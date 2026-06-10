@@ -1,0 +1,58 @@
+.erco-timepicker {
+  .react-datepicker__header--time {
+    background-color: rgba(0, 126, 122, 0.08);
+    border-bottom-color: rgba(0, 126, 122, 0.2);
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .react-datepicker-time__header {
+    color: #007e7a;
+    font-weight: 600;
+    font-size: 0.8rem;
+    letter-spacing: 0.02em;
+  }
+
+  .react-datepicker__time-list-item {
+    &:hover:not(.react-datepicker__time-list-item--selected) {
+      background-color: rgba(0, 126, 122, 0.1) !important;
+      color: #007e7a !important;
+    }
+
+    &--selected {
+      background-color: #007e7a !important;
+      color: #fff !important;
+      font-weight: 600;
+
+      &:hover {
+        background-color: #005f5c !important;
+      }
+    }
+  }
+
+  .react-datepicker__time-list {
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba(0, 126, 122, 0.35);
+      border-radius: 2px;
+    }
+  }
+
+  .react-datepicker {
+    border-color: rgba(0, 126, 122, 0.35);
+    box-shadow: 0 4px 16px rgba(0, 126, 122, 0.1);
+  }
+
+  .react-datepicker__triangle {
+    &::before {
+      border-bottom-color: rgba(0, 126, 122, 0.3) !important;
+    }
+
+    &::after {
+      border-bottom-color: rgba(0, 126, 122, 0.08) !important;
+    }
+  }
+}

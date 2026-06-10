@@ -1,0 +1,129 @@
+﻿=== PART: word/document.xml ===
+ERP Annex
+ERP Annex 24 (Wildlife encounter)
+ERCO No.
+39
+Date
+11/4/2025
+Date of Report issuance
+13/4/2025
+Time
+2105 hrs
+Weather
+Clear
+Location/Area
+Stockpile A, Zone 3
+Forest nearest CMD Building, Zone 6
+Stockpile E, Zone 3
+VMECC Personnel Information
+Type of
+Emergency /
+Incident
+FIRE
+SC
+Ridzal Aziz
+RESCUE
+ASC
+Azrul / Naim
+HAZMAT / OIL SPILL
+TRT 1
+Aiman / Alshir
+X
+SPECIAL ASSISSTANCE/SERVICES
+TRT 2
+Zul / Mizan
+Details of Emergency
+Wild Boar sighted at Stockpile E
+TRT 3
+Ammar / Rosle
+TRT 4
+Izad / Khai
+SUMMARY OF EMERGENCY/ INCIDENT
+VMECC received a call via Walkie Talkie from CCR regarding a report from VMM Supervisor was sighted Wild boar at the stockpile A area. Crew deployed to location. Upon arrival, OSC initiated assessment and confirmed there was a Wild Boar. OSC plans to repel wild boar using RIV 01, RIV 02 and Security Patrolling team. Team execute to repel and wild boar heading towards in forest area at Zone 6 (near CMD building). OSC informed to Security supervisor to conduct safety announcement at all BPs Contractor Villa. Team proceed to standby at Zone 6 area. Operation continued to tracked wild boar location in Forest area, Zone 6. During patrolling, team was seeing the Wild boar heading towards at CT 15 area and stockpile E area. Wild boar crosses the road and enters into natural pond area. OSC and Team conducted assessment and confirmed no sign of Wild Boar at Yard area. OSC informed operation standdown and Team RTB.
+CHRONOLOGY OF EVENT
+Time
+Event/ Action
+2105
+VMECC received call via Walkie Talkie from CCR reporting that there were Wild Boar sighted at Stockpile A area
+2106
+Team deployed to location
+Team notified SC and Security Team
+2113
+Team arrived location and reporting one Wild Boar sighted
+2120
+Team conduct tracking the wild boar at TR09 area (from CT site to hill site)
+2130
+OSC plans to repel wild boar using RIV 01, RIV 02 and assist by Security Patrolling team.
+OSC request to enter Stockpile A area from yard leader
+2141
+Team executed to repel the wild boar.
+Wild boar run away and heading towards in forest area at Zone 6 (near CMD building).
+2315
+Security supervisor conduct safety announcement at all BPs Contractor Villa.
+Team standby at Zone 6 area and continuedto tracked the wild boar location in Forest area.
+0700
+Wildlife Operation handed over to day shift (Charlie)
+Team (1x RIV and 2x TRT) standby at Zone 6 area
+Team conducted Patrolling and initiated assessment in forest area, zone 6
+1900
+Wildlife Operation handed over to night shift (Delta)
+Team (1x RIV and 2x TRT) standby at Zone 6 area
+Team conducted Patrolling at forest area, zone 6
+0037
+Team seeing the Wild boar heading towards at CT 15 area and stockpile E area.
+Wild boar crosses the road and enters into natural pond area.
+0045
+OSC and Team conducted assessment and confirmed no sign of Wild Boar at Yard area
+0050
+OSC informed operation standdown and Team RTB.
+STRENGTHS
+Response time in line with 2025 KPI (1.2 Adherence Response Time) targets.
+Available and operational resources: ER Equipment and response vehicles & PPE.
+VMECC TRTcapable to handle Wildlife Encounter.
+Good cooperation from VMM staff and Security Team.
+RESOURCES, EQUIPMENT & CONSUMABLES MOBILISED
+Rapid Intervention Vehicle (RIV)
+PPE
+Walkie Talkie
+IMPROVEMENT OPPORTUNITIES
+To provide wild boar trap
+To collaborate with Wildlife Department (PERHILITAN) regarding wildlife issues
+PHOTOGRAPH
+Prepared by:
+Azrul Azian
+ASCDelta, VMECC
+Reviewed by:
+Ridzal Aziz
+SC, VMECC
+Vale Review by:
+Date:
+13/4/2025
+Date:
+13/4/2025
+Date:
+
+=== PART: word/footer1.xml ===
+VALE MALAYSIA EMERGENCY CONTROL CENTRE
+
+=== PART: word/footer2.xml ===
+VALE MALAYSIA EMERGENCY CONTROL CENTRE
+
+=== PART: word/footer3.xml ===
+VALE MALAYSIA EMERGENCY CONTROL CENTRE
+
+=== PART: word/header1.xml ===
+Emergency Response Call Out Report
+Document Code: VMECC-OPS-001
+Revision No: 0
+
+=== PART: word/header2.xml ===
+Emergency Response Call Out Report
+Document Code:
+VMECC-OPS-001
+Revision No: 0
+
+=== PART: word/header3.xml ===
+Emergency Response Call Out Report
+Document Code: VMECC-OPS-001
+Revision No: 0
+

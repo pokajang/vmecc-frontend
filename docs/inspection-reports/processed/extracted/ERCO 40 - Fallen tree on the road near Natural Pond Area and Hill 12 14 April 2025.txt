@@ -1,0 +1,109 @@
+﻿=== PART: word/document.xml ===
+ERP Annex
+ANNEX 9: General Emergency Response Plan
+ERCO No.
+40
+Date
+14/4/2025
+Date of Report issuance
+14/4/2025
+Time
+0240 hrs
+Weather
+Raining
+Location/Area
+Road - Natural pond
+Road - Hill 12
+VMECC Personnel Information
+Type of
+Emergency /
+Incident
+FIRE
+SC
+Ridzal Aziz
+RESCUE
+ASC
+Azrul
+HAZMAT / OIL SPILL
+TRT 1
+Aiman
+X
+SPECIAL ASSISSTANCE/SERVICES
+TRT 2
+Zul Ikmal
+Details of Emergency
+Response to falling tree on the road incident
+TRT 3
+Ammar
+TRT 4
+Izad
+SUMMARY OF EMERGENCY/ INCIDENT
+VMECC received a call via telephone from CCR regarding falling tree on the road at Natural Pond, Zone 3 area. Crew deployed to location. Upon arrival, OSC initiated assessment and confirmed there was a falling tree on the road. Team attempted to cut the tree with existing chain saw but lack of capability. As discussed with Yard Leader, team barricade at falling tree area. Further site assessment found there were few more falling tree and area with minor flooding. OSC notified Yard Leader and Team RTB.
+CHRONOLOGY OF EVENT
+Time
+Event/ Action
+0240
+VMECC received a call via telephone from CCR regarding falling tree on the road at Natural Pond, Zone 3 area.
+0242
+Team deployed to location
+Team notified SC and Security Team
+0248
+Team arrived location and OSC initiated assessment and confirmed there was a 2x falling tree on the road front of natural pond area and 1x at Hill 12 road
+0250
+Team attempted to cut with existing chain saw but lack of capability.
+0258
+Team barricade at falling tree area
+0310
+Team proceed to patrolling at zone 3 area
+Further site assessment found there were few more falling tree and area with minor flooding
+0400
+Team report no more falling tree at zone 3 and team RTB
+STRENGTHS
+Response time in line with 2025 KPI (1.2 Adherence Response Time) targets.
+Available and operational resources: ER Equipment and response vehicles & PPE.
+Good cooperation from VMM staff and Security Team.
+RESOURCES, EQUIPMENT & CONSUMABLES MOBILISED
+Rapid Intervention Vehicle (RIV)
+PPE
+Walkie Talkie
+IMPROVEMENT OPPORTUNITIES
+To provide Heavy Duty Hand/Power Tools for tree cutting such as Chain Saw, Hand Saw, Machete, Axe, Steel Rake
+PHOTOGRAPH
+Prepared by:
+Azrul Azian
+ASCDelta, VMECC
+Reviewed by:
+Ridzal Aziz
+SC, VMECC
+Vale Review by:
+Date:
+14/4/2025
+Date:
+13/4/2025
+Date:
+
+=== PART: word/footer1.xml ===
+VALE MALAYSIA EMERGENCY CONTROL CENTRE
+
+=== PART: word/footer2.xml ===
+VALE MALAYSIA EMERGENCY CONTROL CENTRE
+
+=== PART: word/footer3.xml ===
+VALE MALAYSIA EMERGENCY CONTROL CENTRE
+
+=== PART: word/header1.xml ===
+Emergency Response Call Out Report
+Document Code: VMECC-OPS-001
+Revision No: 0
+
+=== PART: word/header2.xml ===
+Emergency Response Call Out Report
+Document Code:
+VMECC-OPS-001
+Revision No: 0
+
+=== PART: word/header3.xml ===
+Emergency Response Call Out Report
+Document Code: VMECC-OPS-001
+Revision No: 0
+

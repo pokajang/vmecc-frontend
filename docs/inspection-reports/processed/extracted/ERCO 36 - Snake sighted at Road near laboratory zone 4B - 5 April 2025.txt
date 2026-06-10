@@ -1,0 +1,101 @@
+﻿=== PART: word/document.xml ===
+Date
+05/04/2025
+Date of Report issuance
+05/04/2025
+Time
+0443hrs
+Weather
+Clear
+Location/Area
+Road near laboratory
+VMECC Personnel Information
+Type of
+Emergency /
+Incident
+FIRE
+SC
+Ridzal Aziz
+RESCUE
+ASC
+Naim
+HAZMAT / OIL SPILL
+TRT 1
+Shah
+X
+SPECIAL ASSISSTANCE/SERVICES
+TRT 2
+Mizan
+Details of Emergency
+Snake sighted at road near laboratory (Zone 4B)
+TRT 3
+Adam
+TRT 4
+Rosli
+SUMMARY OF EMERGENCY/INCIDENT
+VMECC received call via Walkie Talkie from CCR regarding a report from Chargeman that a snake was sighted at road near laboratory. Crew deployed from site to the reported location. Upon arrival, team-initiated assessment and confirmed there was a snake (Non venomous Reticulated Python)at road near laboratory. After donning a PPE, team successfully captured the snake and secured by putting inside the snake bag. Team managed to release the snake outside of VMM premise. Team proceeded with housekeeping and RTB.
+CHRONOLOGY OF EVENT
+Time
+Event/ Action
+0443
+VMECC received a call from CCR reporting from Chargeman reporting there is a snake sighted at road near laboratory.
+0445
+RIV 02(T1, T3 & T4)deploys to locationfrom station.
+0450
+Team arrived location and assess the area.
+0452
+Team located the snake at grassy area next to the road.
+0455
+Team safely catches the snake; Snake was identified a (Non venomous Reticulated Python).
+0502
+The snake was released outside the VMM premises and RTB.
+STRENGTHS
+Response time in line with 2025 KPI (1.2 Adherence Response Time) targets.
+Available and operational resources: PPE & Snake catcher equipment and guard
+Special assistance/Service - Wildlife management
+RESOURCES, EQUIPMENT & CONSUMABLES MOBILISED
+Rapid Intervention Vehicle (RIV)
+PPE (Snake guard)
+Snake catcher
+Walkie Talkie
+IMPROVEMENT OPPURTUNITIES
+N/A
+PHOTOGRAPH
+Prepared by:
+Naim
+ASC, VMECC
+Reviewed by:
+Ridzal Aziz
+SC, VMECC
+Vale Review by:
+Date:
+05/04/2025
+Date:
+05/04/2025
+Date:
+
+=== PART: word/footer1.xml ===
+VALE MALAYSIA EMERGENCY CONTROL CENTRE
+
+=== PART: word/footer2.xml ===
+VALE MALAYSIA EMERGENCY CONTROL CENTRE
+
+=== PART: word/footer3.xml ===
+VALE MALAYSIA EMERGENCY CONTROL CENTRE
+
+=== PART: word/header1.xml ===
+Emergency Response Call Out Report
+Document Code: VMECC-OPS-001
+Revision No: 0
+
+=== PART: word/header2.xml ===
+VMECC Incident Report
+Document Code:
+VMECC-OPS-001
+Revision No: 1
+
+=== PART: word/header3.xml ===
+Emergency Response Call Out Report
+Document Code: VMECC-OPS-001
+Revision No: 0
+

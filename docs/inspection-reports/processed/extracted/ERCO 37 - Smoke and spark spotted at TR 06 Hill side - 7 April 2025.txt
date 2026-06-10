@@ -1,0 +1,131 @@
+﻿=== PART: word/document.xml ===
+Date
+07/04/2025
+Date of Report issuance
+08/04/2025
+Time
+1022 hrs
+Weather
+Clear
+Location/Area
+VMM TR 06 Hill side(Zone 3)
+VMECC Personnel Information
+Type of
+Emergency /
+Incident
+X
+FIRE
+SC
+Ridzal Aziz
+RESCUE
+ASC
+Sharman
+HAZMAT / OIL SPILL
+TRT 1
+Khairuddin
+SPECIAL ASSISSTANCE/SERVICES
+TRT 2
+Aiman (FTO)
+Details of Emergency
+Smoke and spark on roller at TR 06Hillside
+TRT 3
+Adib
+TRT 4
+Rosle
+SUMMARY OF EMERGENCY/ INCIDENT
+VMECC received call from CCR via Walkie Talkie regarding a report from Yard Leader spotted smoke and spark on roller at TR 06 Hillside. Crew deployed to location from VMECC station. Upon arrival, team assessed the situation and initiated cooling by using Hose reel from FRT. After cooling was initiated, ASC requested Yard Leader to stop conveyor operation to open the guarding for better approach. Conveyor line stopped and guarding was opened by team. Cooling stopped for first temperature check, 31°C on Port side roller and 34°C on CCR side roller. Cooling was carried on. Smoke and spark produced due to accumulation of iron ore. After cooling, temperature was rechecked and was at 31°C on both rollers. After discussion with Yard Leader, he will take over for rectifications by Maintenance Team and cleaning of residue iron ore on the ground by Sodexo. Area handed over to Yard Leader. Team proceeds with housekeeping and RTB upon completion.
+CHRONOLOGY OF EVENT
+Time
+Event/ Action
+1022
+VMECC received call via Land Line from CCR regarding a report from Yard Leader that smoke and spark spotted at roller.
+ASC notified SC regarding the report.
+1023
+ASC notified SCR to deploy and FAS to standby.
+RIV 01 and 02deployed to location.
+1024
+FRT deployed to location from station.
+1026
+RIV 02 and 01 arrived at location and donned firefighting gears.
+1028
+Team 1 proceeded with initial assessment and confirmed there is smoke and sparkon roller.
+1030
+FRT arrived at location.
+Team 2 prepared Hose reel to initiate cooling from FRT.
+1034
+Water on and team initiated with cooling operation.
+1035
+Cooling ongoing.
+Smoke still visible.
+Conveyor still running.
+1037
+ASC request Yard Leader to stop conveyor operation and to open guarding.
+SCR (Patrol Team) arrived at location.
+1039
+Conveyor operation stopped and Yard Leader permitted to open guarding.
+Cooling ongoing
+1043
+Cooling stopped for assessment.
+Smoke and spark due to accumulation of iron ore.
+Initial temperature recorded as 38°C.
+Current temperature recorded on CCR side roller 34°C and Port side roller was 31°C.
+Cooling will stop after temperature drops to 30°C
+1051
+Cooling stopped for assessment.
+Temperature recorded at31°C.
+ASC discussed with Yard Leader and he agrees to take over for further rectifications.
+ASC handover to Yard leader.
+Team proceeds with housekeeping.
+1101
+Housekeeping completed and RTB after refilling water in FRT.
+Notified FAS and SCR for stand down.
+STRENGTHS
+Response time in line with 2025 KPI (1.2 Adherence Response Time) targets.
+Available and operational resources: ER Rescue Equipment and response vehicles & PPE
+VMECC TRTM with Fire Fighting technique trained.
+Excellent support and good communication Yard Leader in providing sufficient informationand assistance.
+RESOURCES, EQUIPMENT & CONSUMABLES MOBILISED
+FRT and Rapid Intervention Vehicle (RIV)
+PPE (Firefightinggears)
+Walkie Talkie
+Temperature gun
+IMPROVEMENT OPPORTUNITIES
+FRT positioning nearer to affected area. It is easier to park the FRT’s Godiva Pump nearer to the affected area and this will reduce the time consumptions for crews to deploy firefighting equipment’s to the incident area.
+PHOTOGRAPH
+Prepared by:
+Sharman Rajaram
+ASC, VMECC
+Reviewed by:
+Ridzal Aziz
+SC, VMECC
+Vale Review by:
+Date:
+07/04/2025
+Date:
+08/04/2025
+Date:
+
+=== PART: word/footer1.xml ===
+VALE MALAYSIA EMERGENCY CONTROL CENTRE
+
+=== PART: word/footer2.xml ===
+VALE MALAYSIA EMERGENCY CONTROL CENTRE
+
+=== PART: word/footer3.xml ===
+VALE MALAYSIA EMERGENCY CONTROL CENTRE
+
+=== PART: word/header1.xml ===
+Emergency Response Call Out Report
+Document Code: VMECC-OPS-001
+Revision No: 0
+
+=== PART: word/header2.xml ===
+Emergency Response Call Out Report
+Document Code: VMECC-OPS-001
+Revision No: 0
+
+=== PART: word/header3.xml ===
+Emergency Response Call Out Report
+Document Code: VMECC-OPS-001
+Revision No: 0
+

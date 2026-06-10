@@ -1,0 +1,101 @@
+﻿=== PART: word/document.xml ===
+Date
+9/4/2025
+Date of Report issuance
+9/4/2025
+Time
+2133 hrs
+Weather
+Clear
+Location/Area
+Stock pile E & Lay down area – Zone 3
+VMECC Personnel Information
+Type of
+Emergency /
+Incident
+FIRE
+SC
+Ridzal Aziz
+RESCUE
+ASC
+Sofjowardi
+HAZMAT / OIL SPILL
+TRT 1
+Ikhwan
+X
+SPECIAL ASSISSTANCE/SERVICES
+TRT 2
+Safwan Sani
+Details of Emergency
+Wild Boar sighted at Stockpile E
+ERP Annex 24 (Wildlife encounter)
+TRT 3
+Rosli.M (FTO)
+TRT 4
+Irfan
+SUMMARY OF EMERGENCY/ INCIDENT
+VMECC received report from CCR via walkie talkie reporting a Wild Boar has sighted at Stockpile E. The team was deployed to the location for assist and after arrived, there were one Wild Boar at location and run away onto bush near the natural pond. No activity that area while that happen. Team met YL to inform the situation and please to reported any sign of wild boar should be informed immediately to VMECC. Team RTB.
+CHRONOLOGY OF EVENT
+Time
+Event/ Action
+2133
+VMECC received call via Walkie Talkie from CCR reporting that there were Wild Boar sighted at Stockpile E
+2135
+Team proceeds to location
+2140
+Team arrived location and reporting one Wild Boar sighted
+2141
+Team reported, Wild Boar was run away onto bush near natural pond
+2144
+Team met YL to inform the situation.
+2150
+Team RTB
+STRENGTHS
+Response time in line with 2025 KPI (1.2 Adherence Response Time) targets.
+Available and operational resources: ER Equipment and response vehicles & PPE
+VMECC TRTM with Wildlife management.
+RESOURCES, EQUIPMENT & CONSUMABLES MOBILISED
+Rapid Intervention Vehicle (RIV)
+PPE
+Walkie Talkie
+IMPROVEMENT OPPORTUNITIES
+Wild boar has several times sighted and reported at stockpile area. Team believed there is only one wild boar in that area. The Wild Boar should be captured for safety reason
+PHOTOGRAPH
+Prepared by:
+Sofjowardi
+ASC Bravo VMECC
+Reviewed by:
+Ridzal Aziz
+SC, VMECC
+Vale Review by:
+Date:
+9/4/2025
+Date:
+10/4/2025
+Date:
+
+=== PART: word/footer1.xml ===
+VALE MALAYSIA EMERGENCY CONTROL CENTRE
+
+=== PART: word/footer2.xml ===
+VALE MALAYSIA EMERGENCY CONTROL CENTRE
+
+=== PART: word/footer3.xml ===
+VALE MALAYSIA EMERGENCY CONTROL CENTRE
+
+=== PART: word/header1.xml ===
+Emergency Response Call Out Report
+Document Code: VMECC-OPS-001
+Revision No: 0
+
+=== PART: word/header2.xml ===
+Emergency Response Call Out Report
+Document Code:
+VMECC-OPS-001
+Revision No: 0
+
+=== PART: word/header3.xml ===
+Emergency Response Call Out Report
+Document Code: VMECC-OPS-001
+Revision No: 0
+

@@ -1,0 +1,10 @@
+Options -MultiViews
+FallbackResource /index.html
+RewriteEngine On
+RewriteBase /
+
+# Serve the built SPA for any non-file/non-directory routes
+RewriteRule ^index\.html$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]
