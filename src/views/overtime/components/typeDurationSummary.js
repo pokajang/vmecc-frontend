@@ -1,4 +1,8 @@
-import { formatDuration, getOvertimeTypeLabel, normalizeOvertimeType } from 'src/views/overtime/utils'
+import {
+  formatDuration,
+  getOvertimeTypeLabel,
+  normalizeOvertimeType,
+} from 'src/views/overtime/utils'
 
 export const OVERTIME_TYPE_SUMMARY_ORDER = ['weekday', 'weekend', 'publicHoliday']
 

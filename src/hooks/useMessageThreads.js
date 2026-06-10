@@ -168,7 +168,10 @@ const subscribe = (listener) => {
     subscribers.delete(listener)
     if (!subscribers.size) {
       stopPolling()
-      if (leaderCleanup) { leaderCleanup(); leaderCleanup = null }
+      if (leaderCleanup) {
+        leaderCleanup()
+        leaderCleanup = null
+      }
       // Reset attachment flags so a remount (e.g. same-tab session swap) re-initialises listeners
       visibilityAttached = false
       idleAttached = false

@@ -34,9 +34,30 @@ import {
 // ─── Built-in shift windows (Normal / Day / Night) ───────────────────────────
 
 const SHIFT_FIELDS = [
-  { key: 'normal', label: 'Normal', startKey: 'normal_start', endKey: 'normal_end', defaultStart: '08:00', defaultEnd: '17:00' },
-  { key: 'day',    label: 'Day',    startKey: 'day_start',    endKey: 'day_end',    defaultStart: '07:00', defaultEnd: '19:00' },
-  { key: 'night',  label: 'Night',  startKey: 'night_start',  endKey: 'night_end',  defaultStart: '19:00', defaultEnd: '07:00' },
+  {
+    key: 'normal',
+    label: 'Normal',
+    startKey: 'normal_start',
+    endKey: 'normal_end',
+    defaultStart: '08:00',
+    defaultEnd: '17:00',
+  },
+  {
+    key: 'day',
+    label: 'Day',
+    startKey: 'day_start',
+    endKey: 'day_end',
+    defaultStart: '07:00',
+    defaultEnd: '19:00',
+  },
+  {
+    key: 'night',
+    label: 'Night',
+    startKey: 'night_start',
+    endKey: 'night_end',
+    defaultStart: '19:00',
+    defaultEnd: '07:00',
+  },
 ]
 
 const BuiltinShifts = () => {
@@ -73,7 +94,9 @@ const BuiltinShifts = () => {
     }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load()
+  }, [])
 
   const handleSave = async () => {
     if (loading) return
@@ -118,7 +141,9 @@ const BuiltinShifts = () => {
           {SHIFT_FIELDS.map(({ key, label, startKey, endKey }) => (
             <div key={key} className="d-flex align-items-center gap-3 flex-wrap">
               <div style={{ minWidth: 60, fontWeight: 500 }}>{label}</div>
-              <CFormLabel className="text-muted mb-0" style={{ minWidth: 50 }}>Start</CFormLabel>
+              <CFormLabel className="text-muted mb-0" style={{ minWidth: 50 }}>
+                Start
+              </CFormLabel>
               <CFormInput
                 type="time"
                 size="sm"
@@ -127,7 +152,9 @@ const BuiltinShifts = () => {
                 disabled={!editMode || loading}
                 style={{ maxWidth: 160 }}
               />
-              <CFormLabel className="text-muted mb-0" style={{ minWidth: 40 }}>End</CFormLabel>
+              <CFormLabel className="text-muted mb-0" style={{ minWidth: 40 }}>
+                End
+              </CFormLabel>
               <CFormInput
                 type="time"
                 size="sm"
@@ -173,7 +200,9 @@ const CustomShifts = () => {
     }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load()
+  }, [])
 
   const openAdd = () => {
     setEditing(null)
@@ -258,7 +287,9 @@ const CustomShifts = () => {
               <CTable align="middle" className="mb-0" hover responsive>
                 <CTableHead color="light">
                   <CTableRow>
-                    <CTableHeaderCell className="text-center" style={{ width: 56 }}>#</CTableHeaderCell>
+                    <CTableHeaderCell className="text-center" style={{ width: 56 }}>
+                      #
+                    </CTableHeaderCell>
                     <CTableHeaderCell>Name</CTableHeaderCell>
                     <CTableHeaderCell>Start</CTableHeaderCell>
                     <CTableHeaderCell>End</CTableHeaderCell>
@@ -268,7 +299,9 @@ const CustomShifts = () => {
                 <CTableBody>
                   {shifts.map((shift, index) => (
                     <CTableRow key={shift.id}>
-                      <CTableDataCell className="text-center text-muted">{index + 1}</CTableDataCell>
+                      <CTableDataCell className="text-center text-muted">
+                        {index + 1}
+                      </CTableDataCell>
                       <CTableDataCell>{shift.name}</CTableDataCell>
                       <CTableDataCell>{shift.start}</CTableDataCell>
                       <CTableDataCell>{shift.end}</CTableDataCell>

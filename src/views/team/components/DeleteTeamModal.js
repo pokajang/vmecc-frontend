@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   CButton,
   CFormCheck,
@@ -11,18 +11,10 @@ import {
 import { deleteTeam } from 'src/services/apiClient'
 import ButtonLoader from 'src/components/ButtonLoader'
 
-const DeleteTeamModal = ({ visible, team, onClose, onDeleted }) => {
+const DeleteTeamModalContent = ({ visible, team, onClose, onDeleted }) => {
   const [checks, setChecks] = useState({ members: false, naming: false, irreversible: false })
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState(null)
-
-  // Reset state every time the modal is opened
-  useEffect(() => {
-    if (visible) {
-      setChecks({ members: false, naming: false, irreversible: false })
-      setError(null)
-    }
-  }, [visible])
 
   const activeCount = (team?.members || []).length
   const allChecked = checks.members && checks.naming && checks.irreversible
@@ -53,9 +45,7 @@ const DeleteTeamModal = ({ visible, team, onClose, onDeleted }) => {
   return (
     <CModal visible={visible} onClose={handleClose} alignment="center">
       <CModalHeader>
-        <CModalTitle className="text-danger">
-          Delete {team?.name || 'Team'}
-        </CModalTitle>
+        <CModalTitle className="text-danger">Delete {team?.name || 'Team'}</CModalTitle>
       </CModalHeader>
 
       <CModalBody>
@@ -64,7 +54,11 @@ const DeleteTeamModal = ({ visible, team, onClose, onDeleted }) => {
             className="rounded-2 px-3 py-2 mb-3"
             style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fcd34d' }}
           >
-            This team has <strong>{activeCount} active {activeCount === 1 ? 'member' : 'members'}</strong> who will be notified.
+            This team has{' '}
+            <strong>
+              {activeCount} active {activeCount === 1 ? 'member' : 'members'}
+            </strong>{' '}
+            who will be notified.
           </div>
         )}
 
@@ -97,25 +91,26 @@ const DeleteTeamModal = ({ visible, team, onClose, onDeleted }) => {
           />
         </div>
 
-        {error && (
-          <div className="mt-3 text-danger">{error}</div>
-        )}
+        {error && <div className="mt-3 text-danger">{error}</div>}
       </CModalBody>
 
       <CModalFooter>
         <CButton color="light" disabled={deleting} onClick={handleClose}>
           Cancel
         </CButton>
-        <CButton
-          color="danger"
-          disabled={!allChecked || deleting}
-          onClick={handleDelete}
-        >
+        <CButton color="danger" disabled={!allChecked || deleting} onClick={handleDelete}>
           {deleting ? <ButtonLoader label="Deleting..." /> : 'Permanently delete'}
         </CButton>
       </CModalFooter>
     </CModal>
   )
 }
+
+const DeleteTeamModal = (props) => (
+  <DeleteTeamModalContent
+    key={`${props.visible ? 'open' : 'closed'}-${props.team?.id ?? 'none'}`}
+    {...props}
+  />
+)
 
 export default DeleteTeamModal

@@ -98,7 +98,11 @@ const CreateTeamModal = ({ visible, onClose, onSaved, existingTeams = [] }) => {
         <CModalTitle>Add Teams</CModalTitle>
       </CModalHeader>
       <CModalBody className="d-grid gap-3">
-        {error && <CAlert color="danger" className="mb-0">{error}</CAlert>}
+        {error && (
+          <CAlert color="danger" className="mb-0">
+            {error}
+          </CAlert>
+        )}
 
         <div>
           <div className="text-body-secondary small mb-2">Default teams</div>
@@ -112,7 +116,9 @@ const CreateTeamModal = ({ visible, onClose, onSaved, existingTeams = [] }) => {
                   label={
                     <span className={exists ? 'text-body-secondary' : ''}>
                       {name}
-                      {exists && <span className="ms-2 small text-body-secondary">(already exists)</span>}
+                      {exists && (
+                        <span className="ms-2 small text-body-secondary">(already exists)</span>
+                      )}
                     </span>
                   }
                   checked={exists || selected.has(name)}
@@ -131,7 +137,10 @@ const CreateTeamModal = ({ visible, onClose, onSaved, existingTeams = [] }) => {
               size="sm"
               placeholder="Team name"
               value={customInput}
-              onChange={(e) => { setCustomInput(e.target.value); setError(null) }}
+              onChange={(e) => {
+                setCustomInput(e.target.value)
+                setError(null)
+              }}
               onKeyDown={(e) => e.key === 'Enter' && addCustom()}
             />
             <CButton size="sm" color="secondary" variant="outline" onClick={addCustom}>
@@ -171,7 +180,13 @@ const CreateTeamModal = ({ visible, onClose, onSaved, existingTeams = [] }) => {
         </div>
       </CModalBody>
       <CModalFooter>
-        <CButton color="secondary" variant="outline" size="sm" onClick={handleClose} disabled={submitting}>
+        <CButton
+          color="secondary"
+          variant="outline"
+          size="sm"
+          onClick={handleClose}
+          disabled={submitting}
+        >
           Cancel
         </CButton>
         <CButton

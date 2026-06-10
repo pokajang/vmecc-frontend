@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import Select from 'react-select'
 import {
   CAlert,
@@ -58,36 +58,49 @@ const resolveTeamRole = (user, teamId) => {
   return assignments[0]?.role || null
 }
 
+const buildInitialMembers = (team, membersSource, todayStr) =>
+  (team?.members || []).map((m) => {
+    const opt =
+      membersSource.find((o) => o.id === m.user_id) || membersSource.find((o) => o.name === m.name)
+    if (opt) {
+      const role = resolveTeamRole(opt, team?.id) || m.role || getPrimaryRoleLabel(opt)
+      return {
+        value: opt.id,
+        label: `${opt.name || ''}${role ? ` - ${role}` : ''}`,
+        name: opt.name,
+        role,
+        user_id: opt.id,
+        started_at: m.started_at || todayStr,
+      }
+    }
+    return {
+      value: `custom-${m.id || m.name}`,
+      label: `${m.name}${m.role ? ` - ${m.role}` : ''}`,
+      name: m.name,
+      role: m.role,
+      started_at: m.started_at || todayStr,
+    }
+  })
+
+const getInitialImageState = (currentImageUrl) => {
+  if (!currentImageUrl) return { preview: null, selected: null }
+  if (currentImageUrl.startsWith('preset:')) {
+    return { preview: null, selected: currentImageUrl.slice('preset:'.length) }
+  }
+  return { preview: currentImageUrl, selected: 'upload' }
+}
+
 // ─── Image Picker ────────────────────────────────────────────────────────────
 
 const MAX_FILE_BYTES = 4 * 1024 * 1024 // 4 MB — must match backend max:4096
 
-const ImagePicker = ({ currentImageUrl, teamName, onChange }) => {
+const ImagePicker = ({ currentImageUrl, onChange }) => {
   const fileInputRef = useRef(null)
-  const [preview, setPreview] = useState(null) // local file preview URL
+  const initialImageState = getInitialImageState(currentImageUrl)
+  const [preview, setPreview] = useState(initialImageState.preview) // local file preview URL
   const [uploadFile, setUploadFile] = useState(null) // File object to upload
-  const [selected, setSelected] = useState(null) // preset key or 'upload' or null
+  const [selected, setSelected] = useState(initialImageState.selected) // preset key or 'upload' or null
   const [fileError, setFileError] = useState(null)
-
-  // Derive initial state from currentImageUrl
-  useEffect(() => {
-    setPreview(null)
-    setUploadFile(null)
-    setFileError(null)
-    if (!currentImageUrl) {
-      setSelected(null)
-      return
-    }
-    // Check if it's a stored preset key
-    if (currentImageUrl.startsWith('preset:')) {
-      const key = currentImageUrl.slice('preset:'.length)
-      setSelected(key)
-    } else {
-      // Real uploaded file — show it in the preview slot
-      setSelected('upload')
-      setPreview(currentImageUrl)
-    }
-  }, [currentImageUrl, teamName])
 
   const handlePresetClick = (preset) => {
     setSelected(preset.key)
@@ -128,9 +141,9 @@ const ImagePicker = ({ currentImageUrl, teamName, onChange }) => {
     onChange({ type: 'clear', src: null, file: null, clear: true })
   }
 
-  const activePreview = preview || (selected && selected !== 'upload'
-    ? PRESET_IMAGES.find((p) => p.key === selected)?.src
-    : null)
+  const activePreview =
+    preview ||
+    (selected && selected !== 'upload' ? PRESET_IMAGES.find((p) => p.key === selected)?.src : null)
 
   return (
     <div>
@@ -138,10 +151,19 @@ const ImagePicker = ({ currentImageUrl, teamName, onChange }) => {
       <div className="d-flex align-items-center gap-3 mb-3">
         <div
           className="rounded-3 overflow-hidden flex-shrink-0"
-          style={{ width: 72, height: 72, background: 'var(--cui-tertiary-bg)', border: '1px solid var(--cui-border-color)' }}
+          style={{
+            width: 72,
+            height: 72,
+            background: 'var(--cui-tertiary-bg)',
+            border: '1px solid var(--cui-border-color)',
+          }}
         >
           {activePreview ? (
-            <img src={activePreview} alt="Team" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img
+              src={activePreview}
+              alt="Team"
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
           ) : (
             <div className="w-100 h-100 d-flex align-items-center justify-content-center text-body-secondary">
               <ImagePlus size={22} />
@@ -174,10 +196,15 @@ const ImagePicker = ({ currentImageUrl, teamName, onChange }) => {
               </CButton>
             )}
           </div>
-          {fileError
-            ? <span className="text-danger" style={{ fontSize: '0.7rem' }}>{fileError}</span>
-            : <span className="text-muted" style={{ fontSize: '0.7rem' }}>JPG, PNG, WebP · max 4 MB</span>
-          }
+          {fileError ? (
+            <span className="text-danger" style={{ fontSize: '0.7rem' }}>
+              {fileError}
+            </span>
+          ) : (
+            <span className="text-muted" style={{ fontSize: '0.7rem' }}>
+              JPG, PNG, WebP · max 4 MB
+            </span>
+          )}
         </div>
         <input
           ref={fileInputRef}
@@ -205,16 +232,26 @@ const ImagePicker = ({ currentImageUrl, teamName, onChange }) => {
               style={{
                 width: 52,
                 height: 52,
-                border: selected === preset.key
-                  ? '2px solid var(--cui-primary)'
-                  : '2px solid transparent',
-                outline: selected === preset.key ? '1px solid var(--cui-primary)' : '1px solid var(--cui-border-color)',
+                border:
+                  selected === preset.key
+                    ? '2px solid var(--cui-primary)'
+                    : '2px solid transparent',
+                outline:
+                  selected === preset.key
+                    ? '1px solid var(--cui-primary)'
+                    : '1px solid var(--cui-border-color)',
                 transition: 'border 0.15s',
               }}
             >
-              <img src={preset.src} alt={preset.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img
+                src={preset.src}
+                alt={preset.label}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
             </div>
-            <div className="text-center text-muted mt-1" style={{ fontSize: '0.65rem' }}>{preset.label}</div>
+            <div className="text-center text-muted mt-1" style={{ fontSize: '0.65rem' }}>
+              {preset.label}
+            </div>
           </button>
         ))}
       </div>
@@ -224,7 +261,7 @@ const ImagePicker = ({ currentImageUrl, teamName, onChange }) => {
 
 // ─── Main Modal ──────────────────────────────────────────────────────────────
 
-const EditTeamModal = ({
+const EditTeamModalContent = ({
   visible,
   team,
   rosterStatus,
@@ -235,15 +272,15 @@ const EditTeamModal = ({
   onSaved,
   onDeleted,
 }) => {
-  const [members, setMembers] = useState([])
-  const [group, setGroup] = useState('')
+  const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), [])
+  const [members, setMembers] = useState(() => buildInitialMembers(team, membersSource, todayStr))
+  const [group, setGroup] = useState(team?.group || '')
   const [selectReset, setSelectReset] = useState(0)
   const [saving, setSaving] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [error, setError] = useState(null)
   // image state: { type: 'preset'|'file'|'clear'|null, file: File|null, src: string|null, clear: bool }
   const [imageState, setImageState] = useState(null)
-  const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), [])
 
   const memberOptions = useMemo(() => {
     const currentIds = new Set(
@@ -272,38 +309,6 @@ const EditTeamModal = ({
       }))
   }, [membersSource, assignedUserIds, team?.id, team?.members, members, todayStr])
 
-  useEffect(() => {
-    if (!team) return
-    const initialMembers = (team.members || []).map((m) => {
-      const opt =
-        membersSource.find((o) => o.id === m.user_id) ||
-        membersSource.find((o) => o.name === m.name)
-      if (opt) {
-        const role = resolveTeamRole(opt, team?.id) || m.role || getPrimaryRoleLabel(opt)
-        return {
-          value: opt.id,
-          label: `${opt.name || ''}${role ? ` - ${role}` : ''}`,
-          name: opt.name,
-          role,
-          user_id: opt.id,
-          started_at: m.started_at || todayStr,
-        }
-      }
-      return {
-        value: `custom-${m.id || m.name}`,
-        label: `${m.name}${m.role ? ` - ${m.role}` : ''}`,
-        name: m.name,
-        role: m.role,
-        started_at: m.started_at || todayStr,
-      }
-    })
-    setMembers(initialMembers)
-    setGroup(team?.group || '')
-    setImageState(null)
-    setShowDeleteModal(false)
-    setError(null)
-  }, [team, membersSource, visible, todayStr])
-
   const handleSave = async (e) => {
     e.preventDefault()
     if (!team) return
@@ -328,9 +333,10 @@ const EditTeamModal = ({
 
       // When a new file is queued, send it together with the members payload in
       // one atomic multipart request instead of two separate calls.
-      const resp = imageState?.type === 'file' && imageState.file
-        ? await updateTeamWithImage(team.id, payload, imageState.file)
-        : await updateTeam(team.id, payload)
+      const resp =
+        imageState?.type === 'file' && imageState.file
+          ? await updateTeamWithImage(team.id, payload, imageState.file)
+          : await updateTeam(team.id, payload)
 
       onSaved?.(resp?.data)
     } catch (err) {
@@ -345,7 +351,6 @@ const EditTeamModal = ({
       setSaving(false)
     }
   }
-
 
   return (
     <CModal visible={visible} onClose={saving ? undefined : onClose} alignment="center">
@@ -365,7 +370,9 @@ const EditTeamModal = ({
           <CRow className="g-3">
             {/* Group */}
             <CCol xs={12}>
-              <CFormLabel>Group <span className="text-muted fw-normal">(optional)</span></CFormLabel>
+              <CFormLabel>
+                Group <span className="text-muted fw-normal">(optional)</span>
+              </CFormLabel>
               <input
                 className="form-control"
                 type="text"
@@ -374,7 +381,9 @@ const EditTeamModal = ({
                 value={group}
                 onChange={(e) => setGroup(e.target.value)}
               />
-              <small className="text-muted">Used to visually group teams on the roster overview.</small>
+              <small className="text-muted">
+                Used to visually group teams on the roster overview.
+              </small>
             </CCol>
 
             {/* Members */}
@@ -438,8 +447,8 @@ const EditTeamModal = ({
             <CCol xs={12}>
               <CFormLabel>Team Photo</CFormLabel>
               <ImagePicker
+                key={`${team?.id ?? 'none'}-${team?.image_url || 'no-image'}`}
                 currentImageUrl={team?.image_url || null}
-                teamName={team?.name}
                 onChange={setImageState}
               />
             </CCol>
@@ -482,5 +491,12 @@ const EditTeamModal = ({
     </CModal>
   )
 }
+
+const EditTeamModal = (props) => (
+  <EditTeamModalContent
+    key={`${props.visible ? 'open' : 'closed'}-${props.team?.id ?? 'none'}-${props.membersSource?.length ?? 0}`}
+    {...props}
+  />
+)
 
 export default EditTeamModal

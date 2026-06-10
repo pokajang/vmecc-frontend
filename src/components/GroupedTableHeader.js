@@ -50,17 +50,43 @@ export const MonthGroupLabel = ({
 export const UserGroupLabel = ({
   name = '',
   ownerLabel = '',
+  avatarUrl = '',
   count = 0,
   countNoun = 'records',
   testId = 'user-group-label',
   className = '',
 }) => {
   const resolvedName = String(name || ownerLabel || 'Unknown').trim() || 'Unknown'
+  const initials = resolvedName
+    .split(/\s+/)
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+
   return (
     <div
       className={`d-inline-flex align-items-center gap-2 ${className}`.trim()}
       data-testid={testId}
     >
+      {avatarUrl ? (
+        <img
+          src={avatarUrl}
+          alt=""
+          className="rounded-circle object-fit-cover"
+          width={24}
+          height={24}
+          data-testid={`${testId}-avatar`}
+        />
+      ) : (
+        <span
+          className="rounded-circle bg-body-secondary text-body-secondary d-inline-flex align-items-center justify-content-center small"
+          style={{ width: 24, height: 24, fontSize: '0.65rem' }}
+          data-testid={`${testId}-avatar`}
+        >
+          {initials || '?'}
+        </span>
+      )}
       <span className="text-body-secondary fw-semibold" data-testid={`${testId}-name`}>
         {resolvedName}
       </span>

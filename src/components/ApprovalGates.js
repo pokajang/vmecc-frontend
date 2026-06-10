@@ -4,7 +4,12 @@ import { Check } from 'lucide-react'
 const GATE_COLOR_DONE = '#2eb85c'
 const GATE_COLOR_PENDING = '#d8dbe0'
 
-const ApprovalGates = ({ gates = [], approvalHistory = [], isCancelled = false, direction = 'vertical' }) => {
+const ApprovalGates = ({
+  gates = [],
+  approvalHistory = [],
+  isCancelled = false,
+  direction = 'vertical',
+}) => {
   const actions = new Set(
     (Array.isArray(approvalHistory) ? approvalHistory : []).map((e) => e?.action),
   )

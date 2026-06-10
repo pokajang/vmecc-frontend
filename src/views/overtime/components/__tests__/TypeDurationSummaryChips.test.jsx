@@ -46,9 +46,10 @@ describe('TypeDurationSummaryChips', () => {
   })
 
   it('shows fallback label when there are no positive totals', () => {
-    render(<TypeDurationSummaryChips typeDurationMinutes={{ weekday: 0 }} emptyLabel="Empty totals" />)
+    render(
+      <TypeDurationSummaryChips typeDurationMinutes={{ weekday: 0 }} emptyLabel="Empty totals" />,
+    )
 
     expect(screen.getByText('Empty totals')).toBeTruthy()
   })
 })
-

@@ -17,7 +17,13 @@ const TeamBadge = ({ team }) => {
   return (
     <span
       className="d-inline-block rounded-pill px-2 fw-semibold"
-      style={{ background: bg, color: text, fontSize: '0.875rem', lineHeight: '1.6', whiteSpace: 'nowrap' }}
+      style={{
+        background: bg,
+        color: text,
+        fontSize: '0.875rem',
+        lineHeight: '1.6',
+        whiteSpace: 'nowrap',
+      }}
     >
       {team}
     </span>
@@ -44,9 +50,15 @@ const ShiftSelect = ({ value, teams, onChange }) => {
       onChange={(e) => onChange(e.target.value || null)}
     >
       <option value="">—</option>
-      {isOrphaned && <option value={strVal} disabled>(deleted team)</option>}
+      {isOrphaned && (
+        <option value={strVal} disabled>
+          (deleted team)
+        </option>
+      )}
       {teams.map((t) => (
-        <option key={t.id} value={String(t.id)}>{t.name}</option>
+        <option key={t.id} value={String(t.id)}>
+          {t.name}
+        </option>
       ))}
     </select>
   )
@@ -54,7 +66,10 @@ const ShiftSelect = ({ value, teams, onChange }) => {
 
 const isToday = (dateStr) => {
   const today = new Date()
-  return dateStr === `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  return (
+    dateStr ===
+    `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  )
 }
 
 const isWeekend = (dateStr) => {
@@ -71,7 +86,10 @@ const RosterCard = ({ monthBlock, editMode = false, teams = [], allShifts = [], 
   // Use allShifts for row order; fall back to built-ins if empty
   const shiftDefs = allShifts.length
     ? allShifts
-    : [{ slug: 'day', name: 'Day' }, { slug: 'night', name: 'Night' }]
+    : [
+        { slug: 'day', name: 'Day' },
+        { slug: 'night', name: 'Night' },
+      ]
 
   const cellBase = {
     borderRight: '1px solid var(--cui-border-color)',
@@ -146,21 +164,30 @@ const RosterCard = ({ monthBlock, editMode = false, teams = [], allShifts = [], 
               {allRows.map((row) => (
                 <th
                   key={row.date}
-                  style={{ ...headerCellStyle(row.date), borderBottom: '1px solid var(--cui-border-color)' }}
+                  style={{
+                    ...headerCellStyle(row.date),
+                    borderBottom: '1px solid var(--cui-border-color)',
+                  }}
                 >
-                  <div style={{
-                    fontSize: '0.75rem', fontWeight: 600,
-                    color: isToday(row.date) ? '#2563eb' : 'var(--cui-secondary-color)',
-                    textTransform: 'uppercase', letterSpacing: '0.04em',
-                  }}>
+                  <div
+                    style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      color: isToday(row.date) ? '#2563eb' : 'var(--cui-secondary-color)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                    }}
+                  >
                     {row.dayName.slice(0, 3)}
                   </div>
-                  <div style={{
-                    fontSize: '0.95rem',
-                    fontWeight: isToday(row.date) ? 700 : 500,
-                    color: isToday(row.date) ? '#1d4ed8' : 'inherit',
-                    lineHeight: 1.2,
-                  }}>
+                  <div
+                    style={{
+                      fontSize: '0.95rem',
+                      fontWeight: isToday(row.date) ? 700 : 500,
+                      color: isToday(row.date) ? '#1d4ed8' : 'inherit',
+                      lineHeight: 1.2,
+                    }}
+                  >
                     {row.date.slice(8)}
                   </div>
                 </th>
@@ -173,10 +200,25 @@ const RosterCard = ({ monthBlock, editMode = false, teams = [], allShifts = [], 
               const isLast = si === shiftDefs.length - 1
               return (
                 <tr key={shiftDef.slug}>
-                  <td style={{ ...labelCellStyle, ...(isLast ? {} : { borderBottom: '1px solid var(--cui-border-color)' }) }}>
+                  <td
+                    style={{
+                      ...labelCellStyle,
+                      ...(isLast ? {} : { borderBottom: '1px solid var(--cui-border-color)' }),
+                    }}
+                  >
                     <div className="d-flex align-items-center gap-1">
                       {shiftDef.builtin === false && (
-                        <span title="Custom shift" style={{ width: 7, height: 7, borderRadius: '50%', background: '#f59e0b', display: 'inline-block', flexShrink: 0 }} />
+                        <span
+                          title="Custom shift"
+                          style={{
+                            width: 7,
+                            height: 7,
+                            borderRadius: '50%',
+                            background: '#f59e0b',
+                            display: 'inline-block',
+                            flexShrink: 0,
+                          }}
+                        />
                       )}
                       {shiftDef.name}
                     </div>

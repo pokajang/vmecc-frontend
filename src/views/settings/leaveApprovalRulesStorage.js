@@ -19,33 +19,63 @@ const DEFAULT_OPTIONS = {
   enforceDistinctApprovers: false,
 }
 
-const createDefaultRule = (id, applicantRole, reviewRole, recommendRole, approveRole, active = true) => ({
-  id, applicantRole, reviewRole, recommendRole, approveRole, active,
+const createDefaultRule = (
+  id,
+  applicantRole,
+  reviewRole,
+  recommendRole,
+  approveRole,
+  active = true,
+) => ({
+  id,
+  applicantRole,
+  reviewRole,
+  recommendRole,
+  approveRole,
+  active,
 })
 
 export const DEFAULT_LEAVE_APPROVAL_RULES = {
   rules: [
-    createDefaultRule('leave-rule-trt',  'Tactical Response Team',       'Assistant Incident Commander', 'Incident Commander', 'Client Contract Manager'),
-    createDefaultRule('leave-rule-aic',  'Assistant Incident Commander',  'Incident Commander',           'Contract Manager',   'Client Contract Manager'),
-    createDefaultRule('leave-rule-ic',   'Incident Commander',            'Contract Manager',             'Human Resource',     'Client Contract Manager'),
+    createDefaultRule(
+      'leave-rule-trt',
+      'Tactical Response Team',
+      'Assistant Incident Commander',
+      'Incident Commander',
+      'Client Contract Manager',
+    ),
+    createDefaultRule(
+      'leave-rule-aic',
+      'Assistant Incident Commander',
+      'Incident Commander',
+      'Contract Manager',
+      'Client Contract Manager',
+    ),
+    createDefaultRule(
+      'leave-rule-ic',
+      'Incident Commander',
+      'Contract Manager',
+      'Human Resource',
+      'Client Contract Manager',
+    ),
   ],
   fallback: DEFAULT_FALLBACK_RULE,
-  options:  DEFAULT_OPTIONS,
+  options: DEFAULT_OPTIONS,
 }
 
-const isRole      = (value) => ROLE_OPTIONS.includes(value)
+const isRole = (value) => ROLE_OPTIONS.includes(value)
 const clonePolicy = (policy) => JSON.parse(JSON.stringify(policy))
-const pickRole    = (role, fallbackRole) => (isRole(role) ? role : fallbackRole)
+const pickRole = (role, fallbackRole) => (isRole(role) ? role : fallbackRole)
 
 const normalizeRule = (rule, index) => {
   const fallback = DEFAULT_FALLBACK_RULE
   return {
-    id:            String(rule?.id || `leave-rule-${index + 1}`),
+    id: String(rule?.id || `leave-rule-${index + 1}`),
     applicantRole: pickRole(rule?.applicantRole, ''),
-    reviewRole:    pickRole(rule?.reviewRole,    fallback.reviewRole),
+    reviewRole: pickRole(rule?.reviewRole, fallback.reviewRole),
     recommendRole: pickRole(rule?.recommendRole, fallback.recommendRole),
-    approveRole:   pickRole(rule?.approveRole,   fallback.approveRole),
-    active:        rule?.active !== false,
+    approveRole: pickRole(rule?.approveRole, fallback.approveRole),
+    active: rule?.active !== false,
   }
 }
 
@@ -56,21 +86,25 @@ export const normalizeLeaveApprovalRules = (value) => {
   const sourceRules = Array.isArray(value.rules) ? value.rules : base.rules
   const normalizedRules = sourceRules.map(normalizeRule).filter((rule) => rule.applicantRole)
 
-  const fallbackSource = (value.fallback && typeof value.fallback === 'object' && !Array.isArray(value.fallback))
-    ? value.fallback : base.fallback
+  const fallbackSource =
+    value.fallback && typeof value.fallback === 'object' && !Array.isArray(value.fallback)
+      ? value.fallback
+      : base.fallback
 
-  const optionsSource = (value.options && typeof value.options === 'object' && !Array.isArray(value.options))
-    ? value.options : base.options
+  const optionsSource =
+    value.options && typeof value.options === 'object' && !Array.isArray(value.options)
+      ? value.options
+      : base.options
 
   return {
     rules: normalizedRules.length > 0 ? normalizedRules : base.rules,
     fallback: {
-      reviewRole:    pickRole(fallbackSource.reviewRole,    base.fallback.reviewRole),
+      reviewRole: pickRole(fallbackSource.reviewRole, base.fallback.reviewRole),
       recommendRole: pickRole(fallbackSource.recommendRole, base.fallback.recommendRole),
-      approveRole:   pickRole(fallbackSource.approveRole,   base.fallback.approveRole),
+      approveRole: pickRole(fallbackSource.approveRole, base.fallback.approveRole),
     },
     options: {
-      requireRecommendation:    optionsSource.requireRecommendation    !== false,
+      requireRecommendation: optionsSource.requireRecommendation !== false,
       enforceDistinctApprovers: Boolean(optionsSource.enforceDistinctApprovers),
     },
   }

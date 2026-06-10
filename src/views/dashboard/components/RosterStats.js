@@ -1,13 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import {
-  CCard,
-  CCardBody,
-  CCardHeader,
-  CCol,
-  CRow,
-  CWidgetStatsA,
-} from '@coreui/react'
+import { CCard, CCardBody, CCardHeader, CCol, CRow, CWidgetStatsA } from '@coreui/react'
 import { CChartBar, CChartLine } from '@coreui/react-chartjs'
 import { getStyle } from '@coreui/utils'
 import {
@@ -46,11 +39,15 @@ export const RosterKpiTiles = ({ stats }) => {
           color="success"
           value={
             <>
-              {stats?.teamsOnDuty ?? 0}{' '}
-              <span className="fs-6 fw-normal">teams</span>
+              {stats?.teamsOnDuty ?? 0} <span className="fs-6 fw-normal">teams</span>
             </>
           }
-          title={<TileTitle>Teams on Duty<PeriodLabel label="Right Now" /></TileTitle>}
+          title={
+            <TileTitle>
+              Teams on Duty
+              <PeriodLabel label="Right Now" />
+            </TileTitle>
+          }
           chart={sparkline(getStyle('--cui-success'), true)}
         />
       </CCol>
@@ -62,11 +59,15 @@ export const RosterKpiTiles = ({ stats }) => {
           color="warning"
           value={
             <>
-              {stats?.draftsPendingPublish ?? 0}{' '}
-              <span className="fs-6 fw-normal">days</span>
+              {stats?.draftsPendingPublish ?? 0} <span className="fs-6 fw-normal">days</span>
             </>
           }
-          title={<TileTitle>Draft Roster Days<PeriodLabel label="Unpublished" /></TileTitle>}
+          title={
+            <TileTitle>
+              Draft Roster Days
+              <PeriodLabel label="Unpublished" />
+            </TileTitle>
+          }
           chart={sparkline(getStyle('--cui-warning'))}
         />
       </CCol>
@@ -138,10 +139,10 @@ RosterActivityChart.propTypes = {
 // ─── Zone 4 — per-team shift breakdown table ──────────────────────────────────
 
 const TEAM_COLORS = {
-  alpha:   { bg: '#eef2ff', text: '#4338ca' },
-  bravo:   { bg: '#ecfdf5', text: '#059669' },
+  alpha: { bg: '#eef2ff', text: '#4338ca' },
+  bravo: { bg: '#ecfdf5', text: '#059669' },
   charlie: { bg: '#fffbeb', text: '#d97706' },
-  delta:   { bg: '#fff1f2', text: '#e11d48' },
+  delta: { bg: '#fff1f2', text: '#e11d48' },
 }
 
 const getTeamColor = (name) => {
@@ -156,7 +157,9 @@ export const RosterTeamBreakdown = ({ stats }) => {
     <CCard className="h-100">
       <CCardHeader>
         <div className="fw-semibold">Team Shift Summary</div>
-        <div className="text-body-secondary small mt-1">Shifts covered per team · Current period</div>
+        <div className="text-body-secondary small mt-1">
+          Shifts covered per team · Current period
+        </div>
       </CCardHeader>
       <CCardBody className="p-0">
         <div className="table-responsive">
@@ -199,16 +202,44 @@ export const RosterTeamBreakdown = ({ stats }) => {
                         {team.name}
                       </span>
                     </td>
-                    <td style={{ padding: '10px 14px', textAlign: 'center', color: 'var(--cui-secondary-color)', fontSize: '0.875rem' }}>
+                    <td
+                      style={{
+                        padding: '10px 14px',
+                        textAlign: 'center',
+                        color: 'var(--cui-secondary-color)',
+                        fontSize: '0.875rem',
+                      }}
+                    >
                       {team.memberCount}
                     </td>
-                    <td style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 500, fontSize: '0.875rem' }}>
+                    <td
+                      style={{
+                        padding: '10px 14px',
+                        textAlign: 'center',
+                        fontWeight: 500,
+                        fontSize: '0.875rem',
+                      }}
+                    >
                       {team.dayShifts}
                     </td>
-                    <td style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 500, fontSize: '0.875rem' }}>
+                    <td
+                      style={{
+                        padding: '10px 14px',
+                        textAlign: 'center',
+                        fontWeight: 500,
+                        fontSize: '0.875rem',
+                      }}
+                    >
                       {team.nightShifts}
                     </td>
-                    <td style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, fontSize: '0.875rem' }}>
+                    <td
+                      style={{
+                        padding: '10px 14px',
+                        textAlign: 'center',
+                        fontWeight: 700,
+                        fontSize: '0.875rem',
+                      }}
+                    >
                       {team.totalShifts}
                     </td>
                   </tr>

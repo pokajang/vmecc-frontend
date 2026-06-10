@@ -44,11 +44,11 @@ export const sparklineDataset = (color, filled = false) => ({
 // One source of truth for module accent colors.
 // Referenced in Dashboard.js (section headers) and stats components (gradients, chart fills).
 export const MODULE_ACCENTS = {
-  payroll:    { base: '#1b7a4a', dark: '#145c38', sparkline: '#6fcf97' },
-  overtime:   { base: '#b45309', dark: '#92400e', sparkline: '#fcd34d' },
-  leave:      { base: '#0e7490', dark: '#0a5a6e', sparkline: '#67e8f9' },
-  roster:     { base: '#4f46e5', dark: '#3730a3', sparkline: '#a5b4fc' },
-  reports:    { base: '#be185d', dark: '#9d174d', sparkline: '#f9a8d4' },
+  payroll: { base: '#1b7a4a', dark: '#145c38', sparkline: '#6fcf97' },
+  overtime: { base: '#b45309', dark: '#92400e', sparkline: '#fcd34d' },
+  leave: { base: '#0e7490', dark: '#0a5a6e', sparkline: '#67e8f9' },
+  roster: { base: '#4f46e5', dark: '#3730a3', sparkline: '#a5b4fc' },
+  reports: { base: '#be185d', dark: '#9d174d', sparkline: '#f9a8d4' },
   inspection: { base: '#7c3aed', dark: '#5b21b6', sparkline: '#c4b5fd' },
 }
 

@@ -1,5 +1,15 @@
 import React, { memo, useMemo, useState } from 'react'
-import { CBadge, CButton, CFormCheck, CFormInput, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
+import {
+  CBadge,
+  CButton,
+  CFormCheck,
+  CFormInput,
+  CModal,
+  CModalBody,
+  CModalFooter,
+  CModalHeader,
+  CModalTitle,
+} from '@coreui/react'
 import { Trash2 } from 'lucide-react'
 import TableLoader from 'src/components/TableLoader'
 import { formatChatTime, getDraftPreview, getInitials, getPreview } from './messageUtils'
@@ -78,7 +88,9 @@ const ChatList = ({
             const timeLabel = formatChatTime(thread.last_message?.created_at)
             const initials = getInitials(thread.user?.name || thread.user?.email || '')
             const unread = thread.unread_count || 0
-            const roleLabel = ROLE_ABBREVIATIONS[getPrimaryRoleLabel(thread.user)] ?? getPrimaryRoleLabel(thread.user)
+            const roleLabel =
+              ROLE_ABBREVIATIONS[getPrimaryRoleLabel(thread.user)] ??
+              getPrimaryRoleLabel(thread.user)
             return (
               <div
                 key={thread.user?.id || idx}
@@ -106,7 +118,10 @@ const ChatList = ({
                         {thread.user?.name || thread.user?.email || 'Unknown'}
                       </span>
                       {roleLabel && (
-                        <span className="text-muted small fw-normal flex-shrink-0" style={{ fontSize: '0.7rem' }}>
+                        <span
+                          className="text-muted small fw-normal flex-shrink-0"
+                          style={{ fontSize: '0.7rem' }}
+                        >
                           {roleLabel}
                         </span>
                       )}
@@ -114,14 +129,22 @@ const ChatList = ({
                     <span className="text-muted small flex-shrink-0">{timeLabel}</span>
                   </div>
                   <div className={`text-muted small mt-1 ${unread ? 'fw-semibold text-body' : ''}`}>
-                    <span className={hasDraft ? 'text-danger fw-semibold' : lastFromMe ? 'fw-semibold' : ''}>
+                    <span
+                      className={
+                        hasDraft ? 'text-danger fw-semibold' : lastFromMe ? 'fw-semibold' : ''
+                      }
+                    >
                       {prefix}:
                     </span>{' '}
                     {preview}
                   </div>
                 </div>
                 <div className="ms-2 d-flex align-items-center gap-1 flex-shrink-0">
-                  {unread > 0 && !isActive && <CBadge color="light" className="sidebar-message-badge">{unread}</CBadge>}
+                  {unread > 0 && !isActive && (
+                    <CBadge color="light" className="sidebar-message-badge">
+                      {unread}
+                    </CBadge>
+                  )}
                   <button
                     type="button"
                     className="btn btn-link p-0 text-muted chat-thread-delete-btn"
@@ -144,11 +167,7 @@ const ChatList = ({
         </div>
       )}
 
-      <CModal
-        visible={!!modalThread}
-        onClose={() => setModalThread(null)}
-        alignment="center"
-      >
+      <CModal visible={!!modalThread} onClose={() => setModalThread(null)} alignment="center">
         <CModalHeader>
           <CModalTitle>Delete conversation</CModalTitle>
         </CModalHeader>
@@ -176,11 +195,7 @@ const ChatList = ({
           </div>
         </CModalBody>
         <CModalFooter>
-          <CButton
-            color="secondary"
-            variant="outline"
-            onClick={() => setModalThread(null)}
-          >
+          <CButton color="secondary" variant="outline" onClick={() => setModalThread(null)}>
             Cancel
           </CButton>
           <CButton

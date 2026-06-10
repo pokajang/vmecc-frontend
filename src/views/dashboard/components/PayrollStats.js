@@ -59,7 +59,12 @@ export const PayrollKpiTiles = ({ stats, periodLabel }) => {
           className="h-100"
           color="warning"
           value={stats?.pendingApprovals ?? 0}
-          title={<TileTitle>Pending Claim Approvals<PeriodLabel label={pl} /></TileTitle>}
+          title={
+            <TileTitle>
+              Pending Claim Approvals
+              <PeriodLabel label={pl} />
+            </TileTitle>
+          }
           chart={sparkline(getStyle('--cui-warning'))}
         />
       </CCol>
@@ -71,8 +76,7 @@ export const PayrollKpiTiles = ({ stats, periodLabel }) => {
           color="danger"
           value={
             <>
-              {stats?.approvedUnpaidCount ?? 0}{' '}
-              <span className="fs-6 fw-normal">claims</span>
+              {stats?.approvedUnpaidCount ?? 0} <span className="fs-6 fw-normal">claims</span>
             </>
           }
           title={
@@ -99,7 +103,12 @@ export const PayrollKpiTiles = ({ stats, periodLabel }) => {
               <span className="fs-6 fw-normal">salary claims</span>
             </>
           }
-          title={<TileTitle>Incomplete Salary Contracts<PeriodLabel label="Current" /></TileTitle>}
+          title={
+            <TileTitle>
+              Incomplete Salary Contracts
+              <PeriodLabel label="Current" />
+            </TileTitle>
+          }
           chart={sparkline(getStyle('--cui-primary'), true)}
         />
       </CCol>
@@ -111,11 +120,15 @@ export const PayrollKpiTiles = ({ stats, periodLabel }) => {
           style={{ background: `linear-gradient(135deg, ${ACCENT} 0%, ${ACCENT_DARK} 100%)` }}
           value={
             <>
-              {stats?.staffWithOpenClaims ?? 0}{' '}
-              <span className="fs-6 fw-normal">staff</span>
+              {stats?.staffWithOpenClaims ?? 0} <span className="fs-6 fw-normal">staff</span>
             </>
           }
-          title={<TileTitle>Staff with Open Claims<PeriodLabel label={pl} /></TileTitle>}
+          title={
+            <TileTitle>
+              Staff with Open Claims
+              <PeriodLabel label={pl} />
+            </TileTitle>
+          }
           chart={sparkline(ACCENT_SPARK, true)}
         />
       </CCol>

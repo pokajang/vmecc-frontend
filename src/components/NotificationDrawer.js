@@ -6,7 +6,9 @@ const NotificationDrawer = ({ open, onClose, title, count, countColor, children 
 
   useEffect(() => {
     if (!open) return
-    const handleKey = (e) => { if (e.key === 'Escape') onClose() }
+    const handleKey = (e) => {
+      if (e.key === 'Escape') onClose()
+    }
     document.addEventListener('keydown', handleKey)
     return () => document.removeEventListener('keydown', handleKey)
   }, [open, onClose])
@@ -17,7 +19,9 @@ const NotificationDrawer = ({ open, onClose, title, count, countColor, children 
 
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : ''
-    return () => { document.body.style.overflow = '' }
+    return () => {
+      document.body.style.overflow = ''
+    }
   }, [open])
 
   return (
@@ -57,9 +61,7 @@ const NotificationDrawer = ({ open, onClose, title, count, countColor, children 
         </div>
 
         {/* Scrollable body */}
-        <div className="notification-drawer-body">
-          {children}
-        </div>
+        <div className="notification-drawer-body">{children}</div>
       </div>
     </>
   )

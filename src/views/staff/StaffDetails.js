@@ -333,25 +333,27 @@ const StaffDetails = () => {
                                 <TableLoader />
                               </CTableDataCell>
                             </CTableRow>
-                          ) : visibleRows.map((user, index) => (
-                            <CTableRow
-                              key={user.id}
-                              role="button"
-                              className="cursor-pointer"
-                              onClick={() => goProfile(user.id)}
-                            >
-                              <CTableDataCell className="text-center">{index + 1}</CTableDataCell>
-                              <CTableDataCell>{user.name || '-'}</CTableDataCell>
-                              <CTableDataCell>{getPrimaryRoleLabel(user) || '-'}</CTableDataCell>
-                              <CTableDataCell>{user.phone || '-'}</CTableDataCell>
-                              <CTableDataCell>{renderEmergency(user)}</CTableDataCell>
-                              <CTableDataCell>{user.team || '-'}</CTableDataCell>
-                              <CTableDataCell>{getStatusLabel(user)}</CTableDataCell>
-                              <CTableDataCell className="text-center align-middle">
-                                <RowActions items={getActionItems(user)} />
-                              </CTableDataCell>
-                            </CTableRow>
-                          ))}
+                          ) : (
+                            visibleRows.map((user, index) => (
+                              <CTableRow
+                                key={user.id}
+                                role="button"
+                                className="cursor-pointer"
+                                onClick={() => goProfile(user.id)}
+                              >
+                                <CTableDataCell className="text-center">{index + 1}</CTableDataCell>
+                                <CTableDataCell>{user.name || '-'}</CTableDataCell>
+                                <CTableDataCell>{getPrimaryRoleLabel(user) || '-'}</CTableDataCell>
+                                <CTableDataCell>{user.phone || '-'}</CTableDataCell>
+                                <CTableDataCell>{renderEmergency(user)}</CTableDataCell>
+                                <CTableDataCell>{user.team || '-'}</CTableDataCell>
+                                <CTableDataCell>{getStatusLabel(user)}</CTableDataCell>
+                                <CTableDataCell className="text-center align-middle">
+                                  <RowActions items={getActionItems(user)} />
+                                </CTableDataCell>
+                              </CTableRow>
+                            ))
+                          )}
                         </CTableBody>
                       </CTable>
                     </div>
@@ -360,30 +362,32 @@ const StaffDetails = () => {
                   <div className="d-md-none">
                     {loading ? (
                       <TableLoader />
-                    ) : visibleRows.map((user, index) => (
-                      <CCard
-                        key={user.id}
-                        className="mb-3 cursor-pointer"
-                        role="button"
-                        onClick={() => goProfile(user.id)}
-                      >
-                        <CCardBody className="d-flex justify-content-between align-items-start gap-3">
-                          <div>
-                            <div className="fw-semibold d-flex justify-content-between align-items-center gap-2">
-                              <span>{user.name || '-'}</span>
-                              <span className="text-muted small">
-                                {getPrimaryRoleLabel(user) || '-'}
-                              </span>
+                    ) : (
+                      visibleRows.map((user, index) => (
+                        <CCard
+                          key={user.id}
+                          className="mb-3 cursor-pointer"
+                          role="button"
+                          onClick={() => goProfile(user.id)}
+                        >
+                          <CCardBody className="d-flex justify-content-between align-items-start gap-3">
+                            <div>
+                              <div className="fw-semibold d-flex justify-content-between align-items-center gap-2">
+                                <span>{user.name || '-'}</span>
+                                <span className="text-muted small">
+                                  {getPrimaryRoleLabel(user) || '-'}
+                                </span>
+                              </div>
+                              <div className="text-muted small">{user.phone || '-'}</div>
+                              <div className="text-muted small">{renderEmergency(user)}</div>
+                              <div className="text-muted small">{user.team || '-'}</div>
+                              <div className="text-muted small">{getStatusLabel(user)}</div>
                             </div>
-                            <div className="text-muted small">{user.phone || '-'}</div>
-                            <div className="text-muted small">{renderEmergency(user)}</div>
-                            <div className="text-muted small">{user.team || '-'}</div>
-                            <div className="text-muted small">{getStatusLabel(user)}</div>
-                          </div>
-                          <RowActions items={getActionItems(user)} />
-                        </CCardBody>
-                      </CCard>
-                    ))}
+                            <RowActions items={getActionItems(user)} />
+                          </CCardBody>
+                        </CCard>
+                      ))
+                    )}
                   </div>
 
                   <DataTableFooter

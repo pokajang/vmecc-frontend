@@ -63,7 +63,9 @@ const TypeDurationSummaryChips = ({
   }
 
   return (
-    <div className={`d-flex flex-wrap align-items-center gap-2 ${justifyClass} ${className}`.trim()}>
+    <div
+      className={`d-flex flex-wrap align-items-center gap-2 ${justifyClass} ${className}`.trim()}
+    >
       {summaryItems.map((item) => {
         const typeVisual = TYPE_VISUAL_MAP[item.overtimeType] || TYPE_VISUAL_MAP.default
         const Icon = typeVisual.icon

@@ -52,7 +52,12 @@ export const OvertimeKpiTiles = ({ stats, periodLabel }) => {
           className="h-100"
           color="warning"
           value={stats?.pendingApprovals ?? 0}
-          title={<TileTitle>Pending OT Approvals<PeriodLabel label={pl} /></TileTitle>}
+          title={
+            <TileTitle>
+              Pending OT Approvals
+              <PeriodLabel label={pl} />
+            </TileTitle>
+          }
           chart={sparkline(getStyle('--cui-warning'))}
         />
       </CCol>
@@ -64,11 +69,15 @@ export const OvertimeKpiTiles = ({ stats, periodLabel }) => {
           color="success"
           value={
             <>
-              {stats?.approvedHoursThisPeriod ?? 0}{' '}
-              <span className="fs-6 fw-normal">hrs</span>
+              {stats?.approvedHoursThisPeriod ?? 0} <span className="fs-6 fw-normal">hrs</span>
             </>
           }
-          title={<TileTitle>Approved OT Hours<PeriodLabel label={pl} /></TileTitle>}
+          title={
+            <TileTitle>
+              Approved OT Hours
+              <PeriodLabel label={pl} />
+            </TileTitle>
+          }
           chart={sparkline(getStyle('--cui-success'), true)}
         />
       </CCol>
@@ -80,11 +89,15 @@ export const OvertimeKpiTiles = ({ stats, periodLabel }) => {
           color="primary"
           value={
             <>
-              {stats?.staffWithOpenRequests ?? 0}{' '}
-              <span className="fs-6 fw-normal">staff</span>
+              {stats?.staffWithOpenRequests ?? 0} <span className="fs-6 fw-normal">staff</span>
             </>
           }
-          title={<TileTitle>Staff with Open OT<PeriodLabel label={pl} /></TileTitle>}
+          title={
+            <TileTitle>
+              Staff with Open OT
+              <PeriodLabel label={pl} />
+            </TileTitle>
+          }
           chart={sparkline(getStyle('--cui-primary'), true)}
         />
       </CCol>
@@ -96,11 +109,15 @@ export const OvertimeKpiTiles = ({ stats, periodLabel }) => {
           style={{ background: `linear-gradient(135deg, ${ACCENT} 0%, ${ACCENT_DARK} 100%)` }}
           value={
             <>
-              {stats?.submittedThisPeriod ?? 0}{' '}
-              <span className="fs-6 fw-normal">requests</span>
+              {stats?.submittedThisPeriod ?? 0} <span className="fs-6 fw-normal">requests</span>
             </>
           }
-          title={<TileTitle>OT Submitted<PeriodLabel label={pl} /></TileTitle>}
+          title={
+            <TileTitle>
+              OT Submitted
+              <PeriodLabel label={pl} />
+            </TileTitle>
+          }
           chart={sparkline(ACCENT_SPARK, true)}
         />
       </CCol>
@@ -225,9 +242,7 @@ export const OvertimeTeamCard = ({ stats }) => {
 
 OvertimeTeamCard.propTypes = {
   stats: PropTypes.shape({
-    byTeam: PropTypes.arrayOf(
-      PropTypes.shape({ team: PropTypes.string, count: PropTypes.number }),
-    ),
+    byTeam: PropTypes.arrayOf(PropTypes.shape({ team: PropTypes.string, count: PropTypes.number })),
     monthlyTrend: PropTypes.arrayOf(
       PropTypes.shape({ month: PropTypes.string, count: PropTypes.number }),
     ),
@@ -411,9 +426,7 @@ OvertimeStatusBreakdown.propTypes = {
       rejected: PropTypes.number,
       cancelled: PropTypes.number,
     }),
-    byTeam: PropTypes.arrayOf(
-      PropTypes.shape({ team: PropTypes.string, count: PropTypes.number }),
-    ),
+    byTeam: PropTypes.arrayOf(PropTypes.shape({ team: PropTypes.string, count: PropTypes.number })),
   }),
   periodLabel: PropTypes.string,
 }

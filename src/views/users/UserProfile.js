@@ -80,7 +80,16 @@ const getAuditDetails = (log) => {
 
 // --- modal state reducer ---
 
-const MODAL_KEYS = ['deactivate', 'activate', 'reset', 'delete', 'restore', 'lock', 'unlock', 'role']
+const MODAL_KEYS = [
+  'deactivate',
+  'activate',
+  'reset',
+  'delete',
+  'restore',
+  'lock',
+  'unlock',
+  'role',
+]
 const initialModalState = Object.fromEntries(MODAL_KEYS.map((k) => [k, false]))
 
 const modalReducer = (state, action) => {
@@ -468,13 +477,15 @@ const UserProfile = () => {
                   : undefined
             }
           >
-            {statusUpdating
-              ? <ButtonLoader label="Updating..." />
-              : user.deleted_at
-                ? 'Deleted'
-                : user.status === 'Active'
-                  ? 'Deactivate'
-                  : 'Activate'}
+            {statusUpdating ? (
+              <ButtonLoader label="Updating..." />
+            ) : user.deleted_at ? (
+              'Deleted'
+            ) : user.status === 'Active' ? (
+              'Deactivate'
+            ) : (
+              'Activate'
+            )}
           </CButton>
           <CDropdown alignment="end">
             <CDropdownToggle color="secondary" variant="outline" size="sm">

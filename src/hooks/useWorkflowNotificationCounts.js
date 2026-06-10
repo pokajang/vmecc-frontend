@@ -9,7 +9,10 @@ const useWorkflowNotificationCounts = () => {
   const [unread, setUnread] = useState(0)
 
   const fetchCounts = useCallback(async () => {
-    if (!user?.id) { setUnread(0); return }
+    if (!user?.id) {
+      setUnread(0)
+      return
+    }
     try {
       const result = await getWorkflowUnreadCount()
       setUnread(Number(result?.count || 0) || 0)

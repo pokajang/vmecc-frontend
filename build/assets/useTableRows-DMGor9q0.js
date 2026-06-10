@@ -1,0 +1,1 @@
+import{r as e}from"./index-BAoqeITW.js";const c=5,l="all",u=o=>Array.isArray(o)?o:[],i=(o,r=c)=>{const[s,n]=e.useState(r),t=u(o),a=e.useMemo(()=>s===l||s>=t.length?t:t.slice(0,s),[s,t]);return{rowsToShow:s,setRowsToShow:n,visibleRows:a}};export{i as u};

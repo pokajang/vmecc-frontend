@@ -11,8 +11,8 @@
  */
 
 const CHANNEL_NAME = 'vmecc_messages'
-const HEARTBEAT_INTERVAL = 4000  // leader announces itself every 4s
-const LEADER_TIMEOUT = 10000     // follower waits 10s before claiming leadership
+const HEARTBEAT_INTERVAL = 4000 // leader announces itself every 4s
+const LEADER_TIMEOUT = 10000 // follower waits 10s before claiming leadership
 
 const STORAGE_KEY = 'vmecc_msg_leader_ts'
 
@@ -30,7 +30,9 @@ const getChannel = () => {
       const { type, data } = event.data || {}
       if (type === 'heartbeat') {
         // Another tab is leader — record its timestamp and stay as follower
-        try { localStorage.setItem(STORAGE_KEY, String(Date.now())) } catch {}
+        try {
+          localStorage.setItem(STORAGE_KEY, String(Date.now()))
+        } catch {}
         demoteToFollower()
       }
       if (type === 'threads' && !isLeader && onThreadsUpdate) {
@@ -44,13 +46,18 @@ const getChannel = () => {
 const startHeartbeat = () => {
   stopHeartbeat()
   heartbeatTimer = setInterval(() => {
-    try { localStorage.setItem(STORAGE_KEY, String(Date.now())) } catch {}
+    try {
+      localStorage.setItem(STORAGE_KEY, String(Date.now()))
+    } catch {}
     getChannel()?.postMessage({ type: 'heartbeat' })
   }, HEARTBEAT_INTERVAL)
 }
 
 const stopHeartbeat = () => {
-  if (heartbeatTimer) { clearInterval(heartbeatTimer); heartbeatTimer = null }
+  if (heartbeatTimer) {
+    clearInterval(heartbeatTimer)
+    heartbeatTimer = null
+  }
 }
 
 const promoteToLeader = () => {
@@ -87,7 +94,10 @@ const scheduleLeaderCheck = () => {
 }
 
 const stopLeaderCheck = () => {
-  if (leaderCheckTimer) { clearTimeout(leaderCheckTimer); leaderCheckTimer = null }
+  if (leaderCheckTimer) {
+    clearTimeout(leaderCheckTimer)
+    leaderCheckTimer = null
+  }
 }
 
 export const initMessageLeader = (onLeaderChange, onThreadsReceived) => {

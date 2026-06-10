@@ -4,10 +4,10 @@ import charlieImg from 'src/assets/images/teams/charlie.webp'
 import deltaImg from 'src/assets/images/teams/delta.webp'
 
 export const PRESET_IMAGES = [
-  { key: 'alpha',   label: 'Alpha',   src: alphaImg },
-  { key: 'bravo',   label: 'Bravo',   src: bravoImg },
+  { key: 'alpha', label: 'Alpha', src: alphaImg },
+  { key: 'bravo', label: 'Bravo', src: bravoImg },
   { key: 'charlie', label: 'Charlie', src: charlieImg },
-  { key: 'delta',   label: 'Delta',   src: deltaImg },
+  { key: 'delta', label: 'Delta', src: deltaImg },
 ]
 
 // Prefix used to identify preset keys stored in image_url

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
   CBadge,
   CButton,
@@ -22,13 +22,7 @@ import DataTableFooter from 'src/components/DataTableFooter'
 import TablePeriodSelect from 'src/components/TablePeriodSelect'
 import useTableRows from 'src/hooks/useTableRows'
 import { exportWorkbook } from 'src/utils/exportXlsx'
-import {
-  EMPTY,
-  formatDateTime,
-  formatDaysAgo,
-  getRecordTime,
-  renderStatus,
-} from 'src/utils/users'
+import { EMPTY, formatDateTime, formatDaysAgo, getRecordTime, renderStatus } from 'src/utils/users'
 
 const renderDateWithAgo = (value) => {
   const formatted = formatDateTime(value)
@@ -52,7 +46,8 @@ const LoginRecordsPanel = ({ records, lastLoginAt }) => {
   const filteredRecords = useMemo(() => {
     const term = loginSearch.trim().toLowerCase()
     const now = new Date()
-    const rangeDays = loginRange === '7' ? 7 : loginRange === '30' ? 30 : loginRange === '90' ? 90 : null
+    const rangeDays =
+      loginRange === '7' ? 7 : loginRange === '30' ? 30 : loginRange === '90' ? 90 : null
 
     return (records || []).filter((record) => {
       if (loginStatus !== 'All') {
@@ -100,9 +95,32 @@ const LoginRecordsPanel = ({ records, lastLoginAt }) => {
     })
   }
 
-  useEffect(() => {
+  const handleLoginSearchChange = (event) => {
+    setLoginSearch(event.target.value)
     setOpenDetail(null)
-  }, [loginSearch, loginStatus, loginRange, rowsToShow])
+  }
+
+  const handleLoginStatusChange = (event) => {
+    setLoginStatus(event.target.value)
+    setOpenDetail(null)
+  }
+
+  const handleLoginRangeChange = (value) => {
+    setLoginRange(value)
+    setOpenDetail(null)
+  }
+
+  const handleRowsToShowChange = (value) => {
+    setRowsToShow(value)
+    setOpenDetail(null)
+  }
+
+  const clearLoginFilters = () => {
+    setLoginSearch('')
+    setLoginStatus('All')
+    setLoginRange('all')
+    setOpenDetail(null)
+  }
 
   return (
     <CCard>
@@ -145,15 +163,11 @@ const LoginRecordsPanel = ({ records, lastLoginAt }) => {
               size="sm"
               placeholder="Search IP, device, reason"
               value={loginSearch}
-              onChange={(e) => setLoginSearch(e.target.value)}
+              onChange={handleLoginSearchChange}
             />
           </CCol>
           <CCol md={2} className="d-none d-md-block">
-            <CFormSelect
-              size="sm"
-              value={loginStatus}
-              onChange={(e) => setLoginStatus(e.target.value)}
-            >
+            <CFormSelect size="sm" value={loginStatus} onChange={handleLoginStatusChange}>
               <option value="All">All status</option>
               <option value="Success">Success</option>
               <option value="Failed">Failed</option>
@@ -162,7 +176,7 @@ const LoginRecordsPanel = ({ records, lastLoginAt }) => {
           <CCol md={2} className="d-none d-md-block">
             <TablePeriodSelect
               value={loginRange}
-              onChange={setLoginRange}
+              onChange={handleLoginRangeChange}
               include24Hours={false}
               includeCustom={false}
               includeAll={true}
@@ -175,11 +189,7 @@ const LoginRecordsPanel = ({ records, lastLoginAt }) => {
               color="secondary"
               variant="outline"
               className="w-100"
-              onClick={() => {
-                setLoginSearch('')
-                setLoginStatus('All')
-                setLoginRange('all')
-              }}
+              onClick={clearLoginFilters}
             >
               Clear
             </CButton>
@@ -193,15 +203,11 @@ const LoginRecordsPanel = ({ records, lastLoginAt }) => {
                 size="sm"
                 placeholder="Search IP, device, reason"
                 value={loginSearch}
-                onChange={(e) => setLoginSearch(e.target.value)}
+                onChange={handleLoginSearchChange}
               />
             </CCol>
             <CCol xs={4}>
-              <CFormSelect
-                size="sm"
-                value={loginStatus}
-                onChange={(e) => setLoginStatus(e.target.value)}
-              >
+              <CFormSelect size="sm" value={loginStatus} onChange={handleLoginStatusChange}>
                 <option value="All">All status</option>
                 <option value="Success">Success</option>
                 <option value="Failed">Failed</option>
@@ -210,7 +216,7 @@ const LoginRecordsPanel = ({ records, lastLoginAt }) => {
             <CCol xs={4}>
               <TablePeriodSelect
                 value={loginRange}
-                onChange={setLoginRange}
+                onChange={handleLoginRangeChange}
                 include24Hours={false}
                 includeCustom={false}
                 includeAll={true}
@@ -223,11 +229,7 @@ const LoginRecordsPanel = ({ records, lastLoginAt }) => {
                 color="secondary"
                 variant="outline"
                 className="w-100"
-                onClick={() => {
-                  setLoginSearch('')
-                  setLoginStatus('All')
-                  setLoginRange('all')
-                }}
+                onClick={clearLoginFilters}
               >
                 Clear
               </CButton>
@@ -258,9 +260,14 @@ const LoginRecordsPanel = ({ records, lastLoginAt }) => {
                     const { color, label } = renderStatus(record.status)
                     const reason = record.reason || record.error || EMPTY
                     const when =
-                      record.timestamp || record.logged_at || record.created_at || record.time || null
+                      record.timestamp ||
+                      record.logged_at ||
+                      record.created_at ||
+                      record.time ||
+                      null
                     const ip = record.ip_address || EMPTY
-                    const device = record.device_info || record.user_agent || record.device_id || EMPTY
+                    const device =
+                      record.device_info || record.user_agent || record.device_id || EMPTY
                     return (
                       <CTableRow key={idx}>
                         <CTableDataCell className="text-center align-top">{idx + 1}</CTableDataCell>
@@ -329,7 +336,7 @@ const LoginRecordsPanel = ({ records, lastLoginAt }) => {
 
         <DataTableFooter
           rowsToShow={rowsToShow}
-          onRowsToShowChange={setRowsToShow}
+          onRowsToShowChange={handleRowsToShowChange}
           filteredCount={filteredRecords.length}
           totalCount={(records || []).length}
         />

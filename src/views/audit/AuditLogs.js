@@ -179,7 +179,9 @@ const AuditLogs = () => {
 
   const actions = useMemo(() => {
     const unique = new Set()
-    logs.forEach((log) => { if (log.action) unique.add(log.action) })
+    logs.forEach((log) => {
+      if (log.action) unique.add(log.action)
+    })
     return Array.from(unique).sort()
   }, [logs])
 
@@ -289,12 +291,7 @@ const AuditLogs = () => {
                 />
               </CCol>
               <CCol xs={12} md={3}>
-                <CButton
-                  size="sm"
-                  color="secondary"
-                  variant="outline"
-                  onClick={handleClearDates}
-                >
+                <CButton size="sm" color="secondary" variant="outline" onClick={handleClearDates}>
                   Clear dates
                 </CButton>
               </CCol>
@@ -303,7 +300,8 @@ const AuditLogs = () => {
 
           {isTruncated && !error && (
             <CAlert color="info" className="py-2 small">
-              Showing the latest {AUDIT_LIMIT} entries for this period. Narrow the date range to see older records.
+              Showing the latest {AUDIT_LIMIT} entries for this period. Narrow the date range to see
+              older records.
             </CAlert>
           )}
 
@@ -347,7 +345,9 @@ const AuditLogs = () => {
                           </CTableDataCell>
                           <CTableDataCell>{formatDateTime(log.created_at)}</CTableDataCell>
                           <CTableDataCell>{formatAction(log.action)}</CTableDataCell>
-                          <CTableDataCell className="text-break">{getActorLabel(log)}</CTableDataCell>
+                          <CTableDataCell className="text-break">
+                            {getActorLabel(log)}
+                          </CTableDataCell>
                           <CTableDataCell className="text-break">
                             {getTargetLabel(log)}
                           </CTableDataCell>

@@ -6,43 +6,43 @@ const sortOptions = [
   { value: 'last_login_at:asc', label: 'Login: Oldest' },
 ]
 
+const getInitialFilters = (searchParams, roles) => {
+  const q = searchParams.get('q') ?? ''
+  const roleParam = searchParams.get('role') ?? 'All'
+  const statusParam = searchParams.get('status') ?? 'All'
+  const sortFieldParam = searchParams.get('sort') ?? 'last_login_at'
+  const sortDirParam = searchParams.get('dir') ?? 'desc'
+
+  const validRole = roleParam === 'All' || roles.includes(roleParam) ? roleParam : 'All'
+  const validStatus = ['All', 'Active', 'Inactive', 'Deleted'].includes(statusParam)
+    ? statusParam
+    : 'All'
+  const validSortField = ['name', 'email', 'roles', 'status', 'last_login_at'].includes(
+    sortFieldParam,
+  )
+    ? sortFieldParam
+    : 'name'
+  const validSortDir = sortDirParam === 'desc' ? 'desc' : 'asc'
+
+  return {
+    search: q,
+    roleFilter: validRole,
+    statusFilter: validStatus,
+    sort: { field: validSortField, dir: validSortDir },
+  }
+}
+
 const useUserFilters = (roles = []) => {
   const [searchParams, setSearchParams] = useSearchParams()
-  const [search, setSearch] = useState('')
-  const [roleFilter, setRoleFilter] = useState('All')
-  const [statusFilter, setStatusFilter] = useState('All')
+  const initialFilters = getInitialFilters(searchParams, roles)
+  const [search, setSearch] = useState(initialFilters.search)
+  const [roleFilter, setRoleFilter] = useState(initialFilters.roleFilter)
+  const [statusFilter, setStatusFilter] = useState(initialFilters.statusFilter)
   const [period, setPeriod] = useState('all')
-  const [sort, setSort] = useState({ field: 'last_login_at', dir: 'desc' })
-  const paramsAppliedRef = useRef(false)
+  const [sort, setSort] = useState(initialFilters.sort)
   const syncTimerRef = useRef(null)
 
   useEffect(() => {
-    if (paramsAppliedRef.current) return
-    const q = searchParams.get('q') ?? ''
-    const roleParam = searchParams.get('role') ?? 'All'
-    const statusParam = searchParams.get('status') ?? 'All'
-    const sortFieldParam = searchParams.get('sort') ?? 'last_login_at'
-    const sortDirParam = searchParams.get('dir') ?? 'desc'
-
-    const validRole = roleParam === 'All' || roles.includes(roleParam) ? roleParam : 'All'
-    const validStatus = ['All', 'Active', 'Inactive', 'Deleted'].includes(statusParam) ? statusParam : 'All'
-    const validSortField = ['name', 'email', 'roles', 'status', 'last_login_at'].includes(sortFieldParam)
-      ? sortFieldParam
-      : 'name'
-    const validSortDir = sortDirParam === 'desc' ? 'desc' : 'asc'
-
-    if (q) setSearch(q)
-    if (validRole !== 'All') setRoleFilter(validRole)
-    if (validStatus !== 'All') setStatusFilter(validStatus)
-    if (validSortField !== 'last_login_at' || validSortDir !== 'desc') {
-      setSort({ field: validSortField, dir: validSortDir })
-    }
-
-    paramsAppliedRef.current = true
-  }, [searchParams, roles])
-
-  useEffect(() => {
-    if (!paramsAppliedRef.current) return
     const params = new URLSearchParams()
 
     if (search) params.set('q', search)

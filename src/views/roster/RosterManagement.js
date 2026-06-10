@@ -155,43 +155,53 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
     const now = new Date().toLocaleString()
     const shiftDefs = allShifts.length
       ? allShifts
-      : [{ slug: 'day', name: 'Day' }, { slug: 'night', name: 'Night' }]
+      : [
+          { slug: 'day', name: 'Day' },
+          { slug: 'night', name: 'Night' },
+        ]
 
-    const monthBlocks = monthWeekGroups.map((mb) => {
-      const allRows = mb.weeks.flatMap((w) => w.rows)
-      const hasDraft = allRows.some((r) =>
-        Object.values(r.shifts || {}).some((s) => s?.status === 'draft')
-      )
+    const monthBlocks = monthWeekGroups
+      .map((mb) => {
+        const allRows = mb.weeks.flatMap((w) => w.rows)
+        const hasDraft = allRows.some((r) =>
+          Object.values(r.shifts || {}).some((s) => s?.status === 'draft'),
+        )
 
-      const headerCols = allRows.map((row) => {
-        const t = new Date()
-        const todayStr = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`
-        const todayCls = row.date === todayStr ? ' today' : ''
-        const d = new Date(row.date)
-        const wknd = (d.getDay()===0||d.getDay()===6) ? ' weekend' : ''
-        return `<th class="date-col${todayCls}${wknd}">
-          <div class="dow">${escHtml(row.dayName.slice(0,3).toUpperCase())}</div>
+        const headerCols = allRows
+          .map((row) => {
+            const t = new Date()
+            const todayStr = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`
+            const todayCls = row.date === todayStr ? ' today' : ''
+            const d = new Date(row.date)
+            const wknd = d.getDay() === 0 || d.getDay() === 6 ? ' weekend' : ''
+            return `<th class="date-col${todayCls}${wknd}">
+          <div class="dow">${escHtml(row.dayName.slice(0, 3).toUpperCase())}</div>
           <div class="dnum">${escHtml(row.date.slice(8))}</div>
         </th>`
-      }).join('')
+          })
+          .join('')
 
-      const shiftRows = shiftDefs.map((shiftDef) => {
-        const cells = allRows.map((row) => {
-          const shiftObj = row.shifts?.[shiftDef.slug]
-          const isDraft = shiftObj?.status === 'draft'
-          const t = new Date()
-          const todayStr = `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`
-          const todayCls = row.date === todayStr ? ' today' : ''
-          const d = new Date(row.date)
-          const wknd = (d.getDay()===0||d.getDay()===6) ? ' weekend' : ''
-          const draftCls = isDraft ? ' draft-cell' : ''
-          const team = escHtml(shiftObj?.team || '')
-          return `<td class="data-col${todayCls}${wknd}${draftCls}">${team}${isDraft && team ? '<span class="draft-dot">●</span>' : ''}</td>`
-        }).join('')
-        return `<tr><td class="label-col">${escHtml(shiftDef.name)}</td>${cells}</tr>`
-      }).join('')
+        const shiftRows = shiftDefs
+          .map((shiftDef) => {
+            const cells = allRows
+              .map((row) => {
+                const shiftObj = row.shifts?.[shiftDef.slug]
+                const isDraft = shiftObj?.status === 'draft'
+                const t = new Date()
+                const todayStr = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`
+                const todayCls = row.date === todayStr ? ' today' : ''
+                const d = new Date(row.date)
+                const wknd = d.getDay() === 0 || d.getDay() === 6 ? ' weekend' : ''
+                const draftCls = isDraft ? ' draft-cell' : ''
+                const team = escHtml(shiftObj?.team || '')
+                return `<td class="data-col${todayCls}${wknd}${draftCls}">${team}${isDraft && team ? '<span class="draft-dot">●</span>' : ''}</td>`
+              })
+              .join('')
+            return `<tr><td class="label-col">${escHtml(shiftDef.name)}</td>${cells}</tr>`
+          })
+          .join('')
 
-      return `
+        return `
         <div class="month-block">
           <div class="month-label">
             ${escHtml(mb.month)}
@@ -204,7 +214,8 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
             </table>
           </div>
         </div>`
-    }).join('')
+      })
+      .join('')
 
     const w = window.open('', '_blank', 'width=1400,height=900')
     w.document.write(`<!DOCTYPE html>
@@ -258,7 +269,10 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
 </html>`)
     w.document.close()
     w.focus()
-    setTimeout(() => { w.print(); w.close() }, 500)
+    setTimeout(() => {
+      w.print()
+      w.close()
+    }, 500)
   }
 
   const handleExportXlsx = () => {
@@ -275,7 +289,10 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
 
     const shiftDefs = allShifts.length
       ? allShifts
-      : [{ slug: 'day', name: 'Day' }, { slug: 'night', name: 'Night' }]
+      : [
+          { slug: 'day', name: 'Day' },
+          { slug: 'night', name: 'Night' },
+        ]
 
     // Sheet 1: full schedule — one row per date
     const shiftScheduleHeaders = shiftDefs.flatMap((s) => [`${s.name} Team`, `${s.name} Status`])
@@ -296,32 +313,39 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
     ]
 
     // Sheet 2: monthly summary
-    const shiftSummaryHeaders = shiftDefs.flatMap((s) => [`${s.name} Shifts`, `Unassigned (${s.name})`])
-    const summaryRows = [
-      ...meta,
-      ['Month', 'Team', ...shiftSummaryHeaders],
-    ]
+    const shiftSummaryHeaders = shiftDefs.flatMap((s) => [
+      `${s.name} Shifts`,
+      `Unassigned (${s.name})`,
+    ])
+    const summaryRows = [...meta, ['Month', 'Team', ...shiftSummaryHeaders]]
     // aggregate per month per team from filteredRows
     const monthMap = {}
     filteredRows.forEach((row) => {
       const d = new Date(row.date)
-      const mKey = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+      const mKey = d.toLocaleDateString('en-US', {
+        month: 'long',
+        year: 'numeric',
+        timeZone: 'UTC',
+      })
       if (!monthMap[mKey]) {
         monthMap[mKey] = { days: 0, teamShifts: {} }
-        shiftDefs.forEach((s) => { monthMap[mKey].teamShifts[s.slug] = {} })
+        shiftDefs.forEach((s) => {
+          monthMap[mKey].teamShifts[s.slug] = {}
+        })
       }
       monthMap[mKey].days += 1
       shiftDefs.forEach((s) => {
         const teamName = row.shifts?.[s.slug]?.team
         if (teamName) {
-          monthMap[mKey].teamShifts[s.slug][teamName] = (monthMap[mKey].teamShifts[s.slug][teamName] || 0) + 1
+          monthMap[mKey].teamShifts[s.slug][teamName] =
+            (monthMap[mKey].teamShifts[s.slug][teamName] || 0) + 1
         }
       })
     })
     const allTeamNames = [...new Set(teams.map((t) => t.name))]
     Object.entries(monthMap).forEach(([month, data]) => {
       const assignedPerShift = shiftDefs.map((s) =>
-        Object.values(data.teamShifts[s.slug]).reduce((sum, n) => sum + n, 0)
+        Object.values(data.teamShifts[s.slug]).reduce((sum, n) => sum + n, 0),
       )
       allTeamNames.forEach((name, ti) => {
         summaryRows.push([
@@ -394,13 +418,30 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
             </div>
           ) : (
             <div className="d-flex align-items-center gap-2">
-              <CButton size="sm" className={ghostBtn} disabled={isSavingDraft || isPublishing} onClick={handleSaveDraft} title="Save privately — teams will not be notified">
+              <CButton
+                size="sm"
+                className={ghostBtn}
+                disabled={isSavingDraft || isPublishing}
+                onClick={handleSaveDraft}
+                title="Save privately — teams will not be notified"
+              >
                 {isSavingDraft ? <ButtonLoader label="Saving..." /> : 'Save Draft'}
               </CButton>
-              <CButton size="sm" className={ghostBtn} disabled={isSavingDraft || isPublishing} onClick={() => setShowPublishConfirm(true)} title="Publish and notify all assigned teams">
+              <CButton
+                size="sm"
+                className={ghostBtn}
+                disabled={isSavingDraft || isPublishing}
+                onClick={() => setShowPublishConfirm(true)}
+                title="Publish and notify all assigned teams"
+              >
                 {isPublishing ? <ButtonLoader label="Publishing..." /> : 'Publish'}
               </CButton>
-              <CButton size="sm" className={ghostBtn} disabled={isSavingDraft || isPublishing} onClick={handleCancelClick}>
+              <CButton
+                size="sm"
+                className={ghostBtn}
+                disabled={isSavingDraft || isPublishing}
+                onClick={handleCancelClick}
+              >
                 Cancel
               </CButton>
             </div>
@@ -408,8 +449,16 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
         </CCardHeader>
 
         <CCardBody className="p-4">
-          {statusMessage && <CAlert color="success" className="mb-4">{statusMessage}</CAlert>}
-          {error && <CAlert color="danger" className="mb-4">{error}</CAlert>}
+          {statusMessage && (
+            <CAlert color="success" className="mb-4">
+              {statusMessage}
+            </CAlert>
+          )}
+          {error && (
+            <CAlert color="danger" className="mb-4">
+              {error}
+            </CAlert>
+          )}
 
           <RosterFilter
             rangeType={rangeType}
@@ -438,15 +487,29 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
           ) : !loading && teams.length === 0 ? (
             <div className="text-center text-muted py-4">
               No teams configured yet.{' '}
-              <Link to="/team/details" className="text-primary">Go to Team Details</Link> to set up teams first.
+              <Link to="/team/details" className="text-primary">
+                Go to Team Details
+              </Link>{' '}
+              to set up teams first.
             </div>
           ) : monthWeekGroups.length === 0 ? (
             <div className="text-center text-muted py-4">No roster found for this period.</div>
           ) : (
             <div id="roster-print-area">
               {allShifts.some((s) => s.builtin === false) && (
-                <div className="d-flex align-items-center gap-2 mb-3" style={{ fontSize: '0.8rem', color: 'var(--cui-secondary-color)' }}>
-                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#f59e0b', display: 'inline-block' }} />
+                <div
+                  className="d-flex align-items-center gap-2 mb-3"
+                  style={{ fontSize: '0.8rem', color: 'var(--cui-secondary-color)' }}
+                >
+                  <span
+                    style={{
+                      width: 7,
+                      height: 7,
+                      borderRadius: '50%',
+                      background: '#f59e0b',
+                      display: 'inline-block',
+                    }}
+                  />
                   Custom shift
                 </div>
               )}
@@ -466,29 +529,59 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
       </CCard>
 
       {/* Discard confirmation */}
-      <CModal visible={showCancelConfirm} onClose={() => setShowCancelConfirm(false)} alignment="center">
-        <CModalHeader><CModalTitle>Discard changes?</CModalTitle></CModalHeader>
+      <CModal
+        visible={showCancelConfirm}
+        onClose={() => setShowCancelConfirm(false)}
+        alignment="center"
+      >
+        <CModalHeader>
+          <CModalTitle>Discard changes?</CModalTitle>
+        </CModalHeader>
         <CModalBody className="text-body-secondary">
-          You have unsaved roster changes for <strong>{scopeLabel}</strong>. Cancelling will discard them.
+          You have unsaved roster changes for <strong>{scopeLabel}</strong>. Cancelling will discard
+          them.
         </CModalBody>
         <CModalFooter>
-          <CButton color="light" onClick={() => setShowCancelConfirm(false)}>Keep editing</CButton>
-          <CButton color="danger" onClick={() => { setShowCancelConfirm(false); handleCancelEdit() }}>Discard changes</CButton>
+          <CButton color="light" onClick={() => setShowCancelConfirm(false)}>
+            Keep editing
+          </CButton>
+          <CButton
+            color="danger"
+            onClick={() => {
+              setShowCancelConfirm(false)
+              handleCancelEdit()
+            }}
+          >
+            Discard changes
+          </CButton>
         </CModalFooter>
       </CModal>
 
       {/* Publish confirmation */}
-      <CModal visible={showPublishConfirm} onClose={() => setShowPublishConfirm(false)} alignment="center">
-        <CModalHeader><CModalTitle>Publish Roster?</CModalTitle></CModalHeader>
+      <CModal
+        visible={showPublishConfirm}
+        onClose={() => setShowPublishConfirm(false)}
+        alignment="center"
+      >
+        <CModalHeader>
+          <CModalTitle>Publish Roster?</CModalTitle>
+        </CModalHeader>
         <CModalBody>
-          <p className="mb-3">You are about to publish the roster for <strong>{scopeLabel}</strong>.</p>
+          <p className="mb-3">
+            You are about to publish the roster for <strong>{scopeLabel}</strong>.
+          </p>
           <p className="text-body-secondary mb-0">
-            All members of the assigned teams will receive an email notification with their shift schedule.
+            All members of the assigned teams will receive an email notification with their shift
+            schedule.
           </p>
         </CModalBody>
         <CModalFooter>
-          <CButton color="light" onClick={() => setShowPublishConfirm(false)}>Cancel</CButton>
-          <CButton color="primary" onClick={handlePublishConfirm}>Confirm & Publish</CButton>
+          <CButton color="light" onClick={() => setShowPublishConfirm(false)}>
+            Cancel
+          </CButton>
+          <CButton color="primary" onClick={handlePublishConfirm}>
+            Confirm & Publish
+          </CButton>
         </CModalFooter>
       </CModal>
     </>
@@ -527,7 +620,10 @@ const RosterManagement = () => {
           <CNavLink
             active={resolvedTab === 'overview'}
             style={{ cursor: 'pointer' }}
-            onClick={(e) => { e.preventDefault(); switchTab('overview') }}
+            onClick={(e) => {
+              e.preventDefault()
+              switchTab('overview')
+            }}
           >
             Overview
           </CNavLink>
@@ -536,15 +632,22 @@ const RosterManagement = () => {
           <CNavLink
             active={resolvedTab === 'schedule'}
             style={{ cursor: 'pointer' }}
-            onClick={(e) => { e.preventDefault(); switchTab('schedule') }}
+            onClick={(e) => {
+              e.preventDefault()
+              switchTab('schedule')
+            }}
           >
             Set Roster
           </CNavLink>
         </CNavItem>
       </CNav>
 
-      {resolvedTab === 'overview' && <OverviewTab canManageRoster={canManageRoster} exportedBy={exportedBy} />}
-      {resolvedTab === 'schedule' && <ScheduleTab canManageRoster={canManageRoster} exportedBy={exportedBy} />}
+      {resolvedTab === 'overview' && (
+        <OverviewTab canManageRoster={canManageRoster} exportedBy={exportedBy} />
+      )}
+      {resolvedTab === 'schedule' && (
+        <ScheduleTab canManageRoster={canManageRoster} exportedBy={exportedBy} />
+      )}
     </CContainer>
   )
 }

@@ -39,7 +39,17 @@ const bulkSettled = async (items, fn) => {
 
 // --- modal state reducer ---
 
-const MODAL_KEYS = ['reset', 'delete', 'permanentDelete', 'restore', 'deactivate', 'activate', 'lock', 'unlock', 'role']
+const MODAL_KEYS = [
+  'reset',
+  'delete',
+  'permanentDelete',
+  'restore',
+  'deactivate',
+  'activate',
+  'lock',
+  'unlock',
+  'role',
+]
 
 const initialModalState = Object.fromEntries(MODAL_KEYS.map((k) => [k, false]))
 
@@ -303,10 +313,22 @@ const useUsers = ({ isAdmin, roles = [], isSelf }) => {
 
   const closeResetModal = useCallback(() => dispatchModal({ type: 'close', modal: 'reset' }), [])
   const closeDeleteModal = useCallback(() => dispatchModal({ type: 'close', modal: 'delete' }), [])
-  const closePermanentDeleteModal = useCallback(() => dispatchModal({ type: 'close', modal: 'permanentDelete' }), [])
-  const closeRestoreModal = useCallback(() => dispatchModal({ type: 'close', modal: 'restore' }), [])
-  const closeDeactivateModal = useCallback(() => dispatchModal({ type: 'close', modal: 'deactivate' }), [])
-  const closeActivateModal = useCallback(() => dispatchModal({ type: 'close', modal: 'activate' }), [])
+  const closePermanentDeleteModal = useCallback(
+    () => dispatchModal({ type: 'close', modal: 'permanentDelete' }),
+    [],
+  )
+  const closeRestoreModal = useCallback(
+    () => dispatchModal({ type: 'close', modal: 'restore' }),
+    [],
+  )
+  const closeDeactivateModal = useCallback(
+    () => dispatchModal({ type: 'close', modal: 'deactivate' }),
+    [],
+  )
+  const closeActivateModal = useCallback(
+    () => dispatchModal({ type: 'close', modal: 'activate' }),
+    [],
+  )
   const closeLockModal = useCallback(() => dispatchModal({ type: 'close', modal: 'lock' }), [])
   const closeUnlockModal = useCallback(() => dispatchModal({ type: 'close', modal: 'unlock' }), [])
   const closeRoleModal = useCallback(() => dispatchModal({ type: 'close', modal: 'role' }), [])

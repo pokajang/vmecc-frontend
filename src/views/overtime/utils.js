@@ -46,14 +46,7 @@ export const normalizeOvertimeClockTime = (value) => {
     const hour = Number(match[1])
     const minute = Number(match[2])
     const second = Number(match[3])
-    if (
-      hour >= 0 &&
-      hour <= 23 &&
-      minute >= 0 &&
-      minute <= 59 &&
-      second >= 0 &&
-      second <= 59
-    ) {
+    if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59 && second >= 0 && second <= 59) {
       return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
     }
   }

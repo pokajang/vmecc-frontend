@@ -52,21 +52,25 @@ const LeaveApprovalRules = () => {
 
   useEffect(() => {
     let mounted = true
-    loadLeaveApprovalRules().then((result) => {
-      if (!mounted) return
-      const policy = normalizeLeaveApprovalRules(result?.data)
-      setSavedPolicy(policy)
-      setDraftPolicy(policy)
-      setLoading(false)
-      if (!result?.ok) {
+    loadLeaveApprovalRules()
+      .then((result) => {
+        if (!mounted) return
+        const policy = normalizeLeaveApprovalRules(result?.data)
+        setSavedPolicy(policy)
+        setDraftPolicy(policy)
+        setLoading(false)
+        if (!result?.ok) {
+          setError('Unable to load leave approval rules.')
+        }
+      })
+      .catch(() => {
+        if (!mounted) return
+        setLoading(false)
         setError('Unable to load leave approval rules.')
-      }
-    }).catch(() => {
-      if (!mounted) return
-      setLoading(false)
-      setError('Unable to load leave approval rules.')
-    })
-    return () => { mounted = false }
+      })
+    return () => {
+      mounted = false
+    }
   }, [])
 
   const sortedRoles = useMemo(

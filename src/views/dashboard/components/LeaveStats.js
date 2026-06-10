@@ -1,14 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import {
-  CCard,
-  CCardBody,
-  CCardHeader,
-  CCol,
-  CProgress,
-  CRow,
-  CWidgetStatsA,
-} from '@coreui/react'
+import { CCard, CCardBody, CCardHeader, CCol, CProgress, CRow, CWidgetStatsA } from '@coreui/react'
 import { CChartBar, CChartLine } from '@coreui/react-chartjs'
 import { getStyle } from '@coreui/utils'
 import {
@@ -49,7 +41,12 @@ export const LeaveKpiTiles = ({ stats, periodLabel }) => {
           className="h-100"
           color="warning"
           value={stats?.pendingApprovals ?? 0}
-          title={<TileTitle>Pending Leave Approvals<PeriodLabel label={pl} /></TileTitle>}
+          title={
+            <TileTitle>
+              Pending Leave Approvals
+              <PeriodLabel label={pl} />
+            </TileTitle>
+          }
           chart={sparkline(getStyle('--cui-warning'))}
         />
       </CCol>
@@ -61,11 +58,15 @@ export const LeaveKpiTiles = ({ stats, periodLabel }) => {
           color="success"
           value={
             <>
-              {stats?.approvedDaysThisPeriod ?? 0}{' '}
-              <span className="fs-6 fw-normal">days</span>
+              {stats?.approvedDaysThisPeriod ?? 0} <span className="fs-6 fw-normal">days</span>
             </>
           }
-          title={<TileTitle>Leave Days Approved<PeriodLabel label={pl} /></TileTitle>}
+          title={
+            <TileTitle>
+              Leave Days Approved
+              <PeriodLabel label={pl} />
+            </TileTitle>
+          }
           chart={sparkline(getStyle('--cui-success'), true)}
         />
       </CCol>
@@ -77,11 +78,15 @@ export const LeaveKpiTiles = ({ stats, periodLabel }) => {
           color="info"
           value={
             <>
-              {stats?.staffCurrentlyOnLeave ?? 0}{' '}
-              <span className="fs-6 fw-normal">staff</span>
+              {stats?.staffCurrentlyOnLeave ?? 0} <span className="fs-6 fw-normal">staff</span>
             </>
           }
-          title={<TileTitle>Staff Currently on Leave<PeriodLabel label="Today" /></TileTitle>}
+          title={
+            <TileTitle>
+              Staff Currently on Leave
+              <PeriodLabel label="Today" />
+            </TileTitle>
+          }
           chart={sparkline(getStyle('--cui-info'), true)}
         />
       </CCol>
@@ -93,11 +98,15 @@ export const LeaveKpiTiles = ({ stats, periodLabel }) => {
           style={{ background: `linear-gradient(135deg, ${ACCENT} 0%, ${ACCENT_DARK} 100%)` }}
           value={
             <>
-              {stats?.staffWithPendingRequests ?? 0}{' '}
-              <span className="fs-6 fw-normal">staff</span>
+              {stats?.staffWithPendingRequests ?? 0} <span className="fs-6 fw-normal">staff</span>
             </>
           }
-          title={<TileTitle>Staff with Pending Leave<PeriodLabel label={pl} /></TileTitle>}
+          title={
+            <TileTitle>
+              Staff with Pending Leave
+              <PeriodLabel label={pl} />
+            </TileTitle>
+          }
           chart={sparkline(ACCENT_SPARK, true)}
         />
       </CCol>
@@ -218,9 +227,7 @@ export const LeaveTeamBreakdown = ({ stats, periodLabel }) => {
 
 LeaveTeamBreakdown.propTypes = {
   stats: PropTypes.shape({
-    byTeam: PropTypes.arrayOf(
-      PropTypes.shape({ team: PropTypes.string, count: PropTypes.number }),
-    ),
+    byTeam: PropTypes.arrayOf(PropTypes.shape({ team: PropTypes.string, count: PropTypes.number })),
   }),
   periodLabel: PropTypes.string,
 }

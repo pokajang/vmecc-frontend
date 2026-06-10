@@ -47,7 +47,10 @@ export const MonthGroupLabel = ({
 }) => {
   const monthLabel = String(label || 'Unknown month').toUpperCase()
   return (
-    <div className={`d-inline-flex align-items-center gap-2 ${className}`.trim()} data-testid={testId}>
+    <div
+      className={`d-inline-flex align-items-center gap-2 ${className}`.trim()}
+      data-testid={testId}
+    >
       <span
         className="text-body-secondary fw-semibold small"
         style={{ letterSpacing: '0.06em' }}
@@ -74,7 +77,10 @@ export const UserGroupLabel = ({
   const hasAvatar = String(avatarUrl || '').trim() !== ''
 
   return (
-    <div className={`d-inline-flex align-items-center gap-2 ${className}`.trim()} data-testid={testId}>
+    <div
+      className={`d-inline-flex align-items-center gap-2 ${className}`.trim()}
+      data-testid={testId}
+    >
       {hasAvatar ? (
         <img
           src={avatarUrl}

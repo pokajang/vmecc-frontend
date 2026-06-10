@@ -62,46 +62,48 @@ const UserListTable = ({
               <TableLoader />
             </CTableDataCell>
           </CTableRow>
-        ) : users.map((user, idx) => (
-          <CTableRow
-            key={user.id}
-            role="button"
-            className="cursor-pointer"
-            onClick={() => onRowClick(user)}
-          >
-            <CTableDataCell className="text-center">
-              <CFormCheck
-                checked={selectedIds.includes(user.id)}
-                onChange={() => onToggleSelect?.(user)}
-                onClick={(e) => e.stopPropagation()}
-              />
-            </CTableDataCell>
-            <CTableDataCell className="text-center text-muted">{idx + 1}</CTableDataCell>
-            <CTableDataCell>{user.name || EMPTY}</CTableDataCell>
-            <CTableDataCell className="text-break">{user.email || EMPTY}</CTableDataCell>
-            <CTableDataCell>{formatRoles(user.roles)}</CTableDataCell>
-            <CTableDataCell>
-              {user.deleted_at ? 'Deleted' : user.locked_at ? 'Locked' : user.status || EMPTY}
-            </CTableDataCell>
-            <CTableDataCell>{formatLastLogin(user.last_login_at)}</CTableDataCell>
-            <CTableDataCell className="text-center align-middle">
-              <UserRowActions
-                user={user}
-                isSelf={isSelf}
-                onExportXlsx={onExportXlsx}
-                exportDisabled={exportDisabledIds.includes(user.id)}
-                onRestore={onRestore}
-                onToggleStatus={onToggleStatus}
-                onChangeRole={onChangeRole}
-                onResetPassword={onResetPassword}
-                onDeleteUser={onDeleteUser}
-                onDeletePermanently={onDeletePermanently}
-                onLockUser={onLockUser}
-                onUnlockUser={onUnlockUser}
-              />
-            </CTableDataCell>
-          </CTableRow>
-        ))}
+        ) : (
+          users.map((user, idx) => (
+            <CTableRow
+              key={user.id}
+              role="button"
+              className="cursor-pointer"
+              onClick={() => onRowClick(user)}
+            >
+              <CTableDataCell className="text-center">
+                <CFormCheck
+                  checked={selectedIds.includes(user.id)}
+                  onChange={() => onToggleSelect?.(user)}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </CTableDataCell>
+              <CTableDataCell className="text-center text-muted">{idx + 1}</CTableDataCell>
+              <CTableDataCell>{user.name || EMPTY}</CTableDataCell>
+              <CTableDataCell className="text-break">{user.email || EMPTY}</CTableDataCell>
+              <CTableDataCell>{formatRoles(user.roles)}</CTableDataCell>
+              <CTableDataCell>
+                {user.deleted_at ? 'Deleted' : user.locked_at ? 'Locked' : user.status || EMPTY}
+              </CTableDataCell>
+              <CTableDataCell>{formatLastLogin(user.last_login_at)}</CTableDataCell>
+              <CTableDataCell className="text-center align-middle">
+                <UserRowActions
+                  user={user}
+                  isSelf={isSelf}
+                  onExportXlsx={onExportXlsx}
+                  exportDisabled={exportDisabledIds.includes(user.id)}
+                  onRestore={onRestore}
+                  onToggleStatus={onToggleStatus}
+                  onChangeRole={onChangeRole}
+                  onResetPassword={onResetPassword}
+                  onDeleteUser={onDeleteUser}
+                  onDeletePermanently={onDeletePermanently}
+                  onLockUser={onLockUser}
+                  onUnlockUser={onUnlockUser}
+                />
+              </CTableDataCell>
+            </CTableRow>
+          ))
+        )}
       </CTableBody>
     </CTable>
   </div>

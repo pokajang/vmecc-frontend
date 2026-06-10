@@ -29,11 +29,16 @@ const useOnDutyTeam = () => {
 
         const rows = rosterResp?.data || []
         const row = rows[0]
-        if (!row) { setOnDuty(null); return }
+        if (!row) {
+          setOnDuty(null)
+          return
+        }
 
         const windows = shiftResp?.data || {
-          day_start: '07:00', day_end: '19:00',
-          night_start: '19:00', night_end: '07:00',
+          day_start: '07:00',
+          day_end: '19:00',
+          night_start: '19:00',
+          night_end: '07:00',
         }
 
         const now = new Date()
@@ -49,7 +54,10 @@ const useOnDutyTeam = () => {
             ? 'night'
             : null
 
-        if (!activeShift) { setOnDuty(null); return }
+        if (!activeShift) {
+          setOnDuty(null)
+          return
+        }
 
         const team = activeShift === 'day' ? row.dayShift?.team : row.nightShift?.team
         setOnDuty(team ? { team, shift: activeShift } : null)
@@ -61,7 +69,10 @@ const useOnDutyTeam = () => {
     load()
     // Refresh every 5 minutes
     const interval = setInterval(load, 5 * 60 * 1000)
-    return () => { cancelled = true; clearInterval(interval) }
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+    }
   }, [])
 
   return onDuty

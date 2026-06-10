@@ -21,15 +21,15 @@ Dashboard shows **global aggregate data** — not per-user filtered. Role-based 
 
 ---
 
-## Mock-first approach
+## API-backed stats
 
-Every module section is built with mock data first. Mocks live in:
+Every module section reads production data from:
 
 ```
-src/views/dashboard/mocks/dashboard-mocks.js
+GET /api/stats/{module}?period={period}
 ```
 
-Structure mirrors the intended API response exactly — swapping to real calls is a one-line change per module in the hook. Each module adds its own key to the mocks object.
+The response shape for each module is the component contract. Do not wire live dashboard sections to generated or sample data.
 
 ---
 
@@ -39,7 +39,7 @@ Structure mirrors the intended API response exactly — swapping to real calls i
 src/views/dashboard/hooks/useDashboardStats.js
 ```
 
-Fires all module stat calls in `Promise.all`. Returns `{ stats, loading, error }`. Each module adds one entry to the Promise.all array. While mocks are in use the hook returns mock data directly (no fetch).
+Fires visible module stat calls and returns `{ stats, loading, error }`. Hidden modules are not requested.
 
 ---
 
@@ -50,10 +50,8 @@ src/views/dashboard/
   Dashboard.js                        ← main layout, assembles all zones
   DASHBOARD_SPEC.md                   ← this file
   MainChart.js                        ← existing, repurposed for activity trend
-  mocks/
-    dashboard-mocks.js                ← all module mock data
   hooks/
-    useDashboardStats.js              ← Promise.all hook
+    useDashboardStats.js              ← API-backed module stats hook
   components/
     KpiTiles.js                       ← Zone 1
     OperationsOverview.js             ← Zone 2

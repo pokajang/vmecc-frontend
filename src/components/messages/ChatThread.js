@@ -15,22 +15,24 @@ import TableLoader from 'src/components/TableLoader'
 const AttachmentImage = ({ attachmentId, originalName, localPreview, style, onClick }) => {
   const src = getMessageAttachmentUrl(attachmentId)
   const { blobUrl, error } = useAuthenticatedImageUrl(src, localPreview || null)
-  if (error) return (
-    <div
-      className="d-flex align-items-center justify-content-center text-muted small"
-      style={{ ...style, minHeight: 60, background: '#f0f0f0' }}
-    >
-      Image unavailable
-    </div>
-  )
-  if (!blobUrl) return (
-    <div
-      className="d-flex align-items-center justify-content-center"
-      style={{ ...style, minHeight: 120, background: '#f0f0f0' }}
-    >
-      <Loader size={20} className="icon-spin text-muted" />
-    </div>
-  )
+  if (error)
+    return (
+      <div
+        className="d-flex align-items-center justify-content-center text-muted small"
+        style={{ ...style, minHeight: 60, background: '#f0f0f0' }}
+      >
+        Image unavailable
+      </div>
+    )
+  if (!blobUrl)
+    return (
+      <div
+        className="d-flex align-items-center justify-content-center"
+        style={{ ...style, minHeight: 120, background: '#f0f0f0' }}
+      >
+        <Loader size={20} className="icon-spin text-muted" />
+      </div>
+    )
   return (
     <img
       src={blobUrl}
@@ -151,7 +153,8 @@ const ChatThread = ({
                   <span className="fw-semibold">{activeUserName}</span>
                   {getPrimaryRoleLabel(activeThread?.user) && (
                     <span className="text-muted fw-normal" style={{ fontSize: '0.7rem' }}>
-                      {ROLE_ABBREVIATIONS[getPrimaryRoleLabel(activeThread?.user)] ?? getPrimaryRoleLabel(activeThread?.user)}
+                      {ROLE_ABBREVIATIONS[getPrimaryRoleLabel(activeThread?.user)] ??
+                        getPrimaryRoleLabel(activeThread?.user)}
                     </span>
                   )}
                 </div>
@@ -196,7 +199,9 @@ const ChatThread = ({
                             type="button"
                             className="btn btn-link p-0 text-muted chat-message-delete-btn"
                             title="Delete message"
-                            onClick={() => setConfirmDelete({ messageId: message.id, hasImage, hasBody })}
+                            onClick={() =>
+                              setConfirmDelete({ messageId: message.id, hasImage, hasBody })
+                            }
                             style={{ opacity: 0, transition: 'opacity 0.15s', lineHeight: 1 }}
                           >
                             <Trash2 size={14} />
@@ -226,13 +231,19 @@ const ChatThread = ({
                             />
                           )}
                           {/* Body + timestamp row */}
-                          <div className={`d-flex align-items-end gap-2 p-2 px-3${hasImage && !hasBody ? ' pt-1' : ''}`} style={{ flexWrap: 'wrap' }}>
+                          <div
+                            className={`d-flex align-items-end gap-2 p-2 px-3${hasImage && !hasBody ? ' pt-1' : ''}`}
+                            style={{ flexWrap: 'wrap' }}
+                          >
                             {hasBody && (
                               <div className="small text-body" style={{ whiteSpace: 'pre-wrap' }}>
                                 {message.body}
                               </div>
                             )}
-                            <div className="text-muted ms-auto" style={{ fontSize: '0.65rem', lineHeight: 1.4, whiteSpace: 'nowrap' }}>
+                            <div
+                              className="text-muted ms-auto"
+                              style={{ fontSize: '0.65rem', lineHeight: 1.4, whiteSpace: 'nowrap' }}
+                            >
                               {formatChatTime(message.created_at)}
                               {showSeen && <span className="ms-1">· Seen</span>}
                             </div>
@@ -272,19 +283,22 @@ const ChatThread = ({
                 <button
                   type="button"
                   className="btn btn-sm btn-dark position-absolute d-flex align-items-center justify-content-center p-0"
-                  style={{ top: 4, right: 4, width: 20, height: 20, borderRadius: '50%', opacity: 0.8 }}
+                  style={{
+                    top: 4,
+                    right: 4,
+                    width: 20,
+                    height: 20,
+                    borderRadius: '50%',
+                    opacity: 0.8,
+                  }}
                   onClick={onImageClear}
                 >
                   <X size={12} />
                 </button>
               </div>
             )}
-            {imageError && (
-              <div className="text-danger small mb-2">{imageError}</div>
-            )}
-            {sendError && (
-              <div className="text-danger small mb-2">{sendError}</div>
-            )}
+            {imageError && <div className="text-danger small mb-2">{imageError}</div>}
+            {sendError && <div className="text-danger small mb-2">{sendError}</div>}
             <div className="d-flex gap-2 align-items-end">
               {/* Hidden file input */}
               <input
@@ -349,8 +363,8 @@ const ChatThread = ({
             confirmDelete.hasImage && confirmDelete.hasBody
               ? 'This will permanently delete the message and its image for both you and the recipient.'
               : confirmDelete.hasImage
-              ? 'This will permanently delete the image for both you and the recipient.'
-              : 'This will permanently delete this message for both you and the recipient.'
+                ? 'This will permanently delete the image for both you and the recipient.'
+                : 'This will permanently delete this message for both you and the recipient.'
           }
           onConfirm={() => {
             onDeleteMessage(confirmDelete.messageId)

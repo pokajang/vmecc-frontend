@@ -24,11 +24,15 @@ export const EVENT_LABELS = {
 }
 
 export const getModuleLabel = (item) => {
-  const key = String(item?.module || item?.metadata?.module || '').trim().toLowerCase()
+  const key = String(item?.module || item?.metadata?.module || '')
+    .trim()
+    .toLowerCase()
   return MODULE_LABELS[key] || key || 'Workflow'
 }
 
 export const getEventLabel = (item) => {
-  const key = String(item?.eventType || '').trim().toLowerCase()
+  const key = String(item?.eventType || '')
+    .trim()
+    .toLowerCase()
   return EVENT_LABELS[key] || null
 }

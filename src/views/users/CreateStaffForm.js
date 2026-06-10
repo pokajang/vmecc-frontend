@@ -106,7 +106,9 @@ const CreateStaffForm = ({
                 className={`g-3 align-items-end mx-0 px-0 py-1 ${index > 0 ? 'border-top pt-3' : ''}`}
               >
                 <CCol xs={12} className="d-flex justify-content-between align-items-center">
-                  <span className="small fw-semibold text-body-secondary">Assignment {index + 1}</span>
+                  <span className="small fw-semibold text-body-secondary">
+                    Assignment {index + 1}
+                  </span>
                   <CButton
                     type="button"
                     size="sm"

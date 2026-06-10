@@ -8,8 +8,8 @@ import { apiRequest } from 'src/services/apiClient'
 import { normalizeApiAssignmentRow } from 'src/views/leave/leaveApiNormalizer'
 
 // ── Key helpers (kept for import compatibility, no longer used for storage) ───
-export const getLeaveAssignmentsKey        = (_userId) => ''
-export const getLeaveAssignmentHistoryKey  = (_userId) => ''
+export const getLeaveAssignmentsKey = (_userId) => ''
+export const getLeaveAssignmentHistoryKey = (_userId) => ''
 
 // ── Assignments ───────────────────────────────────────────────────────────────
 
@@ -38,7 +38,7 @@ export const loadSharedLeaveAssignments = async () => loadLeaveAssignments()
  * No-ops silently if the API call fails (caller handles UI feedback).
  */
 export const saveLeaveAssignments = async (_userId, rows) => {
-  const items = Array.isArray(rows) ? rows : (rows ? [rows] : [])
+  const items = Array.isArray(rows) ? rows : rows ? [rows] : []
   for (const row of items) {
     if (!row?.user_id && !row?.id) continue
     try {
@@ -47,20 +47,20 @@ export const saveLeaveAssignments = async (_userId, rows) => {
           method: 'PUT',
           body: JSON.stringify({
             entitlement: row.entitlement,
-            used:        row.used,
-            pending:     row.pending,
+            used: row.used,
+            pending: row.pending,
           }),
         })
       } else {
         await apiRequest('/staff/leave/assignments', {
           method: 'POST',
           body: JSON.stringify({
-            user_id:     row.user_id,
-            year:        row.year,
-            leave_type:  row.leaveType ?? row.leave_type,
+            user_id: row.user_id,
+            year: row.year,
+            leave_type: row.leaveType ?? row.leave_type,
             entitlement: row.entitlement,
-            used:        row.used        ?? 0,
-            pending:     row.pending     ?? 0,
+            used: row.used ?? 0,
+            pending: row.pending ?? 0,
           }),
         })
       }
@@ -72,5 +72,5 @@ export const saveLeaveAssignments = async (_userId, rows) => {
 
 // ── Assignment History (no-ops — server manages audit trail) ─────────────────
 
-export const loadLeaveAssignmentHistory  = async (_userId) => []
-export const saveLeaveAssignmentHistory  = async (_userId, _rows) => {}
+export const loadLeaveAssignmentHistory = async (_userId) => []
+export const saveLeaveAssignmentHistory = async (_userId, _rows) => {}

@@ -63,10 +63,14 @@ const SalaryClaimPaymentModal = ({
                 value={values.paymentDate || ''}
                 onChange={(event) => onChange('paymentDate', event.target.value)}
               />
-              {errors.paymentDate ? <div className="text-danger small mt-1">{errors.paymentDate}</div> : null}
+              {errors.paymentDate ? (
+                <div className="text-danger small mt-1">{errors.paymentDate}</div>
+              ) : null}
             </div>
             <div>
-              <CFormLabel htmlFor="salary-mark-paid-reference">Payment Reference (optional)</CFormLabel>
+              <CFormLabel htmlFor="salary-mark-paid-reference">
+                Payment Reference (optional)
+              </CFormLabel>
               <CFormInput
                 id="salary-mark-paid-reference"
                 value={values.paymentReference || ''}
@@ -101,7 +105,11 @@ const SalaryClaimPaymentModal = ({
         <CButton color="light" onClick={onClose} disabled={isSubmitting}>
           Cancel
         </CButton>
-        <CButton color={isMarkMode ? 'success' : 'warning'} onClick={onSubmit} disabled={isSubmitting}>
+        <CButton
+          color={isMarkMode ? 'success' : 'warning'}
+          onClick={onSubmit}
+          disabled={isSubmitting}
+        >
           {actionLabel}
         </CButton>
       </CModalFooter>

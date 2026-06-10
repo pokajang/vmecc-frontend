@@ -1,12 +1,5 @@
 import React from 'react'
-import {
-  CAlert,
-  CFormInput,
-  CModal,
-  CModalBody,
-  CModalHeader,
-  CModalTitle,
-} from '@coreui/react'
+import { CAlert, CFormInput, CModal, CModalBody, CModalHeader, CModalTitle } from '@coreui/react'
 import { getInitials, EMPTY_VALUE } from './messageUtils'
 
 const NewChatModal = ({

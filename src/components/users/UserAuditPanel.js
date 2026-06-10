@@ -23,9 +23,7 @@ const EMPTY = '--'
 
 const formatAction = (value) => {
   if (!value) return EMPTY
-  return value
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (m) => m.toUpperCase())
+  return value.replace(/_/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase())
 }
 
 const getActorLabel = (log) => {
@@ -92,7 +90,10 @@ const UserAuditPanel = ({ userId }) => {
 
   const { rowsToShow, setRowsToShow, visibleRows } = useTableRows(logs)
 
-  const emptyState = useMemo(() => !loading && !error && logs.length === 0, [loading, error, logs.length])
+  const emptyState = useMemo(
+    () => !loading && !error && logs.length === 0,
+    [loading, error, logs.length],
+  )
 
   const handleExport = () => {
     const headers = ['#', 'Time', 'Action', 'Actor', 'IP', 'Details']
@@ -150,7 +151,9 @@ const UserAuditPanel = ({ userId }) => {
                     <CTableDataCell>{formatDateTime(log.created_at)}</CTableDataCell>
                     <CTableDataCell>{formatAction(log.action)}</CTableDataCell>
                     <CTableDataCell className="text-break">{getActorLabel(log)}</CTableDataCell>
-                    <CTableDataCell className="text-break">{log.ip_address || EMPTY}</CTableDataCell>
+                    <CTableDataCell className="text-break">
+                      {log.ip_address || EMPTY}
+                    </CTableDataCell>
                     <CTableDataCell className="text-break">{getDetailsLabel(log)}</CTableDataCell>
                   </CTableRow>
                 ))}

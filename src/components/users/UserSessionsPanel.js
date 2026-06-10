@@ -83,7 +83,8 @@ const UserSessionsPanel = ({ userId, actionsDisabled = false, actionsDisabledRea
       }
 
       if (term) {
-        const hay = `${session.ip_address || ''} ${session.user_agent || ''} ${session.device_id || ''}`.toLowerCase()
+        const hay =
+          `${session.ip_address || ''} ${session.user_agent || ''} ${session.device_id || ''}`.toLowerCase()
         if (!hay.includes(term)) return false
       }
 
@@ -306,7 +307,9 @@ const UserSessionsPanel = ({ userId, actionsDisabled = false, actionsDisabledRea
                       <CTableDataCell>
                         <span className={`badge bg-${status.color}`}>{status.label}</span>
                       </CTableDataCell>
-                      <CTableDataCell className="text-break">{session.user_agent || '-'}</CTableDataCell>
+                      <CTableDataCell className="text-break">
+                        {session.user_agent || '-'}
+                      </CTableDataCell>
                       <CTableDataCell>{session.ip_address || '-'}</CTableDataCell>
                       <CTableDataCell>{formatDateTime(session.created_at)}</CTableDataCell>
                       <CTableDataCell>{formatDateTime(session.last_seen_at)}</CTableDataCell>

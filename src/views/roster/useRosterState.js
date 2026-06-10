@@ -1,9 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { fetchRosters, fetchTeams, fetchShiftWindows, fetchAllShifts, saveRosters, publishRosters } from 'src/services/apiClient'
+import {
+  fetchRosters,
+  fetchTeams,
+  fetchShiftWindows,
+  fetchAllShifts,
+  saveRosters,
+  publishRosters,
+} from 'src/services/apiClient'
 
 // Built-in shift definitions used as fallback if the API is unreachable
 const FALLBACK_SHIFTS = [
-  { slug: 'day',   name: 'Day',   builtin: true },
+  { slug: 'day', name: 'Day', builtin: true },
   { slug: 'night', name: 'Night', builtin: true },
 ]
 
@@ -41,15 +48,20 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
   const [allShifts, setAllShifts] = useState(FALLBACK_SHIFTS) // ordered shift definitions
   const [initialized, setInitialized] = useState(false)
   const [shiftWindows, setShiftWindows] = useState({
-    normal_start: '08:00', normal_end: '17:00',
-    day_start: '07:00',    day_end: '19:00',
-    night_start: '19:00',  night_end: '07:00',
+    normal_start: '08:00',
+    normal_end: '17:00',
+    day_start: '07:00',
+    day_end: '19:00',
+    night_start: '19:00',
+    night_end: '07:00',
   })
 
   const teamsRef = useRef([])
-  useEffect(() => { teamsRef.current = teams }, [teams])
+  useEffect(() => {
+    teamsRef.current = teams
+  }, [teams])
 
-  const getRangeMonthCount = (value) => value === 'month' ? 12 : 0
+  const getRangeMonthCount = (value) => (value === 'month' ? 12 : 0)
 
   const getRecentMonths = (count, anchorDate = new Date()) => {
     const months = []
@@ -72,7 +84,6 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
     if (selectedMonths.length) return selectedMonths
     const count = getRangeMonthCount(rangeType) || 1
     return getRecentMonths(count)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedMonths, rangeType])
 
   const baseRows = useMemo(() => {
@@ -95,7 +106,10 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
     } else {
       const rangeStartEnd = () => {
         if (rangeType === 'day') {
-          return { start: dateFilter ? new Date(dateFilter) : null, end: dateFilter ? new Date(dateFilter) : null }
+          return {
+            start: dateFilter ? new Date(dateFilter) : null,
+            end: dateFilter ? new Date(dateFilter) : null,
+          }
         }
         if (rangeType === 'week') {
           const monday = getMonday(dateFilter ? new Date(dateFilter) : today)
@@ -104,7 +118,10 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
           return { start: monday, end: sunday }
         }
         if (rangeType === 'custom') {
-          return { start: startDate ? new Date(startDate) : null, end: endDate ? new Date(endDate) : null }
+          return {
+            start: startDate ? new Date(startDate) : null,
+            end: endDate ? new Date(endDate) : null,
+          }
         }
         return { start: null, end: null }
       }
@@ -131,7 +148,7 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
       if (!match) return row
       return { ...row, shifts: match.shifts ?? {} }
     })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roster, rangeType, effectiveMonths, dateFilter, startDate, endDate])
 
   const monthOptions = useMemo(() => {
@@ -152,7 +169,7 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
     return Array.from(opts.entries())
       .sort((a, b) => a[0].localeCompare(b[0]))
       .map(([value, label]) => ({ value, label }))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [baseRows, rangeType, selectedMonths])
 
   const getRange = () => {
@@ -165,7 +182,10 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
       return { start: monday, end: sunday }
     }
     if (rangeType === 'custom') {
-      return { start: startDate ? new Date(startDate) : null, end: endDate ? new Date(endDate) : null }
+      return {
+        start: startDate ? new Date(startDate) : null,
+        end: endDate ? new Date(endDate) : null,
+      }
     }
     return { start: null, end: null }
   }
@@ -185,19 +205,24 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
         .sort()
         .map((m) => {
           const [y, mo] = m.split('-').map(Number)
-          return new Date(y, mo - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+          return new Date(y, mo - 1, 1).toLocaleDateString('en-US', {
+            month: 'long',
+            year: 'numeric',
+          })
         })
       return labels.join(', ')
     }
     return 'current view'
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rangeType, dateFilter, startDate, endDate, selectedMonths])
 
   const filtered = useMemo(() => {
     const { start, end } = getRange()
     return baseRows.filter((row) => {
       if (search.trim()) {
-        const shiftTeams = Object.values(row.shifts || {}).map((s) => s?.team || '').join(' ')
+        const shiftTeams = Object.values(row.shifts || {})
+          .map((s) => s?.team || '')
+          .join(' ')
         const hay = `${row.date} ${shiftTeams}`.toLowerCase()
         if (!hay.includes(search.trim().toLowerCase())) return false
       }
@@ -216,12 +241,16 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
       const matchesTeam = (shift) => teamFilter === 'All' || (shift?.team || '') === teamFilter
       return Object.values(row.shifts || {}).some(matchesTeam) || teamFilter === 'All'
     })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [baseRows, dateFilter, teamFilter, search, rangeType, startDate, endDate, selectedMonths])
 
   const monthWeekGroups = useMemo(() => {
     const monthName = (dateStr) =>
-      new Date(dateStr).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+      new Date(dateStr).toLocaleDateString('en-US', {
+        month: 'long',
+        year: 'numeric',
+        timeZone: 'UTC',
+      })
     const months = new Map()
     filtered
       .slice()
@@ -259,7 +288,11 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
   // monthlyStats: per-month per-team counts across all shift slugs
   const monthlyStats = useMemo(() => {
     const monthName = (dateStr) =>
-      new Date(dateStr).toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+      new Date(dateStr).toLocaleDateString('en-US', {
+        month: 'long',
+        year: 'numeric',
+        timeZone: 'UTC',
+      })
 
     const byMonth = {}
     filtered.forEach((row) => {
@@ -297,20 +330,22 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
 
       return { month, teams: teamsData, unassigned, totalDays }
     })
-  }, [filtered, teams, allShifts])
+  }, [filtered, allShifts])
 
   const viewPublishStatus = useMemo(() => {
     const assigned = filtered.filter((r) => Object.keys(r.shifts || {}).length > 0)
     if (assigned.length === 0) return null
     const allPublished = assigned.every((r) =>
-      Object.values(r.shifts || {}).every((s) => s?.status === 'published')
+      Object.values(r.shifts || {}).every((s) => s?.status === 'published'),
     )
     return allPublished ? 'published' : 'draft'
   }, [filtered])
 
   const teamStatuses = useMemo(() => {
     const base = {}
-    Object.keys(stats || {}).forEach((t) => { base[t] = 'Unscheduled' })
+    Object.keys(stats || {}).forEach((t) => {
+      base[t] = 'Unscheduled'
+    })
     const todayStr = formatISO(new Date())
     const todayRow = roster.find((r) => r.date === todayStr)
     if (!todayRow) return base
@@ -329,7 +364,7 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
     // Build slug → time window map from allShifts (custom shifts carry start/end)
     // plus built-in windows from shiftWindows settings
     const shiftTimeMap = {
-      day:   { start: toMinutes(shiftWindows.day_start),   end: toMinutes(shiftWindows.day_end) },
+      day: { start: toMinutes(shiftWindows.day_start), end: toMinutes(shiftWindows.day_end) },
       night: { start: toMinutes(shiftWindows.night_start), end: toMinutes(shiftWindows.night_end) },
     }
     allShifts.forEach((s) => {
@@ -338,9 +373,10 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
       }
     })
 
-    const activeShift = Object.entries(shiftTimeMap).find(([, { start, end }]) =>
-      start !== end && inRange(currentMins, start, end)
-    )?.[0] ?? null
+    const activeShift =
+      Object.entries(shiftTimeMap).find(
+        ([, { start, end }]) => start !== end && inRange(currentMins, start, end),
+      )?.[0] ?? null
 
     if (activeShift) {
       const activeTeam = todayRow.shifts?.[activeShift]?.team
@@ -352,7 +388,7 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
       })
     }
     return base
-  }, [roster, shiftWindows, stats])
+  }, [roster, shiftWindows, stats, allShifts])
 
   const refreshRoster = async (teamList = teamsRef.current, statusFilter = null) => {
     setLoading(true)
@@ -384,13 +420,15 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
         return found ? { ...shiftObj, team_id: found.id } : shiftObj
       }
 
-      const rows = (resp?.data || []).map((row) => addDayName({
-        date: row.date,
-        status: row.status || 'draft',
-        shifts: Object.fromEntries(
-          Object.entries(row.shifts || {}).map(([slug, s]) => [slug, mapShiftEntry(s)])
-        ),
-      }))
+      const rows = (resp?.data || []).map((row) =>
+        addDayName({
+          date: row.date,
+          status: row.status || 'draft',
+          shifts: Object.fromEntries(
+            Object.entries(row.shifts || {}).map(([slug, s]) => [slug, mapShiftEntry(s)]),
+          ),
+        }),
+      )
 
       setRoster(rows)
       setOriginalRoster(rows)
@@ -431,14 +469,14 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
       }
     }
     load()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled])
 
   useEffect(() => {
     if (rangeType === 'month' && selectedMonths.length === 0) {
       setSelectedMonths(getRecentMonths(6))
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rangeType])
 
   useEffect(() => {
@@ -453,36 +491,48 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
   useEffect(() => {
     if (!enabled || !initialized) return
     refreshRoster(teamsRef.current, publishedOnly ? 'published' : null)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, initialized, rangeType, dateFilter, startDate, endDate, selectedMonths])
 
   // ── Navigation helpers ──────────────────────────────────────────────────────
 
   const handlePrev = () => {
     if (rangeType === 'day') {
-      const d = new Date(dateFilter); d.setDate(d.getDate() - 1); setDateFilter(formatISO(d))
+      const d = new Date(dateFilter)
+      d.setDate(d.getDate() - 1)
+      setDateFilter(formatISO(d))
     } else if (rangeType === 'week') {
-      const d = new Date(dateFilter); d.setDate(d.getDate() - 7); setDateFilter(formatISO(d))
+      const d = new Date(dateFilter)
+      d.setDate(d.getDate() - 7)
+      setDateFilter(formatISO(d))
     } else if (rangeType === 'month') {
-      setSelectedMonths(selectedMonths.map((m) => {
-        const [y, mo] = m.split('-').map(Number)
-        const d = new Date(y, mo - 2, 1)
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-      }))
+      setSelectedMonths(
+        selectedMonths.map((m) => {
+          const [y, mo] = m.split('-').map(Number)
+          const d = new Date(y, mo - 2, 1)
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+        }),
+      )
     }
   }
 
   const handleNext = () => {
     if (rangeType === 'day') {
-      const d = new Date(dateFilter); d.setDate(d.getDate() + 1); setDateFilter(formatISO(d))
+      const d = new Date(dateFilter)
+      d.setDate(d.getDate() + 1)
+      setDateFilter(formatISO(d))
     } else if (rangeType === 'week') {
-      const d = new Date(dateFilter); d.setDate(d.getDate() + 7); setDateFilter(formatISO(d))
+      const d = new Date(dateFilter)
+      d.setDate(d.getDate() + 7)
+      setDateFilter(formatISO(d))
     } else if (rangeType === 'month') {
-      setSelectedMonths(selectedMonths.map((m) => {
-        const [y, mo] = m.split('-').map(Number)
-        const d = new Date(y, mo, 1)
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-      }))
+      setSelectedMonths(
+        selectedMonths.map((m) => {
+          const [y, mo] = m.split('-').map(Number)
+          const d = new Date(y, mo, 1)
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+        }),
+      )
     }
   }
 
@@ -512,7 +562,9 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
     if (teamId !== null) {
       const existing = roster.find((r) => r.date === date)
       const otherShifts = Object.entries(existing?.shifts || {}).filter(([s]) => s !== shiftSlug)
-      const conflict = otherShifts.find(([, s]) => s?.team_id && String(s.team_id) === String(teamId))
+      const conflict = otherShifts.find(
+        ([, s]) => s?.team_id && String(s.team_id) === String(teamId),
+      )
       if (conflict) {
         setError(`A team cannot be assigned to more than one shift on the same date.`)
         setTimeout(() => setError(null), 4000)
@@ -539,7 +591,10 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
   }
 
   const handleCancelEdit = () => {
-    if (isDirty) { setRoster(originalRoster); setIsDirty(false) }
+    if (isDirty) {
+      setRoster(originalRoster)
+      setIsDirty(false)
+    }
     setEditMode(false)
   }
 
@@ -548,7 +603,7 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
     filtered.map((row) => ({
       date: row.date,
       shifts: allShifts.map((s) => ({
-        shift:   s.slug,
+        shift: s.slug,
         team_id: row.shifts?.[s.slug]?.team_id != null ? Number(row.shifts[s.slug].team_id) : null,
       })),
     }))
@@ -603,16 +658,47 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
 
   return {
     state: {
-      rangeType, dateFilter, startDate, endDate, teamFilter, search, selectedMonths,
-      editMode, isSavingDraft, isPublishing, isDirty, statusMessage, error, loading,
-      monthOptions, monthWeekGroups, filteredRows: filtered,
-      stats, monthlyStats, teams, allShifts, teamStatuses, scopeLabel, viewPublishStatus,
+      rangeType,
+      dateFilter,
+      startDate,
+      endDate,
+      teamFilter,
+      search,
+      selectedMonths,
+      editMode,
+      isSavingDraft,
+      isPublishing,
+      isDirty,
+      statusMessage,
+      error,
+      loading,
+      monthOptions,
+      monthWeekGroups,
+      filteredRows: filtered,
+      stats,
+      monthlyStats,
+      teams,
+      allShifts,
+      teamStatuses,
+      scopeLabel,
+      viewPublishStatus,
     },
     actions: {
-      setDateFilter, setStartDate, setEndDate, setTeamFilter, setSearch,
-      setSelectedMonths, setEditMode, handleRangeChange, handleClear,
-      handleAssign, handleSaveDraft, handlePublish, handleCancelEdit,
-      handlePrev, handleNext,
+      setDateFilter,
+      setStartDate,
+      setEndDate,
+      setTeamFilter,
+      setSearch,
+      setSelectedMonths,
+      setEditMode,
+      handleRangeChange,
+      handleClear,
+      handleAssign,
+      handleSaveDraft,
+      handlePublish,
+      handleCancelEdit,
+      handlePrev,
+      handleNext,
       onMonthToggle: (value, checked) =>
         setSelectedMonths((prev) => (checked ? [...prev, value] : prev.filter((v) => v !== value))),
     },

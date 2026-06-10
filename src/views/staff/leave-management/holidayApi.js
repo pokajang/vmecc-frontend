@@ -9,7 +9,7 @@ import {
 const toFrontendRow = (row) => ({
   id: row.id,
   name: row.name,
-  date: row.date,                              // 'YYYY-MM-DD'
+  date: row.date, // 'YYYY-MM-DD'
   year: row.year,
   scope: row.scope,
   state: row.state,

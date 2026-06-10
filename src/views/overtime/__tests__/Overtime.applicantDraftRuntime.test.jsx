@@ -119,7 +119,11 @@ vi.mock('../components/OvertimeDetailSection', () => ({
 vi.mock('src/views/shared/ActionConfirmModal', () => ({
   default: ({ visible, title = '', onConfirm, onClose }) =>
     visible ? (
-      <div data-testid={`action-confirm-${String(title || '').toLowerCase().replace(/\s+/g, '-')}`}>
+      <div
+        data-testid={`action-confirm-${String(title || '')
+          .toLowerCase()
+          .replace(/\s+/g, '-')}`}
+      >
         <button type="button" onClick={onConfirm}>
           confirm-action
         </button>

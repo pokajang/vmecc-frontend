@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
 import {
   CAlert,
@@ -68,10 +68,10 @@ const ModuleSectionHeader = ({
             {period && onPeriodChange && (
               <CDropdown alignment="end">
                 <CDropdownToggle
-                size="sm"
-                className="d-inline-flex align-items-center border-0 shadow-none"
-                style={{ background: 'rgba(0, 126, 122, 0.12)', color: 'var(--cui-primary)' }}
-              >
+                  size="sm"
+                  className="d-inline-flex align-items-center border-0 shadow-none"
+                  style={{ background: 'rgba(0, 126, 122, 0.12)', color: 'var(--cui-primary)' }}
+                >
                   {selectedPeriodLabel}
                 </CDropdownToggle>
                 <CDropdownMenu>
@@ -115,7 +115,6 @@ const SectionHeading = ({ title, subtext }) => (
 
 const Dashboard = () => {
   const authUser = useSelector((state) => state.authUser)
-  const { stats, loading } = useDashboardStats()
   const { stats: myStats, loading: myStatsLoading } = useMyStats()
   const [myStatsVisible, setMyStatsVisible] = useState(true)
   const [period, setPeriod] = useState('this_month')
@@ -127,6 +126,28 @@ const Dashboard = () => {
   const canViewLeaveSection = hasPermission(authUser, DASHBOARD_SECTION_PERMISSIONS.leave)
   const canViewRosterSection = hasPermission(authUser, DASHBOARD_SECTION_PERMISSIONS.roster)
   const canViewReportsSection = hasPermission(authUser, DASHBOARD_SECTION_PERMISSIONS.reports)
+  const visibleDashboardModules = useMemo(
+    () =>
+      [
+        canViewPayrollSection ? 'payroll' : null,
+        canViewOvertimeSection ? 'overtime' : null,
+        canViewLeaveSection ? 'leave' : null,
+        canViewRosterSection ? 'roster' : null,
+        canViewReportsSection ? 'reports' : null,
+      ].filter(Boolean),
+    [
+      canViewPayrollSection,
+      canViewOvertimeSection,
+      canViewLeaveSection,
+      canViewRosterSection,
+      canViewReportsSection,
+    ],
+  )
+  const {
+    stats,
+    loading,
+    error: dashboardStatsError,
+  } = useDashboardStats({ period, modules: visibleDashboardModules })
 
   if (!hasPermission(authUser, 'self.dashboard')) {
     return (
@@ -158,9 +179,20 @@ const Dashboard = () => {
               {myStatsVisible ? <EyeOff size={14} /> : <Eye size={14} />}
             </CButton>
           </div>
-          {myStatsVisible && <div className="mt-4"><MyStats stats={myStats} loading={myStatsLoading} /></div>}
+          {myStatsVisible && (
+            <div className="mt-4">
+              <MyStats stats={myStats} loading={myStatsLoading} />
+            </div>
+          )}
         </CCardBody>
       </CCard>
+
+      {dashboardStatsError && (
+        <CAlert color="warning" className="mb-4">
+          Dashboard statistics could not be fully loaded. Some sections may show zero values until
+          the data is available.
+        </CAlert>
+      )}
 
       {canViewPayrollSection && (
         <ModuleSectionHeader

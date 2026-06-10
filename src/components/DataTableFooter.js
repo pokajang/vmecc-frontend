@@ -33,7 +33,9 @@ const DataTableFooter = ({
       <span>Show</span>
       <CFormSelect
         size="sm"
-        value={rowsToShow === ALL_ROWS_VALUE || rowsToShow >= filteredCount ? ALL_ROWS_VALUE : rowsToShow}
+        value={
+          rowsToShow === ALL_ROWS_VALUE || rowsToShow >= filteredCount ? ALL_ROWS_VALUE : rowsToShow
+        }
         onChange={(e) => {
           const raw = e.target.value
           onRowsToShowChange(raw === ALL_ROWS_VALUE ? ALL_ROWS_VALUE : Number(raw))

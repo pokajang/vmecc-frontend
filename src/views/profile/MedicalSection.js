@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { CAlert, CCard, CCardBody, CCardHeader, CFormInput, CFormTextarea } from '@coreui/react'
 import { useDispatch } from 'react-redux'
 import EditControls from 'src/components/EditControls'
@@ -12,30 +12,21 @@ const toListArray = (value) =>
     .map((v) => v.trim())
     .filter(Boolean)
 
+const normalizeMedicalForm = (medical = {}) => ({
+  bloodType: medical.bloodType || '',
+  allergies: toListString(medical.allergies || []),
+  conditions: toListString(medical.conditions || []),
+  medications: toListString(medical.medications || []),
+  notes: medical.notes || '',
+})
+
 const MedicalSection = ({ medical = {} }) => {
   const dispatch = useDispatch()
   const [showNotice, setShowNotice] = useState(true)
   const [editMode, setEditMode] = useState(false)
   const [status, setStatus] = useAutoStatus()
 
-  const [form, setForm] = useState({
-    bloodType: '-',
-    allergies: '',
-    conditions: '',
-    medications: '',
-    notes: '',
-  })
-
-  useEffect(() => {
-    const m = medical || {}
-    setForm({
-      bloodType: m.bloodType || '',
-      allergies: toListString(m.allergies || []),
-      conditions: toListString(m.conditions || []),
-      medications: toListString(m.medications || []),
-      notes: m.notes || '',
-    })
-  }, [medical])
+  const [form, setForm] = useState(() => normalizeMedicalForm(medical))
 
   const renderRow = (label, content) => (
     <div className="d-flex justify-content-between align-items-center">
@@ -79,16 +70,14 @@ const MedicalSection = ({ medical = {} }) => {
   }
 
   const handleCancel = () => {
-    const m = medical || {}
-    setForm({
-      bloodType: m.bloodType || '',
-      allergies: toListString(m.allergies || []),
-      conditions: toListString(m.conditions || []),
-      medications: toListString(m.medications || []),
-      notes: m.notes || '',
-    })
+    setForm(normalizeMedicalForm(medical))
     setStatus({ loading: false, message: null, type: null })
     setEditMode(false)
+  }
+
+  const handleEdit = () => {
+    setForm(normalizeMedicalForm(medical))
+    setEditMode(true)
   }
 
   return (
@@ -98,7 +87,7 @@ const MedicalSection = ({ medical = {} }) => {
         <EditControls
           editMode={editMode}
           loading={status.loading}
-          onEdit={() => setEditMode(true)}
+          onEdit={handleEdit}
           onSave={handleSave}
           onCancel={handleCancel}
         />
@@ -131,7 +120,7 @@ const MedicalSection = ({ medical = {} }) => {
               placeholder="e.g., A+, O-, AB"
             />
           ) : (
-            form.bloodType || '--'
+            medical.bloodType || '--'
           ),
         )}
         {renderRow(
@@ -146,7 +135,7 @@ const MedicalSection = ({ medical = {} }) => {
               placeholder="e.g., peanuts, penicillin"
             />
           ) : (
-            renderList(toListArray(form.allergies))
+            renderList(medical.allergies || [])
           ),
         )}
         {renderRow(
@@ -161,7 +150,7 @@ const MedicalSection = ({ medical = {} }) => {
               placeholder="e.g., asthma, hypertension"
             />
           ) : (
-            renderList(toListArray(form.conditions))
+            renderList(medical.conditions || [])
           ),
         )}
         {renderRow(
@@ -176,7 +165,7 @@ const MedicalSection = ({ medical = {} }) => {
               placeholder="e.g., ibuprofen, metformin"
             />
           ) : (
-            renderList(toListArray(form.medications))
+            renderList(medical.medications || [])
           ),
         )}
         <div>
@@ -192,7 +181,7 @@ const MedicalSection = ({ medical = {} }) => {
             />
           ) : (
             <div className="border rounded p-2 bg-body-secondary text-body">
-              {form.notes ? form.notes : '--'}
+              {medical.notes ? medical.notes : '--'}
             </div>
           )}
         </div>

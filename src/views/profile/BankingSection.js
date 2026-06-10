@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import Select from 'react-select'
 import { CCard, CCardBody, CCardHeader, CFormInput } from '@coreui/react'
 import { useDispatch } from 'react-redux'
@@ -52,25 +52,18 @@ const maskAccount = (value = '') => {
   return `${'*'.repeat(Math.max(0, value.length - 4))}${value.slice(-4)}`
 }
 
+const normalizeBankingForm = (banking = {}) => ({
+  bankName: banking.bankName || '',
+  accountName: banking.accountName || '',
+  accountNumber: banking.accountNumber || '',
+})
+
 const BankingSection = ({ banking }) => {
   const dispatch = useDispatch()
   const [editMode, setEditMode] = useState(false)
   const safeBanking = banking ?? {}
-  const [form, setForm] = useState({
-    bankName: safeBanking.bankName || '',
-    accountName: safeBanking.accountName || '',
-    accountNumber: safeBanking.accountNumber || '',
-  })
+  const [form, setForm] = useState(() => normalizeBankingForm(safeBanking))
   const [status, setStatus] = useAutoStatus()
-
-  useEffect(() => {
-    const updated = banking ?? {}
-    setForm({
-      bankName: updated.bankName || '',
-      accountName: updated.accountName || '',
-      accountNumber: updated.accountNumber || '',
-    })
-  }, [banking])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -96,12 +89,13 @@ const BankingSection = ({ banking }) => {
 
   const handleCancel = () => {
     setEditMode(false)
-    setForm({
-      bankName: safeBanking.bankName || '',
-      accountName: safeBanking.accountName || '',
-      accountNumber: safeBanking.accountNumber || '',
-    })
+    setForm(normalizeBankingForm(safeBanking))
     setStatus({ loading: false, message: null, type: null })
+  }
+
+  const handleEdit = () => {
+    setForm(normalizeBankingForm(safeBanking))
+    setEditMode(true)
   }
 
   const renderRow = (label, content) => (
@@ -120,7 +114,7 @@ const BankingSection = ({ banking }) => {
         <EditControls
           editMode={editMode}
           loading={status.loading}
-          onEdit={() => setEditMode(true)}
+          onEdit={handleEdit}
           onSave={handleSave}
           onCancel={handleCancel}
         />

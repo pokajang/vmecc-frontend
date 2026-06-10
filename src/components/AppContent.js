@@ -8,7 +8,11 @@ import ErrorBoundary from './ErrorBoundary'
 
 const AppContent = () => {
   return (
-    <CContainer fluid className="px-3 px-md-4 px-xl-5 py-3 py-md-4 d-flex flex-column flex-grow-1" style={{ minHeight: 0 }}>
+    <CContainer
+      fluid
+      className="px-3 px-md-4 px-xl-5 py-3 py-md-4 d-flex flex-column flex-grow-1"
+      style={{ minHeight: 0 }}
+    >
       <Suspense fallback={<CSpinner color="primary" />}>
         <Routes>
           {routes.map((route, idx) => {

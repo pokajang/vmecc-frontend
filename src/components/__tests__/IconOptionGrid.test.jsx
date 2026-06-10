@@ -70,12 +70,18 @@ describe('IconOptionGrid', () => {
 
     const weekendCard = screen.getByTestId('option-weekend')
     fireEvent.click(weekendCard)
-    expect(handleChange).toHaveBeenCalledWith('weekend', expect.objectContaining({ value: 'weekend' }))
+    expect(handleChange).toHaveBeenCalledWith(
+      'weekend',
+      expect.objectContaining({ value: 'weekend' }),
+    )
 
     const weekdayCard = screen.getByTestId('option-weekday')
     fireEvent.keyDown(weekdayCard, { key: 'Enter' })
     fireEvent.keyDown(weekdayCard, { key: ' ' })
-    expect(handleChange).toHaveBeenCalledWith('weekday', expect.objectContaining({ value: 'weekday' }))
+    expect(handleChange).toHaveBeenCalledWith(
+      'weekday',
+      expect.objectContaining({ value: 'weekday' }),
+    )
     expect(handleChange).toHaveBeenCalledTimes(3)
   })
 

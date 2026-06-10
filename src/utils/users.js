@@ -31,7 +31,8 @@ export const formatDaysAgo = (value) => {
 
 export const renderStatus = (status) => {
   const normalized = (status || '').toLowerCase()
-  if (normalized === 'success' || normalized === 'successful') return { color: 'success', label: 'Success' }
+  if (normalized === 'success' || normalized === 'successful')
+    return { color: 'success', label: 'Success' }
   if (normalized === 'failed' || normalized === 'fail') return { color: 'danger', label: 'Failed' }
   return { color: 'secondary', label: status || 'Unknown' }
 }

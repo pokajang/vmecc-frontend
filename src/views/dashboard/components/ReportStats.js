@@ -1,14 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import {
-  CCard,
-  CCardBody,
-  CCardHeader,
-  CCol,
-  CProgress,
-  CRow,
-  CWidgetStatsA,
-} from '@coreui/react'
+import { CCard, CCardBody, CCardHeader, CCol, CProgress, CRow, CWidgetStatsA } from '@coreui/react'
 import { CChartBar, CChartDoughnut, CChartLine } from '@coreui/react-chartjs'
 import { getStyle } from '@coreui/utils'
 import {
@@ -49,7 +41,12 @@ export const ReportKpiTiles = ({ stats, periodLabel }) => {
           className="h-100"
           color="warning"
           value={stats?.pendingReview ?? 0}
-          title={<TileTitle>Reports Pending Review<PeriodLabel label={pl} /></TileTitle>}
+          title={
+            <TileTitle>
+              Reports Pending Review
+              <PeriodLabel label={pl} />
+            </TileTitle>
+          }
           chart={sparkline(getStyle('--cui-warning'))}
         />
       </CCol>
@@ -60,7 +57,12 @@ export const ReportKpiTiles = ({ stats, periodLabel }) => {
           className="h-100"
           color="warning"
           value={stats?.pendingApproval ?? 0}
-          title={<TileTitle>Reports Pending Approval<PeriodLabel label={pl} /></TileTitle>}
+          title={
+            <TileTitle>
+              Reports Pending Approval
+              <PeriodLabel label={pl} />
+            </TileTitle>
+          }
           chart={sparkline(getStyle('--cui-warning'))}
         />
       </CCol>
@@ -72,11 +74,15 @@ export const ReportKpiTiles = ({ stats, periodLabel }) => {
           style={{ background: `linear-gradient(135deg, ${ACCENT} 0%, ${ACCENT_DARK} 100%)` }}
           value={
             <>
-              {stats?.submittedThisPeriod ?? 0}{' '}
-              <span className="fs-6 fw-normal">reports</span>
+              {stats?.submittedThisPeriod ?? 0} <span className="fs-6 fw-normal">reports</span>
             </>
           }
-          title={<TileTitle>Reports Submitted<PeriodLabel label={pl} /></TileTitle>}
+          title={
+            <TileTitle>
+              Reports Submitted
+              <PeriodLabel label={pl} />
+            </TileTitle>
+          }
           chart={sparkline(ACCENT_SPARK, true)}
         />
       </CCol>
@@ -177,7 +183,6 @@ export const ReportBreakdown = ({ stats, periodLabel }) => {
       </CCardHeader>
       <CCardBody>
         <CRow className="g-4">
-
           {/* By report type — doughnut */}
           <CCol xs={12} md={4}>
             <div className="text-body-secondary small mb-2">By report type</div>
@@ -243,7 +248,6 @@ export const ReportBreakdown = ({ stats, periodLabel }) => {
               )
             })}
           </CCol>
-
         </CRow>
       </CCardBody>
     </CCard>

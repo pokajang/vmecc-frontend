@@ -8,7 +8,6 @@ const useMyStats = () => {
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
     fetchMyDashboardStats()
       .then((res) => {
         if (!cancelled) {
