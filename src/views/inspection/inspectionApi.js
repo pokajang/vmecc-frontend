@@ -1,4 +1,5 @@
 import { apiRequest, buildApiUrl, fetchWithCsrfRetry } from 'src/services/apiClient'
+import featureFlags from 'src/config/featureFlags'
 import { loadInspectionRecords, saveInspectionRecords } from './inspectionStorage'
 import { normalizeInspectionTypeSlug, normalizeReportRecords } from './inspectionSharedUtils'
 import { WORKFLOW_SESSION_KEY } from './workflowSession'
@@ -13,6 +14,11 @@ const INSPECTION_API_ENABLED =
   REPORT_API_ENABLED_TYPES_RAW.includes('*') || REPORT_API_ENABLED_TYPES_RAW.length === 0
     ? true
     : REPORT_API_ENABLED_TYPES_RAW.includes(INSPECTION_TYPE)
+
+const assertInspectionPersistenceAvailable = () => {
+  if (INSPECTION_API_ENABLED || featureFlags.reportLocalFallbackEnabled) return
+  throw new Error('Inspection report API is disabled and local fallback is not enabled.')
+}
 
 const toApiStatus = (status) => {
   const value = normalizeInspectionTypeSlug(status)
@@ -48,6 +54,7 @@ const toPayload = (row) => {
 export const isInspectionApiEnabled = () => INSPECTION_API_ENABLED
 
 export const fetchInspectionRecords = async () => {
+  assertInspectionPersistenceAvailable()
   if (!INSPECTION_API_ENABLED) return []
   const response = await apiRequest(`/reports?reportType=${encodeURIComponent(INSPECTION_TYPE)}`)
   const rows = normalizeReportRecords(Array.isArray(response?.data) ? response.data : [])
@@ -110,6 +117,7 @@ const persistInspectionRecordsToApi = async (rows) => {
 
 export const persistInspectionRecords = async (userId, rows) => {
   if (!userId) return false
+  assertInspectionPersistenceAvailable()
   if (!INSPECTION_API_ENABLED) {
     return saveInspectionRecords(
       userId,
@@ -123,6 +131,7 @@ export const persistInspectionRecords = async (userId, rows) => {
 
 export const persistInspectionRecord = async (userId, row) => {
   if (!userId || !row) return false
+  assertInspectionPersistenceAvailable()
   const safeRow = stripInspectionWorkflowMetadata(row)
   if (!INSPECTION_API_ENABLED) {
     const existingRows = loadInspectionRecords(userId)
@@ -139,6 +148,7 @@ export const deleteInspectionRecord = async (userId, reportUid) => {
   if (!userId) return false
   const id = String(reportUid || '').trim()
   if (!id) return false
+  assertInspectionPersistenceAvailable()
   if (!INSPECTION_API_ENABLED) {
     return saveInspectionRecords(
       userId,
