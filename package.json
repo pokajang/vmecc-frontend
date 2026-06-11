@@ -40,11 +40,10 @@
     "react-datepicker": "^9.1.0",
     "react-dom": "^19.2.0",
     "react-redux": "^9.2.0",
-    "react-router-dom": "^7.9.5",
+    "react-router-dom": "^7.17.0",
     "react-select": "^5.10.2",
     "redux": "5.0.1",
-    "simplebar-react": "^3.3.2",
-    "xlsx": "^0.18.5"
+    "simplebar-react": "^3.3.2"
   },
   "devDependencies": {
     "@testing-library/react": "^16.3.2",

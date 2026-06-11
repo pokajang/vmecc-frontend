@@ -180,7 +180,7 @@ const MonthlyBreakdown = ({ monthlyStats = [], allShifts = [], exportedBy = '' }
     )
 
     exportWorkbook({
-      filename: `roster-monthly-breakdown-${datestamp}.xlsx`,
+      filename: `roster-monthly-breakdown-${datestamp}.csv`,
       sheets: [
         {
           name: 'Monthly Breakdown',

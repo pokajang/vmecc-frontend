@@ -39,7 +39,7 @@ const writeMarker = (userId, payload) => {
   }
 }
 
-const collectPayload = (user) => {
+const collectPayload = async (user) => {
   const userId = user?.id
   const overtimeRows = loadOvertimeRecords(userId, [])?.data || []
   const overtimeDraft = loadOvertimeDraft(userId)?.data || null
@@ -62,10 +62,15 @@ const collectPayload = (user) => {
   }
 
   if (hasPermission(user, 'settings.manage')) {
+    const [overtimeApprovalRules, salaryWorkflowRules] = await Promise.all([
+      loadOvertimeApprovalRules(),
+      loadSalaryWorkflowRules(),
+    ])
+
     payload.settings = {
-      overtimeApprovalRules: loadOvertimeApprovalRules(),
+      overtimeApprovalRules: overtimeApprovalRules.data,
       overtimeRateSettings: loadOvertimeRateSettings(),
-      salaryWorkflowRules: loadSalaryWorkflowRules().data,
+      salaryWorkflowRules: salaryWorkflowRules.data,
     }
   }
 
@@ -110,7 +115,7 @@ export const runOtPayrollMigrationOnce = async (user) => {
   }
 
   try {
-    const payload = collectPayload(user)
+    const payload = await collectPayload(user)
     const result = await importOtPayrollMigrationApi(payload)
     const report = result?.data || {}
     writeMarker(userId, {

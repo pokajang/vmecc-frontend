@@ -425,7 +425,7 @@ const UserProfile = () => {
           { name: 'Active Sessions', headers: sessionHeaders, rows: sessionRows },
           { name: 'Admin Activity (latest 200)', headers: auditHeaders, rows: auditRows },
         ],
-        filename: `user-${userSlug}-activity-${new Date().toISOString().slice(0, 10)}.xlsx`,
+        filename: `user-${userSlug}-activity-${new Date().toISOString().slice(0, 10)}.csv`,
       })
     } catch (err) {
       pushActionMessage('danger', err.payload?.message || 'Unable to export activity.')
@@ -497,7 +497,7 @@ const UserProfile = () => {
                 disabled={exporting}
                 className="cursor-pointer"
               >
-                {exporting ? <ButtonLoader label="Exporting..." /> : 'Export XLSX'}
+                {exporting ? <ButtonLoader label="Exporting..." /> : 'Export CSV'}
               </CDropdownItem>
               {user.deleted_at ? (
                 <CDropdownItem

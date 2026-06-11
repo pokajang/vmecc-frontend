@@ -1,11 +1,13 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { apiRequest } from 'src/services/apiClient'
 import { runStaffOvertimeWorkflowApi } from 'src/services/overtimeApi'
 import { parseWorkflowTransitionError } from 'src/services/workflowTransitionErrors'
 import { getDisplayLeaveId } from 'src/views/staff/leave-management/leaveRecordUtils'
 import { getDisplayOvertimeId } from 'src/views/overtime/utils'
 import {
+  DEFAULT_OVERTIME_APPROVAL_RULES,
   loadOvertimeApprovalRules,
+  normalizeOvertimeApprovalRules,
   resolveOvertimeApprovalRule,
 } from 'src/views/settings/overtimeApprovalRulesStorage'
 import {
@@ -47,6 +49,25 @@ const useLeaveAdminWorkflow = ({
     useState(false)
   const [overtimeWorkflowDeclarationError, setOvertimeWorkflowDeclarationError] = useState('')
   const [overtimeWorkflowRejectError, setOvertimeWorkflowRejectError] = useState('')
+  const [overtimePolicy, setOvertimePolicy] = useState(() =>
+    normalizeOvertimeApprovalRules(DEFAULT_OVERTIME_APPROVAL_RULES),
+  )
+
+  useEffect(() => {
+    let alive = true
+
+    const hydratePolicy = async () => {
+      const result = await loadOvertimeApprovalRules()
+      if (!alive || !result?.ok) return
+      setOvertimePolicy(normalizeOvertimeApprovalRules(result.data))
+    }
+
+    hydratePolicy()
+
+    return () => {
+      alive = false
+    }
+  }, [])
 
   const getReviewActionConfig = useCallback(
     (row) => {
@@ -79,7 +100,7 @@ const useLeaveAdminWorkflow = ({
       const workflowState = resolveReviewWorkflowStateForRecord(
         row,
         applicantRoles,
-        loadOvertimeApprovalRules().workflow,
+        overtimePolicy.workflow,
         resolveOvertimeApprovalRule,
       )
       const requiredRole = normalizeRoleValue(workflowState.nextActionRole)
@@ -98,7 +119,7 @@ const useLeaveAdminWorkflow = ({
         applicantRoles,
       }
     },
-    [actorRoles, getApplicantRolesForRecord, isSystemAdministrator],
+    [actorRoles, getApplicantRolesForRecord, isSystemAdministrator, overtimePolicy],
   )
 
   const closeWorkflowModal = useCallback(() => {
@@ -407,7 +428,7 @@ const useLeaveAdminWorkflow = ({
       const workflowState = resolveReviewWorkflowStateForRecord(
         { ...row, ownerUserId, applicantRoles },
         applicantRoles,
-        loadOvertimeApprovalRules().workflow,
+        overtimePolicy.workflow,
         resolveOvertimeApprovalRule,
       )
 
@@ -532,6 +553,7 @@ const useLeaveAdminWorkflow = ({
       actorRoles,
       getApplicantRolesForRecord,
       isSystemAdministrator,
+      overtimePolicy,
       pushToast,
       refreshAllOvertimeRecords,
     ],

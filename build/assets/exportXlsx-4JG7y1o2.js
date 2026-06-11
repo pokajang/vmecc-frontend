@@ -1,0 +1,4 @@
+const s=e=>Array.isArray(e)?e:[],i=e=>e==null?"":typeof e=="string"?e:String(e),u=e=>{const t=i(e).replace(/\r\n/g,`
+`).replace(/\r/g,`
+`).replace(/"/g,'""');return/[",\n]/.test(t)?`"${t}"`:t},l=e=>s(e).map(u).join(","),g=e=>{const r=`export-${new Date().toISOString().slice(0,10)}.csv`;return(String(e||r).trim()||r).replace(/\.xlsx$/i,".csv")},b=({sheets:e,filename:r})=>{const t=s(e);if(!t.length)return;const n=[];t.forEach((c,d)=>{t.length>1&&(n.length&&n.push(""),n.push(l([c.name||`Sheet ${d+1}`])));const h=s(c.headers).map(i),f=s(c.rows).map(a=>s(a).map(i));h.length&&n.push(l(h)),f.forEach(a=>n.push(l(a)))});const m=new Blob([`\uFEFF${n.join(`\r
+`)}`],{type:"text/csv;charset=utf-8"}),p=URL.createObjectURL(m),o=document.createElement("a");o.href=p,o.download=g(r),document.body.appendChild(o),o.click(),document.body.removeChild(o),URL.revokeObjectURL(p)};export{b as e};

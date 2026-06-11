@@ -117,7 +117,7 @@ const useUserExportActions = ({ filtered }) => {
   const exportXlsx = useCallback(() => {
     exportWorkbook({
       sheets: [{ name: 'Users', headers: userExportHeaders, rows: getExportRows(filtered) }],
-      filename: `users-${new Date().toISOString().slice(0, 10)}.xlsx`,
+      filename: `users-${new Date().toISOString().slice(0, 10)}.csv`,
     })
   }, [filtered])
 
@@ -179,7 +179,7 @@ const useUserExportActions = ({ filtered }) => {
             { name: 'Active Sessions', headers: sessionHeaders, rows: sessionRows },
             { name: 'Admin Activity (latest 200)', headers: auditHeaders, rows: auditRows },
           ],
-          filename: `user-${slug}-activity-${new Date().toISOString().slice(0, 10)}.xlsx`,
+          filename: `user-${slug}-activity-${new Date().toISOString().slice(0, 10)}.csv`,
         })
       } catch (err) {
         pushExportMessage('danger', err.payload?.message || 'Unable to export activity.')

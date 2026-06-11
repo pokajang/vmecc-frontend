@@ -110,7 +110,7 @@ const UserSessionsPanel = ({ userId, actionsDisabled = false, actionsDisabledRea
     })
     exportWorkbook({
       sheets: [{ name: 'Active Sessions', headers, rows }],
-      filename: `active-sessions-${new Date().toISOString().slice(0, 10)}.xlsx`,
+      filename: `active-sessions-${new Date().toISOString().slice(0, 10)}.csv`,
     })
   }
 
@@ -152,7 +152,7 @@ const UserSessionsPanel = ({ userId, actionsDisabled = false, actionsDisabledRea
             onClick={handleExport}
             disabled={filteredSessions.length === 0}
           >
-            Export XLSX
+            Export CSV
           </CButton>
           <CButton
             size="sm"

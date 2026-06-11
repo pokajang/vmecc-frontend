@@ -43,6 +43,7 @@ export const featureFlags = {
     import.meta.env.VITE_HOLIDAY_GUIDANCE_STAFF_VISIBILITY_ENABLED,
     false,
   ),
+  reportLocalFallbackEnabled: asBool(import.meta.env.VITE_REPORT_LOCAL_FALLBACK_ENABLED, false),
   holidayGuidanceCohortUserIds: asCsvList(import.meta.env.VITE_HOLIDAY_GUIDANCE_COHORT_USER_IDS),
   holidayGuidanceCohortEmails: asCsvList(import.meta.env.VITE_HOLIDAY_GUIDANCE_COHORT_EMAILS),
 }

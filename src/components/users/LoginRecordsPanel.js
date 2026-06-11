@@ -91,7 +91,7 @@ const LoginRecordsPanel = ({ records, lastLoginAt }) => {
     })
     exportWorkbook({
       sheets: [{ name: 'Login Records', headers, rows }],
-      filename: `login-records-${new Date().toISOString().slice(0, 10)}.xlsx`,
+      filename: `login-records-${new Date().toISOString().slice(0, 10)}.csv`,
     })
   }
 
@@ -133,7 +133,7 @@ const LoginRecordsPanel = ({ records, lastLoginAt }) => {
           onClick={handleExport}
           disabled={filteredRecords.length === 0}
         >
-          Export XLSX
+          Export CSV
         </CButton>
       </CCardHeader>
       <CCardBody className="d-grid gap-3">

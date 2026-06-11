@@ -107,7 +107,7 @@ const UserAuditPanel = ({ userId }) => {
     ])
     exportWorkbook({
       sheets: [{ name: 'Admin Activity', headers, rows }],
-      filename: `admin-activity-${new Date().toISOString().slice(0, 10)}.xlsx`,
+      filename: `admin-activity-${new Date().toISOString().slice(0, 10)}.csv`,
     })
   }
 
@@ -122,7 +122,7 @@ const UserAuditPanel = ({ userId }) => {
           onClick={handleExport}
           disabled={logs.length === 0}
         >
-          Export XLSX
+          Export CSV
         </CButton>
       </CCardHeader>
       <CCardBody>

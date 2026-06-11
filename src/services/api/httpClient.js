@@ -8,6 +8,19 @@ const normalizeBaseUrl = (url) => {
 const API_BASE_URL = normalizeBaseUrl(import.meta.env.VITE_API_URL || 'http://localhost:8000/api')
 export const SYSTEM_MAINTENANCE_EVENT = 'vmecc:system-maintenance'
 
+let csrfToken = null
+
+export const getCsrfToken = () => csrfToken
+
+export const setCsrfToken = (token) => {
+  const normalized = String(token || '').trim()
+  csrfToken = normalized || null
+}
+
+export const clearCsrfToken = () => {
+  csrfToken = null
+}
+
 export const buildUrl = (path) => {
   if (!path.startsWith('/')) {
     return `${API_BASE_URL}/${path}`
@@ -63,9 +76,15 @@ export const getClientId = () => {
   }
 }
 
-export const apiRequest = async (path, options = {}) => {
-  // Do not force Content-Type for FormData — let the browser set it with the multipart boundary.
+const isUnsafeMethod = (method) =>
+  !['GET', 'HEAD', 'OPTIONS'].includes(String(method).toUpperCase())
+
+const hasHeader = (headers, targetName) =>
+  Object.keys(headers || {}).some((name) => name.toLowerCase() === targetName.toLowerCase())
+
+const requestHeaders = (options = {}) => {
   const isFormData = options.body instanceof FormData
+  const method = String(options.method || 'GET').toUpperCase()
   const headers = {
     ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     Accept: 'application/json',
@@ -73,12 +92,53 @@ export const apiRequest = async (path, options = {}) => {
     ...(getClientId() ? { 'X-Client-Id': getClientId() } : {}),
   }
 
-  const response = await fetch(buildUrl(path), {
-    method: options.method || 'GET',
+  if (isUnsafeMethod(method) && csrfToken && !hasHeader(headers, 'X-CSRF-Token')) {
+    headers['X-CSRF-Token'] = csrfToken
+  }
+
+  return headers
+}
+
+export const refreshCsrfToken = async () => {
+  const response = await fetch(buildUrl('/auth/session'), {
+    method: 'GET',
     credentials: 'include',
-    ...options,
-    headers,
+    headers: {
+      Accept: 'application/json',
+      ...(getClientId() ? { 'X-Client-Id': getClientId() } : {}),
+    },
   })
+  if (!response.ok) {
+    clearCsrfToken()
+    return null
+  }
+  const payload = await response.json()
+  setCsrfToken(payload?.csrf_token)
+  return getCsrfToken()
+}
+
+export const fetchWithCsrfRetry = async (url, options = {}, retried = false) => {
+  const method = String(options.method || 'GET').toUpperCase()
+  const { headers: _headers, ...fetchOptions } = options
+  const response = await fetch(url, {
+    ...fetchOptions,
+    method,
+    credentials: 'include',
+    headers: requestHeaders({ ...options, method }),
+  })
+
+  if (response.status === 419 && isUnsafeMethod(method) && !retried) {
+    const refreshedToken = await refreshCsrfToken()
+    if (refreshedToken) {
+      return fetchWithCsrfRetry(url, options, true)
+    }
+  }
+
+  return response
+}
+
+export const apiRequest = async (path, options = {}) => {
+  const response = await fetchWithCsrfRetry(buildUrl(path), options)
 
   let payload = null
   const contentType = response.headers.get('content-type')
@@ -100,6 +160,10 @@ export const apiRequest = async (path, options = {}) => {
     error.status = response.status
     error.payload = payload
     throw error
+  }
+
+  if (payload?.csrf_token) {
+    setCsrfToken(payload.csrf_token)
   }
 
   const maintenanceFromHeaders = readMaintenanceHeaderPayload(response)

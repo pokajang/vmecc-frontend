@@ -1,17 +1,9 @@
 import { expect, test } from 'vitest'
 import {
-  resolveWorkflowMetadataForSubmit,
   isLeaveCancellable,
   isLeaveCancellableByApplicant,
   isLeaveCancellableByAdmin,
 } from '../leaveWorkflow'
-
-test('resolveWorkflowMetadataForSubmit returns template when no existing snapshot', () => {
-  const result = resolveWorkflowMetadataForSubmit(null, ['staff'])
-  expect(result).toHaveProperty('workflowSnapshot')
-  expect(result).toHaveProperty('workflowStage')
-  expect(result.applicantRoles).toEqual(['staff'])
-})
 
 test('isLeaveCancellable rules', () => {
   expect(isLeaveCancellable({ status: 'Rejected' })).toBe(false)

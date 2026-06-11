@@ -1,4 +1,5 @@
-import { apiRequest, buildApiUrl } from 'src/services/apiClient'
+import { apiRequest, buildApiUrl, fetchWithCsrfRetry } from 'src/services/apiClient'
+import featureFlags from 'src/config/featureFlags'
 import { REPORT_TYPE_CONFIG } from './constants'
 import { loadReportRecords, saveReportRecords } from './reportStorage'
 import { normalizeReportRecords } from './utils'
@@ -91,7 +92,11 @@ export const persistReportRecords = async (userId, rows) => {
   for (const type of allTypes) {
     const rowsForType = byType.get(type) ?? []
     if (!isReportApiEnabled(type)) {
-      localRowsByType.set(type, rowsForType)
+      if (featureFlags.reportLocalFallbackEnabled) {
+        localRowsByType.set(type, rowsForType)
+      } else {
+        ok = false
+      }
       continue
     }
     const saved = await persistReportRecordsToApi(type, rowsForType)
@@ -102,7 +107,9 @@ export const persistReportRecords = async (userId, rows) => {
   for (const rowsForType of localRowsByType.values()) {
     mergedLocalRows.push(...rowsForType)
   }
-  if (!saveReportRecords(userId, mergedLocalRows)) ok = false
+  if (featureFlags.reportLocalFallbackEnabled && !saveReportRecords(userId, mergedLocalRows)) {
+    ok = false
+  }
 
   return ok
 }
@@ -223,17 +230,17 @@ export const runReportApiBackfillMigration = async ({ userId, reportTypeSlug }) 
 
 export const downloadErcoReportPdf = async (record) => {
   const reportUid = String(record?.id || '').trim()
+  if (!reportUid) {
+    throw new Error('Download unavailable until the ERCO report is saved.')
+  }
   const reportVersion = Number(record?.version || 0) || undefined
-  const response = await fetch(buildApiUrl('/reports/erco/pdf'), {
+  const response = await fetchWithCsrfRetry(buildApiUrl('/reports/erco/pdf'), {
     method: 'POST',
-    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       Accept: '*/*',
     },
-    body: JSON.stringify(
-      reportUid ? { report_uid: reportUid, version: reportVersion, record } : { record },
-    ),
+    body: JSON.stringify({ report_uid: reportUid, version: reportVersion }),
   })
 
   if (!response.ok) {

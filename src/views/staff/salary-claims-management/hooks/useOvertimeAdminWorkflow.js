@@ -1,6 +1,8 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
+  DEFAULT_OVERTIME_APPROVAL_RULES,
   loadOvertimeApprovalRules,
+  normalizeOvertimeApprovalRules,
   resolveOvertimeApprovalRule,
 } from 'src/views/settings/overtimeApprovalRulesStorage'
 import { getDisplayOvertimeId } from 'src/views/overtime/utils'
@@ -35,10 +37,29 @@ const useOvertimeAdminWorkflow = ({
     useState(false)
   const [overtimeWorkflowDeclarationError, setOvertimeWorkflowDeclarationError] = useState('')
   const [overtimeWorkflowRejectError, setOvertimeWorkflowRejectError] = useState('')
+  const [overtimePolicy, setOvertimePolicy] = useState(() =>
+    normalizeOvertimeApprovalRules(DEFAULT_OVERTIME_APPROVAL_RULES),
+  )
+
+  useEffect(() => {
+    let alive = true
+
+    const hydratePolicy = async () => {
+      const result = await loadOvertimeApprovalRules()
+      if (!alive || !result?.ok) return
+      setOvertimePolicy(normalizeOvertimeApprovalRules(result.data))
+    }
+
+    hydratePolicy()
+
+    return () => {
+      alive = false
+    }
+  }, [])
 
   const getOvertimeReviewActionConfig = useCallback(
     (row) => {
-      const workflowPolicy = loadOvertimeApprovalRules().workflow
+      const workflowPolicy = overtimePolicy.workflow
       const applicantRoles = getOvertimeApplicantRolesForRecord(row)
       const workflowState = resolveOvertimeWorkflowStateForRecord(
         row,
@@ -62,7 +83,7 @@ const useOvertimeAdminWorkflow = ({
         applicantRoles,
       }
     },
-    [getOvertimeApplicantRolesForRecord, isSystemAdmin, normalizedUserRoles],
+    [getOvertimeApplicantRolesForRecord, isSystemAdmin, normalizedUserRoles, overtimePolicy],
   )
 
   const closeOvertimeWorkflowModal = useCallback(() => {
@@ -127,7 +148,7 @@ const useOvertimeAdminWorkflow = ({
         return false
       }
       const ownerUserId = String(row?.ownerUserId || '')
-      const policy = loadOvertimeApprovalRules().workflow
+      const policy = overtimePolicy.workflow
       const applicantRoles = getOvertimeApplicantRolesForRecord({
         ...row,
         ownerUserId,
@@ -275,6 +296,7 @@ const useOvertimeAdminWorkflow = ({
       hydrateOvertime,
       isSystemAdmin,
       normalizedUserRoles,
+      overtimePolicy,
       pushToast,
     ],
   )

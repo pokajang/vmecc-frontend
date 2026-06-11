@@ -22,6 +22,9 @@ const TeamDetails = React.lazy(() => import('./views/team/TeamDetails'))
 const TeamView = React.lazy(() => import('./views/team/TeamView'))
 const Settings = React.lazy(() => import('./views/settings/Settings'))
 const Messages = React.lazy(() => import('./views/messages/Messages'))
+const WorkflowNotifications = React.lazy(
+  () => import('./views/notifications/workflow/WorkflowNotifications'),
+)
 
 const SALARY_CLAIMS_TAB_PATH_MAP = {
   claims: 'claims',
@@ -196,7 +199,9 @@ const LegacyStaffSalaryClaimsRouteRedirect = () => {
   return <Navigate to={`/staff/salary-claims/claim/${encodeURIComponent(decodedValue)}`} replace />
 }
 
-const LegacyWorkflowNotificationsAliasRedirect = () => <Navigate to="/" replace />
+const LegacyWorkflowNotificationsAliasRedirect = () => (
+  <Navigate to="/notifications/workflow" replace />
+)
 
 const ReportInspectionNewSectionRedirect = () => {
   const { newSection } = useParams()
@@ -416,6 +421,11 @@ const routes = [
   { path: '/settings', name: 'Settings', element: Settings },
   { path: '/settings/role-permissions', name: 'Role Permissions', element: Settings },
   { path: '/settings/dashboard-visibility', name: 'Dashboard Visibility', element: Settings },
+  {
+    path: '/notifications/workflow',
+    name: 'Workflow Notifications',
+    element: WorkflowNotifications,
+  },
   {
     path: '/notifications/leave',
     name: 'Workflow Notifications',

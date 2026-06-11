@@ -1,7 +1,5 @@
 import { ROLE_OPTIONS } from 'src/constants/roles'
-
-const SALARY_WORKFLOW_RULES_KEY = 'vmecc_salary_workflow_rules'
-const SCHEMA_VERSION = 1
+import { fetchSalaryWorkflowRules, saveSalaryWorkflowRulesApi } from 'src/services/api/settingsApi'
 
 const STAGE_ALLOWED_ROLES = {
   checkRole: ['Admin', 'Finance', 'Human Resource', 'Contract Manager'],
@@ -52,65 +50,12 @@ export const normalizeSalaryWorkflowRules = (value) => {
   }
 }
 
-const writeEnvelope = (data) => {
-  const payload = {
-    version: SCHEMA_VERSION,
-    updatedAt: new Date().toISOString(),
-    data: normalizeSalaryWorkflowRules(data),
-  }
-
+export const loadSalaryWorkflowRules = async () => {
   try {
-    localStorage.setItem(SALARY_WORKFLOW_RULES_KEY, JSON.stringify(payload))
-    return { ok: true, data: payload.data }
-  } catch (error) {
-    return { ok: false, error, data: normalizeSalaryWorkflowRules(data) }
-  }
-}
-
-export const loadSalaryWorkflowRules = () => {
-  try {
-    const raw = localStorage.getItem(SALARY_WORKFLOW_RULES_KEY)
-    if (!raw) {
-      const seeded = writeEnvelope(DEFAULT_SALARY_WORKFLOW_RULES)
-      return {
-        ok: seeded.ok,
-        data: seeded.data,
-        missing: true,
-        migrated: false,
-        recovered: !seeded.ok,
-        error: seeded.error,
-      }
-    }
-
-    const parsed = JSON.parse(raw)
-    const isEnvelope =
-      parsed &&
-      typeof parsed === 'object' &&
-      !Array.isArray(parsed) &&
-      'version' in parsed &&
-      'data' in parsed
-    const sourceData = isEnvelope ? parsed.data : parsed
-    const normalized = normalizeSalaryWorkflowRules(sourceData)
-    const shouldRewrite =
-      !isEnvelope ||
-      parsed.version !== SCHEMA_VERSION ||
-      JSON.stringify(normalized) !== JSON.stringify(sourceData)
-
-    if (shouldRewrite) {
-      const rewrite = writeEnvelope(normalized)
-      return {
-        ok: rewrite.ok,
-        data: rewrite.data,
-        missing: false,
-        migrated: true,
-        recovered: !rewrite.ok,
-        error: rewrite.error,
-      }
-    }
-
+    const result = await fetchSalaryWorkflowRules()
     return {
       ok: true,
-      data: normalized,
+      data: normalizeSalaryWorkflowRules(result?.data),
       missing: false,
       migrated: false,
       recovered: false,
@@ -127,7 +72,15 @@ export const loadSalaryWorkflowRules = () => {
   }
 }
 
-export const saveSalaryWorkflowRules = (rules) => writeEnvelope(rules)
+export const saveSalaryWorkflowRules = async (rules) => {
+  const normalized = normalizeSalaryWorkflowRules(rules)
+  try {
+    const result = await saveSalaryWorkflowRulesApi(normalized)
+    return { ok: true, data: normalizeSalaryWorkflowRules(result?.data || normalized) }
+  } catch (error) {
+    return { ok: false, error, data: normalized }
+  }
+}
 
 export const resolveSalaryWorkflowRule = (policy) => {
   const normalizedPolicy = normalizeSalaryWorkflowRules(policy)

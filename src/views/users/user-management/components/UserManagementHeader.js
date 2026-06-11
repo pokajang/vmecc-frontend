@@ -39,7 +39,7 @@ const UserManagementHeader = ({
             Export CSV
           </CDropdownItem>
           <CDropdownItem onClick={onExportXlsx} disabled={!hasRows}>
-            Export XLSX
+            Export CSV
           </CDropdownItem>
         </CDropdownMenu>
       </CDropdown>

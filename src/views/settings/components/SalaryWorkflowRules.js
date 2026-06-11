@@ -1,8 +1,9 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { CCard, CCardBody, CCardHeader, CFormLabel, CFormSelect } from '@coreui/react'
 import EditControls from 'src/components/EditControls'
 import { ROLE_OPTIONS } from 'src/constants/roles'
 import {
+  DEFAULT_SALARY_WORKFLOW_RULES,
   loadSalaryWorkflowRules,
   normalizeSalaryWorkflowRules,
   SALARY_WORKFLOW_STAGE_ALLOWED_ROLES,
@@ -18,21 +19,14 @@ const STAGE_FIELDS = [
 ]
 
 const SalaryWorkflowRules = () => {
-  const [initialLoadResult] = useState(() => loadSalaryWorkflowRules())
   const initialPolicy = useMemo(
-    () => normalizeSalaryWorkflowRules(initialLoadResult?.data),
-    [initialLoadResult],
+    () => normalizeSalaryWorkflowRules(DEFAULT_SALARY_WORKFLOW_RULES),
+    [],
   )
   const [editMode, setEditMode] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(() =>
-    initialLoadResult?.ok ? null : 'Unable to fully load salary workflow rules from local storage.',
-  )
-  const [statusMessage, setStatusMessage] = useState(() =>
-    initialLoadResult?.ok && (initialLoadResult?.migrated || initialLoadResult?.recovered)
-      ? 'Salary workflow rules were normalized from legacy/local data.'
-      : null,
-  )
+  const [error, setError] = useState(null)
+  const [statusMessage, setStatusMessage] = useState(null)
   const [savedPolicy, setSavedPolicy] = useState(initialPolicy)
   const [draftPolicy, setDraftPolicy] = useState(initialPolicy)
 
@@ -50,6 +44,29 @@ const SalaryWorkflowRules = () => {
       }, {}),
     [sortedRoles],
   )
+
+  useEffect(() => {
+    let alive = true
+
+    const hydrate = async () => {
+      setLoading(true)
+      const result = await loadSalaryWorkflowRules()
+      if (!alive) return
+      const normalized = normalizeSalaryWorkflowRules(result?.data)
+      setSavedPolicy(normalized)
+      setDraftPolicy(normalized)
+      setLoading(false)
+      if (!result?.ok) {
+        setError('Unable to load salary workflow rules from API; showing defaults.')
+      }
+    }
+
+    hydrate()
+
+    return () => {
+      alive = false
+    }
+  }, [])
 
   const validateDraftPolicy = (policy) => {
     if (
@@ -81,7 +98,7 @@ const SalaryWorkflowRules = () => {
     }))
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const validationMessage = validateDraftPolicy(draftPolicy)
     if (validationMessage) {
       setError(validationMessage)
@@ -90,7 +107,7 @@ const SalaryWorkflowRules = () => {
 
     setLoading(true)
     setError(null)
-    const result = saveSalaryWorkflowRules(draftPolicy)
+    const result = await saveSalaryWorkflowRules(draftPolicy)
     const normalized = normalizeSalaryWorkflowRules(result?.data)
     setLoading(false)
 

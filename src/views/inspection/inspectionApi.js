@@ -1,4 +1,4 @@
-import { apiRequest, buildApiUrl } from 'src/services/apiClient'
+import { apiRequest, buildApiUrl, fetchWithCsrfRetry } from 'src/services/apiClient'
 import { loadInspectionRecords, saveInspectionRecords } from './inspectionStorage'
 import { normalizeInspectionTypeSlug, normalizeReportRecords } from './inspectionSharedUtils'
 import { WORKFLOW_SESSION_KEY } from './workflowSession'
@@ -180,9 +180,8 @@ export const downloadInspectionReportPdf = async (record) => {
     error.status = 400
     throw error
   }
-  const response = await fetch(buildApiUrl('/reports/inspection/pdf'), {
+  const response = await fetchWithCsrfRetry(buildApiUrl('/reports/inspection/pdf'), {
     method: 'POST',
-    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       Accept: '*/*',

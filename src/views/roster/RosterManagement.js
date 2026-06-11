@@ -360,7 +360,7 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
     })
 
     exportWorkbook({
-      filename: `roster-schedule-${datestamp}.xlsx`,
+      filename: `roster-schedule-${datestamp}.csv`,
       sheets: [
         { name: 'Schedule', headers: [], rows: scheduleRows },
         { name: 'Monthly Summary', headers: [], rows: summaryRows },

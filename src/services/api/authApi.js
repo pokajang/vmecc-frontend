@@ -1,4 +1,4 @@
-import { apiRequest } from './httpClient'
+import { apiRequest, clearCsrfToken } from './httpClient'
 
 export const loginRequest = (credentials) =>
   apiRequest('/auth/login', {
@@ -18,10 +18,15 @@ export const resetPassword = (payload) =>
     body: JSON.stringify(payload),
   })
 
-export const logoutRequest = () =>
-  apiRequest('/auth/logout', {
-    method: 'POST',
-  })
+export const logoutRequest = async () => {
+  try {
+    return await apiRequest('/auth/logout', {
+      method: 'POST',
+    })
+  } finally {
+    clearCsrfToken()
+  }
+}
 
 export const fetchSession = () => apiRequest('/auth/session')
 

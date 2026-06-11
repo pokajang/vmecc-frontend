@@ -19,8 +19,8 @@ const UserRowActions = ({
   const isSelfUser = typeof isSelf === 'function' ? isSelf(user) : false
   const items = [
     typeof onExportXlsx === 'function' && {
-      key: 'export-xlsx',
-      label: 'Export XLSX',
+      key: 'export-csv',
+      label: 'Export CSV',
       onClick: () => onExportXlsx(user),
       disabled: exportDisabled,
     },

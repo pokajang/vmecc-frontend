@@ -6,8 +6,6 @@ import { CSpinner, useColorModes } from '@coreui/react'
 import './scss/style.scss'
 import { NavigationGuardProvider } from './contexts/NavigationGuardContext'
 
-// We use those styles to show code examples, you should remove them in your application.
-import './scss/examples.scss'
 import { fetchSession, SYSTEM_MAINTENANCE_EVENT } from './services/apiClient'
 import { isSystemAdministrator } from './utils/authz'
 import { shouldShowMaintenancePage } from './utils/systemMaintenance'
@@ -21,7 +19,6 @@ const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))
 
 // Pages
 const Login = React.lazy(() => import('./views/pages/login/Login'))
-const Register = React.lazy(() => import('./views/pages/register/Register'))
 const ForgotPassword = React.lazy(() => import('./views/pages/forgot-password/ForgotPassword'))
 const ResetPassword = React.lazy(() => import('./views/pages/reset-password/ResetPassword'))
 const Page403 = React.lazy(() => import('./views/pages/page403/Page403'))
@@ -217,12 +214,7 @@ const App = () => {
         >
           <Routes>
             <Route exact path="/login" name="Login Page" element={renderPublicRoute(<Login />)} />
-            <Route
-              exact
-              path="/register"
-              name="Register Page"
-              element={renderPublicRoute(<Register />)}
-            />
+            <Route exact path="/register" element={<Navigate to="/login" replace />} />
             <Route
               exact
               path="/forgot-password"

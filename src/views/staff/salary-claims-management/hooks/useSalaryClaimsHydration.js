@@ -9,7 +9,7 @@ import { ROLE_OPTIONS } from 'src/constants/roles'
 import { loadStaffOvertimeRecordsApiFirst } from 'src/services/overtimeApi'
 import { loadStaffPayrollClaimsApiFirst } from 'src/services/payrollClaimsApi'
 import {
-  loadSalaryWorkflowRules,
+  DEFAULT_SALARY_WORKFLOW_RULES,
   resolveSalaryWorkflowRule,
 } from 'src/views/settings/salaryWorkflowStorage'
 import useSalaryAssignmentState from './useSalaryAssignmentState'
@@ -22,7 +22,7 @@ import {
 
 const useSalaryClaimsHydration = ({ user, isHrUser, pushToast }) => {
   const [salaryWorkflowRule, setSalaryWorkflowRule] = useState(() =>
-    resolveSalaryWorkflowRule(loadSalaryWorkflowRules().data),
+    resolveSalaryWorkflowRule(DEFAULT_SALARY_WORKFLOW_RULES),
   )
   const [claimRows, setClaimRows] = useState([])
   const [isClaimsLoading, setIsClaimsLoading] = useState(true)
@@ -38,12 +38,12 @@ const useSalaryClaimsHydration = ({ user, isHrUser, pushToast }) => {
 
   const hydrateClaims = useCallback(async () => {
     setIsClaimsLoading(true)
-    let workflowRule = resolveSalaryWorkflowRule(loadSalaryWorkflowRules().data)
+    let workflowRule = resolveSalaryWorkflowRule(DEFAULT_SALARY_WORKFLOW_RULES)
     try {
       const workflowResult = await fetchSalaryWorkflowRules()
       workflowRule = resolveSalaryWorkflowRule(workflowResult?.data || {})
     } catch {
-      // fallback to local workflow storage
+      // Keep deterministic defaults when settings API data is unavailable.
     }
     setSalaryWorkflowRule(workflowRule)
 

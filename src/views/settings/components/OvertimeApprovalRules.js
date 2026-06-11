@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
   CButton,
   CCard,
@@ -45,27 +45,52 @@ const createEmptyRule = (seed = Date.now()) => ({
 
 const OvertimeApprovalRules = () => {
   const emptyPolicy = useMemo(() => normalizeOvertimeApprovalRules(null), [])
-  const [savedPolicy, setSavedPolicy] = useState(() => loadOvertimeApprovalRules())
+  const [savedPolicy, setSavedPolicy] = useState(emptyPolicy)
 
   const [typeEditMode, setTypeEditMode] = useState(false)
   const [flowEditMode, setFlowEditMode] = useState(false)
+  const [typeLoading, setTypeLoading] = useState(false)
+  const [flowLoading, setFlowLoading] = useState(false)
 
   const [typeError, setTypeError] = useState(null)
   const [flowError, setFlowError] = useState(null)
   const [typeStatusMessage, setTypeStatusMessage] = useState(null)
   const [flowStatusMessage, setFlowStatusMessage] = useState(null)
 
-  const [typeDraftVisibility, setTypeDraftVisibility] = useState(
-    () => loadOvertimeApprovalRules()?.typeVisibility || emptyPolicy.typeVisibility,
-  )
-  const [flowDraftWorkflow, setFlowDraftWorkflow] = useState(
-    () => loadOvertimeApprovalRules()?.workflow || emptyPolicy.workflow,
-  )
+  const [typeDraftVisibility, setTypeDraftVisibility] = useState(emptyPolicy.typeVisibility)
+  const [flowDraftWorkflow, setFlowDraftWorkflow] = useState(emptyPolicy.workflow)
 
   const sortedRoles = useMemo(
     () => [...ROLE_SELECT_OPTIONS].sort((a, b) => a.label.localeCompare(b.label)),
     [],
   )
+
+  useEffect(() => {
+    let alive = true
+
+    const hydrate = async () => {
+      setTypeLoading(true)
+      setFlowLoading(true)
+      const result = await loadOvertimeApprovalRules()
+      if (!alive) return
+      const normalized = normalizeOvertimeApprovalRules(result?.data)
+      setSavedPolicy(normalized)
+      setTypeDraftVisibility(normalized.typeVisibility)
+      setFlowDraftWorkflow(normalized.workflow)
+      setTypeLoading(false)
+      setFlowLoading(false)
+      if (!result?.ok) {
+        setTypeError('Unable to load overtime type rules from API; showing defaults.')
+        setFlowError('Unable to load overtime approval flow from API; showing defaults.')
+      }
+    }
+
+    hydrate()
+
+    return () => {
+      alive = false
+    }
+  }, [])
 
   const validateWorkflow = (workflow) => {
     const workflowPolicy = workflow || emptyPolicy.workflow
@@ -184,7 +209,7 @@ const OvertimeApprovalRules = () => {
     setFlowStatusMessage(null)
   }
 
-  const handleTypeSave = () => {
+  const handleTypeSave = async () => {
     if (!hasVisibleOvertimeType(typeDraftVisibility)) {
       setTypeError('Enable at least one overtime type for user application.')
       return
@@ -194,22 +219,25 @@ const OvertimeApprovalRules = () => {
       ...savedPolicy,
       typeVisibility: typeDraftVisibility,
     })
-    const ok = saveOvertimeApprovalRules(normalized)
-    if (!ok) {
+    setTypeLoading(true)
+    const result = await saveOvertimeApprovalRules(normalized)
+    setTypeLoading(false)
+    if (!result?.ok) {
       setTypeError('Unable to save overtime type rules.')
       return
     }
 
-    setSavedPolicy(normalized)
-    setTypeDraftVisibility(normalized.typeVisibility)
-    setFlowDraftWorkflow(normalized.workflow)
+    const persisted = normalizeOvertimeApprovalRules(result.data)
+    setSavedPolicy(persisted)
+    setTypeDraftVisibility(persisted.typeVisibility)
+    setFlowDraftWorkflow(persisted.workflow)
     setTypeEditMode(false)
     setTypeError(null)
     setTypeStatusMessage('Overtime type rules saved.')
     setTimeout(() => setTypeStatusMessage(null), 2500)
   }
 
-  const handleFlowSave = () => {
+  const handleFlowSave = async () => {
     const validationMessage = validateWorkflow(flowDraftWorkflow)
     if (validationMessage) {
       setFlowError(validationMessage)
@@ -220,15 +248,18 @@ const OvertimeApprovalRules = () => {
       ...savedPolicy,
       workflow: flowDraftWorkflow,
     })
-    const ok = saveOvertimeApprovalRules(normalized)
-    if (!ok) {
+    setFlowLoading(true)
+    const result = await saveOvertimeApprovalRules(normalized)
+    setFlowLoading(false)
+    if (!result?.ok) {
       setFlowError('Unable to save overtime approval flow.')
       return
     }
 
-    setSavedPolicy(normalized)
-    setFlowDraftWorkflow(normalized.workflow)
-    setTypeDraftVisibility(normalized.typeVisibility)
+    const persisted = normalizeOvertimeApprovalRules(result.data)
+    setSavedPolicy(persisted)
+    setFlowDraftWorkflow(persisted.workflow)
+    setTypeDraftVisibility(persisted.typeVisibility)
     setFlowEditMode(false)
     setFlowError(null)
     setFlowStatusMessage('Overtime approval flow saved.')
@@ -256,7 +287,7 @@ const OvertimeApprovalRules = () => {
           <span>Overtime Type Rules</span>
           <EditControls
             editMode={typeEditMode}
-            loading={false}
+            loading={typeLoading}
             onEdit={handleTypeEdit}
             onSave={handleTypeSave}
             onCancel={handleTypeCancel}
@@ -277,7 +308,7 @@ const OvertimeApprovalRules = () => {
               label={`${option.title} - ${option.description}`}
               checked={Boolean(typeDraftVisibility?.[option.value])}
               onChange={(event) => setTypeVisibilityField(option.value, event.target.checked)}
-              disabled={!typeEditMode}
+              disabled={!typeEditMode || typeLoading}
             />
           ))}
         </CCardBody>
@@ -288,7 +319,7 @@ const OvertimeApprovalRules = () => {
           <span>Overtime Approval Flow</span>
           <EditControls
             editMode={flowEditMode}
-            loading={false}
+            loading={flowLoading}
             onEdit={handleFlowEdit}
             onSave={handleFlowSave}
             onCancel={handleFlowCancel}
@@ -308,14 +339,14 @@ const OvertimeApprovalRules = () => {
             label="Require recommendation stage before final approval"
             checked={Boolean(flowDraftWorkflow?.options?.requireRecommendation)}
             onChange={(event) => setOptionField('requireRecommendation', event.target.checked)}
-            disabled={!flowEditMode}
+            disabled={!flowEditMode || flowLoading}
           />
           <CFormCheck
             id="ot-approval-distinct"
             label="Enforce distinct roles across Review, Recommend, and Approve"
             checked={Boolean(flowDraftWorkflow?.options?.enforceDistinctApprovers)}
             onChange={(event) => setOptionField('enforceDistinctApprovers', event.target.checked)}
-            disabled={!flowEditMode}
+            disabled={!flowEditMode || flowLoading}
           />
 
           <div className="fw-semibold">Fallback Rule</div>
@@ -330,7 +361,7 @@ const OvertimeApprovalRules = () => {
                   size="sm"
                   value={flowDraftWorkflow?.fallback?.[stage.key] || ''}
                   onChange={(event) => setFallbackField(stage.key, event.target.value)}
-                  disabled={!flowEditMode}
+                  disabled={!flowEditMode || flowLoading}
                 >
                   {sortedRoles.map((option) => (
                     <option key={`ot-fallback-${stage.key}-${option.value}`} value={option.value}>
@@ -345,7 +376,13 @@ const OvertimeApprovalRules = () => {
           <div className="d-flex justify-content-between align-items-center">
             <div className="fw-semibold">Role-Based Rules</div>
             {flowEditMode ? (
-              <CButton size="sm" color="secondary" variant="outline" onClick={addRule}>
+              <CButton
+                size="sm"
+                color="secondary"
+                variant="outline"
+                disabled={flowLoading}
+                onClick={addRule}
+              >
                 <Plus size={14} className="me-1" />
                 Add Rule
               </CButton>
@@ -374,7 +411,7 @@ const OvertimeApprovalRules = () => {
                         onChange={(event) =>
                           setRuleField(rule.id, 'applicantRole', event.target.value)
                         }
-                        disabled={!flowEditMode}
+                        disabled={!flowEditMode || flowLoading}
                       >
                         <option value="">Select role</option>
                         {sortedRoles.map((option) => (
@@ -390,7 +427,7 @@ const OvertimeApprovalRules = () => {
                           size="sm"
                           value={rule[stage.key] || ''}
                           onChange={(event) => setRuleField(rule.id, stage.key, event.target.value)}
-                          disabled={!flowEditMode}
+                          disabled={!flowEditMode || flowLoading}
                         >
                           {sortedRoles.map((option) => (
                             <option
@@ -407,7 +444,7 @@ const OvertimeApprovalRules = () => {
                       <CFormCheck
                         checked={rule.active !== false}
                         onChange={(event) => setRuleField(rule.id, 'active', event.target.checked)}
-                        disabled={!flowEditMode}
+                        disabled={!flowEditMode || flowLoading}
                       />
                     </CTableDataCell>
                     <CTableDataCell className="text-center">
@@ -416,7 +453,7 @@ const OvertimeApprovalRules = () => {
                           size="sm"
                           color="danger"
                           variant="outline"
-                          disabled={(flowDraftWorkflow?.rules || []).length <= 1}
+                          disabled={(flowDraftWorkflow?.rules || []).length <= 1 || flowLoading}
                           onClick={() => removeRule(rule.id)}
                         >
                           <Trash2 size={14} />
