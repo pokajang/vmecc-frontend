@@ -43,6 +43,7 @@ const IconOptionCard = ({
   iconContainerSize,
   style,
   testId,
+  role = 'button',
 }) => {
   const variantPreset = CARD_VARIANTS[variant] || CARD_VARIANTS.standard
   const resolvedBodyClassName = bodyClassName || variantPreset.bodyClassName
@@ -66,9 +67,10 @@ const IconOptionCard = ({
 
   return (
     <div
-      role="button"
+      role={role}
       tabIndex={isInteractive ? 0 : -1}
-      aria-pressed={selected}
+      aria-pressed={role === 'button' ? selected : undefined}
+      aria-checked={role === 'radio' ? selected : undefined}
       aria-disabled={!isInteractive}
       data-testid={testId}
       className={buildClassName(

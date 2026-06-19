@@ -13,15 +13,28 @@ import {
   CTableRow,
 } from '@coreui/react'
 import ApprovalGates from 'src/components/ApprovalGates'
+import BulkSelectionActionBar from 'src/components/BulkSelectionActionBar'
 import DataTableFooter from 'src/components/DataTableFooter'
 import GroupedTableHeaderRow, { UserGroupLabel } from 'src/components/GroupedTableHeader'
+import MobileRecordList from 'src/components/MobileRecordList'
 import TypeDurationSummaryChips from 'src/views/overtime/components/TypeDurationSummaryChips'
+import RowActionCell from 'src/components/RowActionCell'
 import RowActions from 'src/components/RowActions'
 import TableFilters from 'src/components/TableFilters'
 import TableLoader from 'src/components/TableLoader'
+import WorkflowStatusSummary from 'src/components/WorkflowStatusSummary'
 import BulkActionButton from 'src/views/staff/components/BulkActionButton'
 import BulkWorkflowActionModal from './BulkWorkflowActionModal'
 import useBulkWorkflowSelection from '../hooks/useBulkWorkflowSelection'
+import {
+  buildReviewWorkflowActionItems,
+  buildWorkflowMobileSections,
+  buildWorkflowMonthUserGroups,
+  formatWorkflowTeamSuffix,
+  getWorkflowGroupSelectionState,
+  normalizeWorkflowTeamLabel,
+  toWorkflowTestIdToken,
+} from '../workflowRecordHelpers'
 import {
   formatDuration,
   getOvertimeTypeLabel,
@@ -29,89 +42,28 @@ import {
   resolveOvertimeGates,
 } from 'src/views/overtime/utils'
 
-const normalizeTeamLabel = (value) => {
-  const normalized = String(value || '').trim()
-  if (!normalized || normalized.toLowerCase() === 'unassigned') return ''
-  return normalized
-}
-
-const formatTeamSuffix = (value) => {
-  const normalized = normalizeTeamLabel(value)
-  return normalized ? `- ${normalized}` : ''
-}
-
-const buildMonthUserGroups = (rows = []) => {
-  const groups = []
-  const monthMap = new Map()
-  const monthFormatter = new Intl.DateTimeFormat('en-MY', { month: 'long', year: 'numeric' })
-
-  ;(Array.isArray(rows) ? rows : []).forEach((row) => {
-    const appliedDate = new Date(row?.appliedAt)
-    const hasAppliedDate = !Number.isNaN(appliedDate.getTime())
-    const monthValue = hasAppliedDate
-      ? `${appliedDate.getFullYear()}-${String(appliedDate.getMonth() + 1).padStart(2, '0')}`
-      : 'unknown'
-    const monthLabel = hasAppliedDate ? monthFormatter.format(appliedDate) : 'Unknown period'
-    const monthKey = `month:${monthValue}`
-
-    if (!monthMap.has(monthKey)) {
-      const nextMonth = {
-        key: monthKey,
-        label: monthLabel,
-        rows: [],
-        typeDurationMinutes: {},
-        userGroups: [],
-        userMap: new Map(),
-      }
-      monthMap.set(monthKey, nextMonth)
-      groups.push(nextMonth)
-    }
-
-    const monthGroup = monthMap.get(monthKey)
-    monthGroup.rows.push(row)
-    const overtimeType = normalizeOvertimeType(row?.overtimeType)
-    const durationMinutes = Number(row?.durationMinutes || 0)
-    monthGroup.typeDurationMinutes[overtimeType] =
-      Number(monthGroup.typeDurationMinutes[overtimeType] || 0) + durationMinutes
-
-    const userKey = String(
-      row?.ownerUserId || row?.employee || row?.recordKey || row?.id || 'unknown',
-    )
-    if (!monthGroup.userMap.has(userKey)) {
-      const nextUser = {
-        key: `${monthKey}:user:${userKey}`,
-        ownerLabel: String(row?.employee || row?.submittedBy || '').trim() || 'Unknown',
-        avatarUrl: String(row?.avatarUrl || '').trim(),
-        teamLabel: normalizeTeamLabel(row?.team),
-        rows: [],
-        typeDurationMinutes: {},
-      }
-      monthGroup.userMap.set(userKey, nextUser)
-      monthGroup.userGroups.push(nextUser)
-    }
-
-    const userGroup = monthGroup.userMap.get(userKey)
-    userGroup.rows.push(row)
-    userGroup.typeDurationMinutes[overtimeType] =
-      Number(userGroup.typeDurationMinutes[overtimeType] || 0) + durationMinutes
-    const rowTeam = normalizeTeamLabel(row?.team)
-    if (rowTeam) {
-      if (!userGroup.teamLabel) {
-        userGroup.teamLabel = rowTeam
-      } else if (userGroup.teamLabel !== rowTeam) {
-        userGroup.teamLabel = 'Multiple teams'
-      }
-    }
+const buildOvertimeMonthUserGroups = (rows = []) => {
+  return buildWorkflowMonthUserGroups({
+    entries: rows,
+    unknownGroupLabel: 'Unknown period',
+    includeUserGroups: true,
+    createMonthExtras: () => ({ typeDurationMinutes: {} }),
+    createUserExtras: () => ({ typeDurationMinutes: {} }),
+    onAddToMonth: (monthGroup, row) => {
+      const overtimeType = normalizeOvertimeType(row?.overtimeType)
+      const durationMinutes = Number(row?.durationMinutes || 0)
+      monthGroup.typeDurationMinutes[overtimeType] =
+        Number(monthGroup.typeDurationMinutes[overtimeType] || 0) + durationMinutes
+    },
+    onAddToUser: (userGroup, row) => {
+      const overtimeType = normalizeOvertimeType(row?.overtimeType)
+      const durationMinutes = Number(row?.durationMinutes || 0)
+      userGroup.typeDurationMinutes[overtimeType] =
+        Number(userGroup.typeDurationMinutes[overtimeType] || 0) + durationMinutes
+    },
+    getTeam: (row) => normalizeWorkflowTeamLabel(row?.team),
   })
-
-  return groups
 }
-
-const toTestIdToken = (value = '') =>
-  String(value || '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '') || 'group'
 
 const OvertimeRecordsTab = (props) => {
   const usingVmContract = Boolean(props?.vm && props?.handlers)
@@ -248,9 +200,116 @@ const OvertimeRecordsTab = (props) => {
     onBulkWorkflowAction,
   })
 
-  const groupedMonthRows = React.useMemo(() => buildMonthUserGroups(rows), [rows])
+  const groupedMonthRows = React.useMemo(() => buildOvertimeMonthUserGroups(rows), [rows])
   const canGoPrev = Number(currentPage) > 1
   const canGoNext = Number(currentPage) < Number(lastPage)
+
+  const buildRowActionItems = React.useCallback(
+    (row) => {
+      const reviewActionConfig = getReviewActionConfig?.(row) || {
+        approveLabel: 'Approve',
+        approveDisabled: row.status !== 'Pending',
+        rejectDisabled: row.status !== 'Pending',
+      }
+      return buildReviewWorkflowActionItems({
+        row,
+        actionKeyPrefix: 'overtime',
+        actionConfig: reviewActionConfig,
+        onApprove: approveOvertime,
+        onReject: rejectOvertime,
+        disableWhenHandlerMissing: true,
+      })
+    },
+    [approveOvertime, getReviewActionConfig, rejectOvertime],
+  )
+
+  const renderMobileGroupSelect = ({ id, ariaLabel, eligibleKeys = [], allSelected = false }) => (
+    <CFormCheck
+      id={id}
+      aria-label={ariaLabel}
+      disabled={eligibleKeys.length === 0}
+      checked={allSelected}
+      onChange={() => toggleGroupSelection(eligibleKeys, allSelected)}
+      onClick={(event) => event.stopPropagation()}
+      onMouseDown={(event) => event.stopPropagation()}
+      onKeyDown={(event) => event.stopPropagation()}
+    />
+  )
+
+  const buildMobileRecordItem = (row) => {
+    const reviewActionConfig = getReviewActionConfig?.(row) || {}
+    const statusLabel =
+      typeof getStatusLabel === 'function'
+        ? getStatusLabel(row)
+        : String(row?.status || '').trim() || '-'
+    const nextActionLabel =
+      typeof getPendingActionHint === 'function'
+        ? getPendingActionHint(row)
+        : reviewActionConfig?.requiredRole
+          ? `Requires ${reviewActionConfig.requiredRole}`
+          : reviewActionConfig?.approveLabel || ''
+
+    return {
+      key: row.recordKey || row.id,
+      title: getDisplayOvertimeId(row),
+      subtitle: row.employee || row.submittedBy || '-',
+      eyebrow: getOvertimeTypeLabel(row?.overtimeType, { short: true }),
+      status: (
+        <WorkflowStatusSummary
+          statusLabel={statusLabel}
+          nextActionLabel={nextActionLabel}
+          gates={resolveOvertimeGates(row)}
+          approvalHistory={row.approvalHistory}
+          isCancelled={row.status === 'Cancelled'}
+        />
+      ),
+      fields: [
+        { key: 'start', label: 'Start', value: getStartDateTimeLabel(row) },
+        { key: 'end', label: 'End', value: getEndDateTimeLabel(row) },
+        { key: 'duration', label: 'Duration', value: formatDuration(row.durationMinutes) },
+        { key: 'submitted', label: 'Submitted', value: formatDate(row.appliedAt) },
+      ],
+      detail: formatWorkflowTeamSuffix(row.team).replace(/^- /, '') || row.reason || '',
+      ariaLabel: `Open overtime record ${getDisplayOvertimeId(row)}`,
+      onOpen: () => openOvertimeDetail?.(row),
+      actions: <RowActions items={buildRowActionItems(row)} />,
+    }
+  }
+
+  const mobileRecordSections = buildWorkflowMobileSections({
+    groups: groupedMonthRows,
+    useUserGroups: true,
+    buildGroupLabel: ({ group, userGroup }) => {
+      const { eligibleKeys, allSelected } = getWorkflowGroupSelectionState({
+        rows: userGroup.rows,
+        canActOnRow: canBulkActOnRow,
+        getRowKey: getRowSelectionKey,
+        isSelectedKey,
+      })
+
+      return (
+        <span className="d-inline-flex align-items-center gap-2">
+          {renderMobileGroupSelect({
+            id: `ot-mobile-group-select-${toWorkflowTestIdToken(userGroup.key)}`,
+            ariaLabel: `Select actionable overtime records for ${group.label || 'Unknown period'} | ${userGroup.ownerLabel || 'Unknown'}`,
+            eligibleKeys,
+            allSelected,
+          })}
+          <span>
+            {group.label ? `${group.label} | ` : ''}
+            {userGroup.ownerLabel || 'Unknown'}
+            {formatWorkflowTeamSuffix(userGroup.teamLabel)
+              ? ` ${formatWorkflowTeamSuffix(userGroup.teamLabel)}`
+              : ''}
+          </span>
+        </span>
+      )
+    },
+    buildGroupSummary: ({ userGroup }) => (
+      <TypeDurationSummaryChips typeDurationMinutes={userGroup.typeDurationMinutes} />
+    ),
+    buildItem: buildMobileRecordItem,
+  })
 
   return (
     <CCard>
@@ -265,35 +324,40 @@ const OvertimeRecordsTab = (props) => {
           filters={[
             {
               key: 'sort',
+              label: 'Sort',
               value: sort,
               onChange: setSort,
               options: overtimeSortOptions,
             },
             {
               key: 'status',
+              label: 'Status',
               value: statusFilter,
               onChange: setStatusFilter,
               options: statusOptions,
             },
             {
               key: 'overtimeType',
+              label: 'Type',
               value: overtimeTypeFilter,
               onChange: setOvertimeTypeFilter,
               options: overtimeTypeOptions,
             },
             {
               key: 'team',
+              label: 'Team',
               value: teamFilter,
               onChange: setTeamFilter,
               options: teamOptions,
             },
           ]}
           onClear={clearFilters}
-          rowClassName="flex-md-nowrap"
+          rowClassName="flex-md-nowrap align-items-md-end"
           searchColMd={3}
           periodColMd={2}
           filterColMd={2}
           clearColMd="auto"
+          showDesktopLabels
         />
 
         {isLoading ? (
@@ -303,31 +367,31 @@ const OvertimeRecordsTab = (props) => {
         ) : (
           <>
             {selectedVisibleCount > 0 ? (
-              <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 border rounded-3 p-2 bg-light">
-                <div className="fw-semibold">
-                  {selectedVisibleCount} overtime record{selectedVisibleCount === 1 ? '' : 's'}{' '}
-                  selected
-                </div>
-                <div className="d-flex flex-wrap gap-2">
-                  <BulkActionButton
-                    label="Clear selection"
-                    intent="neutral"
-                    onClick={clearSelection}
-                  />
-                  <BulkActionButton
-                    label="Reject selected"
-                    intent="reject"
-                    onClick={() => openBulkModal('reject')}
-                  />
-                  <BulkActionButton
-                    label={`${selectedApproveActionLabel} selected`}
-                    intent="approve"
-                    onClick={() => openBulkModal('approve')}
-                  />
-                </div>
-              </div>
+              <BulkSelectionActionBar
+                label={`${selectedVisibleCount} overtime record${selectedVisibleCount === 1 ? '' : 's'} selected`}
+                actions={
+                  <>
+                    <BulkActionButton
+                      label="Clear selection"
+                      intent="neutral"
+                      onClick={clearSelection}
+                    />
+                    <BulkActionButton
+                      label="Reject selected"
+                      intent="reject"
+                      onClick={() => openBulkModal('reject')}
+                    />
+                    <BulkActionButton
+                      label={`${selectedApproveActionLabel} selected`}
+                      intent="approve"
+                      onClick={() => openBulkModal('approve')}
+                    />
+                  </>
+                }
+              />
             ) : null}
-            <div className="rounded-3 shadow-sm overflow-hidden bg-white">
+            <MobileRecordList sections={mobileRecordSections} />
+            <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
               <CTable align="middle" className="mb-0" hover responsive>
                 <CTableHead color="light">
                   <CTableRow>
@@ -359,7 +423,7 @@ const OvertimeRecordsTab = (props) => {
                           countNoun={monthGroup.rows.length === 1 ? 'record' : 'records'}
                           className="table-secondary"
                           cellClassName="fw-semibold text-body"
-                          testId={`ot-month-group-${toTestIdToken(monthGroup.key)}`}
+                          testId={`ot-month-group-${toWorkflowTestIdToken(monthGroup.key)}`}
                         >
                           <TypeDurationSummaryChips
                             typeDurationMinutes={monthGroup.typeDurationMinutes}
@@ -388,7 +452,7 @@ const OvertimeRecordsTab = (props) => {
                               <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
                                 <div className="d-flex flex-wrap align-items-center gap-2">
                                   <CFormCheck
-                                    id={`ot-group-select-${toTestIdToken(userGroup.key)}`}
+                                    id={`ot-group-select-${toWorkflowTestIdToken(userGroup.key)}`}
                                     aria-label={`Select actionable overtime records for ${monthGroup.label || 'Unknown period'} | ${userGroup.ownerLabel || 'Unknown'}`}
                                     disabled={eligibleGroupKeys.length === 0}
                                     checked={allSelected}
@@ -403,11 +467,11 @@ const OvertimeRecordsTab = (props) => {
                                     count={userGroup.rows.length}
                                     countNoun={userGroup.rows.length === 1 ? 'record' : 'records'}
                                     avatarUrl={userGroup.avatarUrl}
-                                    testId={`ot-user-group-${toTestIdToken(userGroup.key)}`}
+                                    testId={`ot-user-group-${toWorkflowTestIdToken(userGroup.key)}`}
                                   />
-                                  {formatTeamSuffix(userGroup.teamLabel) ? (
+                                  {formatWorkflowTeamSuffix(userGroup.teamLabel) ? (
                                     <span className="small text-body-secondary">
-                                      {formatTeamSuffix(userGroup.teamLabel)}
+                                      {formatWorkflowTeamSuffix(userGroup.teamLabel)}
                                     </span>
                                   ) : null}
                                 </div>
@@ -424,17 +488,21 @@ const OvertimeRecordsTab = (props) => {
 
                         userGroup.rows.forEach((row) => {
                           rowIndex += 1
-                          const reviewActionConfig = getReviewActionConfig?.(row) || {
-                            approveLabel: 'Approve',
-                            approveDisabled: row.status !== 'Pending',
-                            rejectDisabled: row.status !== 'Pending',
-                          }
                           monthRows.push(
                             <CTableRow
                               key={row.recordKey || row.id}
+                              role="button"
                               className="cursor-pointer"
                               style={{ cursor: 'pointer' }}
+                              tabIndex={0}
+                              aria-label={`Open overtime record ${getDisplayOvertimeId(row)}`}
                               onClick={() => openOvertimeDetail?.(row)}
+                              onKeyDown={(event) => {
+                                if (event.key === 'Enter' || event.key === ' ') {
+                                  event.preventDefault()
+                                  openOvertimeDetail?.(row)
+                                }
+                              }}
                             >
                               <CTableDataCell className="text-center text-body-secondary">
                                 {rowIndex}
@@ -456,39 +524,9 @@ const OvertimeRecordsTab = (props) => {
                                 />
                               </CTableDataCell>
                               <CTableDataCell>{formatDate(row.appliedAt)}</CTableDataCell>
-                              <CTableDataCell
-                                className="text-center"
-                                onClick={(event) => event.stopPropagation()}
-                                onMouseDown={(event) => event.stopPropagation()}
-                              >
-                                <RowActions
-                                  items={[
-                                    {
-                                      key: 'approve-overtime',
-                                      label: reviewActionConfig?.approveLabel || 'Approve',
-                                      onClick: () => approveOvertime?.(row),
-                                      disabled:
-                                        reviewActionConfig?.approveDisabled ||
-                                        typeof approveOvertime !== 'function',
-                                      disabledReason: reviewActionConfig?.requiredRole
-                                        ? `This stage requires ${reviewActionConfig.requiredRole} role.`
-                                        : 'This record is not eligible for this workflow action.',
-                                    },
-                                    {
-                                      key: 'reject-overtime',
-                                      label: 'Reject',
-                                      className: 'text-danger',
-                                      onClick: () => rejectOvertime?.(row),
-                                      disabled:
-                                        reviewActionConfig?.rejectDisabled ||
-                                        typeof rejectOvertime !== 'function',
-                                      disabledReason: reviewActionConfig?.requiredRole
-                                        ? `This stage requires ${reviewActionConfig.requiredRole} role.`
-                                        : 'This record is not eligible for this workflow action.',
-                                    },
-                                  ]}
-                                />
-                              </CTableDataCell>
+                              <RowActionCell>
+                                <RowActions items={buildRowActionItems(row)} />
+                              </RowActionCell>
                             </CTableRow>,
                           )
                         })

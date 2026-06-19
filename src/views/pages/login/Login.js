@@ -135,10 +135,13 @@ const Login = () => {
   return (
     <div
       className="bg-body-tertiary d-flex align-items-center justify-content-center"
-      style={{ minHeight: '100dvh', height: '100dvh', overflow: 'hidden' }}
+      style={{ minHeight: '100dvh', overflowY: 'auto' }}
     >
-      <CContainer fluid className="h-100 px-2 px-sm-3">
-        <CRow className="justify-content-center align-items-center h-100 mx-0">
+      <CContainer fluid className="px-2 px-sm-3 py-4">
+        <CRow
+          className="justify-content-center align-items-center mx-0"
+          style={{ minHeight: 'calc(100dvh - 3rem)' }}
+        >
           <CCol xs={12} sm={10} md={8} lg={5} className="px-1 px-sm-2" style={{ maxWidth: 460 }}>
             <div className="text-center mb-3 mb-sm-4">
               <img

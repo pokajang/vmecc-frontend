@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
-import { CAlert, CCol, CContainer, CRow } from '@coreui/react'
+import { CAlert, CButton, CCol, CContainer, CRow } from '@coreui/react'
 import { Pencil } from 'lucide-react'
 import { useSelector } from 'react-redux'
 import { useNavigate, useParams } from 'react-router-dom'
 import BackButton from 'src/components/BackButton'
 import FormActionGroup from 'src/components/FormActionGroup'
+import ModulePageHeader from 'src/components/ModulePageHeader'
 import TableLoader from 'src/components/TableLoader'
 import StatusPill from './components/StatusPill'
 import EditTeamModal from './components/EditTeamModal'
@@ -197,6 +198,23 @@ const TeamView = () => {
 
   return (
     <CContainer fluid>
+      <ModulePageHeader
+        title={team.name || 'Team Detail'}
+        subtitle="Review team members, roles, and roster status."
+        actions={
+          canManageTeams ? (
+            <CButton
+              size="sm"
+              color="primary"
+              className="d-inline-flex align-items-center gap-1"
+              onClick={handleOpenEdit}
+            >
+              <Pencil size={14} />
+              Edit Team
+            </CButton>
+          ) : null
+        }
+      />
       <CRow className="g-3">
         {/* Left: team identity card */}
         <CCol md={6} lg={5} xl={4}>
@@ -250,17 +268,6 @@ const TeamView = () => {
                   <span className="fw-semibold fs-5">{team.name || '--'}</span>
                   <StatusPill label={status} />
                 </div>
-                {canManageTeams && (
-                  <div
-                    role="button"
-                    onClick={handleOpenEdit}
-                    className="text-muted p-1 rounded d-inline-flex align-items-center"
-                    style={{ cursor: 'pointer', lineHeight: 1 }}
-                    title="Edit team"
-                  >
-                    <Pencil size={14} />
-                  </div>
-                )}
               </div>
               {team.lead_name && <div className="text-muted small">Lead: {team.lead_name}</div>}
             </div>
@@ -298,7 +305,7 @@ const TeamView = () => {
                 return (
                   <div
                     key={member.id}
-                    className="d-flex justify-content-between align-items-center px-3 py-2"
+                    className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 px-3 py-2"
                     style={{
                       borderBottom:
                         idx < activeMembers.length - 1
@@ -315,19 +322,17 @@ const TeamView = () => {
                     </div>
                     {roleTag ? (
                       <span
-                        className="px-2 py-1 rounded-pill fw-semibold ms-3"
+                        className="px-2 py-1 rounded-pill fw-semibold"
                         style={{
                           background: roleTag.bg,
                           color: roleTag.color,
-                          whiteSpace: 'nowrap',
+                          maxWidth: '100%',
                         }}
                       >
                         {roleTag.label}
                       </span>
                     ) : (
-                      <span className="text-muted ms-3" style={{ whiteSpace: 'nowrap' }}>
-                        {member.role || '--'}
-                      </span>
+                      <span className="text-muted text-break">{member.role || '--'}</span>
                     )}
                   </div>
                 )
@@ -364,7 +369,7 @@ const TeamView = () => {
                 return (
                   <div
                     key={member.id}
-                    className="d-flex justify-content-between align-items-center px-3 py-2"
+                    className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 px-3 py-2"
                     style={{
                       borderBottom:
                         idx < pastMembers.length - 1 ? '1px solid var(--cui-border-color)' : 'none',
@@ -379,9 +384,7 @@ const TeamView = () => {
                         {duration ? ` - ${duration}` : ''}
                       </span>
                     </div>
-                    <span className="text-muted ms-3" style={{ whiteSpace: 'nowrap' }}>
-                      {member.role || '--'}
-                    </span>
+                    <span className="text-muted text-break">{member.role || '--'}</span>
                   </div>
                 )
               })

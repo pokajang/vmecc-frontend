@@ -1,5 +1,5 @@
 import React from 'react'
-import { CNav, CNavItem, CNavLink } from '@coreui/react'
+import RouteNavTabs from 'src/components/RouteNavTabs'
 
 const ALL_TAB_ITEMS = [
   { key: 'salaryRecords', label: 'Salary Records', group: 'records' },
@@ -17,30 +17,26 @@ const SalaryClaimsTabsNav = ({ activeTab, onSwitch, group, tabMeta = {} }) => {
   if (items.length === 0) return null
 
   return (
-    <CNav variant="underline" role="tablist" className="mb-3">
-      {items.map((tabItem) => (
-        <CNavItem key={tabItem.key} role="presentation">
-          <CNavLink
-            active={activeTab === tabItem.key}
-            onClick={(event) => {
-              event.preventDefault()
-              if (!canSwitch || activeTab === tabItem.key) return
-              onSwitch(tabItem.key)
-            }}
-            style={{ cursor: 'pointer' }}
-          >
-            <span className="d-inline-flex align-items-center gap-2">
-              <span>{tabItem.label}</span>
-              {Number(tabMeta?.[tabItem.key]?.warningCount || 0) > 0 && (
-                <span className="badge rounded-pill bg-warning text-dark">
-                  {tabMeta[tabItem.key].warningCount}
-                </span>
-              )}
-            </span>
-          </CNavLink>
-        </CNavItem>
-      ))}
-    </CNav>
+    <RouteNavTabs
+      currentPath={activeTab}
+      navigate={(tab) => onSwitch(tab)}
+      items={items.map((tabItem) => ({
+        key: tabItem.key,
+        to: tabItem.key,
+        match: tabItem.key,
+        disabled: !canSwitch,
+        label: (
+          <span className="d-inline-flex align-items-center gap-2">
+            <span>{tabItem.label}</span>
+            {Number(tabMeta?.[tabItem.key]?.warningCount || 0) > 0 && (
+              <span className="badge rounded-pill bg-warning text-dark">
+                {tabMeta[tabItem.key].warningCount}
+              </span>
+            )}
+          </span>
+        ),
+      }))}
+    />
   )
 }
 

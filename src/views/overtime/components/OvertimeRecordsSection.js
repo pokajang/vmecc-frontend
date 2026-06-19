@@ -1,5 +1,6 @@
 import React from 'react'
 import {
+  CBadge,
   CCard,
   CCardBody,
   CCardHeader,
@@ -11,14 +12,15 @@ import {
   CTableRow,
 } from '@coreui/react'
 import { LoaderCircle, Plus } from 'lucide-react'
-import ApprovalGates from 'src/components/ApprovalGates'
 import CreateActionButton from 'src/components/CreateActionButton'
 import DataTableFooter from 'src/components/DataTableFooter'
 import GroupedTableHeaderRow from 'src/components/GroupedTableHeader'
+import ResponsiveRecordCollection from 'src/components/ResponsiveRecordCollection'
+import RowActionCell from 'src/components/RowActionCell'
 import TypeDurationSummaryChips from 'src/views/overtime/components/TypeDurationSummaryChips'
 import RowActions from 'src/components/RowActions'
 import TableFilters from 'src/components/TableFilters'
-import TableLoader from 'src/components/TableLoader'
+import WorkflowStatusSummary from 'src/components/WorkflowStatusSummary'
 import {
   APPLICANT_OVERTIME_EDIT_LOCK_REASON,
   canApplicantEditOvertimeRecord,
@@ -53,14 +55,67 @@ const OvertimeRecordsSection = ({
   cancelOvertime,
   deleteOvertime,
   getDisplayOvertimeId,
+  getStatusLabel,
+  getPendingActionHint,
+  getStatusBadge,
   getStartDateTimeLabel,
   getEndDateTimeLabel,
   isLoading = false,
+  showPrimaryAction = true,
 }) => {
   const indexedVisibleRows = (Array.isArray(visibleRows) ? visibleRows : []).map((row, index) => ({
     row,
     displayIndex: index + 1,
   }))
+  const renderStatusBadge = (row) =>
+    getStatusBadge ? (
+      getStatusBadge(row?.status || '-', getStatusLabel ? getStatusLabel(row) : row?.status || '-')
+    ) : (
+      <CBadge color="secondary">{getStatusLabel ? getStatusLabel(row) : row?.status || '-'}</CBadge>
+    )
+  const getDraftActionItems = (row) => [
+    {
+      key: 'resume-draft-overtime',
+      label: 'Resume',
+      onClick: () => openOvertimeForEdit(row),
+    },
+    {
+      key: 'delete-draft-overtime',
+      label: 'Delete',
+      onClick: () => deleteOvertime(row),
+      className: 'text-danger',
+    },
+  ]
+  const getSubmittedActionItems = (row) => {
+    const disableEdit = !canApplicantEditOvertimeRecord(row)
+    const disableCancel = row.status === 'Cancelled'
+    const disableDelete = row.status !== 'Cancelled'
+
+    return [
+      {
+        key: 'edit-overtime',
+        label: 'Edit',
+        onClick: () => openOvertimeForEdit(row),
+        disabled: disableEdit,
+        disabledReason: APPLICANT_OVERTIME_EDIT_LOCK_REASON,
+      },
+      {
+        key: 'cancel-overtime',
+        label: 'Cancel',
+        onClick: () => cancelOvertime(row),
+        disabled: disableCancel,
+        disabledReason: 'Cancelled overtime claims cannot be cancelled again.',
+      },
+      {
+        key: 'delete-overtime',
+        label: 'Delete',
+        onClick: () => deleteOvertime(row),
+        className: 'text-danger',
+        disabled: disableDelete,
+        disabledReason: 'Only cancelled overtime claims can be deleted.',
+      },
+    ]
+  }
   const draftVisibleRows = indexedVisibleRows.filter((entry) => Boolean(entry?.row?.isDraft))
   const groupedVisibleRows = indexedVisibleRows
     .filter((entry) => !entry?.row?.isDraft)
@@ -91,16 +146,61 @@ const OvertimeRecordsSection = ({
       }
       return groups
     }, [])
+  const buildMobileItem = ({ row }) => {
+    const isDraft = Boolean(row?.isDraft)
+    const pendingActionHint = isDraft ? 'Draft saved' : getPendingActionHint?.(row)
+    return {
+      key: row.recordKey || row.id,
+      title: getDisplayOvertimeId(row),
+      eyebrow: getOvertimeTypeLabel(row?.overtimeType, { short: true }),
+      subtitle: row.reason || '-',
+      status: renderStatusBadge(row),
+      ariaLabel: `Open overtime record ${getDisplayOvertimeId(row)} summary`,
+      onOpen: () => openRecord(row),
+      fields: [
+        { key: 'start', label: 'Start', value: getStartDateTimeLabel(row) },
+        { key: 'end', label: 'End', value: getEndDateTimeLabel(row) },
+        { key: 'duration', label: 'Duration', value: formatDuration(row.durationMinutes) },
+        {
+          key: 'next',
+          label: 'Next',
+          value: pendingActionHint || getStatusLabel?.(row) || row.status || '-',
+        },
+      ],
+      detail: row?.hasDraftChanges ? 'Draft saved changes are available for this claim.' : null,
+      actions: (
+        <RowActions items={isDraft ? getDraftActionItems(row) : getSubmittedActionItems(row)} />
+      ),
+    }
+  }
+  const mobileSections = [
+    {
+      key: 'drafts',
+      label: draftVisibleRows.length ? 'Drafts' : '',
+      summary: draftVisibleRows.length
+        ? `${draftVisibleRows.length} ${draftVisibleRows.length === 1 ? 'record' : 'records'}`
+        : '',
+      items: draftVisibleRows.map(buildMobileItem),
+    },
+    ...groupedVisibleRows.map((group) => ({
+      key: group.key,
+      label: group.label,
+      summary: `${group.entries.length} ${group.entries.length === 1 ? 'record' : 'records'}`,
+      items: group.entries.map(buildMobileItem),
+    })),
+  ]
 
   return (
     <CCard>
       <CCardHeader className="d-flex flex-wrap justify-content-between align-items-center gap-2">
         <span>My Overtime Records</span>
-        <CreateActionButton
-          label="Apply Overtime"
-          onClick={startNewOvertime}
-          icon={<Plus size={13} className="me-1 align-text-bottom" />}
-        />
+        {showPrimaryAction ? (
+          <CreateActionButton
+            label="Apply Overtime"
+            onClick={startNewOvertime}
+            icon={<Plus size={13} className="me-1 align-text-bottom" />}
+          />
+        ) : null}
       </CCardHeader>
       <CCardBody>
         <TableFilters
@@ -131,13 +231,17 @@ const OvertimeRecordsSection = ({
           clearColMd="auto"
         />
 
-        {isLoading ? (
-          <TableLoader />
-        ) : filteredRecords.length === 0 ? (
-          <div className="text-body-secondary">No overtime records match the current filters.</div>
-        ) : (
-          <>
-            <div className="rounded-3 shadow-sm overflow-hidden bg-white">
+        <ResponsiveRecordCollection
+          isLoading={isLoading}
+          isEmpty={filteredRecords.length === 0}
+          emptyMessage={
+            <div className="text-body-secondary">
+              No overtime records match the current filters.
+            </div>
+          }
+          mobileSections={mobileSections}
+          renderDesktop={() => (
+            <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
               <CTable align="middle" className="mb-0" hover responsive>
                 <CTableHead color="light">
                   <CTableRow>
@@ -192,23 +296,9 @@ const OvertimeRecordsSection = ({
                           Draft
                         </span>
                       </CTableDataCell>
-                      <CTableDataCell className="text-center align-middle">
-                        <RowActions
-                          items={[
-                            {
-                              key: 'resume-draft-overtime',
-                              label: 'Resume',
-                              onClick: () => openOvertimeForEdit(row),
-                            },
-                            {
-                              key: 'delete-draft-overtime',
-                              label: 'Delete',
-                              onClick: () => deleteOvertime(row),
-                              className: 'text-danger',
-                            },
-                          ]}
-                        />
-                      </CTableDataCell>
+                      <RowActionCell className="text-center align-middle">
+                        <RowActions items={getDraftActionItems(row)} />
+                      </RowActionCell>
                     </CTableRow>
                   ))}
                   {groupedVisibleRows.map((group) => (
@@ -228,9 +318,6 @@ const OvertimeRecordsSection = ({
                         />
                       </GroupedTableHeaderRow>
                       {group.entries.map(({ row, displayIndex }) => {
-                        const disableEdit = !canApplicantEditOvertimeRecord(row)
-                        const disableCancel = row.status === 'Cancelled'
-                        const disableDelete = row.status !== 'Cancelled'
                         return (
                           <CTableRow
                             key={row.id}
@@ -269,42 +356,17 @@ const OvertimeRecordsSection = ({
                                   Draft saved
                                 </div>
                               ) : null}
-                              <ApprovalGates
+                              <WorkflowStatusSummary
+                                statusLabel={getStatusLabel?.(row) || row.status || '-'}
+                                nextActionLabel={getPendingActionHint?.(row) || ''}
                                 gates={resolveOvertimeGates(row)}
                                 approvalHistory={row.approvalHistory}
                                 isCancelled={row.status === 'Cancelled'}
                               />
                             </CTableDataCell>
-                            <CTableDataCell className="text-center align-middle">
-                              <RowActions
-                                items={[
-                                  {
-                                    key: 'edit-overtime',
-                                    label: 'Edit',
-                                    onClick: () => openOvertimeForEdit(row),
-                                    disabled: disableEdit,
-                                    disabledReason: APPLICANT_OVERTIME_EDIT_LOCK_REASON,
-                                  },
-                                  {
-                                    key: 'cancel-overtime',
-                                    label: 'Cancel',
-                                    onClick: () => cancelOvertime(row),
-                                    disabled: disableCancel,
-                                    disabledReason:
-                                      'Cancelled overtime claims cannot be cancelled again.',
-                                  },
-                                  {
-                                    key: 'delete-overtime',
-                                    label: 'Delete',
-                                    onClick: () => deleteOvertime(row),
-                                    className: 'text-danger',
-                                    disabled: disableDelete,
-                                    disabledReason:
-                                      'Only cancelled overtime claims can be deleted.',
-                                  },
-                                ]}
-                              />
-                            </CTableDataCell>
+                            <RowActionCell className="text-center align-middle">
+                              <RowActions items={getSubmittedActionItems(row)} />
+                            </RowActionCell>
                           </CTableRow>
                         )
                       })}
@@ -313,14 +375,16 @@ const OvertimeRecordsSection = ({
                 </CTableBody>
               </CTable>
             </div>
+          )}
+          footer={
             <DataTableFooter
               rowsToShow={rowsToShow}
               onRowsToShowChange={setRowsToShow}
               filteredCount={filteredRecords.length}
               totalCount={overtimeRecordsCount}
             />
-          </>
-        )}
+          }
+        />
       </CCardBody>
     </CCard>
   )

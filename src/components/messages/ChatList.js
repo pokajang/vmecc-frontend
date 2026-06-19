@@ -33,18 +33,21 @@ const ChatList = ({
 }) => {
   const [modalThread, setModalThread] = useState(null) // { userId, isStarter }
   const [deleteScope, setDeleteScope] = useState('me')
+  const [quickFilter, setQuickFilter] = useState('all')
 
   const filteredThreads = useMemo(() => {
     const term = query.trim().toLowerCase()
-    if (!term) return threads
     return threads.filter((t) => {
+      const draft = getDraftPreview(drafts[t.user?.id] || '')
+      if (quickFilter === 'unread' && !(t.unread_count > 0)) return false
+      if (quickFilter === 'drafts' && !draft) return false
+      if (!term) return true
       const name = t.user?.name || ''
       const email = t.user?.email || ''
-      const draft = getDraftPreview(drafts[t.user?.id] || '')
       const preview = draft || getPreview(t.last_message)
       return `${name} ${email} ${preview}`.toLowerCase().includes(term)
     })
-  }, [threads, query, drafts])
+  }, [threads, query, drafts, quickFilter])
 
   const handleDeleteClick = (e, thread) => {
     e.stopPropagation()
@@ -69,6 +72,23 @@ const ChatList = ({
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
         />
+        <div className="d-flex flex-wrap gap-2 mt-2" aria-label="Message quick filters">
+          {[
+            { key: 'all', label: 'All' },
+            { key: 'unread', label: 'Unread' },
+            { key: 'drafts', label: 'Drafts' },
+          ].map((filter) => (
+            <CButton
+              key={filter.key}
+              size="sm"
+              color={quickFilter === filter.key ? 'primary' : 'light'}
+              variant={quickFilter === filter.key ? undefined : 'outline'}
+              onClick={() => setQuickFilter(filter.key)}
+            >
+              {filter.label}
+            </CButton>
+          ))}
+        </div>
       </div>
       <div className="overflow-auto flex-grow-1" style={{ minHeight: 0 }}>
         {loading ? (

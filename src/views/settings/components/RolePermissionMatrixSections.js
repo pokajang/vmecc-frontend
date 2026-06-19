@@ -146,8 +146,8 @@ export const RolePermissionMatrixTable = ({
   togglePermission,
   visibleRoles,
 }) => (
-  <div className="rounded-3 shadow-sm overflow-hidden bg-white mt-2">
-    <div className="rpm-scroll" style={{ overflowX: 'auto' }}>
+  <div className="rounded-3 shadow-sm overflow-hidden bg-white mt-2 matrix-table-shell">
+    <div className="rpm-scroll matrix-table-scroll">
       <CTable align="middle" className="mb-0" hover responsive>
         <CTableHead color="light">
           <CTableRow>
@@ -158,7 +158,7 @@ export const RolePermissionMatrixTable = ({
                 position: 'sticky',
                 left: 0,
                 zIndex: 2,
-                background: '#f8f9fa',
+                background: 'var(--cui-light-bg-subtle, #f8f9fa)',
               }}
             >
               Permission
@@ -217,7 +217,7 @@ export const RolePermissionMatrixTable = ({
                     position: 'sticky',
                     left: 0,
                     zIndex: 1,
-                    background: '#fff',
+                    background: 'var(--cui-body-bg, #fff)',
                   }}
                 >
                   <div className="fw-medium">{label}</div>
@@ -234,7 +234,11 @@ export const RolePermissionMatrixTable = ({
                       key={role}
                       className="text-center align-middle"
                       style={{
-                        background: changed ? (checked ? '#d1f5d3' : '#fde8e8') : undefined,
+                        background: changed
+                          ? checked
+                            ? 'var(--vmecc-status-success-bg, #d1f5d3)'
+                            : 'var(--vmecc-status-danger-bg, #fde8e8)'
+                          : undefined,
                       }}
                     >
                       <input
@@ -305,7 +309,13 @@ export const RolePermissionRoleEditor = ({
           <div
             key={`role-${activeFocusedRole}-${perm}`}
             className="d-flex justify-content-between align-items-center border rounded px-3 py-2 mb-2"
-            style={{ background: changed ? (checked ? '#d1f5d3' : '#fde8e8') : '#fff' }}
+            style={{
+              background: changed
+                ? checked
+                  ? 'var(--vmecc-status-success-bg, #d1f5d3)'
+                  : 'var(--vmecc-status-danger-bg, #fde8e8)'
+                : 'var(--cui-body-bg, #fff)',
+            }}
           >
             <div>
               <div className="fw-medium">{label}</div>
@@ -337,7 +347,7 @@ export const RolePermissionLegend = () => (
         display: 'inline-block',
         width: 10,
         height: 10,
-        background: '#d1f5d3',
+        background: 'var(--vmecc-status-success-bg, #d1f5d3)',
         border: '1px solid #ccc',
         verticalAlign: 'middle',
       }}
@@ -348,7 +358,7 @@ export const RolePermissionLegend = () => (
         display: 'inline-block',
         width: 10,
         height: 10,
-        background: '#fde8e8',
+        background: 'var(--vmecc-status-danger-bg, #fde8e8)',
         border: '1px solid #ccc',
         verticalAlign: 'middle',
       }}

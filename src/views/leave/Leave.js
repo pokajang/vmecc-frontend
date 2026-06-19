@@ -12,6 +12,9 @@ import {
 } from '@coreui/react'
 import { useSelector } from 'react-redux'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { Plus } from 'lucide-react'
+import CreateActionButton from 'src/components/CreateActionButton'
+import ModulePageHeader from 'src/components/ModulePageHeader'
 import { isHolidayGuidanceLeaveEnabledForUser } from 'src/config/featureFlags'
 import { hasPermission } from 'src/utils/authz'
 import useTableRows from 'src/hooks/useTableRows'
@@ -353,6 +356,20 @@ const Leave = () => {
 
   return (
     <CContainer fluid>
+      <ModulePageHeader
+        title="Leave"
+        subtitle="Track leave balances, review requests, and submit new leave applications."
+        actions={
+          activeSection === 'new-leave' ? null : (
+            <CreateActionButton
+              label="Apply Leave"
+              importance="primary"
+              onClick={() => runWithDiscardGuard(startNewLeave)}
+              icon={<Plus size={15} className="me-1 align-text-bottom" />}
+            />
+          )
+        }
+      />
       <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
       <LeaveSubmitConfirmModal
         visible={isSubmitConfirmVisible}
@@ -387,10 +404,15 @@ const Leave = () => {
         onClose={closeDeleteConfirmModal}
         onConfirm={confirmDeleteLeave}
       />
-      <CNav variant="underline" role="tablist" className="mb-3 flex-nowrap overflow-auto">
-        <CNavItem role="presentation">
+      <CNav variant="underline" className="mb-3 flex-nowrap overflow-auto">
+        <CNavItem>
           <CNavLink
             active={activeSection === 'leave-records' || activeSection === 'leave-detail'}
+            aria-current={
+              activeSection === 'leave-records' || activeSection === 'leave-detail'
+                ? 'page'
+                : undefined
+            }
             onClick={() => runWithDiscardGuard(() => navigate('/leave'))}
             style={{ cursor: 'pointer' }}
             className={
@@ -402,9 +424,10 @@ const Leave = () => {
             Leave Records
           </CNavLink>
         </CNavItem>
-        <CNavItem role="presentation">
+        <CNavItem>
           <CNavLink
             active={activeSection === 'new-leave'}
+            aria-current={activeSection === 'new-leave' ? 'page' : undefined}
             onClick={() => runWithDiscardGuard(startNewLeave)}
             style={{ cursor: 'pointer' }}
             className={activeSection === 'new-leave' ? 'text-primary' : ''}
@@ -417,7 +440,7 @@ const Leave = () => {
       {activeSection === 'leave-records' && (
         <LeaveRecordsSection
           title="My Leave Records"
-          showPrimaryAction
+          showPrimaryAction={false}
           actionMode="self"
           search={search}
           setSearch={setSearch}

@@ -87,7 +87,7 @@ describe('LeaveApplySection', () => {
     expect(screen.getByRole('button', { name: 'Back' })).toBeTruthy()
     const actionBar = document.querySelector('.action-row-thumb')
     expect(actionBar).toBeTruthy()
-    expect(document.querySelector('.action-row-thumb-spacer.d-lg-none')).toBeTruthy()
+    expect(document.querySelector('.action-row-thumb-spacer.d-md-none')).toBeTruthy()
 
     const actionButtons = within(actionBar).getAllByRole('button')
     expect(actionButtons.map((button) => button.textContent)).toEqual([

@@ -13,18 +13,31 @@ import {
 } from '@coreui/react'
 import { Clock3, Plus } from 'lucide-react'
 import ApprovalGates from 'src/components/ApprovalGates'
+import BulkSelectionActionBar from 'src/components/BulkSelectionActionBar'
 import CreateActionButton from 'src/components/CreateActionButton'
 import DataTableFooter from 'src/components/DataTableFooter'
 import GroupedTableHeaderRow, {
   GroupTotalBadge,
   UserGroupLabel,
 } from 'src/components/GroupedTableHeader'
+import MobileRecordList from 'src/components/MobileRecordList'
+import RowActionCell from 'src/components/RowActionCell'
 import RowActions from 'src/components/RowActions'
 import TableFilters from 'src/components/TableFilters'
 import TableLoader from 'src/components/TableLoader'
+import WorkflowStatusSummary from 'src/components/WorkflowStatusSummary'
 import BulkActionButton from 'src/views/staff/components/BulkActionButton'
 import BulkWorkflowActionModal from './BulkWorkflowActionModal'
 import useBulkWorkflowSelection from '../hooks/useBulkWorkflowSelection'
+import {
+  buildReviewWorkflowActionItems,
+  buildWorkflowMobileSections,
+  buildWorkflowMonthUserGroups,
+  formatWorkflowTeamSuffix,
+  formatWorkflowTotal,
+  getWorkflowGroupSelectionState,
+  toWorkflowTestIdToken,
+} from '../workflowRecordHelpers'
 
 const resolveLeaveGates = (row) => {
   const requireRecommendation = row?.workflowSnapshot?.requireRecommendation !== false
@@ -33,88 +46,6 @@ const resolveLeaveGates = (row) => {
     ...(requireRecommendation ? [{ action: 'Recommended', label: 'Recommended' }] : []),
     { action: 'Approved', label: 'Approved' },
   ]
-}
-
-const toMonthValue = (value) => {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'unknown'
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-}
-
-const toTestIdToken = (value = '') =>
-  String(value || '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '') || 'group'
-
-const buildMonthUserGroups = ({
-  entries = [],
-  unknownGroupLabel = 'Unknown month',
-  monthFormatter,
-  includeUserGroups = false,
-}) => {
-  const groups = []
-  const monthMap = new Map()
-
-  ;(Array.isArray(entries) ? entries : []).forEach((entry) => {
-    const row = entry?.row || {}
-    const monthValue = toMonthValue(row?.appliedAt)
-    const appliedDate = new Date(row?.appliedAt)
-    const monthLabel =
-      monthValue === 'unknown' || Number.isNaN(appliedDate.getTime())
-        ? unknownGroupLabel
-        : monthFormatter.format(appliedDate)
-    const monthKey = `month:${monthValue}`
-
-    if (!monthMap.has(monthKey)) {
-      const nextMonth = {
-        key: monthKey,
-        label: monthLabel,
-        entries: [],
-        totalDays: 0,
-        userGroups: [],
-        userMap: new Map(),
-      }
-      monthMap.set(monthKey, nextMonth)
-      groups.push(nextMonth)
-    }
-
-    const monthGroup = monthMap.get(monthKey)
-    monthGroup.entries.push(entry)
-    monthGroup.totalDays += Number(row?.days || 0)
-
-    if (!includeUserGroups) return
-
-    const userKey =
-      String(row?.ownerUserId || '').trim() ||
-      String(row?.employee || '').trim() ||
-      String(row?.id || '').trim() ||
-      'unknown'
-    const groupKey = `${monthKey}:user:${userKey}`
-
-    if (!monthGroup.userMap.has(groupKey)) {
-      const nextUser = {
-        key: groupKey,
-        ownerLabel: String(row?.employee || '').trim() || 'Unknown',
-        avatarUrl: String(row?.avatarUrl || '').trim(),
-        team: String(row?.team || '').trim(),
-        entries: [],
-        totalDays: 0,
-      }
-      monthGroup.userMap.set(groupKey, nextUser)
-      monthGroup.userGroups.push(nextUser)
-    }
-
-    const userGroup = monthGroup.userMap.get(groupKey)
-    userGroup.entries.push(entry)
-    userGroup.totalDays += Number(row?.days || 0)
-  })
-
-  return groups.map((group) => {
-    const { userMap, ...rest } = group
-    void userMap
-    return rest
-  })
 }
 
 const LeaveRecordsSection = ({
@@ -167,11 +98,6 @@ const LeaveRecordsSection = ({
 }) => {
   const monthFormatter = new Intl.DateTimeFormat('en-MY', { month: 'long', year: 'numeric' })
   const shouldGroupByMonth = enableMonthGrouping ? Boolean(groupByMonth) : true
-  const formatDayTotal = (value) => {
-    const normalized = Number(value || 0)
-    if (!Number.isFinite(normalized)) return '0'
-    return Number.isInteger(normalized) ? String(normalized) : normalized.toFixed(1)
-  }
   const indexedVisibleRows = (Array.isArray(visibleRows) ? visibleRows : []).map((row, index) => ({
     row,
     displayIndex: index + 1,
@@ -181,11 +107,20 @@ const LeaveRecordsSection = ({
   const shouldShowUserGroups = shouldGroupByMonth && isReviewMode
   const groupedVisibleRows = !shouldGroupByMonth
     ? [{ key: 'all-records', label: '', entries: indexedVisibleRows, totalDays: 0, userGroups: [] }]
-    : buildMonthUserGroups({
+    : buildWorkflowMonthUserGroups({
         entries: indexedVisibleRows,
+        getRow: (entry) => entry.row,
         unknownGroupLabel,
         monthFormatter,
         includeUserGroups: shouldShowUserGroups,
+        createMonthExtras: () => ({ totalDays: 0 }),
+        createUserExtras: () => ({ totalDays: 0 }),
+        onAddToMonth: (group, row) => {
+          group.totalDays += Number(row?.days || 0)
+        },
+        onAddToUser: (group, row) => {
+          group.totalDays += Number(row?.days || 0)
+        },
       })
 
   const getRowSelectionKey = React.useCallback(
@@ -230,9 +165,7 @@ const LeaveRecordsSection = ({
   })
 
   const getTeamSuffixLabel = (teamValue) => {
-    const normalizedTeam = String(teamValue || '').trim()
-    if (!normalizedTeam || normalizedTeam.toLowerCase() === 'unassigned') return ''
-    return `- ${normalizedTeam}`
+    return formatWorkflowTeamSuffix(teamValue)
   }
 
   const buildActionItemsForRow = (row) => {
@@ -250,27 +183,13 @@ const LeaveRecordsSection = ({
     const disableDelete = String(row?.status || '') !== 'Draft'
 
     if (actionMode === 'review') {
-      return [
-        {
-          key: 'approve-leave',
-          label: reviewActionConfig?.approveLabel || 'Approve',
-          onClick: () => approveLeave?.(row),
-          disabled: reviewActionConfig?.approveDisabled,
-          disabledReason: reviewActionConfig?.requiredRole
-            ? `This stage requires ${reviewActionConfig.requiredRole} role.`
-            : 'This record is not eligible for this workflow action.',
-        },
-        {
-          key: 'reject-leave',
-          label: 'Reject',
-          className: 'text-danger',
-          onClick: () => rejectLeave?.(row),
-          disabled: reviewActionConfig?.rejectDisabled,
-          disabledReason: reviewActionConfig?.requiredRole
-            ? `This stage requires ${reviewActionConfig.requiredRole} role.`
-            : 'This record is not eligible for this workflow action.',
-        },
-      ]
+      return buildReviewWorkflowActionItems({
+        row,
+        actionKeyPrefix: 'leave',
+        actionConfig: reviewActionConfig,
+        onApprove: approveLeave,
+        onReject: rejectLeave,
+      })
     }
 
     return [
@@ -298,6 +217,97 @@ const LeaveRecordsSection = ({
       },
     ]
   }
+
+  const renderMobileGroupSelect = ({ id, ariaLabel, eligibleKeys = [], allSelected = false }) => (
+    <CFormCheck
+      id={id}
+      aria-label={ariaLabel}
+      disabled={eligibleKeys.length === 0}
+      checked={allSelected}
+      onChange={() => toggleGroupSelection(eligibleKeys, allSelected)}
+      onClick={(event) => event.stopPropagation()}
+      onMouseDown={(event) => event.stopPropagation()}
+      onKeyDown={(event) => event.stopPropagation()}
+    />
+  )
+
+  const buildMobileRecordItem = ({ row }) => {
+    const reviewActionConfig = actionMode === 'review' ? getReviewActionConfig?.(row) : null
+    const statusLabel = String(row?.status || '').trim() || '-'
+    const nextActionLabel =
+      reviewActionConfig?.approveDisabled && reviewActionConfig?.rejectDisabled
+        ? reviewActionConfig?.requiredRole
+          ? `Requires ${reviewActionConfig.requiredRole}`
+          : 'No workflow action available'
+        : reviewActionConfig?.approveLabel || ''
+
+    return {
+      key: row.recordKey || row.id,
+      title: getDisplayLeaveId(row),
+      subtitle: row.employee || row.reason || '-',
+      eyebrow: row.leaveType || 'Leave',
+      status: (
+        <WorkflowStatusSummary
+          statusLabel={statusLabel}
+          nextActionLabel={nextActionLabel}
+          gates={resolveLeaveGates(row)}
+          approvalHistory={row.approvalHistory}
+          isCancelled={row.status === 'Cancelled'}
+        />
+      ),
+      fields: [
+        { key: 'start', label: 'Start', value: getStartDateTimeLabel(row) },
+        { key: 'end', label: 'End', value: getEndDateTimeLabel(row) },
+        { key: 'days', label: 'Days', value: row.days ?? '-' },
+        {
+          key: 'applied',
+          label: 'Applied',
+          value: typeof formatDate === 'function' ? formatDate(row.appliedAt) : '-',
+        },
+      ],
+      detail: row.team ? getTeamSuffixLabel(row.team).replace(/^- /, '') : row.reason || '',
+      ariaLabel: `Open leave record ${getDisplayLeaveId(row)}`,
+      onOpen: () => openRecord(row),
+      actions: <RowActions items={buildActionItemsForRow(row)} />,
+    }
+  }
+
+  const mobileRecordSections = buildWorkflowMobileSections({
+    groups: groupedVisibleRows,
+    useUserGroups: shouldShowUserGroups,
+    buildGroupLabel: ({ group, userGroup }) => {
+      if (!shouldShowUserGroups) return shouldGroupByMonth ? group.label : ''
+      const { eligibleKeys, allSelected } = getWorkflowGroupSelectionState({
+        rows: userGroup.entries.map(({ row }) => row),
+        canActOnRow: canBulkActOnRow,
+        getRowKey: getRowSelectionKey,
+        isSelectedKey,
+      })
+
+      return (
+        <span className="d-inline-flex align-items-center gap-2">
+          {renderMobileGroupSelect({
+            id: `leave-mobile-group-select-${toWorkflowTestIdToken(userGroup.key)}`,
+            ariaLabel: `Select actionable leave records for ${group.label || 'Unknown period'} | ${userGroup.ownerLabel || 'Unknown'}`,
+            eligibleKeys,
+            allSelected,
+          })}
+          <span>
+            {group.label ? `${group.label} | ` : ''}
+            {userGroup.ownerLabel || 'Unknown'}
+            {getTeamSuffixLabel(userGroup.team) ? ` ${getTeamSuffixLabel(userGroup.team)}` : ''}
+          </span>
+        </span>
+      )
+    },
+    buildGroupSummary: ({ group, userGroup }) =>
+      shouldShowUserGroups
+        ? `${formatWorkflowTotal(userGroup.totalDays)} day(s)`
+        : shouldGroupByMonth
+          ? `${formatWorkflowTotal(group.totalDays)} day(s)`
+          : '',
+    buildItem: buildMobileRecordItem,
+  })
 
   const renderRecordRow = ({ row, displayIndex }) => {
     const actionItems = buildActionItemsForRow(row)
@@ -335,14 +345,9 @@ const LeaveRecordsSection = ({
         <CTableDataCell>
           {typeof formatDate === 'function' ? formatDate(row.appliedAt) : '-'}
         </CTableDataCell>
-        <CTableDataCell
-          className="text-center align-middle"
-          onClick={(event) => event.stopPropagation()}
-          onMouseDown={(event) => event.stopPropagation()}
-          onKeyDown={(event) => event.stopPropagation()}
-        >
+        <RowActionCell className="text-center align-middle">
           <RowActions items={actionItems} />
-        </CTableDataCell>
+        </RowActionCell>
       </CTableRow>
     )
   }
@@ -379,29 +384,33 @@ const LeaveRecordsSection = ({
           filters={[
             {
               key: 'sort',
+              label: 'Sort',
               value: sort,
               onChange: setSort,
               options: leaveSortOptions,
             },
             {
               key: 'type',
+              label: 'Type',
               value: typeFilter,
               onChange: setTypeFilter,
               options: typeOptions,
             },
             {
               key: 'status',
+              label: 'Status',
               value: statusFilter,
               onChange: setStatusFilter,
               options: statusOptions,
             },
           ]}
           onClear={clearFilters}
-          rowClassName="flex-md-nowrap"
+          rowClassName="flex-md-nowrap align-items-md-end"
           searchColMd={3}
           periodColMd={2}
           filterColMd={2}
           clearColMd="auto"
+          showDesktopLabels
         />
 
         {isLoading ? (
@@ -411,31 +420,31 @@ const LeaveRecordsSection = ({
         ) : (
           <>
             {actionMode === 'review' && selectedVisibleCount > 0 ? (
-              <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 border rounded-3 p-2 bg-light">
-                <div className="fw-semibold">
-                  {selectedVisibleCount} leave record{selectedVisibleCount === 1 ? '' : 's'}{' '}
-                  selected
-                </div>
-                <div className="d-flex flex-wrap gap-2">
-                  <BulkActionButton
-                    label="Clear selection"
-                    intent="neutral"
-                    onClick={clearSelection}
-                  />
-                  <BulkActionButton
-                    label="Reject selected"
-                    intent="reject"
-                    onClick={() => openBulkModal('reject')}
-                  />
-                  <BulkActionButton
-                    label={`${selectedApproveActionLabel} selected`}
-                    intent="approve"
-                    onClick={() => openBulkModal('approve')}
-                  />
-                </div>
-              </div>
+              <BulkSelectionActionBar
+                label={`${selectedVisibleCount} leave record${selectedVisibleCount === 1 ? '' : 's'} selected`}
+                actions={
+                  <>
+                    <BulkActionButton
+                      label="Clear selection"
+                      intent="neutral"
+                      onClick={clearSelection}
+                    />
+                    <BulkActionButton
+                      label="Reject selected"
+                      intent="reject"
+                      onClick={() => openBulkModal('reject')}
+                    />
+                    <BulkActionButton
+                      label={`${selectedApproveActionLabel} selected`}
+                      intent="approve"
+                      onClick={() => openBulkModal('approve')}
+                    />
+                  </>
+                }
+              />
             ) : null}
-            <div className="rounded-3 shadow-sm overflow-hidden bg-white">
+            <MobileRecordList sections={mobileRecordSections} />
+            <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
               <CTable align="middle" className="mb-0" hover responsive>
                 <CTableHead color="light">
                   <CTableRow>
@@ -464,11 +473,11 @@ const LeaveRecordsSection = ({
                           countNoun={group.entries.length === 1 ? 'record' : 'records'}
                           className="table-secondary"
                           cellClassName="fw-semibold text-body"
-                          testId={`leave-month-group-${toTestIdToken(group.key)}`}
+                          testId={`leave-month-group-${toWorkflowTestIdToken(group.key)}`}
                         >
                           <GroupTotalBadge
                             label="Total"
-                            value={`${formatDayTotal(group.totalDays)} day(s)`}
+                            value={`${formatWorkflowTotal(group.totalDays)} day(s)`}
                           />
                         </GroupedTableHeaderRow>
                       ) : null}
@@ -496,7 +505,7 @@ const LeaveRecordsSection = ({
                                       <div className="d-flex flex-wrap align-items-center gap-2">
                                         {actionMode === 'review' ? (
                                           <CFormCheck
-                                            id={`leave-group-select-${toTestIdToken(userGroup.key)}`}
+                                            id={`leave-group-select-${toWorkflowTestIdToken(userGroup.key)}`}
                                             aria-label={`Select actionable leave records for ${group.label || 'Unknown period'} | ${userGroup.ownerLabel || 'Unknown'}`}
                                             disabled={eligibleGroupKeys.length === 0}
                                             checked={allSelected}
@@ -514,7 +523,7 @@ const LeaveRecordsSection = ({
                                             userGroup.entries.length === 1 ? 'record' : 'records'
                                           }
                                           avatarUrl={userGroup.avatarUrl}
-                                          testId={`leave-user-group-${toTestIdToken(userGroup.key)}`}
+                                          testId={`leave-user-group-${toWorkflowTestIdToken(userGroup.key)}`}
                                         />
                                         {getTeamSuffixLabel(userGroup.team) ? (
                                           <span className="small text-body-secondary">
@@ -524,7 +533,7 @@ const LeaveRecordsSection = ({
                                       </div>
                                       <GroupTotalBadge
                                         label="Subtotal"
-                                        value={`${formatDayTotal(userGroup.totalDays)} day(s)`}
+                                        value={`${formatWorkflowTotal(userGroup.totalDays)} day(s)`}
                                       />
                                     </div>
                                   </CTableDataCell>

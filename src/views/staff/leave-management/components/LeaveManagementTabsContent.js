@@ -1,5 +1,5 @@
 import React from 'react'
-import { CNav, CNavItem, CNavLink } from '@coreui/react'
+import RouteNavTabs from 'src/components/RouteNavTabs'
 import { assignmentSortOptions, holidaySortOptions, leaveSortOptions } from '../data'
 import AssignmentsTab from './AssignmentsTab'
 import HolidaysTab from './HolidaysTab'
@@ -88,48 +88,36 @@ const LeaveManagementTabsContent = ({
   isHolidaysLoading,
 }) => (
   <>
-    <CNav variant="underline" role="tablist" className="mb-3">
-      <CNavItem role="presentation">
-        <CNavLink
-          active={resolvedManagementTab === 'records'}
-          onClick={() => switchManagementTab('records')}
-          style={{ cursor: 'pointer' }}
-          className={resolvedManagementTab === 'records' ? 'text-primary' : ''}
-        >
-          All Leaves
-        </CNavLink>
-      </CNavItem>
-      <CNavItem role="presentation">
-        <CNavLink
-          active={resolvedManagementTab === 'assignments'}
-          onClick={() => switchManagementTab('assignments')}
-          style={{ cursor: 'pointer' }}
-          className={resolvedManagementTab === 'assignments' ? 'text-primary' : ''}
-        >
-          Set Leaves
-        </CNavLink>
-      </CNavItem>
-      <CNavItem role="presentation">
-        <CNavLink
-          active={resolvedManagementTab === 'holidays'}
-          onClick={() => switchManagementTab('holidays')}
-          style={{ cursor: 'pointer' }}
-          className={resolvedManagementTab === 'holidays' ? 'text-primary' : ''}
-        >
-          Set Holidays
-        </CNavLink>
-      </CNavItem>
-      <CNavItem role="presentation">
-        <CNavLink
-          active={resolvedManagementTab === 'rules'}
-          onClick={() => switchManagementTab('rules')}
-          style={{ cursor: 'pointer' }}
-          className={resolvedManagementTab === 'rules' ? 'text-primary' : ''}
-        >
-          Leave Workflow
-        </CNavLink>
-      </CNavItem>
-    </CNav>
+    <RouteNavTabs
+      currentPath={resolvedManagementTab}
+      navigate={(tab) => switchManagementTab(tab)}
+      items={[
+        {
+          key: 'records',
+          label: 'All Leaves',
+          to: 'records',
+          match: 'records',
+        },
+        {
+          key: 'assignments',
+          label: 'Set Leaves',
+          to: 'assignments',
+          match: 'assignments',
+        },
+        {
+          key: 'holidays',
+          label: 'Set Holidays',
+          to: 'holidays',
+          match: 'holidays',
+        },
+        {
+          key: 'rules',
+          label: 'Leave Workflow',
+          to: 'rules',
+          match: 'rules',
+        },
+      ]}
+    />
 
     {resolvedManagementTab === 'records' && (
       <LeaveRecordsSection

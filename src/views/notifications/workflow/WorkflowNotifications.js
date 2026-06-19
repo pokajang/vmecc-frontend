@@ -6,6 +6,30 @@ import { buildWorkflowNotificationDetailPath } from 'src/services/workflowNotifi
 import TableLoader from 'src/components/TableLoader'
 import WorkflowNotificationCard from '../WorkflowNotificationCard'
 
+export const groupWorkflowNotifications = (items = []) => {
+  const actionRequired = []
+  const updates = []
+  ;(Array.isArray(items) ? items : []).forEach((item) => {
+    if (item?.actionRequiredForViewer) {
+      actionRequired.push(item)
+    } else {
+      updates.push(item)
+    }
+  })
+  return [
+    {
+      key: 'action-required',
+      label: 'Action Required',
+      items: actionRequired,
+    },
+    {
+      key: 'updates',
+      label: 'Other Updates',
+      items: updates,
+    },
+  ].filter((group) => group.items.length > 0)
+}
+
 const WorkflowNotifications = ({ onClose }) => {
   const navigate = useNavigate()
   const {
@@ -21,6 +45,7 @@ const WorkflowNotifications = ({ onClose }) => {
   } = useWorkflowNotifications({ unreadOnly: false })
 
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const groupedItems = groupWorkflowNotifications(items)
 
   const handleClick = (item) => {
     if (item.unread) {
@@ -118,14 +143,22 @@ const WorkflowNotifications = ({ onClose }) => {
 
         {!loading &&
           !error &&
-          items.map((item) => (
-            <WorkflowNotificationCard
-              key={item.id}
-              item={item}
-              onClick={handleClick}
-              onDelete={deleteOne}
-              onMarkRead={markRead}
-            />
+          groupedItems.map((group) => (
+            <section key={group.key} className="notification-drawer-group">
+              <div className="notification-drawer-group-title">
+                <span>{group.label}</span>
+                <span className="notification-drawer-group-count">{group.items.length}</span>
+              </div>
+              {group.items.map((item) => (
+                <WorkflowNotificationCard
+                  key={item.id}
+                  item={item}
+                  onClick={handleClick}
+                  onDelete={deleteOne}
+                  onMarkRead={markRead}
+                />
+              ))}
+            </section>
           ))}
       </div>
     </>

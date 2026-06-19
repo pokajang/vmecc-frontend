@@ -31,7 +31,7 @@ import {
   deleteCustomShift,
 } from 'src/services/apiClient'
 
-// ─── Built-in shift windows (Normal / Day / Night) ───────────────────────────
+// Built-in shift windows (Normal / Day / Night)
 
 const SHIFT_FIELDS = [
   {
@@ -139,7 +139,11 @@ const BuiltinShifts = () => {
         {statusMessage && <div className="text-success small mb-3">{statusMessage}</div>}
         <div className="d-grid gap-3">
           {SHIFT_FIELDS.map(({ key, label, startKey, endKey }) => (
-            <div key={key} className="d-flex align-items-center gap-3 flex-wrap">
+            <div
+              key={key}
+              className="d-grid d-sm-flex align-items-sm-center gap-2 gap-sm-3"
+              style={{ gridTemplateColumns: '1fr' }}
+            >
               <div style={{ minWidth: 60, fontWeight: 500 }}>{label}</div>
               <CFormLabel className="text-muted mb-0" style={{ minWidth: 50 }}>
                 Start
@@ -150,7 +154,7 @@ const BuiltinShifts = () => {
                 value={times[startKey]}
                 onChange={(e) => setTimes((prev) => ({ ...prev, [startKey]: e.target.value }))}
                 disabled={!editMode || loading}
-                style={{ maxWidth: 160 }}
+                style={{ maxWidth: 160, minWidth: 0 }}
               />
               <CFormLabel className="text-muted mb-0" style={{ minWidth: 40 }}>
                 End
@@ -161,7 +165,7 @@ const BuiltinShifts = () => {
                 value={times[endKey]}
                 onChange={(e) => setTimes((prev) => ({ ...prev, [endKey]: e.target.value }))}
                 disabled={!editMode || loading}
-                style={{ maxWidth: 160 }}
+                style={{ maxWidth: 160, minWidth: 0 }}
               />
             </div>
           ))}
@@ -171,7 +175,7 @@ const BuiltinShifts = () => {
   )
 }
 
-// ─── Custom shifts ────────────────────────────────────────────────────────────
+// Custom shifts
 
 const EMPTY_FORM = { name: '', start: '08:00', end: '17:00' }
 
@@ -283,55 +287,96 @@ const CustomShifts = () => {
             <div className="text-muted small">No custom shifts defined yet.</div>
           )}
           {!loading && shifts.length > 0 && (
-            <div className="rounded-3 shadow-sm overflow-hidden bg-white">
-              <CTable align="middle" className="mb-0" hover responsive>
-                <CTableHead color="light">
-                  <CTableRow>
-                    <CTableHeaderCell className="text-center" style={{ width: 56 }}>
-                      #
-                    </CTableHeaderCell>
-                    <CTableHeaderCell>Name</CTableHeaderCell>
-                    <CTableHeaderCell>Start</CTableHeaderCell>
-                    <CTableHeaderCell>End</CTableHeaderCell>
-                    <CTableHeaderCell style={{ width: 80 }} />
-                  </CTableRow>
-                </CTableHead>
-                <CTableBody>
-                  {shifts.map((shift, index) => (
-                    <CTableRow key={shift.id}>
-                      <CTableDataCell className="text-center text-muted">
-                        {index + 1}
-                      </CTableDataCell>
-                      <CTableDataCell>{shift.name}</CTableDataCell>
-                      <CTableDataCell>{shift.start}</CTableDataCell>
-                      <CTableDataCell>{shift.end}</CTableDataCell>
-                      <CTableDataCell className="text-center align-middle">
-                        <div className="d-flex gap-1 justify-content-end">
-                          <CButton
-                            size="sm"
-                            color="link"
-                            className="text-muted p-1"
-                            onClick={() => openEdit(shift)}
-                            title="Edit"
-                          >
-                            <Pencil size={14} />
-                          </CButton>
-                          <CButton
-                            size="sm"
-                            color="link"
-                            className="text-danger p-1"
-                            onClick={() => confirmDelete(shift)}
-                            title="Delete"
-                          >
-                            <Trash2 size={14} />
-                          </CButton>
-                        </div>
-                      </CTableDataCell>
+            <>
+              <div className="rounded-3 shadow-sm overflow-hidden bg-white d-none d-md-block">
+                <CTable align="middle" className="mb-0" hover responsive>
+                  <CTableHead color="light">
+                    <CTableRow>
+                      <CTableHeaderCell className="text-center" style={{ width: 56 }}>
+                        #
+                      </CTableHeaderCell>
+                      <CTableHeaderCell>Name</CTableHeaderCell>
+                      <CTableHeaderCell>Start</CTableHeaderCell>
+                      <CTableHeaderCell>End</CTableHeaderCell>
+                      <CTableHeaderCell style={{ width: 80 }} />
                     </CTableRow>
-                  ))}
-                </CTableBody>
-              </CTable>
-            </div>
+                  </CTableHead>
+                  <CTableBody>
+                    {shifts.map((shift, index) => (
+                      <CTableRow key={shift.id}>
+                        <CTableDataCell className="text-center text-muted">
+                          {index + 1}
+                        </CTableDataCell>
+                        <CTableDataCell>{shift.name}</CTableDataCell>
+                        <CTableDataCell>{shift.start}</CTableDataCell>
+                        <CTableDataCell>{shift.end}</CTableDataCell>
+                        <CTableDataCell className="text-center align-middle">
+                          <div className="d-flex gap-1 justify-content-end">
+                            <CButton
+                              size="sm"
+                              color="link"
+                              className="text-muted p-1"
+                              onClick={() => openEdit(shift)}
+                              title={`Edit ${shift.name}`}
+                              aria-label={`Edit ${shift.name}`}
+                            >
+                              <Pencil size={14} />
+                            </CButton>
+                            <CButton
+                              size="sm"
+                              color="link"
+                              className="text-danger p-1"
+                              onClick={() => confirmDelete(shift)}
+                              title={`Delete ${shift.name}`}
+                              aria-label={`Delete ${shift.name}`}
+                            >
+                              <Trash2 size={14} />
+                            </CButton>
+                          </div>
+                        </CTableDataCell>
+                      </CTableRow>
+                    ))}
+                  </CTableBody>
+                </CTable>
+              </div>
+              <div className="d-md-none d-grid gap-3">
+                {shifts.map((shift) => (
+                  <article key={shift.id} className="rounded-3 border bg-body shadow-sm p-3">
+                    <div className="d-flex align-items-start justify-content-between gap-3">
+                      <div className="d-grid gap-2" style={{ minWidth: 0 }}>
+                        <div className="fw-semibold text-break">{shift.name}</div>
+                        <div className="d-flex flex-wrap gap-3 small text-body-secondary">
+                          <span>Start: {shift.start}</span>
+                          <span>End: {shift.end}</span>
+                        </div>
+                      </div>
+                      <div className="d-flex gap-1 flex-shrink-0">
+                        <CButton
+                          size="sm"
+                          color="link"
+                          className="text-muted p-1"
+                          onClick={() => openEdit(shift)}
+                          title={`Edit ${shift.name}`}
+                          aria-label={`Edit ${shift.name}`}
+                        >
+                          <Pencil size={14} />
+                        </CButton>
+                        <CButton
+                          size="sm"
+                          color="link"
+                          className="text-danger p-1"
+                          onClick={() => confirmDelete(shift)}
+                          title={`Delete ${shift.name}`}
+                          aria-label={`Delete ${shift.name}`}
+                        >
+                          <Trash2 size={14} />
+                        </CButton>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </>
           )}
         </CCardBody>
       </CCard>
@@ -353,7 +398,7 @@ const CustomShifts = () => {
                 disabled={saving}
               />
             </div>
-            <div className="d-flex gap-3">
+            <div className="d-flex flex-wrap gap-3">
               <div className="flex-fill">
                 <CFormLabel>Start Time</CFormLabel>
                 <CFormInput
@@ -406,7 +451,7 @@ const CustomShifts = () => {
   )
 }
 
-// ─── Page root ────────────────────────────────────────────────────────────────
+// Page root
 
 const WorkShift = () => (
   <>

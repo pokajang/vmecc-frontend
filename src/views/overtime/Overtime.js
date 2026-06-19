@@ -13,6 +13,9 @@ import {
 } from '@coreui/react'
 import { useSelector } from 'react-redux'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { Plus } from 'lucide-react'
+import CreateActionButton from 'src/components/CreateActionButton'
+import ModulePageHeader from 'src/components/ModulePageHeader'
 import { isHolidayGuidanceOvertimeEnabledForUser } from 'src/config/featureFlags'
 import { hasPermission, isSystemAdministrator } from 'src/utils/authz'
 import useTableRows from 'src/hooks/useTableRows'
@@ -538,6 +541,20 @@ const Overtime = () => {
 
   return (
     <CContainer fluid>
+      <ModulePageHeader
+        title="Overtime"
+        subtitle="Review overtime records, resume drafts, and submit new overtime requests."
+        actions={
+          activeSection === 'new-overtime' ? null : (
+            <CreateActionButton
+              label="Apply Overtime"
+              importance="primary"
+              onClick={() => runWithDiscardGuard(startNewOvertime)}
+              icon={<Plus size={15} className="me-1 align-text-bottom" />}
+            />
+          )
+        }
+      />
       <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
       <OvertimeSubmitConfirmModal
         visible={isSubmitConfirmVisible}
@@ -592,10 +609,15 @@ const Overtime = () => {
         onClose={closeDeleteConfirmModal}
         onConfirm={confirmDeleteOvertime}
       />
-      <CNav variant="underline" role="tablist" className="mb-3 flex-nowrap overflow-auto">
-        <CNavItem role="presentation">
+      <CNav variant="underline" className="mb-3 flex-nowrap overflow-auto">
+        <CNavItem>
           <CNavLink
             active={activeSection === 'overtime-records' || activeSection === 'overtime-detail'}
+            aria-current={
+              activeSection === 'overtime-records' || activeSection === 'overtime-detail'
+                ? 'page'
+                : undefined
+            }
             onClick={() => runWithDiscardGuard(() => navigate('/overtime'))}
             style={{ cursor: 'pointer' }}
             className={
@@ -607,9 +629,10 @@ const Overtime = () => {
             Overtime Records
           </CNavLink>
         </CNavItem>
-        <CNavItem role="presentation">
+        <CNavItem>
           <CNavLink
             active={activeSection === 'new-overtime'}
+            aria-current={activeSection === 'new-overtime' ? 'page' : undefined}
             onClick={() => runWithDiscardGuard(startNewOvertime)}
             style={{ cursor: 'pointer' }}
             className={activeSection === 'new-overtime' ? 'text-primary' : ''}
@@ -649,6 +672,7 @@ const Overtime = () => {
           getStartDateTimeLabel={getStartDateTimeLabel}
           getEndDateTimeLabel={getEndDateTimeLabel}
           isLoading={isOvertimeLoading}
+          showPrimaryAction={false}
         />
       ) : null}
 

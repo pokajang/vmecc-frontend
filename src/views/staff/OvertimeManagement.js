@@ -1,18 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import {
-  CBadge,
-  CContainer,
-  CNav,
-  CNavItem,
-  CNavLink,
-  CToast,
-  CToastBody,
-  CToastHeader,
-  CToaster,
-} from '@coreui/react'
+import { CBadge, CContainer, CToast, CToastBody, CToastHeader, CToaster } from '@coreui/react'
 import { useSelector } from 'react-redux'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { buildWorkflowHistoryEntries } from 'src/components/auditHistory'
+import ModulePageHeader from 'src/components/ModulePageHeader'
+import RouteNavTabs from 'src/components/RouteNavTabs'
 import { isHolidayGuidanceStaffVisibilityEnabledForUser } from 'src/config/featureFlags'
 import { fetchStaffOvertimeRecord } from 'src/services/apiClient'
 import { loadStaffOvertimeRecordsApiFirst, mapOvertimeApiRowToUi } from 'src/services/overtimeApi'
@@ -634,32 +626,29 @@ const OvertimeManagement = () => {
 
       {!isDetailRoute ? (
         <>
-          <CNav variant="underline" role="tablist" className="mb-3">
-            <CNavItem role="presentation">
-              <CNavLink
-                active={resolvedTab === 'overtimeRecords'}
-                onClick={(event) => {
-                  event.preventDefault()
-                  switchTab('overtimeRecords')
-                }}
-                style={{ cursor: 'pointer' }}
-              >
-                Overtime Records
-              </CNavLink>
-            </CNavItem>
-            <CNavItem role="presentation">
-              <CNavLink
-                active={resolvedTab === 'otRules'}
-                onClick={(event) => {
-                  event.preventDefault()
-                  switchTab('otRules')
-                }}
-                style={{ cursor: 'pointer' }}
-              >
-                Set OT Rules
-              </CNavLink>
-            </CNavItem>
-          </CNav>
+          <ModulePageHeader
+            title="Staff Overtime Management"
+            subtitle="Review overtime records, process workflow decisions, and maintain overtime rules."
+          />
+
+          <RouteNavTabs
+            currentPath={resolvedTab}
+            navigate={(tab) => switchTab(tab)}
+            items={[
+              {
+                key: 'overtimeRecords',
+                label: 'Overtime Records',
+                to: 'overtimeRecords',
+                match: 'overtimeRecords',
+              },
+              {
+                key: 'otRules',
+                label: 'Set OT Rules',
+                to: 'otRules',
+                match: 'otRules',
+              },
+            ]}
+          />
 
           {resolvedTab === 'overtimeRecords' ? (
             <OvertimeRecordsTab

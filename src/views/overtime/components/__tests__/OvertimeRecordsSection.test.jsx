@@ -140,8 +140,38 @@ describe('OvertimeRecordsSection draft row UX', () => {
     expect(openRecord).toHaveBeenCalledWith(draftRow)
   })
 
+  it('renders draft and submitted records as mobile cards with key details', () => {
+    const openRecord = vi.fn()
+    const visibleRows = [draftRow, pendingRow]
+    const filteredRecords = [draftRow, pendingRow]
+
+    render(
+      <OvertimeRecordsSection
+        {...baseProps}
+        openRecord={openRecord}
+        visibleRows={visibleRows}
+        filteredRecords={filteredRecords}
+      />,
+    )
+
+    const draftCard = screen.getByRole('button', { name: 'Open overtime record DRAFT summary' })
+    const submittedCard = screen.getByRole('button', {
+      name: 'Open overtime record OT-2026-001 summary',
+    })
+
+    expect(screen.getByText('Drafts')).toBeTruthy()
+    expect(draftCard.textContent).toContain('DRAFT')
+    expect(draftCard.textContent).toContain('2h')
+    expect(submittedCard.textContent).toContain('OT-2026-001')
+    expect(submittedCard.textContent).toContain('Pending overtime row')
+
+    fireEvent.keyDown(submittedCard, { key: 'Enter' })
+    expect(openRecord).toHaveBeenCalledWith(pendingRow)
+  })
+
   it('supports deleting the draft row from row actions', () => {
     const deleteOvertime = vi.fn()
+    const openRecord = vi.fn()
     const visibleRows = [draftRow, pendingRow]
     const filteredRecords = [draftRow, pendingRow]
 
@@ -149,7 +179,7 @@ describe('OvertimeRecordsSection draft row UX', () => {
       <OvertimeRecordsSection
         {...baseProps}
         deleteOvertime={deleteOvertime}
-        openRecord={vi.fn()}
+        openRecord={openRecord}
         visibleRows={visibleRows}
         filteredRecords={filteredRecords}
       />,
@@ -161,6 +191,33 @@ describe('OvertimeRecordsSection draft row UX', () => {
     fireEvent.click(deleteAction)
     expect(deleteOvertime).toHaveBeenCalledTimes(1)
     expect(deleteOvertime).toHaveBeenCalledWith(draftRow)
+    expect(openRecord).not.toHaveBeenCalled()
+  })
+
+  it('keeps submitted row actions from triggering row navigation', () => {
+    const cancelOvertime = vi.fn()
+    const openRecord = vi.fn()
+
+    const { container } = render(
+      <OvertimeRecordsSection
+        {...baseProps}
+        cancelOvertime={cancelOvertime}
+        openRecord={openRecord}
+        visibleRows={[pendingRow]}
+        filteredRecords={[pendingRow]}
+      />,
+    )
+
+    const recordRow = Array.from(container.querySelectorAll('tbody tr')).find((row) =>
+      row.textContent?.includes('OT-2026-001'),
+    )
+    const cancelAction = within(recordRow).getByRole('button', { name: 'Cancel' })
+
+    fireEvent.click(cancelAction)
+
+    expect(cancelOvertime).toHaveBeenCalledTimes(1)
+    expect(cancelOvertime).toHaveBeenCalledWith(pendingRow)
+    expect(openRecord).not.toHaveBeenCalled()
   })
 
   it('disables edit action once pending claim has passed first approval step', () => {
@@ -208,7 +265,7 @@ describe('OvertimeRecordsSection draft row UX', () => {
     expect(screen.getByTestId('ot-type-summary-chip-weekend')).toBeTruthy()
     expect(screen.getByTestId('ot-type-summary-chip-publicHoliday')).toBeTruthy()
     expect(screen.getByTestId('ot-month-group-2026-04-month').textContent).toBe('APRIL 2026')
-    expect(screen.getByText('2 records')).toBeTruthy()
+    expect(screen.getAllByText('2 records').length).toBeGreaterThan(0)
     expect(screen.queryByText(/Total:/i)).toBeNull()
   })
 })

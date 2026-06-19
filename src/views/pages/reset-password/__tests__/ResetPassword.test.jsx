@@ -10,7 +10,7 @@ afterEach(() => {
 })
 
 describe('ResetPassword', () => {
-  it('uses the compact one-viewport auth layout', () => {
+  it('uses the scroll-safe auth layout', () => {
     render(
       <MemoryRouter initialEntries={['/reset-password?token=token-1&email=user@example.test']}>
         <Routes>
@@ -21,8 +21,8 @@ describe('ResetPassword', () => {
 
     const shell = screen.getByTestId('reset-password-shell')
     expect(shell.style.minHeight).toBe('100dvh')
-    expect(shell.style.height).toBe('100dvh')
-    expect(shell.style.overflow).toBe('hidden')
+    expect(shell.style.height).toBe('')
+    expect(shell.style.overflowY).toBe('auto')
     expect(shell.className).toContain('align-items-center')
 
     const logo = screen.getByAltText('VMECC')

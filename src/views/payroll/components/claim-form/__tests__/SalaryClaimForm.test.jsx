@@ -122,6 +122,51 @@ describe('SalaryClaimForm', () => {
     expect(within(actionBar).queryByRole('button', { name: 'Submit request' })).toBeNull()
   })
 
+  it('shows summary-first salary claim path and can open submit without expanding details', async () => {
+    render(
+      <MemoryRouter>
+        <SalaryClaimForm
+          {...baseProps}
+          overtimeEligibility={{ isResolved: true, eligible: true, error: null }}
+        />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByText('Salary Claim Summary')).toBeTruthy()
+    expect(screen.getByText('Final Payable')).toBeTruthy()
+    expect(screen.getByText('Baseline Net')).toBeTruthy()
+    expect(screen.getByText('Adjustments')).toBeTruthy()
+    expect(screen.getByText('Approved OT')).toBeTruthy()
+
+    const actionBar = screen.getByRole('group', { name: 'Form actions' })
+    await waitFor(() => {
+      expect(
+        within(actionBar).getByRole('button', { name: 'Submit request' }).hasAttribute('disabled'),
+      ).toBe(false)
+    })
+    fireEvent.click(within(actionBar).getByRole('button', { name: 'Submit request' }))
+    expect(screen.getByRole('button', { name: 'Confirm Submit' })).toBeTruthy()
+  })
+
+  it('keeps detailed salary and overtime rows available behind disclosure sections', async () => {
+    render(
+      <MemoryRouter>
+        <SalaryClaimForm
+          {...baseProps}
+          overtimeEligibility={{ isResolved: true, eligible: true, error: null }}
+        />
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByText('Salary baseline and adjustment details'))
+    await waitFor(() => {
+      expect(screen.getByText('Adjusted Gross Salary')).toBeTruthy()
+    })
+
+    fireEvent.click(screen.getByText('Overtime payout details'))
+    expect(screen.getByText(/No overtime records found/i)).toBeTruthy()
+  })
+
   it('opens a blank editor on Add Adjustment and clears it without touching saved items', async () => {
     render(
       <MemoryRouter>
@@ -147,6 +192,30 @@ describe('SalaryClaimForm', () => {
 
     expect(screen.getByLabelText('Remarks').value).toBe('')
     expect(screen.getByText('KEEP_THIS_SALARY_NOTE')).toBeTruthy()
+  })
+
+  it('shows leave guard modal for dirty salary claim edits and discards through existing back action', async () => {
+    const onBack = vi.fn()
+
+    render(
+      <MemoryRouter>
+        <SalaryClaimForm {...baseProps} onBack={onBack} />
+      </MemoryRouter>,
+    )
+
+    const addButton = screen.getByRole('button', { name: 'Add Adjustment' })
+    await waitFor(() => {
+      expect(addButton.hasAttribute('disabled')).toBe(false)
+    })
+    fireEvent.click(addButton)
+    fireEvent.change(screen.getByLabelText('Remarks'), {
+      target: { value: 'temporary salary draft change' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Back to claims' }))
+
+    expect(screen.getByText('Unsaved Changes')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }))
+    expect(onBack).toHaveBeenCalled()
   })
 
   it('loads overtime rows using backend-compatible month and status filters', async () => {

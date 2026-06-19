@@ -1,8 +1,8 @@
 import React from 'react'
 import { Check } from 'lucide-react'
 
-const GATE_COLOR_DONE = '#2eb85c'
-const GATE_COLOR_PENDING = '#d8dbe0'
+const GATE_COLOR_DONE = 'var(--vmecc-status-success-text, #2eb85c)'
+const GATE_COLOR_PENDING = 'var(--vmecc-status-muted-text, #d8dbe0)'
 
 const ApprovalGates = ({
   gates = [],

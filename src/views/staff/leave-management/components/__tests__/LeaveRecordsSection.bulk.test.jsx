@@ -107,9 +107,9 @@ describe('LeaveRecordsSection bulk workflow', () => {
       />,
     )
 
-    const groupCheckbox = screen.getByRole('checkbox', {
+    const groupCheckbox = screen.getAllByRole('checkbox', {
       name: /Select actionable leave records/i,
-    })
+    })[0]
     fireEvent.click(groupCheckbox)
 
     expect(screen.getByText('2 leave records selected')).toBeTruthy()
@@ -131,5 +131,56 @@ describe('LeaveRecordsSection bulk workflow', () => {
         }),
       )
     })
+  })
+
+  it('opens records from keyboard activation and keeps row actions separate', () => {
+    const openRecord = vi.fn()
+    const approveLeave = vi.fn()
+    render(
+      <LeaveRecordsSection
+        title="All Leaves"
+        actionMode="review"
+        search=""
+        setSearch={vi.fn()}
+        period="all"
+        setPeriod={vi.fn()}
+        sort="appliedAt:desc"
+        setSort={vi.fn()}
+        typeFilter="All"
+        setTypeFilter={vi.fn()}
+        statusFilter="All"
+        setStatusFilter={vi.fn()}
+        leaveSortOptions={[{ value: 'appliedAt:desc', label: 'Latest applied' }]}
+        typeOptions={[{ value: 'All', label: 'All leave types' }]}
+        statusOptions={[{ value: 'All', label: 'All status' }]}
+        clearFilters={vi.fn()}
+        filteredRecords={rows}
+        visibleRows={rows}
+        rowsToShow={5}
+        setRowsToShow={vi.fn()}
+        leaveRecordsCount={rows.length}
+        openRecord={openRecord}
+        approveLeave={approveLeave}
+        rejectLeave={vi.fn()}
+        getReviewActionConfig={() => ({
+          approveLabel: 'Review',
+          approveDisabled: false,
+          rejectDisabled: false,
+        })}
+        getDisplayLeaveId={(row) => row.id}
+        getStartDateTimeLabel={(row) => `${row.startDate} ${row.startTime}`}
+        getEndDateTimeLabel={(row) => `${row.endDate} ${row.endTime}`}
+        formatDate={(value) => String(value || '').slice(0, 10)}
+      />,
+    )
+
+    fireEvent.keyDown(screen.getAllByRole('button', { name: /Open leave record/i })[0], {
+      key: 'Enter',
+    })
+    expect(openRecord).toHaveBeenCalledTimes(1)
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Review' })[0])
+    expect(approveLeave).toHaveBeenCalledTimes(1)
+    expect(openRecord).toHaveBeenCalledTimes(1)
   })
 })

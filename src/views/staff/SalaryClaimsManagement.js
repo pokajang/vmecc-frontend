@@ -17,6 +17,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { hasAnyPermission, hasPermission } from 'src/utils/authz'
 import { SALARY_CLAIMS_ALLOWED_PERMISSIONS } from './leave-management/data'
 import ErrorBoundary from 'src/components/ErrorBoundary'
+import ModulePageHeader from 'src/components/ModulePageHeader'
 import TableLoader from 'src/components/TableLoader'
 import SalaryWorkflowActionModal from './components/SalaryWorkflowActionModal'
 import ClaimDetailView from './salary-claims-management/components/ClaimDetailView'
@@ -32,6 +33,7 @@ import BulkClaimActionModal from './salary-claims-management/components/BulkClai
 import AttachmentPreviewModal from './salary-claims-management/components/AttachmentPreviewModal'
 import SalaryClaimPaymentModal from './salary-claims-management/components/SalaryClaimPaymentModal'
 import { truncateAttachmentLabel } from './salary-claims-management/helpers/claimDetail'
+import { buildBulkSelectionSummary } from './salary-claims-management/helpers/bulkSelectionSummary'
 import useSalaryClaimsPageState from './salary-claims-management/hooks/useSalaryClaimsPageState'
 import useSalaryClaimsHydration from './salary-claims-management/hooks/useSalaryClaimsHydration'
 import useSalaryClaimsDerived from './salary-claims-management/hooks/useSalaryClaimsDerived'
@@ -337,6 +339,8 @@ const SalaryClaimsManagement = () => {
     openBulkPaymentModal: actions.openBulkPaymentModal,
     canBulkActOnClaim: actions.canBulkActOnClaim,
     canBulkActOnSalaryClaim: actions.canBulkActOnSalaryClaim,
+    canMarkClaimPaid: actions.canMarkClaimPaid,
+    canUnmarkClaimPaid: actions.canUnmarkClaimPaid,
     getClaimKey: derived.getClaimKey,
     toggleClaimGroupSelection: actions.toggleClaimGroupSelection,
     toggleSalaryGroupSelection: actions.toggleSalaryGroupSelection,
@@ -397,6 +401,36 @@ const SalaryClaimsManagement = () => {
     reloadOvertimeRates: hydration.reloadOvertimeRates,
     persistOvertimeRates: hydration.persistOvertimeRates,
   })
+  const getSalaryProjectedNetForRow = derived.getSalaryProjectedNetForRow
+  const getBulkClaimAmount = useCallback(
+    (row) =>
+      String(row?.type || '').trim() === 'salary' ? getSalaryProjectedNetForRow(row) : row?.amount,
+    [getSalaryProjectedNetForRow],
+  )
+  const bulkWorkflowSummary = useMemo(
+    () =>
+      buildBulkSelectionSummary(derived.selectedClaims, {
+        predicate: actions.canBulkActOnClaim,
+        getAmount: getBulkClaimAmount,
+        formatCurrency: actions.formatCurrency,
+      }),
+    [actions.canBulkActOnClaim, actions.formatCurrency, derived.selectedClaims, getBulkClaimAmount],
+  )
+  const bulkPaymentSummary = useMemo(() => {
+    const isMarkMode = actions.paymentModalState.mode === 'mark'
+    return buildBulkSelectionSummary(derived.selectedClaims, {
+      predicate: isMarkMode ? actions.canMarkClaimPaid : actions.canUnmarkClaimPaid,
+      getAmount: derived.getSalaryProjectedNetForRow,
+      formatCurrency: actions.formatCurrency,
+    })
+  }, [
+    actions.canMarkClaimPaid,
+    actions.canUnmarkClaimPaid,
+    actions.formatCurrency,
+    actions.paymentModalState.mode,
+    derived.getSalaryProjectedNetForRow,
+    derived.selectedClaims,
+  ])
 
   if (!user) {
     return (
@@ -449,7 +483,8 @@ const SalaryClaimsManagement = () => {
         vm={{
           visible: pageState.bulkActionModal.visible,
           action: pageState.bulkActionModal.action,
-          selectedCount: derived.selectedClaims.length,
+          selectedCount: bulkWorkflowSummary.count,
+          summary: bulkWorkflowSummary,
           remarks: pageState.bulkRemarks,
           declarationChecked: pageState.bulkDeclarationChecked,
           declarationLabel: WORKFLOW_DECLARATION_LABEL,
@@ -470,7 +505,8 @@ const SalaryClaimsManagement = () => {
         visible={actions.paymentModalState.visible}
         mode={actions.paymentModalState.mode}
         scope={actions.paymentModalState.scope}
-        selectedCount={derived.selectedClaims.length}
+        selectedCount={bulkPaymentSummary.count}
+        summary={bulkPaymentSummary}
         record={actions.paymentModalState.target}
         values={actions.paymentFormValues}
         errors={actions.paymentFormErrors}
@@ -510,17 +546,23 @@ const SalaryClaimsManagement = () => {
       </CModal>
 
       {!isClaimDetailRoute && !isAssignmentFormRoute && tabNavGroup && (
-        <SalaryClaimsTabsNav
-          activeTab={pageState.activeTab}
-          onSwitch={pageState.switchTab}
-          group={tabNavGroup}
-          tabMeta={{
-            salaryRecords:
-              derived.salaryContractIncompleteTotalCount > 0
-                ? { warningCount: derived.salaryContractIncompleteTotalCount }
-                : undefined,
-          }}
-        />
+        <>
+          <ModulePageHeader
+            title="Salary & Claims Management"
+            subtitle="Review payroll claims, manage salary records, configure pay settings, and maintain workflow rules."
+          />
+          <SalaryClaimsTabsNav
+            activeTab={pageState.activeTab}
+            onSwitch={pageState.switchTab}
+            group={tabNavGroup}
+            tabMeta={{
+              salaryRecords:
+                derived.salaryContractIncompleteTotalCount > 0
+                  ? { warningCount: derived.salaryContractIncompleteTotalCount }
+                  : undefined,
+            }}
+          />
+        </>
       )}
 
       {isClaimDetailRoute && !hydration.isClaimsLoading && (

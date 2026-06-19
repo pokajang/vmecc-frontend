@@ -18,6 +18,7 @@ import { roles } from './CreateStaffForm'
 import UserFormModal from 'src/components/users/UserFormModal'
 import UserActionModals from 'src/components/users/UserActionModals'
 import UserConfirmModal from 'src/components/users/UserConfirmModal'
+import ModulePageHeader from 'src/components/ModulePageHeader'
 import useTableRows from 'src/hooks/useTableRows'
 import useUserFilters from 'src/hooks/useUserFilters'
 import useUsers from 'src/hooks/useUsers'
@@ -251,19 +252,28 @@ const UserManagement = () => {
   return (
     <CContainer fluid>
       <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
+      <ModulePageHeader
+        title="User Management"
+        subtitle="Manage user accounts, access status, roles, sessions, and exports."
+        actions={
+          <UserManagementHeader
+            actionsOnly
+            refreshing={refreshing}
+            showForm={showForm}
+            submitStatus={submitStatus}
+            onToggleForm={toggleForm}
+            onExportCsv={exportCsv}
+            onExportXlsx={exportXlsx}
+            hasRows={filtered.length > 0}
+          />
+        }
+      />
       <CRow>
         <CCol>
           <CCard className="mb-4">
-            <CCardHeader>
-              <UserManagementHeader
-                refreshing={refreshing}
-                showForm={showForm}
-                submitStatus={submitStatus}
-                onToggleForm={toggleForm}
-                onExportCsv={exportCsv}
-                onExportXlsx={exportXlsx}
-                hasRows={filtered.length > 0}
-              />
+            <CCardHeader className="d-flex align-items-center gap-2">
+              <span>User Records</span>
+              {refreshing ? <span className="small text-body-secondary">Refreshing...</span> : null}
             </CCardHeader>
             <CCardBody>
               <UserManagementTableSection

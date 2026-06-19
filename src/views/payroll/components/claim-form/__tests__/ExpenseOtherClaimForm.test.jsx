@@ -89,6 +89,104 @@ describe('ExpenseOtherClaimForm', () => {
     expect(screen.getByText('KEEP_THIS_EXPENSE_NOTE')).toBeTruthy()
   })
 
+  it('shows category-led fields only when the selected expense category requires them', () => {
+    render(
+      <MemoryRouter>
+        <ExpenseOtherClaimForm {...baseProps} />
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Item' }))
+
+    expect(screen.getByText('1. Category')).toBeTruthy()
+    expect(screen.getByText('2. Claim Details')).toBeTruthy()
+    expect(screen.queryByLabelText('Distance (KM)')).toBeNull()
+
+    fireEvent.change(screen.getByLabelText('Category'), { target: { value: 'Mileage' } })
+
+    expect(screen.getByText('3. Category Details')).toBeTruthy()
+    expect(screen.getByLabelText('From')).toBeTruthy()
+    expect(screen.getByLabelText('To')).toBeTruthy()
+    expect(screen.getByLabelText('Distance (KM)')).toBeTruthy()
+    expect(screen.getByLabelText('Rate / KM')).toBeTruthy()
+    expect(screen.getByLabelText('Amount (MYR)').hasAttribute('disabled')).toBe(true)
+  })
+
+  it('opens saved item attachment preview from the existing item attachment action', () => {
+    render(
+      <MemoryRouter>
+        <ExpenseOtherClaimForm {...baseProps} />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByText('1 linked attachment on saved item.')).toBeTruthy()
+    fireEvent.click(screen.getByText('receipt.pdf'))
+
+    expect(screen.getByText('Attachment Preview')).toBeTruthy()
+    expect(
+      screen.getAllByText('Preview is unavailable for this attachment in current draft state.')
+        .length,
+    ).toBeGreaterThan(0)
+  })
+
+  it('shows leave guard modal for dirty expense edits and discards through existing back action', () => {
+    const onBack = vi.fn()
+
+    render(
+      <MemoryRouter>
+        <ExpenseOtherClaimForm {...baseProps} onBack={onBack} />
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Item' }))
+    fireEvent.change(screen.getByLabelText('Item Notes'), {
+      target: { value: 'temporary expense draft change' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Back to claims' }))
+
+    expect(screen.getByText('Unsaved Changes')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }))
+    expect(onBack).toHaveBeenCalled()
+  })
+
+  it('opens post-submit modal after successful expense submission', async () => {
+    vi.spyOn(payrollClaimsApi, 'loadMyPayrollClaimDraftsApiFirst').mockResolvedValue({
+      ok: true,
+      data: [],
+    })
+    const submitSpy = vi
+      .spyOn(payrollClaimsApi, 'submitMyPayrollClaimApiFirst')
+      .mockResolvedValue({ ok: true, data: { id: 'CLM-POST-001' } })
+
+    render(
+      <MemoryRouter>
+        <ExpenseOtherClaimForm
+          {...baseProps}
+          draftPayload={{
+            ...baseProps.draftPayload,
+            savedItems: [
+              {
+                ...baseProps.draftPayload.savedItems[0],
+                attachmentId: 99,
+                attachmentUploadState: 'uploaded',
+              },
+            ],
+          }}
+        />
+      </MemoryRouter>,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Submit request' }))
+    fireEvent.click(screen.getByRole('checkbox'))
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm Submit' }))
+
+    await waitFor(() => {
+      expect(submitSpy).toHaveBeenCalled()
+      expect(screen.getByText('Claim Submitted')).toBeTruthy()
+    })
+    expect(screen.getByText('Claim CLM-POST-001 was saved successfully.')).toBeTruthy()
+  })
+
   it('locks submit actions while submit request is in-flight', async () => {
     let resolveSubmit
     const submitPromise = new Promise((resolve) => {

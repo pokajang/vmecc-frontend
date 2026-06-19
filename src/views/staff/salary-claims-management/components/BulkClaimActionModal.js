@@ -10,12 +10,14 @@ import {
   CModalHeader,
 } from '@coreui/react'
 import BulkActionButton from 'src/views/staff/components/BulkActionButton'
+import BulkSelectionSummaryPreview from './BulkSelectionSummaryPreview'
 
 const BulkClaimActionModal = ({ vm, handlers }) => {
   const {
     visible,
     action,
     selectedCount,
+    summary,
     remarks,
     declarationChecked,
     declarationLabel,
@@ -37,9 +39,9 @@ const BulkClaimActionModal = ({ vm, handlers }) => {
         {action === 'reject' ? 'Bulk Reject Claims' : 'Bulk Approve Claims'}
       </CModalHeader>
       <CModalBody className="d-grid gap-3">
-        <div className="text-body-secondary">
-          {selectedCount} claim{selectedCount === 1 ? '' : 's'} selected.
-        </div>
+        <BulkSelectionSummaryPreview
+          summary={summary || { count: selectedCount, sampleItems: [], remainingCount: 0 }}
+        />
         {action === 'reject' ? (
           <>
             <CFormLabel htmlFor="bulk-reject-remarks">Remarks</CFormLabel>

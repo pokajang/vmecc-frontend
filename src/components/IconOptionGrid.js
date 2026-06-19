@@ -32,13 +32,18 @@ const IconOptionGrid = ({
   disabled = false,
   ariaLabel,
   testIdPrefix = '',
+  selectionMode,
 }) => {
   if (!Array.isArray(options) || options.length === 0) {
     return emptyState || null
   }
 
+  const resolvedSelectionMode = selectionMode || (Array.isArray(value) ? 'multi' : 'single')
+  const groupRole = resolvedSelectionMode === 'single' ? 'radiogroup' : 'group'
+  const optionRole = resolvedSelectionMode === 'single' ? 'radio' : 'button'
+
   return (
-    <CRow className={rowClassName} role="group" aria-label={ariaLabel}>
+    <CRow className={rowClassName} role={groupRole} aria-label={ariaLabel}>
       {options.map((option) => {
         const optionValue = option?.value
         const optionTitle = option?.title || option?.label || String(optionValue || '')
@@ -68,6 +73,7 @@ const IconOptionGrid = ({
               showDescription={showDescription}
               variant={option?.variant || variant}
               testId={testId}
+              role={optionRole}
               onSelect={() => {
                 if (typeof onChange !== 'function') return
                 onChange(optionValue, option)

@@ -49,6 +49,38 @@ const buildDummySummary = ({ form, teamLabel, respondersSummaryValue, chronology
   ].join(' ')
 }
 
+const ErcoBasicPathSummary = ({ form, teamLabel, respondersSummaryValue, chronologyCount }) => (
+  <div className="rounded-3 border bg-white p-3 d-grid gap-2">
+    <div className="fw-semibold">Basic Report Path</div>
+    <div className="small text-body-secondary">
+      Complete the report title and incident summary first. Chronology and operational audit details
+      remain available below when needed.
+    </div>
+    <div className="row g-2 small">
+      <div className="col-6 col-md-3">
+        <div className="text-body-secondary">Type</div>
+        <div className="fw-semibold">{String(form.incidentType || '').trim() || '-'}</div>
+      </div>
+      <div className="col-6 col-md-3">
+        <div className="text-body-secondary">Location</div>
+        <div className="fw-semibold">{formatErcoLocation(form.location) || '-'}</div>
+      </div>
+      <div className="col-6 col-md-3">
+        <div className="text-body-secondary">Team</div>
+        <div className="fw-semibold">{teamLabel || '-'}</div>
+      </div>
+      <div className="col-6 col-md-3">
+        <div className="text-body-secondary">Chronology</div>
+        <div className="fw-semibold">{chronologyCount} rows</div>
+      </div>
+      <div className="col-12">
+        <div className="text-body-secondary">Responders</div>
+        <div className="fw-semibold">{respondersSummaryValue || '-'}</div>
+      </div>
+    </div>
+  </div>
+)
+
 const ErcoDetailsStep = ({
   form,
   fieldErrors,
@@ -330,6 +362,13 @@ const ErcoDetailsStep = ({
         incidentSummaryItems={incidentSummaryItems}
       />
 
+      <ErcoBasicPathSummary
+        form={form}
+        teamLabel={teamLabel}
+        respondersSummaryValue={respondersSummaryValue}
+        chronologyCount={chronologyRows.length}
+      />
+
       <IncidentTitleField
         fieldError={fieldErrors.details}
         titleManager={titleManager}
@@ -341,39 +380,44 @@ const ErcoDetailsStep = ({
         updateIncidentTitleField={updateIncidentTitleField}
       />
 
-      <ChronologySection
-        fieldError={fieldErrors.chronology}
-        showChronologyStarter={showChronologyStarter}
-        isChronologyDefault={isChronologyDefault}
-        canUndo={canUndo}
-        undoChronology={undoChronology}
-        handleResetChronology={handleResetChronology}
-        handleAddSimpleRow={handleAddSimpleRow}
-        isAdvanceMenuOpen={isAdvanceMenuOpen}
-        setIsAdvanceMenuOpen={setIsAdvanceMenuOpen}
-        hasAnyPresetRows={hasAnyPresetRows}
-        hasPreMobRows={hasPreMobRows}
-        hasDemobRows={hasDemobRows}
-        handleAddPreMobRows={handleAddPreMobRows}
-        handleAddDemobRows={handleAddDemobRows}
-        startTimeEditMode={startTimeEditMode}
-        responseStartTime={responseStartTime}
-        setResponseStartTime={setResponseStartTime}
-        handleSaveResponseStartTime={handleSaveResponseStartTime}
-        handleCancelResponseStartTimeEdit={handleCancelResponseStartTimeEdit}
-        handleSetResponseStartTime={handleSetResponseStartTime}
-        isChronologyOutOfOrder={isChronologyOutOfOrder}
-        sortChronologyByTime={sortChronologyByTime}
-        chronologyRows={chronologyRows}
-        rowContainerRefs={rowContainerRefs}
-        chronologyRowProps={chronologyRowProps}
-        rowModal={rowModal}
-        onOpenAddRowModal={openAddRowModal}
-        onOpenEditRowModal={openEditRowModal}
-        onCloseRowModal={closeRowModal}
-        onRowModalDraftChange={setRowModalDraft}
-        onCommitRowModal={commitRowModal}
-      />
+      <details className="rounded-3 border bg-white p-3">
+        <summary className="fw-semibold">Advanced Chronology</summary>
+        <div className="mt-3">
+          <ChronologySection
+            fieldError={fieldErrors.chronology}
+            showChronologyStarter={showChronologyStarter}
+            isChronologyDefault={isChronologyDefault}
+            canUndo={canUndo}
+            undoChronology={undoChronology}
+            handleResetChronology={handleResetChronology}
+            handleAddSimpleRow={handleAddSimpleRow}
+            isAdvanceMenuOpen={isAdvanceMenuOpen}
+            setIsAdvanceMenuOpen={setIsAdvanceMenuOpen}
+            hasAnyPresetRows={hasAnyPresetRows}
+            hasPreMobRows={hasPreMobRows}
+            hasDemobRows={hasDemobRows}
+            handleAddPreMobRows={handleAddPreMobRows}
+            handleAddDemobRows={handleAddDemobRows}
+            startTimeEditMode={startTimeEditMode}
+            responseStartTime={responseStartTime}
+            setResponseStartTime={setResponseStartTime}
+            handleSaveResponseStartTime={handleSaveResponseStartTime}
+            handleCancelResponseStartTimeEdit={handleCancelResponseStartTimeEdit}
+            handleSetResponseStartTime={handleSetResponseStartTime}
+            isChronologyOutOfOrder={isChronologyOutOfOrder}
+            sortChronologyByTime={sortChronologyByTime}
+            chronologyRows={chronologyRows}
+            rowContainerRefs={rowContainerRefs}
+            chronologyRowProps={chronologyRowProps}
+            rowModal={rowModal}
+            onOpenAddRowModal={openAddRowModal}
+            onOpenEditRowModal={openEditRowModal}
+            onCloseRowModal={closeRowModal}
+            onRowModalDraftChange={setRowModalDraft}
+            onCommitRowModal={commitRowModal}
+          />
+        </div>
+      </details>
 
       <IncidentSummaryTextarea
         value={form.summary}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
-import { CButton, CFormInput, CFormSelect } from '@coreui/react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { CButton, CFormInput, CFormLabel, CFormSelect } from '@coreui/react'
+import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 
 const DEFAULT_MONTH_WINDOW = 6
 
@@ -27,27 +27,48 @@ const RosterFilter = ({
 }) => {
   const [showAllMonths, setShowAllMonths] = useState(false)
 
-  // Month-based = the card picker mode; day/week/custom use the date inputs
   const isMonthBased = rangeType === 'month'
   const showNavArrows = rangeType === 'day' || rangeType === 'week'
+  const activeFilterItems = [
+    search?.trim()
+      ? { key: 'search', label: 'Search', value: search.trim(), onClear: () => onSearchChange('') }
+      : null,
+    rangeType !== 'month'
+      ? { key: 'range', label: 'Range', value: rangeType, onClear: null }
+      : null,
+    teamFilter && teamFilter !== 'All'
+      ? { key: 'team', label: 'Team', value: teamFilter, onClear: () => onTeamChange('All') }
+      : null,
+    isMonthBased && selectedMonths.length > 0
+      ? {
+          key: 'months',
+          label: 'Months',
+          value: `${selectedMonths.length} selected`,
+          onClear: null,
+        }
+      : null,
+  ].filter(Boolean)
 
   return (
     <div className="mb-4">
-      {/* ── Row 1: View type + date navigation ─────────────────────────── */}
-      <div className="d-flex align-items-center gap-2 mb-4">
-        <CFormSelect
-          size="sm"
-          value={rangeType}
-          onChange={(e) => onRangeChange(e.target.value)}
-          style={{ maxWidth: 140 }}
-        >
-          <option value="month">Monthly</option>
-          <option value="day">Daily</option>
-          <option value="week">Weekly</option>
-          <option value="custom">Custom range</option>
-        </CFormSelect>
+      <div className="d-flex flex-wrap align-items-end gap-2 mb-4">
+        <div className="d-grid gap-1" style={{ minWidth: 140 }}>
+          <CFormLabel htmlFor="roster-range-filter" className="small text-body-secondary mb-0">
+            Range
+          </CFormLabel>
+          <CFormSelect
+            id="roster-range-filter"
+            size="sm"
+            value={rangeType}
+            onChange={(event) => onRangeChange(event.target.value)}
+          >
+            <option value="month">Monthly</option>
+            <option value="day">Daily</option>
+            <option value="week">Weekly</option>
+            <option value="custom">Custom range</option>
+          </CFormSelect>
+        </div>
 
-        {/* Prev / Next — day & week only */}
         {showNavArrows && (
           <CButton
             size="sm"
@@ -55,38 +76,59 @@ const RosterFilter = ({
             variant="outline"
             className="px-2 py-1"
             onClick={onPrev}
+            aria-label="Previous roster period"
           >
             <ChevronLeft size={14} />
           </CButton>
         )}
 
         {(rangeType === 'day' || rangeType === 'week') && (
-          <CFormInput
-            size="sm"
-            type="date"
-            value={dateFilter}
-            onChange={(e) => onDateChange(e.target.value)}
-            style={{ maxWidth: 160 }}
-          />
+          <div className="d-grid gap-1" style={{ minWidth: 160 }}>
+            <CFormLabel htmlFor="roster-date-filter" className="small text-body-secondary mb-0">
+              Date
+            </CFormLabel>
+            <CFormInput
+              id="roster-date-filter"
+              size="sm"
+              type="date"
+              value={dateFilter}
+              onChange={(event) => onDateChange(event.target.value)}
+            />
+          </div>
         )}
 
         {rangeType === 'custom' && (
           <>
-            <CFormInput
-              size="sm"
-              type="date"
-              value={startDate}
-              onChange={(e) => onStartDateChange(e.target.value)}
-              style={{ maxWidth: 150 }}
-            />
-            <span className="text-muted small">to</span>
-            <CFormInput
-              size="sm"
-              type="date"
-              value={endDate}
-              onChange={(e) => onEndDateChange(e.target.value)}
-              style={{ maxWidth: 150 }}
-            />
+            <div className="d-grid gap-1" style={{ minWidth: 150 }}>
+              <CFormLabel
+                htmlFor="roster-start-date-filter"
+                className="small text-body-secondary mb-0"
+              >
+                Start date
+              </CFormLabel>
+              <CFormInput
+                id="roster-start-date-filter"
+                size="sm"
+                type="date"
+                value={startDate}
+                onChange={(event) => onStartDateChange(event.target.value)}
+              />
+            </div>
+            <div className="d-grid gap-1" style={{ minWidth: 150 }}>
+              <CFormLabel
+                htmlFor="roster-end-date-filter"
+                className="small text-body-secondary mb-0"
+              >
+                End date
+              </CFormLabel>
+              <CFormInput
+                id="roster-end-date-filter"
+                size="sm"
+                type="date"
+                value={endDate}
+                onChange={(event) => onEndDateChange(event.target.value)}
+              />
+            </div>
           </>
         )}
 
@@ -97,25 +139,26 @@ const RosterFilter = ({
             variant="outline"
             className="px-2 py-1"
             onClick={onNext}
+            aria-label="Next roster period"
           >
             <ChevronRight size={14} />
           </CButton>
         )}
       </div>
 
-      {/* ── Month card picker ───────────────────────────────────────────── */}
       {isMonthBased &&
         monthOptions.length > 0 &&
         (() => {
           const scopeOptions = showAllMonths
             ? monthOptions
             : monthOptions.slice(-DEFAULT_MONTH_WINDOW)
-          const allSelected = scopeOptions.every((m) => selectedMonths.includes(m.value))
-          const toggleAll = () => scopeOptions.forEach((m) => onMonthToggle(m.value, !allSelected))
+          const allSelected = scopeOptions.every((month) => selectedMonths.includes(month.value))
+          const toggleAll = () =>
+            scopeOptions.forEach((month) => onMonthToggle(month.value, !allSelected))
 
           return (
             <div className="mb-4">
-              <div className="d-flex align-items-center justify-content-between mb-2">
+              <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
                 <span className="small text-body-secondary">Select months to view</span>
                 {monthOptions.length > DEFAULT_MONTH_WINDOW && (
                   <button
@@ -125,10 +168,9 @@ const RosterFilter = ({
                     onClick={() => {
                       const next = !showAllMonths
                       setShowAllMonths(next)
-                      // reselect scope defaults
-                      monthOptions.forEach((m) => onMonthToggle(m.value, false))
+                      monthOptions.forEach((month) => onMonthToggle(month.value, false))
                       const scope = next ? monthOptions : monthOptions.slice(-DEFAULT_MONTH_WINDOW)
-                      scope.forEach((m) => onMonthToggle(m.value, true))
+                      scope.forEach((month) => onMonthToggle(month.value, true))
                     }}
                   >
                     {showAllMonths ? 'Show less' : `See all (${monthOptions.length} months)`}
@@ -137,13 +179,15 @@ const RosterFilter = ({
               </div>
 
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {/* All / Clear */}
                 <div
                   role="button"
                   tabIndex={0}
                   onClick={toggleAll}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') toggleAll()
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      toggleAll()
+                    }
                   }}
                   className={`rounded-3 border text-center ${allSelected ? 'border-secondary bg-secondary bg-opacity-10' : 'border-light-subtle'}`}
                   style={{
@@ -164,7 +208,6 @@ const RosterFilter = ({
                   </div>
                 </div>
 
-                {/* divider */}
                 <div
                   style={{
                     width: 1,
@@ -174,22 +217,25 @@ const RosterFilter = ({
                   }}
                 />
 
-                {scopeOptions.map((m) => {
-                  const isSelected = selectedMonths.includes(m.value)
-                  const [year, month] = m.value.split('-')
+                {scopeOptions.map((month) => {
+                  const isSelected = selectedMonths.includes(month.value)
+                  const [year, monthNumber] = month.value.split('-')
                   const shortMonth = new Date(
                     Number(year),
-                    Number(month) - 1,
+                    Number(monthNumber) - 1,
                     1,
                   ).toLocaleDateString('en-US', { month: 'short' })
                   return (
                     <div
-                      key={m.value}
+                      key={month.value}
                       role="button"
                       tabIndex={0}
-                      onClick={() => onMonthToggle(m.value, !isSelected)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') onMonthToggle(m.value, !isSelected)
+                      onClick={() => onMonthToggle(month.value, !isSelected)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault()
+                          onMonthToggle(month.value, !isSelected)
+                        }
                       }}
                       className={`rounded-3 border text-center ${isSelected ? 'border-primary bg-primary bg-opacity-10' : 'border-light-subtle'}`}
                       style={{
@@ -223,32 +269,67 @@ const RosterFilter = ({
           )
         })()}
 
-      {/* ── Row 2: Team filter + search ─────────────────────────────────── */}
-      <div className="d-flex align-items-center gap-2 mt-1">
-        <CFormSelect
-          size="sm"
-          style={{ maxWidth: 160 }}
-          value={teamFilter}
-          onChange={(e) => onTeamChange(e.target.value)}
-        >
-          <option value="All">All teams</option>
-          {teams.map((t) => (
-            <option key={t.id || t.name} value={t.name}>
-              {t.name}
-            </option>
-          ))}
-        </CFormSelect>
-        <CFormInput
-          size="sm"
-          className="flex-grow-1"
-          placeholder="Search team or date"
-          value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
-        />
+      <div className="d-flex flex-wrap align-items-end gap-2 mt-1">
+        <div className="d-grid gap-1" style={{ minWidth: 160 }}>
+          <CFormLabel htmlFor="roster-team-filter" className="small text-body-secondary mb-0">
+            Team
+          </CFormLabel>
+          <CFormSelect
+            id="roster-team-filter"
+            size="sm"
+            value={teamFilter}
+            onChange={(event) => onTeamChange(event.target.value)}
+          >
+            <option value="All">All teams</option>
+            {teams.map((team) => (
+              <option key={team.id || team.name} value={team.name}>
+                {team.name}
+              </option>
+            ))}
+          </CFormSelect>
+        </div>
+        <div className="d-grid gap-1 flex-grow-1" style={{ minWidth: 180 }}>
+          <CFormLabel htmlFor="roster-search-filter" className="small text-body-secondary mb-0">
+            Search
+          </CFormLabel>
+          <CFormInput
+            id="roster-search-filter"
+            size="sm"
+            placeholder="Search team or date"
+            value={search}
+            onChange={(event) => onSearchChange(event.target.value)}
+          />
+        </div>
         <CButton size="sm" color="secondary" variant="outline" onClick={onClear}>
           Clear
         </CButton>
       </div>
+
+      {activeFilterItems.length > 0 && (
+        <div className="d-flex flex-wrap align-items-center gap-2 mt-3" aria-label="Active filters">
+          <span className="small text-body-secondary">Active filters:</span>
+          {activeFilterItems.map((item) => (
+            <span
+              key={item.key}
+              className="d-inline-flex align-items-center gap-1 rounded-pill border bg-body px-2 py-1 small"
+            >
+              <span className="text-body-secondary">{item.label}:</span>
+              <span className="fw-semibold">{item.value}</span>
+              {item.onClear ? (
+                <button
+                  type="button"
+                  className="btn btn-link btn-sm p-0 ms-1 text-body-secondary"
+                  style={{ lineHeight: 1 }}
+                  onClick={item.onClear}
+                  aria-label={`Clear ${item.label} filter`}
+                >
+                  <X size={12} />
+                </button>
+              ) : null}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

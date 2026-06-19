@@ -118,7 +118,7 @@ const ClaimTypeSelection = ({
           {continueLabel}
         </CButton>
       </div>
-      <div className="action-row-thumb-spacer d-lg-none" />
+      <div className="action-row-thumb-spacer d-md-none" />
     </div>
   )
 }

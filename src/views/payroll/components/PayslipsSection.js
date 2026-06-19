@@ -21,91 +21,16 @@ import { useNavigate } from 'react-router-dom'
 import ApprovalGates from 'src/components/ApprovalGates'
 import RowActions from 'src/components/RowActions'
 import TableLoader from 'src/components/TableLoader'
-
-const formatContributionList = (contributions = {}, formatCurrency) => {
-  const entries = Object.entries(contributions || {}).filter(([, amount]) => Number(amount) !== 0)
-  if (!entries.length) return '-'
-  return entries
-    .map(([key, amount]) => `${key}: ${formatCurrency(Number(amount) || 0)}`)
-    .join(' | ')
-}
-
-const formatAllowanceList = (allowanceItems = [], formatCurrency) => {
-  if (!Array.isArray(allowanceItems) || allowanceItems.length === 0) return '-'
-  return allowanceItems
-    .map((entry) => `${entry.label || entry.key}: ${formatCurrency(Number(entry.amount) || 0)}`)
-    .join(' | ')
-}
-
-const formatBaselineSource = (value) => {
-  const normalized = String(value || '')
-    .trim()
-    .toLowerCase()
-  if (normalized === 'hybrid') return 'Claim Snapshot + Salary Record'
-  if (normalized === 'claim_snapshot') return 'Claim Snapshot'
-  if (normalized === 'salary_record') return 'Salary Record'
-  return 'Unavailable'
-}
-
-const toContributionPairs = (employee = {}, employer = {}) => {
-  const keys = Array.from(
-    new Set([
-      ...Object.keys(employee || {}).map((key) =>
-        String(key || '')
-          .trim()
-          .toLowerCase(),
-      ),
-      ...Object.keys(employer || {}).map((key) =>
-        String(key || '')
-          .trim()
-          .toLowerCase(),
-      ),
-    ]),
-  ).filter(Boolean)
-  return keys.map((key) => {
-    const employeeAmount = Number(employee?.[key] || 0) || 0
-    const employerAmount = Number(employer?.[key] || 0) || 0
-    return {
-      key,
-      label: key.toUpperCase(),
-      employeeAmount,
-      employerAmount,
-    }
-  })
-}
-
-const formatAdjustmentItems = (rows = [], formatCurrency) =>
-  rows.length > 0
-    ? rows
-        .map((entry) => {
-          const amountLabel = formatCurrency(Number(entry?.signedAmount || 0))
-          const label = String(
-            entry?.title || entry?.itemType || `Line ${entry?.lineNo || '-'}`,
-          ).trim()
-          return `${label}: ${amountLabel}`
-        })
-        .join(' | ')
-    : '-'
+import {
+  buildPayrollBreakdown,
+  formatAdjustmentItems,
+  formatAllowanceList,
+  formatContributionList,
+} from './payrollBreakdownViewModel'
 
 const toIdentifier = (row = {}, index = 0) =>
   String(row.id || row.payslipId || row.reference || `payslip-${index}`).trim() ||
   `payslip-${index}`
-
-const hasDetailData = (row = {}) =>
-  Boolean(
-    row?.salaryRecord ||
-      (Array.isArray(row?.adjustments) && row.adjustments.length > 0) ||
-      (Array.isArray(row?.overtime?.rows) && row.overtime.rows.length > 0) ||
-      row?.baselineSource,
-  )
-
-const resolvePaymentDateLabel = (row = {}) => {
-  const status = String(row?.status || '').trim()
-  const paymentDate = String(row?.paymentDate || '').trim()
-  if (status === 'Paid') return paymentDate || '-'
-  if (status === 'Approved' && !paymentDate) return 'Pending payment'
-  return paymentDate || '-'
-}
 
 const PAYROLL_GATES = [
   { action: 'Checked', label: 'Checked' },
@@ -158,6 +83,144 @@ const PayslipsSection = ({
       ? missingFields.map((key) => missingFieldLabelByKey[key] || String(key)).join(', ')
       : ''
 
+  const renderDownloadActions = (row) => (
+    <RowActions
+      items={[
+        {
+          key: 'download-payslip',
+          label: 'Download payslip',
+          onClick: () => handleDownloadAction(row),
+          disabled: !row.payslipId,
+        },
+      ]}
+    />
+  )
+
+  const renderApprovalStatus = (row, approvalHistory) =>
+    approvalHistory.length > 0 ? (
+      <ApprovalGates
+        gates={PAYROLL_GATES}
+        approvalHistory={approvalHistory}
+        isCancelled={row.status === 'Cancelled'}
+      />
+    ) : (
+      <span className="small text-body-secondary">{row.status || '-'}</span>
+    )
+
+  const renderMobileDetailSection = (title, rows) => (
+    <section className="border rounded-3 bg-body p-3">
+      <div className="fw-semibold small text-body mb-2">{title}</div>
+      <div className="d-grid gap-2">
+        {rows.map((item) => (
+          <div
+            key={item.label}
+            className="d-flex justify-content-between gap-3 small"
+            style={{ overflowWrap: 'anywhere' }}
+          >
+            <span className="text-body-secondary">{item.label}</span>
+            <span className="fw-semibold text-end">{item.value ?? '-'}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+
+  const renderMobileDetails = (breakdown) => {
+    const { summary, baseline, contributions, adjustments, overtime, status } = breakdown
+
+    return (
+      <div className="d-grid gap-2 mt-3">
+        {renderMobileDetailSection('Net Pay Summary', [
+          { label: 'Baseline net', value: formatCurrency(summary.baselineNet) },
+          { label: 'Total adjustments', value: formatCurrency(summary.adjustmentsTotal) },
+          { label: 'OT payout', value: formatCurrency(summary.approvedOvertimePayout) },
+          { label: 'Net payable', value: formatCurrency(summary.finalPayable) },
+        ])}
+
+        {renderMobileDetailSection('Deductions & Contributions', [
+          {
+            label: 'Total deductions',
+            value: formatCurrency(summary.baselineTotalDeductions),
+          },
+          {
+            label: 'Employer total',
+            value: formatCurrency(contributions.employerContributionTotal),
+          },
+          {
+            label: 'Employee contributions',
+            value: formatContributionList(contributions.employeeContributions, formatCurrency),
+          },
+          {
+            label: 'Employer contributions',
+            value: formatContributionList(contributions.employerContributions, formatCurrency),
+          },
+          ...contributions.contributionPairs.map((entry) => ({
+            label: entry.label,
+            value: `${formatCurrency(entry.employeeAmount)} / ${formatCurrency(
+              entry.employerAmount,
+            )}`,
+          })),
+        ])}
+
+        {renderMobileDetailSection('Salary Baseline', [
+          { label: 'Baseline source', value: baseline.sourceLabel },
+          {
+            label: 'Salary record',
+            value: baseline.salaryRecord
+              ? `${baseline.salaryRecord.referenceId || '-'} | Effective ${
+                  baseline.salaryRecord.effectiveFrom || '-'
+                } | ${baseline.salaryRecord.status || '-'}`
+              : 'No salary record linked',
+          },
+          { label: 'Payment date', value: status.paymentDateLabel },
+          {
+            label: 'Basic salary',
+            value: formatCurrency(summary.basicSalary),
+          },
+          {
+            label: 'Total allowances',
+            value: formatCurrency(baseline.allowanceTotal),
+          },
+          {
+            label: 'Allowance breakdown',
+            value: formatAllowanceList(baseline.allowanceItems, formatCurrency),
+          },
+          {
+            label: 'Deduction items',
+            value:
+              baseline.deductionItems.length > 0
+                ? baseline.deductionItems
+                    .map((entry) => {
+                      const label = String(entry?.label || entry?.key || 'Deduction').trim()
+                      return `${label}: ${formatCurrency(entry?.amount || 0)}`
+                    })
+                    .join(' | ')
+                : '-',
+          },
+        ])}
+
+        {renderMobileDetailSection('Overtime Records', [
+          { label: 'Overtime rows', value: overtime.rows.length },
+          {
+            label: 'Approved hours',
+            value: Number(overtime.approvedHours).toFixed(2),
+          },
+          {
+            label: 'Approved payout',
+            value: formatCurrency(overtime.approvedPayout),
+          },
+        ])}
+
+        {renderMobileDetailSection('Adjustment Items', [
+          {
+            label: 'Adjustment items',
+            value: formatAdjustmentItems(adjustments.rows, formatCurrency),
+          },
+        ])}
+      </div>
+    )
+  }
+
   return (
     <CCard>
       <CCardHeader>Payslips</CCardHeader>
@@ -170,7 +233,101 @@ const PayslipsSection = ({
         <p className="text-body-secondary">
           Payslip details are composed from approved payroll claims and salary assignment records.
         </p>
-        <div className="rounded-3 shadow-sm overflow-hidden bg-white">
+        <div className="d-md-none d-grid gap-3">
+          {isLoading ? (
+            <div className="border rounded-3 bg-white p-3">
+              <TableLoader />
+            </div>
+          ) : rows.length === 0 ? (
+            <div className="border rounded-3 bg-white p-4 text-center text-body-secondary">
+              No payslips available yet.
+            </div>
+          ) : (
+            rows.map((row, index) => {
+              const rowId = rowIds[index]
+              const detailVisible = expandedId === rowId
+              const breakdown = buildPayrollBreakdown(row, { sourceType: 'payslip' })
+              const detailAvailable = breakdown.hasDetails
+
+              return (
+                <article key={rowId} className="border rounded-3 p-3 bg-white shadow-sm">
+                  <div
+                    role={detailAvailable ? 'button' : undefined}
+                    tabIndex={detailAvailable ? 0 : undefined}
+                    className={detailAvailable ? 'cursor-pointer' : undefined}
+                    aria-label={`Toggle payslip details for ${row.reference || row.month || rowId}`}
+                    aria-expanded={detailAvailable ? detailVisible : undefined}
+                    onClick={() => {
+                      if (!detailAvailable) return
+                      toggleDetails(rowId)
+                    }}
+                    onKeyDown={(event) => {
+                      if (!detailAvailable) return
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        toggleDetails(rowId)
+                      }
+                    }}
+                  >
+                    <div className="d-flex align-items-start justify-content-between gap-3">
+                      <div className="min-w-0">
+                        <div className="small text-body-secondary mb-1">
+                          Payment date: {breakdown.status.paymentDateLabel}
+                        </div>
+                        <div className="fw-semibold text-truncate">{row.month || '-'}</div>
+                        <div className="small text-body-secondary mt-1">{row.reference || '-'}</div>
+                      </div>
+                      <div
+                        className="text-end"
+                        style={{ maxWidth: '52%', overflowWrap: 'anywhere' }}
+                      >
+                        {renderApprovalStatus(row, breakdown.status.approvalHistory)}
+                      </div>
+                    </div>
+
+                    <div className="row g-2 mt-3">
+                      <div className="col-6">
+                        <div className="small text-body-secondary">Baseline net</div>
+                        <div className="fw-semibold">
+                          {formatCurrency(breakdown.summary.baselineNet)}
+                        </div>
+                      </div>
+                      <div className="col-6">
+                        <div className="small text-body-secondary">Adjustments</div>
+                        <div className="fw-semibold">
+                          {formatCurrency(breakdown.summary.adjustmentsTotal)}
+                        </div>
+                      </div>
+                      <div className="col-6">
+                        <div className="small text-body-secondary">OT payout</div>
+                        <div className="fw-semibold">
+                          {formatCurrency(breakdown.summary.approvedOvertimePayout)}
+                        </div>
+                      </div>
+                      <div className="col-6">
+                        <div className="small text-body-secondary">Net payable</div>
+                        <div className="fw-semibold">
+                          {formatCurrency(breakdown.summary.finalPayable)}
+                        </div>
+                      </div>
+                    </div>
+
+                    {detailVisible ? renderMobileDetails(breakdown) : null}
+                  </div>
+
+                  <div
+                    className="d-flex justify-content-end mt-3"
+                    onClick={(event) => event.stopPropagation()}
+                    onMouseDown={(event) => event.stopPropagation()}
+                  >
+                    {renderDownloadActions(row)}
+                  </div>
+                </article>
+              )
+            })
+          )}
+        </div>
+        <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
           <CTable align="middle" className="mb-0" hover responsive>
             <CTableHead color="light">
               <CTableRow>
@@ -204,32 +361,8 @@ const PayslipsSection = ({
                 rows.map((row, index) => {
                   const rowId = rowIds[index]
                   const detailVisible = expandedId === rowId
-                  const detailAvailable = hasDetailData(row)
-                  const salaryRecord = row?.salaryRecord || null
-                  const adjustmentRows = Array.isArray(row?.adjustments) ? row.adjustments : []
-                  const overtimeRows = Array.isArray(row?.overtime?.rows) ? row.overtime.rows : []
-                  const employeeContributions =
-                    row?.baseline?.employeeContributions ||
-                    salaryRecord?.employeeContributions ||
-                    {}
-                  const employerContributions =
-                    row?.baseline?.employerContributions ||
-                    salaryRecord?.employerContributions ||
-                    {}
-                  const contributionPairs = toContributionPairs(
-                    employeeContributions,
-                    employerContributions,
-                  )
-                  const employerContributionTotal = contributionPairs.reduce(
-                    (sum, entry) => sum + (Number(entry?.employerAmount || 0) || 0),
-                    0,
-                  )
-                  const deductionItems = Array.isArray(row?.baseline?.deductionItems)
-                    ? row.baseline.deductionItems
-                    : []
-                  const approvalHistory = Array.isArray(row?.approvalHistory)
-                    ? row.approvalHistory
-                    : []
+                  const breakdown = buildPayrollBreakdown(row, { sourceType: 'payslip' })
+                  const detailAvailable = breakdown.hasDetails
 
                   return (
                     <Fragment key={rowId}>
@@ -256,27 +389,29 @@ const PayslipsSection = ({
                         <CTableDataCell>
                           <div className="fw-semibold">{row.month}</div>
                           <div className="small text-body-secondary">
-                            Payment date: {resolvePaymentDateLabel(row)}
+                            Payment date: {breakdown.status.paymentDateLabel}
                           </div>
                         </CTableDataCell>
                         <CTableDataCell className="fw-semibold">
                           {row.reference || '-'}
                         </CTableDataCell>
                         <CTableDataCell>
-                          {formatCurrency(row.baselineNetSalary ?? 0)}
+                          {formatCurrency(breakdown.summary.baselineNet)}
                         </CTableDataCell>
-                        <CTableDataCell>{formatCurrency(row.adjustmentsTotal ?? 0)}</CTableDataCell>
                         <CTableDataCell>
-                          {formatCurrency(row.approvedOvertimePayout ?? 0)}
+                          {formatCurrency(breakdown.summary.adjustmentsTotal)}
+                        </CTableDataCell>
+                        <CTableDataCell>
+                          {formatCurrency(breakdown.summary.approvedOvertimePayout)}
                         </CTableDataCell>
                         <CTableDataCell className="fw-semibold">
-                          {formatCurrency(row.netPayable ?? 0)}
+                          {formatCurrency(breakdown.summary.finalPayable)}
                         </CTableDataCell>
                         <CTableDataCell>
-                          {approvalHistory.length > 0 ? (
+                          {breakdown.status.approvalHistory.length > 0 ? (
                             <ApprovalGates
                               gates={PAYROLL_GATES}
-                              approvalHistory={approvalHistory}
+                              approvalHistory={breakdown.status.approvalHistory}
                               isCancelled={row.status === 'Cancelled'}
                             />
                           ) : (
@@ -328,7 +463,7 @@ const PayslipsSection = ({
                                             Baseline net
                                           </CTableDataCell>
                                           <CTableDataCell>
-                                            {formatCurrency(row.baselineNetSalary ?? 0)}
+                                            {formatCurrency(breakdown.summary.baselineNet)}
                                           </CTableDataCell>
                                         </CTableRow>
                                         <CTableRow>
@@ -336,7 +471,7 @@ const PayslipsSection = ({
                                             Total adjustments
                                           </CTableDataCell>
                                           <CTableDataCell>
-                                            {formatCurrency(row.adjustmentsTotal ?? 0)}
+                                            {formatCurrency(breakdown.summary.adjustmentsTotal)}
                                           </CTableDataCell>
                                         </CTableRow>
                                         <CTableRow>
@@ -344,7 +479,9 @@ const PayslipsSection = ({
                                             OT payout
                                           </CTableDataCell>
                                           <CTableDataCell>
-                                            {formatCurrency(row.approvedOvertimePayout ?? 0)}
+                                            {formatCurrency(
+                                              breakdown.summary.approvedOvertimePayout,
+                                            )}
                                           </CTableDataCell>
                                         </CTableRow>
                                         <CTableRow className="table-light">
@@ -352,7 +489,7 @@ const PayslipsSection = ({
                                             Net payable
                                           </CTableDataCell>
                                           <CTableDataCell className="fw-semibold">
-                                            {formatCurrency(row.netPayable ?? 0)}
+                                            {formatCurrency(breakdown.summary.finalPayable)}
                                           </CTableDataCell>
                                         </CTableRow>
                                       </CTableBody>
@@ -395,15 +532,17 @@ const PayslipsSection = ({
                                           </CTableDataCell>
                                           <CTableDataCell className="text-end">
                                             {formatCurrency(
-                                              row?.baseline?.employeeDeductionsTotal ?? 0,
+                                              breakdown.summary.baselineTotalDeductions,
                                             )}
                                           </CTableDataCell>
                                           <CTableDataCell className="text-end">
-                                            {formatCurrency(employerContributionTotal)}
+                                            {formatCurrency(
+                                              breakdown.contributions.employerContributionTotal,
+                                            )}
                                           </CTableDataCell>
                                         </CTableRow>
-                                        {contributionPairs.length > 0 ? (
-                                          contributionPairs.map((entry) => (
+                                        {breakdown.contributions.contributionPairs.length > 0 ? (
+                                          breakdown.contributions.contributionPairs.map((entry) => (
                                             <CTableRow key={entry.key}>
                                               <CTableDataCell className="text-body-secondary small">
                                                 {entry.label}
@@ -462,7 +601,7 @@ const PayslipsSection = ({
                                             Baseline source
                                           </CTableDataCell>
                                           <CTableDataCell>
-                                            {formatBaselineSource(row.baselineSource)}
+                                            {breakdown.baseline.sourceLabel}
                                           </CTableDataCell>
                                         </CTableRow>
                                         <CTableRow>
@@ -470,8 +609,8 @@ const PayslipsSection = ({
                                             Salary record
                                           </CTableDataCell>
                                           <CTableDataCell>
-                                            {salaryRecord
-                                              ? `${salaryRecord.referenceId || '-'} | Effective ${salaryRecord.effectiveFrom || '-'} | ${salaryRecord.status || '-'}`
+                                            {breakdown.baseline.salaryRecord
+                                              ? `${breakdown.baseline.salaryRecord.referenceId || '-'} | Effective ${breakdown.baseline.salaryRecord.effectiveFrom || '-'} | ${breakdown.baseline.salaryRecord.status || '-'}`
                                               : 'No salary record linked'}
                                           </CTableDataCell>
                                         </CTableRow>
@@ -480,7 +619,7 @@ const PayslipsSection = ({
                                             Payment date
                                           </CTableDataCell>
                                           <CTableDataCell>
-                                            {resolvePaymentDateLabel(row)}
+                                            {breakdown.status.paymentDateLabel}
                                           </CTableDataCell>
                                         </CTableRow>
                                         <CTableRow>
@@ -488,11 +627,7 @@ const PayslipsSection = ({
                                             Basic salary
                                           </CTableDataCell>
                                           <CTableDataCell>
-                                            {formatCurrency(
-                                              row?.baseline?.basicSalary ??
-                                                salaryRecord?.basicSalary ??
-                                                0,
-                                            )}
+                                            {formatCurrency(breakdown.summary.basicSalary)}
                                           </CTableDataCell>
                                         </CTableRow>
                                         <CTableRow>
@@ -500,11 +635,7 @@ const PayslipsSection = ({
                                             Total allowances
                                           </CTableDataCell>
                                           <CTableDataCell>
-                                            {formatCurrency(
-                                              row?.baseline?.allowanceTotal ??
-                                                salaryRecord?.allowanceTotal ??
-                                                0,
-                                            )}
+                                            {formatCurrency(breakdown.baseline.allowanceTotal)}
                                           </CTableDataCell>
                                         </CTableRow>
                                         <CTableRow>
@@ -513,9 +644,7 @@ const PayslipsSection = ({
                                           </CTableDataCell>
                                           <CTableDataCell>
                                             {formatAllowanceList(
-                                              row?.baseline?.allowanceItems ||
-                                                salaryRecord?.allowanceItems ||
-                                                [],
+                                              breakdown.baseline.allowanceItems,
                                               formatCurrency,
                                             )}
                                           </CTableDataCell>
@@ -525,8 +654,8 @@ const PayslipsSection = ({
                                             Deduction items
                                           </CTableDataCell>
                                           <CTableDataCell>
-                                            {deductionItems.length > 0
-                                              ? deductionItems
+                                            {breakdown.baseline.deductionItems.length > 0
+                                              ? breakdown.baseline.deductionItems
                                                   .map((entry) => {
                                                     const label = String(
                                                       entry?.label || entry?.key || 'Deduction',
@@ -542,21 +671,26 @@ const PayslipsSection = ({
                                             Adjustment items
                                           </CTableDataCell>
                                           <CTableDataCell>
-                                            {formatAdjustmentItems(adjustmentRows, formatCurrency)}
+                                            {formatAdjustmentItems(
+                                              breakdown.adjustments.rows,
+                                              formatCurrency,
+                                            )}
                                           </CTableDataCell>
                                         </CTableRow>
                                         <CTableRow>
                                           <CTableDataCell className="text-body-secondary small">
                                             Overtime rows
                                           </CTableDataCell>
-                                          <CTableDataCell>{overtimeRows.length}</CTableDataCell>
+                                          <CTableDataCell>
+                                            {breakdown.overtime.rows.length}
+                                          </CTableDataCell>
                                         </CTableRow>
                                         <CTableRow>
                                           <CTableDataCell className="text-body-secondary small">
                                             Approved hours
                                           </CTableDataCell>
                                           <CTableDataCell>
-                                            {Number(row?.overtime?.approvedHours ?? 0).toFixed(2)}
+                                            {Number(breakdown.overtime.approvedHours).toFixed(2)}
                                           </CTableDataCell>
                                         </CTableRow>
                                         <CTableRow>
@@ -564,7 +698,7 @@ const PayslipsSection = ({
                                             Approved payout
                                           </CTableDataCell>
                                           <CTableDataCell>
-                                            {formatCurrency(row?.overtime?.approvedPayout ?? 0)}
+                                            {formatCurrency(breakdown.overtime.approvedPayout)}
                                           </CTableDataCell>
                                         </CTableRow>
                                         <CTableRow>
@@ -573,7 +707,7 @@ const PayslipsSection = ({
                                           </CTableDataCell>
                                           <CTableDataCell>
                                             {formatContributionList(
-                                              employeeContributions,
+                                              breakdown.contributions.employeeContributions,
                                               formatCurrency,
                                             )}
                                           </CTableDataCell>
@@ -584,7 +718,7 @@ const PayslipsSection = ({
                                           </CTableDataCell>
                                           <CTableDataCell>
                                             {formatContributionList(
-                                              employerContributions,
+                                              breakdown.contributions.employerContributions,
                                               formatCurrency,
                                             )}
                                           </CTableDataCell>

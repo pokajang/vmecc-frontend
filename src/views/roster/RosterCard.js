@@ -49,7 +49,7 @@ const ShiftSelect = ({ value, teams, onChange }) => {
       value={strVal}
       onChange={(e) => onChange(e.target.value || null)}
     >
-      <option value="">—</option>
+      <option value="">-</option>
       {isOrphaned && (
         <option value={strVal} disabled>
           (deleted team)
@@ -77,7 +77,7 @@ const isWeekend = (dateStr) => {
   return d.getDay() === 0 || d.getDay() === 6
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
+// Main component
 
 const RosterCard = ({ monthBlock, editMode = false, teams = [], allShifts = [], onAssign }) => {
   const weekStarts = new Set(monthBlock.weeks.map((w) => w.rows[0]?.date).filter(Boolean))
@@ -155,7 +155,7 @@ const RosterCard = ({ monthBlock, editMode = false, teams = [], allShifts = [], 
         }}
       >
         <table style={{ borderCollapse: 'collapse', width: '100%', tableLayout: 'auto' }}>
-          {/* ── Date header row ── */}
+          {/* Date header row */}
           <thead>
             <tr>
               <th style={{ ...labelCellStyle, borderBottom: '1px solid var(--cui-border-color)' }}>

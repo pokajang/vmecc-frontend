@@ -103,7 +103,7 @@ const OvertimeApplySection = ({
                 Continue
               </CButton>
             </div>
-            <div className="action-row-thumb-spacer d-lg-none" />
+            <div className="action-row-thumb-spacer d-md-none" />
           </>
         ) : null}
       </div>

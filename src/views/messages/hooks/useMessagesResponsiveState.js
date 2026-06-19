@@ -20,7 +20,7 @@ const useMessagesResponsiveState = ({ activeUserId }) => {
   }, [])
 
   useEffect(() => {
-    const media = window.matchMedia('(max-width: 991.98px)')
+    const media = window.matchMedia('(max-width: 767.98px)')
     const handleMedia = (event) => {
       setIsMobile(event.matches)
       setMobileView(event.matches ? 'list' : 'thread')

@@ -177,6 +177,7 @@ const AppHeader = () => {
 
   const openNotifDrawer = useCallback((e) => {
     e.preventDefault()
+    returnFocusRef.current = e.currentTarget || null
     setNotifDrawerOpen(true)
   }, [])
 
@@ -404,6 +405,7 @@ const AppHeader = () => {
         onClose={() => setNotifDrawerOpen(false)}
         title="Notifications"
         count={notifUnread}
+        returnFocusRef={returnFocusRef}
       >
         <ErrorBoundary>
           <WorkflowNotifications onClose={() => setNotifDrawerOpen(false)} />

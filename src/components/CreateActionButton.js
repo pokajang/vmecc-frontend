@@ -11,16 +11,24 @@ const CreateActionButton = ({
   disabled = false,
   size = 'sm',
   className = '',
+  importance = 'inline',
   ariaExpanded,
   ariaLabel,
 }) => {
   const resolvedIcon = icon || <Plus size={13} className="me-1 align-text-bottom" />
   const resolvedAriaLabel = ariaLabel || label || undefined
+  const isPrimary = importance === 'primary'
+  const disabledClassName = disabled ? 'opacity-50' : ''
+  const buttonClassName = isPrimary
+    ? `d-inline-flex align-items-center px-3 ${disabledClassName} ${className}`.trim()
+    : `text-primary px-2 py-1 border-0 bg-transparent shadow-none ${disabledClassName} ${className}`.trim()
+  const colorProps = isPrimary ? { color: 'primary' } : {}
 
   return (
     <CButton
       size={size}
-      className={`text-primary px-2 py-1 border-0 bg-transparent shadow-none ${disabled ? 'opacity-50' : ''} ${className}`.trim()}
+      {...colorProps}
+      className={buttonClassName}
       style={disabled ? DISABLED_STYLE : undefined}
       onClick={disabled ? undefined : onClick}
       disabled={disabled}

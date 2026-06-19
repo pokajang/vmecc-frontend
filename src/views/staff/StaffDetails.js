@@ -19,7 +19,9 @@ import { useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { fetchTeams, fetchUsers } from 'src/services/apiClient'
 import RowActions from 'src/components/RowActions'
-import TableLoader from 'src/components/TableLoader'
+import ModulePageHeader from 'src/components/ModulePageHeader'
+import ResponsiveRecordCollection from 'src/components/ResponsiveRecordCollection'
+import RowActionCell from 'src/components/RowActionCell'
 import TableFilters from 'src/components/TableFilters'
 import DataTableFooter from 'src/components/DataTableFooter'
 import useTableRows from 'src/hooks/useTableRows'
@@ -245,6 +247,26 @@ const StaffDetails = () => {
   const getStatusLabel = (user) => (user?.deleted_at ? 'Terminated' : user?.status || '-')
 
   const goProfile = (id) => navigate(`/staff/profile/${id}`)
+  const mobileStaffSections = [
+    {
+      key: 'staff-directory',
+      items: visibleRows.map((user) => ({
+        key: user.id,
+        title: user.name || '-',
+        subtitle: getPrimaryRoleLabel(user) || '-',
+        eyebrow: user.email || '',
+        fields: [
+          { key: 'mobile', label: 'Mobile', value: user.phone || '-' },
+          { key: 'team', label: 'Team', value: user.team || '-' },
+          { key: 'status', label: 'Status', value: getStatusLabel(user) },
+          { key: 'emergency', label: 'Emergency', value: renderEmergency(user) },
+        ],
+        ariaLabel: `Open staff profile for ${user.name || user.email || user.id}`,
+        onOpen: () => goProfile(user.id),
+        actions: <RowActions items={getActionItems(user)} />,
+      })),
+    },
+  ]
 
   if (!canViewStaff && !loading) {
     return (
@@ -256,11 +278,16 @@ const StaffDetails = () => {
 
   return (
     <CContainer fluid>
+      <ModulePageHeader
+        title="Staff Directory"
+        subtitle="Review staff profiles, employment status, roles, teams, and contact details."
+        actions={refreshing ? <Loader size={14} className="icon-spin" /> : null}
+      />
       <CRow>
         <CCol>
           <CCard className="mb-4">
             <CCardHeader className="d-flex align-items-center gap-2">
-              <span>Staff Details</span>
+              <span>Staff Records</span>
               {refreshing && <Loader size={14} className="icon-spin" />}
             </CCardHeader>
             <CCardBody>
@@ -282,6 +309,7 @@ const StaffDetails = () => {
                     filters={[
                       {
                         key: 'status',
+                        label: 'Status',
                         value: statusFilter,
                         onChange: setStatusFilter,
                         options: [
@@ -293,6 +321,7 @@ const StaffDetails = () => {
                       },
                       {
                         key: 'role',
+                        label: 'Role',
                         value: roleFilter,
                         onChange: setRoleFilter,
                         options: roleOptions.map((r) => ({
@@ -302,99 +331,82 @@ const StaffDetails = () => {
                       },
                     ]}
                     onClear={clearFilters}
+                    rowClassName="align-items-md-end"
+                    showDesktopLabels
                   />
-                  <div className="d-none d-md-block">
-                    <div className="rounded-3 shadow-sm overflow-hidden bg-white">
-                      <CTable align="middle" className="mb-0" hover responsive>
-                        <CTableHead color="light">
-                          <CTableRow>
-                            <CTableHeaderCell className="text-center">#</CTableHeaderCell>
-                            <CTableHeaderCell role="button" onClick={() => toggleSort('name')}>
-                              Name
-                            </CTableHeaderCell>
-                            <CTableHeaderCell role="button" onClick={() => toggleSort('role')}>
-                              Role
-                            </CTableHeaderCell>
-                            <CTableHeaderCell>Mobile</CTableHeaderCell>
-                            <CTableHeaderCell>Emergency contact</CTableHeaderCell>
-                            <CTableHeaderCell role="button" onClick={() => toggleSort('team')}>
-                              Team
-                            </CTableHeaderCell>
-                            <CTableHeaderCell role="button" onClick={() => toggleSort('status')}>
-                              Status
-                            </CTableHeaderCell>
-                            <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
-                          </CTableRow>
-                        </CTableHead>
-                        <CTableBody>
-                          {loading ? (
-                            <CTableRow>
-                              <CTableDataCell colSpan={8} className="p-0 border-0">
-                                <TableLoader />
-                              </CTableDataCell>
-                            </CTableRow>
-                          ) : (
-                            visibleRows.map((user, index) => (
-                              <CTableRow
-                                key={user.id}
-                                role="button"
-                                className="cursor-pointer"
-                                onClick={() => goProfile(user.id)}
-                              >
-                                <CTableDataCell className="text-center">{index + 1}</CTableDataCell>
-                                <CTableDataCell>{user.name || '-'}</CTableDataCell>
-                                <CTableDataCell>{getPrimaryRoleLabel(user) || '-'}</CTableDataCell>
-                                <CTableDataCell>{user.phone || '-'}</CTableDataCell>
-                                <CTableDataCell>{renderEmergency(user)}</CTableDataCell>
-                                <CTableDataCell>{user.team || '-'}</CTableDataCell>
-                                <CTableDataCell>{getStatusLabel(user)}</CTableDataCell>
-                                <CTableDataCell className="text-center align-middle">
-                                  <RowActions items={getActionItems(user)} />
-                                </CTableDataCell>
+                  <ResponsiveRecordCollection
+                    isLoading={loading}
+                    isEmpty={visibleRows.length === 0}
+                    emptyMessage={
+                      <div className="text-body-secondary">
+                        No staff records match the current filters.
+                      </div>
+                    }
+                    mobileSections={mobileStaffSections}
+                    renderDesktop={() => (
+                      <div className="d-none d-md-block">
+                        <div className="rounded-3 shadow-sm overflow-hidden bg-white">
+                          <CTable align="middle" className="mb-0" hover responsive>
+                            <CTableHead color="light">
+                              <CTableRow>
+                                <CTableHeaderCell className="text-center">#</CTableHeaderCell>
+                                <CTableHeaderCell role="button" onClick={() => toggleSort('name')}>
+                                  Name
+                                </CTableHeaderCell>
+                                <CTableHeaderCell role="button" onClick={() => toggleSort('role')}>
+                                  Role
+                                </CTableHeaderCell>
+                                <CTableHeaderCell>Mobile</CTableHeaderCell>
+                                <CTableHeaderCell>Emergency contact</CTableHeaderCell>
+                                <CTableHeaderCell role="button" onClick={() => toggleSort('team')}>
+                                  Team
+                                </CTableHeaderCell>
+                                <CTableHeaderCell
+                                  role="button"
+                                  onClick={() => toggleSort('status')}
+                                >
+                                  Status
+                                </CTableHeaderCell>
+                                <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
                               </CTableRow>
-                            ))
-                          )}
-                        </CTableBody>
-                      </CTable>
-                    </div>
-                  </div>
-
-                  <div className="d-md-none">
-                    {loading ? (
-                      <TableLoader />
-                    ) : (
-                      visibleRows.map((user, index) => (
-                        <CCard
-                          key={user.id}
-                          className="mb-3 cursor-pointer"
-                          role="button"
-                          onClick={() => goProfile(user.id)}
-                        >
-                          <CCardBody className="d-flex justify-content-between align-items-start gap-3">
-                            <div>
-                              <div className="fw-semibold d-flex justify-content-between align-items-center gap-2">
-                                <span>{user.name || '-'}</span>
-                                <span className="text-muted small">
-                                  {getPrimaryRoleLabel(user) || '-'}
-                                </span>
-                              </div>
-                              <div className="text-muted small">{user.phone || '-'}</div>
-                              <div className="text-muted small">{renderEmergency(user)}</div>
-                              <div className="text-muted small">{user.team || '-'}</div>
-                              <div className="text-muted small">{getStatusLabel(user)}</div>
-                            </div>
-                            <RowActions items={getActionItems(user)} />
-                          </CCardBody>
-                        </CCard>
-                      ))
+                            </CTableHead>
+                            <CTableBody>
+                              {visibleRows.map((user, index) => (
+                                <CTableRow
+                                  key={user.id}
+                                  role="button"
+                                  className="cursor-pointer"
+                                  onClick={() => goProfile(user.id)}
+                                >
+                                  <CTableDataCell className="text-center">
+                                    {index + 1}
+                                  </CTableDataCell>
+                                  <CTableDataCell>{user.name || '-'}</CTableDataCell>
+                                  <CTableDataCell>
+                                    {getPrimaryRoleLabel(user) || '-'}
+                                  </CTableDataCell>
+                                  <CTableDataCell>{user.phone || '-'}</CTableDataCell>
+                                  <CTableDataCell>{renderEmergency(user)}</CTableDataCell>
+                                  <CTableDataCell>{user.team || '-'}</CTableDataCell>
+                                  <CTableDataCell>{getStatusLabel(user)}</CTableDataCell>
+                                  <RowActionCell className="text-center align-middle">
+                                    <RowActions items={getActionItems(user)} />
+                                  </RowActionCell>
+                                </CTableRow>
+                              ))}
+                            </CTableBody>
+                          </CTable>
+                        </div>
+                      </div>
                     )}
-                  </div>
-
-                  <DataTableFooter
-                    rowsToShow={rowsToShow}
-                    onRowsToShowChange={setRowsToShow}
-                    filteredCount={filtered.length}
-                    totalCount={staff.length}
+                    footer={
+                      <DataTableFooter
+                        rowsToShow={rowsToShow}
+                        onRowsToShowChange={setRowsToShow}
+                        filteredCount={filtered.length}
+                        totalCount={staff.length}
+                      />
+                    }
                   />
                   <StaffActionModals
                     actionUser={actionUser}

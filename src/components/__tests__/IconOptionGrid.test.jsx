@@ -36,6 +36,7 @@ describe('IconOptionGrid', () => {
       />,
     )
 
+    expect(screen.getByRole('radiogroup', { name: 'Choose option' })).toBeTruthy()
     expect(screen.getByText('Weekday Overtime')).toBeTruthy()
     expect(screen.getByText('Overtime worked on weekends.')).toBeTruthy()
   })
@@ -54,6 +55,8 @@ describe('IconOptionGrid', () => {
     const selectedCard = screen.getByTestId('option-weekend')
     expect(selectedCard.className).toContain('border-primary')
     expect(selectedCard.className).toContain('bg-primary')
+    expect(selectedCard.getAttribute('role')).toBe('radio')
+    expect(selectedCard.getAttribute('aria-checked')).toBe('true')
   })
 
   it('triggers selection on click and keyboard', () => {

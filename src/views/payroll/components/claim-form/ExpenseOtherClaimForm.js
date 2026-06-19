@@ -34,6 +34,7 @@ import ClaimSubmissionEditorCard from './ClaimSubmissionEditorCard'
 import ClaimPostSubmitModal from './ClaimPostSubmitModal'
 import ClaimDraftHeaderBar from './ClaimDraftHeaderBar'
 import useClaimToast from './hooks/useClaimToast'
+import { buildClaimDefaultPathValidity, groupClaimAttachments } from './claimFormViewModel'
 
 const ExpenseOtherClaimForm = ({
   user,
@@ -79,6 +80,16 @@ const ExpenseOtherClaimForm = ({
   const totalAmount = useMemo(
     () => savedItems.reduce((sum, item) => sum + parseAmount(item.amount), 0),
     [savedItems],
+  )
+  const attachmentGroups = useMemo(() => groupClaimAttachments(savedItems), [savedItems])
+  const defaultPathReady = useMemo(
+    () =>
+      buildClaimDefaultPathValidity({
+        claimType,
+        periodConfirmed,
+        savedItems,
+      }),
+    [claimType, periodConfirmed, savedItems],
   )
   const submitLineItems = useMemo(
     () =>
@@ -429,6 +440,8 @@ const ExpenseOtherClaimForm = ({
             savedItems={savedItems}
             editingIndex={editingIndex}
             totalAmount={totalAmount}
+            attachmentGroups={attachmentGroups}
+            defaultPathReady={defaultPathReady}
             onAddItem={handleAddItem}
             onEditItem={editSavedItem}
             onRemoveItem={removeSavedItem}

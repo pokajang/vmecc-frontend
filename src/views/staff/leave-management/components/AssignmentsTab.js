@@ -19,6 +19,8 @@ import {
 } from '@coreui/react'
 import CreateActionButton from 'src/components/CreateActionButton'
 import DataTableFooter from 'src/components/DataTableFooter'
+import MobileRecordList from 'src/components/MobileRecordList'
+import RowActionCell from 'src/components/RowActionCell'
 import RowActions from 'src/components/RowActions'
 import TableFilters from 'src/components/TableFilters'
 import TableLoader from 'src/components/TableLoader'
@@ -170,6 +172,69 @@ const AssignmentsTab = ({
     setRowsToShow: setMatrixRowsToShow,
     visibleRows: visibleMatrixRows,
   } = useTableRows(matrixRows)
+
+  const getSortedAssignmentRowsForEmployee = (employeeRow) =>
+    [...(employeeRow?.sourceRows || [])].sort((a, b) => {
+      if (assignmentTypeFilter !== 'All') {
+        if (a.leaveType === assignmentTypeFilter) return -1
+        if (b.leaveType === assignmentTypeFilter) return 1
+      }
+      const ai = leaveTypeCatalog.indexOf(a.leaveType)
+      const bi = leaveTypeCatalog.indexOf(b.leaveType)
+      return (ai === -1 ? Number.MAX_SAFE_INTEGER : ai) - (bi === -1 ? Number.MAX_SAFE_INTEGER : bi)
+    })
+
+  const mobileAssignmentSections = [
+    {
+      key: 'leave-assignment-mobile-cards',
+      label: 'Entitlement assignments',
+      summary: `${visibleMatrixRows.length} employee${visibleMatrixRows.length === 1 ? '' : 's'}`,
+      items: visibleMatrixRows.map((employeeRow) => {
+        const sortedSourceRows = getSortedAssignmentRowsForEmployee(employeeRow)
+        const primaryRow = sortedSourceRows[0]
+        const visibleTypes = matrixLeaveTypes.filter((leaveType) => employeeRow.leaves[leaveType])
+
+        return {
+          key: employeeRow.key,
+          title: employeeRow.employee,
+          subtitle: `Year ${primaryRow?.year || selectedYear || currentYear}`,
+          eyebrow: employeeRow.team || 'Unassigned',
+          fields: visibleTypes.flatMap((leaveType) => {
+            const stats = employeeRow.leaves[leaveType]
+            return [
+              {
+                key: `${leaveType}-balance`,
+                label: `${leaveType} balance`,
+                value: stats ? stats.balance : '-',
+              },
+              {
+                key: `${leaveType}-used`,
+                label: `${leaveType} used`,
+                value: stats ? stats.used : '-',
+              },
+            ]
+          }),
+          detail:
+            visibleTypes.length === 0
+              ? 'No visible entitlement rows for the current filters.'
+              : `${visibleTypes.length} leave type${visibleTypes.length === 1 ? '' : 's'} shown`,
+          ariaLabel: `Open leave assignment details for ${employeeRow.employee}`,
+          onOpen: () => openAssignmentDetail(sortedSourceRows),
+          actions: (
+            <RowActions
+              items={[
+                {
+                  key: 'edit',
+                  label: 'Edit',
+                  onClick: () => openEditAssignmentForm(primaryRow),
+                },
+              ]}
+            />
+          ),
+        }
+      }),
+    },
+  ]
 
   const openAssignmentForm = () => {
     setIsAssigning(true)
@@ -388,7 +453,8 @@ const AssignmentsTab = ({
           </div>
         ) : (
           <>
-            <div className="d-flex justify-content-end mb-3">
+            <MobileRecordList sections={mobileAssignmentSections} />
+            <div className="d-none d-md-flex justify-content-end mb-3">
               <CButtonGroup size="sm" role="group" aria-label="Assignments table view">
                 <CButton
                   color={tableView === 'matrix' ? 'primary' : 'light'}
@@ -404,7 +470,7 @@ const AssignmentsTab = ({
                 </CButton>
               </CButtonGroup>
             </div>
-            <div className="rounded-3 shadow-sm overflow-hidden bg-white">
+            <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
               {tableView === 'matrix' ? (
                 <CTable align="middle" className="mb-0" hover responsive>
                   <CTableHead color="light">
@@ -441,18 +507,7 @@ const AssignmentsTab = ({
                   </CTableHead>
                   <CTableBody>
                     {visibleMatrixRows.map((employeeRow) => {
-                      const sortedSourceRows = [...employeeRow.sourceRows].sort((a, b) => {
-                        if (assignmentTypeFilter !== 'All') {
-                          if (a.leaveType === assignmentTypeFilter) return -1
-                          if (b.leaveType === assignmentTypeFilter) return 1
-                        }
-                        const ai = leaveTypeCatalog.indexOf(a.leaveType)
-                        const bi = leaveTypeCatalog.indexOf(b.leaveType)
-                        return (
-                          (ai === -1 ? Number.MAX_SAFE_INTEGER : ai) -
-                          (bi === -1 ? Number.MAX_SAFE_INTEGER : bi)
-                        )
-                      })
+                      const sortedSourceRows = getSortedAssignmentRowsForEmployee(employeeRow)
                       const primaryRow = sortedSourceRows[0]
 
                       return (
@@ -460,6 +515,15 @@ const AssignmentsTab = ({
                           key={employeeRow.key}
                           className="cursor-pointer"
                           onClick={() => openAssignmentDetail(sortedSourceRows)}
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`Open leave assignment details for ${employeeRow.employee}`}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault()
+                              openAssignmentDetail(sortedSourceRows)
+                            }
+                          }}
                         >
                           <CTableDataCell className="fw-semibold text-start">
                             {employeeRow.employee}
@@ -484,7 +548,7 @@ const AssignmentsTab = ({
                               </CTableDataCell>,
                             ]
                           })}
-                          <CTableDataCell className="text-center">
+                          <RowActionCell>
                             <RowActions
                               items={[
                                 {
@@ -494,7 +558,7 @@ const AssignmentsTab = ({
                                 },
                               ]}
                             />
-                          </CTableDataCell>
+                          </RowActionCell>
                         </CTableRow>
                       )
                     })}
@@ -527,6 +591,15 @@ const AssignmentsTab = ({
                           key={row.id}
                           className="cursor-pointer"
                           onClick={() => openAssignmentDetail(row)}
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`Open leave assignment details for ${row.employee || group.employee}`}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault()
+                              openAssignmentDetail(row)
+                            }
+                          }}
                         >
                           <CTableDataCell className="text-start">{row.leaveType}</CTableDataCell>
                           <CTableDataCell className="text-center">{row.entitlement}</CTableDataCell>
@@ -535,7 +608,7 @@ const AssignmentsTab = ({
                           <CTableDataCell className="text-center fw-semibold">
                             {getAvailableDays(row)}
                           </CTableDataCell>
-                          <CTableDataCell className="text-center">
+                          <RowActionCell>
                             <RowActions
                               items={[
                                 {
@@ -545,7 +618,7 @@ const AssignmentsTab = ({
                                 },
                               ]}
                             />
-                          </CTableDataCell>
+                          </RowActionCell>
                         </CTableRow>
                       )),
                     ])}

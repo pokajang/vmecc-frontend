@@ -1,5 +1,6 @@
 import React from 'react'
 import {
+  CBadge,
   CCard,
   CCardBody,
   CCardHeader,
@@ -11,13 +12,14 @@ import {
   CTableRow,
 } from '@coreui/react'
 import { Clock3, Plus } from 'lucide-react'
-import ApprovalGates from 'src/components/ApprovalGates'
 import CreateActionButton from 'src/components/CreateActionButton'
 import DataTableFooter from 'src/components/DataTableFooter'
 import GroupedTableHeaderRow, { GroupTotalBadge } from 'src/components/GroupedTableHeader'
+import ResponsiveRecordCollection from 'src/components/ResponsiveRecordCollection'
+import RowActionCell from 'src/components/RowActionCell'
 import RowActions from 'src/components/RowActions'
 import TableFilters from 'src/components/TableFilters'
-import TableLoader from 'src/components/TableLoader'
+import WorkflowStatusSummary from 'src/components/WorkflowStatusSummary'
 
 const resolveLeaveGates = (row) => {
   const requireRecommendation = row?.workflowSnapshot?.requireRecommendation !== false
@@ -68,6 +70,9 @@ const LeaveRecordsSection = ({
   rejectLeave,
   getReviewActionConfig,
   getDisplayLeaveId,
+  getStatusLabel,
+  getPendingActionHint,
+  getStatusBadge,
   getStartDateTimeLabel,
   getEndDateTimeLabel,
   isLoading = false,
@@ -83,6 +88,73 @@ const LeaveRecordsSection = ({
     row,
     displayIndex: index + 1,
   }))
+  const renderStatusBadge = (row) =>
+    getStatusBadge ? (
+      getStatusBadge(row?.status || '-', getStatusLabel ? getStatusLabel(row) : row?.status || '-')
+    ) : (
+      <CBadge color="secondary">{getStatusLabel ? getStatusLabel(row) : row?.status || '-'}</CBadge>
+    )
+  const getLeaveActionItems = (row) => {
+    const reviewActionConfig =
+      actionMode === 'review'
+        ? getReviewActionConfig?.(row) || {
+            approveLabel: 'Approve',
+            approveDisabled: row.status !== 'Pending',
+            rejectDisabled: row.status !== 'Pending',
+          }
+        : null
+    const disableEdit = !['Pending', 'Draft'].includes(row.status)
+    const disableCancel =
+      typeof canCancelLeave === 'function' ? !canCancelLeave(row) : row.status !== 'Pending'
+    const disableDelete = String(row?.status || '') !== 'Draft'
+
+    return actionMode === 'review'
+      ? [
+          {
+            key: 'approve-leave',
+            label: reviewActionConfig?.approveLabel || 'Approve',
+            onClick: () => approveLeave?.(row),
+            disabled: reviewActionConfig?.approveDisabled,
+            disabledReason: reviewActionConfig?.requiredRole
+              ? `This stage requires ${reviewActionConfig.requiredRole} role.`
+              : 'This record is not eligible for this workflow action.',
+          },
+          {
+            key: 'reject-leave',
+            label: 'Reject',
+            className: 'text-danger',
+            onClick: () => rejectLeave?.(row),
+            disabled: reviewActionConfig?.rejectDisabled,
+            disabledReason: reviewActionConfig?.requiredRole
+              ? `This stage requires ${reviewActionConfig.requiredRole} role.`
+              : 'This record is not eligible for this workflow action.',
+          },
+        ]
+      : [
+          {
+            key: 'edit-leave',
+            label: 'Edit',
+            onClick: () => openLeaveForEdit?.(row),
+            disabled: disableEdit,
+            disabledReason: 'Only Pending or Draft leave requests can be edited.',
+          },
+          {
+            key: 'cancel-leave',
+            label: 'Cancel',
+            onClick: () => cancelLeave?.(row),
+            disabled: disableCancel,
+            disabledReason: 'Only pending leave requests can be cancelled.',
+          },
+          {
+            key: 'delete-leave',
+            label: 'Delete',
+            className: 'text-danger',
+            onClick: () => deleteLeave?.(row),
+            disabled: disableDelete,
+            disabledReason: 'Only Draft leave requests can be deleted.',
+          },
+        ]
+  }
 
   const groupedVisibleRows = !shouldGroupByMonth
     ? [{ label: '', entries: indexedVisibleRows }]
@@ -104,6 +176,34 @@ const LeaveRecordsSection = ({
         }
         return groups
       }, [])
+  const mobileSections = groupedVisibleRows.map((group) => ({
+    key: group.label || 'all-records',
+    label: shouldGroupByMonth ? group.label : '',
+    summary: shouldGroupByMonth ? `${formatDayTotal(group.totalDays)} day(s)` : '',
+    items: group.entries.map(({ row }) => {
+      const pendingActionHint = getPendingActionHint?.(row)
+      return {
+        key: row.recordKey || row.id,
+        title: getDisplayLeaveId(row),
+        eyebrow: row.leaveType || 'Leave request',
+        subtitle: row.reason || '-',
+        status: renderStatusBadge(row),
+        ariaLabel: `Open leave record ${getDisplayLeaveId(row)} summary`,
+        onOpen: () => openRecord(row),
+        fields: [
+          { key: 'start', label: 'Start', value: getStartDateTimeLabel(row) },
+          { key: 'end', label: 'End', value: getEndDateTimeLabel(row) },
+          { key: 'days', label: 'Days', value: row.days ?? '-' },
+          {
+            key: 'next',
+            label: 'Next',
+            value: pendingActionHint || getStatusLabel?.(row) || row.status || '-',
+          },
+        ],
+        actions: <RowActions items={getLeaveActionItems(row)} />,
+      }
+    }),
+  }))
 
   return (
     <CCard>
@@ -162,13 +262,15 @@ const LeaveRecordsSection = ({
           clearColMd="auto"
         />
 
-        {isLoading ? (
-          <TableLoader />
-        ) : filteredRecords.length === 0 ? (
-          <div className="text-body-secondary">No leave records match the current filters.</div>
-        ) : (
-          <>
-            <div className="rounded-3 shadow-sm overflow-hidden bg-white">
+        <ResponsiveRecordCollection
+          isLoading={isLoading}
+          isEmpty={filteredRecords.length === 0}
+          emptyMessage={
+            <div className="text-body-secondary">No leave records match the current filters.</div>
+          }
+          mobileSections={mobileSections}
+          renderDesktop={() => (
+            <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
               <CTable align="middle" className="mb-0" hover responsive>
                 <CTableHead color="light">
                   <CTableRow>
@@ -203,68 +305,7 @@ const LeaveRecordsSection = ({
                         </GroupedTableHeaderRow>
                       ) : null}
                       {group.entries.map(({ row, displayIndex }) => {
-                        const reviewActionConfig =
-                          actionMode === 'review'
-                            ? getReviewActionConfig?.(row) || {
-                                approveLabel: 'Approve',
-                                approveDisabled: row.status !== 'Pending',
-                                rejectDisabled: row.status !== 'Pending',
-                              }
-                            : null
-                        const disableEdit = !['Pending', 'Draft'].includes(row.status)
-                        const disableCancel =
-                          typeof canCancelLeave === 'function'
-                            ? !canCancelLeave(row)
-                            : row.status !== 'Pending'
-                        const disableDelete = String(row?.status || '') !== 'Draft'
-                        const actionItems =
-                          actionMode === 'review'
-                            ? [
-                                {
-                                  key: 'approve-leave',
-                                  label: reviewActionConfig?.approveLabel || 'Approve',
-                                  onClick: () => approveLeave?.(row),
-                                  disabled: reviewActionConfig?.approveDisabled,
-                                  disabledReason: reviewActionConfig?.requiredRole
-                                    ? `This stage requires ${reviewActionConfig.requiredRole} role.`
-                                    : 'This record is not eligible for this workflow action.',
-                                },
-                                {
-                                  key: 'reject-leave',
-                                  label: 'Reject',
-                                  className: 'text-danger',
-                                  onClick: () => rejectLeave?.(row),
-                                  disabled: reviewActionConfig?.rejectDisabled,
-                                  disabledReason: reviewActionConfig?.requiredRole
-                                    ? `This stage requires ${reviewActionConfig.requiredRole} role.`
-                                    : 'This record is not eligible for this workflow action.',
-                                },
-                              ]
-                            : [
-                                {
-                                  key: 'edit-leave',
-                                  label: 'Edit',
-                                  onClick: () => openLeaveForEdit?.(row),
-                                  disabled: disableEdit,
-                                  disabledReason:
-                                    'Only Pending or Draft leave requests can be edited.',
-                                },
-                                {
-                                  key: 'cancel-leave',
-                                  label: 'Cancel',
-                                  onClick: () => cancelLeave?.(row),
-                                  disabled: disableCancel,
-                                  disabledReason: 'Only pending leave requests can be cancelled.',
-                                },
-                                {
-                                  key: 'delete-leave',
-                                  label: 'Delete',
-                                  className: 'text-danger',
-                                  onClick: () => deleteLeave?.(row),
-                                  disabled: disableDelete,
-                                  disabledReason: 'Only Draft leave requests can be deleted.',
-                                },
-                              ]
+                        const actionItems = getLeaveActionItems(row)
 
                         return (
                           <CTableRow
@@ -293,15 +334,17 @@ const LeaveRecordsSection = ({
                             <CTableDataCell>{getEndDateTimeLabel(row)}</CTableDataCell>
                             <CTableDataCell>{row.days ?? '-'}</CTableDataCell>
                             <CTableDataCell>
-                              <ApprovalGates
+                              <WorkflowStatusSummary
+                                statusLabel={getStatusLabel?.(row) || row.status || '-'}
+                                nextActionLabel={getPendingActionHint?.(row) || ''}
                                 gates={resolveLeaveGates(row)}
                                 approvalHistory={row.approvalHistory}
                                 isCancelled={row.status === 'Cancelled'}
                               />
                             </CTableDataCell>
-                            <CTableDataCell className="text-center align-middle">
+                            <RowActionCell className="text-center align-middle">
                               <RowActions items={actionItems} />
-                            </CTableDataCell>
+                            </RowActionCell>
                           </CTableRow>
                         )
                       })}
@@ -310,14 +353,16 @@ const LeaveRecordsSection = ({
                 </CTableBody>
               </CTable>
             </div>
+          )}
+          footer={
             <DataTableFooter
               rowsToShow={rowsToShow}
               onRowsToShowChange={setRowsToShow}
               filteredCount={filteredRecords.length}
               totalCount={leaveRecordsCount}
             />
-          </>
-        )}
+          }
+        />
       </CCardBody>
     </CCard>
   )

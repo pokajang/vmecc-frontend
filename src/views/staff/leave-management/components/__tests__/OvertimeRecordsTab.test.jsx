@@ -111,7 +111,7 @@ describe('OvertimeRecordsTab', () => {
   it('renders month and user grouped headers with per-type totals and type column', () => {
     render(<OvertimeRecordsTab vm={baseVm} handlers={baseHandlers} />)
 
-    expect(screen.getByText('Type')).toBeTruthy()
+    expect(screen.getAllByText('Type').length).toBeGreaterThan(0)
     expect(screen.queryByText('Employee')).toBeNull()
     expect(screen.getAllByTestId('ot-type-summary-chip-weekend').length).toBeGreaterThan(0)
     expect(screen.getAllByTestId('ot-type-summary-chip-publicHoliday').length).toBeGreaterThan(0)
@@ -120,10 +120,10 @@ describe('OvertimeRecordsTab', () => {
     expect(screen.getByTestId('ot-user-group-month-2026-04-user-1-avatar').tagName).toBe('IMG')
   })
 
-  it('renders approval gates in status cell without redundant top status text', () => {
+  it('renders approval gates and mobile-readable workflow status text', () => {
     render(<OvertimeRecordsTab vm={baseVm} handlers={baseHandlers} />)
 
-    expect(screen.queryByText('Pending Review')).toBeNull()
+    expect(screen.getAllByText('Pending Review').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Reviewed').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Recommended').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Approved').length).toBeGreaterThan(0)
@@ -146,9 +146,9 @@ describe('OvertimeRecordsTab', () => {
     }
     render(<OvertimeRecordsTab vm={baseVm} handlers={handlers} />)
 
-    const groupCheckbox = screen.getByRole('checkbox', {
+    const groupCheckbox = screen.getAllByRole('checkbox', {
       name: /Select actionable overtime records/i,
-    })
+    })[0]
     fireEvent.click(groupCheckbox)
 
     expect(screen.getByText('2 overtime records selected')).toBeTruthy()
@@ -169,5 +169,23 @@ describe('OvertimeRecordsTab', () => {
         }),
       )
     })
+  })
+
+  it('opens overtime records from keyboard activation and keeps actions separate', () => {
+    const handlers = {
+      ...baseHandlers,
+      openOvertimeDetail: vi.fn(),
+      approveOvertime: vi.fn(),
+    }
+    render(<OvertimeRecordsTab vm={baseVm} handlers={handlers} />)
+
+    fireEvent.keyDown(screen.getAllByRole('button', { name: /Open overtime record/i })[0], {
+      key: 'Enter',
+    })
+    expect(handlers.openOvertimeDetail).toHaveBeenCalledTimes(1)
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Review' })[0])
+    expect(handlers.approveOvertime).toHaveBeenCalledTimes(1)
+    expect(handlers.openOvertimeDetail).toHaveBeenCalledTimes(1)
   })
 })

@@ -1,6 +1,7 @@
 import React from 'react'
 import { CContainer } from '@coreui/react'
 import { useSelector } from 'react-redux'
+import ModulePageHeader from 'src/components/ModulePageHeader'
 import { hasAnyPermission } from 'src/utils/authz'
 import WorkShift from '../settings/components/WorkShift'
 
@@ -28,6 +29,10 @@ const ShiftSettings = () => {
 
   return (
     <CContainer fluid>
+      <ModulePageHeader
+        title="Shift Settings"
+        subtitle="Manage built-in shift windows and custom roster shift types."
+      />
       <WorkShift />
     </CContainer>
   )

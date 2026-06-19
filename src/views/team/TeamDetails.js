@@ -14,6 +14,7 @@ import {
   createTeam,
 } from 'src/services/apiClient'
 import CreateActionButton from 'src/components/CreateActionButton'
+import ModulePageHeader from 'src/components/ModulePageHeader'
 import { hasPermission } from 'src/utils/authz'
 import { resolveTeamScheduleStatusMap } from './components/teamScheduleStatus'
 
@@ -96,15 +97,23 @@ const TeamDetails = () => {
 
   return (
     <CContainer fluid>
+      <ModulePageHeader
+        title="Team Directory"
+        subtitle="Review operational teams, members, and current roster coverage."
+        actions={
+          canManageTeams ? (
+            <CreateActionButton
+              label="Add Team"
+              importance="primary"
+              onClick={() => setShowCreate(true)}
+            />
+          ) : null
+        }
+      />
       <CRow>
         <CCol>
           <CCard className="mb-4">
-            <CCardHeader className="d-flex justify-content-between align-items-center">
-              <span>Team Details</span>
-              {canManageTeams && (
-                <CreateActionButton label="Add teams" onClick={() => setShowCreate(true)} />
-              )}
-            </CCardHeader>
+            <CCardHeader>Teams</CCardHeader>
             <CCardBody>
               {!loading && error && <CAlert color="danger">{error}</CAlert>}
               {!loading && !canViewTeams && (
@@ -129,8 +138,8 @@ const TeamDetails = () => {
                     <p className="text-body-secondary mb-1">No teams found.</p>
                     {canManageTeams && (
                       <p className="text-body-secondary small mb-0">
-                        Use <strong>Add teams</strong> above to create Alpha, Bravo, Charlie, and
-                        Delta teams.
+                        Use <strong>Add Team</strong> to create Alpha, Bravo, Charlie, and Delta
+                        teams.
                       </p>
                     )}
                   </CCol>

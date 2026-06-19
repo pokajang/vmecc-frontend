@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import {
   fetchRosters,
   fetchTeams,
@@ -7,6 +7,8 @@ import {
   saveRosters,
   publishRosters,
 } from 'src/services/apiClient'
+import rosterFlowReducer, { initialRosterFlowState } from './rosterFlowReducer'
+import { validateRosterAssignment } from './rosterConflictValidator'
 
 // Built-in shift definitions used as fallback if the API is unreachable
 const FALLBACK_SHIFTS = [
@@ -37,12 +39,7 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
   const [selectedMonths, setSelectedMonths] = useState([])
   const [roster, setRoster] = useState([])
   const [originalRoster, setOriginalRoster] = useState([])
-  const [isDirty, setIsDirty] = useState(false)
-  const [editMode, setEditMode] = useState(false)
-  const [isSavingDraft, setIsSavingDraft] = useState(false)
-  const [isPublishing, setIsPublishing] = useState(false)
-  const [statusMessage, setStatusMessage] = useState(null)
-  const [error, setError] = useState(null)
+  const [flowState, dispatchFlow] = useReducer(rosterFlowReducer, initialRosterFlowState)
   const [loading, setLoading] = useState(true)
   const [teams, setTeams] = useState([])
   const [allShifts, setAllShifts] = useState(FALLBACK_SHIFTS) // ordered shift definitions
@@ -57,6 +54,12 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
   })
 
   const teamsRef = useRef([])
+  const { editMode, isDirty, isSavingDraft, isPublishing, statusMessage, error } = flowState
+  const setEditMode = (value) => dispatchFlow({ type: 'set-edit-mode', value })
+  const setIsDirty = (value) => dispatchFlow({ type: 'set-dirty', value })
+  const setStatusMessage = (message) => dispatchFlow({ type: 'set-status-message', message })
+  const setError = (message) => dispatchFlow({ type: 'set-error', message })
+
   useEffect(() => {
     teamsRef.current = teams
   }, [teams])
@@ -432,7 +435,7 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
 
       setRoster(rows)
       setOriginalRoster(rows)
-      setIsDirty(false)
+      dispatchFlow({ type: 'reset-edit' })
     } catch (err) {
       setError(err.payload?.message || 'Unable to load roster.')
     } finally {
@@ -559,18 +562,13 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
   }
 
   const handleAssign = (date, shiftSlug, teamId) => {
-    if (teamId !== null) {
-      const existing = roster.find((r) => r.date === date)
-      const otherShifts = Object.entries(existing?.shifts || {}).filter(([s]) => s !== shiftSlug)
-      const conflict = otherShifts.find(
-        ([, s]) => s?.team_id && String(s.team_id) === String(teamId),
-      )
-      if (conflict) {
-        setError(`A team cannot be assigned to more than one shift on the same date.`)
-        setTimeout(() => setError(null), 4000)
-        return
-      }
+    const validation = validateRosterAssignment({ roster, date, shiftSlug, teamId })
+    if (!validation.ok) {
+      setError(validation.message)
+      setTimeout(() => setError(null), 4000)
+      return
     }
+
     setError(null)
     setRoster((prev) => {
       const next = [...prev]
@@ -616,8 +614,7 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
       setEditMode(false)
       return
     }
-    setIsSavingDraft(true)
-    setError(null)
+    dispatchFlow({ type: 'start-save-draft' })
     try {
       await saveRosters(entries)
       setStatusMessage(`Draft saved for ${scopeLabel}.`)
@@ -628,7 +625,7 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
     } catch (err) {
       setError(err.payload?.message || 'Unable to save draft.')
     } finally {
-      setIsSavingDraft(false)
+      dispatchFlow({ type: 'finish-save-draft' })
     }
   }
 
@@ -640,8 +637,7 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
       setEditMode(false)
       return
     }
-    setIsPublishing(true)
-    setError(null)
+    dispatchFlow({ type: 'start-publish' })
     try {
       await publishRosters(entries, scopeLabel)
       setStatusMessage(`Roster published for ${scopeLabel}. Teams have been notified.`)
@@ -652,7 +648,7 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
     } catch (err) {
       setError(err.payload?.message || 'Unable to publish roster.')
     } finally {
-      setIsPublishing(false)
+      dispatchFlow({ type: 'finish-publish' })
     }
   }
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CBadge } from '@coreui/react'
 import {
   CalendarDays,
@@ -7,12 +7,14 @@ import {
   Clock3,
   ExternalLink,
   LogOut,
+  MessageSquareText,
   Settings,
   User,
   WalletCards,
 } from 'lucide-react'
 
 import { getPrimaryRoleLabel } from 'src/utils/authz'
+import useFocusTrap from 'src/hooks/useFocusTrap'
 import { isTitle } from 'src/utils/navigation'
 
 const collectLeafRows = (items = [], rows) => {
@@ -54,7 +56,7 @@ const MobileNavSheet = ({
 }) => {
   const [activeGroup, setActiveGroup] = useState(null)
   const headerRef = useRef(null)
-  const wasOpenRef = useRef(open)
+  const panelRef = useRef(null)
 
   useEffect(() => {
     if (!open) return
@@ -66,36 +68,21 @@ const MobileNavSheet = ({
     }
   }, [open])
 
-  useEffect(() => {
-    if (open) {
-      const timer = setTimeout(() => headerRef.current?.focus(), 0)
-      return () => clearTimeout(timer)
+  const handleEscape = useCallback(() => {
+    if (mode === 'menu' && activeGroup) {
+      setActiveGroup(null)
+      return
     }
+    onClose()
+  }, [activeGroup, mode, onClose])
 
-    if (wasOpenRef.current && returnFocusRef?.current) {
-      returnFocusRef.current.focus()
-    }
-  }, [open, returnFocusRef])
-
-  useEffect(() => {
-    wasOpenRef.current = open
-  }, [open])
-
-  useEffect(() => {
-    if (!open) return
-
-    const handleKeyDown = (event) => {
-      if (event.key !== 'Escape') return
-      if (mode === 'menu' && activeGroup) {
-        setActiveGroup(null)
-        return
-      }
-      onClose()
-    }
-
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [open, mode, activeGroup, onClose])
+  useFocusTrap({
+    enabled: open,
+    containerRef: panelRef,
+    initialFocusRef: headerRef,
+    returnFocusRef,
+    onEscape: handleEscape,
+  })
 
   const topLevelRows = useMemo(
     () =>
@@ -121,6 +108,13 @@ const MobileNavSheet = ({
   const primaryRole = getPrimaryRoleLabel(user)
   const secondaryRoles = (user?.roles || []).filter((role) => role !== primaryRole)
   const canQuickActions = canClaim || canLeave || canOvertime
+  const myWorkItems = [
+    canClaim ? { label: 'Payroll', to: '/payroll', icon: WalletCards } : null,
+    canLeave ? { label: 'Leave', to: '/leave', icon: CalendarDays } : null,
+    canOvertime ? { label: 'Overtime', to: '/overtime', icon: Clock3 } : null,
+    { label: 'Messages', to: '/messages', icon: MessageSquareText },
+    { label: 'Profile', to: '/profile', icon: User },
+  ].filter(Boolean)
 
   if (!open) return null
 
@@ -131,60 +125,85 @@ const MobileNavSheet = ({
     const rows = activeGroup ? secondLevelRows : topLevelRows
 
     return (
-      <div className="mobile-nav-sheet-action-grid mobile-nav-sheet-action-grid-menu">
-        {rows.map((row) => {
-          if (row.type === 'section') {
-            return (
-              <div
-                key={row.key}
-                className="mobile-nav-sheet-section mobile-nav-sheet-section-grid mobile-nav-sheet-span-2"
-              >
-                {row.label}
-              </div>
-            )
-          }
+      <>
+        {!activeGroup && myWorkItems.length > 0 && (
+          <>
+            <div className="mobile-nav-sheet-section">My Work</div>
+            <div className="mobile-nav-sheet-action-grid mb-3">
+              {myWorkItems.map((item) => {
+                const Icon = item.icon
+                return (
+                  <button
+                    key={item.to}
+                    type="button"
+                    className="mobile-nav-sheet-row mobile-nav-sheet-tile"
+                    onClick={() => onNavigate({ to: item.to })}
+                  >
+                    <span className="mobile-nav-sheet-row-main">
+                      <Icon size={16} />
+                      <span>{item.label}</span>
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </>
+        )}
+        <div className="mobile-nav-sheet-action-grid mobile-nav-sheet-action-grid-menu">
+          {rows.map((row) => {
+            if (row.type === 'section') {
+              return (
+                <div
+                  key={row.key}
+                  className="mobile-nav-sheet-section mobile-nav-sheet-section-grid mobile-nav-sheet-span-2"
+                >
+                  {row.label}
+                </div>
+              )
+            }
 
-          if (row.type === 'group') {
+            if (row.type === 'group') {
+              return (
+                <button
+                  key={row.key}
+                  type="button"
+                  className="mobile-nav-sheet-row mobile-nav-sheet-tile"
+                  onClick={() => setActiveGroup(row.item)}
+                >
+                  <span className="mobile-nav-sheet-row-main">
+                    {row.item.icon && (
+                      <span className="mobile-nav-sheet-row-icon">{row.item.icon}</span>
+                    )}
+                    <span>{row.item.name}</span>
+                  </span>
+                  <ChevronRight size={16} />
+                </button>
+              )
+            }
+
+            const { item } = row
             return (
               <button
                 key={row.key}
                 type="button"
                 className="mobile-nav-sheet-row mobile-nav-sheet-tile"
-                onClick={() => setActiveGroup(row.item)}
+                onClick={() => onNavigate(item)}
               >
                 <span className="mobile-nav-sheet-row-main">
-                  {row.item.icon && (
-                    <span className="mobile-nav-sheet-row-icon">{row.item.icon}</span>
-                  )}
-                  <span>{row.item.name}</span>
+                  {item.icon && <span className="mobile-nav-sheet-row-icon">{item.icon}</span>}
+                  <span>{item.name}</span>
+                  {item.href && <ExternalLink size={14} className="text-body-tertiary" />}
                 </span>
-                <ChevronRight size={16} />
+                {item.badge && (
+                  <CBadge color={item.badge.color} className={item.badge.className || ''}>
+                    {item.badge.text}
+                  </CBadge>
+                )}
               </button>
             )
-          }
-
-          const { item } = row
-          return (
-            <button
-              key={row.key}
-              type="button"
-              className="mobile-nav-sheet-row mobile-nav-sheet-tile"
-              onClick={() => onNavigate(item)}
-            >
-              <span className="mobile-nav-sheet-row-main">
-                {item.icon && <span className="mobile-nav-sheet-row-icon">{item.icon}</span>}
-                <span>{item.name}</span>
-                {item.href && <ExternalLink size={14} className="text-body-tertiary" />}
-              </span>
-              {item.badge && (
-                <CBadge color={item.badge.color} className={item.badge.className || ''}>
-                  {item.badge.text}
-                </CBadge>
-              )}
-            </button>
-          )
-        })}
-      </div>
+          })}
+        </div>
+      </>
     )
   }
 
@@ -291,6 +310,7 @@ const MobileNavSheet = ({
         aria-label="Close menu overlay"
       />
       <section
+        ref={panelRef}
         className={`mobile-nav-sheet${open ? ' show' : ''}`}
         role="dialog"
         aria-modal="true"

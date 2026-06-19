@@ -122,6 +122,16 @@ const LoginRecordsPanel = ({ records, lastLoginAt }) => {
     setOpenDetail(null)
   }
 
+  const toggleDetail = (index) => {
+    setOpenDetail((current) => (current === index ? null : index))
+  }
+
+  const handleCardKeyDown = (event, index) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return
+    event.preventDefault()
+    toggleDetail(index)
+  }
+
   return (
     <CCard>
       <CCardHeader className="d-flex justify-content-between align-items-center">
@@ -303,8 +313,12 @@ const LoginRecordsPanel = ({ records, lastLoginAt }) => {
                 <CCard
                   key={idx}
                   role="button"
+                  tabIndex={0}
+                  aria-expanded={isOpen}
+                  aria-label={`Toggle login record ${idx + 1} details`}
                   className="cursor-pointer"
-                  onClick={() => setOpenDetail(isOpen ? null : idx)}
+                  onClick={() => toggleDetail(idx)}
+                  onKeyDown={(event) => handleCardKeyDown(event, idx)}
                 >
                   <CCardBody className="d-grid gap-2">
                     <div className="d-flex justify-content-between align-items-center">

@@ -10,12 +10,14 @@ const ClaimSubmissionSavedItemsCard = ({
   savedItems,
   editingIndex,
   totalAmount,
+  attachmentGroups = [],
+  defaultPathReady = false,
   onAddItem,
   onEditItem,
   onRemoveItem,
   onPreviewAttachment,
 }) => (
-  <CCard>
+  <CCard data-default-path-ready={defaultPathReady ? 'true' : 'false'}>
     <CCardHeader className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
       <span>{isExceptionalClaim ? 'Saved Exceptional Items' : 'Saved Claim Items'}</span>
       <CreateActionButton
@@ -95,6 +97,12 @@ const ClaimSubmissionSavedItemsCard = ({
         </span>
         <span className="h5 mb-0">{formatCurrency(totalAmount)}</span>
       </div>
+      {attachmentGroups.length > 0 && (
+        <div className="small text-body-secondary">
+          {attachmentGroups.length} linked attachment{attachmentGroups.length === 1 ? '' : 's'} on
+          saved item{attachmentGroups.length === 1 ? '' : 's'}.
+        </div>
+      )}
     </CCardBody>
   </CCard>
 )

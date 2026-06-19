@@ -1,8 +1,19 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import { useNavigationGuard } from 'src/contexts/NavigationGuardContext'
 import { getSelectableStaffOptions } from 'src/utils/staffSelect'
 import { ASSIGNMENT_DRAFT_STATUS } from '../constants'
 import { getAssignmentEmployeeIdentityKey } from '../utils'
+import {
+  addAssignmentAllowanceRow,
+  ASSIGNMENT_FORM_STEPS,
+  buildAssignmentPayComponentRows,
+  buildAssignmentPatchReviewSummary,
+  buildAssignmentStepState,
+  deleteAssignmentAllowanceRow,
+  normalizeAssignmentRemarks,
+  updateAssignmentPayDraft,
+} from './salary-assignment/assignmentFormModel'
+import { normalizeNotesHistory } from './salary-assignment/assignmentStateDomain'
 
 const cloneDraftSnapshot = (value) => {
   try {
@@ -20,40 +31,58 @@ const serializeDraftSnapshot = (value) => {
   }
 }
 
+const flowInitialState = {
+  activeStep: 'staff',
+  submitConfirmVisible: false,
+  isSubmitting: false,
+  isAutosaving: false,
+  autosaveError: '',
+  lastAutosavedAt: '',
+}
+
+const flowReducer = (state, action) => {
+  switch (action.type) {
+    case 'set-step':
+      return { ...state, activeStep: action.step || state.activeStep }
+    case 'set-submit-visible':
+      return { ...state, submitConfirmVisible: Boolean(action.visible) }
+    case 'set-submitting':
+      return { ...state, isSubmitting: Boolean(action.value) }
+    case 'set-autosaving':
+      return { ...state, isAutosaving: Boolean(action.value) }
+    case 'set-autosave-error':
+      return { ...state, autosaveError: action.value || '' }
+    case 'set-last-autosaved-at':
+      return { ...state, lastAutosavedAt: action.value || '' }
+    case 'reset-for-route':
+      return {
+        ...flowInitialState,
+        activeStep: action.isReadOnly ? 'review' : 'staff',
+      }
+    default:
+      return state
+  }
+}
+
 const useSalaryAssignmentFormController = ({ vm, handlers }) => {
   const {
     isEditing,
     isReadOnly,
     draft,
-    payComponentsEditMode,
-    payComponentsDraft,
     staffOptions,
     salaryDetailTotals,
     calculatedDeductions,
     formatDateTime,
     assignmentRows,
     currentAssignmentId,
+    actorName,
   } = vm
-  const {
-    onBack,
-    onStaffChange,
-    onDraftFieldChange,
-    onSaveDraft,
-    onSetSalary,
-    onAddAllowanceRow,
-    onUpdateComponentRow,
-    onDeleteComponentRow,
-  } = handlers
-  const [remarksDraft, setRemarksDraft] = useState('')
-  const [remarksDirty, setRemarksDirty] = useState(false)
-  const [remarksEditMode, setRemarksEditMode] = useState(false)
-  const [editingRemarkId, setEditingRemarkId] = useState('')
+  const { onBack, onStaffChange, onDraftFieldChange, onSaveDraft, onSetSalary } = handlers
+  const [flowState, dispatchFlow] = useReducer(flowReducer, {
+    ...flowInitialState,
+    activeStep: isReadOnly ? 'review' : 'staff',
+  })
   const [includeInactiveStaff, setIncludeInactiveStaff] = useState(false)
-  const [submitConfirmVisible, setSubmitConfirmVisible] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isAutosaving, setIsAutosaving] = useState(false)
-  const [autosaveError, setAutosaveError] = useState('')
-  const [lastAutosavedAt, setLastAutosavedAt] = useState('')
   const [baselineDraft, setBaselineDraft] = useState(() => cloneDraftSnapshot(draft))
   const userEditedRef = useRef(false)
   const draftRef = useRef(draft)
@@ -68,55 +97,18 @@ const useSalaryAssignmentFormController = ({ vm, handlers }) => {
     [draft.selectedStaffKey, includeInactiveStaff, staffOptions],
   )
 
-  const remarksHistory = useMemo(() => {
-    const mappedHistory = Array.isArray(draft.notesHistory)
-      ? draft.notesHistory
-          .map((entry, index) => {
-            const text = String(entry?.text || '').trim()
-            if (!text) return null
-            return {
-              id:
-                String(entry?.id || '').trim() ||
-                `remark-${index + 1}-${String(entry?.createdAt || '').trim() || 'legacy'}`,
-              text,
-              createdAt: String(entry?.createdAt || '').trim(),
-              createdBy: String(entry?.createdBy || '').trim(),
-              updatedAt: String(entry?.updatedAt || '').trim(),
-              updatedBy: String(entry?.updatedBy || '').trim(),
-            }
-          })
-          .filter(Boolean)
-      : []
-    if (mappedHistory.length > 0) return mappedHistory
-
-    const legacyText = String(draft.notes || '').trim()
-    if (!legacyText) return []
-    return [
-      {
-        id: 'remark-legacy',
-        text: legacyText,
-        createdAt: String(draft.notesUpdatedAt || '').trim(),
-        createdBy: String(draft.notesUpdatedBy || '').trim(),
-        updatedAt: '',
-        updatedBy: '',
-      },
-    ]
-  }, [draft.notes, draft.notesHistory, draft.notesUpdatedAt, draft.notesUpdatedBy])
-
-  const activeRemarksValue = remarksDraft
+  const remarksHistory = useMemo(() => normalizeNotesHistory(draft.notesHistory, draft), [draft])
+  const activeRemarksValue = draft.notes || remarksHistory[0]?.text || ''
+  const stepState = useMemo(
+    () => buildAssignmentStepState({ draft, isReadOnly }),
+    [draft, isReadOnly],
+  )
   const isDraftChanged = serializeDraftSnapshot(draft) !== serializeDraftSnapshot(baselineDraft)
-  const hasUnsavedChanges =
-    !isReadOnly &&
-    Boolean(
-      (userEditedRef.current && isDraftChanged) ||
-        payComponentsEditMode ||
-        remarksDirty ||
-        remarksEditMode,
-    )
+  const hasUnsavedChanges = !isReadOnly && Boolean(userEditedRef.current && isDraftChanged)
 
   const markDraftEdited = () => {
     userEditedRef.current = true
-    setAutosaveError('')
+    dispatchFlow({ type: 'set-autosave-error', value: '' })
   }
 
   const handleStaffSelectChange = (key) => {
@@ -129,41 +121,60 @@ const useSalaryAssignmentFormController = ({ vm, handlers }) => {
     onDraftFieldChange(field, value)
   }
 
-  const handlePayComponentUpdate = (...args) => {
+  const applyDraftPatch = (nextDraft) => {
+    ;['basicSalary', 'allowances', 'employeeContributions'].forEach((field) => {
+      if (nextDraft[field] !== draftRef.current[field]) {
+        onDraftFieldChange(field, nextDraft[field])
+      }
+    })
+  }
+
+  const handlePayComponentUpdate = (rowType, rowId, field, value) => {
     markDraftEdited()
-    onUpdateComponentRow(...args)
+    applyDraftPatch(
+      updateAssignmentPayDraft(draftRef.current, {
+        rowType,
+        rowId,
+        field,
+        value,
+      }),
+    )
   }
 
   const handleAddAllowanceRow = () => {
     markDraftEdited()
-    onAddAllowanceRow()
+    const nextDraft = addAssignmentAllowanceRow(draftRef.current)
+    onDraftFieldChange('allowances', nextDraft.allowances)
   }
 
-  const handleDeleteAllowanceRow = (...args) => {
+  const handleDeleteAllowanceRow = (_rowType, rowId) => {
     markDraftEdited()
-    onDeleteComponentRow(...args)
+    const nextDraft = deleteAssignmentAllowanceRow(draftRef.current, rowId)
+    onDraftFieldChange('allowances', nextDraft.allowances)
+  }
+
+  const handleRemarksChange = (value) => {
+    markDraftEdited()
+    const nextPatch = normalizeAssignmentRemarks({
+      currentHistory: draftRef.current.notesHistory,
+      value,
+      actorName,
+    })
+    onDraftFieldChange('notesHistory', nextPatch.notesHistory)
+    onDraftFieldChange('notes', nextPatch.notes)
+    onDraftFieldChange('notesUpdatedAt', nextPatch.notesUpdatedAt || '')
+    onDraftFieldChange('notesUpdatedBy', nextPatch.notesUpdatedBy || '')
   }
 
   const autosaveSummary = useMemo(() => {
-    if (autosaveError) return autosaveError
-    if (payComponentsEditMode || remarksDirty || remarksEditMode) {
-      return 'Draft autosave pauses until this section is saved or cancelled.'
-    }
-    if (isAutosaving) return 'Saving draft...'
-    if (lastAutosavedAt) {
-      const savedLabel = formatDateTime?.(lastAutosavedAt) || lastAutosavedAt
+    if (flowState.autosaveError) return flowState.autosaveError
+    if (flowState.isAutosaving) return 'Saving draft...'
+    if (flowState.lastAutosavedAt) {
+      const savedLabel = formatDateTime?.(flowState.lastAutosavedAt) || flowState.lastAutosavedAt
       return `Draft saved ${savedLabel}.`
     }
     return 'Draft autosave is on.'
-  }, [
-    autosaveError,
-    formatDateTime,
-    isAutosaving,
-    lastAutosavedAt,
-    payComponentsEditMode,
-    remarksDirty,
-    remarksEditMode,
-  ])
+  }, [flowState.autosaveError, flowState.isAutosaving, flowState.lastAutosavedAt, formatDateTime])
 
   useEffect(() => {
     draftRef.current = draft
@@ -172,8 +183,7 @@ const useSalaryAssignmentFormController = ({ vm, handlers }) => {
   useEffect(() => {
     userEditedRef.current = false
     setBaselineDraft(cloneDraftSnapshot(draftRef.current))
-    setAutosaveError('')
-    setLastAutosavedAt('')
+    dispatchFlow({ type: 'reset-for-route', isReadOnly })
   }, [currentAssignmentId, isEditing, isReadOnly])
 
   useEffect(() => {
@@ -195,51 +205,37 @@ const useSalaryAssignmentFormController = ({ vm, handlers }) => {
   }
 
   useEffect(() => {
-    if (
-      isReadOnly ||
-      !userEditedRef.current ||
-      !isDraftChanged ||
-      payComponentsEditMode ||
-      remarksDirty ||
-      remarksEditMode ||
-      isSubmitting
-    ) {
+    if (isReadOnly || !userEditedRef.current || !isDraftChanged || flowState.isSubmitting) {
       return undefined
     }
 
     const timeoutId = window.setTimeout(async () => {
-      setIsAutosaving(true)
-      setAutosaveError('')
+      dispatchFlow({ type: 'set-autosaving', value: true })
+      dispatchFlow({ type: 'set-autosave-error', value: '' })
       const ok = await onSaveDraft({ showNotice: false })
-      setIsAutosaving(false)
+      dispatchFlow({ type: 'set-autosaving', value: false })
       if (ok) {
         setBaselineDraft(cloneDraftSnapshot(draft))
-        setLastAutosavedAt(new Date().toISOString())
+        dispatchFlow({ type: 'set-last-autosaved-at', value: new Date().toISOString() })
       } else {
-        setAutosaveError('Draft autosave failed. Changes remain unsaved.')
+        dispatchFlow({
+          type: 'set-autosave-error',
+          value: 'Draft autosave failed. Changes remain unsaved.',
+        })
       }
     }, 900)
 
     return () => window.clearTimeout(timeoutId)
-  }, [
-    draft,
-    isDraftChanged,
-    isReadOnly,
-    isSubmitting,
-    onSaveDraft,
-    payComponentsEditMode,
-    remarksDirty,
-    remarksEditMode,
-  ])
+  }, [draft, flowState.isSubmitting, isDraftChanged, isReadOnly, onSaveDraft])
 
   const handleConfirmSetSalary = async () => {
-    if (isSubmitting) return
-    setSubmitConfirmVisible(false)
-    setIsSubmitting(true)
+    if (flowState.isSubmitting) return
+    dispatchFlow({ type: 'set-submit-visible', visible: false })
+    dispatchFlow({ type: 'set-submitting', value: true })
     try {
       await onSetSalary()
     } finally {
-      setIsSubmitting(false)
+      dispatchFlow({ type: 'set-submitting', value: false })
     }
   }
 
@@ -282,124 +278,75 @@ const useSalaryAssignmentFormController = ({ vm, handlers }) => {
     Boolean(existingEmployeeAssignment) &&
     String(existingEmployeeAssignment?.id || '') !== String(currentAssignmentId || '')
 
-  const { componentRows, totalEmployeeDeductions } = useMemo(() => {
-    const activeBasicSalary = payComponentsEditMode
-      ? payComponentsDraft?.basicSalary
-      : draft?.basicSalary
-    const activeAllowanceRows =
-      payComponentsEditMode && Array.isArray(payComponentsDraft?.allowances)
-        ? payComponentsDraft.allowances
-        : Array.isArray(draft?.allowances)
-          ? draft.allowances
-          : []
-    const deductionInputs =
-      payComponentsEditMode && payComponentsDraft?.employeeDeductions
-        ? payComponentsDraft.employeeDeductions
-        : draft?.employeeContributions || {}
-    const resolveDeductionAmount = (key, fallback) => {
-      const raw = deductionInputs?.[key]
-      if (raw === '' || raw === null || typeof raw === 'undefined') return fallback
-      const numeric = Number.parseFloat(raw)
-      return Number.isFinite(numeric) ? numeric : fallback
-    }
-    const employeeDeductionRows = calculatedDeductions.rows.map((row) => ({
-      ...row,
-      amount: resolveDeductionAmount(row.key, row.employeeAmount),
-    }))
-    const totalDeductions = employeeDeductionRows.reduce(
-      (sum, row) => sum + Number(row.amount || 0),
-      0,
+  const { rows: componentRows, totalEmployeeDeductions } = useMemo(
+    () =>
+      buildAssignmentPayComponentRows({
+        draft,
+        salaryDetailTotals,
+        calculatedDeductions,
+      }),
+    [calculatedDeductions, draft, salaryDetailTotals],
+  )
+  const reviewSummary = useMemo(
+    () =>
+      buildAssignmentPatchReviewSummary({
+        baselineDraft,
+        draft,
+        salaryDetailTotals,
+        calculatedDeductions,
+      }),
+    [baselineDraft, calculatedDeductions, draft, salaryDetailTotals],
+  )
+
+  const setActiveStep = (step) => {
+    if (!stepState[step]?.available) return
+    dispatchFlow({ type: 'set-step', step })
+  }
+
+  const goToNextStep = () => {
+    const currentIndex = ASSIGNMENT_FORM_STEPS.findIndex(
+      (step) => step.key === flowState.activeStep,
     )
-    const rows = [
-      {
-        id: 'component-basic',
-        rowType: 'basic',
-        label: 'Basic Salary',
-        amount: activeBasicSalary,
-        editable: true,
-        deletable: false,
-      },
-      ...activeAllowanceRows.map((row, index) => ({
-        id: row?.id || `allowance-${index}`,
-        rowType: 'allowance',
-        label: row?.name || `Allowance ${index + 1}`,
-        name: row?.name || '',
-        amount: row?.amount,
-        editable: true,
-        deletable: true,
-      })),
-      ...employeeDeductionRows.map((row) => ({
-        id: `deduction-${row.key}`,
-        componentKey: row.key,
-        rowType: 'deduction',
-        label: `${row.label} (Employee Deduction)`,
-        amount: row.amount,
-        editable: true,
-        deletable: false,
-      })),
-      {
-        id: 'summary-gross',
-        rowType: 'summary',
-        label: 'Gross Salary',
-        amount: salaryDetailTotals.gross,
-        editable: false,
-        deletable: false,
-      },
-      {
-        id: 'summary-total-deductions',
-        rowType: 'summary',
-        label: 'Total Employee Deductions',
-        amount: totalDeductions,
-        editable: false,
-        deletable: false,
-      },
-      {
-        id: 'summary-net-payable',
-        rowType: 'summary-net',
-        label: 'Net Payable',
-        amount: salaryDetailTotals.gross - totalDeductions,
-        editable: false,
-        deletable: false,
-      },
-    ]
-    return { componentRows: rows, totalEmployeeDeductions: totalDeductions }
-  }, [
-    calculatedDeductions.rows,
-    draft?.allowances,
-    draft?.basicSalary,
-    draft?.employeeContributions,
-    payComponentsEditMode,
-    payComponentsDraft?.allowances,
-    payComponentsDraft?.basicSalary,
-    payComponentsDraft?.employeeDeductions,
-    salaryDetailTotals.gross,
-  ])
+    const nextStep = ASSIGNMENT_FORM_STEPS[currentIndex + 1]
+    if (nextStep && stepState[nextStep.key]?.available) {
+      dispatchFlow({ type: 'set-step', step: nextStep.key })
+    }
+  }
+
+  const goToPreviousStep = () => {
+    const currentIndex = ASSIGNMENT_FORM_STEPS.findIndex(
+      (step) => step.key === flowState.activeStep,
+    )
+    const previousStep = ASSIGNMENT_FORM_STEPS[currentIndex - 1]
+    if (previousStep) dispatchFlow({ type: 'set-step', step: previousStep.key })
+  }
 
   return {
     activeRemarksValue,
+    activeStep: flowState.activeStep,
     autosaveSummary,
     componentRows,
-    editingRemarkId,
+    goToNextStep,
+    goToPreviousStep,
     handleAddAllowanceRow,
     handleBackClick,
     handleConfirmSetSalary,
     handleDeleteAllowanceRow,
     handleDraftFieldChange,
     handlePayComponentUpdate,
+    handleRemarksChange,
     handleStaffSelectChange,
     includeInactiveStaff,
-    isAutosaving,
-    isSubmitting,
-    remarksDirty,
-    remarksEditMode,
+    isAutosaving: flowState.isAutosaving,
+    isSubmitting: flowState.isSubmitting,
     remarksHistory,
-    setEditingRemarkId,
+    reviewSummary,
+    setActiveStep,
     setIncludeInactiveStaff,
-    setRemarksDirty,
-    setRemarksDraft,
-    setRemarksEditMode,
-    setSubmitConfirmVisible,
-    submitConfirmVisible,
+    setSubmitConfirmVisible: (visible) => dispatchFlow({ type: 'set-submit-visible', visible }),
+    stepState,
+    steps: ASSIGNMENT_FORM_STEPS,
+    submitConfirmVisible: flowState.submitConfirmVisible,
     totalEmployeeDeductions,
     visibleStaffOptions,
     willOverwriteExistingAssignment,

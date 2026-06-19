@@ -16,51 +16,76 @@ import useSalaryAssignmentFormController from '../hooks/useSalaryAssignmentFormC
 import {
   SalaryAssignmentPayComponentsCard,
   SalaryAssignmentRemarksCard,
+  SalaryAssignmentReviewCard,
   SalaryAssignmentStaffFields,
 } from './SalaryAssignmentFormSections'
+
+const SalaryAssignmentStepNav = ({ activeStep, setActiveStep, stepState, steps }) => (
+  <div className="d-flex flex-wrap gap-2 mb-3" aria-label="Salary assignment steps">
+    {steps.map((step, index) => {
+      const state = stepState[step.key] || {}
+      const isActive = activeStep === step.key
+      return (
+        <CButton
+          key={step.key}
+          type="button"
+          color={isActive ? 'primary' : state.complete ? 'success' : 'light'}
+          variant={isActive ? undefined : 'outline'}
+          disabled={!state.available}
+          aria-current={isActive ? 'step' : undefined}
+          onClick={() => setActiveStep(step.key)}
+        >
+          {index + 1}. {step.label}
+        </CButton>
+      )
+    })}
+  </div>
+)
 
 const SalaryAssignmentFormPage = ({ vm, handlers }) => {
   const {
     isEditing,
     isReadOnly,
     draft,
-    payComponentsEditMode,
     staffDirectoryLoading,
     assignmentFound,
     formatCurrency,
+    formatMonth,
     formatDateTime,
-    actorName,
     statutoryRatesFeatureEnabled,
   } = vm
-  const { onEditPayComponents, onSavePayComponents, onCancelPayComponents, onOpenEdit } = handlers
+  const { onOpenEdit } = handlers
   const {
     activeRemarksValue,
+    activeStep,
     autosaveSummary,
     componentRows,
-    editingRemarkId,
+    goToNextStep,
+    goToPreviousStep,
     handleAddAllowanceRow,
     handleBackClick,
     handleConfirmSetSalary,
     handleDeleteAllowanceRow,
     handleDraftFieldChange,
     handlePayComponentUpdate,
+    handleRemarksChange,
     handleStaffSelectChange,
     includeInactiveStaff,
     isAutosaving,
     isSubmitting,
-    remarksDirty,
-    remarksEditMode,
     remarksHistory,
-    setEditingRemarkId,
+    reviewSummary,
+    setActiveStep,
     setIncludeInactiveStaff,
-    setRemarksDirty,
-    setRemarksDraft,
-    setRemarksEditMode,
     setSubmitConfirmVisible,
+    stepState,
+    steps,
     submitConfirmVisible,
     visibleStaffOptions,
     willOverwriteExistingAssignment,
   } = useSalaryAssignmentFormController({ vm, handlers })
+  const currentStepIndex = steps.findIndex((step) => step.key === activeStep)
+  const nextStep = steps[currentStepIndex + 1] || null
 
   return (
     <CContainer fluid>
@@ -76,85 +101,105 @@ const SalaryAssignmentFormPage = ({ vm, handlers }) => {
         </CCard>
       ) : (
         <div className="d-grid gap-3">
-          <SalaryAssignmentStaffFields
-            draft={draft}
-            handleDraftFieldChange={handleDraftFieldChange}
-            handleStaffSelectChange={handleStaffSelectChange}
-            includeInactiveStaff={includeInactiveStaff}
-            isReadOnly={isReadOnly}
-            setIncludeInactiveStaff={setIncludeInactiveStaff}
-            staffDirectoryLoading={staffDirectoryLoading}
-            visibleStaffOptions={visibleStaffOptions}
+          <SalaryAssignmentStepNav
+            activeStep={activeStep}
+            setActiveStep={setActiveStep}
+            stepState={stepState}
+            steps={steps}
           />
 
-          {!isReadOnly && willOverwriteExistingAssignment && (
-            <div className="rounded-3 border border-warning bg-warning bg-opacity-10 p-3">
-              This employee already has a salary assignment, existing pay components were loaded and
-              this update will overwrite it.
-            </div>
+          {activeStep === 'staff' && (
+            <>
+              <SalaryAssignmentStaffFields
+                draft={draft}
+                handleDraftFieldChange={handleDraftFieldChange}
+                handleStaffSelectChange={handleStaffSelectChange}
+                includeInactiveStaff={includeInactiveStaff}
+                isReadOnly={isReadOnly}
+                setIncludeInactiveStaff={setIncludeInactiveStaff}
+                staffDirectoryLoading={staffDirectoryLoading}
+                visibleStaffOptions={visibleStaffOptions}
+              />
+
+              {!isReadOnly && willOverwriteExistingAssignment && (
+                <div className="rounded-3 border border-warning bg-warning bg-opacity-10 p-3">
+                  This employee already has a salary assignment, existing pay components were loaded
+                  and this update will overwrite it.
+                </div>
+              )}
+            </>
           )}
 
-          <SalaryAssignmentPayComponentsCard
-            componentRows={componentRows}
-            formatCurrency={formatCurrency}
-            handleAddAllowanceRow={handleAddAllowanceRow}
-            handleDeleteAllowanceRow={handleDeleteAllowanceRow}
-            handlePayComponentUpdate={handlePayComponentUpdate}
-            isReadOnly={isReadOnly}
-            onCancelPayComponents={onCancelPayComponents}
-            onEditPayComponents={onEditPayComponents}
-            onOpenEdit={onOpenEdit}
-            onSavePayComponents={onSavePayComponents}
-            payComponentsEditMode={payComponentsEditMode}
-            statutoryRatesFeatureEnabled={statutoryRatesFeatureEnabled}
-          />
+          {activeStep === 'pay' && (
+            <SalaryAssignmentPayComponentsCard
+              componentRows={componentRows}
+              formatCurrency={formatCurrency}
+              handleAddAllowanceRow={handleAddAllowanceRow}
+              handleDeleteAllowanceRow={handleDeleteAllowanceRow}
+              handlePayComponentUpdate={handlePayComponentUpdate}
+              isReadOnly={isReadOnly}
+              statutoryRatesFeatureEnabled={statutoryRatesFeatureEnabled}
+            />
+          )}
 
-          <SalaryAssignmentRemarksCard
-            activeRemarksValue={activeRemarksValue}
-            actorName={actorName}
-            editingRemarkId={editingRemarkId}
-            formatDateTime={formatDateTime}
-            handleDraftFieldChange={handleDraftFieldChange}
-            isReadOnly={isReadOnly}
-            remarksDirty={remarksDirty}
-            remarksEditMode={remarksEditMode}
-            remarksHistory={remarksHistory}
-            setEditingRemarkId={setEditingRemarkId}
-            setRemarksDirty={setRemarksDirty}
-            setRemarksDraft={setRemarksDraft}
-            setRemarksEditMode={setRemarksEditMode}
-          />
+          {activeStep === 'review' && (
+            <>
+              <SalaryAssignmentReviewCard
+                formatCurrency={formatCurrency}
+                formatMonth={formatMonth}
+                reviewSummary={reviewSummary}
+              />
+              <SalaryAssignmentRemarksCard
+                activeRemarksValue={activeRemarksValue}
+                formatDateTime={formatDateTime}
+                handleRemarksChange={handleRemarksChange}
+                isReadOnly={isReadOnly}
+                remarksHistory={remarksHistory}
+              />
+            </>
+          )}
 
           {!isReadOnly && (
             <div className="px-1 small text-body-secondary text-end">{autosaveSummary}</div>
           )}
 
-          {!isReadOnly && (
+          {isReadOnly ? (
+            <FormActionGroup leading={<BackButton onClick={handleBackClick} label="Back" />}>
+              <CButton color="light" onClick={handleBackClick}>
+                Back
+              </CButton>
+              <CButton color="primary" onClick={onOpenEdit}>
+                Edit Salary
+              </CButton>
+            </FormActionGroup>
+          ) : (
             <FormActionGroup leading={<BackButton onClick={handleBackClick} label="Back" />}>
               <CButton color="light" onClick={handleBackClick}>
                 Cancel
               </CButton>
-              <CButton
-                color="primary"
-                onClick={() => setSubmitConfirmVisible(true)}
-                disabled={
-                  isSubmitting ||
-                  isAutosaving ||
-                  payComponentsEditMode ||
-                  remarksDirty ||
-                  remarksEditMode
-                }
-              >
-                {isEditing ? 'Update Salary' : 'Set Salary'}
-              </CButton>
+              {activeStep !== 'staff' && (
+                <CButton color="light" onClick={goToPreviousStep}>
+                  Previous
+                </CButton>
+              )}
+              {nextStep ? (
+                <CButton
+                  color="primary"
+                  onClick={goToNextStep}
+                  disabled={!stepState[nextStep.key]?.available}
+                >
+                  Next
+                </CButton>
+              ) : (
+                <CButton
+                  color="primary"
+                  onClick={() => setSubmitConfirmVisible(true)}
+                  disabled={isSubmitting || isAutosaving || !stepState.review.complete}
+                >
+                  {isEditing ? 'Update Salary' : 'Set Salary'}
+                </CButton>
+              )}
             </FormActionGroup>
-          )}
-          {!isReadOnly && (payComponentsEditMode || remarksDirty || remarksEditMode) && (
-            <div className="small text-body-secondary text-end">
-              {payComponentsEditMode
-                ? 'Save or cancel Pay Components before continuing.'
-                : 'Save or cancel Remarks before continuing.'}
-            </div>
           )}
         </div>
       )}

@@ -19,9 +19,10 @@ import {
 } from '@coreui/react'
 import { useSelector } from 'react-redux'
 import { fetchAuditLogs } from 'src/services/apiClient'
-import TableLoader from 'src/components/TableLoader'
-import TableFilters from 'src/components/TableFilters'
 import DataTableFooter from 'src/components/DataTableFooter'
+import ModulePageHeader from 'src/components/ModulePageHeader'
+import ResponsiveRecordCollection from 'src/components/ResponsiveRecordCollection'
+import TableFilters from 'src/components/TableFilters'
 import { getPeriodOptions } from 'src/components/TablePeriodSelect'
 import useTableRows from 'src/hooks/useTableRows'
 import { hasPermission } from 'src/utils/authz'
@@ -84,16 +85,16 @@ const getDetailsLabel = (log) => {
   if (log.action === 'team_deleted') {
     const name = log.metadata?.team_name || 'Unknown team'
     const count = log.metadata?.member_count ?? 0
-    return `Team "${name}" deleted — ${count} ${count === 1 ? 'member' : 'members'} unassigned`
+    return `Team "${name}" deleted - ${count} ${count === 1 ? 'member' : 'members'} unassigned`
   }
   if (log.action === 'roster_draft_saved') {
     const count = log.metadata?.entry_count ?? 0
-    return `Roster draft saved — ${count} ${count === 1 ? 'entry' : 'entries'}`
+    return `Roster draft saved - ${count} ${count === 1 ? 'entry' : 'entries'}`
   }
   if (log.action === 'roster_published') {
     const scope = log.metadata?.scope_label || 'unknown range'
     const teams = log.metadata?.teams_count ?? 0
-    return `Roster published for ${scope} — ${teams} ${teams === 1 ? 'team' : 'teams'} notified`
+    return `Roster published for ${scope} - ${teams} ${teams === 1 ? 'team' : 'teams'} notified`
   }
   if (log.action === 'user_sessions_revoked_all') {
     const reason = (log.metadata?.reason || '').trim()
@@ -230,6 +231,22 @@ const AuditLogs = () => {
   }, [])
 
   const isTruncated = logs.length >= AUDIT_LIMIT
+  const mobileAuditSections = [
+    {
+      key: 'audit-logs',
+      items: visibleRows.map((log, idx) => ({
+        key: log.id || `${log.created_at}-${idx}`,
+        title: formatAction(log.action),
+        subtitle: getActorLabel(log),
+        eyebrow: formatDateTime(log.created_at),
+        fields: [
+          { key: 'target', label: 'Target', value: getTargetLabel(log) },
+          { key: 'ip', label: 'IP', value: log.ip_address || EMPTY },
+        ],
+        detail: getDetailsLabel(log),
+      })),
+    },
+  ]
 
   if (!canViewAudit) {
     return (
@@ -241,8 +258,12 @@ const AuditLogs = () => {
 
   return (
     <CContainer fluid>
+      <ModulePageHeader
+        title="Audit Logs"
+        subtitle="Review administrative activity, security events, and operational changes."
+      />
       <CCard className="mb-4">
-        <CCardHeader>Audit Logs</CCardHeader>
+        <CCardHeader>Activity Records</CCardHeader>
         <CCardBody>
           <TableFilters
             searchValue={search}
@@ -256,6 +277,7 @@ const AuditLogs = () => {
             filters={[
               {
                 key: 'action',
+                label: 'Action',
                 value: actionFilter,
                 onChange: setActionFilter,
                 options: [
@@ -268,6 +290,8 @@ const AuditLogs = () => {
               },
             ]}
             onClear={handleClear}
+            rowClassName="align-items-md-end"
+            showDesktopLabels
           />
 
           {range === 'custom' && (
@@ -308,37 +332,29 @@ const AuditLogs = () => {
           {error && <CAlert color="danger">{error}</CAlert>}
 
           {!error && (
-            <>
-              <div className="rounded-3 shadow-sm overflow-hidden bg-white">
-                <CTable align="middle" className="mb-0" hover responsive>
-                  <CTableHead color="light">
-                    <CTableRow>
-                      <CTableHeaderCell style={{ width: '4%' }} className="text-center">
-                        #
-                      </CTableHeaderCell>
-                      <CTableHeaderCell style={{ width: '18%' }}>Time</CTableHeaderCell>
-                      <CTableHeaderCell style={{ width: '16%' }}>Action</CTableHeaderCell>
-                      <CTableHeaderCell style={{ width: '16%' }}>Actor</CTableHeaderCell>
-                      <CTableHeaderCell style={{ width: '20%' }}>Target</CTableHeaderCell>
-                      <CTableHeaderCell style={{ width: '12%' }}>IP</CTableHeaderCell>
-                      <CTableHeaderCell style={{ width: '18%' }}>Details</CTableHeaderCell>
-                    </CTableRow>
-                  </CTableHead>
-                  <CTableBody>
-                    {loading ? (
+            <ResponsiveRecordCollection
+              isLoading={loading}
+              isEmpty={filtered.length === 0}
+              emptyMessage={<div className="text-center text-muted">No audit logs found.</div>}
+              mobileSections={mobileAuditSections}
+              renderDesktop={() => (
+                <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
+                  <CTable align="middle" className="mb-0" hover responsive>
+                    <CTableHead color="light">
                       <CTableRow>
-                        <CTableDataCell colSpan={7} className="p-0 border-0">
-                          <TableLoader />
-                        </CTableDataCell>
+                        <CTableHeaderCell style={{ width: '4%' }} className="text-center">
+                          #
+                        </CTableHeaderCell>
+                        <CTableHeaderCell style={{ width: '18%' }}>Time</CTableHeaderCell>
+                        <CTableHeaderCell style={{ width: '16%' }}>Action</CTableHeaderCell>
+                        <CTableHeaderCell style={{ width: '16%' }}>Actor</CTableHeaderCell>
+                        <CTableHeaderCell style={{ width: '20%' }}>Target</CTableHeaderCell>
+                        <CTableHeaderCell style={{ width: '12%' }}>IP</CTableHeaderCell>
+                        <CTableHeaderCell style={{ width: '18%' }}>Details</CTableHeaderCell>
                       </CTableRow>
-                    ) : filtered.length === 0 ? (
-                      <CTableRow>
-                        <CTableDataCell colSpan={7} className="text-center text-muted">
-                          No audit logs found.
-                        </CTableDataCell>
-                      </CTableRow>
-                    ) : (
-                      visibleRows.map((log, idx) => (
+                    </CTableHead>
+                    <CTableBody>
+                      {visibleRows.map((log, idx) => (
                         <CTableRow key={log.id}>
                           <CTableDataCell className="text-center text-muted">
                             {idx + 1}
@@ -358,20 +374,21 @@ const AuditLogs = () => {
                             {getDetailsLabel(log)}
                           </CTableDataCell>
                         </CTableRow>
-                      ))
-                    )}
-                  </CTableBody>
-                </CTable>
-              </div>
-
-              <DataTableFooter
-                rowsToShow={rowsToShow}
-                onRowsToShowChange={setRowsToShow}
-                filteredCount={filtered.length}
-                totalCount={logs.length}
-                showFilteredFrom={false}
-              />
-            </>
+                      ))}
+                    </CTableBody>
+                  </CTable>
+                </div>
+              )}
+              footer={
+                <DataTableFooter
+                  rowsToShow={rowsToShow}
+                  onRowsToShowChange={setRowsToShow}
+                  filteredCount={filtered.length}
+                  totalCount={logs.length}
+                  showFilteredFrom={false}
+                />
+              }
+            />
           )}
         </CCardBody>
       </CCard>

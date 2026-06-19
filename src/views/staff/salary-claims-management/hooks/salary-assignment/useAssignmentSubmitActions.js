@@ -18,7 +18,6 @@ const useAssignmentSubmitActions = ({
   setActiveAssignmentDraftId,
   setActiveAssignmentDraftName,
   editingAssignmentId,
-  payComponentsEditMode,
   salaryDetailTotals,
   statutoryRates,
   statutoryRatesFeatureEnabled,
@@ -27,19 +26,19 @@ const useAssignmentSubmitActions = ({
 }) => {
   const setSalaryAssignment = useCallback(
     async ({ actorName, staffOptions }) => {
-      if (payComponentsEditMode) {
-        pushToast('Save or cancel Pay Components edits before saving assignment.', {
-          title: 'Unsaved changes',
-          color: 'warning',
-        })
-        return { ok: false }
-      }
       if (!assignmentDraft.employee?.trim()) {
         pushToast('Select staff for this assignment.', { title: 'Missing staff', color: 'danger' })
         return { ok: false }
       }
       if (!assignmentDraft.effectiveFrom) {
         pushToast('Select effective month.', { title: 'Missing month', color: 'danger' })
+        return { ok: false }
+      }
+      if (parseAmount(assignmentDraft.basicSalary) < 0) {
+        pushToast('Basic salary cannot be negative.', {
+          title: 'Invalid salary',
+          color: 'danger',
+        })
         return { ok: false }
       }
       if (parseAmount(assignmentDraft.basicSalary) <= 0) {
@@ -160,7 +159,6 @@ const useAssignmentSubmitActions = ({
       assignmentRows,
       editingAssignmentId,
       mergeAssignmentHistoryEntry,
-      payComponentsEditMode,
       pushToast,
       refreshAssignmentHistory,
       salaryDetailTotals,

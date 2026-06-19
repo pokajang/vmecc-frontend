@@ -13,8 +13,8 @@ import {
   CTableRow,
 } from '@coreui/react'
 import { fetchAuditLogs } from 'src/services/apiClient'
-import TableLoader from 'src/components/TableLoader'
 import DataTableFooter from 'src/components/DataTableFooter'
+import ResponsiveRecordCollection from 'src/components/ResponsiveRecordCollection'
 import useTableRows from 'src/hooks/useTableRows'
 import { exportWorkbook } from 'src/utils/exportXlsx'
 import { formatDateTime } from 'src/utils/users'
@@ -89,6 +89,19 @@ const UserAuditPanel = ({ userId }) => {
   }, [userId])
 
   const { rowsToShow, setRowsToShow, visibleRows } = useTableRows(logs)
+  const mobileAuditSections = [
+    {
+      key: 'user-audit',
+      items: visibleRows.map((log, index) => ({
+        key: log.id || `${log.created_at}-${index}`,
+        title: formatAction(log.action),
+        eyebrow: formatDateTime(log.created_at),
+        subtitle: getActorLabel(log),
+        fields: [{ key: 'ip', label: 'IP', value: log.ip_address || EMPTY }],
+        detail: getDetailsLabel(log),
+      })),
+    },
+  ]
 
   const emptyState = useMemo(
     () => !loading && !error && logs.length === 0,
@@ -126,49 +139,58 @@ const UserAuditPanel = ({ userId }) => {
         </CButton>
       </CCardHeader>
       <CCardBody>
-        {loading && <TableLoader />}
         {error && <CAlert color="danger">{error}</CAlert>}
-        {emptyState && <span className="text-muted small">No audit activity for this user.</span>}
-        {!loading && !error && logs.length > 0 && (
-          <div className="rounded-3 shadow-sm overflow-hidden bg-white">
-            <CTable align="middle" className="mb-0" hover responsive>
-              <CTableHead color="light">
-                <CTableRow>
-                  <CTableHeaderCell className="text-center" style={{ width: '5%' }}>
-                    #
-                  </CTableHeaderCell>
-                  <CTableHeaderCell style={{ width: '19%' }}>Time</CTableHeaderCell>
-                  <CTableHeaderCell style={{ width: '19%' }}>Action</CTableHeaderCell>
-                  <CTableHeaderCell style={{ width: '19%' }}>Actor</CTableHeaderCell>
-                  <CTableHeaderCell style={{ width: '19%' }}>IP</CTableHeaderCell>
-                  <CTableHeaderCell style={{ width: '19%' }}>Details</CTableHeaderCell>
-                </CTableRow>
-              </CTableHead>
-              <CTableBody>
-                {visibleRows.map((log, index) => (
-                  <CTableRow key={log.id}>
-                    <CTableDataCell className="text-center">{index + 1}</CTableDataCell>
-                    <CTableDataCell>{formatDateTime(log.created_at)}</CTableDataCell>
-                    <CTableDataCell>{formatAction(log.action)}</CTableDataCell>
-                    <CTableDataCell className="text-break">{getActorLabel(log)}</CTableDataCell>
-                    <CTableDataCell className="text-break">
-                      {log.ip_address || EMPTY}
-                    </CTableDataCell>
-                    <CTableDataCell className="text-break">{getDetailsLabel(log)}</CTableDataCell>
-                  </CTableRow>
-                ))}
-              </CTableBody>
-            </CTable>
-          </div>
-        )}
-
-        {!loading && !error && logs.length > 0 && (
-          <DataTableFooter
-            rowsToShow={rowsToShow}
-            onRowsToShowChange={setRowsToShow}
-            filteredCount={logs.length}
-            totalCount={logs.length}
-            showFilteredFrom={false}
+        {!error && (
+          <ResponsiveRecordCollection
+            isLoading={loading}
+            isEmpty={emptyState}
+            emptyMessage={
+              <span className="text-muted small">No audit activity for this user.</span>
+            }
+            mobileSections={mobileAuditSections}
+            renderDesktop={() => (
+              <div className="rounded-3 shadow-sm overflow-hidden bg-white d-none d-md-block">
+                <CTable align="middle" className="mb-0" hover responsive>
+                  <CTableHead color="light">
+                    <CTableRow>
+                      <CTableHeaderCell className="text-center" style={{ width: '5%' }}>
+                        #
+                      </CTableHeaderCell>
+                      <CTableHeaderCell style={{ width: '19%' }}>Time</CTableHeaderCell>
+                      <CTableHeaderCell style={{ width: '19%' }}>Action</CTableHeaderCell>
+                      <CTableHeaderCell style={{ width: '19%' }}>Actor</CTableHeaderCell>
+                      <CTableHeaderCell style={{ width: '19%' }}>IP</CTableHeaderCell>
+                      <CTableHeaderCell style={{ width: '19%' }}>Details</CTableHeaderCell>
+                    </CTableRow>
+                  </CTableHead>
+                  <CTableBody>
+                    {visibleRows.map((log, index) => (
+                      <CTableRow key={log.id}>
+                        <CTableDataCell className="text-center">{index + 1}</CTableDataCell>
+                        <CTableDataCell>{formatDateTime(log.created_at)}</CTableDataCell>
+                        <CTableDataCell>{formatAction(log.action)}</CTableDataCell>
+                        <CTableDataCell className="text-break">{getActorLabel(log)}</CTableDataCell>
+                        <CTableDataCell className="text-break">
+                          {log.ip_address || EMPTY}
+                        </CTableDataCell>
+                        <CTableDataCell className="text-break">
+                          {getDetailsLabel(log)}
+                        </CTableDataCell>
+                      </CTableRow>
+                    ))}
+                  </CTableBody>
+                </CTable>
+              </div>
+            )}
+            footer={
+              <DataTableFooter
+                rowsToShow={rowsToShow}
+                onRowsToShowChange={setRowsToShow}
+                filteredCount={logs.length}
+                totalCount={logs.length}
+                showFilteredFrom={false}
+              />
+            }
           />
         )}
       </CCardBody>

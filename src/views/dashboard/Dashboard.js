@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import {
   CAlert,
@@ -113,6 +114,130 @@ const SectionHeading = ({ title, subtext }) => (
   </div>
 )
 
+const buildDashboardActionQueue = ({
+  stats,
+  canViewPayrollSection,
+  canViewOvertimeSection,
+  canViewLeaveSection,
+  canViewRosterSection,
+  canViewReportsSection,
+}) => {
+  const items = []
+  const addItem = (condition, item) => {
+    if (condition && Number(item.count) > 0) items.push(item)
+  }
+
+  addItem(canViewPayrollSection, {
+    key: 'payroll-approvals',
+    module: 'Payroll',
+    label: 'Claims pending approval',
+    count: stats.payroll?.pendingApprovals,
+    to: '/staff/salary-claims/claims',
+    tone: MODULE_ACCENTS.payroll.base,
+  })
+  addItem(canViewPayrollSection, {
+    key: 'payroll-unpaid',
+    module: 'Payroll',
+    label: 'Approved unpaid claims',
+    count: stats.payroll?.approvedUnpaidCount,
+    to: '/staff/salary-claims/claims',
+    tone: MODULE_ACCENTS.payroll.base,
+  })
+  addItem(canViewOvertimeSection, {
+    key: 'overtime-approvals',
+    module: 'Overtime',
+    label: 'Requests pending approval',
+    count: stats.overtime?.pendingApprovals,
+    to: '/staff/overtime-management/records',
+    tone: MODULE_ACCENTS.overtime.base,
+  })
+  addItem(canViewLeaveSection, {
+    key: 'leave-approvals',
+    module: 'Leave',
+    label: 'Requests pending approval',
+    count: stats.leave?.pendingApprovals,
+    to: '/staff/leave-management/records',
+    tone: MODULE_ACCENTS.leave.base,
+  })
+  addItem(canViewRosterSection, {
+    key: 'roster-drafts',
+    module: 'Roster',
+    label: 'Draft days pending publish',
+    count: stats.roster?.draftsPendingPublish,
+    to: '/roster/schedule',
+    tone: MODULE_ACCENTS.roster.base,
+  })
+  addItem(canViewReportsSection, {
+    key: 'reports-review',
+    module: 'Reports',
+    label: 'Reports pending review',
+    count: stats.reports?.pendingReview,
+    to: '/report/erco',
+    tone: MODULE_ACCENTS.reports.base,
+  })
+  addItem(canViewReportsSection, {
+    key: 'reports-approval',
+    module: 'Reports',
+    label: 'Reports pending approval',
+    count: stats.reports?.pendingApproval,
+    to: '/report/erco',
+    tone: MODULE_ACCENTS.reports.base,
+  })
+
+  return items
+}
+
+const DashboardActionQueue = ({ items, loading, periodLabel }) => (
+  <CCard className="mb-4">
+    <CCardBody>
+      <div className="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3">
+        <div>
+          <h5 className="mb-1 fw-semibold">Action Queue</h5>
+          <div className="text-body-secondary small">
+            Items needing attention now - {periodLabel}
+          </div>
+        </div>
+        {items.length > 0 && (
+          <span className="badge text-bg-light border">{items.length} groups</span>
+        )}
+      </div>
+      {loading ? (
+        <div className="text-body-secondary small">Loading action queue...</div>
+      ) : items.length === 0 ? (
+        <div className="text-body-secondary small">No dashboard actions need attention.</div>
+      ) : (
+        <div className="d-grid gap-2">
+          {items.map((item) => (
+            <Link
+              key={item.key}
+              to={item.to}
+              className="d-flex flex-wrap align-items-center justify-content-between gap-2 rounded border bg-body px-3 py-2 text-decoration-none text-body"
+            >
+              <span className="d-flex align-items-center gap-2" style={{ minWidth: 0 }}>
+                <span
+                  aria-hidden="true"
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    background: item.tone,
+                    flexShrink: 0,
+                  }}
+                />
+                <span className="d-grid" style={{ minWidth: 0 }}>
+                  <span className="fw-semibold text-break">{item.label}</span>
+                  <span className="small text-body-secondary">{item.module}</span>
+                </span>
+              </span>
+              <span className="fw-semibold">{item.count}</span>
+            </Link>
+          ))}
+        </div>
+      )}
+    </CCardBody>
+  </CCard>
+)
+
 const Dashboard = () => {
   const authUser = useSelector((state) => state.authUser)
   const { stats: myStats, loading: myStatsLoading } = useMyStats()
@@ -148,6 +273,25 @@ const Dashboard = () => {
     loading,
     error: dashboardStatsError,
   } = useDashboardStats({ period, modules: visibleDashboardModules })
+  const actionQueueItems = useMemo(
+    () =>
+      buildDashboardActionQueue({
+        stats,
+        canViewPayrollSection,
+        canViewOvertimeSection,
+        canViewLeaveSection,
+        canViewRosterSection,
+        canViewReportsSection,
+      }),
+    [
+      stats,
+      canViewPayrollSection,
+      canViewOvertimeSection,
+      canViewLeaveSection,
+      canViewRosterSection,
+      canViewReportsSection,
+    ],
+  )
 
   if (!hasPermission(authUser, 'self.dashboard')) {
     return (
@@ -161,7 +305,7 @@ const Dashboard = () => {
     <>
       <CCard className="mb-4 border-0" style={{ background: 'rgba(0, 126, 122, 0.08)' }}>
         <CCardBody>
-          <div className="d-flex align-items-start justify-content-between">
+          <div className="d-flex align-items-start justify-content-between gap-3 flex-wrap">
             <div>
               <h4 className="mb-1 fw-semibold">Dashboard Overview</h4>
               <div className="text-body-secondary">
@@ -169,15 +313,33 @@ const Dashboard = () => {
                 {userName && userRole ? ` (${userRole})` : ''}
               </div>
             </div>
-            <CButton
-              size="sm"
-              className="px-2 py-1 d-inline-flex align-items-center border-0 bg-transparent shadow-none text-primary"
-              onClick={() => setMyStatsVisible((v) => !v)}
-              aria-label={myStatsVisible ? 'Hide my stats' : 'Show my stats'}
-              title={myStatsVisible ? 'Hide my stats' : 'Show my stats'}
-            >
-              {myStatsVisible ? <EyeOff size={14} /> : <Eye size={14} />}
-            </CButton>
+            <div className="d-flex flex-wrap align-items-center gap-2">
+              <CDropdown alignment="end">
+                <CDropdownToggle size="sm" color="primary" variant="outline">
+                  {periodLabel}
+                </CDropdownToggle>
+                <CDropdownMenu>
+                  {PERIOD_OPTIONS.map((option) => (
+                    <CDropdownItem
+                      key={option.value}
+                      active={option.value === period}
+                      onClick={() => setPeriod(option.value)}
+                    >
+                      {option.label}
+                    </CDropdownItem>
+                  ))}
+                </CDropdownMenu>
+              </CDropdown>
+              <CButton
+                size="sm"
+                className="px-2 py-1 d-inline-flex align-items-center border-0 bg-transparent shadow-none text-primary"
+                onClick={() => setMyStatsVisible((v) => !v)}
+                aria-label={myStatsVisible ? 'Hide my stats' : 'Show my stats'}
+                title={myStatsVisible ? 'Hide my stats' : 'Show my stats'}
+              >
+                {myStatsVisible ? <EyeOff size={14} /> : <Eye size={14} />}
+              </CButton>
+            </div>
           </div>
           {myStatsVisible && (
             <div className="mt-4">
@@ -194,14 +356,14 @@ const Dashboard = () => {
         </CAlert>
       )}
 
+      <DashboardActionQueue items={actionQueueItems} loading={loading} periodLabel={periodLabel} />
+
       {canViewPayrollSection && (
         <ModuleSectionHeader
           title="Payroll Claims"
           subtext={`Salary & expense claims - ${periodLabel}`}
           accentColor={MODULE_ACCENTS.payroll.base}
           icon={Wallet}
-          period={period}
-          onPeriodChange={setPeriod}
         >
           <SectionHeading title="Current Status" subtext={`Key claim metrics - ${periodLabel}`} />
           <CRow className="mb-4" xs={{ gutter: 4 }}>
@@ -246,8 +408,6 @@ const Dashboard = () => {
           subtext={`OT requests & approvals - ${periodLabel}`}
           accentColor={MODULE_ACCENTS.overtime.base}
           icon={Clock3}
-          period={period}
-          onPeriodChange={setPeriod}
         >
           <SectionHeading title="Current Status" subtext={`Key OT metrics - ${periodLabel}`} />
           <CRow className="mb-4" xs={{ gutter: 4 }}>
@@ -292,8 +452,6 @@ const Dashboard = () => {
           subtext={`Leave requests & absences - ${periodLabel}`}
           accentColor={MODULE_ACCENTS.leave.base}
           icon={CalendarDays}
-          period={period}
-          onPeriodChange={setPeriod}
         >
           <SectionHeading title="Current Status" subtext={`Key leave metrics - ${periodLabel}`} />
           <CRow className="mb-4" xs={{ gutter: 4 }}>
@@ -317,8 +475,6 @@ const Dashboard = () => {
           subtext={`Shift scheduling & team coverage - ${periodLabel}`}
           accentColor={MODULE_ACCENTS.roster.base}
           icon={LayoutGrid}
-          period={period}
-          onPeriodChange={setPeriod}
         >
           <SectionHeading title="Current Status" subtext="Live roster snapshot" />
           <CRow className="mb-4" xs={{ gutter: 4 }}>
@@ -342,8 +498,6 @@ const Dashboard = () => {
           subtext={`ERCO, Drill & Fitness Test submissions - ${periodLabel}`}
           accentColor={MODULE_ACCENTS.reports.base}
           icon={TriangleAlert}
-          period={period}
-          onPeriodChange={setPeriod}
         >
           <SectionHeading title="Current Status" subtext={`Key report metrics - ${periodLabel}`} />
           <CRow className="mb-4" xs={{ gutter: 4 }}>

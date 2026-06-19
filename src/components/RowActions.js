@@ -11,7 +11,7 @@ const RowActions = ({
   iconSize = 18,
   toggleClassName = '',
   toggleStyle,
-  hitArea = 34,
+  hitArea = 44,
 }) => {
   const [visible, setVisible] = useState(false)
   const closeRef = useRef(() => setVisible(false))
@@ -90,6 +90,9 @@ const RowActions = ({
                 <span title={title} aria-label={ariaLabel}>
                   {label}
                 </span>
+                {disabledReason ? (
+                  <span className="d-block small text-body-secondary mt-1">{disabledReason}</span>
+                ) : null}
               </CDropdownItem>
             )
           })}

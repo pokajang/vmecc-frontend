@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { CCard, CCardBody, CCardHeader, CFormLabel, CFormSelect } from '@coreui/react'
+import { CCard, CCardBody, CCardHeader } from '@coreui/react'
 import EditControls from 'src/components/EditControls'
 import { ROLE_OPTIONS } from 'src/constants/roles'
+import ApprovalRulesEditor from './ApprovalRulesEditor'
 import {
   DEFAULT_SALARY_WORKFLOW_RULES,
   loadSalaryWorkflowRules,
@@ -143,38 +144,20 @@ const SalaryWorkflowRules = () => {
         />
       </CCardHeader>
       <CCardBody className="d-grid gap-3">
-        <p className="text-muted mb-0">
-          Configure a single workflow applied to all salary applications.
-        </p>
-
-        {statusMessage ? <div className="text-success small">{statusMessage}</div> : null}
-        {error ? <div className="text-danger small">{error}</div> : null}
-
-        <div className="border rounded-3 p-3 d-grid gap-2">
-          <div className="fw-semibold">Global Workflow Rule</div>
-          <div className="small text-muted">
-            This Check, Review, and Approve setup is applied to all salary applications.
-          </div>
-          <div className="row g-2">
-            {STAGE_FIELDS.map((stage) => (
-              <div className="col-12 col-md-4" key={stage.key}>
-                <CFormLabel className="small mb-1">{stage.label}</CFormLabel>
-                <CFormSelect
-                  size="sm"
-                  value={draftPolicy?.fallback?.[stage.key] || ''}
-                  onChange={(event) => setFallbackField(stage.key, event.target.value)}
-                  disabled={!editMode || loading}
-                >
-                  {stageRoleOptions[stage.key]?.map((option) => (
-                    <option key={`fallback-${stage.key}-${option.value}`} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </CFormSelect>
-              </div>
-            ))}
-          </div>
-        </div>
+        <ApprovalRulesEditor
+          title="Global Workflow Rule"
+          description="Configure a single Check, Review, and Approve setup applied to all salary applications."
+          editMode={editMode}
+          error={error}
+          loading={loading}
+          policy={draftPolicy}
+          setPolicy={setDraftPolicy}
+          setFallbackField={setFallbackField}
+          sortedRoles={sortedRoles}
+          stageFields={STAGE_FIELDS}
+          stageRoleOptions={stageRoleOptions}
+          statusMessage={statusMessage}
+        />
       </CCardBody>
     </CCard>
   )

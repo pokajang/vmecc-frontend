@@ -31,7 +31,7 @@ describe('LeaveTypeSelection', () => {
 
     render(<Wrapper />)
 
-    const medicalCard = screen.getByText('Medical Leave').closest('[role="button"]')
+    const medicalCard = screen.getByText('Medical Leave').closest('[role="radio"]')
     fireEvent.click(medicalCard)
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }))
 

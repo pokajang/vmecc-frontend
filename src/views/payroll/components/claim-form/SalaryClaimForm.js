@@ -26,6 +26,7 @@ import ClaimPostSubmitModal from './ClaimPostSubmitModal'
 import ClaimDraftHeaderBar from './ClaimDraftHeaderBar'
 import SalaryClaimSubmitDialog from './SalaryClaimSubmitDialog'
 import SalaryClaimHeaderRow from './SalaryClaimHeaderRow'
+import { buildClaimDefaultPathValidity } from './claimFormViewModel'
 
 const SalaryClaimForm = ({
   user,
@@ -387,6 +388,147 @@ const SalaryClaimForm = ({
     adjustmentDateInputRef,
   })
 
+  const salaryBodyPeriod = useMemo(
+    () => ({
+      value: header.period,
+      confirmed: periodConfirmed,
+      monthLabel: PAYROLL_MONTH_OPTIONS.find((option) => option.value === header.period)?.label,
+    }),
+    [header.period, periodConfirmed],
+  )
+  const salaryBodyBaseline = useMemo(
+    () => ({
+      isLoading: isSalaryAssignmentsLoading,
+      hasAssignedSalaryBaseline,
+      assignedSalarySnapshot,
+      allowanceItems,
+      statutoryDeductionItems,
+      adjustedGrossSalary,
+      adjustedTotalDeductions,
+      adjustedNetBeforeOvertime,
+      payrollBaselineConfirmed,
+      setPayrollBaselineConfirmed,
+    }),
+    [
+      adjustedGrossSalary,
+      adjustedNetBeforeOvertime,
+      adjustedTotalDeductions,
+      allowanceItems,
+      assignedSalarySnapshot,
+      hasAssignedSalaryBaseline,
+      isSalaryAssignmentsLoading,
+      payrollBaselineConfirmed,
+      statutoryDeductionItems,
+    ],
+  )
+  const salaryBodyAdjustments = useMemo(
+    () => ({
+      totalAmount,
+      additionAdjustmentRows,
+      deductionAdjustmentRows,
+      editingIndex,
+      showForm,
+      draftItem,
+      editSavedItem,
+      removeSavedItem,
+      handleAddItem,
+      saveItem,
+      resetDraft,
+      cancelAddItem,
+    }),
+    [
+      additionAdjustmentRows,
+      cancelAddItem,
+      deductionAdjustmentRows,
+      draftItem,
+      editSavedItem,
+      editingIndex,
+      handleAddItem,
+      removeSavedItem,
+      resetDraft,
+      saveItem,
+      showForm,
+      totalAmount,
+    ],
+  )
+  const salaryBodyOvertime = useMemo(
+    () => ({
+      overtimeEligibilityResolved,
+      isOvertimeEligible,
+      isSysAdmin,
+      hasOvertimeEligibilityError,
+      isOvertimeRowsLoading,
+      overtimeBaseMode,
+      overtimeAutoHourlyBaseRate,
+      overtimeMonthlyDivisor,
+      overtimePreviewHoursPerDay,
+      overtimeHourlySourceSummary,
+      overtimeRowsForPeriod,
+      overtimeTotals,
+      projectedNetPayout,
+    }),
+    [
+      hasOvertimeEligibilityError,
+      isOvertimeEligible,
+      isOvertimeRowsLoading,
+      isSysAdmin,
+      overtimeAutoHourlyBaseRate,
+      overtimeBaseMode,
+      overtimeEligibilityResolved,
+      overtimeHourlySourceSummary,
+      overtimeMonthlyDivisor,
+      overtimePreviewHoursPerDay,
+      overtimeRowsForPeriod,
+      overtimeTotals,
+      projectedNetPayout,
+    ],
+  )
+  const salaryBodyAttachments = useMemo(
+    () => ({
+      openAttachmentPreview,
+      adjustmentFormRef,
+      adjustmentDateInputRef,
+      updateDraftItem,
+      handleAttachmentChange,
+      clearDraftAttachment,
+    }),
+    [
+      adjustmentDateInputRef,
+      adjustmentFormRef,
+      clearDraftAttachment,
+      handleAttachmentChange,
+      openAttachmentPreview,
+      updateDraftItem,
+    ],
+  )
+  const salaryDefaultPathReady = useMemo(
+    () =>
+      buildClaimDefaultPathValidity({
+        claimType: 'salary',
+        periodConfirmed,
+        hasAssignedSalaryBaseline,
+        payrollBaselineConfirmed,
+      }),
+    [hasAssignedSalaryBaseline, payrollBaselineConfirmed, periodConfirmed],
+  )
+  const salaryBodyActions = useMemo(
+    () => ({
+      onBack: handleBack,
+      submitClaim,
+      clearForm: resetDraft,
+    }),
+    [handleBack, resetDraft, submitClaim],
+  )
+  const salaryBodyState = useMemo(
+    () => ({
+      draftSyncSummary,
+      isEditingSubmittedClaim,
+      isSubmittingClaim,
+      defaultPathReady: salaryDefaultPathReady,
+    }),
+    [draftSyncSummary, isEditingSubmittedClaim, isSubmittingClaim, salaryDefaultPathReady],
+  )
+
   return (
     <div className="d-grid gap-4">
       <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
@@ -446,54 +588,13 @@ const SalaryClaimForm = ({
       />
       {periodConfirmed && (
         <SalaryClaimBody
-          headerPeriod={header.period}
-          isSalaryAssignmentsLoading={isSalaryAssignmentsLoading}
-          hasAssignedSalaryBaseline={hasAssignedSalaryBaseline}
-          handleAddItem={handleAddItem}
-          assignedSalarySnapshot={assignedSalarySnapshot}
-          allowanceItems={allowanceItems}
-          statutoryDeductionItems={statutoryDeductionItems}
-          additionAdjustmentRows={additionAdjustmentRows}
-          deductionAdjustmentRows={deductionAdjustmentRows}
-          adjustedGrossSalary={adjustedGrossSalary}
-          adjustedTotalDeductions={adjustedTotalDeductions}
-          adjustedNetBeforeOvertime={adjustedNetBeforeOvertime}
-          totalAmount={totalAmount}
-          overtimeTotals={overtimeTotals}
-          projectedNetPayout={projectedNetPayout}
-          editingIndex={editingIndex}
-          editSavedItem={editSavedItem}
-          removeSavedItem={removeSavedItem}
-          openAttachmentPreview={openAttachmentPreview}
-          showForm={showForm}
-          draftItem={draftItem}
-          adjustmentFormRef={adjustmentFormRef}
-          adjustmentDateInputRef={adjustmentDateInputRef}
-          updateDraftItem={updateDraftItem}
-          handleAttachmentChange={handleAttachmentChange}
-          clearDraftAttachment={clearDraftAttachment}
-          saveItem={saveItem}
-          resetDraft={resetDraft}
-          cancelAddItem={cancelAddItem}
-          overtimeEligibilityResolved={overtimeEligibilityResolved}
-          isOvertimeEligible={isOvertimeEligible}
-          isSysAdmin={isSysAdmin}
-          hasOvertimeEligibilityError={hasOvertimeEligibilityError}
-          isOvertimeRowsLoading={isOvertimeRowsLoading}
-          overtimeBaseMode={overtimeBaseMode}
-          overtimeAutoHourlyBaseRate={overtimeAutoHourlyBaseRate}
-          overtimeMonthlyDivisor={overtimeMonthlyDivisor}
-          overtimePreviewHoursPerDay={overtimePreviewHoursPerDay}
-          overtimeHourlySourceSummary={overtimeHourlySourceSummary}
-          overtimeRowsForPeriod={overtimeRowsForPeriod}
-          payrollBaselineConfirmed={payrollBaselineConfirmed}
-          setPayrollBaselineConfirmed={setPayrollBaselineConfirmed}
-          draftSyncSummary={draftSyncSummary}
-          onBack={handleBack}
-          saveDraft={saveDraft}
-          submitClaim={submitClaim}
-          isEditingSubmittedClaim={isEditingSubmittedClaim}
-          isSubmittingClaim={isSubmittingClaim}
+          period={salaryBodyPeriod}
+          baseline={salaryBodyBaseline}
+          adjustments={salaryBodyAdjustments}
+          overtime={salaryBodyOvertime}
+          attachments={salaryBodyAttachments}
+          actions={salaryBodyActions}
+          state={salaryBodyState}
         />
       )}
     </div>

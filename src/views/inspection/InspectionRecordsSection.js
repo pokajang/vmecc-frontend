@@ -1,32 +1,24 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React from 'react'
 import {
-  CButton,
-  CTooltip,
   CCard,
   CCardBody,
   CCardHeader,
-  CFormInput,
-  CFormSelect,
-  CModal,
-  CModalBody,
-  CModalFooter,
-  CModalHeader,
-  CModalTitle,
   CTable,
   CTableBody,
   CTableDataCell,
   CTableHead,
   CTableHeaderCell,
   CTableRow,
+  CTooltip,
 } from '@coreui/react'
-import ApprovalGates from 'src/components/ApprovalGates'
 import CreateActionButton from 'src/components/CreateActionButton'
 import DataTableFooter from 'src/components/DataTableFooter'
+import ResponsiveRecordCollection from 'src/components/ResponsiveRecordCollection'
+import RowActionCell from 'src/components/RowActionCell'
 import RowActions from 'src/components/RowActions'
-import { getPeriodOptions } from 'src/components/TablePeriodSelect'
 import TableFilters from 'src/components/TableFilters'
-import TableLoader from 'src/components/TableLoader'
-import { FilePenLine, Funnel, Search, X } from 'lucide-react'
+import WorkflowStatusSummary from 'src/components/WorkflowStatusSummary'
+import { FilePenLine } from 'lucide-react'
 import { formatReportDisplayId } from './inspectionSharedUtils'
 import { INSPECTION_INCIDENT_TYPE_OPTIONS } from './constants'
 
@@ -80,74 +72,6 @@ const formatRowDateTime = (row, formatDateTime) => {
   return '--'
 }
 
-const buildRowActionItems = (
-  row,
-  {
-    onEditRecord,
-    onReviewTransition,
-    onApproveTransition,
-    onRejectTransition,
-    onDownloadRecord,
-    onDeleteRecord,
-    canEditRecord,
-    canReviewRecord,
-    canApproveRecord,
-    canRejectRecord,
-    canDeleteRecord,
-    downloadingId,
-  },
-) => [
-  row.recordKind === 'draft'
-    ? {
-        key: 'edit',
-        label: 'Open Draft',
-        onClick: () => onEditRecord(row),
-        disabled: !canEditRecord?.(row),
-      }
-    : {
-        key: 'review',
-        label: 'Review',
-        onClick: () => onReviewTransition?.(row),
-        disabled: !canReviewRecord?.(row),
-      },
-  ...(row.recordKind === 'draft'
-    ? []
-    : [
-        {
-          key: 'approve',
-          label: 'Approve',
-          disabled: !canApproveRecord?.(row),
-          onClick: () => onApproveTransition?.(row),
-        },
-        {
-          key: 'reject',
-          label: 'Reject',
-          className: 'text-danger',
-          disabled: !canRejectRecord?.(row),
-          onClick: () => onRejectTransition?.(row),
-        },
-        {
-          key: 'edit',
-          label: 'Edit',
-          disabled: !canEditRecord?.(row),
-          onClick: () => onEditRecord(row),
-        },
-        {
-          key: 'download',
-          label: downloadingId === row.id ? 'Generating...' : 'Download',
-          disabled: Boolean(downloadingId),
-          onClick: () => onDownloadRecord(row.id),
-        },
-      ]),
-  {
-    key: 'delete',
-    label: 'Delete',
-    className: 'text-danger',
-    disabled: !canDeleteRecord?.(row),
-    onClick: () => onDeleteRecord(row),
-  },
-]
-
 const INSPECTION_TYPE_DESCRIPTION_MAP = INSPECTION_INCIDENT_TYPE_OPTIONS.reduce((acc, row) => {
   const key = String(row?.value || '')
     .trim()
@@ -189,6 +113,109 @@ const getApprovalHistory = (row) => {
   return [...history, ...fallback]
 }
 
+const getWorkflowStatusLabel = (row) => {
+  if (row?.recordKind === 'draft') return 'Draft saved'
+  return String(row?.status || '').trim() || 'Status unavailable'
+}
+
+const getWorkflowNextActionLabel = (row) => {
+  if (row?.recordKind === 'draft') return 'Open draft to continue'
+  const status = String(row?.status || '')
+    .trim()
+    .toLowerCase()
+  if (status === 'submitted') return 'Pending review'
+  if (status === 'reviewed') return 'Pending approval'
+  if (status === 'approved') return 'Approved'
+  if (status === 'rejected') return 'Rejected'
+  if (status === 'cancelled') return 'Cancelled'
+  return ''
+}
+
+const disabledReason = (isEnabled, reason) => (isEnabled ? undefined : reason)
+
+const buildRowActionItems = (
+  row,
+  {
+    onEditRecord,
+    onReviewTransition,
+    onApproveTransition,
+    onRejectTransition,
+    onDownloadRecord,
+    onDeleteRecord,
+    canEditRecord,
+    canReviewRecord,
+    canApproveRecord,
+    canRejectRecord,
+    canDeleteRecord,
+    downloadingId,
+  },
+) => {
+  const canEdit = Boolean(canEditRecord?.(row))
+  const canReview = Boolean(canReviewRecord?.(row))
+  const canApprove = Boolean(canApproveRecord?.(row))
+  const canReject = Boolean(canRejectRecord?.(row))
+  const canDelete = Boolean(canDeleteRecord?.(row))
+
+  return [
+    row.recordKind === 'draft'
+      ? {
+          key: 'edit',
+          label: 'Open Draft',
+          onClick: () => onEditRecord(row),
+          disabled: !canEdit,
+          disabledReason: disabledReason(canEdit, 'This draft cannot be opened.'),
+        }
+      : {
+          key: 'review',
+          label: 'Review',
+          onClick: () => onReviewTransition?.(row),
+          disabled: !canReview,
+          disabledReason: disabledReason(canReview, 'Review is not available for this status.'),
+        },
+    ...(row.recordKind === 'draft'
+      ? []
+      : [
+          {
+            key: 'approve',
+            label: 'Approve',
+            disabled: !canApprove,
+            disabledReason: disabledReason(canApprove, 'Approve is not available for this status.'),
+            onClick: () => onApproveTransition?.(row),
+          },
+          {
+            key: 'reject',
+            label: 'Reject',
+            className: 'text-danger',
+            disabled: !canReject,
+            disabledReason: disabledReason(canReject, 'Reject is not available for this status.'),
+            onClick: () => onRejectTransition?.(row),
+          },
+          {
+            key: 'edit',
+            label: 'Edit',
+            disabled: !canEdit,
+            disabledReason: disabledReason(canEdit, 'Edit is not available for this status.'),
+            onClick: () => onEditRecord(row),
+          },
+          {
+            key: 'download',
+            label: downloadingId === row.id ? 'Generating...' : 'Download',
+            disabled: Boolean(downloadingId),
+            disabledReason: downloadingId ? 'Another report PDF is being generated.' : undefined,
+            onClick: () => onDownloadRecord?.(row.id),
+          },
+        ]),
+    {
+      key: 'delete',
+      label: 'Delete',
+      className: 'text-danger',
+      disabled: !canDelete,
+      disabledReason: disabledReason(canDelete, 'Delete is not available for this status.'),
+      onClick: () => onDeleteRecord(row),
+    },
+  ]
+}
+
 const InspectionRecordsSection = ({
   startNew,
   search,
@@ -225,272 +252,113 @@ const InspectionRecordsSection = ({
   rowsToShow,
   setRowsToShow,
   totalCount,
+  showPrimaryAction = true,
 }) => {
-  const [mobileSearch, setMobileSearch] = useState(search)
-  const [mobileFilterModalOpen, setMobileFilterModalOpen] = useState(false)
+  const buildActions = (row) =>
+    buildRowActionItems(row, {
+      onEditRecord,
+      onReviewTransition,
+      onApproveTransition,
+      onRejectTransition,
+      onDownloadRecord,
+      onDeleteRecord,
+      canEditRecord,
+      canReviewRecord,
+      canApproveRecord,
+      canRejectRecord,
+      canDeleteRecord,
+      downloadingId,
+    })
 
-  useEffect(() => {
-    setMobileSearch(search)
-  }, [search])
+  const mobileItems = visibleRows.map((row, index) => {
+    const displayId = formatDisplayId(row, index)
+    const reportedBy = row.timeline?.[0]?.by || row.submittedBy || '--'
+    const rowSubtext = getInspectionTypeSubtext(row)
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (mobileSearch !== search) setSearch(mobileSearch)
-    }, 250)
-    return () => clearTimeout(timer)
-  }, [mobileSearch, search, setSearch])
-
-  const periodOptions = useMemo(() => getPeriodOptions(), [])
-  const defaultSort = sortOptions?.[0]?.value || 'reportedAt:desc'
-  const defaultType = typeOptions?.[0]?.value || 'All'
-  const defaultStatus = statusOptions?.[0]?.value || 'All'
-  const hasSearch = Boolean(String(search || '').trim())
-  const periodActive = String(period || 'all') !== 'all'
-  const typeActive = String(typeFilter || '') !== String(defaultType || '')
-  const statusActive = String(statusFilter || '') !== String(defaultStatus || '')
-  const sortActive = String(sort || '') !== String(defaultSort || '')
-  const mobileFilterCount = [periodActive, typeActive, statusActive, sortActive].filter(
-    Boolean,
-  ).length
-  const hasMobileFilter = mobileFilterCount > 0 || hasSearch
+    return {
+      key: row.recordKey || row.id,
+      title: displayId,
+      eyebrow: row.incidentType || '--',
+      subtitle: rowSubtext || row.location || '',
+      status:
+        row.recordKind === 'draft' ? (
+          <DraftStatus direction="horizontal" />
+        ) : (
+          <WorkflowStatusSummary
+            statusLabel={getWorkflowStatusLabel(row)}
+            nextActionLabel={getWorkflowNextActionLabel(row)}
+            gates={REPORT_GATES}
+            approvalHistory={getApprovalHistory(row)}
+            isCancelled={row.status === 'Cancelled'}
+          />
+        ),
+      ariaLabel: `Open inspection record ${displayId} summary`,
+      onOpen: () => (row.recordKind === 'draft' ? onEditRecord(row) : onViewRecord(row.id)),
+      fields: [
+        { key: 'location', label: 'Location', value: row.location || '--' },
+        { key: 'reportedBy', label: 'Reported By', value: reportedBy },
+        { key: 'reportedAt', label: 'Reported At', value: formatRowDateTime(row, formatDateTime) },
+        {
+          key: 'status',
+          label: 'Status',
+          value: row.recordKind === 'draft' ? 'Draft' : row.status || '--',
+        },
+      ],
+      detail: null,
+      actions: <RowActions hitArea={40} items={buildActions(row)} />,
+    }
+  })
 
   return (
     <CCard>
       <CCardHeader className="d-flex justify-content-between align-items-center">
         <span>My Inspection Records</span>
-        <CreateActionButton label="New Inspection" onClick={startNew} />
+        {showPrimaryAction ? (
+          <CreateActionButton label="New Inspection" onClick={startNew} />
+        ) : null}
       </CCardHeader>
       <CCardBody>
-        <div className="d-md-none mb-3">
-          <div className="d-flex align-items-center gap-2">
-            <div className="position-relative flex-grow-1">
-              <Search
-                size={14}
-                className="position-absolute text-body-secondary"
-                style={{ left: '10px', top: '50%', transform: 'translateY(-50%)' }}
-              />
-              <CFormInput
-                size="sm"
-                className="ps-5 pe-4"
-                placeholder="Search ID, type, location, status"
-                value={mobileSearch}
-                onChange={(e) => setMobileSearch(e.target.value)}
-              />
-              {hasSearch ? (
-                <button
-                  type="button"
-                  aria-label="Clear search"
-                  className="position-absolute border-0 bg-transparent text-body-secondary p-0"
-                  style={{ right: '10px', top: '50%', transform: 'translateY(-50%)' }}
-                  onClick={() => {
-                    setMobileSearch('')
-                    setSearch('')
-                  }}
-                >
-                  <X size={14} />
-                </button>
-              ) : null}
+        <TableFilters
+          searchValue={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search Inspection report ID, inspection type, or status"
+          periodValue={period}
+          onPeriodChange={setPeriod}
+          filters={[
+            { key: 'sort', label: 'Sort', value: sort, onChange: setSort, options: sortOptions },
+            {
+              key: 'type',
+              label: 'Inspection Type',
+              value: typeFilter,
+              onChange: setTypeFilter,
+              options: typeOptions,
+            },
+            {
+              key: 'status',
+              label: 'Status',
+              value: statusFilter,
+              onChange: setStatusFilter,
+              options: statusOptions,
+            },
+          ]}
+          onClear={clearFilters}
+          rowClassName="flex-md-nowrap align-items-md-end"
+          searchColMd={3}
+          periodColMd={2}
+          filterColMd={2}
+          clearColMd="auto"
+          showDesktopLabels
+        />
+        <ResponsiveRecordCollection
+          isLoading={isLoading}
+          isEmpty={filteredRecords.length === 0}
+          emptyMessage={
+            <div className="text-body-secondary">
+              No inspection reports match the current filters.
             </div>
-            <CButton
-              size="sm"
-              color="primary"
-              variant="outline"
-              className="d-inline-flex align-items-center justify-content-center px-2 position-relative"
-              onClick={() => setMobileFilterModalOpen(true)}
-              aria-label="Open filters"
-            >
-              <Funnel size={14} />
-              {mobileFilterCount > 0 ? (
-                <span
-                  className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary"
-                  style={{ fontSize: '0.55rem' }}
-                >
-                  {mobileFilterCount}
-                </span>
-              ) : null}
-            </CButton>
-          </div>
-
-          <CModal
-            visible={mobileFilterModalOpen}
-            onClose={() => setMobileFilterModalOpen(false)}
-            alignment="center"
-            fullscreen="sm"
-            scrollable
-          >
-            <CModalHeader>
-              <CModalTitle>Filter Records</CModalTitle>
-            </CModalHeader>
-            <CModalBody className="d-grid gap-3">
-              <div className="d-grid gap-1">
-                <label className="small text-body-secondary">Sort</label>
-                <CFormSelect size="sm" value={sort} onChange={(e) => setSort(e.target.value)}>
-                  {sortOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </CFormSelect>
-              </div>
-              <div className="d-grid gap-1">
-                <label className="small text-body-secondary">Period</label>
-                <CFormSelect size="sm" value={period} onChange={(e) => setPeriod(e.target.value)}>
-                  {periodOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </CFormSelect>
-              </div>
-              <div className="d-grid gap-1">
-                <label className="small text-body-secondary">Incident Type</label>
-                <CFormSelect
-                  size="sm"
-                  value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value)}
-                >
-                  {typeOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </CFormSelect>
-              </div>
-              <div className="d-grid gap-1">
-                <label className="small text-body-secondary">Status</label>
-                <CFormSelect
-                  size="sm"
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                >
-                  {statusOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </CFormSelect>
-              </div>
-            </CModalBody>
-            <CModalFooter>
-              {hasMobileFilter ? (
-                <CButton size="sm" color="secondary" variant="outline" onClick={clearFilters}>
-                  Reset
-                </CButton>
-              ) : null}
-              <CButton size="sm" color="primary" onClick={() => setMobileFilterModalOpen(false)}>
-                Done
-              </CButton>
-            </CModalFooter>
-          </CModal>
-        </div>
-
-        <div className="d-none d-md-block">
-          <TableFilters
-            searchValue={search}
-            onSearchChange={setSearch}
-            searchPlaceholder="Search Inspection report ID, inspection type, or status"
-            periodValue={period}
-            onPeriodChange={setPeriod}
-            filters={[
-              { key: 'sort', value: sort, onChange: setSort, options: sortOptions },
-              { key: 'type', value: typeFilter, onChange: setTypeFilter, options: typeOptions },
-              {
-                key: 'status',
-                value: statusFilter,
-                onChange: setStatusFilter,
-                options: statusOptions,
-              },
-            ]}
-            onClear={clearFilters}
-            rowClassName="flex-md-nowrap"
-            searchColMd={3}
-            periodColMd={2}
-            filterColMd={2}
-            clearColMd="auto"
-          />
-        </div>
-        {isLoading ? (
-          <TableLoader />
-        ) : filteredRecords.length === 0 ? (
-          <div className="text-body-secondary">
-            No inspection reports match the current filters.
-          </div>
-        ) : (
-          <>
-            <div className="d-md-none">
-              {visibleRows.map((row, index) => {
-                const reportedBy = row.timeline?.[0]?.by || row.submittedBy || null
-                const rowSubtext = getInspectionTypeSubtext(row)
-                const compactMeta = [
-                  row.location || '--',
-                  reportedBy || '--',
-                  formatRowDateTime(row, formatDateTime),
-                ]
-                  .filter(Boolean)
-                  .join(' • ')
-                return (
-                  <div
-                    key={row.id}
-                    className="d-flex justify-content-between align-items-start gap-3 border-bottom py-3"
-                    style={{ cursor: 'pointer' }}
-                    onClick={() =>
-                      row.recordKind === 'draft' ? onEditRecord(row) : onViewRecord(row.id)
-                    }
-                  >
-                    <div className="d-grid gap-1 flex-grow-1" style={{ minWidth: 0 }}>
-                      <div className="d-flex align-items-start justify-content-between gap-2">
-                        <div className="fw-semibold text-truncate">
-                          {formatDisplayId(row, index)}
-                        </div>
-                        <div
-                          className="flex-shrink-0"
-                          onClick={(e) => e.stopPropagation()}
-                          onMouseDown={(e) => e.stopPropagation()}
-                        >
-                          <RowActions
-                            hitArea={40}
-                            items={buildRowActionItems(row, {
-                              onEditRecord,
-                              onReviewTransition,
-                              onApproveTransition,
-                              onRejectTransition,
-                              onDownloadRecord,
-                              onDeleteRecord,
-                              canEditRecord,
-                              canReviewRecord,
-                              canApproveRecord,
-                              canRejectRecord,
-                              canDeleteRecord,
-                              downloadingId,
-                            })}
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        {row.recordKind === 'draft' ? (
-                          <DraftStatus direction="horizontal" />
-                        ) : (
-                          <ApprovalGates
-                            gates={REPORT_GATES}
-                            approvalHistory={getApprovalHistory(row)}
-                            isCancelled={row.status === 'Cancelled'}
-                            direction="horizontal"
-                          />
-                        )}
-                      </div>
-                      <div className="small">{row.incidentType || '--'}</div>
-                      {rowSubtext ? (
-                        <CTooltip content={rowSubtext} placement="top">
-                          <div className="small text-muted text-truncate">{rowSubtext}</div>
-                        </CTooltip>
-                      ) : null}
-                      <div className="small text-body-secondary text-truncate">{compactMeta}</div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-
+          }
+          mobileSections={[{ key: 'inspection', items: mobileItems }]}
+          renderDesktop={() => (
             <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
               <CTable align="middle" className="mb-0" hover responsive>
                 <CTableHead color="light">
@@ -513,7 +381,7 @@ const InspectionRecordsSection = ({
                     const rowSubtext = getInspectionTypeSubtext(row)
                     return (
                       <CTableRow
-                        key={row.id}
+                        key={row.recordKey || row.id}
                         className="cursor-pointer"
                         style={{ cursor: 'pointer' }}
                         onClick={() =>
@@ -546,51 +414,34 @@ const InspectionRecordsSection = ({
                           {row.recordKind === 'draft' ? (
                             <DraftStatus />
                           ) : (
-                            <ApprovalGates
+                            <WorkflowStatusSummary
+                              statusLabel={getWorkflowStatusLabel(row)}
+                              nextActionLabel={getWorkflowNextActionLabel(row)}
                               gates={REPORT_GATES}
                               approvalHistory={getApprovalHistory(row)}
                               isCancelled={row.status === 'Cancelled'}
                             />
                           )}
                         </CTableDataCell>
-                        <CTableDataCell
-                          className="text-center"
-                          onClick={(e) => e.stopPropagation()}
-                          onMouseDown={(e) => e.stopPropagation()}
-                        >
-                          <RowActions
-                            hitArea={40}
-                            items={buildRowActionItems(row, {
-                              onEditRecord,
-                              onReviewTransition,
-                              onApproveTransition,
-                              onRejectTransition,
-                              onDownloadRecord,
-                              onDeleteRecord,
-                              canEditRecord,
-                              canReviewRecord,
-                              canApproveRecord,
-                              canRejectRecord,
-                              canDeleteRecord,
-                              downloadingId,
-                            })}
-                          />
-                        </CTableDataCell>
+                        <RowActionCell className="text-center">
+                          <RowActions hitArea={40} items={buildActions(row)} />
+                        </RowActionCell>
                       </CTableRow>
                     )
                   })}
                 </CTableBody>
               </CTable>
             </div>
-
+          )}
+          footer={
             <DataTableFooter
               rowsToShow={rowsToShow}
               onRowsToShowChange={setRowsToShow}
               filteredCount={filteredRecords.length}
               totalCount={totalCount}
             />
-          </>
-        )}
+          }
+        />
       </CCardBody>
     </CCard>
   )

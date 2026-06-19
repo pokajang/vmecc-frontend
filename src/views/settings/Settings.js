@@ -1,18 +1,10 @@
 import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
-import {
-  CAlert,
-  CButton,
-  CCard,
-  CCardBody,
-  CContainer,
-  CFormSwitch,
-  CNav,
-  CNavItem,
-  CNavLink,
-} from '@coreui/react'
+import { CAlert, CButton, CCard, CCardBody, CContainer, CFormSwitch } from '@coreui/react'
 import { useDispatch, useSelector } from 'react-redux'
-import { NavLink, Navigate, useMatch } from 'react-router-dom'
+import { Navigate, useMatch, useNavigate } from 'react-router-dom'
 import ButtonLoader from 'src/components/ButtonLoader'
+import ModulePageHeader from 'src/components/ModulePageHeader'
+import RouteNavTabs from 'src/components/RouteNavTabs'
 import TableLoader from 'src/components/TableLoader'
 import { hasPermission } from 'src/utils/authz'
 import {
@@ -45,6 +37,7 @@ const Settings = () => {
   const authUser = useSelector((state) => state.authUser)
   const canManage = useMemo(() => hasPermission(authUser, 'settings.manage'), [authUser])
   const dispatch = useDispatch()
+  const navigate = useNavigate()
 
   const isRolesRoute = Boolean(useMatch({ path: '/settings/role-permissions', end: true }))
   const isDashboardVisibilityRoute = Boolean(
@@ -166,39 +159,35 @@ const Settings = () => {
 
   return (
     <CContainer fluid>
-      <CNav variant="underline" role="tablist" className="mb-3">
-        <CNavItem role="presentation">
-          <CNavLink
-            as={NavLink}
-            to="/settings"
-            end
-            active={activeTab === TAB_GENERAL}
-            className={activeTab === TAB_GENERAL ? 'text-primary' : ''}
-          >
-            General
-          </CNavLink>
-        </CNavItem>
-        <CNavItem role="presentation">
-          <CNavLink
-            as={NavLink}
-            to="/settings/role-permissions"
-            active={activeTab === TAB_ROLES}
-            className={activeTab === TAB_ROLES ? 'text-primary' : ''}
-          >
-            Role Permissions
-          </CNavLink>
-        </CNavItem>
-        <CNavItem role="presentation">
-          <CNavLink
-            as={NavLink}
-            to="/settings/dashboard-visibility"
-            active={activeTab === TAB_DASHBOARD}
-            className={activeTab === TAB_DASHBOARD ? 'text-primary' : ''}
-          >
-            Dashboard Visibility
-          </CNavLink>
-        </CNavItem>
-      </CNav>
+      <ModulePageHeader
+        title="Settings"
+        subtitle="Maintain system controls, role permissions, and dashboard visibility rules."
+      />
+
+      <RouteNavTabs
+        currentPath={activeTab}
+        navigate={(tabPath) => navigate(tabPath)}
+        items={[
+          {
+            key: TAB_GENERAL,
+            label: 'General',
+            to: '/settings',
+            match: TAB_GENERAL,
+          },
+          {
+            key: TAB_ROLES,
+            label: 'Role Permissions',
+            to: '/settings/role-permissions',
+            match: TAB_ROLES,
+          },
+          {
+            key: TAB_DASHBOARD,
+            label: 'Dashboard Visibility',
+            to: '/settings/dashboard-visibility',
+            match: TAB_DASHBOARD,
+          },
+        ]}
+      />
 
       {activeTab === TAB_GENERAL && (
         <>

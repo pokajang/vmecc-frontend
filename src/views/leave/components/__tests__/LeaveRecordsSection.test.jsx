@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react'
-import { fireEvent, render, screen } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import LeaveRecordsSection from '../LeaveRecordsSection'
 
 vi.mock('src/components/RowActions', () => ({
@@ -23,6 +23,10 @@ vi.mock('src/components/RowActions', () => ({
     </div>
   ),
 }))
+
+afterEach(() => {
+  cleanup()
+})
 
 const buildProps = (overrides = {}) => {
   const row = {
@@ -87,6 +91,23 @@ describe('LeaveRecordsSection interactions', () => {
     fireEvent.keyDown(rowButton, { key: ' ' })
 
     expect(props.openRecord).toHaveBeenCalledTimes(2)
+  })
+
+  it('renders a mobile record card with critical record details', () => {
+    const props = buildProps()
+    render(<LeaveRecordsSection {...props} />)
+
+    const mobileCard = screen.getByRole('button', {
+      name: 'Open leave record LV-AL-2026-001 summary',
+    })
+
+    expect(mobileCard.textContent).toContain('LV-AL-2026-001')
+    expect(mobileCard.textContent).toContain('Annual Leave')
+    expect(mobileCard.textContent).toContain('15 Apr 2026')
+    expect(mobileCard.textContent).toContain('1')
+
+    fireEvent.click(mobileCard)
+    expect(props.openRecord).toHaveBeenCalledWith(props.visibleRows[0])
   })
 
   it('action click does not trigger row navigation', () => {

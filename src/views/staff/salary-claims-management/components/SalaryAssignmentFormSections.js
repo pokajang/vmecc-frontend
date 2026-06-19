@@ -17,10 +17,8 @@ import {
   CTableHeaderCell,
   CTableRow,
 } from '@coreui/react'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
-import EditControls from 'src/components/EditControls'
-import FormActionGroup from 'src/components/FormActionGroup'
 import StaffSelect from 'src/components/staff/StaffSelect'
 
 export const selectControlStyles = {
@@ -46,6 +44,74 @@ export const selectControlStyles = {
   }),
 }
 
+const SummaryField = ({ label, value }) => (
+  <div className="d-flex justify-content-between align-items-start gap-3 py-2">
+    <span className="text-body-secondary">{label}</span>
+    <span className="fw-semibold text-end text-break">{value || '-'}</span>
+  </div>
+)
+
+const formatPatchAmount = (formatCurrency, value) =>
+  typeof value === 'number' ? formatCurrency(value) : formatCurrency(Number(value || 0))
+
+const PayChangeRow = ({ change, formatCurrency }) => {
+  const isRemark = change.type === 'remarks'
+  return (
+    <div className="border rounded-3 bg-white p-3">
+      <div className="d-flex justify-content-between align-items-start gap-3">
+        <div>
+          <div className="fw-semibold">{change.label}</div>
+          <div className="small text-body-secondary text-capitalize">{change.changeType}</div>
+        </div>
+        {!isRemark ? (
+          <div className="text-end">
+            <div className="small text-body-secondary">
+              {formatPatchAmount(formatCurrency, change.beforeAmount)}
+            </div>
+            <div className="fw-semibold">
+              {formatPatchAmount(formatCurrency, change.afterAmount)}
+            </div>
+          </div>
+        ) : null}
+      </div>
+      {isRemark ? (
+        <div className="small mt-2">
+          <div className="text-body-secondary">Before</div>
+          <div style={{ whiteSpace: 'pre-wrap' }}>{change.beforeText || '-'}</div>
+          <div className="text-body-secondary mt-2">After</div>
+          <div style={{ whiteSpace: 'pre-wrap' }}>{change.afterText || '-'}</div>
+        </div>
+      ) : change.beforeLabel !== change.afterLabel ? (
+        <div className="small text-body-secondary mt-2">
+          Renamed from {change.beforeLabel || '-'} to {change.afterLabel || '-'}.
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+const UnchangedPayRows = ({ formatCurrency, rows = [] }) => {
+  if (!rows.length) return null
+  return (
+    <details className="border rounded-3 bg-white p-3 mt-3">
+      <summary className="fw-semibold">Show unchanged pay components</summary>
+      <div className="d-grid gap-2 mt-3">
+        {rows.map((row) => (
+          <SummaryField
+            key={row.key}
+            label={row.label}
+            value={
+              row.type === 'deduction'
+                ? `-${formatCurrency(Math.abs(row.amount))}`
+                : formatCurrency(row.amount)
+            }
+          />
+        ))}
+      </div>
+    </details>
+  )
+}
+
 export const SalaryAssignmentStaffFields = ({
   draft,
   handleDraftFieldChange,
@@ -56,85 +122,91 @@ export const SalaryAssignmentStaffFields = ({
   staffDirectoryLoading,
   visibleStaffOptions,
 }) => (
-  <>
-    <CRow className="g-3">
-      <CCol md={8}>
-        <CFormLabel htmlFor="assignment-staff">Staff</CFormLabel>
-        <StaffSelect
-          inputId="assignment-staff"
-          value={draft.selectedStaffKey}
-          options={visibleStaffOptions}
-          onChange={handleStaffSelectChange}
-          isLoading={staffDirectoryLoading}
-          placeholder={staffDirectoryLoading ? 'Loading staff...' : 'Search and select staff'}
-          includeInactive={includeInactiveStaff}
-          disabled={isReadOnly}
-          styles={selectControlStyles}
-        />
-        <CFormCheck
-          id="assignment-include-inactive"
-          className="mt-2"
-          label="Include inactive staff"
-          checked={includeInactiveStaff}
-          disabled={isReadOnly}
-          onChange={(event) => setIncludeInactiveStaff(event.target.checked)}
-        />
-      </CCol>
-      <CCol md={4}>
-        <CFormLabel htmlFor="assignment-effective">Effective Month</CFormLabel>
-        <CFormInput
-          id="assignment-effective"
-          type="month"
-          style={{ minHeight: 38 }}
-          value={String(draft.effectiveFrom || '').slice(0, 7)}
-          disabled={isReadOnly}
-          onChange={(event) => handleDraftFieldChange('effectiveFrom', event.target.value)}
-        />
-      </CCol>
-    </CRow>
+  <CCard>
+    <CCardHeader>Staff and Month</CCardHeader>
+    <CCardBody className="d-grid gap-3">
+      <CRow className="g-3">
+        <CCol md={8}>
+          <CFormLabel htmlFor="assignment-staff">Staff</CFormLabel>
+          <StaffSelect
+            inputId="assignment-staff"
+            value={draft.selectedStaffKey}
+            options={visibleStaffOptions}
+            onChange={handleStaffSelectChange}
+            isLoading={staffDirectoryLoading}
+            placeholder={staffDirectoryLoading ? 'Loading staff...' : 'Search and select staff'}
+            includeInactive={includeInactiveStaff}
+            disabled={isReadOnly}
+            styles={selectControlStyles}
+          />
+          <CFormCheck
+            id="assignment-include-inactive"
+            className="mt-2"
+            label="Include inactive staff"
+            checked={includeInactiveStaff}
+            disabled={isReadOnly}
+            onChange={(event) => setIncludeInactiveStaff(event.target.checked)}
+          />
+        </CCol>
+        <CCol md={4}>
+          <CFormLabel htmlFor="assignment-effective">Effective Month</CFormLabel>
+          <CFormInput
+            id="assignment-effective"
+            type="month"
+            style={{ minHeight: 38 }}
+            value={String(draft.effectiveFrom || '').slice(0, 7)}
+            disabled={isReadOnly}
+            onChange={(event) => handleDraftFieldChange('effectiveFrom', event.target.value)}
+          />
+        </CCol>
+      </CRow>
 
-    {(draft.selectedStaffKey || draft.employee) && (
-      <div className="rounded-3 border border-primary bg-primary bg-opacity-10 p-3">
-        <div className="d-flex align-items-start gap-3">
-          <div
-            className="d-inline-flex align-items-center justify-content-center rounded-circle border bg-white text-body-secondary fw-semibold"
-            style={{ flex: '0 0 auto', width: 56, height: 56, lineHeight: 1 }}
-          >
-            {draft?.avatarUrl ? (
-              <img
-                src={draft.avatarUrl}
-                alt={draft.employee || 'Staff avatar'}
-                className="rounded-circle"
-                style={{ width: 56, height: 56, objectFit: 'cover' }}
-              />
-            ) : (
-              String(draft.employee || '?')
-                .trim()
-                .charAt(0)
-                .toUpperCase()
-            )}
-          </div>
-          <div className="flex-grow-1" style={{ minWidth: 0 }}>
-            <div className="small text-body-secondary mb-1">Staff Details</div>
-            <div className="fw-semibold">{draft.employee || '-'}</div>
-            <div className="mt-1 d-grid gap-1">
-              {[
-                ['Email', draft.email],
-                ['IC Number', draft.icNumber],
-                ['Mobile Number', draft.phone],
-                ['Team', draft.team],
-              ].map(([label, value]) => (
-                <div key={label} className="d-flex justify-content-between align-items-start gap-3">
-                  <span className="text-body-secondary">{label}</span>
-                  <span className="text-end">{value || '-'}</span>
-                </div>
-              ))}
+      {(draft.selectedStaffKey || draft.employee) && (
+        <div className="rounded-3 border border-primary bg-primary bg-opacity-10 p-3">
+          <div className="d-flex align-items-start gap-3">
+            <div
+              className="d-inline-flex align-items-center justify-content-center rounded-circle border bg-white text-body-secondary fw-semibold"
+              style={{ flex: '0 0 auto', width: 56, height: 56, lineHeight: 1 }}
+            >
+              {draft?.avatarUrl ? (
+                <img
+                  src={draft.avatarUrl}
+                  alt={draft.employee || 'Staff avatar'}
+                  className="rounded-circle"
+                  style={{ width: 56, height: 56, objectFit: 'cover' }}
+                />
+              ) : (
+                String(draft.employee || '?')
+                  .trim()
+                  .charAt(0)
+                  .toUpperCase()
+              )}
+            </div>
+            <div className="flex-grow-1" style={{ minWidth: 0 }}>
+              <div className="small text-body-secondary mb-1">Staff Details</div>
+              <div className="fw-semibold">{draft.employee || '-'}</div>
+              <div className="mt-1 d-grid gap-1">
+                {[
+                  ['Email', draft.email],
+                  ['IC Number', draft.icNumber],
+                  ['Mobile Number', draft.phone],
+                  ['Team', draft.team],
+                ].map(([label, value]) => (
+                  <div
+                    key={label}
+                    className="d-flex justify-content-between align-items-start gap-3"
+                  >
+                    <span className="text-body-secondary">{label}</span>
+                    <span className="text-end text-break">{value || '-'}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    )}
-  </>
+      )}
+    </CCardBody>
+  </CCard>
 )
 
 export const SalaryAssignmentPayComponentsCard = ({
@@ -144,43 +216,79 @@ export const SalaryAssignmentPayComponentsCard = ({
   handleDeleteAllowanceRow,
   handlePayComponentUpdate,
   isReadOnly,
-  onCancelPayComponents,
-  onEditPayComponents,
-  onOpenEdit,
-  onSavePayComponents,
-  payComponentsEditMode,
   statutoryRatesFeatureEnabled,
 }) => (
   <CCard>
     <CCardHeader className="d-flex justify-content-between align-items-center gap-2">
-      <span>Pay Components</span>
-      {isReadOnly ? (
-        <CButton
-          size="sm"
-          className="text-primary px-2 py-1 border-0 bg-transparent shadow-none"
-          onClick={onOpenEdit}
-        >
-          <Pencil size={13} className="me-1 align-text-bottom" />
-          Edit
-        </CButton>
-      ) : (
-        <div className="d-flex align-items-center gap-2">
-          {payComponentsEditMode && (
-            <CreateActionButton label="Add Allowance" onClick={handleAddAllowanceRow} />
-          )}
-          <EditControls
-            editMode={false}
-            loading={false}
-            onEdit={onEditPayComponents}
-            onSave={onSavePayComponents}
-            onCancel={onCancelPayComponents}
-            className={payComponentsEditMode ? 'd-none' : ''}
-          />
-        </div>
-      )}
+      <span>Pay Package</span>
+      {!isReadOnly ? (
+        <CreateActionButton label="Add Allowance" onClick={handleAddAllowanceRow} />
+      ) : null}
     </CCardHeader>
     <CCardBody>
-      <div className="rounded-3 shadow-sm overflow-hidden bg-white">
+      <div className="d-md-none d-grid gap-2">
+        {componentRows.map((row) => (
+          <div key={row.id} className="border rounded-3 bg-white p-3">
+            <div className="d-flex justify-content-between align-items-start gap-3">
+              <div className="fw-semibold">{row.label}</div>
+              {row.deletable && !isReadOnly ? (
+                <CButton
+                  color="light"
+                  size="sm"
+                  onClick={() => handleDeleteAllowanceRow('allowance', row.id)}
+                  title="Delete row"
+                  aria-label="Delete row"
+                >
+                  <Trash2 size={14} />
+                </CButton>
+              ) : null}
+            </div>
+            {row.editable && !isReadOnly ? (
+              <div className="row g-2 mt-2">
+                {row.rowType === 'allowance' ? (
+                  <div className="col-12">
+                    <CFormLabel htmlFor={`assignment-${row.id}-name`}>Component</CFormLabel>
+                    <CFormInput
+                      id={`assignment-${row.id}-name`}
+                      value={row.name}
+                      onChange={(event) =>
+                        handlePayComponentUpdate('allowance', row.id, 'name', event.target.value)
+                      }
+                      placeholder="Allowance name"
+                    />
+                  </div>
+                ) : null}
+                <div className="col-12">
+                  <CFormLabel htmlFor={`assignment-${row.id}-amount`}>Amount</CFormLabel>
+                  <CFormInput
+                    id={`assignment-${row.id}-amount`}
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={row.amount}
+                    onChange={(event) =>
+                      handlePayComponentUpdate(
+                        row.rowType,
+                        row.rowType === 'deduction' ? row.componentKey : row.id,
+                        'amount',
+                        event.target.value,
+                      )
+                    }
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="mt-2 text-end fw-semibold">
+                {row.rowType === 'deduction' || row.id === 'summary-total-deductions'
+                  ? `-${formatCurrency(Math.abs(row.amount))}`
+                  : formatCurrency(row.amount)}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
         <CTable align="middle" className="mb-0" responsive>
           <CTableHead color="light">
             <CTableRow>
@@ -189,7 +297,7 @@ export const SalaryAssignmentPayComponentsCard = ({
               </CTableHeaderCell>
               <CTableHeaderCell>Component</CTableHeaderCell>
               <CTableHeaderCell className="text-end">Amount</CTableHeaderCell>
-              {payComponentsEditMode && (
+              {!isReadOnly && (
                 <CTableHeaderCell className="text-end" style={{ width: 120 }}>
                   Action
                 </CTableHeaderCell>
@@ -206,7 +314,7 @@ export const SalaryAssignmentPayComponentsCard = ({
                   {index + 1}
                 </CTableDataCell>
                 <CTableDataCell>
-                  {payComponentsEditMode && !isReadOnly && row.rowType === 'allowance' ? (
+                  {!isReadOnly && row.rowType === 'allowance' ? (
                     <CFormInput
                       value={row.name}
                       onChange={(event) =>
@@ -219,7 +327,7 @@ export const SalaryAssignmentPayComponentsCard = ({
                   )}
                 </CTableDataCell>
                 <CTableDataCell className="text-end">
-                  {payComponentsEditMode && !isReadOnly && row.editable ? (
+                  {!isReadOnly && row.editable ? (
                     <div className="d-flex justify-content-end">
                       <div style={{ width: 160 }}>
                         <CFormInput
@@ -244,20 +352,18 @@ export const SalaryAssignmentPayComponentsCard = ({
                     formatCurrency(row.amount)
                   )}
                 </CTableDataCell>
-                {payComponentsEditMode && !isReadOnly && (
+                {!isReadOnly && (
                   <CTableDataCell className="text-end">
                     {row.deletable ? (
-                      <div className="d-flex justify-content-end gap-2">
-                        <CButton
-                          color="light"
-                          size="sm"
-                          onClick={() => handleDeleteAllowanceRow('allowance', row.id)}
-                          title="Delete row"
-                          aria-label="Delete row"
-                        >
-                          <Trash2 size={14} />
-                        </CButton>
-                      </div>
+                      <CButton
+                        color="light"
+                        size="sm"
+                        onClick={() => handleDeleteAllowanceRow('allowance', row.id)}
+                        title="Delete row"
+                        aria-label="Delete row"
+                      >
+                        <Trash2 size={14} />
+                      </CButton>
                     ) : null}
                   </CTableDataCell>
                 )}
@@ -272,175 +378,99 @@ export const SalaryAssignmentPayComponentsCard = ({
           0.00 until the backend feature is enabled.
         </div>
       )}
-      {payComponentsEditMode && !isReadOnly && (
-        <FormActionGroup mobileThumb={false} className="mt-3">
-          <CButton color="light" onClick={onCancelPayComponents}>
-            Cancel
-          </CButton>
-          <CButton color="primary" onClick={onSavePayComponents}>
-            Save
-          </CButton>
-        </FormActionGroup>
-      )}
     </CCardBody>
   </CCard>
 )
 
 export const SalaryAssignmentRemarksCard = ({
   activeRemarksValue,
-  actorName,
-  editingRemarkId,
-  formatDateTime,
-  handleDraftFieldChange,
+  handleRemarksChange,
   isReadOnly,
-  remarksDirty,
-  remarksEditMode,
   remarksHistory,
-  setEditingRemarkId,
-  setRemarksDirty,
-  setRemarksDraft,
-  setRemarksEditMode,
-}) => {
-  const resetRemarks = () => {
-    setEditingRemarkId('')
-    setRemarksDirty(false)
-    setRemarksDraft('')
-    setRemarksEditMode(false)
-  }
+}) => (
+  <CCard>
+    <CCardHeader>Remarks</CCardHeader>
+    <CCardBody className="d-grid gap-3">
+      <CFormTextarea
+        id="assignment-notes"
+        rows={4}
+        value={activeRemarksValue}
+        disabled={isReadOnly}
+        onChange={(event) => handleRemarksChange(event.target.value)}
+        placeholder="Add assignment notes for HR/admin context"
+      />
+      {remarksHistory.length > 0 ? (
+        <div className="d-grid gap-2">
+          {remarksHistory.map((remark) => (
+            <div key={remark.id} className="small text-body-secondary">
+              {remark.updatedAt || remark.createdAt || '-'} by{' '}
+              {remark.updatedBy || remark.createdBy || '-'}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="small text-body-secondary">No remarks added yet.</div>
+      )}
+    </CCardBody>
+  </CCard>
+)
 
-  const syncLatestRemark = (nextHistory) => {
-    const latest = nextHistory[0] || null
-    handleDraftFieldChange('notesHistory', nextHistory)
-    handleDraftFieldChange('notes', latest?.text || '')
-    handleDraftFieldChange('notesUpdatedAt', latest?.updatedAt || latest?.createdAt || '')
-    handleDraftFieldChange('notesUpdatedBy', latest?.updatedBy || latest?.createdBy || '')
-  }
-
-  return (
-    <CCard>
-      <CCardHeader className="d-flex justify-content-between align-items-center gap-2">
-        <span>Notes (Optional)</span>
-        {!isReadOnly && (
-          <CreateActionButton
-            label="Add Remarks"
-            onClick={() => {
-              setEditingRemarkId('')
-              setRemarksEditMode(true)
-              setRemarksDirty(false)
-              setRemarksDraft('')
-            }}
-          />
-        )}
-      </CCardHeader>
-      <CCardBody>
-        {remarksHistory.length > 0 ? (
-          <div className="d-grid gap-3">
-            {remarksHistory.map((remark) => {
-              const remarkDate = remark.updatedAt || remark.createdAt
-              const remarkBy = remark.updatedBy || remark.createdBy
-              const isEdited = Boolean(remark.updatedAt)
-              return (
-                <div key={remark.id} className="d-grid gap-1">
-                  <div className="d-flex align-items-center justify-content-between gap-2">
-                    <div className="small text-body-secondary">
-                      {remarkDate ? formatDateTime?.(remarkDate) || remarkDate : '-'} by{' '}
-                      {remarkBy || '-'}
-                      {isEdited ? ' (edited)' : ''}
-                    </div>
-                    {!isReadOnly && (
-                      <div className="d-flex align-items-center gap-2">
-                        <CButton
-                          color="light"
-                          size="sm"
-                          onClick={() => {
-                            setEditingRemarkId(remark.id)
-                            setRemarksEditMode(true)
-                            setRemarksDirty(false)
-                            setRemarksDraft(remark.text)
-                          }}
-                          title="Edit remark"
-                          aria-label="Edit remark"
-                        >
-                          <Pencil size={14} />
-                        </CButton>
-                        <CButton
-                          color="light"
-                          size="sm"
-                          onClick={() => {
-                            syncLatestRemark(
-                              remarksHistory.filter((entry) => entry.id !== remark.id),
-                            )
-                            if (editingRemarkId === remark.id) resetRemarks()
-                          }}
-                          title="Delete remark"
-                          aria-label="Delete remark"
-                        >
-                          <Trash2 size={14} />
-                        </CButton>
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ whiteSpace: 'pre-wrap' }}>{remark.text}</div>
-                </div>
-              )
-            })}
+export const SalaryAssignmentReviewCard = ({ formatCurrency, formatMonth, reviewSummary }) => (
+  <CCard>
+    <CCardHeader>Review</CCardHeader>
+    <CCardBody>
+      <div className="row g-3">
+        <div className="col-md-6">
+          <div className="border rounded-3 bg-white p-3 h-100">
+            <div className="fw-semibold mb-2">Assignment</div>
+            <SummaryField label="Staff" value={reviewSummary.staffName} />
+            <SummaryField label="Team" value={reviewSummary.team} />
+            <SummaryField
+              label="Effective month"
+              value={formatMonth?.(reviewSummary.effectiveFrom) || reviewSummary.effectiveFrom}
+            />
+          </div>
+        </div>
+        <div className="col-md-6">
+          <div className="border rounded-3 bg-white p-3 h-100">
+            <div className="fw-semibold mb-2">Pay Summary</div>
+            <SummaryField label="Basic salary" value={formatCurrency(reviewSummary.basicSalary)} />
+            <SummaryField label="Gross salary" value={formatCurrency(reviewSummary.grossSalary)} />
+            <SummaryField
+              label="Employee deductions"
+              value={`-${formatCurrency(Math.abs(reviewSummary.totalEmployeeDeductions))}`}
+            />
+            <SummaryField label="Net payable" value={formatCurrency(reviewSummary.netPayable)} />
+          </div>
+        </div>
+      </div>
+      <div className="border rounded-3 bg-white p-3 mt-3">
+        <div className="fw-semibold mb-2">Changed Items</div>
+        {reviewSummary.changedRows?.length > 0 ? (
+          <div className="d-grid gap-2">
+            {reviewSummary.changedRows.map((change) => (
+              <PayChangeRow key={change.key} change={change} formatCurrency={formatCurrency} />
+            ))}
           </div>
         ) : (
-          <div className="small text-body-secondary">No remarks added yet.</div>
+          <div className="small text-body-secondary">No pay component changes from baseline.</div>
         )}
-
-        {!isReadOnly && (remarksEditMode || remarksDirty) ? (
-          <>
-            <CFormTextarea
-              id="assignment-notes"
-              rows={3}
-              value={activeRemarksValue}
-              onChange={(event) => {
-                setRemarksDirty(true)
-                setRemarksDraft(event.target.value)
-              }}
-              placeholder="Add assignment notes for HR/admin context"
-            />
-            <div className="d-flex justify-content-end gap-2 mt-2">
-              <CButton color="light" size="sm" onClick={resetRemarks}>
-                Cancel Remarks
-              </CButton>
-              <CButton
-                color="primary"
-                size="sm"
-                onClick={() => {
-                  const nextText = String(activeRemarksValue || '').trim()
-                  if (!nextText) return
-                  const nowIso = new Date().toISOString()
-                  const actor = actorName || 'System user'
-                  const nextHistory = editingRemarkId
-                    ? remarksHistory.map((entry) =>
-                        entry.id === editingRemarkId
-                          ? { ...entry, text: nextText, updatedAt: nowIso, updatedBy: actor }
-                          : entry,
-                      )
-                    : [
-                        {
-                          id: `remark-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-                          text: nextText,
-                          createdAt: nowIso,
-                          createdBy: actor,
-                          updatedAt: '',
-                          updatedBy: '',
-                        },
-                        ...remarksHistory,
-                      ]
-                  syncLatestRemark(nextHistory)
-                  resetRemarks()
-                }}
-                disabled={!String(activeRemarksValue || '').trim()}
-              >
-                Save Remarks
-              </CButton>
-            </div>
-          </>
-        ) : null}
-      </CCardBody>
-    </CCard>
-  )
-}
+      </div>
+      <UnchangedPayRows formatCurrency={formatCurrency} rows={reviewSummary.unchangedRows || []} />
+      <div className="border rounded-3 bg-white p-3 mt-3">
+        <div className="fw-semibold mb-2">Remarks</div>
+        {reviewSummary.remarks.length > 0 ? (
+          <div className="d-grid gap-2">
+            {reviewSummary.remarks.map((remark) => (
+              <div key={remark.id} style={{ whiteSpace: 'pre-wrap' }}>
+                {remark.text}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="small text-body-secondary">No remarks added.</div>
+        )}
+      </div>
+    </CCardBody>
+  </CCard>
+)

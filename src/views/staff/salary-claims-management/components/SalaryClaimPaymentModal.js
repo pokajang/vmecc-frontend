@@ -9,12 +9,14 @@ import {
   CModalFooter,
   CModalHeader,
 } from '@coreui/react'
+import BulkSelectionSummaryPreview from './BulkSelectionSummaryPreview'
 
 const SalaryClaimPaymentModal = ({
   visible = false,
   mode = 'mark',
   scope = 'single',
   selectedCount = 0,
+  summary = null,
   record = null,
   values = {},
   errors = {},
@@ -44,9 +46,11 @@ const SalaryClaimPaymentModal = ({
       <CModalHeader>{title}</CModalHeader>
       <CModalBody className="d-grid gap-3">
         {scope === 'bulk' ? (
-          <div className="text-body-secondary">
-            {selectedCount} claim{selectedCount === 1 ? '' : 's'} selected.
-          </div>
+          <BulkSelectionSummaryPreview
+            summary={summary || { count: selectedCount, sampleItems: [], remainingCount: 0 }}
+            showTotal={isMarkMode}
+            totalLabel="Total payable"
+          />
         ) : (
           <div className="text-body-secondary">
             Claim: <strong>{record?.id || '-'}</strong>

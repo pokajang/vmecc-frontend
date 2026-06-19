@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   CAlert,
+  CBadge,
   CButton,
   CCard,
   CCardBody,
@@ -18,8 +19,9 @@ import {
   CTableRow,
 } from '@coreui/react'
 import { fetchUserSessions, revokeAllUserSessions, revokeUserSession } from 'src/services/apiClient'
-import TableLoader from 'src/components/TableLoader'
 import DataTableFooter from 'src/components/DataTableFooter'
+import ResponsiveRecordCollection from 'src/components/ResponsiveRecordCollection'
+import RowActionCell from 'src/components/RowActionCell'
 import TablePeriodSelect from 'src/components/TablePeriodSelect'
 import useTableRows from 'src/hooks/useTableRows'
 import { exportWorkbook } from 'src/utils/exportXlsx'
@@ -93,6 +95,37 @@ const UserSessionsPanel = ({ userId, actionsDisabled = false, actionsDisabledRea
   }, [sessions, search, statusFilter, range])
 
   const { rowsToShow, setRowsToShow, visibleRows } = useTableRows(filteredSessions)
+  const mobileSessionSections = [
+    {
+      key: 'sessions',
+      items: visibleRows.map((session) => {
+        const status = statusLabel(session)
+        return {
+          key: session.id,
+          title: session.ip_address || '-',
+          eyebrow: formatDateTime(session.created_at),
+          subtitle: session.user_agent || '-',
+          status: <CBadge color={status.color}>{status.label}</CBadge>,
+          fields: [
+            { key: 'last-seen', label: 'Last seen', value: formatDateTime(session.last_seen_at) },
+            { key: 'expires', label: 'Expires', value: formatDateTime(session.expires_at) },
+          ],
+          actions: (
+            <CButton
+              size="sm"
+              color="danger"
+              variant="outline"
+              disabled={!session.active || working || actionsDisabled}
+              onClick={() => handleRevoke(session.id)}
+              title={actionsDisabled ? actionsDisabledReason : undefined}
+            >
+              Revoke
+            </CButton>
+          ),
+        }
+      }),
+    },
+  ]
 
   const handleExport = () => {
     const headers = ['#', 'Status', 'Device', 'IP', 'Created', 'Last seen', 'Expires']
@@ -276,70 +309,73 @@ const UserSessionsPanel = ({ userId, actionsDisabled = false, actionsDisabledRea
           </CRow>
         </CCollapse>
 
-        {loading && <TableLoader />}
         {error && <CAlert color="danger">{error}</CAlert>}
-        {!loading && !error && filteredSessions.length === 0 && (
-          <span className="text-muted small">No sessions found.</span>
-        )}
-        {!loading && !error && filteredSessions.length > 0 && (
-          <div className="rounded-3 shadow-sm overflow-hidden bg-white">
-            <CTable align="middle" className="mb-0" responsive>
-              <CTableHead color="light">
-                <CTableRow>
-                  <CTableHeaderCell className="text-center" style={{ width: '5%' }}>
-                    #
-                  </CTableHeaderCell>
-                  <CTableHeaderCell>Status</CTableHeaderCell>
-                  <CTableHeaderCell>Device</CTableHeaderCell>
-                  <CTableHeaderCell>IP</CTableHeaderCell>
-                  <CTableHeaderCell>Created</CTableHeaderCell>
-                  <CTableHeaderCell>Last seen</CTableHeaderCell>
-                  <CTableHeaderCell>Expires</CTableHeaderCell>
-                  <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
-                </CTableRow>
-              </CTableHead>
-              <CTableBody>
-                {visibleRows.map((session, index) => {
-                  const status = statusLabel(session)
-                  return (
-                    <CTableRow key={session.id}>
-                      <CTableDataCell className="text-center">{index + 1}</CTableDataCell>
-                      <CTableDataCell>
-                        <span className={`badge bg-${status.color}`}>{status.label}</span>
-                      </CTableDataCell>
-                      <CTableDataCell className="text-break">
-                        {session.user_agent || '-'}
-                      </CTableDataCell>
-                      <CTableDataCell>{session.ip_address || '-'}</CTableDataCell>
-                      <CTableDataCell>{formatDateTime(session.created_at)}</CTableDataCell>
-                      <CTableDataCell>{formatDateTime(session.last_seen_at)}</CTableDataCell>
-                      <CTableDataCell>{formatDateTime(session.expires_at)}</CTableDataCell>
-                      <CTableDataCell className="text-center">
-                        <CButton
-                          size="sm"
-                          color="danger"
-                          variant="outline"
-                          disabled={!session.active || working || actionsDisabled}
-                          onClick={() => handleRevoke(session.id)}
-                          title={actionsDisabled ? actionsDisabledReason : undefined}
-                        >
-                          Revoke
-                        </CButton>
-                      </CTableDataCell>
+        {!error && (
+          <ResponsiveRecordCollection
+            isLoading={loading}
+            isEmpty={filteredSessions.length === 0}
+            emptyMessage={<span className="text-muted small">No sessions found.</span>}
+            mobileSections={mobileSessionSections}
+            renderDesktop={() => (
+              <div className="rounded-3 shadow-sm overflow-hidden bg-white d-none d-md-block">
+                <CTable align="middle" className="mb-0" responsive>
+                  <CTableHead color="light">
+                    <CTableRow>
+                      <CTableHeaderCell className="text-center" style={{ width: '5%' }}>
+                        #
+                      </CTableHeaderCell>
+                      <CTableHeaderCell>Status</CTableHeaderCell>
+                      <CTableHeaderCell>Device</CTableHeaderCell>
+                      <CTableHeaderCell>IP</CTableHeaderCell>
+                      <CTableHeaderCell>Created</CTableHeaderCell>
+                      <CTableHeaderCell>Last seen</CTableHeaderCell>
+                      <CTableHeaderCell>Expires</CTableHeaderCell>
+                      <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
                     </CTableRow>
-                  )
-                })}
-              </CTableBody>
-            </CTable>
-          </div>
-        )}
-
-        {!loading && !error && (
-          <DataTableFooter
-            rowsToShow={rowsToShow}
-            onRowsToShowChange={setRowsToShow}
-            filteredCount={filteredSessions.length}
-            totalCount={sessions.length}
+                  </CTableHead>
+                  <CTableBody>
+                    {visibleRows.map((session, index) => {
+                      const status = statusLabel(session)
+                      return (
+                        <CTableRow key={session.id}>
+                          <CTableDataCell className="text-center">{index + 1}</CTableDataCell>
+                          <CTableDataCell>
+                            <span className={`badge bg-${status.color}`}>{status.label}</span>
+                          </CTableDataCell>
+                          <CTableDataCell className="text-break">
+                            {session.user_agent || '-'}
+                          </CTableDataCell>
+                          <CTableDataCell>{session.ip_address || '-'}</CTableDataCell>
+                          <CTableDataCell>{formatDateTime(session.created_at)}</CTableDataCell>
+                          <CTableDataCell>{formatDateTime(session.last_seen_at)}</CTableDataCell>
+                          <CTableDataCell>{formatDateTime(session.expires_at)}</CTableDataCell>
+                          <RowActionCell className="text-center">
+                            <CButton
+                              size="sm"
+                              color="danger"
+                              variant="outline"
+                              disabled={!session.active || working || actionsDisabled}
+                              onClick={() => handleRevoke(session.id)}
+                              title={actionsDisabled ? actionsDisabledReason : undefined}
+                            >
+                              Revoke
+                            </CButton>
+                          </RowActionCell>
+                        </CTableRow>
+                      )
+                    })}
+                  </CTableBody>
+                </CTable>
+              </div>
+            )}
+            footer={
+              <DataTableFooter
+                rowsToShow={rowsToShow}
+                onRowsToShowChange={setRowsToShow}
+                filteredCount={filteredSessions.length}
+                totalCount={sessions.length}
+              />
+            }
           />
         )}
       </CCardBody>

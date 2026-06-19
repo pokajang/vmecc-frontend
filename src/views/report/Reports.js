@@ -5,9 +5,6 @@ import {
   CCardBody,
   CCardHeader,
   CContainer,
-  CNav,
-  CNavItem,
-  CNavLink,
   CToast,
   CToastBody,
   CToastHeader,
@@ -17,6 +14,9 @@ import { useSelector } from 'react-redux'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { hasPermission } from 'src/utils/authz'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
+import CreateActionButton from 'src/components/CreateActionButton'
+import ModuleNavTabs from 'src/components/ModuleNavTabs'
+import ModulePageHeader from 'src/components/ModulePageHeader'
 import TableLoader from 'src/components/TableLoader'
 import { SORT_OPTIONS } from './constants'
 import { FORM_REGISTRY } from './formRegistry'
@@ -161,10 +161,12 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
     isActionBusy,
     isDeleting,
     isSubmitting,
+    pendingEditRow,
     openSavedDraft,
     pendingAction,
     pendingReviewBackSection,
     pendingReviewRecord,
+    removeDraft,
     requestDeleteRecord,
     requestReview,
     runGuardedAction,
@@ -181,6 +183,7 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
     showEditDraftChoice,
     startBlankReport,
     startNew,
+    submit,
     submitWorkflowAction,
     transitionApprove,
     transitionReject,
@@ -276,9 +279,25 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
   const handleSaveReviewDraft = () => saveReviewDraft({ reviewRecord, selectedEditingRecord })
   const handleBackFromReview = () => backFromReview({ reviewBackSection, reviewRecord })
   const handleConfirmReviewSubmit = () => confirmReviewSubmit(reviewRecord)
+  const isCreateSection = activeSection === 'new' || activeSection === 'review'
+  const recordsSectionActive = activeSection === 'records' || activeSection === 'detail'
+  const createSectionActive = isCreateSection
 
   return (
     <CContainer fluid>
+      <ModulePageHeader
+        title={reportTypeLabel}
+        subtitle="Review records, manage drafts, and submit new reports."
+        actions={
+          isCreateSection ? null : (
+            <CreateActionButton
+              label={`New ${reportTypeLabel} Report`}
+              importance="primary"
+              onClick={() => runGuardedAction(startNew)}
+            />
+          )
+        }
+      />
       <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
       {downloadingId || isDeleting || isSubmitting ? (
         <div
@@ -389,29 +408,22 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
         onSubmit={submitWorkflowAction}
       />
 
-      <CNav variant="underline" role="tablist" className="mb-3 flex-nowrap overflow-auto pb-1">
-        <CNavItem role="presentation">
-          <CNavLink
-            active={activeSection === 'records' || activeSection === 'detail'}
-            onClick={() => runGuardedAction(() => navigate(reportBasePath))}
-            style={{ cursor: 'pointer' }}
-            className={`${activeSection === 'records' || activeSection === 'detail' ? 'text-primary' : ''} text-nowrap`.trim()}
-          >
-            {reportTypeLabel} Records
-          </CNavLink>
-        </CNavItem>
-        <CNavItem role="presentation">
-          <CNavLink
-            active={activeSection === 'new' || activeSection === 'review'}
-            onClick={() => runGuardedAction(startNew)}
-            style={{ cursor: 'pointer' }}
-            className={`${activeSection === 'new' || activeSection === 'review' ? 'text-primary' : ''} text-nowrap`.trim()}
-          >
-            New {reportTypeLabel} Report
-          </CNavLink>
-        </CNavItem>
-      </CNav>
-      <div className="small text-body-secondary d-md-none mb-2">Swipe to view more tabs.</div>
+      <ModuleNavTabs
+        items={[
+          {
+            key: 'records',
+            label: `${reportTypeLabel} Records`,
+            active: recordsSectionActive,
+            onClick: () => runGuardedAction(() => navigate(reportBasePath)),
+          },
+          {
+            key: 'new',
+            label: `New ${reportTypeLabel} Report`,
+            active: createSectionActive,
+            onClick: () => runGuardedAction(startNew),
+          },
+        ]}
+      />
 
       {activeSection === 'records' ? (
         <ReportRecordsSection
@@ -451,6 +463,7 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
           rowsToShow={rowsToShow}
           setRowsToShow={setRowsToShow}
           totalCount={recordsInScopeCount}
+          showPrimaryAction={false}
         />
       ) : null}
 

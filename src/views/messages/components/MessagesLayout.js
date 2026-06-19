@@ -91,7 +91,7 @@ const MessagesLayout = ({
         )}
 
         {!error && !threadsError && (
-          <div className="d-flex flex-column flex-lg-row flex-grow-1" style={{ minHeight: 0 }}>
+          <div className="d-flex flex-column flex-md-row flex-grow-1" style={{ minHeight: 0 }}>
             <ChatList
               threads={threads}
               drafts={drafts}

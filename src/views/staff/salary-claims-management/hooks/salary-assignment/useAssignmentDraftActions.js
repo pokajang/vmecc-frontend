@@ -17,17 +17,9 @@ const useAssignmentDraftActions = ({
   activeAssignmentDraftName,
   setActiveAssignmentDraftName,
   editingAssignmentId,
-  payComponentsEditMode,
 }) => {
   const saveAssignmentAsDraft = useCallback(
     async ({ actorName }) => {
-      if (payComponentsEditMode) {
-        pushToast('Save or cancel Pay Components edits before saving draft.', {
-          title: 'Unsaved changes',
-          color: 'warning',
-        })
-        return { ok: false }
-      }
       const now = new Date().toISOString()
       const draftName =
         String(activeAssignmentDraftName || '').trim() ||
@@ -65,7 +57,6 @@ const useAssignmentDraftActions = ({
       activeAssignmentDraftName,
       assignmentDraft,
       editingAssignmentId,
-      payComponentsEditMode,
       pushToast,
       setActiveAssignmentDraftId,
       setActiveAssignmentDraftName,

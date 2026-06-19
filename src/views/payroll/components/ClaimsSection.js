@@ -39,15 +39,18 @@ const ClaimsSection = ({
   groupByPeriod = true,
   errorMessage = '',
   onRetry = () => {},
+  showPrimaryAction = true,
 }) => (
   <CCard>
     <CCardHeader className="d-flex flex-wrap justify-content-between align-items-center gap-2">
       <span>Claim Records</span>
-      <CreateActionButton
-        label="Apply Claim"
-        onClick={onCreateClaim}
-        icon={<Plus size={13} className="me-1 align-text-bottom" />}
-      />
+      {showPrimaryAction ? (
+        <CreateActionButton
+          label="Apply Claim"
+          onClick={onCreateClaim}
+          icon={<Plus size={13} className="me-1 align-text-bottom" />}
+        />
+      ) : null}
     </CCardHeader>
     <CCardBody>
       {errorMessage ? (

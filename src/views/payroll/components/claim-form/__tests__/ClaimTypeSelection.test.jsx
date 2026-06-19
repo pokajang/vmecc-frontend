@@ -40,7 +40,7 @@ describe('ClaimTypeSelection', () => {
       />,
     )
 
-    const expenseCard = screen.getByText('Expense Claim').closest('[role="button"]')
+    const expenseCard = screen.getByText('Expense Claim').closest('[role="radio"]')
     fireEvent.click(expenseCard)
     fireEvent.keyDown(expenseCard, { key: 'Enter' })
 
@@ -62,7 +62,7 @@ describe('ClaimTypeSelection', () => {
     )
 
     const periodDescriptions = screen.getAllByText('Claim period')
-    const firstPeriodCard = periodDescriptions[0].closest('[role="button"]')
+    const firstPeriodCard = periodDescriptions[0].closest('[role="radio"]')
     fireEvent.click(firstPeriodCard)
 
     expect(onPeriodChange).toHaveBeenCalledTimes(1)
@@ -70,7 +70,7 @@ describe('ClaimTypeSelection', () => {
 
   it('disables blocked salary month card and shows lock reason', () => {
     const blockedPeriod = buildClaimPeriodOptions(2)[0]?.value || ''
-    const blockedReason = 'Already claimed (CLM-2026-008 • Approved)'
+    const blockedReason = 'Already claimed (CLM-2026-008 - Approved)'
     render(
       <ClaimTypeSelection
         selectedType="salary"
@@ -92,7 +92,7 @@ describe('ClaimTypeSelection', () => {
 
   it('disables Continue when selected salary period is blocked', () => {
     const blockedPeriod = buildClaimPeriodOptions(2)[0]?.value || ''
-    const blockedReason = 'Already claimed (CLM-2026-008 • Approved)'
+    const blockedReason = 'Already claimed (CLM-2026-008 - Approved)'
     render(
       <ClaimTypeSelection
         selectedType="salary"

@@ -102,6 +102,6 @@ describe('OvertimeApplySection', () => {
     expect(screen.getByRole('button', { name: 'Clear form' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Save draft' })).toBeTruthy()
     expect(document.querySelector('.action-row-thumb')).toBeTruthy()
-    expect(document.querySelector('.action-row-thumb-spacer.d-lg-none')).toBeTruthy()
+    expect(document.querySelector('.action-row-thumb-spacer.d-md-none')).toBeTruthy()
   })
 })

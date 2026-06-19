@@ -1,22 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import {
-  CButton,
-  CCard,
-  CCardBody,
-  CCardHeader,
-  CFormCheck,
-  CFormLabel,
-  CFormSelect,
-  CTable,
-  CTableBody,
-  CTableDataCell,
-  CTableHead,
-  CTableHeaderCell,
-  CTableRow,
-} from '@coreui/react'
-import { Plus, Trash2 } from 'lucide-react'
+import { CButton, CCard, CCardBody, CCardHeader, CFormCheck } from '@coreui/react'
 import EditControls from 'src/components/EditControls'
 import { ROLE_OPTIONS } from 'src/constants/roles'
+import ApprovalRulesEditor from './ApprovalRulesEditor'
 import {
   DEFAULT_OVERTIME_APPROVAL_RULES,
   OVERTIME_TYPE_OPTIONS,
@@ -326,147 +312,23 @@ const OvertimeApprovalRules = () => {
           />
         </CCardHeader>
         <CCardBody className="d-grid gap-3">
-          <p className="text-muted mb-0">
-            Configure role-based overtime workflow routing for review, recommendation, and final
-            approval.
-          </p>
-          {flowStatusMessage ? <div className="text-success small">{flowStatusMessage}</div> : null}
-          {flowError ? <div className="text-danger small">{flowError}</div> : null}
-
-          <div className="fw-semibold">Workflow Options</div>
-          <CFormCheck
-            id="ot-approval-recommendation"
-            label="Require recommendation stage before final approval"
-            checked={Boolean(flowDraftWorkflow?.options?.requireRecommendation)}
-            onChange={(event) => setOptionField('requireRecommendation', event.target.checked)}
-            disabled={!flowEditMode || flowLoading}
+          <ApprovalRulesEditor
+            title="Overtime Approval Flow"
+            description="Configure role-based overtime workflow routing for review, recommendation, and final approval."
+            editMode={flowEditMode}
+            error={flowError}
+            loading={flowLoading}
+            policy={flowDraftWorkflow}
+            setPolicy={setFlowDraftWorkflow}
+            setFallbackField={setFallbackField}
+            setOptionField={setOptionField}
+            setRuleField={setRuleField}
+            addRule={addRule}
+            removeRule={removeRule}
+            sortedRoles={sortedRoles}
+            stageFields={STAGE_FIELDS}
+            statusMessage={flowStatusMessage}
           />
-          <CFormCheck
-            id="ot-approval-distinct"
-            label="Enforce distinct roles across Review, Recommend, and Approve"
-            checked={Boolean(flowDraftWorkflow?.options?.enforceDistinctApprovers)}
-            onChange={(event) => setOptionField('enforceDistinctApprovers', event.target.checked)}
-            disabled={!flowEditMode || flowLoading}
-          />
-
-          <div className="fw-semibold">Fallback Rule</div>
-          <div className="small text-muted">
-            Used when applicant role does not match any active rule.
-          </div>
-          <div className="row g-2">
-            {STAGE_FIELDS.map((stage) => (
-              <div className="col-12 col-md-4" key={stage.key}>
-                <CFormLabel className="small mb-1">{stage.label}</CFormLabel>
-                <CFormSelect
-                  size="sm"
-                  value={flowDraftWorkflow?.fallback?.[stage.key] || ''}
-                  onChange={(event) => setFallbackField(stage.key, event.target.value)}
-                  disabled={!flowEditMode || flowLoading}
-                >
-                  {sortedRoles.map((option) => (
-                    <option key={`ot-fallback-${stage.key}-${option.value}`} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </CFormSelect>
-              </div>
-            ))}
-          </div>
-
-          <div className="d-flex justify-content-between align-items-center">
-            <div className="fw-semibold">Role-Based Rules</div>
-            {flowEditMode ? (
-              <CButton
-                size="sm"
-                color="secondary"
-                variant="outline"
-                disabled={flowLoading}
-                onClick={addRule}
-              >
-                <Plus size={14} className="me-1" />
-                Add Rule
-              </CButton>
-            ) : null}
-          </div>
-
-          <div className="rounded-3 border overflow-hidden">
-            <CTable align="middle" className="mb-0" responsive>
-              <CTableHead color="light">
-                <CTableRow>
-                  <CTableHeaderCell>Applicant Role</CTableHeaderCell>
-                  <CTableHeaderCell>Review</CTableHeaderCell>
-                  <CTableHeaderCell>Recommend</CTableHeaderCell>
-                  <CTableHeaderCell>Approve</CTableHeaderCell>
-                  <CTableHeaderCell className="text-center">Active</CTableHeaderCell>
-                  <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
-                </CTableRow>
-              </CTableHead>
-              <CTableBody>
-                {(flowDraftWorkflow?.rules || []).map((rule) => (
-                  <CTableRow key={rule.id}>
-                    <CTableDataCell>
-                      <CFormSelect
-                        size="sm"
-                        value={rule.applicantRole}
-                        onChange={(event) =>
-                          setRuleField(rule.id, 'applicantRole', event.target.value)
-                        }
-                        disabled={!flowEditMode || flowLoading}
-                      >
-                        <option value="">Select role</option>
-                        {sortedRoles.map((option) => (
-                          <option key={`${rule.id}-applicant-${option.value}`} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </CFormSelect>
-                    </CTableDataCell>
-                    {STAGE_FIELDS.map((stage) => (
-                      <CTableDataCell key={`${rule.id}-${stage.key}`}>
-                        <CFormSelect
-                          size="sm"
-                          value={rule[stage.key] || ''}
-                          onChange={(event) => setRuleField(rule.id, stage.key, event.target.value)}
-                          disabled={!flowEditMode || flowLoading}
-                        >
-                          {sortedRoles.map((option) => (
-                            <option
-                              key={`${rule.id}-${stage.key}-${option.value}`}
-                              value={option.value}
-                            >
-                              {option.label}
-                            </option>
-                          ))}
-                        </CFormSelect>
-                      </CTableDataCell>
-                    ))}
-                    <CTableDataCell className="text-center">
-                      <CFormCheck
-                        checked={rule.active !== false}
-                        onChange={(event) => setRuleField(rule.id, 'active', event.target.checked)}
-                        disabled={!flowEditMode || flowLoading}
-                      />
-                    </CTableDataCell>
-                    <CTableDataCell className="text-center">
-                      {flowEditMode ? (
-                        <CButton
-                          size="sm"
-                          color="danger"
-                          variant="outline"
-                          disabled={(flowDraftWorkflow?.rules || []).length <= 1 || flowLoading}
-                          onClick={() => removeRule(rule.id)}
-                        >
-                          <Trash2 size={14} />
-                        </CButton>
-                      ) : (
-                        <span className="text-body-secondary small">-</span>
-                      )}
-                    </CTableDataCell>
-                  </CTableRow>
-                ))}
-              </CTableBody>
-            </CTable>
-          </div>
         </CCardBody>
       </CCard>
     </>

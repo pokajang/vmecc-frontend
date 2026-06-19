@@ -14,7 +14,7 @@ describe('useMessagesResponsiveState', () => {
       configurable: true,
       value: vi.fn(() => ({
         matches: mediaState.matches,
-        media: '(max-width: 991.98px)',
+        media: '(max-width: 767.98px)',
         onchange: null,
         addEventListener: vi.fn((event, listener) => {
           if (event === 'change') mediaListener = listener
@@ -35,6 +35,7 @@ describe('useMessagesResponsiveState', () => {
     expect(result.current.showThreadPanel).toBe(true)
     expect(result.current.showListPanel).toBe(true)
     expect(result.current.shouldPollThread).toBe(true)
+    expect(window.matchMedia).toHaveBeenCalledWith('(max-width: 767.98px)')
   })
 
   it('switches to list view on mobile breakpoint changes', async () => {

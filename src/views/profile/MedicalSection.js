@@ -12,15 +12,22 @@ const toListArray = (value) =>
     .map((v) => v.trim())
     .filter(Boolean)
 
-const normalizeMedicalForm = (medical = {}) => ({
-  bloodType: medical.bloodType || '',
-  allergies: toListString(medical.allergies || []),
-  conditions: toListString(medical.conditions || []),
-  medications: toListString(medical.medications || []),
-  notes: medical.notes || '',
-})
+const normalizeMedicalInfo = (medical) =>
+  medical && typeof medical === 'object' && !Array.isArray(medical) ? medical : {}
+
+const normalizeMedicalForm = (medical = {}) => {
+  const safeMedical = normalizeMedicalInfo(medical)
+  return {
+    bloodType: safeMedical.bloodType || '',
+    allergies: toListString(safeMedical.allergies || []),
+    conditions: toListString(safeMedical.conditions || []),
+    medications: toListString(safeMedical.medications || []),
+    notes: safeMedical.notes || '',
+  }
+}
 
 const MedicalSection = ({ medical = {} }) => {
+  const safeMedical = normalizeMedicalInfo(medical)
   const dispatch = useDispatch()
   const [showNotice, setShowNotice] = useState(true)
   const [editMode, setEditMode] = useState(false)
@@ -120,7 +127,7 @@ const MedicalSection = ({ medical = {} }) => {
               placeholder="e.g., A+, O-, AB"
             />
           ) : (
-            medical.bloodType || '--'
+            safeMedical.bloodType || '--'
           ),
         )}
         {renderRow(
@@ -135,7 +142,7 @@ const MedicalSection = ({ medical = {} }) => {
               placeholder="e.g., peanuts, penicillin"
             />
           ) : (
-            renderList(medical.allergies || [])
+            renderList(safeMedical.allergies || [])
           ),
         )}
         {renderRow(
@@ -150,7 +157,7 @@ const MedicalSection = ({ medical = {} }) => {
               placeholder="e.g., asthma, hypertension"
             />
           ) : (
-            renderList(medical.conditions || [])
+            renderList(safeMedical.conditions || [])
           ),
         )}
         {renderRow(
@@ -165,7 +172,7 @@ const MedicalSection = ({ medical = {} }) => {
               placeholder="e.g., ibuprofen, metformin"
             />
           ) : (
-            renderList(medical.medications || [])
+            renderList(safeMedical.medications || [])
           ),
         )}
         <div>
@@ -181,7 +188,7 @@ const MedicalSection = ({ medical = {} }) => {
             />
           ) : (
             <div className="border rounded p-2 bg-body-secondary text-body">
-              {medical.notes ? medical.notes : '--'}
+              {safeMedical.notes ? safeMedical.notes : '--'}
             </div>
           )}
         </div>

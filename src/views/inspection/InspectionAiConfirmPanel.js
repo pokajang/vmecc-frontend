@@ -202,6 +202,7 @@ const InspectionAiConfirmPanel = ({
 }) => {
   const [confirmedType, setConfirmedType] = useState(aiResult.detectedType || '')
   const [confirmedLocation, setConfirmedLocation] = useState(initialLocation)
+  const [summaryAccepted, setSummaryAccepted] = useState(false)
 
   // Sequential description steps: 0 = condition active, 1 = action active, 2 = all done
   const [descStep, setDescStep] = useState(0)
@@ -304,6 +305,7 @@ const InspectionAiConfirmPanel = ({
     ? aiResult.secondaryFindings
     : []
   const uploadedPhotoLabel = photos.length > 1 ? 'Uploaded Photos' : 'Uploaded Photo'
+  const acceptedSummary = [conditionText, actionText].filter(Boolean).join('\n\n')
 
   return (
     <>
@@ -377,12 +379,46 @@ const InspectionAiConfirmPanel = ({
           <div className="text-body-secondary small mt-1">{photo.fileName}</div>
         </div>
 
+        <div className="rounded-3 border bg-white p-3 d-grid gap-2">
+          <div className="d-flex flex-wrap justify-content-between align-items-start gap-2">
+            <div>
+              <div className="fw-semibold">Editable AI Summary</div>
+              <div className="small text-body-secondary">
+                Accept the suggested summary for the common path, or edit the details before review.
+              </div>
+            </div>
+            <div className="d-flex flex-wrap gap-2">
+              <CButton
+                size="sm"
+                color={summaryAccepted ? 'success' : 'primary'}
+                onClick={() => {
+                  setSummaryAccepted(true)
+                  setDescStep(2)
+                }}
+              >
+                Accept summary
+              </CButton>
+              <CButton
+                size="sm"
+                color="secondary"
+                variant="outline"
+                onClick={() => {
+                  setSummaryAccepted(false)
+                  setDescStep(0)
+                }}
+              >
+                Edit details
+              </CButton>
+            </div>
+          </div>
+          <div className="small" style={{ whiteSpace: 'pre-wrap' }}>
+            {acceptedSummary || 'No AI summary text is available yet.'}
+          </div>
+        </div>
+
         {/* Inspection type */}
         <div className="d-grid gap-2">
-          <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <div className="fw-semibold">Choose Inspection Type</div>
-            <CreateActionButton label="Add type" onClick={incident.openAddModal} />
-          </div>
+          <div className="fw-semibold">Choose Inspection Type</div>
           <IconOptionGrid
             options={incident.visibleTypeOptions}
             value={confirmedType}
@@ -401,54 +437,63 @@ const InspectionAiConfirmPanel = ({
               return isSelected ? { style: ACTIVE_CARD_STYLE } : {}
             }}
           />
+          <details className="rounded-3 border bg-white p-3">
+            <summary className="fw-semibold">Custom type management</summary>
+            <div className="small text-body-secondary mt-2">
+              Add or edit inspection templates without interrupting the primary review path.
+            </div>
+            <CreateActionButton label="Add type" onClick={incident.openAddModal} className="mt-2" />
+          </details>
         </div>
 
         {/* Description - sequential steps */}
-        <div className="d-grid gap-2">
-          <div className="fw-semibold">Set Description</div>
+        {!summaryAccepted ? (
+          <div className="d-grid gap-2">
+            <div className="fw-semibold">Set Description</div>
 
-          {/* Completed steps */}
-          {descStep > 0 && (
-            <CompletedStep
-              title="Current Condition"
-              text={conditionText}
-              onEdit={descStep > 1 ? () => openStepEditor(0) : undefined}
-            />
-          )}
-          {descStep > 1 && (
-            <CompletedStep
-              title="Action Taken"
-              text={actionText}
-              onEdit={() => openStepEditor(1)}
-            />
-          )}
+            {/* Completed steps */}
+            {descStep > 0 && (
+              <CompletedStep
+                title="Current Condition"
+                text={conditionText}
+                onEdit={descStep > 1 ? () => openStepEditor(0) : undefined}
+              />
+            )}
+            {descStep > 1 && (
+              <CompletedStep
+                title="Action Taken"
+                text={actionText}
+                onEdit={() => openStepEditor(1)}
+              />
+            )}
 
-          {/* Active step */}
-          {descStep === 0 && (
-            <DescriptionStep
-              title="Current Condition"
-              options={getAngleOptions(aiResult.descriptions, 'condition')}
-              value={conditionText}
-              onChange={setConditionText}
-              onContinue={() => (editSnapshot?.step === 0 ? saveStepEditor() : setDescStep(1))}
-              onCancel={cancelStepEditor}
-              isRowEdit={editSnapshot?.step === 0}
-            />
-          )}
-          {descStep === 1 && (
-            <DescriptionStep
-              title="Action Taken"
-              options={getAngleOptions(aiResult.descriptions, 'action')}
-              value={actionText}
-              onChange={setActionText}
-              onBack={() => setDescStep(0)}
-              onContinue={() => (editSnapshot?.step === 1 ? saveStepEditor() : setDescStep(2))}
-              onCancel={cancelStepEditor}
-              isLast
-              isRowEdit={editSnapshot?.step === 1}
-            />
-          )}
-        </div>
+            {/* Active step */}
+            {descStep === 0 && (
+              <DescriptionStep
+                title="Current Condition"
+                options={getAngleOptions(aiResult.descriptions, 'condition')}
+                value={conditionText}
+                onChange={setConditionText}
+                onContinue={() => (editSnapshot?.step === 0 ? saveStepEditor() : setDescStep(1))}
+                onCancel={cancelStepEditor}
+                isRowEdit={editSnapshot?.step === 0}
+              />
+            )}
+            {descStep === 1 && (
+              <DescriptionStep
+                title="Action Taken"
+                options={getAngleOptions(aiResult.descriptions, 'action')}
+                value={actionText}
+                onChange={setActionText}
+                onBack={() => setDescStep(0)}
+                onContinue={() => (editSnapshot?.step === 1 ? saveStepEditor() : setDescStep(2))}
+                onCancel={cancelStepEditor}
+                isLast
+                isRowEdit={editSnapshot?.step === 1}
+              />
+            )}
+          </div>
+        ) : null}
 
         {/* Secondary findings (shown only after description is completed) */}
         {descStep > 1 ? (

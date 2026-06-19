@@ -37,15 +37,18 @@ const SalaryPayoutCard = ({
   onEditItem,
   onRemoveItem,
   onPreviewAttachment,
+  showAddAction = true,
 }) => (
   <CCard>
     <CCardHeader className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
       <span>Salary Payout</span>
-      <CreateActionButton
-        label="Add Adjustment"
-        onClick={onAddItem}
-        disabled={!hasAssignedSalaryBaseline}
-      />
+      {showAddAction && (
+        <CreateActionButton
+          label="Add Adjustment"
+          onClick={onAddItem}
+          disabled={!hasAssignedSalaryBaseline}
+        />
+      )}
     </CCardHeader>
     <CCardBody className="d-grid gap-3">
       {isSalaryAssignmentsLoading ? (

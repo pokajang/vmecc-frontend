@@ -80,7 +80,7 @@ const LeaveTypeSelection = ({ selectedType, onSelect, onContinue, onBack = () =>
           Continue
         </CButton>
       </div>
-      <div className="action-row-thumb-spacer d-lg-none" />
+      <div className="action-row-thumb-spacer d-md-none" />
     </div>
   )
 }

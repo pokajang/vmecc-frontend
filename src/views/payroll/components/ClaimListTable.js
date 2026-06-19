@@ -1,5 +1,6 @@
 import React from 'react'
 import {
+  CBadge,
   CTable,
   CTableBody,
   CTableDataCell,
@@ -10,6 +11,7 @@ import {
 import { LoaderCircle, Plus } from 'lucide-react'
 import ApprovalGates from 'src/components/ApprovalGates'
 import GroupedTableHeaderRow, { GroupTotalBadge } from 'src/components/GroupedTableHeader'
+import MobileRecordList from 'src/components/MobileRecordList'
 import RowActions from 'src/components/RowActions'
 
 const MONTH_INDEX_BY_NAME = {
@@ -104,6 +106,42 @@ const PAYROLL_GATES = [
   { action: 'Approved', label: 'Approved' },
 ]
 
+const TERMINAL_STATUSES = ['Approved', 'Paid', 'Rejected', 'Cancelled']
+const STATUS_COLORS = {
+  Approved: 'success',
+  Paid: 'success',
+  Rejected: 'danger',
+  Cancelled: 'secondary',
+  Pending: 'warning',
+  Checked: 'info',
+  Reviewed: 'info',
+  Draft: 'secondary',
+}
+
+const resolveStatusLabel = (claim = {}) => {
+  if (claim?.isDraft) return claim?.localOnly ? 'Draft (Syncing)' : 'Draft'
+  return String(claim?.status || '').trim() || '-'
+}
+
+const resolveNextState = (claim = {}) => {
+  const status = resolveStatusLabel(claim)
+  if (claim?.isDraft) return status
+  if (TERMINAL_STATUSES.includes(status)) return status
+
+  const completedActions = new Set(
+    (Array.isArray(claim?.approvalHistory) ? claim.approvalHistory : []).map(
+      (entry) => entry?.action,
+    ),
+  )
+  const nextGate = PAYROLL_GATES.find((gate) => !completedActions.has(gate.action))
+  return nextGate ? `Pending ${nextGate.label}` : status
+}
+
+const renderStatusBadge = (claim = {}) => {
+  const status = resolveStatusLabel(claim)
+  return <CBadge color={STATUS_COLORS[status] || 'secondary'}>{status}</CBadge>
+}
+
 const ClaimListTable = ({
   claims = [],
   groupByPeriod = true,
@@ -127,168 +165,231 @@ const ClaimListTable = ({
     entry.count += 1
   })
 
+  const getClaimActionItems = (claim) => {
+    const isDraft = Boolean(claim?.isDraft)
+    const isLocalSyncingDraft = Boolean(claim?.localOnly)
+    const status = String(claim?.status || '').trim()
+    const isTerminal = TERMINAL_STATUSES.includes(status)
+    const canDeleteByStatus = isDraft || status === 'Cancelled'
+    const editCapability = claim?.actionPermissions?.edit || null
+    const cancelCapability = claim?.actionPermissions?.cancel || null
+    const deleteCapability = claim?.actionPermissions?.delete || null
+    const downloadCapability = claim?.actionPermissions?.downloadAttachment || null
+    const disableCancel =
+      isDraft || isTerminal || isLocalSyncingDraft || cancelCapability?.enabled === false
+    const disableEdit = (!isDraft && isTerminal) || editCapability?.enabled === false
+    const disableDelete = !canDeleteByStatus || deleteCapability?.enabled === false
+    const disableDownload =
+      !claim.attachmentAvailable ||
+      isLocalSyncingDraft ||
+      downloadCapability?.enabled === false ||
+      claim?.attachmentOwnedByViewer === false
+
+    return [
+      {
+        key: 'edit-claim',
+        label: 'Edit',
+        onClick: () => onEditClaim(claim),
+        disabled: disableEdit,
+        disabledReason: editCapability?.blockedReason || 'This claim can no longer be edited.',
+      },
+      {
+        key: 'cancel-claim',
+        label: 'Cancel',
+        onClick: () => onCancelClaim(claim),
+        disabled: disableCancel,
+        disabledReason:
+          cancelCapability?.blockedReason || 'Only active submitted claims can be cancelled.',
+      },
+      {
+        key: 'delete-claim',
+        label: 'Delete',
+        onClick: () => onDeleteClaim(claim),
+        disabled: disableDelete,
+        disabledReason:
+          deleteCapability?.blockedReason || 'Please cancel this claim before deleting it.',
+        className: 'text-danger',
+      },
+      {
+        key: 'download-attachment',
+        label: claim.attachmentAvailable ? 'Download attachment' : 'No attachment',
+        onClick: () => onDownloadAttachment(claim),
+        disabled: disableDownload,
+        disabledReason:
+          downloadCapability?.blockedReason ||
+          (claim?.attachmentOwnedByViewer === false
+            ? 'Attachment access is restricted for this claim.'
+            : 'Attachment is not available for this claim.'),
+      },
+    ]
+  }
+
+  const mobileSections = []
+  if (groupByPeriod) {
+    claims.forEach((claim) => {
+      const meta = resolvePeriodKey(claim)
+      let section = mobileSections.find((entry) => entry.key === meta.key)
+      if (!section) {
+        const summary = groupMeta.get(meta.key) || { label: meta.label, total: 0, count: 0 }
+        section = {
+          key: meta.key,
+          label: summary.label || 'Unknown month',
+          summary: `${summary.count} ${summary.count === 1 ? 'record' : 'records'} - ${formatCurrency(
+            summary.total,
+          )}`,
+          items: [],
+        }
+        mobileSections.push(section)
+      }
+      section.items.push(claim)
+    })
+  } else {
+    mobileSections.push({
+      key: 'all-claims',
+      label: '',
+      summary: '',
+      items: claims,
+    })
+  }
+
+  const mobileRecordSections = mobileSections.map((section) => ({
+    ...section,
+    items: section.items.map((claim) => {
+      const salarySupplements = resolveSalaryClaimSupplements(claim)
+      const isSalaryClaim = String(claim?.type || '').trim() === 'salary'
+      const detail = isSalaryClaim
+        ? salarySupplements.length > 0
+          ? salarySupplements.join(', ')
+          : ''
+        : claim.categoryDetail || ''
+
+      return {
+        key: claim.id,
+        title: claim.id,
+        eyebrow: claim.category || 'Claim',
+        subtitle: detail || claim.period || '-',
+        status: renderStatusBadge(claim),
+        ariaLabel: `Open claim ${claim.id} summary`,
+        onOpen: () => onOpenClaim(claim),
+        fields: [
+          { key: 'period', label: 'Period', value: claim.period || '-' },
+          { key: 'submitted', label: 'Submitted', value: formatDate(claim.submittedAt) },
+          { key: 'amount', label: 'Amount', value: formatCurrency(resolveDisplayAmount(claim)) },
+          { key: 'next', label: 'Next', value: resolveNextState(claim) },
+        ],
+        actions: <RowActions items={getClaimActionItems(claim)} />,
+      }
+    }),
+  }))
+
   let lastGroupKey = null
   let index = 0
 
   return (
-    <div className="rounded-3 shadow-sm overflow-hidden bg-white">
-      <CTable align="middle" className="mb-0" hover responsive>
-        <CTableHead color="light">
-          <CTableRow>
-            <CTableHeaderCell className="text-center" style={{ width: '56px' }}>
-              #
-            </CTableHeaderCell>
-            <CTableHeaderCell>Claim ID</CTableHeaderCell>
-            <CTableHeaderCell>Period</CTableHeaderCell>
-            <CTableHeaderCell>Claim Type</CTableHeaderCell>
-            <CTableHeaderCell>Submitted</CTableHeaderCell>
-            <CTableHeaderCell className="text-end">Amount</CTableHeaderCell>
-            <CTableHeaderCell>Status</CTableHeaderCell>
-            <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
-          </CTableRow>
-        </CTableHead>
-        <CTableBody>
-          {claims.flatMap((claim) => {
-            const rows = []
-            const meta = resolvePeriodKey(claim)
-            if (groupByPeriod && meta.key !== lastGroupKey) {
-              lastGroupKey = meta.key
-              const summary = groupMeta.get(meta.key) || { label: meta.label, total: 0, count: 0 }
+    <>
+      <MobileRecordList sections={mobileRecordSections} />
+      <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
+        <CTable align="middle" className="mb-0" hover responsive>
+          <CTableHead color="light">
+            <CTableRow>
+              <CTableHeaderCell className="text-center" style={{ width: '56px' }}>
+                #
+              </CTableHeaderCell>
+              <CTableHeaderCell>Claim ID</CTableHeaderCell>
+              <CTableHeaderCell>Period</CTableHeaderCell>
+              <CTableHeaderCell>Claim Type</CTableHeaderCell>
+              <CTableHeaderCell>Submitted</CTableHeaderCell>
+              <CTableHeaderCell className="text-end">Amount</CTableHeaderCell>
+              <CTableHeaderCell>Status</CTableHeaderCell>
+              <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
+            </CTableRow>
+          </CTableHead>
+          <CTableBody>
+            {claims.flatMap((claim) => {
+              const rows = []
+              const meta = resolvePeriodKey(claim)
+              if (groupByPeriod && meta.key !== lastGroupKey) {
+                lastGroupKey = meta.key
+                const summary = groupMeta.get(meta.key) || { label: meta.label, total: 0, count: 0 }
+                rows.push(
+                  <GroupedTableHeaderRow
+                    key={`group-${meta.key}`}
+                    colSpan={8}
+                    label={summary.label || 'Unknown month'}
+                    count={summary.count}
+                  >
+                    <GroupTotalBadge label="Total" value={formatCurrency(summary.total)} />
+                  </GroupedTableHeaderRow>,
+                )
+              }
+              index += 1
+              const isDraft = Boolean(claim?.isDraft)
+              const isLocalSyncingDraft = Boolean(claim?.localOnly)
+              const salarySupplements = resolveSalaryClaimSupplements(claim)
               rows.push(
-                <GroupedTableHeaderRow
-                  key={`group-${meta.key}`}
-                  colSpan={8}
-                  label={summary.label || 'Unknown month'}
-                  count={summary.count}
+                <CTableRow
+                  key={claim.id}
+                  role="button"
+                  className="cursor-pointer"
+                  tabIndex={0}
+                  aria-label={`Open claim ${claim.id}`}
+                  onClick={() => onOpenClaim(claim)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      onOpenClaim(claim)
+                    }
+                  }}
                 >
-                  <GroupTotalBadge label="Total" value={formatCurrency(summary.total)} />
-                </GroupedTableHeaderRow>,
-              )
-            }
-            index += 1
-            const isDraft = Boolean(claim?.isDraft)
-            const isLocalSyncingDraft = Boolean(claim?.localOnly)
-            const status = String(claim?.status || '').trim()
-            const isTerminal = ['Approved', 'Paid', 'Rejected', 'Cancelled'].includes(status)
-            const canDeleteByStatus = isDraft || status === 'Cancelled'
-            const editCapability = claim?.actionPermissions?.edit || null
-            const cancelCapability = claim?.actionPermissions?.cancel || null
-            const deleteCapability = claim?.actionPermissions?.delete || null
-            const downloadCapability = claim?.actionPermissions?.downloadAttachment || null
-            const disableCancel =
-              isDraft || isTerminal || isLocalSyncingDraft || cancelCapability?.enabled === false
-            const disableEdit = (!isDraft && isTerminal) || editCapability?.enabled === false
-            const disableDelete = !canDeleteByStatus || deleteCapability?.enabled === false
-            const disableDownload =
-              !claim.attachmentAvailable ||
-              isLocalSyncingDraft ||
-              downloadCapability?.enabled === false ||
-              claim?.attachmentOwnedByViewer === false
-            const salarySupplements = resolveSalaryClaimSupplements(claim)
-            rows.push(
-              <CTableRow
-                key={claim.id}
-                role="button"
-                className="cursor-pointer"
-                tabIndex={0}
-                aria-label={`Open claim ${claim.id}`}
-                onClick={() => onOpenClaim(claim)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault()
-                    onOpenClaim(claim)
-                  }
-                }}
-              >
-                <CTableDataCell className="text-center text-muted">{index}</CTableDataCell>
-                <CTableDataCell className="fw-semibold">{claim.id}</CTableDataCell>
-                <CTableDataCell>{claim.period}</CTableDataCell>
-                <CTableDataCell>
-                  <div className="fw-medium">{claim.category}</div>
-                  {String(claim?.type || '').trim() === 'salary' ? (
-                    salarySupplements.length > 0 ? (
-                      <div className="small text-body-secondary d-inline-flex align-items-center gap-1">
-                        <Plus size={11} />
-                        <span>{salarySupplements.join(', ')}</span>
+                  <CTableDataCell className="text-center text-muted">{index}</CTableDataCell>
+                  <CTableDataCell className="fw-semibold">{claim.id}</CTableDataCell>
+                  <CTableDataCell>{claim.period}</CTableDataCell>
+                  <CTableDataCell>
+                    <div className="fw-medium">{claim.category}</div>
+                    {String(claim?.type || '').trim() === 'salary' ? (
+                      salarySupplements.length > 0 ? (
+                        <div className="small text-body-secondary d-inline-flex align-items-center gap-1">
+                          <Plus size={11} />
+                          <span>{salarySupplements.join(', ')}</span>
+                        </div>
+                      ) : null
+                    ) : claim.categoryDetail ? (
+                      <div className="small text-body-secondary">{claim.categoryDetail}</div>
+                    ) : null}
+                  </CTableDataCell>
+                  <CTableDataCell>{formatDate(claim.submittedAt)}</CTableDataCell>
+                  <CTableDataCell className="text-end">
+                    {formatCurrency(resolveDisplayAmount(claim))}
+                  </CTableDataCell>
+                  <CTableDataCell>
+                    {isDraft ? (
+                      <div className="small d-inline-flex align-items-center text-body-secondary">
+                        <LoaderCircle size={12} className="me-1" />
+                        {isLocalSyncingDraft ? 'Draft (Syncing)' : 'Draft'}
                       </div>
-                    ) : null
-                  ) : claim.categoryDetail ? (
-                    <div className="small text-body-secondary">{claim.categoryDetail}</div>
-                  ) : null}
-                </CTableDataCell>
-                <CTableDataCell>{formatDate(claim.submittedAt)}</CTableDataCell>
-                <CTableDataCell className="text-end">
-                  {formatCurrency(resolveDisplayAmount(claim))}
-                </CTableDataCell>
-                <CTableDataCell>
-                  {isDraft ? (
-                    <div className="small d-inline-flex align-items-center text-body-secondary">
-                      <LoaderCircle size={12} className="me-1" />
-                      {isLocalSyncingDraft ? 'Draft (Syncing)' : 'Draft'}
-                    </div>
-                  ) : (
-                    <ApprovalGates
-                      gates={PAYROLL_GATES}
-                      approvalHistory={claim.approvalHistory}
-                      isCancelled={claim.status === 'Cancelled'}
-                    />
-                  )}
-                </CTableDataCell>
-                <CTableDataCell
-                  className="text-center align-middle"
-                  onClick={(event) => event.stopPropagation()}
-                  onMouseDown={(event) => event.stopPropagation()}
-                >
-                  <RowActions
-                    items={[
-                      {
-                        key: 'edit-claim',
-                        label: 'Edit',
-                        onClick: () => onEditClaim(claim),
-                        disabled: disableEdit,
-                        disabledReason:
-                          editCapability?.blockedReason || 'This claim can no longer be edited.',
-                      },
-                      {
-                        key: 'cancel-claim',
-                        label: 'Cancel',
-                        onClick: () => onCancelClaim(claim),
-                        disabled: disableCancel,
-                        disabledReason:
-                          cancelCapability?.blockedReason ||
-                          'Only active submitted claims can be cancelled.',
-                      },
-                      {
-                        key: 'delete-claim',
-                        label: 'Delete',
-                        onClick: () => onDeleteClaim(claim),
-                        disabled: disableDelete,
-                        disabledReason:
-                          deleteCapability?.blockedReason ||
-                          'Please cancel this claim before deleting it.',
-                        className: 'text-danger',
-                      },
-                      {
-                        key: 'download-attachment',
-                        label: claim.attachmentAvailable ? 'Download attachment' : 'No attachment',
-                        onClick: () => onDownloadAttachment(claim),
-                        disabled: disableDownload,
-                        disabledReason:
-                          downloadCapability?.blockedReason ||
-                          (claim?.attachmentOwnedByViewer === false
-                            ? 'Attachment access is restricted for this claim.'
-                            : 'Attachment is not available for this claim.'),
-                      },
-                    ]}
-                  />
-                </CTableDataCell>
-              </CTableRow>,
-            )
-            return rows
-          })}
-        </CTableBody>
-      </CTable>
-    </div>
+                    ) : (
+                      <ApprovalGates
+                        gates={PAYROLL_GATES}
+                        approvalHistory={claim.approvalHistory}
+                        isCancelled={claim.status === 'Cancelled'}
+                      />
+                    )}
+                  </CTableDataCell>
+                  <CTableDataCell
+                    className="text-center align-middle"
+                    onClick={(event) => event.stopPropagation()}
+                    onMouseDown={(event) => event.stopPropagation()}
+                  >
+                    <RowActions items={getClaimActionItems(claim)} />
+                  </CTableDataCell>
+                </CTableRow>,
+              )
+              return rows
+            })}
+          </CTableBody>
+        </CTable>
+      </div>
+    </>
   )
 }
 

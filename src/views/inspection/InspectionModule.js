@@ -1,18 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import {
-  CBadge,
-  CContainer,
-  CNav,
-  CNavItem,
-  CNavLink,
-  CToast,
-  CToastBody,
-  CToastHeader,
-  CToaster,
-} from '@coreui/react'
+import { CBadge, CContainer, CToast, CToastBody, CToastHeader, CToaster } from '@coreui/react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
+import CreateActionButton from 'src/components/CreateActionButton'
+import ModuleNavTabs from 'src/components/ModuleNavTabs'
+import ModulePageHeader from 'src/components/ModulePageHeader'
 import TableLoader from 'src/components/TableLoader'
 import InspectionWorkflowActionModal from 'src/views/inspection/components/InspectionWorkflowActionModal'
 import InspectionRecordsSection from 'src/views/inspection/InspectionRecordsSection'
@@ -483,8 +476,24 @@ const InspectionModule = () => {
     )
   }
 
+  const isCreateSection = activeSection === 'form' || activeSection === 'review'
+  const recordsSectionActive = activeSection === 'records' || activeSection === 'detail'
+
   return (
     <CContainer fluid>
+      <ModulePageHeader
+        title="Inspection"
+        subtitle="Review inspection records, manage drafts, and submit new inspections."
+        actions={
+          isCreateSection ? null : (
+            <CreateActionButton
+              label="New Inspection"
+              importance="primary"
+              onClick={() => runGuardedAction(startNew)}
+            />
+          )
+        }
+      />
       <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
       {(isDeleting || isSubmitting) && (
         <div
@@ -570,28 +579,22 @@ const InspectionModule = () => {
         onSubmit={submitWorkflowAction}
       />
 
-      <CNav variant="underline" role="tablist" className="mb-3 flex-nowrap overflow-auto pb-1">
-        <CNavItem role="presentation">
-          <CNavLink
-            active={activeSection === 'records' || activeSection === 'detail'}
-            onClick={() => runGuardedAction(() => navigate(reportBasePath))}
-            style={{ cursor: 'pointer' }}
-            className={`${activeSection === 'records' || activeSection === 'detail' ? 'text-primary' : ''} text-nowrap`.trim()}
-          >
-            Inspection Records
-          </CNavLink>
-        </CNavItem>
-        <CNavItem role="presentation">
-          <CNavLink
-            active={activeSection === 'form' || activeSection === 'review'}
-            onClick={() => runGuardedAction(startNew)}
-            style={{ cursor: 'pointer' }}
-            className={`${activeSection === 'form' || activeSection === 'review' ? 'text-primary' : ''} text-nowrap`.trim()}
-          >
-            New Inspection
-          </CNavLink>
-        </CNavItem>
-      </CNav>
+      <ModuleNavTabs
+        items={[
+          {
+            key: 'records',
+            label: 'Inspection Records',
+            active: recordsSectionActive,
+            onClick: () => runGuardedAction(() => navigate(reportBasePath)),
+          },
+          {
+            key: 'new',
+            label: 'New Inspection',
+            active: isCreateSection,
+            onClick: () => runGuardedAction(startNew),
+          },
+        ]}
+      />
 
       {activeSection === 'records' ? (
         <InspectionRecordsSection
@@ -630,6 +633,7 @@ const InspectionModule = () => {
           rowsToShow={rowsToShow}
           setRowsToShow={setRowsToShow}
           totalCount={recordsInScopeCount}
+          showPrimaryAction={false}
         />
       ) : null}
 

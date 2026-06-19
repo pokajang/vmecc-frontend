@@ -1,25 +1,17 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import {
-  CBadge,
-  CButton,
-  CCol,
-  CFormInput,
-  CFormLabel,
-  CFormSelect,
-  COffcanvas,
-  COffcanvasBody,
-  COffcanvasHeader,
-  COffcanvasTitle,
-  CRow,
-} from '@coreui/react'
-import { Filter, X } from 'lucide-react'
-import TablePeriodSelect, { getPeriodOptions } from 'src/components/TablePeriodSelect'
+import React, { useCallback, useRef, useState } from 'react'
+import { CBadge, CButton, CCol, CFormInput, CRow } from '@coreui/react'
+import { Filter } from 'lucide-react'
+import useFocusTrap from 'src/hooks/useFocusTrap'
+import ActiveFilterChips from './table-filters/ActiveFilterChips'
+import FilterControls, { PeriodFilterControl } from './table-filters/FilterControls'
+import MobileFilterDrawer from './table-filters/MobileFilterDrawer'
+import useTableFilters from './table-filters/useTableFilters'
 
 /**
  * Generic filter bar with search + selects + clear.
  * Props:
  *  - searchValue, onSearchChange, searchPlaceholder
- *  - filters: [{ key, label, value, onChange, options: [{label, value}] }]
+ *  - filters: [{ key, label, value, onChange, options: [{label, value}], defaultValue? }]
  *  - onClear, clearLabel
  */
 const TableFilters = ({
@@ -39,46 +31,33 @@ const TableFilters = ({
   periodColMd = 2,
   filterColMd = 3,
   clearColMd = 2,
+  showDesktopLabels = false,
+  periodLabel = 'Period',
+  showActiveSummary = true,
 }) => {
-  const [localSearch, setLocalSearch] = useState(searchValue)
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+  const mobileFilterTriggerRef = useRef(null)
+  const mobileFilterDrawerRef = useRef(null)
+  const mobileFilterCloseRef = useRef(null)
 
-  useEffect(() => {
-    setLocalSearch(searchValue)
-  }, [searchValue])
+  const {
+    localSearch,
+    setLocalSearch,
+    resolvedPeriodOptions,
+    activeFilterItems,
+    isStructuredFilterActive,
+    isAnyFilterActive,
+  } = useTableFilters({
+    searchValue,
+    onSearchChange,
+    filters,
+    periodValue,
+    onPeriodChange,
+    periodOptions,
+    showPeriod,
+    periodLabel,
+  })
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (localSearch !== searchValue) {
-        onSearchChange(localSearch)
-      }
-    }, 250)
-    return () => clearTimeout(timer)
-  }, [localSearch, onSearchChange, searchValue])
-
-  const isStructuredFilterActive = useMemo(() => {
-    if (showPeriod && periodValue && periodValue !== 'all') return true
-    return filters.some((f) => {
-      const firstOptionValue = f.options?.[0]?.value
-      return f.value !== undefined && f.value !== firstOptionValue
-    })
-  }, [showPeriod, periodValue, filters])
-
-  const activeStructuredFilterCount = useMemo(() => {
-    let count = showPeriod && periodValue && periodValue !== 'all' ? 1 : 0
-    filters.forEach((f) => {
-      const firstOptionValue = f.options?.[0]?.value
-      if (f.value !== undefined && f.value !== firstOptionValue) count += 1
-    })
-    return count
-  }, [showPeriod, periodValue, filters])
-
-  const isAnyFilterActive = useMemo(() => {
-    if (localSearch.trim()) return true
-    return isStructuredFilterActive
-  }, [localSearch, isStructuredFilterActive])
-
-  const resolvedPeriodOptions = periodOptions || getPeriodOptions()
   const selectClassName = autoWidth ? 'w-auto' : ''
   const buttonClassName = autoWidth ? 'w-auto' : 'w-100 w-md-auto'
   const searchColProps = autoWidth
@@ -89,44 +68,42 @@ const TableFilters = ({
   const clearColProps = autoWidth ? { xs: 12, md: 'auto' } : { xs: 12, md: clearColMd }
   const mobileSearchColProps = autoWidth ? { xs: true, className: 'flex-grow-1' } : { xs: true }
 
+  const closeMobileFilters = useCallback(() => setMobileFiltersOpen(false), [])
+
+  useFocusTrap({
+    enabled: mobileFiltersOpen,
+    containerRef: mobileFilterDrawerRef,
+    initialFocusRef: mobileFilterCloseRef,
+    returnFocusRef: mobileFilterTriggerRef,
+    onEscape: closeMobileFilters,
+  })
+
   const handleClear = () => {
     onClear()
-    setMobileFiltersOpen(false)
+    closeMobileFilters()
   }
 
   const renderPeriodControl = ({ mobile = false } = {}) =>
     showPeriod ? (
-      <div className={mobile ? 'd-grid gap-1' : ''}>
-        {mobile ? <CFormLabel className="small text-body-secondary mb-0">Period</CFormLabel> : null}
-        <TablePeriodSelect
-          value={periodValue}
-          onChange={onPeriodChange}
-          options={resolvedPeriodOptions}
-          className={mobile ? 'w-100' : selectClassName}
-        />
-      </div>
+      <PeriodFilterControl
+        value={periodValue}
+        onChange={onPeriodChange}
+        options={resolvedPeriodOptions}
+        label={periodLabel}
+        mobile={mobile}
+        showDesktopLabels={showDesktopLabels}
+        selectClassName={selectClassName}
+      />
     ) : null
 
   const renderFilterControl = (filter, { mobile = false } = {}) => (
-    <div key={filter.key} className={mobile ? 'd-grid gap-1' : ''}>
-      {mobile ? (
-        <CFormLabel className="small text-body-secondary mb-0">
-          {filter.label || 'Filter'}
-        </CFormLabel>
-      ) : null}
-      <CFormSelect
-        size="sm"
-        value={filter.value}
-        onChange={(e) => filter.onChange(e.target.value)}
-        className={mobile ? 'w-100' : selectClassName}
-      >
-        {filter.options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </CFormSelect>
-    </div>
+    <FilterControls
+      key={filter.key}
+      filter={filter}
+      mobile={mobile}
+      showDesktopLabels={showDesktopLabels}
+      selectClassName={selectClassName}
+    />
   )
 
   return (
@@ -146,22 +123,23 @@ const TableFilters = ({
         {(showPeriod || filters.length > 0 || isAnyFilterActive) && (
           <CCol xs="auto" className="d-md-none">
             <CButton
+              ref={mobileFilterTriggerRef}
               size="sm"
               color={isStructuredFilterActive ? 'primary' : 'secondary'}
               variant={isStructuredFilterActive ? undefined : 'outline'}
               className="position-relative d-inline-flex align-items-center justify-content-center"
-              style={{ width: 34, height: 34 }}
+              style={{ width: 44, height: 44 }}
               onClick={() => setMobileFiltersOpen(true)}
               aria-label="Open filters"
             >
               <Filter size={16} />
-              {activeStructuredFilterCount > 0 ? (
+              {activeFilterItems.length > 0 ? (
                 <CBadge
                   color="danger"
                   className="position-absolute top-0 start-100 translate-middle rounded-pill"
                   style={{ fontSize: '0.6rem' }}
                 >
-                  {activeStructuredFilterCount}
+                  {activeFilterItems.length}
                 </CBadge>
               ) : null}
             </CButton>
@@ -207,35 +185,20 @@ const TableFilters = ({
         )}
       </CRow>
 
-      <COffcanvas
+      {showActiveSummary ? <ActiveFilterChips items={activeFilterItems} /> : null}
+
+      <MobileFilterDrawer
+        drawerRef={mobileFilterDrawerRef}
+        closeRef={mobileFilterCloseRef}
         visible={mobileFiltersOpen}
-        onHide={() => setMobileFiltersOpen(false)}
-        placement="bottom"
-        className="table-filter-drawer d-md-none"
-      >
-        <COffcanvasHeader>
-          <COffcanvasTitle>Filters</COffcanvasTitle>
-          <CButton
-            color="link"
-            className="p-1 text-body-secondary"
-            onClick={() => setMobileFiltersOpen(false)}
-            aria-label="Close filters"
-          >
-            <X size={18} />
-          </CButton>
-        </COffcanvasHeader>
-        <COffcanvasBody>
-          <div className="d-grid gap-3">
-            {renderPeriodControl({ mobile: true })}
-            {filters.map((filter) => renderFilterControl(filter, { mobile: true }))}
-            {isAnyFilterActive ? (
-              <CButton size="sm" color="secondary" variant="outline" onClick={handleClear}>
-                {clearLabel}
-              </CButton>
-            ) : null}
-          </div>
-        </COffcanvasBody>
-      </COffcanvas>
+        onClose={closeMobileFilters}
+        renderPeriodControl={renderPeriodControl}
+        renderFilterControl={renderFilterControl}
+        filters={filters}
+        isAnyFilterActive={isAnyFilterActive}
+        onClear={handleClear}
+        clearLabel={clearLabel}
+      />
     </>
   )
 }

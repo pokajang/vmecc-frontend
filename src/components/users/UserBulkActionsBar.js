@@ -37,6 +37,7 @@ const UserBulkActionsBar = ({
         size="sm"
         color="primary"
         variant="outline"
+        className="w-100 w-md-auto"
         onClick={onApply}
         disabled={disabled || !selectedAction || actionOptions.length === 0}
       >
@@ -44,7 +45,14 @@ const UserBulkActionsBar = ({
       </CButton>
     </CCol>
     <CCol xs={12} md="auto">
-      <CButton size="sm" color="secondary" variant="ghost" onClick={onClear} disabled={disabled}>
+      <CButton
+        size="sm"
+        color="secondary"
+        variant="ghost"
+        className="w-100 w-md-auto"
+        onClick={onClear}
+        disabled={disabled}
+      >
         Clear selection
       </CButton>
     </CCol>

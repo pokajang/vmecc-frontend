@@ -1,41 +1,31 @@
 import React from 'react'
-import { CNav, CNavItem, CNavLink } from '@coreui/react'
+import RouteNavTabs from 'src/components/RouteNavTabs'
 
 const PayrollNav = ({ activeSection, onNavigate }) => (
-  <CNav variant="underline" role="tablist" className="mb-3 flex-nowrap overflow-auto">
-    <CNavItem role="presentation">
-      <CNavLink
-        active={activeSection === 'claims' || activeSection === 'claim-detail'}
-        onClick={() => onNavigate('/payroll')}
-        style={{ cursor: 'pointer' }}
-        className={
-          activeSection === 'claims' || activeSection === 'claim-detail' ? 'text-primary' : ''
-        }
-      >
-        Claim Records
-      </CNavLink>
-    </CNavItem>
-    <CNavItem role="presentation">
-      <CNavLink
-        active={activeSection === 'payslips'}
-        onClick={() => onNavigate('/payroll/payslips')}
-        style={{ cursor: 'pointer' }}
-        className={activeSection === 'payslips' ? 'text-primary' : ''}
-      >
-        Payslips
-      </CNavLink>
-    </CNavItem>
-    <CNavItem role="presentation">
-      <CNavLink
-        active={activeSection.startsWith('new-claim')}
-        onClick={() => onNavigate('/payroll/claims/new')}
-        style={{ cursor: 'pointer' }}
-        className={activeSection.startsWith('new-claim') ? 'text-primary' : ''}
-      >
-        Apply Claim
-      </CNavLink>
-    </CNavItem>
-  </CNav>
+  <RouteNavTabs
+    currentPath={activeSection}
+    navigate={(to) => onNavigate(to)}
+    items={[
+      {
+        key: 'claims',
+        label: 'Claim Records',
+        to: '/payroll',
+        match: (section) => section === 'claims' || section === 'claim-detail',
+      },
+      {
+        key: 'payslips',
+        label: 'Payslips',
+        to: '/payroll/payslips',
+        match: 'payslips',
+      },
+      {
+        key: 'new-claim',
+        label: 'Apply Claim',
+        to: '/payroll/claims/new',
+        match: (section) => section.startsWith('new-claim'),
+      },
+    ]}
+  />
 )
 
 export default PayrollNav

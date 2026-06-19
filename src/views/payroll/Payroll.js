@@ -3,6 +3,9 @@ import { CAlert, CContainer, CToast, CToastBody, CToastHeader, CToaster } from '
 import { useSelector } from 'react-redux'
 import { hasPermission } from 'src/utils/authz'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { Plus } from 'lucide-react'
+import CreateActionButton from 'src/components/CreateActionButton'
+import ModulePageHeader from 'src/components/ModulePageHeader'
 import ExpenseOtherClaimForm from 'src/views/payroll/components/claim-form/ExpenseOtherClaimForm'
 import ClaimTypeSelection from 'src/views/payroll/components/claim-form/ClaimTypeSelection'
 import SalaryClaimForm from 'src/views/payroll/components/claim-form/SalaryClaimForm'
@@ -244,6 +247,20 @@ const Payroll = () => {
 
   return (
     <CContainer fluid>
+      <ModulePageHeader
+        title="Payroll"
+        subtitle="Review claim records, payslips, and submit new salary or expense claims."
+        actions={
+          activeSection.startsWith('new-claim') ? null : (
+            <CreateActionButton
+              label="Apply Claim"
+              importance="primary"
+              onClick={() => navigate('/payroll/claims/new')}
+              icon={<Plus size={15} className="me-1 align-text-bottom" />}
+            />
+          )
+        }
+      />
       <PayrollNav activeSection={activeSection} onNavigate={navigate} />
       <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
       <ClaimActionModals
@@ -293,6 +310,7 @@ const Payroll = () => {
               formatCurrency={formatCurrency}
               formatDate={formatDate}
               onCreateClaim={() => navigate('/payroll/claims/new')}
+              showPrimaryAction={false}
               isLoading={isClaimsLoading}
               errorMessage={claimsError}
               onRetry={refreshClaimRows}

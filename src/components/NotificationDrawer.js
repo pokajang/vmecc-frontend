@@ -1,21 +1,27 @@
 import React, { useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
+import useFocusTrap from 'src/hooks/useFocusTrap'
 
-const NotificationDrawer = ({ open, onClose, title, count, countColor, children }) => {
+const NotificationDrawer = ({
+  open,
+  onClose,
+  title,
+  count,
+  countColor,
+  children,
+  initialFocusRef,
+  returnFocusRef,
+}) => {
   const panelRef = useRef(null)
+  const closeButtonRef = useRef(null)
 
-  useEffect(() => {
-    if (!open) return
-    const handleKey = (e) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', handleKey)
-    return () => document.removeEventListener('keydown', handleKey)
-  }, [open, onClose])
-
-  useEffect(() => {
-    if (open && panelRef.current) panelRef.current.focus()
-  }, [open])
+  useFocusTrap({
+    enabled: open,
+    containerRef: panelRef,
+    initialFocusRef: initialFocusRef || closeButtonRef,
+    returnFocusRef,
+    onEscape: onClose,
+  })
 
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : ''
@@ -55,7 +61,12 @@ const NotificationDrawer = ({ open, onClose, title, count, countColor, children 
               </span>
             )}
           </span>
-          <button className="notification-drawer-close" onClick={onClose} aria-label="Close">
+          <button
+            ref={closeButtonRef}
+            className="notification-drawer-close"
+            onClick={onClose}
+            aria-label="Close"
+          >
             <X size={16} />
           </button>
         </div>
