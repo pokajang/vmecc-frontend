@@ -2,11 +2,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import {
-  CDropdown,
-  CDropdownItem,
-  CDropdownMenu,
-  CDropdownToggle,
-  CSpinner,
   CContainer,
   CHeader,
   CHeaderNav,
@@ -26,11 +21,10 @@ import useWorkflowNotificationCounts from 'src/hooks/useWorkflowNotificationCoun
 import useMessageUnreadCount from 'src/hooks/useMessageUnreadCount'
 import useOnDutyTeam from 'src/hooks/useOnDutyTeam'
 import useOvertimeEligibility from 'src/hooks/useOvertimeEligibility'
-import { fetchRolePermissions, logoutRequest } from 'src/services/apiClient'
+import { logoutRequest } from 'src/services/apiClient'
 import { getVisibleNavigationWithOptions } from 'src/utils/navigation'
-import { getPrimaryRoleLabel, hasPermission, isSystemAdministrator } from 'src/utils/authz'
+import { hasPermission, isSystemAdministrator } from 'src/utils/authz'
 import { isModuleEnabled } from 'src/utils/modules'
-import { ROLE_OPTIONS } from 'src/constants/roles'
 import navigation from 'src/_nav'
 import { useGuardedNavigate } from 'src/contexts/NavigationGuardContext'
 
@@ -87,20 +81,6 @@ const AppHeader = () => {
       }),
     [authUser, moduleActivation, overtimeEligibleForMenu, unreadCount],
   )
-  const switcherSource = authUser?.switcher_source || null
-  const canUseRoleSwitcher = isSysAdmin || Boolean(switcherSource)
-  const [rolePermissionsByRole, setRolePermissionsByRole] = useState({})
-  const [roleMatrixLoading, setRoleMatrixLoading] = useState(false)
-  const roleOptions = useMemo(() => {
-    const list = canUseRoleSwitcher
-      ? ROLE_OPTIONS
-      : Array.isArray(authUser?.roles)
-        ? authUser.roles
-        : []
-    return Array.from(new Set(list.map((role) => String(role || '').trim()).filter(Boolean)))
-  }, [authUser?.roles, canUseRoleSwitcher])
-  const [quickRole, setQuickRole] = useState(() => getPrimaryRoleLabel(authUser) || '')
-
   useEffect(() => {
     const handleScroll = () => {
       headerRef.current &&
@@ -109,35 +89,6 @@ const AppHeader = () => {
     document.addEventListener('scroll', handleScroll)
     return () => document.removeEventListener('scroll', handleScroll)
   }, [])
-
-  useEffect(() => {
-    const nextPrimary = getPrimaryRoleLabel(authUser) || roleOptions[0] || ''
-    setQuickRole(nextPrimary)
-  }, [authUser, roleOptions])
-
-  useEffect(() => {
-    let isMounted = true
-    const loadRoleMatrix = async () => {
-      if (!canUseRoleSwitcher) return
-      setRoleMatrixLoading(true)
-      try {
-        const result = await fetchRolePermissions()
-        if (!isMounted) return
-        setRolePermissionsByRole(
-          result?.matrix && typeof result.matrix === 'object' ? result.matrix : {},
-        )
-      } catch {
-        if (!isMounted) return
-        setRolePermissionsByRole({})
-      } finally {
-        if (isMounted) setRoleMatrixLoading(false)
-      }
-    }
-    loadRoleMatrix()
-    return () => {
-      isMounted = false
-    }
-  }, [canUseRoleSwitcher])
 
   useEffect(() => {
     setMobileSheetOpen(false)
@@ -199,51 +150,6 @@ const AppHeader = () => {
     returnFocusRef.current = e.currentTarget || null
     setNotifDrawerOpen(true)
   }, [])
-
-  const handleQuickRoleSwitch = useCallback(
-    (roleName) => {
-      const next = String(roleName || '').trim()
-      if (!next || !authUser || next === quickRole) return
-      const source =
-        switcherSource &&
-        Array.isArray(switcherSource.roles) &&
-        Array.isArray(switcherSource.permissions)
-          ? switcherSource
-          : {
-              roles: Array.isArray(authUser?.roles) ? authUser.roles : [],
-              permissions: Array.isArray(authUser?.permissions) ? authUser.permissions : [],
-            }
-      const sourcePrimaryRole =
-        getPrimaryRoleLabel({ roles: source.roles }) || source.roles[0] || ''
-
-      if (next === sourcePrimaryRole) {
-        const { switcher_source: _dropSwitcherSource, ...restUser } = authUser
-        dispatch({
-          type: 'set',
-          authUser: {
-            ...restUser,
-            roles: source.roles,
-            permissions: source.permissions,
-          },
-        })
-        return
-      }
-
-      const nextPermissions = Array.isArray(rolePermissionsByRole?.[next])
-        ? rolePermissionsByRole[next]
-        : []
-      dispatch({
-        type: 'set',
-        authUser: {
-          ...authUser,
-          roles: [next],
-          permissions: nextPermissions,
-          switcher_source: source,
-        },
-      })
-    },
-    [authUser, dispatch, quickRole, rolePermissionsByRole, switcherSource],
-  )
 
   const navItems = (
     <>
@@ -314,35 +220,10 @@ const AppHeader = () => {
         <CContainer className="border-bottom px-3 px-md-4" fluid>
           <CHeaderToggler
             onClick={() => dispatch({ type: 'set', sidebarShow: !sidebarShow })}
-            style={{ marginInlineStart: '-14px' }}
+            aria-label="Toggle sidebar"
           >
             <Menu size={16} />
           </CHeaderToggler>
-          {canUseRoleSwitcher && roleOptions.length > 0 && (
-            <CDropdown variant="btn-group" className="ms-2">
-              <CDropdownToggle color="light" size="sm" className="text-truncate">
-                Role switcher: {quickRole || 'Select'}
-              </CDropdownToggle>
-              <CDropdownMenu>
-                {roleMatrixLoading && (
-                  <CDropdownItem as="button" type="button" disabled>
-                    <CSpinner size="sm" className="me-2" />
-                    Loading roles...
-                  </CDropdownItem>
-                )}
-                {roleOptions.map((role) => (
-                  <CDropdownItem
-                    key={role}
-                    active={role === quickRole}
-                    disabled={roleMatrixLoading}
-                    onClick={() => handleQuickRoleSwitch(role)}
-                  >
-                    {role}
-                  </CDropdownItem>
-                ))}
-              </CDropdownMenu>
-            </CDropdown>
-          )}
           <CHeaderNav className="ms-auto gap-2">{navItems}</CHeaderNav>
           <CHeaderNav>
             <li className="nav-item py-1">
