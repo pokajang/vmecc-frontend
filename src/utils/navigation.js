@@ -1,14 +1,27 @@
 import { hasAnyPermission, hasPermission } from 'src/utils/authz'
+import { isModuleEnabled } from 'src/utils/modules'
 
 export const isTitle = (item) => !item?.to && !item?.href && !item?.items
 
 export const applyRoleVisibility = (items, authUser, options = {}) => {
   const overtimeEligible =
     typeof options?.overtimeEligible === 'boolean' ? options.overtimeEligible : null
+  const moduleActivation = options?.moduleActivation || null
 
   const filtered = items.reduce((acc, item) => {
-    if (item.to === '/dashboard' && !hasPermission(authUser, 'self.dashboard')) return acc
-    if (item.to === '/messages' && !hasPermission(authUser, 'self.messages')) return acc
+    if (
+      item.to === '/dashboard' &&
+      (!hasPermission(authUser, 'self.dashboard') ||
+        !isModuleEnabled(moduleActivation, 'dashboard'))
+    ) {
+      return acc
+    }
+    if (
+      item.to === '/messages' &&
+      (!hasPermission(authUser, 'self.messages') || !isModuleEnabled(moduleActivation, 'messages'))
+    ) {
+      return acc
+    }
     if (item.to === '/leave' && !hasPermission(authUser, 'self.leave')) return acc
     if (
       item.to === '/overtime' &&
@@ -16,7 +29,13 @@ export const applyRoleVisibility = (items, authUser, options = {}) => {
     ) {
       return acc
     }
-    if (item.to === '/payroll' && !hasPermission(authUser, 'self.payroll')) return acc
+    if (
+      item.to === '/payroll' &&
+      (!hasPermission(authUser, 'self.payroll') ||
+        !isModuleEnabled(moduleActivation, 'payroll.self_service'))
+    ) {
+      return acc
+    }
 
     if (item.to === '/admin/users' && !hasPermission(authUser, 'users.manage')) return acc
     if (item.to === '/admin/audit' && !hasPermission(authUser, 'audit.view')) return acc
@@ -35,7 +54,8 @@ export const applyRoleVisibility = (items, authUser, options = {}) => {
     }
     if (
       String(item.to || '').startsWith('/staff/salary-claims') &&
-      !hasPermission(authUser, 'staff.salary.manage')
+      (!hasPermission(authUser, 'staff.salary.manage') ||
+        !isModuleEnabled(moduleActivation, 'payroll.salary_claims_management'))
     ) {
       return acc
     }
@@ -47,7 +67,8 @@ export const applyRoleVisibility = (items, authUser, options = {}) => {
     }
     if (
       String(item.to || '').startsWith('/staff/set-salary') &&
-      !hasPermission(authUser, 'staff.salary.manage')
+      (!hasPermission(authUser, 'staff.salary.manage') ||
+        !isModuleEnabled(moduleActivation, 'payroll.salary_settings'))
     ) {
       return acc
     }

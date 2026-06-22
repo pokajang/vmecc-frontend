@@ -187,13 +187,13 @@ export const updateMessageThreads = (updater) => {
   setState({ data: nextData })
 }
 
-const useMessageThreads = () => {
+const useMessageThreads = ({ enabled = true } = {}) => {
   const authUser = useSelector((store) => store.authUser)
   const [localState, setLocalState] = useState(state)
 
   useEffect(() => {
-    setAuthUserId(authUser?.id || null)
-  }, [authUser?.id])
+    setAuthUserId(enabled ? authUser?.id || null : null)
+  }, [authUser?.id, enabled])
 
   useEffect(() => subscribe(setLocalState), [])
 

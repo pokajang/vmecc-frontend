@@ -6,8 +6,9 @@ import { CSpinner, useColorModes } from '@coreui/react'
 import './scss/style.scss'
 import { NavigationGuardProvider } from './contexts/NavigationGuardContext'
 
-import { fetchSession, SYSTEM_MAINTENANCE_EVENT } from './services/apiClient'
+import { fetchModuleActivation, fetchSession, SYSTEM_MAINTENANCE_EVENT } from './services/apiClient'
 import { isSystemAdministrator } from './utils/authz'
+import { normalizeModuleActivationPayload } from './utils/modules'
 import { shouldShowMaintenancePage } from './utils/systemMaintenance'
 import {
   loadSystemMaintenanceSetting,
@@ -78,6 +79,12 @@ const App = () => {
       dispatch({ type: 'set', authStatus: 'checking', authError: null })
       try {
         const session = await fetchSession()
+        let moduleActivation = null
+        try {
+          moduleActivation = normalizeModuleActivationPayload(await fetchModuleActivation())
+        } catch {
+          moduleActivation = null
+        }
         if (!isMounted) {
           return
         }
@@ -86,6 +93,7 @@ const App = () => {
           authStatus: 'authenticated',
           authUser: session?.user || session,
           authError: null,
+          ...(moduleActivation ? { moduleActivation } : {}),
         })
       } catch (error) {
         if (!isMounted) {

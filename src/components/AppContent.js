@@ -1,12 +1,28 @@
 import React, { Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
-import { CContainer, CSpinner } from '@coreui/react'
+import { useSelector } from 'react-redux'
+import { CAlert, CContainer, CSpinner } from '@coreui/react'
 
 // routes config
 import routes from '../routes'
 import ErrorBoundary from './ErrorBoundary'
+import { getModuleDisabledReason, isModuleEnabled } from 'src/utils/modules'
+
+const ModuleDisabled = ({ moduleKey, moduleActivation }) => {
+  const state = getModuleDisabledReason(moduleActivation, moduleKey)
+  return (
+    <CAlert color="warning" className="my-4">
+      This module is currently disabled.
+      {state?.blockingModule && (
+        <span className="d-block small mt-1">Blocking module: {state.blockingModule}</span>
+      )}
+    </CAlert>
+  )
+}
 
 const AppContent = () => {
+  const moduleActivation = useSelector((state) => state.moduleActivation)
+
   return (
     <CContainer
       fluid
@@ -16,6 +32,7 @@ const AppContent = () => {
       <Suspense fallback={<CSpinner color="primary" />}>
         <Routes>
           {routes.map((route, idx) => {
+            const routeModule = route.module || null
             return (
               route.element && (
                 <Route
@@ -25,7 +42,14 @@ const AppContent = () => {
                   name={route.name}
                   element={
                     <ErrorBoundary>
-                      <route.element />
+                      {routeModule && !isModuleEnabled(moduleActivation, routeModule) ? (
+                        <ModuleDisabled
+                          moduleKey={routeModule}
+                          moduleActivation={moduleActivation}
+                        />
+                      ) : (
+                        <route.element />
+                      )}
                     </ErrorBoundary>
                   }
                 />

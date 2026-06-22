@@ -15,6 +15,7 @@ import {
 } from '@coreui/react'
 import { CalendarDays, Clock3, Eye, EyeOff, LayoutGrid, TriangleAlert, Wallet } from 'lucide-react'
 import { getPrimaryRoleLabel, hasPermission } from 'src/utils/authz'
+import { isModuleEnabled } from 'src/utils/modules'
 import { DASHBOARD_SECTION_PERMISSIONS } from 'src/constants/dashboardVisibility'
 import useDashboardStats from './hooks/useDashboardStats'
 import useMyStats from './hooks/useMyStats'
@@ -240,17 +241,28 @@ const DashboardActionQueue = ({ items, loading, periodLabel }) => (
 
 const Dashboard = () => {
   const authUser = useSelector((state) => state.authUser)
+  const moduleActivation = useSelector((state) => state.moduleActivation)
   const { stats: myStats, loading: myStatsLoading } = useMyStats()
   const [myStatsVisible, setMyStatsVisible] = useState(true)
   const [period, setPeriod] = useState('this_month')
   const periodLabel = resolvePeriodLabel(period)
   const userName = authUser?.name || authUser?.full_name || ''
   const userRole = getPrimaryRoleLabel(authUser)
-  const canViewPayrollSection = hasPermission(authUser, DASHBOARD_SECTION_PERMISSIONS.payroll)
-  const canViewOvertimeSection = hasPermission(authUser, DASHBOARD_SECTION_PERMISSIONS.overtime)
-  const canViewLeaveSection = hasPermission(authUser, DASHBOARD_SECTION_PERMISSIONS.leave)
-  const canViewRosterSection = hasPermission(authUser, DASHBOARD_SECTION_PERMISSIONS.roster)
-  const canViewReportsSection = hasPermission(authUser, DASHBOARD_SECTION_PERMISSIONS.reports)
+  const canViewPayrollSection =
+    hasPermission(authUser, DASHBOARD_SECTION_PERMISSIONS.payroll) &&
+    isModuleEnabled(moduleActivation, 'dashboard.payroll')
+  const canViewOvertimeSection =
+    hasPermission(authUser, DASHBOARD_SECTION_PERMISSIONS.overtime) &&
+    isModuleEnabled(moduleActivation, 'dashboard.overtime')
+  const canViewLeaveSection =
+    hasPermission(authUser, DASHBOARD_SECTION_PERMISSIONS.leave) &&
+    isModuleEnabled(moduleActivation, 'dashboard.leave')
+  const canViewRosterSection =
+    hasPermission(authUser, DASHBOARD_SECTION_PERMISSIONS.roster) &&
+    isModuleEnabled(moduleActivation, 'dashboard.roster')
+  const canViewReportsSection =
+    hasPermission(authUser, DASHBOARD_SECTION_PERMISSIONS.reports) &&
+    isModuleEnabled(moduleActivation, 'dashboard.reports')
   const visibleDashboardModules = useMemo(
     () =>
       [

@@ -11,6 +11,7 @@ import useMessageUnreadCount from 'src/hooks/useMessageUnreadCount'
 import useOvertimeEligibility from 'src/hooks/useOvertimeEligibility'
 import { getVisibleNavigationWithOptions } from 'src/utils/navigation'
 import { hasPermission, isSystemAdministrator } from 'src/utils/authz'
+import { isModuleEnabled } from 'src/utils/modules'
 
 // sidebar nav config
 import navigation from '../_nav'
@@ -19,10 +20,15 @@ const AppSidebar = () => {
   const dispatch = useDispatch()
   const sidebarShow = useSelector((state) => state.sidebarShow)
   const authUser = useSelector((state) => state.authUser)
-  const unreadCount = useMessageUnreadCount()
+  const moduleActivation = useSelector((state) => state.moduleActivation)
+  const messagesEnabled = isModuleEnabled(moduleActivation, 'messages')
+  const payrollEnabled = isModuleEnabled(moduleActivation, 'payroll.self_service')
+  const overtimeEnabled = isModuleEnabled(moduleActivation, 'overtime.self_service')
+  const unreadCount = useMessageUnreadCount({ enabled: messagesEnabled })
   const isSysAdmin = isSystemAdministrator(authUser)
   const shouldResolveOvertimeEligibility =
-    hasPermission(authUser, 'self.overtime') || hasPermission(authUser, 'self.payroll')
+    (overtimeEnabled && hasPermission(authUser, 'self.overtime')) ||
+    (payrollEnabled && hasPermission(authUser, 'self.payroll'))
   const { eligible: overtimeEligible, isResolved: overtimeEligibilityResolved } =
     useOvertimeEligibility({ enabled: shouldResolveOvertimeEligibility })
   const overtimeEligibleForMenu = shouldResolveOvertimeEligibility
@@ -35,8 +41,9 @@ const AppSidebar = () => {
     () =>
       getVisibleNavigationWithOptions(navigation, authUser, unreadCount, {
         overtimeEligible: overtimeEligibleForMenu,
+        moduleActivation,
       }),
-    [authUser, overtimeEligibleForMenu, unreadCount],
+    [authUser, moduleActivation, overtimeEligibleForMenu, unreadCount],
   )
 
   return (

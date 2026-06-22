@@ -6,6 +6,13 @@ const initialState = {
   authStatus: 'unknown',
   authUser: null,
   authError: null,
+  moduleActivation: {
+    registry: [],
+    configured: {},
+    effective: {},
+    forceAllEnabled: false,
+    fallbackMode: true,
+  },
   systemMaintenance: {
     enabled: false,
     phase: 'off',

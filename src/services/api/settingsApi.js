@@ -42,6 +42,13 @@ export const saveSystemMaintenanceSetting = (payload) =>
     body: JSON.stringify(payload || {}),
   })
 
+export const fetchModuleActivation = () => apiRequest('/settings/modules')
+export const saveModuleActivation = (configured) =>
+  apiRequest('/settings/modules', {
+    method: 'PUT',
+    body: JSON.stringify({ configured: configured || {} }),
+  })
+
 export const uploadWorkflowAttachment = (file) => {
   const formData = new FormData()
   formData.append('file', file)

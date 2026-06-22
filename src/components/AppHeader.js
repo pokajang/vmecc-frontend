@@ -29,6 +29,7 @@ import useOvertimeEligibility from 'src/hooks/useOvertimeEligibility'
 import { fetchRolePermissions, logoutRequest } from 'src/services/apiClient'
 import { getVisibleNavigationWithOptions } from 'src/utils/navigation'
 import { getPrimaryRoleLabel, hasPermission, isSystemAdministrator } from 'src/utils/authz'
+import { isModuleEnabled } from 'src/utils/modules'
 import { ROLE_OPTIONS } from 'src/constants/roles'
 import navigation from 'src/_nav'
 import { useGuardedNavigate } from 'src/contexts/NavigationGuardContext'
@@ -46,9 +47,14 @@ const AppHeader = () => {
 
   const sidebarShow = useSelector((state) => state.sidebarShow)
   const authUser = useSelector((state) => state.authUser)
+  const moduleActivation = useSelector((state) => state.moduleActivation)
+  const messagesEnabled = isModuleEnabled(moduleActivation, 'messages')
+  const payrollEnabled = isModuleEnabled(moduleActivation, 'payroll.self_service')
+  const overtimeEnabled = isModuleEnabled(moduleActivation, 'overtime.self_service')
+  const rosterEnabled = isModuleEnabled(moduleActivation, 'roster')
 
-  const unreadCount = useMessageUnreadCount()
-  const onDuty = useOnDutyTeam()
+  const unreadCount = useMessageUnreadCount({ enabled: messagesEnabled })
+  const onDuty = useOnDutyTeam({ enabled: rosterEnabled })
   const notifUnread = useWorkflowNotificationCounts()
 
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false)
@@ -57,16 +63,16 @@ const AppHeader = () => {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [notifDrawerOpen, setNotifDrawerOpen] = useState(false)
 
-  const canClaim = hasPermission(authUser, 'self.payroll')
+  const canClaim = payrollEnabled && hasPermission(authUser, 'self.payroll')
   const canLeave = hasPermission(authUser, 'self.leave')
   const canOvertimePermission = hasPermission(authUser, 'self.overtime')
   const isSysAdmin = isSystemAdministrator(authUser)
-  const shouldResolveOvertimeEligibility = canClaim || canOvertimePermission
+  const shouldResolveOvertimeEligibility = canClaim || (overtimeEnabled && canOvertimePermission)
   const { eligible: overtimeEligible, isResolved: overtimeEligibilityResolved } =
     useOvertimeEligibility({ enabled: shouldResolveOvertimeEligibility })
   const canOvertime = isSysAdmin
-    ? canOvertimePermission
-    : canOvertimePermission && overtimeEligibilityResolved && overtimeEligible
+    ? overtimeEnabled && canOvertimePermission
+    : overtimeEnabled && canOvertimePermission && overtimeEligibilityResolved && overtimeEligible
   const overtimeEligibleForMenu = shouldResolveOvertimeEligibility
     ? isSysAdmin
       ? true
@@ -77,8 +83,9 @@ const AppHeader = () => {
     () =>
       getVisibleNavigationWithOptions(navigation, authUser, unreadCount, {
         overtimeEligible: overtimeEligibleForMenu,
+        moduleActivation,
       }),
-    [authUser, overtimeEligibleForMenu, unreadCount],
+    [authUser, moduleActivation, overtimeEligibleForMenu, unreadCount],
   )
   const switcherSource = authUser?.switcher_source || null
   const canUseRoleSwitcher = isSysAdmin || Boolean(switcherSource)
@@ -169,7 +176,19 @@ const AppHeader = () => {
       console.error('Failed to log out', err)
     } finally {
       setMobileSheetOpen(false)
-      dispatch({ type: 'set', authStatus: 'anonymous', authUser: null, authError: null })
+      dispatch({
+        type: 'set',
+        authStatus: 'anonymous',
+        authUser: null,
+        authError: null,
+        moduleActivation: {
+          registry: [],
+          configured: {},
+          effective: {},
+          forceAllEnabled: false,
+          fallbackMode: true,
+        },
+      })
       navigate('/login', { replace: true })
       setIsLoggingOut(false)
     }
@@ -273,16 +292,18 @@ const AppHeader = () => {
         </CNavLink>
       </CNavItem>
 
-      <CNavItem>
-        <CNavLink as={NavLink} to="/messages" className="px-2 position-relative">
-          <MessageSquareText size={16} />
-          {unreadCount > 0 && (
-            <CBadge color="light" className="header-message-badge">
-              {unreadCount}
-            </CBadge>
-          )}
-        </CNavLink>
-      </CNavItem>
+      {messagesEnabled && (
+        <CNavItem>
+          <CNavLink as={NavLink} to="/messages" className="px-2 position-relative">
+            <MessageSquareText size={16} />
+            {unreadCount > 0 && (
+              <CBadge color="light" className="header-message-badge">
+                {unreadCount}
+              </CBadge>
+            )}
+          </CNavLink>
+        </CNavItem>
+      )}
     </>
   )
 
@@ -327,7 +348,7 @@ const AppHeader = () => {
             <li className="nav-item py-1">
               <div className="vr h-100 mx-2 text-body text-opacity-75"></div>
             </li>
-            <AppHeaderDropdown canOvertime={canOvertime} />
+            <AppHeaderDropdown canClaim={canClaim} canOvertime={canOvertime} />
           </CHeaderNav>
         </CContainer>
       </CHeader>
@@ -360,15 +381,17 @@ const AppHeader = () => {
           )}
         </button>
 
-        <NavLink to="/messages" className="app-bottom-nav-item position-relative">
-          <MessageSquareText size={20} />
-          <span className="app-bottom-nav-label">Messages</span>
-          {unreadCount > 0 && (
-            <CBadge color="light" className="header-message-badge">
-              {unreadCount}
-            </CBadge>
-          )}
-        </NavLink>
+        {messagesEnabled && (
+          <NavLink to="/messages" className="app-bottom-nav-item position-relative">
+            <MessageSquareText size={20} />
+            <span className="app-bottom-nav-label">Messages</span>
+            {unreadCount > 0 && (
+              <CBadge color="light" className="header-message-badge">
+                {unreadCount}
+              </CBadge>
+            )}
+          </NavLink>
+        )}
 
         <button
           ref={accountTriggerRef}
@@ -396,6 +419,7 @@ const AppHeader = () => {
         canClaim={canClaim}
         canLeave={canLeave}
         canOvertime={canOvertime}
+        canMessage={messagesEnabled && hasPermission(authUser, 'self.messages')}
         isLoggingOut={isLoggingOut}
         returnFocusRef={returnFocusRef}
       />

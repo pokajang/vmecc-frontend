@@ -11,11 +11,17 @@ const inRange = (current, start, end) => {
   return current >= start || current < end // crosses midnight
 }
 
-const useOnDutyTeam = () => {
+const useOnDutyTeam = ({ enabled = true } = {}) => {
   const [onDuty, setOnDuty] = useState(null) // { team: string, shift: 'day'|'night' }
 
   useEffect(() => {
     let cancelled = false
+
+    if (!enabled) {
+      return () => {
+        cancelled = true
+      }
+    }
 
     const load = async () => {
       try {
@@ -73,9 +79,9 @@ const useOnDutyTeam = () => {
       cancelled = true
       clearInterval(interval)
     }
-  }, [])
+  }, [enabled])
 
-  return onDuty
+  return enabled ? onDuty : null
 }
 
 export default useOnDutyTeam

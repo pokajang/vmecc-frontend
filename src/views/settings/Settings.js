@@ -15,10 +15,12 @@ import {
 
 const RolePermissionMatrix = React.lazy(() => import('./RolePermissionMatrix'))
 const DashboardVisibilityMatrix = React.lazy(() => import('./DashboardVisibilityMatrix'))
+const ModuleActivationMatrix = React.lazy(() => import('./ModuleActivationMatrix'))
 
 const TAB_GENERAL = 'general'
 const TAB_ROLES = 'role-permissions'
 const TAB_DASHBOARD = 'dashboard-visibility'
+const TAB_MODULES = 'modules'
 
 const toRemainingMs = (iso) => {
   const ts = Date.parse(String(iso || ''))
@@ -43,11 +45,14 @@ const Settings = () => {
   const isDashboardVisibilityRoute = Boolean(
     useMatch({ path: '/settings/dashboard-visibility', end: true }),
   )
+  const isModulesRoute = Boolean(useMatch({ path: '/settings/modules', end: true }))
   const activeTab = isRolesRoute
     ? TAB_ROLES
     : isDashboardVisibilityRoute
       ? TAB_DASHBOARD
-      : TAB_GENERAL
+      : isModulesRoute
+        ? TAB_MODULES
+        : TAB_GENERAL
 
   const [maintenanceSetting, setMaintenanceSetting] = useState({ ...DEFAULT_SYSTEM_MAINTENANCE })
   const [maintenanceLoading, setMaintenanceLoading] = useState(true)
@@ -186,6 +191,12 @@ const Settings = () => {
             to: '/settings/dashboard-visibility',
             match: TAB_DASHBOARD,
           },
+          {
+            key: TAB_MODULES,
+            label: 'Module Activation',
+            to: '/settings/modules',
+            match: TAB_MODULES,
+          },
         ]}
       />
 
@@ -274,6 +285,18 @@ const Settings = () => {
           }
         >
           <DashboardVisibilityMatrix />
+        </Suspense>
+      )}
+
+      {activeTab === TAB_MODULES && (
+        <Suspense
+          fallback={
+            <div className="py-5" aria-label="Loading module activation">
+              <TableLoader />
+            </div>
+          }
+        >
+          <ModuleActivationMatrix />
         </Suspense>
       )}
     </CContainer>

@@ -51,6 +51,7 @@ const MobileNavSheet = ({
   canClaim,
   canLeave,
   canOvertime,
+  canMessage,
   isLoggingOut,
   returnFocusRef,
 }) => {
@@ -112,7 +113,7 @@ const MobileNavSheet = ({
     canClaim ? { label: 'Payroll', to: '/payroll', icon: WalletCards } : null,
     canLeave ? { label: 'Leave', to: '/leave', icon: CalendarDays } : null,
     canOvertime ? { label: 'Overtime', to: '/overtime', icon: Clock3 } : null,
-    { label: 'Messages', to: '/messages', icon: MessageSquareText },
+    canMessage ? { label: 'Messages', to: '/messages', icon: MessageSquareText } : null,
     { label: 'Profile', to: '/profile', icon: User },
   ].filter(Boolean)
 

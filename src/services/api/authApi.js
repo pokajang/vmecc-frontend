@@ -30,7 +30,14 @@ export const logoutRequest = async () => {
 
 export const fetchSession = () => apiRequest('/auth/session')
 
-export const fetchGoogleAuthUrl = () => apiRequest('/auth/google/redirect')
+export const fetchGoogleAuthUrl = (options = {}) => {
+  const query = new URLSearchParams()
+  if (options?.remember) {
+    query.set('remember', '1')
+  }
+
+  return apiRequest(`/auth/google/redirect${query.toString() ? `?${query.toString()}` : ''}`)
+}
 
 export const fetchUsers = (params = {}) => {
   const query = new URLSearchParams()

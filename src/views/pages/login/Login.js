@@ -7,6 +7,7 @@ import {
   CCol,
   CContainer,
   CForm,
+  CFormCheck,
   CFormInput,
   CInputGroup,
   CInputGroupText,
@@ -18,7 +19,8 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import logoSvg from 'src/assets/brand/logo.svg'
 import ButtonLoader from 'src/components/ButtonLoader'
-import { fetchGoogleAuthUrl, loginRequest } from 'src/services/apiClient'
+import { fetchGoogleAuthUrl, fetchModuleActivation, loginRequest } from 'src/services/apiClient'
+import { normalizeModuleActivationPayload } from 'src/utils/modules'
 import { isGracePhase } from 'src/utils/systemMaintenance'
 
 const toRemainingMs = (iso) => {
@@ -49,13 +51,14 @@ const Login = () => {
   const [formValues, setFormValues] = useState({
     email: '',
     password: '',
+    remember: false,
   })
 
   const handleChange = (event) => {
-    const { name, value } = event.target
+    const { checked, name, type, value } = event.target
     setFormValues((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: type === 'checkbox' ? checked : value,
     }))
   }
 
@@ -67,12 +70,23 @@ const Login = () => {
     setErrorMessage(null)
     setIsSubmitting(true)
     try {
-      const response = await loginRequest(formValues)
+      const response = await loginRequest({
+        email: formValues.email,
+        password: formValues.password,
+        remember: formValues.remember,
+      })
+      let moduleActivation = null
+      try {
+        moduleActivation = normalizeModuleActivationPayload(await fetchModuleActivation())
+      } catch {
+        moduleActivation = null
+      }
       dispatch({
         type: 'set',
         authStatus: 'authenticated',
         authUser: response?.user || response,
         authError: null,
+        ...(moduleActivation ? { moduleActivation } : {}),
       })
       navigate('/', { replace: true })
     } catch (error) {
@@ -92,7 +106,7 @@ const Login = () => {
     setErrorMessage(null)
     setIsGoogleLoading(true)
     try {
-      const response = await fetchGoogleAuthUrl()
+      const response = await fetchGoogleAuthUrl({ remember: formValues.remember })
       if (response?.url) {
         window.location.href = response.url
       } else {
@@ -212,6 +226,16 @@ const Login = () => {
                       <CIcon icon={showPassword ? cilShieldAlt : cilLowVision} />
                     </CInputGroupText>
                   </CInputGroup>
+                  <div className="d-flex align-items-center justify-content-between gap-2 mb-3">
+                    <CFormCheck
+                      id="remember"
+                      name="remember"
+                      label="Remember me"
+                      checked={formValues.remember}
+                      onChange={handleChange}
+                      disabled={isSubmitting || isAuthLoading || isGoogleLoading}
+                    />
+                  </div>
                   <div className="d-flex align-items-center justify-content-between gap-2 mb-2 w-100">
                     <CButton
                       type="submit"

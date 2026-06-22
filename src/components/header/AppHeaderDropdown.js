@@ -14,7 +14,12 @@ import ButtonLoader from 'src/components/ButtonLoader'
 import { logoutRequest } from 'src/services/apiClient'
 import { getPrimaryRoleLabel, hasPermission } from 'src/utils/authz'
 
-const AppHeaderDropdown = ({ placement = 'bottom-end', label = null, canOvertime = null }) => {
+const AppHeaderDropdown = ({
+  placement = 'bottom-end',
+  label = null,
+  canClaim = null,
+  canOvertime = null,
+}) => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const user = useSelector((state) => state.authUser)
@@ -32,7 +37,19 @@ const AppHeaderDropdown = ({ placement = 'bottom-end', label = null, canOvertime
       console.error('Failed to log out', error)
     } finally {
       setVisible(false)
-      dispatch({ type: 'set', authStatus: 'anonymous', authUser: null, authError: null })
+      dispatch({
+        type: 'set',
+        authStatus: 'anonymous',
+        authUser: null,
+        authError: null,
+        moduleActivation: {
+          registry: [],
+          configured: {},
+          effective: {},
+          forceAllEnabled: false,
+          fallbackMode: true,
+        },
+      })
       navigate('/login', { replace: true })
       setIsLoggingOut(false)
     }
@@ -45,7 +62,8 @@ const AppHeaderDropdown = ({ placement = 'bottom-end', label = null, canOvertime
 
   const primaryRole = getPrimaryRoleLabel(user)
   const secondaryRoles = (user?.roles || []).filter((role) => role !== primaryRole)
-  const canClaim = hasPermission(user, 'self.payroll')
+  const canClaimAction =
+    typeof canClaim === 'boolean' ? canClaim : hasPermission(user, 'self.payroll')
   const canLeave = hasPermission(user, 'self.leave')
   const canOvertimeAction =
     typeof canOvertime === 'boolean' ? canOvertime : hasPermission(user, 'self.overtime')
@@ -95,12 +113,12 @@ const AppHeaderDropdown = ({ placement = 'bottom-end', label = null, canOvertime
           <Settings size={16} className="me-2" />
           Settings
         </CDropdownItem>
-        {(canClaim || canLeave || canOvertimeAction) && (
+        {(canClaimAction || canLeave || canOvertimeAction) && (
           <>
             <CDropdownHeader className="fw-semibold mt-1 mb-1 app-header-dropdown-section-header">
               Quick Actions
             </CDropdownHeader>
-            {canClaim && (
+            {canClaimAction && (
               <CDropdownItem
                 as="button"
                 type="button"
