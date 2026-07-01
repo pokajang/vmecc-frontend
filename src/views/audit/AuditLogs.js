@@ -257,42 +257,44 @@ const AuditLogs = () => {
   }
 
   return (
-    <CContainer fluid>
+    <CContainer fluid data-tour-id="audit-module">
       <ModulePageHeader
         title="Audit Logs"
         subtitle="Review administrative activity, security events, and operational changes."
       />
-      <CCard className="mb-4">
+      <CCard className="mb-4" data-tour-id="audit-records-card">
         <CCardHeader>Activity Records</CCardHeader>
         <CCardBody>
-          <TableFilters
-            searchValue={search}
-            onSearchChange={setSearch}
-            searchPlaceholder="Search action, actor, target, IP"
-            filterColMd={3}
-            clearColMd={2}
-            periodValue={range}
-            onPeriodChange={handlePeriodChange}
-            periodOptions={periodOptions}
-            filters={[
-              {
-                key: 'action',
-                label: 'Action',
-                value: actionFilter,
-                onChange: setActionFilter,
-                options: [
-                  { value: 'All', label: 'All actions' },
-                  ...actions.map((action) => ({
-                    value: action,
-                    label: formatAction(action),
-                  })),
-                ],
-              },
-            ]}
-            onClear={handleClear}
-            rowClassName="align-items-md-end"
-            showDesktopLabels
-          />
+          <div data-tour-id="audit-filters">
+            <TableFilters
+              searchValue={search}
+              onSearchChange={setSearch}
+              searchPlaceholder="Search action, actor, target, IP"
+              filterColMd={3}
+              clearColMd={2}
+              periodValue={range}
+              onPeriodChange={handlePeriodChange}
+              periodOptions={periodOptions}
+              filters={[
+                {
+                  key: 'action',
+                  label: 'Action',
+                  value: actionFilter,
+                  onChange: setActionFilter,
+                  options: [
+                    { value: 'All', label: 'All actions' },
+                    ...actions.map((action) => ({
+                      value: action,
+                      label: formatAction(action),
+                    })),
+                  ],
+                },
+              ]}
+              onClear={handleClear}
+              rowClassName="align-items-md-end"
+              showDesktopLabels
+            />
+          </div>
 
           {range === 'custom' && (
             <CRow className="g-2 mb-3 align-items-end">
@@ -331,65 +333,70 @@ const AuditLogs = () => {
 
           {error && <CAlert color="danger">{error}</CAlert>}
 
-          {!error && (
-            <ResponsiveRecordCollection
-              isLoading={loading}
-              isEmpty={filtered.length === 0}
-              emptyMessage={<div className="text-center text-muted">No audit logs found.</div>}
-              mobileSections={mobileAuditSections}
-              renderDesktop={() => (
-                <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
-                  <CTable align="middle" className="mb-0" hover responsive>
-                    <CTableHead color="light">
-                      <CTableRow>
-                        <CTableHeaderCell style={{ width: '4%' }} className="text-center">
-                          #
-                        </CTableHeaderCell>
-                        <CTableHeaderCell style={{ width: '18%' }}>Time</CTableHeaderCell>
-                        <CTableHeaderCell style={{ width: '16%' }}>Action</CTableHeaderCell>
-                        <CTableHeaderCell style={{ width: '16%' }}>Actor</CTableHeaderCell>
-                        <CTableHeaderCell style={{ width: '20%' }}>Target</CTableHeaderCell>
-                        <CTableHeaderCell style={{ width: '12%' }}>IP</CTableHeaderCell>
-                        <CTableHeaderCell style={{ width: '18%' }}>Details</CTableHeaderCell>
-                      </CTableRow>
-                    </CTableHead>
-                    <CTableBody>
-                      {visibleRows.map((log, idx) => (
-                        <CTableRow key={log.id}>
-                          <CTableDataCell className="text-center text-muted">
-                            {idx + 1}
-                          </CTableDataCell>
-                          <CTableDataCell>{formatDateTime(log.created_at)}</CTableDataCell>
-                          <CTableDataCell>{formatAction(log.action)}</CTableDataCell>
-                          <CTableDataCell className="text-break">
-                            {getActorLabel(log)}
-                          </CTableDataCell>
-                          <CTableDataCell className="text-break">
-                            {getTargetLabel(log)}
-                          </CTableDataCell>
-                          <CTableDataCell className="text-break">
-                            {log.ip_address || EMPTY}
-                          </CTableDataCell>
-                          <CTableDataCell className="text-break">
-                            {getDetailsLabel(log)}
-                          </CTableDataCell>
+          <div data-tour-id="audit-records">
+            {!error && (
+              <ResponsiveRecordCollection
+                isLoading={loading}
+                isEmpty={filtered.length === 0}
+                emptyMessage={<div className="text-center text-muted">No audit logs found.</div>}
+                mobileSections={mobileAuditSections}
+                mobileVariant="list-group"
+                renderDesktop={() => (
+                  <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
+                    <CTable align="middle" className="mb-0" hover responsive>
+                      <CTableHead color="light">
+                        <CTableRow>
+                          <CTableHeaderCell style={{ width: '4%' }} className="text-center">
+                            #
+                          </CTableHeaderCell>
+                          <CTableHeaderCell style={{ width: '18%' }}>Time</CTableHeaderCell>
+                          <CTableHeaderCell style={{ width: '16%' }}>Action</CTableHeaderCell>
+                          <CTableHeaderCell style={{ width: '16%' }}>Actor</CTableHeaderCell>
+                          <CTableHeaderCell style={{ width: '20%' }}>Target</CTableHeaderCell>
+                          <CTableHeaderCell style={{ width: '12%' }}>IP</CTableHeaderCell>
+                          <CTableHeaderCell style={{ width: '18%' }}>Details</CTableHeaderCell>
                         </CTableRow>
-                      ))}
-                    </CTableBody>
-                  </CTable>
-                </div>
-              )}
-              footer={
-                <DataTableFooter
-                  rowsToShow={rowsToShow}
-                  onRowsToShowChange={setRowsToShow}
-                  filteredCount={filtered.length}
-                  totalCount={logs.length}
-                  showFilteredFrom={false}
-                />
-              }
-            />
-          )}
+                      </CTableHead>
+                      <CTableBody>
+                        {visibleRows.map((log, idx) => (
+                          <CTableRow key={log.id}>
+                            <CTableDataCell className="text-center text-muted">
+                              {idx + 1}
+                            </CTableDataCell>
+                            <CTableDataCell>{formatDateTime(log.created_at)}</CTableDataCell>
+                            <CTableDataCell>{formatAction(log.action)}</CTableDataCell>
+                            <CTableDataCell className="text-break">
+                              {getActorLabel(log)}
+                            </CTableDataCell>
+                            <CTableDataCell className="text-break">
+                              {getTargetLabel(log)}
+                            </CTableDataCell>
+                            <CTableDataCell className="text-break">
+                              {log.ip_address || EMPTY}
+                            </CTableDataCell>
+                            <CTableDataCell className="text-break">
+                              {getDetailsLabel(log)}
+                            </CTableDataCell>
+                          </CTableRow>
+                        ))}
+                      </CTableBody>
+                    </CTable>
+                  </div>
+                )}
+                footer={
+                  <div data-tour-id="audit-results-footer">
+                    <DataTableFooter
+                      rowsToShow={rowsToShow}
+                      onRowsToShowChange={setRowsToShow}
+                      filteredCount={filtered.length}
+                      totalCount={logs.length}
+                      showFilteredFrom={false}
+                    />
+                  </div>
+                }
+              />
+            )}
+          </div>
         </CCardBody>
       </CCard>
     </CContainer>

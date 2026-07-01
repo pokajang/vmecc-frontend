@@ -9,6 +9,9 @@ import {
   CFormTextarea,
   CRow,
 } from '@coreui/react'
+import FormActionGroup from 'src/components/FormActionGroup'
+
+const LOCAL_DRAFT_MESSAGE = 'Saved locally. Keep browser data to recover later.'
 
 const DrillFormStep = ({
   form,
@@ -49,7 +52,7 @@ const DrillFormStep = ({
             </div>
           </CCol>
           <CCol md={12}>
-            <CFormLabel>Drill Scenario / Details</CFormLabel>
+            <CFormLabel>Describe Drill Scenario</CFormLabel>
             <CFormTextarea
               rows={3}
               value={form.details}
@@ -58,7 +61,7 @@ const DrillFormStep = ({
             />
           </CCol>
           <CCol md={12}>
-            <CFormLabel>Drill Outcome Summary</CFormLabel>
+            <CFormLabel>Outcome Summary</CFormLabel>
             <CFormTextarea
               rows={4}
               value={form.summary}
@@ -111,7 +114,7 @@ const DrillFormStep = ({
       </div>
     </div>
 
-    <div className="d-flex flex-column flex-sm-row justify-content-end gap-2 mb-4">
+    <div className="d-none d-md-flex flex-md-row justify-content-end gap-2 mb-4">
       <CButton type="button" color="light" onClick={() => setSetupConfirmed(false)}>
         Back
       </CButton>
@@ -125,6 +128,28 @@ const DrillFormStep = ({
         {submitLabel}
       </CButton>
     </div>
+    <FormActionGroup
+      className="d-md-none mb-4"
+      mobileVariant="compact-sticky"
+      statusMessage={LOCAL_DRAFT_MESSAGE}
+      leading={
+        <>
+          <CButton type="button" color="light" onClick={() => setSetupConfirmed(false)}>
+            Back
+          </CButton>
+          <CButton type="button" color="light" onClick={onClear}>
+            Reset
+          </CButton>
+        </>
+      }
+    >
+      <CButton type="button" color="secondary" variant="outline" onClick={onSaveDraft}>
+        Save Draft
+      </CButton>
+      <CButton type="submit" color="primary">
+        {submitLabel}
+      </CButton>
+    </FormActionGroup>
   </>
 )
 

@@ -124,6 +124,8 @@ describe('SalaryRecordsTab contract-incomplete UI', () => {
     })
 
     expect(screen.getByText(/contain incomplete backend contract fields/i)).toBeTruthy()
+    expect(document.querySelector('.list-group')).toBeTruthy()
+    expect(document.querySelector('.list-group-item')).toBeTruthy()
     expect(screen.getByText('Partial total')).toBeTruthy()
     expect(screen.getByText('Partial subtotal')).toBeTruthy()
     expect(screen.getAllByText('Incomplete backend salary data').length).toBeGreaterThan(0)

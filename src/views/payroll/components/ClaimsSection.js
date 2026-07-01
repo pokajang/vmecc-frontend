@@ -41,7 +41,7 @@ const ClaimsSection = ({
   onRetry = () => {},
   showPrimaryAction = true,
 }) => (
-  <CCard>
+  <CCard data-tour-id="payroll-claims">
     <CCardHeader className="d-flex flex-wrap justify-content-between align-items-center gap-2">
       <span>Claim Records</span>
       {showPrimaryAction ? (
@@ -64,39 +64,41 @@ const ClaimsSection = ({
           </CButton>
         </CAlert>
       ) : null}
-      <TableFilters
-        searchValue={search}
-        onSearchChange={onSearchChange}
-        searchPlaceholder="Search claim ID, period, type, detail, or status"
-        periodValue={period}
-        onPeriodChange={onPeriodChange}
-        filters={[
-          {
-            key: 'sort',
-            value: sort,
-            onChange: onSortChange,
-            options: claimSortOptions,
-          },
-          {
-            key: 'category',
-            value: categoryFilter,
-            onChange: onCategoryChange,
-            options: categoryOptions,
-          },
-          {
-            key: 'status',
-            value: statusFilter,
-            onChange: onStatusChange,
-            options: statusOptions,
-          },
-        ]}
-        onClear={onClearFilters}
-        rowClassName="flex-md-nowrap"
-        searchColMd={3}
-        periodColMd={2}
-        filterColMd={2}
-        clearColMd="auto"
-      />
+      <div data-tour-id="payroll-claims-filters">
+        <TableFilters
+          searchValue={search}
+          onSearchChange={onSearchChange}
+          searchPlaceholder="Search claim ID, period, type, detail, or status"
+          periodValue={period}
+          onPeriodChange={onPeriodChange}
+          filters={[
+            {
+              key: 'sort',
+              value: sort,
+              onChange: onSortChange,
+              options: claimSortOptions,
+            },
+            {
+              key: 'category',
+              value: categoryFilter,
+              onChange: onCategoryChange,
+              options: categoryOptions,
+            },
+            {
+              key: 'status',
+              value: statusFilter,
+              onChange: onStatusChange,
+              options: statusOptions,
+            },
+          ]}
+          onClear={onClearFilters}
+          rowClassName="flex-md-nowrap"
+          searchColMd={3}
+          periodColMd={2}
+          filterColMd={2}
+          clearColMd="auto"
+        />
+      </div>
 
       {isLoading ? (
         <TableLoader />

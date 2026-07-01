@@ -36,6 +36,36 @@ describe('useWorkflowNotifications', () => {
     deleteAllWorkflowNotificationsForViewer.mockResolvedValue({ ok: true })
   })
 
+  it('stops polling notification lists after an auth-blocked response', async () => {
+    vi.useFakeTimers()
+    getWorkflowNotificationsForViewer.mockResolvedValue({
+      ok: false,
+      data: [],
+      error: { status: 401 },
+    })
+    getWorkflowUnreadCount.mockResolvedValue({ ok: false, count: 0, error: { status: 401 } })
+
+    const { result } = renderHook(() => useWorkflowNotifications({ unreadOnly: false }))
+
+    await act(async () => {
+      await Promise.resolve()
+      await Promise.resolve()
+    })
+
+    expect(getWorkflowNotificationsForViewer).toHaveBeenCalledTimes(1)
+    expect(getWorkflowUnreadCount).toHaveBeenCalledTimes(1)
+    expect(result.current.error).toBe('Sign in again to view notifications.')
+
+    await act(async () => {
+      vi.advanceTimersByTime(30 * 1000)
+      await Promise.resolve()
+      await Promise.resolve()
+    })
+
+    expect(getWorkflowNotificationsForViewer).toHaveBeenCalledTimes(1)
+    expect(getWorkflowUnreadCount).toHaveBeenCalledTimes(1)
+  })
+
   it('marks all notifications as read and syncs the unread count event', async () => {
     getWorkflowNotificationsForViewer
       .mockResolvedValueOnce({

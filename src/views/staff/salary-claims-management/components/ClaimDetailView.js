@@ -43,7 +43,7 @@ const ClaimDetailView = ({ vm, handlers }) => {
   const isSalaryClaim = selectedClaim?.type === 'salary'
 
   return (
-    <div className="d-grid gap-3">
+    <div className="d-grid gap-3" data-tour-id="salary-claims-management-detail">
       <div className="d-flex flex-wrap align-items-center gap-2">
         <BackButton onClick={onBack} label="Back to claims" />
         {selectedClaim?.status && (

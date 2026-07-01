@@ -99,6 +99,8 @@ describe('ClaimRecordsTab shared record primitives', () => {
     expect(screen.getAllByText('Expense').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Travel').length).toBeGreaterThan(0)
     expect(screen.getAllByText('RM 250.00').length).toBeGreaterThan(0)
+    expect(document.querySelector('.list-group')).toBeTruthy()
+    expect(document.querySelector('.list-group-item')).toBeTruthy()
     expect(screen.getByText('1 claim selected')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Reject selected' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Approve selected' })).toBeTruthy()

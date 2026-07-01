@@ -11,6 +11,7 @@ import {
   CTableHead,
   CTableHeaderCell,
   CTableRow,
+  CTooltip,
 } from '@coreui/react'
 import { Pencil, Trash2 } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
@@ -132,18 +133,20 @@ const SalaryPayoutCard = ({
                             </span>
                           )}
                           {item.attachmentName && (
-                            <CBadge
-                              color="light"
-                              className="text-body-secondary flex-shrink-0"
-                              role="button"
-                              style={{ cursor: 'pointer' }}
-                              title="Preview attachment"
-                              onClick={() => onPreviewAttachment(item)}
-                            >
-                              {item.attachmentName.length > 18
-                                ? `${item.attachmentName.slice(0, 12)}...${item.attachmentName.slice(-4)}`
-                                : item.attachmentName}
-                            </CBadge>
+                            <CTooltip content={item.attachmentName} placement="top">
+                              <CBadge
+                                color="light"
+                                className="text-body-secondary flex-shrink-0"
+                                role="button"
+                                style={{ cursor: 'pointer' }}
+                                aria-label={`Preview ${item.attachmentName}`}
+                                onClick={() => onPreviewAttachment(item)}
+                              >
+                                {item.attachmentName.length > 18
+                                  ? `${item.attachmentName.slice(0, 12)}...${item.attachmentName.slice(-4)}`
+                                  : item.attachmentName}
+                              </CBadge>
+                            </CTooltip>
                           )}
                           {editingIndex === savedIndex && (
                             <CBadge color="info" className="flex-shrink-0">
@@ -239,18 +242,20 @@ const SalaryPayoutCard = ({
                             </span>
                           )}
                           {item.attachmentName && (
-                            <CBadge
-                              color="light"
-                              className="text-body-secondary flex-shrink-0"
-                              role="button"
-                              style={{ cursor: 'pointer' }}
-                              title="Preview attachment"
-                              onClick={() => onPreviewAttachment(item)}
-                            >
-                              {item.attachmentName.length > 18
-                                ? `${item.attachmentName.slice(0, 12)}...${item.attachmentName.slice(-4)}`
-                                : item.attachmentName}
-                            </CBadge>
+                            <CTooltip content={item.attachmentName} placement="top">
+                              <CBadge
+                                color="light"
+                                className="text-body-secondary flex-shrink-0"
+                                role="button"
+                                style={{ cursor: 'pointer' }}
+                                aria-label={`Preview ${item.attachmentName}`}
+                                onClick={() => onPreviewAttachment(item)}
+                              >
+                                {item.attachmentName.length > 18
+                                  ? `${item.attachmentName.slice(0, 12)}...${item.attachmentName.slice(-4)}`
+                                  : item.attachmentName}
+                              </CBadge>
+                            </CTooltip>
                           )}
                           {editingIndex === savedIndex && (
                             <CBadge color="info" className="flex-shrink-0">

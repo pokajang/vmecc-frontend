@@ -449,7 +449,7 @@ const SalaryClaimsManagement = () => {
   }
 
   return (
-    <CContainer fluid>
+    <CContainer fluid data-tour-id="salary-claims-management-module">
       <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
 
       <SalaryWorkflowActionModal
@@ -526,6 +526,7 @@ const SalaryClaimsManagement = () => {
         visible={actions.assignmentDeleteModalVisible}
         alignment="center"
         onClose={actions.closeAssignmentDeleteModal}
+        data-tour-id="salary-claims-management-assignment-delete-modal"
       >
         <CModalHeader onClose={actions.closeAssignmentDeleteModal}>
           <CModalTitle>Delete Assignment</CModalTitle>
@@ -551,17 +552,19 @@ const SalaryClaimsManagement = () => {
             title="Salary & Claims Management"
             subtitle="Review payroll claims, manage salary records, configure pay settings, and maintain workflow rules."
           />
-          <SalaryClaimsTabsNav
-            activeTab={pageState.activeTab}
-            onSwitch={pageState.switchTab}
-            group={tabNavGroup}
-            tabMeta={{
-              salaryRecords:
-                derived.salaryContractIncompleteTotalCount > 0
-                  ? { warningCount: derived.salaryContractIncompleteTotalCount }
-                  : undefined,
-            }}
-          />
+          <div data-tour-id="salary-claims-management-nav">
+            <SalaryClaimsTabsNav
+              activeTab={pageState.activeTab}
+              onSwitch={pageState.switchTab}
+              group={tabNavGroup}
+              tabMeta={{
+                salaryRecords:
+                  derived.salaryContractIncompleteTotalCount > 0
+                    ? { warningCount: derived.salaryContractIncompleteTotalCount }
+                    : undefined,
+              }}
+            />
+          </div>
         </>
       )}
 

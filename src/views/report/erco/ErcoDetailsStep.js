@@ -1,9 +1,9 @@
 import React from 'react'
 import { CAlert } from '@coreui/react'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
+import TypeManagerModal from 'src/components/report-workflow/TypeManagerModal'
 import { formatErcoLocation, resolveRespondingTeamLabel } from './utils'
 import { sortResponders } from './chronologyUtils'
-import TypeManagerModal from './TypeManagerModal'
 import useIncidentTitleManager from './useIncidentTitleManager'
 import { useChronology } from './useChronology'
 import {
@@ -319,7 +319,7 @@ const ErcoDetailsStep = ({
         onResetSystemOverride={titleManager.resetSystemOverride}
         onStartEdit={titleManager.startEditType}
         onRequestDelete={({ value, label }) => setDeleteTitleTarget({ value, label })}
-        nameLabel="Title"
+        nameLabel="Incident Title"
         nameValue={titleManager.newTitleName}
         onChangeName={(value) => {
           titleManager.setNewTitleName(value)
@@ -381,7 +381,7 @@ const ErcoDetailsStep = ({
       />
 
       <details className="rounded-3 border bg-white p-3">
-        <summary className="fw-semibold">Advanced Chronology</summary>
+        <summary className="fw-semibold">Chronology</summary>
         <div className="mt-3">
           <ChronologySection
             fieldError={fieldErrors.chronology}

@@ -1,0 +1,78 @@
+import { describe, expect, it } from 'vitest'
+import {
+  getInspectionTypeDefinition,
+  getInspectionTypeInitialFormState,
+  getInspectionTypeOptions,
+} from '../app/inspectionTypeRegistry'
+
+describe('inspectionTypeRegistry', () => {
+  it('derives incident type options from the registered type definitions', () => {
+    const options = getInspectionTypeOptions()
+
+    expect(options.some((option) => option.value === 'ER Aux Equipment Inspection')).toBe(true)
+    expect(options.some((option) => option.value === 'FRT Daily Inspection')).toBe(true)
+    expect(options.some((option) => option.value === 'Hydraulic Rescue Tools Inspection')).toBe(
+      true,
+    )
+    expect(options.some((option) => option.value === 'SCBA Inspection')).toBe(true)
+    expect(
+      options.some((option) => option.value === 'High Angle Rescue Equipment Inspection'),
+    ).toBe(true)
+    expect(options.some((option) => option.value === 'General Inspection')).toBe(true)
+  })
+
+  it('returns structured type definitions for implemented structured inspection types', () => {
+    const erAux = getInspectionTypeDefinition('ER Aux Equipment Inspection')
+    const frt = getInspectionTypeDefinition('FRT Daily Inspection')
+    const hydraulic = getInspectionTypeDefinition('Hydraulic Rescue Tools Inspection')
+    const scba = getInspectionTypeDefinition('SCBA Inspection')
+    const highAngle = getInspectionTypeDefinition('High Angle Rescue Equipment Inspection')
+
+    expect(erAux?.formMode).toBe('structured')
+    expect(typeof erAux?.getSummary).toBe('function')
+    expect(typeof erAux?.EditSection).toBe('function')
+
+    expect(frt?.formMode).toBe('structured')
+    expect(frt?.supportsSubLocations).toBe(false)
+    expect(typeof frt?.getSummary).toBe('function')
+    expect(typeof frt?.ReadOnlySection).toBe('function')
+
+    expect(hydraulic?.formMode).toBe('structured')
+    expect(typeof hydraulic?.getSummary).toBe('function')
+    expect(typeof hydraulic?.ReadOnlySection).toBe('function')
+
+    expect(scba?.formMode).toBe('structured')
+    expect(typeof scba?.getSummary).toBe('function')
+    expect(typeof scba?.ReadOnlySection).toBe('function')
+
+    expect(highAngle?.formMode).toBe('structured')
+    expect(typeof highAngle?.getSummary).toBe('function')
+    expect(typeof highAngle?.ReadOnlySection).toBe('function')
+  })
+
+  it('aggregates per-type initial form state fragments', () => {
+    expect(getInspectionTypeInitialFormState()).toMatchObject({
+      erAuxInspectedBy: '',
+      erAuxInspectionDate: '',
+      erAuxChecks: [],
+      erAuxEquipmentRows: [],
+      frtInspectedBy: '',
+      frtInspectionDate: '',
+      frtShift: '',
+      frtDailyChecks: [],
+      frtDailyRemarks: '',
+      frtOneOffChecks: [],
+      frtOneOffRemarks: '',
+      hydraulicChecks: [],
+      hydraulicEquipmentRows: [],
+      highAngleInspectedBy: '',
+      highAngleInspectionDate: '',
+      highAngleChecks: [],
+      scbaInspectedBy: '',
+      scbaInspectionDate: '',
+      scbaBackPlateChecks: [],
+      scbaCylinderChecks: [],
+      scbaFaceMaskChecks: [],
+    })
+  })
+})

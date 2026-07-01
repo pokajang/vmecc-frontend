@@ -5,6 +5,7 @@ import useWorkflowNotifications from 'src/hooks/useWorkflowNotifications'
 import { buildWorkflowNotificationDetailPath } from 'src/services/workflowNotifications'
 import TableLoader from 'src/components/TableLoader'
 import WorkflowNotificationCard from '../WorkflowNotificationCard'
+import MobileOverlaySection from 'src/components/header/MobileOverlaySection'
 
 export const groupWorkflowNotifications = (items = []) => {
   const actionRequired = []
@@ -145,10 +146,12 @@ const WorkflowNotifications = ({ onClose }) => {
           !error &&
           groupedItems.map((group) => (
             <section key={group.key} className="notification-drawer-group">
-              <div className="notification-drawer-group-title">
-                <span>{group.label}</span>
-                <span className="notification-drawer-group-count">{group.items.length}</span>
-              </div>
+              <MobileOverlaySection
+                className="notification-drawer-group-title"
+                count={group.items.length}
+              >
+                {group.label}
+              </MobileOverlaySection>
               {group.items.map((item) => (
                 <WorkflowNotificationCard
                   key={item.id}

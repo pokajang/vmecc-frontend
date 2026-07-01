@@ -277,7 +277,7 @@ const StaffDetails = () => {
   }
 
   return (
-    <CContainer fluid>
+    <CContainer fluid data-tour-id="staff-directory-module">
       <ModulePageHeader
         title="Staff Directory"
         subtitle="Review staff profiles, employment status, roles, teams, and contact details."
@@ -285,7 +285,7 @@ const StaffDetails = () => {
       />
       <CRow>
         <CCol>
-          <CCard className="mb-4">
+          <CCard className="mb-4" data-tour-id="staff-directory-records">
             <CCardHeader className="d-flex align-items-center gap-2">
               <span>Staff Records</span>
               {refreshing && <Loader size={14} className="icon-spin" />}
@@ -296,118 +296,134 @@ const StaffDetails = () => {
 
               {!error && (
                 <>
-                  <TableFilters
-                    searchValue={search}
-                    onSearchChange={setSearch}
-                    searchPlaceholder="Search name or email"
-                    searchColMd={4}
-                    periodColMd={2}
-                    filterColMd={2}
-                    clearColMd={2}
-                    periodValue={period}
-                    onPeriodChange={setPeriod}
-                    filters={[
-                      {
-                        key: 'status',
-                        label: 'Status',
-                        value: statusFilter,
-                        onChange: setStatusFilter,
-                        options: [
-                          { value: 'All', label: 'All status' },
-                          { value: 'Active', label: 'Active' },
-                          { value: 'Inactive', label: 'Inactive' },
-                          { value: 'Terminated', label: 'Terminated' },
-                        ],
-                      },
-                      {
-                        key: 'role',
-                        label: 'Role',
-                        value: roleFilter,
-                        onChange: setRoleFilter,
-                        options: roleOptions.map((r) => ({
-                          value: r,
-                          label: r === 'All' ? 'All roles' : r,
-                        })),
-                      },
-                    ]}
-                    onClear={clearFilters}
-                    rowClassName="align-items-md-end"
-                    showDesktopLabels
-                  />
-                  <ResponsiveRecordCollection
-                    isLoading={loading}
-                    isEmpty={visibleRows.length === 0}
-                    emptyMessage={
-                      <div className="text-body-secondary">
-                        No staff records match the current filters.
-                      </div>
-                    }
-                    mobileSections={mobileStaffSections}
-                    renderDesktop={() => (
-                      <div className="d-none d-md-block">
-                        <div className="rounded-3 shadow-sm overflow-hidden bg-white">
-                          <CTable align="middle" className="mb-0" hover responsive>
-                            <CTableHead color="light">
-                              <CTableRow>
-                                <CTableHeaderCell className="text-center">#</CTableHeaderCell>
-                                <CTableHeaderCell role="button" onClick={() => toggleSort('name')}>
-                                  Name
-                                </CTableHeaderCell>
-                                <CTableHeaderCell role="button" onClick={() => toggleSort('role')}>
-                                  Role
-                                </CTableHeaderCell>
-                                <CTableHeaderCell>Mobile</CTableHeaderCell>
-                                <CTableHeaderCell>Emergency contact</CTableHeaderCell>
-                                <CTableHeaderCell role="button" onClick={() => toggleSort('team')}>
-                                  Team
-                                </CTableHeaderCell>
-                                <CTableHeaderCell
-                                  role="button"
-                                  onClick={() => toggleSort('status')}
-                                >
-                                  Status
-                                </CTableHeaderCell>
-                                <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
-                              </CTableRow>
-                            </CTableHead>
-                            <CTableBody>
-                              {visibleRows.map((user, index) => (
-                                <CTableRow
-                                  key={user.id}
-                                  role="button"
-                                  className="cursor-pointer"
-                                  onClick={() => goProfile(user.id)}
-                                >
-                                  <CTableDataCell className="text-center">
-                                    {index + 1}
-                                  </CTableDataCell>
-                                  <CTableDataCell>{user.name || '-'}</CTableDataCell>
-                                  <CTableDataCell>
-                                    {getPrimaryRoleLabel(user) || '-'}
-                                  </CTableDataCell>
-                                  <CTableDataCell>{user.phone || '-'}</CTableDataCell>
-                                  <CTableDataCell>{renderEmergency(user)}</CTableDataCell>
-                                  <CTableDataCell>{user.team || '-'}</CTableDataCell>
-                                  <CTableDataCell>{getStatusLabel(user)}</CTableDataCell>
-                                  <RowActionCell className="text-center align-middle">
-                                    <RowActions items={getActionItems(user)} />
-                                  </RowActionCell>
-                                </CTableRow>
-                              ))}
-                            </CTableBody>
-                          </CTable>
+                  <div data-tour-id="staff-directory-filters">
+                    <TableFilters
+                      searchValue={search}
+                      onSearchChange={setSearch}
+                      searchPlaceholder="Search name or email"
+                      searchColMd={4}
+                      periodColMd={2}
+                      filterColMd={2}
+                      clearColMd={2}
+                      periodValue={period}
+                      onPeriodChange={setPeriod}
+                      filters={[
+                        {
+                          key: 'status',
+                          label: 'Status',
+                          value: statusFilter,
+                          onChange: setStatusFilter,
+                          options: [
+                            { value: 'All', label: 'All status' },
+                            { value: 'Active', label: 'Active' },
+                            { value: 'Inactive', label: 'Inactive' },
+                            { value: 'Terminated', label: 'Terminated' },
+                          ],
+                        },
+                        {
+                          key: 'role',
+                          label: 'Role',
+                          value: roleFilter,
+                          onChange: setRoleFilter,
+                          options: roleOptions.map((r) => ({
+                            value: r,
+                            label: r === 'All' ? 'All roles' : r,
+                          })),
+                        },
+                      ]}
+                      onClear={clearFilters}
+                      rowClassName="align-items-md-end"
+                      showDesktopLabels
+                    />
+                  </div>
+                  <div data-tour-id="staff-directory-list">
+                    <ResponsiveRecordCollection
+                      isLoading={loading}
+                      isEmpty={visibleRows.length === 0}
+                      emptyMessage={
+                        <div className="text-body-secondary">
+                          No staff records match the current filters.
                         </div>
-                      </div>
-                    )}
-                    footer={
-                      <DataTableFooter
-                        rowsToShow={rowsToShow}
-                        onRowsToShowChange={setRowsToShow}
-                        filteredCount={filtered.length}
-                        totalCount={staff.length}
-                      />
-                    }
-                  />
+                      }
+                      mobileSections={mobileStaffSections}
+                      mobileVariant="list-group"
+                      renderDesktop={() => (
+                        <div className="d-none d-md-block">
+                          <div className="rounded-3 shadow-sm overflow-hidden bg-white">
+                            <CTable align="middle" className="mb-0" hover responsive>
+                              <CTableHead color="light">
+                                <CTableRow>
+                                  <CTableHeaderCell className="text-center">#</CTableHeaderCell>
+                                  <CTableHeaderCell
+                                    role="button"
+                                    onClick={() => toggleSort('name')}
+                                  >
+                                    Name
+                                  </CTableHeaderCell>
+                                  <CTableHeaderCell
+                                    role="button"
+                                    onClick={() => toggleSort('role')}
+                                  >
+                                    Role
+                                  </CTableHeaderCell>
+                                  <CTableHeaderCell>Mobile</CTableHeaderCell>
+                                  <CTableHeaderCell>Emergency contact</CTableHeaderCell>
+                                  <CTableHeaderCell
+                                    role="button"
+                                    onClick={() => toggleSort('team')}
+                                  >
+                                    Team
+                                  </CTableHeaderCell>
+                                  <CTableHeaderCell
+                                    role="button"
+                                    onClick={() => toggleSort('status')}
+                                  >
+                                    Status
+                                  </CTableHeaderCell>
+                                  <CTableHeaderCell className="text-center">
+                                    Action
+                                  </CTableHeaderCell>
+                                </CTableRow>
+                              </CTableHead>
+                              <CTableBody>
+                                {visibleRows.map((user, index) => (
+                                  <CTableRow
+                                    key={user.id}
+                                    role="button"
+                                    className="cursor-pointer"
+                                    onClick={() => goProfile(user.id)}
+                                  >
+                                    <CTableDataCell className="text-center">
+                                      {index + 1}
+                                    </CTableDataCell>
+                                    <CTableDataCell>{user.name || '-'}</CTableDataCell>
+                                    <CTableDataCell>
+                                      {getPrimaryRoleLabel(user) || '-'}
+                                    </CTableDataCell>
+                                    <CTableDataCell>{user.phone || '-'}</CTableDataCell>
+                                    <CTableDataCell>{renderEmergency(user)}</CTableDataCell>
+                                    <CTableDataCell>{user.team || '-'}</CTableDataCell>
+                                    <CTableDataCell>{getStatusLabel(user)}</CTableDataCell>
+                                    <RowActionCell className="text-center align-middle">
+                                      <RowActions items={getActionItems(user)} />
+                                    </RowActionCell>
+                                  </CTableRow>
+                                ))}
+                              </CTableBody>
+                            </CTable>
+                          </div>
+                        </div>
+                      )}
+                      footer={
+                        <DataTableFooter
+                          rowsToShow={rowsToShow}
+                          onRowsToShowChange={setRowsToShow}
+                          filteredCount={filtered.length}
+                          totalCount={staff.length}
+                        />
+                      }
+                    />
+                  </div>
                   <StaffActionModals
                     actionUser={actionUser}
                     actionUpdating={actionUpdating}

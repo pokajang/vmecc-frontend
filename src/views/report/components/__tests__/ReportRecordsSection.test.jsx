@@ -100,13 +100,20 @@ describe('ReportRecordsSection', () => {
     const mobileCard = screen.getByRole('button', {
       name: 'Open erco report ERCO-2026-001 summary',
     })
+    const mobileArticle = mobileCard.closest('article')
 
+    expect(document.querySelector('.list-group')).toBeTruthy()
+    expect(mobileArticle.className).toContain('list-group-item')
+    expect(mobileCard.querySelector('.fw-semibold')?.textContent).toBe('Medical Emergency')
+    expect(mobileCard.querySelector('.record-card-eyebrow')?.textContent).toBe('ERCO-2026-001')
+    expect(mobileCard.querySelector('.small.text-body-secondary')?.textContent).toBe('Engine Room')
     expect(mobileCard.textContent).toContain('ERCO-2026-001')
     expect(mobileCard.textContent).toContain('Medical Emergency')
     expect(mobileCard.textContent).toContain('Engine Room')
     expect(mobileCard.textContent).toContain('Alex Tan')
     expect(mobileCard.textContent).toContain('2026-04-15 10:30')
-    expect(mobileCard.textContent).toContain('Submitted')
+    expect(mobileArticle.textContent).toContain('Submitted')
+    expect(mobileArticle.textContent).toContain('15 Apr 2026')
 
     fireEvent.keyDown(mobileCard, { key: 'Enter' })
     fireEvent.keyDown(mobileCard, { key: ' ' })
@@ -179,5 +186,18 @@ describe('ReportRecordsSection', () => {
     })[0]
 
     expect(reviewAction.getAttribute('title')).toBe('Review is not available for this status.')
+  })
+
+  it('renders the configured report type label in the desktop table', () => {
+    render(
+      <ReportRecordsSection
+        {...buildProps({
+          reportTypeLabel: 'Fitness Test',
+          typeLabel: 'Fitness Test Type',
+        })}
+      />,
+    )
+
+    expect(screen.getByRole('columnheader', { name: 'Fitness Test Type' })).toBeTruthy()
   })
 })

@@ -32,9 +32,11 @@ const TableFilters = ({
   filterColMd = 3,
   clearColMd = 2,
   showDesktopLabels = false,
+  labelClassName = 'text-body-secondary',
   periodLabel = 'Period',
   showActiveSummary = true,
 }) => {
+  const mobileFilterTriggerSize = 'calc(1.5em + 0.75rem + 2px)'
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const mobileFilterTriggerRef = useRef(null)
   const mobileFilterDrawerRef = useRef(null)
@@ -93,6 +95,7 @@ const TableFilters = ({
         mobile={mobile}
         showDesktopLabels={showDesktopLabels}
         selectClassName={selectClassName}
+        labelClassName={labelClassName}
       />
     ) : null
 
@@ -103,6 +106,7 @@ const TableFilters = ({
       mobile={mobile}
       showDesktopLabels={showDesktopLabels}
       selectClassName={selectClassName}
+      labelClassName={labelClassName}
     />
   )
 
@@ -114,7 +118,7 @@ const TableFilters = ({
           className={`${mobileSearchColProps.className || ''} d-md-none`.trim()}
         >
           <CFormInput
-            size="sm"
+            className="table-filter-mobile-search"
             placeholder={searchPlaceholder}
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
@@ -124,11 +128,15 @@ const TableFilters = ({
           <CCol xs="auto" className="d-md-none">
             <CButton
               ref={mobileFilterTriggerRef}
-              size="sm"
               color={isStructuredFilterActive ? 'primary' : 'secondary'}
               variant={isStructuredFilterActive ? undefined : 'outline'}
-              className="position-relative d-inline-flex align-items-center justify-content-center"
-              style={{ width: 44, height: 44 }}
+              className="table-filter-trigger position-relative d-inline-flex align-items-center justify-content-center"
+              style={{
+                width: mobileFilterTriggerSize,
+                height: mobileFilterTriggerSize,
+                minWidth: mobileFilterTriggerSize,
+                minHeight: mobileFilterTriggerSize,
+              }}
               onClick={() => setMobileFiltersOpen(true)}
               aria-label="Open filters"
             >

@@ -12,6 +12,8 @@ const RowActions = ({
   toggleClassName = '',
   toggleStyle,
   hitArea = 44,
+  tourId = '',
+  toggleAriaLabel = 'Row actions',
 }) => {
   const [visible, setVisible] = useState(false)
   const closeRef = useRef(() => setVisible(false))
@@ -33,7 +35,11 @@ const RowActions = ({
   if (!items.length) return null
 
   return (
-    <div onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
+    <div
+      {...(tourId ? { 'data-tour-id': tourId } : {})}
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+    >
       <CDropdown
         alignment={align}
         portal
@@ -47,55 +53,58 @@ const RowActions = ({
           size="sm"
           className={`p-2 border-0 shadow-none text-muted d-inline-flex align-items-center justify-content-center rounded ${toggleClassName}`.trim()}
           style={{ cursor: 'pointer', minWidth: hitArea, minHeight: hitArea, ...toggleStyle }}
-          aria-label="Row actions"
+          aria-label={toggleAriaLabel}
         >
           <MoreVertical size={iconSize} />
         </CDropdownToggle>
-        <CDropdownMenu>
-          {items.map((item) => {
-            const disabled = Boolean(item.disabled)
-            const disabledReason = disabled ? String(item.disabledReason || '').trim() : ''
-            const label = String(item.label || '')
-            const title = disabledReason || undefined
-            const ariaLabel = disabledReason ? `${label}. ${disabledReason}` : label
+        <CDropdownMenu aria-hidden={!visible}>
+          {visible
+            ? items.map((item) => {
+                const disabled = Boolean(item.disabled)
+                const disabledReason = disabled ? String(item.disabledReason || '').trim() : ''
+                const label = String(item.label || '')
+                const title = disabledReason || undefined
+                const ariaLabel = disabledReason ? `${label}. ${disabledReason}` : label
 
-            return (
-              <CDropdownItem
-                key={item.key || item.label}
-                className={`${disabled ? 'text-body-secondary opacity-75' : 'cursor-pointer'} ${
-                  item.className || ''
-                }`.trim()}
-                style={{
-                  cursor: disabled ? 'not-allowed' : 'pointer',
-                  ...(item.style || {}),
-                  ...(disabled ? { color: 'var(--cui-secondary-color)' } : {}),
-                }}
-                onClick={(event) => {
-                  if (disabled) {
-                    event.preventDefault()
-                    event.stopPropagation()
-                    return
-                  }
-                  try {
-                    item.onClick?.()
-                  } catch (err) {
-                    console.error(`RowActions: onClick failed for "${item.key || item.label}"`, err)
-                  }
-                }}
-                aria-disabled={disabled}
-                aria-label={ariaLabel}
-                title={title}
-                tabIndex={0}
-              >
-                <span title={title} aria-label={ariaLabel}>
-                  {label}
-                </span>
-                {disabledReason ? (
-                  <span className="d-block small text-body-secondary mt-1">{disabledReason}</span>
-                ) : null}
-              </CDropdownItem>
-            )
-          })}
+                return (
+                  <CDropdownItem
+                    key={item.key || item.label}
+                    className={`${disabled ? 'text-body-secondary opacity-75' : 'cursor-pointer'} ${
+                      item.className || ''
+                    }`.trim()}
+                    style={{
+                      cursor: disabled ? 'not-allowed' : 'pointer',
+                      ...(item.style || {}),
+                      ...(disabled ? { color: 'var(--cui-secondary-color)' } : {}),
+                    }}
+                    onClick={(event) => {
+                      if (disabled) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                        return
+                      }
+                      setVisible(false)
+                      try {
+                        item.onClick?.()
+                      } catch (err) {
+                        console.error(
+                          `RowActions: onClick failed for "${item.key || item.label}"`,
+                          err,
+                        )
+                      }
+                    }}
+                    aria-disabled={disabled}
+                    aria-label={ariaLabel}
+                    title={title}
+                    tabIndex={0}
+                  >
+                    <span title={title} aria-label={ariaLabel}>
+                      {label}
+                    </span>
+                  </CDropdownItem>
+                )
+              })
+            : null}
         </CDropdownMenu>
       </CDropdown>
     </div>

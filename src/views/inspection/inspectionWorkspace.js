@@ -4,6 +4,11 @@ import {
   isInspectionDraftPayload,
   normalizeInspectionForm,
 } from './inspectionFormHelpers'
+import {
+  clearOfflineWorkspace,
+  loadOfflineWorkspaceSync,
+  saveOfflineWorkspace,
+} from './inspectionOfflineStore'
 
 const WORKSPACE_KEY_PREFIX = 'inspection_workspace_v1_'
 
@@ -15,7 +20,7 @@ export const buildDraftRow = (payload, actorName = '') => {
     __rawDraftPayload: payload,
     id: `draft-inspection-${meta.editReportId || 'new'}`,
     draftId: 'inspection',
-    displayId: 'Inspection Draft',
+    displayId: 'Draft',
     reportType: 'inspection',
     recordKind: 'draft',
     status: 'Draft',
@@ -40,9 +45,12 @@ const getWorkspaceKey = (userId) => `${WORKSPACE_KEY_PREFIX}${String(userId || '
 
 export const loadWorkspace = (userId) => {
   try {
-    const raw = globalThis.sessionStorage?.getItem(getWorkspaceKey(userId))
-    if (!raw) return null
-    const parsed = JSON.parse(raw)
+    let parsed = loadOfflineWorkspaceSync(userId)
+    if (!parsed) {
+      const raw = globalThis.sessionStorage?.getItem(getWorkspaceKey(userId))
+      parsed = raw ? JSON.parse(raw) : null
+      if (parsed) saveOfflineWorkspace(userId, parsed)
+    }
     if (!parsed || typeof parsed !== 'object') return null
     return {
       mode: String(parsed.mode || '').trim() === 'edit' ? 'edit' : 'new',
@@ -56,14 +64,16 @@ export const loadWorkspace = (userId) => {
 
 export const saveWorkspace = (userId, workspace) => {
   try {
+    saveOfflineWorkspace(userId, workspace)
     globalThis.sessionStorage?.setItem(getWorkspaceKey(userId), JSON.stringify(workspace))
   } catch {
-    // Session storage is only a workspace fallback.
+    // Offline persistence is best-effort.
   }
 }
 
 export const clearWorkspace = (userId) => {
   try {
+    clearOfflineWorkspace(userId)
     globalThis.sessionStorage?.removeItem(getWorkspaceKey(userId))
   } catch {
     // Ignore storage failures.

@@ -30,6 +30,7 @@ export const NavigationGuardProvider = ({ children }) => {
   const navigate = useNavigate()
   const location = useLocation()
   const currentPathRef = useRef(`${location.pathname}${location.search}${location.hash}`)
+  const suppressNextBeforeUnloadRef = useRef(false)
 
   const activeGuards = useMemo(
     () => Object.values(guards).filter((guard) => guard && guard.active),
@@ -59,23 +60,38 @@ export const NavigationGuardProvider = ({ children }) => {
     })
   }, [])
 
+  const suppressNextBeforeUnload = useCallback(() => {
+    suppressNextBeforeUnloadRef.current = true
+    window.setTimeout(() => {
+      suppressNextBeforeUnloadRef.current = false
+    }, 1000)
+  }, [])
+
   const requestNavigation = useCallback(
-    (action) => {
+    (action, options = {}) => {
+      const allowUnload = Boolean(options?.allowUnload)
       if (!isBlocked) {
+        if (allowUnload) suppressNextBeforeUnload()
         action?.()
         return true
       }
-      setPendingAction(() => action || null)
+      setPendingAction({
+        action: action || null,
+        allowUnload,
+      })
       return false
     },
-    [isBlocked],
+    [isBlocked, suppressNextBeforeUnload],
   )
 
   const confirmDiscard = useCallback(() => {
-    const action = pendingAction
+    const action = pendingAction?.action
+    if (pendingAction?.allowUnload) {
+      suppressNextBeforeUnload()
+    }
     setPendingAction(null)
     action?.()
-  }, [pendingAction])
+  }, [pendingAction, suppressNextBeforeUnload])
 
   const stayOnPage = useCallback(() => {
     setPendingAction(null)
@@ -92,7 +108,10 @@ export const NavigationGuardProvider = ({ children }) => {
       const currentPath = currentPathRef.current
       if (!attemptedPath || attemptedPath === currentPath) return
       window.history.pushState(window.history.state, '', currentPath)
-      setPendingAction(() => () => navigate(attemptedPath))
+      setPendingAction({
+        action: () => navigate(attemptedPath),
+        allowUnload: false,
+      })
     }
     window.addEventListener('popstate', onPopState)
     return () => window.removeEventListener('popstate', onPopState)
@@ -101,6 +120,10 @@ export const NavigationGuardProvider = ({ children }) => {
   useEffect(() => {
     const onBeforeUnload = (event) => {
       if (!isBlocked) return
+      if (suppressNextBeforeUnloadRef.current) {
+        suppressNextBeforeUnloadRef.current = false
+        return
+      }
       event.preventDefault()
       event.returnValue = ''
     }
@@ -129,7 +152,10 @@ export const NavigationGuardProvider = ({ children }) => {
       const currentPath = `${location.pathname}${location.search}${location.hash}`
       if (nextPath === currentPath) return
       event.preventDefault()
-      setPendingAction(() => () => navigate(nextPath))
+      setPendingAction({
+        action: () => navigate(nextPath),
+        allowUnload: false,
+      })
     }
     document.addEventListener('click', onClickCapture, true)
     return () => document.removeEventListener('click', onClickCapture, true)

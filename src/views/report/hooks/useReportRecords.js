@@ -7,13 +7,15 @@ import {
   runReportApiBackfillMigration,
 } from '../reportApi'
 import { loadReportRecords } from '../reportStorage'
+import { isReportRecordMine } from '../reportUiUtils'
 import { toDateTime } from '../utils'
 
 const byNewest = (a, b) => toDateTime(b) - toDateTime(a)
 
-const useReportRecords = ({ userId, reportTypeSlug, reportId, draftRows = [] }) => {
+const useReportRecords = ({ user = null, userId, reportTypeSlug, reportId, draftRows = [] }) => {
   const [records, setRecords] = useState([])
   const [search, setSearch] = useState('')
+  const [recordScope, setRecordScope] = useState('mine')
   const [period, setPeriod] = useState('all')
   const [sort, setSort] = useState('reportedAt:desc')
   const [typeFilter, setTypeFilter] = useState('All')
@@ -25,24 +27,8 @@ const useReportRecords = ({ userId, reportTypeSlug, reportId, draftRows = [] }) 
 
   const reloadRecords = async () => {
     if (!userId) return
-    const rows = apiEnabledForType
-      ? await fetchReportRecords(userId)
-      : loadReportRecords(userId).filter(
-          (row) =>
-            String(row?.reportType || '').toLowerCase() ===
-            String(reportTypeSlug || '').toLowerCase(),
-        )
-    setRecords(rows.sort(byNewest))
-    setIsLoading(false)
-  }
-
-  useEffect(() => {
-    if (!userId) return
-    let cancelled = false
-    const load = async () => {
-      if (shouldRunBackfill) {
-        await runReportApiBackfillMigration({ userId, reportTypeSlug })
-      }
+    setIsLoading(true)
+    try {
       const rows = apiEnabledForType
         ? await fetchReportRecords(userId)
         : loadReportRecords(userId).filter(
@@ -50,9 +36,36 @@ const useReportRecords = ({ userId, reportTypeSlug, reportId, draftRows = [] }) 
               String(row?.reportType || '').toLowerCase() ===
               String(reportTypeSlug || '').toLowerCase(),
           )
-      if (cancelled) return
       setRecords(rows.sort(byNewest))
+    } catch {
+      setRecords([])
+    } finally {
       setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!userId) return
+    let cancelled = false
+    const load = async () => {
+      try {
+        if (shouldRunBackfill) {
+          await runReportApiBackfillMigration({ userId, reportTypeSlug })
+        }
+        const rows = apiEnabledForType
+          ? await fetchReportRecords(userId)
+          : loadReportRecords(userId).filter(
+              (row) =>
+                String(row?.reportType || '').toLowerCase() ===
+                String(reportTypeSlug || '').toLowerCase(),
+            )
+        if (cancelled) return
+        setRecords(rows.sort(byNewest))
+      } catch {
+        if (!cancelled) setRecords([])
+      } finally {
+        if (!cancelled) setIsLoading(false)
+      }
     }
     load()
     return () => {
@@ -75,7 +88,7 @@ const useReportRecords = ({ userId, reportTypeSlug, reportId, draftRows = [] }) 
 
   const persistRecords = async (next) => {
     const intended = (Array.isArray(next) ? next : []).sort(byNewest)
-    const saved = await persistReportRecords(userId, intended)
+    const saved = await persistReportRecords(userId, intended, { reportTypeSlug })
     if (!saved) return { saved: false, trimmed: false }
     await reloadRecords()
     return { saved: true, trimmed: false }
@@ -87,8 +100,18 @@ const useReportRecords = ({ userId, reportTypeSlug, reportId, draftRows = [] }) 
     return rows.filter((row) => String(row.reportType || '').toLowerCase() === reportTypeSlug)
   }, [draftRows, records, reportTypeSlug])
 
+  const scopedRecords = useMemo(() => {
+    if (recordScope !== 'mine') return recordsInScope
+    return recordsInScope.filter((row) => isReportRecordMine(row, user))
+  }, [recordScope, recordsInScope, user])
+
+  const submittedRecordsInScope = useMemo(
+    () => scopedRecords.filter((row) => row?.recordKind !== 'draft'),
+    [scopedRecords],
+  )
+
   const filteredRecords = useMemo(() => {
-    let next = [...recordsInScope]
+    let next = [...scopedRecords]
     const term = search.trim().toLowerCase()
 
     if (term) {
@@ -129,7 +152,7 @@ const useReportRecords = ({ userId, reportTypeSlug, reportId, draftRows = [] }) 
     })
 
     return next
-  }, [nowMs, period, recordsInScope, search, sort, statusFilter, typeFilter])
+  }, [nowMs, period, scopedRecords, search, sort, statusFilter, typeFilter])
 
   const selectedRecord = useMemo(
     () => recordsInScope.find((x) => String(x.id) === String(reportId || '')) || null,
@@ -138,22 +161,30 @@ const useReportRecords = ({ userId, reportTypeSlug, reportId, draftRows = [] }) 
 
   const typeOptions = useMemo(
     () => [
-      { value: 'All', label: 'All incident types' },
-      ...Array.from(new Set(recordsInScope.map((row) => String(row.incidentType || '').trim())))
+      {
+        value: 'All',
+        label:
+          String(reportTypeSlug || '').toLowerCase() === 'drill'
+            ? 'All drill types'
+            : String(reportTypeSlug || '').toLowerCase() === 'fitness-test'
+              ? 'All fitness test types'
+              : 'All incident types',
+      },
+      ...Array.from(new Set(scopedRecords.map((row) => String(row.incidentType || '').trim())))
         .filter(Boolean)
         .map((type) => ({ value: type, label: type })),
     ],
-    [recordsInScope],
+    [reportTypeSlug, scopedRecords],
   )
 
   const statusOptions = useMemo(
     () => [
       { value: 'All', label: 'All status' },
-      ...Array.from(new Set(recordsInScope.map((row) => String(row.status || '').trim())))
+      ...Array.from(new Set(scopedRecords.map((row) => String(row.status || '').trim())))
         .filter(Boolean)
         .map((status) => ({ value: status, label: status })),
     ],
-    [recordsInScope],
+    [scopedRecords],
   )
 
   const { rowsToShow, setRowsToShow, visibleRows } = useTableRows(filteredRecords)
@@ -171,6 +202,8 @@ const useReportRecords = ({ userId, reportTypeSlug, reportId, draftRows = [] }) 
     isLoading,
     search,
     setSearch,
+    recordScope,
+    setRecordScope,
     period,
     setPeriod,
     sort,
@@ -180,10 +213,12 @@ const useReportRecords = ({ userId, reportTypeSlug, reportId, draftRows = [] }) 
     statusFilter,
     setStatusFilter,
     filteredRecords,
+    scopedRecords,
+    submittedRecordsInScope,
     selectedRecord,
     typeOptions,
     statusOptions,
-    recordsInScopeCount: recordsInScope.length,
+    recordsInScopeCount: scopedRecords.length,
     rowsToShow,
     setRowsToShow,
     visibleRows,

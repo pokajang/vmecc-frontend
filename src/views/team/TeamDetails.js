@@ -8,7 +8,7 @@ import CreateTeamModal from './components/CreateTeamModal'
 import TableLoader from 'src/components/TableLoader'
 import {
   fetchTeams,
-  fetchUsers,
+  fetchTeamMemberOptions,
   fetchShiftWindows,
   fetchRosters,
   createTeam,
@@ -74,29 +74,38 @@ const TeamDetails = () => {
   }, [])
 
   const loadMembers = useCallback(async () => {
+    if (!canManageTeams) {
+      setMembers([])
+      setMembersLoading(false)
+      return
+    }
     setMembersLoading(true)
     try {
-      const resp = await fetchUsers()
+      const resp = await fetchTeamMemberOptions()
       setMembers(resp?.data || [])
     } catch {
       setMembers([])
     } finally {
       setMembersLoading(false)
     }
-  }, [])
+  }, [canManageTeams])
 
   useEffect(() => {
     if (canViewTeams) {
       loadPageData()
-      loadMembers()
+      if (canManageTeams) {
+        loadMembers()
+      } else {
+        setMembersLoading(false)
+      }
     } else {
       setLoading(false)
       setMembersLoading(false)
     }
-  }, [canViewTeams, loadPageData, loadMembers])
+  }, [canManageTeams, canViewTeams, loadPageData, loadMembers])
 
   return (
-    <CContainer fluid>
+    <CContainer fluid data-tour-id="team-directory-module">
       <ModulePageHeader
         title="Team Directory"
         subtitle="Review operational teams, members, and current roster coverage."
@@ -106,13 +115,14 @@ const TeamDetails = () => {
               label="Add Team"
               importance="primary"
               onClick={() => setShowCreate(true)}
+              data-tour-id="team-directory-create-action"
             />
           ) : null
         }
       />
       <CRow>
         <CCol>
-          <CCard className="mb-4">
+          <CCard className="mb-4" data-tour-id="team-directory-teams">
             <CCardHeader>Teams</CCardHeader>
             <CCardBody>
               {!loading && error && <CAlert color="danger">{error}</CAlert>}
@@ -145,47 +155,49 @@ const TeamDetails = () => {
                   </CCol>
                 </CRow>
               ) : (
-                (() => {
-                  const hasGroups = teams.some((t) => t.group)
-                  const groupMap = {}
-                  teams.forEach((t) => {
-                    const key = t.group || 'Default'
-                    if (!groupMap[key]) groupMap[key] = []
-                    groupMap[key].push(t)
-                  })
-                  const groupKeys = [
-                    'Default',
-                    ...Object.keys(groupMap).filter((k) => k !== 'Default'),
-                  ].filter((k) => groupMap[k])
-                  const renderCard = (team) => (
-                    <CCol key={team.id} xs={12} md={6} lg={3}>
-                      <TeamCard
-                        team={team}
-                        status={statusMap[team.id]}
-                        onView={() => navigate(`/team/details/${team.id}`)}
-                        onEdit={() => {
-                          if (!canManageTeams) return
-                          setEditTeam(team)
-                          setEditTeamStatus(statusMap[team.id] || null)
-                          setShowEdit(true)
-                        }}
-                        canEdit={canManageTeams}
-                      />
-                    </CCol>
-                  )
-                  if (!hasGroups) return <CRow className="g-3">{teams.map(renderCard)}</CRow>
-                  return groupKeys.map((groupKey) => (
-                    <div key={groupKey} className="mb-4">
-                      <div
-                        className="text-muted small fw-semibold mb-2"
-                        style={{ letterSpacing: '0.05em', textTransform: 'uppercase' }}
-                      >
-                        {groupKey}
+                <div data-tour-id="team-directory-grid">
+                  {(() => {
+                    const hasGroups = teams.some((t) => t.group)
+                    const groupMap = {}
+                    teams.forEach((t) => {
+                      const key = t.group || 'Default'
+                      if (!groupMap[key]) groupMap[key] = []
+                      groupMap[key].push(t)
+                    })
+                    const groupKeys = [
+                      'Default',
+                      ...Object.keys(groupMap).filter((k) => k !== 'Default'),
+                    ].filter((k) => groupMap[k])
+                    const renderCard = (team) => (
+                      <CCol key={team.id} xs={12} md={6} lg={3}>
+                        <TeamCard
+                          team={team}
+                          status={statusMap[team.id]}
+                          onView={() => navigate(`/team/details/${team.id}`)}
+                          onEdit={() => {
+                            if (!canManageTeams) return
+                            setEditTeam(team)
+                            setEditTeamStatus(statusMap[team.id] || null)
+                            setShowEdit(true)
+                          }}
+                          canEdit={canManageTeams}
+                        />
+                      </CCol>
+                    )
+                    if (!hasGroups) return <CRow className="g-3">{teams.map(renderCard)}</CRow>
+                    return groupKeys.map((groupKey) => (
+                      <div key={groupKey} className="mb-4">
+                        <div
+                          className="text-muted small fw-semibold mb-2"
+                          style={{ letterSpacing: '0.05em', textTransform: 'uppercase' }}
+                        >
+                          {groupKey}
+                        </div>
+                        <CRow className="g-3">{groupMap[groupKey].map(renderCard)}</CRow>
                       </div>
-                      <CRow className="g-3">{groupMap[groupKey].map(renderCard)}</CRow>
-                    </div>
-                  ))
-                })()
+                    ))
+                  })()}
+                </div>
               )}
             </CCardBody>
           </CCard>

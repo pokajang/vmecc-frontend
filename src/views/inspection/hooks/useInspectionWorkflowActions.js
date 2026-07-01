@@ -19,15 +19,18 @@ const useInspectionWorkflowActions = ({ reloadRecords, pushToast }) => {
 
   const canReviewRecord = useCallback((row) => {
     if (!row || row.recordKind === 'draft') return false
-    return String(row.status || '').trim() === 'Submitted'
+    return row.canReview === true
   }, [])
 
   const canApproveRecord = useCallback((row) => {
     if (!row || row.recordKind === 'draft') return false
-    return String(row.status || '').trim() === 'Reviewed'
+    return row.canApprove === true
   }, [])
 
-  const canRejectRecord = canApproveRecord
+  const canRejectRecord = useCallback((row) => {
+    if (!row || row.recordKind === 'draft') return false
+    return row.canReject === true
+  }, [])
 
   const closeWorkflowActionModal = useCallback(() => {
     setWorkflowActionState({ visible: false, actionType: '', record: null })

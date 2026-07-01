@@ -141,7 +141,7 @@ const RosterCard = ({ monthBlock, editMode = false, teams = [], allShifts = [], 
   }
 
   return (
-    <div className="mb-4">
+    <div className="mb-4" {...(editMode ? { 'data-tour-id': 'roster-management-grid' } : {})}>
       <div className="fw-semibold mb-2 month-label">{monthBlock.month}</div>
 
       <div

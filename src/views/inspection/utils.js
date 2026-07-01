@@ -100,6 +100,8 @@ export const normalizeInspectionRecord = (record) => {
     description: String(record.description || '').trim(),
     photos: Array.isArray(record.photos) ? record.photos.filter(Boolean) : [],
     findings: Array.isArray(record.findings) ? record.findings : [],
+    checklist: Array.isArray(record.checklist) ? record.checklist.filter(Boolean) : [],
+    checklistVersion: String(record.checklistVersion || ''),
     submittedAt: String(record.submittedAt || ''),
     submittedBy: String(record.submittedBy || ''),
   }

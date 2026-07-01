@@ -28,17 +28,19 @@ const IncidentSummaryPanel = ({ teamLabel, shiftLabel, incidentSummaryItems }) =
         ) : null}
       </div>
     </div>
-    <div className="rounded-3 border p-3 p-md-4">
+    <div className="erco-incident-summary-panel rounded-3 border p-3 p-md-4">
       <CRow className="g-3">
         {incidentSummaryItems.map((item) => (
           <CCol key={item.label} xs={item.fullWidth ? 12 : 6} md={item.fullWidth ? 12 : undefined}>
-            <div className="small text-body-secondary">{item.label}</div>
-            <div
-              className={item.fullWidth ? 'fw-semibold' : 'fw-semibold text-truncate'}
-              style={{ minWidth: 0, overflowWrap: item.fullWidth ? 'anywhere' : undefined }}
-              title={item.fullWidth ? item.value : undefined}
-            >
-              {item.value}
+            <div className="erco-incident-summary-panel__field">
+              <div className="small text-body-secondary">{item.label}</div>
+              <div
+                className={item.fullWidth ? 'fw-semibold' : 'fw-semibold text-truncate'}
+                style={{ minWidth: 0, overflowWrap: item.fullWidth ? 'anywhere' : undefined }}
+                title={item.fullWidth ? item.value : undefined}
+              >
+                {item.value}
+              </div>
             </div>
           </CCol>
         ))}

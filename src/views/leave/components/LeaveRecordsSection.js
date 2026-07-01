@@ -76,6 +76,7 @@ const LeaveRecordsSection = ({
   getStartDateTimeLabel,
   getEndDateTimeLabel,
   isLoading = false,
+  filtersTourId = null,
 }) => {
   const monthFormatter = new Intl.DateTimeFormat('en-MY', { month: 'long', year: 'numeric' })
   const shouldGroupByMonth = enableMonthGrouping ? Boolean(groupByMonth) : true
@@ -228,39 +229,41 @@ const LeaveRecordsSection = ({
         </div>
       </CCardHeader>
       <CCardBody>
-        <TableFilters
-          searchValue={search}
-          onSearchChange={setSearch}
-          searchPlaceholder={searchPlaceholder}
-          periodValue={period}
-          onPeriodChange={setPeriod}
-          filters={[
-            {
-              key: 'sort',
-              value: sort,
-              onChange: setSort,
-              options: leaveSortOptions,
-            },
-            {
-              key: 'type',
-              value: typeFilter,
-              onChange: setTypeFilter,
-              options: typeOptions,
-            },
-            {
-              key: 'status',
-              value: statusFilter,
-              onChange: setStatusFilter,
-              options: statusOptions,
-            },
-          ]}
-          onClear={clearFilters}
-          rowClassName="flex-md-nowrap"
-          searchColMd={3}
-          periodColMd={2}
-          filterColMd={2}
-          clearColMd="auto"
-        />
+        <div {...(filtersTourId ? { 'data-tour-id': filtersTourId } : {})}>
+          <TableFilters
+            searchValue={search}
+            onSearchChange={setSearch}
+            searchPlaceholder={searchPlaceholder}
+            periodValue={period}
+            onPeriodChange={setPeriod}
+            filters={[
+              {
+                key: 'sort',
+                value: sort,
+                onChange: setSort,
+                options: leaveSortOptions,
+              },
+              {
+                key: 'type',
+                value: typeFilter,
+                onChange: setTypeFilter,
+                options: typeOptions,
+              },
+              {
+                key: 'status',
+                value: statusFilter,
+                onChange: setStatusFilter,
+                options: statusOptions,
+              },
+            ]}
+            onClear={clearFilters}
+            rowClassName="flex-md-nowrap"
+            searchColMd={3}
+            periodColMd={2}
+            filterColMd={2}
+            clearColMd="auto"
+          />
+        </div>
 
         <ResponsiveRecordCollection
           isLoading={isLoading}
@@ -269,6 +272,7 @@ const LeaveRecordsSection = ({
             <div className="text-body-secondary">No leave records match the current filters.</div>
           }
           mobileSections={mobileSections}
+          mobileVariant="list-group"
           renderDesktop={() => (
             <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
               <CTable align="middle" className="mb-0" hover responsive>

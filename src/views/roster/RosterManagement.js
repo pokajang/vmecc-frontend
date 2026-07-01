@@ -77,15 +77,17 @@ const OverviewTab = ({ canManageRoster, exportedBy }) => {
   } = useRosterState(canManageRoster, true, 'all') // publishedOnly=true, fetch all historical data
 
   return (
-    <RosterStat
-      stats={stats}
-      statuses={teamStatuses}
-      teams={teams}
-      monthlyStats={monthlyStats}
-      allShifts={allShifts}
-      loading={loading}
-      exportedBy={exportedBy}
-    />
+    <section data-tour-id="roster-management-overview">
+      <RosterStat
+        stats={stats}
+        statuses={teamStatuses}
+        teams={teams}
+        monthlyStats={monthlyStats}
+        allShifts={allShifts}
+        loading={loading}
+        exportedBy={exportedBy}
+      />
+    </section>
   )
 }
 
@@ -157,7 +159,10 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
   }
 
   const readModeActions = !editMode ? (
-    <>
+    <div
+      className="d-flex flex-wrap align-items-center gap-2"
+      data-tour-id="roster-management-read-actions"
+    >
       <CButton
         size="sm"
         className={`d-inline-flex align-items-center ${ghostBtn}`}
@@ -182,11 +187,13 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
         size="sm"
         className={`d-inline-flex align-items-center ${ghostBtn}`}
         onClick={() => setEditMode(true)}
+        data-tour-id="roster-management-edit-action"
+        disabled={loading}
       >
         <Pencil size={13} className="me-1 align-text-bottom" />
         Edit Roster
       </CButton>
-    </>
+    </div>
   ) : null
 
   return (
@@ -200,7 +207,7 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
         }
         actions={readModeActions}
       />
-      <CCard className="mb-4">
+      <CCard className="mb-4" data-tour-id="roster-management-schedule">
         <CCardHeader className="d-flex flex-wrap align-items-center justify-content-between gap-2">
           <div className="d-flex flex-wrap align-items-center gap-2">
             <span>Roster Schedule</span>
@@ -211,13 +218,17 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
           </div>
 
           {editMode && (
-            <div className="d-flex flex-wrap align-items-center gap-2 justify-content-end">
+            <div
+              className="d-flex flex-wrap align-items-center gap-2 justify-content-end"
+              data-tour-id="roster-management-edit-actions"
+            >
               <CButton
                 size="sm"
                 className={ghostBtn}
                 disabled={isSavingDraft || isPublishing}
                 onClick={handleSaveDraft}
                 title="Save privately - teams will not be notified"
+                data-tour-id="roster-management-save-draft-action"
               >
                 {isSavingDraft ? <ButtonLoader label="Saving..." /> : 'Save Draft'}
               </CButton>
@@ -227,6 +238,7 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
                 disabled={isSavingDraft || isPublishing}
                 onClick={() => setShowPublishConfirm(true)}
                 title="Publish and notify all assigned teams"
+                data-tour-id="roster-management-publish-action"
               >
                 {isPublishing ? <ButtonLoader label="Publishing..." /> : 'Publish'}
               </CButton>
@@ -235,6 +247,7 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
                 className={ghostBtn}
                 disabled={isSavingDraft || isPublishing}
                 onClick={handleCancelClick}
+                data-tour-id="roster-management-cancel-action"
               >
                 Cancel
               </CButton>
@@ -254,27 +267,29 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
             </CAlert>
           )}
 
-          <RosterFilter
-            rangeType={rangeType}
-            onRangeChange={handleRangeChange}
-            dateFilter={dateFilter}
-            onDateChange={setDateFilter}
-            startDate={startDate}
-            endDate={endDate}
-            onStartDateChange={setStartDate}
-            onEndDateChange={setEndDate}
-            teamFilter={teamFilter}
-            onTeamChange={setTeamFilter}
-            search={search}
-            onSearchChange={setSearch}
-            monthOptions={monthOptions}
-            selectedMonths={selectedMonths}
-            onMonthToggle={onMonthToggle}
-            onClear={handleClear}
-            onPrev={handlePrev}
-            onNext={handleNext}
-            teams={teams}
-          />
+          <div data-tour-id="roster-management-filters">
+            <RosterFilter
+              rangeType={rangeType}
+              onRangeChange={handleRangeChange}
+              dateFilter={dateFilter}
+              onDateChange={setDateFilter}
+              startDate={startDate}
+              endDate={endDate}
+              onStartDateChange={setStartDate}
+              onEndDateChange={setEndDate}
+              teamFilter={teamFilter}
+              onTeamChange={setTeamFilter}
+              search={search}
+              onSearchChange={setSearch}
+              monthOptions={monthOptions}
+              selectedMonths={selectedMonths}
+              onMonthToggle={onMonthToggle}
+              onClear={handleClear}
+              onPrev={handlePrev}
+              onNext={handleNext}
+              teams={teams}
+            />
+          </div>
 
           {loading ? (
             <TableLoader />
@@ -340,12 +355,21 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
         <CModalHeader>
           <CModalTitle>Discard changes?</CModalTitle>
         </CModalHeader>
-        <CModalBody className="text-body-secondary">
+        <CModalBody
+          className="text-body-secondary"
+          data-tour-id={showCancelConfirm ? 'roster-management-cancel-modal' : undefined}
+        >
           You have unsaved roster changes for <strong>{scopeLabel}</strong>. Cancelling will discard
           them.
         </CModalBody>
         <CModalFooter>
-          <CButton color="light" onClick={() => setShowCancelConfirm(false)}>
+          <CButton
+            color="light"
+            onClick={() => setShowCancelConfirm(false)}
+            data-tour-id={
+              showCancelConfirm ? 'roster-management-cancel-modal-close-action' : undefined
+            }
+          >
             Keep editing
           </CButton>
           <CButton
@@ -369,7 +393,9 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
         <CModalHeader>
           <CModalTitle>Publish Roster?</CModalTitle>
         </CModalHeader>
-        <CModalBody>
+        <CModalBody
+          data-tour-id={showPublishConfirm ? 'roster-management-publish-modal' : undefined}
+        >
           <p className="mb-3">
             You are about to publish the roster for <strong>{scopeLabel}</strong>.
           </p>
@@ -417,29 +443,31 @@ const RosterManagement = () => {
   }
 
   return (
-    <CContainer fluid>
+    <CContainer fluid data-tour-id="roster-management-module">
       <ModulePageHeader
         title="Roster Management"
         subtitle="Review published coverage and manage roster assignments by shift."
       />
-      <RouteNavTabs
-        currentPath={resolvedTab}
-        navigate={(tab) => switchTab(tab)}
-        items={[
-          {
-            key: 'overview',
-            label: 'Overview',
-            to: 'overview',
-            match: 'overview',
-          },
-          {
-            key: 'schedule',
-            label: 'Set Roster',
-            to: 'schedule',
-            match: 'schedule',
-          },
-        ]}
-      />
+      <div data-tour-id="roster-management-nav">
+        <RouteNavTabs
+          currentPath={resolvedTab}
+          navigate={(tab) => switchTab(tab)}
+          items={[
+            {
+              key: 'overview',
+              label: 'Overview',
+              to: 'overview',
+              match: 'overview',
+            },
+            {
+              key: 'schedule',
+              label: 'Set Roster',
+              to: 'schedule',
+              match: 'schedule',
+            },
+          ]}
+        />
+      </div>
 
       {resolvedTab === 'overview' && (
         <OverviewTab canManageRoster={canManageRoster} exportedBy={exportedBy} />

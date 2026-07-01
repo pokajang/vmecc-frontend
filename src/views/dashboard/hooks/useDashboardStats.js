@@ -1,7 +1,19 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { fetchDashboardModuleStats } from 'src/services/apiClient'
 
 export const DASHBOARD_MODULES = ['payroll', 'overtime', 'leave', 'roster', 'reports']
+const DASHBOARD_MODULE_FETCH_TIMEOUT_MS = 10_000
+
+const createEmptyModuleState = () =>
+  DASHBOARD_MODULES.reduce((acc, module) => {
+    acc[module] = {
+      loading: false,
+      loaded: false,
+      error: null,
+      stats: {},
+    }
+    return acc
+  }, {})
 
 const createEmptyStats = () =>
   DASHBOARD_MODULES.reduce((acc, module) => {
@@ -14,65 +26,130 @@ const normalizeModules = (modules) =>
     ? modules.filter((module) => DASHBOARD_MODULES.includes(module))
     : DASHBOARD_MODULES
 
-const useDashboardStats = ({ period = 'this_month', modules } = {}) => {
-  const selectedModules = useMemo(() => normalizeModules(modules), [modules])
-  const modulesKey = selectedModules.join('|')
-  const [stats, setStats] = useState(() => createEmptyStats())
-  const [loading, setLoading] = useState(selectedModules.length > 0)
-  const [error, setError] = useState(null)
+const buildModuleKey = (modules) => normalizeModules(modules).join('|')
+const parseModuleKey = (moduleKey) => (moduleKey ? moduleKey.split('|') : [])
+
+const useDashboardStats = ({ period = 'this_month', modules, refreshToken = 0 } = {}) => {
+  const selectedModuleKey = useMemo(() => buildModuleKey(modules), [modules])
+  const selectedModules = useMemo(() => parseModuleKey(selectedModuleKey), [selectedModuleKey])
+  const [moduleStateMap, setModuleStateMap] = useState(() => createEmptyModuleState())
+  const requestIdRef = useRef(0)
+
+  const loading = selectedModules.some((module) => moduleStateMap[module]?.loading)
+  const erroredModules = selectedModules.filter((module) => Boolean(moduleStateMap[module]?.error))
+  const error =
+    erroredModules.length > 0
+      ? new Error(`Failed to load dashboard stats for: ${erroredModules.join(', ')}`)
+      : null
+  const stats = useMemo(() => {
+    const nextStats = createEmptyStats()
+    DASHBOARD_MODULES.forEach((module) => {
+      nextStats[module] = moduleStateMap[module]?.stats || {}
+    })
+    return nextStats
+  }, [moduleStateMap])
 
   useEffect(() => {
-    let cancelled = false
-    const modulesForRequest = modulesKey ? modulesKey.split('|') : []
-
-    Promise.resolve().then(async () => {
-      if (cancelled) return
-
-      setStats(createEmptyStats())
-      setError(null)
-
-      if (modulesForRequest.length === 0) {
-        setLoading(false)
-        return
-      }
-
-      setLoading(true)
-
-      const results = await Promise.allSettled(
-        modulesForRequest.map((module) =>
-          fetchDashboardModuleStats(module, period).then((payload) => [module, payload ?? {}]),
+    if (selectedModules.length === 0) {
+      setModuleStateMap((prev) =>
+        Object.fromEntries(
+          Object.entries(prev).map(([module]) => [
+            module,
+            { ...prev[module], loading: false, loaded: true },
+          ]),
         ),
       )
-      if (cancelled) return
+      return undefined
+    }
 
-      const nextStats = createEmptyStats()
-      const failedModules = []
+    const requestId = ++requestIdRef.current
+    const controllers = {}
+    const timeoutTimerIds = new Set()
 
-      results.forEach((result, index) => {
-        const module = modulesForRequest[index]
-        if (result.status === 'fulfilled') {
-          const [resolvedModule, payload] = result.value
-          nextStats[resolvedModule] = payload
-          return
-        }
-        failedModules.push(module)
+    const withRequestStateReset = selectedModules.reduce((acc, module) => {
+      acc[module] = { loading: true, loaded: false, error: null, stats: {} }
+      return acc
+    }, {})
+
+    setModuleStateMap((prev) => ({ ...prev, ...withRequestStateReset }))
+
+    const requests = selectedModules.map(async (module) => {
+      const controller = new AbortController()
+      controllers[module] = controller
+      let timerId
+
+      const timeoutPromise = new Promise((resolve) => {
+        timerId = setTimeout(() => {
+          clearTimeout(timerId)
+          resolve({
+            module,
+            error: new Error(`${module} dashboard stats request timed out`),
+          })
+        }, DASHBOARD_MODULE_FETCH_TIMEOUT_MS)
+        timeoutTimerIds.add(timerId)
+        controller.signal.addEventListener('abort', () => clearTimeout(timerId), { once: true })
       })
 
-      setStats(nextStats)
-      setError(
-        failedModules.length > 0
-          ? new Error(`Failed to load dashboard stats for: ${failedModules.join(', ')}`)
-          : null,
-      )
-      setLoading(false)
+      try {
+        const result = await Promise.race([
+          fetchDashboardModuleStats(module, period, {
+            signal: controller.signal,
+          }).then((payload) => ({
+            module,
+            payload: payload ?? {},
+          })),
+          timeoutPromise,
+        ])
+        return result
+      } catch (error) {
+        if (error?.name === 'AbortError') {
+          return null
+        }
+        return { module, error }
+      } finally {
+        if (timerId) {
+          clearTimeout(timerId)
+          timeoutTimerIds.delete(timerId)
+        }
+      }
+    })
+
+    Promise.allSettled(requests).then((results) => {
+      if (requestId !== requestIdRef.current) return
+
+      const nextState = selectedModules.reduce((acc, module, index) => {
+        const result = results[index]
+        const value = result?.status === 'fulfilled' ? result.value : null
+        const fetchError =
+          value?.error ||
+          (result?.status === 'rejected'
+            ? result.reason || new Error(`${module} dashboard stats request failed`)
+            : null)
+
+        acc[module] = {
+          loading: false,
+          loaded: !fetchError,
+          error: fetchError ? String(fetchError.message || fetchError) : null,
+          stats: value?.payload || {},
+        }
+        return acc
+      }, {})
+
+      setModuleStateMap((prev) => ({ ...prev, ...nextState }))
     })
 
     return () => {
-      cancelled = true
+      Object.values(controllers).forEach((controller) => controller.abort())
+      timeoutTimerIds.forEach((timerId) => clearTimeout(timerId))
     }
-  }, [modulesKey, period])
+  }, [period, refreshToken, selectedModules])
 
-  return { stats, loading, error }
+  return {
+    stats,
+    loading,
+    error,
+    moduleStats: moduleStateMap,
+  }
 }
 
 export default useDashboardStats

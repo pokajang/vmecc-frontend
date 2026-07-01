@@ -2,6 +2,7 @@ import React from 'react'
 import { CButton, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
 
 const LeaveCancelConfirmModal = ({
+  tourId = '',
   visible,
   record,
   statusLabel = '',
@@ -10,7 +11,12 @@ const LeaveCancelConfirmModal = ({
   onClose,
   onConfirm,
 }) => (
-  <CModal visible={visible} onClose={onClose} alignment="center">
+  <CModal
+    visible={visible}
+    onClose={onClose}
+    alignment="center"
+    {...(tourId ? { 'data-tour-id': tourId } : {})}
+  >
     <CModalHeader>Confirm Leave Cancellation</CModalHeader>
     <CModalBody>
       {!record ? (

@@ -244,7 +244,7 @@ const ClaimSubmissionEditorCard = ({
                 : '3. Attachment and Notes'}
             </div>
           </CCol>
-          <CCol md={12}>
+          <CCol md={12} data-tour-id="payroll-claim-attachments">
             <CFormLabel htmlFor="draft-attachment">
               {isExceptionalClaim ? 'Attachment (Required)' : 'Attachment'}
             </CFormLabel>

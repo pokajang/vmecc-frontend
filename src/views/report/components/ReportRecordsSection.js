@@ -12,14 +12,17 @@ import {
   CTooltip,
 } from '@coreui/react'
 import CreateActionButton from 'src/components/CreateActionButton'
+import ButtonLoader from 'src/components/ButtonLoader'
 import DataTableFooter from 'src/components/DataTableFooter'
+import MobileRecordList from 'src/components/MobileRecordList'
 import ResponsiveRecordCollection from 'src/components/ResponsiveRecordCollection'
 import RowActionCell from 'src/components/RowActionCell'
 import RowActions from 'src/components/RowActions'
 import TableFilters from 'src/components/TableFilters'
 import WorkflowStatusSummary from 'src/components/WorkflowStatusSummary'
+import RecordScopeSegmentedControl from 'src/components/report-workflow/RecordScopeSegmentedControl'
 import { FilePenLine } from 'lucide-react'
-import { formatReportDisplayId } from '../utils'
+import { formatMobileReportDate } from '../reportUiUtils'
 
 const REPORT_GATES = [
   { action: 'Submitted', label: 'Submitted' },
@@ -27,16 +30,10 @@ const REPORT_GATES = [
   { action: 'Approved', label: 'Approved' },
 ]
 
-const LEGACY_RANDOM_DISPLAY_ID = /^[A-Z]+-\d{6}-[A-Z0-9]+$/i
-
-const formatDisplayId = (row, index) => {
+const formatDisplayId = (row) => {
   if (row?.recordKind === 'draft') return row.displayId || 'Draft'
   const raw = String(row.displayId || '')
-  if (!raw) return '--'
-  if (!LEGACY_RANDOM_DISPLAY_ID.test(raw)) return raw
-  const prefix = raw.split('-')[0]
-  const date = row.timeline?.[0]?.at || row.incidentDate || row.reportDate
-  return formatReportDisplayId(prefix, index + 1, date)
+  return raw || '--'
 }
 
 const DraftStatus = ({ direction = 'vertical' }) => {
@@ -206,6 +203,8 @@ const ReportRecordsSection = ({
   startNew,
   search,
   setSearch,
+  recordScope,
+  setRecordScope,
   period,
   setPeriod,
   sort,
@@ -239,7 +238,20 @@ const ReportRecordsSection = ({
   setRowsToShow,
   totalCount,
   showPrimaryAction = true,
+  isMobileCardless = false,
+  moduleContextLabel = '',
+  typeLabel = 'Incident Type',
+  onboardingAnchorPrefix = '',
 }) => {
+  const anchorPrefix = String(onboardingAnchorPrefix || '').trim()
+  const moduleRecordsTourId = anchorPrefix ? `${anchorPrefix}-records` : undefined
+  const moduleFiltersTourId = anchorPrefix ? `${anchorPrefix}-filters` : undefined
+  const moduleNewActionTourId = anchorPrefix ? `${anchorPrefix}-new-action` : undefined
+  const firstDraftRow = visibleRows.find((row) => row?.recordKind === 'draft') || null
+  const firstDraftRowKey = String(firstDraftRow?.recordKey || firstDraftRow?.id || '').trim()
+  const resolvedContextLabel = String(moduleContextLabel || reportTypeLabel || 'report')
+    .trim()
+    .toLowerCase()
   const buildActions = (row) =>
     buildRowActionItems(row, {
       onEditRecord,
@@ -258,178 +270,257 @@ const ReportRecordsSection = ({
 
   const mobileItems = visibleRows.map((row, index) => {
     const displayId = formatDisplayId(row, index)
+    const isGeneratingDownload = downloadingId === row.id
     const reportedBy = row.timeline?.[0]?.by || row.submittedBy || '--'
-    const rowSubtext = getRowSubtext(row)
+    const reportedAt = formatRowDateTime(row, formatDateTime)
+    const mobileTitle = row.incidentType || (row.recordKind === 'draft' ? 'Draft' : 'Record')
+    const mobileSubtitle = row.location || 'No location'
 
     return {
       key: row.recordKey || row.id,
-      title: displayId,
-      eyebrow: row.incidentType || '--',
-      subtitle: rowSubtext || row.location || '',
-      status:
-        row.recordKind === 'draft' ? (
-          <DraftStatus direction="horizontal" />
-        ) : (
-          <WorkflowStatusSummary
-            statusLabel={getWorkflowStatusLabel(row)}
-            nextActionLabel={getWorkflowNextActionLabel(row)}
-            gates={REPORT_GATES}
-            approvalHistory={getApprovalHistory(row)}
-            isCancelled={row.status === 'Cancelled'}
-          />
-        ),
-      ariaLabel: `Open ${reportTypeLabel.toLowerCase()} report ${displayId} summary`,
+      layout: 'compact',
+      eyebrow: displayId,
+      title: mobileTitle,
+      subtitle: mobileSubtitle,
+      searchText: [displayId, row.incidentType, row.location, reportedBy, reportedAt, row.status]
+        .filter(Boolean)
+        .join(' '),
+      status: (
+        <>
+          <div className="small fw-semibold text-nowrap">
+            {row.recordKind === 'draft' ? 'Draft' : row.status || '--'}
+          </div>
+          <div className="small text-body-secondary text-nowrap">{formatMobileReportDate(row)}</div>
+        </>
+      ),
+      ariaLabel: `Open ${resolvedContextLabel} report ${displayId} summary`,
       onOpen: () => (row.recordKind === 'draft' ? onEditRecord(row) : onViewRecord(row.id)),
-      fields: [
-        { key: 'location', label: 'Location', value: row.location || '--' },
-        { key: 'reportedBy', label: 'Reported By', value: reportedBy },
-        { key: 'reportedAt', label: 'Reported At', value: formatRowDateTime(row, formatDateTime) },
-        {
-          key: 'status',
-          label: 'Status',
-          value: row.recordKind === 'draft' ? 'Draft' : row.status || '--',
-        },
-      ],
-      detail: null,
-      actions: <RowActions hitArea={40} items={buildActions(row)} />,
+      actions: isGeneratingDownload ? (
+        <span className="small text-muted">
+          <ButtonLoader label="Generating..." size={13} />
+        </span>
+      ) : (
+        <RowActions
+          hitArea={40}
+          items={buildActions(row)}
+          tourId={
+            row.recordKind === 'draft' &&
+            firstDraftRowKey === String(row.recordKey || row.id || '').trim() &&
+            anchorPrefix
+              ? `${anchorPrefix}-draft-resume-action`
+              : ''
+          }
+        />
+      ),
     }
   })
 
+  const filters = (
+    <TableFilters
+      searchValue={search}
+      onSearchChange={setSearch}
+      searchPlaceholder="Search records"
+      periodValue={period}
+      onPeriodChange={setPeriod}
+      filters={[
+        { key: 'sort', label: 'Sort', value: sort, onChange: setSort, options: sortOptions },
+        {
+          key: 'type',
+          label: 'Type',
+          value: typeFilter,
+          onChange: setTypeFilter,
+          options: typeOptions,
+        },
+        {
+          key: 'status',
+          label: 'Status',
+          value: statusFilter,
+          onChange: setStatusFilter,
+          options: statusOptions,
+        },
+      ]}
+      onClear={clearFilters}
+      rowClassName="flex-md-nowrap align-items-md-end"
+      searchColMd={3}
+      periodColMd={2}
+      filterColMd={2}
+      clearColMd="auto"
+      showDesktopLabels
+      labelClassName="text-muted"
+    />
+  )
+
+  const footer = (
+    <DataTableFooter
+      rowsToShow={rowsToShow}
+      onRowsToShowChange={setRowsToShow}
+      filteredCount={filteredRecords.length}
+      totalCount={totalCount}
+    />
+  )
+
+  const emptyMessage = (
+    <div className="text-body-secondary">
+      No {reportTypeLabel.toLowerCase()} reports match the current filters.
+    </div>
+  )
+
   return (
-    <CCard>
-      <CCardHeader className="d-flex justify-content-between align-items-center">
-        <span>My {reportTypeLabel} Reports</span>
-        {showPrimaryAction ? (
-          <CreateActionButton label={`New ${reportTypeLabel} Report`} onClick={startNew} />
-        ) : null}
-      </CCardHeader>
-      <CCardBody>
-        <TableFilters
-          searchValue={search}
-          onSearchChange={setSearch}
-          searchPlaceholder={`Search ${reportTypeLabel} report ID, incident type, or status`}
-          periodValue={period}
-          onPeriodChange={setPeriod}
-          filters={[
-            { key: 'sort', label: 'Sort', value: sort, onChange: setSort, options: sortOptions },
-            {
-              key: 'type',
-              label: 'Incident Type',
-              value: typeFilter,
-              onChange: setTypeFilter,
-              options: typeOptions,
-            },
-            {
-              key: 'status',
-              label: 'Status',
-              value: statusFilter,
-              onChange: setStatusFilter,
-              options: statusOptions,
-            },
-          ]}
-          onClear={clearFilters}
-          rowClassName="flex-md-nowrap align-items-md-end"
-          searchColMd={3}
-          periodColMd={2}
-          filterColMd={2}
-          clearColMd="auto"
-          showDesktopLabels
-        />
-        <ResponsiveRecordCollection
-          isLoading={isLoading}
-          isEmpty={filteredRecords.length === 0}
-          emptyMessage={
-            <div className="text-body-secondary">
-              No {reportTypeLabel.toLowerCase()} reports match the current filters.
-            </div>
-          }
-          mobileSections={[{ key: 'reports', items: mobileItems }]}
-          renderDesktop={() => (
-            <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
-              <CTable align="middle" className="mb-0" hover responsive>
-                <CTableHead color="light">
-                  <CTableRow>
-                    <CTableHeaderCell className="text-center" style={{ width: '56px' }}>
-                      #
-                    </CTableHeaderCell>
-                    <CTableHeaderCell>Report ID</CTableHeaderCell>
-                    <CTableHeaderCell>Incident Type</CTableHeaderCell>
-                    <CTableHeaderCell>Location</CTableHeaderCell>
-                    <CTableHeaderCell>Reported By</CTableHeaderCell>
-                    <CTableHeaderCell>Reported At</CTableHeaderCell>
-                    <CTableHeaderCell>Status</CTableHeaderCell>
-                    <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
-                  </CTableRow>
-                </CTableHead>
-                <CTableBody>
-                  {visibleRows.map((row, index) => {
-                    const reportedBy = row.timeline?.[0]?.by || row.submittedBy || '--'
-                    const rowSubtext = getRowSubtext(row)
-                    return (
-                      <CTableRow
-                        key={row.recordKey || row.id}
-                        className="cursor-pointer"
-                        style={{ cursor: 'pointer' }}
-                        onClick={() =>
-                          row.recordKind === 'draft' ? onEditRecord(row) : onViewRecord(row.id)
-                        }
-                      >
-                        <CTableDataCell className="text-center text-body-secondary">
-                          {index + 1}
-                        </CTableDataCell>
-                        <CTableDataCell className="fw-semibold">
-                          {formatDisplayId(row, index)}
-                        </CTableDataCell>
-                        <CTableDataCell>
-                          <div>{row.incidentType || '--'}</div>
-                          {rowSubtext ? (
-                            <CTooltip content={rowSubtext} placement="top">
-                              <div
-                                className="small text-muted text-truncate"
-                                style={{ maxWidth: '220px' }}
-                              >
-                                {rowSubtext}
-                              </div>
-                            </CTooltip>
-                          ) : null}
-                        </CTableDataCell>
-                        <CTableDataCell>{row.location || '--'}</CTableDataCell>
-                        <CTableDataCell>{reportedBy}</CTableDataCell>
-                        <CTableDataCell>{formatRowDateTime(row, formatDateTime)}</CTableDataCell>
-                        <CTableDataCell>
-                          {row.recordKind === 'draft' ? (
-                            <DraftStatus />
-                          ) : (
-                            <WorkflowStatusSummary
-                              statusLabel={getWorkflowStatusLabel(row)}
-                              nextActionLabel={getWorkflowNextActionLabel(row)}
-                              gates={REPORT_GATES}
-                              approvalHistory={getApprovalHistory(row)}
-                              isCancelled={row.status === 'Cancelled'}
-                            />
-                          )}
-                        </CTableDataCell>
-                        <RowActionCell className="text-center">
-                          <RowActions hitArea={40} items={buildActions(row)} />
-                        </RowActionCell>
-                      </CTableRow>
-                    )
-                  })}
-                </CTableBody>
-              </CTable>
-            </div>
-          )}
-          footer={
-            <DataTableFooter
-              rowsToShow={rowsToShow}
-              onRowsToShowChange={setRowsToShow}
-              filteredCount={filteredRecords.length}
-              totalCount={totalCount}
+    <>
+      <div className={`${isMobileCardless ? 'inspection-mobile-section' : ''} d-md-none`.trim()}>
+        <div className="d-flex justify-content-between align-items-center gap-2 mb-3">
+          <RecordScopeSegmentedControl value={recordScope} onChange={setRecordScope} />
+          {showPrimaryAction ? (
+            <CreateActionButton
+              label="New"
+              onClick={startNew}
+              {...(moduleNewActionTourId ? { 'data-tour-id': moduleNewActionTourId } : {})}
             />
-          }
-        />
-      </CCardBody>
-    </CCard>
+          ) : null}
+        </div>
+        <div {...(moduleFiltersTourId ? { 'data-tour-id': moduleFiltersTourId } : {})}>
+          {filters}
+        </div>
+        {isLoading ? null : filteredRecords.length === 0 ? (
+          emptyMessage
+        ) : (
+          <div {...(moduleRecordsTourId ? { 'data-tour-id': moduleRecordsTourId } : {})}>
+            <MobileRecordList
+              sections={[{ key: 'reports', items: mobileItems }]}
+              variant="list-group"
+            />
+          </div>
+        )}
+        {isLoading ? (
+          <div className="border rounded-3 bg-white">
+            <ResponsiveRecordCollection isLoading />
+          </div>
+        ) : filteredRecords.length > 0 ? (
+          footer
+        ) : null}
+      </div>
+
+      <CCard
+        className="d-none d-md-block"
+        {...(moduleRecordsTourId ? { 'data-tour-id': moduleRecordsTourId } : {})}
+      >
+        <CCardHeader className="d-flex justify-content-between align-items-center">
+          <RecordScopeSegmentedControl value={recordScope} onChange={setRecordScope} />
+          {showPrimaryAction ? (
+            <CreateActionButton
+              label={`New ${reportTypeLabel} Report`}
+              onClick={startNew}
+              {...(moduleNewActionTourId ? { 'data-tour-id': moduleNewActionTourId } : {})}
+            />
+          ) : null}
+        </CCardHeader>
+        <CCardBody>
+          <div {...(moduleFiltersTourId ? { 'data-tour-id': moduleFiltersTourId } : {})}>
+            {filters}
+          </div>
+          <ResponsiveRecordCollection
+            isLoading={isLoading}
+            isEmpty={filteredRecords.length === 0}
+            emptyMessage={emptyMessage}
+            mobileSections={[]}
+            renderDesktop={() => (
+              <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
+                <CTable align="middle" className="mb-0" hover responsive>
+                  <CTableHead color="light">
+                    <CTableRow>
+                      <CTableHeaderCell className="text-center" style={{ width: '56px' }}>
+                        #
+                      </CTableHeaderCell>
+                      <CTableHeaderCell>Report ID</CTableHeaderCell>
+                      <CTableHeaderCell>{typeLabel}</CTableHeaderCell>
+                      <CTableHeaderCell>Location</CTableHeaderCell>
+                      <CTableHeaderCell>Reported By</CTableHeaderCell>
+                      <CTableHeaderCell>Reported At</CTableHeaderCell>
+                      <CTableHeaderCell>Status</CTableHeaderCell>
+                      <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
+                    </CTableRow>
+                  </CTableHead>
+                  <CTableBody>
+                    {visibleRows.map((row, index) => {
+                      const reportedBy = row.timeline?.[0]?.by || row.submittedBy || '--'
+                      const rowSubtext = getRowSubtext(row)
+                      const isGeneratingDownload = downloadingId === row.id
+                      return (
+                        <CTableRow
+                          key={row.recordKey || row.id}
+                          className="cursor-pointer"
+                          style={{ cursor: 'pointer' }}
+                          onClick={() =>
+                            row.recordKind === 'draft' ? onEditRecord(row) : onViewRecord(row.id)
+                          }
+                        >
+                          <CTableDataCell className="text-center text-body-secondary">
+                            {index + 1}
+                          </CTableDataCell>
+                          <CTableDataCell className="fw-semibold">
+                            {formatDisplayId(row, index)}
+                          </CTableDataCell>
+                          <CTableDataCell>
+                            <div>{row.incidentType || '--'}</div>
+                            {rowSubtext ? (
+                              <CTooltip content={rowSubtext} placement="top">
+                                <div
+                                  className="small text-muted text-truncate"
+                                  style={{ maxWidth: '220px' }}
+                                >
+                                  {rowSubtext}
+                                </div>
+                              </CTooltip>
+                            ) : null}
+                          </CTableDataCell>
+                          <CTableDataCell>{row.location || '--'}</CTableDataCell>
+                          <CTableDataCell>{reportedBy}</CTableDataCell>
+                          <CTableDataCell>{formatRowDateTime(row, formatDateTime)}</CTableDataCell>
+                          <CTableDataCell>
+                            {row.recordKind === 'draft' ? (
+                              <DraftStatus />
+                            ) : (
+                              <WorkflowStatusSummary
+                                statusLabel={getWorkflowStatusLabel(row)}
+                                nextActionLabel={getWorkflowNextActionLabel(row)}
+                                gates={REPORT_GATES}
+                                approvalHistory={getApprovalHistory(row)}
+                                isCancelled={row.status === 'Cancelled'}
+                              />
+                            )}
+                          </CTableDataCell>
+                          <RowActionCell className="text-center">
+                            {isGeneratingDownload ? (
+                              <span className="small text-muted">
+                                <ButtonLoader label="Generating..." size={13} />
+                              </span>
+                            ) : (
+                              <RowActions
+                                hitArea={40}
+                                items={buildActions(row)}
+                                tourId={
+                                  row.recordKind === 'draft' &&
+                                  firstDraftRowKey ===
+                                    String(row.recordKey || row.id || '').trim() &&
+                                  anchorPrefix
+                                    ? `${anchorPrefix}-draft-resume-action`
+                                    : ''
+                                }
+                              />
+                            )}
+                          </RowActionCell>
+                        </CTableRow>
+                      )
+                    })}
+                  </CTableBody>
+                </CTable>
+              </div>
+            )}
+            footer={footer}
+          />
+        </CCardBody>
+      </CCard>
+    </>
   )
 }
 

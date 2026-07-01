@@ -26,6 +26,10 @@ const ClaimDetailSection = ({
   approvedDateLabel,
   onDownloadClaim,
   onEditClaim,
+  onCancelClaim,
+  onDeleteClaim,
+  canCancelClaim = false,
+  canDeleteClaim = false,
 }) => {
   const isSalaryClaim = selectedClaim?.type === 'salary'
   const claimHistoryEntries = selectedClaim
@@ -55,7 +59,7 @@ const ClaimDetailSection = ({
       ]
     : []
   return (
-    <div className="d-grid gap-3">
+    <div className="d-grid gap-3" data-tour-id="payroll-claim-detail">
       <div className="d-flex flex-wrap align-items-center gap-2">
         <BackButton to="/payroll" label="Back to claims" />
         {selectedClaim?.status && (
@@ -164,17 +168,40 @@ const ClaimDetailSection = ({
           />
 
           <div className="d-flex flex-column flex-md-row justify-content-end gap-2">
-            <CButton color="light" onClick={() => onDownloadClaim(selectedClaim)}>
+            <CButton
+              color="light"
+              data-tour-id="payroll-claim-download-action"
+              onClick={() => onDownloadClaim(selectedClaim)}
+            >
               <Download size={14} className="me-1 align-text-bottom" />
               Download claim
             </CButton>
             <CButton
               color="primary"
+              data-tour-id="payroll-claim-edit-action"
               onClick={() => onEditClaim(selectedClaim)}
               disabled={!canEditSubmittedClaim}
             >
               <Pencil size={14} className="me-1 align-text-bottom" />
               Edit
+            </CButton>
+            <CButton
+              color="warning"
+              variant="outline"
+              data-tour-id="payroll-claim-cancel-action"
+              disabled={!canCancelClaim}
+              onClick={() => onCancelClaim?.(selectedClaim)}
+            >
+              Cancel
+            </CButton>
+            <CButton
+              color="danger"
+              variant="outline"
+              data-tour-id="payroll-claim-delete-action"
+              disabled={!canDeleteClaim}
+              onClick={() => onDeleteClaim?.(selectedClaim)}
+            >
+              Delete
             </CButton>
           </div>
         </>

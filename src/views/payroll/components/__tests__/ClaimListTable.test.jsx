@@ -68,6 +68,8 @@ describe('ClaimListTable', () => {
     expect(screen.getAllByText('2 records').length).toBeGreaterThan(0)
     expect(screen.getAllByText('RM 150.00').length).toBeGreaterThan(0)
     expect(screen.getByText('2 records - RM 150.00')).toBeTruthy()
+    expect(document.querySelector('.list-group')).toBeTruthy()
+    expect(document.querySelector('.list-group-item')).toBeTruthy()
   })
 
   it('renders payroll claim mobile cards with key details and keyboard open behavior', () => {

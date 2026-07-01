@@ -142,18 +142,44 @@ export const normalizeReportRecord = (row) => {
     inferReportTypeFromDisplayId(displayId)
   if (!reportType) return null
 
-  const location = Array.isArray(merged.location)
+  const rawLocation = Array.isArray(merged.location)
     ? merged.location
         .map((item) => String(item || '').trim())
         .filter(Boolean)
         .join(', ')
     : String(merged.location || merged.location_name || '').trim()
+  const mainLocation = String(merged.mainLocation || merged.main_location || '').trim()
+  const subLocation = String(merged.subLocation || merged.sub_location || '').trim()
+  const mainLocationId = String(merged.mainLocationId || merged.main_location_id || '').trim()
+  const subLocationId = String(merged.subLocationId || merged.sub_location_id || '').trim()
+  const locationPath = Array.isArray(merged.locationPath)
+    ? merged.locationPath
+    : Array.isArray(merged.location_path)
+      ? merged.location_path
+      : []
+  const locationIds = Array.isArray(merged.locationIds)
+    ? merged.locationIds
+    : Array.isArray(merged.location_ids)
+      ? merged.location_ids
+      : [mainLocationId, subLocationId].filter(Boolean)
+  const location =
+    rawLocation ||
+    [mainLocation, subLocation]
+      .map((item) => String(item || '').trim())
+      .filter(Boolean)
+      .join(' > ')
+  const hydraulicChecks = Array.isArray(merged.hydraulicChecks)
+    ? merged.hydraulicChecks
+    : Array.isArray(merged.hydraulic_checks)
+      ? merged.hydraulic_checks
+      : []
 
   return {
     ...merged,
     id: id || displayId,
     displayId: displayId || id,
     reportType,
+    ownerUserId: merged.ownerUserId ?? merged.owner_user_id ?? null,
     status: String(merged.status || 'Submitted').trim() || 'Submitted',
     incidentDate,
     incidentTime,
@@ -162,12 +188,36 @@ export const normalizeReportRecord = (row) => {
     incidentType: String(merged.incidentType || merged.incident_type || '').trim(),
     description: String(merged.description || merged.details || '').trim(),
     location,
+    mainLocation,
+    subLocation,
+    mainLocationId,
+    subLocationId,
+    locationPath,
+    locationIds,
     chronology: Array.isArray(merged.chronology) ? merged.chronology : [],
     timeline: Array.isArray(merged.timeline) ? merged.timeline : [],
     photos: Array.isArray(merged.photos) ? merged.photos : [],
     findings: Array.isArray(merged.findings) ? merged.findings : [],
+    hydraulicChecks,
     version: Number(merged.version || 0) || 0,
     revision: Number(merged.revision || 0) || 0,
+    workflowStage: String(merged.workflowStage || merged.workflow_stage || '').trim(),
+    workflowSnapshot:
+      merged.workflowSnapshot && typeof merged.workflowSnapshot === 'object'
+        ? merged.workflowSnapshot
+        : merged.workflow_snapshot && typeof merged.workflow_snapshot === 'object'
+          ? merged.workflow_snapshot
+          : {},
+    nextActionRole: String(merged.nextActionRole || merged.next_action_role || '').trim(),
+    scopeTeamId: merged.scopeTeamId ?? merged.scope_team_id ?? null,
+    approvalHistory: Array.isArray(merged.approvalHistory)
+      ? merged.approvalHistory
+      : Array.isArray(merged.approval_history)
+        ? merged.approval_history
+        : [],
+    canReview: merged.canReview === true || merged.can_review === true,
+    canApprove: merged.canApprove === true || merged.can_approve === true,
+    canReject: merged.canReject === true || merged.can_reject === true,
     submittedAt: String(merged.submittedAt || merged.submitted_at || '').trim(),
     submittedBy: String(merged.submittedBy || merged.submitted_by || '').trim(),
     createdAt: String(merged.createdAt || merged.created_at || '').trim(),
@@ -202,4 +252,19 @@ export const formatDateTime = (date, time) => {
   const parsed = new Date(`${date}T00:00:00`)
   const dateText = Number.isNaN(parsed.getTime()) ? date : parsed.toLocaleDateString()
   return time ? `${dateText}, ${time}` : dateText
+}
+
+const READABLE_TIMESTAMP_FORMATTER = new Intl.DateTimeFormat('en-GB', {
+  day: '2-digit',
+  month: 'short',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+})
+
+export const formatTimestamp = (value, fallback = '--') => {
+  const text = String(value || '').trim()
+  if (!text) return fallback
+  const parsed = new Date(text)
+  return Number.isNaN(parsed.getTime()) ? fallback : READABLE_TIMESTAMP_FORMATTER.format(parsed)
 }

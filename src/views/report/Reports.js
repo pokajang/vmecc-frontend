@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   CBadge,
+  CButton,
   CCard,
   CCardBody,
   CCardHeader,
@@ -12,6 +13,7 @@ import {
 } from '@coreui/react'
 import { useSelector } from 'react-redux'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { ChevronLeft } from 'lucide-react'
 import { hasPermission } from 'src/utils/authz'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import CreateActionButton from 'src/components/CreateActionButton'
@@ -20,16 +22,19 @@ import ModulePageHeader from 'src/components/ModulePageHeader'
 import TableLoader from 'src/components/TableLoader'
 import { SORT_OPTIONS } from './constants'
 import { FORM_REGISTRY } from './formRegistry'
-import { loadErcoDraft } from './reportStorage'
 import ReportDetailSection from './components/ReportDetailSection'
 import ReportRecordsSection from './components/ReportRecordsSection'
 import ReportWorkflowActionModal from './components/ReportWorkflowActionModal'
+import { refreshReportRecord } from './reportApi'
 import useReportMetadata from './hooks/useReportMetadata'
 import useReportRecords from './hooks/useReportRecords'
 import useUnsavedChangesGuard from './hooks/useUnsavedChangesGuard'
 import useActiveReportDraftRows from './hooks/useActiveReportDraftRows'
 import useReportRouteActions from './hooks/useReportRouteActions'
-import { formatDateTime, normalizeReportTypeSlug } from './utils'
+import { formatDateTime, normalizeReportRecord, normalizeReportTypeSlug } from './utils'
+import DrillMobileHome from './drill/DrillMobileHome'
+import ErcoMobileHome from './erco/ErcoMobileHome'
+import FitnessTestMobileHome from './fitness-test/FitnessTestMobileHome'
 
 import {
   REPORT_WORKFLOW_DECLARATION_LABEL,
@@ -58,6 +63,8 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
   const [isFormDirty, setIsFormDirty] = useState(false)
   const [formSessionKey, setFormSessionKey] = useState(0)
   const [draftVersion, setDraftVersion] = useState(0)
+  const [showMobileRecords, setShowMobileRecords] = useState(false)
+  const [routeDetailRecord, setRouteDetailRecord] = useState(null)
   const toaster = useRef()
 
   const {
@@ -102,9 +109,12 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
     statusFilter,
     setStatusFilter,
     filteredRecords,
+    submittedRecordsInScope,
     selectedRecord,
     typeOptions,
     statusOptions,
+    recordScope,
+    setRecordScope,
     recordsInScopeCount,
     rowsToShow,
     setRowsToShow,
@@ -113,17 +123,19 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
     persistRecords,
     reloadRecords,
   } = useReportRecords({
+    user,
     userId: user?.id,
     reportTypeSlug,
     reportId,
     draftRows: activeDraftRows,
   })
   const nextReportSequence = useMemo(() => {
+    if (isLoading) return null
     const matchingRows = records.filter(
       (row) => String(row?.reportType || '').toLowerCase() === activeFormSlug,
     )
     return matchingRows.length + 1
-  }, [activeFormSlug, records])
+  }, [activeFormSlug, isLoading, records])
   const editingReportId = useMemo(() => {
     const fromQuery = new URLSearchParams(location.search).get('edit')
     const fallback = location.state?.editReportId
@@ -202,6 +214,7 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
     persistRecords,
     pushToast,
     queryDraftId,
+    recordFallbacks: routeDetailRecord ? [routeDetailRecord] : [],
     records,
     reloadRecords,
     reportBasePath,
@@ -226,6 +239,194 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
     return <CBadge color={tone}>{label}</CBadge>
   }
 
+  const ActiveFormComponent = formComponent || FORM_REGISTRY[activeFormSlug] || null
+  const supportsNewForm = typeof ActiveFormComponent === 'function'
+  const isErcoReport = activeFormSlug === 'erco'
+  const isDrillReport = activeFormSlug === 'drill'
+  const isFitnessTestReport = activeFormSlug === 'fitness-test'
+  const isWorkFirstReport = isErcoReport || isDrillReport || isFitnessTestReport
+  const onboardingAnchorPrefix = activeFormSlug ? `${activeFormSlug}-report` : ''
+  const selectedEditingRecord =
+    records.find((row) => String(row.id || '').trim() === editingReportId) || null
+  const routeDetailRecordMatches =
+    activeSection === 'detail' &&
+    String(routeDetailRecord?.id || '') === String(reportId || '') &&
+    String(routeDetailRecord?.reportType || '').toLowerCase() === activeFormSlug
+  const selectedDetailRecord =
+    selectedRecord || (routeDetailRecordMatches ? routeDetailRecord : null)
+  const editingDraftSeed = selectedEditingRecord
+    ? recordToDraft(selectedEditingRecord, activeFormSlug)
+    : null
+  const reviewRecord = pendingReviewRecord || location.state?.reviewRecord || null
+  const reviewBackSection =
+    pendingReviewBackSection ||
+    location.state?.reviewBackSection ||
+    (activeFormSlug === 'erco' ? 'analysis' : '')
+  const reviewChangeSummary =
+    selectedEditingRecord && reviewRecord
+      ? buildChangeSummary(selectedEditingRecord, reviewRecord)
+      : []
+  const displayReviewChangeSummary =
+    isDrillReport || isFitnessTestReport
+      ? reviewChangeSummary.map((entry) => ({
+          ...entry,
+          label:
+            entry.label === 'Incident Type'
+              ? isFitnessTestReport
+                ? 'Fitness Test Type'
+                : 'Drill Type'
+              : entry.label === 'Title'
+                ? isFitnessTestReport
+                  ? 'Test Details'
+                  : 'Drill Scenario'
+                : entry.label === 'Summary'
+                  ? isFitnessTestReport
+                    ? 'Test Summary'
+                    : 'Outcome Summary'
+                  : entry.label,
+        }))
+      : reviewChangeSummary
+  const reviewReturnDraft =
+    location.state?.returnFromReview && location.state?.reviewRecord
+      ? recordToDraft(location.state.reviewRecord, activeFormSlug)
+      : null
+  const shouldSkipDraftLoad =
+    location.state?.skipReportDraft === activeFormSlug || location.state?.returnFromReview === true
+  const activeDraftRow =
+    activeFormSlug === 'erco' && queryDraftId
+      ? activeDraftRows.find((row) => String(row?.draftId || '').trim() === queryDraftId) || null
+      : null
+
+  useEffect(() => {
+    if (activeSection !== 'detail' || !reportId || selectedRecord) {
+      return undefined
+    }
+    let cancelled = false
+    const loadRouteDetailRecord = async () => {
+      try {
+        const row = normalizeReportRecord(await refreshReportRecord(reportId))
+        if (cancelled || !row || String(row.reportType || '').toLowerCase() !== activeFormSlug) {
+          return
+        }
+        setRouteDetailRecord(row)
+      } catch {
+        if (!cancelled) setRouteDetailRecord(null)
+      }
+    }
+    loadRouteDetailRecord()
+    return () => {
+      cancelled = true
+    }
+  }, [activeFormSlug, activeSection, reportId, selectedRecord])
+
+  const recentMobileRecords = useMemo(
+    () => submittedRecordsInScope.slice(0, 5),
+    [submittedRecordsInScope],
+  )
+  const recentMobileDrafts = useMemo(() => activeDraftRows.slice(0, 3), [activeDraftRows])
+  const handleSaveReviewDraft = useCallback(
+    () => saveReviewDraft({ reviewRecord, selectedEditingRecord }),
+    [reviewRecord, saveReviewDraft, selectedEditingRecord],
+  )
+  const handleBackFromReview = useCallback(
+    () => backFromReview({ reviewBackSection, reviewRecord }),
+    [backFromReview, reviewBackSection, reviewRecord],
+  )
+  const handleConfirmReviewSubmit = useCallback(
+    () => confirmReviewSubmit(reviewRecord),
+    [confirmReviewSubmit, reviewRecord],
+  )
+  const isCreateSection = activeSection === 'new' || activeSection === 'review'
+  const recordsSectionActive = activeSection === 'records' || activeSection === 'detail'
+  const createSectionActive = isCreateSection
+
+  const navigateToMobileHome = useCallback(() => {
+    setShowMobileRecords(false)
+    navigate(reportBasePath)
+  }, [navigate, reportBasePath])
+
+  const openDraftRow = useCallback(
+    (row) => {
+      if (!row) return
+      const query = new URLSearchParams()
+      if (row.draftId) query.set('draft', String(row.draftId))
+      if (row.sourceReportUid) query.set('edit', String(row.sourceReportUid))
+      const directDraftSeed = activeFormSlug === 'erco' ? null : row
+      setIsFormDirty(false)
+      setFormSessionKey((prev) => prev + 1)
+      navigate(`${reportBasePath}/new${query.toString() ? `?${query.toString()}` : ''}`, {
+        state: {
+          skipReportDraft: directDraftSeed ? activeFormSlug : '',
+          initialFormSeed: directDraftSeed,
+        },
+      })
+    },
+    [activeFormSlug, navigate, reportBasePath],
+  )
+
+  const startNewWithIncidentType = useCallback(
+    (incidentType) => {
+      const value = String(incidentType || '').trim()
+      if (!value) return
+      setIsFormDirty(false)
+      setFormSessionKey((prev) => prev + 1)
+      navigate(`${reportBasePath}/new/setup`, {
+        state: {
+          skipReportDraft: activeFormSlug,
+          initialFormSeed: { incidentType: value },
+        },
+      })
+    },
+    [activeFormSlug, navigate, reportBasePath],
+  )
+
+  const handleMobileBack = useCallback(() => {
+    if (activeSection === 'records' && showMobileRecords) {
+      setShowMobileRecords(false)
+      return
+    }
+    if (activeSection === 'detail') {
+      navigateToMobileHome()
+      return
+    }
+    if (activeSection === 'review') {
+      handleBackFromReview()
+      return
+    }
+    if (activeSection === 'new') {
+      runGuardedAction(navigateToMobileHome)
+    }
+  }, [
+    activeSection,
+    handleBackFromReview,
+    navigateToMobileHome,
+    runGuardedAction,
+    showMobileRecords,
+  ])
+
+  const showMobileBack =
+    isWorkFirstReport &&
+    (activeSection === 'detail' ||
+      activeSection === 'review' ||
+      activeSection === 'new' ||
+      (activeSection === 'records' && showMobileRecords))
+  const mobileTitle =
+    isWorkFirstReport && activeSection === 'records' && !showMobileRecords
+      ? reportTypeLabel
+      : isWorkFirstReport && (activeSection === 'new' || activeSection === 'review')
+        ? `Conduct ${reportTypeLabel}`
+        : isWorkFirstReport && activeSection === 'records' && showMobileRecords
+          ? `${reportTypeLabel} Records`
+          : reportTypeLabel
+  const pageTitle = isWorkFirstReport ? (
+    <>
+      <span className="d-md-none">{mobileTitle}</span>
+      <span className="d-none d-md-inline">{reportTypeLabel}</span>
+    </>
+  ) : (
+    reportTypeLabel
+  )
+
   if (!user) {
     return (
       <div className="my-4 text-danger">Unable to load reports page. Please sign in again.</div>
@@ -249,57 +450,46 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
     )
   }
 
-  const ActiveFormComponent = formComponent || FORM_REGISTRY[activeFormSlug] || null
-  const supportsNewForm = typeof ActiveFormComponent === 'function'
-  const selectedEditingRecord =
-    records.find((row) => String(row.id || '').trim() === editingReportId) || null
-  const editingDraftSeed = selectedEditingRecord
-    ? recordToDraft(selectedEditingRecord, activeFormSlug)
-    : null
-  const reviewRecord = pendingReviewRecord || location.state?.reviewRecord || null
-  const reviewBackSection =
-    pendingReviewBackSection ||
-    location.state?.reviewBackSection ||
-    (activeFormSlug === 'erco' ? 'analysis' : '')
-  const reviewChangeSummary =
-    selectedEditingRecord && reviewRecord
-      ? buildChangeSummary(selectedEditingRecord, reviewRecord)
-      : []
-  const reviewReturnDraft =
-    location.state?.returnFromReview && location.state?.reviewRecord
-      ? recordToDraft(location.state.reviewRecord, activeFormSlug)
-      : null
-  const shouldSkipDraftLoad =
-    location.state?.skipReportDraft === activeFormSlug || location.state?.returnFromReview === true
-  const activeDraftRow =
-    activeFormSlug === 'erco' && queryDraftId
-      ? activeDraftRows.find((row) => String(row?.draftId || '').trim() === queryDraftId) || null
-      : null
-
-  const handleSaveReviewDraft = () => saveReviewDraft({ reviewRecord, selectedEditingRecord })
-  const handleBackFromReview = () => backFromReview({ reviewBackSection, reviewRecord })
-  const handleConfirmReviewSubmit = () => confirmReviewSubmit(reviewRecord)
-  const isCreateSection = activeSection === 'new' || activeSection === 'review'
-  const recordsSectionActive = activeSection === 'records' || activeSection === 'detail'
-  const createSectionActive = isCreateSection
-
   return (
-    <CContainer fluid>
+    <CContainer
+      fluid
+      {...(onboardingAnchorPrefix ? { 'data-tour-id': `${onboardingAnchorPrefix}-module` } : {})}
+    >
       <ModulePageHeader
-        title={reportTypeLabel}
-        subtitle="Review records, manage drafts, and submit new reports."
+        title={pageTitle}
+        subtitle={isWorkFirstReport ? '' : 'Review records, manage drafts, and submit new reports.'}
         actions={
-          isCreateSection ? null : (
-            <CreateActionButton
-              label={`New ${reportTypeLabel} Report`}
-              importance="primary"
-              onClick={() => runGuardedAction(startNew)}
-            />
-          )
+          <>
+            {showMobileBack ? (
+              <CButton
+                type="button"
+                color="secondary"
+                variant="outline"
+                className="inspection-header-back-btn d-md-none d-inline-flex align-items-center gap-1"
+                onClick={handleMobileBack}
+              >
+                <ChevronLeft size={16} />
+                Back
+              </CButton>
+            ) : null}
+            {isCreateSection ? null : (
+              <CreateActionButton
+                label={`New ${reportTypeLabel} Report`}
+                importance="primary"
+                className={isWorkFirstReport ? 'd-none d-md-inline-flex' : ''}
+                onClick={() => runGuardedAction(startNew)}
+              />
+            )}
+          </>
         }
       />
-      <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
-      {downloadingId || isDeleting || isSubmitting ? (
+      <CToaster
+        ref={toaster}
+        push={toast}
+        placement="bottom-end"
+        className="inspection-toaster mb-3 me-3"
+      />
+      {isDeleting || isSubmitting ? (
         <div
           style={{
             position: 'fixed',
@@ -319,15 +509,7 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
               boxShadow: '0 8px 32px rgba(0,0,0,0.14)',
             }}
           >
-            <TableLoader
-              message={
-                isSubmitting
-                  ? 'Submitting report...'
-                  : isDeleting
-                    ? 'Deleting report...'
-                    : 'Generating PDF...'
-              }
-            />
+            <TableLoader message={isSubmitting ? 'Submitting report...' : 'Deleting report...'} />
           </div>
         </div>
       ) : null}
@@ -373,6 +555,7 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
       />
       <ActionConfirmModal
         visible={Boolean(deleteTarget)}
+        tourId={onboardingAnchorPrefix ? `${onboardingAnchorPrefix}-delete-modal` : ''}
         title={deleteTarget?.recordKind === 'draft' ? 'Delete Draft' : 'Delete Report'}
         message={
           deleteTarget?.recordKind === 'draft'
@@ -408,135 +591,277 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
         onSubmit={submitWorkflowAction}
       />
 
-      <ModuleNavTabs
-        items={[
-          {
-            key: 'records',
-            label: `${reportTypeLabel} Records`,
-            active: recordsSectionActive,
-            onClick: () => runGuardedAction(() => navigate(reportBasePath)),
-          },
-          {
-            key: 'new',
-            label: `New ${reportTypeLabel} Report`,
-            active: createSectionActive,
-            onClick: () => runGuardedAction(startNew),
-          },
-        ]}
-      />
+      <div
+        className="d-none d-md-block"
+        {...(onboardingAnchorPrefix ? { 'data-tour-id': `${onboardingAnchorPrefix}-nav` } : {})}
+      >
+        <ModuleNavTabs
+          items={[
+            {
+              key: 'records',
+              label: `${reportTypeLabel} Records`,
+              active: recordsSectionActive,
+              onClick: () => runGuardedAction(() => navigate(reportBasePath)),
+            },
+            {
+              key: 'new',
+              label: `New ${reportTypeLabel} Report`,
+              active: createSectionActive,
+              onClick: () => runGuardedAction(startNew),
+            },
+          ]}
+        />
+      </div>
+
+      {activeSection === 'records' && isErcoReport && !showMobileRecords ? (
+        <ErcoMobileHome
+          user={user}
+          draftRows={recentMobileDrafts}
+          recentRecords={recentMobileRecords}
+          recordsCount={recordsInScopeCount}
+          recordScope={recordScope}
+          onRecordScopeChange={setRecordScope}
+          isRecordsLoading={isLoading}
+          onSelectType={(incidentType) =>
+            runGuardedAction(() => startNewWithIncidentType(incidentType))
+          }
+          onContinueDraft={(row) => runGuardedAction(() => openDraftRow(row))}
+          onDeleteDraft={(row) => setDeleteTarget(row)}
+          onOpenRecord={(row) =>
+            navigate(`${reportBasePath}/${encodeURIComponent(String(row?.id || ''))}`)
+          }
+          onViewRecords={() => setShowMobileRecords(true)}
+          pushToast={pushToast}
+        />
+      ) : null}
+
+      {activeSection === 'records' && isDrillReport && !showMobileRecords ? (
+        <DrillMobileHome
+          user={user}
+          draftRows={recentMobileDrafts}
+          recentRecords={recentMobileRecords}
+          recordsCount={recordsInScopeCount}
+          recordScope={recordScope}
+          onRecordScopeChange={setRecordScope}
+          isRecordsLoading={isLoading}
+          onSelectType={(incidentType) =>
+            runGuardedAction(() => startNewWithIncidentType(incidentType))
+          }
+          onContinueDraft={(row) => runGuardedAction(() => openDraftRow(row))}
+          onDeleteDraft={(row) => setDeleteTarget(row)}
+          onOpenRecord={(row) =>
+            navigate(`${reportBasePath}/${encodeURIComponent(String(row?.id || ''))}`)
+          }
+          onViewRecords={() => setShowMobileRecords(true)}
+          pushToast={pushToast}
+        />
+      ) : null}
+
+      {activeSection === 'records' && isFitnessTestReport && !showMobileRecords ? (
+        <FitnessTestMobileHome
+          draftRows={recentMobileDrafts}
+          recentRecords={recentMobileRecords}
+          recordsCount={recordsInScopeCount}
+          recordScope={recordScope}
+          onRecordScopeChange={setRecordScope}
+          isRecordsLoading={isLoading}
+          onSelectType={(incidentType) =>
+            runGuardedAction(() => startNewWithIncidentType(incidentType))
+          }
+          onContinueDraft={(row) => runGuardedAction(() => openDraftRow(row))}
+          onDeleteDraft={(row) => setDeleteTarget(row)}
+          onOpenRecord={(row) =>
+            navigate(`${reportBasePath}/${encodeURIComponent(String(row?.id || ''))}`)
+          }
+          onViewRecords={() => setShowMobileRecords(true)}
+        />
+      ) : null}
 
       {activeSection === 'records' ? (
-        <ReportRecordsSection
-          reportTypeLabel={reportTypeLabel}
-          startNew={startNew}
-          search={search}
-          setSearch={setSearch}
-          period={period}
-          setPeriod={setPeriod}
-          sort={sort}
-          setSort={setSort}
-          typeFilter={typeFilter}
-          setTypeFilter={setTypeFilter}
-          typeOptions={typeOptions}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-          statusOptions={statusOptions}
-          sortOptions={SORT_OPTIONS}
-          clearFilters={clearFilters}
-          isLoading={isLoading}
-          filteredRecords={filteredRecords}
-          visibleRows={visibleRows}
-          onViewRecord={(id) => navigate(`${reportBasePath}/${encodeURIComponent(id)}`)}
-          onDownloadRecord={downloadRecord}
-          downloadingId={downloadingId}
-          onEditRecord={editRecord}
-          onDeleteRecord={requestDeleteRecord}
-          onReviewTransition={transitionReview}
-          onApproveTransition={transitionApprove}
-          onRejectTransition={transitionReject}
-          canReviewRecord={canReviewRecord}
-          canApproveRecord={canApproveRecord}
-          canRejectRecord={canRejectRecord}
-          canEditRecord={canEditRecord}
-          canDeleteRecord={canDeleteRecord}
-          formatDateTime={formatDateTime}
-          rowsToShow={rowsToShow}
-          setRowsToShow={setRowsToShow}
-          totalCount={recordsInScopeCount}
-          showPrimaryAction={false}
-        />
+        <div className={isWorkFirstReport && !showMobileRecords ? 'd-none d-md-block' : ''}>
+          <ReportRecordsSection
+            reportTypeLabel={reportTypeLabel}
+            startNew={startNew}
+            search={search}
+            setSearch={setSearch}
+            period={period}
+            setPeriod={setPeriod}
+            sort={sort}
+            setSort={setSort}
+            typeFilter={typeFilter}
+            setTypeFilter={setTypeFilter}
+            typeOptions={typeOptions}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            statusOptions={statusOptions}
+            recordScope={recordScope}
+            setRecordScope={setRecordScope}
+            sortOptions={SORT_OPTIONS}
+            clearFilters={clearFilters}
+            isLoading={isLoading}
+            filteredRecords={filteredRecords}
+            visibleRows={visibleRows}
+            onViewRecord={(id) => navigate(`${reportBasePath}/${encodeURIComponent(id)}`)}
+            onDownloadRecord={downloadRecord}
+            downloadingId={downloadingId}
+            onEditRecord={editRecord}
+            onDeleteRecord={requestDeleteRecord}
+            onReviewTransition={transitionReview}
+            onApproveTransition={transitionApprove}
+            onRejectTransition={transitionReject}
+            canReviewRecord={canReviewRecord}
+            canApproveRecord={canApproveRecord}
+            canRejectRecord={canRejectRecord}
+            canEditRecord={canEditRecord}
+            canDeleteRecord={canDeleteRecord}
+            formatDateTime={formatDateTime}
+            rowsToShow={rowsToShow}
+            setRowsToShow={setRowsToShow}
+            totalCount={recordsInScopeCount}
+            showPrimaryAction={false}
+            isMobileCardless={isWorkFirstReport}
+            moduleContextLabel={isDrillReport ? 'Drill' : isErcoReport ? 'ERCO' : reportTypeLabel}
+            typeLabel={
+              isFitnessTestReport
+                ? 'Fitness Test Type'
+                : isDrillReport
+                  ? 'Drill Type'
+                  : 'Incident Type'
+            }
+            onboardingAnchorPrefix={onboardingAnchorPrefix}
+          />
+        </div>
       ) : null}
 
       {activeSection === 'detail' ? (
-        <ReportDetailSection
-          selectedRecord={selectedRecord}
-          onBack={() => navigate(reportBasePath)}
-          formatDateTime={formatDateTime}
-          renderStatusBadge={renderStatusBadge}
-          onDownloadRecord={downloadRecord}
-          downloadingId={downloadingId}
-          onReviewRecord={transitionReview}
-          onApproveRecord={transitionApprove}
-          onRejectRecord={transitionReject}
-          isActionBusy={isActionBusy}
-        />
+        <div
+          {...(onboardingAnchorPrefix
+            ? { 'data-tour-id': `${onboardingAnchorPrefix}-detail` }
+            : {})}
+        >
+          <ReportDetailSection
+            selectedRecord={selectedDetailRecord}
+            onBack={() => navigate(reportBasePath)}
+            formatDateTime={formatDateTime}
+            renderStatusBadge={renderStatusBadge}
+            onDownloadRecord={downloadRecord}
+            onEditRecord={editRecord}
+            onDeleteRecord={requestDeleteRecord}
+            canEditRecord={canEditRecord}
+            canDeleteRecord={canDeleteRecord}
+            downloadingId={downloadingId}
+            onReviewRecord={transitionReview}
+            onApproveRecord={transitionApprove}
+            onRejectRecord={transitionReject}
+            isActionBusy={isActionBusy}
+            onboardingAnchorPrefix={onboardingAnchorPrefix}
+            typeLabel={
+              isFitnessTestReport
+                ? 'Fitness Test Type'
+                : isDrillReport
+                  ? 'Drill Type'
+                  : 'Incident Type'
+            }
+            conditionLabel={isDrillReport || isFitnessTestReport ? 'Condition' : 'Weather'}
+            detailsLabel={
+              isFitnessTestReport
+                ? 'Test Details'
+                : isDrillReport
+                  ? 'Drill Scenario'
+                  : 'Incident Title'
+            }
+            summaryLabel={
+              isFitnessTestReport ? 'Test Summary' : isDrillReport ? 'Outcome Summary' : 'Summary'
+            }
+          />
+        </div>
       ) : null}
 
       {activeSection === 'review' ? (
-        <ReportDetailSection
-          selectedRecord={reviewRecord}
-          mode="review"
-          reviewBannerText="Review Mode - not submitted yet."
-          reviewActions={{
-            onBackToEdit: handleBackFromReview,
-            onSaveDraft: handleSaveReviewDraft,
-            onConfirm: handleConfirmReviewSubmit,
-            confirmLabel: selectedEditingRecord ? 'Confirm Update' : 'Confirm Submit',
-          }}
-          isSubmittingReview={isSubmitting}
-          changeSummary={reviewChangeSummary}
-          formatDateTime={formatDateTime}
-          renderStatusBadge={renderStatusBadge}
-        />
+        <div
+          {...(onboardingAnchorPrefix
+            ? { 'data-tour-id': `${onboardingAnchorPrefix}-review` }
+            : {})}
+        >
+          <ReportDetailSection
+            selectedRecord={reviewRecord}
+            mode="review"
+            reviewBannerText={isDrillReport ? '' : 'Review Mode - not submitted yet.'}
+            reviewActions={{
+              onBackToEdit: handleBackFromReview,
+              onSaveDraft: handleSaveReviewDraft,
+              onConfirm: handleConfirmReviewSubmit,
+              confirmLabel: selectedEditingRecord ? 'Confirm Update' : 'Confirm Submit',
+            }}
+            isSubmittingReview={isSubmitting}
+            changeSummary={displayReviewChangeSummary}
+            formatDateTime={formatDateTime}
+            renderStatusBadge={renderStatusBadge}
+            onboardingAnchorPrefix={onboardingAnchorPrefix}
+            typeLabel={
+              isFitnessTestReport
+                ? 'Fitness Test Type'
+                : isDrillReport
+                  ? 'Drill Type'
+                  : 'Incident Type'
+            }
+            conditionLabel={isDrillReport || isFitnessTestReport ? 'Condition' : 'Weather'}
+            detailsLabel={
+              isFitnessTestReport
+                ? 'Test Details'
+                : isDrillReport
+                  ? 'Drill Scenario'
+                  : 'Incident Title'
+            }
+            summaryLabel={
+              isFitnessTestReport ? 'Test Summary' : isDrillReport ? 'Outcome Summary' : 'Summary'
+            }
+          />
+        </div>
       ) : null}
 
       {activeSection === 'new' ? (
-        supportsNewForm ? (
-          <ActiveFormComponent
-            key={`${activeFormSlug}-${formSessionKey}`}
-            user={user}
-            reportTypeSlug={activeFormSlug}
-            reportTypeIdPrefix={reportTypeIdPrefix}
-            nextReportSequence={nextReportSequence}
-            reportTypeLabel={reportTypeLabel}
-            reportBasePath={reportBasePath}
-            newSection={newSection}
-            datePresetOptions={datePresetOptions}
-            timePresetOptions={timePresetOptions}
-            pushToast={pushToast}
-            onSubmitted={submit}
-            onDirtyChange={setIsFormDirty}
-            skipDraftLoad={shouldSkipDraftLoad}
-            editingRecord={selectedEditingRecord}
-            editingDraftSeed={editingDraftSeed}
-            preferSavedEditDraft={location.state?.preferSavedEditDraft === true}
-            activeDraftId={queryDraftId}
-            showEditSourceBanner={!(activeDraftRow && activeDraftRow.recordKind === 'draft')}
-            reviewReturnRecord={reviewReturnDraft}
-            onRequestReview={requestReview}
-            onDraftSaved={() => setDraftVersion((prev) => prev + 1)}
-          />
-        ) : (
-          <CCard className="mb-3">
-            <CCardHeader>Create {reportTypeLabel} Report</CCardHeader>
-            <CCardBody>
-              <div className="text-body-secondary">
-                This form is intentionally empty for now. We will define the {reportTypeLabel}{' '}
-                report fields next.
-              </div>
-            </CCardBody>
-          </CCard>
-        )
+        <div
+          {...(onboardingAnchorPrefix ? { 'data-tour-id': `${onboardingAnchorPrefix}-form` } : {})}
+        >
+          {supportsNewForm ? (
+            <ActiveFormComponent
+              key={`${activeFormSlug}-${formSessionKey}`}
+              user={user}
+              reportTypeSlug={activeFormSlug}
+              reportTypeIdPrefix={reportTypeIdPrefix}
+              nextReportSequence={nextReportSequence}
+              reportTypeLabel={reportTypeLabel}
+              reportBasePath={reportBasePath}
+              newSection={newSection}
+              datePresetOptions={datePresetOptions}
+              timePresetOptions={timePresetOptions}
+              pushToast={pushToast}
+              onSubmitted={submit}
+              onDirtyChange={setIsFormDirty}
+              skipDraftLoad={shouldSkipDraftLoad}
+              editingRecord={selectedEditingRecord}
+              editingDraftSeed={editingDraftSeed}
+              preferSavedEditDraft={location.state?.preferSavedEditDraft === true}
+              activeDraftId={queryDraftId}
+              showEditSourceBanner={!(activeDraftRow && activeDraftRow.recordKind === 'draft')}
+              reviewReturnRecord={reviewReturnDraft}
+              initialFormSeed={location.state?.initialFormSeed || null}
+              onRequestReview={requestReview}
+              onDraftSaved={() => setDraftVersion((prev) => prev + 1)}
+            />
+          ) : (
+            <CCard className="mb-3">
+              <CCardHeader>Create {reportTypeLabel} Report</CCardHeader>
+              <CCardBody>
+                <div className="text-body-secondary">
+                  This form is intentionally empty for now. We will define the {reportTypeLabel}{' '}
+                  report fields next.
+                </div>
+              </CCardBody>
+            </CCard>
+          )}
+        </div>
       ) : null}
     </CContainer>
   )

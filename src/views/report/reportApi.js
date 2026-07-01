@@ -63,9 +63,10 @@ export const refreshReportRecord = async (reportUid) => {
   return response?.data || null
 }
 
-export const persistReportRecords = async (userId, rows) => {
+export const persistReportRecords = async (userId, rows, options = {}) => {
   if (!userId) return false
   const desiredRows = Array.isArray(rows) ? rows : []
+  const activeType = normalizeType(options?.reportTypeSlug || options?.reportType)
   const byType = new Map()
   desiredRows.forEach((row) => {
     const type = normalizeType(row?.reportType)
@@ -85,9 +86,11 @@ export const persistReportRecords = async (userId, rows) => {
 
   let ok = true
 
-  // Union of desired types and currently stored types ensures that deleting
-  // the last record of a type still triggers the API DELETE for that type.
-  const allTypes = new Set([...byType.keys(), ...localRowsByType.keys()])
+  // Without an explicit active type, keep the legacy broad sync behavior.
+  // With an active type, scope writes/deletes so one report module cannot touch another.
+  const allTypes = activeType
+    ? new Set([activeType])
+    : new Set([...byType.keys(), ...localRowsByType.keys()])
 
   for (const type of allTypes) {
     const rowsForType = byType.get(type) ?? []
@@ -101,6 +104,9 @@ export const persistReportRecords = async (userId, rows) => {
     }
     const saved = await persistReportRecordsToApi(type, rowsForType)
     if (!saved) ok = false
+    if (saved && featureFlags.reportLocalFallbackEnabled) {
+      localRowsByType.set(type, rowsForType)
+    }
   }
 
   const mergedLocalRows = []
@@ -235,6 +241,42 @@ export const downloadErcoReportPdf = async (record) => {
   }
   const reportVersion = Number(record?.version || 0) || undefined
   const response = await fetchWithCsrfRetry(buildApiUrl('/reports/erco/pdf'), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: '*/*',
+    },
+    body: JSON.stringify({ report_uid: reportUid, version: reportVersion }),
+  })
+
+  if (!response.ok) {
+    let message = 'Download failed'
+    try {
+      const payload = await response.json()
+      message = payload?.message || message
+    } catch {
+      const text = await response.text()
+      if (text) message = text
+    }
+    const error = new Error(message)
+    error.status = response.status
+    throw error
+  }
+
+  const blob = await response.blob()
+  const contentDisposition = response.headers.get('content-disposition') || ''
+  const filenameMatch = /filename\*?=(?:UTF-8''|")?([^\";]+)/i.exec(contentDisposition)
+  const filename = filenameMatch ? decodeURIComponent(filenameMatch[1]) : ''
+  return { blob, filename: String(filename || '').trim() }
+}
+
+export const downloadDrillReportPdf = async (record) => {
+  const reportUid = String(record?.id || '').trim()
+  if (!reportUid) {
+    throw new Error('Download unavailable until the drill report is saved.')
+  }
+  const reportVersion = Number(record?.version || 0) || undefined
+  const response = await fetchWithCsrfRetry(buildApiUrl('/reports/drill/pdf'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

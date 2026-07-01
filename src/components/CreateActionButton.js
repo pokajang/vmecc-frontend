@@ -12,10 +12,14 @@ const CreateActionButton = ({
   size = 'sm',
   className = '',
   importance = 'inline',
+  showIcon = true,
   ariaExpanded,
   ariaLabel,
+  ...rest
 }) => {
-  const resolvedIcon = icon || <Plus size={13} className="me-1 align-text-bottom" />
+  const resolvedIcon = showIcon
+    ? icon || <Plus size={13} className="me-1 align-text-bottom" />
+    : null
   const resolvedAriaLabel = ariaLabel || label || undefined
   const isPrimary = importance === 'primary'
   const disabledClassName = disabled ? 'opacity-50' : ''
@@ -34,6 +38,7 @@ const CreateActionButton = ({
       disabled={disabled}
       aria-label={resolvedAriaLabel}
       aria-expanded={ariaExpanded}
+      {...rest}
     >
       {resolvedIcon}
       {label}

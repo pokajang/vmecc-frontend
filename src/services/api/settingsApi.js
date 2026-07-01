@@ -21,6 +21,19 @@ export const saveSalaryWorkflowRulesApi = (payload) =>
     body: JSON.stringify(payload || {}),
   })
 
+export const fetchInspectionWorkflowRules = () => apiRequest('/settings/inspection-workflow-rules')
+export const saveInspectionWorkflowRules = (payload) =>
+  apiRequest('/settings/inspection-workflow-rules', {
+    method: 'POST',
+    body: JSON.stringify(payload || {}),
+  })
+export const fetchReportingWorkflowRules = () => apiRequest('/settings/reporting-workflow-rules')
+export const saveReportingWorkflowRules = (payload) =>
+  apiRequest('/settings/reporting-workflow-rules', {
+    method: 'POST',
+    body: JSON.stringify(payload || {}),
+  })
+
 export const fetchSalaryStatutoryRates = () => apiRequest('/settings/salary-statutory-rates')
 export const saveSalaryStatutoryRates = (payload) =>
   apiRequest('/settings/salary-statutory-rates', {

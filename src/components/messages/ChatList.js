@@ -64,8 +64,13 @@ const ChatList = ({
         background: '#ffffff',
         minHeight: 0,
       }}
+      data-tour-id="messages-list-panel"
     >
-      <div className="p-3 border-bottom" style={{ background: '#ffffff' }}>
+      <div
+        className="p-3 border-bottom"
+        style={{ background: '#ffffff' }}
+        data-tour-id="messages-list-filters"
+      >
         <CFormInput
           size="sm"
           placeholder="Search chats"

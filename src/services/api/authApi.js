@@ -67,6 +67,14 @@ export const updateProfile = (payload) =>
     body: JSON.stringify(payload),
   })
 
+export const fetchOnboardingStates = () => apiRequest('/onboarding/states')
+
+export const updateOnboardingState = (key, payload) =>
+  apiRequest(`/onboarding/states/${encodeURIComponent(key)}`, {
+    method: 'POST',
+    body: JSON.stringify(payload || {}),
+  })
+
 export const uploadProfileImage = (file) => {
   const formData = new FormData()
   formData.append('image', file)

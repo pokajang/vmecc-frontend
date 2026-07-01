@@ -56,6 +56,20 @@ const useWeatherTypeManager = ({ userId, selectedWeather, updateSetupField, push
     return sortOptionsByUsage(options, weatherUsage)
   }, [customWeatherTypes, weatherSystemOptions, weatherUsage])
 
+  const availableIconOptions = useMemo(() => {
+    const editKey = normalizeTypeKey(editingWeatherTypeKey)
+    const currentIconKey = String(newWeatherIconKey || '').trim()
+    const usedIconKeys = new Set(
+      typeOptions
+        .filter((row) => normalizeTypeKey(row?.value) !== editKey)
+        .map((row) => resolveTypeIconKey(row, 'weather'))
+        .filter(Boolean),
+    )
+    return iconOptions.filter(
+      (option) => !usedIconKeys.has(option.key) || option.key === currentIconKey,
+    )
+  }, [editingWeatherTypeKey, iconOptions, newWeatherIconKey, typeOptions])
+
   const systemOverrideSet = useMemo(
     () =>
       new Set(
@@ -106,8 +120,13 @@ const useWeatherTypeManager = ({ userId, selectedWeather, updateSetupField, push
   const openAddModal = () => {
     setAddWeatherError('')
     resetDraft()
+    const usedIconKeys = new Set(
+      typeOptions.map((row) => resolveTypeIconKey(row, 'weather')).filter(Boolean),
+    )
+    const unusedIcon = iconOptions.find((option) => !usedIconKeys.has(option.key))
     setNewWeatherIconKey(
-      pickLeastUsedTypeIconKey('weather', [...customWeatherTypes, ...weatherSystemOverrides]),
+      unusedIcon?.key ||
+        pickLeastUsedTypeIconKey('weather', [...customWeatherTypes, ...weatherSystemOverrides]),
     )
     setWeatherEditMode(false)
     setShowAddWeatherModal(true)
@@ -123,6 +142,7 @@ const useWeatherTypeManager = ({ userId, selectedWeather, updateSetupField, push
   const saveType = () => {
     const title = String(newWeatherName || '').trim()
     const description = String(newWeatherDescription || '').trim()
+    const iconKey = String(newWeatherIconKey || '').trim()
     const editKey = String(editingWeatherTypeKey || '')
       .trim()
       .toLowerCase()
@@ -141,6 +161,18 @@ const useWeatherTypeManager = ({ userId, selectedWeather, updateSetupField, push
     })
     if (exists) {
       setAddWeatherError('This weather type already exists.')
+      return
+    }
+
+    const iconExists = iconOptions.some((option) => option.key === iconKey)
+    const iconUsed = typeOptions.some(
+      (row) =>
+        normalizeTypeKey(row.value) !== editKey && resolveTypeIconKey(row, 'weather') === iconKey,
+    )
+    if (!iconExists || iconUsed) {
+      setAddWeatherError(
+        iconExists ? 'This icon is already used by another weather type.' : 'Choose an icon.',
+      )
       return
     }
 
@@ -164,7 +196,7 @@ const useWeatherTypeManager = ({ userId, selectedWeather, updateSetupField, push
           value: baseOption.value,
           title,
           description,
-          iconKey: newWeatherIconKey,
+          iconKey,
         },
       ]
       setWeatherSystemOverrides(nextOverrides)
@@ -188,9 +220,9 @@ const useWeatherTypeManager = ({ userId, selectedWeather, updateSetupField, push
             .trim()
             .toLowerCase()
           if (rowKey !== editKey) return row
-          return { value: title, title, description, iconKey: newWeatherIconKey }
+          return { value: title, title, description, iconKey }
         })
-      : [...customWeatherTypes, { value: title, title, description, iconKey: newWeatherIconKey }]
+      : [...customWeatherTypes, { value: title, title, description, iconKey }]
     setCustomWeatherTypes(nextCustomTypes)
     saveCustomWeatherTypes(userId, nextCustomTypes)
 
@@ -328,7 +360,7 @@ const useWeatherTypeManager = ({ userId, selectedWeather, updateSetupField, push
     setNewWeatherDescription,
     newWeatherIconKey,
     setNewWeatherIconKey,
-    iconOptions,
+    iconOptions: availableIconOptions,
     editingWeatherTypeKey,
     editingSystemType,
     addWeatherError,

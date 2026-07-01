@@ -7,6 +7,7 @@ const ResponsiveRecordCollection = ({
   isEmpty = false,
   emptyMessage = null,
   mobileSections = [],
+  mobileVariant = 'card',
   renderDesktop = null,
   footer = null,
   children = null,
@@ -17,7 +18,7 @@ const ResponsiveRecordCollection = ({
   return (
     <>
       {children}
-      <MobileRecordList sections={mobileSections} />
+      <MobileRecordList sections={mobileSections} variant={mobileVariant} />
       {typeof renderDesktop === 'function' ? renderDesktop() : renderDesktop}
       {footer}
     </>

@@ -5,6 +5,7 @@ import {
   CDropdownItem,
   CDropdownMenu,
   CDropdownToggle,
+  CTooltip,
 } from '@coreui/react'
 import { CalendarDays, Clock3, LogOut, Settings, User, WalletCards } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -67,25 +68,41 @@ const AppHeaderDropdown = ({
   const canLeave = hasPermission(user, 'self.leave')
   const canOvertimeAction =
     typeof canOvertime === 'boolean' ? canOvertime : hasPermission(user, 'self.overtime')
+  const canShowQuickActions = canClaimAction || canLeave || canOvertimeAction
+  const canShowMyRecords = canClaimAction || canLeave || canOvertimeAction
 
   return (
     <CDropdown
       variant="nav-item"
       placement={placement}
       offset={label ? [0, 12] : [0, 2]}
+      portal
       visible={visible}
       onShow={() => setVisible(true)}
       onHide={() => setVisible(false)}
       className="d-flex align-items-center"
     >
-      <CDropdownToggle
-        className={`py-0 pe-0 d-flex flex-column align-items-center gap-1${label ? ' border-0 bg-transparent shadow-none' : ''}`}
-        caret={false}
-      >
-        <User size={label ? 20 : 18} />
-        {label && <span className="app-bottom-nav-label">{label}</span>}
-      </CDropdownToggle>
-      <CDropdownMenu className="pt-0">
+      {label ? (
+        <CDropdownToggle
+          className="py-0 pe-0 d-flex flex-column align-items-center gap-1 border-0 bg-transparent shadow-none"
+          caret={false}
+        >
+          <User size={20} />
+          <span className="app-bottom-nav-label">{label}</span>
+        </CDropdownToggle>
+      ) : (
+        <CDropdownToggle
+          className="app-header-account-toggle p-0 d-inline-flex align-items-center justify-content-center"
+          caret={false}
+        >
+          <CTooltip content="Account" placement="bottom">
+            <span className="app-header-account-tooltip-target">
+              <User size={18} />
+            </span>
+          </CTooltip>
+        </CDropdownToggle>
+      )}
+      <CDropdownMenu className="app-header-account-menu pt-0">
         <CDropdownHeader className="fw-semibold mb-0 py-2 app-header-dropdown-user-header">
           <div className="d-grid gap-1">
             <span>Signed in as</span>
@@ -100,20 +117,7 @@ const AppHeaderDropdown = ({
             )}
           </div>
         </CDropdownHeader>
-        <CDropdownItem as="button" type="button" onClick={() => goTo('/profile')} className="py-2">
-          <User size={16} className="me-2" />
-          Profile
-        </CDropdownItem>
-        <CDropdownItem
-          as="button"
-          type="button"
-          onClick={() => goTo('/profile/security')}
-          className="py-2"
-        >
-          <Settings size={16} className="me-2" />
-          Settings
-        </CDropdownItem>
-        {(canClaimAction || canLeave || canOvertimeAction) && (
+        {canShowQuickActions && (
           <>
             <CDropdownHeader className="fw-semibold mt-1 mb-1 app-header-dropdown-section-header">
               Quick Actions
@@ -153,6 +157,62 @@ const AppHeaderDropdown = ({
             )}
           </>
         )}
+        {canShowMyRecords && (
+          <>
+            <CDropdownHeader className="fw-semibold mt-1 mb-1 app-header-dropdown-section-header">
+              My Records
+            </CDropdownHeader>
+            {canClaimAction && (
+              <CDropdownItem
+                as="button"
+                type="button"
+                onClick={() => goTo('/payroll')}
+                className="py-2"
+              >
+                <WalletCards size={16} className="me-2" />
+                Payroll records
+              </CDropdownItem>
+            )}
+            {canLeave && (
+              <CDropdownItem
+                as="button"
+                type="button"
+                onClick={() => goTo('/leave')}
+                className="py-2"
+              >
+                <CalendarDays size={16} className="me-2" />
+                Leave records
+              </CDropdownItem>
+            )}
+            {canOvertimeAction && (
+              <CDropdownItem
+                as="button"
+                type="button"
+                onClick={() => goTo('/overtime')}
+                className="py-2"
+              >
+                <Clock3 size={16} className="me-2" />
+                Overtime records
+              </CDropdownItem>
+            )}
+          </>
+        )}
+        <CDropdownHeader className="fw-semibold mt-1 mb-1 app-header-dropdown-section-header">
+          Account
+        </CDropdownHeader>
+        <CDropdownItem as="button" type="button" onClick={() => goTo('/profile')} className="py-2">
+          <User size={16} className="me-2" />
+          Profile
+        </CDropdownItem>
+        <CDropdownItem
+          as="button"
+          type="button"
+          onClick={() => goTo('/profile/security')}
+          className="py-2"
+        >
+          <Settings size={16} className="me-2" />
+          Settings
+        </CDropdownItem>
         <CDropdownHeader className="fw-semibold mt-1 mb-1 app-header-dropdown-section-header">
           Session
         </CDropdownHeader>

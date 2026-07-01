@@ -5,12 +5,18 @@ const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 const UserManagement = React.lazy(() => import('./views/users/UserManagement'))
 const UserProfile = React.lazy(() => import('./views/users/UserProfile'))
 const AuditLogs = React.lazy(() => import('./views/audit/AuditLogs'))
+const AiHelperReports = React.lazy(() => import('./views/admin/AiHelperReports'))
+const FeedbackReports = React.lazy(() => import('./views/admin/FeedbackReports'))
+const AiHelperKnowledge = React.lazy(() => import('./views/admin/AiHelperKnowledge'))
 const Profile = React.lazy(() => import('./views/profile/Profile'))
 const Payroll = React.lazy(() => import('./views/payroll/Payroll'))
 const Leave = React.lazy(() => import('./views/leave/Leave'))
 const Overtime = React.lazy(() => import('./views/overtime/Overtime'))
 const Reports = React.lazy(() => import('./views/report/Reports'))
 const Inspection = React.lazy(() => import('./views/inspection/InspectionPage'))
+const ReportingWorkflowSettings = React.lazy(
+  () => import('./views/settings/ReportingWorkflowSettings'),
+)
 const StaffDetails = React.lazy(() => import('./views/staff/StaffDetails'))
 const LeaveManagement = React.lazy(() => import('./views/staff/LeaveManagement'))
 const OvertimeManagement = React.lazy(() => import('./views/staff/OvertimeManagement'))
@@ -227,6 +233,9 @@ const routes = [
   { path: '/admin/users/:id/:slug', name: 'User Profile', element: UserProfile },
   { path: '/admin/users/:id', name: 'User Profile', element: UserProfile },
   { path: '/admin/audit', name: 'Audit', element: AuditLogs },
+  { path: '/admin/ai-helper-reports', name: 'Ask AI Reports', element: AiHelperReports },
+  { path: '/admin/feedback-reports', name: 'Feedback Reports', element: FeedbackReports },
+  { path: '/admin/ai-helper-knowledge', name: 'Ask AI Knowledge', element: AiHelperKnowledge },
   { path: '/profile', name: 'Profile', element: Profile },
   { path: '/profile/security', name: 'Security', element: Profile },
   { path: '/payroll', name: 'Payroll', element: Payroll, module: 'payroll.self_service' },
@@ -273,6 +282,20 @@ const routes = [
   { path: '/inspection/review', name: 'Inspection Review', element: Inspection },
   { path: '/inspection/:reportId/edit', name: 'Inspection Edit', element: Inspection },
   { path: '/inspection/:reportId', name: 'Inspection Detail', element: Inspection },
+  {
+    path: '/reporting-settings',
+    element: () => <Navigate to="/reporting-settings/inspection" replace />,
+  },
+  {
+    path: '/reporting-settings/:moduleKey',
+    name: 'Reporting Settings',
+    element: ReportingWorkflowSettings,
+  },
+  {
+    path: '/inspection/workflow-settings',
+    name: 'Inspection Workflow Settings',
+    element: () => <Navigate to="/reporting-settings/inspection" replace />,
+  },
   {
     path: '/report/inspection',
     element: () => <Navigate to="/inspection" replace />,
@@ -488,6 +511,11 @@ const routes = [
   { path: '/settings/role-permissions', name: 'Role Permissions', element: Settings },
   { path: '/settings/dashboard-visibility', name: 'Dashboard Visibility', element: Settings },
   { path: '/settings/modules', name: 'Module Activation', element: Settings },
+  {
+    path: '/settings/inspection-workflow',
+    name: 'Reporting Settings',
+    element: () => <Navigate to="/reporting-settings/inspection" replace />,
+  },
   {
     path: '/notifications/workflow',
     name: 'Workflow Notifications',

@@ -3,6 +3,7 @@ import React from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import MobileNavSheet from '../MobileNavSheet'
+import { PWA_INSTALL_ACTION } from 'src/constants/pwa'
 
 afterEach(() => cleanup())
 
@@ -12,6 +13,7 @@ const baseProps = {
   onClose: vi.fn(),
   onNavigate: vi.fn(),
   onLogout: vi.fn(),
+  onReportIssue: vi.fn(),
   menuData: [{ name: 'Home', to: '/dashboard' }],
   user: { name: 'Admin', roles: ['Admin'] },
   canClaim: true,
@@ -21,17 +23,57 @@ const baseProps = {
   returnFocusRef: { current: null },
 }
 
-it('renders permission-aware my work shortcuts in the mobile menu', () => {
-  const handleNavigate = vi.fn()
-  render(<MobileNavSheet {...baseProps} onNavigate={handleNavigate} />)
+it('does not render personal self-service shortcuts in the mobile menu', () => {
+  render(<MobileNavSheet {...baseProps} />)
 
-  expect(screen.getByText('My Work')).toBeTruthy()
-  expect(screen.getByRole('button', { name: /Payroll/ })).toBeTruthy()
-  expect(screen.getByRole('button', { name: /Leave/ })).toBeTruthy()
+  expect(screen.queryByText('My Work')).toBeNull()
+  expect(screen.queryByRole('button', { name: /Payroll/ })).toBeNull()
+  expect(screen.queryByRole('button', { name: /Leave/ })).toBeNull()
   expect(screen.queryByRole('button', { name: /Overtime/ })).toBeNull()
+  expect(screen.getByRole('button', { name: /Home/ })).toBeTruthy()
+})
 
-  fireEvent.click(screen.getByRole('button', { name: /Payroll/ }))
+it('renders quick actions before my records in the mobile account sheet', () => {
+  const handleNavigate = vi.fn()
+  render(
+    <MobileNavSheet
+      {...baseProps}
+      mode="account"
+      canOvertime={false}
+      onNavigate={handleNavigate}
+    />,
+  )
+
+  const quickActions = screen.getByText('Quick Actions').closest('.mobile-overlay-section')
+  const myRecords = screen.getByText('My Records').closest('.mobile-overlay-section')
+  expect(screen.getByRole('dialog', { name: 'Account' })).toBeTruthy()
+  const account = screen
+    .getAllByText('Account')
+    .map((element) => element.closest('.mobile-overlay-section'))
+    .find(Boolean)
+  const session = screen.getByText('Session').closest('.mobile-overlay-section')
+
+  expect(quickActions.compareDocumentPosition(myRecords)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+  expect(myRecords.compareDocumentPosition(account)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+  expect(account.compareDocumentPosition(session)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+
+  expect(screen.getByRole('button', { name: /New Claim/ })).toBeTruthy()
+  expect(screen.getByRole('button', { name: /Apply Leave/ })).toBeTruthy()
+  expect(screen.getByRole('button', { name: /Payroll records/ })).toBeTruthy()
+  expect(screen.getByRole('button', { name: /Leave records/ })).toBeTruthy()
+  expect(screen.queryByRole('button', { name: /Overtime records/ })).toBeNull()
+  expect(screen.queryByRole('button', { name: /Messages/ })).toBeNull()
+
+  fireEvent.click(screen.getByRole('button', { name: /Payroll records/ }))
   expect(handleNavigate).toHaveBeenCalledWith({ to: '/payroll' })
+})
+
+it('renders report issue action in the mobile account sheet', () => {
+  const onReportIssue = vi.fn()
+  render(<MobileNavSheet {...baseProps} mode="account" onReportIssue={onReportIssue} />)
+
+  fireEvent.click(screen.getByRole('button', { name: /Report issue/ }))
+  expect(onReportIssue).toHaveBeenCalledTimes(1)
 })
 
 it('restores focus to the trigger when the sheet closes', async () => {
@@ -68,4 +110,20 @@ it('uses Escape to leave a submenu before closing the sheet', async () => {
 
   fireEvent.keyDown(document, { key: 'Escape' })
   expect(handleClose).toHaveBeenCalledTimes(1)
+})
+
+it('passes install action items through the mobile menu', () => {
+  const handleNavigate = vi.fn()
+  render(
+    <MobileNavSheet
+      {...baseProps}
+      onNavigate={handleNavigate}
+      menuData={[{ name: 'Install VMECC', action: PWA_INSTALL_ACTION }]}
+    />,
+  )
+
+  fireEvent.click(screen.getByRole('button', { name: /Install VMECC/ }))
+  expect(handleNavigate).toHaveBeenCalledWith(
+    expect.objectContaining({ name: 'Install VMECC', action: PWA_INSTALL_ACTION }),
+  )
 })

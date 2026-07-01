@@ -64,7 +64,7 @@ const AssignmentCreateModal = ({
   return (
     <CModal visible={visible} onClose={onClose} alignment="center">
       <CModalHeader>Assign Entitlement</CModalHeader>
-      <CModalBody>
+      <CModalBody data-tour-id={visible ? 'leave-management-assignment-form' : undefined}>
         <CRow className="g-3">
           <CCol md={6}>
             <CFormLabel htmlFor="assignment-staff">Staff</CFormLabel>
@@ -137,7 +137,10 @@ const AssignmentCreateModal = ({
           </div>
         )}
 
-        <div className="rounded-3 border bg-light p-3 mt-3">
+        <div
+          className="rounded-3 border bg-light p-3 mt-3"
+          data-tour-id="leave-management-assignment-activity"
+        >
           <div className="fw-semibold mb-2">Assignment Activity</div>
           {!selectedStaff ? (
             <div className="small text-body-secondary">Select a staff member to view activity.</div>
@@ -166,7 +169,12 @@ const AssignmentCreateModal = ({
         </div>
       )}
       <CModalFooter>
-        <CButton color="light" onClick={onClose} disabled={isSaving}>
+        <CButton
+          color="light"
+          onClick={onClose}
+          disabled={isSaving}
+          data-tour-id={visible ? 'leave-management-assignment-form-close-action' : undefined}
+        >
           Cancel
         </CButton>
         <CButton color="primary" onClick={onSave} disabled={!selectedStaff || isSaving}>

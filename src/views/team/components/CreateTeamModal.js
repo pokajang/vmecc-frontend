@@ -97,14 +97,14 @@ const CreateTeamModal = ({ visible, onClose, onSaved, existingTeams = [] }) => {
       <CModalHeader>
         <CModalTitle>Add Teams</CModalTitle>
       </CModalHeader>
-      <CModalBody className="d-grid gap-3">
+      <CModalBody className="d-grid gap-3" data-tour-id="team-directory-create-modal">
         {error && (
           <CAlert color="danger" className="mb-0">
             {error}
           </CAlert>
         )}
 
-        <div>
+        <div data-tour-id="team-directory-create-defaults">
           <div className="text-body-secondary small mb-2">Default teams</div>
           <div className="d-grid gap-2">
             {DEFAULT_TEAMS.map((name) => {
@@ -130,7 +130,7 @@ const CreateTeamModal = ({ visible, onClose, onSaved, existingTeams = [] }) => {
           </div>
         </div>
 
-        <div>
+        <div data-tour-id="team-directory-create-custom">
           <div className="text-body-secondary small mb-2">Custom teams</div>
           <div className="d-flex gap-2 mb-2">
             <CFormInput

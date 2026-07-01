@@ -76,12 +76,41 @@ describe('UI debt shared primitives', () => {
     expect(handleOpen).toHaveBeenCalledTimes(2)
   })
 
+  it('renders field-rich mobile records as list-group rows', () => {
+    render(
+      <MobileRecordList
+        variant="list-group"
+        sections={[
+          {
+            key: 'records',
+            items: [
+              {
+                key: 'REC-1',
+                title: 'REC-1',
+                subtitle: 'Detailed record',
+                fields: [
+                  { key: 'status', label: 'Status', value: 'Pending' },
+                  { key: 'amount', label: 'Amount', value: 'RM 10.00' },
+                ],
+              },
+            ],
+          },
+        ]}
+      />,
+    )
+
+    expect(document.querySelector('.list-group')).toBeTruthy()
+    expect(document.querySelectorAll('.list-group-item')).toHaveLength(1)
+    expect(screen.getByText('RM 10.00')).toBeTruthy()
+  })
+
   it('keeps record card action slots separate from the open region', () => {
     const handleOpen = vi.fn()
     const handleAction = vi.fn()
 
     render(
       <RecordCard
+        variant="list-group"
         item={{
           key: 'REC-1',
           title: 'REC-1',
@@ -99,6 +128,62 @@ describe('UI debt shared primitives', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
     expect(handleAction).toHaveBeenCalledTimes(1)
     expect(handleOpen).not.toHaveBeenCalled()
+  })
+
+  it('toggles expandable list-group rows by pointer and keyboard without action leakage', () => {
+    const handleToggle = vi.fn()
+    const handleAction = vi.fn()
+
+    const { rerender } = render(
+      <RecordCard
+        variant="list-group"
+        item={{
+          key: 'REC-1',
+          title: 'REC-1',
+          ariaLabel: 'Toggle record REC-1 details',
+          expanded: false,
+          onToggle: handleToggle,
+          expandedContent: <div>Expanded details</div>,
+          actions: (
+            <button type="button" onClick={handleAction}>
+              Download
+            </button>
+          ),
+        }}
+      />,
+    )
+
+    const row = screen.getByRole('button', { name: 'Toggle record REC-1 details' })
+    expect(row.getAttribute('aria-expanded')).toBe('false')
+
+    fireEvent.click(row)
+    fireEvent.keyDown(row, { key: 'Enter' })
+    fireEvent.keyDown(row, { key: ' ' })
+    expect(handleToggle).toHaveBeenCalledTimes(3)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Download' }))
+    expect(handleAction).toHaveBeenCalledTimes(1)
+    expect(handleToggle).toHaveBeenCalledTimes(3)
+
+    rerender(
+      <RecordCard
+        variant="list-group"
+        item={{
+          key: 'REC-1',
+          title: 'REC-1',
+          ariaLabel: 'Toggle record REC-1 details',
+          expanded: true,
+          onToggle: handleToggle,
+          expandedContent: <div>Expanded details</div>,
+        }}
+      />,
+    )
+    expect(
+      screen
+        .getByRole('button', { name: 'Toggle record REC-1 details' })
+        .getAttribute('aria-expanded'),
+    ).toBe('true')
+    expect(screen.getByText('Expanded details')).toBeTruthy()
   })
 
   it('stops row action cell events from opening the parent row', () => {
@@ -153,6 +238,7 @@ describe('UI debt shared primitives', () => {
             items: [{ key: 'REC-1', title: 'REC-1' }],
           },
         ]}
+        mobileVariant="list-group"
         renderDesktop={<div className="d-none d-md-block">Desktop table</div>}
         footer={<div>10 total records</div>}
       >
@@ -164,6 +250,7 @@ describe('UI debt shared primitives', () => {
     expect(screen.getByText('REC-1')).toBeTruthy()
     expect(screen.getByText('Desktop table')).toBeTruthy()
     expect(screen.getByText('10 total records')).toBeTruthy()
+    expect(document.querySelector('.list-group')).toBeTruthy()
   })
 
   it('renders leading form actions before primary actions in the split action row', () => {
@@ -180,6 +267,31 @@ describe('UI debt shared primitives', () => {
         .getAllByRole('button')
         .map((button) => button.textContent),
     ).toEqual(['Back', 'Save'])
+  })
+
+  it('renders compact sticky form actions with a mobile status message', () => {
+    render(
+      <FormActionGroup
+        leading={<button type="button">Reset</button>}
+        mobileVariant="compact-sticky"
+        statusMessage="Saved locally. Keep browser data to recover later."
+      >
+        <button type="button">Save Draft</button>
+        <button type="button">Save & Review</button>
+      </FormActionGroup>,
+    )
+
+    const group = screen.getByRole('group', { name: 'Form actions' })
+    expect(group.className).toContain('action-row-thumb--compact-sticky')
+    expect(group.className).toContain('action-row-thumb--has-leading')
+    expect(screen.getByText('Saved locally. Keep browser data to recover later.')).toBeTruthy()
+    expect(document.querySelector('.action-row-thumb-spacer--compact')).toBeTruthy()
+    expect(document.querySelector('.action-row-thumb-spacer--compact-with-leading')).toBeTruthy()
+    expect(
+      within(group)
+        .getAllByRole('button')
+        .map((button) => button.textContent),
+    ).toEqual(['Reset', 'Save Draft', 'Save & Review'])
   })
 
   it('keeps search inline while exposing structured filters through a mobile drawer trigger', () => {
@@ -212,8 +324,9 @@ describe('UI debt shared primitives', () => {
 
     const openFiltersButton = screen.getByRole('button', { name: 'Open filters' })
     expect(openFiltersButton.textContent).toContain('2')
-    expect(openFiltersButton.style.width).toBe('44px')
-    expect(openFiltersButton.style.height).toBe('44px')
+    const expectedTriggerSizes = ['calc(1.5em + 0.75rem + 2px)', 'calc(1.5em + 2px + 0.75rem)']
+    expect(expectedTriggerSizes).toContain(openFiltersButton.style.width)
+    expect(expectedTriggerSizes).toContain(openFiltersButton.style.height)
     expect(screen.getByText('Active filters:')).toBeTruthy()
     expect(screen.getAllByText('Last 30 days').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Approved').length).toBeGreaterThan(0)
@@ -461,6 +574,7 @@ describe('UI debt shared primitives', () => {
     expect(deleteAction.getAttribute('aria-disabled')).toBe('true')
     expect(deleteAction.getAttribute('aria-label')).toBe(`Delete. ${disabledReason}`)
     expect(deleteAction.getAttribute('title')).toBe(disabledReason)
+    expect(deleteAction.textContent).toBe('Delete')
     expect(deleteAction.className).not.toContain('disabled')
     expect(deleteAction.getAttribute('tabindex')).toBe('0')
 

@@ -1,7 +1,7 @@
 import React from 'react'
 import RecordCard from './RecordCard'
 
-const MobileRecordList = ({ sections = [], emptyMessage = null }) => {
+const MobileRecordList = ({ sections = [], emptyMessage = null, variant = 'card' }) => {
   const visibleSections = sections
     .map((section) => ({
       ...section,
@@ -14,7 +14,12 @@ const MobileRecordList = ({ sections = [], emptyMessage = null }) => {
   return (
     <div className="d-md-none d-grid gap-3">
       {visibleSections.map((section) => (
-        <section key={section.key || section.label || 'records'} className="d-grid gap-2">
+        <section
+          key={section.key || section.label || 'records'}
+          className={
+            section.variant === 'list-group' || variant === 'list-group' ? '' : 'd-grid gap-2'
+          }
+        >
           {section.label ? (
             <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 small text-body-secondary text-uppercase fw-semibold">
               <span>{section.label}</span>
@@ -23,9 +28,15 @@ const MobileRecordList = ({ sections = [], emptyMessage = null }) => {
               ) : null}
             </div>
           ) : null}
-          {section.items.map((item) => (
-            <RecordCard key={item.key} item={item} />
-          ))}
+          {section.variant === 'list-group' || variant === 'list-group' ? (
+            <div className="list-group overflow-hidden border rounded-3">
+              {section.items.map((item) => (
+                <RecordCard key={item.key} item={item} variant="list-group" />
+              ))}
+            </div>
+          ) : (
+            section.items.map((item) => <RecordCard key={item.key} item={item} />)
+          )}
         </section>
       ))}
     </div>

@@ -1,6 +1,10 @@
 import { apiRequest, buildApiUrl, fetchWithCsrfRetry } from 'src/services/apiClient'
 import featureFlags from 'src/config/featureFlags'
-import { loadInspectionRecords, saveInspectionRecords } from './inspectionStorage'
+import {
+  loadAllInspectionRecords,
+  loadInspectionRecords,
+  saveInspectionRecords,
+} from './inspectionStorage'
 import { normalizeInspectionTypeSlug, normalizeReportRecords } from './inspectionSharedUtils'
 import { WORKFLOW_SESSION_KEY } from './workflowSession'
 
@@ -48,20 +52,78 @@ const toPayload = (row) => {
   delete safe.updatedAt
   delete safe.recordKind
   delete safe.reportType
+  delete safe.submissionKey
+  delete safe.idempotentReplay
+  delete safe.idempotent_replay
+  delete safe.queueId
+  delete safe.queueStatus
+  delete safe.queuedAt
+  delete safe.sourceReportUid
+  delete safe.operation
+  delete safe.baseVersion
+  delete safe.baseRevision
+  delete safe.baseServerSnapshot
+  delete safe.conflictServerSnapshot
+  delete safe.conflictDetectedAt
+  delete safe.resolutionStatus
+  delete safe.lastAttemptAt
+  delete safe.nextRetryAt
+  delete safe.lastError
+  delete safe.history
+  delete safe.attempts
   return safe
 }
 
 export const isInspectionApiEnabled = () => INSPECTION_API_ENABLED
 
-export const fetchInspectionRecords = async () => {
+export const fetchInspectionRecords = async ({ scope = 'mine' } = {}) => {
   assertInspectionPersistenceAvailable()
   if (!INSPECTION_API_ENABLED) return []
-  const response = await apiRequest(`/reports?reportType=${encodeURIComponent(INSPECTION_TYPE)}`)
+  const params = new URLSearchParams({ reportType: INSPECTION_TYPE })
+  if (
+    String(scope || '')
+      .trim()
+      .toLowerCase() === 'all'
+  )
+    params.set('scope', 'all')
+  const response = await apiRequest(`/reports?${params.toString()}`)
   const rows = normalizeReportRecords(Array.isArray(response?.data) ? response.data : [])
   return rows.filter((row) => normalizeInspectionTypeSlug(row?.reportType) === INSPECTION_TYPE)
 }
 
-const upsertInspectionRecordToApi = async (row) => {
+export const fetchInspectionChecklistSummary = async (filters = {}) => {
+  assertInspectionPersistenceAvailable()
+  if (!INSPECTION_API_ENABLED) {
+    return {
+      totalReports: 0,
+      withChecklist: 0,
+      withoutChecklist: 0,
+      items: [],
+    }
+  }
+  const params = new URLSearchParams()
+  Object.entries(filters || {}).forEach(([key, value]) => {
+    const next = String(value ?? '').trim()
+    if (next && next !== 'All') params.set(key, next)
+  })
+  const path = `/reports/inspection/checklist-summary${params.toString() ? `?${params.toString()}` : ''}`
+  const response = await apiRequest(path)
+  return (
+    response?.data || {
+      totalReports: 0,
+      withChecklist: 0,
+      withoutChecklist: 0,
+      items: [],
+    }
+  )
+}
+
+export const loadInspectionRecordsForScope = ({ userId, scope = 'mine' }) => {
+  if (scope === 'all') return loadAllInspectionRecords()
+  return loadInspectionRecords(userId)
+}
+
+const upsertInspectionRecordToApi = async (row, { submissionKey = '', expectedVersion } = {}) => {
   if (
     !row ||
     row?.recordKind === 'draft' ||
@@ -79,6 +141,9 @@ const upsertInspectionRecordToApi = async (row) => {
     report_type: INSPECTION_TYPE,
     payload: toPayload(row),
     status: toApiStatus(row?.status),
+    ...(String(submissionKey || row?.submissionKey || '').trim()
+      ? { submission_key: String(submissionKey || row?.submissionKey || '').trim() }
+      : {}),
   }
 
   if (!latest) {
@@ -96,7 +161,7 @@ const upsertInspectionRecordToApi = async (row) => {
     method: 'PUT',
     body: JSON.stringify({
       ...body,
-      version: Number(latest?.version || row?.version || 1),
+      version: Number(expectedVersion || latest?.version || row?.version || 1),
     }),
   })
   return true
@@ -129,7 +194,7 @@ export const persistInspectionRecords = async (userId, rows) => {
   return true
 }
 
-export const persistInspectionRecord = async (userId, row) => {
+export const persistInspectionRecord = async (userId, row, options = {}) => {
   if (!userId || !row) return false
   assertInspectionPersistenceAvailable()
   const safeRow = stripInspectionWorkflowMetadata(row)
@@ -140,7 +205,7 @@ export const persistInspectionRecord = async (userId, row) => {
       ...existingRows.filter((item) => String(item?.id || '') !== String(safeRow?.id || '')),
     ])
   }
-  await upsertInspectionRecordToApi(safeRow)
+  await upsertInspectionRecordToApi(safeRow, options)
   return true
 }
 

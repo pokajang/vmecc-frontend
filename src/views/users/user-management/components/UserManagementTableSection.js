@@ -95,7 +95,7 @@ const UserManagementTableSection = ({
   ]
 
   return (
-    <>
+    <div data-tour-id="users-list">
       {selectedCount > 0 && (
         <UserBulkActionsBar
           selectedCount={selectedCount}
@@ -108,55 +108,57 @@ const UserManagementTableSection = ({
         />
       )}
 
-      <TableFilters
-        searchValue={search}
-        onSearchChange={onSearchChange}
-        searchPlaceholder="Search name or email"
-        rowClassName="flex-md-nowrap align-items-md-end"
-        searchColMd={3}
-        periodColMd={2}
-        filterColMd={2}
-        clearColMd="auto"
-        periodValue={period}
-        onPeriodChange={onPeriodChange}
-        filters={[
-          {
-            key: 'sort',
-            label: 'Sort',
-            value: `${sort.field}:${sort.dir}`,
-            onChange: (value) => {
-              const [field, dir] = value.split(':')
-              if (!field || !dir) return
-              setSort({ field, dir })
+      <div data-tour-id="users-filters">
+        <TableFilters
+          searchValue={search}
+          onSearchChange={onSearchChange}
+          searchPlaceholder="Search name or email"
+          rowClassName="flex-md-nowrap align-items-md-end"
+          searchColMd={3}
+          periodColMd={2}
+          filterColMd={2}
+          clearColMd="auto"
+          periodValue={period}
+          onPeriodChange={onPeriodChange}
+          filters={[
+            {
+              key: 'sort',
+              label: 'Sort',
+              value: `${sort.field}:${sort.dir}`,
+              onChange: (value) => {
+                const [field, dir] = value.split(':')
+                if (!field || !dir) return
+                setSort({ field, dir })
+              },
+              options: sortOptions,
             },
-            options: sortOptions,
-          },
-          {
-            key: 'role',
-            label: 'Role',
-            value: roleFilter,
-            onChange: setRoleFilter,
-            options: [
-              { value: 'All', label: 'All roles' },
-              ...roles.map((r) => ({ value: r, label: r })),
-            ],
-          },
-          {
-            key: 'status',
-            label: 'Status',
-            value: statusFilter,
-            onChange: setStatusFilter,
-            options: [
-              { value: 'All', label: 'All status' },
-              { value: 'Active', label: 'Active' },
-              { value: 'Inactive', label: 'Inactive' },
-              { value: 'Deleted', label: 'Deleted' },
-            ],
-          },
-        ]}
-        onClear={onClearFilters}
-        showDesktopLabels
-      />
+            {
+              key: 'role',
+              label: 'Role',
+              value: roleFilter,
+              onChange: setRoleFilter,
+              options: [
+                { value: 'All', label: 'All roles' },
+                ...roles.map((r) => ({ value: r, label: r })),
+              ],
+            },
+            {
+              key: 'status',
+              label: 'Status',
+              value: statusFilter,
+              onChange: setStatusFilter,
+              options: [
+                { value: 'All', label: 'All status' },
+                { value: 'Active', label: 'Active' },
+                { value: 'Inactive', label: 'Inactive' },
+                { value: 'Deleted', label: 'Deleted' },
+              ],
+            },
+          ]}
+          onClear={onClearFilters}
+          showDesktopLabels
+        />
+      </div>
 
       {error && <CAlert color="danger">{error}</CAlert>}
 
@@ -168,6 +170,7 @@ const UserManagementTableSection = ({
             <div className="text-body-secondary">No users match the current filters.</div>
           }
           mobileSections={mobileUserSections}
+          mobileVariant="list-group"
           renderDesktop={() => (
             <div className="d-none d-md-block">
               <UserListTable
@@ -201,7 +204,7 @@ const UserManagementTableSection = ({
           }
         />
       )}
-    </>
+    </div>
   )
 }
 

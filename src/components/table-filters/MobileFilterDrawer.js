@@ -27,7 +27,7 @@ const MobileFilterDrawer = ({
     placement="bottom"
     className="table-filter-drawer d-md-none"
   >
-    <COffcanvasHeader>
+    <COffcanvasHeader className="table-filter-drawer__header d-flex align-items-center justify-content-between">
       <COffcanvasTitle>Filters</COffcanvasTitle>
       <CButton
         ref={closeRef}
@@ -39,8 +39,8 @@ const MobileFilterDrawer = ({
         <X size={18} />
       </CButton>
     </COffcanvasHeader>
-    <COffcanvasBody>
-      <div className="d-grid gap-3">
+    <COffcanvasBody className="table-filter-drawer__body">
+      <div className="table-filter-drawer__controls d-grid">
         {renderPeriodControl({ mobile: true })}
         {filters.map((filter) => renderFilterControl(filter, { mobile: true }))}
         {isAnyFilterActive ? (

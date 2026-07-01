@@ -221,10 +221,23 @@ const Payroll = () => {
       approvedDateLabel,
       onDownloadClaim: downloadClaimPackage,
       onEditClaim: editSubmittedClaim,
+      onCancelClaim: cancelClaim,
+      onDeleteClaim: deleteClaim,
+      canCancelClaim:
+        Boolean(selectedClaim) &&
+        !Boolean(selectedClaim?.isDraft) &&
+        !['Approved', 'Paid', 'Rejected', 'Cancelled'].includes(
+          String(selectedClaim?.status || '').trim(),
+        ),
+      canDeleteClaim:
+        Boolean(selectedClaim?.isDraft) ||
+        String(selectedClaim?.status || '').trim() === 'Cancelled',
     }),
     [
       approvedDateLabel,
+      cancelClaim,
       canEditSubmittedClaim,
+      deleteClaim,
       downloadClaimPackage,
       editSubmittedClaim,
       lastUpdatedByLabel,
@@ -246,22 +259,30 @@ const Payroll = () => {
   }
 
   return (
-    <CContainer fluid>
+    <CContainer fluid data-tour-id="payroll-module">
       <ModulePageHeader
         title="Payroll"
         subtitle="Review claim records, payslips, and submit new salary or expense claims."
         actions={
           activeSection.startsWith('new-claim') ? null : (
-            <CreateActionButton
-              label="Apply Claim"
-              importance="primary"
-              onClick={() => navigate('/payroll/claims/new')}
-              icon={<Plus size={15} className="me-1 align-text-bottom" />}
-            />
+            <div data-tour-id={activeSection === 'claims' ? 'payroll-new-claim-action' : undefined}>
+              <CreateActionButton
+                label="Apply Claim"
+                importance="primary"
+                onClick={() => navigate('/payroll/claims/new')}
+                icon={<Plus size={15} className="me-1 align-text-bottom" />}
+              />
+            </div>
           )
         }
       />
-      <PayrollNav activeSection={activeSection} onNavigate={navigate} />
+      <div
+        data-tour-id={
+          activeSection === 'claims' || activeSection === 'payslips' ? 'payroll-nav' : undefined
+        }
+      >
+        <PayrollNav activeSection={activeSection} onNavigate={navigate} />
+      </div>
       <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
       <ClaimActionModals
         cancelModalVisible={cancelModalVisible}

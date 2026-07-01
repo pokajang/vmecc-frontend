@@ -43,33 +43,12 @@ beforeEach(() => {
 })
 
 describe('Login remember me', () => {
-  it('defaults unchecked and sends remember false for password login', async () => {
+  it('defaults checked and sends remember true for password login', async () => {
     renderLogin()
 
     const remember = screen.getByRole('checkbox', { name: /remember me/i })
-    expect(remember.checked).toBe(false)
+    expect(remember.checked).toBe(true)
 
-    fireEvent.change(screen.getByPlaceholderText('Email'), {
-      target: { value: 'user@example.test' },
-    })
-    fireEvent.change(screen.getByPlaceholderText('Password'), {
-      target: { value: 'password' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: /^sign in$/i }))
-
-    await waitFor(() =>
-      expect(loginRequest).toHaveBeenCalledWith({
-        email: 'user@example.test',
-        password: 'password',
-        remember: false,
-      }),
-    )
-  })
-
-  it('sends remember true for password and Google login when checked', async () => {
-    renderLogin()
-
-    fireEvent.click(screen.getByRole('checkbox', { name: /remember me/i }))
     fireEvent.change(screen.getByPlaceholderText('Email'), {
       target: { value: 'user@example.test' },
     })
@@ -85,6 +64,27 @@ describe('Login remember me', () => {
         remember: true,
       }),
     )
+  })
+
+  it('allows remember opt-out for password and Google login', async () => {
+    renderLogin()
+
+    fireEvent.click(screen.getByRole('checkbox', { name: /remember me/i }))
+    fireEvent.change(screen.getByPlaceholderText('Email'), {
+      target: { value: 'user@example.test' },
+    })
+    fireEvent.change(screen.getByPlaceholderText('Password'), {
+      target: { value: 'password' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /^sign in$/i }))
+
+    await waitFor(() =>
+      expect(loginRequest).toHaveBeenCalledWith({
+        email: 'user@example.test',
+        password: 'password',
+        remember: false,
+      }),
+    )
 
     cleanup()
     renderLogin()
@@ -92,6 +92,6 @@ describe('Login remember me', () => {
     fireEvent.click(screen.getByRole('checkbox', { name: /remember me/i }))
     fireEvent.click(screen.getByRole('button', { name: /continue with google/i }))
 
-    await waitFor(() => expect(fetchGoogleAuthUrl).toHaveBeenCalledWith({ remember: true }))
+    await waitFor(() => expect(fetchGoogleAuthUrl).toHaveBeenCalledWith({ remember: false }))
   })
 })

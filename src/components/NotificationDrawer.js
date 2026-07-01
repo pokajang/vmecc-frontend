@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
 import useFocusTrap from 'src/hooks/useFocusTrap'
+import useMediaQuery from 'src/hooks/useMediaQuery'
+import MobileOverlayShell from 'src/components/header/MobileOverlayShell'
 
 const NotificationDrawer = ({
   open,
@@ -14,9 +16,10 @@ const NotificationDrawer = ({
 }) => {
   const panelRef = useRef(null)
   const closeButtonRef = useRef(null)
+  const isMobileOverlay = useMediaQuery('(max-width: 767.98px)')
 
   useFocusTrap({
-    enabled: open,
+    enabled: open && !isMobileOverlay,
     containerRef: panelRef,
     initialFocusRef: initialFocusRef || closeButtonRef,
     returnFocusRef,
@@ -24,11 +27,29 @@ const NotificationDrawer = ({
   })
 
   useEffect(() => {
+    if (isMobileOverlay) return undefined
+
     document.body.style.overflow = open ? 'hidden' : ''
     return () => {
       document.body.style.overflow = ''
     }
-  }, [open])
+  }, [isMobileOverlay, open])
+
+  if (isMobileOverlay) {
+    return (
+      <MobileOverlayShell
+        open={open}
+        title={title}
+        count={count}
+        onClose={onClose}
+        returnFocusRef={returnFocusRef}
+        className="mobile-notification-sheet"
+        bodyClassName="notification-drawer-body mobile-notification-sheet-body"
+      >
+        {children}
+      </MobileOverlayShell>
+    )
+  }
 
   return (
     <>

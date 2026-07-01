@@ -9,27 +9,41 @@ import {
   CBadge,
   CNavLink,
   CNavItem,
+  CToast,
+  CToastBody,
+  CToastHeader,
+  CToaster,
+  CTooltip,
 } from '@coreui/react'
-import { Bell, MessageSquareText, Menu, User } from 'lucide-react'
+import { Bell, BookOpen, Flag, MessageSquareText, Menu, Sparkles, User } from 'lucide-react'
 
 import { AppHeaderDropdown } from './header/index'
+import FeedbackReportModal from './header/FeedbackReportModal'
 import MobileNavSheet from './header/MobileNavSheet'
 import NotificationDrawer from './NotificationDrawer'
 import WorkflowNotifications from 'src/views/notifications/workflow/WorkflowNotifications'
 import ErrorBoundary from './ErrorBoundary'
+import TutorialHubModal from 'src/components/onboarding/TutorialHubModal'
 import useWorkflowNotificationCounts from 'src/hooks/useWorkflowNotificationCounts'
 import useMessageUnreadCount from 'src/hooks/useMessageUnreadCount'
 import useOnDutyTeam from 'src/hooks/useOnDutyTeam'
-import useOvertimeEligibility from 'src/hooks/useOvertimeEligibility'
-import { logoutRequest } from 'src/services/apiClient'
+import useMediaQuery from 'src/hooks/useMediaQuery'
+import usePwaInstallPrompt from 'src/hooks/usePwaInstallPrompt'
+import { createFeedbackReport, logoutRequest } from 'src/services/apiClient'
 import { getVisibleNavigationWithOptions } from 'src/utils/navigation'
-import { hasPermission, isSystemAdministrator } from 'src/utils/authz'
+import { hasAnyPermission, hasPermission, isSystemAdministrator } from 'src/utils/authz'
 import { isModuleEnabled } from 'src/utils/modules'
 import navigation from 'src/_nav'
 import { useGuardedNavigate } from 'src/contexts/NavigationGuardContext'
+import { getVisibleTutorialHubItems } from 'src/onboarding/tutorialRegistry'
+import useOnboardingVisibilityOptions from 'src/onboarding/useOnboardingVisibilityOptions'
+import { PWA_INSTALL_ACTION } from 'src/constants/pwa'
+
+const HEADER_TOOLTIP_TRIGGER = ['hover']
 
 const AppHeader = () => {
   const headerRef = useRef()
+  const toaster = useRef()
   const menuTriggerRef = useRef(null)
   const accountTriggerRef = useRef(null)
   const returnFocusRef = useRef(null)
@@ -40,46 +54,55 @@ const AppHeader = () => {
   const location = useLocation()
 
   const sidebarShow = useSelector((state) => state.sidebarShow)
+  const aiHelperOpen = useSelector((state) => state.aiHelperOpen)
   const authUser = useSelector((state) => state.authUser)
   const moduleActivation = useSelector((state) => state.moduleActivation)
   const messagesEnabled = isModuleEnabled(moduleActivation, 'messages')
   const payrollEnabled = isModuleEnabled(moduleActivation, 'payroll.self_service')
   const overtimeEnabled = isModuleEnabled(moduleActivation, 'overtime.self_service')
   const rosterEnabled = isModuleEnabled(moduleActivation, 'roster')
+  const canReadRosterStatus = hasAnyPermission(authUser, ['rosters.manage', 'teams.view'])
+  const isDesktop = useMediaQuery('(min-width: 768px)')
+  const { showNavInstallItem, openInstallExperience } = usePwaInstallPrompt()
 
   const unreadCount = useMessageUnreadCount({ enabled: messagesEnabled })
-  const onDuty = useOnDutyTeam({ enabled: rosterEnabled })
+  const onDuty = useOnDutyTeam({ enabled: rosterEnabled && canReadRosterStatus })
   const notifUnread = useWorkflowNotificationCounts()
 
-  const [mobileSheetOpen, setMobileSheetOpen] = useState(false)
+  const [mobileOverlay, setMobileOverlay] = useState(null)
   const [sheetMode, setSheetMode] = useState('menu')
   const [sheetSession, setSheetSession] = useState(0)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
-  const [notifDrawerOpen, setNotifDrawerOpen] = useState(false)
+  const [toast, addToast] = useState(null)
+  const [feedbackModalVisible, setFeedbackModalVisible] = useState(false)
+  const [feedbackMessage, setFeedbackMessage] = useState('')
+  const [feedbackError, setFeedbackError] = useState('')
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false)
 
   const canClaim = payrollEnabled && hasPermission(authUser, 'self.payroll')
   const canLeave = hasPermission(authUser, 'self.leave')
   const canOvertimePermission = hasPermission(authUser, 'self.overtime')
   const isSysAdmin = isSystemAdministrator(authUser)
-  const shouldResolveOvertimeEligibility = canClaim || (overtimeEnabled && canOvertimePermission)
-  const { eligible: overtimeEligible, isResolved: overtimeEligibilityResolved } =
-    useOvertimeEligibility({ enabled: shouldResolveOvertimeEligibility })
+  const onboardingVisibilityOptions = useOnboardingVisibilityOptions()
   const canOvertime = isSysAdmin
     ? overtimeEnabled && canOvertimePermission
-    : overtimeEnabled && canOvertimePermission && overtimeEligibilityResolved && overtimeEligible
-  const overtimeEligibleForMenu = shouldResolveOvertimeEligibility
-    ? isSysAdmin
-      ? true
-      : overtimeEligibilityResolved && overtimeEligible
-    : null
+    : overtimeEnabled &&
+      canOvertimePermission &&
+      onboardingVisibilityOptions.overtimeEligibilityResolved &&
+      onboardingVisibilityOptions.overtimeEligible
 
   const menuData = useMemo(
     () =>
       getVisibleNavigationWithOptions(navigation, authUser, unreadCount, {
-        overtimeEligible: overtimeEligibleForMenu,
-        moduleActivation,
+        overtimeEligible: onboardingVisibilityOptions.overtimeEligible,
+        moduleActivation: onboardingVisibilityOptions.moduleActivation,
+        showNavInstallItem,
       }),
-    [authUser, moduleActivation, overtimeEligibleForMenu, unreadCount],
+    [authUser, onboardingVisibilityOptions, showNavInstallItem, unreadCount],
+  )
+  const tutorialItems = useMemo(
+    () => getVisibleTutorialHubItems(authUser, onboardingVisibilityOptions),
+    [authUser, onboardingVisibilityOptions],
   )
   useEffect(() => {
     const handleScroll = () => {
@@ -91,31 +114,48 @@ const AppHeader = () => {
   }, [])
 
   useEffect(() => {
-    setMobileSheetOpen(false)
-    setNotifDrawerOpen(false)
+    setMobileOverlay(null)
   }, [location.pathname])
 
   const openMobileSheet = useCallback((mode, triggerRef) => {
     returnFocusRef.current = triggerRef?.current || null
     setSheetMode(mode)
     setSheetSession((prev) => prev + 1)
-    setMobileSheetOpen(true)
+    setMobileOverlay(mode)
   }, [])
 
-  const closeMobileSheet = useCallback(() => setMobileSheetOpen(false), [])
+  const closeMobileOverlay = useCallback(() => setMobileOverlay(null), [])
+
+  const pushToast = useCallback((message, { title = '', color = 'light' } = {}) => {
+    addToast(
+      <CToast autohide delay={4000} color={color}>
+        {title ? (
+          <CToastHeader closeButton>
+            <strong className="me-auto">{title}</strong>
+          </CToastHeader>
+        ) : null}
+        <CToastBody>{message}</CToastBody>
+      </CToast>,
+    )
+  }, [])
 
   const handleSheetNavigate = useCallback(
     (item) => {
       if (!item) return
+      if (item.action === PWA_INSTALL_ACTION) {
+        void openInstallExperience()
+        setMobileOverlay(null)
+        return
+      }
       if (item.href) {
         window.open(item.href, '_blank', 'noopener,noreferrer')
-        setMobileSheetOpen(false)
+        setMobileOverlay(null)
         return
       }
       if (item.to) guardedNavigate(item.to)
-      setMobileSheetOpen(false)
+      setMobileOverlay(null)
     },
-    [guardedNavigate],
+    [guardedNavigate, openInstallExperience],
   )
 
   const handleMobileLogout = useCallback(async () => {
@@ -126,7 +166,7 @@ const AppHeader = () => {
     } catch (err) {
       console.error('Failed to log out', err)
     } finally {
-      setMobileSheetOpen(false)
+      setMobileOverlay(null)
       dispatch({
         type: 'set',
         authStatus: 'anonymous',
@@ -148,11 +188,90 @@ const AppHeader = () => {
   const openNotifDrawer = useCallback((e) => {
     e.preventDefault()
     returnFocusRef.current = e.currentTarget || null
-    setNotifDrawerOpen(true)
+    setMobileOverlay('alerts')
   }, [])
+
+  const openAiHelper = useCallback(() => {
+    setMobileOverlay(null)
+    dispatch({ type: 'set', aiHelperOpen: true, sidebarShow: false })
+  }, [dispatch])
+
+  const openTutorialHub = useCallback((event) => {
+    event?.preventDefault?.()
+    returnFocusRef.current = event?.currentTarget || null
+    event?.currentTarget?.blur?.()
+    setMobileOverlay('tutorial')
+  }, [])
+
+  const closeFeedbackReportModal = useCallback(() => {
+    if (isSubmittingFeedback) return
+    setFeedbackModalVisible(false)
+    setFeedbackMessage('')
+    setFeedbackError('')
+  }, [isSubmittingFeedback])
+
+  const openFeedbackReportModal = useCallback((event) => {
+    event?.preventDefault?.()
+    returnFocusRef.current = event?.currentTarget || null
+    event?.currentTarget?.blur?.()
+    setMobileOverlay(null)
+    setFeedbackError('')
+    setFeedbackModalVisible(true)
+  }, [])
+
+  const handleFeedbackSubmit = useCallback(async () => {
+    const trimmedMessage = feedbackMessage.trim()
+    if (trimmedMessage.length < 10) {
+      setFeedbackError('Please describe the issue in at least 10 characters.')
+      return
+    }
+
+    setIsSubmittingFeedback(true)
+    setFeedbackError('')
+
+    try {
+      await createFeedbackReport({
+        message: trimmedMessage,
+        page_context: {
+          path: location.pathname || '/',
+          search: location.search || '',
+          title: typeof document !== 'undefined' ? document.title || '' : '',
+        },
+      })
+      setFeedbackModalVisible(false)
+      setFeedbackMessage('')
+      setFeedbackError('')
+      pushToast('Your report has been submitted to system administrators.', {
+        title: 'Report submitted',
+        color: 'success',
+      })
+    } catch (err) {
+      setFeedbackError(err?.payload?.message || err?.message || 'Unable to submit report.')
+    } finally {
+      setIsSubmittingFeedback(false)
+    }
+  }, [feedbackMessage, location.pathname, location.search, pushToast])
 
   const navItems = (
     <>
+      <CNavItem>
+        <CTooltip content="Ask AI" placement="bottom" trigger={HEADER_TOOLTIP_TRIGGER}>
+          <CNavLink
+            as="button"
+            type="button"
+            className={`app-header-ask-ai px-2 border-0 bg-transparent d-inline-flex align-items-center gap-1 ${
+              aiHelperOpen ? 'active' : ''
+            }`}
+            onClick={openAiHelper}
+            aria-label="Ask AI"
+            aria-pressed={aiHelperOpen}
+          >
+            <Sparkles size={16} />
+            <span className="d-none d-lg-inline">Ask AI</span>
+          </CNavLink>
+        </CTooltip>
+      </CNavItem>
+
       {onDuty && (
         <CNavItem className="d-none d-sm-flex align-items-center">
           <NavLink to="/roster/overview" className="text-decoration-none">
@@ -182,32 +301,66 @@ const AppHeader = () => {
       )}
 
       <CNavItem>
-        <CNavLink
-          as="button"
-          type="button"
-          className="px-2 position-relative border-0 bg-transparent"
-          onClick={openNotifDrawer}
-          aria-label="Notifications"
-        >
-          <Bell size={16} />
-          {notifUnread > 0 && (
-            <CBadge color="light" className="header-alert-badge">
-              {notifUnread}
-            </CBadge>
-          )}
-        </CNavLink>
+        <CTooltip content="Tutorial" placement="bottom" trigger={HEADER_TOOLTIP_TRIGGER}>
+          <CNavLink
+            as="button"
+            type="button"
+            className="px-2 border-0 bg-transparent d-inline-flex align-items-center gap-1"
+            onClick={openTutorialHub}
+            aria-label="Open tutorial"
+          >
+            <BookOpen size={16} />
+            <span className="d-none d-lg-inline">Tutorial</span>
+          </CNavLink>
+        </CTooltip>
+      </CNavItem>
+
+      <CNavItem>
+        <CTooltip content="Report issue" placement="bottom" trigger={HEADER_TOOLTIP_TRIGGER}>
+          <CNavLink
+            as="button"
+            type="button"
+            className="px-2 border-0 bg-transparent d-inline-flex align-items-center gap-1"
+            onClick={openFeedbackReportModal}
+            aria-label="Report issue"
+          >
+            <Flag size={16} />
+            <span className="d-none d-lg-inline">Report issue</span>
+          </CNavLink>
+        </CTooltip>
+      </CNavItem>
+
+      <CNavItem>
+        <CTooltip content="Notifications" placement="bottom" trigger={HEADER_TOOLTIP_TRIGGER}>
+          <CNavLink
+            as="button"
+            type="button"
+            className="px-2 position-relative border-0 bg-transparent"
+            onClick={openNotifDrawer}
+            aria-label="Notifications"
+          >
+            <Bell size={16} />
+            {notifUnread > 0 && (
+              <CBadge color="light" className="header-alert-badge">
+                {notifUnread}
+              </CBadge>
+            )}
+          </CNavLink>
+        </CTooltip>
       </CNavItem>
 
       {messagesEnabled && (
         <CNavItem>
-          <CNavLink as={NavLink} to="/messages" className="px-2 position-relative">
-            <MessageSquareText size={16} />
-            {unreadCount > 0 && (
-              <CBadge color="light" className="header-message-badge">
-                {unreadCount}
-              </CBadge>
-            )}
-          </CNavLink>
+          <CTooltip content="Messages" placement="bottom" trigger={HEADER_TOOLTIP_TRIGGER}>
+            <CNavLink as={NavLink} to="/messages" className="px-2 position-relative">
+              <MessageSquareText size={16} />
+              {unreadCount > 0 && (
+                <CBadge color="light" className="header-message-badge">
+                  {unreadCount}
+                </CBadge>
+              )}
+            </CNavLink>
+          </CTooltip>
         </CNavItem>
       )}
     </>
@@ -218,12 +371,24 @@ const AppHeader = () => {
       {/* Desktop header */}
       <CHeader position="sticky" className="mb-2 p-0 d-none d-md-flex" ref={headerRef}>
         <CContainer className="border-bottom px-3 px-md-4" fluid>
-          <CHeaderToggler
-            onClick={() => dispatch({ type: 'set', sidebarShow: !sidebarShow })}
-            aria-label="Toggle sidebar"
-          >
-            <Menu size={16} />
-          </CHeaderToggler>
+          <CTooltip content="Toggle sidebar" placement="bottom" trigger={HEADER_TOOLTIP_TRIGGER}>
+            <CHeaderToggler
+              onClick={() =>
+                dispatch(
+                  aiHelperOpen
+                    ? {
+                        type: 'set',
+                        aiHelperOpen: false,
+                        ...(isDesktop ? { sidebarShow: true } : {}),
+                      }
+                    : { type: 'set', sidebarShow: !sidebarShow },
+                )
+              }
+              aria-label="Toggle sidebar"
+            >
+              <Menu size={16} />
+            </CHeaderToggler>
+          </CTooltip>
           <CHeaderNav className="ms-auto gap-2">{navItems}</CHeaderNav>
           <CHeaderNav>
             <li className="nav-item py-1">
@@ -238,20 +403,50 @@ const AppHeader = () => {
       <nav className="app-bottom-nav d-flex d-md-none">
         <button
           ref={menuTriggerRef}
+          type="button"
           className="app-bottom-nav-item"
           onClick={() => openMobileSheet('menu', menuTriggerRef)}
           aria-label="Open menu"
           aria-haspopup="dialog"
-          aria-expanded={mobileSheetOpen && sheetMode === 'menu'}
+          aria-expanded={mobileOverlay === 'menu'}
+          data-active={mobileOverlay === 'menu'}
         >
           <Menu size={20} />
           <span className="app-bottom-nav-label">Menu</span>
         </button>
 
         <button
+          type="button"
+          className="app-bottom-nav-item"
+          onClick={openTutorialHub}
+          aria-label="Open tutorial"
+          aria-haspopup="dialog"
+          aria-expanded={mobileOverlay === 'tutorial'}
+          data-active={mobileOverlay === 'tutorial'}
+        >
+          <BookOpen size={20} />
+          <span className="app-bottom-nav-label">Tutorial</span>
+        </button>
+
+        <button
+          type="button"
+          className={`app-bottom-nav-item${aiHelperOpen ? ' active' : ''}`}
+          onClick={openAiHelper}
+          aria-label="Ask AI"
+          aria-pressed={aiHelperOpen}
+        >
+          <Sparkles size={20} />
+          <span className="app-bottom-nav-label">Ask AI</span>
+        </button>
+
+        <button
+          type="button"
           className="app-bottom-nav-item position-relative"
           onClick={openNotifDrawer}
           aria-label="Notifications"
+          aria-haspopup="dialog"
+          aria-expanded={mobileOverlay === 'alerts'}
+          data-active={mobileOverlay === 'alerts'}
         >
           <Bell size={20} />
           <span className="app-bottom-nav-label">Alerts</span>
@@ -262,18 +457,6 @@ const AppHeader = () => {
           )}
         </button>
 
-        {messagesEnabled && (
-          <NavLink to="/messages" className="app-bottom-nav-item position-relative">
-            <MessageSquareText size={20} />
-            <span className="app-bottom-nav-label">Messages</span>
-            {unreadCount > 0 && (
-              <CBadge color="light" className="header-message-badge">
-                {unreadCount}
-              </CBadge>
-            )}
-          </NavLink>
-        )}
-
         <button
           ref={accountTriggerRef}
           type="button"
@@ -281,7 +464,8 @@ const AppHeader = () => {
           onClick={() => openMobileSheet('account', accountTriggerRef)}
           aria-label="Open account menu"
           aria-haspopup="dialog"
-          aria-expanded={mobileSheetOpen && sheetMode === 'account'}
+          aria-expanded={mobileOverlay === 'account'}
+          data-active={mobileOverlay === 'account'}
         >
           <User size={20} />
           <span className="app-bottom-nav-label">Account</span>
@@ -290,9 +474,9 @@ const AppHeader = () => {
 
       <MobileNavSheet
         key={`${sheetMode}-${sheetSession}`}
-        open={mobileSheetOpen}
+        open={mobileOverlay === 'menu' || mobileOverlay === 'account'}
         mode={sheetMode}
-        onClose={closeMobileSheet}
+        onClose={closeMobileOverlay}
         onNavigate={handleSheetNavigate}
         onLogout={handleMobileLogout}
         menuData={menuData}
@@ -300,22 +484,45 @@ const AppHeader = () => {
         canClaim={canClaim}
         canLeave={canLeave}
         canOvertime={canOvertime}
-        canMessage={messagesEnabled && hasPermission(authUser, 'self.messages')}
         isLoggingOut={isLoggingOut}
+        onReportIssue={openFeedbackReportModal}
         returnFocusRef={returnFocusRef}
       />
 
       <NotificationDrawer
-        open={notifDrawerOpen}
-        onClose={() => setNotifDrawerOpen(false)}
+        open={mobileOverlay === 'alerts'}
+        onClose={closeMobileOverlay}
         title="Notifications"
         count={notifUnread}
         returnFocusRef={returnFocusRef}
       >
-        <ErrorBoundary>
-          <WorkflowNotifications onClose={() => setNotifDrawerOpen(false)} />
-        </ErrorBoundary>
+        {mobileOverlay === 'alerts' ? (
+          <ErrorBoundary>
+            <WorkflowNotifications onClose={closeMobileOverlay} />
+          </ErrorBoundary>
+        ) : null}
       </NotificationDrawer>
+
+      <TutorialHubModal
+        visible={mobileOverlay === 'tutorial'}
+        onClose={closeMobileOverlay}
+        onNavigate={(to) => guardedNavigate(to)}
+        tutorials={tutorialItems}
+        user={authUser}
+        returnFocusRef={returnFocusRef}
+      />
+
+      <FeedbackReportModal
+        visible={feedbackModalVisible}
+        message={feedbackMessage}
+        error={feedbackError}
+        submitting={isSubmittingFeedback}
+        onClose={closeFeedbackReportModal}
+        onMessageChange={setFeedbackMessage}
+        onSubmit={handleFeedbackSubmit}
+      />
+
+      <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
     </>
   )
 }

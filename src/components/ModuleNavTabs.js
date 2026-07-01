@@ -15,6 +15,7 @@ const ModuleNavTabs = ({ items = [], className = '' }) => (
             aria-current={isActive ? 'page' : undefined}
             onClick={item.onClick}
             title={item.title}
+            data-tour-id={item.dataTourId}
             style={{ cursor: isDisabled ? 'not-allowed' : 'pointer' }}
             className={`${isActive ? 'text-primary' : ''} text-nowrap`.trim()}
           >

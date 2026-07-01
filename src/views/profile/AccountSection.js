@@ -6,9 +6,11 @@ import {
   CCardBody,
   CCardHeader,
   CFormInput,
+  CFormSelect,
   CFormTextarea,
 } from '@coreui/react'
 import { useDispatch } from 'react-redux'
+import { MALAYSIA_STATE_OPTIONS } from 'src/constants/malaysiaStates'
 import { deleteProfileImage, updateProfile, uploadProfileImage } from 'src/services/apiClient'
 import EditControls from 'src/components/EditControls'
 import useAutoStatus from 'src/hooks/useAutoStatus'
@@ -20,6 +22,7 @@ const AccountSection = ({ user, roles }) => {
   const [icNumber, setIcNumber] = useState(user.ic_number || '')
   const [phone, setPhone] = useState(user.phone || '')
   const [address, setAddress] = useState(user.address || '')
+  const [state, setState] = useState(user.state || '')
   const [isImageBusy, setIsImageBusy] = useState(false)
   const [status, setStatus] = useAutoStatus()
   const fileInputRef = useRef(null)
@@ -52,7 +55,7 @@ const AccountSection = ({ user, roles }) => {
     if (status.loading) return
     setStatus({ loading: true, message: null, type: null })
     try {
-      const response = await updateProfile({ name, ic_number: icNumber, phone, address })
+      const response = await updateProfile({ name, ic_number: icNumber, phone, address, state })
       dispatch({
         type: 'set',
         authUser: response?.user || null,
@@ -74,6 +77,7 @@ const AccountSection = ({ user, roles }) => {
     setIcNumber(user.ic_number || '')
     setPhone(user.phone || '')
     setAddress(user.address || '')
+    setState(user.state || '')
     setStatus({ loading: false, message: null, type: null })
   }
 
@@ -249,6 +253,26 @@ const AccountSection = ({ user, roles }) => {
             />
           ) : (
             user.address || '—'
+          ),
+        )}
+        {renderRow(
+          'State',
+          editMode ? (
+            <CFormSelect
+              size="sm"
+              value={state}
+              onChange={(e) => setState(e.target.value)}
+              disabled={status.loading}
+            >
+              <option value="">Select state</option>
+              {MALAYSIA_STATE_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </CFormSelect>
+          ) : (
+            user.state || '--'
           ),
         )}
         {renderRow(

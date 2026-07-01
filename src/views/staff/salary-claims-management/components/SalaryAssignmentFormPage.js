@@ -88,7 +88,7 @@ const SalaryAssignmentFormPage = ({ vm, handlers }) => {
   const nextStep = steps[currentStepIndex + 1] || null
 
   return (
-    <CContainer fluid>
+    <CContainer fluid data-tour-id="salary-claims-management-assignment-form">
       <div className="fw-semibold mb-3">
         {isReadOnly ? 'Salary Details' : isEditing ? 'Edit Salary' : 'Create New Salary'}
       </div>
@@ -149,13 +149,15 @@ const SalaryAssignmentFormPage = ({ vm, handlers }) => {
                 formatMonth={formatMonth}
                 reviewSummary={reviewSummary}
               />
-              <SalaryAssignmentRemarksCard
-                activeRemarksValue={activeRemarksValue}
-                formatDateTime={formatDateTime}
-                handleRemarksChange={handleRemarksChange}
-                isReadOnly={isReadOnly}
-                remarksHistory={remarksHistory}
-              />
+              <div data-tour-id="salary-claims-management-assignment-history">
+                <SalaryAssignmentRemarksCard
+                  activeRemarksValue={activeRemarksValue}
+                  formatDateTime={formatDateTime}
+                  handleRemarksChange={handleRemarksChange}
+                  isReadOnly={isReadOnly}
+                  remarksHistory={remarksHistory}
+                />
+              </div>
             </>
           )}
 
@@ -168,7 +170,11 @@ const SalaryAssignmentFormPage = ({ vm, handlers }) => {
               <CButton color="light" onClick={handleBackClick}>
                 Back
               </CButton>
-              <CButton color="primary" onClick={onOpenEdit}>
+              <CButton
+                color="primary"
+                data-tour-id="salary-claims-management-assignment-edit-action"
+                onClick={onOpenEdit}
+              >
                 Edit Salary
               </CButton>
             </FormActionGroup>

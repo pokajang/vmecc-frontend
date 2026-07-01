@@ -4,7 +4,9 @@ import {
   CalendarDays,
   Clock3,
   ClipboardList,
+  Download,
   Dumbbell,
+  Flag,
   LayoutDashboard,
   LayoutGrid,
   MessageSquareText,
@@ -16,6 +18,7 @@ import {
   Wallet,
   Wrench,
 } from 'lucide-react'
+import { PWA_INSTALL_ACTION } from 'src/constants/pwa'
 
 const _nav = [
   {
@@ -35,26 +38,49 @@ const _nav = [
     icon: <MessageSquareText className="nav-icon" size={20} />,
   },
   {
+    component: CNavItem,
+    name: 'Install VMECC',
+    action: PWA_INSTALL_ACTION,
+    icon: <Download className="nav-icon" size={20} />,
+  },
+  {
     component: CNavTitle,
-    name: 'My Work',
+    name: 'Reports and Inspection',
   },
   {
     component: CNavItem,
-    name: 'Payroll',
-    to: '/payroll',
-    icon: <Wallet className="nav-icon" size={20} />,
+    name: 'Inspection',
+    to: '/inspection',
+    matchPrefix: ['/inspection'],
+    'data-tour-id': 'inspection-nav',
+    icon: <ClipboardList className="nav-icon" size={20} />,
   },
   {
     component: CNavItem,
-    name: 'Overtime',
-    to: '/overtime',
-    icon: <Clock3 className="nav-icon" size={20} />,
+    name: 'ERCO',
+    to: '/report/erco',
+    matchPrefix: ['/report/erco'],
+    icon: <TriangleAlert className="nav-icon" size={20} />,
   },
   {
     component: CNavItem,
-    name: 'Leave',
-    to: '/leave',
-    icon: <CalendarDays className="nav-icon" size={20} />,
+    name: 'Drill',
+    to: '/report/drill',
+    matchPrefix: ['/report/drill'],
+    icon: <Wrench className="nav-icon" size={20} />,
+  },
+  {
+    component: CNavItem,
+    name: 'Fitness Test',
+    to: '/report/fitness-test',
+    matchPrefix: ['/report/fitness-test'],
+    icon: <Dumbbell className="nav-icon" size={20} />,
+  },
+  {
+    component: CNavItem,
+    name: 'Reporting Settings',
+    to: '/reporting-settings/inspection',
+    icon: <Settings className="nav-icon" size={20} />,
   },
   {
     component: CNavTitle,
@@ -121,38 +147,6 @@ const _nav = [
   },
   {
     component: CNavTitle,
-    name: 'Reports and Inspection',
-  },
-  {
-    component: CNavItem,
-    name: 'Inspection',
-    to: '/inspection',
-    matchPrefix: ['/inspection'],
-    icon: <ClipboardList className="nav-icon" size={20} />,
-  },
-  {
-    component: CNavItem,
-    name: 'ERCO',
-    to: '/report/erco',
-    matchPrefix: ['/report/erco'],
-    icon: <TriangleAlert className="nav-icon" size={20} />,
-  },
-  {
-    component: CNavItem,
-    name: 'Drill',
-    to: '/report/drill',
-    matchPrefix: ['/report/drill'],
-    icon: <Wrench className="nav-icon" size={20} />,
-  },
-  {
-    component: CNavItem,
-    name: 'Fitness Test',
-    to: '/report/fitness-test',
-    matchPrefix: ['/report/fitness-test'],
-    icon: <Dumbbell className="nav-icon" size={20} />,
-  },
-  {
-    component: CNavTitle,
     name: 'Admin',
   },
   {
@@ -165,6 +159,24 @@ const _nav = [
     component: CNavItem,
     name: 'Audit',
     to: '/admin/audit',
+    icon: <ClipboardList className="nav-icon" size={20} />,
+  },
+  {
+    component: CNavItem,
+    name: 'Ask AI Reports',
+    to: '/admin/ai-helper-reports',
+    icon: <Flag className="nav-icon" size={20} />,
+  },
+  {
+    component: CNavItem,
+    name: 'Feedback Reports',
+    to: '/admin/feedback-reports',
+    icon: <Flag className="nav-icon" size={20} />,
+  },
+  {
+    component: CNavItem,
+    name: 'Ask AI Knowledge',
+    to: '/admin/ai-helper-knowledge',
     icon: <ClipboardList className="nav-icon" size={20} />,
   },
   {

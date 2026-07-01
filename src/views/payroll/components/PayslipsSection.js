@@ -19,6 +19,7 @@ import {
 } from '@coreui/react'
 import { useNavigate } from 'react-router-dom'
 import ApprovalGates from 'src/components/ApprovalGates'
+import MobileRecordList from 'src/components/MobileRecordList'
 import RowActions from 'src/components/RowActions'
 import TableLoader from 'src/components/TableLoader'
 import {
@@ -49,6 +50,11 @@ const PayslipsSection = ({
   const [expandedId, setExpandedId] = useState('')
   const [downloadNoticeRow, setDownloadNoticeRow] = useState(null)
   const rowIds = useMemo(() => rows.map((row, index) => toIdentifier(row, index)), [rows])
+  const firstDownloadableRowId = String(
+    rows.find((row) => row?.payslipId || row?.id)?.payslipId ||
+      rows.find((row) => row?.payslipId || row?.id)?.id ||
+      '',
+  ).trim()
 
   const toggleDetails = (nextId) => {
     setExpandedId((prev) => (prev === nextId ? '' : nextId))
@@ -85,6 +91,11 @@ const PayslipsSection = ({
 
   const renderDownloadActions = (row) => (
     <RowActions
+      tourId={
+        firstDownloadableRowId === String(row?.payslipId || row?.id || '').trim()
+          ? 'payroll-payslip-download-action'
+          : ''
+      }
       items={[
         {
           key: 'download-payslip',
@@ -221,8 +232,55 @@ const PayslipsSection = ({
     )
   }
 
+  const mobilePayslipSections = [
+    {
+      key: 'payslips',
+      items: rows.map((row, index) => {
+        const rowId = rowIds[index]
+        const detailVisible = expandedId === rowId
+        const breakdown = buildPayrollBreakdown(row, { sourceType: 'payslip' })
+        const detailAvailable = breakdown.hasDetails
+
+        return {
+          key: rowId,
+          title: row.month || '-',
+          eyebrow: `Payment date: ${breakdown.status.paymentDateLabel}`,
+          subtitle: row.reference || '-',
+          status: renderApprovalStatus(row, breakdown.status.approvalHistory),
+          fields: [
+            {
+              key: 'baseline',
+              label: 'Baseline net',
+              value: formatCurrency(breakdown.summary.baselineNet),
+            },
+            {
+              key: 'adjustments',
+              label: 'Adjustments',
+              value: formatCurrency(breakdown.summary.adjustmentsTotal),
+            },
+            {
+              key: 'overtime',
+              label: 'OT payout',
+              value: formatCurrency(breakdown.summary.approvedOvertimePayout),
+            },
+            {
+              key: 'payable',
+              label: 'Net payable',
+              value: formatCurrency(breakdown.summary.finalPayable),
+            },
+          ],
+          expanded: detailVisible,
+          onToggle: detailAvailable ? () => toggleDetails(rowId) : undefined,
+          ariaLabel: `Toggle payslip details for ${row.reference || row.month || rowId}`,
+          expandedContent: detailVisible ? renderMobileDetails(breakdown) : null,
+          actions: renderDownloadActions(row),
+        }
+      }),
+    },
+  ]
+
   return (
-    <CCard>
+    <CCard data-tour-id="payroll-payslips">
       <CCardHeader>Payslips</CCardHeader>
       <CCardBody>
         {errorMessage && (
@@ -243,88 +301,7 @@ const PayslipsSection = ({
               No payslips available yet.
             </div>
           ) : (
-            rows.map((row, index) => {
-              const rowId = rowIds[index]
-              const detailVisible = expandedId === rowId
-              const breakdown = buildPayrollBreakdown(row, { sourceType: 'payslip' })
-              const detailAvailable = breakdown.hasDetails
-
-              return (
-                <article key={rowId} className="border rounded-3 p-3 bg-white shadow-sm">
-                  <div
-                    role={detailAvailable ? 'button' : undefined}
-                    tabIndex={detailAvailable ? 0 : undefined}
-                    className={detailAvailable ? 'cursor-pointer' : undefined}
-                    aria-label={`Toggle payslip details for ${row.reference || row.month || rowId}`}
-                    aria-expanded={detailAvailable ? detailVisible : undefined}
-                    onClick={() => {
-                      if (!detailAvailable) return
-                      toggleDetails(rowId)
-                    }}
-                    onKeyDown={(event) => {
-                      if (!detailAvailable) return
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault()
-                        toggleDetails(rowId)
-                      }
-                    }}
-                  >
-                    <div className="d-flex align-items-start justify-content-between gap-3">
-                      <div className="min-w-0">
-                        <div className="small text-body-secondary mb-1">
-                          Payment date: {breakdown.status.paymentDateLabel}
-                        </div>
-                        <div className="fw-semibold text-truncate">{row.month || '-'}</div>
-                        <div className="small text-body-secondary mt-1">{row.reference || '-'}</div>
-                      </div>
-                      <div
-                        className="text-end"
-                        style={{ maxWidth: '52%', overflowWrap: 'anywhere' }}
-                      >
-                        {renderApprovalStatus(row, breakdown.status.approvalHistory)}
-                      </div>
-                    </div>
-
-                    <div className="row g-2 mt-3">
-                      <div className="col-6">
-                        <div className="small text-body-secondary">Baseline net</div>
-                        <div className="fw-semibold">
-                          {formatCurrency(breakdown.summary.baselineNet)}
-                        </div>
-                      </div>
-                      <div className="col-6">
-                        <div className="small text-body-secondary">Adjustments</div>
-                        <div className="fw-semibold">
-                          {formatCurrency(breakdown.summary.adjustmentsTotal)}
-                        </div>
-                      </div>
-                      <div className="col-6">
-                        <div className="small text-body-secondary">OT payout</div>
-                        <div className="fw-semibold">
-                          {formatCurrency(breakdown.summary.approvedOvertimePayout)}
-                        </div>
-                      </div>
-                      <div className="col-6">
-                        <div className="small text-body-secondary">Net payable</div>
-                        <div className="fw-semibold">
-                          {formatCurrency(breakdown.summary.finalPayable)}
-                        </div>
-                      </div>
-                    </div>
-
-                    {detailVisible ? renderMobileDetails(breakdown) : null}
-                  </div>
-
-                  <div
-                    className="d-flex justify-content-end mt-3"
-                    onClick={(event) => event.stopPropagation()}
-                    onMouseDown={(event) => event.stopPropagation()}
-                  >
-                    {renderDownloadActions(row)}
-                  </div>
-                </article>
-              )
-            })
+            <MobileRecordList sections={mobilePayslipSections} variant="list-group" />
           )}
         </div>
         <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
@@ -424,6 +401,12 @@ const PayslipsSection = ({
                           onMouseDown={(event) => event.stopPropagation()}
                         >
                           <RowActions
+                            tourId={
+                              firstDownloadableRowId ===
+                              String(row?.payslipId || row?.id || '').trim()
+                                ? 'payroll-payslip-download-action'
+                                : ''
+                            }
                             items={[
                               {
                                 key: 'download-payslip',

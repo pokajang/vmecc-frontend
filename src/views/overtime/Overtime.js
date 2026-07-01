@@ -16,6 +16,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
 import ModulePageHeader from 'src/components/ModulePageHeader'
+import { useNavigationGuard } from 'src/contexts/NavigationGuardContext'
 import { isHolidayGuidanceOvertimeEnabledForUser } from 'src/config/featureFlags'
 import { hasPermission, isSystemAdministrator } from 'src/utils/authz'
 import useTableRows from 'src/hooks/useTableRows'
@@ -57,6 +58,7 @@ const Overtime = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const { overtimeId } = useParams()
+  const { registerGuard, unregisterGuard } = useNavigationGuard()
   const user = useSelector((state) => state.authUser)
   const isSysAdmin = isSystemAdministrator(user)
   const canUseOvertimeModule = hasPermission(user, 'self.overtime')
@@ -266,6 +268,15 @@ const Overtime = () => {
     window.addEventListener('beforeunload', onBeforeUnload)
     return () => window.removeEventListener('beforeunload', onBeforeUnload)
   }, [activeSection, isFormDirty])
+
+  useEffect(() => {
+    registerGuard('overtime-form', {
+      active: activeSection === 'new-overtime' && isFormDirty,
+      message: 'Your current overtime form changes are not saved.',
+    })
+
+    return () => unregisterGuard('overtime-form')
+  }, [activeSection, isFormDirty, registerGuard, unregisterGuard])
 
   const statusOptions = useMemo(
     () => [
@@ -540,18 +551,20 @@ const Overtime = () => {
   }
 
   return (
-    <CContainer fluid>
+    <CContainer fluid data-tour-id="overtime-module">
       <ModulePageHeader
         title="Overtime"
         subtitle="Review overtime records, resume drafts, and submit new overtime requests."
         actions={
           activeSection === 'new-overtime' ? null : (
-            <CreateActionButton
-              label="Apply Overtime"
-              importance="primary"
-              onClick={() => runWithDiscardGuard(startNewOvertime)}
-              icon={<Plus size={15} className="me-1 align-text-bottom" />}
-            />
+            <div data-tour-id="overtime-new-action">
+              <CreateActionButton
+                label="Apply Overtime"
+                importance="primary"
+                onClick={() => runWithDiscardGuard(startNewOvertime)}
+                icon={<Plus size={15} className="me-1 align-text-bottom" />}
+              />
+            </div>
           )
         }
       />
@@ -582,6 +595,7 @@ const Overtime = () => {
         onConfirm={confirmDiscardDraftChanges}
       />
       <ActionConfirmModal
+        tourId="overtime-cancel-modal"
         visible={isCancelConfirmVisible}
         title="Cancel Overtime Claim"
         message={
@@ -595,6 +609,7 @@ const Overtime = () => {
         onConfirm={confirmCancelOvertime}
       />
       <ActionConfirmModal
+        tourId="overtime-delete-modal"
         visible={isDeleteConfirmVisible}
         title={deletePreviewRecord?.isDraft ? 'Delete Overtime Draft' : 'Delete Overtime Claim'}
         message={
@@ -643,87 +658,107 @@ const Overtime = () => {
       </CNav>
 
       {activeSection === 'overtime-records' ? (
-        <OvertimeRecordsSection
-          search={search}
-          setSearch={setSearch}
-          period={period}
-          setPeriod={setPeriod}
-          sort={sort}
-          setSort={setSort}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-          overtimeSortOptions={overtimeSortOptions}
-          statusOptions={statusOptions}
-          clearFilters={clearFilters}
-          filteredRecords={filteredRecords}
-          visibleRows={visibleRows}
-          rowsToShow={rowsToShow}
-          setRowsToShow={setRowsToShow}
-          overtimeRecordsCount={overtimeRecords.length + (draftListRow ? 1 : 0)}
-          startNewOvertime={startNewOvertime}
-          openRecord={openRecord}
-          openOvertimeForEdit={openOvertimeForEdit}
-          cancelOvertime={cancelOvertime}
-          deleteOvertime={deleteOvertime}
-          getDisplayOvertimeId={getDisplayOvertimeId}
-          getStatusLabel={getWorkflowStatusLabel}
-          getPendingActionHint={getWorkflowPendingActionHint}
-          getStatusBadge={getStatusBadge}
-          getStartDateTimeLabel={getStartDateTimeLabel}
-          getEndDateTimeLabel={getEndDateTimeLabel}
-          isLoading={isOvertimeLoading}
-          showPrimaryAction={false}
-        />
+        <div data-tour-id="overtime-records">
+          <OvertimeRecordsSection
+            search={search}
+            setSearch={setSearch}
+            period={period}
+            setPeriod={setPeriod}
+            sort={sort}
+            setSort={setSort}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            overtimeSortOptions={overtimeSortOptions}
+            statusOptions={statusOptions}
+            clearFilters={clearFilters}
+            filteredRecords={filteredRecords}
+            visibleRows={visibleRows}
+            rowsToShow={rowsToShow}
+            setRowsToShow={setRowsToShow}
+            overtimeRecordsCount={overtimeRecords.length + (draftListRow ? 1 : 0)}
+            startNewOvertime={startNewOvertime}
+            openRecord={openRecord}
+            openOvertimeForEdit={openOvertimeForEdit}
+            cancelOvertime={cancelOvertime}
+            deleteOvertime={deleteOvertime}
+            getDisplayOvertimeId={getDisplayOvertimeId}
+            getStatusLabel={getWorkflowStatusLabel}
+            getPendingActionHint={getWorkflowPendingActionHint}
+            getStatusBadge={getStatusBadge}
+            getStartDateTimeLabel={getStartDateTimeLabel}
+            getEndDateTimeLabel={getEndDateTimeLabel}
+            isLoading={isOvertimeLoading}
+            showPrimaryAction={false}
+            filtersTourId="overtime-filters"
+          />
+        </div>
       ) : null}
 
       {activeSection === 'overtime-detail' ? (
-        <OvertimeDetailSection
-          selectedRecord={selectedRecord}
-          selectedRecordPendingActionHint={selectedRecordPendingActionHint}
-          selectedRecordHistoryEntries={selectedRecordHistoryEntries}
-          onBack={() => navigate('/overtime')}
-          getDisplayOvertimeId={getDisplayOvertimeId}
-          getScheduleLabel={getScheduleLabel}
-          formatDate={formatDate}
-          formatDateTime={formatDateTime}
-        />
+        <div data-tour-id="overtime-detail">
+          <OvertimeDetailSection
+            selectedRecord={selectedRecord}
+            selectedRecordPendingActionHint={selectedRecordPendingActionHint}
+            selectedRecordHistoryEntries={selectedRecordHistoryEntries}
+            onBack={() => navigate('/overtime')}
+            getDisplayOvertimeId={getDisplayOvertimeId}
+            getScheduleLabel={getScheduleLabel}
+            formatDate={formatDate}
+            formatDateTime={formatDateTime}
+            canEdit={Boolean(selectedRecord && canApplicantEditOvertimeRecord(selectedRecord))}
+            canCancel={
+              Boolean(selectedRecord) &&
+              !Boolean(selectedRecord?.isDraft) &&
+              String(selectedRecord?.status || '') !== 'Cancelled'
+            }
+            canDelete={
+              Boolean(selectedRecord?.isDraft) ||
+              String(selectedRecord?.status || '') === 'Cancelled'
+            }
+            onEdit={openOvertimeForEdit}
+            onCancel={cancelOvertime}
+            onDelete={deleteOvertime}
+          />
+        </div>
       ) : null}
 
       {activeSection === 'new-overtime' ? (
-        <OvertimeApplySection
-          overtimeTypeConfirmed={overtimeTypeConfirmed}
-          overtimeType={overtimeType}
-          isOvertimeTypeDerived={overtimeTypeDerivedMode}
-          overtimeTypeOptions={visibleOvertimeTypeOptions}
-          onSelectOvertimeType={handleSelectOvertimeType}
-          onContinueOvertimeType={handleContinueOvertimeTypeWithToast}
-          onBackToOvertimeType={handleBackToOvertimeType}
-          onSubmit={handleSubmit}
-          onBack={() => runWithDiscardGuard(() => navigate('/overtime'))}
-          claimDate={claimDate}
-          startTime={startTime}
-          endTime={endTime}
-          reason={reason}
-          fieldErrors={fieldErrors}
-          onClaimDateChange={handleClaimDateChange}
-          onStartTimeChange={handleStartTimeChange}
-          onEndTimeChange={handleEndTimeChange}
-          onReasonChange={handleReasonChange}
-          durationMinutes={durationMinutes}
-          isOvernight={isOvernight}
-          onClearForm={handleClearForm}
-          clearButtonLabel={clearButtonLabel}
-          clearingButtonLabel={clearingButtonLabel}
-          onDraft={handleDraft}
-          editingRecordId={editingRecordId}
-          isResumeEditMode={isResumeEditMode}
-          submitButtonLabel={submitButtonLabel}
-          submittingButtonLabel={submittingButtonLabel}
-          isDraftSaving={isDraftSaving}
-          isFormClearing={isFormClearing}
-          isSubmittingClaim={isSubmittingClaim}
-          guidanceMessage={isOvertimeGuidanceEnabled ? overtimeGuidanceMessage : ''}
-        />
+        <div>
+          <OvertimeApplySection
+            overtimeTypeConfirmed={overtimeTypeConfirmed}
+            overtimeType={overtimeType}
+            isOvertimeTypeDerived={overtimeTypeDerivedMode}
+            overtimeTypeOptions={visibleOvertimeTypeOptions}
+            onSelectOvertimeType={handleSelectOvertimeType}
+            onContinueOvertimeType={handleContinueOvertimeTypeWithToast}
+            onBackToOvertimeType={handleBackToOvertimeType}
+            onSubmit={handleSubmit}
+            onBack={() => runWithDiscardGuard(() => navigate('/overtime'))}
+            claimDate={claimDate}
+            startTime={startTime}
+            endTime={endTime}
+            reason={reason}
+            fieldErrors={fieldErrors}
+            onClaimDateChange={handleClaimDateChange}
+            onStartTimeChange={handleStartTimeChange}
+            onEndTimeChange={handleEndTimeChange}
+            onReasonChange={handleReasonChange}
+            durationMinutes={durationMinutes}
+            isOvernight={isOvernight}
+            onClearForm={handleClearForm}
+            clearButtonLabel={clearButtonLabel}
+            clearingButtonLabel={clearingButtonLabel}
+            onDraft={handleDraft}
+            editingRecordId={editingRecordId}
+            isResumeEditMode={isResumeEditMode}
+            submitButtonLabel={submitButtonLabel}
+            submittingButtonLabel={submittingButtonLabel}
+            isDraftSaving={isDraftSaving}
+            isFormClearing={isFormClearing}
+            isSubmittingClaim={isSubmittingClaim}
+            guidanceMessage={isOvertimeGuidanceEnabled ? overtimeGuidanceMessage : ''}
+          />
+        </div>
       ) : null}
     </CContainer>
   )

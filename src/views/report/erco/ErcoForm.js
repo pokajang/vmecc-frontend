@@ -53,6 +53,7 @@ const ErcoForm = ({
   activeDraftId = '',
   showEditSourceBanner = true,
   reviewReturnRecord = null,
+  initialFormSeed = null,
   onRequestReview,
   onDraftSaved,
 }) => {
@@ -60,6 +61,7 @@ const ErcoForm = ({
   const location = useLocation()
   const draftLoadedRef = useRef(false)
   const seededEditIdRef = useRef('')
+  const initialSeedAppliedRef = useRef(false)
   const reviewSeedAppliedRef = useRef(false)
   const lastSavedDraftSignatureRef = useRef(null)
   const [showReset, setShowReset] = useState(false)
@@ -155,6 +157,36 @@ const ErcoForm = ({
       onDirtyChange(false)
     },
   })
+
+  useEffect(() => {
+    if (initialSeedAppliedRef.current || !initialFormSeed) return
+    const normalizedDraft =
+      typeof normalizeErcoDraft === 'function'
+        ? normalizeErcoDraft(initialFormSeed || {})
+        : initialFormSeed || {}
+    const seed = { ...normalizedDraft }
+    delete seed.setupConfirmed
+    delete seed.respondingTeamConfirmed
+    delete seed.detailsConfirmed
+    delete seed.savedAt
+    setForm((prev) => ({
+      ...prev,
+      ...seed,
+      chronology: seed.chronology?.length ? seed.chronology : prev.chronology,
+    }))
+    setSetupConfirmed(false)
+    setRespondingTeamConfirmed(false)
+    setDetailsConfirmed(false)
+    lastSavedDraftSignatureRef.current = null
+    initialSeedAppliedRef.current = true
+  }, [
+    initialFormSeed,
+    normalizeErcoDraft,
+    setDetailsConfirmed,
+    setForm,
+    setRespondingTeamConfirmed,
+    setSetupConfirmed,
+  ])
 
   useEffect(() => {
     activeDraftIdRef.current = String(activeDraftId || '').trim()

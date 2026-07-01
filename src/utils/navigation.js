@@ -1,14 +1,22 @@
-import { hasAnyPermission, hasPermission } from 'src/utils/authz'
+import { hasAnyPermission, hasPermission, isSystemAdministrator } from 'src/utils/authz'
+import { PWA_INSTALL_ACTION } from 'src/constants/pwa'
 import { isModuleEnabled } from 'src/utils/modules'
 
-export const isTitle = (item) => !item?.to && !item?.href && !item?.items
+export const isTitle = (item) => !item?.to && !item?.href && !item?.action && !item?.items
 
 export const applyRoleVisibility = (items, authUser, options = {}) => {
   const overtimeEligible =
     typeof options?.overtimeEligible === 'boolean' ? options.overtimeEligible : null
   const moduleActivation = options?.moduleActivation || null
+  const showNavInstallItem = options?.showNavInstallItem !== false
 
   const filtered = items.reduce((acc, item) => {
+    if (item.action === PWA_INSTALL_ACTION) {
+      if (!showNavInstallItem) return acc
+      acc.push(item)
+      return acc
+    }
+
     if (
       item.to === '/dashboard' &&
       (!hasPermission(authUser, 'self.dashboard') ||
@@ -39,6 +47,9 @@ export const applyRoleVisibility = (items, authUser, options = {}) => {
 
     if (item.to === '/admin/users' && !hasPermission(authUser, 'users.manage')) return acc
     if (item.to === '/admin/audit' && !hasPermission(authUser, 'audit.view')) return acc
+    if (item.to === '/admin/ai-helper-reports' && !isSystemAdministrator(authUser)) return acc
+    if (item.to === '/admin/feedback-reports' && !isSystemAdministrator(authUser)) return acc
+    if (item.to === '/admin/ai-helper-knowledge' && !isSystemAdministrator(authUser)) return acc
     if (item.to === '/settings' && !hasPermission(authUser, 'settings.manage')) return acc
     if (
       item.to === '/staff/details' &&
@@ -87,7 +98,11 @@ export const applyRoleVisibility = (items, authUser, options = {}) => {
     if (String(item.to || '').startsWith('/roster') && !hasPermission(authUser, 'rosters.manage')) {
       return acc
     }
-    if (
+    if (String(item.to || '').startsWith('/reporting-settings')) {
+      if (!hasPermission(authUser, 'settings.manage')) {
+        return acc
+      }
+    } else if (
       String(item.to || '').startsWith('/inspection') &&
       !hasPermission(authUser, 'reports.inspection.view')
     ) {
@@ -141,7 +156,7 @@ export const applyRoleVisibility = (items, authUser, options = {}) => {
     if (!isTitle(item)) return true
     for (let i = index + 1; i < filtered.length; i++) {
       if (isTitle(filtered[i])) break
-      if (filtered[i].to || filtered[i].href) return true
+      if (filtered[i].to || filtered[i].href || filtered[i].action) return true
     }
     return false
   })

@@ -34,6 +34,8 @@ let isIdle = false
 let idleTimerId = null
 let visibilityAttached = false
 let idleAttached = false
+let lifecycleAttached = false
+let isPageUnloading = false
 let backoffMs = 0
 
 const notify = () => {
@@ -77,6 +79,20 @@ const ensureVisibilityListener = () => {
   handleVisibility()
 }
 
+const ensureLifecycleListener = () => {
+  if (lifecycleAttached || typeof window === 'undefined') return
+  lifecycleAttached = true
+  window.addEventListener('pagehide', () => {
+    isPageUnloading = true
+  })
+  window.addEventListener('beforeunload', () => {
+    isPageUnloading = true
+  })
+}
+
+const isUnloadFetchFailure = (err) =>
+  isPageUnloading && !err?.status && (err instanceof TypeError || err?.message === 'Network Error')
+
 const stopPolling = () => {
   if (timerId) {
     clearTimeout(timerId)
@@ -110,6 +126,7 @@ const fetchThreads = async ({ silent = false } = {}) => {
       broadcastThreads(data)
     })
     .catch((err) => {
+      if (isUnloadFetchFailure(err)) return
       if (shouldBackoff(err)) {
         backoffMs = Math.min(backoffMs ? backoffMs * 2 : 15000, MAX_BACKOFF)
       }
@@ -145,6 +162,7 @@ let leaderCleanup = null
 
 const subscribe = (listener) => {
   subscribers.add(listener)
+  ensureLifecycleListener()
   ensureVisibilityListener()
   ensureIdleListener()
   listener(state)

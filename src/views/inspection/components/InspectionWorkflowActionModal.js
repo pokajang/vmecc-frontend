@@ -9,6 +9,7 @@ import {
   CModalFooter,
   CModalHeader,
 } from '@coreui/react'
+import { stripInspectionContext } from '../typeOptionUtils'
 
 const ACTION_META = {
   review: { label: 'Review', color: 'primary', remarksLabel: 'Remarks (optional)' },
@@ -47,9 +48,15 @@ const InspectionWorkflowActionModal = ({
   const showRemarksHelper = !isReject && actionType !== 'review'
 
   return (
-    <CModal visible={visible} onClose={onClose} alignment="center" fullscreen="sm" scrollable>
+    <CModal
+      visible={visible}
+      onClose={onClose}
+      alignment="center"
+      scrollable
+      className="inspection-workflow-modal"
+    >
       <CModalHeader>{action.label} Report</CModalHeader>
-      <CModalBody className="d-grid gap-3">
+      <CModalBody className="inspection-workflow-modal__body d-grid gap-3">
         {!record ? (
           <div className="text-body-secondary small">No report details available.</div>
         ) : (
@@ -57,7 +64,7 @@ const InspectionWorkflowActionModal = ({
             <div className="d-grid gap-2">
               {[
                 { label: 'Report ID', value: record.displayId || record.id || '-' },
-                { label: 'Type', value: record.incidentType || '-' },
+                { label: 'Type', value: stripInspectionContext(record.incidentType) || '-' },
                 { label: 'Location', value: record.location || '-' },
                 { label: 'Reported At', value: formatRecordDateTime(record, formatDateTime) },
                 {
@@ -74,14 +81,14 @@ const InspectionWorkflowActionModal = ({
                   key={item.label}
                   className="d-flex justify-content-between align-items-start gap-3"
                 >
-                  <span className="text-body-secondary small">{item.label}</span>
+                  <span className="text-muted small">{item.label}</span>
                   <span className="text-end text-break">{item.value}</span>
                 </div>
               ))}
             </div>
 
             <div>
-              <div className="small text-body-secondary mb-1">{action.remarksLabel}</div>
+              <div className="small text-muted mb-1">{action.remarksLabel}</div>
               <CFormInput
                 type="text"
                 value={remarks}
@@ -93,7 +100,7 @@ const InspectionWorkflowActionModal = ({
                 <div className="invalid-feedback d-block">{rejectError}</div>
               ) : (
                 showRemarksHelper && (
-                  <div className="small text-body-secondary mt-1">
+                  <div className="small text-muted mt-1">
                     Optional for approve actions. Required when rejecting.
                   </div>
                 )
@@ -110,7 +117,7 @@ const InspectionWorkflowActionModal = ({
               {declarationError ? (
                 <div className="invalid-feedback d-block">{declarationError}</div>
               ) : (
-                <div className="small text-body-secondary mt-1">Required for this action.</div>
+                <div className="small text-muted mt-1">Required for this action.</div>
               )}
             </div>
 

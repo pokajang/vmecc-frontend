@@ -33,6 +33,13 @@ const statusLabel = (session) => {
   return { label: 'Expired', color: 'secondary' }
 }
 
+const clientModeLabel = (value) => {
+  const mode = String(value || '').toLowerCase()
+  if (mode === 'pwa') return 'PWA'
+  if (mode === 'browser') return 'Browser'
+  return 'Unknown'
+}
+
 const UserSessionsPanel = ({ userId, actionsDisabled = false, actionsDisabledReason = '' }) => {
   const [sessions, setSessions] = useState([])
   const [loading, setLoading] = useState(true)
@@ -86,7 +93,7 @@ const UserSessionsPanel = ({ userId, actionsDisabled = false, actionsDisabledRea
 
       if (term) {
         const hay =
-          `${session.ip_address || ''} ${session.user_agent || ''} ${session.device_id || ''}`.toLowerCase()
+          `${session.ip_address || ''} ${session.user_agent || ''} ${session.device_id || ''} ${session.client_mode || ''}`.toLowerCase()
         if (!hay.includes(term)) return false
       }
 
@@ -107,6 +114,7 @@ const UserSessionsPanel = ({ userId, actionsDisabled = false, actionsDisabledRea
           subtitle: session.user_agent || '-',
           status: <CBadge color={status.color}>{status.label}</CBadge>,
           fields: [
+            { key: 'mode', label: 'Mode', value: clientModeLabel(session.client_mode) },
             { key: 'last-seen', label: 'Last seen', value: formatDateTime(session.last_seen_at) },
             { key: 'expires', label: 'Expires', value: formatDateTime(session.expires_at) },
           ],
@@ -128,12 +136,13 @@ const UserSessionsPanel = ({ userId, actionsDisabled = false, actionsDisabledRea
   ]
 
   const handleExport = () => {
-    const headers = ['#', 'Status', 'Device', 'IP', 'Created', 'Last seen', 'Expires']
+    const headers = ['#', 'Status', 'Mode', 'Device', 'IP', 'Created', 'Last seen', 'Expires']
     const rows = filteredSessions.map((session, index) => {
       const status = statusLabel(session)
       return [
         index + 1,
         status.label,
+        clientModeLabel(session.client_mode),
         session.user_agent || '-',
         session.ip_address || '-',
         formatDateTime(session.created_at),
@@ -316,6 +325,7 @@ const UserSessionsPanel = ({ userId, actionsDisabled = false, actionsDisabledRea
             isEmpty={filteredSessions.length === 0}
             emptyMessage={<span className="text-muted small">No sessions found.</span>}
             mobileSections={mobileSessionSections}
+            mobileVariant="list-group"
             renderDesktop={() => (
               <div className="rounded-3 shadow-sm overflow-hidden bg-white d-none d-md-block">
                 <CTable align="middle" className="mb-0" responsive>
@@ -343,7 +353,15 @@ const UserSessionsPanel = ({ userId, actionsDisabled = false, actionsDisabledRea
                             <span className={`badge bg-${status.color}`}>{status.label}</span>
                           </CTableDataCell>
                           <CTableDataCell className="text-break">
-                            {session.user_agent || '-'}
+                            <div className="d-flex flex-column gap-1">
+                              <span>{session.user_agent || '-'}</span>
+                              <CBadge
+                                color="light"
+                                className="align-self-start text-body-secondary"
+                              >
+                                {clientModeLabel(session.client_mode)}
+                              </CBadge>
+                            </div>
                           </CTableDataCell>
                           <CTableDataCell>{session.ip_address || '-'}</CTableDataCell>
                           <CTableDataCell>{formatDateTime(session.created_at)}</CTableDataCell>

@@ -416,41 +416,43 @@ const SalaryRecordsTab = ({ vm, handlers }) => {
   )
 
   return (
-    <CCard>
+    <CCard data-tour-id="salary-claims-management-salary">
       <CCardHeader>Salary Records</CCardHeader>
       <CCardBody>
-        <TableFilters
-          searchValue={salarySearch}
-          onSearchChange={setSalarySearch}
-          searchPlaceholder="Search claim ID, employee, payroll month, status"
-          periodValue={salaryPeriod}
-          onPeriodChange={setSalaryPeriod}
-          filters={[
-            {
-              key: 'sort',
-              label: 'Sort',
-              value: salarySort,
-              defaultValue: salarySortOptions?.[0]?.value,
-              onChange: setSalarySort,
-              options: salarySortOptions,
-            },
-            {
-              key: 'status',
-              label: 'Status',
-              value: salaryStatusFilter,
-              defaultValue: salaryStatusOptions?.[0]?.value,
-              onChange: setSalaryStatusFilter,
-              options: salaryStatusOptions,
-            },
-          ]}
-          onClear={clearSalaryFilters}
-          rowClassName="flex-md-nowrap align-items-md-end"
-          searchColMd={4}
-          periodColMd={2}
-          filterColMd={2}
-          clearColMd="auto"
-          showDesktopLabels
-        />
+        <div data-tour-id="salary-claims-management-salary-filters">
+          <TableFilters
+            searchValue={salarySearch}
+            onSearchChange={setSalarySearch}
+            searchPlaceholder="Search claim ID, employee, payroll month, status"
+            periodValue={salaryPeriod}
+            onPeriodChange={setSalaryPeriod}
+            filters={[
+              {
+                key: 'sort',
+                label: 'Sort',
+                value: salarySort,
+                defaultValue: salarySortOptions?.[0]?.value,
+                onChange: setSalarySort,
+                options: salarySortOptions,
+              },
+              {
+                key: 'status',
+                label: 'Status',
+                value: salaryStatusFilter,
+                defaultValue: salaryStatusOptions?.[0]?.value,
+                onChange: setSalaryStatusFilter,
+                options: salaryStatusOptions,
+              },
+            ]}
+            onClear={clearSalaryFilters}
+            rowClassName="flex-md-nowrap align-items-md-end"
+            searchColMd={4}
+            periodColMd={2}
+            filterColMd={2}
+            clearColMd="auto"
+            showDesktopLabels
+          />
+        </div>
 
         <ResponsiveRecordCollection
           isLoading={isLoading}
@@ -459,6 +461,7 @@ const SalaryRecordsTab = ({ vm, handlers }) => {
             <div className="text-body-secondary">No salary records match the current filters.</div>
           }
           mobileSections={mobileSalarySections}
+          mobileVariant="list-group"
           renderDesktop={renderDesktopTable}
           footer={
             <DataTableFooter

@@ -28,12 +28,14 @@ const FitnessTestForm = ({
   editingDraftSeed = null,
   preferSavedEditDraft = false,
   reviewReturnRecord = null,
+  initialFormSeed = null,
   onRequestReview,
   onDraftSaved,
 }) => {
   const draftLoadedRef = useRef(false)
   const seededEditIdRef = useRef('')
   const reviewSeedAppliedRef = useRef(false)
+  const initialSeedAppliedRef = useRef(false)
   const lastSavedDraftSignatureRef = useRef(null)
   const [showReset, setShowReset] = useState(false)
   const [editViewMode, setEditViewMode] = useState(preferSavedEditDraft ? 'draft' : 'original')
@@ -72,6 +74,20 @@ const FitnessTestForm = ({
       onDirtyChange(false)
     },
   })
+
+  useEffect(() => {
+    if (initialSeedAppliedRef.current || !initialFormSeed) return
+    const seed = { ...(initialFormSeed || {}) }
+    delete seed.setupConfirmed
+    delete seed.savedAt
+    setForm((prev) => ({
+      ...prev,
+      ...seed,
+      chronology: seed.chronology?.length ? seed.chronology : prev.chronology,
+    }))
+    setSetupConfirmed(Boolean(initialFormSeed.setupConfirmed))
+    initialSeedAppliedRef.current = true
+  }, [initialFormSeed, setForm, setSetupConfirmed])
 
   useEffect(() => {
     onDirtyChange(
@@ -305,7 +321,7 @@ const FitnessTestForm = ({
             form={form}
             fieldErrors={fieldErrors}
             setForm={setForm}
-            setSetupConfirmed={setSetupConfirmed}
+            onEditSetup={() => setSetupConfirmed(false)}
             addChronology={addChronology}
             updateChronology={updateChronology}
             removeChronology={removeChronology}

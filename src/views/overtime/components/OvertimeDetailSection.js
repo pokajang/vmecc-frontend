@@ -1,5 +1,5 @@
 import React from 'react'
-import { CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/react'
+import { CButton, CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/react'
 import ApprovalGates from 'src/components/ApprovalGates'
 import AuditHistoryPanel from 'src/components/AuditHistoryPanel'
 import BackButton from 'src/components/BackButton'
@@ -15,6 +15,12 @@ const OvertimeDetailSection = ({
   formatDate,
   formatDateTime,
   showGuidanceMetadata = false,
+  canEdit = false,
+  canCancel = false,
+  canDelete = false,
+  onEdit,
+  onCancel,
+  onDelete,
 }) => (
   <>
     <div className="mb-3">
@@ -94,6 +100,35 @@ const OvertimeDetailSection = ({
             emptyMessage="No workflow activity yet."
             formatDateTime={formatDateTime}
           />
+          <div className="d-flex flex-column flex-sm-row justify-content-end gap-2 mt-3">
+            <CButton
+              color="primary"
+              variant="outline"
+              data-tour-id="overtime-edit-action"
+              disabled={!canEdit}
+              onClick={() => onEdit?.(selectedRecord)}
+            >
+              Edit
+            </CButton>
+            <CButton
+              color="warning"
+              variant="outline"
+              data-tour-id="overtime-cancel-action"
+              disabled={!canCancel}
+              onClick={() => onCancel?.(selectedRecord)}
+            >
+              Cancel
+            </CButton>
+            <CButton
+              color="danger"
+              variant="outline"
+              data-tour-id="overtime-delete-action"
+              disabled={!canDelete}
+              onClick={() => onDelete?.(selectedRecord)}
+            >
+              Delete
+            </CButton>
+          </div>
         </CCol>
       </CRow>
     )}

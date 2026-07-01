@@ -1,17 +1,9 @@
 import React from 'react'
-import {
-  CButton,
-  CFormInput,
-  CFormLabel,
-  CModal,
-  CModalBody,
-  CModalFooter,
-  CModalHeader,
-  CModalTitle,
-} from '@coreui/react'
-import { Camera, ChevronDown, ChevronUp, ClipboardCheck, Pencil, Plus, Trash2 } from 'lucide-react'
+import { CButton, CFormInput } from '@coreui/react'
+import { Camera, ChevronDown, ChevronUp, ClipboardCheck, Trash2 } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
 import IconOptionGrid from 'src/components/IconOptionGrid'
+import TypeManagerModal from 'src/components/report-workflow/TypeManagerModal'
 import { uid } from '../../utils'
 import {
   ACTIVE_CARD_BG,
@@ -28,6 +20,19 @@ import {
 import { compressPhotoFile, isLikelyImageFile, readFileAsDataUrl } from './postIncidentImageUtils'
 import useIsMobile from './useIsMobile'
 
+const MOBILE_SECTION_ORDER = [
+  'strengths',
+  'resourcesMobilised',
+  'improvementOpportunities',
+  'photos',
+]
+const MOBILE_SECTION_LABELS = {
+  strengths: 'Strengths',
+  resourcesMobilised: 'Resources',
+  improvementOpportunities: 'Improvements',
+  photos: 'Photos',
+}
+
 const PostIncidentAnalysisSection = ({ value, onChange, pushToast }) => {
   const section = React.useMemo(() => normalizeSection(value), [value])
   const isMobile = useIsMobile()
@@ -43,6 +48,7 @@ const PostIncidentAnalysisSection = ({ value, onChange, pushToast }) => {
   const [editingItemKey, setEditingItemKey] = React.useState('')
   const [newItemName, setNewItemName] = React.useState('')
   const [addItemError, setAddItemError] = React.useState('')
+  const [openMobileSection, setOpenMobileSection] = React.useState('')
 
   const updateSection = (patch) => {
     if (typeof onChange !== 'function') return
@@ -67,6 +73,25 @@ const PostIncidentAnalysisSection = ({ value, onChange, pushToast }) => {
       : [...rows, normalizedValue]
     updateSection({ [key]: nextRows })
   }
+
+  const getSelectedCount = React.useCallback(
+    (key) => {
+      if (key === 'photos') return Array.isArray(section.photos) ? section.photos.length : 0
+      return Array.isArray(section[key]) ? section[key].length : 0
+    },
+    [section],
+  )
+
+  const getFirstIncompleteMobileSection = React.useCallback(() => {
+    return MOBILE_SECTION_ORDER.find((key) => getSelectedCount(key) === 0) || 'strengths'
+  }, [getSelectedCount])
+
+  React.useEffect(() => {
+    if (!isMobile) return
+    if (!openMobileSection) {
+      setOpenMobileSection(getFirstIncompleteMobileSection())
+    }
+  }, [getFirstIncompleteMobileSection, isMobile, openMobileSection])
 
   const buildVisibleOptions = (key) => {
     const sectionMeta = SECTION_META[key] || {}
@@ -357,47 +382,6 @@ const PostIncidentAnalysisSection = ({ value, onChange, pushToast }) => {
     } finally {
       event.target.value = ''
     }
-    return
-
-    const validFiles = files.filter((f) => f.size <= MAX_BYTES)
-    const skipped = files.length - validFiles.length
-
-    if (skipped > 0) {
-      pushToast?.(
-        `${skipped} photo${skipped > 1 ? 's' : ''} skipped — each file must be under 1.5 MB.`,
-        { title: 'Photo too large', color: 'warning' },
-      )
-    }
-
-    if (validFiles.length === 0) {
-      event.target.value = ''
-      return
-    }
-
-    try {
-      const nextPhotos = await Promise.all(
-        validFiles.map(async (file) => ({
-          id: uid(),
-          fileName: String(file?.name || 'photo'),
-          url: await readFileAsDataUrl(file),
-          description: '',
-        })),
-      )
-      updateSection({
-        photos: [...(Array.isArray(section.photos) ? section.photos : []), ...nextPhotos],
-      })
-      pushToast?.(
-        `${validFiles.length} photo${validFiles.length > 1 ? 's' : ''} added to post-incident analysis.`,
-        { title: 'Photos updated', color: 'success' },
-      )
-    } catch {
-      pushToast?.('Unable to process one or more photos.', {
-        title: 'Upload failed',
-        color: 'danger',
-      })
-    } finally {
-      event.target.value = ''
-    }
   }
 
   const removePhoto = (photoId) => {
@@ -560,179 +544,160 @@ const PostIncidentAnalysisSection = ({ value, onChange, pushToast }) => {
     )
   }
 
+  const renderPhotosSection = () => (
+    <div className="d-grid gap-2">
+      <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div className="fw-semibold">Photographs</div>
+        <CreateActionButton
+          label="Add photo"
+          icon={<Camera size={13} className="me-1 align-text-bottom" />}
+          onClick={() => photoInputRef.current?.click()}
+        />
+      </div>
+      <CFormInput
+        ref={photoInputRef}
+        id="post-analysis-photo-upload"
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={handleUploadPhotos}
+        className="d-none"
+      />
+      {Array.isArray(section.photos) && section.photos.length > 0 ? (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+            gap: '0.75rem',
+          }}
+        >
+          {section.photos.map((photo, index) => (
+            <div
+              key={photo.id || `${photo.fileName || 'photo'}-${index}`}
+              className="rounded-3 border border-light-subtle p-2 d-grid gap-2"
+            >
+              <img
+                src={photo.url}
+                alt={photo.fileName || 'Incident photo'}
+                style={{
+                  width: '100%',
+                  height: '140px',
+                  objectFit: 'cover',
+                  borderRadius: '4px',
+                }}
+              />
+              <div className="small text-truncate">{photo.fileName || 'Photo'}</div>
+              <CFormInput
+                size="sm"
+                value={String(photo?.description || '')}
+                placeholder="Add image description"
+                onChange={(event) => updatePhotoDescription(photo.id, event.target.value)}
+              />
+              <CButton
+                type="button"
+                color="danger"
+                variant="outline"
+                size="sm"
+                className="d-inline-flex align-items-center justify-content-center gap-1"
+                onClick={() => removePhoto(photo.id)}
+              >
+                <Trash2 size={14} />
+                Remove
+              </CButton>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-3 border border-light-subtle bg-light-subtle p-3 text-body-secondary">
+          No photos yet. Upload photos to continue.
+        </div>
+      )}
+    </div>
+  )
+
+  const renderMobileSectionBody = (key) => {
+    if (key === 'resourcesMobilised') return renderPillSection(key)
+    if (key === 'photos') return renderPhotosSection()
+    return renderCardSection(key)
+  }
+
+  const renderMobileAccordionSection = (key) => {
+    const isOpen = openMobileSection === key
+    const count = getSelectedCount(key)
+    const countLabel =
+      key === 'photos' ? `${count} photo${count === 1 ? '' : 's'}` : `${count} selected`
+    const ToggleIcon = isOpen ? ChevronUp : ChevronDown
+
+    return (
+      <section key={key} className="erco-analysis-mobile-section">
+        <button
+          type="button"
+          className="erco-analysis-mobile-section__header"
+          aria-expanded={isOpen}
+          onClick={() => setOpenMobileSection(key)}
+        >
+          <span className="erco-analysis-mobile-section__title">
+            {MOBILE_SECTION_LABELS[key] || SECTION_META[key]?.title || key}
+          </span>
+          <span className="erco-analysis-mobile-section__meta">
+            {countLabel}
+            <ToggleIcon size={15} />
+          </span>
+        </button>
+        {isOpen ? (
+          <div className="erco-analysis-mobile-section__body">{renderMobileSectionBody(key)}</div>
+        ) : null}
+      </section>
+    )
+  }
+
   return (
     <div className="d-grid gap-4">
-      <CModal
+      <TypeManagerModal
         visible={Boolean(addModalSectionKey)}
-        alignment="center"
         onClose={closeAddModal}
-        fullscreen="sm"
-        scrollable
-      >
-        <CModalHeader>
-          <CModalTitle>
-            {addModalEditMode
-              ? `Edit ${SECTION_META[addModalSectionKey]?.title || 'Items'}`
-              : SECTION_META[addModalSectionKey]?.modalTitle || 'Add Item'}
-          </CModalTitle>
-        </CModalHeader>
-        <CModalBody className="d-grid gap-3">
-          {addModalEditMode ? (
-            <div className="d-grid gap-2" style={{ maxHeight: 460, overflowY: 'auto' }}>
-              {getModalManageRows(addModalSectionKey).map((row) => (
-                <div
-                  key={row.value}
-                  className="d-flex justify-content-between align-items-center gap-2 border rounded px-2 py-2"
-                >
-                  <div style={{ minWidth: 0 }} className="text-truncate">
-                    {row.title || row.value}
-                  </div>
-                  <div className="d-flex align-items-center gap-1">
-                    <CButton
-                      type="button"
-                      size="sm"
-                      color="link"
-                      className="text-primary p-1 d-inline-flex align-items-center bg-transparent border-0 shadow-none"
-                      onClick={() => startEditItem(row.value)}
-                    >
-                      <Pencil size={14} />
-                    </CButton>
-                    <CButton
-                      type="button"
-                      size="sm"
-                      color="link"
-                      className="text-danger p-1 d-inline-flex align-items-center bg-transparent border-0 shadow-none"
-                      onClick={() => removeItem(addModalSectionKey, row.value)}
-                    >
-                      <Trash2 size={14} />
-                    </CButton>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <>
-              <div>
-                <CFormLabel>Item Name</CFormLabel>
-                <CFormInput
-                  value={newItemName}
-                  invalid={Boolean(addItemError)}
-                  placeholder="Enter item name"
-                  onChange={(event) => {
-                    setNewItemName(event.target.value)
-                    if (addItemError) setAddItemError('')
-                  }}
-                />
-              </div>
-              {addItemError ? <div className="small text-danger">{addItemError}</div> : null}
-              <div className="pt-1">
-                <CreateActionButton
-                  label={SECTION_META[addModalSectionKey]?.editLabel || 'Edit items'}
-                  onClick={() => setAddModalEditMode(true)}
-                  size="sm"
-                />
-              </div>
-            </>
-          )}
-        </CModalBody>
-        <CModalFooter>
-          {addModalEditMode ? (
-            <>
-              <CButton color="light" onClick={() => setAddModalEditMode(false)}>
-                Back
-              </CButton>
-              <CButton color="light" onClick={closeAddModal}>
-                Close
-              </CButton>
-            </>
-          ) : (
-            <>
-              <CButton color="light" onClick={closeAddModal}>
-                Cancel
-              </CButton>
-              <CButton color="primary" onClick={saveNewItem}>
-                {editingItemKey ? 'Update Item' : 'Save Item'}
-              </CButton>
-            </>
-          )}
-        </CModalFooter>
-      </CModal>
+        editMode={addModalEditMode}
+        onSetEditMode={setAddModalEditMode}
+        editTitle={`Edit ${SECTION_META[addModalSectionKey]?.title || 'Items'}`}
+        addTitle={SECTION_META[addModalSectionKey]?.modalTitle || 'Add Item'}
+        options={getModalManageRows(addModalSectionKey)}
+        onStartEdit={(row) => startEditItem(row?.value)}
+        onRequestDelete={({ value }) => removeItem(addModalSectionKey, value)}
+        nameLabel="Item Name"
+        nameValue={newItemName}
+        onChangeName={(value) => {
+          setNewItemName(value)
+          if (addItemError) setAddItemError('')
+        }}
+        namePlaceholder="Enter item name"
+        showDescriptionField={false}
+        error={addItemError}
+        editingKey={editingItemKey}
+        editingLabel="Editing item"
+        editButtonLabel={SECTION_META[addModalSectionKey]?.editLabel || 'Edit items'}
+        onSave={saveNewItem}
+        saveLabel="Save Item"
+        updateLabel="Update Item"
+        showRowIcon={false}
+      />
 
       <div className="d-flex align-items-center gap-2 fw-semibold">
         <ClipboardCheck size={16} />
         Post Incident Analysis
       </div>
 
-      {renderPillSection('resourcesMobilised')}
-      {renderCardSection('strengths')}
-      {renderCardSection('improvementOpportunities')}
-
-      <div className="d-grid gap-2">
-        <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
-          <div className="fw-semibold">Photographs</div>
-          <CreateActionButton
-            label="Add photo"
-            icon={<Camera size={13} className="me-1 align-text-bottom" />}
-            onClick={() => photoInputRef.current?.click()}
-          />
+      {isMobile ? (
+        <div className="erco-analysis-mobile-accordion">
+          {MOBILE_SECTION_ORDER.map((key) => renderMobileAccordionSection(key))}
         </div>
-        <CFormInput
-          ref={photoInputRef}
-          id="post-analysis-photo-upload"
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={handleUploadPhotos}
-          className="d-none"
-        />
-        {Array.isArray(section.photos) && section.photos.length > 0 ? (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-              gap: '0.75rem',
-            }}
-          >
-            {section.photos.map((photo, index) => (
-              <div
-                key={photo.id || `${photo.fileName || 'photo'}-${index}`}
-                className="rounded-3 border border-light-subtle p-2 d-grid gap-2"
-              >
-                <img
-                  src={photo.url}
-                  alt={photo.fileName || 'Incident photo'}
-                  style={{
-                    width: '100%',
-                    height: '140px',
-                    objectFit: 'cover',
-                    borderRadius: '4px',
-                  }}
-                />
-                <div className="small text-truncate">{photo.fileName || 'Photo'}</div>
-                <CFormInput
-                  size="sm"
-                  value={String(photo?.description || '')}
-                  placeholder="Add image description"
-                  onChange={(event) => updatePhotoDescription(photo.id, event.target.value)}
-                />
-                <CButton
-                  type="button"
-                  color="danger"
-                  variant="outline"
-                  size="sm"
-                  className="d-inline-flex align-items-center justify-content-center gap-1"
-                  onClick={() => removePhoto(photo.id)}
-                >
-                  <Trash2 size={14} />
-                  Remove
-                </CButton>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-body-secondary">No photos uploaded yet.</div>
-        )}
-      </div>
+      ) : (
+        <>
+          {renderPillSection('resourcesMobilised')}
+          {renderCardSection('strengths')}
+          {renderCardSection('improvementOpportunities')}
+          {renderPhotosSection()}
+        </>
+      )}
     </div>
   )
 }

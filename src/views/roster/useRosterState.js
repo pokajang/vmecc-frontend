@@ -54,6 +54,7 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
   })
 
   const teamsRef = useRef([])
+  const flowStateRef = useRef(flowState)
   const { editMode, isDirty, isSavingDraft, isPublishing, statusMessage, error } = flowState
   const setEditMode = (value) => dispatchFlow({ type: 'set-edit-mode', value })
   const setIsDirty = (value) => dispatchFlow({ type: 'set-dirty', value })
@@ -63,6 +64,10 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
   useEffect(() => {
     teamsRef.current = teams
   }, [teams])
+
+  useEffect(() => {
+    flowStateRef.current = flowState
+  }, [flowState])
 
   const getRangeMonthCount = (value) => (value === 'month' ? 12 : 0)
 
@@ -435,7 +440,9 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
 
       setRoster(rows)
       setOriginalRoster(rows)
-      dispatchFlow({ type: 'reset-edit' })
+      if (!flowStateRef.current.editMode) {
+        dispatchFlow({ type: 'reset-edit' })
+      }
     } catch (err) {
       setError(err.payload?.message || 'Unable to load roster.')
     } finally {

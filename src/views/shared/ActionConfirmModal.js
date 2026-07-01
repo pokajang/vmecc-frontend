@@ -8,10 +8,16 @@ const ActionConfirmModal = ({
   confirmLabel = 'Confirm',
   confirmColor = 'primary',
   cancelLabel = 'Cancel',
+  tourId = '',
   onClose,
   onConfirm,
 }) => (
-  <CModal visible={visible} alignment="center" onClose={onClose}>
+  <CModal
+    visible={visible}
+    alignment="center"
+    onClose={onClose}
+    {...(tourId ? { 'data-tour-id': tourId } : {})}
+  >
     <CModalHeader onClose={onClose}>
       <CModalTitle>{title}</CModalTitle>
     </CModalHeader>

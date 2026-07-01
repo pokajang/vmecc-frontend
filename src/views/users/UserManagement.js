@@ -250,7 +250,7 @@ const UserManagement = () => {
   }
 
   return (
-    <CContainer fluid>
+    <CContainer fluid data-tour-id="users-module">
       <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
       <ModulePageHeader
         title="User Management"

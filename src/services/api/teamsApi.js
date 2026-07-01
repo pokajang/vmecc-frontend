@@ -3,6 +3,7 @@ import { apiRequest } from './httpClient'
 // Teams
 export const fetchTeams = () => apiRequest('/teams')
 export const fetchTeam = (id) => apiRequest(`/teams/${id}`)
+export const fetchTeamMemberOptions = () => apiRequest('/teams/member-options')
 export const createTeam = (payload) =>
   apiRequest('/teams', {
     method: 'POST',

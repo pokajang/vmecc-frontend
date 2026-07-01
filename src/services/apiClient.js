@@ -4,6 +4,7 @@ export {
   buildApiUrl,
   clearCsrfToken,
   fetchWithCsrfRetry,
+  getClientMode,
   getCsrfToken,
   refreshCsrfToken,
   setCsrfToken,
@@ -20,3 +21,5 @@ export * from './api/migrationApi'
 export * from './api/holidaysApi'
 export * from './api/rolePermissionsApi'
 export * from './api/dashboardApi'
+export * from './api/aiHelperApi'
+export * from './api/feedbackReportsApi'

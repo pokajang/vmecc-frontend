@@ -1,21 +1,25 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useMemo, useState } from 'react'
 import { CBadge } from '@coreui/react'
 import {
-  CalendarDays,
-  ChevronLeft,
+  CalendarCheck,
+  CalendarPlus,
   ChevronRight,
-  Clock3,
+  ClockPlus,
   ExternalLink,
+  FilePlus2,
+  Flag,
+  History,
   LogOut,
-  MessageSquareText,
+  ReceiptText,
   Settings,
   User,
-  WalletCards,
 } from 'lucide-react'
 
 import { getPrimaryRoleLabel } from 'src/utils/authz'
-import useFocusTrap from 'src/hooks/useFocusTrap'
 import { isTitle } from 'src/utils/navigation'
+import MobileOverlayItem from './MobileOverlayItem'
+import MobileOverlaySection from './MobileOverlaySection'
+import MobileOverlayShell from './MobileOverlayShell'
 
 const collectLeafRows = (items = [], rows) => {
   items.forEach((item) => {
@@ -26,7 +30,7 @@ const collectLeafRows = (items = [], rows) => {
       return
     }
 
-    if (item.to || item.href) {
+    if (item.to || item.href || item.action) {
       rows.push({ type: 'link', item })
       return
     }
@@ -51,23 +55,11 @@ const MobileNavSheet = ({
   canClaim,
   canLeave,
   canOvertime,
-  canMessage,
   isLoggingOut,
+  onReportIssue,
   returnFocusRef,
 }) => {
   const [activeGroup, setActiveGroup] = useState(null)
-  const headerRef = useRef(null)
-  const panelRef = useRef(null)
-
-  useEffect(() => {
-    if (!open) return
-
-    const originalOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = originalOverflow
-    }
-  }, [open])
 
   const handleEscape = useCallback(() => {
     if (mode === 'menu' && activeGroup) {
@@ -76,14 +68,6 @@ const MobileNavSheet = ({
     }
     onClose()
   }, [activeGroup, mode, onClose])
-
-  useFocusTrap({
-    enabled: open,
-    containerRef: panelRef,
-    initialFocusRef: headerRef,
-    returnFocusRef,
-    onEscape: handleEscape,
-  })
 
   const topLevelRows = useMemo(
     () =>
@@ -109,98 +93,58 @@ const MobileNavSheet = ({
   const primaryRole = getPrimaryRoleLabel(user)
   const secondaryRoles = (user?.roles || []).filter((role) => role !== primaryRole)
   const canQuickActions = canClaim || canLeave || canOvertime
-  const myWorkItems = [
-    canClaim ? { label: 'Payroll', to: '/payroll', icon: WalletCards } : null,
-    canLeave ? { label: 'Leave', to: '/leave', icon: CalendarDays } : null,
-    canOvertime ? { label: 'Overtime', to: '/overtime', icon: Clock3 } : null,
-    canMessage ? { label: 'Messages', to: '/messages', icon: MessageSquareText } : null,
-    { label: 'Profile', to: '/profile', icon: User },
-  ].filter(Boolean)
+  const canMyRecords = canClaim || canLeave || canOvertime
 
   if (!open) return null
 
   const title = mode === 'account' ? 'Account' : activeGroup?.name ? activeGroup.name : 'Menu'
-  const hasBackButton = mode === 'menu' && Boolean(activeGroup)
+  const handleBack = mode === 'menu' && activeGroup ? () => setActiveGroup(null) : null
 
   const renderMenuRows = () => {
     const rows = activeGroup ? secondLevelRows : topLevelRows
 
     return (
       <>
-        {!activeGroup && myWorkItems.length > 0 && (
-          <>
-            <div className="mobile-nav-sheet-section">My Work</div>
-            <div className="mobile-nav-sheet-action-grid mb-3">
-              {myWorkItems.map((item) => {
-                const Icon = item.icon
-                return (
-                  <button
-                    key={item.to}
-                    type="button"
-                    className="mobile-nav-sheet-row mobile-nav-sheet-tile"
-                    onClick={() => onNavigate({ to: item.to })}
-                  >
-                    <span className="mobile-nav-sheet-row-main">
-                      <Icon size={16} />
-                      <span>{item.label}</span>
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-          </>
-        )}
         <div className="mobile-nav-sheet-action-grid mobile-nav-sheet-action-grid-menu">
           {rows.map((row) => {
             if (row.type === 'section') {
               return (
-                <div
-                  key={row.key}
-                  className="mobile-nav-sheet-section mobile-nav-sheet-section-grid mobile-nav-sheet-span-2"
-                >
+                <MobileOverlaySection key={row.key} className="mobile-nav-sheet-section-grid" span>
                   {row.label}
-                </div>
+                </MobileOverlaySection>
               )
             }
 
             if (row.type === 'group') {
               return (
-                <button
+                <MobileOverlayItem
                   key={row.key}
-                  type="button"
-                  className="mobile-nav-sheet-row mobile-nav-sheet-tile"
                   onClick={() => setActiveGroup(row.item)}
-                >
-                  <span className="mobile-nav-sheet-row-main">
-                    {row.item.icon && (
-                      <span className="mobile-nav-sheet-row-icon">{row.item.icon}</span>
-                    )}
-                    <span>{row.item.name}</span>
-                  </span>
-                  <ChevronRight size={16} />
-                </button>
+                  icon={row.item.icon}
+                  label={row.item.name}
+                  trailing={<ChevronRight size={16} />}
+                />
               )
             }
 
             const { item } = row
             return (
-              <button
+              <MobileOverlayItem
                 key={row.key}
-                type="button"
-                className="mobile-nav-sheet-row mobile-nav-sheet-tile"
                 onClick={() => onNavigate(item)}
-              >
-                <span className="mobile-nav-sheet-row-main">
-                  {item.icon && <span className="mobile-nav-sheet-row-icon">{item.icon}</span>}
-                  <span>{item.name}</span>
-                  {item.href && <ExternalLink size={14} className="text-body-tertiary" />}
-                </span>
-                {item.badge && (
-                  <CBadge color={item.badge.color} className={item.badge.className || ''}>
-                    {item.badge.text}
-                  </CBadge>
-                )}
-              </button>
+                icon={item.icon}
+                label={item.name}
+                badge={
+                  item.badge ? (
+                    <CBadge color={item.badge.color} className={item.badge.className || ''}>
+                      {item.badge.text}
+                    </CBadge>
+                  ) : null
+                }
+                trailing={
+                  item.href ? <ExternalLink size={14} className="text-body-tertiary" /> : null
+                }
+              />
             )
           })}
         </div>
@@ -211,134 +155,109 @@ const MobileNavSheet = ({
   const renderAccountRows = () => (
     <>
       <div className="mobile-nav-sheet-user-card">
-        <div className="small text-body-secondary mb-1">Signed in as</div>
-        <div className="fw-semibold">{user?.name || user?.email || 'User'}</div>
-        {primaryRole && <div className="small text-body-secondary mt-1">{primaryRole}</div>}
+        <span className="mobile-nav-sheet-user-label">Signed in as</span>
+        <span className="mobile-nav-sheet-user-name">{user?.name || user?.email || 'User'}</span>
+        {primaryRole && <span className="mobile-nav-sheet-user-role">{primaryRole}</span>}
         {secondaryRoles.length > 0 && (
-          <div className="small text-body-secondary">{secondaryRoles.join(', ')}</div>
+          <span className="mobile-nav-sheet-user-role">{secondaryRoles.join(', ')}</span>
         )}
       </div>
 
-      <div className="mobile-nav-sheet-section">Account</div>
-      <div className="mobile-nav-sheet-action-grid">
-        <button
-          type="button"
-          className="mobile-nav-sheet-row mobile-nav-sheet-tile"
-          onClick={() => onNavigate({ to: '/profile' })}
-        >
-          <span className="mobile-nav-sheet-row-main">
-            <User size={16} />
-            <span>Profile</span>
-          </span>
-        </button>
-        <button
-          type="button"
-          className="mobile-nav-sheet-row mobile-nav-sheet-tile"
-          onClick={() => onNavigate({ to: '/profile/security' })}
-        >
-          <span className="mobile-nav-sheet-row-main">
-            <Settings size={16} />
-            <span>Settings</span>
-          </span>
-        </button>
-      </div>
-
-      {canQuickActions && <div className="mobile-nav-sheet-section">Quick Actions</div>}
+      {canQuickActions && <MobileOverlaySection>Quick Actions</MobileOverlaySection>}
       {canQuickActions && (
         <div className="mobile-nav-sheet-action-grid">
           {canClaim && (
-            <button
-              type="button"
-              className="mobile-nav-sheet-row mobile-nav-sheet-tile"
+            <MobileOverlayItem
               onClick={() => onNavigate({ to: '/payroll/claims/new' })}
-            >
-              <span className="mobile-nav-sheet-row-main">
-                <WalletCards size={16} />
-                <span>New Claim</span>
-              </span>
-            </button>
+              icon={<FilePlus2 size={16} />}
+              label="New Claim"
+            />
           )}
           {canLeave && (
-            <button
-              type="button"
-              className="mobile-nav-sheet-row mobile-nav-sheet-tile"
+            <MobileOverlayItem
               onClick={() => onNavigate({ to: '/leave/new' })}
-            >
-              <span className="mobile-nav-sheet-row-main">
-                <CalendarDays size={16} />
-                <span>Apply Leave</span>
-              </span>
-            </button>
+              icon={<CalendarPlus size={16} />}
+              label="Apply Leave"
+            />
           )}
           {canOvertime && (
-            <button
-              type="button"
-              className="mobile-nav-sheet-row mobile-nav-sheet-tile"
+            <MobileOverlayItem
               onClick={() => onNavigate({ to: '/overtime/new' })}
-            >
-              <span className="mobile-nav-sheet-row-main">
-                <Clock3 size={16} />
-                <span>Apply Overtime</span>
-              </span>
-            </button>
+              icon={<ClockPlus size={16} />}
+              label="Apply Overtime"
+            />
           )}
         </div>
       )}
 
-      <div className="mobile-nav-sheet-section">Session</div>
+      {canMyRecords && <MobileOverlaySection>My Records</MobileOverlaySection>}
+      {canMyRecords && (
+        <div className="mobile-nav-sheet-action-grid">
+          {canClaim && (
+            <MobileOverlayItem
+              onClick={() => onNavigate({ to: '/payroll' })}
+              icon={<ReceiptText size={16} />}
+              label="Payroll records"
+            />
+          )}
+          {canLeave && (
+            <MobileOverlayItem
+              onClick={() => onNavigate({ to: '/leave' })}
+              icon={<CalendarCheck size={16} />}
+              label="Leave records"
+            />
+          )}
+          {canOvertime && (
+            <MobileOverlayItem
+              onClick={() => onNavigate({ to: '/overtime' })}
+              icon={<History size={16} />}
+              label="Overtime records"
+            />
+          )}
+        </div>
+      )}
+
+      <MobileOverlaySection>Account</MobileOverlaySection>
       <div className="mobile-nav-sheet-action-grid">
-        <button
-          type="button"
-          className="mobile-nav-sheet-row mobile-nav-sheet-tile mobile-nav-sheet-tile-danger mobile-nav-sheet-span-2"
+        <MobileOverlayItem
+          onClick={() => onNavigate({ to: '/profile' })}
+          icon={<User size={16} />}
+          label="Profile"
+        />
+        <MobileOverlayItem
+          onClick={() => onNavigate({ to: '/profile/security' })}
+          icon={<Settings size={16} />}
+          label="Settings"
+        />
+        <MobileOverlayItem onClick={onReportIssue} icon={<Flag size={16} />} label="Report issue" />
+      </div>
+
+      <MobileOverlaySection>Session</MobileOverlaySection>
+      <div className="mobile-nav-sheet-inline-actions">
+        <MobileOverlayItem
           onClick={onLogout}
           disabled={isLoggingOut}
-        >
-          <span className="mobile-nav-sheet-row-main">
-            <LogOut size={16} />
-            <span>{isLoggingOut ? 'Signing out...' : 'Log out'}</span>
-          </span>
-        </button>
+          icon={<LogOut size={16} />}
+          label={isLoggingOut ? 'Signing out...' : 'Log out'}
+          danger
+          inline
+        />
       </div>
     </>
   )
 
   return (
-    <>
-      <button
-        type="button"
-        className={`mobile-nav-sheet-backdrop${open ? ' show' : ''}`}
-        onClick={onClose}
-        aria-label="Close menu overlay"
-      />
-      <section
-        ref={panelRef}
-        className={`mobile-nav-sheet${open ? ' show' : ''}`}
-        role="dialog"
-        aria-modal="true"
-        aria-label={`${title} drawer`}
-      >
-        <div
-          className={`mobile-nav-sheet-header${hasBackButton ? ' has-back' : ''}`}
-          ref={headerRef}
-          tabIndex={-1}
-        >
-          {hasBackButton && (
-            <button
-              type="button"
-              className="mobile-nav-sheet-icon-btn"
-              onClick={() => setActiveGroup(null)}
-              aria-label="Back"
-            >
-              <ChevronLeft size={18} />
-            </button>
-          )}
-        </div>
-
-        <div className="mobile-nav-sheet-body">
-          {mode === 'account' ? renderAccountRows() : renderMenuRows()}
-        </div>
-      </section>
-    </>
+    <MobileOverlayShell
+      open={open}
+      title={title}
+      ariaLabel={`${title} drawer`}
+      onClose={onClose}
+      onBack={handleBack}
+      returnFocusRef={returnFocusRef}
+      onEscape={handleEscape}
+    >
+      {mode === 'account' ? renderAccountRows() : renderMenuRows()}
+    </MobileOverlayShell>
   )
 }
 

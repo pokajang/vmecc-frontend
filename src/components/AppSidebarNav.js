@@ -7,7 +7,7 @@ import 'simplebar-react/dist/simplebar.min.css'
 
 import { CBadge, CNavLink, CSidebarNav } from '@coreui/react'
 
-export const AppSidebarNav = ({ items }) => {
+export const AppSidebarNav = ({ items, onAction }) => {
   const location = useLocation()
   const navLink = (name, icon, badge, indent = false) => {
     return (
@@ -34,13 +34,17 @@ export const AppSidebarNav = ({ items }) => {
   }
 
   const navItem = (item, index, indent = false) => {
-    const { component, name, badge, icon, matchPrefix, ...rest } = item
+    const { component, name, badge, icon, matchPrefix, action, ...rest } = item
     const Component = component
     const prefixes = matchPrefix ? (Array.isArray(matchPrefix) ? matchPrefix : [matchPrefix]) : []
     const prefixActive =
       prefixes.length > 0 && prefixes.some((p) => location.pathname.startsWith(p))
         ? { active: true }
         : {}
+    const actionClassName = [rest.className, action ? 'w-100 text-start' : null]
+      .filter(Boolean)
+      .join(' ')
+
     return (
       <Component as="div" key={index}>
         {rest.to || rest.href ? (
@@ -49,6 +53,16 @@ export const AppSidebarNav = ({ items }) => {
             {...(rest.href && { target: '_blank', rel: 'noopener noreferrer' })}
             {...rest}
             {...prefixActive}
+          >
+            {navLink(name, icon, badge, indent)}
+          </CNavLink>
+        ) : action ? (
+          <CNavLink
+            as="button"
+            type="button"
+            {...rest}
+            className={actionClassName}
+            onClick={() => onAction?.(action, item)}
           >
             {navLink(name, icon, badge, indent)}
           </CNavLink>
@@ -81,4 +95,5 @@ export const AppSidebarNav = ({ items }) => {
 
 AppSidebarNav.propTypes = {
   items: PropTypes.arrayOf(PropTypes.any).isRequired,
+  onAction: PropTypes.func,
 }

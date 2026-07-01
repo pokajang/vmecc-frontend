@@ -88,36 +88,38 @@ const LeaveManagementTabsContent = ({
   isHolidaysLoading,
 }) => (
   <>
-    <RouteNavTabs
-      currentPath={resolvedManagementTab}
-      navigate={(tab) => switchManagementTab(tab)}
-      items={[
-        {
-          key: 'records',
-          label: 'All Leaves',
-          to: 'records',
-          match: 'records',
-        },
-        {
-          key: 'assignments',
-          label: 'Set Leaves',
-          to: 'assignments',
-          match: 'assignments',
-        },
-        {
-          key: 'holidays',
-          label: 'Set Holidays',
-          to: 'holidays',
-          match: 'holidays',
-        },
-        {
-          key: 'rules',
-          label: 'Leave Workflow',
-          to: 'rules',
-          match: 'rules',
-        },
-      ]}
-    />
+    <div data-tour-id="leave-management-nav">
+      <RouteNavTabs
+        currentPath={resolvedManagementTab}
+        navigate={(tab) => switchManagementTab(tab)}
+        items={[
+          {
+            key: 'records',
+            label: 'All Leaves',
+            to: 'records',
+            match: 'records',
+          },
+          {
+            key: 'assignments',
+            label: 'Set Leaves',
+            to: 'assignments',
+            match: 'assignments',
+          },
+          {
+            key: 'holidays',
+            label: 'Set Holidays',
+            to: 'holidays',
+            match: 'holidays',
+          },
+          {
+            key: 'rules',
+            label: 'Leave Workflow',
+            to: 'rules',
+            match: 'rules',
+          },
+        ]}
+      />
+    </div>
 
     {resolvedManagementTab === 'records' && (
       <LeaveRecordsSection

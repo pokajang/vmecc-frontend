@@ -130,10 +130,7 @@ const UserProfile = () => {
       setLoading(true)
       setError(null)
       try {
-        const [usersResponse, teamsResponse] = await Promise.all([
-          fetchUsers({ include_deleted: 1 }),
-          fetchTeams(),
-        ])
+        const usersResponse = await fetchUsers({ include_deleted: 1 })
         const found = (usersResponse?.data || []).find((u) => String(u.id) === String(id))
         if (!found) {
           setError('User not found.')
@@ -141,7 +138,12 @@ const UserProfile = () => {
           setUser(found)
           setRoleAssignments(toEditableRoleAssignments(found))
         }
-        setTeams(teamsResponse?.data || [])
+        try {
+          const teamsResponse = await fetchTeams()
+          setTeams(teamsResponse?.data || [])
+        } catch {
+          setTeams([])
+        }
       } catch (err) {
         setError(err.payload?.message || 'Unable to load user.')
       } finally {
@@ -459,213 +461,215 @@ const UserProfile = () => {
   }
 
   return (
-    <CContainer fluid>
-      <div className="mb-3 d-flex justify-content-between align-items-center">
-        <BackButton to="/admin/users" />
-        <div className="d-flex align-items-center gap-2">
-          <CButton
-            size="sm"
-            color={user.status === 'Active' ? 'danger' : 'secondary'}
-            variant="outline"
-            disabled={statusUpdating || isSelf || user.deleted_at}
-            onClick={handleStatusClick}
-            title={
-              isSelf
-                ? 'You cannot change your own status.'
-                : user.deleted_at
-                  ? 'Restore the user before changing status.'
-                  : undefined
-            }
-          >
-            {statusUpdating ? (
-              <ButtonLoader label="Updating..." />
-            ) : user.deleted_at ? (
-              'Deleted'
-            ) : user.status === 'Active' ? (
-              'Deactivate'
-            ) : (
-              'Activate'
-            )}
-          </CButton>
-          <CDropdown alignment="end">
-            <CDropdownToggle color="secondary" variant="outline" size="sm">
-              More
-            </CDropdownToggle>
-            <CDropdownMenu>
-              <CDropdownItem
-                onClick={handleExportXlsx}
-                disabled={exporting}
-                className="cursor-pointer"
-              >
-                {exporting ? <ButtonLoader label="Exporting..." /> : 'Export CSV'}
-              </CDropdownItem>
-              {user.deleted_at ? (
+    <CContainer fluid data-tour-id="users-module">
+      <div data-tour-id="users-profile-entry">
+        <div className="mb-3 d-flex justify-content-between align-items-center">
+          <BackButton to="/admin/users" />
+          <div className="d-flex align-items-center gap-2">
+            <CButton
+              size="sm"
+              color={user.status === 'Active' ? 'danger' : 'secondary'}
+              variant="outline"
+              disabled={statusUpdating || isSelf || user.deleted_at}
+              onClick={handleStatusClick}
+              title={
+                isSelf
+                  ? 'You cannot change your own status.'
+                  : user.deleted_at
+                    ? 'Restore the user before changing status.'
+                    : undefined
+              }
+            >
+              {statusUpdating ? (
+                <ButtonLoader label="Updating..." />
+              ) : user.deleted_at ? (
+                'Deleted'
+              ) : user.status === 'Active' ? (
+                'Deactivate'
+              ) : (
+                'Activate'
+              )}
+            </CButton>
+            <CDropdown alignment="end">
+              <CDropdownToggle color="secondary" variant="outline" size="sm">
+                More
+              </CDropdownToggle>
+              <CDropdownMenu>
                 <CDropdownItem
-                  onClick={() => dispatchModal({ type: 'open', modal: 'restore' })}
-                  disabled={actionUpdating}
+                  onClick={handleExportXlsx}
+                  disabled={exporting}
                   className="cursor-pointer"
                 >
-                  Restore user
+                  {exporting ? <ButtonLoader label="Exporting..." /> : 'Export CSV'}
                 </CDropdownItem>
-              ) : (
-                <>
+                {user.deleted_at ? (
                   <CDropdownItem
-                    onClick={() => dispatchModal({ type: 'open', modal: 'reset' })}
-                    disabled={actionUpdating || isSelf}
+                    onClick={() => dispatchModal({ type: 'open', modal: 'restore' })}
+                    disabled={actionUpdating}
                     className="cursor-pointer"
                   >
-                    Reset password
+                    Restore user
                   </CDropdownItem>
-                  <CDropdownItem
-                    onClick={handleOpenRoleModal}
-                    disabled={actionUpdating || isSelf || !canAssignRoles}
-                    className="cursor-pointer"
-                  >
-                    Manage roles
-                  </CDropdownItem>
-                  <CDropdownItem
-                    onClick={() => dispatchModal({ type: 'open', modal: 'delete' })}
-                    disabled={actionUpdating || isSelf}
-                    className="text-danger cursor-pointer"
-                  >
-                    Delete user
-                  </CDropdownItem>
-                  {user.locked_at ? (
+                ) : (
+                  <>
                     <CDropdownItem
-                      onClick={() => dispatchModal({ type: 'open', modal: 'unlock' })}
+                      onClick={() => dispatchModal({ type: 'open', modal: 'reset' })}
                       disabled={actionUpdating || isSelf}
                       className="cursor-pointer"
                     >
-                      Unlock account
+                      Reset password
                     </CDropdownItem>
-                  ) : (
                     <CDropdownItem
-                      onClick={() => dispatchModal({ type: 'open', modal: 'lock' })}
+                      onClick={handleOpenRoleModal}
+                      disabled={actionUpdating || isSelf || !canAssignRoles}
+                      className="cursor-pointer"
+                    >
+                      Manage roles
+                    </CDropdownItem>
+                    <CDropdownItem
+                      onClick={() => dispatchModal({ type: 'open', modal: 'delete' })}
                       disabled={actionUpdating || isSelf}
                       className="text-danger cursor-pointer"
                     >
-                      Lock account
+                      Delete user
                     </CDropdownItem>
-                  )}
-                </>
-              )}
-            </CDropdownMenu>
-          </CDropdown>
+                    {user.locked_at ? (
+                      <CDropdownItem
+                        onClick={() => dispatchModal({ type: 'open', modal: 'unlock' })}
+                        disabled={actionUpdating || isSelf}
+                        className="cursor-pointer"
+                      >
+                        Unlock account
+                      </CDropdownItem>
+                    ) : (
+                      <CDropdownItem
+                        onClick={() => dispatchModal({ type: 'open', modal: 'lock' })}
+                        disabled={actionUpdating || isSelf}
+                        className="text-danger cursor-pointer"
+                      >
+                        Lock account
+                      </CDropdownItem>
+                    )}
+                  </>
+                )}
+              </CDropdownMenu>
+            </CDropdown>
+          </div>
         </div>
+
+        {actionMessage && (
+          <CAlert color={actionMessage.type} className="my-3">
+            {actionMessage.message}
+          </CAlert>
+        )}
+
+        <UserSummaryCard user={user} />
+
+        <UserConfirmModal
+          visible={modalState.deactivate}
+          title="Deactivate User"
+          message={`Are you sure you want to deactivate ${user?.name || 'this user'} from the system? The user will be notified and will no longer be able to access the system.`}
+          confirmLabel="Deactivate"
+          confirmColor="danger"
+          onConfirm={handleConfirmDeactivate}
+          onClose={() => dispatchModal({ type: 'close', modal: 'deactivate' })}
+          confirmDisabled={statusUpdating}
+          cancelDisabled={statusUpdating}
+        />
+
+        <UserConfirmModal
+          visible={modalState.activate}
+          title="Activate User"
+          message={`Are you sure you want to activate ${user?.name || 'this user'} for the system? The user will be notified and will regain access to the system.`}
+          confirmLabel="Activate"
+          confirmColor="success"
+          onConfirm={handleConfirmActivate}
+          onClose={() => dispatchModal({ type: 'close', modal: 'activate' })}
+          confirmDisabled={statusUpdating}
+          cancelDisabled={statusUpdating}
+        />
+
+        <UserRoleModal
+          visible={modalState.role}
+          roleAssignments={roleAssignments}
+          teams={teams}
+          onAddAssignment={addRoleAssignment}
+          onRemoveAssignment={removeRoleAssignment}
+          onChangeAssignment={changeRoleAssignment}
+          onClose={() => dispatchModal({ type: 'close', modal: 'role' })}
+          onConfirm={handleRoleUpdate}
+          confirmDisabled={actionUpdating || isSelf || !canAssignRoles}
+          loading={actionUpdating}
+        />
+
+        <UserConfirmModal
+          visible={modalState.reset}
+          title="Reset Password"
+          message={`Send a password reset link to ${user?.email || 'this user'}?`}
+          confirmLabel="Send reset link"
+          confirmColor="primary"
+          onConfirm={handlePasswordReset}
+          onClose={() => dispatchModal({ type: 'close', modal: 'reset' })}
+          confirmDisabled={actionUpdating || isSelf}
+          cancelDisabled={actionUpdating}
+        />
+
+        <UserConfirmModal
+          visible={modalState.delete}
+          title="Delete User"
+          message={`This will disable access for ${user?.name || 'this user'}. You can restore later.`}
+          confirmLabel="Delete"
+          confirmColor="danger"
+          onConfirm={handleDeleteUser}
+          onClose={() => dispatchModal({ type: 'close', modal: 'delete' })}
+          confirmDisabled={actionUpdating || isSelf}
+          cancelDisabled={actionUpdating}
+        />
+
+        <UserConfirmModal
+          visible={modalState.restore}
+          title="Restore User"
+          message={`Restore access for ${user?.name || 'this user'}?`}
+          confirmLabel="Restore"
+          confirmColor="success"
+          onConfirm={handleRestoreUser}
+          onClose={() => dispatchModal({ type: 'close', modal: 'restore' })}
+          confirmDisabled={actionUpdating}
+          cancelDisabled={actionUpdating}
+        />
+
+        <UserConfirmModal
+          visible={modalState.lock}
+          title="Lock Account"
+          message={`Lock access for ${user?.name || 'this user'}? This will revoke active sessions.`}
+          confirmLabel="Lock account"
+          confirmColor="danger"
+          onConfirm={handleLockUser}
+          onClose={() => dispatchModal({ type: 'close', modal: 'lock' })}
+          confirmDisabled={actionUpdating || isSelf}
+          cancelDisabled={actionUpdating}
+        />
+
+        <UserConfirmModal
+          visible={modalState.unlock}
+          title="Unlock Account"
+          message={`Unlock access for ${user?.name || 'this user'}? Failed login counters will be reset.`}
+          confirmLabel="Unlock account"
+          confirmColor="success"
+          onConfirm={handleUnlockUser}
+          onClose={() => dispatchModal({ type: 'close', modal: 'unlock' })}
+          confirmDisabled={actionUpdating || isSelf}
+          cancelDisabled={actionUpdating}
+        />
+
+        <LoginRecordsPanel records={user?.login_records || []} lastLoginAt={user?.last_login_at} />
+        <UserSessionsPanel
+          userId={user.id}
+          actionsDisabled={sessionsActionsDisabled}
+          actionsDisabledReason={sessionsDisabledReason}
+        />
+        <UserAuditPanel userId={user.id} />
       </div>
-
-      {actionMessage && (
-        <CAlert color={actionMessage.type} className="my-3">
-          {actionMessage.message}
-        </CAlert>
-      )}
-
-      <UserSummaryCard user={user} />
-
-      <UserConfirmModal
-        visible={modalState.deactivate}
-        title="Deactivate User"
-        message={`Are you sure you want to deactivate ${user?.name || 'this user'} from the system? The user will be notified and will no longer be able to access the system.`}
-        confirmLabel="Deactivate"
-        confirmColor="danger"
-        onConfirm={handleConfirmDeactivate}
-        onClose={() => dispatchModal({ type: 'close', modal: 'deactivate' })}
-        confirmDisabled={statusUpdating}
-        cancelDisabled={statusUpdating}
-      />
-
-      <UserConfirmModal
-        visible={modalState.activate}
-        title="Activate User"
-        message={`Are you sure you want to activate ${user?.name || 'this user'} for the system? The user will be notified and will regain access to the system.`}
-        confirmLabel="Activate"
-        confirmColor="success"
-        onConfirm={handleConfirmActivate}
-        onClose={() => dispatchModal({ type: 'close', modal: 'activate' })}
-        confirmDisabled={statusUpdating}
-        cancelDisabled={statusUpdating}
-      />
-
-      <UserRoleModal
-        visible={modalState.role}
-        roleAssignments={roleAssignments}
-        teams={teams}
-        onAddAssignment={addRoleAssignment}
-        onRemoveAssignment={removeRoleAssignment}
-        onChangeAssignment={changeRoleAssignment}
-        onClose={() => dispatchModal({ type: 'close', modal: 'role' })}
-        onConfirm={handleRoleUpdate}
-        confirmDisabled={actionUpdating || isSelf || !canAssignRoles}
-        loading={actionUpdating}
-      />
-
-      <UserConfirmModal
-        visible={modalState.reset}
-        title="Reset Password"
-        message={`Send a password reset link to ${user?.email || 'this user'}?`}
-        confirmLabel="Send reset link"
-        confirmColor="primary"
-        onConfirm={handlePasswordReset}
-        onClose={() => dispatchModal({ type: 'close', modal: 'reset' })}
-        confirmDisabled={actionUpdating || isSelf}
-        cancelDisabled={actionUpdating}
-      />
-
-      <UserConfirmModal
-        visible={modalState.delete}
-        title="Delete User"
-        message={`This will disable access for ${user?.name || 'this user'}. You can restore later.`}
-        confirmLabel="Delete"
-        confirmColor="danger"
-        onConfirm={handleDeleteUser}
-        onClose={() => dispatchModal({ type: 'close', modal: 'delete' })}
-        confirmDisabled={actionUpdating || isSelf}
-        cancelDisabled={actionUpdating}
-      />
-
-      <UserConfirmModal
-        visible={modalState.restore}
-        title="Restore User"
-        message={`Restore access for ${user?.name || 'this user'}?`}
-        confirmLabel="Restore"
-        confirmColor="success"
-        onConfirm={handleRestoreUser}
-        onClose={() => dispatchModal({ type: 'close', modal: 'restore' })}
-        confirmDisabled={actionUpdating}
-        cancelDisabled={actionUpdating}
-      />
-
-      <UserConfirmModal
-        visible={modalState.lock}
-        title="Lock Account"
-        message={`Lock access for ${user?.name || 'this user'}? This will revoke active sessions.`}
-        confirmLabel="Lock account"
-        confirmColor="danger"
-        onConfirm={handleLockUser}
-        onClose={() => dispatchModal({ type: 'close', modal: 'lock' })}
-        confirmDisabled={actionUpdating || isSelf}
-        cancelDisabled={actionUpdating}
-      />
-
-      <UserConfirmModal
-        visible={modalState.unlock}
-        title="Unlock Account"
-        message={`Unlock access for ${user?.name || 'this user'}? Failed login counters will be reset.`}
-        confirmLabel="Unlock account"
-        confirmColor="success"
-        onConfirm={handleUnlockUser}
-        onClose={() => dispatchModal({ type: 'close', modal: 'unlock' })}
-        confirmDisabled={actionUpdating || isSelf}
-        cancelDisabled={actionUpdating}
-      />
-
-      <LoginRecordsPanel records={user?.login_records || []} lastLoginAt={user?.last_login_at} />
-      <UserSessionsPanel
-        userId={user.id}
-        actionsDisabled={sessionsActionsDisabled}
-        actionsDisabledReason={sessionsDisabledReason}
-      />
-      <UserAuditPanel userId={user.id} />
     </CContainer>
   )
 }

@@ -77,6 +77,7 @@ describe('MedicalSection', () => {
     await waitFor(() => expect(updateProfile).toHaveBeenCalledTimes(1))
     expect(updateProfile).toHaveBeenCalledWith({
       medical_info: {
+        noKnownCriticalMedicalInfo: false,
         bloodType: 'O+',
         allergies: ['peanuts', 'penicillin'],
         conditions: [],

@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { CButton } from '@coreui/react'
+import MobileRecordList from 'src/components/MobileRecordList'
 import RosterMobileDayEditor from './RosterMobileDayEditor'
 
 const AVATAR_COLORS = {
@@ -59,105 +60,94 @@ const RosterMobileDayList = ({
   const [editingShift, setEditingShift] = useState(null)
   const shiftDefs = getShiftDefs(allShifts)
   const closeEditor = () => setEditingShift(null)
+  const mobileRosterSections = monthWeekGroups.map((monthBlock) => ({
+    key: monthBlock.month,
+    label: monthBlock.month,
+    items: monthBlock.weeks
+      .flatMap((week) => week.rows)
+      .map((row) => {
+        const dayStatus = resolveDayStatus(row)
+        return {
+          key: row.date,
+          content: (
+            <div className="d-grid gap-3">
+              <div className="d-flex flex-wrap justify-content-between align-items-start gap-2">
+                <div>
+                  <div className="fw-semibold">{row.dayName}</div>
+                  <div className="small text-body-secondary">{row.date}</div>
+                </div>
+                <span
+                  className="rounded-pill px-2 py-1 small fw-semibold"
+                  style={{
+                    background:
+                      dayStatus === 'Draft'
+                        ? '#fef3c7'
+                        : dayStatus === 'Published'
+                          ? '#d1fae5'
+                          : 'var(--cui-secondary-bg)',
+                    color:
+                      dayStatus === 'Draft'
+                        ? '#92400e'
+                        : dayStatus === 'Published'
+                          ? '#065f46'
+                          : 'var(--cui-secondary-color)',
+                  }}
+                >
+                  {dayStatus}
+                </span>
+              </div>
+              <div className="d-grid gap-2">
+                {shiftDefs.map((shiftDef) => {
+                  const shiftObj = row.shifts?.[shiftDef.slug]
+                  return (
+                    <div key={shiftDef.slug} className="d-grid gap-2">
+                      <div className="d-flex align-items-center gap-2">
+                        {shiftDef.builtin === false && (
+                          <span
+                            title="Custom shift"
+                            aria-label="Custom shift"
+                            style={{
+                              width: 7,
+                              height: 7,
+                              borderRadius: '50%',
+                              background: '#f59e0b',
+                              display: 'inline-block',
+                              flexShrink: 0,
+                            }}
+                          />
+                        )}
+                        <span className="fw-semibold small text-body-secondary">
+                          {shiftDef.name}
+                        </span>
+                      </div>
+                      {editMode ? (
+                        <div className="d-flex align-items-center justify-content-between gap-2">
+                          <TeamBadge team={shiftObj?.team} />
+                          <CButton
+                            size="sm"
+                            color="primary"
+                            variant="outline"
+                            onClick={() => setEditingShift({ row, shiftDef, shiftObj })}
+                          >
+                            Change
+                          </CButton>
+                        </div>
+                      ) : (
+                        <TeamBadge team={shiftObj?.team} />
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          ),
+        }
+      }),
+  }))
 
   return (
     <>
-      <div className="d-md-none d-grid gap-3">
-        {monthWeekGroups.map((monthBlock) => (
-          <section key={monthBlock.month} aria-label={monthBlock.month}>
-            <div className="fw-semibold mb-2">{monthBlock.month}</div>
-            <div className="d-grid gap-3">
-              {monthBlock.weeks
-                .flatMap((week) => week.rows)
-                .map((row) => {
-                  const dayStatus = resolveDayStatus(row)
-                  return (
-                    <article
-                      key={row.date}
-                      className="rounded-3 border bg-body shadow-sm overflow-hidden"
-                    >
-                      <div className="d-flex flex-wrap justify-content-between align-items-start gap-2 px-3 py-2 bg-body-tertiary border-bottom">
-                        <div>
-                          <div className="fw-semibold">{row.dayName}</div>
-                          <div className="small text-body-secondary">{row.date}</div>
-                        </div>
-                        <span
-                          className="rounded-pill px-2 py-1 small fw-semibold"
-                          style={{
-                            background:
-                              dayStatus === 'Draft'
-                                ? '#fef3c7'
-                                : dayStatus === 'Published'
-                                  ? '#d1fae5'
-                                  : 'var(--cui-secondary-bg)',
-                            color:
-                              dayStatus === 'Draft'
-                                ? '#92400e'
-                                : dayStatus === 'Published'
-                                  ? '#065f46'
-                                  : 'var(--cui-secondary-color)',
-                          }}
-                        >
-                          {dayStatus}
-                        </span>
-                      </div>
-                      <div className="d-grid">
-                        {shiftDefs.map((shiftDef, index) => {
-                          const shiftObj = row.shifts?.[shiftDef.slug]
-                          return (
-                            <div
-                              key={shiftDef.slug}
-                              className="d-grid gap-2 px-3 py-2"
-                              style={{
-                                borderTop:
-                                  index === 0 ? undefined : '1px solid var(--cui-border-color)',
-                              }}
-                            >
-                              <div className="d-flex align-items-center gap-2">
-                                {shiftDef.builtin === false && (
-                                  <span
-                                    title="Custom shift"
-                                    aria-label="Custom shift"
-                                    style={{
-                                      width: 7,
-                                      height: 7,
-                                      borderRadius: '50%',
-                                      background: '#f59e0b',
-                                      display: 'inline-block',
-                                      flexShrink: 0,
-                                    }}
-                                  />
-                                )}
-                                <span className="fw-semibold small text-body-secondary">
-                                  {shiftDef.name}
-                                </span>
-                              </div>
-                              {editMode ? (
-                                <div className="d-flex align-items-center justify-content-between gap-2">
-                                  <TeamBadge team={shiftObj?.team} />
-                                  <CButton
-                                    size="sm"
-                                    color="primary"
-                                    variant="outline"
-                                    onClick={() => setEditingShift({ row, shiftDef, shiftObj })}
-                                  >
-                                    Change
-                                  </CButton>
-                                </div>
-                              ) : (
-                                <TeamBadge team={shiftObj?.team} />
-                              )}
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </article>
-                  )
-                })}
-            </div>
-          </section>
-        ))}
-      </div>
+      <MobileRecordList sections={mobileRosterSections} variant="list-group" />
       {editingShift ? (
         <RosterMobileDayEditor
           key={`${editingShift.row?.date || 'date'}-${editingShift.shiftDef?.slug || 'shift'}-${

@@ -19,6 +19,7 @@ import {
 } from '@coreui/react'
 import { Clock } from 'lucide-react'
 import DataTableFooter from 'src/components/DataTableFooter'
+import MobileRecordList from 'src/components/MobileRecordList'
 import TablePeriodSelect from 'src/components/TablePeriodSelect'
 import useTableRows from 'src/hooks/useTableRows'
 import { exportWorkbook } from 'src/utils/exportXlsx'
@@ -34,6 +35,13 @@ const renderDateWithAgo = (value) => {
       {ago && <span className="text-muted small">({ago})</span>}
     </span>
   )
+}
+
+const clientModeLabel = (value) => {
+  const mode = String(value || '').toLowerCase()
+  if (mode === 'pwa') return 'PWA'
+  if (mode === 'browser') return 'Browser'
+  return 'Unknown'
 }
 
 const LoginRecordsPanel = ({ records, lastLoginAt }) => {
@@ -69,7 +77,7 @@ const LoginRecordsPanel = ({ records, lastLoginAt }) => {
         const reason = record.reason || record.error || ''
         const ip = record.ip_address || ''
         const device = record.device_info || record.user_agent || record.device_id || ''
-        const hay = `${reason} ${ip} ${device}`.toLowerCase()
+        const hay = `${reason} ${ip} ${device} ${record.client_mode || ''}`.toLowerCase()
         if (!hay.includes(term)) return false
       }
 
@@ -80,14 +88,22 @@ const LoginRecordsPanel = ({ records, lastLoginAt }) => {
   const { rowsToShow, setRowsToShow, visibleRows: visibleRecords } = useTableRows(filteredRecords)
 
   const handleExport = () => {
-    const headers = ['#', 'Time', 'Status', 'Reason', 'IP', 'Device']
+    const headers = ['#', 'Time', 'Status', 'Reason', 'IP', 'Mode', 'Device']
     const rows = filteredRecords.map((record, index) => {
       const { label } = renderStatus(record.status)
       const when = record.timestamp || record.logged_at || record.created_at || record.time || null
       const reason = record.reason || record.error || EMPTY
       const ip = record.ip_address || EMPTY
       const device = record.device_info || record.user_agent || record.device_id || EMPTY
-      return [index + 1, formatDateTime(when), label, reason, ip, device]
+      return [
+        index + 1,
+        formatDateTime(when),
+        label,
+        reason,
+        ip,
+        clientModeLabel(record.client_mode),
+        device,
+      ]
     })
     exportWorkbook({
       sheets: [{ name: 'Login Records', headers, rows }],
@@ -126,11 +142,50 @@ const LoginRecordsPanel = ({ records, lastLoginAt }) => {
     setOpenDetail((current) => (current === index ? null : index))
   }
 
-  const handleCardKeyDown = (event, index) => {
-    if (event.key !== 'Enter' && event.key !== ' ') return
-    event.preventDefault()
-    toggleDetail(index)
-  }
+  const mobileLoginSections = [
+    {
+      key: 'login-records',
+      items: visibleRecords.map((record, idx) => {
+        const { color, label } = renderStatus(record.status)
+        const when =
+          record.timestamp || record.logged_at || record.created_at || record.time || null
+        const reason = record.reason || record.error || EMPTY
+        const ip = record.ip_address || EMPTY
+        const device = record.device_info || record.user_agent || record.device_id || EMPTY
+        const isOpen = openDetail === idx
+
+        return {
+          key: `${when || 'login'}-${idx}`,
+          title: formatDateTime(when),
+          subtitle: reason,
+          status: <CBadge color={color}>{label}</CBadge>,
+          expanded: isOpen,
+          onToggle: () => toggleDetail(idx),
+          ariaLabel: `Toggle login record ${idx + 1} details`,
+          expandedContent: (
+            <div className="d-grid gap-1 small text-muted">
+              <div>
+                <span className="fw-semibold text-body">Reason: </span>
+                <span className="text-body">{reason}</span>
+              </div>
+              <div>
+                <span className="fw-semibold text-body">IP: </span>
+                <span className="text-body">{ip}</span>
+              </div>
+              <div>
+                <span className="fw-semibold text-body">Device: </span>
+                <span className="text-body">{device}</span>
+              </div>
+              <div>
+                <span className="fw-semibold text-body">Mode: </span>
+                <span className="text-body">{clientModeLabel(record.client_mode)}</span>
+              </div>
+            </div>
+          ),
+        }
+      }),
+    },
+  ]
 
   return (
     <CCard>
@@ -287,7 +342,14 @@ const LoginRecordsPanel = ({ records, lastLoginAt }) => {
                         </CTableDataCell>
                         <CTableDataCell className="text-break">{reason}</CTableDataCell>
                         <CTableDataCell className="text-break">{ip}</CTableDataCell>
-                        <CTableDataCell className="text-break">{device}</CTableDataCell>
+                        <CTableDataCell className="text-break">
+                          <div className="d-flex flex-column gap-1">
+                            <span>{device}</span>
+                            <CBadge color="light" className="align-self-start text-body-secondary">
+                              {clientModeLabel(record.client_mode)}
+                            </CBadge>
+                          </div>
+                        </CTableDataCell>
                       </CTableRow>
                     )
                   })}
@@ -297,54 +359,11 @@ const LoginRecordsPanel = ({ records, lastLoginAt }) => {
           )}
         </div>
 
-        <div className="mt-2 d-md-none d-grid gap-2">
+        <div className="mt-2 d-md-none">
           {filteredRecords.length === 0 ? (
             <span className="text-muted small">No login records yet.</span>
           ) : (
-            visibleRecords.map((record, idx) => {
-              const { color, label } = renderStatus(record.status)
-              const when =
-                record.timestamp || record.logged_at || record.created_at || record.time || null
-              const reason = record.reason || record.error || EMPTY
-              const ip = record.ip_address || EMPTY
-              const device = record.device_info || record.user_agent || record.device_id || EMPTY
-              const isOpen = openDetail === idx
-              return (
-                <CCard
-                  key={idx}
-                  role="button"
-                  tabIndex={0}
-                  aria-expanded={isOpen}
-                  aria-label={`Toggle login record ${idx + 1} details`}
-                  className="cursor-pointer"
-                  onClick={() => toggleDetail(idx)}
-                  onKeyDown={(event) => handleCardKeyDown(event, idx)}
-                >
-                  <CCardBody className="d-grid gap-2">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <div className="fw-semibold small">{formatDateTime(when)}</div>
-                      <CBadge color={color}>{label}</CBadge>
-                    </div>
-                    {isOpen && (
-                      <div className="d-grid gap-1 mt-2 small text-muted">
-                        <div>
-                          <span className="fw-semibold text-body">Reason: </span>
-                          <span className="text-body">{reason}</span>
-                        </div>
-                        <div>
-                          <span className="fw-semibold text-body">IP: </span>
-                          <span className="text-body">{ip}</span>
-                        </div>
-                        <div>
-                          <span className="fw-semibold text-body">Device: </span>
-                          <span className="text-body">{device}</span>
-                        </div>
-                      </div>
-                    )}
-                  </CCardBody>
-                </CCard>
-              )
-            })
+            <MobileRecordList sections={mobileLoginSections} variant="list-group" />
           )}
         </div>
 

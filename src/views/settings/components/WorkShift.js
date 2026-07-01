@@ -21,6 +21,7 @@ import {
 import { Pencil, Trash2 } from 'lucide-react'
 import EditControls from 'src/components/EditControls'
 import CreateActionButton from 'src/components/CreateActionButton'
+import MobileRecordList from 'src/components/MobileRecordList'
 import TableLoader from 'src/components/TableLoader'
 import {
   fetchShiftWindows,
@@ -120,6 +121,37 @@ const BuiltinShifts = () => {
     setStatusMessage(null)
     load()
   }
+  const mobileShiftSections = [
+    {
+      key: 'builtin-shifts',
+      items: SHIFT_FIELDS.map(({ key, label, startKey, endKey }) => ({
+        key,
+        content: (
+          <div className="d-grid gap-3">
+            <div className="fw-semibold">{label}</div>
+            <div className="d-grid gap-2">
+              <CFormLabel className="text-muted mb-0">Start</CFormLabel>
+              <CFormInput
+                type="time"
+                size="sm"
+                value={times[startKey]}
+                onChange={(e) => setTimes((prev) => ({ ...prev, [startKey]: e.target.value }))}
+                disabled={!editMode || loading}
+              />
+              <CFormLabel className="text-muted mb-0">End</CFormLabel>
+              <CFormInput
+                type="time"
+                size="sm"
+                value={times[endKey]}
+                onChange={(e) => setTimes((prev) => ({ ...prev, [endKey]: e.target.value }))}
+                disabled={!editMode || loading}
+              />
+            </div>
+          </div>
+        ),
+      })),
+    },
+  ]
 
   return (
     <CCard className="mb-4">
@@ -137,7 +169,8 @@ const BuiltinShifts = () => {
         <p className="text-muted mb-3">Define start/end times for normal, day, and night shifts.</p>
         {error && <div className="text-danger small mb-3">{error}</div>}
         {statusMessage && <div className="text-success small mb-3">{statusMessage}</div>}
-        <div className="d-grid gap-3">
+        <MobileRecordList sections={mobileShiftSections} variant="list-group" />
+        <div className="d-none d-md-grid gap-3">
           {SHIFT_FIELDS.map(({ key, label, startKey, endKey }) => (
             <div
               key={key}
@@ -271,6 +304,43 @@ const CustomShifts = () => {
       setDeleting(false)
     }
   }
+  const mobileCustomShiftSections = [
+    {
+      key: 'custom-shifts',
+      items: shifts.map((shift) => ({
+        key: shift.id,
+        title: shift.name,
+        fields: [
+          { key: 'start', label: 'Start', value: shift.start },
+          { key: 'end', label: 'End', value: shift.end },
+        ],
+        actions: (
+          <div className="d-flex gap-1 justify-content-end">
+            <CButton
+              size="sm"
+              color="link"
+              className="text-muted p-1"
+              onClick={() => openEdit(shift)}
+              title={`Edit ${shift.name}`}
+              aria-label={`Edit ${shift.name}`}
+            >
+              <Pencil size={14} />
+            </CButton>
+            <CButton
+              size="sm"
+              color="link"
+              className="text-danger p-1"
+              onClick={() => confirmDelete(shift)}
+              title={`Delete ${shift.name}`}
+              aria-label={`Delete ${shift.name}`}
+            >
+              <Trash2 size={14} />
+            </CButton>
+          </div>
+        ),
+      })),
+    },
+  ]
 
   return (
     <>
@@ -339,43 +409,7 @@ const CustomShifts = () => {
                   </CTableBody>
                 </CTable>
               </div>
-              <div className="d-md-none d-grid gap-3">
-                {shifts.map((shift) => (
-                  <article key={shift.id} className="rounded-3 border bg-body shadow-sm p-3">
-                    <div className="d-flex align-items-start justify-content-between gap-3">
-                      <div className="d-grid gap-2" style={{ minWidth: 0 }}>
-                        <div className="fw-semibold text-break">{shift.name}</div>
-                        <div className="d-flex flex-wrap gap-3 small text-body-secondary">
-                          <span>Start: {shift.start}</span>
-                          <span>End: {shift.end}</span>
-                        </div>
-                      </div>
-                      <div className="d-flex gap-1 flex-shrink-0">
-                        <CButton
-                          size="sm"
-                          color="link"
-                          className="text-muted p-1"
-                          onClick={() => openEdit(shift)}
-                          title={`Edit ${shift.name}`}
-                          aria-label={`Edit ${shift.name}`}
-                        >
-                          <Pencil size={14} />
-                        </CButton>
-                        <CButton
-                          size="sm"
-                          color="link"
-                          className="text-danger p-1"
-                          onClick={() => confirmDelete(shift)}
-                          title={`Delete ${shift.name}`}
-                          aria-label={`Delete ${shift.name}`}
-                        >
-                          <Trash2 size={14} />
-                        </CButton>
-                      </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
+              <MobileRecordList sections={mobileCustomShiftSections} variant="list-group" />
             </>
           )}
         </CCardBody>

@@ -15,7 +15,12 @@ const ClaimActionModals = ({
   onDeleteBlockedClose,
 }) => (
   <>
-    <CModal visible={cancelModalVisible} onClose={onCancelClose} alignment="center">
+    <CModal
+      visible={cancelModalVisible}
+      onClose={onCancelClose}
+      alignment="center"
+      data-tour-id="payroll-claim-cancel-modal"
+    >
       <CModalHeader>Cancel Claim</CModalHeader>
       <CModalBody>
         {cancelTarget?.id ? (
@@ -40,7 +45,12 @@ const ClaimActionModals = ({
       </CModalFooter>
     </CModal>
 
-    <CModal visible={deleteModalVisible} onClose={onDeleteClose} alignment="center">
+    <CModal
+      visible={deleteModalVisible}
+      onClose={onDeleteClose}
+      alignment="center"
+      data-tour-id="payroll-claim-delete-modal"
+    >
       <CModalHeader>Delete Claim</CModalHeader>
       <CModalBody>
         {deleteTarget?.id ? (

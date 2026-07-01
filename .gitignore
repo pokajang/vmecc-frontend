@@ -6,10 +6,14 @@ yarn.lock
 
 # testing
 /coverage
+/test-results/
+/playwright-report/
+/smoke-artifacts/
 
 # production build artifacts are committed for shared cPanel hosting.
 
 # misc
+/.codex-run/
 .eslintcache
 .DS_Store
 .idea
@@ -23,3 +27,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 vite-*.log
+/temp-*.js
+/tmp-*.js
+/tmp-*.png
+/diag*.png
+/dashboard-route-check*.png

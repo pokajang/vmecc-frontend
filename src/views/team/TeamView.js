@@ -9,7 +9,12 @@ import ModulePageHeader from 'src/components/ModulePageHeader'
 import TableLoader from 'src/components/TableLoader'
 import StatusPill from './components/StatusPill'
 import EditTeamModal from './components/EditTeamModal'
-import { fetchTeam, fetchShiftWindows, fetchRosters, fetchUsers } from 'src/services/apiClient'
+import {
+  fetchTeam,
+  fetchShiftWindows,
+  fetchRosters,
+  fetchTeamMemberOptions,
+} from 'src/services/apiClient'
 import { resolveImageUrl } from './components/teamImageUtils'
 import { getRoleBadge } from './components/teamRoleUtils'
 import { resolveTeamScheduleStatus } from './components/teamScheduleStatus'
@@ -91,16 +96,21 @@ const TeamView = () => {
   }, [id])
 
   const loadMembers = useCallback(async () => {
+    if (!canManageTeams) {
+      setMembers([])
+      setMembersLoading(false)
+      return
+    }
     setMembersLoading(true)
     try {
-      const resp = await fetchUsers()
+      const resp = await fetchTeamMemberOptions()
       setMembers(resp?.data || [])
     } catch {
       setMembers([])
     } finally {
       setMembersLoading(false)
     }
-  }, [])
+  }, [canManageTeams])
 
   useEffect(() => {
     if (!canViewRequestedTeam) {
@@ -112,6 +122,7 @@ const TeamView = () => {
 
   // Load members lazily when edit modal is first opened
   const handleOpenEdit = () => {
+    if (!canManageTeams) return
     if (members.length === 0) loadMembers()
     setShowEdit(true)
   }
@@ -197,7 +208,7 @@ const TeamView = () => {
   })
 
   return (
-    <CContainer fluid>
+    <CContainer fluid data-tour-id="team-directory-module">
       <ModulePageHeader
         title={team.name || 'Team Detail'}
         subtitle="Review team members, roles, and roster status."
@@ -208,6 +219,7 @@ const TeamView = () => {
               color="primary"
               className="d-inline-flex align-items-center gap-1"
               onClick={handleOpenEdit}
+              data-tour-id="team-directory-detail-edit-action"
             >
               <Pencil size={14} />
               Edit Team
@@ -215,7 +227,7 @@ const TeamView = () => {
           ) : null
         }
       />
-      <CRow className="g-3">
+      <CRow className="g-3" data-tour-id="team-directory-detail">
         {/* Left: team identity card */}
         <CCol md={6} lg={5} xl={4}>
           <div

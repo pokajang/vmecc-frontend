@@ -7,6 +7,7 @@ import {
   storageKey,
   writeStorageValue,
 } from './inspectionSharedUtils'
+import { clearOfflineDraft, loadOfflineDraftSync, saveOfflineDraft } from './inspectionOfflineStore'
 
 const REPORT_RECORDS_KEY_PREFIX = 'report_records_v1_user_'
 const INSPECTION_TYPE = 'inspection'
@@ -33,6 +34,22 @@ export const saveAllRecordsForInspection = (userId, rows) => {
 export const loadInspectionRecords = (userId) =>
   filterInspectionRows(loadAllRecordsForInspection(userId))
 
+export const loadAllInspectionRecords = () => {
+  try {
+    const storage = globalThis.localStorage
+    if (!storage) return []
+    const rows = []
+    for (let index = 0; index < storage.length; index += 1) {
+      const key = storage.key(index)
+      if (!String(key || '').startsWith(REPORT_RECORDS_KEY_PREFIX)) continue
+      rows.push(...parse(readStorageValue(key), []))
+    }
+    return filterInspectionRows(rows)
+  } catch {
+    return []
+  }
+}
+
 export const saveInspectionRecords = (userId, rows) => {
   if (!userId) return false
   const existingRows = loadAllRecordsForInspection(userId)
@@ -48,31 +65,99 @@ const normalizeDraft = (row) => {
   return payload
 }
 
+const stripOfflineDraftMeta = (draft = {}) => {
+  const payload = draft && typeof draft === 'object' ? { ...draft } : {}
+  delete payload.__offlineSyncStatus
+  delete payload.__offlineSavedAt
+  delete payload.__offlineSyncError
+  return payload
+}
+
 export const loadInspectionDraft = async (userId) => {
   if (!userId) return null
-  const response = await apiRequest(
-    `/reports/draft?report_type=${encodeURIComponent(INSPECTION_TYPE)}`,
-  )
-  return normalizeDraft(response?.data)
+  const localDraft = loadOfflineDraftSync(userId)
+  const localSyncStatus = String(localDraft?.__offlineSyncStatus || '').trim()
+  if (localDraft && ['waiting', 'failed'].includes(localSyncStatus)) {
+    try {
+      const payload = stripOfflineDraftMeta(localDraft)
+      const response = await apiRequest('/reports/draft', {
+        method: 'POST',
+        body: JSON.stringify({
+          report_type: INSPECTION_TYPE,
+          payload,
+        }),
+      })
+      if (response?.data) {
+        const syncedDraft = {
+          ...payload,
+          __offlineSyncStatus: 'synced',
+          __offlineSavedAt: new Date().toISOString(),
+        }
+        await saveOfflineDraft(userId, syncedDraft)
+        return syncedDraft
+      }
+    } catch {
+      return localDraft
+    }
+  }
+  try {
+    const response = await apiRequest(
+      `/reports/draft?report_type=${encodeURIComponent(INSPECTION_TYPE)}`,
+    )
+    const draft = normalizeDraft(response?.data)
+    if (draft) await saveOfflineDraft(userId, { ...draft, __offlineSyncStatus: 'synced' })
+    return draft || loadOfflineDraftSync(userId)
+  } catch {
+    return loadOfflineDraftSync(userId)
+  }
 }
 
 export const saveInspectionDraft = async (userId, draft) => {
   if (!userId) return false
-  const response = await apiRequest('/reports/draft', {
-    method: 'POST',
-    body: JSON.stringify({
-      report_type: INSPECTION_TYPE,
-      payload: draft && typeof draft === 'object' ? draft : {},
-    }),
+  const payload = draft && typeof draft === 'object' ? draft : {}
+  await saveOfflineDraft(userId, {
+    ...payload,
+    __offlineSyncStatus:
+      typeof navigator !== 'undefined' && navigator.onLine === false ? 'waiting' : 'syncing',
+    __offlineSavedAt: new Date().toISOString(),
   })
-  return Boolean(response?.data)
+  try {
+    const response = await apiRequest('/reports/draft', {
+      method: 'POST',
+      body: JSON.stringify({
+        report_type: INSPECTION_TYPE,
+        payload,
+      }),
+    })
+    if (response?.data) {
+      await saveOfflineDraft(userId, {
+        ...payload,
+        __offlineSyncStatus: 'synced',
+        __offlineSavedAt: new Date().toISOString(),
+      })
+    }
+    return { saved: Boolean(response?.data), synced: Boolean(response?.data) }
+  } catch (error) {
+    await saveOfflineDraft(userId, {
+      ...payload,
+      __offlineSyncStatus: 'failed',
+      __offlineSavedAt: new Date().toISOString(),
+      __offlineSyncError: error?.message || 'Draft sync failed.',
+    })
+    return { saved: true, synced: false, error }
+  }
 }
 
 export const clearInspectionDraft = async (userId) => {
   if (!userId) return false
-  await apiRequest(`/reports/draft?report_type=${encodeURIComponent(INSPECTION_TYPE)}`, {
-    method: 'DELETE',
-  })
+  await clearOfflineDraft(userId)
+  try {
+    await apiRequest(`/reports/draft?report_type=${encodeURIComponent(INSPECTION_TYPE)}`, {
+      method: 'DELETE',
+    })
+  } catch {
+    // Local draft is cleared even if the server is unavailable.
+  }
   return true
 }
 

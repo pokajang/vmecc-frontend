@@ -154,6 +154,7 @@ const ClaimListTable = ({
   formatDate = (value) => value,
 }) => {
   const groupMeta = new Map()
+  const firstDraftClaimId = String(claims.find((claim) => Boolean(claim?.isDraft))?.id || '').trim()
 
   claims.forEach((claim) => {
     const meta = resolvePeriodKey(claim)
@@ -277,7 +278,16 @@ const ClaimListTable = ({
           { key: 'amount', label: 'Amount', value: formatCurrency(resolveDisplayAmount(claim)) },
           { key: 'next', label: 'Next', value: resolveNextState(claim) },
         ],
-        actions: <RowActions items={getClaimActionItems(claim)} />,
+        actions: (
+          <RowActions
+            items={getClaimActionItems(claim)}
+            tourId={
+              claim?.isDraft && firstDraftClaimId === String(claim.id || '').trim()
+                ? 'payroll-claim-draft-resume-action'
+                : ''
+            }
+          />
+        ),
       }
     }),
   }))
@@ -287,7 +297,7 @@ const ClaimListTable = ({
 
   return (
     <>
-      <MobileRecordList sections={mobileRecordSections} />
+      <MobileRecordList sections={mobileRecordSections} variant="list-group" />
       <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
         <CTable align="middle" className="mb-0" hover responsive>
           <CTableHead color="light">
@@ -380,7 +390,14 @@ const ClaimListTable = ({
                     onClick={(event) => event.stopPropagation()}
                     onMouseDown={(event) => event.stopPropagation()}
                   >
-                    <RowActions items={getClaimActionItems(claim)} />
+                    <RowActions
+                      items={getClaimActionItems(claim)}
+                      tourId={
+                        isDraft && firstDraftClaimId === String(claim.id || '').trim()
+                          ? 'payroll-claim-draft-resume-action'
+                          : ''
+                      }
+                    />
                   </CTableDataCell>
                 </CTableRow>,
               )

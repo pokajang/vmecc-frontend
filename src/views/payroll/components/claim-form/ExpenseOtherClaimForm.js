@@ -350,7 +350,7 @@ const ExpenseOtherClaimForm = ({
   })
 
   return (
-    <div className="d-grid gap-4">
+    <div className="d-grid gap-4" data-tour-id="payroll-claim-form">
       <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
       <ClaimLeaveModal
         visible={leaveModalVisible}
@@ -469,7 +469,12 @@ const ExpenseOtherClaimForm = ({
             <CButton color="secondary" variant="outline" onClick={resetDraft}>
               Clear form
             </CButton>
-            <CButton color="primary" onClick={submitClaim} disabled={isSubmittingClaim}>
+            <CButton
+              color="primary"
+              data-tour-id="payroll-claim-submit-action"
+              onClick={submitClaim}
+              disabled={isSubmittingClaim}
+            >
               {isSubmittingClaim
                 ? 'Submitting...'
                 : isEditingSubmittedClaim

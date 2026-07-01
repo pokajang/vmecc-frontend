@@ -8,10 +8,10 @@ import { AppSidebarNav } from './AppSidebarNav'
 import logoHorizontalSvg from 'src/assets/brand/logo-horizontal.svg'
 import logoSvg from 'src/assets/brand/logo.svg'
 import useMessageUnreadCount from 'src/hooks/useMessageUnreadCount'
-import useOvertimeEligibility from 'src/hooks/useOvertimeEligibility'
+import usePwaInstallPrompt from 'src/hooks/usePwaInstallPrompt'
 import { getVisibleNavigationWithOptions } from 'src/utils/navigation'
-import { hasPermission, isSystemAdministrator } from 'src/utils/authz'
 import { isModuleEnabled } from 'src/utils/modules'
+import { PWA_INSTALL_ACTION } from 'src/constants/pwa'
 
 // sidebar nav config
 import navigation from '../_nav'
@@ -19,31 +19,29 @@ import navigation from '../_nav'
 const AppSidebar = () => {
   const dispatch = useDispatch()
   const sidebarShow = useSelector((state) => state.sidebarShow)
+  const aiHelperOpen = useSelector((state) => state.aiHelperOpen)
   const authUser = useSelector((state) => state.authUser)
   const moduleActivation = useSelector((state) => state.moduleActivation)
   const messagesEnabled = isModuleEnabled(moduleActivation, 'messages')
-  const payrollEnabled = isModuleEnabled(moduleActivation, 'payroll.self_service')
-  const overtimeEnabled = isModuleEnabled(moduleActivation, 'overtime.self_service')
   const unreadCount = useMessageUnreadCount({ enabled: messagesEnabled })
-  const isSysAdmin = isSystemAdministrator(authUser)
-  const shouldResolveOvertimeEligibility =
-    (overtimeEnabled && hasPermission(authUser, 'self.overtime')) ||
-    (payrollEnabled && hasPermission(authUser, 'self.payroll'))
-  const { eligible: overtimeEligible, isResolved: overtimeEligibilityResolved } =
-    useOvertimeEligibility({ enabled: shouldResolveOvertimeEligibility })
-  const overtimeEligibleForMenu = shouldResolveOvertimeEligibility
-    ? isSysAdmin
-      ? true
-      : overtimeEligibilityResolved && overtimeEligible
-    : null
+  const { showNavInstallItem, openInstallExperience } = usePwaInstallPrompt()
 
   const navigationWithBadge = useMemo(
     () =>
       getVisibleNavigationWithOptions(navigation, authUser, unreadCount, {
-        overtimeEligible: overtimeEligibleForMenu,
         moduleActivation,
+        showNavInstallItem,
       }),
-    [authUser, moduleActivation, overtimeEligibleForMenu, unreadCount],
+    [authUser, moduleActivation, showNavInstallItem, unreadCount],
+  )
+
+  const handleNavigationAction = useMemo(
+    () => ({
+      [PWA_INSTALL_ACTION]: () => {
+        void openInstallExperience()
+      },
+    }),
+    [openInstallExperience],
   )
 
   return (
@@ -54,7 +52,11 @@ const AppSidebar = () => {
       unfoldable={false}
       visible={sidebarShow}
       onVisibleChange={(visible) => {
-        dispatch({ type: 'set', sidebarShow: visible })
+        dispatch({
+          type: 'set',
+          sidebarShow: visible,
+          ...(visible && aiHelperOpen ? { aiHelperOpen: false } : {}),
+        })
       }}
     >
       <CSidebarHeader className="border-bottom sidebar-brand-header">
@@ -77,7 +79,12 @@ const AppSidebar = () => {
           onClick={() => dispatch({ type: 'set', sidebarShow: false })}
         />
       </CSidebarHeader>
-      <AppSidebarNav items={navigationWithBadge} />
+      <AppSidebarNav
+        items={navigationWithBadge}
+        onAction={(action) => {
+          handleNavigationAction[action]?.()
+        }}
+      />
     </CSidebar>
   )
 }

@@ -8,8 +8,9 @@ import {
   saveReportDraft,
   updateErcoDraft,
 } from '../reportStorage'
-import { downloadErcoReportPdf } from '../reportApi'
+import { downloadDrillReportPdf, downloadErcoReportPdf } from '../reportApi'
 import { recordToDraft } from '../reportDraftDomain'
+import { buildReportPdfFilename } from '../reportUiUtils'
 import { toDateTime } from '../utils'
 import useReportWorkflowActions from './useReportWorkflowActions'
 
@@ -22,6 +23,7 @@ const useReportRouteActions = ({
   persistRecords,
   pushToast,
   queryDraftId,
+  recordFallbacks = [],
   records,
   reloadRecords,
   reportBasePath,
@@ -91,17 +93,26 @@ const useReportRouteActions = ({
 
   const downloadRecord = useCallback(
     async (id) => {
-      const record = records.find((r) => String(r.id) === String(id))
+      const record =
+        records.find((r) => String(r.id) === String(id)) ||
+        recordFallbacks.find((r) => String(r?.id) === String(id))
       if (!record) return
 
-      if (String(record.reportType || '').toLowerCase() === 'erco') {
+      const recordType = String(record.reportType || '').toLowerCase()
+      if (recordType === 'erco' || recordType === 'drill') {
         setDownloadingId(id)
         try {
-          const { blob, filename } = await downloadErcoReportPdf(record)
+          const { blob, filename } =
+            recordType === 'drill'
+              ? await downloadDrillReportPdf(record)
+              : await downloadErcoReportPdf(record)
           const url = URL.createObjectURL(blob)
           const a = document.createElement('a')
           a.href = url
-          a.download = filename || `${record.displayId || record.id}.pdf`
+          a.download =
+            buildReportPdfFilename(record, user, activeFormSlug) ||
+            filename ||
+            `${record.displayId || record.id}.pdf`
           a.click()
           URL.revokeObjectURL(url)
         } catch (err) {
@@ -123,7 +134,7 @@ const useReportRouteActions = ({
       a.click()
       URL.revokeObjectURL(url)
     },
-    [records, pushToast],
+    [activeFormSlug, recordFallbacks, records, pushToast, user],
   )
 
   const runGuardedAction = useCallback(
@@ -451,7 +462,10 @@ const useReportRouteActions = ({
         pushToast('Draft deleted.', { title: 'Draft deleted', color: 'info' })
         return
       }
-      const { saved } = await persistRecords(records.filter((row) => row.id !== target.id))
+      const sameTypeRecords = records.filter(
+        (row) => String(row?.reportType || '').toLowerCase() === activeFormSlug,
+      )
+      const { saved } = await persistRecords(sameTypeRecords.filter((row) => row.id !== target.id))
       if (!saved) {
         pushToast('Unable to delete this report. Please try again.', {
           title: 'Delete failed',
@@ -470,6 +484,7 @@ const useReportRouteActions = ({
     }
   }, [
     canDeleteRecord,
+    activeFormSlug,
     deleteTarget,
     navigate,
     persistRecords,
@@ -488,7 +503,10 @@ const useReportRouteActions = ({
       setIsSubmitting(true)
 
       try {
-        const next = [record, ...records.filter((row) => row.id !== record.id)].sort(
+        const sameTypeRecords = records.filter(
+          (row) => String(row?.reportType || '').toLowerCase() === activeFormSlug,
+        )
+        const next = [record, ...sameTypeRecords.filter((row) => row.id !== record.id)].sort(
           (a, b) => toDateTime(b) - toDateTime(a),
         )
         const { saved, trimmed } = await persistRecords(next)
@@ -525,6 +543,7 @@ const useReportRouteActions = ({
       }
     },
     [
+      activeFormSlug,
       navigate,
       persistRecords,
       pushToast,

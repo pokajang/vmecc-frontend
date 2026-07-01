@@ -5,17 +5,35 @@ const FormActionGroup = ({
   leading = null,
   className = '',
   mobileThumb = true,
+  mobileVariant = 'default',
+  statusMessage = '',
   showSpacer = true,
   spacerClassName = 'd-md-none',
   ariaLabel = 'Form actions',
 }) => {
   const hasLeading = Boolean(leading)
   const hasActions = Boolean(children)
+  const isCompactSticky = mobileVariant === 'compact-sticky'
   const containerClassName = mobileThumb
-    ? `action-row-thumb${hasLeading ? ' action-row-thumb--split' : ''}`
+    ? [
+        'action-row-thumb',
+        hasLeading ? 'action-row-thumb--split' : '',
+        isCompactSticky ? 'action-row-thumb--compact-sticky' : '',
+        isCompactSticky && hasLeading ? 'action-row-thumb--has-leading' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')
     : `d-flex flex-wrap align-items-center gap-2 ${
         hasLeading ? 'justify-content-between' : 'justify-content-end'
       }`
+  const spacerClasses = [
+    'action-row-thumb-spacer',
+    isCompactSticky ? 'action-row-thumb-spacer--compact' : '',
+    isCompactSticky && hasLeading ? 'action-row-thumb-spacer--compact-with-leading' : '',
+    spacerClassName,
+  ]
+    .filter(Boolean)
+    .join(' ')
 
   return (
     <>
@@ -24,12 +42,15 @@ const FormActionGroup = ({
         role="group"
         aria-label={ariaLabel}
       >
+        {isCompactSticky && statusMessage ? (
+          <div className="action-row-thumb-status text-body-secondary" title={statusMessage}>
+            {statusMessage}
+          </div>
+        ) : null}
         {hasLeading ? <div className="action-row-thumb-leading">{leading}</div> : null}
         {hasActions ? <div className="action-row-thumb-actions">{children}</div> : null}
       </div>
-      {mobileThumb && showSpacer ? (
-        <div className={`action-row-thumb-spacer ${spacerClassName}`.trim()} />
-      ) : null}
+      {mobileThumb && showSpacer ? <div className={spacerClasses} /> : null}
     </>
   )
 }

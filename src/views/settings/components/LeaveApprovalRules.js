@@ -179,7 +179,7 @@ const LeaveApprovalRules = () => {
   }
 
   return (
-    <CCard className="mb-4">
+    <CCard className="mb-4" data-tour-id="leave-management-rules">
       <CCardHeader className="d-flex justify-content-between align-items-center gap-2">
         <span>Leave Approval Rules</span>
         <EditControls

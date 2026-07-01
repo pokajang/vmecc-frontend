@@ -76,6 +76,22 @@ export const getClientId = () => {
   }
 }
 
+export const getClientMode = () => {
+  try {
+    if (
+      window.matchMedia?.('(display-mode: standalone)')?.matches ||
+      window.matchMedia?.('(display-mode: fullscreen)')?.matches ||
+      window.navigator?.standalone === true
+    ) {
+      return 'pwa'
+    }
+  } catch {
+    // Fall back to browser mode if display-mode detection is unavailable.
+  }
+
+  return 'browser'
+}
+
 const isUnsafeMethod = (method) =>
   !['GET', 'HEAD', 'OPTIONS'].includes(String(method).toUpperCase())
 
@@ -90,6 +106,7 @@ const requestHeaders = (options = {}) => {
     Accept: 'application/json',
     ...(options.headers || {}),
     ...(getClientId() ? { 'X-Client-Id': getClientId() } : {}),
+    'X-Client-Mode': getClientMode(),
   }
 
   if (isUnsafeMethod(method) && csrfToken && !hasHeader(headers, 'X-CSRF-Token')) {
@@ -106,6 +123,7 @@ export const refreshCsrfToken = async () => {
     headers: {
       Accept: 'application/json',
       ...(getClientId() ? { 'X-Client-Id': getClientId() } : {}),
+      'X-Client-Mode': getClientMode(),
     },
   })
   if (!response.ok) {
@@ -119,6 +137,10 @@ export const refreshCsrfToken = async () => {
 
 export const fetchWithCsrfRetry = async (url, options = {}, retried = false) => {
   const method = String(options.method || 'GET').toUpperCase()
+  if (isUnsafeMethod(method) && !csrfToken) {
+    await refreshCsrfToken()
+  }
+
   const { headers: _headers, ...fetchOptions } = options
   const response = await fetch(url, {
     ...fetchOptions,

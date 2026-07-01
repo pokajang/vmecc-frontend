@@ -1,0 +1,61 @@
+import { Truck } from 'lucide-react'
+import {
+  buildFrtChecklist,
+  buildFrtDescription,
+  FRT_DAILY_INSPECTION_TYPE,
+  getFrtCheckSummary,
+  getFrtMissingFields,
+  getFrtVisibleDailyChecks,
+  isFrtDailyInspectionType,
+  normalizeFrtDailyChecks,
+  normalizeFrtOneOffChecks,
+  normalizeFrtTruckReference,
+} from './helpers'
+import { FrtDailyEditSection, FrtDailyReadOnlySection } from './section'
+
+const frtDailyInspectionDefinition = {
+  key: 'frt-daily-inspection',
+  inspectionType: FRT_DAILY_INSPECTION_TYPE,
+  title: 'FRT Daily',
+  description: 'Fire truck daily roster and one-off checks with seeded rows and required readings.',
+  iconKey: 'Truck',
+  icon: Truck,
+  implemented: true,
+  formMode: 'structured',
+  supportsEquipmentCatalog: false,
+  supportsCustomLocations: false,
+  supportsSubLocations: false,
+  checksField: 'frtDailyChecks',
+  fieldRefKey: 'frtChecks',
+  photoEvidenceTitle: 'General Evidence Photos',
+  missingFieldKeys: [
+    'frtSession',
+    'frtDailyChecks',
+    'frtDailyRemarks',
+    'frtOneOffChecks',
+    'frtOneOffRemarks',
+  ],
+  initialFormState: {
+    frtInspectedBy: '',
+    frtInspectionDate: '',
+    frtShift: '',
+    frtTruckReference: normalizeFrtTruckReference(),
+    frtDailyChecks: [],
+    frtDailyRemarks: '',
+    frtOneOffChecks: [],
+    frtOneOffRemarks: '',
+  },
+  isInspectionType: isFrtDailyInspectionType,
+  getSummary: getFrtCheckSummary,
+  getVisibleChecks: getFrtVisibleDailyChecks,
+  getMissingFields: getFrtMissingFields,
+  buildChecklist: buildFrtChecklist,
+  buildDescription: buildFrtDescription,
+  normalizeDailyChecks: normalizeFrtDailyChecks,
+  normalizeOneOffChecks: normalizeFrtOneOffChecks,
+  normalizeTruckReference: normalizeFrtTruckReference,
+  EditSection: FrtDailyEditSection,
+  ReadOnlySection: FrtDailyReadOnlySection,
+}
+
+export default frtDailyInspectionDefinition

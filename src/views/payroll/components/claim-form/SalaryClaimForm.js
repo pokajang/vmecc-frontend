@@ -530,7 +530,7 @@ const SalaryClaimForm = ({
   )
 
   return (
-    <div className="d-grid gap-4">
+    <div className="d-grid gap-4" data-tour-id="payroll-claim-form">
       <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
       <ClaimLeaveModal
         visible={leaveModalVisible}

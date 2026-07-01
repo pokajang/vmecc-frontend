@@ -3,6 +3,7 @@ import React from 'react'
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
+import { NavigationGuardProvider } from 'src/contexts/NavigationGuardContext'
 import Overtime from '../Overtime'
 import { DEFAULT_OVERTIME_APPROVAL_RULES } from '../overtimePolicy'
 
@@ -202,17 +203,19 @@ const PathProbe = () => {
 const renderOvertime = (initialPath = '/overtime') =>
   render(
     <MemoryRouter initialEntries={[initialPath]}>
-      <Routes>
-        <Route
-          path="*"
-          element={
-            <>
-              <PathProbe />
-              <Overtime />
-            </>
-          }
-        />
-      </Routes>
+      <NavigationGuardProvider>
+        <Routes>
+          <Route
+            path="*"
+            element={
+              <>
+                <PathProbe />
+                <Overtime />
+              </>
+            }
+          />
+        </Routes>
+      </NavigationGuardProvider>
     </MemoryRouter>,
   )
 

@@ -172,8 +172,31 @@ const countPresentResponders = (record) => {
   return rows.filter((row) => row?.present !== false).length
 }
 
+const getPostIncidentAnalysis = (record) => {
+  const raw = record?.postIncidentAnalysis
+  return raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {}
+}
+
+const countAnalysisRows = (record, key, alternateKey) => {
+  const analysis = getPostIncidentAnalysis(record)
+  const rows = analysis[key] || (alternateKey ? analysis[alternateKey] : null)
+  return Array.isArray(rows) ? rows.length : 0
+}
+
+const countAnalysisPhotos = (record) => {
+  const analysis = getPostIncidentAnalysis(record)
+  if (Array.isArray(analysis.photos)) return analysis.photos.length
+  return Array.isArray(record?.photos) ? record.photos.length : 0
+}
+
+const countLegacyFindings = (record) =>
+  Array.isArray(record?.findings) ? record.findings.length : 0
+
 const buildChangeSummary = (original, next) => {
   if (!original || !next) return []
+  const originalStrengths =
+    countAnalysisRows(original, 'strengths') || countLegacyFindings(original)
+  const nextStrengths = countAnalysisRows(next, 'strengths') || countLegacyFindings(next)
   const pairs = [
     ['Incident Type', toText(original.incidentType), toText(next.incidentType)],
     [
@@ -199,16 +222,18 @@ const buildChangeSummary = (original, next) => {
       String((Array.isArray(next.chronology) ? next.chronology : []).length),
     ],
     ['Responders', String(countPresentResponders(original)), String(countPresentResponders(next))],
+    ['Strengths', String(originalStrengths), String(nextStrengths)],
     [
-      'Photos',
-      String((Array.isArray(original.photos) ? original.photos : []).length),
-      String((Array.isArray(next.photos) ? next.photos : []).length),
+      'Resources Mobilised',
+      String(countAnalysisRows(original, 'resourcesMobilised', 'resourcesMobilized')),
+      String(countAnalysisRows(next, 'resourcesMobilised', 'resourcesMobilized')),
     ],
     [
-      'Findings',
-      String((Array.isArray(original.findings) ? original.findings : []).length),
-      String((Array.isArray(next.findings) ? next.findings : []).length),
+      'Improvement Opportunities',
+      String(countAnalysisRows(original, 'improvementOpportunities', 'improvements')),
+      String(countAnalysisRows(next, 'improvementOpportunities', 'improvements')),
     ],
+    ['Photos', String(countAnalysisPhotos(original)), String(countAnalysisPhotos(next))],
   ]
   return pairs
     .filter((row) => row[1] !== row[2])

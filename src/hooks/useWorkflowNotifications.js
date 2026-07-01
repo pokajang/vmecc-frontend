@@ -12,6 +12,7 @@ import {
 const POLL_INTERVAL_MS = 30 * 1000
 const REFRESH_DEBOUNCE_MS = 300
 const READ_SETTLE_MS = 1500
+const AUTH_ERROR_MESSAGE = 'Sign in again to view notifications.'
 
 // Piggybacks the fresh count on the event so useWorkflowNotificationCounts
 // can update its badge without making a redundant API call.
@@ -25,6 +26,16 @@ const notify = (count) =>
 
 const countUnreadItems = (items = []) =>
   items.reduce((total, item) => total + (item?.unread ? 1 : 0), 0)
+
+const isAuthBlockedResult = (result) => {
+  const status = Number(result?.error?.status)
+  return status === 401 || status === 403
+}
+
+const getAuthBlockedMessage = (itemsResult, countResult) => {
+  const status = Number(itemsResult?.error?.status || countResult?.error?.status)
+  return status === 403 ? 'Notifications are unavailable for this account.' : AUTH_ERROR_MESSAGE
+}
 
 const useWorkflowNotifications = ({ unreadOnly = false } = {}) => {
   const user = useSelector((state) => state.authUser)
@@ -41,11 +52,13 @@ const useWorkflowNotifications = ({ unreadOnly = false } = {}) => {
   const pendingDeletesRef = useRef(new Set())
   const pendingReadsRef = useRef(new Set())
   const pendingReadReleaseTimerRef = useRef(null)
+  const authBlockedRef = useRef(false)
   useEffect(() => {
     paramsRef.current = { unreadOnly }
   }, [unreadOnly])
   useEffect(() => {
     userIdRef.current = user?.id
+    authBlockedRef.current = false
   }, [user?.id])
   useEffect(() => {
     itemsRef.current = items
@@ -60,6 +73,13 @@ const useWorkflowNotifications = ({ unreadOnly = false } = {}) => {
       if (broadcast) notify(0)
       return
     }
+    if (authBlockedRef.current) {
+      setItems([])
+      setUnreadCount(0)
+      if (broadcast) notify(0)
+      if (!silent) setError(AUTH_ERROR_MESSAGE)
+      return
+    }
     if (!silent) {
       setLoading(true)
       setError(null)
@@ -70,6 +90,14 @@ const useWorkflowNotifications = ({ unreadOnly = false } = {}) => {
         getWorkflowNotificationsForViewer({ unreadOnly: uo, limit: 100 }),
         getWorkflowUnreadCount(),
       ])
+      if (isAuthBlockedResult(itemsResult) || isAuthBlockedResult(countResult)) {
+        authBlockedRef.current = true
+        setItems([])
+        setUnreadCount(0)
+        if (broadcast) notify(0)
+        if (!silent) setError(getAuthBlockedMessage(itemsResult, countResult))
+        return
+      }
       if (itemsResult?.ok) {
         const data = Array.isArray(itemsResult.data) ? itemsResult.data : []
         const pendingDeletes = pendingDeletesRef.current
@@ -120,7 +148,7 @@ const useWorkflowNotifications = ({ unreadOnly = false } = {}) => {
 
   useEffect(() => {
     fetchData(false)
-  }, [fetchData])
+  }, [fetchData, unreadOnly, user?.id])
 
   useEffect(() => {
     const timer = window.setInterval(() => fetchData(true, true), POLL_INTERVAL_MS)

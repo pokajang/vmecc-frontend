@@ -18,6 +18,7 @@ import {
 } from '@coreui/react'
 import CreateActionButton from 'src/components/CreateActionButton'
 import DataTableFooter from 'src/components/DataTableFooter'
+import MobileRecordList from 'src/components/MobileRecordList'
 import RowActions from 'src/components/RowActions'
 import TableFilters from 'src/components/TableFilters'
 import TableLoader from 'src/components/TableLoader'
@@ -230,8 +231,51 @@ const HolidaysTab = ({
     return { ok: true }
   }
 
+  const mobileHolidaySections = groupedListRows.map((group) => ({
+    key: `holiday-mobile-year-${group.year}`,
+    label: group.year,
+    summary: `${group.entries.length} ${group.entries.length === 1 ? 'record' : 'records'}`,
+    items: group.entries.map(({ row, displayIndex }) => ({
+      key: row.id,
+      title: row.name || '-',
+      eyebrow: formatDate(row.date),
+      subtitle: row.scope === 'State' ? row.state || '-' : 'All States',
+      status: row.scope || '-',
+      fields: [
+        { key: 'date', label: 'Date', value: formatDate(row.date) },
+        { key: 'scope', label: 'Scope', value: row.scope || '-' },
+        {
+          key: 'state',
+          label: 'State',
+          value: row.scope === 'State' ? row.state || '-' : 'All States',
+        },
+        { key: 'index', label: '#', value: displayIndex },
+      ],
+      ariaLabel: `Open holiday ${row.name || displayIndex}`,
+      onOpen: () => openHolidayDetail(row),
+      actions: (
+        <RowActions
+          toggleAriaLabel="Mobile row actions"
+          items={[
+            {
+              key: 'edit',
+              label: 'Edit',
+              onClick: () => openEditModal(row),
+            },
+            {
+              key: 'delete',
+              label: 'Delete',
+              className: 'text-danger',
+              onClick: () => handleDeleteRequest(row),
+            },
+          ]}
+        />
+      ),
+    })),
+  }))
+
   return (
-    <CCard>
+    <CCard data-tour-id="leave-management-holidays">
       <CCardHeader className="d-flex justify-content-between align-items-center gap-2">
         <span>Set Holidays</span>
         <CreateActionButton label="Configure holidays" onClick={openCreateModal} />
@@ -330,7 +374,8 @@ const HolidaysTab = ({
           <div className="text-body-secondary">No holidays match the current filters.</div>
         ) : (
           <>
-            <div className="rounded-3 shadow-sm overflow-hidden bg-white">
+            <MobileRecordList sections={mobileHolidaySections} variant="list-group" />
+            <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
               <CTable align="middle" className="mb-0" hover responsive>
                 <CTableHead color="light">
                   <CTableRow>

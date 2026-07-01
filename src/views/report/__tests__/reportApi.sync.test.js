@@ -70,6 +70,41 @@ describe('reportApi sync hardening', () => {
     expect(deletedPaths).not.toContain('/reports/drill-1')
   })
 
+  it('scopes active report persistence away from unrelated local fallback rows', async () => {
+    const writePaths = []
+    loadReportRecords.mockReturnValue([
+      {
+        id: 'drill-1',
+        displayId: 'DRL-01-01012026',
+        reportType: 'drill',
+        status: 'Submitted',
+      },
+    ])
+    apiRequest.mockImplementation(async (path, options = {}) => {
+      if (path === '/reports' && !options.method) return { data: [] }
+      if (path.startsWith('/reports') && ['POST', 'PUT', 'DELETE'].includes(options.method)) {
+        writePaths.push(`${options.method} ${path}`)
+      }
+      return { data: null }
+    })
+
+    const ok = await persistReportRecords(
+      'u-1',
+      [
+        {
+          id: 'fitness-1',
+          displayId: 'FIT-01-01012026',
+          reportType: 'fitness-test',
+          status: 'Submitted',
+        },
+      ],
+      { reportTypeSlug: 'fitness-test' },
+    )
+
+    expect(ok).toBe(true)
+    expect(writePaths).toEqual(['POST /reports'])
+  })
+
   it('does not mark backfill migrated when verification is incomplete', async () => {
     let reportsFetchCount = 0
     loadReportRecords.mockReturnValue([

@@ -3,7 +3,7 @@ import { CFooter } from '@coreui/react'
 
 const AppFooter = () => {
   return (
-    <CFooter className="px-4">
+    <CFooter className="app-footer px-3 px-md-4">
       <div>
         <span>&copy; 2026 VMECC.</span>
       </div>

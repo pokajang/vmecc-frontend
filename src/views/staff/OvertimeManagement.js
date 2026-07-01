@@ -20,7 +20,10 @@ import {
   getWorkflowStatusLabel as getOvertimeWorkflowStatusLabel,
 } from 'src/views/overtime/utils'
 import OvertimeDetailSection from 'src/views/overtime/components/OvertimeDetailSection'
-import { overtimeSortOptions, SALARY_CLAIMS_ALLOWED_PERMISSIONS } from './leave-management/data'
+import {
+  overtimeSortOptions,
+  OVERTIME_MANAGEMENT_ALLOWED_PERMISSIONS,
+} from './leave-management/data'
 import OvertimeRecordsTab from './leave-management/components/OvertimeRecordsTab'
 import OvertimeWorkflowActionModal from './leave-management/components/OvertimeWorkflowActionModal'
 import OvertimeApprovalRules from '../settings/components/OvertimeApprovalRules'
@@ -104,7 +107,10 @@ const OvertimeManagement = () => {
   const navigate = useNavigate()
   const { overtimeRouteKey } = useParams()
   const user = useSelector((state) => state.authUser)
-  const isHrUser = useMemo(() => hasAnyPermission(user, SALARY_CLAIMS_ALLOWED_PERMISSIONS), [user])
+  const isHrUser = useMemo(
+    () => hasAnyPermission(user, OVERTIME_MANAGEMENT_ALLOWED_PERMISSIONS),
+    [user],
+  )
   const showGuidanceMetadata = isHolidayGuidanceStaffVisibilityEnabledForUser(user)
   const actorName = useMemo(
     () => user?.name || user?.full_name || user?.email || 'System user',
@@ -593,7 +599,7 @@ const OvertimeManagement = () => {
   }
 
   return (
-    <CContainer fluid>
+    <CContainer fluid data-tour-id="overtime-management-module">
       <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
 
       <OvertimeWorkflowActionModal
@@ -631,24 +637,26 @@ const OvertimeManagement = () => {
             subtitle="Review overtime records, process workflow decisions, and maintain overtime rules."
           />
 
-          <RouteNavTabs
-            currentPath={resolvedTab}
-            navigate={(tab) => switchTab(tab)}
-            items={[
-              {
-                key: 'overtimeRecords',
-                label: 'Overtime Records',
-                to: 'overtimeRecords',
-                match: 'overtimeRecords',
-              },
-              {
-                key: 'otRules',
-                label: 'Set OT Rules',
-                to: 'otRules',
-                match: 'otRules',
-              },
-            ]}
-          />
+          <div data-tour-id="overtime-management-nav">
+            <RouteNavTabs
+              currentPath={resolvedTab}
+              navigate={(tab) => switchTab(tab)}
+              items={[
+                {
+                  key: 'overtimeRecords',
+                  label: 'Overtime Records',
+                  to: 'overtimeRecords',
+                  match: 'overtimeRecords',
+                },
+                {
+                  key: 'otRules',
+                  label: 'Set OT Rules',
+                  to: 'otRules',
+                  match: 'otRules',
+                },
+              ]}
+            />
+          </div>
 
           {resolvedTab === 'overtimeRecords' ? (
             <OvertimeRecordsTab
@@ -700,22 +708,28 @@ const OvertimeManagement = () => {
             />
           ) : null}
 
-          {resolvedTab === 'otRules' ? <OvertimeApprovalRules /> : null}
+          {resolvedTab === 'otRules' ? (
+            <div data-tour-id="overtime-management-rules">
+              <OvertimeApprovalRules />
+            </div>
+          ) : null}
         </>
       ) : (
-        <OvertimeDetailSection
-          selectedRecord={selectedRecord}
-          selectedRecordStatusLabel={selectedRecordStatusLabel}
-          selectedRecordPendingActionHint={selectedRecordPendingActionHint}
-          selectedRecordHistoryEntries={selectedRecordHistoryEntries}
-          onBack={backToOvertimePage}
-          getDisplayOvertimeId={getDisplayOvertimeId}
-          getScheduleLabel={getOvertimeScheduleLabel}
-          getStatusBadge={getStatusBadge}
-          formatDate={formatOvertimeDate}
-          formatDateTime={formatOvertimeDateTime}
-          showGuidanceMetadata={showGuidanceMetadata}
-        />
+        <div data-tour-id="overtime-management-detail">
+          <OvertimeDetailSection
+            selectedRecord={selectedRecord}
+            selectedRecordStatusLabel={selectedRecordStatusLabel}
+            selectedRecordPendingActionHint={selectedRecordPendingActionHint}
+            selectedRecordHistoryEntries={selectedRecordHistoryEntries}
+            onBack={backToOvertimePage}
+            getDisplayOvertimeId={getDisplayOvertimeId}
+            getScheduleLabel={getOvertimeScheduleLabel}
+            getStatusBadge={getStatusBadge}
+            formatDate={formatOvertimeDate}
+            formatDateTime={formatOvertimeDateTime}
+            showGuidanceMetadata={showGuidanceMetadata}
+          />
+        </div>
       )}
     </CContainer>
   )

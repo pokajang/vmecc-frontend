@@ -1,16 +1,6 @@
 import React from 'react'
-import { CAlert, CBadge, CButton, CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/react'
-
-const DetailField = ({ label, children, xs = 6, md = 4 }) => (
-  <CCol xs={xs} md={md}>
-    <div className="small text-body-secondary">{label}</div>
-    <div>{children}</div>
-  </CCol>
-)
-
-const SectionHeading = ({ children }) => (
-  <div className="fw-semibold border-bottom pb-2 mb-1">{children}</div>
-)
+import { CAlert, CBadge, CButton, CCard, CCardBody, CCardHeader, CRow } from '@coreui/react'
+import { DetailField, SectionHeading } from 'src/components/report-workflow/ReportViewComponents'
 
 const ChronologyRows = ({ chronology }) => {
   const rows = (Array.isArray(chronology) ? chronology : []).filter((r) => r.time || r.action)
@@ -158,10 +148,14 @@ const ReportDetailSection = ({
   onBack,
   formatDateTime,
   renderStatusBadge,
+  onEditRecord,
   onReviewRecord,
   onApproveRecord,
   onRejectRecord,
   onDownloadRecord,
+  onDeleteRecord,
+  canEditRecord,
+  canDeleteRecord,
   downloadingId = null,
   isActionBusy = false,
   mode = 'detail',
@@ -169,6 +163,11 @@ const ReportDetailSection = ({
   isSubmittingReview = false,
   changeSummary = [],
   reviewBannerText = 'Review Mode - not submitted yet.',
+  typeLabel = 'Incident Type',
+  conditionLabel = 'Weather',
+  detailsLabel = 'Incident Title',
+  summaryLabel = 'Summary',
+  onboardingAnchorPrefix = '',
 }) => {
   if (!selectedRecord) {
     return (
@@ -191,6 +190,8 @@ const ReportDetailSection = ({
   const detailsText = String(r.details || r.description || '').trim()
   const summaryText = String(r.summary || '').trim()
   const displayStatus = isReviewMode ? 'Draft' : r.status
+  const canEditCurrentRecord = Boolean(canEditRecord?.(r))
+  const canDeleteCurrentRecord = Boolean(canDeleteRecord?.(r))
 
   const dateTime = formatDateTime(r.incidentDate || r.reportDate, r.incidentTime || r.reportTime)
   const timeline = Array.isArray(r.timeline) ? r.timeline : []
@@ -206,6 +207,14 @@ const ReportDetailSection = ({
   const reviewedEntry = findAction('Reviewed')
   const approvedEntry = findAction('Approved')
   const rejectedEntry = findAction('Rejected')
+  const submittedBy =
+    String(r.submittedBy || submittedEntry?.by || r.reportedBy || r.createdBy || '').trim() || '--'
+  const submittedAtRaw = String(submittedEntry?.at || r.submittedAt || r.createdAt || '').trim()
+  const submittedAtDate = submittedAtRaw ? new Date(submittedAtRaw) : null
+  const submittedAt =
+    submittedAtDate && !Number.isNaN(submittedAtDate.getTime())
+      ? submittedAtDate.toLocaleString()
+      : submittedAtRaw || '--'
   const renderWorkflowActor = (entry) => {
     const actor = String(entry?.by || '').trim() || '--'
     const remarks = String(entry?.remarks || '').trim()
@@ -221,186 +230,226 @@ const ReportDetailSection = ({
     )
   }
 
-  return (
-    <CCard>
-      <CCardHeader>
-        <strong>{r.displayId}</strong>
-      </CCardHeader>
-      <CCardBody>
-        <div className="d-grid gap-4">
+  const renderDetailContent = () => (
+    <div className="d-grid gap-4">
+      {isReviewMode && reviewBannerText ? (
+        <CAlert color="info" className="mb-0 py-2">
+          {reviewBannerText}
+        </CAlert>
+      ) : null}
+
+      <CRow className="g-3">
+        <DetailField label="Status">
+          {typeof renderStatusBadge === 'function'
+            ? renderStatusBadge(displayStatus)
+            : displayStatus || '--'}
+        </DetailField>
+        <DetailField label="Submitted By">{submittedBy}</DetailField>
+        <DetailField label="Submitted At">{submittedAt}</DetailField>
+        <DetailField label="Action Owner">{r.actionOwner || '--'}</DetailField>
+        <DetailField label="Date / Time">{dateTime || '--'}</DetailField>
+        <DetailField label={typeLabel}>{r.incidentType || '--'}</DetailField>
+        {r.weather ? <DetailField label={conditionLabel}>{r.weather}</DetailField> : null}
+        <DetailField label="Location" xs={12} md={r.weather ? 4 : 8}>
+          {r.location || '--'}
+        </DetailField>
+        {r.teamInCharge || r.respondingTeamName ? (
+          <DetailField label="Team In Charge" xs={12} md={4}>
+            {r.teamInCharge || r.respondingTeamName}
+          </DetailField>
+        ) : null}
+        {r.aicInCharge ? (
+          <DetailField label="AIC In Charge" xs={12} md={4}>
+            {r.aicInCharge}
+          </DetailField>
+        ) : null}
+      </CRow>
+
+      {detailsText || summaryText ? (
+        <div className="d-grid gap-3">
+          {detailsText ? (
+            <div>
+              <div className="small text-body-secondary">{detailsLabel}</div>
+              <div className="fw-semibold">{detailsText}</div>
+            </div>
+          ) : null}
+          {summaryText ? (
+            <div>
+              <div className="small text-body-secondary">{summaryLabel}</div>
+              <div style={{ whiteSpace: 'pre-wrap' }}>{summaryText}</div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      {submittedEntry || reviewedEntry || approvedEntry || rejectedEntry ? (
+        <div className="d-grid gap-2">
+          <SectionHeading>Workflow Activity</SectionHeading>
           <CRow className="g-3">
-            <DetailField label="Status">
-              {typeof renderStatusBadge === 'function'
-                ? renderStatusBadge(displayStatus)
-                : displayStatus || '--'}
-            </DetailField>
-            <DetailField label="Action Owner">{r.actionOwner || '--'}</DetailField>
-            <DetailField label="Date / Time">{dateTime || '--'}</DetailField>
-            <DetailField label="Incident Type">{r.incidentType || '--'}</DetailField>
-            {r.weather ? <DetailField label="Weather">{r.weather}</DetailField> : null}
-            <DetailField label="Location" xs={12} md={r.weather ? 4 : 8}>
-              {r.location || '--'}
-            </DetailField>
-            {r.teamInCharge || r.respondingTeamName ? (
-              <DetailField label="Team In Charge" xs={12} md={4}>
-                {r.teamInCharge || r.respondingTeamName}
+            {submittedEntry ? (
+              <DetailField label="Submitted By" xs={12} md={4}>
+                {renderWorkflowActor(submittedEntry)}
               </DetailField>
             ) : null}
-            {r.aicInCharge ? (
-              <DetailField label="AIC In Charge" xs={12} md={4}>
-                {r.aicInCharge}
+            {reviewedEntry ? (
+              <DetailField label="Reviewed By" xs={12} md={4}>
+                {renderWorkflowActor(reviewedEntry)}
+              </DetailField>
+            ) : null}
+            {approvedEntry ? (
+              <DetailField label="Approved By" xs={12} md={4}>
+                {renderWorkflowActor(approvedEntry)}
+              </DetailField>
+            ) : null}
+            {rejectedEntry ? (
+              <DetailField label="Rejected By" xs={12} md={4}>
+                {renderWorkflowActor(rejectedEntry)}
               </DetailField>
             ) : null}
           </CRow>
-
-          {detailsText || summaryText ? (
-            <div className="d-grid gap-3">
-              {detailsText ? (
-                <div>
-                  <div className="small text-body-secondary">Incident Title</div>
-                  <div className="fw-semibold">{detailsText}</div>
-                </div>
-              ) : null}
-              {summaryText ? (
-                <div>
-                  <div className="small text-body-secondary">Summary</div>
-                  <div style={{ whiteSpace: 'pre-wrap' }}>{summaryText}</div>
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-
-          {submittedEntry || reviewedEntry || approvedEntry || rejectedEntry ? (
-            <div className="d-grid gap-2">
-              <SectionHeading>Workflow Activity</SectionHeading>
-              <CRow className="g-3">
-                {submittedEntry ? (
-                  <DetailField label="Submitted By" xs={12} md={4}>
-                    {renderWorkflowActor(submittedEntry)}
-                  </DetailField>
-                ) : null}
-                {reviewedEntry ? (
-                  <DetailField label="Reviewed By" xs={12} md={4}>
-                    {renderWorkflowActor(reviewedEntry)}
-                  </DetailField>
-                ) : null}
-                {approvedEntry ? (
-                  <DetailField label="Approved By" xs={12} md={4}>
-                    {renderWorkflowActor(approvedEntry)}
-                  </DetailField>
-                ) : null}
-                {rejectedEntry ? (
-                  <DetailField label="Rejected By" xs={12} md={4}>
-                    {renderWorkflowActor(rejectedEntry)}
-                  </DetailField>
-                ) : null}
-              </CRow>
-            </div>
-          ) : null}
-
-          {isReviewMode ? (
-            <div className="d-grid gap-2">
-              <SectionHeading>Changed Fields</SectionHeading>
-              {Array.isArray(changeSummary) && changeSummary.length > 0 ? (
-                <div className="rounded-3 border overflow-hidden">
-                  {changeSummary.map((entry, index) => (
-                    <div
-                      key={`${entry.label}-${index}`}
-                      className={`px-3 py-2 ${index < changeSummary.length - 1 ? 'border-bottom' : ''}`}
-                    >
-                      <div className="small text-body-secondary">{entry.label}</div>
-                      <div className="small">
-                        <span className="text-body-secondary">From:</span> {entry.before || '--'}
-                      </div>
-                      <div className="small">
-                        <span className="text-body-secondary">To:</span> {entry.after || '--'}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="small text-body-secondary">No changes detected.</div>
-              )}
-            </div>
-          ) : null}
-
-          {hasRespondingTeam ? <RespondingTeamRows respondingTeam={r.respondingTeam} /> : null}
-          {hasChronology ? <ChronologyRows chronology={r.chronology} /> : null}
-
-          {isErco &&
-          (r.postIncidentAnalysis || (Array.isArray(r.photos) && r.photos.length > 0)) ? (
-            <PostAnalysisRows
-              analysis={r.postIncidentAnalysis || {}}
-              fallbackPhotos={Array.isArray(r.photos) ? r.photos : []}
-            />
-          ) : null}
-
-          <div className="d-flex flex-column flex-sm-row flex-wrap gap-2 justify-content-end">
-            {isReviewMode ? (
-              <>
-                <CButton color="light" onClick={() => reviewActions?.onBackToEdit?.()}>
-                  Back to Edit
-                </CButton>
-                <CButton color="secondary" onClick={() => reviewActions?.onSaveDraft?.()}>
-                  Save Draft
-                </CButton>
-                <CButton
-                  color="primary"
-                  disabled={isSubmittingReview}
-                  onClick={() => reviewActions?.onConfirm?.()}
-                >
-                  {reviewActions?.confirmLabel || 'Confirm Submit'}
-                </CButton>
-              </>
-            ) : (
-              <>
-                <CButton color="light" onClick={onBack}>
-                  Back to records
-                </CButton>
-                <CButton
-                  color="secondary"
-                  variant="outline"
-                  disabled={Boolean(downloadingId)}
-                  onClick={() => onDownloadRecord?.(r.id)}
-                >
-                  {downloadingId === r.id ? 'Generating...' : 'Download'}
-                </CButton>
-                {String(r.status || '').trim() === 'Submitted' ? (
-                  <CButton
-                    color="info"
-                    variant="outline"
-                    disabled={isActionBusy}
-                    onClick={() => onReviewRecord?.(r)}
-                  >
-                    Review
-                  </CButton>
-                ) : null}
-                {String(r.status || '').trim() === 'Reviewed' ? (
-                  <>
-                    <CButton
-                      color="success"
-                      variant="outline"
-                      disabled={isActionBusy}
-                      onClick={() => onApproveRecord?.(r)}
-                    >
-                      Approve
-                    </CButton>
-                    <CButton
-                      color="danger"
-                      variant="outline"
-                      disabled={isActionBusy}
-                      onClick={() => onRejectRecord?.(r)}
-                    >
-                      Reject
-                    </CButton>
-                  </>
-                ) : null}
-              </>
-            )}
-          </div>
         </div>
-      </CCardBody>
-    </CCard>
+      ) : null}
+
+      {isReviewMode ? (
+        <div className="d-grid gap-2">
+          <SectionHeading>Changed Fields</SectionHeading>
+          {Array.isArray(changeSummary) && changeSummary.length > 0 ? (
+            <div className="rounded-3 border overflow-hidden">
+              {changeSummary.map((entry, index) => (
+                <div
+                  key={`${entry.label}-${index}`}
+                  className={`px-3 py-2 ${index < changeSummary.length - 1 ? 'border-bottom' : ''}`}
+                >
+                  <div className="small text-body-secondary">{entry.label}</div>
+                  <div className="small">
+                    <span className="text-body-secondary">From:</span> {entry.before || '--'}
+                  </div>
+                  <div className="small">
+                    <span className="text-body-secondary">To:</span> {entry.after || '--'}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="small text-body-secondary">No changes detected.</div>
+          )}
+        </div>
+      ) : null}
+
+      {hasRespondingTeam ? <RespondingTeamRows respondingTeam={r.respondingTeam} /> : null}
+      {hasChronology ? <ChronologyRows chronology={r.chronology} /> : null}
+
+      {isErco && (r.postIncidentAnalysis || (Array.isArray(r.photos) && r.photos.length > 0)) ? (
+        <PostAnalysisRows
+          analysis={r.postIncidentAnalysis || {}}
+          fallbackPhotos={Array.isArray(r.photos) ? r.photos : []}
+        />
+      ) : null}
+
+      <div className="d-flex flex-column flex-sm-row flex-wrap gap-2 justify-content-end">
+        {isReviewMode ? (
+          <>
+            <CButton color="light" onClick={() => reviewActions?.onBackToEdit?.()}>
+              Back to Edit
+            </CButton>
+            <CButton color="secondary" onClick={() => reviewActions?.onSaveDraft?.()}>
+              Save Draft
+            </CButton>
+            <CButton
+              color="primary"
+              disabled={isSubmittingReview}
+              onClick={() => reviewActions?.onConfirm?.()}
+            >
+              {reviewActions?.confirmLabel || 'Confirm Submit'}
+            </CButton>
+          </>
+        ) : (
+          <>
+            <CButton color="light" onClick={onBack}>
+              Back to records
+            </CButton>
+            <CButton
+              color="secondary"
+              variant="outline"
+              {...(onboardingAnchorPrefix
+                ? { 'data-tour-id': `${onboardingAnchorPrefix}-download-action` }
+                : {})}
+              disabled={Boolean(downloadingId)}
+              onClick={() => onDownloadRecord?.(r.id)}
+            >
+              {downloadingId === r.id ? 'Generating...' : 'Download'}
+            </CButton>
+            <CButton
+              color="primary"
+              variant="outline"
+              {...(onboardingAnchorPrefix
+                ? { 'data-tour-id': `${onboardingAnchorPrefix}-edit-action` }
+                : {})}
+              disabled={!canEditCurrentRecord}
+              onClick={() => onEditRecord?.(r)}
+            >
+              Edit
+            </CButton>
+            <CButton
+              color="danger"
+              variant="outline"
+              {...(onboardingAnchorPrefix
+                ? { 'data-tour-id': `${onboardingAnchorPrefix}-delete-action` }
+                : {})}
+              disabled={!canDeleteCurrentRecord}
+              onClick={() => onDeleteRecord?.(r)}
+            >
+              Delete
+            </CButton>
+            {String(r.status || '').trim() === 'Submitted' ? (
+              <CButton
+                color="info"
+                variant="outline"
+                disabled={isActionBusy}
+                onClick={() => onReviewRecord?.(r)}
+              >
+                Review
+              </CButton>
+            ) : null}
+            {String(r.status || '').trim() === 'Reviewed' ? (
+              <>
+                <CButton
+                  color="success"
+                  variant="outline"
+                  disabled={isActionBusy}
+                  onClick={() => onApproveRecord?.(r)}
+                >
+                  Approve
+                </CButton>
+                <CButton
+                  color="danger"
+                  variant="outline"
+                  disabled={isActionBusy}
+                  onClick={() => onRejectRecord?.(r)}
+                >
+                  Reject
+                </CButton>
+              </>
+            ) : null}
+          </>
+        )}
+      </div>
+    </div>
+  )
+
+  return (
+    <>
+      <div className="inspection-mobile-section d-md-none">
+        <div className="fw-semibold mb-3">{r.displayId}</div>
+        {renderDetailContent()}
+      </div>
+      <CCard className="d-none d-md-block">
+        <CCardHeader>
+          <strong>{r.displayId}</strong>
+        </CCardHeader>
+        <CCardBody>{renderDetailContent()}</CCardBody>
+      </CCard>
+    </>
   )
 }
 

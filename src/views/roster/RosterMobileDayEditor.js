@@ -27,7 +27,13 @@ const RosterMobileDayEditor = ({
   }
 
   return (
-    <COffcanvas placement="bottom" visible={visible} onHide={onClose} className="d-md-none">
+    <COffcanvas
+      placement="bottom"
+      visible={visible}
+      onHide={onClose}
+      className="d-md-none"
+      data-tour-id="roster-management-mobile-editor"
+    >
       <COffcanvasHeader>
         <COffcanvasTitle>
           {shiftDef?.name || 'Shift'} - {row?.date || '-'}

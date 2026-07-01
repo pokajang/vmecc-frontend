@@ -1,19 +1,38 @@
 import React from 'react'
-import { AppContent, AppSidebar, AppHeader } from '../components/index'
+import { useSelector } from 'react-redux'
+import { AppContent, AppSidebar, AppHeader, AppFooter } from '../components/index'
+import AiHelperPanel from 'src/components/ai-helper/AiHelperPanel'
+import AppUpdateBanner from 'src/components/AppUpdateBanner'
 import MaintenanceGraceBanner from 'src/components/MaintenanceGraceBanner'
+import TrtProfileCompletionOnboarding from 'src/components/onboarding/TrtProfileCompletionOnboarding'
+import OnboardingTourHost from 'src/components/onboarding/OnboardingTourHost'
+import PwaInstallBanner from 'src/components/PwaInstallBanner'
+import { PwaInstallProvider } from 'src/hooks/usePwaInstallPrompt'
 
 const DefaultLayout = () => {
+  const aiHelperOpen = useSelector((state) => state.aiHelperOpen)
+
   return (
-    <div>
-      <AppSidebar />
-      <div className="wrapper d-flex flex-column min-vh-100">
-        <AppHeader />
-        <MaintenanceGraceBanner />
-        <div className="body flex-grow-1 d-flex flex-column" style={{ minHeight: 0 }}>
-          <AppContent />
+    <PwaInstallProvider>
+      <div>
+        <AppSidebar />
+        <div
+          className={`wrapper d-flex flex-column min-vh-100${aiHelperOpen ? ' ai-helper-open' : ''}`}
+        >
+          <AppHeader />
+          <TrtProfileCompletionOnboarding />
+          <OnboardingTourHost />
+          <MaintenanceGraceBanner />
+          <PwaInstallBanner />
+          <AppUpdateBanner />
+          <div className="body flex-grow-1 d-flex flex-column" style={{ minHeight: 0 }}>
+            <AppContent />
+          </div>
+          <AppFooter />
         </div>
+        <AiHelperPanel />
       </div>
-    </div>
+    </PwaInstallProvider>
   )
 }
 

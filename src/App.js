@@ -28,6 +28,16 @@ const Page500 = React.lazy(() => import('./views/pages/page500/Page500'))
 const Maintenance = React.lazy(() => import('./views/pages/maintenance/Maintenance'))
 const MAINTENANCE_POLL_INTERVAL_AUTHENTICATED_MS = 10000
 const MAINTENANCE_POLL_INTERVAL_PUBLIC_MS = 30000
+const AUTH_BOOTSTRAP_TIMEOUT_MS = 12_000
+
+const withTimeout = (promise, timeoutMs, timeoutMessage) => {
+  let timeoutId
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs)
+  })
+
+  return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId))
+}
 
 const App = () => {
   const { isColorModeSet, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
@@ -37,10 +47,77 @@ const App = () => {
   const authUser = useSelector((state) => state.authUser)
   const systemMaintenance = useSelector((state) => state.systemMaintenance)
   const systemMaintenanceRef = useRef(systemMaintenance)
+  const sessionCheckInFlightRef = useRef(false)
 
   useEffect(() => {
     systemMaintenanceRef.current = systemMaintenance
   }, [systemMaintenance])
+
+  const loadSession = useCallback(
+    async ({ silent = false, isActive = () => true } = {}) => {
+      if (sessionCheckInFlightRef.current) return false
+      sessionCheckInFlightRef.current = true
+
+      if (!silent && isActive()) {
+        dispatch({ type: 'set', authStatus: 'checking', authError: null })
+      }
+
+      try {
+        const session = await withTimeout(
+          fetchSession(),
+          AUTH_BOOTSTRAP_TIMEOUT_MS,
+          'Session bootstrap timed out.',
+        )
+        if (!isActive()) {
+          return false
+        }
+        dispatch({
+          type: 'set',
+          authStatus: 'authenticated',
+          authUser: session?.user || session,
+          authError: null,
+        })
+
+        // Module activation data is not required to enter the app shell.
+        // Load it separately so route bootstrap remains bounded and resilient
+        // to transient module-service issues.
+        void (async () => {
+          try {
+            const moduleActivationRaw = await fetchModuleActivation()
+            if (!isActive()) return
+            const moduleActivation = normalizeModuleActivationPayload(moduleActivationRaw)
+            dispatch({
+              type: 'set',
+              ...(moduleActivation ? { moduleActivation } : {}),
+            })
+          } catch {
+            // keep existing activation fallback behavior on failure
+          }
+        })()
+
+        return true
+      } catch (error) {
+        if (isActive() && !silent) {
+          dispatch({
+            type: 'set',
+            authStatus: 'anonymous',
+            authUser: null,
+            authError:
+              error?.status === 401
+                ? null
+                : error?.status >= 500 ||
+                    String(error?.message || '').includes('Session bootstrap timed out.')
+                  ? 'Unable to connect to server.'
+                  : error?.message || 'Unable to initialize session.',
+          })
+        }
+        return false
+      } finally {
+        sessionCheckInFlightRef.current = false
+      }
+    },
+    [dispatch],
+  )
 
   const applySystemMaintenance = useCallback(
     (nextValue) => {
@@ -75,44 +152,33 @@ const App = () => {
 
   useEffect(() => {
     let isMounted = true
-    const loadSession = async () => {
-      dispatch({ type: 'set', authStatus: 'checking', authError: null })
-      try {
-        const session = await fetchSession()
-        let moduleActivation = null
-        try {
-          moduleActivation = normalizeModuleActivationPayload(await fetchModuleActivation())
-        } catch {
-          moduleActivation = null
-        }
-        if (!isMounted) {
-          return
-        }
-        dispatch({
-          type: 'set',
-          authStatus: 'authenticated',
-          authUser: session?.user || session,
-          authError: null,
-          ...(moduleActivation ? { moduleActivation } : {}),
-        })
-      } catch (error) {
-        if (!isMounted) {
-          return
-        }
-        dispatch({
-          type: 'set',
-          authStatus: 'anonymous',
-          authUser: null,
-          authError: error.status && error.status >= 500 ? 'Unable to connect to server' : null,
-        })
-      }
-    }
 
-    loadSession()
+    void loadSession({ isActive: () => isMounted })
     return () => {
       isMounted = false
     }
-  }, [dispatch])
+  }, [loadSession])
+
+  useEffect(() => {
+    if (authStatus !== 'anonymous') return undefined
+
+    const recheckSession = () => {
+      if (document.visibilityState && document.visibilityState !== 'visible') {
+        return
+      }
+      void loadSession({ silent: true })
+    }
+
+    window.addEventListener('focus', recheckSession)
+    window.addEventListener('pageshow', recheckSession)
+    document.addEventListener('visibilitychange', recheckSession)
+
+    return () => {
+      window.removeEventListener('focus', recheckSession)
+      window.removeEventListener('pageshow', recheckSession)
+      document.removeEventListener('visibilitychange', recheckSession)
+    }
+  }, [authStatus, loadSession])
 
   useEffect(() => {
     let isMounted = true

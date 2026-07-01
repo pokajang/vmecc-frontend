@@ -355,18 +355,20 @@ const Leave = () => {
   }
 
   return (
-    <CContainer fluid>
+    <CContainer fluid data-tour-id="leave-module">
       <ModulePageHeader
         title="Leave"
         subtitle="Track leave balances, review requests, and submit new leave applications."
         actions={
           activeSection === 'new-leave' ? null : (
-            <CreateActionButton
-              label="Apply Leave"
-              importance="primary"
-              onClick={() => runWithDiscardGuard(startNewLeave)}
-              icon={<Plus size={15} className="me-1 align-text-bottom" />}
-            />
+            <div data-tour-id="leave-new-action">
+              <CreateActionButton
+                label="Apply Leave"
+                importance="primary"
+                onClick={() => runWithDiscardGuard(startNewLeave)}
+                icon={<Plus size={15} className="me-1 align-text-bottom" />}
+              />
+            </div>
           )
         }
       />
@@ -383,6 +385,7 @@ const Leave = () => {
         onConfirm={confirmDiscardAndContinue}
       />
       <LeaveCancelConfirmModal
+        tourId="leave-cancel-modal"
         visible={isCancelConfirmVisible}
         record={cancelPreviewRecord}
         statusLabel={getWorkflowStatusLabel(cancelPreviewRecord)}
@@ -392,6 +395,7 @@ const Leave = () => {
         onConfirm={confirmCancelLeave}
       />
       <ActionConfirmModal
+        tourId="leave-delete-modal"
         visible={isDeleteConfirmVisible}
         title="Delete Leave Request"
         message={
@@ -438,106 +442,119 @@ const Leave = () => {
       </CNav>
 
       {activeSection === 'leave-records' && (
-        <LeaveRecordsSection
-          title="My Leave Records"
-          showPrimaryAction={false}
-          actionMode="self"
-          search={search}
-          setSearch={setSearch}
-          period={period}
-          setPeriod={setPeriod}
-          sort={sort}
-          setSort={setSort}
-          typeFilter={typeFilter}
-          setTypeFilter={setTypeFilter}
-          statusFilter={statusFilter}
-          setStatusFilter={setStatusFilter}
-          leaveSortOptions={leaveSortOptions}
-          typeOptions={typeOptions}
-          statusOptions={statusOptions}
-          clearFilters={clearFilters}
-          filteredRecords={filteredRecords}
-          visibleRows={visibleRows}
-          rowsToShow={rowsToShow}
-          setRowsToShow={setRowsToShow}
-          leaveRecordsCount={leaveRecords.length}
-          startNewLeave={startNewLeave}
-          openRecord={openRecord}
-          openLeaveForEdit={openLeaveForEdit}
-          cancelLeave={cancelLeave}
-          canCancelLeave={canCancelLeave}
-          deleteLeave={deleteLeave}
-          getDisplayLeaveId={getDisplayLeaveId}
-          getStatusLabel={getWorkflowStatusLabel}
-          getPendingActionHint={getWorkflowPendingActionHint}
-          getStatusBadge={getStatusBadge}
-          getStartDateTimeLabel={getStartDateTimeLabel}
-          getEndDateTimeLabel={getEndDateTimeLabel}
-          formatDate={formatDate}
-          isLoading={isLeaveLoading}
-        />
+        <div data-tour-id="leave-records">
+          <LeaveRecordsSection
+            title="My Leave Records"
+            showPrimaryAction={false}
+            actionMode="self"
+            search={search}
+            setSearch={setSearch}
+            period={period}
+            setPeriod={setPeriod}
+            sort={sort}
+            setSort={setSort}
+            typeFilter={typeFilter}
+            setTypeFilter={setTypeFilter}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            leaveSortOptions={leaveSortOptions}
+            typeOptions={typeOptions}
+            statusOptions={statusOptions}
+            clearFilters={clearFilters}
+            filteredRecords={filteredRecords}
+            visibleRows={visibleRows}
+            rowsToShow={rowsToShow}
+            setRowsToShow={setRowsToShow}
+            leaveRecordsCount={leaveRecords.length}
+            startNewLeave={startNewLeave}
+            openRecord={openRecord}
+            openLeaveForEdit={openLeaveForEdit}
+            cancelLeave={cancelLeave}
+            canCancelLeave={canCancelLeave}
+            deleteLeave={deleteLeave}
+            getDisplayLeaveId={getDisplayLeaveId}
+            getStatusLabel={getWorkflowStatusLabel}
+            getPendingActionHint={getWorkflowPendingActionHint}
+            getStatusBadge={getStatusBadge}
+            getStartDateTimeLabel={getStartDateTimeLabel}
+            getEndDateTimeLabel={getEndDateTimeLabel}
+            formatDate={formatDate}
+            isLoading={isLeaveLoading}
+            filtersTourId="leave-filters"
+          />
+        </div>
       )}
 
       {activeSection === 'leave-detail' && (
-        <LeaveDetailSection
-          selectedRecord={selectedRecord}
-          selectedRecordPendingActionHint={selectedRecordPendingActionHint}
-          selectedRecordHistoryEntries={selectedRecordHistoryEntries}
-          onBack={() => navigate('/leave')}
-          getDisplayLeaveId={getDisplayLeaveId}
-          getScheduleLabel={getScheduleLabel}
-          getStatusBadge={getStatusBadge}
-          formatDate={formatDate}
-          formatDateTime={formatDateTime}
-        />
+        <div data-tour-id="leave-detail">
+          <LeaveDetailSection
+            selectedRecord={selectedRecord}
+            selectedRecordPendingActionHint={selectedRecordPendingActionHint}
+            selectedRecordHistoryEntries={selectedRecordHistoryEntries}
+            onBack={() => navigate('/leave')}
+            getDisplayLeaveId={getDisplayLeaveId}
+            getScheduleLabel={getScheduleLabel}
+            getStatusBadge={getStatusBadge}
+            formatDate={formatDate}
+            formatDateTime={formatDateTime}
+            canEdit={['Pending', 'Draft'].includes(String(selectedRecord?.status || ''))}
+            canCancel={canCancelLeave(selectedRecord)}
+            canDelete={String(selectedRecord?.status || '') === 'Draft'}
+            onEdit={openLeaveForEdit}
+            onCancel={cancelLeave}
+            onDelete={deleteLeave}
+          />
+        </div>
       )}
 
       {activeSection === 'new-leave' && (
-        <LeaveApplySection
-          leaveTypeConfirmed={leaveTypeConfirmed}
-          leaveType={leaveType}
-          onSelectLeaveType={setLeaveType}
-          onContinueLeaveType={handleLeaveTypeContinue}
-          onBack={() => runWithDiscardGuard(() => navigate('/leave'))}
-          onBackToLeaveType={handleBackToLeaveType}
-          onSubmit={handleSubmit}
-          selectedLeaveTypeOption={selectedLeaveTypeOption}
-          SelectedLeaveIcon={SelectedLeaveIcon}
-          balanceStats={balanceStats}
-          balanceSummary={balanceSummary}
-          workShift={workShift}
-          handleShiftChange={handleShiftChange}
-          shiftOptions={shiftOptions}
-          selectedShiftConfig={selectedShiftConfig}
-          startDate={startDate}
-          handleStartDateChange={handleStartDateChange}
-          startTimeSlot={startTimeSlot}
-          handleStartTimeChange={handleStartTimeChange}
-          endDate={endDate}
-          handleEndDateChange={handleEndDateChange}
-          endTimeSlot={endTimeSlot}
-          handleEndTimeChange={handleEndTimeChange}
-          fieldErrors={fieldErrors}
-          activeFieldRule={activeFieldRule}
-          coverBy={coverBy}
-          onCoverByChange={handleCoverByChange}
-          handleAttachmentChange={handleAttachmentChange}
-          openCameraCapture={openCameraCapture}
-          isAttachmentProcessing={isAttachmentProcessing}
-          cameraInputRef={cameraInputRef}
-          attachmentStatus={attachmentStatus}
-          attachmentMeta={attachmentMeta}
-          clearAttachment={clearAttachment}
-          requestedDays={requestedDays}
-          formatDayCount={formatDayCount}
-          reason={reason}
-          onReasonChange={handleReasonChange}
-          onClearForm={handleClearForm}
-          onDraft={handleDraft}
-          isSubmitBlockedByBalance={isSubmitBlockedByBalance}
-          editingRecordId={editingRecordId}
-          guidanceMessage={shouldShowLeaveGuidanceMessage ? leaveGuidanceMessage : ''}
-        />
+        <div>
+          <LeaveApplySection
+            leaveTypeConfirmed={leaveTypeConfirmed}
+            leaveType={leaveType}
+            onSelectLeaveType={setLeaveType}
+            onContinueLeaveType={handleLeaveTypeContinue}
+            onBack={() => runWithDiscardGuard(() => navigate('/leave'))}
+            onBackToLeaveType={handleBackToLeaveType}
+            onSubmit={handleSubmit}
+            selectedLeaveTypeOption={selectedLeaveTypeOption}
+            SelectedLeaveIcon={SelectedLeaveIcon}
+            balanceStats={balanceStats}
+            balanceSummary={balanceSummary}
+            workShift={workShift}
+            handleShiftChange={handleShiftChange}
+            shiftOptions={shiftOptions}
+            selectedShiftConfig={selectedShiftConfig}
+            startDate={startDate}
+            handleStartDateChange={handleStartDateChange}
+            startTimeSlot={startTimeSlot}
+            handleStartTimeChange={handleStartTimeChange}
+            endDate={endDate}
+            handleEndDateChange={handleEndDateChange}
+            endTimeSlot={endTimeSlot}
+            handleEndTimeChange={handleEndTimeChange}
+            fieldErrors={fieldErrors}
+            activeFieldRule={activeFieldRule}
+            coverBy={coverBy}
+            onCoverByChange={handleCoverByChange}
+            handleAttachmentChange={handleAttachmentChange}
+            openCameraCapture={openCameraCapture}
+            isAttachmentProcessing={isAttachmentProcessing}
+            cameraInputRef={cameraInputRef}
+            attachmentStatus={attachmentStatus}
+            attachmentMeta={attachmentMeta}
+            clearAttachment={clearAttachment}
+            requestedDays={requestedDays}
+            formatDayCount={formatDayCount}
+            reason={reason}
+            onReasonChange={handleReasonChange}
+            onClearForm={handleClearForm}
+            onDraft={handleDraft}
+            isSubmitBlockedByBalance={isSubmitBlockedByBalance}
+            editingRecordId={editingRecordId}
+            guidanceMessage={shouldShowLeaveGuidanceMessage ? leaveGuidanceMessage : ''}
+          />
+        </div>
       )}
     </CContainer>
   )

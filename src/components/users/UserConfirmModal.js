@@ -16,6 +16,8 @@ const UserConfirmModal = ({
   zIndex,
   className,
   style,
+  tourId,
+  bodyTourId,
 }) => {
   const mergedStyle = {
     ...(zIndex != null
@@ -57,10 +59,10 @@ const UserConfirmModal = ({
         className={className}
         style={mergedStyle}
       >
-        <CModalHeader>
+        <CModalHeader data-tour-id={visible ? tourId : undefined}>
           <CModalTitle>{title}</CModalTitle>
         </CModalHeader>
-        <CModalBody>{message}</CModalBody>
+        <CModalBody data-tour-id={visible ? bodyTourId : undefined}>{message}</CModalBody>
         <CModalFooter>
           <CButton color="secondary" variant="outline" onClick={onClose} disabled={cancelDisabled}>
             {cancelLabel}

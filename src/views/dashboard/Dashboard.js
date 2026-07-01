@@ -188,8 +188,12 @@ const buildDashboardActionQueue = ({
   return items
 }
 
-const DashboardActionQueue = ({ items, loading, periodLabel }) => (
-  <CCard className="mb-4">
+const DashboardActionQueue = ({ items, loading, periodLabel, hasModuleErrors = false }) => (
+  <CCard
+    className="mb-4"
+    data-tour-id="dashboard-action-queue"
+    data-testid="dashboard-action-queue"
+  >
     <CCardBody>
       <div className="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3">
         <div>
@@ -203,11 +207,19 @@ const DashboardActionQueue = ({ items, loading, periodLabel }) => (
         )}
       </div>
       {loading ? (
-        <div className="text-body-secondary small">Loading action queue...</div>
+        <div className="text-body-secondary small" data-testid="dashboard-action-queue-loading">
+          Loading action queue...
+        </div>
+      ) : hasModuleErrors && items.length === 0 ? (
+        <div className="text-body-secondary small" data-testid="dashboard-action-queue-error">
+          Some dashboard modules could not be loaded. Action queue values may be partial.
+        </div>
       ) : items.length === 0 ? (
-        <div className="text-body-secondary small">No dashboard actions need attention.</div>
+        <div className="text-body-secondary small" data-testid="dashboard-action-queue-empty">
+          No dashboard actions need attention.
+        </div>
       ) : (
-        <div className="d-grid gap-2">
+        <div className="d-grid gap-2" data-testid="dashboard-action-queue-items">
           {items.map((item) => (
             <Link
               key={item.key}
@@ -239,12 +251,60 @@ const DashboardActionQueue = ({ items, loading, periodLabel }) => (
   </CCard>
 )
 
+const DashboardModuleSlot = ({ moduleKey, isVisible, children }) => (
+  <div
+    data-testid={`dashboard-module-${moduleKey}`}
+    data-visible={isVisible ? 'visible' : 'hidden'}
+    hidden={!isVisible}
+  >
+    {children}
+  </div>
+)
+
+const moduleFriendlyName = {
+  payroll: 'payroll',
+  overtime: 'overtime',
+  leave: 'leave',
+  roster: 'roster',
+  reports: 'reports',
+}
+
+const DashboardModuleCardGuard = ({ moduleKey, moduleStats, onRetry, children }) => {
+  const state = moduleStats?.[moduleKey]
+  const isLoading = Boolean(state?.loading)
+  const stateError = state?.error ? String(state.error).replace(/^Error: /, '') : ''
+
+  if (isLoading) {
+    return (
+      <CAlert color="secondary" className="mb-3" data-testid={`dashboard-${moduleKey}-loading`}>
+        Loading {moduleFriendlyName[moduleKey]} stats...
+      </CAlert>
+    )
+  }
+
+  if (stateError) {
+    return (
+      <CAlert color="warning" className="mb-3" data-testid={`dashboard-${moduleKey}-error`}>
+        <div className="mb-2">
+          Unable to load {moduleFriendlyName[moduleKey]} stats right now. {stateError}
+        </div>
+        <CButton size="sm" color="warning" variant="outline" onClick={onRetry}>
+          Retry {moduleFriendlyName[moduleKey]}
+        </CButton>
+      </CAlert>
+    )
+  }
+
+  return children
+}
+
 const Dashboard = () => {
   const authUser = useSelector((state) => state.authUser)
   const moduleActivation = useSelector((state) => state.moduleActivation)
   const { stats: myStats, loading: myStatsLoading } = useMyStats()
   const [myStatsVisible, setMyStatsVisible] = useState(true)
   const [period, setPeriod] = useState('this_month')
+  const [dashboardRefreshToken, setDashboardRefreshToken] = useState(0)
   const periodLabel = resolvePeriodLabel(period)
   const userName = authUser?.name || authUser?.full_name || ''
   const userRole = getPrimaryRoleLabel(authUser)
@@ -280,11 +340,20 @@ const Dashboard = () => {
       canViewReportsSection,
     ],
   )
-  const {
-    stats,
-    loading,
-    error: dashboardStatsError,
-  } = useDashboardStats({ period, modules: visibleDashboardModules })
+  const { stats, loading, moduleStats } = useDashboardStats({
+    period,
+    modules: visibleDashboardModules,
+    refreshToken: dashboardRefreshToken,
+  })
+  const payrollLoading = moduleStats?.payroll?.loading
+  const overtimeLoading = moduleStats?.overtime?.loading
+  const leaveLoading = moduleStats?.leave?.loading
+  const rosterLoading = moduleStats?.roster?.loading
+  const reportsLoading = moduleStats?.reports?.loading
+  const refreshDashboardStats = () => setDashboardRefreshToken((value) => value + 1)
+  const actionQueueHasModuleErrors = visibleDashboardModules.some((moduleKey) =>
+    Boolean(moduleStats?.[moduleKey]?.error),
+  )
   const actionQueueItems = useMemo(
     () =>
       buildDashboardActionQueue({
@@ -314,8 +383,12 @@ const Dashboard = () => {
   }
 
   return (
-    <>
-      <CCard className="mb-4 border-0" style={{ background: 'rgba(0, 126, 122, 0.08)' }}>
+    <div data-tour-id="dashboard-module">
+      <CCard
+        className="mb-4 border-0"
+        data-tour-id="dashboard-overview"
+        style={{ background: 'rgba(0, 126, 122, 0.08)' }}
+      >
         <CCardBody>
           <div className="d-flex align-items-start justify-content-between gap-3 flex-wrap">
             <div>
@@ -326,7 +399,7 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="d-flex flex-wrap align-items-center gap-2">
-              <CDropdown alignment="end">
+              <CDropdown alignment="end" data-tour-id="dashboard-period-control">
                 <CDropdownToggle size="sm" color="primary" variant="outline">
                   {periodLabel}
                 </CDropdownToggle>
@@ -354,183 +427,258 @@ const Dashboard = () => {
             </div>
           </div>
           {myStatsVisible && (
-            <div className="mt-4">
+            <div className="mt-4" data-tour-id="dashboard-my-stats">
               <MyStats stats={myStats} loading={myStatsLoading} />
             </div>
           )}
         </CCardBody>
       </CCard>
 
-      {dashboardStatsError && (
-        <CAlert color="warning" className="mb-4">
-          Dashboard statistics could not be fully loaded. Some sections may show zero values until
-          the data is available.
-        </CAlert>
-      )}
+      <DashboardActionQueue
+        items={actionQueueItems}
+        loading={loading}
+        periodLabel={periodLabel}
+        hasModuleErrors={actionQueueHasModuleErrors}
+      />
 
-      <DashboardActionQueue items={actionQueueItems} loading={loading} periodLabel={periodLabel} />
-
-      {canViewPayrollSection && (
-        <ModuleSectionHeader
-          title="Payroll Claims"
-          subtext={`Salary & expense claims - ${periodLabel}`}
-          accentColor={MODULE_ACCENTS.payroll.base}
-          icon={Wallet}
-        >
-          <SectionHeading title="Current Status" subtext={`Key claim metrics - ${periodLabel}`} />
-          <CRow className="mb-4" xs={{ gutter: 4 }}>
-            <PayrollKpiTiles stats={stats.payroll} loading={loading} periodLabel={periodLabel} />
-          </CRow>
-
-          <SectionHeading
-            title="Period Summary"
-            subtext={`Payroll & assignment totals - ${periodLabel}`}
-          />
-          <CRow className="mb-4" xs={{ gutter: 4 }}>
-            <PayrollOperationsCard
-              stats={stats.payroll}
-              loading={loading}
-              periodLabel={periodLabel}
-            />
-            <PayrollAssignmentsCard stats={stats.payroll} loading={loading} />
-          </CRow>
-
-          <CRow className="mb-4" xs={{ gutter: 4 }}>
-            <CCol xs={12} lg={6}>
-              <PayrollActivityChart
-                stats={stats.payroll}
-                loading={loading}
-                periodLabel={periodLabel}
+      <DashboardModuleSlot moduleKey="payroll" isVisible={canViewPayrollSection}>
+        {canViewPayrollSection && (
+          <ModuleSectionHeader
+            title="Payroll Claims"
+            subtext={`Salary & expense claims - ${periodLabel}`}
+            accentColor={MODULE_ACCENTS.payroll.base}
+            icon={Wallet}
+          >
+            <DashboardModuleCardGuard
+              moduleKey="payroll"
+              moduleStats={moduleStats}
+              onRetry={refreshDashboardStats}
+            >
+              <SectionHeading
+                title="Current Status"
+                subtext={`Key claim metrics - ${periodLabel}`}
               />
-            </CCol>
-            <CCol xs={12} lg={6}>
-              <PayrollStatusBreakdown
-                stats={stats.payroll}
-                loading={loading}
-                periodLabel={periodLabel}
+              <CRow className="mb-4" xs={{ gutter: 4 }}>
+                <PayrollKpiTiles
+                  stats={stats.payroll}
+                  loading={payrollLoading}
+                  periodLabel={periodLabel}
+                />
+              </CRow>
+
+              <SectionHeading
+                title="Period Summary"
+                subtext={`Payroll & assignment totals - ${periodLabel}`}
               />
-            </CCol>
-          </CRow>
-        </ModuleSectionHeader>
-      )}
+              <CRow className="mb-4" xs={{ gutter: 4 }}>
+                <PayrollOperationsCard
+                  stats={stats.payroll}
+                  loading={payrollLoading}
+                  periodLabel={periodLabel}
+                />
+                <PayrollAssignmentsCard stats={stats.payroll} loading={payrollLoading} />
+              </CRow>
 
-      {canViewOvertimeSection && (
-        <ModuleSectionHeader
-          title="Overtime"
-          subtext={`OT requests & approvals - ${periodLabel}`}
-          accentColor={MODULE_ACCENTS.overtime.base}
-          icon={Clock3}
-        >
-          <SectionHeading title="Current Status" subtext={`Key OT metrics - ${periodLabel}`} />
-          <CRow className="mb-4" xs={{ gutter: 4 }}>
-            <OvertimeKpiTiles stats={stats.overtime} loading={loading} periodLabel={periodLabel} />
-          </CRow>
+              <CRow className="mb-4" xs={{ gutter: 4 }}>
+                <CCol xs={12} lg={6}>
+                  <PayrollActivityChart
+                    stats={stats.payroll}
+                    loading={payrollLoading}
+                    periodLabel={periodLabel}
+                  />
+                </CCol>
+                <CCol xs={12} lg={6}>
+                  <PayrollStatusBreakdown
+                    stats={stats.payroll}
+                    loading={payrollLoading}
+                    periodLabel={periodLabel}
+                  />
+                </CCol>
+              </CRow>
+            </DashboardModuleCardGuard>
+          </ModuleSectionHeader>
+        )}
+      </DashboardModuleSlot>
 
-          <SectionHeading
-            title="Period Summary"
-            subtext={`OT approvals & team distribution - ${periodLabel}`}
-          />
-          <CRow className="mb-4" xs={{ gutter: 4 }}>
-            <OvertimeOperationsCard
-              stats={stats.overtime}
-              loading={loading}
-              periodLabel={periodLabel}
-            />
-            <OvertimeTeamCard stats={stats.overtime} loading={loading} />
-          </CRow>
+      <DashboardModuleSlot moduleKey="overtime" isVisible={canViewOvertimeSection}>
+        {canViewOvertimeSection && (
+          <ModuleSectionHeader
+            title="Overtime"
+            subtext={`OT requests & approvals - ${periodLabel}`}
+            accentColor={MODULE_ACCENTS.overtime.base}
+            icon={Clock3}
+          >
+            <DashboardModuleCardGuard
+              moduleKey="overtime"
+              moduleStats={moduleStats}
+              onRetry={refreshDashboardStats}
+            >
+              <SectionHeading title="Current Status" subtext={`Key OT metrics - ${periodLabel}`} />
+              <CRow className="mb-4" xs={{ gutter: 4 }}>
+                <OvertimeKpiTiles
+                  stats={stats.overtime}
+                  loading={overtimeLoading}
+                  periodLabel={periodLabel}
+                />
+              </CRow>
 
-          <CRow className="mb-4" xs={{ gutter: 4 }}>
-            <CCol xs={12} lg={6}>
-              <OvertimeActivityChart
-                stats={stats.overtime}
-                loading={loading}
-                periodLabel={periodLabel}
+              <SectionHeading
+                title="Period Summary"
+                subtext={`OT approvals & team distribution - ${periodLabel}`}
               />
-            </CCol>
-            <CCol xs={12} lg={6}>
-              <OvertimeStatusBreakdown
-                stats={stats.overtime}
-                loading={loading}
-                periodLabel={periodLabel}
+              <CRow className="mb-4" xs={{ gutter: 4 }}>
+                <OvertimeOperationsCard
+                  stats={stats.overtime}
+                  loading={overtimeLoading}
+                  periodLabel={periodLabel}
+                />
+                <OvertimeTeamCard stats={stats.overtime} loading={overtimeLoading} />
+              </CRow>
+
+              <CRow className="mb-4" xs={{ gutter: 4 }}>
+                <CCol xs={12} lg={6}>
+                  <OvertimeActivityChart
+                    stats={stats.overtime}
+                    loading={overtimeLoading}
+                    periodLabel={periodLabel}
+                  />
+                </CCol>
+                <CCol xs={12} lg={6}>
+                  <OvertimeStatusBreakdown
+                    stats={stats.overtime}
+                    loading={overtimeLoading}
+                    periodLabel={periodLabel}
+                  />
+                </CCol>
+              </CRow>
+            </DashboardModuleCardGuard>
+          </ModuleSectionHeader>
+        )}
+      </DashboardModuleSlot>
+
+      <DashboardModuleSlot moduleKey="leave" isVisible={canViewLeaveSection}>
+        {canViewLeaveSection && (
+          <ModuleSectionHeader
+            title="Leave"
+            subtext={`Leave requests & absences - ${periodLabel}`}
+            accentColor={MODULE_ACCENTS.leave.base}
+            icon={CalendarDays}
+          >
+            <DashboardModuleCardGuard
+              moduleKey="leave"
+              moduleStats={moduleStats}
+              onRetry={refreshDashboardStats}
+            >
+              <SectionHeading
+                title="Current Status"
+                subtext={`Key leave metrics - ${periodLabel}`}
               />
-            </CCol>
-          </CRow>
-        </ModuleSectionHeader>
-      )}
+              <CRow className="mb-4" xs={{ gutter: 4 }}>
+                <LeaveKpiTiles
+                  stats={stats.leave}
+                  loading={leaveLoading}
+                  periodLabel={periodLabel}
+                />
+              </CRow>
 
-      {canViewLeaveSection && (
-        <ModuleSectionHeader
-          title="Leave"
-          subtext={`Leave requests & absences - ${periodLabel}`}
-          accentColor={MODULE_ACCENTS.leave.base}
-          icon={CalendarDays}
-        >
-          <SectionHeading title="Current Status" subtext={`Key leave metrics - ${periodLabel}`} />
-          <CRow className="mb-4" xs={{ gutter: 4 }}>
-            <LeaveKpiTiles stats={stats.leave} loading={loading} periodLabel={periodLabel} />
-          </CRow>
+              <CRow className="mb-4" xs={{ gutter: 4 }}>
+                <CCol xs={12} lg={6}>
+                  <LeaveActivityChart
+                    stats={stats.leave}
+                    loading={leaveLoading}
+                    periodLabel={periodLabel}
+                  />
+                </CCol>
+                <CCol xs={12} lg={6}>
+                  <LeaveTeamBreakdown
+                    stats={stats.leave}
+                    loading={leaveLoading}
+                    periodLabel={periodLabel}
+                  />
+                </CCol>
+              </CRow>
+            </DashboardModuleCardGuard>
+          </ModuleSectionHeader>
+        )}
+      </DashboardModuleSlot>
 
-          <CRow className="mb-4" xs={{ gutter: 4 }}>
-            <CCol xs={12} lg={6}>
-              <LeaveActivityChart stats={stats.leave} loading={loading} periodLabel={periodLabel} />
-            </CCol>
-            <CCol xs={12} lg={6}>
-              <LeaveTeamBreakdown stats={stats.leave} loading={loading} periodLabel={periodLabel} />
-            </CCol>
-          </CRow>
-        </ModuleSectionHeader>
-      )}
+      <DashboardModuleSlot moduleKey="roster" isVisible={canViewRosterSection}>
+        {canViewRosterSection && (
+          <ModuleSectionHeader
+            title="Roster & Teams"
+            subtext={`Shift scheduling & team coverage - ${periodLabel}`}
+            accentColor={MODULE_ACCENTS.roster.base}
+            icon={LayoutGrid}
+          >
+            <DashboardModuleCardGuard
+              moduleKey="roster"
+              moduleStats={moduleStats}
+              onRetry={refreshDashboardStats}
+            >
+              <SectionHeading title="Current Status" subtext="Live roster snapshot" />
+              <CRow className="mb-4" xs={{ gutter: 4 }}>
+                <RosterKpiTiles stats={stats.roster} loading={rosterLoading} />
+              </CRow>
 
-      {canViewRosterSection && (
-        <ModuleSectionHeader
-          title="Roster & Teams"
-          subtext={`Shift scheduling & team coverage - ${periodLabel}`}
-          accentColor={MODULE_ACCENTS.roster.base}
-          icon={LayoutGrid}
-        >
-          <SectionHeading title="Current Status" subtext="Live roster snapshot" />
-          <CRow className="mb-4" xs={{ gutter: 4 }}>
-            <RosterKpiTiles stats={stats.roster} loading={loading} />
-          </CRow>
+              <CRow className="mb-4" xs={{ gutter: 4 }}>
+                <CCol xs={12} lg={6}>
+                  <RosterActivityChart stats={stats.roster} loading={rosterLoading} />
+                </CCol>
+                <CCol xs={12} lg={6}>
+                  <RosterTeamBreakdown stats={stats.roster} loading={rosterLoading} />
+                </CCol>
+              </CRow>
+            </DashboardModuleCardGuard>
+          </ModuleSectionHeader>
+        )}
+      </DashboardModuleSlot>
 
-          <CRow className="mb-4" xs={{ gutter: 4 }}>
-            <CCol xs={12} lg={6}>
-              <RosterActivityChart stats={stats.roster} loading={loading} />
-            </CCol>
-            <CCol xs={12} lg={6}>
-              <RosterTeamBreakdown stats={stats.roster} loading={loading} />
-            </CCol>
-          </CRow>
-        </ModuleSectionHeader>
-      )}
-
-      {canViewReportsSection && (
-        <ModuleSectionHeader
-          title="Reports"
-          subtext={`ERCO, Drill & Fitness Test submissions - ${periodLabel}`}
-          accentColor={MODULE_ACCENTS.reports.base}
-          icon={TriangleAlert}
-        >
-          <SectionHeading title="Current Status" subtext={`Key report metrics - ${periodLabel}`} />
-          <CRow className="mb-4" xs={{ gutter: 4 }}>
-            <ReportKpiTiles stats={stats.reports} loading={loading} periodLabel={periodLabel} />
-          </CRow>
-
-          <CRow className="mb-4" xs={{ gutter: 4 }}>
-            <CCol xs={12} lg={5}>
-              <ReportActivityChart
-                stats={stats.reports}
-                loading={loading}
-                periodLabel={periodLabel}
+      <DashboardModuleSlot moduleKey="reports" isVisible={canViewReportsSection}>
+        {canViewReportsSection && (
+          <ModuleSectionHeader
+            title="Reports"
+            subtext={`ERCO, Drill & Fitness Test submissions - ${periodLabel}`}
+            accentColor={MODULE_ACCENTS.reports.base}
+            icon={TriangleAlert}
+          >
+            <DashboardModuleCardGuard
+              moduleKey="reports"
+              moduleStats={moduleStats}
+              onRetry={refreshDashboardStats}
+            >
+              <SectionHeading
+                title="Current Status"
+                subtext={`Key report metrics - ${periodLabel}`}
               />
-            </CCol>
-            <CCol xs={12} lg={7}>
-              <ReportBreakdown stats={stats.reports} loading={loading} periodLabel={periodLabel} />
-            </CCol>
-          </CRow>
-        </ModuleSectionHeader>
-      )}
-    </>
+              <CRow className="mb-4" xs={{ gutter: 4 }}>
+                <ReportKpiTiles
+                  stats={stats.reports}
+                  loading={reportsLoading}
+                  periodLabel={periodLabel}
+                />
+              </CRow>
+
+              <CRow className="mb-4" xs={{ gutter: 4 }}>
+                <CCol xs={12} lg={5}>
+                  <ReportActivityChart
+                    stats={stats.reports}
+                    loading={reportsLoading}
+                    periodLabel={periodLabel}
+                  />
+                </CCol>
+                <CCol xs={12} lg={7}>
+                  <ReportBreakdown
+                    stats={stats.reports}
+                    loading={reportsLoading}
+                    periodLabel={periodLabel}
+                  />
+                </CCol>
+              </CRow>
+            </DashboardModuleCardGuard>
+          </ModuleSectionHeader>
+        )}
+      </DashboardModuleSlot>
+    </div>
   )
 }
 

@@ -1,0 +1,39 @@
+import { ShieldCheck } from 'lucide-react'
+import {
+  buildHseChecklist,
+  buildHseDescription,
+  getHseCheckSummary,
+  getHseMissingFields,
+  HSE_FORM_DEFAULTS,
+  HSE_INSPECTION_TYPE,
+  isHseInspectionType,
+  normalizeHseFormFields,
+} from './helpers'
+import { HseEditSection, HseReadOnlySection } from './section'
+
+const hseInspectionDefinition = {
+  key: 'health-safety-environment-inspection',
+  inspectionType: HSE_INSPECTION_TYPE,
+  title: 'Health Safety Environment',
+  description: 'Area-satisfactory, unsafe act, unsafe condition, and environmental observations.',
+  iconKey: 'ShieldCheck',
+  icon: ShieldCheck,
+  implemented: true,
+  formMode: 'structured',
+  supportsEquipmentCatalog: false,
+  checksField: 'hseSelections',
+  fieldRefKey: 'hseObservation',
+  photoEvidenceTitle: 'HSE Evidence Photos',
+  missingFieldKeys: ['hseSession', 'hseSelection', 'hseDetails'],
+  initialFormState: HSE_FORM_DEFAULTS,
+  isInspectionType: isHseInspectionType,
+  getSummary: getHseCheckSummary,
+  getMissingFields: getHseMissingFields,
+  buildChecklist: buildHseChecklist,
+  buildDescription: buildHseDescription,
+  normalizeChecks: normalizeHseFormFields,
+  EditSection: HseEditSection,
+  ReadOnlySection: HseReadOnlySection,
+}
+
+export default hseInspectionDefinition

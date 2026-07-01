@@ -101,6 +101,8 @@ describe('LeaveRecordsSection interactions', () => {
       name: 'Open leave record LV-AL-2026-001 summary',
     })
 
+    expect(document.querySelector('.list-group')).toBeTruthy()
+    expect(mobileCard.closest('article').className).toContain('list-group-item')
     expect(mobileCard.textContent).toContain('LV-AL-2026-001')
     expect(mobileCard.textContent).toContain('Annual Leave')
     expect(mobileCard.textContent).toContain('15 Apr 2026')

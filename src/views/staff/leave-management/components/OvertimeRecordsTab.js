@@ -312,53 +312,55 @@ const OvertimeRecordsTab = (props) => {
   })
 
   return (
-    <CCard>
+    <CCard data-tour-id="overtime-management-records">
       <CCardHeader>Overtime Records</CCardHeader>
       <CCardBody>
-        <TableFilters
-          searchValue={search}
-          onSearchChange={setSearch}
-          searchPlaceholder="Search overtime ID, employee, status, team, type, or reason"
-          periodValue={period}
-          onPeriodChange={setPeriod}
-          filters={[
-            {
-              key: 'sort',
-              label: 'Sort',
-              value: sort,
-              onChange: setSort,
-              options: overtimeSortOptions,
-            },
-            {
-              key: 'status',
-              label: 'Status',
-              value: statusFilter,
-              onChange: setStatusFilter,
-              options: statusOptions,
-            },
-            {
-              key: 'overtimeType',
-              label: 'Type',
-              value: overtimeTypeFilter,
-              onChange: setOvertimeTypeFilter,
-              options: overtimeTypeOptions,
-            },
-            {
-              key: 'team',
-              label: 'Team',
-              value: teamFilter,
-              onChange: setTeamFilter,
-              options: teamOptions,
-            },
-          ]}
-          onClear={clearFilters}
-          rowClassName="flex-md-nowrap align-items-md-end"
-          searchColMd={3}
-          periodColMd={2}
-          filterColMd={2}
-          clearColMd="auto"
-          showDesktopLabels
-        />
+        <div data-tour-id="overtime-management-filters">
+          <TableFilters
+            searchValue={search}
+            onSearchChange={setSearch}
+            searchPlaceholder="Search overtime ID, employee, status, team, type, or reason"
+            periodValue={period}
+            onPeriodChange={setPeriod}
+            filters={[
+              {
+                key: 'sort',
+                label: 'Sort',
+                value: sort,
+                onChange: setSort,
+                options: overtimeSortOptions,
+              },
+              {
+                key: 'status',
+                label: 'Status',
+                value: statusFilter,
+                onChange: setStatusFilter,
+                options: statusOptions,
+              },
+              {
+                key: 'overtimeType',
+                label: 'Type',
+                value: overtimeTypeFilter,
+                onChange: setOvertimeTypeFilter,
+                options: overtimeTypeOptions,
+              },
+              {
+                key: 'team',
+                label: 'Team',
+                value: teamFilter,
+                onChange: setTeamFilter,
+                options: teamOptions,
+              },
+            ]}
+            onClear={clearFilters}
+            rowClassName="flex-md-nowrap align-items-md-end"
+            searchColMd={3}
+            periodColMd={2}
+            filterColMd={2}
+            clearColMd="auto"
+            showDesktopLabels
+          />
+        </div>
 
         {isLoading ? (
           <TableLoader />
@@ -390,7 +392,7 @@ const OvertimeRecordsTab = (props) => {
                 }
               />
             ) : null}
-            <MobileRecordList sections={mobileRecordSections} />
+            <MobileRecordList sections={mobileRecordSections} variant="list-group" />
             <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
               <CTable align="middle" className="mb-0" hover responsive>
                 <CTableHead color="light">

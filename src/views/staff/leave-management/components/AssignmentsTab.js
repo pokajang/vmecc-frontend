@@ -79,6 +79,7 @@ const AssignmentsTab = ({
   const [isAssigning, setIsAssigning] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState(null)
+  const [assignmentDetailEntryReady, setAssignmentDetailEntryReady] = useState(false)
   const [selectedStaffKey, setSelectedStaffKey] = useState('')
   const [includeInactiveStaff, setIncludeInactiveStaff] = useState(false)
   const [selectedYear, setSelectedYear] = useState(currentYear)
@@ -238,6 +239,7 @@ const AssignmentsTab = ({
 
   const openAssignmentForm = () => {
     setIsAssigning(true)
+    setAssignmentDetailEntryReady(false)
     setSelectedStaffKey('')
     setIncludeInactiveStaff(false)
     setSelectedYear(currentYear)
@@ -246,6 +248,7 @@ const AssignmentsTab = ({
 
   const closeAssignmentForm = () => {
     setIsAssigning(false)
+    setAssignmentDetailEntryReady(true)
     setIsSaving(false)
     setSaveError(null)
     setSelectedStaffKey('')
@@ -333,12 +336,17 @@ const AssignmentsTab = ({
   }
 
   const detailPrimaryRow = detailRows?.[0] || null
+  const assignmentDetailSelector = '[data-tour-id="leave-management-assignment-detail"]'
 
   return (
-    <CCard>
+    <CCard data-tour-id="leave-management-assignments">
       <CCardHeader className="d-flex justify-content-between align-items-center gap-2">
         <span>Set Leaves</span>
-        <CreateActionButton label="Assign entitlement" onClick={openAssignmentForm} />
+        <CreateActionButton
+          label="Assign entitlement"
+          onClick={openAssignmentForm}
+          data-tour-id="leave-management-assignment-create-action"
+        />
       </CCardHeader>
       <CCardBody>
         <AssignmentCreateModal
@@ -365,7 +373,7 @@ const AssignmentsTab = ({
           <CModalHeader onClose={closeAssignmentDetail}>
             <CModalTitle>Leave Assignment Details</CModalTitle>
           </CModalHeader>
-          <CModalBody>
+          <CModalBody data-tour-id={detailRows ? 'leave-management-assignment-detail' : undefined}>
             {detailPrimaryRow ? (
               <div className="d-grid gap-3">
                 <div>
@@ -453,7 +461,7 @@ const AssignmentsTab = ({
           </div>
         ) : (
           <>
-            <MobileRecordList sections={mobileAssignmentSections} />
+            <MobileRecordList sections={mobileAssignmentSections} variant="list-group" />
             <div className="d-none d-md-flex justify-content-end mb-3">
               <CButtonGroup size="sm" role="group" aria-label="Assignments table view">
                 <CButton
@@ -506,13 +514,20 @@ const AssignmentsTab = ({
                     </CTableRow>
                   </CTableHead>
                   <CTableBody>
-                    {visibleMatrixRows.map((employeeRow) => {
+                    {visibleMatrixRows.map((employeeRow, index) => {
                       const sortedSourceRows = getSortedAssignmentRowsForEmployee(employeeRow)
                       const primaryRow = sortedSourceRows[0]
 
                       return (
                         <CTableRow
                           key={employeeRow.key}
+                          {...(index === 0
+                            ? {
+                                'data-tour-id': assignmentDetailEntryReady
+                                  ? 'leave-management-assignment-detail-entry'
+                                  : 'leave-management-assignment-row-actions',
+                              }
+                            : {})}
                           className="cursor-pointer"
                           onClick={() => openAssignmentDetail(sortedSourceRows)}
                           role="button"
@@ -577,7 +592,7 @@ const AssignmentsTab = ({
                     </CTableRow>
                   </CTableHead>
                   <CTableBody>
-                    {groupedListRows.flatMap((group) => [
+                    {groupedListRows.flatMap((group, groupIndex) => [
                       <CTableRow key={`${group.key}-divider`} className="table-light">
                         <CTableDataCell
                           colSpan={6}
@@ -586,9 +601,16 @@ const AssignmentsTab = ({
                           {group.employee} ({group.team})
                         </CTableDataCell>
                       </CTableRow>,
-                      ...group.rows.map((row) => (
+                      ...group.rows.map((row, rowIndex) => (
                         <CTableRow
                           key={row.id}
+                          {...(groupIndex === 0 && rowIndex === 0
+                            ? {
+                                'data-tour-id': assignmentDetailEntryReady
+                                  ? 'leave-management-assignment-detail-entry'
+                                  : 'leave-management-assignment-row-actions',
+                              }
+                            : {})}
                           className="cursor-pointer"
                           onClick={() => openAssignmentDetail(row)}
                           role="button"

@@ -39,6 +39,7 @@ const submittedRow = {
   incidentTime: '14:00',
   submittedBy: 'Priya Lim',
   status: 'Submitted',
+  checklist: [{ id: 'safety:access-clear', label: 'Access clear', selected: true }],
   timeline: [{ action: 'Submitted', by: 'Priya Lim', at: '2026-04-16T14:20:00.000Z' }],
 }
 
@@ -52,6 +53,28 @@ const draftRow = {
   status: 'Draft',
 }
 
+const queuedRow = {
+  id: 'queue-1',
+  queueId: 'queue-1',
+  displayId: 'INS-QUEUED-001',
+  recordKind: 'queued',
+  incidentType: 'Inspection',
+  location: 'Zone Q',
+  submittedAt: '2026-04-18T10:00:00.000Z',
+  status: 'Queued',
+  queueStatus: 'failed',
+  lastError: 'Network unavailable',
+  attempts: 1,
+  nextRetryAt: '2026-04-18T10:05:00.000Z',
+  history: [
+    {
+      action: 'queued',
+      at: '2026-04-18T10:00:00.000Z',
+      message: 'Inspection submission queued on this device.',
+    },
+  ],
+}
+
 const buildProps = (overrides = {}) => ({
   startNew: vi.fn(),
   search: '',
@@ -62,10 +85,15 @@ const buildProps = (overrides = {}) => ({
   setSort: vi.fn(),
   typeFilter: 'All',
   setTypeFilter: vi.fn(),
-  typeOptions: [{ value: 'All', label: 'All inspection types' }],
+  typeOptions: [{ value: 'All', label: 'All types' }],
   statusFilter: 'All',
   setStatusFilter: vi.fn(),
   statusOptions: [{ value: 'All', label: 'All status' }],
+  checklistFilter: 'All',
+  setChecklistFilter: vi.fn(),
+  hasChecklistFilter: 'All',
+  setHasChecklistFilter: vi.fn(),
+  checklistOptions: [{ value: 'All', label: 'All checklist items' }],
   sortOptions: [{ value: 'reportedAt:desc', label: 'Newest' }],
   clearFilters: vi.fn(),
   isLoading: false,
@@ -76,6 +104,8 @@ const buildProps = (overrides = {}) => ({
   downloadingId: null,
   onEditRecord: vi.fn(),
   onDeleteRecord: vi.fn(),
+  onSaveQueuedAsDraft: vi.fn(),
+  onOpenQueueConflict: vi.fn(),
   onReviewTransition: vi.fn(),
   onApproveTransition: vi.fn(),
   onRejectTransition: vi.fn(),
@@ -88,6 +118,24 @@ const buildProps = (overrides = {}) => ({
   rowsToShow: 10,
   setRowsToShow: vi.fn(),
   totalCount: 1,
+  queueSummary: null,
+  isQueueSyncing: false,
+  onRetryQueue: vi.fn(),
+  checklistSummary: {
+    totalReports: 1,
+    withChecklist: 1,
+    withoutChecklist: 0,
+    items: [{ id: 'safety:access-clear', label: 'Access clear', count: 1 }],
+  },
+  offlineHealth: {
+    indexedDbStatus: 'Available',
+    cacheName: 'vmecc-app-shell-v2',
+    pendingQueueCount: 0,
+    storageRemaining: 1024 * 1024,
+    warnings: [],
+  },
+  onRefreshOfflineAssets: vi.fn(),
+  onRecoverLocalDraft: vi.fn(),
   ...overrides,
 })
 
@@ -96,16 +144,20 @@ describe('InspectionRecordsSection', () => {
     const props = buildProps()
     render(<InspectionRecordsSection {...props} />)
 
-    const mobileCard = screen.getByRole('button', {
-      name: 'Open inspection record INS-2026-001 summary',
-    })
+    const mobileCard = screen
+      .getAllByRole('button', {
+        name: 'Open inspection record INS-2026-001 summary',
+      })
+      .find((button) => button.closest('article'))
 
-    expect(mobileCard.textContent).toContain('INS-2026-001')
-    expect(mobileCard.textContent).toContain('Safety')
-    expect(mobileCard.textContent).toContain('Monthly safety inspection.')
-    expect(mobileCard.textContent).toContain('Workshop')
-    expect(mobileCard.textContent).toContain('Priya Lim')
-    expect(mobileCard.textContent).toContain('2026-04-16 14:00')
+    const mobileArticle = mobileCard.closest('article')
+    expect(mobileArticle.className).toContain('list-group-item')
+    expect(mobileArticle.closest('.list-group')).toBeTruthy()
+    expect(mobileArticle.textContent).toContain('16 Apr 2026')
+    expect(mobileArticle.textContent).toContain('Safety - Workshop')
+    expect(mobileArticle.textContent).toContain('Submitted')
+    expect(mobileArticle.textContent).not.toContain('Monthly safety inspection.')
+    expect(mobileArticle.textContent).not.toContain('Priya Lim')
 
     fireEvent.keyDown(mobileCard, { key: 'Enter' })
     fireEvent.keyDown(mobileCard, { key: ' ' })
@@ -121,9 +173,11 @@ describe('InspectionRecordsSection', () => {
     })
     render(<InspectionRecordsSection {...props} />)
 
-    const mobileCard = screen.getByRole('button', {
-      name: 'Open inspection record Draft summary',
-    })
+    const mobileCard = screen
+      .getAllByRole('button', {
+        name: 'Open inspection record Draft summary',
+      })
+      .find((button) => button.closest('article'))
     fireEvent.keyDown(mobileCard, { key: 'Enter' })
 
     expect(props.onEditRecord).toHaveBeenCalledWith(draftRow)
@@ -134,9 +188,11 @@ describe('InspectionRecordsSection', () => {
     const props = buildProps()
     render(<InspectionRecordsSection {...props} />)
 
-    const mobileCard = screen.getByRole('button', {
-      name: 'Open inspection record INS-2026-001 summary',
-    })
+    const mobileCard = screen
+      .getAllByRole('button', {
+        name: 'Open inspection record INS-2026-001 summary',
+      })
+      .find((button) => button.closest('article'))
     const mobileArticle = mobileCard.closest('article')
     fireEvent.click(within(mobileArticle).getByRole('button', { name: 'Review' }))
 
@@ -154,6 +210,24 @@ describe('InspectionRecordsSection', () => {
 
     fireEvent.click(desktopRow)
 
+    expect(props.onViewRecord).toHaveBeenCalledWith('INS-001')
+  })
+
+  it('opens submitted inspections from desktop row keyboard actions', () => {
+    const props = buildProps()
+    const { container } = render(<InspectionRecordsSection {...props} />)
+
+    const desktopRow = Array.from(container.querySelectorAll('tbody tr')).find((row) =>
+      row.textContent?.includes('INS-2026-001'),
+    )
+
+    expect(desktopRow.getAttribute('role')).toBe('button')
+    expect(desktopRow.getAttribute('tabindex')).toBe('0')
+
+    fireEvent.keyDown(desktopRow, { key: 'Enter' })
+    fireEvent.keyDown(desktopRow, { key: ' ' })
+
+    expect(props.onViewRecord).toHaveBeenCalledTimes(2)
     expect(props.onViewRecord).toHaveBeenCalledWith('INS-001')
   })
 
@@ -180,5 +254,57 @@ describe('InspectionRecordsSection', () => {
     })[0]
 
     expect(reviewAction.getAttribute('title')).toBe('Review is not available for this status.')
+  })
+
+  it('renders queued records with retry and local delete actions', () => {
+    const props = buildProps({
+      filteredRecords: [queuedRow],
+      visibleRows: [queuedRow],
+      queueRows: [queuedRow],
+      queueSummary: { count: 1, failedCount: 1, syncingCount: 0, lastError: 'Network unavailable' },
+    })
+
+    render(<InspectionRecordsSection {...props} />)
+
+    expect(screen.getAllByText('Network unavailable')).toHaveLength(2)
+    fireEvent.click(screen.getAllByRole('button', { name: 'Retry now' })[0])
+    fireEvent.click(screen.getAllByRole('button', { name: 'Save as draft' })[0])
+    fireEvent.click(screen.getAllByRole('button', { name: 'Delete queued' })[0])
+
+    expect(props.onRetryQueue).toHaveBeenCalled()
+    expect(props.onSaveQueuedAsDraft).toHaveBeenCalledWith(queuedRow)
+    expect(props.onDeleteRecord).toHaveBeenCalledWith(queuedRow)
+    expect(screen.queryByRole('button', { name: 'Review' })).toBeNull()
+  })
+
+  it('shows queue detail history and offline health', () => {
+    const props = buildProps({
+      filteredRecords: [queuedRow],
+      visibleRows: [queuedRow],
+      queueRows: [queuedRow],
+      queueSummary: { count: 1, failedCount: 1, syncingCount: 0, lastError: 'Network unavailable' },
+      offlineHealth: {
+        indexedDbStatus: 'Available',
+        cacheName: 'vmecc-app-shell-v2',
+        pendingQueueCount: 1,
+        storageRemaining: 1024 * 1024,
+        warnings: [],
+      },
+    })
+
+    render(<InspectionRecordsSection {...props} />)
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Details' })[0])
+
+    expect(screen.getByText('Offline readiness')).toBeTruthy()
+    expect(screen.getByText('Queue history')).toBeTruthy()
+    expect(screen.getByText(/Inspection submission queued on this device/)).toBeTruthy()
+  })
+
+  it('does not render the legacy checklist summary panel', () => {
+    render(<InspectionRecordsSection {...buildProps()} />)
+
+    expect(screen.queryByText('Checklist Summary')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Export CSV' })).toBeNull()
   })
 })

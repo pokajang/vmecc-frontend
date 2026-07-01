@@ -163,45 +163,47 @@ const Settings = () => {
   }
 
   return (
-    <CContainer fluid>
+    <CContainer fluid data-tour-id="settings-module">
       <ModulePageHeader
         title="Settings"
         subtitle="Maintain system controls, role permissions, and dashboard visibility rules."
       />
 
-      <RouteNavTabs
-        currentPath={activeTab}
-        navigate={(tabPath) => navigate(tabPath)}
-        items={[
-          {
-            key: TAB_GENERAL,
-            label: 'General',
-            to: '/settings',
-            match: TAB_GENERAL,
-          },
-          {
-            key: TAB_ROLES,
-            label: 'Role Permissions',
-            to: '/settings/role-permissions',
-            match: TAB_ROLES,
-          },
-          {
-            key: TAB_DASHBOARD,
-            label: 'Dashboard Visibility',
-            to: '/settings/dashboard-visibility',
-            match: TAB_DASHBOARD,
-          },
-          {
-            key: TAB_MODULES,
-            label: 'Module Activation',
-            to: '/settings/modules',
-            match: TAB_MODULES,
-          },
-        ]}
-      />
+      <div data-tour-id="settings-nav">
+        <RouteNavTabs
+          currentPath={activeTab}
+          navigate={(tabPath) => navigate(tabPath)}
+          items={[
+            {
+              key: TAB_GENERAL,
+              label: 'General',
+              to: '/settings',
+              match: TAB_GENERAL,
+            },
+            {
+              key: TAB_ROLES,
+              label: 'Role Permissions',
+              to: '/settings/role-permissions',
+              match: TAB_ROLES,
+            },
+            {
+              key: TAB_DASHBOARD,
+              label: 'Dashboard Visibility',
+              to: '/settings/dashboard-visibility',
+              match: TAB_DASHBOARD,
+            },
+            {
+              key: TAB_MODULES,
+              label: 'Module Activation',
+              to: '/settings/modules',
+              match: TAB_MODULES,
+            },
+          ]}
+        />
+      </div>
 
       {activeTab === TAB_GENERAL && (
-        <>
+        <div data-tour-id="settings-general">
           <CCard className="mb-3">
             <CCardBody>
               <div className="d-flex justify-content-between align-items-start gap-3">
@@ -261,43 +263,49 @@ const Settings = () => {
               )}
             </CCardBody>
           </CCard>
-        </>
+        </div>
       )}
 
       {activeTab === TAB_ROLES && (
-        <Suspense
-          fallback={
-            <div className="py-5" aria-label="Loading role permissions">
-              <TableLoader />
-            </div>
-          }
-        >
-          <RolePermissionMatrix />
-        </Suspense>
+        <div data-tour-id="settings-role-permissions">
+          <Suspense
+            fallback={
+              <div className="py-5" aria-label="Loading role permissions">
+                <TableLoader />
+              </div>
+            }
+          >
+            <RolePermissionMatrix />
+          </Suspense>
+        </div>
       )}
 
       {activeTab === TAB_DASHBOARD && (
-        <Suspense
-          fallback={
-            <div className="py-5" aria-label="Loading dashboard visibility">
-              <TableLoader />
-            </div>
-          }
-        >
-          <DashboardVisibilityMatrix />
-        </Suspense>
+        <div data-tour-id="settings-dashboard-visibility">
+          <Suspense
+            fallback={
+              <div className="py-5" aria-label="Loading dashboard visibility">
+                <TableLoader />
+              </div>
+            }
+          >
+            <DashboardVisibilityMatrix />
+          </Suspense>
+        </div>
       )}
 
       {activeTab === TAB_MODULES && (
-        <Suspense
-          fallback={
-            <div className="py-5" aria-label="Loading module activation">
-              <TableLoader />
-            </div>
-          }
-        >
-          <ModuleActivationMatrix />
-        </Suspense>
+        <div data-tour-id="settings-modules">
+          <Suspense
+            fallback={
+              <div className="py-5" aria-label="Loading module activation">
+                <TableLoader />
+              </div>
+            }
+          >
+            <ModuleActivationMatrix />
+          </Suspense>
+        </div>
       )}
     </CContainer>
   )

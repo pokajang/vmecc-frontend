@@ -4,21 +4,63 @@ import {
   deleteInspectionRecord,
   fetchInspectionRecords,
   isInspectionApiEnabled,
+  loadInspectionRecordsForScope,
   persistInspectionRecord,
   persistInspectionRecords,
 } from '../inspectionApi'
-import { loadInspectionRecords } from '../inspectionStorage'
 import { toDateTime } from '../inspectionSharedUtils'
+import { stripInspectionContext } from '../typeOptionUtils'
 
 const byNewest = (a, b) => toDateTime(b) - toDateTime(a)
 
-const useInspectionRecords = ({ userId, reportId, draftRows = [] }) => {
+const normalizeIdentity = (value) =>
+  String(value || '')
+    .trim()
+    .toLowerCase()
+
+const getUserIdentitySet = (user) => {
+  const values = [user?.id, user?.name, user?.email, user?.username, user?.employeeId]
+    .map(normalizeIdentity)
+    .filter(Boolean)
+  return new Set(values)
+}
+
+const getRecordOwnerTokens = (row) =>
+  [
+    row?.submittedBy,
+    row?.submitted_by,
+    row?._preparedBy,
+    row?.preparedBy,
+    row?.prepared_by,
+    row?.createdBy,
+    row?.created_by,
+    row?.userId,
+    row?.user_id,
+    row?.ownerId,
+    row?.owner_id,
+    row?.timeline?.[0]?.by,
+  ]
+    .map(normalizeIdentity)
+    .filter(Boolean)
+
+const isMineRecord = (row, userIdentitySet) => {
+  if (row?.recordKind === 'draft') return true
+  const ownerTokens = getRecordOwnerTokens(row)
+  if (ownerTokens.length === 0) return true
+  if (userIdentitySet.size === 0) return false
+  return ownerTokens.some((token) => userIdentitySet.has(token))
+}
+
+const useInspectionRecords = ({ user, userId, reportId, draftRows = [] }) => {
   const [records, setRecords] = useState([])
+  const [recordScope, setRecordScope] = useState('mine')
   const [search, setSearch] = useState('')
   const [period, setPeriod] = useState('all')
   const [sort, setSort] = useState('reportedAt:desc')
   const [typeFilter, setTypeFilter] = useState('All')
   const [statusFilter, setStatusFilter] = useState('All')
+  const [checklistFilter, setChecklistFilter] = useState('All')
+  const [hasChecklistFilter, setHasChecklistFilter] = useState('All')
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
   const [nowMs, setNowMs] = useState(() => Date.now())
@@ -28,10 +70,11 @@ const useInspectionRecords = ({ userId, reportId, draftRows = [] }) => {
     async (signal = { cancelled: false }) => {
       if (!userId) return
       try {
+        setIsLoading(true)
         setLoadError(null)
         const rows = apiEnabledForInspection
-          ? await fetchInspectionRecords(userId)
-          : loadInspectionRecords(userId)
+          ? await fetchInspectionRecords({ scope: recordScope })
+          : loadInspectionRecordsForScope({ userId, scope: recordScope })
         if (signal.cancelled) return
         setRecords(rows.sort(byNewest))
       } catch (error) {
@@ -41,10 +84,10 @@ const useInspectionRecords = ({ userId, reportId, draftRows = [] }) => {
         if (!signal.cancelled) setIsLoading(false)
       }
     },
-    [apiEnabledForInspection, userId],
+    [apiEnabledForInspection, recordScope, userId],
   )
 
-  const reloadRecords = () => loadRows()
+  const reloadRecords = useCallback(() => loadRows(), [loadRows])
 
   useEffect(() => {
     const signal = { cancelled: false }
@@ -104,10 +147,18 @@ const useInspectionRecords = ({ userId, reportId, draftRows = [] }) => {
     }
   }
 
-  const recordsInScope = useMemo(
+  const userIdentitySet = useMemo(() => getUserIdentitySet(user || { id: userId }), [user, userId])
+  const allRecordsWithDrafts = useMemo(
     () => records.concat(Array.isArray(draftRows) ? draftRows : []),
     [draftRows, records],
   )
+
+  const recordsInScope = useMemo(() => {
+    if (recordScope === 'all') {
+      return allRecordsWithDrafts.filter((row) => row?.recordKind !== 'queued')
+    }
+    return allRecordsWithDrafts.filter((row) => isMineRecord(row, userIdentitySet))
+  }, [allRecordsWithDrafts, recordScope, userIdentitySet])
 
   const filteredRecords = useMemo(() => {
     let next = [...recordsInScope]
@@ -125,6 +176,28 @@ const useInspectionRecords = ({ userId, reportId, draftRows = [] }) => {
 
     if (statusFilter !== 'All') {
       next = next.filter((x) => String(x.status || '') === statusFilter)
+    }
+
+    if (hasChecklistFilter !== 'All') {
+      const wantsChecklist = hasChecklistFilter === 'yes'
+      next = next.filter((x) => {
+        const selectedCount = (Array.isArray(x.checklist) ? x.checklist : []).filter(
+          (item) => item && item.selected !== false,
+        ).length
+        return wantsChecklist ? selectedCount > 0 : selectedCount === 0
+      })
+    }
+
+    if (checklistFilter !== 'All') {
+      next = next.filter((x) =>
+        (Array.isArray(x.checklist) ? x.checklist : []).some(
+          (item) =>
+            item &&
+            item.selected !== false &&
+            (String(item.id || '') === checklistFilter ||
+              String(item.label || '') === checklistFilter),
+        ),
+      )
     }
 
     if (period !== 'all') {
@@ -151,19 +224,29 @@ const useInspectionRecords = ({ userId, reportId, draftRows = [] }) => {
     })
 
     return next
-  }, [nowMs, period, recordsInScope, search, sort, statusFilter, typeFilter])
+  }, [
+    checklistFilter,
+    hasChecklistFilter,
+    nowMs,
+    period,
+    recordsInScope,
+    search,
+    sort,
+    statusFilter,
+    typeFilter,
+  ])
 
   const selectedRecord = useMemo(
-    () => recordsInScope.find((x) => String(x.id) === String(reportId || '')) || null,
-    [recordsInScope, reportId],
+    () => allRecordsWithDrafts.find((x) => String(x.id) === String(reportId || '')) || null,
+    [allRecordsWithDrafts, reportId],
   )
 
   const typeOptions = useMemo(
     () => [
-      { value: 'All', label: 'All incident types' },
+      { value: 'All', label: 'All types' },
       ...Array.from(new Set(recordsInScope.map((row) => String(row.incidentType || '').trim())))
         .filter(Boolean)
-        .map((type) => ({ value: type, label: type })),
+        .map((type) => ({ value: type, label: stripInspectionContext(type) || type })),
     ],
     [recordsInScope],
   )
@@ -178,6 +261,27 @@ const useInspectionRecords = ({ userId, reportId, draftRows = [] }) => {
     [recordsInScope],
   )
 
+  const checklistOptions = useMemo(
+    () => [
+      { value: 'All', label: 'All checklist items' },
+      ...Array.from(
+        new Map(
+          recordsInScope
+            .flatMap((row) => (Array.isArray(row.checklist) ? row.checklist : []))
+            .filter((item) => item && item.selected !== false && String(item.label || '').trim())
+            .map((item) => [
+              String(item.id || item.label || '').trim(),
+              {
+                value: String(item.id || item.label || '').trim(),
+                label: String(item.label).trim(),
+              },
+            ]),
+        ).values(),
+      ),
+    ],
+    [recordsInScope],
+  )
+
   const { rowsToShow, setRowsToShow, visibleRows } = useTableRows(filteredRecords)
 
   const clearFilters = () => {
@@ -186,6 +290,8 @@ const useInspectionRecords = ({ userId, reportId, draftRows = [] }) => {
     setSort('reportedAt:desc')
     setTypeFilter('All')
     setStatusFilter('All')
+    setChecklistFilter('All')
+    setHasChecklistFilter('All')
   }
 
   return {
@@ -194,6 +300,8 @@ const useInspectionRecords = ({ userId, reportId, draftRows = [] }) => {
     isLoading,
     search,
     setSearch,
+    recordScope,
+    setRecordScope,
     period,
     setPeriod,
     sort,
@@ -202,10 +310,16 @@ const useInspectionRecords = ({ userId, reportId, draftRows = [] }) => {
     setTypeFilter,
     statusFilter,
     setStatusFilter,
+    checklistFilter,
+    setChecklistFilter,
+    hasChecklistFilter,
+    setHasChecklistFilter,
+    scopedRecords: recordsInScope,
     filteredRecords,
     selectedRecord,
     typeOptions,
     statusOptions,
+    checklistOptions,
     recordsInScopeCount: recordsInScope.length,
     rowsToShow,
     setRowsToShow,

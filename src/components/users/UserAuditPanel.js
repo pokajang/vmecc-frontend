@@ -148,6 +148,7 @@ const UserAuditPanel = ({ userId }) => {
               <span className="text-muted small">No audit activity for this user.</span>
             }
             mobileSections={mobileAuditSections}
+            mobileVariant="list-group"
             renderDesktop={() => (
               <div className="rounded-3 shadow-sm overflow-hidden bg-white d-none d-md-block">
                 <CTable align="middle" className="mb-0" hover responsive>

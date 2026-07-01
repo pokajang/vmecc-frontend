@@ -1,5 +1,5 @@
 import React from 'react'
-import { CBadge, CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/react'
+import { CBadge, CButton, CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/react'
 import ApprovalGates from 'src/components/ApprovalGates'
 import AuditHistoryPanel from 'src/components/AuditHistoryPanel'
 import BackButton from 'src/components/BackButton'
@@ -23,6 +23,12 @@ const LeaveDetailSection = ({
   getStatusBadge,
   formatDate,
   formatDateTime,
+  canEdit = false,
+  canCancel = false,
+  canDelete = false,
+  onEdit,
+  onCancel,
+  onDelete,
 }) => (
   <>
     <div className="mb-3">
@@ -94,6 +100,35 @@ const LeaveDetailSection = ({
             emptyMessage="No workflow activity yet."
             formatDateTime={formatDateTime}
           />
+          <div className="d-flex flex-column flex-sm-row justify-content-end gap-2 mt-3">
+            <CButton
+              color="primary"
+              variant="outline"
+              data-tour-id="leave-edit-action"
+              disabled={!canEdit}
+              onClick={() => onEdit?.(selectedRecord)}
+            >
+              Edit
+            </CButton>
+            <CButton
+              color="warning"
+              variant="outline"
+              data-tour-id="leave-cancel-action"
+              disabled={!canCancel}
+              onClick={() => onCancel?.(selectedRecord)}
+            >
+              Cancel
+            </CButton>
+            <CButton
+              color="danger"
+              variant="outline"
+              data-tour-id="leave-delete-action"
+              disabled={!canDelete}
+              onClick={() => onDelete?.(selectedRecord)}
+            >
+              Delete
+            </CButton>
+          </div>
         </CCol>
       </CRow>
     )}

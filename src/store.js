@@ -1,7 +1,18 @@
 import { legacy_createStore as createStore } from 'redux'
 
+const readStoredAiHelperOpen = () => {
+  try {
+    return localStorage.getItem('vmecc_ai_helper_open') === '1'
+  } catch {
+    return false
+  }
+}
+
+const storedAiHelperOpen = readStoredAiHelperOpen()
+
 const initialState = {
-  sidebarShow: true,
+  sidebarShow: !storedAiHelperOpen,
+  aiHelperOpen: storedAiHelperOpen,
   theme: 'light',
   authStatus: 'unknown',
   authUser: null,

@@ -13,8 +13,8 @@ const UserManagementHeader = ({
   hasRows,
   actionsOnly = false,
 }) => {
-  const actions = (
-    <div className="d-flex flex-wrap align-items-center gap-2">
+  const actionSurface = (
+    <div data-tour-id="users-create-action" className="d-flex flex-wrap align-items-center gap-2">
       <CreateActionButton
         label={showForm ? 'Close' : 'Create User'}
         disabled={submitStatus.loading}
@@ -44,7 +44,7 @@ const UserManagementHeader = ({
     </div>
   )
 
-  if (actionsOnly) return actions
+  if (actionsOnly) return actionSurface
 
   return (
     <div className="d-flex justify-content-between align-items-center">
@@ -52,7 +52,7 @@ const UserManagementHeader = ({
         <span>Users</span>
         {refreshing && <Loader size={14} className="icon-spin" />}
       </div>
-      {actions}
+      {actionSurface}
     </div>
   )
 }

@@ -17,6 +17,7 @@ import AuditHistoryPanel from 'src/components/AuditHistoryPanel'
 import CreateActionButton from 'src/components/CreateActionButton'
 import DataTableFooter from 'src/components/DataTableFooter'
 import GroupedTableHeaderRow from 'src/components/GroupedTableHeader'
+import MobileRecordList from 'src/components/MobileRecordList'
 import RowActions from 'src/components/RowActions'
 import TableFilters from 'src/components/TableFilters'
 import TableLoader from 'src/components/TableLoader'
@@ -94,6 +95,7 @@ const AssignmentTableRow = memo(
     onRowClick,
     onEdit,
     onDelete,
+    actionTourId = '',
   }) => {
     const isDraft = String(row?.status || '') === ASSIGNMENT_DRAFT_STATUS
     const employeeContributions = row?.employeeContributions || {}
@@ -129,6 +131,7 @@ const AssignmentTableRow = memo(
           <CTableDataCell className="fw-semibold">{formatCurrency(netAssigned)}</CTableDataCell>
           <CTableDataCell className="text-end">
             <RowActions
+              tourId={actionTourId}
               items={[
                 { key: 'edit', label: 'Edit', onClick: () => onEdit(row, isDraft) },
                 {
@@ -196,6 +199,15 @@ const SalarySettingsTab = ({ vm, handlers }) => {
   const [showFullHistory, setShowFullHistory] = useState(false)
   const [retryCoolingDown, setRetryCoolingDown] = useState(false)
   const retryTimerRef = useRef(null)
+  const flattenedAssignmentRows = useMemo(
+    () => groupedVisibleAssignmentRows.flatMap((group) => group.rows || []),
+    [groupedVisibleAssignmentRows],
+  )
+  const firstDraftAssignmentId = String(
+    flattenedAssignmentRows.find((row) => String(row?.status || '') === ASSIGNMENT_DRAFT_STATUS)
+      ?.id || '',
+  ).trim()
+  const firstDeleteAssignmentId = String(flattenedAssignmentRows[0]?.id || '').trim()
 
   const handleRetry = useCallback(() => {
     if (retryCoolingDown || typeof retryLoadAssignments !== 'function') return
@@ -311,6 +323,14 @@ const SalarySettingsTab = ({ vm, handlers }) => {
               onRowClick={handleRowClick}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              actionTourId={
+                String(row?.status || '') === ASSIGNMENT_DRAFT_STATUS &&
+                firstDraftAssignmentId === String(row?.id || '').trim()
+                  ? 'salary-claims-management-assignment-draft-resume-action'
+                  : firstDeleteAssignmentId === String(row?.id || '').trim()
+                    ? 'salary-claims-management-assignment-delete-action'
+                    : ''
+              }
             />
           )
         })
@@ -328,18 +348,157 @@ const SalarySettingsTab = ({ vm, handlers }) => {
     toggleGroupExpanded,
     formatCurrency,
     formatMonth,
+    firstDeleteAssignmentId,
+    firstDraftAssignmentId,
     getAssignmentNetAssigned,
     handleRowClick,
     handleEdit,
     handleDelete,
   ])
 
+  const mobileAssignmentSections = useMemo(
+    () =>
+      groupedVisibleAssignmentRows.map((group) => {
+        const isGroupExpanded = expandedGroupKeys.has(group.key)
+        return {
+          key: `assignment-mobile-group-${group.key}`,
+          label: `${group.periodLabel || 'Unknown period'} | ${group.ownerLabel || 'Unknown'}`,
+          summary: `${group.rows.length} ${group.rows.length === 1 ? 'record' : 'records'}`,
+          items: group.rows.map((row, index) => {
+            const isDraft = String(row?.status || '') === ASSIGNMENT_DRAFT_STATUS
+            const employeeContributions = row?.employeeContributions || {}
+            const epf = Number(employeeContributions?.epf ?? row?.epf ?? 0)
+            const perkeso = Number(employeeContributions?.perkeso ?? row?.perkeso ?? 0)
+            const sip = Number(employeeContributions?.sip ?? row?.sip ?? 0)
+            const totalDeductions = epf + perkeso + sip
+            const allowances = Array.isArray(row?.allowances) ? row.allowances : []
+            const netAssigned = getAssignmentNetAssigned(row)
+
+            return {
+              key: row.id ?? `${group.key}-${index}`,
+              title: row.employee || '-',
+              eyebrow: isDraft ? row.name || row.id || 'Draft assignment' : row.id || '-',
+              subtitle: `Effective ${formatMonth(row.effectiveFrom)}`,
+              status: isDraft ? (
+                <span className="badge bg-warning-subtle text-warning-emphasis">Draft</span>
+              ) : null,
+              fields: [
+                { key: 'basic', label: 'Basic', value: formatCurrency(row.basicSalary) },
+                {
+                  key: 'allowance',
+                  label: 'Allowance',
+                  value: formatCurrency(resolveAllowanceTotal(row)),
+                },
+                {
+                  key: 'deductions',
+                  label: 'Deductions',
+                  value: formatCurrency(totalDeductions),
+                },
+                { key: 'net', label: 'Net Payable', value: formatCurrency(netAssigned) },
+              ],
+              detail: group.ownerLabel ? `Owner: ${group.ownerLabel}` : null,
+              expanded: isGroupExpanded,
+              expandedContent: (
+                <div className="row g-3 small">
+                  <div className="col-12">
+                    <div className="fw-semibold text-body-secondary mb-1">Pay Components</div>
+                    <div className="d-grid gap-1">
+                      <div className="d-flex justify-content-between gap-2">
+                        <span>Basic</span>
+                        <span>{formatCurrency(row.basicSalary)}</span>
+                      </div>
+                      {allowances.length > 0 ? (
+                        allowances.map((item, i) => (
+                          <div key={item.id ?? i} className="d-flex justify-content-between gap-2">
+                            <span>{item.name || '-'}</span>
+                            <span>{formatCurrency(item.amount)}</span>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-body-secondary">No allowances.</div>
+                      )}
+                      <div className="d-flex justify-content-between gap-2 fw-semibold pt-1 border-top">
+                        <span>Total Allowance</span>
+                        <span>{formatCurrency(resolveAllowanceTotal(row))}</span>
+                      </div>
+                      <div className="d-flex justify-content-between gap-2 fw-semibold">
+                        <span>Total Payable</span>
+                        <span>{formatCurrency(netAssigned)}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-12">
+                    <div className="fw-semibold text-body-secondary mb-1">Deductions</div>
+                    <div className="d-grid gap-1">
+                      <div className="d-flex justify-content-between gap-2">
+                        <span>EPF</span>
+                        <span>{formatCurrency(epf)}</span>
+                      </div>
+                      <div className="d-flex justify-content-between gap-2">
+                        <span>PERKESO</span>
+                        <span>{formatCurrency(perkeso)}</span>
+                      </div>
+                      <div className="d-flex justify-content-between gap-2">
+                        <span>SIP</span>
+                        <span>{formatCurrency(sip)}</span>
+                      </div>
+                      <div className="d-flex justify-content-between gap-2 fw-semibold pt-1 border-top">
+                        <span>Total Deductions</span>
+                        <span>{formatCurrency(totalDeductions)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ),
+              ariaLabel: `Open salary assignment ${row.id || row.employee || index + 1}`,
+              onOpen: () => handleRowClick(row, isDraft),
+              actions: (
+                <RowActions
+                  toggleAriaLabel="Mobile row actions"
+                  tourId={
+                    isDraft && firstDraftAssignmentId === String(row?.id || '').trim()
+                      ? 'salary-claims-management-assignment-draft-resume-action'
+                      : firstDeleteAssignmentId === String(row?.id || '').trim()
+                        ? 'salary-claims-management-assignment-delete-action'
+                        : ''
+                  }
+                  items={[
+                    { key: 'edit', label: 'Edit', onClick: () => handleEdit(row, isDraft) },
+                    {
+                      key: 'delete',
+                      label: 'Delete',
+                      className: 'text-danger',
+                      onClick: () => handleDelete(row),
+                    },
+                  ]}
+                />
+              ),
+            }
+          }),
+        }
+      }),
+    [
+      groupedVisibleAssignmentRows,
+      expandedGroupKeys,
+      firstDeleteAssignmentId,
+      firstDraftAssignmentId,
+      formatCurrency,
+      formatMonth,
+      getAssignmentNetAssigned,
+      handleRowClick,
+      handleEdit,
+      handleDelete,
+    ],
+  )
+
   return (
     <>
-      <CCard>
+      <CCard data-tour-id="salary-claims-management-assignment-list">
         <CCardHeader className="d-flex justify-content-between align-items-center gap-2">
           <span>Salary Assignments</span>
-          <CreateActionButton label="Assign Salary" onClick={openCreateAssignment} />
+          <div data-tour-id="salary-claims-management-assignment-create-action">
+            <CreateActionButton label="Assign Salary" onClick={openCreateAssignment} />
+          </div>
         </CCardHeader>
         <CCardBody className="d-grid gap-3">
           <TableFilters
@@ -409,7 +568,8 @@ const SalarySettingsTab = ({ vm, handlers }) => {
             </div>
           ) : (
             <>
-              <div className="rounded-3 shadow-sm overflow-hidden bg-white">
+              <MobileRecordList sections={mobileAssignmentSections} variant="list-group" />
+              <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
                 <CTable align="middle" className="mb-0" hover responsive>
                   <CTableHead color="light">
                     <CTableRow>
@@ -442,25 +602,27 @@ const SalarySettingsTab = ({ vm, handlers }) => {
 
       <div className="mt-3 d-grid gap-2">
         {isLoading ? (
-          <CCard>
+          <CCard data-tour-id="salary-claims-management-assignment-history">
             <CCardHeader>History</CCardHeader>
             <CCardBody>
               <TableLoader />
             </CCardBody>
           </CCard>
         ) : (
-          <AuditHistoryPanel
-            title={
-              hiddenHistoryCount > 0
-                ? `History (showing 5 of ${
-                    (Array.isArray(assignmentHistory) ? assignmentHistory : []).length
-                  })`
-                : 'History'
-            }
-            entries={historyRows}
-            emptyMessage="No history yet."
-            formatDateTime={formatDate}
-          />
+          <div data-tour-id="salary-claims-management-assignment-history">
+            <AuditHistoryPanel
+              title={
+                hiddenHistoryCount > 0
+                  ? `History (showing 5 of ${
+                      (Array.isArray(assignmentHistory) ? assignmentHistory : []).length
+                    })`
+                  : 'History'
+              }
+              entries={historyRows}
+              emptyMessage="No history yet."
+              formatDateTime={formatDate}
+            />
+          </div>
         )}
         {(Array.isArray(assignmentHistory) ? assignmentHistory : []).length > 5 && (
           <div className="d-flex justify-content-end">

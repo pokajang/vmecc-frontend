@@ -83,7 +83,7 @@ const OvertimeApplySection = ({
 
   if (canRenderFreshTypeSelector) {
     return (
-      <div className="d-grid gap-4">
+      <div className="d-grid gap-4" data-tour-id="overtime-type-selection">
         <div className="fw-semibold">Choose Overtime Type</div>
         {fieldErrors.overtimeType ? (
           <div className="small text-danger">{fieldErrors.overtimeType}</div>
@@ -97,6 +97,7 @@ const OvertimeApplySection = ({
               </CButton>
               <CButton
                 color="primary"
+                data-tour-id="overtime-type-continue"
                 disabled={!overtimeType}
                 onClick={() => onContinueOvertimeType(overtimeType)}
               >
@@ -111,7 +112,7 @@ const OvertimeApplySection = ({
   }
 
   return (
-    <CForm onSubmit={onSubmit}>
+    <CForm onSubmit={onSubmit} data-tour-id="overtime-apply">
       <div className="mb-3">
         <BackButton onClick={isResumeEditMode ? onBack : onBackToOvertimeType} label="Back" />
       </div>
@@ -214,7 +215,7 @@ const OvertimeApplySection = ({
               </CFormFeedback>
             ) : null}
           </CCol>
-          <CCol xs={12}>
+          <CCol xs={12} data-tour-id="overtime-utility-panel">
             <div className="small text-muted">
               Overtime duration:{' '}
               <span className="fw-semibold">{formatDuration(durationMinutes)}</span>
@@ -241,7 +242,7 @@ const OvertimeApplySection = ({
         </CRow>
       </div>
 
-      <FormActionGroup className="mt-4">
+      <FormActionGroup className="mt-4" data-tour-id="overtime-draft-panel">
         <CButton
           color="secondary"
           variant="outline"
@@ -251,10 +252,17 @@ const OvertimeApplySection = ({
         >
           {isFormClearing ? <ButtonLoader label={clearingButtonLabel} /> : clearButtonLabel}
         </CButton>
-        <CButton color="light" type="button" onClick={onDraft} disabled={isActionBusy}>
-          {isDraftSaving ? <ButtonLoader label="Saving draft..." /> : 'Save draft'}
-        </CButton>
-        <CButton color="primary" type="submit" disabled={isActionBusy}>
+        <span data-tour-id="overtime-draft-action">
+          <CButton color="light" type="button" onClick={onDraft} disabled={isActionBusy}>
+            {isDraftSaving ? <ButtonLoader label="Saving draft..." /> : 'Save draft'}
+          </CButton>
+        </span>
+        <CButton
+          color="primary"
+          type="submit"
+          data-tour-id="overtime-submit-action"
+          disabled={isActionBusy}
+        >
           {isSubmittingClaim ? <ButtonLoader label={submittingButtonLabel} /> : submitButtonLabel}
         </CButton>
       </FormActionGroup>

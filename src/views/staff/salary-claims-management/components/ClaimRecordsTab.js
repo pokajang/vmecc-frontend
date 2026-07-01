@@ -288,49 +288,51 @@ const ClaimRecordsTab = ({ vm, handlers }) => {
   )
 
   return (
-    <CCard>
+    <CCard data-tour-id="salary-claims-management-claims">
       <CCardHeader>Claim Records</CCardHeader>
       <CCardBody>
-        <TableFilters
-          searchValue={search}
-          onSearchChange={setSearch}
-          searchPlaceholder="Search claim ID, employee, claim type, status, period"
-          periodValue={period}
-          onPeriodChange={setPeriod}
-          filters={[
-            {
-              key: 'sort',
-              label: 'Sort',
-              value: sort,
-              defaultValue: claimSortOptions?.[0]?.value,
-              onChange: setSort,
-              options: claimSortOptions,
-            },
-            {
-              key: 'type',
-              label: 'Type',
-              value: typeFilter,
-              defaultValue: claimTypeOptions?.[0]?.value,
-              onChange: setTypeFilter,
-              options: claimTypeOptions,
-            },
-            {
-              key: 'status',
-              label: 'Status',
-              value: statusFilter,
-              defaultValue: claimStatusOptions?.[0]?.value,
-              onChange: setStatusFilter,
-              options: claimStatusOptions,
-            },
-          ]}
-          onClear={clearClaimFilters}
-          rowClassName="flex-md-nowrap align-items-md-end"
-          searchColMd={3}
-          periodColMd={2}
-          filterColMd={2}
-          clearColMd="auto"
-          showDesktopLabels
-        />
+        <div data-tour-id="salary-claims-management-claims-filters">
+          <TableFilters
+            searchValue={search}
+            onSearchChange={setSearch}
+            searchPlaceholder="Search claim ID, employee, claim type, status, period"
+            periodValue={period}
+            onPeriodChange={setPeriod}
+            filters={[
+              {
+                key: 'sort',
+                label: 'Sort',
+                value: sort,
+                defaultValue: claimSortOptions?.[0]?.value,
+                onChange: setSort,
+                options: claimSortOptions,
+              },
+              {
+                key: 'type',
+                label: 'Type',
+                value: typeFilter,
+                defaultValue: claimTypeOptions?.[0]?.value,
+                onChange: setTypeFilter,
+                options: claimTypeOptions,
+              },
+              {
+                key: 'status',
+                label: 'Status',
+                value: statusFilter,
+                defaultValue: claimStatusOptions?.[0]?.value,
+                onChange: setStatusFilter,
+                options: claimStatusOptions,
+              },
+            ]}
+            onClear={clearClaimFilters}
+            rowClassName="flex-md-nowrap align-items-md-end"
+            searchColMd={3}
+            periodColMd={2}
+            filterColMd={2}
+            clearColMd="auto"
+            showDesktopLabels
+          />
+        </div>
 
         <ResponsiveRecordCollection
           isLoading={isLoading}
@@ -339,6 +341,7 @@ const ClaimRecordsTab = ({ vm, handlers }) => {
             <div className="text-body-secondary">No claim records match the current filters.</div>
           }
           mobileSections={mobileClaimSections}
+          mobileVariant="list-group"
           renderDesktop={renderDesktopTable}
           footer={
             <DataTableFooter

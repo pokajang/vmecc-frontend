@@ -222,6 +222,7 @@ const SalaryClaimBody = ({
         </CButton>
         <CButton
           color="primary"
+          data-tour-id="payroll-claim-submit-action"
           onClick={submitClaim}
           disabled={!defaultPathReady || isSubmittingClaim}
         >

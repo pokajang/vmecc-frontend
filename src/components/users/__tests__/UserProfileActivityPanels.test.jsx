@@ -45,6 +45,8 @@ describe('user profile activity panels', () => {
     expect(screen.getByRole('button', { name: 'Export CSV' })).toBeTruthy()
 
     const mobileArticle = auditTitles.find((title) => title.closest('article'))?.closest('article')
+    expect(document.querySelector('.list-group')).toBeTruthy()
+    expect(mobileArticle.className).toContain('list-group-item')
     expect(mobileArticle.textContent).toContain('System Admin')
     expect(mobileArticle.textContent).toContain('127.0.0.1')
 
@@ -76,6 +78,8 @@ describe('user profile activity panels', () => {
     const mobileArticle = sessionTitles
       .find((title) => title.closest('article'))
       ?.closest('article')
+    expect(document.querySelector('.list-group')).toBeTruthy()
+    expect(mobileArticle.className).toContain('list-group-item')
     expect(mobileArticle.textContent).toContain('Chrome on Windows')
     expect(mobileArticle.textContent).toContain('Active')
 

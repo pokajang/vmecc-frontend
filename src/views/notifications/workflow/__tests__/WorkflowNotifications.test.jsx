@@ -38,6 +38,7 @@ describe('WorkflowNotifications', () => {
 
   it('renders grouped notifications and preserves click behavior', () => {
     const markRead = vi.fn()
+    const deleteOne = vi.fn()
     const onClose = vi.fn()
     useWorkflowNotifications.mockReturnValue({
       items: [
@@ -66,7 +67,7 @@ describe('WorkflowNotifications', () => {
       refresh: vi.fn(),
       markRead,
       markAllRead: vi.fn(),
-      deleteOne: vi.fn(),
+      deleteOne,
       deleteAll: vi.fn(),
     })
 
@@ -78,11 +79,21 @@ describe('WorkflowNotifications', () => {
 
     expect(screen.getByText('Action Required')).toBeTruthy()
     expect(screen.getByText('Other Updates')).toBeTruthy()
+    expect(screen.getByText('Action Required').closest('.mobile-overlay-section')).toBeTruthy()
+    expect(screen.getAllByText('1')[0].classList.contains('mobile-overlay-section-count')).toBe(
+      true,
+    )
 
     fireEvent.click(screen.getByText('Leave needs approval'))
 
     expect(markRead).toHaveBeenCalledWith(1)
     expect(onClose).toHaveBeenCalledTimes(1)
     expect(navigate).toHaveBeenCalledTimes(1)
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Mark as read' })[0])
+    expect(markRead).toHaveBeenCalledWith(1)
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Delete notification' })[0])
+    expect(deleteOne).toHaveBeenCalledWith(1)
   })
 })

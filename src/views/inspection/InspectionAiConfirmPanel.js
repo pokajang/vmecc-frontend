@@ -5,7 +5,7 @@ import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import CreateActionButton from 'src/components/CreateActionButton'
 import EditControls from 'src/components/EditControls'
 import IconOptionGrid from 'src/components/IconOptionGrid'
-import TypeManagerModal from './TypeManagerModal'
+import TypeManagerModal from 'src/components/report-workflow/TypeManagerModal'
 import { recordTypeUsage } from './typeUsageStorage'
 import { ACTIVE_CARD_STYLE, TOGGLE_CARD_PROPS } from './typeOptionUtils'
 import useIncidentTypeManager, { INCIDENT_TYPE_TOGGLE_VALUE } from './useIncidentTypeManager'
@@ -52,7 +52,7 @@ const DescriptionStep = ({
       className="rounded-3 border p-3 d-grid gap-3"
       style={{ backgroundColor: DESCRIPTION_CARD_BG }}
     >
-      <div className="fw-semibold">{title}</div>
+      <div className="fw-semibold text-muted">{title}</div>
       <div className="text-body-secondary small">
         AI analysis recommendation - you may choose or write one.
       </div>
@@ -105,7 +105,7 @@ const DescriptionStep = ({
 const CompletedStep = ({ title, text, onEdit }) => (
   <div className="rounded-3 border border-light-subtle p-3 d-flex justify-content-between align-items-start gap-2">
     <div style={{ minWidth: 0 }}>
-      <div className="fw-semibold mb-1">{title}</div>
+      <div className="fw-semibold text-muted mb-1">{title}</div>
       <div
         className="text-body-secondary"
         style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
@@ -149,7 +149,7 @@ const SecondarySuggestionCard = ({
         opacity: action === 'dismiss' ? 0.5 : 1,
       }}
     >
-      <div className="fw-semibold">{secondary.type}</div>
+      <div className="fw-semibold text-muted">{secondary.type}</div>
       <div className="text-body-secondary small">
         AI suggestion - choose one, or write your own wording.
       </div>
@@ -333,13 +333,13 @@ const InspectionAiConfirmPanel = ({
         options={incident.typeOptions}
         onStartEdit={incident.startEditType}
         onRequestDelete={({ value, label }) => setDeleteTarget({ kind: 'incident', value, label })}
-        nameLabel="Type Name"
+        nameLabel="Inspection Type Name"
         nameValue={incident.newTypeName}
         onChangeName={(value) => {
           incident.setNewTypeName(value)
           if (incident.addTypeError) incident.setAddTypeError('')
         }}
-        namePlaceholder="e.g. Fire Water Pump House Inspection"
+        namePlaceholder="e.g. SCBA"
         descriptionLabel="Short Description (Optional)"
         descriptionValue={incident.newTypeDescription}
         onChangeDescription={incident.setNewTypeDescription}
@@ -354,11 +354,12 @@ const InspectionAiConfirmPanel = ({
         iconOptions={incident.iconOptions}
         iconValue={incident.newTypeIconKey}
         onChangeIcon={incident.setNewTypeIconKey}
+        showIconPicker
       />
 
       <div className="d-grid gap-4">
         {/* Header */}
-        <div className="fw-semibold">
+        <div className="fw-semibold text-muted">
           {isPromotedSecondary ? 'Additional Finding' : 'AI Analysis Result'}
         </div>
         {!isPromotedSecondary ? (
@@ -370,7 +371,7 @@ const InspectionAiConfirmPanel = ({
 
         {/* Photo preview */}
         <div className="d-grid gap-1">
-          <div className="fw-semibold">{uploadedPhotoLabel}</div>
+          <div className="fw-semibold text-muted">{uploadedPhotoLabel}</div>
           <img
             src={photo.url}
             alt={photo.fileName}
@@ -382,7 +383,7 @@ const InspectionAiConfirmPanel = ({
         <div className="rounded-3 border bg-white p-3 d-grid gap-2">
           <div className="d-flex flex-wrap justify-content-between align-items-start gap-2">
             <div>
-              <div className="fw-semibold">Editable AI Summary</div>
+              <div className="fw-semibold text-muted">Editable AI Summary</div>
               <div className="small text-body-secondary">
                 Accept the suggested summary for the common path, or edit the details before review.
               </div>
@@ -418,7 +419,7 @@ const InspectionAiConfirmPanel = ({
 
         {/* Inspection type */}
         <div className="d-grid gap-2">
-          <div className="fw-semibold">Choose Inspection Type</div>
+          <div className="fw-semibold text-muted">Choose Type</div>
           <IconOptionGrid
             options={incident.visibleTypeOptions}
             value={confirmedType}
@@ -438,18 +439,22 @@ const InspectionAiConfirmPanel = ({
             }}
           />
           <details className="rounded-3 border bg-white p-3">
-            <summary className="fw-semibold">Custom type management</summary>
+            <summary className="fw-semibold text-muted">Custom type management</summary>
             <div className="small text-body-secondary mt-2">
               Add or edit inspection templates without interrupting the primary review path.
             </div>
-            <CreateActionButton label="Add type" onClick={incident.openAddModal} className="mt-2" />
+            <CreateActionButton
+              label="Add type"
+              className="inspection-compact-action-btn mt-2"
+              onClick={incident.openAddModal}
+            />
           </details>
         </div>
 
         {/* Description - sequential steps */}
         {!summaryAccepted ? (
           <div className="d-grid gap-2">
-            <div className="fw-semibold">Set Description</div>
+            <div className="fw-semibold text-muted">Set Description</div>
 
             {/* Completed steps */}
             {descStep > 0 && (
@@ -499,7 +504,7 @@ const InspectionAiConfirmPanel = ({
         {descStep > 1 ? (
           <div className="d-grid gap-2">
             <div className="d-flex align-items-center justify-content-between">
-              <div className="fw-semibold">Also Noticed</div>
+              <div className="fw-semibold text-muted">Also Noticed</div>
               <div className="text-body-secondary small">
                 {secondaryFindings.length} suggestion(s)
               </div>

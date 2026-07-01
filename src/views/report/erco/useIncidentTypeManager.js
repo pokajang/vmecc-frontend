@@ -56,6 +56,20 @@ const useIncidentTypeManager = ({ userId, selectedType, updateSetupField, pushTo
     return sortOptionsByUsage(options, incidentUsage)
   }, [customIncidentTypes, incidentSystemOptions, incidentUsage])
 
+  const availableIconOptions = useMemo(() => {
+    const editKey = normalizeTypeKey(editingIncidentTypeKey)
+    const currentIconKey = String(newTypeIconKey || '').trim()
+    const usedIconKeys = new Set(
+      typeOptions
+        .filter((row) => normalizeTypeKey(row?.value) !== editKey)
+        .map((row) => resolveTypeIconKey(row, 'incident'))
+        .filter(Boolean),
+    )
+    return iconOptions.filter(
+      (option) => !usedIconKeys.has(option.key) || option.key === currentIconKey,
+    )
+  }, [editingIncidentTypeKey, iconOptions, newTypeIconKey, typeOptions])
+
   const systemOverrideSet = useMemo(
     () =>
       new Set(
@@ -106,8 +120,13 @@ const useIncidentTypeManager = ({ userId, selectedType, updateSetupField, pushTo
   const openAddModal = () => {
     setAddTypeError('')
     resetDraft()
+    const usedIconKeys = new Set(
+      typeOptions.map((row) => resolveTypeIconKey(row, 'incident')).filter(Boolean),
+    )
+    const unusedIcon = iconOptions.find((option) => !usedIconKeys.has(option.key))
     setNewTypeIconKey(
-      pickLeastUsedTypeIconKey('incident', [...customIncidentTypes, ...incidentSystemOverrides]),
+      unusedIcon?.key ||
+        pickLeastUsedTypeIconKey('incident', [...customIncidentTypes, ...incidentSystemOverrides]),
     )
     setIncidentEditMode(false)
     setShowAddTypeModal(true)
@@ -123,6 +142,7 @@ const useIncidentTypeManager = ({ userId, selectedType, updateSetupField, pushTo
   const saveType = () => {
     const title = String(newTypeName || '').trim()
     const description = String(newTypeDescription || '').trim()
+    const iconKey = String(newTypeIconKey || '').trim()
     const editKey = String(editingIncidentTypeKey || '')
       .trim()
       .toLowerCase()
@@ -141,6 +161,16 @@ const useIncidentTypeManager = ({ userId, selectedType, updateSetupField, pushTo
     })
     if (exists) {
       setAddTypeError('This type already exists.')
+      return
+    }
+
+    const iconExists = iconOptions.some((option) => option.key === iconKey)
+    const iconUsed = typeOptions.some(
+      (row) =>
+        normalizeTypeKey(row.value) !== editKey && resolveTypeIconKey(row, 'incident') === iconKey,
+    )
+    if (!iconExists || iconUsed) {
+      setAddTypeError(iconExists ? 'This icon is already used by another type.' : 'Choose an icon.')
       return
     }
 
@@ -164,7 +194,7 @@ const useIncidentTypeManager = ({ userId, selectedType, updateSetupField, pushTo
           value: baseOption.value,
           title,
           description,
-          iconKey: newTypeIconKey,
+          iconKey,
         },
       ]
       setIncidentSystemOverrides(nextOverrides)
@@ -188,9 +218,9 @@ const useIncidentTypeManager = ({ userId, selectedType, updateSetupField, pushTo
             .trim()
             .toLowerCase()
           if (rowKey !== editKey) return row
-          return { value: title, title, description, iconKey: newTypeIconKey }
+          return { value: title, title, description, iconKey }
         })
-      : [...customIncidentTypes, { value: title, title, description, iconKey: newTypeIconKey }]
+      : [...customIncidentTypes, { value: title, title, description, iconKey }]
     setCustomIncidentTypes(nextCustomTypes)
     saveCustomIncidentTypes(userId, nextCustomTypes)
 
@@ -330,7 +360,7 @@ const useIncidentTypeManager = ({ userId, selectedType, updateSetupField, pushTo
     setNewTypeDescription,
     newTypeIconKey,
     setNewTypeIconKey,
-    iconOptions,
+    iconOptions: availableIconOptions,
     editingIncidentTypeKey,
     editingSystemType,
     addTypeError,

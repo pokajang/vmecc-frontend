@@ -35,8 +35,12 @@ it('renders custom shift mobile cards with accessible edit and delete actions', 
 
   await waitFor(() => expect(screen.getAllByText('Evening').length).toBeGreaterThan(0))
 
-  expect(screen.getAllByText('Start: 15:00').length).toBeGreaterThan(0)
-  expect(screen.getAllByText('End: 23:00').length).toBeGreaterThan(0)
+  expect(document.querySelector('.list-group')).toBeTruthy()
+  expect(document.querySelector('.list-group-item')).toBeTruthy()
+  expect(screen.getAllByText('Start').length).toBeGreaterThan(0)
+  expect(screen.getAllByText('15:00').length).toBeGreaterThan(0)
+  expect(screen.getAllByText('End').length).toBeGreaterThan(0)
+  expect(screen.getAllByText('23:00').length).toBeGreaterThan(0)
   expect(screen.getAllByRole('button', { name: 'Edit Evening' }).length).toBeGreaterThan(0)
   expect(screen.getAllByRole('button', { name: 'Delete Evening' }).length).toBeGreaterThan(0)
 })

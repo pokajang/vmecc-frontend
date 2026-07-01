@@ -15,8 +15,12 @@
   "scripts": {
     "build": "vite build",
     "audit:staff-hardcoded": "node scripts/audit-hardcoded-staff.mjs",
+    "check:onboarding-endpoint-coverage": "node scripts/check-onboarding-endpoint-coverage.mjs",
     "test:payroll-hook-order": "node scripts/test-payroll-hook-order.mjs",
     "test:payroll-hook-runtime": "vitest run src/views/payroll/__tests__/Payroll.hook-order.test.jsx --environment jsdom",
+    "test:e2e:smoke": "playwright test tests/e2e/smoke.spec.js --config=playwright.config.mjs",
+    "test:e2e:smoke:full": "playwright test tests/e2e/smoke-full.spec.js --config=playwright.config.mjs",
+    "test:e2e:onboarding": "playwright test tests/e2e/onboarding/inspection-quick-tour.spec.js --config=playwright.config.mjs",
     "lint": "eslint",
     "serve": "vite preview",
     "start": "vite"
@@ -39,6 +43,7 @@
     "react": "^19.2.0",
     "react-datepicker": "^9.1.0",
     "react-dom": "^19.2.0",
+    "react-joyride": "^3.1.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.17.0",
     "react-select": "^5.10.2",
@@ -46,10 +51,10 @@
     "simplebar-react": "^3.3.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@testing-library/react": "^16.3.2",
     "@vitejs/plugin-react": "^5.1.0",
     "autoprefixer": "^10.4.21",
-    "baseline-browser-mapping": "^2.10.14",
     "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",

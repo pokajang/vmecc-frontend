@@ -51,7 +51,7 @@ const Login = () => {
   const [formValues, setFormValues] = useState({
     email: '',
     password: '',
-    remember: false,
+    remember: true,
   })
 
   const handleChange = (event) => {

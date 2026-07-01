@@ -9,12 +9,15 @@ import {
   CFormTextarea,
   CRow,
 } from '@coreui/react'
+import FormActionGroup from 'src/components/FormActionGroup'
+
+const LOCAL_DRAFT_MESSAGE = 'Saved locally. Keep browser data to recover later.'
 
 const FitnessTestFormStep = ({
   form,
   fieldErrors,
   setForm,
-  setSetupConfirmed,
+  onEditSetup,
   addChronology,
   updateChronology,
   removeChronology,
@@ -28,7 +31,12 @@ const FitnessTestFormStep = ({
         <CRow className="g-3">
           <CCol md={12}>
             <div className="rounded-3 border border-light-subtle p-2 p-md-3">
-              <div className="small text-body-secondary mb-1">Fitness test setup</div>
+              <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
+                <div className="small text-body-secondary">Fitness test setup</div>
+                <CButton type="button" color="link" size="sm" className="p-0" onClick={onEditSetup}>
+                  Edit Setup
+                </CButton>
+              </div>
               <div className="d-flex flex-wrap gap-2">
                 <CBadge color="light" className="border text-body-secondary">
                   Type: {form.incidentType}
@@ -111,10 +119,7 @@ const FitnessTestFormStep = ({
       </div>
     </div>
 
-    <div className="d-flex flex-column flex-sm-row justify-content-end gap-2 mb-4">
-      <CButton type="button" color="light" onClick={() => setSetupConfirmed(false)}>
-        Back
-      </CButton>
+    <div className="d-none d-md-flex flex-md-row justify-content-end gap-2 mb-4">
       <CButton type="button" color="light" onClick={onClear}>
         Reset
       </CButton>
@@ -125,6 +130,23 @@ const FitnessTestFormStep = ({
         {submitLabel}
       </CButton>
     </div>
+    <FormActionGroup
+      className="d-md-none mb-4"
+      mobileVariant="compact-sticky"
+      statusMessage={LOCAL_DRAFT_MESSAGE}
+      leading={
+        <CButton type="button" color="light" onClick={onClear}>
+          Reset
+        </CButton>
+      }
+    >
+      <CButton type="button" color="secondary" variant="outline" onClick={onSaveDraft}>
+        Save Draft
+      </CButton>
+      <CButton type="submit" color="primary">
+        {submitLabel}
+      </CButton>
+    </FormActionGroup>
   </>
 )
 
