@@ -78,9 +78,9 @@ const RowActions = ({
                       ...(disabled ? { color: 'var(--cui-secondary-color)' } : {}),
                     }}
                     onClick={(event) => {
+                      event.stopPropagation()
                       if (disabled) {
                         event.preventDefault()
-                        event.stopPropagation()
                         return
                       }
                       setVisible(false)
