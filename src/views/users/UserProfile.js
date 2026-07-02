@@ -297,11 +297,11 @@ const UserProfile = () => {
     if (!user || actionUpdating || isSelf) return
     setActionUpdating(true)
     try {
-      await deleteUser(user.id)
-      pushActionMessage('success', 'User deleted.')
+      await deleteUser(user.id, { permanent: true })
+      pushActionMessage('success', 'User permanently deleted.')
       navigate('/admin/users')
     } catch (err) {
-      pushActionMessage('danger', err.payload?.message || 'Unable to delete user.')
+      pushActionMessage('danger', err.payload?.message || 'Unable to permanently delete user.')
     } finally {
       setActionUpdating(false)
     }
@@ -616,9 +616,9 @@ const UserProfile = () => {
 
         <UserConfirmModal
           visible={modalState.delete}
-          title="Delete User"
-          message={`This will disable access for ${user?.name || 'this user'}. You can restore later.`}
-          confirmLabel="Delete"
+          title="Delete User Permanently"
+          message={`This will permanently delete ${user?.name || 'this user'} and cannot be undone. The account cannot be restored after this action.`}
+          confirmLabel="Delete permanently"
           confirmColor="danger"
           onConfirm={handleDeleteUser}
           onClose={() => dispatchModal({ type: 'close', modal: 'delete' })}

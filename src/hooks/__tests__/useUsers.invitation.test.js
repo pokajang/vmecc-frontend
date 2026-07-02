@@ -94,3 +94,82 @@ describe('useUsers invitation feedback', () => {
     })
   })
 })
+
+describe('useUsers destructive delete flow', () => {
+  beforeEach(() => {
+    vi.resetAllMocks()
+    fetchTeams.mockResolvedValue({ data: [] })
+  })
+
+  const targetUser = {
+    id: 'u-delete',
+    name: 'Delete Target',
+    email: 'delete.target@example.test',
+    roles: ['HR'],
+    status: 'Active',
+    deleted_at: null,
+  }
+
+  it('permanently deletes a user from the normal delete action', async () => {
+    fetchUsers.mockResolvedValueOnce({ data: [targetUser] })
+    deleteUser.mockResolvedValue({})
+
+    const { result } = renderHook(() =>
+      useUsers({ isAdmin: true, roles: ['Contract Manager'], isSelf: () => false }),
+    )
+
+    await waitFor(() => {
+      expect(result.current.users).toHaveLength(1)
+    })
+
+    act(() => {
+      result.current.openDeleteModal(targetUser)
+    })
+
+    await act(async () => {
+      await result.current.handleDeleteUser()
+    })
+
+    expect(deleteUser).toHaveBeenCalledTimes(1)
+    expect(deleteUser).toHaveBeenCalledWith(targetUser.id, { permanent: true })
+    expect(result.current.users).toEqual([])
+    expect(result.current.confirmDeleteOpen).toBe(false)
+    expect(result.current.statusMessage).toEqual({
+      type: 'success',
+      message: 'User permanently deleted.',
+    })
+  })
+
+  it('keeps the row available if the permanent delete request fails', async () => {
+    fetchUsers.mockResolvedValueOnce({ data: [targetUser] })
+    deleteUser.mockRejectedValueOnce({
+      payload: { message: 'Unable to force delete user.' },
+    })
+
+    const { result } = renderHook(() =>
+      useUsers({ isAdmin: true, roles: ['Contract Manager'], isSelf: () => false }),
+    )
+
+    await waitFor(() => {
+      expect(result.current.users).toHaveLength(1)
+    })
+
+    act(() => {
+      result.current.openDeleteModal(targetUser)
+    })
+
+    await act(async () => {
+      await result.current.handleDeleteUser()
+    })
+
+    expect(deleteUser).toHaveBeenCalledTimes(1)
+    expect(deleteUser).toHaveBeenCalledWith(targetUser.id, { permanent: true })
+    expect(result.current.users).toHaveLength(1)
+    expect(result.current.users[0].deleted_at).toBeNull()
+    expect(result.current.confirmDeleteOpen).toBe(true)
+    expect(result.current.statusMessage).toEqual({
+      type: 'danger',
+      message: 'Unable to force delete user.',
+    })
+  })
+})

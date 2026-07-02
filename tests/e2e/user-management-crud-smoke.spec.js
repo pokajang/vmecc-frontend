@@ -494,7 +494,7 @@ test.describe('User Management CRUD smoke', () => {
       await triggerModalAction(page, testInfo, report, {
         user: activeUser,
         actionLabel: 'Delete user',
-        modalTitle: 'Delete User',
+        modalTitle: 'Delete User Permanently',
       })
       await triggerModalAction(page, testInfo, report, {
         user: activeUser,

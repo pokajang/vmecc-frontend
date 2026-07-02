@@ -130,9 +130,11 @@ describe('UserManagement row actions', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Delete user' }))
 
     await waitFor(() => {
-      expect(screen.getByText('Delete User')).toBeTruthy()
+      expect(screen.getByText('Delete User Permanently')).toBeTruthy()
       expect(
-        screen.getByText('This will disable access for Alice Admin. You can restore later.'),
+        screen.getByText(
+          'This will permanently delete Alice Admin and cannot be undone. The account cannot be restored after this action.',
+        ),
       ).toBeTruthy()
     })
     expect(goProfile).not.toHaveBeenCalled()

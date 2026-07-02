@@ -65,9 +65,9 @@ const UserActionModals = ({
 
     <UserConfirmModal
       visible={confirmDeleteOpen}
-      title="Delete User"
-      message={`This will disable access for ${actionUser?.name || 'this user'}. You can restore later.`}
-      confirmLabel="Delete"
+      title="Delete User Permanently"
+      message={`This will permanently delete ${actionUser?.name || 'this user'} and cannot be undone. The account cannot be restored after this action.`}
+      confirmLabel="Delete permanently"
       confirmColor="danger"
       onConfirm={onConfirmDelete}
       onClose={onCloseDelete}
