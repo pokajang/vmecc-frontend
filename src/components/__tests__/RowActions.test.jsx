@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from 'react'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import RowActions from '../RowActions'
 
@@ -9,7 +9,7 @@ afterEach(() => {
 })
 
 describe('RowActions', () => {
-  it('does not bubble a portaled menu item click to row-level handlers', () => {
+  it('does not bubble a portaled menu item click to row-level handlers', async () => {
     const onRowClick = vi.fn()
     const onDelete = vi.fn()
 
@@ -30,7 +30,7 @@ describe('RowActions', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Row actions' }))
     fireEvent.click(screen.getByText('Delete user'))
 
-    expect(onDelete).toHaveBeenCalledTimes(1)
+    await waitFor(() => expect(onDelete).toHaveBeenCalledTimes(1))
     expect(onRowClick).not.toHaveBeenCalled()
   })
 })

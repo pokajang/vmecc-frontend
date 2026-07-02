@@ -5,6 +5,16 @@ import { MoreVertical } from 'lucide-react'
 // Each mounted RowActions registers a close callback so opening one closes the rest.
 const registry = new Set()
 
+const stopBubblingEvent = (event) => {
+  event.stopPropagation()
+  event.nativeEvent?.stopImmediatePropagation?.()
+}
+
+const stopActionEvent = (event) => {
+  event.preventDefault()
+  stopBubblingEvent(event)
+}
+
 const RowActions = ({
   items = [],
   align = 'end',
@@ -37,8 +47,11 @@ const RowActions = ({
   return (
     <div
       {...(tourId ? { 'data-tour-id': tourId } : {})}
-      onClick={(e) => e.stopPropagation()}
-      onMouseDown={(e) => e.stopPropagation()}
+      onClick={stopBubblingEvent}
+      onMouseDown={stopBubblingEvent}
+      onMouseUp={stopBubblingEvent}
+      onPointerDown={stopBubblingEvent}
+      onPointerUp={stopBubblingEvent}
     >
       <CDropdown
         alignment={align}
@@ -69,6 +82,8 @@ const RowActions = ({
                 return (
                   <CDropdownItem
                     key={item.key || item.label}
+                    as="button"
+                    type="button"
                     className={`${disabled ? 'text-body-secondary opacity-75' : 'cursor-pointer'} ${
                       item.className || ''
                     }`.trim()}
@@ -77,22 +92,28 @@ const RowActions = ({
                       ...(item.style || {}),
                       ...(disabled ? { color: 'var(--cui-secondary-color)' } : {}),
                     }}
+                    disabled={disabled}
                     onClick={(event) => {
-                      event.stopPropagation()
+                      stopActionEvent(event)
                       if (disabled) {
-                        event.preventDefault()
                         return
                       }
                       setVisible(false)
-                      try {
-                        item.onClick?.()
-                      } catch (err) {
-                        console.error(
-                          `RowActions: onClick failed for "${item.key || item.label}"`,
-                          err,
-                        )
-                      }
+                      window.setTimeout(() => {
+                        try {
+                          item.onClick?.()
+                        } catch (err) {
+                          console.error(
+                            `RowActions: onClick failed for "${item.key || item.label}"`,
+                            err,
+                          )
+                        }
+                      }, 0)
                     }}
+                    onMouseDown={stopBubblingEvent}
+                    onMouseUp={stopBubblingEvent}
+                    onPointerDown={stopBubblingEvent}
+                    onPointerUp={stopBubblingEvent}
                     aria-disabled={disabled}
                     aria-label={ariaLabel}
                     title={title}
