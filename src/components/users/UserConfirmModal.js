@@ -19,14 +19,18 @@ const UserConfirmModal = ({
   tourId,
   bodyTourId,
 }) => {
-  const mergedStyle = {
-    ...(zIndex != null
-      ? {
-          '--cui-modal-zindex': zIndex + 5,
-        }
-      : {}),
-    ...(style || {}),
-  }
+  const hasCustomModalStyle = zIndex != null || style != null
+  const mergedStyle = hasCustomModalStyle
+    ? {
+        ...(style || {}),
+        ...(zIndex != null
+          ? {
+              '--cui-modal-zindex': zIndex + 5,
+            }
+          : {}),
+        display: 'block',
+      }
+    : undefined
 
   useEffect(() => {
     if (zIndex == null || !visible) return
@@ -57,7 +61,7 @@ const UserConfirmModal = ({
         alignment="center"
         backdrop={zIndex != null ? false : true}
         className={className}
-        style={mergedStyle}
+        {...(mergedStyle ? { style: mergedStyle } : {})}
       >
         <CModalHeader data-tour-id={visible ? tourId : undefined}>
           <CModalTitle>{title}</CModalTitle>
