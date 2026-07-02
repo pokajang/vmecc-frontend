@@ -64,7 +64,7 @@ export default defineConfig(() => {
   const buildMetadata = createBuildMetadata()
 
   return {
-    base: './',
+    base: '/',
     define: {
       __VMECC_APP_VERSION__: JSON.stringify(buildMetadata.version),
       __VMECC_BUILD_ID__: JSON.stringify(buildMetadata.buildId),

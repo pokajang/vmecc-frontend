@@ -1,0 +1,1 @@
+import{n as s}from"./index-DhluNIV4.js";import{e as a}from"./CTable-C4ldq5qx.js";const t=o=>{o.stopPropagation()},p=({children:o,className:n="text-center",...e})=>s.jsx(a,{...e,className:n,onClick:t,onMouseDown:t,onKeyDown:t,children:o});export{p as R};
