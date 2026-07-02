@@ -168,7 +168,11 @@ const useUsers = ({ isAdmin, roles = [], isSelf }) => {
         setRoleAssignments([createDefaultAssignment(defaultRole)])
         setSubmitStatus({ loading: false, message: null, type: null })
         setShowForm(false)
-        pushStatus('success', 'User created and invitation sent.')
+        if (response?.invitation_sent === false) {
+          pushStatus('warning', 'User created, but the invitation email could not be sent.', 6000)
+        } else {
+          pushStatus('success', 'User created and invitation queued.')
+        }
       } catch (err) {
         setSubmitStatus({
           loading: false,
