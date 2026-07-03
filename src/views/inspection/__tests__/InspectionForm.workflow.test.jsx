@@ -1,8 +1,168 @@
 // @vitest-environment jsdom
 import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import InspectionForm from '../InspectionForm'
+import { ErAuxEquipmentChecks } from '../components/InspectionFormDisplaySections'
+import { buildInspectionPayloadSnapshot, normalizeInspectionForm } from '../inspectionFormHelpers'
+
+const fireTruckApiMock = vi.hoisted(() => {
+  const normalizeRows = (rows = []) =>
+    (Array.isArray(rows) ? rows : [])
+      .map((row) => {
+        const truckId = row?.truckId ?? row?.truck_id ?? row?.id ?? ''
+        const plateNo = String(row?.plateNo || row?.plate_no || row?.value || row?.title || '')
+          .trim()
+          .toUpperCase()
+        if (!plateNo) return null
+        const name = String(row?.name || row?.description || '').trim()
+        const source = String(row?.source || 'custom').trim()
+        return {
+          ...row,
+          id: String(truckId || plateNo),
+          truckId,
+          plateNo,
+          value: plateNo,
+          title: plateNo,
+          name,
+          description: name,
+          roadTaxExpiry: String(row?.roadTaxExpiry || row?.road_tax_expiry || ''),
+          insuranceExpiry: String(row?.insuranceExpiry || row?.insurance_expiry || ''),
+          puspakomExpiry: String(row?.puspakomExpiry || row?.puspakom_expiry || ''),
+          source,
+          canEdit: row?.canEdit === true || (row?.canEdit !== false && source !== 'seed'),
+          canDelete: row?.canDelete === true || (row?.canDelete !== false && source !== 'seed'),
+        }
+      })
+      .filter(Boolean)
+
+  return {
+    rows: normalizeRows([
+      {
+        id: 'truck-1',
+        truckId: 'truck-1',
+        plateNo: 'AJG9555',
+        name: 'Fire Truck',
+        roadTaxExpiry: '2026-02-13',
+        insuranceExpiry: '2026-02-13',
+        puspakomExpiry: '2026-02-19',
+        source: 'custom',
+      },
+    ]),
+    normalizeRows,
+    fetchFireTruckOptions: vi.fn(async () => ({
+      data: fireTruckApiMock.rows,
+      meta: {},
+    })),
+    createFireTruckOption: vi.fn(
+      async (payload) =>
+        normalizeRows([{ id: 'truck-new', truckId: 'truck-new', source: 'custom', ...payload }])[0],
+    ),
+    updateFireTruckOption: vi.fn(
+      async (id, payload) => normalizeRows([{ id, truckId: id, source: 'custom', ...payload }])[0],
+    ),
+    deleteFireTruckOption: vi.fn(async () => true),
+    loadCachedFireTruckCatalog: vi.fn(() => fireTruckApiMock.rows),
+    saveCachedFireTruckCatalog: vi.fn((rows) => {
+      fireTruckApiMock.rows = normalizeRows(rows)
+    }),
+  }
+})
+
+const scbaCatalogApiMock = vi.hoisted(() => {
+  const normalizeFields = (fields = []) =>
+    (Array.isArray(fields) ? fields : []).map((field) => ({
+      key: String(field?.key || field?.label || 'check')
+        .trim()
+        .replace(/[^a-zA-Z0-9]+(.)/g, (_, character) => character.toUpperCase())
+        .replace(/^[A-Z]/, (character) => character.toLowerCase()),
+      label: String(field?.label || field?.name || field || '').trim(),
+      kind: 'status',
+    }))
+  const normalizeSections = (sections = []) =>
+    (Array.isArray(sections) ? sections : []).map((section, index) => ({
+      ...section,
+      id: String(section?.id || section?.catalogSectionId || `scba-section-${index + 1}`),
+      catalogSectionId: section?.catalogSectionId || section?.id || `scba-section-${index + 1}`,
+      key:
+        section?.key ||
+        `customScba-${String(section?.title || 'section')
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')}`,
+      title: String(section?.title || '').trim(),
+      shortLabel: String(section?.shortLabel || section?.title || '').trim(),
+      fields: normalizeFields(section?.fields),
+      rows: Array.isArray(section?.rows) ? section.rows : [],
+      isCustomSection: true,
+      source: 'custom',
+      canEdit: true,
+      canDelete: true,
+    }))
+
+  return {
+    sections: [],
+    normalizeSections,
+    fetchScbaCatalog: vi.fn(async () => ({ data: scbaCatalogApiMock.sections, meta: {} })),
+    loadCachedScbaCatalog: vi.fn(() => scbaCatalogApiMock.sections),
+    saveCachedScbaCatalog: vi.fn((sections) => {
+      scbaCatalogApiMock.sections = normalizeSections(sections)
+    }),
+    createScbaCatalogSection: vi.fn(async (payload) => {
+      const saved = normalizeSections([
+        {
+          id: `scba-section-${scbaCatalogApiMock.sections.length + 1}`,
+          catalogSectionId: `scba-section-${scbaCatalogApiMock.sections.length + 1}`,
+          ...payload,
+        },
+      ])[0]
+      scbaCatalogApiMock.sections = [...scbaCatalogApiMock.sections, saved]
+      return saved
+    }),
+    updateScbaCatalogSection: vi.fn(
+      async (id, payload) => normalizeSections([{ id, catalogSectionId: id, ...payload }])[0],
+    ),
+    archiveScbaCatalogSection: vi.fn(async () => true),
+    createScbaCatalogItem: vi.fn(async (sectionId, payload) => ({
+      id: `scba-item-${Date.now()}`,
+      catalogItemId: `scba-item-${Date.now()}`,
+      catalogSectionId: sectionId,
+      sectionKey: '',
+      location: payload.mainLocation || payload.location || '',
+      mainLocation: payload.mainLocation || payload.location || '',
+      brand: payload.brand || '',
+      serialNo: payload.serialNo || '',
+      equipmentDescription: payload.equipmentDescription || '',
+      equipmentSource: 'custom',
+      isCustomEquipment: true,
+    })),
+    updateScbaCatalogItem: vi.fn(async (id, payload) => ({ id, catalogItemId: id, ...payload })),
+    archiveScbaCatalogItem: vi.fn(async () => true),
+  }
+})
+
+vi.mock('../inspectionFireTruckApi', () => ({
+  fetchFireTruckOptions: fireTruckApiMock.fetchFireTruckOptions,
+  createFireTruckOption: fireTruckApiMock.createFireTruckOption,
+  updateFireTruckOption: fireTruckApiMock.updateFireTruckOption,
+  deleteFireTruckOption: fireTruckApiMock.deleteFireTruckOption,
+  loadCachedFireTruckCatalog: fireTruckApiMock.loadCachedFireTruckCatalog,
+  saveCachedFireTruckCatalog: fireTruckApiMock.saveCachedFireTruckCatalog,
+  normalizeFireTruckCatalogRows: fireTruckApiMock.normalizeRows,
+}))
+
+vi.mock('../inspectionScbaCatalogApi', () => ({
+  fetchScbaCatalog: scbaCatalogApiMock.fetchScbaCatalog,
+  loadCachedScbaCatalog: scbaCatalogApiMock.loadCachedScbaCatalog,
+  saveCachedScbaCatalog: scbaCatalogApiMock.saveCachedScbaCatalog,
+  createScbaCatalogSection: scbaCatalogApiMock.createScbaCatalogSection,
+  updateScbaCatalogSection: scbaCatalogApiMock.updateScbaCatalogSection,
+  archiveScbaCatalogSection: scbaCatalogApiMock.archiveScbaCatalogSection,
+  createScbaCatalogItem: scbaCatalogApiMock.createScbaCatalogItem,
+  updateScbaCatalogItem: scbaCatalogApiMock.updateScbaCatalogItem,
+  archiveScbaCatalogItem: scbaCatalogApiMock.archiveScbaCatalogItem,
+  normalizeScbaCatalogSections: scbaCatalogApiMock.normalizeSections,
+}))
 
 vi.mock('src/components/report-workflow/TypeManagerModal', () => ({
   default: () => null,
@@ -208,6 +368,19 @@ const makeHydraulicChecks = (location = 'FRT', overrides = {}) =>
 describe('InspectionForm workflow', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    fireTruckApiMock.rows = fireTruckApiMock.normalizeRows([
+      {
+        id: 'truck-1',
+        truckId: 'truck-1',
+        plateNo: 'AJG9555',
+        name: 'Fire Truck',
+        roadTaxExpiry: '2026-02-13',
+        insuranceExpiry: '2026-02-13',
+        puspakomExpiry: '2026-02-19',
+        source: 'custom',
+      },
+    ])
+    scbaCatalogApiMock.sections = []
   })
   afterEach(() => {
     cleanup()
@@ -374,7 +547,7 @@ describe('InspectionForm workflow', () => {
     )
   })
 
-  it('applies photo caption chips to the selected photo', () => {
+  it('updates the selected photo description', () => {
     const onChange = vi.fn()
     render(
       <InspectionForm
@@ -396,14 +569,16 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    fireEvent.click(screen.getByText('Defect'))
+    fireEvent.change(screen.getByPlaceholderText('Describe this photo'), {
+      target: { value: 'Updated caption' },
+    })
 
     expect(onChange).toHaveBeenCalledWith(
       expect.objectContaining({
         photos: [
           expect.objectContaining({
             id: 'photo-1',
-            description: 'Existing caption\nDefect',
+            description: 'Updated caption',
           }),
         ],
       }),
@@ -579,6 +754,165 @@ describe('InspectionForm workflow', () => {
     expect(screen.getByPlaceholderText('FE Physical Condition defect remarks')).toBeTruthy()
   })
 
+  it('keeps saved fire extinguisher rows visible when the catalog result is partial', () => {
+    render(
+      <InspectionForm
+        {...baseProps}
+        value={{
+          mainLocation: 'Manjung Hub',
+          subLocation: 'Reception',
+          selectedLocation: 'Manjung Hub > Reception',
+          inspectionType: 'Fire Extinguisher Inspection',
+          photos: [],
+          fireExtinguisherCatalogRows: [
+            {
+              id: 'fe:1',
+              catalogId: 'fe:1',
+              sourceRowNumber: '1',
+              zone: 'Zone 1',
+              mainLocation: 'Manjung Hub',
+              subLocation: 'Reception',
+              idLocNo: 'ADO-001',
+              barcodeNo: 'EE042021Y544896',
+              certificationValidity: 'Valid',
+              certificationValidityRaw: '01/12/2026',
+              daysLeftToExpire: '180',
+            },
+          ],
+          fireExtinguisherChecks: [
+            {
+              id: 'fe:1',
+              catalogId: 'fe:1',
+              sourceRowNumber: '1',
+              mainLocation: 'Manjung Hub',
+              subLocation: 'Reception',
+              idLocNo: 'ADO-001',
+              barcodeNo: 'EE042021Y544896',
+              physicalCondition: 'Good',
+              signageCondition: 'Good',
+              boxKeyAvailability: 'Yes',
+              boxGlassAvailability: 'Yes',
+              operationalCondition: 'Operational',
+            },
+            {
+              id: 'fe:999',
+              sourceRowNumber: '999',
+              mainLocation: 'Manjung Hub',
+              subLocation: 'Reception',
+              idLocNo: 'ADO-999',
+              barcodeNo: 'EE042021Y999999',
+              physicalCondition: 'Not Good',
+              physicalConditionRemarks: 'Cylinder body dented.',
+              signageCondition: 'Good',
+              boxKeyAvailability: 'Yes',
+              boxGlassAvailability: 'Yes',
+              operationalCondition: 'Operational',
+            },
+          ],
+        }}
+      />,
+    )
+
+    expect(screen.getByText('ADO-001')).toBeTruthy()
+    expect(screen.getByText('ADO-999')).toBeTruthy()
+    expect(screen.getByDisplayValue('Cylinder body dented.')).toBeTruthy()
+  })
+
+  it('shows shared extinguisher edit warning copy for seeded catalog rows', async () => {
+    render(
+      <InspectionForm
+        {...baseProps}
+        value={{
+          mainLocation: 'Manjung Hub',
+          subLocation: 'Reception',
+          selectedLocation: 'Manjung Hub > Reception',
+          inspectionType: 'Fire Extinguisher Inspection',
+          fireExtinguisherInspectedBy: 'Inspector Fire',
+          fireExtinguisherInspectionDate: '2026-06-29',
+          fireExtinguisherChecks: [
+            {
+              id: 'fe:1',
+              catalogId: '1',
+              equipmentSource: 'seed',
+              canEdit: true,
+              canDelete: true,
+              mainLocation: 'Manjung Hub',
+              subLocation: 'Reception',
+              idLocNo: 'ADO-001',
+              barcodeNo: 'EE042021Y544896',
+              feType: 'DP 6KG',
+              physicalCondition: 'Good',
+              signageCondition: 'Good',
+              boxKeyAvailability: 'Yes',
+              boxGlassAvailability: 'Yes',
+              operationalCondition: 'Operational',
+            },
+          ],
+        }}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Extinguisher actions for ADO-001' }))
+    fireEvent.click(screen.getAllByRole('button', { name: 'Edit' }).at(-1))
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          'This item is shared across inspections. Changes will affect future inspections.',
+        ),
+      ).toBeTruthy()
+    })
+    expect(screen.getByRole('button', { name: 'Save global change' })).toBeTruthy()
+  })
+
+  it('confirms shared extinguisher delete with future-inspection warning copy', async () => {
+    render(
+      <InspectionForm
+        {...baseProps}
+        value={{
+          mainLocation: 'Manjung Hub',
+          subLocation: 'Reception',
+          selectedLocation: 'Manjung Hub > Reception',
+          inspectionType: 'Fire Extinguisher Inspection',
+          fireExtinguisherInspectedBy: 'Inspector Fire',
+          fireExtinguisherInspectionDate: '2026-06-29',
+          fireExtinguisherChecks: [
+            {
+              id: 'fe:1',
+              catalogId: '1',
+              equipmentSource: 'seed',
+              canEdit: true,
+              canDelete: true,
+              mainLocation: 'Manjung Hub',
+              subLocation: 'Reception',
+              idLocNo: 'ADO-001',
+              barcodeNo: 'EE042021Y544896',
+              feType: 'DP 6KG',
+              physicalCondition: 'Good',
+              signageCondition: 'Good',
+              boxKeyAvailability: 'Yes',
+              boxGlassAvailability: 'Yes',
+              operationalCondition: 'Operational',
+            },
+          ],
+        }}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Extinguisher actions for ADO-001' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('Delete Extinguisher')).toBeTruthy()
+    })
+    expect(
+      screen.getByText(
+        'Delete this shared extinguisher? This will remove it from all future inspections. Past inspection records will not be changed.',
+      ),
+    ).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Delete' })).toBeTruthy()
+  })
+
   it('collapses completed Fire Extinguisher rows and opens the next incomplete row even when search hides it', async () => {
     render(
       <InspectionForm
@@ -616,7 +950,6 @@ describe('InspectionForm workflow', () => {
     )
 
     expect(screen.getByText('Complete')).toBeTruthy()
-    expect(screen.queryByText('General extinguisher remarks')).toBeTruthy()
 
     fireEvent.change(screen.getByLabelText('Search fire extinguisher rows'), {
       target: { value: '544896' },
@@ -628,6 +961,111 @@ describe('InspectionForm workflow', () => {
     await waitFor(() => {
       expect(screen.getByText('ADO-002')).toBeTruthy()
     })
+  })
+
+  it('blocks Fire Extinguisher review until failed statuses include defect photos', async () => {
+    const onRequestReview = vi.fn()
+    const { rerender } = render(
+      <InspectionForm
+        {...baseProps}
+        onRequestReview={onRequestReview}
+        value={{
+          mainLocation: 'Manjung Hub',
+          selectedLocation: 'Manjung Hub > Reception',
+          inspectionType: 'Fire Extinguisher Inspection',
+          fireExtinguisherInspectedBy: 'Inspector Fire',
+          fireExtinguisherInspectionDate: '2026-06-29',
+          photos: [],
+          fireExtinguisherChecks: [
+            {
+              id: 'fe:1',
+              mainLocation: 'Manjung Hub',
+              subLocation: 'Reception',
+              idLocNo: 'ADO-001',
+              barcodeNo: 'EE042021Y544896',
+              physicalCondition: 'Not Good',
+              physicalConditionRemarks: 'Cylinder body dented.',
+              signageCondition: 'Good',
+              boxKeyAvailability: 'Yes',
+              boxGlassAvailability: 'Yes',
+              operationalCondition: 'Operational',
+            },
+          ],
+        }}
+      />,
+    )
+
+    fireEvent.click(screen.getAllByText('Save & Review')[0])
+
+    expect(onRequestReview).not.toHaveBeenCalled()
+    expect(
+      screen.getByText('Add remarks and photos for every defect or failed extinguisher status.'),
+    ).toBeTruthy()
+    expect(screen.getByText('FE Physical Condition defect photo is required.')).toBeTruthy()
+
+    await waitFor(() => {
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Add defect photo' }))
+    })
+
+    rerender(
+      <InspectionForm
+        {...baseProps}
+        onRequestReview={onRequestReview}
+        value={{
+          mainLocation: 'Manjung Hub',
+          selectedLocation: 'Manjung Hub > Reception',
+          inspectionType: 'Fire Extinguisher Inspection',
+          fireExtinguisherInspectedBy: 'Inspector Fire',
+          fireExtinguisherInspectionDate: '2026-06-29',
+          photos: [],
+          fireExtinguisherChecks: [
+            {
+              id: 'fe:1',
+              mainLocation: 'Manjung Hub',
+              subLocation: 'Reception',
+              idLocNo: 'ADO-001',
+              barcodeNo: 'EE042021Y544896',
+              physicalCondition: 'Not Good',
+              physicalConditionRemarks: 'Cylinder body dented.',
+              physicalConditionPhotos: [
+                {
+                  id: 'fe-photo-1',
+                  fileName: 'dent.jpg',
+                  description: 'Cylinder defect',
+                  url: 'data:image/png;base64,abc123',
+                },
+              ],
+              signageCondition: 'Good',
+              boxKeyAvailability: 'Yes',
+              boxGlassAvailability: 'Yes',
+              operationalCondition: 'Operational',
+            },
+          ],
+        }}
+      />,
+    )
+
+    fireEvent.click(screen.getAllByText('Save & Review')[0])
+
+    expect(onRequestReview).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fireExtinguisherInspectedBy: 'Inspector',
+        fireExtinguisherInspectionDate: '2026-06-29',
+        fireExtinguisherChecks: expect.arrayContaining([
+          expect.objectContaining({
+            id: 'fe:1',
+            physicalCondition: 'Not Good',
+            physicalConditionRemarks: 'Cylinder body dented.',
+            physicalConditionPhotos: [
+              expect.objectContaining({
+                id: 'fe-photo-1',
+                description: 'Cylinder defect',
+              }),
+            ],
+          }),
+        ]),
+      }),
+    )
   })
 
   it('renders HSE observation and allows area-satisfactory review without photos', () => {
@@ -656,7 +1094,7 @@ describe('InspectionForm workflow', () => {
 
     expect(onRequestReview).toHaveBeenCalledWith(
       expect.objectContaining({
-        hseInspectedBy: 'Inspector A',
+        hseInspectedBy: 'Inspector',
         hseInspectionDate: '2026-06-29',
         hseSelections: ['areaSatisfactory'],
         hseAreaConditionRemarks: 'Area is clear and housekeeping is acceptable.',
@@ -690,13 +1128,58 @@ describe('InspectionForm workflow', () => {
     expect(screen.getByText('Severity is required for HSE findings.')).toBeTruthy()
     expect(screen.getByText('Unsafe Act Details is required.')).toBeTruthy()
     expect(screen.getByText('Environmental Details is required.')).toBeTruthy()
-    expect(screen.getAllByText('3 items need attention before review.').length).toBeGreaterThan(0)
+    expect(
+      screen.getByText('Add at least one evidence photo for the selected HSE finding.'),
+    ).toBeTruthy()
+    expect(screen.getAllByText('4 items need attention before review.').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Take HSE photo').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Upload HSE photo').length).toBeGreaterThan(0)
   })
 
+  it('applies the HSE outcome caption to uploaded evidence photos', async () => {
+    const onChange = vi.fn()
+    const { container } = render(
+      <InspectionForm
+        {...baseProps}
+        onChange={onChange}
+        value={{
+          mainLocation: 'Zone A',
+          selectedLocation: 'Zone A',
+          inspectionType: 'Health Safety Environment Inspection',
+          hseInspectedBy: 'Inspector A',
+          hseInspectionDate: '2026-06-29',
+          hseSelections: ['unsafeAct'],
+          hseUnsafeActDetails: 'Unsafe lifting observed.',
+          hseSeverity: 'High',
+          photos: [],
+        }}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Upload HSE photo' }))
+
+    const uploadInput = container.querySelector('input[type="file"]:not([capture])')
+    expect(uploadInput).toBeTruthy()
+
+    fireEvent.change(uploadInput, {
+      target: { files: [new File(['hse'], 'hse-evidence.png', { type: 'image/png' })] },
+    })
+
+    await waitFor(() => {
+      const latestForm = onChange.mock.calls[onChange.mock.calls.length - 1]?.[0]
+      expect(latestForm?.photos).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            fileName: 'hse-evidence.png',
+            description: 'Unsafe Act',
+          }),
+        ]),
+      )
+    })
+  })
+
   it('shows ER Aux equipment cards for the selected Store location', () => {
-    render(
+    const { container } = render(
       <InspectionForm
         {...baseProps}
         value={{
@@ -710,16 +1193,32 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    expect(screen.getByText('Inspection Session')).toBeTruthy()
-    expect(screen.getByText('ER Aux Equipment Checks')).toBeTruthy()
+    expect(screen.getByText('Date and time of inspection')).toBeTruthy()
+    expect(screen.queryByText('Inspection Session')).toBeNull()
+    expect(screen.getByText('Emergency Response Auxiliary Equipment Checks')).toBeTruthy()
     expect(screen.getByText('Fire Jacket')).toBeTruthy()
     expect(screen.getByText('Animal catcher net')).toBeTruthy()
+    expect(
+      within(
+        container.querySelector('[data-inspection-er-aux-row-id="store:fire-jacket"]'),
+      ).getByPlaceholderText('Quantity').value,
+    ).toBe('15')
+    expect(
+      within(
+        container.querySelector('[data-inspection-er-aux-row-id="store:fire-helmet"]'),
+      ).getByPlaceholderText('Quantity').value,
+    ).toBe('2')
+    expect(
+      within(
+        container.querySelector('[data-inspection-er-aux-row-id="store:animal-catcher-net"]'),
+      ).getByPlaceholderText('Quantity').value,
+    ).toBe('3')
     expect(screen.queryByText('Actual field coming soon')).toBeNull()
     expect(screen.getByText('General Evidence Photos')).toBeTruthy()
     expect(screen.getAllByText('Save & Review').length).toBeGreaterThan(0)
   })
 
-  it('shows FRT Daily structured cards for FIRE TRUCK without a sub-location selector', () => {
+  it('shows Fire Truck Daily Readiness structured cards for a selected truck without a sub-location selector', () => {
     render(
       <InspectionForm
         {...baseProps}
@@ -745,10 +1244,13 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    expect(screen.getByText('Inspection Session')).toBeTruthy()
-    expect(screen.getByText('Truck Reference')).toBeTruthy()
-    expect(screen.getByText('FRT Daily Roster')).toBeTruthy()
-    expect(screen.getByText('FRT One-Off Checklist')).toBeTruthy()
+    expect(screen.getByText('Date and time of inspection')).toBeTruthy()
+    expect(screen.getByText('Choose Truck')).toBeTruthy()
+    expect(screen.queryByText('Shift')).toBeNull()
+    expect(screen.queryByText('Inspection Session')).toBeNull()
+    expect(screen.getByText('Truck Details')).toBeTruthy()
+    expect(screen.getByText('Daily Readiness Roster')).toBeTruthy()
+    expect(screen.getByText('One-Off Readiness Checklist')).toBeTruthy()
     expect(screen.getByText('LOCKER 01')).toBeTruthy()
     expect(screen.getByText('TRUCK CHECKLIST')).toBeTruthy()
     expect(screen.getByText('MILEAGE (ODOMETER)')).toBeTruthy()
@@ -756,6 +1258,122 @@ describe('InspectionForm workflow', () => {
     expect(screen.queryByText('Choose Sub-location')).toBeNull()
     expect(screen.queryByText('Actual field coming soon')).toBeNull()
     expect(screen.getAllByText('Save & Review').length).toBeGreaterThan(0)
+  })
+
+  it('edits the selected FRT truck from the Truck Details kebab', async () => {
+    const onChange = vi.fn()
+    render(
+      <InspectionForm
+        {...baseProps}
+        onChange={onChange}
+        value={{
+          mainLocation: 'AJG9555',
+          selectedLocation: 'AJG9555',
+          mainLocationId: 'truck-1',
+          inspectionType: 'Fire Truck Daily Readiness',
+          photos: [],
+          frtTruckId: 'truck-1',
+          frtTruckPlateNo: 'AJG9555',
+          frtTruckReference: {
+            truckId: 'truck-1',
+            name: 'Fire Truck',
+            plateNo: 'AJG9555',
+            roadTaxExpiry: '2026-02-13',
+            insuranceExpiry: '2026-02-13',
+            puspakomExpiry: '2026-02-19',
+          },
+          frtDailyChecks: [],
+          frtDailyRemarks: '',
+          frtOneOffChecks: [],
+          frtOneOffRemarks: '',
+        }}
+      />,
+    )
+
+    const actions = await screen.findByLabelText('Truck actions for AJG9555')
+    fireEvent.click(actions)
+    fireEvent.click(await screen.findByText('Edit Truck'))
+
+    expect(await screen.findByText('Edit Truck')).toBeTruthy()
+    const plateInput = screen.getByPlaceholderText('e.g. AJG9555')
+    fireEvent.change(plateInput, { target: { value: 'btm1234' } })
+    fireEvent.click(screen.getByText('Update Truck'))
+
+    await waitFor(() => {
+      expect(fireTruckApiMock.updateFireTruckOption).toHaveBeenCalledWith(
+        'truck-1',
+        expect.objectContaining({
+          plateNo: 'BTM1234',
+          name: 'Fire Truck',
+        }),
+      )
+    })
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mainLocation: 'BTM1234',
+        selectedLocation: 'BTM1234',
+        mainLocationId: 'truck-1',
+        frtTruckId: 'truck-1',
+        frtTruckPlateNo: 'BTM1234',
+        frtTruckReference: expect.objectContaining({
+          truckId: 'truck-1',
+          plateNo: 'BTM1234',
+        }),
+      }),
+    )
+  })
+
+  it('deletes the selected FRT truck from the Truck Details kebab and clears selection', async () => {
+    const onChange = vi.fn()
+    render(
+      <InspectionForm
+        {...baseProps}
+        onChange={onChange}
+        value={{
+          mainLocation: 'AJG9555',
+          selectedLocation: 'AJG9555',
+          mainLocationId: 'truck-1',
+          inspectionType: 'Fire Truck Daily Readiness',
+          photos: [],
+          frtTruckId: 'truck-1',
+          frtTruckPlateNo: 'AJG9555',
+          frtTruckReference: {
+            truckId: 'truck-1',
+            name: 'Fire Truck',
+            plateNo: 'AJG9555',
+            roadTaxExpiry: '2026-02-13',
+            insuranceExpiry: '2026-02-13',
+            puspakomExpiry: '2026-02-19',
+          },
+          frtDailyChecks: [],
+          frtDailyRemarks: '',
+          frtOneOffChecks: [],
+          frtOneOffRemarks: '',
+        }}
+      />,
+    )
+
+    fireEvent.click(await screen.findByLabelText('Truck actions for AJG9555'))
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete Truck' }))
+    await screen.findByText('Delete Truck')
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete' }))
+
+    await waitFor(() => {
+      expect(fireTruckApiMock.deleteFireTruckOption).toHaveBeenCalledWith('truck-1')
+    })
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mainLocation: '',
+        selectedLocation: '',
+        mainLocationId: '',
+        frtTruckId: '',
+        frtTruckPlateNo: '',
+        frtTruckReference: expect.objectContaining({
+          truckId: '',
+          plateNo: '',
+        }),
+      }),
+    )
   })
 
   it('shows FRT hydraulic equipment cards for the selected FRT location', () => {
@@ -776,8 +1394,6 @@ describe('InspectionForm workflow', () => {
     expect(screen.getByText('Hydraulic Cylinder Ramp 1')).toBeTruthy()
     expect(screen.queryByText('Hydraulic Pump Motor 2')).toBeNull()
     expect(screen.getAllByText('FRT').length).toBeGreaterThan(0)
-    expect(screen.getByText('0 of 6 checked')).toBeTruthy()
-    expect(screen.getByText('No defects')).toBeTruthy()
     expect(screen.getByText('General Evidence Photos')).toBeTruthy()
     expect(screen.getAllByText('Save & Review').length).toBeGreaterThan(0)
   })
@@ -800,6 +1416,40 @@ describe('InspectionForm workflow', () => {
     expect(screen.queryByText('Hydraulic Pump Motor 1')).toBeNull()
   })
 
+  it('keeps all hydraulic workbook cards visible when catalog rows are partial', () => {
+    render(
+      <InspectionForm
+        {...baseProps}
+        value={{
+          mainLocation: 'FRT',
+          inspectionType: 'Hydraulic Rescue Tools Inspection',
+          photos: [],
+          hydraulicEquipmentRows: [
+            {
+              id: 'frt:hydraulic-pump-motor-1',
+              location: 'FRT',
+              mainLocation: 'FRT',
+              equipment: 'Hydraulic Pump Motor 1',
+              equipmentId: 1,
+              equipmentDescription: 'Primary power unit',
+              equipmentSource: 'custom',
+              canEdit: true,
+              canDelete: true,
+            },
+          ],
+          hydraulicChecks: [],
+        }}
+      />,
+    )
+
+    expect(screen.getByText('Hydraulic Pump Motor 1')).toBeTruthy()
+    expect(screen.getByText('Hydraulic Hose 1')).toBeTruthy()
+    expect(screen.getByText('Hydraulic Spreader 1')).toBeTruthy()
+    expect(screen.getByText('Hydraulic Cutter 1')).toBeTruthy()
+    expect(screen.getByText('Hydraulic Combi 1')).toBeTruthy()
+    expect(screen.getByText('Hydraulic Cylinder Ramp 1')).toBeTruthy()
+  })
+
   it('shows SCBA section cards for the selected FRT location', () => {
     render(
       <InspectionForm
@@ -817,7 +1467,8 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    expect(screen.getByText('Inspection Session')).toBeTruthy()
+    expect(screen.getByText('Date and time of inspection')).toBeTruthy()
+    expect(screen.queryByText('Inspection Session')).toBeNull()
     expect(screen.getByText('SCBA Checks')).toBeTruthy()
     expect(screen.getByText('Back Plate')).toBeTruthy()
     expect(screen.getByText('Cylinder')).toBeTruthy()
@@ -826,6 +1477,117 @@ describe('InspectionForm workflow', () => {
     expect(screen.getByText('Drager 02')).toBeTruthy()
     expect(screen.queryByText('Actual field coming soon')).toBeNull()
     expect(screen.getAllByText('Save & Review').length).toBeGreaterThan(0)
+  })
+
+  it('shows custom SCBA section check labels after adding a section without items', async () => {
+    const Harness = () => {
+      const [value, setValue] = React.useState({
+        mainLocation: 'FRT',
+        inspectionType: 'SCBA Inspection',
+        photos: [],
+        scbaInspectedBy: '',
+        scbaInspectionDate: '',
+        scbaBackPlateChecks: [],
+        scbaCylinderChecks: [],
+        scbaFaceMaskChecks: [],
+        scbaCustomSections: [],
+      })
+      return <InspectionForm {...baseProps} value={value} onChange={setValue} />
+    }
+
+    render(<Harness />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add section' }))
+    fireEvent.change(screen.getByPlaceholderText('e.g. Regulator'), {
+      target: { value: 'Regulator' },
+    })
+    fireEvent.change(screen.getByPlaceholderText(/One check per line/), {
+      target: { value: 'Purge Valve\nLeak Test' },
+    })
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Add section' }))
+
+    expect(await screen.findByText('Regulator')).toBeTruthy()
+    expect(await screen.findByText('Checks: Purge Valve, Leak Test')).toBeTruthy()
+    expect(screen.getByText(/No items in this section yet/)).toBeTruthy()
+
+    fireEvent.click(screen.getByLabelText('Section actions for Regulator'))
+    expect(await screen.findByRole('button', { name: 'Edit section' })).toBeTruthy()
+    expect(await screen.findByRole('button', { name: 'Remove from this inspection' })).toBeTruthy()
+    expect(
+      await screen.findByRole('button', { name: 'Archive from future inspections' }),
+    ).toBeTruthy()
+  })
+
+  it('shows custom SCBA item action menu for editing and deleting custom items', async () => {
+    render(
+      <InspectionForm
+        {...baseProps}
+        value={{
+          mainLocation: 'FRT',
+          inspectionType: 'SCBA Inspection',
+          photos: [],
+          scbaInspectedBy: '',
+          scbaInspectionDate: '',
+          scbaBackPlateChecks: [],
+          scbaCylinderChecks: [],
+          scbaFaceMaskChecks: [],
+          scbaCustomSections: [
+            {
+              id: 'customScba-regulator',
+              key: 'customScba-regulator',
+              title: 'Regulator',
+              shortLabel: 'Regulator',
+              fields: [{ key: 'purgeValve', label: 'Purge Valve', kind: 'status' }],
+              rows: [
+                {
+                  id: 'customScba-regulator:frt:msa:r-01',
+                  location: 'FRT',
+                  brand: 'MSA',
+                  serialNo: 'R-01',
+                  purgeValve: '',
+                },
+              ],
+            },
+          ],
+        }}
+      />,
+    )
+
+    fireEvent.click(screen.getByLabelText('Item actions for MSA R-01'))
+    expect(await screen.findByRole('button', { name: 'Edit item' })).toBeTruthy()
+    expect(await screen.findByRole('button', { name: 'Remove from this inspection' })).toBeTruthy()
+  })
+
+  it('collapses and expands SCBA sections from the search toolbar', () => {
+    render(
+      <InspectionForm
+        {...baseProps}
+        value={{
+          mainLocation: 'FRT',
+          inspectionType: 'SCBA Inspection',
+          photos: [],
+          scbaInspectedBy: '',
+          scbaInspectionDate: '',
+          scbaBackPlateChecks: [],
+          scbaCylinderChecks: [],
+          scbaFaceMaskChecks: [],
+        }}
+      />,
+    )
+
+    expect(screen.getByText('MSA 06')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse all' }))
+    expect(screen.queryByText('MSA 06')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next incomplete' }))
+    expect(screen.getByText('MSA 06')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse all' }))
+    expect(screen.queryByText('MSA 06')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Expand all' }))
+    expect(screen.getByText('MSA 06')).toBeTruthy()
   })
 
   it('shows High Angle kit cards for the selected Response Kit #1', () => {
@@ -843,7 +1605,8 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    expect(screen.getByText('Inspection Session')).toBeTruthy()
+    expect(screen.getByText('Date and time of inspection')).toBeTruthy()
+    expect(screen.queryByText('Inspection Session')).toBeNull()
     expect(screen.getByText('High Angle Rescue Equipment Checks')).toBeTruthy()
     expect(screen.getAllByText('Response Kit #1').length).toBeGreaterThan(0)
     expect(screen.getAllByText('General Kit Items').length).toBeGreaterThan(0)
@@ -921,6 +1684,50 @@ describe('InspectionForm workflow', () => {
         ]),
       }),
     )
+  })
+
+  it('keeps SCBA field evidence scoped to the selected issue field', () => {
+    render(
+      <InspectionForm
+        {...baseProps}
+        value={{
+          mainLocation: 'FRT',
+          inspectionType: 'SCBA Inspection',
+          photos: [],
+          scbaInspectedBy: '',
+          scbaInspectionDate: '',
+          scbaBackPlateChecks: [
+            {
+              id: 'backPlate:frt:msa:06',
+              sectionKey: 'backPlate',
+              location: 'FRT',
+              mainLocation: 'FRT',
+              brand: 'MSA',
+              serialNo: '06',
+              remarks: 'Legacy row note',
+              backPlateHarnessCondition: 'Good',
+              highPressureHose: 'Not Good',
+              highPressureHoseRemarks: 'Scoped hose note',
+              highPressureHosePhotos: [],
+              pressureGauge: 'Good',
+              alarmDevice: 'Good',
+              demandValve: 'Good',
+              sealing: 'Good',
+              cleanliness: 'Good',
+            },
+          ],
+          scbaCylinderChecks: [],
+          scbaFaceMaskChecks: [],
+        }}
+      />,
+    )
+
+    expect(screen.getByDisplayValue('Scoped hose note')).toBeTruthy()
+    expect(
+      screen.queryByText('Back Plate & Harness retained evidence from earlier status'),
+    ).toBeNull()
+    expect(screen.queryByText('Pressure Gauge retained evidence from earlier status')).toBeNull()
+    expect(screen.queryByText('Alarm Device retained evidence from earlier status')).toBeNull()
   })
 
   it('updates FRT daily and one-off rows through the structured controls', () => {
@@ -1048,7 +1855,160 @@ describe('InspectionForm workflow', () => {
     )
   })
 
-  it('marks one hydraulic equipment card OK without clearing hidden defect evidence', () => {
+  it('keeps existing hydraulic Defect and N/A values when marking all OK', () => {
+    const onChange = vi.fn()
+    render(
+      <InspectionForm
+        {...baseProps}
+        onChange={onChange}
+        value={{
+          mainLocation: 'FRT',
+          inspectionType: 'Hydraulic Rescue Tools Inspection',
+          photos: [],
+          hydraulicChecks: [
+            {
+              id: 'frt:hydraulic-pump-motor-1',
+              location: 'FRT',
+              equipment: 'Hydraulic Pump Motor 1',
+              physicalCondition: 'Defect',
+              physicalConditionRemarks: 'Cracked handle.',
+              physicalConditionPhotos: [
+                {
+                  id: 'physical-photo-1',
+                  fileName: 'crack.jpg',
+                  description: 'Cracked handle',
+                  url: 'data:image/png;base64,abc123',
+                },
+              ],
+              noLeakage: 'N/A',
+              noLeakageRemarks: 'Tool isolated.',
+            },
+          ],
+        }}
+      />,
+    )
+
+    fireEvent.click(screen.getByText('Mark all OK'))
+
+    const latestForm = onChange.mock.calls[onChange.mock.calls.length - 1][0]
+    expect(latestForm.hydraulicChecks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          equipment: 'Hydraulic Pump Motor 1',
+          physicalCondition: 'Defect',
+          physicalConditionRemarks: 'Cracked handle.',
+          physicalConditionPhotos: [expect.objectContaining({ id: 'physical-photo-1' })],
+          mechanicalCondition: 'OK',
+          noLeakage: 'N/A',
+          noLeakageRemarks: 'Tool isolated.',
+          functionTest: 'OK',
+        }),
+      ]),
+    )
+  })
+
+  it('fills blank hydraulic fields from one card OK without overwriting Defect or N/A values', () => {
+    const onChange = vi.fn()
+    render(
+      <InspectionForm
+        {...baseProps}
+        onChange={onChange}
+        value={{
+          mainLocation: 'FRT',
+          inspectionType: 'Hydraulic Rescue Tools Inspection',
+          photos: [],
+          hydraulicChecks: makeHydraulicChecks('FRT', {
+            'Hydraulic Pump Motor 1': {
+              physicalCondition: '',
+              mechanicalCondition: 'N/A',
+              mechanicalConditionRemarks: 'Temporarily unavailable.',
+              noLeakage: '',
+              functionTest: 'Defect',
+              functionTestRemarks: 'Slow response captured earlier.',
+              functionTestPhotos: [
+                {
+                  id: 'defect-photo-1',
+                  fileName: 'defect.jpg',
+                  description: 'Function defect',
+                  url: 'data:image/png;base64,abc123',
+                },
+              ],
+            },
+          }),
+        }}
+      />,
+    )
+
+    fireEvent.click(screen.getAllByText('All OK')[0])
+
+    const latestForm = onChange.mock.calls[onChange.mock.calls.length - 1][0]
+    expect(latestForm.hydraulicChecks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          equipment: 'Hydraulic Pump Motor 1',
+          physicalCondition: 'OK',
+          mechanicalCondition: 'N/A',
+          mechanicalConditionRemarks: 'Temporarily unavailable.',
+          noLeakage: 'OK',
+          functionTest: 'Defect',
+          functionTestRemarks: 'Slow response captured earlier.',
+          functionTestPhotos: [expect.objectContaining({ id: 'defect-photo-1' })],
+        }),
+      ]),
+    )
+  })
+
+  it('shows and clears retained hydraulic evidence without changing current status', () => {
+    const onChange = vi.fn()
+    render(
+      <InspectionForm
+        {...baseProps}
+        onChange={onChange}
+        value={{
+          mainLocation: 'FRT',
+          inspectionType: 'Hydraulic Rescue Tools Inspection',
+          photos: [],
+          hydraulicChecks: makeHydraulicChecks('FRT', {
+            'Hydraulic Pump Motor 1': {
+              functionTest: 'OK',
+              functionTestRemarks: 'Old defect note retained.',
+              functionTestPhotos: [
+                {
+                  id: 'retained-photo-1',
+                  fileName: 'retained.jpg',
+                  description: 'Old defect evidence',
+                  url: 'data:image/png;base64,abc123',
+                },
+              ],
+            },
+          }),
+        }}
+      />,
+    )
+
+    expect(screen.getByText('Retained evidence')).toBeTruthy()
+    expect(screen.getByText('Function Test retained evidence from earlier status')).toBeTruthy()
+    expect(screen.getByText('Old defect note retained.')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear retained evidence' }))
+
+    const latestForm = onChange.mock.calls[onChange.mock.calls.length - 1][0]
+    expect(latestForm.hydraulicChecks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          equipment: 'Hydraulic Pump Motor 1',
+          functionTest: 'OK',
+          functionTestRemarks: '',
+          functionTestPhotos: [],
+          physicalCondition: 'OK',
+          mechanicalCondition: 'OK',
+          noLeakage: 'OK',
+        }),
+      ]),
+    )
+  })
+
+  it('applies quick captions to hydraulic defect evidence photos', () => {
     const onChange = vi.fn()
     render(
       <InspectionForm
@@ -1066,7 +2026,7 @@ describe('InspectionForm workflow', () => {
                 {
                   id: 'defect-photo-1',
                   fileName: 'defect.jpg',
-                  description: 'Function defect',
+                  description: 'Existing caption',
                   url: 'data:image/png;base64,abc123',
                 },
               ],
@@ -1076,22 +2036,516 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    fireEvent.click(screen.getAllByText('Mark OK')[0])
+    fireEvent.click(screen.getByRole('button', { name: 'View photos' }))
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByPlaceholderText('Describe this photo')).toBeTruthy()
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Defect' }))
 
     const latestForm = onChange.mock.calls[onChange.mock.calls.length - 1][0]
     expect(latestForm.hydraulicChecks).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           equipment: 'Hydraulic Pump Motor 1',
-          physicalCondition: 'OK',
-          mechanicalCondition: 'OK',
-          noLeakage: 'OK',
-          functionTest: 'OK',
-          functionTestRemarks: 'Slow response captured earlier.',
-          functionTestPhotos: [expect.objectContaining({ id: 'defect-photo-1' })],
+          functionTestPhotos: [
+            expect.objectContaining({
+              id: 'defect-photo-1',
+              description: 'Existing caption\nDefect',
+            }),
+          ],
         }),
       ]),
     )
+  })
+
+  it('hides redundant ER Aux card-level OK shortcuts for single-check cards', () => {
+    render(
+      <InspectionForm
+        {...baseProps}
+        value={{
+          mainLocation: 'Office',
+          inspectionType: 'ER Aux Equipment Inspection',
+          photos: [],
+          erAuxChecks: [],
+        }}
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: 'Mark all OK' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'All OK' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Equipment actions for Radio Tetra' })).toBeTruthy()
+  })
+
+  it('shows ER Aux equipment edit/delete kebab for editable catalog rows', async () => {
+    const onEditEquipment = vi.fn()
+    const onDeleteEquipment = vi.fn()
+    const row = {
+      id: 'office:radio-tetra-custom',
+      equipmentId: 'er-aux-equipment-1',
+      location: 'Office',
+      mainLocation: 'Office',
+      equipment: 'Radio Tetra',
+      equipmentSource: 'custom',
+      isCustomEquipment: true,
+      quantity: '7',
+      defaultQuantity: '7',
+      condition: 'OK',
+      canEdit: true,
+      canDelete: true,
+      photos: [],
+      defectPhotos: [],
+    }
+
+    render(
+      <ErAuxEquipmentChecks
+        mainLocation="Office"
+        summary={{
+          visibleChecks: [row],
+          totalCount: 1,
+        }}
+        onEditEquipment={onEditEquipment}
+        onDeleteEquipment={onDeleteEquipment}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Equipment actions for Radio Tetra' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit' }))
+    await waitFor(() => expect(onEditEquipment).toHaveBeenCalledWith(row))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Equipment actions for Radio Tetra' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete' }))
+    await waitFor(() => expect(onDeleteEquipment).toHaveBeenCalledWith(row))
+  })
+
+  it('hides ER Aux equipment kebab for protected seed rows', () => {
+    render(
+      <ErAuxEquipmentChecks
+        mainLocation="Office"
+        summary={{
+          visibleChecks: [
+            {
+              id: 'office:radio-tetra',
+              location: 'Office',
+              mainLocation: 'Office',
+              equipment: 'Radio Tetra',
+              equipmentSource: 'seed',
+              quantity: '7',
+              defaultQuantity: '7',
+              condition: 'OK',
+              canEdit: false,
+              canDelete: false,
+              photos: [],
+              defectPhotos: [],
+            },
+          ],
+          totalCount: 1,
+        }}
+      />,
+    )
+
+    expect(screen.queryByRole('button', { name: 'Equipment actions for Radio Tetra' })).toBeNull()
+  })
+
+  it('deletes an ER Aux fallback equipment row from the card kebab', async () => {
+    const onChange = vi.fn()
+    render(
+      <InspectionForm
+        {...baseProps}
+        onChange={onChange}
+        value={{
+          mainLocation: 'Office',
+          inspectionType: 'ER Aux Equipment Inspection',
+          photos: [],
+          erAuxChecks: [],
+        }}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Equipment actions for Radio Tetra' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete' }))
+
+    await waitFor(() => {
+      const latestForm = onChange.mock.calls[onChange.mock.calls.length - 1]?.[0]
+      expect(latestForm?.erAuxEquipmentRows).toEqual(
+        expect.not.arrayContaining([
+          expect.objectContaining({
+            equipment: 'Radio Tetra',
+          }),
+        ]),
+      )
+      expect(latestForm?.erAuxEquipmentRows).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            equipment: 'Radio VHF',
+          }),
+        ]),
+      )
+    })
+  })
+
+  it('allows seeded ER Aux quantities to be cleared and edited', () => {
+    const onChange = vi.fn()
+    const initialValue = {
+      mainLocation: 'Office',
+      inspectionType: 'ER Aux Equipment Inspection',
+      photos: [],
+      erAuxChecks: [],
+    }
+    const { container, rerender } = render(
+      <InspectionForm {...baseProps} onChange={onChange} value={initialValue} />,
+    )
+    const getRadioTetraCard = () => {
+      const card = container.querySelector('[data-inspection-er-aux-row-id="office:radio-tetra"]')
+      expect(card).toBeTruthy()
+      return card
+    }
+    const getQuantityInput = () => within(getRadioTetraCard()).getByPlaceholderText('Quantity')
+
+    expect(getQuantityInput().value).toBe('7')
+
+    fireEvent.change(getQuantityInput(), { target: { value: '' } })
+    let latestForm = onChange.mock.calls[onChange.mock.calls.length - 1][0]
+    expect(latestForm.erAuxChecks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'office:radio-tetra',
+          quantity: '',
+        }),
+      ]),
+    )
+
+    rerender(<InspectionForm {...baseProps} onChange={onChange} value={latestForm} />)
+    expect(getQuantityInput().value).toBe('')
+
+    fireEvent.change(getQuantityInput(), { target: { value: '8' } })
+    latestForm = onChange.mock.calls[onChange.mock.calls.length - 1][0]
+    expect(latestForm.erAuxChecks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'office:radio-tetra',
+          quantity: '8',
+        }),
+      ]),
+    )
+
+    rerender(<InspectionForm {...baseProps} onChange={onChange} value={latestForm} />)
+    expect(getQuantityInput().value).toBe('8')
+
+    fireEvent.click(within(getRadioTetraCard()).getByRole('button', { name: 'OK' }))
+    latestForm = onChange.mock.calls[onChange.mock.calls.length - 1][0]
+    expect(latestForm.erAuxChecks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'office:radio-tetra',
+          quantity: '8',
+          condition: 'OK',
+        }),
+      ]),
+    )
+
+    const payload = buildInspectionPayloadSnapshot(normalizeInspectionForm(latestForm))
+    expect(payload.erAuxChecks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'office:radio-tetra',
+          quantity: '8',
+        }),
+      ]),
+    )
+    expect(payload.checklist).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: 'Radio Tetra - Qty 8: OK',
+        }),
+      ]),
+    )
+  })
+
+  it('names incomplete ER Aux rows and fields before review', () => {
+    const onRequestReview = vi.fn()
+    render(
+      <InspectionForm
+        {...baseProps}
+        onRequestReview={onRequestReview}
+        value={{
+          mainLocation: 'Office',
+          inspectedAt: '2026-07-03T07:10',
+          inspectionType: 'ER Aux Equipment Inspection',
+          photos: [],
+          erAuxEquipmentRows: [
+            {
+              id: 'office:radio-tetra',
+              location: 'Office',
+              equipment: 'Radio Tetra',
+              defaultQuantity: '7',
+            },
+          ],
+          erAuxChecks: [
+            {
+              id: 'office:radio-tetra',
+              location: 'Office',
+              equipment: 'Radio Tetra',
+              quantity: '',
+              condition: '',
+            },
+          ],
+        }}
+      />,
+    )
+
+    fireEvent.click(screen.getAllByText('Save & Review')[0])
+
+    expect(
+      screen.getByText('Complete these Emergency Response Auxiliary Equipment fields:'),
+    ).toBeTruthy()
+    expect(screen.getByText('Radio Tetra: quantity, condition')).toBeTruthy()
+    expect(onRequestReview).not.toHaveBeenCalled()
+  })
+
+  it('keeps ER Aux defect evidence separate from optional additional notes', () => {
+    const onChange = vi.fn()
+    const initialValue = {
+      mainLocation: 'Office',
+      inspectionType: 'ER Aux Equipment Inspection',
+      photos: [],
+      erAuxChecks: [],
+    }
+    const { container, rerender } = render(
+      <InspectionForm {...baseProps} onChange={onChange} value={initialValue} />,
+    )
+
+    const getRadioTetraCard = () => {
+      const radioTetraCard = container.querySelector(
+        '[data-inspection-er-aux-row-id="office:radio-tetra"]',
+      )
+      expect(radioTetraCard).toBeTruthy()
+      return radioTetraCard
+    }
+    const getRadioTetraRow = () => within(getRadioTetraCard())
+
+    let row = getRadioTetraRow()
+    fireEvent.click(row.getByRole('button', { name: 'Defect' }))
+    const defectValue = onChange.mock.calls[onChange.mock.calls.length - 1][0]
+
+    rerender(<InspectionForm {...baseProps} onChange={onChange} value={defectValue} />)
+    row = getRadioTetraRow()
+
+    expect(row.getAllByText('Additional notes (optional)').length).toBeGreaterThan(0)
+    expect(row.queryByText('Issue details')).toBeNull()
+    expect(row.getByText('Defect remarks')).toBeTruthy()
+    expect(row.queryByText('Additional notes')).toBeNull()
+    const cardText = getRadioTetraCard().textContent
+    expect(cardText.indexOf('Defect remarks')).toBeLessThan(
+      cardText.indexOf('Additional notes (optional)'),
+    )
+
+    fireEvent.click(row.getByRole('button', { name: 'Remark' }))
+    expect(row.getByText('Additional notes')).toBeTruthy()
+
+    fireEvent.click(row.getByRole('button', { name: 'Cancel' }))
+    expect(row.getByText('Defect remarks')).toBeTruthy()
+    expect(row.queryByText('Additional notes')).toBeNull()
+  })
+
+  it('attaches a photo to an ER Aux equipment row from the row photo action', async () => {
+    const onChange = vi.fn()
+    const { container } = render(
+      <InspectionForm
+        {...baseProps}
+        onChange={onChange}
+        value={{
+          mainLocation: 'Office',
+          inspectionType: 'ER Aux Equipment Inspection',
+          photos: [],
+          erAuxChecks: [],
+        }}
+      />,
+    )
+
+    fireEvent.click(screen.getAllByText('Photo')[0])
+
+    const cameraInput = container.querySelector('input[type="file"][capture="environment"]')
+    expect(cameraInput).toBeTruthy()
+
+    const file = new File(['photo'], 'er-aux-photo.png', { type: 'image/png' })
+    fireEvent.change(cameraInput, { target: { files: [file] } })
+
+    await waitFor(() => {
+      const latestForm = onChange.mock.calls[onChange.mock.calls.length - 1]?.[0]
+      expect(latestForm?.erAuxChecks).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: 'office:radio-tetra',
+            equipment: 'Radio Tetra',
+            photos: [
+              expect.objectContaining({
+                fileName: 'er-aux-photo.png',
+              }),
+            ],
+          }),
+        ]),
+      )
+    })
+  })
+
+  it('clears ER Aux additional notes without repopulating from legacy remarks', () => {
+    const onChange = vi.fn()
+    const value = {
+      mainLocation: 'Office',
+      inspectionType: 'ER Aux Equipment Inspection',
+      photos: [],
+      erAuxChecks: [
+        {
+          id: 'office:radio-tetra',
+          location: 'Office',
+          equipment: 'Radio Tetra',
+          quantity: '7',
+          condition: 'OK',
+          remarks: 'asdf',
+          additionalNotes: 'asdf',
+          photos: [],
+        },
+      ],
+    }
+    const { container, rerender } = render(
+      <InspectionForm {...baseProps} onChange={onChange} value={value} />,
+    )
+    const getRow = () =>
+      within(container.querySelector('[data-inspection-er-aux-row-id="office:radio-tetra"]'))
+
+    expect(getRow().getByText('Additional notes')).toBeTruthy()
+    fireEvent.click(getRow().getByRole('button', { name: 'Clear' }))
+
+    const latestForm = onChange.mock.calls[onChange.mock.calls.length - 1][0]
+    expect(latestForm.erAuxChecks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'office:radio-tetra',
+          remarks: 'asdf',
+          additionalNotes: '',
+        }),
+      ]),
+    )
+
+    rerender(<InspectionForm {...baseProps} onChange={onChange} value={latestForm} />)
+    expect(getRow().queryByText('Additional notes')).toBeNull()
+  })
+
+  it('keeps ER Aux defect photos separate from additional photos', async () => {
+    const onChange = vi.fn()
+    const { container, rerender } = render(
+      <InspectionForm
+        {...baseProps}
+        onChange={onChange}
+        value={{
+          mainLocation: 'Office',
+          inspectionType: 'ER Aux Equipment Inspection',
+          photos: [],
+          erAuxChecks: [],
+        }}
+      />,
+    )
+    const getRow = () =>
+      within(container.querySelector('[data-inspection-er-aux-row-id="office:radio-tetra"]'))
+    const cameraInput = container.querySelector('input[type="file"][capture="environment"]')
+    expect(cameraInput).toBeTruthy()
+
+    fireEvent.click(getRow().getByRole('button', { name: 'Defect' }))
+    let latestForm = onChange.mock.calls[onChange.mock.calls.length - 1][0]
+    rerender(<InspectionForm {...baseProps} onChange={onChange} value={latestForm} />)
+
+    fireEvent.click(getRow().getByRole('button', { name: 'Add defect photo' }))
+    fireEvent.change(cameraInput, {
+      target: { files: [new File(['defect'], 'er-aux-defect.png', { type: 'image/png' })] },
+    })
+
+    await waitFor(() => {
+      latestForm = onChange.mock.calls[onChange.mock.calls.length - 1]?.[0]
+      expect(latestForm?.erAuxChecks).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: 'office:radio-tetra',
+            defectPhotos: [expect.objectContaining({ fileName: 'er-aux-defect.png' })],
+            photos: [],
+          }),
+        ]),
+      )
+    })
+
+    rerender(<InspectionForm {...baseProps} onChange={onChange} value={latestForm} />)
+    fireEvent.click(getRow().getByRole('button', { name: 'Additional photo' }))
+    fireEvent.change(cameraInput, {
+      target: { files: [new File(['additional'], 'er-aux-additional.png', { type: 'image/png' })] },
+    })
+
+    await waitFor(() => {
+      latestForm = onChange.mock.calls[onChange.mock.calls.length - 1]?.[0]
+      expect(latestForm?.erAuxChecks).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: 'office:radio-tetra',
+            defectPhotos: [expect.objectContaining({ fileName: 'er-aux-defect.png' })],
+            photos: [expect.objectContaining({ fileName: 'er-aux-additional.png' })],
+          }),
+        ]),
+      )
+    })
+  })
+
+  it('removes ER Aux defect photos from the open viewer immediately', async () => {
+    const onChange = vi.fn()
+    render(
+      <InspectionForm
+        {...baseProps}
+        onChange={onChange}
+        value={{
+          mainLocation: 'Office',
+          inspectionType: 'ER Aux Equipment Inspection',
+          photos: [],
+          erAuxChecks: [
+            {
+              id: 'office:radio-tetra',
+              location: 'Office',
+              equipment: 'Radio Tetra',
+              quantity: '7',
+              condition: 'Defect',
+              defectRemarks: 'Broken casing.',
+              defectPhotos: [
+                {
+                  id: 'defect-photo-1',
+                  fileName: 'defect-photo.png',
+                  url: 'data:image/png;base64,abc123',
+                },
+              ],
+              photos: [],
+            },
+          ],
+        }}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'View defect photos' }))
+    expect(await screen.findByText('Radio Tetra - defect photos')).toBeTruthy()
+    expect(screen.getByText('1 photo')).toBeTruthy()
+    expect(screen.getByText('defect-photo.png')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('0 photos')).toBeTruthy()
+      expect(screen.queryByText('defect-photo.png')).toBeNull()
+    })
+    await waitFor(() => {
+      const latestForm = onChange.mock.calls[onChange.mock.calls.length - 1]?.[0]
+      expect(latestForm?.erAuxChecks).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: 'office:radio-tetra',
+            defectPhotos: [],
+          }),
+        ]),
+      )
+    })
   })
 
   it('requires a reason when a hydraulic check is marked N/A', () => {
@@ -1169,7 +2623,7 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    fireEvent.click(screen.getAllByText('Add general remark')[0])
+    fireEvent.click(screen.getAllByText('Remark')[0])
     expect(screen.getByPlaceholderText('General equipment remarks')).toBeTruthy()
     fireEvent.click(screen.getByText('Cancel'))
     expect(screen.queryByPlaceholderText('General equipment remarks')).toBeNull()

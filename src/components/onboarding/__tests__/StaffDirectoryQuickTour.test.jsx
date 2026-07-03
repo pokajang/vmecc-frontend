@@ -28,75 +28,7 @@ vi.mock('src/services/apiClient', () => ({
   ),
 }))
 
-vi.mock('react-joyride', async () => {
-  const ReactModule = await import('react')
-  return {
-    ACTIONS: {
-      CLOSE: 'close',
-      NEXT: 'next',
-      PREV: 'prev',
-      SKIP: 'skip',
-    },
-    EVENTS: {
-      STEP_AFTER: 'step:after',
-      TOOLTIP: 'tooltip',
-      TARGET_NOT_FOUND: 'error:target_not_found',
-    },
-    STATUS: {
-      FINISHED: 'finished',
-      SKIPPED: 'skipped',
-    },
-    Joyride: ({ onEvent, run, steps, tooltipComponent: TooltipComponent }) => {
-      const [stepIndex, setStepIndex] = ReactModule.useState(0)
-
-      ReactModule.useEffect(() => {
-        if (run) setStepIndex(0)
-      }, [run])
-
-      if (!run) return null
-
-      const moveNext = () => {
-        onEvent?.({
-          action: 'next',
-          index: stepIndex,
-          type: 'step:after',
-        })
-        if (stepIndex < steps.length - 1) {
-          setStepIndex((current) => current + 1)
-        }
-      }
-
-      const moveBack = () => {
-        onEvent?.({
-          action: 'prev',
-          index: stepIndex,
-          type: 'step:after',
-        })
-        setStepIndex((current) => Math.max(0, current - 1))
-      }
-
-      return (
-        <div data-testid="joyride-running">
-          {TooltipComponent ? (
-            <TooltipComponent
-              backProps={{ onClick: moveBack }}
-              closeProps={{ onClick: () => onEvent?.({ action: 'close', index: stepIndex }) }}
-              continuous
-              index={stepIndex}
-              primaryProps={{ onClick: moveNext }}
-              skipProps={{ onClick: () => onEvent?.({ status: 'skipped', index: stepIndex }) }}
-              size={steps.length}
-              step={steps[stepIndex]}
-              tooltipProps={{}}
-            />
-          ) : null}
-        </div>
-      )
-    },
-    __esModule: true,
-    React: ReactModule,
-  }
-})
+vi.mock('react-joyride', () => import('./joyrideTestMock'))
 
 const createStorageMock = () => {
   let values = {}

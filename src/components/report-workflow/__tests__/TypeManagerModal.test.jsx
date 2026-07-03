@@ -48,4 +48,41 @@ describe('TypeManagerModal', () => {
       label: 'Fire Drill',
     })
   })
+
+  it('renders shared badges in edit mode and shared warning copy in form mode', () => {
+    const { rerender } = render(
+      <TypeManagerModal
+        {...baseProps}
+        options={[
+          {
+            value: 'ASIC',
+            title: 'ASIC',
+            description: '1 report sub-location.',
+            canEdit: true,
+            canDelete: true,
+          },
+        ]}
+        getRowBadgeLabel={() => 'Shared'}
+      />,
+    )
+
+    expect(screen.getByText('Shared')).toBeTruthy()
+
+    rerender(
+      <TypeManagerModal
+        {...baseProps}
+        editMode={false}
+        editingKey="ASIC"
+        nameValue="ASIC"
+        warningNotice="This item is shared across inspections. Changes will affect future inspections."
+      />,
+    )
+
+    expect(
+      screen.getByText(
+        'This item is shared across inspections. Changes will affect future inspections.',
+      ),
+    ).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Update Type' })).toBeTruthy()
+  })
 })

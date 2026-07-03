@@ -189,7 +189,7 @@ const normalizeHydraulicCheck = (item = {}) => {
   const fieldEvidence = HYDRAULIC_CHECK_FIELDS.reduce((next, field) => {
     const snakeRemarksKey = toSnakeKey(field.remarksKey)
     const snakePhotosKey = toSnakeKey(field.photosKey)
-    next[field.remarksKey] = String(item[field.remarksKey] || item[snakeRemarksKey] || '').trim()
+    next[field.remarksKey] = String(item[field.remarksKey] || item[snakeRemarksKey] || '')
     next[field.photosKey] = normalizePhotos(item[field.photosKey] || item[snakePhotosKey])
     return next
   }, {})
@@ -215,7 +215,7 @@ const normalizeHydraulicCheck = (item = {}) => {
     ),
     noLeakage: normalizeHydraulicStatus(item.noLeakage || item.no_leakage),
     functionTest: normalizeHydraulicStatus(item.functionTest || item.function_test),
-    remarks: String(item.remarks || item.remark || item.defects || '').trim(),
+    remarks: String(item.remarks || item.remark || item.defects || ''),
     photos: normalizePhotos(item.photos),
     ...fieldEvidence,
   }
@@ -260,6 +260,35 @@ export const getHydraulicEquipmentRowsForLocation = (mainLocation = '') => {
   return HYDRAULIC_EQUIPMENT_ROWS.filter((row) => normalizeKey(row.location) === locationKey)
 }
 
+const getHydraulicRowMergeKey = (row = {}) =>
+  `${normalizeKey(row.location || row.mainLocation)}:${normalizeKey(row.equipment)}`
+
+const mergeHydraulicSeedAndCatalogRows = (seedRows = [], catalogRows = []) => {
+  const byKey = new Map()
+  const keyById = new Map()
+  const orderedKeys = []
+
+  seedRows.forEach((row) => {
+    const key = getHydraulicRowMergeKey(row)
+    if (!key || byKey.has(key)) return
+    byKey.set(key, row)
+    if (row.id) keyById.set(String(row.id), key)
+    orderedKeys.push(key)
+  })
+
+  catalogRows.forEach((row) => {
+    const rowId = String(row.id || '').trim()
+    const key = rowId && keyById.has(rowId) ? keyById.get(rowId) : getHydraulicRowMergeKey(row)
+    if (!key) return
+    const existing = byKey.get(key)
+    if (!existing) orderedKeys.push(key)
+    byKey.set(key, existing ? { ...existing, ...row } : row)
+    if (rowId) keyById.set(rowId, key)
+  })
+
+  return orderedKeys.map((key) => byKey.get(key)).filter(Boolean)
+}
+
 const getHydraulicChecksById = (checks) => {
   const byId = new Map()
   normalizeHydraulicChecks(checks).forEach((item) => byId.set(item.id, item))
@@ -273,10 +302,10 @@ export const getHydraulicVisibleChecks = (form = {}) => {
   ).filter(
     (row) => normalizeKey(row.location || row.mainLocation) === normalizeKey(location.mainLocation),
   )
-  const rows =
-    catalogRows.length > 0
-      ? catalogRows
-      : getHydraulicEquipmentRowsForLocation(location.mainLocation)
+  const rows = mergeHydraulicSeedAndCatalogRows(
+    getHydraulicEquipmentRowsForLocation(location.mainLocation),
+    catalogRows,
+  )
   const byId = getHydraulicChecksById(form?.hydraulicChecks || form?.hydraulic_checks)
   const visible = rows.map((row) => {
     const check = byId.get(row.id) || {}
@@ -295,14 +324,23 @@ export const getHydraulicVisibleChecks = (form = {}) => {
       isCustomEquipment: check.isCustomEquipment || row.isCustomEquipment,
       canEdit: row.canEdit,
       canDelete: row.canDelete,
+      isWorkbookSeedRow: row.equipmentSource === 'seed',
+      isExtensionRow: row.equipmentSource !== 'seed',
     }
   })
   byId.forEach((check) => {
     if (
       normalizeKey(check.location || check.mainLocation) === normalizeKey(location.mainLocation) &&
-      !visible.some((row) => row.id === check.id)
+      !visible.some(
+        (row) =>
+          row.id === check.id || getHydraulicRowMergeKey(row) === getHydraulicRowMergeKey(check),
+      )
     ) {
-      visible.push(check)
+      visible.push({
+        ...check,
+        isWorkbookSeedRow: false,
+        isExtensionRow: true,
+      })
     }
   })
   return visible
@@ -318,6 +356,16 @@ const getHydraulicDefectFields = (check = {}) =>
 
 const getHydraulicNaFields = (check = {}) =>
   HYDRAULIC_CHECK_FIELDS.filter((field) => normalizeHydraulicStatus(check?.[field.key]) === 'N/A')
+
+export const getHydraulicRetainedEvidenceFields = (check = {}) =>
+  HYDRAULIC_CHECK_FIELDS.filter((field) => {
+    const status = normalizeHydraulicStatus(check?.[field.key])
+    if (status === 'Defect' || status === 'N/A') return false
+    return (
+      String(check?.[field.remarksKey] || '').trim() ||
+      normalizePhotos(check?.[field.photosKey]).length > 0
+    )
+  })
 
 const getHydraulicIncompleteDefectEvidenceCount = (check = {}) =>
   getHydraulicDefectFields(check).filter(
@@ -349,6 +397,10 @@ export const getHydraulicCheckSummary = (form = {}) => {
     (count, check) => count + getHydraulicIncompleteNaReasonCount(check),
     0,
   )
+  const retainedEvidenceCount = visibleChecks.reduce(
+    (count, check) => count + getHydraulicRetainedEvidenceFields(check).length,
+    0,
+  )
   return {
     totalCount: visibleChecks.length,
     checkedCount,
@@ -356,6 +408,7 @@ export const getHydraulicCheckSummary = (form = {}) => {
     naCount,
     incompleteDefectEvidenceCount,
     incompleteNaReasonCount,
+    retainedEvidenceCount,
     visibleChecks,
   }
 }

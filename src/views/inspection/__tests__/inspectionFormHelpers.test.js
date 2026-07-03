@@ -3,16 +3,24 @@ import {
   appendInspectionText,
   buildInspectionDraftPayload,
   buildInspectionPayloadSnapshot,
+  createInspectionFormSignature,
   buildInspectionReviewRecord,
   buildInspectionSubmittedRecord,
+  formatInspectionRole,
   formatInspectionLocation,
+  getInspectionSessionActorRole,
+  getInspectionSessionActorRoleCode,
   getFrtCheckSummary,
   getInspectionChecklistChips,
   getInspectionFormValidationState,
   getInspectionFormMissingFields,
   getInspectionDraftMeta,
   getHydraulicCheckSummary,
+  getHydraulicRetainedEvidenceFields,
+  getHighAngleCheckSummary,
+  getHighAngleRetainedEvidenceRows,
   getScbaCheckSummary,
+  getScbaFieldEvidenceKeys,
   isInspectionDraftPayload,
   isInspectionChecklistItemSelected,
   normalizeInspectionForm,
@@ -27,13 +35,20 @@ import {
   FRT_DAILY_SECTION_DEFINITIONS,
   FRT_ONE_OFF_SECTION_DEFINITIONS,
 } from '../types/frt-daily/helpers'
+import { getErAuxCheckSummary } from '../types/er-aux/helpers'
 import {
   filterFireExtinguisherRows,
   getFireExtinguisherCheckSummary,
+  getFireExtinguisherVisibleChecks,
   normalizeFireExtinguisherChecks,
 } from '../types/fire-extinguisher/helpers'
-import { HIGH_ANGLE_KIT_DEFINITIONS } from '../types/high-angle/helpers'
-import { SCBA_SECTION_DEFINITIONS } from '../types/scba/helpers'
+import {
+  HIGH_ANGLE_CONDITION_FIELD,
+  HIGH_ANGLE_KIT_DEFINITIONS,
+  getHighAngleVisibleChecks,
+} from '../types/high-angle/helpers'
+import { getHydraulicVisibleChecks } from '../types/hydraulic/helpers'
+import { getScbaVisibleSections, SCBA_SECTION_DEFINITIONS } from '../types/scba/helpers'
 
 const basePhotos = [
   {
@@ -53,6 +68,7 @@ const basePhotos = [
 const baseForm = {
   selectedLocation: 'Zone 1',
   inspectionType: 'Hydraulic Rescue Tools Inspection',
+  inspectedAt: '2026-06-29T09:30',
   description: 'Observed normal physical condition and no leakage.',
   photos: basePhotos,
 }
@@ -73,9 +89,13 @@ describe('inspectionFormHelpers', () => {
       mainLocationId: '',
       subLocationId: '',
       inspectionType: 'ER Aux Equipment Inspection',
+      inspectedAt: '',
       description: 'Equipment quantity and condition recorded.',
       photos: basePhotos,
       checklist: [],
+      inspectionActor: null,
+      submittedByRole: '',
+      submittedByRoleCode: '',
       erAuxInspectedBy: '',
       erAuxInspectionDate: '',
       erAuxChecks: [],
@@ -87,7 +107,11 @@ describe('inspectionFormHelpers', () => {
       frtInspectedBy: '',
       frtInspectionDate: '',
       frtShift: '',
+      frtTruckId: '',
+      frtTruckPlateNo: '',
       frtTruckReference: {
+        truckId: '',
+        name: '',
         plateNo: 'AJG9555',
         roadTaxExpiry: '13/02/2026',
         insuranceExpiry: '13/02/2026',
@@ -105,6 +129,7 @@ describe('inspectionFormHelpers', () => {
       scbaBackPlateChecks: [],
       scbaCylinderChecks: [],
       scbaFaceMaskChecks: [],
+      scbaCustomSections: [],
       hseInspectedBy: '',
       hseInspectionDate: '',
       hseSelections: [],
@@ -120,6 +145,36 @@ describe('inspectionFormHelpers', () => {
       hseRemarks: '',
       hydraulicChecks: [],
       hydraulicEquipmentRows: [],
+    })
+  })
+
+  it('normalizes shared inspection date/time and derives it from legacy session dates', () => {
+    const empty = selectInspectionInitialForm({}).form
+    expect(empty.inspectedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)
+
+    const canonical = normalizeInspectionForm({
+      mainLocation: 'FIRE TRUCK',
+      inspectionType: 'FRT Daily Inspection',
+      inspectedAt: '2026-07-01T09:45',
+    })
+    expect(canonical.inspectedAt).toBe('2026-07-01T09:45')
+    expect(canonical.frtInspectionDate).toBe('2026-07-01')
+
+    const legacyDateFields = [
+      ['erAuxInspectionDate', 'ER Aux Equipment Inspection'],
+      ['fireExtinguisherInspectionDate', 'Fire Extinguisher Inspection'],
+      ['frtInspectionDate', 'FRT Daily Inspection'],
+      ['highAngleInspectionDate', 'High Angle Rescue Equipment Inspection'],
+      ['scbaInspectionDate', 'SCBA Inspection'],
+      ['hseInspectionDate', 'Health Safety Environment Inspection'],
+    ]
+
+    legacyDateFields.forEach(([field, inspectionType]) => {
+      const form = normalizeInspectionForm({
+        inspectionType,
+        [field]: '2026-06-28',
+      })
+      expect(form.inspectedAt).toBe('2026-06-28T00:00')
     })
   })
 
@@ -193,6 +248,47 @@ describe('inspectionFormHelpers', () => {
         ],
       }),
     )
+  })
+
+  it('preserves in-progress spaces in hydraulic remarks while normalizing form edits', () => {
+    const form = normalizeInspectionForm({
+      inspectionType: 'Hydraulic Rescue Tools Inspection',
+      mainLocation: 'FRT',
+      hydraulicChecks: [
+        {
+          id: 'frt:hydraulic-pump-motor-1',
+          location: 'FRT',
+          equipment: 'Hydraulic Pump Motor 1',
+          noLeakage: 'Defect',
+          noLeakageRemarks: 'minor leak ',
+          remarks: 'general note ',
+        },
+      ],
+    })
+
+    expect(form.hydraulicChecks[0].noLeakageRemarks).toBe('minor leak ')
+    expect(form.hydraulicChecks[0].remarks).toBe('general note ')
+  })
+
+  it('preserves in-progress spaces in ER Aux remarks while normalizing form edits', () => {
+    const form = normalizeInspectionForm({
+      inspectionType: 'ER Aux Equipment Inspection',
+      mainLocation: 'Office',
+      erAuxChecks: [
+        {
+          id: 'office:radio-tetra',
+          location: 'Office',
+          equipment: 'Radio Tetra',
+          quantity: '7',
+          condition: 'Defect',
+          defectRemarks: 'makan nasi ',
+          additionalNotes: 'optional note ',
+        },
+      ],
+    })
+
+    expect(form.erAuxChecks[0].defectRemarks).toBe('makan nasi ')
+    expect(form.erAuxChecks[0].additionalNotes).toBe('optional note ')
   })
 
   it('formats and splits hierarchical inspection locations', () => {
@@ -338,18 +434,28 @@ describe('inspectionFormHelpers', () => {
       reportTypeSlug: 'inspection',
       reportTypeIdPrefix: 'INS',
       sequence: 3,
-      user: { name: 'Inspector' },
+      user: {
+        name: 'Inspector',
+        primary_role: 'Tactical Response Team',
+        primary_role_code: 'TRT',
+      },
     })
 
     expect(reviewRecord.status).toBe('Draft')
     expect(reviewRecord.submittedAt).toBe('')
     expect(reviewRecord.submittedBy).toBe('')
+    expect(reviewRecord.submittedByRole).toBe('Tactical Response Team')
+    expect(reviewRecord.submittedByRoleCode).toBe('TRT')
     expect(reviewRecord.checklist).toHaveLength(1)
     expect(reviewRecord.checklistVersion).toBe('inspection-checklist-v1')
 
     const submittedRecord = buildInspectionSubmittedRecord(
       reviewRecord,
-      { name: 'Jang' },
+      {
+        name: 'Jang',
+        primary_role: 'Assistant Incident Commander',
+        primary_role_code: 'AIC',
+      },
       '2026-04-29T06:00:00.000Z',
     )
 
@@ -358,8 +464,22 @@ describe('inspectionFormHelpers', () => {
     expect(submittedRecord.status).toBe('Submitted')
     expect(submittedRecord.submittedAt).toBe('2026-04-29T06:00:00.000Z')
     expect(submittedRecord.submittedBy).toBe('Jang')
+    expect(submittedRecord.submittedByRole).toBe('Assistant Incident Commander')
+    expect(submittedRecord.submittedByRoleCode).toBe('AIC')
     expect(submittedRecord.checklist[0].label).toBe('Physical condition checked')
     expect(submittedRecord.checklistVersion).toBe('inspection-checklist-v1')
+  })
+
+  it('formats the session actor role from backend primary role fields', () => {
+    const user = {
+      roles: ['Tactical Response Team'],
+      primary_role: 'Incident Commander',
+      primary_role_code: 'IC',
+    }
+
+    expect(getInspectionSessionActorRole(user)).toBe('Incident Commander')
+    expect(getInspectionSessionActorRoleCode(user)).toBe('IC')
+    expect(formatInspectionRole('Incident Commander', 'IC')).toBe('Incident Commander (IC)')
   })
 
   it('preserves in-progress description whitespace in form state but trims it in payload projection', () => {
@@ -386,6 +506,7 @@ describe('inspectionFormHelpers', () => {
       }),
     ).toEqual({
       inspectionType: false,
+      inspectedAt: true,
       selectedLocation: true,
       description: false,
       photos: false,
@@ -444,14 +565,19 @@ describe('inspectionFormHelpers', () => {
       hseUnsafeActDetails: 'Worker bypassed barricade.',
       hseUnsafeConditionDetails: 'Open trench without cover.',
       hseSeverity: 'High',
+      photos: [basePhotos[0]],
     })
 
     expect(findingPayload.hseSelections).toEqual(['unsafeAct', 'unsafeCondition'])
     expect(findingPayload.checklist.map((item) => item.label)).toEqual([
-      'Unsafe Act',
-      'Unsafe Condition',
+      'Unsafe Act - High',
+      'Unsafe Condition - High',
     ])
-    expect(findingPayload.description).toContain('Unsafe Act, Unsafe Condition')
+    expect(findingPayload.description).toContain(
+      'Selected outcome(s): Unsafe Act, Unsafe Condition.',
+    )
+    expect(findingPayload.description).toContain('- Unsafe Act: Worker bypassed barricade.')
+    expect(findingPayload.description).toContain('- Unsafe Condition: Open trench without cover.')
     expect(getInspectionFormMissingFields(findingPayload)).toEqual(
       expect.objectContaining({
         hseSession: false,
@@ -504,11 +630,34 @@ describe('inspectionFormHelpers', () => {
       hseSeverity: true,
       hseUnsafeActDetails: true,
       hseEnvironmentalDetails: true,
+      hsePhotoEvidence: true,
     })
     expect(findingState.firstTarget).toEqual({
       field: 'hseDetails',
       detailKey: 'hseSeverity',
     })
+  })
+
+  it('builds an owned General Inspection payload summary from checklist selections', () => {
+    const payload = buildInspectionPayloadSnapshot({
+      mainLocation: 'Zone 1',
+      selectedLocation: 'Zone 1',
+      inspectionType: 'General Inspection',
+      description: '',
+      photos: [basePhotos[0]],
+      checklist: [
+        { id: 'housekeeping', label: 'Housekeeping checked', selected: true },
+        { id: 'access', label: 'Access clear', selected: true },
+      ],
+    })
+
+    expect(payload.description).toContain('General inspection completed at Zone 1.')
+    expect(payload.description).toContain('- Housekeeping checked')
+    expect(payload.description).toContain('- Access clear')
+    expect(payload.checklist.map((item) => item.label)).toEqual([
+      'Housekeeping checked',
+      'Access clear',
+    ])
   })
 
   it('normalizes hydraulic checks and builds a structured hydraulic payload summary', () => {
@@ -625,6 +774,63 @@ describe('inspectionFormHelpers', () => {
     )
   })
 
+  it('keeps retained hydraulic evidence out of active defect descriptions and checklist labels', () => {
+    const form = {
+      mainLocation: 'FRT',
+      inspectionType: 'Hydraulic Rescue Tools Inspection',
+      photos: [],
+      hydraulicChecks: [
+        {
+          id: 'frt:hydraulic-pump-motor-1',
+          location: 'FRT',
+          equipment: 'Hydraulic Pump Motor 1',
+          physicalCondition: 'OK',
+          physicalConditionRemarks: 'Old crack evidence retained.',
+          physicalConditionPhotos: [
+            {
+              id: 'retained-photo-1',
+              fileName: 'old-crack.jpg',
+              description: 'Old crack evidence',
+              url: 'data:image/png;base64,abc123',
+            },
+          ],
+          mechanicalCondition: 'OK',
+          noLeakage: 'OK',
+          functionTest: 'OK',
+        },
+      ],
+    }
+
+    const summary = getHydraulicCheckSummary(form)
+    expect(summary.defectCount).toBe(0)
+    expect(summary.retainedEvidenceCount).toBe(1)
+    expect(getHydraulicRetainedEvidenceFields(form.hydraulicChecks[0])).toEqual([
+      expect.objectContaining({ key: 'physicalCondition' }),
+    ])
+
+    const payload = buildInspectionPayloadSnapshot(form)
+    expect(payload.description).toContain('no defects recorded')
+    expect(payload.description).not.toContain('Old crack evidence retained.')
+    expect(payload.hydraulicChecks[0].physicalConditionRemarks).toBe('Old crack evidence retained.')
+    expect(payload.hydraulicChecks[0].physicalConditionPhotos).toEqual([
+      expect.objectContaining({ id: 'retained-photo-1' }),
+    ])
+    expect(payload.checklist).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: 'Hydraulic Pump Motor 1 - Physical Condition: OK',
+        }),
+      ]),
+    )
+    expect(payload.checklist).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: expect.stringContaining('Defect'),
+        }),
+      ]),
+    )
+  })
+
   it('uses catalog equipment rows for hydraulic visibility and preserves custom metadata', () => {
     const summary = getHydraulicCheckSummary({
       mainLocation: 'FRT',
@@ -680,9 +886,9 @@ describe('inspectionFormHelpers', () => {
       ],
     })
 
-    expect(summary.totalCount).toBe(2)
+    expect(summary.totalCount).toBe(7)
     expect(summary.checkedCount).toBe(2)
-    expect(summary.visibleChecks).toHaveLength(2)
+    expect(summary.visibleChecks).toHaveLength(7)
     expect(summary.visibleChecks).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -824,6 +1030,14 @@ describe('inspectionFormHelpers', () => {
           boxKeyAvailability: 'Yes',
           boxGlassAvailability: 'No',
           boxGlassAvailabilityRemarks: 'Glass missing.',
+          boxGlassAvailabilityPhotos: [
+            {
+              id: 'fe-photo-1',
+              fileName: 'glass.jpg',
+              description: 'Missing box glass.',
+              url: 'data:image/png;base64,glass123',
+            },
+          ],
           operationalCondition: 'Operational',
         },
       ],
@@ -833,6 +1047,9 @@ describe('inspectionFormHelpers', () => {
     expect(summary.totalCount).toBe(1)
     expect(summary.completedCount).toBe(1)
     expect(summary.defectCount).toBe(1)
+    expect(summary.defectFieldCount).toBe(1)
+    expect(summary.incompleteDefectRemarkCount).toBe(0)
+    expect(summary.incompleteDefectPhotoCount).toBe(0)
     expect(summary.visibleChecks[0]).toEqual(
       expect.objectContaining({
         idLocNo: 'ADO-001',
@@ -844,7 +1061,7 @@ describe('inspectionFormHelpers', () => {
     expect(filterFireExtinguisherRows(summary.visibleChecks, 'auditorium')).toHaveLength(0)
   })
 
-  it('returns exact Fire Extinguisher validation row targets for statuses and defect remarks', () => {
+  it('returns exact Fire Extinguisher validation row targets for statuses, defect remarks, and defect photos', () => {
     const baseFireForm = {
       mainLocation: 'Manjung Hub',
       inspectionType: 'Fire Extinguisher Inspection',
@@ -917,18 +1134,82 @@ describe('inspectionFormHelpers', () => {
     expect(missingRemarkState.fireExtinguisher.missingRemarksByRow['fe:1']).toEqual([
       'physicalConditionRemarks',
     ])
+    expect(missingRemarkState.fireExtinguisher.missingPhotosByRow['fe:1']).toEqual([
+      'physicalConditionPhotos',
+    ])
     expect(missingRemarkState.firstTarget).toEqual({
       field: 'fireExtinguisherRemarks',
       rowId: 'fe:1',
       checkKey: '',
       detailKey: 'physicalConditionRemarks',
     })
+
+    const missingPhotoState = getInspectionFormValidationState({
+      ...baseFireForm,
+      fireExtinguisherChecks: [
+        {
+          id: 'fe:1',
+          catalogId: 1,
+          physicalCondition: 'Not Good',
+          physicalConditionRemarks: 'Cylinder body dented.',
+          signageCondition: 'Good',
+          boxKeyAvailability: 'Yes',
+          boxGlassAvailability: 'Yes',
+          operationalCondition: 'Operational',
+        },
+      ],
+    })
+
+    expect(missingPhotoState.missing).toEqual(
+      expect.objectContaining({
+        fireExtinguisherChecks: false,
+        fireExtinguisherRemarks: true,
+      }),
+    )
+    expect(missingPhotoState.fireExtinguisher.missingRemarksByRow['fe:1']).toBeUndefined()
+    expect(missingPhotoState.fireExtinguisher.missingPhotosByRow['fe:1']).toEqual([
+      'physicalConditionPhotos',
+    ])
+    expect(missingPhotoState.firstTarget).toEqual({
+      field: 'fireExtinguisherRemarks',
+      rowId: 'fe:1',
+      checkKey: '',
+      detailKey: 'physicalConditionPhotos',
+    })
+  })
+
+  it('omits pending Fire Extinguisher checklist items from derived payloads', () => {
+    const payload = buildInspectionPayloadSnapshot(
+      normalizeInspectionForm({
+        inspectionType: 'Fire Extinguisher Inspection',
+        mainLocation: 'Manjung Hub',
+        selectedLocation: 'Manjung Hub',
+        fireExtinguisherInspectedBy: 'Inspector Fire',
+        fireExtinguisherInspectionDate: '2026-06-29',
+        fireExtinguisherChecks: [
+          {
+            id: 'fe:1',
+            mainLocation: 'Manjung Hub',
+            idLocNo: 'ADO-001',
+            physicalCondition: 'Good',
+          },
+        ],
+      }),
+    )
+
+    expect(payload.checklist).toEqual([
+      expect.objectContaining({
+        label: 'ADO-001 - FE Physical Condition: Good',
+      }),
+    ])
+    expect(payload.checklist.some((item) => item.label.includes('Pending'))).toBe(false)
   })
 
   it('requires complete hydraulic checks and defect evidence for hydraulic review', () => {
     const incomplete = getInspectionFormMissingFields({
       mainLocation: 'FRT',
       inspectionType: 'Hydraulic Rescue Tools Inspection',
+      inspectedAt: '2026-06-29T09:30',
       photos: [],
       hydraulicChecks: [
         {
@@ -946,6 +1227,7 @@ describe('inspectionFormHelpers', () => {
 
     expect(incomplete).toEqual({
       inspectionType: false,
+      inspectedAt: false,
       selectedLocation: false,
       photos: false,
       description: false,
@@ -1022,14 +1304,242 @@ describe('inspectionFormHelpers', () => {
         }),
       ]),
     )
-    expect(payload.description).toContain('ER Aux equipment checked at Store by Inspector One')
+    expect(payload.description).toContain(
+      'Emergency Response Auxiliary Equipment checked at Store by Inspector One',
+    )
     expect(payload.description).toContain('Chainsaw (qty 0) - Missing: Sent for replacement.')
   })
 
-  it('requires ER Aux session details, quantities, conditions, and issue remarks for review', () => {
+  it('keeps loaded static ER Aux equipment rows manageable for card kebab actions', () => {
+    const summary = getErAuxCheckSummary({
+      mainLocation: 'Office',
+      inspectionType: 'ER Aux Equipment Inspection',
+      erAuxEquipmentRows: [
+        {
+          id: 'office:radio-tetra',
+          location: 'Office',
+          equipment: 'Radio Tetra',
+          equipmentSource: 'seed',
+          defaultQuantity: '7',
+        },
+      ],
+      erAuxChecks: [],
+    })
+
+    expect(summary.visibleChecks[0]).toEqual(
+      expect.objectContaining({
+        equipment: 'Radio Tetra',
+        isLocalSeedEquipment: true,
+        canEdit: true,
+        canDelete: true,
+      }),
+    )
+  })
+
+  it('seeds ER Aux equipment from the VMM checklist by location', () => {
+    const store = getErAuxCheckSummary({
+      mainLocation: 'Store',
+      inspectionType: 'ER Aux Equipment Inspection',
+      erAuxChecks: [],
+    })
+    const office = getErAuxCheckSummary({
+      mainLocation: 'Office',
+      inspectionType: 'ER Aux Equipment Inspection',
+      erAuxChecks: [],
+    })
+
+    expect(store.visibleChecks).toHaveLength(26)
+    expect(store.visibleChecks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ equipment: 'Fire Jacket', quantity: '15' }),
+        expect.objectContaining({ equipment: 'Fire helmet', quantity: '2' }),
+        expect.objectContaining({ equipment: 'Animal catcher net', quantity: '3' }),
+      ]),
+    )
+    expect(office.visibleChecks).toHaveLength(5)
+    expect(office.visibleChecks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ equipment: 'Radio Tetra', quantity: '7' }),
+        expect.objectContaining({ equipment: 'Radio VHF', quantity: '5' }),
+        expect.objectContaining({ equipment: 'Hydrant static pressure tester', quantity: '1' }),
+      ]),
+    )
+  })
+
+  it('keeps ER Aux checklist seeds visible when catalog rows are cached', () => {
+    const summary = getErAuxCheckSummary({
+      mainLocation: 'Office',
+      inspectionType: 'ER Aux Equipment Inspection',
+      erAuxEquipmentRows: [
+        {
+          id: 'office:smoke-torch',
+          location: 'Office',
+          equipment: 'Smoke Torch',
+          equipmentSource: 'custom',
+          defaultQuantity: '1',
+          canEdit: true,
+          canDelete: true,
+        },
+      ],
+      erAuxChecks: [],
+    })
+
+    expect(summary.visibleChecks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ equipment: 'Radio Tetra', quantity: '7' }),
+        expect.objectContaining({ equipment: 'Hydrant flow test kit', quantity: '1' }),
+        expect.objectContaining({ equipment: 'Smoke Torch', quantity: '1' }),
+      ]),
+    )
+  })
+
+  it('replaces ER Aux seeded rows by id when a seed item is renamed', () => {
+    const summary = getErAuxCheckSummary({
+      mainLocation: 'Office',
+      inspectionType: 'ER Aux Equipment Inspection',
+      erAuxEquipmentRows: [
+        {
+          id: 'office:mobile-radio',
+          location: 'Office',
+          equipment: 'Smoke Mobile Radio',
+          equipmentSource: 'local',
+          defaultQuantity: '1',
+          canEdit: true,
+          canDelete: true,
+        },
+      ],
+      erAuxChecks: [],
+    })
+    const ids = summary.visibleChecks.map((row) => row.id)
+
+    expect(ids.filter((id) => id === 'office:mobile-radio')).toHaveLength(1)
+    expect(summary.visibleChecks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'office:mobile-radio',
+          equipment: 'Smoke Mobile Radio',
+          quantity: '1',
+        }),
+      ]),
+    )
+    expect(summary.visibleChecks.some((row) => row.equipment === 'Mobile Radio')).toBe(false)
+  })
+
+  it('defaults ER Aux quantities but preserves explicit user edits', () => {
+    const untouched = getErAuxCheckSummary({
+      mainLocation: 'Office',
+      inspectionType: 'ER Aux Equipment Inspection',
+      erAuxChecks: [],
+    })
+
+    expect(untouched.visibleChecks[0]).toEqual(
+      expect.objectContaining({
+        id: 'office:radio-tetra',
+        quantity: '7',
+      }),
+    )
+
+    const cleared = getErAuxCheckSummary({
+      mainLocation: 'Office',
+      inspectionType: 'ER Aux Equipment Inspection',
+      erAuxChecks: [
+        {
+          id: 'office:radio-tetra',
+          location: 'Office',
+          equipment: 'Radio Tetra',
+          quantity: '',
+          condition: 'OK',
+        },
+      ],
+    })
+
+    expect(cleared.visibleChecks[0]).toEqual(
+      expect.objectContaining({
+        id: 'office:radio-tetra',
+        quantity: '',
+      }),
+    )
+
+    const edited = buildInspectionPayloadSnapshot(
+      normalizeInspectionForm({
+        mainLocation: 'Office',
+        inspectionType: 'ER Aux Equipment Inspection',
+        erAuxChecks: [
+          {
+            id: 'office:radio-tetra',
+            location: 'Office',
+            equipment: 'Radio Tetra',
+            quantity: '8',
+            condition: 'OK',
+          },
+        ],
+      }),
+    )
+
+    expect(edited.erAuxChecks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'office:radio-tetra',
+          quantity: '8',
+        }),
+      ]),
+    )
+    expect(edited.checklist).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: 'Radio Tetra - Qty 8: OK',
+        }),
+      ]),
+    )
+  })
+
+  it('reports exact incomplete ER Aux rows and fields for review validation', () => {
+    const state = getInspectionFormValidationState({
+      mainLocation: 'Office',
+      inspectedAt: '2026-07-03T07:10',
+      inspectionType: 'ER Aux Equipment Inspection',
+      erAuxEquipmentRows: [
+        {
+          id: 'office:radio-tetra',
+          location: 'Office',
+          equipment: 'Radio Tetra',
+          defaultQuantity: '7',
+        },
+      ],
+      erAuxChecks: [
+        {
+          id: 'office:radio-tetra',
+          location: 'Office',
+          equipment: 'Radio Tetra',
+          quantity: '',
+          condition: '',
+        },
+      ],
+    })
+
+    expect(state.missing.erAuxChecks).toBe(true)
+    expect(state.erAux.incompleteCheckDetails).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'office:radio-tetra',
+          equipment: 'Radio Tetra',
+          missing: ['quantity', 'condition'],
+          detailKey: 'quantity',
+        }),
+      ]),
+    )
+    expect(state.firstTarget).toEqual({
+      field: 'erAuxChecks',
+      rowId: 'office:radio-tetra',
+      detailKey: 'quantity',
+    })
+  })
+
+  it('requires ER Aux quantities and conditions for review when defect remarks/photos are optional until defect', () => {
     const incomplete = getInspectionFormMissingFields({
       mainLocation: 'Store',
       inspectionType: 'ER Aux Equipment Inspection',
+      inspectedAt: '2026-06-29T09:30',
       erAuxInspectedBy: '',
       erAuxInspectionDate: '',
       erAuxChecks: [
@@ -1047,12 +1557,13 @@ describe('inspectionFormHelpers', () => {
 
     expect(incomplete).toEqual({
       inspectionType: false,
+      inspectedAt: false,
       selectedLocation: false,
       photos: false,
       description: false,
-      erAuxSession: true,
+      erAuxSession: false,
       erAuxChecks: true,
-      erAuxRemarks: true,
+      erAuxRemarks: false,
       frtSession: false,
       frtDailyChecks: false,
       frtDailyRemarks: false,
@@ -1152,10 +1663,10 @@ describe('inspectionFormHelpers', () => {
     expect(payload.scbaFaceMaskChecks[0].leakTest).toBe('Not Good')
     expect(payload.description).toContain('SCBA checked at FRT by Inspector SCBA on 2026-06-28.')
     expect(payload.description).toContain(
-      'Back Plate MSA 06: High Pressure Hose - Hose coupling worn.',
+      'Back Plate MSA 06: High Pressure Hose - High Pressure Hose: Hose coupling worn.',
     )
     expect(payload.description).toContain(
-      'Face Mask Drager 02: Leak Test - Leak test failed on seal.',
+      'Face Mask Drager 02: Leak Test - Leak Test: Leak test failed on seal.',
     )
     expect(payload.checklist).toHaveLength(2)
     expect(payload.checklist).toEqual(
@@ -1164,6 +1675,82 @@ describe('inspectionFormHelpers', () => {
         expect.objectContaining({ label: 'Face Mask Drager 02 - Leak Test: Not Good' }),
       ]),
     )
+  })
+
+  it('normalizes SCBA custom sections with field evidence and summary validation', () => {
+    const form = normalizeInspectionForm({
+      mainLocation: 'CUSTOM BAY',
+      inspectionType: 'SCBA Inspection',
+      scbaInspectedBy: 'Inspector SCBA',
+      scbaInspectionDate: '2026-07-03',
+      scbaBackPlateChecks: [],
+      scbaCylinderChecks: [],
+      scbaFaceMaskChecks: [],
+      scbaCustomSections: [
+        {
+          title: 'Regulator',
+          shortLabel: 'Regulator',
+          fields: [{ key: 'purgeValve', label: 'Purge Valve', kind: 'status' }],
+          rows: [
+            {
+              id: 'customScba-regulator:frt:msa:r-01',
+              location: 'CUSTOM BAY',
+              brand: 'MSA',
+              serialNo: 'R-01',
+              purgeValve: 'Not Good',
+              purgeValveRemarks: 'Purge valve sticks.',
+              purgeValvePhotos: [
+                {
+                  id: 'purge-photo',
+                  fileName: 'purge.png',
+                  description: 'Purge valve close-up.',
+                  url: 'data:image/png;base64,abc123',
+                },
+              ],
+              photos: [
+                {
+                  id: 'regulator-general',
+                  fileName: 'regulator.png',
+                  description: 'General regulator photo.',
+                  url: 'data:image/png;base64,def456',
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    })
+
+    const summary = getScbaCheckSummary(form)
+    const payload = buildInspectionPayloadSnapshot(form)
+    const missing = getInspectionFormMissingFields(form)
+    const signature = JSON.parse(createInspectionFormSignature(form))
+
+    expect(summary.visibleSections.map((section) => section.title)).toEqual(['Regulator'])
+    expect(summary.totalCount).toBe(1)
+    expect(summary.issueCount).toBe(1)
+    expect(missing.scbaChecks).toBe(false)
+    expect(missing.scbaRemarks).toBe(false)
+    expect(payload.scbaCustomSections[0].rows[0]).toMatchObject({
+      brand: 'MSA',
+      serialNo: 'R-01',
+      purgeValve: 'Not Good',
+      purgeValveRemarks: 'Purge valve sticks.',
+    })
+    expect(payload.description).toContain('Regulator MSA R-01: Purge Valve')
+    expect(payload.checklist).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ label: 'Regulator MSA R-01 - Purge Valve: Not Good' }),
+      ]),
+    )
+    expect(signature.scbaCustomSections[0].rows[0].purgeValvePhotos[0]).toMatchObject({
+      id: 'purge-photo',
+      description: 'Purge valve close-up.',
+    })
+    expect(signature.scbaCustomSections[0].rows[0].photos[0]).toMatchObject({
+      id: 'regulator-general',
+      description: 'General regulator photo.',
+    })
   })
 
   it('keeps the workbook-backed SCBA section roster, metadata, and source labels stable', () => {
@@ -1307,6 +1894,7 @@ describe('inspectionFormHelpers', () => {
     const incomplete = getInspectionFormMissingFields({
       mainLocation: 'FRT',
       inspectionType: 'SCBA Inspection',
+      inspectedAt: '2026-06-29T09:30',
       scbaInspectedBy: '',
       scbaInspectionDate: '',
       scbaBackPlateChecks: [
@@ -1332,6 +1920,7 @@ describe('inspectionFormHelpers', () => {
 
     expect(incomplete).toEqual({
       inspectionType: false,
+      inspectedAt: false,
       selectedLocation: false,
       photos: false,
       description: false,
@@ -1348,7 +1937,7 @@ describe('inspectionFormHelpers', () => {
       highAngleSession: false,
       highAngleChecks: false,
       highAngleRemarks: false,
-      scbaSession: true,
+      scbaSession: false,
       scbaChecks: true,
       scbaRemarks: true,
     })
@@ -1538,6 +2127,7 @@ describe('inspectionFormHelpers', () => {
     const incomplete = getInspectionFormMissingFields({
       mainLocation: 'Response Kit #1',
       inspectionType: 'High Angle Rescue Equipment Inspection',
+      inspectedAt: '2026-06-29T09:30',
       highAngleInspectedBy: '',
       highAngleInspectionDate: '',
       highAngleChecks: [
@@ -1558,6 +2148,7 @@ describe('inspectionFormHelpers', () => {
 
     expect(incomplete).toEqual({
       inspectionType: false,
+      inspectedAt: false,
       selectedLocation: false,
       photos: false,
       description: false,
@@ -1571,7 +2162,7 @@ describe('inspectionFormHelpers', () => {
       frtOneOffRemarks: false,
       hydraulicChecks: false,
       hydraulicRemarks: false,
-      highAngleSession: true,
+      highAngleSession: false,
       highAngleChecks: true,
       highAngleRemarks: true,
       scbaSession: false,
@@ -1643,7 +2234,7 @@ describe('inspectionFormHelpers', () => {
       mainLocation: 'FIRE TRUCK',
       selectedLocation: 'FIRE TRUCK',
     })
-    expect(fireTruck.selectedTruck).toBe('FIRE TRUCK')
+    expect(fireTruck.selectedTruck).toBe('AJG9555')
     expect(fireTruck.dailyRows).toHaveLength(92)
     expect(fireTruck.oneOffRows).toHaveLength(46)
     expect(fireTruck.visibleDailySections.map((section) => section.title)).toEqual([
@@ -1704,6 +2295,14 @@ describe('inspectionFormHelpers', () => {
           rowKind: 'status',
           status: 'Issue',
           remarks: 'Panel dent needs repair.',
+          photos: [
+            {
+              id: 'frt-daily-photo-1',
+              fileName: 'frt-daily-photo.png',
+              description: 'Panel dent evidence.',
+              url: 'data:image/png;base64,AAAA',
+            },
+          ],
         },
         {
           id: 'daily:fire-truck:91',
@@ -1746,6 +2345,14 @@ describe('inspectionFormHelpers', () => {
           equipment: 'ELECTRONIC SIREN',
           condition: 'Not Good',
           remarks: 'Mute switch sticking.',
+          photos: [
+            {
+              id: 'frt-one-off-photo-1',
+              fileName: 'frt-one-off-photo.png',
+              description: 'Siren issue evidence.',
+              url: 'data:image/png;base64,BBBB',
+            },
+          ],
         },
       ],
     })
@@ -1761,6 +2368,12 @@ describe('inspectionFormHelpers', () => {
     )
     expect(payload.frtDailyChecks).toHaveLength(92)
     expect(payload.frtOneOffChecks).toHaveLength(46)
+    expect(payload.frtDailyChecks.find((row) => row.rowNumber === '90')?.photos).toEqual([
+      expect.objectContaining({ id: 'frt-daily-photo-1' }),
+    ])
+    expect(payload.frtOneOffChecks.find((row) => row.rowNumber === '16')?.photos).toEqual([
+      expect.objectContaining({ id: 'frt-one-off-photo-1' }),
+    ])
     expect(payload.frtDailyChecks[90]).toEqual(
       expect.objectContaining({
         equipment: 'MILEAGE (ODOMETER)',
@@ -1782,7 +2395,7 @@ describe('inspectionFormHelpers', () => {
       ]),
     )
     expect(payload.description).toContain(
-      'FRT Daily inspection checked for FIRE TRUCK on 2026-06-29 (Day shift) by Inspector Truck.',
+      'Fire Truck Daily Readiness completed for AJG9555 on 2026-06-29 by Inspector Truck.',
     )
     expect(payload.description).toContain('Daily roster completed: 4/92.')
     expect(payload.description).toContain('One-off checklist completed: 2/46.')
@@ -1862,6 +2475,7 @@ describe('inspectionFormHelpers', () => {
       mainLocation: 'FIRE TRUCK',
       selectedLocation: 'FIRE TRUCK',
       inspectionType: 'FRT Daily Inspection',
+      inspectedAt: '2026-06-29T09:30',
       frtInspectedBy: '',
       frtInspectionDate: '',
       frtShift: '',
@@ -1905,13 +2519,14 @@ describe('inspectionFormHelpers', () => {
 
     expect(incomplete).toEqual({
       inspectionType: false,
+      inspectedAt: false,
       selectedLocation: false,
       photos: false,
       description: false,
       erAuxSession: false,
       erAuxChecks: false,
       erAuxRemarks: false,
-      frtSession: true,
+      frtSession: false,
       frtDailyChecks: true,
       frtDailyRemarks: true,
       frtOneOffChecks: true,
@@ -1925,6 +2540,75 @@ describe('inspectionFormHelpers', () => {
       scbaChecks: false,
       scbaRemarks: false,
     })
+  })
+
+  it('accepts complete FRT issue rows with remarks and photo evidence', () => {
+    const dailyChecks = FRT_DAILY_SECTION_DEFINITIONS.flatMap((section) => section.rows).map(
+      (row) => {
+        if (row.id === 'daily:fire-truck:90') {
+          return {
+            ...row,
+            status: 'Issue',
+            readingValue: '',
+            remarks: 'Panel dent needs repair.',
+            photos: [
+              {
+                id: 'frt-daily-photo-1',
+                fileName: 'frt-daily-photo.png',
+                url: 'data:image/png;base64,AAAA',
+              },
+            ],
+          }
+        }
+        return {
+          ...row,
+          status: row.rowKind === 'reading' ? '' : 'Checked',
+          readingValue: row.rowKind === 'reading' ? '100' : '',
+          remarks: '',
+          photos: [],
+        }
+      },
+    )
+    const oneOffChecks = FRT_ONE_OFF_SECTION_DEFINITIONS.flatMap((section) => section.rows).map(
+      (row) =>
+        row.id === 'one-off:fire-truck:16'
+          ? {
+              ...row,
+              condition: 'Not Good',
+              remarks: 'Mute switch sticking.',
+              photos: [
+                {
+                  id: 'frt-one-off-photo-1',
+                  fileName: 'frt-one-off-photo.png',
+                  url: 'data:image/png;base64,BBBB',
+                },
+              ],
+            }
+          : { ...row, condition: 'Good', remarks: '', photos: [] },
+    )
+
+    const incomplete = getInspectionFormMissingFields({
+      mainLocation: 'FIRE TRUCK',
+      selectedLocation: 'FIRE TRUCK',
+      inspectionType: 'FRT Daily Inspection',
+      inspectedAt: '2026-06-29T09:30',
+      frtInspectedBy: 'Inspector Truck',
+      frtInspectionDate: '2026-06-29',
+      frtShift: 'Day',
+      frtDailyChecks: dailyChecks,
+      frtOneOffChecks: oneOffChecks,
+      photos: [],
+    })
+
+    expect(incomplete).toEqual(
+      expect.objectContaining({
+        frtSession: false,
+        frtDailyChecks: false,
+        frtDailyRemarks: false,
+        frtOneOffChecks: false,
+        frtOneOffRemarks: false,
+      }),
+    )
   })
 
   it('appends helper text without erasing existing notes or duplicating chips', () => {
@@ -1946,6 +2630,362 @@ describe('inspectionFormHelpers', () => {
     ])
     expect(getInspectionChecklistChips('Other Inspection')).toContain('Area checked')
     expect(getInspectionChecklistChips('Unknown Type')).toContain('Condition recorded')
+  })
+
+  it('keeps hydraulic workbook seed rows visible when catalog coverage is partial', () => {
+    const visibleChecks = getHydraulicVisibleChecks({
+      mainLocation: 'FRT',
+      hydraulicEquipmentRows: [
+        {
+          id: 'frt:hydraulic-pump-motor-1',
+          location: 'FRT',
+          mainLocation: 'FRT',
+          equipment: 'Hydraulic Pump Motor 1',
+          equipmentId: 1,
+          equipmentDescription: 'Primary power unit',
+          equipmentSource: 'seed',
+          canEdit: true,
+          canDelete: true,
+        },
+      ],
+      hydraulicChecks: [
+        {
+          id: 'frt:hydraulic-pump-motor-1',
+          location: 'FRT',
+          equipment: 'Hydraulic Pump Motor 1',
+          physicalCondition: 'OK',
+        },
+      ],
+    })
+
+    expect(visibleChecks).toHaveLength(6)
+    expect(visibleChecks.map((row) => row.equipment)).toEqual([
+      'Hydraulic Pump Motor 1',
+      'Hydraulic Hose 1',
+      'Hydraulic Spreader 1',
+      'Hydraulic Cutter 1',
+      'Hydraulic Combi 1',
+      'Hydraulic Cylinder Ramp 1',
+    ])
+    expect(visibleChecks[0]).toMatchObject({
+      id: 'frt:hydraulic-pump-motor-1',
+      equipmentId: 1,
+      equipmentDescription: 'Primary power unit',
+      canEdit: true,
+      canDelete: true,
+      isWorkbookSeedRow: true,
+      isExtensionRow: false,
+      physicalCondition: 'OK',
+    })
+  })
+
+  it('appends unmatched hydraulic catalog and saved rows after workbook seed rows', () => {
+    const visibleChecks = getHydraulicVisibleChecks({
+      mainLocation: 'FRT',
+      hydraulicEquipmentRows: [
+        {
+          id: 'hydraulic-custom-1',
+          location: 'FRT',
+          mainLocation: 'FRT',
+          equipment: 'Hydraulic Ram Extension',
+          equipmentSource: 'custom',
+          canEdit: true,
+          canDelete: true,
+        },
+      ],
+      hydraulicChecks: [
+        {
+          id: 'hydraulic-custom-2',
+          location: 'FRT',
+          mainLocation: 'FRT',
+          equipment: 'Hydraulic Wedge',
+          equipmentSource: 'custom',
+          functionTest: 'Defect',
+        },
+      ],
+    })
+
+    expect(visibleChecks).toHaveLength(8)
+    expect(visibleChecks.slice(0, 6).every((row) => row.isWorkbookSeedRow === true)).toBe(true)
+    expect(visibleChecks.slice(6)).toEqual([
+      expect.objectContaining({
+        equipment: 'Hydraulic Ram Extension',
+        isWorkbookSeedRow: false,
+        isExtensionRow: true,
+      }),
+      expect.objectContaining({
+        equipment: 'Hydraulic Wedge',
+        isWorkbookSeedRow: false,
+        isExtensionRow: true,
+      }),
+    ])
+  })
+
+  it('keeps saved fire extinguisher rows visible when catalog coverage is partial', () => {
+    const visibleChecks = getFireExtinguisherVisibleChecks({
+      mainLocation: 'Manjung Hub',
+      subLocation: 'Reception',
+      fireExtinguisherCatalogRows: [
+        {
+          id: 'fe:1',
+          catalogId: 'fe:1',
+          sourceRowNumber: '1',
+          zone: 'Zone 1',
+          mainLocation: 'Manjung Hub',
+          subLocation: 'Reception',
+          idLocNo: 'ADO-001',
+          barcodeNo: 'EE042021Y544896',
+          feType: 'DP 6KG',
+          certificationValidity: 'Valid',
+          certificationValidityRaw: '01/12/2026',
+          daysLeftToExpire: '180',
+        },
+      ],
+      fireExtinguisherChecks: [
+        {
+          id: 'fe:1',
+          catalogId: 'fe:1',
+          sourceRowNumber: '1',
+          mainLocation: 'Manjung Hub',
+          subLocation: 'Reception',
+          idLocNo: 'ADO-001',
+          barcodeNo: 'EE042021Y544896',
+          physicalCondition: 'Good',
+          signageCondition: 'Good',
+          boxKeyAvailability: 'Yes',
+          boxGlassAvailability: 'Yes',
+          operationalCondition: 'Operational',
+        },
+        {
+          id: 'fe:999',
+          sourceRowNumber: '999',
+          mainLocation: 'Manjung Hub',
+          subLocation: 'Reception',
+          idLocNo: 'ADO-999',
+          barcodeNo: 'EE042021Y999999',
+          feType: 'CO2 5KG',
+          certificationValidity: 'Expired',
+          certificationValidityRaw: '01/01/2024',
+          daysLeftToExpire: '-10',
+          physicalCondition: 'Not Good',
+          physicalConditionRemarks: 'Cylinder body dented.',
+        },
+      ],
+    })
+
+    expect(visibleChecks).toHaveLength(2)
+    expect(visibleChecks[0]).toMatchObject({
+      id: 'fe:1',
+      zone: 'Zone 1',
+      idLocNo: 'ADO-001',
+      daysLeftToExpire: '180',
+      isOrphanedSavedRow: false,
+    })
+    expect(visibleChecks[1]).toMatchObject({
+      id: 'fe:999',
+      idLocNo: 'ADO-999',
+      barcodeNo: 'EE042021Y999999',
+      physicalCondition: 'Not Good',
+      physicalConditionRemarks: 'Cylinder body dented.',
+      isOrphanedSavedRow: true,
+    })
+  })
+
+  it('keeps fire extinguisher merged counts and descriptions aligned with the merged visible set', () => {
+    const form = normalizeInspectionForm({
+      inspectionType: 'Fire Extinguisher Inspection',
+      mainLocation: 'Manjung Hub',
+      subLocation: 'Reception',
+      selectedLocation: 'Manjung Hub > Reception',
+      fireExtinguisherInspectedBy: 'Inspector Fire',
+      fireExtinguisherInspectionDate: '2026-06-29',
+      fireExtinguisherCatalogRows: [
+        {
+          id: 'fe:1',
+          catalogId: 'fe:1',
+          sourceRowNumber: '1',
+          zone: 'Zone 1',
+          mainLocation: 'Manjung Hub',
+          subLocation: 'Reception',
+          idLocNo: 'ADO-001',
+          barcodeNo: 'EE042021Y544896',
+          certificationValidity: 'Valid',
+          certificationValidityRaw: '01/12/2026',
+          daysLeftToExpire: '180',
+        },
+      ],
+      fireExtinguisherChecks: [
+        {
+          id: 'fe:1',
+          catalogId: 'fe:1',
+          sourceRowNumber: '1',
+          mainLocation: 'Manjung Hub',
+          subLocation: 'Reception',
+          idLocNo: 'ADO-001',
+          barcodeNo: 'EE042021Y544896',
+          physicalCondition: 'Good',
+          signageCondition: 'Good',
+          boxKeyAvailability: 'Yes',
+          boxGlassAvailability: 'Yes',
+          operationalCondition: 'Operational',
+        },
+        {
+          id: 'fe:999',
+          sourceRowNumber: '999',
+          mainLocation: 'Manjung Hub',
+          subLocation: 'Reception',
+          idLocNo: 'ADO-999',
+          barcodeNo: 'EE042021Y999999',
+          physicalCondition: 'Not Good',
+          physicalConditionRemarks: 'Cylinder body dented.',
+          physicalConditionPhotos: [
+            {
+              id: 'fe-photo-999',
+              fileName: 'dented-body.jpg',
+              description: 'Cylinder body defect',
+              url: 'data:image/png;base64,defect999',
+            },
+          ],
+          signageCondition: 'Good',
+          boxKeyAvailability: 'Yes',
+          boxGlassAvailability: 'Yes',
+          operationalCondition: 'Operational',
+          remarks: 'Needs replacement.',
+        },
+      ],
+    })
+
+    const summary = getFireExtinguisherCheckSummary(form)
+    const payload = buildInspectionPayloadSnapshot(form)
+
+    expect(summary.totalCount).toBe(2)
+    expect(summary.completedCount).toBe(2)
+    expect(summary.defectCount).toBe(1)
+    expect(summary.defectFieldCount).toBe(1)
+    expect(payload.checklist).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: 'ADO-999 - FE Physical Condition: Not Good',
+        }),
+      ]),
+    )
+    expect(payload.description).toContain('Fire extinguishers checked at Manjung Hub > Reception.')
+    expect(payload.description).toContain('Defect/remark item(s): 1.')
+    expect(payload.description).toContain(
+      '- ADO-999 - FE Physical Condition: Cylinder body dented.',
+    )
+    expect(payload.description).toContain(
+      '- ADO-999 - General equipment remarks: Needs replacement.',
+    )
+  })
+
+  it('appends SCBA extension rows after workbook rows inside static sections', () => {
+    const visibleSections = getScbaVisibleSections({
+      mainLocation: 'FRT',
+      scbaBackPlateChecks: [
+        {
+          id: 'backPlate:frt:msa:06',
+          sectionKey: 'backPlate',
+          location: 'FRT',
+          mainLocation: 'FRT',
+          brand: 'MSA',
+          serialNo: '06',
+          backPlateHarnessCondition: 'Good',
+        },
+        {
+          id: 'backPlate-extra-1',
+          sectionKey: 'backPlate',
+          location: 'FRT',
+          mainLocation: 'FRT',
+          brand: 'MSA',
+          serialNo: 'R-99',
+          equipmentSource: 'custom',
+          isCustomEquipment: true,
+        },
+      ],
+      scbaCylinderChecks: [],
+      scbaFaceMaskChecks: [],
+      scbaCustomSections: [
+        {
+          id: 'customScba-regulator',
+          key: 'customScba-regulator',
+          title: 'Regulator',
+          shortLabel: 'Regulator',
+          fields: [{ key: 'purgeValve', label: 'Purge Valve', kind: 'status' }],
+          rows: [
+            {
+              id: 'customScba-regulator:frt:msa:r-01',
+              location: 'FRT',
+              mainLocation: 'FRT',
+              brand: 'MSA',
+              serialNo: 'R-01',
+              purgeValve: 'Good',
+            },
+          ],
+        },
+      ],
+    })
+
+    const backPlateSection = visibleSections.find((section) => section.key === 'backPlate')
+    const customSection = visibleSections.find((section) => section.key === 'customScba-regulator')
+    const seededBackPlateRow = backPlateSection.visibleRows.find(
+      (row) => row.id === 'backPlate:frt:msa:06',
+    )
+    const extraBackPlateRow = backPlateSection.visibleRows.find(
+      (row) => row.id === 'backPlate-extra-1',
+    )
+
+    expect(seededBackPlateRow).toMatchObject({
+      id: 'backPlate:frt:msa:06',
+      isWorkbookSeedRow: true,
+      isExtensionRow: false,
+    })
+    expect(backPlateSection.visibleRows.at(-1)).toMatchObject({
+      id: 'backPlate-extra-1',
+      isWorkbookSeedRow: false,
+      isExtensionRow: true,
+      isCustomEquipment: true,
+    })
+    expect(extraBackPlateRow).toMatchObject({
+      id: 'backPlate-extra-1',
+      isWorkbookSeedRow: false,
+      isExtensionRow: true,
+      isCustomEquipment: true,
+    })
+    expect(customSection.visibleRows[0]).toMatchObject({
+      id: 'customScba-regulator:frt:msa:r-01',
+      isWorkbookSeedRow: false,
+      isExtensionRow: true,
+    })
+  })
+
+  it('appends High Angle extension rows after workbook reference rows for a selected kit', () => {
+    const visibleChecks = getHighAngleVisibleChecks({
+      mainLocation: 'Response Kit #1',
+      highAngleChecks: [
+        {
+          id: 'response-kit-1:999',
+          mainLocation: 'Response Kit #1',
+          location: 'Main Compartment',
+          subLocation: 'Extensions',
+          equipment: 'Custom Anchor',
+          quantity: '1',
+          condition: 'Good',
+        },
+      ],
+    })
+
+    expect(visibleChecks[0]).toMatchObject({
+      rowNumber: '1',
+      isWorkbookSeedRow: true,
+      isExtensionRow: false,
+    })
+    expect(visibleChecks.at(-1)).toMatchObject({
+      id: 'response-kit-1:999',
+      equipment: 'Custom Anchor',
+      isWorkbookSeedRow: false,
+      isExtensionRow: true,
+    })
   })
 
   it('toggles structured checklist state and appends readable description text once', () => {
@@ -1983,5 +3023,127 @@ describe('inspectionFormHelpers', () => {
       ),
     ).toBe(false)
     expect(deselected.description).toBe('Existing note\nPhysical condition checked')
+  })
+
+  it('requires High Angle issue photos and treats cleared-status evidence as retained audit context', () => {
+    const form = normalizeInspectionForm({
+      inspectionType: 'High Angle Rescue Equipment Inspection',
+      mainLocation: 'Response Kit #1',
+      highAngleChecks: [
+        {
+          id: 'response-kit-1:3',
+          mainLocation: 'Response Kit #1',
+          equipment: 'Locking Carabiner - CT - Steel - S',
+          rowNumber: '3',
+          condition: 'Not Good',
+          conditionRemarks: 'Gate spring is sticking.',
+          conditionPhotos: [],
+        },
+      ],
+      photos: [],
+    })
+
+    expect(getInspectionFormMissingFields(form).highAngleRemarks).toBe(true)
+
+    const withPhoto = normalizeInspectionForm({
+      ...form,
+      highAngleChecks: [
+        {
+          ...form.highAngleChecks[0],
+          conditionPhotos: [basePhotos[0]],
+        },
+      ],
+    })
+    expect(getInspectionFormMissingFields(withPhoto).highAngleRemarks).toBe(false)
+    expect(getHighAngleCheckSummary(withPhoto).incompletePhotoCount).toBe(0)
+
+    const retained = normalizeInspectionForm({
+      ...withPhoto,
+      highAngleChecks: [
+        {
+          ...withPhoto.highAngleChecks[0],
+          condition: 'Good',
+        },
+      ],
+    })
+    expect(getHighAngleCheckSummary(retained).issueCount).toBe(0)
+    expect(
+      getHighAngleRetainedEvidenceRows(getHighAngleCheckSummary(retained).visibleChecks),
+    ).toHaveLength(1)
+    const retainedPayloadRow = buildInspectionPayloadSnapshot(retained).highAngleChecks.find(
+      (row) => row.id === 'response-kit-1:3',
+    )
+    expect(retainedPayloadRow).toMatchObject({
+      condition: 'Good',
+      [HIGH_ANGLE_CONDITION_FIELD.remarksKey]: 'Gate spring is sticking.',
+      [HIGH_ANGLE_CONDITION_FIELD.photosKey]: [basePhotos[0]],
+    })
+  })
+
+  it('requires SCBA issue photos and keeps field evidence in payload snapshots', () => {
+    const field = SCBA_SECTION_DEFINITIONS[0].fields.find(
+      (candidate) => candidate.key === 'highPressureHose',
+    )
+    const { remarksKey, photosKey } = getScbaFieldEvidenceKeys(field)
+    const form = normalizeInspectionForm({
+      inspectionType: 'SCBA Inspection',
+      mainLocation: 'FRT',
+      scbaBackPlateChecks: [
+        {
+          id: 'backplate:frt:msa:06',
+          location: 'FRT',
+          brand: 'MSA',
+          serialNo: '06',
+          backPlateHarnessCondition: 'Good',
+          highPressureHose: 'Not Good',
+          pressureGauge: 'Good',
+          alarmDevice: 'Good',
+          demandValve: 'Good',
+          sealing: 'Good',
+          cleanliness: 'Good',
+          remarks: 'General SCBA row note.',
+          photos: [basePhotos[0]],
+          [remarksKey]: 'Hose coupling worn.',
+          [photosKey]: [],
+        },
+      ],
+      scbaCylinderChecks: [],
+      scbaFaceMaskChecks: [],
+      photos: [],
+    })
+
+    expect(getInspectionFormMissingFields(form).scbaRemarks).toBe(true)
+    expect(getScbaCheckSummary(form).incompletePhotoCount).toBe(1)
+
+    const withPhoto = normalizeInspectionForm({
+      ...form,
+      scbaBackPlateChecks: [
+        {
+          ...form.scbaBackPlateChecks[0],
+          [photosKey]: [basePhotos[1]],
+        },
+      ],
+    })
+    expect(getInspectionFormMissingFields(withPhoto).scbaRemarks).toBe(false)
+    expect(getScbaCheckSummary(withPhoto).incompletePhotoCount).toBe(0)
+
+    const payload = buildInspectionPayloadSnapshot(withPhoto)
+    expect(payload.scbaBackPlateChecks[0]).toMatchObject({
+      remarks: 'General SCBA row note.',
+      photos: [basePhotos[0]],
+      highPressureHose: 'Not Good',
+      [remarksKey]: 'Hose coupling worn.',
+      [photosKey]: [basePhotos[1]],
+    })
+    expect(payload.description).toContain('High Pressure Hose: Hose coupling worn.')
+    expect(payload.description).not.toContain('General SCBA row note.')
+
+    const withoutAdditionalPhoto = normalizeInspectionForm({
+      ...withPhoto,
+      scbaBackPlateChecks: [{ ...withPhoto.scbaBackPlateChecks[0], photos: [] }],
+    })
+    expect(createInspectionFormSignature(withPhoto)).not.toBe(
+      createInspectionFormSignature(withoutAdditionalPhoto),
+    )
   })
 })

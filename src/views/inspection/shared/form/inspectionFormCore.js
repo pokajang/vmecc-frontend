@@ -4,6 +4,7 @@ import {
   buildErAuxDescription,
   getErAuxCheckSummary,
   getErAuxMissingFields,
+  getErAuxValidationDetails,
   getErAuxVisibleChecks,
   isErAuxInspectionType,
   normalizeErAuxChecks,
@@ -23,6 +24,7 @@ import {
   buildFrtDescription,
   getFrtCheckSummary,
   getFrtMissingFields,
+  getFrtValidationDetails,
   getFrtVisibleDailyChecks,
   getFrtVisibleOneOffChecks,
   isFrtDailyInspectionType,
@@ -31,10 +33,19 @@ import {
   normalizeFrtTruckReference,
 } from 'src/views/inspection/types/frt-daily/helpers'
 import {
+  buildGeneralChecklist,
+  buildGeneralDescription,
+  GENERAL_INSPECTION_TYPE,
+  getGeneralMissingFields,
+  getGeneralValidationDetails,
+  isGeneralInspectionType as isGeneralInspectionTypeHelper,
+} from 'src/views/inspection/types/general/helpers'
+import {
   buildHighAngleChecklist,
   buildHighAngleDescription,
   getHighAngleMissingFields,
   getHighAngleVisibleChecks,
+  HIGH_ANGLE_CONDITION_FIELD,
   isHighAngleInspectionType,
   normalizeHighAngleChecks,
 } from 'src/views/inspection/types/high-angle/helpers'
@@ -63,17 +74,77 @@ import {
   buildScbaDescription,
   getScbaCheckSummary,
   getScbaMissingFields,
+  getScbaFieldEvidenceKeys,
   isScbaInspectionType,
   normalizeScbaBackPlateChecks,
+  normalizeScbaCustomSections,
   normalizeScbaCylinderChecks,
   normalizeScbaFaceMaskChecks,
+  SCBA_SECTION_DEFINITIONS,
 } from 'src/views/inspection/types/scba/helpers'
-import { GENERAL_INSPECTION_TYPE } from 'src/views/inspection/types/general/definition'
 import { normalizeInspectionDraft } from 'src/views/inspection/utils'
+import { ROLE_ABBREVIATIONS } from 'src/constants/roles'
+import { getPrimaryRoleLabel } from 'src/utils/authz'
 
 export const INSPECTION_DRAFT_META_KEY = '__inspection'
 export const INSPECTION_FORM_VERSION = 'inspection'
 export const INSPECTION_CHECKLIST_VERSION = 'inspection-checklist-v1'
+
+const padDatePart = (value) => String(value).padStart(2, '0')
+
+export const getDefaultInspectionDateTime = (date = new Date()) => {
+  const parsed = date instanceof Date ? date : new Date(date)
+  const safeDate = Number.isNaN(parsed.getTime()) ? new Date() : parsed
+  return (
+    [
+      safeDate.getFullYear(),
+      padDatePart(safeDate.getMonth() + 1),
+      padDatePart(safeDate.getDate()),
+    ].join('-') + `T${padDatePart(safeDate.getHours())}:${padDatePart(safeDate.getMinutes())}`
+  )
+}
+
+export const normalizeInspectionDateTime = (value = '') => {
+  const text = String(value || '').trim()
+  if (!text) return ''
+  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return `${text}T00:00`
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(text)) return text.slice(0, 16)
+  const parsed = new Date(text)
+  if (Number.isNaN(parsed.getTime())) return text
+  return getDefaultInspectionDateTime(parsed)
+}
+
+export const getInspectionDateFromDateTime = (value = '') => {
+  const normalized = normalizeInspectionDateTime(value)
+  return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(normalized) ? normalized.slice(0, 10) : ''
+}
+
+const deriveInspectedAt = (source = {}) => {
+  const direct = normalizeInspectionDateTime(
+    source.inspectedAt ||
+      source.inspected_at ||
+      source.inspectionDateTime ||
+      source.inspection_date_time ||
+      '',
+  )
+  if (direct) return direct
+
+  return normalizeInspectionDateTime(
+    source.erAuxInspectionDate ||
+      source.er_aux_inspection_date ||
+      source.fireExtinguisherInspectionDate ||
+      source.fire_extinguisher_inspection_date ||
+      source.frtInspectionDate ||
+      source.frt_inspection_date ||
+      source.highAngleInspectionDate ||
+      source.high_angle_inspection_date ||
+      source.scbaInspectionDate ||
+      source.scba_inspection_date ||
+      source.hseInspectionDate ||
+      source.hse_inspection_date ||
+      '',
+  )
+}
 
 export const defaultInspectionForm = {
   selectedLocation: '',
@@ -82,6 +153,7 @@ export const defaultInspectionForm = {
   mainLocationId: '',
   subLocationId: '',
   inspectionType: '',
+  inspectedAt: '',
   description: '',
   photos: [],
   checklist: [],
@@ -98,6 +170,8 @@ export const defaultInspectionForm = {
   frtInspectedBy: '',
   frtInspectionDate: '',
   frtShift: '',
+  frtTruckId: '',
+  frtTruckPlateNo: '',
   frtTruckReference: normalizeFrtTruckReference(),
   frtDailyChecks: [],
   frtDailyRemarks: '',
@@ -111,6 +185,7 @@ export const defaultInspectionForm = {
   scbaBackPlateChecks: [],
   scbaCylinderChecks: [],
   scbaFaceMaskChecks: [],
+  scbaCustomSections: [],
   hseInspectedBy: '',
   hseInspectionDate: '',
   hseSelections: [],
@@ -124,6 +199,73 @@ export const defaultInspectionForm = {
   hseResponsiblePerson: '',
   hseTargetDate: '',
   hseRemarks: '',
+  inspectionActor: null,
+  submittedByRole: '',
+  submittedByRoleCode: '',
+}
+
+export const getInspectionSessionActor = (user = {}) =>
+  [user?.name, user?.full_name, user?.fullName, user?.display_name, user?.displayName, user?.email]
+    .map((value) => String(value || '').trim())
+    .find(Boolean) || ''
+
+export const getInspectionSessionActorRole = (user = {}) =>
+  String(user?.primary_role || user?.primaryRole || getPrimaryRoleLabel(user) || '').trim()
+
+export const getInspectionSessionActorRoleCode = (user = {}) => {
+  const role = getInspectionSessionActorRole(user)
+  return String(
+    user?.primary_role_code || user?.primaryRoleCode || ROLE_ABBREVIATIONS[role] || '',
+  ).trim()
+}
+
+export const formatInspectionRole = (role = '', roleCode = '') => {
+  const normalizedRole = String(role || '').trim()
+  const normalizedRoleCode = String(roleCode || '').trim()
+  if (normalizedRole && normalizedRoleCode) return `${normalizedRole} (${normalizedRoleCode})`
+  return normalizedRole || normalizedRoleCode
+}
+
+const getInspectionSessionActorSnapshot = (user = {}) => ({
+  userId: user?.id ?? null,
+  name: getInspectionSessionActor(user),
+  email: String(user?.email || '').trim(),
+  role: getInspectionSessionActorRole(user),
+  roleCode: getInspectionSessionActorRoleCode(user),
+})
+
+export const getInspectionInspectorField = (inspectionType = '') => {
+  if (isErAuxInspectionType(inspectionType)) return 'erAuxInspectedBy'
+  if (isFireExtinguisherInspectionType(inspectionType)) return 'fireExtinguisherInspectedBy'
+  if (isFrtDailyInspectionType(inspectionType)) return 'frtInspectedBy'
+  if (isHighAngleInspectionType(inspectionType)) return 'highAngleInspectedBy'
+  if (isScbaInspectionType(inspectionType)) return 'scbaInspectedBy'
+  if (isHseInspectionType(inspectionType)) return 'hseInspectedBy'
+  return ''
+}
+
+export const applySessionInspector = (form = {}, user = {}) => {
+  const source = form && typeof form === 'object' ? form : {}
+  const normalizedForm = normalizeInspectionForm(form)
+  const inspectorField = getInspectionInspectorField(normalizedForm.inspectionType)
+  const actor = getInspectionSessionActorSnapshot(user)
+  if (!inspectorField) {
+    return {
+      ...source,
+      ...normalizedForm,
+      inspectionActor: actor,
+      submittedByRole: actor.role,
+      submittedByRoleCode: actor.roleCode,
+    }
+  }
+  return {
+    ...source,
+    ...normalizedForm,
+    [inspectorField]: actor.name,
+    inspectionActor: actor,
+    submittedByRole: actor.role,
+    submittedByRoleCode: actor.roleCode,
+  }
 }
 
 export const INSPECTION_DESCRIPTION_CHIPS = [
@@ -211,8 +353,7 @@ export const INSPECTION_CHECKLIST_TEMPLATES = {
   ],
 }
 
-export const isGeneralInspectionType = (inspectionType) =>
-  normalizeChecklistKey(inspectionType) === normalizeChecklistKey(GENERAL_INSPECTION_TYPE)
+export const isGeneralInspectionType = isGeneralInspectionTypeHelper
 
 export const makeInspectionChecklistId = (inspectionType, label) =>
   `${slugChecklistSegment(inspectionType) || 'generic'}:${slugChecklistSegment(label)}`
@@ -417,6 +558,12 @@ export const normalizeInspectionForm = (form = {}) => {
   const source = form && typeof form === 'object' ? form : {}
   const location = normalizeInspectionLocation(source)
   const hseFields = normalizeHseFormFields(source)
+  const inspectedAt = deriveInspectedAt(source)
+  const inspectionDate = getInspectionDateFromDateTime(inspectedAt)
+  const normalizedHseFields = {
+    ...hseFields,
+    hseInspectionDate: inspectionDate || hseFields.hseInspectionDate,
+  }
   return {
     selectedLocation: location.selectedLocation,
     mainLocation: location.mainLocation,
@@ -424,12 +571,29 @@ export const normalizeInspectionForm = (form = {}) => {
     mainLocationId: location.mainLocationId,
     subLocationId: location.subLocationId,
     inspectionType: deriveType(source),
+    inspectedAt,
     description: deriveDescription(source),
     photos: derivePhotos(source),
     checklist: normalizeChecklist(source.checklist),
+    inspectionActor:
+      source.inspectionActor && typeof source.inspectionActor === 'object'
+        ? {
+            userId: source.inspectionActor.userId ?? source.inspectionActor.user_id ?? null,
+            name: String(source.inspectionActor.name || '').trim(),
+            email: String(source.inspectionActor.email || '').trim(),
+            role: String(source.inspectionActor.role || '').trim(),
+            roleCode: String(
+              source.inspectionActor.roleCode || source.inspectionActor.role_code || '',
+            ).trim(),
+          }
+        : null,
+    submittedByRole: String(source.submittedByRole || source.submitted_by_role || '').trim(),
+    submittedByRoleCode: String(
+      source.submittedByRoleCode || source.submitted_by_role_code || '',
+    ).trim(),
     erAuxInspectedBy: String(source.erAuxInspectedBy || source.er_aux_inspected_by || '').trim(),
     erAuxInspectionDate: String(
-      source.erAuxInspectionDate || source.er_aux_inspection_date || '',
+      inspectionDate || source.erAuxInspectionDate || source.er_aux_inspection_date || '',
     ).trim(),
     erAuxChecks: normalizeErAuxChecks(source.erAuxChecks || source.er_aux_checks),
     erAuxEquipmentRows: normalizeErAuxEquipmentRows(
@@ -439,7 +603,10 @@ export const normalizeInspectionForm = (form = {}) => {
       source.fireExtinguisherInspectedBy || source.fire_extinguisher_inspected_by || '',
     ).trim(),
     fireExtinguisherInspectionDate: String(
-      source.fireExtinguisherInspectionDate || source.fire_extinguisher_inspection_date || '',
+      inspectionDate ||
+        source.fireExtinguisherInspectionDate ||
+        source.fire_extinguisher_inspection_date ||
+        '',
     ).trim(),
     fireExtinguisherChecks: normalizeFireExtinguisherChecks(
       source.fireExtinguisherChecks || source.fire_extinguisher_checks,
@@ -452,8 +619,12 @@ export const normalizeInspectionForm = (form = {}) => {
       source.hydraulicEquipmentRows || source.hydraulic_equipment_rows,
     ),
     frtInspectedBy: String(source.frtInspectedBy || source.frt_inspected_by || '').trim(),
-    frtInspectionDate: String(source.frtInspectionDate || source.frt_inspection_date || '').trim(),
+    frtInspectionDate: String(
+      inspectionDate || source.frtInspectionDate || source.frt_inspection_date || '',
+    ).trim(),
     frtShift: String(source.frtShift || source.frt_shift || '').trim(),
+    frtTruckId: String(source.frtTruckId || source.frt_truck_id || '').trim(),
+    frtTruckPlateNo: String(source.frtTruckPlateNo || source.frt_truck_plate_no || '').trim(),
     frtTruckReference: normalizeFrtTruckReference(
       source.frtTruckReference || source.frt_truck_reference,
     ),
@@ -465,12 +636,12 @@ export const normalizeInspectionForm = (form = {}) => {
       source.highAngleInspectedBy || source.high_angle_inspected_by || '',
     ).trim(),
     highAngleInspectionDate: String(
-      source.highAngleInspectionDate || source.high_angle_inspection_date || '',
+      inspectionDate || source.highAngleInspectionDate || source.high_angle_inspection_date || '',
     ).trim(),
     highAngleChecks: normalizeHighAngleChecks(source.highAngleChecks || source.high_angle_checks),
     scbaInspectedBy: String(source.scbaInspectedBy || source.scba_inspected_by || '').trim(),
     scbaInspectionDate: String(
-      source.scbaInspectionDate || source.scba_inspection_date || '',
+      inspectionDate || source.scbaInspectionDate || source.scba_inspection_date || '',
     ).trim(),
     scbaBackPlateChecks: normalizeScbaBackPlateChecks(
       source.scbaBackPlateChecks || source.scba_back_plate_checks,
@@ -481,7 +652,10 @@ export const normalizeInspectionForm = (form = {}) => {
     scbaFaceMaskChecks: normalizeScbaFaceMaskChecks(
       source.scbaFaceMaskChecks || source.scba_face_mask_checks,
     ),
-    ...hseFields,
+    scbaCustomSections: normalizeScbaCustomSections(
+      source.scbaCustomSections || source.scba_custom_sections,
+    ),
+    ...normalizedHseFields,
   }
 }
 
@@ -489,6 +663,7 @@ export const getInspectionFormMissingFields = (form = {}) => {
   const normalizedForm = normalizeInspectionForm(form)
   const baseMissing = {
     inspectionType: !String(normalizedForm.inspectionType || '').trim(),
+    inspectedAt: !String(normalizedForm.inspectedAt || '').trim(),
     selectedLocation: getInspectionLocationMissingFields(normalizedForm).selectedLocation,
     photos: normalizedForm.photos.length === 0,
   }
@@ -581,6 +756,14 @@ export const getInspectionFormMissingFields = (form = {}) => {
     }
   }
 
+  if (isGeneralInspectionType(normalizedForm.inspectionType)) {
+    return {
+      ...baseMissing,
+      ...sharedStructuredMissing,
+      ...getGeneralMissingFields(normalizedForm),
+    }
+  }
+
   return {
     ...baseMissing,
     description: !String(normalizedForm.description || '').trim(),
@@ -592,6 +775,7 @@ export const getFirstMissingInspectionField = (form = {}) => {
   const missing = getInspectionFormMissingFields(form)
   return [
     'inspectionType',
+    'inspectedAt',
     'selectedLocation',
     'erAuxSession',
     'erAuxChecks',
@@ -624,24 +808,45 @@ export const getInspectionFormValidationState = (form = {}) => {
   const normalizedForm = normalizeInspectionForm(form)
   const missing = getInspectionFormMissingFields(normalizedForm)
   const firstField = getFirstMissingInspectionField(normalizedForm)
+  const isErAux = isErAuxInspectionType(normalizedForm.inspectionType)
   const isFireExtinguisher = isFireExtinguisherInspectionType(normalizedForm.inspectionType)
+  const isFrt = isFrtDailyInspectionType(normalizedForm.inspectionType)
   const isHse = isHseInspectionType(normalizedForm.inspectionType)
+  const isGeneral = isGeneralInspectionType(normalizedForm.inspectionType)
+  const erAux = isErAux
+    ? getErAuxValidationDetails(normalizedForm)
+    : {
+        incompleteCheckDetails: [],
+        incompleteEvidenceDetails: [],
+        firstTarget: null,
+        errorCount: 0,
+      }
   const fireExtinguisher = isFireExtinguisher
     ? getFireExtinguisherValidationDetails(normalizedForm)
     : {
         rowDetails: [],
         missingStatusesByRow: {},
         missingRemarksByRow: {},
+        missingPhotosByRow: {},
         firstTarget: null,
         errorCount: 0,
       }
   const hse = isHse
     ? getHseValidationDetails(normalizedForm)
     : { missingFields: {}, firstTarget: null, errorCount: 0 }
+  const frt = isFrt
+    ? getFrtValidationDetails(normalizedForm)
+    : { rowDetails: [], firstTarget: null, errorCount: 0 }
+  const general = isGeneral
+    ? getGeneralValidationDetails(normalizedForm)
+    : { missingFields: {}, firstTarget: null, errorCount: 0 }
 
   const errorCount =
     Object.entries(missing).reduce((count, [field, value]) => {
       if (!value) return count
+      if (isErAux && ['erAuxChecks', 'erAuxRemarks'].includes(field)) {
+        return count
+      }
       if (
         isFireExtinguisher &&
         ['fireExtinguisherChecks', 'fireExtinguisherRemarks'].includes(field)
@@ -649,26 +854,45 @@ export const getInspectionFormValidationState = (form = {}) => {
         return count
       }
       if (isHse && field === 'hseDetails') return count
+      if (
+        isFrt &&
+        ['frtDailyChecks', 'frtDailyRemarks', 'frtOneOffChecks', 'frtOneOffRemarks'].includes(field)
+      ) {
+        return count
+      }
       return count + 1
     }, 0) +
+    erAux.errorCount +
     fireExtinguisher.errorCount +
-    hse.errorCount
+    hse.errorCount +
+    frt.errorCount
 
   const firstTarget =
-    firstField === 'fireExtinguisherChecks' || firstField === 'fireExtinguisherRemarks'
-      ? fireExtinguisher.firstTarget || { field: firstField }
-      : firstField === 'hseDetails'
-        ? hse.firstTarget || { field: firstField }
-        : firstField
-          ? { field: firstField }
-          : null
+    firstField === 'erAuxChecks' || firstField === 'erAuxRemarks'
+      ? erAux.firstTarget || { field: firstField }
+      : firstField === 'fireExtinguisherChecks' || firstField === 'fireExtinguisherRemarks'
+        ? fireExtinguisher.firstTarget || { field: firstField }
+        : ['frtDailyChecks', 'frtDailyRemarks', 'frtOneOffChecks', 'frtOneOffRemarks'].includes(
+              firstField,
+            )
+          ? frt.firstTarget || { field: firstField }
+          : firstField === 'hseDetails'
+            ? hse.firstTarget || { field: firstField }
+            : isGeneral && ['description', 'photos'].includes(firstField)
+              ? general.firstTarget || { field: firstField }
+              : firstField
+                ? { field: firstField }
+                : null
 
   return {
     missing,
     errorCount,
     firstTarget,
+    erAux,
     fireExtinguisher,
+    frt,
     hse,
+    general,
   }
 }
 
@@ -682,10 +906,14 @@ export const recordToInspectionForm = (record = {}) => {
     subLocationId: normalized.subLocationId || normalized.sub_location_id || '',
     locationPath: normalized.locationPath || normalized.location_path || [],
     inspectionType: normalized.incidentType || '',
+    inspectedAt: normalized.inspectedAt || normalized.inspected_at || '',
     description: normalized.description || '',
     photos: normalized.photos || [],
     findings: normalized.findings || [],
     checklist: normalized.checklist || [],
+    inspectionActor: normalized.inspectionActor || normalized.inspection_actor || null,
+    submittedByRole: normalized.submittedByRole || normalized.submitted_by_role || '',
+    submittedByRoleCode: normalized.submittedByRoleCode || normalized.submitted_by_role_code || '',
     erAuxInspectedBy: normalized.erAuxInspectedBy || normalized.er_aux_inspected_by || '',
     erAuxInspectionDate: normalized.erAuxInspectionDate || normalized.er_aux_inspection_date || '',
     erAuxChecks: normalized.erAuxChecks || normalized.er_aux_checks || [],
@@ -704,6 +932,8 @@ export const recordToInspectionForm = (record = {}) => {
     frtInspectedBy: normalized.frtInspectedBy || normalized.frt_inspected_by || '',
     frtInspectionDate: normalized.frtInspectionDate || normalized.frt_inspection_date || '',
     frtShift: normalized.frtShift || normalized.frt_shift || '',
+    frtTruckId: normalized.frtTruckId || normalized.frt_truck_id || '',
+    frtTruckPlateNo: normalized.frtTruckPlateNo || normalized.frt_truck_plate_no || '',
     frtTruckReference: normalized.frtTruckReference || normalized.frt_truck_reference || {},
     frtDailyChecks: normalized.frtDailyChecks || normalized.frt_daily_checks || [],
     frtDailyRemarks: normalized.frtDailyRemarks || normalized.frt_daily_remarks || '',
@@ -719,6 +949,7 @@ export const recordToInspectionForm = (record = {}) => {
     scbaBackPlateChecks: normalized.scbaBackPlateChecks || normalized.scba_back_plate_checks || [],
     scbaCylinderChecks: normalized.scbaCylinderChecks || normalized.scba_cylinder_checks || [],
     scbaFaceMaskChecks: normalized.scbaFaceMaskChecks || normalized.scba_face_mask_checks || [],
+    scbaCustomSections: normalized.scbaCustomSections || normalized.scba_custom_sections || [],
     hseInspectedBy: normalized.hseInspectedBy || normalized.hse_inspected_by || '',
     hseInspectionDate: normalized.hseInspectionDate || normalized.hse_inspection_date || '',
     hseSelections: normalized.hseSelections || normalized.hse_selections || [],
@@ -749,10 +980,14 @@ export const draftToInspectionForm = (draft = {}) => {
     subLocationId: normalized.subLocationId || normalized.sub_location_id || '',
     locationPath: normalized.locationPath || normalized.location_path || [],
     inspectionType: normalized.incidentType || '',
+    inspectedAt: normalized.inspectedAt || normalized.inspected_at || '',
     description: normalized.description || '',
     photos: normalized.photos || [],
     findings: normalized.findings || [],
     checklist: normalized.checklist || [],
+    inspectionActor: normalized.inspectionActor || normalized.inspection_actor || null,
+    submittedByRole: normalized.submittedByRole || normalized.submitted_by_role || '',
+    submittedByRoleCode: normalized.submittedByRoleCode || normalized.submitted_by_role_code || '',
     erAuxInspectedBy: normalized.erAuxInspectedBy || normalized.er_aux_inspected_by || '',
     erAuxInspectionDate: normalized.erAuxInspectionDate || normalized.er_aux_inspection_date || '',
     erAuxChecks: normalized.erAuxChecks || normalized.er_aux_checks || [],
@@ -771,6 +1006,8 @@ export const draftToInspectionForm = (draft = {}) => {
     frtInspectedBy: normalized.frtInspectedBy || normalized.frt_inspected_by || '',
     frtInspectionDate: normalized.frtInspectionDate || normalized.frt_inspection_date || '',
     frtShift: normalized.frtShift || normalized.frt_shift || '',
+    frtTruckId: normalized.frtTruckId || normalized.frt_truck_id || '',
+    frtTruckPlateNo: normalized.frtTruckPlateNo || normalized.frt_truck_plate_no || '',
     frtTruckReference: normalized.frtTruckReference || normalized.frt_truck_reference || {},
     frtDailyChecks: normalized.frtDailyChecks || normalized.frt_daily_checks || [],
     frtDailyRemarks: normalized.frtDailyRemarks || normalized.frt_daily_remarks || '',
@@ -786,6 +1023,7 @@ export const draftToInspectionForm = (draft = {}) => {
     scbaBackPlateChecks: normalized.scbaBackPlateChecks || normalized.scba_back_plate_checks || [],
     scbaCylinderChecks: normalized.scbaCylinderChecks || normalized.scba_cylinder_checks || [],
     scbaFaceMaskChecks: normalized.scbaFaceMaskChecks || normalized.scba_face_mask_checks || [],
+    scbaCustomSections: normalized.scbaCustomSections || normalized.scba_custom_sections || [],
     hseInspectedBy: normalized.hseInspectedBy || normalized.hse_inspected_by || '',
     hseInspectionDate: normalized.hseInspectionDate || normalized.hse_inspection_date || '',
     hseSelections: normalized.hseSelections || normalized.hse_selections || [],
@@ -843,6 +1081,9 @@ export const buildInspectionPayloadSnapshot = (form = {}) => {
   const scbaFaceMaskChecks = isScbaInspectionType(inspectionType)
     ? normalizeScbaFaceMaskChecks(normalizedForm.scbaFaceMaskChecks)
     : []
+  const scbaCustomSections = isScbaInspectionType(inspectionType)
+    ? normalizeScbaCustomSections(normalizedForm.scbaCustomSections)
+    : []
   const hseFields = isHseInspectionType(inspectionType)
     ? normalizeHseFormFields(normalizedForm)
     : normalizeHseFormFields()
@@ -875,14 +1116,18 @@ export const buildInspectionPayloadSnapshot = (form = {}) => {
                   scbaBackPlateChecks,
                   scbaCylinderChecks,
                   scbaFaceMaskChecks,
+                  scbaCustomSections,
                 })
               : isHseInspectionType(inspectionType) &&
                   !String(normalizedForm.description || '').trim()
                 ? buildHseDescription({ ...normalizedForm, ...hseFields, location })
-                : isErAuxInspectionType(inspectionType) &&
+                : isGeneralInspectionType(inspectionType) &&
                     !String(normalizedForm.description || '').trim()
-                  ? buildErAuxDescription({ ...normalizedForm, location, erAuxChecks })
-                  : String(normalizedForm.description || '').trim()
+                  ? buildGeneralDescription({ ...normalizedForm, location })
+                  : isErAuxInspectionType(inspectionType) &&
+                      !String(normalizedForm.description || '').trim()
+                    ? buildErAuxDescription({ ...normalizedForm, location, erAuxChecks })
+                    : String(normalizedForm.description || '').trim()
   const photos = normalizePhotos(normalizedForm.photos)
   const structuredChecklist = [
     ...(isScbaInspectionType(inspectionType)
@@ -891,6 +1136,7 @@ export const buildInspectionPayloadSnapshot = (form = {}) => {
           scbaBackPlateChecks,
           scbaCylinderChecks,
           scbaFaceMaskChecks,
+          scbaCustomSections,
         })
       : []),
     ...(isErAuxInspectionType(inspectionType)
@@ -910,6 +1156,9 @@ export const buildInspectionPayloadSnapshot = (form = {}) => {
       : []),
     ...(isHseInspectionType(inspectionType)
       ? buildHseChecklist({ ...normalizedForm, ...hseFields })
+      : []),
+    ...(isGeneralInspectionType(inspectionType)
+      ? buildGeneralChecklist({ ...normalizedForm, location })
       : []),
   ]
   const checklist = normalizeChecklist([
@@ -945,9 +1194,13 @@ export const buildInspectionPayloadSnapshot = (form = {}) => {
     subLocationId,
     locationPath,
     locationIds,
+    inspectedAt: String(normalizedForm.inspectedAt || '').trim(),
     description,
     photos,
     checklist,
+    inspectionActor: normalizedForm.inspectionActor,
+    submittedByRole: String(normalizedForm.submittedByRole || '').trim(),
+    submittedByRoleCode: String(normalizedForm.submittedByRoleCode || '').trim(),
     erAuxInspectedBy: String(normalizedForm.erAuxInspectedBy || '').trim(),
     erAuxInspectionDate: String(normalizedForm.erAuxInspectionDate || '').trim(),
     erAuxChecks,
@@ -960,6 +1213,8 @@ export const buildInspectionPayloadSnapshot = (form = {}) => {
     frtInspectedBy: String(normalizedForm.frtInspectedBy || '').trim(),
     frtInspectionDate: String(normalizedForm.frtInspectionDate || '').trim(),
     frtShift: String(normalizedForm.frtShift || '').trim(),
+    frtTruckId: String(normalizedForm.frtTruckId || '').trim(),
+    frtTruckPlateNo: String(normalizedForm.frtTruckPlateNo || '').trim(),
     frtTruckReference: normalizeFrtTruckReference(normalizedForm.frtTruckReference),
     frtDailyChecks,
     frtDailyRemarks: String(normalizedForm.frtDailyRemarks || '').trim(),
@@ -973,6 +1228,7 @@ export const buildInspectionPayloadSnapshot = (form = {}) => {
     scbaBackPlateChecks,
     scbaCylinderChecks,
     scbaFaceMaskChecks,
+    scbaCustomSections,
     ...hseFields,
     checklistVersion: checklist.length > 0 ? INSPECTION_CHECKLIST_VERSION : '',
     findings,
@@ -1000,10 +1256,10 @@ export const getInspectionDraftMeta = (payload = {}) => {
 export const isInspectionDraftPayload = (payload = {}) =>
   getInspectionDraftMeta(payload).formVersion === INSPECTION_FORM_VERSION
 
-export const buildInspectionDraftPayload = ({ form, mode = 'new', editReportId = '' }) =>
+export const buildInspectionDraftPayload = ({ form, mode = 'new', editReportId = '', user }) =>
   attachInspectionDraftMeta(
     {
-      ...buildInspectionPayloadSnapshot(form),
+      ...buildInspectionPayloadSnapshot(applySessionInspector(form, user)),
       savedAt: new Date().toISOString(),
     },
     { mode, editReportId },
@@ -1017,7 +1273,7 @@ const buildBaseInspectionRecord = ({
   nowIso = new Date().toISOString(),
   sequence,
 }) => {
-  const payloadSnapshot = buildInspectionPayloadSnapshot(form)
+  const payloadSnapshot = buildInspectionPayloadSnapshot(applySessionInspector(form, user))
   const { id, displayId } = createInspectionIdentity(reportTypeIdPrefix, nowIso, sequence)
   return {
     id,
@@ -1033,17 +1289,26 @@ const buildBaseInspectionRecord = ({
     subLocationId: payloadSnapshot.subLocationId,
     locationPath: payloadSnapshot.locationPath,
     locationIds: payloadSnapshot.locationIds,
+    inspectedAt: payloadSnapshot.inspectedAt,
     description: payloadSnapshot.description,
     photos: payloadSnapshot.photos,
     findings: payloadSnapshot.findings,
     checklist: payloadSnapshot.checklist,
+    inspectionActor: payloadSnapshot.inspectionActor,
+    submittedByRole: payloadSnapshot.submittedByRole,
+    submittedByRoleCode: payloadSnapshot.submittedByRoleCode,
     erAuxInspectedBy: payloadSnapshot.erAuxInspectedBy,
     erAuxInspectionDate: payloadSnapshot.erAuxInspectionDate,
     erAuxChecks: payloadSnapshot.erAuxChecks,
+    fireExtinguisherInspectedBy: payloadSnapshot.fireExtinguisherInspectedBy,
+    fireExtinguisherInspectionDate: payloadSnapshot.fireExtinguisherInspectionDate,
+    fireExtinguisherChecks: payloadSnapshot.fireExtinguisherChecks,
     hydraulicChecks: payloadSnapshot.hydraulicChecks,
     frtInspectedBy: payloadSnapshot.frtInspectedBy,
     frtInspectionDate: payloadSnapshot.frtInspectionDate,
     frtShift: payloadSnapshot.frtShift,
+    frtTruckId: payloadSnapshot.frtTruckId,
+    frtTruckPlateNo: payloadSnapshot.frtTruckPlateNo,
     frtTruckReference: payloadSnapshot.frtTruckReference,
     frtDailyChecks: payloadSnapshot.frtDailyChecks,
     frtDailyRemarks: payloadSnapshot.frtDailyRemarks,
@@ -1057,6 +1322,7 @@ const buildBaseInspectionRecord = ({
     scbaBackPlateChecks: payloadSnapshot.scbaBackPlateChecks,
     scbaCylinderChecks: payloadSnapshot.scbaCylinderChecks,
     scbaFaceMaskChecks: payloadSnapshot.scbaFaceMaskChecks,
+    scbaCustomSections: payloadSnapshot.scbaCustomSections,
     hseInspectedBy: payloadSnapshot.hseInspectedBy,
     hseInspectionDate: payloadSnapshot.hseInspectionDate,
     hseSelections: payloadSnapshot.hseSelections,
@@ -1110,10 +1376,15 @@ export const buildInspectionSubmittedRecord = (
   user,
   nowIso = new Date().toISOString(),
 ) => ({
-  ...(reviewRecord && typeof reviewRecord === 'object' ? reviewRecord : {}),
+  ...applySessionInspector(
+    reviewRecord && typeof reviewRecord === 'object' ? reviewRecord : {},
+    user,
+  ),
   status: 'Submitted',
   submittedAt: nowIso,
-  submittedBy: user?.name || user?.email || '',
+  submittedBy: getInspectionSessionActor(user),
+  submittedByRole: getInspectionSessionActorRole(user),
+  submittedByRoleCode: getInspectionSessionActorRoleCode(user),
 })
 
 export const isInspectionFormValid = (form = {}) => {
@@ -1142,6 +1413,7 @@ export const createInspectionFormSignature = (form = {}) => {
     erAuxChecks: normalizeErAuxChecks(snapshot.erAuxChecks).map((check) => ({
       ...check,
       photos: normalizePhotos(check.photos).map(getPhotoSignature),
+      defectPhotos: normalizePhotos(check.defectPhotos).map(getPhotoSignature),
     })),
     hydraulicChecks: normalizeHydraulicChecks(snapshot.hydraulicChecks).map((check) => ({
       ...check,
@@ -1150,6 +1422,49 @@ export const createInspectionFormSignature = (form = {}) => {
         next[field.photosKey] = normalizePhotos(check[field.photosKey]).map(getPhotoSignature)
         return next
       }, {}),
+    })),
+    highAngleChecks: normalizeHighAngleChecks(snapshot.highAngleChecks).map((check) => ({
+      ...check,
+      [HIGH_ANGLE_CONDITION_FIELD.photosKey]: normalizePhotos(
+        check[HIGH_ANGLE_CONDITION_FIELD.photosKey],
+      ).map(getPhotoSignature),
+    })),
+    ...SCBA_SECTION_DEFINITIONS.reduce((next, section) => {
+      const key =
+        section.key === 'backPlate'
+          ? 'scbaBackPlateChecks'
+          : section.key === 'cylinder'
+            ? 'scbaCylinderChecks'
+            : 'scbaFaceMaskChecks'
+      const normalizer =
+        section.key === 'backPlate'
+          ? normalizeScbaBackPlateChecks
+          : section.key === 'cylinder'
+            ? normalizeScbaCylinderChecks
+            : normalizeScbaFaceMaskChecks
+      next[key] = normalizer(snapshot[key]).map((check) => ({
+        ...check,
+        photos: normalizePhotos(check.photos).map(getPhotoSignature),
+        ...section.fields.reduce((fieldPhotos, field) => {
+          if (field.kind !== 'status') return fieldPhotos
+          const { photosKey } = getScbaFieldEvidenceKeys(field)
+          fieldPhotos[photosKey] = normalizePhotos(check[photosKey]).map(getPhotoSignature)
+          return fieldPhotos
+        }, {}),
+      }))
+      return next
+    }, {}),
+    scbaCustomSections: normalizeScbaCustomSections(snapshot.scbaCustomSections).map((section) => ({
+      ...section,
+      rows: section.rows.map((check) => ({
+        ...check,
+        photos: normalizePhotos(check.photos).map(getPhotoSignature),
+        ...section.fields.reduce((fieldPhotos, field) => {
+          const { photosKey } = getScbaFieldEvidenceKeys(field)
+          fieldPhotos[photosKey] = normalizePhotos(check[photosKey]).map(getPhotoSignature)
+          return fieldPhotos
+        }, {}),
+      })),
     })),
     findings: [],
   })
@@ -1181,7 +1496,13 @@ export const selectInspectionInitialForm = ({
     return { source: 'record', form: recordToInspectionForm(record) }
   }
 
-  return { source: 'empty', form: normalizeInspectionForm(defaultInspectionForm) }
+  return {
+    source: 'empty',
+    form: normalizeInspectionForm({
+      ...defaultInspectionForm,
+      inspectedAt: getDefaultInspectionDateTime(),
+    }),
+  }
 }
 
 export {
@@ -1215,6 +1536,7 @@ export {
   normalizeFrtTruckReference,
   normalizeHseFormFields,
   normalizeScbaBackPlateChecks,
+  normalizeScbaCustomSections,
   normalizeScbaCylinderChecks,
   normalizeScbaFaceMaskChecks,
   normalizeHydraulicChecks,

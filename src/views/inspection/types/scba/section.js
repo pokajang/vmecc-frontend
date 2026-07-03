@@ -14,15 +14,26 @@ export const ScbaEditSection = ({
     mainLocationLabel={mainLocationLabel}
     form={form}
     summary={summary}
-    inspectedBy={form.scbaInspectedBy}
-    inspectionDate={form.scbaInspectionDate}
-    onUpdateSessionMeta={handlers.onUpdateSessionMeta}
     onUpdateGroupedCheck={handlers.onUpdateGroupedCheck}
     onMarkRowOk={handlers.onMarkRowOk}
     onMarkAllOk={handlers.onMarkAllOk}
+    onAddSection={handlers.onAddScbaSection}
+    onEditSection={handlers.onEditScbaSection}
+    onDeleteSection={handlers.onDeleteScbaSection}
+    onArchiveSection={handlers.onArchiveScbaSection}
+    onRestoreSection={handlers.onRestoreScbaSection}
+    onAddItem={handlers.onAddScbaItem}
+    onEditItem={handlers.onEditScbaItem}
+    onDeleteItem={handlers.onDeleteScbaItem}
+    onArchiveItem={handlers.onArchiveScbaItem}
+    onRestoreItem={handlers.onRestoreScbaItem}
+    onRequestPhotoUpload={handlers.onRequestPhotoUpload}
+    onRequestIssuePhotoUpload={handlers.onRequestScbaIssuePhotoUpload}
+    onRemovePhoto={handlers.onRemovePhoto}
+    onChangePhotoDescription={handlers.onChangePhotoDescription}
+    onApplyPhotoCaption={handlers.onApplyPhotoCaption}
     fieldError={fieldErrors.scbaChecks}
     remarksError={fieldErrors.scbaRemarks}
-    sessionError={fieldErrors.scbaSession}
   />
 )
 
@@ -34,8 +45,6 @@ export const ScbaReadOnlySection = ({ mainLocation, mainLocationLabel, form, sum
       mainLocationLabel={mainLocationLabel}
       form={form}
       summary={summary}
-      inspectedBy={form.scbaInspectedBy}
-      inspectionDate={form.scbaInspectionDate}
     />
   </div>
 )

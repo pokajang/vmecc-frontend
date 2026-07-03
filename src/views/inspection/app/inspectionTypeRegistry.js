@@ -6,6 +6,7 @@ import hydraulicInspectionDefinition from '../types/hydraulic/definition'
 import scbaInspectionDefinition from '../types/scba/definition'
 import highAngleInspectionDefinition from '../types/high-angle/definition'
 import hseInspectionDefinition from '../types/hse/definition'
+import { FRT_DAILY_LEGACY_INSPECTION_TYPE } from '../types/frt-daily/helpers'
 
 export const INSPECTION_TYPE_DEFINITIONS = [
   erAuxInspectionDefinition,
@@ -29,6 +30,7 @@ const byInspectionType = new Map(
     definition,
   ]),
 )
+byInspectionType.set(normalizeKey(FRT_DAILY_LEGACY_INSPECTION_TYPE), frtDailyInspectionDefinition)
 
 export const getInspectionTypeDefinition = (inspectionType) =>
   byInspectionType.get(normalizeKey(inspectionType)) || null

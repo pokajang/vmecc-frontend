@@ -112,11 +112,13 @@ export const createInspectionLocationOption = async ({
 
 export const updateInspectionLocationOption = async (
   id,
-  { name, description = '', iconKey = '' },
+  { inspectionType = '', inspectionTypeKey = '', name, description = '', iconKey = '' },
 ) => {
   const response = await apiRequest(`/inspection/locations/${encodeURIComponent(String(id))}`, {
     method: 'PATCH',
     body: JSON.stringify({
+      inspectionType,
+      inspectionTypeKey: inspectionTypeKey || getInspectionTypeKey(inspectionType),
       name,
       description,
       iconKey,
@@ -125,10 +127,22 @@ export const updateInspectionLocationOption = async (
   return normalizeRows([response?.data])[0] || null
 }
 
-export const deleteInspectionLocationOption = async (id) => {
-  await apiRequest(`/inspection/locations/${encodeURIComponent(String(id))}`, {
-    method: 'DELETE',
-  })
+export const deleteInspectionLocationOption = async (
+  id,
+  { inspectionType = '', inspectionTypeKey = '' } = {},
+) => {
+  const params = new URLSearchParams()
+  if (inspectionType) {
+    params.set('inspectionType', inspectionType)
+    params.set('inspectionTypeKey', inspectionTypeKey || getInspectionTypeKey(inspectionType))
+  }
+
+  await apiRequest(
+    `/inspection/locations/${encodeURIComponent(String(id))}${params.toString() ? `?${params.toString()}` : ''}`,
+    {
+      method: 'DELETE',
+    },
+  )
   return true
 }
 

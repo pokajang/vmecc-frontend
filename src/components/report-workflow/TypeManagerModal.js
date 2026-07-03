@@ -1,5 +1,6 @@
 import React from 'react'
 import {
+  CBadge,
   CButton,
   CFormInput,
   CFormLabel,
@@ -47,6 +48,8 @@ const TypeManagerModal = ({
   onChangeIcon,
   showIconPicker = false,
   showRowIcon = true,
+  getRowBadgeLabel,
+  warningNotice = '',
   tourId = '',
 }) => {
   const shouldShowIconPicker = showIconPicker || iconOptions.length > 0
@@ -72,6 +75,7 @@ const TypeManagerModal = ({
               const RowIcon = row.icon
               const canEdit = row.canEdit !== false
               const canDelete = row.canDelete !== false
+              const rowBadgeLabel = getRowBadgeLabel?.(row) || ''
               return (
                 <div
                   key={row.value}
@@ -87,7 +91,14 @@ const TypeManagerModal = ({
                       </span>
                     ) : null}
                     <div style={{ minWidth: 0 }}>
-                      <div>{row.title}</div>
+                      <div className="d-flex flex-wrap align-items-center gap-2">
+                        <div>{row.title}</div>
+                        {rowBadgeLabel ? (
+                          <CBadge color="warning" shape="rounded-pill">
+                            {rowBadgeLabel}
+                          </CBadge>
+                        ) : null}
+                      </div>
                       {row.description ? <div className="text-muted">{row.description}</div> : null}
                       {row.readOnlyReason ? (
                         <div className="text-muted small">{row.readOnlyReason}</div>
@@ -133,6 +144,11 @@ const TypeManagerModal = ({
           </div>
         ) : (
           <>
+            {warningNotice ? (
+              <div className="small rounded border border-warning-subtle bg-warning-subtle text-body px-3 py-2">
+                {warningNotice}
+              </div>
+            ) : null}
             <div>
               <CFormLabel className="text-muted">{nameLabel}</CFormLabel>
               <CFormInput
@@ -205,19 +221,24 @@ const TypeManagerModal = ({
       <CModalFooter>
         {editMode ? (
           <>
-            <CButton color="light" onClick={() => onSetEditMode(false)}>
+            <CButton type="button" color="light" onClick={() => onSetEditMode(false)}>
               Back
             </CButton>
-            <CButton color="light" onClick={onClose}>
+            <CButton type="button" color="light" onClick={onClose}>
               Close
             </CButton>
           </>
         ) : (
           <>
-            <CButton color="light" onClick={onClose}>
+            <CButton type="button" color="light" onClick={onClose}>
               Cancel
             </CButton>
-            <CButton color="primary" disabled={iconPickerUnavailable} onClick={onSave}>
+            <CButton
+              type="button"
+              color="primary"
+              disabled={iconPickerUnavailable}
+              onClick={onSave}
+            >
               {editingKey ? updateLabel : saveLabel}
             </CButton>
           </>

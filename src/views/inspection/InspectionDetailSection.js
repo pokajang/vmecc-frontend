@@ -3,7 +3,11 @@ import { CAlert, CBadge, CButton, CRow } from '@coreui/react'
 import { getInspectionTypeDefinition } from './app/inspectionTypeRegistry'
 import { formatTimestamp } from './inspectionSharedUtils'
 import { DetailField } from 'src/components/report-workflow/ReportViewComponents'
-import { isGeneralInspectionType, recordToInspectionForm } from './inspectionFormHelpers'
+import {
+  formatInspectionRole,
+  isGeneralInspectionType,
+  recordToInspectionForm,
+} from './inspectionFormHelpers'
 import {
   ChipRow,
   InspectionGeneralEvidenceCard,
@@ -13,13 +17,14 @@ import {
 } from './components/InspectionFormDisplaySections'
 
 const hasStructuredSummaryContent = (summary) =>
-  Array.isArray(summary?.visibleChecks)
+  summary?.hasContent === true ||
+  (Array.isArray(summary?.visibleChecks)
     ? summary.visibleChecks.length > 0
     : Array.isArray(summary?.visibleSections)
       ? summary.visibleSections.some(
           (section) => Array.isArray(section?.visibleRows) && section.visibleRows.length > 0,
         )
-      : false
+      : false)
 
 const getSelectedChecklistItems = (checklist = []) =>
   (Array.isArray(checklist) ? checklist : []).filter(
@@ -31,9 +36,15 @@ const getChecklistLabel = (item) => String(item?.label || item || '').trim()
 const WorkflowActor = ({ entry }) => {
   const actor = String(entry?.by || '').trim() || '--'
   const remarks = String(entry?.remarks || '').trim()
+  const meta = entry?.meta && typeof entry.meta === 'object' ? entry.meta : {}
+  const role = formatInspectionRole(
+    entry?.actorRole || meta.actorRole,
+    entry?.actorRoleCode || meta.actorRoleCode,
+  )
   return (
     <>
       <div>{actor}</div>
+      {role ? <div className="small text-body-secondary">{role}</div> : null}
       {remarks ? (
         <div className="small text-body-secondary mt-1" style={{ whiteSpace: 'pre-wrap' }}>
           Remarks: {remarks}
@@ -126,27 +137,49 @@ const WorkflowActivity = ({ entries = [] }) => {
   )
 }
 
-const InspectionRecordMeta = ({ record, submittedAt, submittedEntry, renderStatusBadge }) => (
-  <div className="inspection-form-section d-grid gap-3">
-    <div className="fw-semibold text-muted">Report Details</div>
-    <CRow className="g-3">
-      <DetailField label="Status">
-        {typeof renderStatusBadge === 'function' ? (
-          renderStatusBadge(record.status || 'Unknown')
-        ) : (
-          <CBadge color="secondary">{record.status || 'Unknown'}</CBadge>
-        )}
-      </DetailField>
-      <DetailField label="Submitted By">
-        {record.submittedBy || submittedEntry?.by || '--'}
-      </DetailField>
-      <DetailField label="Submitted At">{submittedAt}</DetailField>
-      {record.nextActionRole ? (
-        <DetailField label="Next Action">Next action: {record.nextActionRole}</DetailField>
-      ) : null}
-    </CRow>
-  </div>
-)
+const InspectionRecordMeta = ({
+  record,
+  form,
+  inspectedAt,
+  submittedAt,
+  submittedEntry,
+  renderStatusBadge,
+}) => {
+  const submittedRole = formatInspectionRole(
+    record.submittedByRole ||
+      form.submittedByRole ||
+      record.inspectionActor?.role ||
+      form.inspectionActor?.role,
+    record.submittedByRoleCode ||
+      form.submittedByRoleCode ||
+      record.inspectionActor?.roleCode ||
+      form.inspectionActor?.roleCode,
+  )
+
+  return (
+    <div className="inspection-form-section d-grid gap-3">
+      <div className="fw-semibold text-muted">Report Details</div>
+      <CRow className="g-3">
+        <DetailField label="Status">
+          {typeof renderStatusBadge === 'function' ? (
+            renderStatusBadge(record.status || 'Unknown')
+          ) : (
+            <CBadge color="secondary">{record.status || 'Unknown'}</CBadge>
+          )}
+        </DetailField>
+        <DetailField label="Inspection Date/Time">{inspectedAt || '--'}</DetailField>
+        <DetailField label="Submitted By">
+          {record.submittedBy || submittedEntry?.by || '--'}
+        </DetailField>
+        {submittedRole ? <DetailField label="Role">{submittedRole}</DetailField> : null}
+        <DetailField label="Submitted At">{submittedAt}</DetailField>
+        {record.nextActionRole ? (
+          <DetailField label="Next Action">Next action: {record.nextActionRole}</DetailField>
+        ) : null}
+      </CRow>
+    </div>
+  )
+}
 
 const InspectionDetailSection = ({
   selectedRecord,
@@ -170,6 +203,7 @@ const InspectionDetailSection = ({
   const selectedTypeDefinition = getInspectionTypeDefinition(selectedType)
   const isGeneral = isGeneralInspectionType(selectedType)
   const dateTime = formatDateTime(r.incidentDate || r.reportDate, r.incidentTime || r.reportTime)
+  const inspectedAt = formatTimestamp(form.inspectedAt || r.inspectedAt, '--')
   const submittedAt = formatTimestamp(r.submittedAt, '') || dateTime || '--'
   const timeline = Array.isArray(r.timeline) ? r.timeline : []
   const submittedEntry = findWorkflowAction(timeline, 'Submitted')
@@ -254,6 +288,8 @@ const InspectionDetailSection = ({
 
         <InspectionRecordMeta
           record={r}
+          form={form}
+          inspectedAt={inspectedAt}
           submittedAt={submittedAt}
           submittedEntry={submittedEntry}
           renderStatusBadge={renderStatusBadge}
@@ -261,7 +297,9 @@ const InspectionDetailSection = ({
 
         <div className="inspection-form-section d-grid gap-3">
           <div className="fw-semibold text-muted">Type</div>
-          <InspectionSelectedTypeCard inspectionType={selectedType} />
+          <InspectionSelectedTypeCard
+            inspectionType={selectedTypeDefinition?.title || selectedType}
+          />
         </div>
 
         <InspectionReadOnlyLocationSections
@@ -269,13 +307,6 @@ const InspectionDetailSection = ({
           mainLocation={form.mainLocation}
           subLocation={form.subLocation}
         />
-
-        {isGeneral ? (
-          <>
-            <ReadOnlyChecklist checklist={form.checklist} />
-            <ReadOnlyDescription description={form.description} />
-          </>
-        ) : null}
 
         {selectedTypeDefinition?.formMode === 'structured' ? (
           <>

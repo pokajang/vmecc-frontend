@@ -1,14 +1,15 @@
 import { apiRequest } from 'src/services/apiClient'
 import { normalizeInspectionLocationKey } from './inspectionLocationDefaults'
 
-const CACHE_KEY_PREFIX = 'inspection_fire_extinguisher_catalog_cache_v1_'
+const CACHE_KEY_PREFIX = 'inspection_fire_extinguisher_catalog_cache_v2_'
+const LEGACY_CACHE_KEY_PREFIX = 'inspection_fire_extinguisher_catalog_cache_v1_'
 
 const normalizeFeType = (value) =>
   String(value || '')
     .trim()
     .replace(/CO[\u00b2\ufffd]/gi, 'CO2')
 
-const normalizeRows = (rows = []) =>
+const normalizeRows = (rows = [], options = {}) =>
   (Array.isArray(rows) ? rows : [])
     .map((row) => {
       const catalogId = row?.catalogId ?? row?.catalog_id ?? row?.id ?? ''
@@ -23,6 +24,7 @@ const normalizeRows = (rows = []) =>
       const source = String(
         row?.equipmentSource || row?.equipment_source || row?.source || 'seed',
       ).trim()
+      const migrateLegacySharedSeedFlags = options.legacySharedSeedPolicy && source === 'seed'
       if (!mainLocation && !idLocNo && !barcodeNo) return null
       return {
         ...row,
@@ -46,23 +48,30 @@ const normalizeRows = (rows = []) =>
           row?.certificationValidityRaw || row?.certification_validity_raw || '',
         ),
         daysLeftToExpire: String(row?.daysLeftToExpire || row?.days_left_to_expire || ''),
-        canEdit: row?.canEdit === true || (row?.canEdit !== false && source !== 'seed'),
-        canDelete: row?.canDelete === true || (row?.canDelete !== false && source !== 'seed'),
+        canEdit: migrateLegacySharedSeedFlags ? true : row?.canEdit !== false,
+        canDelete: migrateLegacySharedSeedFlags ? true : row?.canDelete !== false,
       }
     })
     .filter(Boolean)
 
-const cacheKey = (mainLocation = '', subLocation = '') =>
-  `${CACHE_KEY_PREFIX}${normalizeInspectionLocationKey(mainLocation) || 'all'}_${
+const cacheKey = (mainLocation = '', subLocation = '', prefix = CACHE_KEY_PREFIX) =>
+  `${prefix}${normalizeInspectionLocationKey(mainLocation) || 'all'}_${
     normalizeInspectionLocationKey(subLocation) || 'all'
   }`
 
 export const loadCachedFireExtinguisherCatalog = (mainLocation = '', subLocation = '') => {
   try {
     const raw = window.localStorage?.getItem(cacheKey(mainLocation, subLocation))
-    if (!raw) return []
-    const parsed = JSON.parse(raw)
-    return normalizeRows(parsed?.data || parsed)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      return normalizeRows(parsed?.data || parsed)
+    }
+    const legacyRaw = window.localStorage?.getItem(
+      cacheKey(mainLocation, subLocation, LEGACY_CACHE_KEY_PREFIX),
+    )
+    if (!legacyRaw) return []
+    const parsed = JSON.parse(legacyRaw)
+    return normalizeRows(parsed?.data || parsed, { legacySharedSeedPolicy: true })
   } catch {
     return []
   }

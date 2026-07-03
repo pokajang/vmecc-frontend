@@ -199,6 +199,7 @@ export const normalizeReportRecord = (row) => {
     photos: Array.isArray(merged.photos) ? merged.photos : [],
     findings: Array.isArray(merged.findings) ? merged.findings : [],
     hydraulicChecks,
+    inspectedAt: String(merged.inspectedAt || merged.inspected_at || '').trim(),
     version: Number(merged.version || 0) || 0,
     revision: Number(merged.revision || 0) || 0,
     workflowStage: String(merged.workflowStage || merged.workflow_stage || '').trim(),
@@ -218,8 +219,18 @@ export const normalizeReportRecord = (row) => {
     canReview: merged.canReview === true || merged.can_review === true,
     canApprove: merged.canApprove === true || merged.can_approve === true,
     canReject: merged.canReject === true || merged.can_reject === true,
+    inspectionActor:
+      merged.inspectionActor && typeof merged.inspectionActor === 'object'
+        ? merged.inspectionActor
+        : merged.inspection_actor && typeof merged.inspection_actor === 'object'
+          ? merged.inspection_actor
+          : null,
     submittedAt: String(merged.submittedAt || merged.submitted_at || '').trim(),
     submittedBy: String(merged.submittedBy || merged.submitted_by || '').trim(),
+    submittedByRole: String(merged.submittedByRole || merged.submitted_by_role || '').trim(),
+    submittedByRoleCode: String(
+      merged.submittedByRoleCode || merged.submitted_by_role_code || '',
+    ).trim(),
     createdAt: String(merged.createdAt || merged.created_at || '').trim(),
     updatedAt: String(merged.updatedAt || merged.updated_at || '').trim(),
   }

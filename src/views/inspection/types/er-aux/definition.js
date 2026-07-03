@@ -15,7 +15,7 @@ import { ErAuxEditSection, ErAuxReadOnlySection } from './section'
 const erAuxInspectionDefinition = {
   key: 'er-aux-equipment-inspection',
   inspectionType: ER_AUX_EQUIPMENT_INSPECTION_TYPE,
-  title: 'ER Aux Equipment',
+  title: 'Emergency Response Auxiliary Equipment',
   description: 'Emergency response auxiliary equipment inventory and condition checks.',
   iconKey: 'ClipboardList',
   icon: ClipboardList,
@@ -26,7 +26,7 @@ const erAuxInspectionDefinition = {
   checksField: 'erAuxChecks',
   photoEvidenceTitle: 'General Evidence Photos',
   fieldRefKey: 'erAuxChecks',
-  missingFieldKeys: ['erAuxSession', 'erAuxChecks', 'erAuxRemarks'],
+  missingFieldKeys: ['erAuxChecks', 'erAuxRemarks'],
   initialFormState: {
     erAuxInspectedBy: '',
     erAuxInspectionDate: '',

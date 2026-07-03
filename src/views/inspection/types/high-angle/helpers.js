@@ -1,3 +1,4 @@
+import { dedupePhotos } from 'src/views/inspection/inspectionSharedUtils'
 import rawReference from './reference.json'
 
 export const HIGH_ANGLE_RESCUE_EQUIPMENT_INSPECTION_TYPE = 'High Angle Rescue Equipment Inspection'
@@ -6,6 +7,13 @@ export const HIGH_ANGLE_STATUS_OPTIONS = [
   { value: 'Good', label: 'Good' },
   { value: 'Not Good', label: 'Not Good' },
 ]
+
+export const HIGH_ANGLE_CONDITION_FIELD = {
+  key: 'condition',
+  label: 'Condition',
+  remarksKey: 'conditionRemarks',
+  photosKey: 'conditionPhotos',
+}
 
 const normalizeKey = (value) =>
   String(value || '')
@@ -21,6 +29,13 @@ const isMeaningfulValue = (value) => {
   const text = String(value || '').trim()
   return text !== '' && text.toUpperCase() !== 'N/A'
 }
+
+const normalizePhotos = (photos) =>
+  dedupePhotos(
+    (Array.isArray(photos) ? photos : []).filter(
+      (photo) => photo && typeof photo === 'object' && String(photo.url || '').trim(),
+    ),
+  )
 
 const HIGH_ANGLE_REFERENCE_SECTIONS = [
   {
@@ -157,6 +172,16 @@ const normalizeHighAngleCheck = (check = {}) => {
     quantity,
     condition: normalizeHighAngleCondition(check.condition),
     remarks: String(check.remarks || check.remark || '').trim(),
+    conditionRemarks: String(
+      check.conditionRemarks ||
+        check.condition_remarks ||
+        (normalizeHighAngleCondition(check.condition) === 'Not Good'
+          ? check.remarks || check.remark || ''
+          : ''),
+    ).trim(),
+    conditionPhotos: normalizePhotos(
+      check.conditionPhotos || check.condition_photos || check.photos,
+    ),
   }
 }
 
@@ -196,12 +221,28 @@ const getHighAngleMergedRowsForKit = (form = {}, kit = '') => {
     quantity: String((checkById.get(row.id) || {}).quantity || row.quantity || '').trim(),
     condition: normalizeHighAngleCondition((checkById.get(row.id) || {}).condition),
     remarks: String((checkById.get(row.id) || {}).remarks || '').trim(),
+    conditionRemarks: String(
+      (checkById.get(row.id) || {}).conditionRemarks ||
+        ((checkById.get(row.id) || {}).condition === 'Not Good'
+          ? (checkById.get(row.id) || {}).remarks
+          : '') ||
+        '',
+    ).trim(),
+    conditionPhotos: normalizePhotos((checkById.get(row.id) || {}).conditionPhotos),
+    isWorkbookSeedRow: true,
+    isExtensionRow: false,
   }))
 
-  const extraRows = normalizedChecks.filter(
-    (row) =>
-      normalizeKey(row.mainLocation) === normalizeKey(definition.title) && !seededIds.has(row.id),
-  )
+  const extraRows = normalizedChecks
+    .filter(
+      (row) =>
+        normalizeKey(row.mainLocation) === normalizeKey(definition.title) && !seededIds.has(row.id),
+    )
+    .map((row) => ({
+      ...row,
+      isWorkbookSeedRow: false,
+      isExtensionRow: true,
+    }))
 
   return [...seededRows, ...extraRows]
 }
@@ -260,7 +301,19 @@ export const getHighAngleCheckSummary = (form = {}) => {
   const visibleChecks = getHighAngleVisibleChecks(form)
   const checkedCount = visibleChecks.filter((row) => row.condition).length
   const issueRows = visibleChecks.filter((row) => row.condition === 'Not Good')
-  const incompleteRemarksCount = issueRows.filter((row) => !String(row.remarks || '').trim()).length
+  const incompleteRemarksCount = issueRows.filter(
+    (row) => !String(row.conditionRemarks || row.remarks || '').trim(),
+  ).length
+  const incompletePhotoCount = issueRows.filter(
+    (row) => normalizePhotos(row.conditionPhotos || row.photos).length === 0,
+  ).length
+  const retainedEvidenceCount = visibleChecks.filter((row) => {
+    if (row.condition === 'Not Good') return false
+    return (
+      String(row.conditionRemarks || row.remarks || '').trim() ||
+      normalizePhotos(row.conditionPhotos || row.photos).length > 0
+    )
+  }).length
   const visibleGroups = buildVisibleGroups(visibleChecks)
   const kitDefinition = getHighAngleKitDefinition(selectedKit)
 
@@ -270,6 +323,8 @@ export const getHighAngleCheckSummary = (form = {}) => {
     checkedCount,
     issueCount: issueRows.length,
     incompleteRemarksCount,
+    incompletePhotoCount,
+    retainedEvidenceCount,
     visibleChecks,
     visibleGroups,
     supportedKits: HIGH_ANGLE_REFERENCE.supportedMainLocations,
@@ -281,20 +336,28 @@ export const getHighAngleCheckSummary = (form = {}) => {
   }
 }
 
+export const getHighAngleRetainedEvidenceRows = (rows = []) =>
+  (Array.isArray(rows) ? rows : []).filter((row) => {
+    if (row.condition === 'Not Good') return false
+    return (
+      String(row.conditionRemarks || row.remarks || '').trim() ||
+      normalizePhotos(row.conditionPhotos || row.photos).length > 0
+    )
+  })
+
 export const getHighAngleMissingFields = (form = {}) => {
   const visibleChecks = getHighAngleVisibleChecks(form)
   const hasVisibleRows = visibleChecks.length > 0
-  const inspectedBy = String(form.highAngleInspectedBy || form.high_angle_inspected_by || '').trim()
-  const inspectionDate = String(
-    form.highAngleInspectionDate || form.high_angle_inspection_date || '',
-  ).trim()
   const hasIncompleteChecks = visibleChecks.some((row) => !String(row.condition || '').trim())
   const hasMissingRemarks = visibleChecks.some(
-    (row) => row.condition === 'Not Good' && !String(row.remarks || '').trim(),
+    (row) =>
+      row.condition === 'Not Good' &&
+      (!String(row.conditionRemarks || row.remarks || '').trim() ||
+        normalizePhotos(row.conditionPhotos || row.photos).length === 0),
   )
 
   return {
-    highAngleSession: !inspectedBy || !inspectionDate,
+    highAngleSession: false,
     highAngleChecks: !hasVisibleRows || hasIncompleteChecks,
     highAngleRemarks: hasMissingRemarks,
   }
@@ -363,7 +426,8 @@ export const buildHighAngleDescription = (form = {}) => {
       if (String(row.quantity || '').trim()) parts.push(`qty ${row.quantity}`)
       const groupLabel = formatHighAngleGroupLabel(row)
       if (groupLabel && groupLabel !== 'General Kit Items') parts.push(groupLabel)
-      const detail = row.remarks ? `${parts.join(' - ')}: ${row.remarks}` : `${parts.join(' - ')}.`
+      const remarks = String(row.conditionRemarks || row.remarks || '').trim()
+      const detail = remarks ? `${parts.join(' - ')}: ${remarks}` : `${parts.join(' - ')}.`
       lines.push(detail)
     })
 

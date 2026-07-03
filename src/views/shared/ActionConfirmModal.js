@@ -8,6 +8,8 @@ const ActionConfirmModal = ({
   confirmLabel = 'Confirm',
   confirmColor = 'primary',
   cancelLabel = 'Cancel',
+  confirmDisabled = false,
+  cancelDisabled = false,
   tourId = '',
   onClose,
   onConfirm,
@@ -23,10 +25,10 @@ const ActionConfirmModal = ({
     </CModalHeader>
     <CModalBody>{message}</CModalBody>
     <CModalFooter>
-      <CButton color="light" onClick={onClose}>
+      <CButton color="light" onClick={onClose} disabled={cancelDisabled}>
         {cancelLabel}
       </CButton>
-      <CButton color={confirmColor} onClick={onConfirm}>
+      <CButton color={confirmColor} onClick={onConfirm} disabled={confirmDisabled}>
         {confirmLabel}
       </CButton>
     </CModalFooter>

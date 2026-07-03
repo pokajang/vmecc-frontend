@@ -161,8 +161,9 @@ describe('InspectionDetailSection', () => {
       />,
     )
 
-    expect(screen.getByText('Inspection Session')).toBeTruthy()
-    expect(screen.getByText('ER Aux Equipment Checks')).toBeTruthy()
+    expect(screen.getByText('Inspection Date/Time')).toBeTruthy()
+    expect(screen.queryByText('Inspection Session')).toBeNull()
+    expect(screen.getByText('Emergency Response Auxiliary Equipment Checks')).toBeTruthy()
     expect(screen.getByText('Fire Jacket')).toBeTruthy()
     expect(screen.getByText('Chainsaw')).toBeTruthy()
     expect(screen.getAllByText('15').length).toBeGreaterThan(0)
@@ -218,7 +219,7 @@ describe('InspectionDetailSection', () => {
 
     expect(screen.getAllByText('Hydraulic Equipment Checks').length).toBeGreaterThan(0)
     expect(screen.getByText('Hydraulic Pump Motor 1')).toBeTruthy()
-    expect(screen.getByText('No Leakage')).toBeTruthy()
+    expect(screen.getAllByText('No Leakage').length).toBeGreaterThan(0)
     expect(screen.getByText('Minor hose leak found.')).toBeTruthy()
     expect(screen.getByText('Leak evidence')).toBeTruthy()
     expect(screen.getByText('Requires seal replacement.')).toBeTruthy()
@@ -286,6 +287,61 @@ describe('InspectionDetailSection', () => {
     expect(screen.getByText('Cylinder body dented.')).toBeTruthy()
     expect(screen.getByText('Cylinder defect')).toBeTruthy()
     expect(screen.getByText('Needs replacement.')).toBeTruthy()
+  })
+
+  it('keeps historical fire extinguisher rows readable when the live catalog row is gone', () => {
+    render(
+      <InspectionDetailSection
+        selectedRecord={{
+          id: 'inspection-fe-detail-historical-1',
+          displayId: 'INSP-FE-DETAIL-ARCHIVED-001',
+          status: 'Submitted',
+          submittedAt: '2026-06-29T10:00:00.000Z',
+          submittedBy: 'Inspector Fire',
+          location: 'Manjung Hub > Reception',
+          selectedLocation: 'Manjung Hub > Reception',
+          mainLocation: 'Manjung Hub',
+          subLocation: 'Reception',
+          incidentType: 'Fire Extinguisher Inspection',
+          fireExtinguisherInspectedBy: 'Inspector Fire',
+          fireExtinguisherInspectionDate: '2026-06-29',
+          fireExtinguisherChecks: [
+            {
+              id: 'fe:archived-1',
+              sourceRowNumber: '999',
+              mainLocation: 'Manjung Hub',
+              subLocation: 'Reception',
+              idLocNo: 'ADO-999',
+              barcodeNo: 'EE042021Y999999',
+              feType: 'CO2 5KG',
+              physicalCondition: 'Not Good',
+              physicalConditionRemarks: 'Archived unit was dented.',
+              signageCondition: 'Good',
+              boxKeyAvailability: 'Yes',
+              boxGlassAvailability: 'Yes',
+              operationalCondition: 'Operational',
+              remarks: 'Captured before archive.',
+            },
+          ],
+        }}
+        onBack={vi.fn()}
+        formatDateTime={() => ''}
+        renderStatusBadge={(status) => <span>{status}</span>}
+        onEditRecord={vi.fn()}
+        canEditRecord={() => false}
+        onReviewRecord={vi.fn()}
+        onApproveRecord={vi.fn()}
+        onRejectRecord={vi.fn()}
+        onDownloadRecord={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByText('ADO-999')).toBeTruthy()
+    expect(
+      screen.getAllByText((_, node) => node?.textContent?.includes('CO2 5KG') || false).length,
+    ).toBeGreaterThan(0)
+    expect(screen.getByText('Archived unit was dented.')).toBeTruthy()
+    expect(screen.getByText('Captured before archive.')).toBeTruthy()
   })
 
   it('renders SCBA structured cards in read-only detail mode', () => {
@@ -444,7 +500,7 @@ describe('InspectionDetailSection', () => {
     expect(container.textContent || '').toContain('Gate spring is sticking.')
   })
 
-  it('renders FRT Daily structured cards in read-only detail mode', () => {
+  it('renders Fire Truck Daily Readiness structured cards in read-only detail mode', () => {
     const { container } = render(
       <InspectionDetailSection
         selectedRecord={{
@@ -528,9 +584,9 @@ describe('InspectionDetailSection', () => {
       />,
     )
 
-    expect(screen.getAllByText('FRT Daily Roster').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('FRT One-Off Checklist').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Truck Reference').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Daily Readiness Roster').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('One-Off Readiness Checklist').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Plate No.').length).toBeGreaterThan(0)
     expect(screen.getAllByText('LOCKER 01').length).toBeGreaterThan(0)
     expect(screen.getAllByText('TRUCK CHECKLIST').length).toBeGreaterThan(0)
     expect(screen.getAllByText('MILEAGE (ODOMETER)').length).toBeGreaterThan(0)
@@ -538,8 +594,8 @@ describe('InspectionDetailSection', () => {
     expect(container.textContent || '').toContain('Mute switch sticking.')
 
     const detailText = container.textContent || ''
-    expect(detailText.indexOf('FRT Daily Roster')).toBeLessThan(
-      detailText.indexOf('FRT One-Off Checklist'),
+    expect(detailText.indexOf('Daily Readiness Roster')).toBeLessThan(
+      detailText.indexOf('One-Off Readiness Checklist'),
     )
   })
 })

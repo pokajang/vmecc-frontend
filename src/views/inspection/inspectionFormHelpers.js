@@ -14,10 +14,12 @@ export {
   FRT_TRUCK_REFERENCE,
 } from './types/frt-daily/helpers'
 export {
+  HIGH_ANGLE_CONDITION_FIELD,
   HIGH_ANGLE_KIT_DEFINITIONS,
   HIGH_ANGLE_RESCUE_EQUIPMENT_INSPECTION_TYPE,
   HIGH_ANGLE_REFERENCE,
   HIGH_ANGLE_STATUS_OPTIONS,
+  getHighAngleRetainedEvidenceRows,
   getHighAngleCheckSummary,
 } from './types/high-angle/helpers'
 export {
@@ -36,8 +38,12 @@ export {
   HYDRAULIC_CHECK_STATUS_OPTIONS,
   HYDRAULIC_EQUIPMENT_ROWS,
   HYDRAULIC_RESCUE_TOOLS_INSPECTION_TYPE,
+  getHydraulicRetainedEvidenceFields,
 } from './types/hydraulic/helpers'
 export {
+  getScbaFieldEvidenceKeys,
+  getScbaRowRetainedEvidenceFields,
+  normalizeScbaCustomSections,
   SCBA_INSPECTION_TYPE,
   SCBA_SECTION_DEFINITIONS,
   SCBA_STATUS_OPTIONS,

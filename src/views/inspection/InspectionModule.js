@@ -48,7 +48,9 @@ import {
   buildInspectionSubmittedRecord,
   createInspectionFormSignature,
   defaultInspectionForm,
+  getDefaultInspectionDateTime,
   getInspectionDraftMeta,
+  applySessionInspector,
   normalizeInspectionForm,
   selectInspectionInitialForm,
 } from './inspectionFormHelpers'
@@ -74,6 +76,7 @@ import {
   buildInspectionContinuationForm,
   buildInspectionContinuationPrompt,
 } from './inspectionContinuation'
+import { isSystemAdministrator } from 'src/utils/authz'
 
 const MOBILE_HOME_RECENT_RECORD_LIMIT = 3
 
@@ -425,6 +428,7 @@ const InspectionModule = () => {
         buildInspectionContinuationForm({
           inspectionType,
           mainLocation: nextLocation,
+          inspectedAt: getDefaultInspectionDateTime(),
         }),
       )
       saveWorkspace(user?.id, {
@@ -515,6 +519,7 @@ const InspectionModule = () => {
       form: normalizeInspectionForm({
         ...defaultInspectionForm,
         inspectionType: normalizedType,
+        inspectedAt: getDefaultInspectionDateTime(),
       }),
     })
     navigate(`${reportBasePath}/new`)
@@ -524,10 +529,12 @@ const InspectionModule = () => {
     const workspace = context || loadWorkspace(user?.id)
     const mode = workspace?.mode || routeMode
     const editReportId = workspace?.recordId || routeRecordId
+    const sessionForm = applySessionInspector(nextForm, user)
     const payload = buildInspectionDraftPayload({
-      form: nextForm,
+      form: sessionForm,
       mode,
       editReportId,
+      user,
     })
     let result = { saved: false, synced: false }
     try {
@@ -548,7 +555,7 @@ const InspectionModule = () => {
       })
       return false
     }
-    lastPersistedSignatureRef.current = createInspectionFormSignature(nextForm)
+    lastPersistedSignatureRef.current = createInspectionFormSignature(sessionForm)
     setIsFormDirty(false)
     setDraftVersion((prev) => prev + 1)
     setDraftStatus(result.synced ? 'Draft synced' : 'Waiting to sync')
@@ -560,7 +567,7 @@ const InspectionModule = () => {
   }
 
   const requestReview = (nextForm) => {
-    const normalized = normalizeInspectionForm(nextForm)
+    const normalized = applySessionInspector(nextForm, user)
     setFormState(normalized)
     saveWorkspace(user?.id, {
       mode: routeMode,
@@ -574,6 +581,7 @@ const InspectionModule = () => {
   const reviewForm = normalizeInspectionForm(
     activeSection === 'review' ? reviewWorkspace?.form || formState : formState,
   )
+  const sessionReviewForm = applySessionInspector(reviewForm, user)
   const reviewEditingRecord =
     reviewWorkspace?.mode === 'edit'
       ? records.find(
@@ -583,7 +591,7 @@ const InspectionModule = () => {
   const reviewRecord =
     activeSection === 'review' && reviewWorkspace?.form
       ? buildInspectionReviewRecord({
-          form: reviewForm,
+          form: sessionReviewForm,
           mode: reviewWorkspace.mode,
           editingRecord: reviewEditingRecord,
           reportTypeSlug: 'inspection',
@@ -690,20 +698,23 @@ const InspectionModule = () => {
     (row) => {
       if (!row) return false
       if (row.recordKind === 'draft') return true
+      if (isSystemAdministrator(user)) return true
       const ownerUserId = String(row.ownerUserId ?? '').trim()
       if (ownerUserId && String(ownerUserId) !== String(user?.id ?? '').trim()) return false
       return ['Submitted', 'Rejected'].includes(String(row.status || '').trim())
     },
-    [user?.id],
+    [user],
   )
 
   const canDeleteRecord = useCallback(
     (row) => {
-      if (!row) return false
+      if (!row || row.recordKind === 'queued') return false
+      if (row.recordKind === 'draft') return true
+      if (isSystemAdministrator(user)) return true
       const ownerUserId = String(row.ownerUserId ?? '').trim()
-      return !ownerUserId || ownerUserId === String(user?.id ?? '').trim()
+      return ownerUserId !== '' && ownerUserId === String(user?.id ?? '').trim()
     },
-    [user?.id],
+    [user],
   )
 
   const {
@@ -1124,7 +1135,7 @@ const InspectionModule = () => {
           selectedRecord={reviewRecord}
           reviewActions={{
             onBackToEdit: backFromReview,
-            onSaveDraft: () => saveDraft(reviewForm, reviewWorkspace),
+            onSaveDraft: () => saveDraft(sessionReviewForm, reviewWorkspace),
             onConfirm: () =>
               reviewRecord && submit(buildInspectionSubmittedRecord(reviewRecord, user)),
             confirmLabel: reviewMayQueue ? 'Queue for sync' : 'Confirm Submit',

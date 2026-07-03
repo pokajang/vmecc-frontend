@@ -64,25 +64,30 @@ const normalizeInspectionFinding = (finding, photosById) => {
 
 export const normalizeInspectionDraft = (draft) => {
   const source = draft && typeof draft === 'object' ? draft : {}
-  const photos = Array.isArray(source.photos) ? source.photos.filter(Boolean) : []
+  const payload = source.payload && typeof source.payload === 'object' ? source.payload : {}
+  const mergedSource = { ...payload, ...source }
+  const photos = Array.isArray(mergedSource.photos) ? mergedSource.photos.filter(Boolean) : []
   const photosById = photos.reduce((acc, photo) => {
     const key = String(photo?.id || '').trim()
     if (key) acc[key] = photo
     return acc
   }, {})
 
-  const findings = Array.isArray(source.findings)
-    ? source.findings
+  const findings = Array.isArray(mergedSource.findings)
+    ? mergedSource.findings
         .map((finding) => normalizeInspectionFinding(finding, photosById))
         .filter(Boolean)
     : []
 
   const selectedLocation = String(
-    source.selectedLocation || computeDominantLocation(findings) || source.location || '',
+    mergedSource.selectedLocation ||
+      computeDominantLocation(findings) ||
+      mergedSource.location ||
+      '',
   ).trim()
 
   return {
-    ...source,
+    ...mergedSource,
     findings,
     selectedLocation,
   }
@@ -102,8 +107,15 @@ export const normalizeInspectionRecord = (record) => {
     findings: Array.isArray(record.findings) ? record.findings : [],
     checklist: Array.isArray(record.checklist) ? record.checklist.filter(Boolean) : [],
     checklistVersion: String(record.checklistVersion || ''),
+    inspectedAt: String(record.inspectedAt || record.inspected_at || ''),
     submittedAt: String(record.submittedAt || ''),
     submittedBy: String(record.submittedBy || ''),
+    submittedByRole: String(record.submittedByRole || ''),
+    submittedByRoleCode: String(record.submittedByRoleCode || ''),
+    inspectionActor:
+      record.inspectionActor && typeof record.inspectionActor === 'object'
+        ? record.inspectionActor
+        : null,
   }
 }
 

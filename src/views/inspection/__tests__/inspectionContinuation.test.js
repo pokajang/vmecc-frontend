@@ -88,6 +88,7 @@ describe('inspectionContinuation', () => {
       mainLocationId: '',
       subLocationId: '',
       inspectionType: 'Hydraulic Rescue Tools Inspection',
+      inspectedAt: '',
       description: '',
       photos: [],
       checklist: [],

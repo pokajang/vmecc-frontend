@@ -1,4 +1,8 @@
 import { createInspectionIdentity, dedupePhotos } from './inspectionSharedUtils'
+import {
+  getInspectionSessionActorRole,
+  getInspectionSessionActorRoleCode,
+} from './inspectionFormHelpers'
 
 const normalizeFinding = (finding) => {
   const confirmedType = String(finding?.confirmedType || finding?.type || '').trim()
@@ -71,7 +75,17 @@ export const buildInspectionRecord = ({
     description: payloadSnapshot.description,
     photos: payloadSnapshot.photos,
     findings: payloadSnapshot.findings,
+    inspectedAt: String(payloadSnapshot.inspectedAt || '').trim(),
     submittedAt: nowIso,
     submittedBy: user?.name || user?.email || '',
+    submittedByRole: getInspectionSessionActorRole(user),
+    submittedByRoleCode: getInspectionSessionActorRoleCode(user),
+    inspectionActor: {
+      userId: user?.id ?? null,
+      name: user?.name || user?.email || '',
+      email: user?.email || '',
+      role: getInspectionSessionActorRole(user),
+      roleCode: getInspectionSessionActorRoleCode(user),
+    },
   }
 }

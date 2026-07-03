@@ -9,16 +9,21 @@ import {
   InspectionGeneralEvidenceCard,
   formatInspectionDisplayLocationTitle,
 } from './components/InspectionFormDisplaySections'
-import { recordToInspectionForm } from './inspectionFormHelpers'
+import {
+  formatInspectionRole,
+  isGeneralInspectionType,
+  recordToInspectionForm,
+} from './inspectionFormHelpers'
 
 const hasStructuredSummaryContent = (summary) =>
-  Array.isArray(summary?.visibleChecks)
+  summary?.hasContent === true ||
+  (Array.isArray(summary?.visibleChecks)
     ? summary.visibleChecks.length > 0
     : Array.isArray(summary?.visibleSections)
       ? summary.visibleSections.some(
           (section) => Array.isArray(section?.visibleRows) && section.visibleRows.length > 0,
         )
-      : false
+      : false)
 
 const InspectionReviewSection = ({
   selectedRecord,
@@ -46,13 +51,22 @@ const InspectionReviewSection = ({
         }
       : {}),
   })
+  const isGeneral = isGeneralInspectionType(r.incidentType || form.inspectionType)
   const mainLocationLabel = formatInspectionDisplayLocationTitle(r.incidentType, form.mainLocation)
   const ReadOnlySection = selectedTypeDefinition?.ReadOnlySection || null
-  const checklist = (Array.isArray(r.checklist) ? r.checklist : []).filter(
-    (item) => item && item.selected !== false && String(item.label || '').trim(),
-  )
+  const inspectedAt = formatTimestamp(form.inspectedAt || r.inspectedAt, '')
   const submittedAt = formatTimestamp(r.submittedAt, '')
   const submittedBy = String(r.submittedBy || '').trim()
+  const submittedRole = formatInspectionRole(
+    r.submittedByRole ||
+      form.submittedByRole ||
+      r.inspectionActor?.role ||
+      form.inspectionActor?.role,
+    r.submittedByRoleCode ||
+      form.submittedByRoleCode ||
+      r.inspectionActor?.roleCode ||
+      form.inspectionActor?.roleCode,
+  )
   const backButton = (
     <CButton color="light" onClick={() => reviewActions?.onBackToEdit?.()}>
       Back to Edit
@@ -113,32 +127,40 @@ const InspectionReviewSection = ({
 
       <CCol xs={12}>
         <CRow className="g-3">
-          <DetailField label="Status" xs={12} md={4}>
+          <DetailField label="Status" xs={12} md={3}>
             {typeof renderStatusBadge === 'function' ? (
               renderStatusBadge(r.status)
             ) : (
               <CBadge color="secondary">{r.status || 'Unknown'}</CBadge>
             )}
           </DetailField>
-          <DetailField label="Location" xs={12} md={4}>
-            {r.location || '--'}
+          <DetailField label="Type" xs={12} md={3}>
+            {selectedTypeDefinition?.title || stripInspectionContext(r.incidentType) || '--'}
           </DetailField>
-          <DetailField label="Type" xs={12} md={4}>
-            {stripInspectionContext(r.incidentType) || '--'}
+          <DetailField label="Inspection Date/Time" xs={12} md={3}>
+            {inspectedAt || '--'}
+          </DetailField>
+          <DetailField label="Location" xs={12} md={3}>
+            {r.location || '--'}
           </DetailField>
         </CRow>
       </CCol>
 
-      {submittedBy || submittedAt ? (
+      {submittedBy || submittedAt || submittedRole ? (
         <CCol xs={12}>
           <CRow className="g-3">
             {submittedBy ? (
-              <DetailField label="Submitted By" xs={12} md={6}>
+              <DetailField label="Submitted By" xs={12} md={4}>
                 {submittedBy}
               </DetailField>
             ) : null}
+            {submittedRole ? (
+              <DetailField label="Role" xs={12} md={4}>
+                {submittedRole}
+              </DetailField>
+            ) : null}
             {submittedAt ? (
-              <DetailField label="Submitted At" xs={12} md={6}>
+              <DetailField label="Submitted At" xs={12} md={4}>
                 {submittedAt}
               </DetailField>
             ) : null}
@@ -146,32 +168,16 @@ const InspectionReviewSection = ({
         </CCol>
       ) : null}
 
-      <CCol xs={12}>
-        {String(r.description || '').trim() ? (
-          <div>
-            <div className="small text-muted">Description</div>
-            <div style={{ whiteSpace: 'pre-wrap' }}>{r.description}</div>
-          </div>
-        ) : (
-          <div className="text-body-secondary small">No description provided.</div>
-        )}
-      </CCol>
-
-      {checklist.length > 0 ? (
+      {!isGeneral ? (
         <CCol xs={12}>
-          <div className="d-grid gap-2">
-            <div className="fw-semibold text-muted">Checklist</div>
-            <div className="d-flex flex-wrap gap-2">
-              {checklist.map((item) => (
-                <span
-                  key={item.id || item.label}
-                  className="inspection-checklist-pill badge text-bg-light border text-body"
-                >
-                  {item.label}
-                </span>
-              ))}
+          {String(r.description || '').trim() ? (
+            <div>
+              <div className="small text-muted">Description</div>
+              <div style={{ whiteSpace: 'pre-wrap' }}>{r.description}</div>
             </div>
-          </div>
+          ) : (
+            <div className="text-body-secondary small">No description provided.</div>
+          )}
         </CCol>
       ) : null}
 

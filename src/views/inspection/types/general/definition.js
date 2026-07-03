@@ -1,6 +1,13 @@
 import { ClipboardCheck } from 'lucide-react'
-
-export const GENERAL_INSPECTION_TYPE = 'General Inspection'
+import {
+  buildGeneralChecklist,
+  buildGeneralDescription,
+  GENERAL_INSPECTION_TYPE,
+  getGeneralCheckSummary,
+  getGeneralMissingFields,
+  isGeneralInspectionType,
+} from './helpers'
+import { GeneralReadOnlySection } from './section'
 
 const generalInspectionDefinition = {
   key: 'general-inspection',
@@ -14,7 +21,13 @@ const generalInspectionDefinition = {
   supportsEquipmentCatalog: false,
   photoEvidenceTitle: 'Upload Photos and Describe',
   initialFormState: {},
-  missingFieldKeys: [],
+  missingFieldKeys: ['description', 'photos'],
+  isInspectionType: isGeneralInspectionType,
+  getSummary: getGeneralCheckSummary,
+  getMissingFields: getGeneralMissingFields,
+  buildChecklist: buildGeneralChecklist,
+  buildDescription: buildGeneralDescription,
+  ReadOnlySection: GeneralReadOnlySection,
 }
 
 export default generalInspectionDefinition

@@ -107,34 +107,53 @@ export const normalizeFireExtinguisherChecks = (checks = []) =>
 const mergeCatalogAndChecks = (catalogRows = [], checks = []) => {
   const normalizedCatalog = normalizeFireExtinguisherCatalogRows(catalogRows)
   const normalizedChecks = normalizeFireExtinguisherChecks(checks)
-  const byIdentity = new Map(normalizedChecks.map((row) => [fireRowIdentity(row), row]))
+  const byIdentity = new Map()
+  const orderedIdentities = []
 
-  return normalizedCatalog.map((row) => {
-    const existing = byIdentity.get(fireRowIdentity(row))
-    return existing
-      ? {
-          ...row,
-          ...existing,
-          zone: text(existing.zone) || row.zone,
-          mainLocation: text(existing.mainLocation) || row.mainLocation,
-          location: text(existing.location) || row.location,
-          subLocation: text(existing.subLocation) || row.subLocation,
-          locationPath:
-            Array.isArray(existing.locationPath) && existing.locationPath.length > 0
-              ? existing.locationPath
-              : row.locationPath,
-          idLocNo: text(existing.idLocNo) || row.idLocNo,
-          barcodeNo: text(existing.barcodeNo) || row.barcodeNo,
-          feType: text(existing.feType) || row.feType,
-          certificationValidity: text(existing.certificationValidity) || row.certificationValidity,
-          certificationValidityRaw:
-            text(existing.certificationValidityRaw) || row.certificationValidityRaw,
-          daysLeftToExpire: text(existing.daysLeftToExpire) || row.daysLeftToExpire,
-          canEdit: row.canEdit,
-          canDelete: row.canDelete,
-        }
-      : row
+  normalizedCatalog.forEach((row) => {
+    const identity = fireRowIdentity(row)
+    if (!identity || byIdentity.has(identity)) return
+    byIdentity.set(identity, row)
+    orderedIdentities.push(identity)
   })
+
+  normalizedChecks.forEach((row) => {
+    const identity = fireRowIdentity(row)
+    if (!identity) return
+    const existing = byIdentity.get(identity)
+    if (!existing) {
+      byIdentity.set(identity, {
+        ...row,
+        integritySource: 'saved-only',
+      })
+      orderedIdentities.push(identity)
+      return
+    }
+    byIdentity.set(identity, {
+      ...existing,
+      ...row,
+      zone: text(row.zone) || existing.zone,
+      mainLocation: text(row.mainLocation) || existing.mainLocation,
+      location: text(row.location) || existing.location,
+      subLocation: text(row.subLocation) || existing.subLocation,
+      locationPath:
+        Array.isArray(row.locationPath) && row.locationPath.length > 0
+          ? row.locationPath
+          : existing.locationPath,
+      idLocNo: text(row.idLocNo) || existing.idLocNo,
+      barcodeNo: text(row.barcodeNo) || existing.barcodeNo,
+      feType: text(row.feType) || existing.feType,
+      certificationValidity: text(row.certificationValidity) || existing.certificationValidity,
+      certificationValidityRaw:
+        text(row.certificationValidityRaw) || existing.certificationValidityRaw,
+      daysLeftToExpire: text(row.daysLeftToExpire) || existing.daysLeftToExpire,
+      canEdit: existing.canEdit,
+      canDelete: existing.canDelete,
+      integritySource: 'catalog+saved',
+    })
+  })
+
+  return orderedIdentities.map((identity) => byIdentity.get(identity)).filter(Boolean)
 }
 
 export const getFireExtinguisherVisibleChecks = (form = {}) => {
@@ -145,34 +164,63 @@ export const getFireExtinguisherVisibleChecks = (form = {}) => {
   const fallback = normalizeFireExtinguisherChecks(form.fireExtinguisherChecks)
   const rows = merged.length > 0 ? merged : fallback
 
-  return rows.filter((row) => {
-    if (mainLocation && text(row.mainLocation).toLowerCase() !== mainLocation.toLowerCase()) {
-      return false
-    }
-    if (subLocation && text(row.subLocation).toLowerCase() !== subLocation.toLowerCase()) {
-      return false
-    }
-    return true
-  })
+  return rows
+    .filter((row) => {
+      if (mainLocation && text(row.mainLocation).toLowerCase() !== mainLocation.toLowerCase()) {
+        return false
+      }
+      if (subLocation && text(row.subLocation).toLowerCase() !== subLocation.toLowerCase()) {
+        return false
+      }
+      return true
+    })
+    .map((row) => ({
+      ...row,
+      isOrphanedSavedRow: row.integritySource === 'saved-only',
+    }))
 }
 
 export const getFireExtinguisherCheckSummary = (form = {}) => {
   const visibleChecks = getFireExtinguisherVisibleChecks(form)
-  const completedCount = visibleChecks.filter((row) =>
-    FIRE_EXTINGUISHER_CHECK_FIELDS.every((field) => text(row[field.key])),
+  const completedCount = visibleChecks.filter(
+    (row) => getFireExtinguisherRowValidation(row).isComplete,
   ).length
   const defectCount = visibleChecks.filter((row) =>
     FIRE_EXTINGUISHER_CHECK_FIELDS.some((field) => isFireExtinguisherDefectStatus(row[field.key])),
   ).length
+  const defectFieldCount = visibleChecks.reduce(
+    (count, row) => count + getFireExtinguisherDefectFields(row).length,
+    0,
+  )
+  const incompleteDefectRemarkCount = visibleChecks.reduce(
+    (count, row) => count + getFireExtinguisherIncompleteDefectRemarkCount(row),
+    0,
+  )
+  const incompleteDefectPhotoCount = visibleChecks.reduce(
+    (count, row) => count + getFireExtinguisherIncompleteDefectPhotoCount(row),
+    0,
+  )
   return {
     visibleChecks,
     totalCount: visibleChecks.length,
     completedCount,
     defectCount,
+    defectFieldCount,
+    incompleteDefectRemarkCount,
+    incompleteDefectPhotoCount,
   }
 }
 
-const hasPhotos = (value) => Array.isArray(value) && value.length > 0
+const hasPhotos = (value) => Array.isArray(value) && value.some(Boolean)
+
+const getFireExtinguisherDefectFields = (row = {}) =>
+  FIRE_EXTINGUISHER_CHECK_FIELDS.filter((field) => isFireExtinguisherDefectStatus(row[field.key]))
+
+const getFireExtinguisherIncompleteDefectRemarkCount = (row = {}) =>
+  getFireExtinguisherDefectFields(row).filter((field) => !text(row[field.remarksKey])).length
+
+const getFireExtinguisherIncompleteDefectPhotoCount = (row = {}) =>
+  getFireExtinguisherDefectFields(row).filter((field) => !hasPhotos(row[field.photosKey])).length
 
 export const getFireExtinguisherRowValidation = (row = {}) => {
   const missingStatusKeys = FIRE_EXTINGUISHER_CHECK_FIELDS.filter(
@@ -181,12 +229,19 @@ export const getFireExtinguisherRowValidation = (row = {}) => {
   const missingRemarkKeys = FIRE_EXTINGUISHER_CHECK_FIELDS.filter(
     (field) => isFireExtinguisherDefectStatus(row[field.key]) && !text(row[field.remarksKey]),
   ).map((field) => field.remarksKey)
+  const missingPhotoKeys = FIRE_EXTINGUISHER_CHECK_FIELDS.filter(
+    (field) => isFireExtinguisherDefectStatus(row[field.key]) && !hasPhotos(row[field.photosKey]),
+  ).map((field) => field.photosKey)
 
   return {
     rowId: text(row.id),
     missingStatusKeys,
     missingRemarkKeys,
-    isComplete: missingStatusKeys.length === 0 && missingRemarkKeys.length === 0,
+    missingPhotoKeys,
+    isComplete:
+      missingStatusKeys.length === 0 &&
+      missingRemarkKeys.length === 0 &&
+      missingPhotoKeys.length === 0,
     hasDefect: FIRE_EXTINGUISHER_CHECK_FIELDS.some((field) =>
       isFireExtinguisherDefectStatus(row[field.key]),
     ),
@@ -222,14 +277,22 @@ export const getFireExtinguisherValidationDetails = (form = {}) => {
     if (detail.missingRemarkKeys.length > 0) next[detail.rowId] = detail.missingRemarkKeys
     return next
   }, {})
+  const missingPhotosByRow = rowDetails.reduce((next, detail) => {
+    if (detail.missingPhotoKeys.length > 0) next[detail.rowId] = detail.missingPhotoKeys
+    return next
+  }, {})
   const firstMissingRow = rowDetails.find(
-    (detail) => detail.missingStatusKeys.length > 0 || detail.missingRemarkKeys.length > 0,
+    (detail) =>
+      detail.missingStatusKeys.length > 0 ||
+      detail.missingRemarkKeys.length > 0 ||
+      detail.missingPhotoKeys.length > 0,
   )
 
   return {
     rowDetails,
     missingStatusesByRow,
     missingRemarksByRow,
+    missingPhotosByRow,
     firstTarget: firstMissingRow
       ? {
           field:
@@ -238,19 +301,21 @@ export const getFireExtinguisherValidationDetails = (form = {}) => {
               : 'fireExtinguisherRemarks',
           rowId: firstMissingRow.rowId,
           checkKey: firstMissingRow.missingStatusKeys[0] || '',
-          detailKey: firstMissingRow.missingRemarkKeys[0] || '',
+          detailKey:
+            firstMissingRow.missingStatusKeys.length > 0
+              ? ''
+              : firstMissingRow.missingRemarkKeys[0] || firstMissingRow.missingPhotoKeys[0] || '',
         }
       : null,
     errorCount:
       Object.values(missingStatusesByRow).reduce((sum, keys) => sum + keys.length, 0) +
-      Object.values(missingRemarksByRow).reduce((sum, keys) => sum + keys.length, 0),
+      Object.values(missingRemarksByRow).reduce((sum, keys) => sum + keys.length, 0) +
+      Object.values(missingPhotosByRow).reduce((sum, keys) => sum + keys.length, 0),
   }
 }
 
 export const getFireExtinguisherMissingFields = (form = {}) => {
   const visibleChecks = getFireExtinguisherVisibleChecks(form)
-  const sessionMissing =
-    !text(form.fireExtinguisherInspectedBy) || !text(form.fireExtinguisherInspectionDate)
   const checksMissing =
     visibleChecks.length === 0 ||
     visibleChecks.some((row) =>
@@ -258,11 +323,13 @@ export const getFireExtinguisherMissingFields = (form = {}) => {
     )
   const remarksMissing = visibleChecks.some((row) =>
     FIRE_EXTINGUISHER_CHECK_FIELDS.some(
-      (field) => isFireExtinguisherDefectStatus(row[field.key]) && !text(row[field.remarksKey]),
+      (field) =>
+        isFireExtinguisherDefectStatus(row[field.key]) &&
+        (!text(row[field.remarksKey]) || !hasPhotos(row[field.photosKey])),
     ),
   )
   return {
-    fireExtinguisherSession: sessionMissing,
+    fireExtinguisherSession: false,
     fireExtinguisherChecks: checksMissing,
     fireExtinguisherRemarks: remarksMissing,
   }
@@ -270,24 +337,44 @@ export const getFireExtinguisherMissingFields = (form = {}) => {
 
 export const buildFireExtinguisherChecklist = (form = {}) =>
   getFireExtinguisherVisibleChecks(form).flatMap((row) =>
-    FIRE_EXTINGUISHER_CHECK_FIELDS.map((field) => ({
-      id: `fire-extinguisher:${row.id}:${field.key}`,
-      inspectionType: FIRE_EXTINGUISHER_INSPECTION_TYPE,
-      label: `${row.idLocNo || row.barcodeNo || 'Fire extinguisher'} - ${field.label}: ${
-        row[field.key] || 'Pending'
-      }`,
-      selected: true,
-      selectedAt: '',
-    })),
+    FIRE_EXTINGUISHER_CHECK_FIELDS.map((field) => {
+      const status = text(row[field.key])
+      if (!status) return null
+      return {
+        id: `fire-extinguisher:${row.id}:${field.key}`,
+        inspectionType: FIRE_EXTINGUISHER_INSPECTION_TYPE,
+        label: `${row.idLocNo || row.barcodeNo || 'Fire extinguisher'} - ${field.label}: ${status}`,
+        selected: true,
+        selectedAt: '',
+      }
+    }).filter(Boolean),
   )
 
 export const buildFireExtinguisherDescription = (form = {}) => {
-  const summary = getFireExtinguisherCheckSummary(form)
-  return `Fire extinguisher inspection for ${text(form.selectedLocation || form.location)} by ${
-    text(form.fireExtinguisherInspectedBy) || 'inspector'
-  } on ${text(form.fireExtinguisherInspectionDate) || 'inspection date'}: ${
-    summary.completedCount
-  }/${summary.totalCount} extinguishers completed, ${summary.defectCount} with defects.`
+  const location = text(form.selectedLocation || form.location)
+  const { totalCount, defectFieldCount, visibleChecks } = getFireExtinguisherCheckSummary(form)
+  const remarkRows = visibleChecks.flatMap((row) => {
+    const itemLabel = row.idLocNo || row.barcodeNo || 'Fire extinguisher'
+    const defectRows = getFireExtinguisherDefectFields(row).map((field) => {
+      const remarks = text(row[field.remarksKey])
+      return `- ${itemLabel} - ${field.label}${remarks ? `: ${remarks}` : ''}`
+    })
+    const generalRemarks = text(row.remarks)
+    if (generalRemarks) {
+      defectRows.push(`- ${itemLabel} - General equipment remarks: ${generalRemarks}`)
+    }
+    return defectRows
+  })
+
+  if (remarkRows.length > 0) {
+    return [
+      `Fire extinguishers checked${location ? ` at ${location}` : ''}.`,
+      `Defect/remark item(s): ${defectFieldCount}.`,
+      ...remarkRows,
+    ].join('\n')
+  }
+
+  return `Fire extinguishers checked${location ? ` at ${location}` : ''}: ${totalCount} extinguisher(s), no defects recorded.`
 }
 
 export const filterFireExtinguisherRows = (rows = [], search = '') => {

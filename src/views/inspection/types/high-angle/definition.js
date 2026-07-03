@@ -26,7 +26,7 @@ const highAngleInspectionDefinition = {
   checksField: 'highAngleChecks',
   fieldRefKey: 'highAngleChecks',
   photoEvidenceTitle: 'General Evidence Photos',
-  missingFieldKeys: ['highAngleSession', 'highAngleChecks', 'highAngleRemarks'],
+  missingFieldKeys: ['highAngleChecks', 'highAngleRemarks'],
   initialFormState: {
     highAngleInspectedBy: '',
     highAngleInspectionDate: '',

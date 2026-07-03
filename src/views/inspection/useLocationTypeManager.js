@@ -386,6 +386,11 @@ const useLocationTypeManager = ({
 
   const editLocationOptions =
     locationDraftKind === LOCATION_DRAFT_SUB ? subLocationOptions : mainLocationOptions
+  const editingLocationRow = useMemo(() => {
+    const editKey = String(editingLocationKey || '').trim()
+    if (!editKey) return null
+    return editLocationOptions.find((row) => sameKey(row.value, editKey)) || null
+  }, [editLocationOptions, editingLocationKey])
 
   const resetDraft = () => {
     setNewLocationName('')
@@ -504,6 +509,7 @@ const useLocationTypeManager = ({
         const savedRow =
           editKey && editingId
             ? await updateInspectionLocationOption(editingId, {
+                inspectionType,
                 name: title,
                 description,
                 iconKey: locationDraftKind === LOCATION_DRAFT_MAIN ? newLocationIconKey : '',
@@ -526,10 +532,7 @@ const useLocationTypeManager = ({
             ? replaceSubLocationRow(backendMainLocations, fallbackMainLocation, savedRow)
             : replaceMainLocationRow(backendMainLocations, {
                 ...savedRow,
-                subLocations:
-                  editKey && sameKey(fallbackMainLocation, editKey)
-                    ? selectedMainLocationRow?.subLocations || savedRow.subLocations || []
-                    : savedRow.subLocations || [],
+                subLocations: savedRow.subLocations || [],
               })
         setBackendMainLocations(nextRows)
         saveCachedInspectionLocationCatalog(inspectionType, nextRows)
@@ -546,7 +549,9 @@ const useLocationTypeManager = ({
 
         pushToast?.(
           editKey
-            ? `${locationDraftKind === LOCATION_DRAFT_SUB ? 'Sub-location' : 'Main location'} "${title}" updated.`
+            ? editingRow && !editingRow.custom
+              ? `Shared ${locationDraftKind === LOCATION_DRAFT_SUB ? 'sub-location' : 'location'} updated.`
+              : `${locationDraftKind === LOCATION_DRAFT_SUB ? 'Sub-location' : 'Main location'} "${title}" updated.`
             : `${locationDraftKind === LOCATION_DRAFT_SUB ? 'Sub-location' : 'Main location'} "${title}" added.`,
           {
             title: editKey ? 'Location updated' : 'Location added',
@@ -673,7 +678,7 @@ const useLocationTypeManager = ({
         setAddLocationError('Unable to archive this location because it is missing a database ID.')
         return
       }
-      deleteInspectionLocationOption(targetId)
+      deleteInspectionLocationOption(targetId, { inspectionType })
         .then(() => {
           const nextRows = removeLocationRow(backendMainLocations, targetRow, parentValue)
           setBackendMainLocations(nextRows)
@@ -693,6 +698,13 @@ const useLocationTypeManager = ({
             })
           }
 
+          if (!targetRow?.custom) {
+            pushToast?.(
+              `Shared ${locationDraftKind === LOCATION_DRAFT_SUB ? 'sub-location' : 'location'} removed from catalog.`,
+              { title: 'Catalog updated', color: 'warning' },
+            )
+            return
+          }
           pushToast?.('Location removed.', { title: 'Location removed', color: 'warning' })
         })
         .catch((error) => {
@@ -808,6 +820,7 @@ const useLocationTypeManager = ({
     newLocationIconKey,
     setNewLocationIconKey,
     iconOptions,
+    editingLocationRow,
     editingLocationKey,
     editingSystemType: false,
     addLocationError,

@@ -13,15 +13,15 @@ export const HighAngleEditSection = ({
     mainLocation={mainLocation}
     mainLocationLabel={mainLocationLabel}
     summary={summary}
-    inspectedBy={form.highAngleInspectedBy}
-    inspectionDate={form.highAngleInspectionDate}
-    onUpdateSessionMeta={handlers.onUpdateSessionMeta}
     onUpdateCheck={handlers.onUpdateCheck}
     onMarkRowOk={handlers.onMarkRowOk}
     onMarkAllOk={handlers.onMarkAllOk}
+    onRequestIssuePhotoUpload={handlers.onRequestHighAngleIssuePhotoUpload}
+    onRemovePhoto={handlers.onRemovePhoto}
+    onChangePhotoDescription={handlers.onChangePhotoDescription}
+    onApplyPhotoCaption={handlers.onApplyPhotoCaption}
     fieldError={fieldErrors.highAngleChecks}
     remarksError={fieldErrors.highAngleRemarks}
-    sessionError={fieldErrors.highAngleSession}
   />
 )
 
@@ -32,8 +32,6 @@ export const HighAngleReadOnlySection = ({ mainLocation, mainLocationLabel, form
       mainLocation={mainLocation}
       mainLocationLabel={mainLocationLabel}
       summary={summary}
-      inspectedBy={form.highAngleInspectedBy}
-      inspectionDate={form.highAngleInspectionDate}
     />
   </div>
 )

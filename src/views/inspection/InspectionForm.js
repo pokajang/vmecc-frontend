@@ -1,5 +1,15 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { CButton, CFormTextarea } from '@coreui/react'
+import {
+  CButton,
+  CFormInput,
+  CFormLabel,
+  CFormTextarea,
+  CModal,
+  CModalBody,
+  CModalFooter,
+  CModalHeader,
+  CModalTitle,
+} from '@coreui/react'
 import CreateActionButton from 'src/components/CreateActionButton'
 import FormActionGroup from 'src/components/FormActionGroup'
 import IconOptionGrid from 'src/components/IconOptionGrid'
@@ -28,6 +38,7 @@ import InspectionLocationOptionPicker from 'src/views/inspection/components/Insp
 import { getInspectionTypeDefinition } from './app/inspectionTypeRegistry'
 import {
   INSPECTION_DESCRIPTION_CHIPS,
+  applySessionInspector,
   appendInspectionText,
   getErAuxCheckSummary,
   getFrtCheckSummary,
@@ -38,11 +49,15 @@ import {
   getScbaCheckSummary,
   getInspectionChecklistChips,
   getInspectionFormMissingFields,
+  getDefaultInspectionDateTime,
   FIRE_EXTINGUISHER_CHECK_FIELDS,
   HYDRAULIC_CHECK_FIELDS,
+  HIGH_ANGLE_CONDITION_FIELD,
   HIGH_ANGLE_STATUS_OPTIONS,
   SCBA_SECTION_DEFINITIONS,
   SCBA_STATUS_OPTIONS,
+  getScbaFieldEvidenceKeys,
+  normalizeScbaCustomSections,
   isGeneralInspectionType,
   isInspectionChecklistItemSelected,
   isInspectionFormValid,
@@ -68,6 +83,31 @@ import {
   saveCachedFireExtinguisherCatalog,
   updateFireExtinguisherOption,
 } from './inspectionFireExtinguisherApi'
+import {
+  createFireTruckOption,
+  deleteFireTruckOption,
+  fetchFireTruckOptions,
+  loadCachedFireTruckCatalog,
+  normalizeFireTruckCatalogRows,
+  saveCachedFireTruckCatalog,
+  updateFireTruckOption,
+} from './inspectionFireTruckApi'
+import {
+  archiveScbaCatalogItem,
+  archiveScbaCatalogSection,
+  createScbaCatalogItem,
+  createScbaCatalogSection,
+  fetchScbaCatalog,
+  loadCachedScbaCatalog,
+  saveCachedScbaCatalog,
+  updateScbaCatalogItem,
+  updateScbaCatalogSection,
+} from './inspectionScbaCatalogApi'
+import {
+  defaultFrtTruckOption,
+  normalizeFrtTruckOption,
+  resolveSelectedFrtTruckPlate,
+} from './types/frt-daily/helpers'
 
 const MAX_PHOTO_BYTES = 1.5 * 1024 * 1024
 const TARGET_PHOTO_BYTES = 1.0 * 1024 * 1024
@@ -198,7 +238,86 @@ const collectInspectionPhotos = (form = {}) => [
         ),
       ])
     : []),
+  ...(Array.isArray(form.erAuxChecks)
+    ? form.erAuxChecks.flatMap((check) => [
+        ...(Array.isArray(check.photos) ? check.photos : []),
+        ...(Array.isArray(check.defectPhotos) ? check.defectPhotos : []),
+      ])
+    : []),
+  ...(Array.isArray(form.frtDailyChecks)
+    ? form.frtDailyChecks.flatMap((check) => (Array.isArray(check.photos) ? check.photos : []))
+    : []),
+  ...(Array.isArray(form.frtOneOffChecks)
+    ? form.frtOneOffChecks.flatMap((check) => (Array.isArray(check.photos) ? check.photos : []))
+    : []),
+  ...(Array.isArray(form.highAngleChecks)
+    ? form.highAngleChecks.flatMap((check) =>
+        Array.isArray(check[HIGH_ANGLE_CONDITION_FIELD.photosKey])
+          ? check[HIGH_ANGLE_CONDITION_FIELD.photosKey]
+          : [],
+      )
+    : []),
+  ...SCBA_SECTION_DEFINITIONS.flatMap((section) => {
+    const checks =
+      section.key === 'backPlate'
+        ? form.scbaBackPlateChecks
+        : section.key === 'cylinder'
+          ? form.scbaCylinderChecks
+          : form.scbaFaceMaskChecks
+    return (Array.isArray(checks) ? checks : []).flatMap((check) => [
+      ...(Array.isArray(check.photos) ? check.photos : []),
+      ...(section.fields || []).flatMap((field) => {
+        if (field.kind !== 'status') return []
+        const { photosKey } = getScbaFieldEvidenceKeys(field)
+        return Array.isArray(check[photosKey]) ? check[photosKey] : []
+      }),
+    ])
+  }),
+  ...normalizeScbaCustomSections(form.scbaCustomSections || form.scba_custom_sections).flatMap(
+    (section) =>
+      (Array.isArray(section.rows) ? section.rows : []).flatMap((check) => [
+        ...(Array.isArray(check.photos) ? check.photos : []),
+        ...(section.fields || []).flatMap((field) => {
+          const { photosKey } = getScbaFieldEvidenceKeys(field)
+          return Array.isArray(check[photosKey]) ? check[photosKey] : []
+        }),
+      ]),
+  ),
 ]
+
+const INSPECTION_TIMESTAMP_FIELDS = [
+  'inspectedAt',
+  'inspected_at',
+  'inspectionDateTime',
+  'inspection_date_time',
+  'erAuxInspectionDate',
+  'er_aux_inspection_date',
+  'fireExtinguisherInspectionDate',
+  'fire_extinguisher_inspection_date',
+  'frtInspectionDate',
+  'frt_inspection_date',
+  'highAngleInspectionDate',
+  'high_angle_inspection_date',
+  'scbaInspectionDate',
+  'scba_inspection_date',
+  'hseInspectionDate',
+  'hse_inspection_date',
+]
+
+const hasInspectionTimestampField = (value = {}) =>
+  INSPECTION_TIMESTAMP_FIELDS.some((field) => Object.prototype.hasOwnProperty.call(value, field))
+
+const slugSegment = (value = '') =>
+  String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+
+const customFieldKeyFromLabel = (label = '') => {
+  const slug = slugSegment(label) || 'check'
+  return slug.replace(/-([a-z0-9])/g, (_, character) => character.toUpperCase())
+}
 
 const InspectionForm = ({
   user,
@@ -209,9 +328,20 @@ const InspectionForm = ({
   onRequestReview,
   draftStatus = '',
 }) => {
-  const form = useMemo(() => normalizeInspectionForm(value), [value])
+  const form = useMemo(() => {
+    const source = value && typeof value === 'object' ? value : {}
+    return normalizeInspectionForm(
+      hasInspectionTimestampField(source)
+        ? source
+        : {
+            ...source,
+            inspectedAt: getDefaultInspectionDateTime(),
+          },
+    )
+  }, [value])
   const latestFormRef = useRef(form)
   const inspectionTypeRef = useRef(null)
+  const inspectedAtRef = useRef(null)
   const selectedLocationRef = useRef(null)
   const descriptionRef = useRef(null)
   const erAuxChecksRef = useRef(null)
@@ -220,6 +350,7 @@ const InspectionForm = ({
   const frtChecksRef = useRef(null)
   const highAngleChecksRef = useRef(null)
   const scbaChecksRef = useRef(null)
+  const scbaCatalogInjectedRef = useRef('')
   const hseObservationRef = useRef(null)
   const photosRef = useRef(null)
   const selectedLocation = String(form.selectedLocation || '').trim()
@@ -231,18 +362,59 @@ const InspectionForm = ({
   const photoUploadTargetRef = useRef({ kind: 'root' })
   const [locationDeleteTarget, setLocationDeleteTarget] = useState(null)
   const [incidentDeleteTarget, setIncidentDeleteTarget] = useState(null)
+  const [fireExtinguisherDeleteTarget, setFireExtinguisherDeleteTarget] = useState(null)
   const [equipmentDeleteTarget, setEquipmentDeleteTarget] = useState(null)
+  const [fireTruckDeleteTarget, setFireTruckDeleteTarget] = useState(null)
+  const [isDeletingEquipment, setIsDeletingEquipment] = useState(false)
   const [fieldErrors, setFieldErrors] = useState({})
   const [validationState, setValidationState] = useState(null)
   const [isEditingType, setIsEditingType] = useState(() => !selectedType)
   const [equipmentRows, setEquipmentRows] = useState([])
   const [fireExtinguisherRows, setFireExtinguisherRows] = useState([])
+  const [fireTruckRows, setFireTruckRows] = useState([])
+  const [scbaCatalogSections, setScbaCatalogSections] = useState([])
   const [showEquipmentModal, setShowEquipmentModal] = useState(false)
+  const [showFireTruckModal, setShowFireTruckModal] = useState(false)
+  const [scbaItemModal, setScbaItemModal] = useState({
+    visible: false,
+    mode: 'add',
+    sectionKey: '',
+    rowId: '',
+    catalogItemId: '',
+    brand: '',
+    serialNo: '',
+    size: '',
+    cylinderType: '',
+    equipmentDescription: '',
+    error: '',
+  })
+  const [scbaSectionModal, setScbaSectionModal] = useState({
+    visible: false,
+    mode: 'add',
+    sectionKey: '',
+    catalogSectionId: '',
+    title: '',
+    shortLabel: '',
+    checksText: '',
+    error: '',
+  })
+  const [scbaRemoveTarget, setScbaRemoveTarget] = useState(null)
+  const [scbaArchiveTarget, setScbaArchiveTarget] = useState(null)
+  const [isSavingScbaCatalog, setIsSavingScbaCatalog] = useState(false)
   const [equipmentEditMode, setEquipmentEditMode] = useState(false)
   const [editingEquipmentId, setEditingEquipmentId] = useState('')
+  const [editingLocalEquipmentId, setEditingLocalEquipmentId] = useState('')
+  const [editingFireTruckId, setEditingFireTruckId] = useState('')
+  const [editingFireTruckPlateNo, setEditingFireTruckPlateNo] = useState('')
   const [newEquipmentName, setNewEquipmentName] = useState('')
   const [newEquipmentDescription, setNewEquipmentDescription] = useState('')
   const [equipmentError, setEquipmentError] = useState('')
+  const [newTruckPlateNo, setNewTruckPlateNo] = useState('')
+  const [newTruckName, setNewTruckName] = useState('')
+  const [newTruckRoadTaxExpiry, setNewTruckRoadTaxExpiry] = useState('')
+  const [newTruckInsuranceExpiry, setNewTruckInsuranceExpiry] = useState('')
+  const [newTruckPuspakomExpiry, setNewTruckPuspakomExpiry] = useState('')
+  const [fireTruckError, setFireTruckError] = useState('')
   const checklistChips = useMemo(() => getInspectionChecklistChips(selectedType), [selectedType])
   const selectedTypeDefinition = useMemo(
     () => getInspectionTypeDefinition(selectedType),
@@ -253,6 +425,8 @@ const InspectionForm = ({
   const isEquipmentCatalogInspectionForm = selectedTypeDefinition?.supportsEquipmentCatalog === true
   const isFireExtinguisherCatalogInspectionForm =
     selectedTypeDefinition?.supportsFireExtinguisherCatalog === true
+  const isFireTruckCatalogInspectionForm = selectedTypeDefinition?.supportsFireTruckCatalog === true
+  const isScbaInspectionForm = selectedTypeDefinition?.fieldRefKey === 'scbaChecks'
   const isSubmittableInspectionForm = selectedTypeDefinition?.implemented === true
   const supportsCustomLocations = selectedTypeDefinition?.supportsCustomLocations !== false
   const supportsSubLocations = selectedTypeDefinition?.supportsSubLocations !== false
@@ -279,6 +453,7 @@ const InspectionForm = ({
     () => selectedTypeDefinition?.getSummary?.(effectiveForm) || null,
     [effectiveForm, selectedTypeDefinition],
   )
+  const structuredDisplayForm = useMemo(() => applySessionInspector(form, user), [form, user])
   const equipmentModalOptions = useMemo(
     () =>
       (currentStructuredSummary?.visibleChecks || []).map((row) => ({
@@ -352,12 +527,110 @@ const InspectionForm = ({
     }
   }, [isFireExtinguisherCatalogInspectionForm, mainLocation, subLocation])
 
+  useEffect(() => {
+    if (!isFireTruckCatalogInspectionForm) {
+      setFireTruckRows([])
+      return undefined
+    }
+
+    let active = true
+    const fallback = [defaultFrtTruckOption()].filter(Boolean)
+    const cached = loadCachedFireTruckCatalog()
+    setFireTruckRows(cached.length > 0 ? cached : fallback)
+
+    fetchFireTruckOptions()
+      .then(({ data }) => {
+        if (!active) return
+        const rows = data.length > 0 ? data : fallback
+        setFireTruckRows(rows)
+        saveCachedFireTruckCatalog(rows)
+      })
+      .catch(() => {
+        if (!active) return
+        setFireTruckRows(cached.length > 0 ? cached : fallback)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [isFireTruckCatalogInspectionForm])
+
+  const valueLooksLikeSavedInspection = useMemo(() => {
+    const source = value && typeof value === 'object' ? value : {}
+    return Boolean(
+      source.id ||
+        source.reportUid ||
+        source.report_uid ||
+        source.draftId ||
+        source.draft_id ||
+        source.status ||
+        source.submittedAt ||
+        source.submitted_at ||
+        source.createdAt ||
+        source.created_at ||
+        source.version,
+    )
+  }, [value])
+
+  useEffect(() => {
+    if (!isScbaInspectionForm || !mainLocation) {
+      setScbaCatalogSections([])
+      scbaCatalogInjectedRef.current = ''
+      return undefined
+    }
+
+    let active = true
+    const cached = loadCachedScbaCatalog()
+    setScbaCatalogSections(cached)
+
+    const injectCatalogIfFresh = (sections = []) => {
+      if (!active || sections.length === 0) return
+      const currentForm = getLatestForm()
+      const currentSections = normalizeScbaCustomSections(
+        currentForm.scbaCustomSections || currentForm.scba_custom_sections,
+      )
+      const hasSnapshot = currentSections.length > 0
+      const injectionKey = `${selectedType}:${mainLocation}`
+      if (
+        hasSnapshot ||
+        valueLooksLikeSavedInspection ||
+        scbaCatalogInjectedRef.current === injectionKey
+      ) {
+        return
+      }
+      scbaCatalogInjectedRef.current = injectionKey
+      updateForm({
+        ...currentForm,
+        scbaCustomSections: sections,
+      })
+    }
+
+    injectCatalogIfFresh(cached)
+
+    fetchScbaCatalog({ mainLocation })
+      .then(({ data }) => {
+        if (!active) return
+        setScbaCatalogSections(data)
+        saveCachedScbaCatalog(data)
+        injectCatalogIfFresh(data)
+      })
+      .catch(() => {
+        if (!active) return
+        setScbaCatalogSections(cached)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [isScbaInspectionForm, mainLocation, selectedType, valueLooksLikeSavedInspection])
+
   const updateForm = (nextForm) => {
     const normalized = normalizeInspectionForm(nextForm)
+    const validationForm = applySessionInspector(normalized, user)
     latestFormRef.current = normalized
     setFieldErrors((currentErrors) => {
       if (!Object.values(currentErrors || {}).some(Boolean)) return currentErrors
-      const missing = getInspectionFormMissingFields(normalized)
+      const missing = getInspectionFormMissingFields(validationForm)
       return Object.keys(currentErrors).reduce((nextErrors, field) => {
         if (currentErrors[field] && missing[field]) nextErrors[field] = true
         return nextErrors
@@ -365,13 +638,13 @@ const InspectionForm = ({
     })
     setValidationState((currentValidation) =>
       currentValidation?.errorCount
-        ? getInspectionFormValidationState(normalized)
+        ? getInspectionFormValidationState(validationForm)
         : currentValidation,
     )
     onChange?.(normalized)
   }
 
-  const getLatestForm = () => normalizeInspectionForm(latestFormRef.current || effectiveForm)
+  const getLatestForm = () => applySessionInspector(latestFormRef.current || effectiveForm, user)
 
   const updateLocationField = (field, nextValue) => {
     if (!['location', 'mainLocation', 'subLocation', 'locationSelection'].includes(field)) return
@@ -406,6 +679,38 @@ const InspectionForm = ({
     updateForm({
       ...form,
       inspectionType: String(nextValue || '').trim(),
+      inspectedAt: form.inspectedAt || getDefaultInspectionDateTime(),
+    })
+  }
+
+  const updateInspectedAt = (nextValue) => {
+    updateForm({
+      ...form,
+      inspectedAt: String(nextValue || '').trim(),
+    })
+  }
+
+  const selectFireTruck = (truck) => {
+    const normalizedTruck = normalizeFrtTruckOption(truck)
+    if (!normalizedTruck) return
+    const latest = getLatestForm()
+    updateForm({
+      ...latest,
+      mainLocation: normalizedTruck.plateNo,
+      selectedLocation: normalizedTruck.plateNo,
+      subLocation: '',
+      mainLocationId: String(normalizedTruck.truckId || normalizedTruck.id || '').trim(),
+      subLocationId: '',
+      frtTruckId: String(normalizedTruck.truckId || normalizedTruck.id || '').trim(),
+      frtTruckPlateNo: normalizedTruck.plateNo,
+      frtTruckReference: {
+        truckId: String(normalizedTruck.truckId || normalizedTruck.id || '').trim(),
+        name: normalizedTruck.name || '',
+        plateNo: normalizedTruck.plateNo,
+        roadTaxExpiry: normalizedTruck.roadTaxExpiry || '',
+        insuranceExpiry: normalizedTruck.insuranceExpiry || '',
+        puspakomExpiry: normalizedTruck.puspakomExpiry || '',
+      },
     })
   }
 
@@ -435,6 +740,29 @@ const InspectionForm = ({
     [incident.typeOptions, selectedType],
   )
   const SelectedTypeIcon = selectedTypeOption?.icon || resolveTypeIcon(selectedTypeOption?.iconKey)
+
+  const selectedFireTruckPlate = String(resolveSelectedFrtTruckPlate(form) || '').trim()
+  const fireTruckOptions = useMemo(
+    () =>
+      normalizeFireTruckCatalogRows(
+        fireTruckRows.length > 0 ? fireTruckRows : [defaultFrtTruckOption()].filter(Boolean),
+      ),
+    [fireTruckRows],
+  )
+  const selectedFireTruckOption = useMemo(
+    () =>
+      fireTruckOptions.find((option) => {
+        const optionId = String(option.truckId || option.id || '').trim()
+        const selectedId = String(form.frtTruckId || form.mainLocationId || '').trim()
+        if (selectedId && optionId === selectedId) return true
+        return (
+          String(option.plateNo || option.value || '')
+            .trim()
+            .toUpperCase() === selectedFireTruckPlate.toUpperCase()
+        )
+      }) || null,
+    [fireTruckOptions, form.frtTruckId, form.mainLocationId, selectedFireTruckPlate],
+  )
 
   const openPhotoInput = (target, inputRef) => {
     photoUploadTargetRef.current = target || { kind: 'root' }
@@ -491,6 +819,10 @@ const InspectionForm = ({
       return
     }
 
+    const uploadTarget = photoUploadTargetRef.current || { kind: 'root' }
+    const defaultPhotoDescription = String(
+      uploadTarget?.defaultDescription || uploadTarget?.caption || '',
+    ).trim()
     const nextPhotos = []
     for (const file of processedFiles) {
       try {
@@ -498,6 +830,7 @@ const InspectionForm = ({
         nextPhotos.push({
           id: uid(),
           fileName: file.name,
+          ...(defaultPhotoDescription ? { description: defaultPhotoDescription } : {}),
           url,
         })
       } catch {
@@ -509,7 +842,6 @@ const InspectionForm = ({
       }
     }
 
-    const uploadTarget = photoUploadTargetRef.current || { kind: 'root' }
     if (
       uploadTarget?.kind === 'fireExtinguisher' ||
       uploadTarget?.kind === 'fireExtinguisherDefect'
@@ -544,16 +876,91 @@ const InspectionForm = ({
       return
     }
 
+    if (uploadTarget?.kind === 'frtIssue') {
+      const row = uploadTarget.row || {}
+      const rowId = String(row.id || '').trim()
+      const isOneOff = String(row?.checklistKind || '').trim() === 'oneOff'
+      const checksKey = isOneOff ? 'frtOneOffChecks' : 'frtDailyChecks'
+      const checks = Array.isArray(form[checksKey]) ? form[checksKey] : []
+      const existingCheck = checks.find((check) => String(check.id || '') === rowId) || row
+      updateFrtCheck(row, {
+        photos: [
+          ...(Array.isArray(existingCheck.photos) ? existingCheck.photos : []),
+          ...nextPhotos,
+        ],
+      })
+      return
+    }
+
+    if (uploadTarget?.kind === 'highAngleIssue') {
+      const row = uploadTarget.row || {}
+      const rowId = String(row.id || '').trim()
+      const existingCheck =
+        form.highAngleChecks.find((check) => String(check.id || '') === rowId) || row
+      const photosKey = uploadTarget.photosKey || HIGH_ANGLE_CONDITION_FIELD.photosKey
+      updateHighAngleCheck(row, {
+        [photosKey]: [
+          ...(Array.isArray(existingCheck[photosKey]) ? existingCheck[photosKey] : []),
+          ...nextPhotos,
+        ],
+      })
+      return
+    }
+
+    if (uploadTarget?.kind === 'scbaEquipment' || uploadTarget?.kind === 'scbaIssue') {
+      const row = uploadTarget.row || {}
+      const rowId = String(row.id || '').trim()
+      const sectionKey = uploadTarget.sectionKey || row.sectionKey
+      const currentForm = getLatestForm()
+      const existingCheck = getScbaExistingCheck(currentForm, sectionKey, rowId) || row
+      const photosKey = uploadTarget.photosKey || 'photos'
+      if (!photosKey) return
+      updateScbaGroupedCheck(sectionKey, row, {
+        [photosKey]: [
+          ...(Array.isArray(existingCheck[photosKey]) ? existingCheck[photosKey] : []),
+          ...nextPhotos,
+        ],
+      })
+      return
+    }
+
+    if (uploadTarget?.kind === 'erAuxEquipment' || uploadTarget?.kind === 'erAuxDefect') {
+      const row = uploadTarget.row || {}
+      const rowId = String(row.id || '').trim()
+      const existingCheck =
+        form.erAuxChecks.find((check) => String(check.id || '') === rowId) || row
+      const photosKey = uploadTarget?.kind === 'erAuxDefect' ? 'defectPhotos' : 'photos'
+      updateErAuxCheck(row, {
+        [photosKey]: [
+          ...(Array.isArray(existingCheck[photosKey]) ? existingCheck[photosKey] : []),
+          ...nextPhotos,
+        ],
+      })
+      return
+    }
+
     updateForm({
       ...form,
       photos: [...form.photos, ...nextPhotos],
     })
   }
 
-  const requestRootPhotoUpload = (inputRef) => openPhotoInput({ kind: 'root' }, inputRef)
+  const requestRootPhotoUpload = (inputRef, defaultDescription = '') =>
+    openPhotoInput(
+      { kind: 'root', defaultDescription: String(defaultDescription || '').trim() },
+      inputRef,
+    )
 
   const requestHydraulicPhotoUpload = (row) => {
     openPhotoInput({ kind: 'hydraulicEquipment', row }, cameraInputRef)
+  }
+
+  const requestErAuxPhotoUpload = (row) => {
+    openPhotoInput({ kind: 'erAuxEquipment', row }, cameraInputRef)
+  }
+
+  const requestErAuxDefectPhotoUpload = (row) => {
+    openPhotoInput({ kind: 'erAuxDefect', row }, cameraInputRef)
   }
 
   const requestHydraulicDefectPhotoUpload = (row, field) => {
@@ -571,6 +978,26 @@ const InspectionForm = ({
     )
   }
 
+  const requestFrtIssuePhotoUpload = (row) => {
+    openPhotoInput({ kind: 'frtIssue', row }, cameraInputRef)
+  }
+
+  const requestHighAngleIssuePhotoUpload = (row) => {
+    openPhotoInput(
+      { kind: 'highAngleIssue', row, photosKey: HIGH_ANGLE_CONDITION_FIELD.photosKey },
+      cameraInputRef,
+    )
+  }
+
+  const requestScbaIssuePhotoUpload = (sectionKey, row, field) => {
+    const { photosKey } = getScbaFieldEvidenceKeys(field)
+    openPhotoInput({ kind: 'scbaIssue', sectionKey, row, photosKey }, cameraInputRef)
+  }
+
+  const requestScbaPhotoUpload = (sectionKey, row) => {
+    openPhotoInput({ kind: 'scbaEquipment', sectionKey, row, photosKey: 'photos' }, cameraInputRef)
+  }
+
   const removePhoto = (photoId) => {
     updateForm({
       ...form,
@@ -583,17 +1010,6 @@ const InspectionForm = ({
       ...form,
       photos: form.photos.map((photo) =>
         String(photo.id || '') === String(photoId || '') ? { ...photo, description } : photo,
-      ),
-    })
-  }
-
-  const applyPhotoCaption = (photoId, caption) => {
-    updateForm({
-      ...form,
-      photos: form.photos.map((photo) =>
-        String(photo.id || '') === String(photoId || '')
-          ? { ...photo, description: appendInspectionText(photo.description, caption) }
-          : photo,
       ),
     })
   }
@@ -623,6 +1039,157 @@ const InspectionForm = ({
   const applyHydraulicPhotoCaption = (row, photoId, caption, photosKey = 'photos') => {
     const photos = getHydraulicPhotoList(row, photosKey)
     updateHydraulicCheck(row, {
+      [photosKey]: photos.map((photo) =>
+        String(photo.id || '') === String(photoId || '')
+          ? { ...photo, description: appendInspectionText(photo.description, caption) }
+          : photo,
+      ),
+    })
+  }
+
+  const getErAuxPhotoList = (row, photosKey = 'photos') => {
+    const rowId = String(row?.id || '').trim()
+    const existing = form.erAuxChecks.find((check) => String(check.id || '') === rowId)
+    return Array.isArray(existing?.[photosKey]) ? existing[photosKey] : []
+  }
+
+  const removeErAuxPhoto = (row, photoId, photosKey = 'photos') => {
+    const photos = getErAuxPhotoList(row, photosKey)
+    updateErAuxCheck(row, {
+      [photosKey]: photos.filter((photo) => String(photo.id || '') !== String(photoId || '')),
+    })
+  }
+
+  const updateErAuxPhotoDescription = (row, photoId, description, photosKey = 'photos') => {
+    const photos = getErAuxPhotoList(row, photosKey)
+    updateErAuxCheck(row, {
+      [photosKey]: photos.map((photo) =>
+        String(photo.id || '') === String(photoId || '') ? { ...photo, description } : photo,
+      ),
+    })
+  }
+
+  const applyErAuxPhotoCaption = (row, photoId, caption, photosKey = 'photos') => {
+    const photos = getErAuxPhotoList(row, photosKey)
+    updateErAuxCheck(row, {
+      [photosKey]: photos.map((photo) =>
+        String(photo.id || '') === String(photoId || '')
+          ? { ...photo, description: appendInspectionText(photo.description, caption) }
+          : photo,
+      ),
+    })
+  }
+
+  const getFrtPhotoList = (row) => {
+    const rowId = String(row?.id || '').trim()
+    const checksKey =
+      String(row?.checklistKind || '').trim() === 'oneOff' ? 'frtOneOffChecks' : 'frtDailyChecks'
+    const checks = Array.isArray(form[checksKey]) ? form[checksKey] : []
+    const existing = checks.find((check) => String(check.id || '') === rowId)
+    return Array.isArray(existing?.photos) ? existing.photos : []
+  }
+
+  const removeFrtPhoto = (row, photoId) => {
+    const photos = getFrtPhotoList(row)
+    updateFrtCheck(row, {
+      photos: photos.filter((photo) => String(photo.id || '') !== String(photoId || '')),
+    })
+  }
+
+  const updateFrtPhotoDescription = (row, photoId, description) => {
+    const photos = getFrtPhotoList(row)
+    updateFrtCheck(row, {
+      photos: photos.map((photo) =>
+        String(photo.id || '') === String(photoId || '') ? { ...photo, description } : photo,
+      ),
+    })
+  }
+
+  const applyFrtPhotoCaption = (row, photoId, caption) => {
+    const photos = getFrtPhotoList(row)
+    updateFrtCheck(row, {
+      photos: photos.map((photo) =>
+        String(photo.id || '') === String(photoId || '')
+          ? { ...photo, description: appendInspectionText(photo.description, caption) }
+          : photo,
+      ),
+    })
+  }
+
+  const getHighAnglePhotoList = (row, photosKey = HIGH_ANGLE_CONDITION_FIELD.photosKey) => {
+    const rowId = String(row?.id || '').trim()
+    const existing = form.highAngleChecks.find((check) => String(check.id || '') === rowId)
+    return Array.isArray(existing?.[photosKey]) ? existing[photosKey] : []
+  }
+
+  const removeHighAnglePhoto = (row, photoId, photosKey = HIGH_ANGLE_CONDITION_FIELD.photosKey) => {
+    const photos = getHighAnglePhotoList(row, photosKey)
+    updateHighAngleCheck(row, {
+      [photosKey]: photos.filter((photo) => String(photo.id || '') !== String(photoId || '')),
+    })
+  }
+
+  const updateHighAnglePhotoDescription = (
+    row,
+    photoId,
+    description,
+    photosKey = HIGH_ANGLE_CONDITION_FIELD.photosKey,
+  ) => {
+    const photos = getHighAnglePhotoList(row, photosKey)
+    updateHighAngleCheck(row, {
+      [photosKey]: photos.map((photo) =>
+        String(photo.id || '') === String(photoId || '') ? { ...photo, description } : photo,
+      ),
+    })
+  }
+
+  const applyHighAnglePhotoCaption = (
+    row,
+    photoId,
+    caption,
+    photosKey = HIGH_ANGLE_CONDITION_FIELD.photosKey,
+  ) => {
+    const photos = getHighAnglePhotoList(row, photosKey)
+    updateHighAngleCheck(row, {
+      [photosKey]: photos.map((photo) =>
+        String(photo.id || '') === String(photoId || '')
+          ? { ...photo, description: appendInspectionText(photo.description, caption) }
+          : photo,
+      ),
+    })
+  }
+
+  const getScbaPhotoList = (sectionKey, row, photosKey = 'photos') => {
+    const rowId = String(row?.id || '').trim()
+    const existing = getScbaExistingCheck(form, sectionKey, rowId)
+    return Array.isArray(existing?.[photosKey]) ? existing[photosKey] : []
+  }
+
+  const removeScbaPhoto = (sectionKey, row, photoId, photosKey = 'photos') => {
+    const photos = getScbaPhotoList(sectionKey, row, photosKey)
+    updateScbaGroupedCheck(sectionKey, row, {
+      [photosKey]: photos.filter((photo) => String(photo.id || '') !== String(photoId || '')),
+    })
+  }
+
+  const updateScbaPhotoDescription = (
+    sectionKey,
+    row,
+    photoId,
+    description,
+    photosKey = 'photos',
+  ) => {
+    const photos = getScbaPhotoList(sectionKey, row, photosKey)
+    updateScbaGroupedCheck(sectionKey, row, {
+      [photosKey]: photos.map((photo) =>
+        String(photo.id || '') === String(photoId || '') ? { ...photo, description } : photo,
+      ),
+    })
+  }
+
+  const applyScbaPhotoCaption = (sectionKey, row, photoId, caption, photosKey = 'photos') => {
+    const photos = getScbaPhotoList(sectionKey, row, photosKey)
+    updateScbaGroupedCheck(sectionKey, row, {
       [photosKey]: photos.map((photo) =>
         String(photo.id || '') === String(photoId || '')
           ? { ...photo, description: appendInspectionText(photo.description, caption) }
@@ -670,7 +1237,7 @@ const InspectionForm = ({
   }
 
   const updateErAuxSessionMeta = (field, nextValue) => {
-    if (!['erAuxInspectedBy', 'erAuxInspectionDate'].includes(field)) return
+    if (!['erAuxInspectionDate'].includes(field)) return
     updateForm({
       ...form,
       [field]: String(nextValue || '').trim(),
@@ -678,15 +1245,7 @@ const InspectionForm = ({
   }
 
   const updateFrtSessionMeta = (field, nextValue) => {
-    if (
-      ![
-        'frtInspectedBy',
-        'frtInspectionDate',
-        'frtShift',
-        'frtDailyRemarks',
-        'frtOneOffRemarks',
-      ].includes(field)
-    ) {
+    if (!['frtInspectionDate', 'frtShift', 'frtDailyRemarks', 'frtOneOffRemarks'].includes(field)) {
       return
     }
     updateForm({
@@ -706,22 +1265,44 @@ const InspectionForm = ({
     updateForm(toggleInspectionChecklistItem(form, label))
   }
 
-  const hydraulicOkPatch = useMemo(
-    () =>
-      HYDRAULIC_CHECK_FIELDS.reduce((next, field) => {
-        next[field.key] = 'OK'
-        return next
-      }, {}),
-    [],
-  )
+  const buildHydraulicFillBlankOkPatch = (check = {}) =>
+    HYDRAULIC_CHECK_FIELDS.reduce((next, field) => {
+      if (!String(check?.[field.key] || '').trim()) next[field.key] = 'OK'
+      return next
+    }, {})
   const highAngleGoodPatch = useMemo(
     () => ({ condition: HIGH_ANGLE_STATUS_OPTIONS[0]?.value || 'Good' }),
     [],
   )
+  const buildHighAngleFillBlankGoodPatch = (check = {}) =>
+    String(check?.condition || '').trim() ? {} : highAngleGoodPatch
   const frtDailyCheckedPatch = useMemo(() => ({ status: 'Checked' }), [])
   const frtOneOffGoodPatch = useMemo(() => ({ condition: 'Good' }), [])
   const erAuxOkPatch = useMemo(() => ({ condition: 'OK' }), [])
-  const scbaSectionFieldMap = useMemo(
+  const scbaSectionFieldMap = useMemo(() => {
+    const next = SCBA_SECTION_DEFINITIONS.reduce((map, section) => {
+      map[section.key] = Array.isArray(section.fields) ? section.fields : []
+      return map
+    }, {})
+    normalizeScbaCustomSections(form.scbaCustomSections || form.scba_custom_sections).forEach(
+      (section) => {
+        next[section.key] = Array.isArray(section.fields) ? section.fields : []
+      },
+    )
+    return next
+  }, [form.scbaCustomSections, form.scba_custom_sections])
+  const scbaCustomSectionMap = useMemo(
+    () =>
+      normalizeScbaCustomSections(form.scbaCustomSections || form.scba_custom_sections).reduce(
+        (next, section) => {
+          next[section.key] = section
+          return next
+        },
+        {},
+      ),
+    [form.scbaCustomSections, form.scba_custom_sections],
+  )
+  const scbaStaticSectionKeys = useMemo(
     () =>
       SCBA_SECTION_DEFINITIONS.reduce((next, section) => {
         next[section.key] = Array.isArray(section.fields) ? section.fields : []
@@ -729,17 +1310,13 @@ const InspectionForm = ({
       }, {}),
     [],
   )
-  const scbaGoodPatchBySection = useMemo(
-    () =>
-      Object.entries(scbaSectionFieldMap).reduce((next, [sectionKey, fields]) => {
-        next[sectionKey] = fields.reduce((patch, field) => {
-          if (field.kind === 'status') patch[field.key] = SCBA_STATUS_OPTIONS[0].value
-          return patch
-        }, {})
-        return next
-      }, {}),
-    [scbaSectionFieldMap],
-  )
+  const buildScbaFillBlankGoodPatch = (sectionKey, check = {}) =>
+    (scbaSectionFieldMap[sectionKey] || []).reduce((patch, field) => {
+      if (field.kind === 'status' && !String(check?.[field.key] || '').trim()) {
+        patch[field.key] = SCBA_STATUS_OPTIONS[0].value
+      }
+      return patch
+    }, {})
 
   const buildErAuxCheckRow = (row, existing = {}, patch = {}) => ({
     id: String(row?.id || existing?.id || '').trim(),
@@ -756,9 +1333,16 @@ const InspectionForm = ({
     ).trim(),
     defaultQuantity: String(row?.defaultQuantity || existing?.defaultQuantity || '').trim(),
     isCustomEquipment: row?.isCustomEquipment === true || existing?.isCustomEquipment === true,
-    quantity: String(existing?.quantity || row?.defaultQuantity || ''),
+    quantity: String(existing?.quantity ?? row?.quantity ?? row?.defaultQuantity ?? ''),
     condition: String(existing?.condition || ''),
-    remarks: String(existing?.remarks || ''),
+    remarks: String(existing?.remarks || existing?.remark || ''),
+    defectRemarks: String(existing?.defectRemarks || existing?.defect_remarks || ''),
+    additionalNotes: String(existing?.additionalNotes || existing?.additional_notes || ''),
+    defectPhotos: Array.isArray(existing?.defectPhotos)
+      ? existing.defectPhotos
+      : Array.isArray(existing?.defect_photos)
+        ? existing.defect_photos
+        : [],
     photos: Array.isArray(existing?.photos) ? existing.photos : [],
     ...patch,
   })
@@ -835,6 +1419,8 @@ const InspectionForm = ({
     const fields = scbaSectionFieldMap[sectionKey] || []
     return {
       id: String(row?.id || existing?.id || '').trim(),
+      catalogItemId: row?.catalogItemId ?? existing?.catalogItemId ?? '',
+      catalogSectionId: row?.catalogSectionId ?? existing?.catalogSectionId ?? '',
       sectionKey,
       location: String(row?.location || existing?.location || '').trim(),
       mainLocation: String(
@@ -844,9 +1430,31 @@ const InspectionForm = ({
       serialNo: String(row?.serialNo || existing?.serialNo || '').trim(),
       size: String(row?.size || existing?.size || '').trim(),
       cylinderType: String(row?.cylinderType || existing?.cylinderType || '').trim(),
+      equipmentDescription: String(
+        row?.equipmentDescription || row?.description || existing?.equipmentDescription || '',
+      ).trim(),
+      equipmentSource: String(
+        row?.equipmentSource ||
+          existing?.equipmentSource ||
+          (scbaCustomSectionMap[sectionKey] ? 'custom' : 'seed'),
+      ).trim(),
+      isCustomEquipment:
+        row?.isCustomEquipment === true ||
+        existing?.isCustomEquipment === true ||
+        Boolean(scbaCustomSectionMap[sectionKey]),
+      removed: existing?.removed === true || row?.removed === true,
+      removedAt: String(existing?.removedAt || row?.removedAt || '').trim(),
+      removedBy: String(existing?.removedBy || row?.removedBy || '').trim(),
+      removedReason: String(existing?.removedReason || row?.removedReason || '').trim(),
       remarks: String(existing?.remarks || ''),
+      photos: Array.isArray(existing?.photos) ? existing.photos : [],
       ...fields.reduce((next, field) => {
         next[field.key] = String(existing?.[field.key] || row?.[field.key] || '')
+        if (field.kind === 'status') {
+          const { remarksKey, photosKey } = getScbaFieldEvidenceKeys(field)
+          next[remarksKey] = String(existing?.[remarksKey] || '')
+          next[photosKey] = Array.isArray(existing?.[photosKey]) ? existing[photosKey] : []
+        }
         return next
       }, {}),
       ...patch,
@@ -863,6 +1471,14 @@ const InspectionForm = ({
     quantity: String(row?.quantity || existing?.quantity || '').trim(),
     condition: String(existing?.condition || ''),
     remarks: String(existing?.remarks || ''),
+    conditionRemarks: String(
+      existing?.conditionRemarks || existing?.condition_remarks || existing?.remarks || '',
+    ),
+    conditionPhotos: Array.isArray(existing?.conditionPhotos)
+      ? existing.conditionPhotos
+      : Array.isArray(existing?.condition_photos)
+        ? existing.condition_photos
+        : [],
     ...patch,
   })
 
@@ -878,6 +1494,7 @@ const InspectionForm = ({
     status: String(existing?.status || ''),
     readingValue: String(existing?.readingValue || ''),
     remarks: String(existing?.remarks || ''),
+    photos: Array.isArray(existing?.photos) ? existing.photos : [],
     ...patch,
   })
 
@@ -890,6 +1507,7 @@ const InspectionForm = ({
     equipment: String(row?.equipment || existing?.equipment || '').trim(),
     condition: String(existing?.condition || ''),
     remarks: String(existing?.remarks || ''),
+    photos: Array.isArray(existing?.photos) ? existing.photos : [],
     ...patch,
   })
 
@@ -986,7 +1604,12 @@ const InspectionForm = ({
   }
 
   const markHydraulicEquipmentOk = (row) => {
-    updateHydraulicCheck(row, hydraulicOkPatch)
+    const currentForm = getLatestForm()
+    const currentChecks = Array.isArray(currentForm.hydraulicChecks)
+      ? currentForm.hydraulicChecks
+      : []
+    const existing = currentChecks.find((check) => String(check.id || '') === String(row?.id || ''))
+    updateHydraulicCheck(row, buildHydraulicFillBlankOkPatch({ ...row, ...(existing || {}) }))
   }
 
   const markFrtRowOk = (row) => {
@@ -1022,11 +1645,16 @@ const InspectionForm = ({
   }
 
   const markHighAngleRowOk = (row) => {
-    updateHighAngleCheck(row, highAngleGoodPatch)
+    const currentForm = getLatestForm()
+    const currentChecks = Array.isArray(currentForm.highAngleChecks)
+      ? currentForm.highAngleChecks
+      : []
+    const existing = currentChecks.find((check) => String(check.id || '') === String(row?.id || ''))
+    updateHighAngleCheck(row, buildHighAngleFillBlankGoodPatch({ ...row, ...(existing || {}) }))
   }
 
   const updateScbaSessionMeta = (field, nextValue) => {
-    if (!['scbaInspectedBy', 'scbaInspectionDate'].includes(field)) return
+    if (!['scbaInspectionDate'].includes(field)) return
     updateForm({
       ...form,
       [field]: String(nextValue || '').trim(),
@@ -1034,7 +1662,7 @@ const InspectionForm = ({
   }
 
   const updateHighAngleSessionMeta = (field, nextValue) => {
-    if (!['highAngleInspectedBy', 'highAngleInspectionDate'].includes(field)) return
+    if (!['highAngleInspectionDate'].includes(field)) return
     updateForm({
       ...form,
       [field]: String(nextValue || '').trim(),
@@ -1042,7 +1670,7 @@ const InspectionForm = ({
   }
 
   const updateFireExtinguisherSessionMeta = (field, nextValue) => {
-    if (!['fireExtinguisherInspectedBy', 'fireExtinguisherInspectionDate'].includes(field)) {
+    if (!['fireExtinguisherInspectionDate'].includes(field)) {
       return
     }
     updateForm({
@@ -1052,7 +1680,7 @@ const InspectionForm = ({
   }
 
   const updateHseSessionMeta = (field, nextValue) => {
-    if (!['hseInspectedBy', 'hseInspectionDate'].includes(field)) return
+    if (!['hseInspectionDate'].includes(field)) return
     updateForm({
       ...form,
       [field]: String(nextValue || '').trim(),
@@ -1106,13 +1734,105 @@ const InspectionForm = ({
       ? 'scbaBackPlateChecks'
       : sectionKey === 'cylinder'
         ? 'scbaCylinderChecks'
-        : 'scbaFaceMaskChecks'
+        : sectionKey === 'faceMask'
+          ? 'scbaFaceMaskChecks'
+          : ''
+
+  const getScbaExistingCheck = (currentForm, sectionKey, rowId) => {
+    const checksFieldKey = getScbaChecksField(sectionKey)
+    if (checksFieldKey) {
+      const checks = Array.isArray(currentForm[checksFieldKey]) ? currentForm[checksFieldKey] : []
+      return checks.find((check) => String(check.id || '') === rowId)
+    }
+    const customSection = normalizeScbaCustomSections(
+      currentForm.scbaCustomSections || currentForm.scba_custom_sections,
+    ).find((section) => section.key === sectionKey)
+    return (customSection?.rows || []).find((check) => String(check.id || '') === rowId)
+  }
+
+  const updateScbaCustomSectionRows = (currentForm, sectionKey, updater) => {
+    const customSections = normalizeScbaCustomSections(
+      currentForm.scbaCustomSections || currentForm.scba_custom_sections,
+    )
+    return customSections.map((section) =>
+      section.key === sectionKey
+        ? { ...section, rows: updater(section.rows || [], section) }
+        : section,
+    )
+  }
+
+  const upsertScbaCatalogSectionCache = (section) => {
+    if (!section?.key) return
+    setScbaCatalogSections((current) => {
+      const normalized = normalizeScbaCustomSections([section])[0]
+      if (!normalized) return current
+      const next = [
+        ...current.filter((candidate) => String(candidate.key || '') !== normalized.key),
+        normalized,
+      ]
+      saveCachedScbaCatalog(next)
+      return next
+    })
+  }
+
+  const ensureScbaCatalogSection = async (currentForm, sectionKey) => {
+    const currentSections = normalizeScbaCustomSections(
+      currentForm.scbaCustomSections || currentForm.scba_custom_sections,
+    )
+    const section = currentSections.find((candidate) => candidate.key === sectionKey)
+    if (!section) return null
+    if (section.catalogSectionId) return section
+
+    const saved = await createScbaCatalogSection({
+      title: section.title,
+      shortLabel: section.shortLabel,
+      fields: section.fields,
+    })
+    if (!saved) return section
+    upsertScbaCatalogSectionCache(saved)
+    updateForm({
+      ...currentForm,
+      scbaCustomSections: currentSections.map((candidate) =>
+        candidate.key === sectionKey
+          ? {
+              ...candidate,
+              id: saved.id || candidate.id,
+              catalogSectionId: saved.catalogSectionId,
+              key: saved.key || candidate.key,
+              rows: candidate.rows.map((row) => ({
+                ...row,
+                catalogSectionId: saved.catalogSectionId,
+                sectionKey: saved.key || candidate.key,
+              })),
+            }
+          : candidate,
+      ),
+    })
+    return {
+      ...section,
+      id: saved.id || section.id,
+      catalogSectionId: saved.catalogSectionId,
+      key: saved.key || section.key,
+    }
+  }
 
   const updateScbaGroupedCheck = (sectionKey, row, patch) => {
     const checksFieldKey = getScbaChecksField(sectionKey)
     const rowId = String(row?.id || '').trim()
     if (!rowId) return
     const currentForm = getLatestForm()
+    if (!checksFieldKey) {
+      const existing = getScbaExistingCheck(currentForm, sectionKey, rowId)
+      const nextCheck = buildScbaCheckRow(sectionKey, row, existing, patch)
+      updateForm({
+        ...currentForm,
+        scbaCustomSections: updateScbaCustomSectionRows(currentForm, sectionKey, (rows) => [
+          nextCheck,
+          ...rows.filter((check) => String(check.id || '') !== rowId),
+        ]),
+      })
+      return
+    }
     const currentChecks = Array.isArray(currentForm[checksFieldKey])
       ? currentForm[checksFieldKey]
       : []
@@ -1129,7 +1849,507 @@ const InspectionForm = ({
   }
 
   const markScbaRowOk = (sectionKey, row) => {
-    updateScbaGroupedCheck(sectionKey, row, scbaGoodPatchBySection[sectionKey] || {})
+    const currentForm = getLatestForm()
+    const existing = getScbaExistingCheck(currentForm, sectionKey, String(row?.id || ''))
+    updateScbaGroupedCheck(
+      sectionKey,
+      row,
+      buildScbaFillBlankGoodPatch(sectionKey, { ...row, ...(existing || {}) }),
+    )
+  }
+
+  const openAddScbaItemModal = (sectionKey) => {
+    setScbaItemModal({
+      visible: true,
+      mode: 'add',
+      sectionKey,
+      rowId: '',
+      catalogItemId: '',
+      brand: '',
+      serialNo: '',
+      size: '',
+      cylinderType: '',
+      equipmentDescription: '',
+      error: '',
+    })
+  }
+
+  const openEditScbaItemModal = (sectionKey, row = {}) => {
+    setScbaItemModal({
+      visible: true,
+      mode: 'edit',
+      sectionKey,
+      rowId: String(row.id || '').trim(),
+      catalogItemId: String(row.catalogItemId || row.catalog_item_id || '').trim(),
+      brand: String(row.brand || '').trim(),
+      serialNo: String(row.serialNo || '').trim(),
+      size: String(row.size || '').trim(),
+      cylinderType: String(row.cylinderType || '').trim(),
+      equipmentDescription: String(row.equipmentDescription || row.description || '').trim(),
+      error: '',
+    })
+  }
+
+  const closeScbaItemModal = () =>
+    setScbaItemModal((current) => ({
+      ...current,
+      visible: false,
+      error: '',
+    }))
+
+  const saveScbaItemModal = async () => {
+    const sectionKey = String(scbaItemModal.sectionKey || '').trim()
+    const brand = String(scbaItemModal.brand || '').trim()
+    const serialNo = String(scbaItemModal.serialNo || '').trim()
+    if (!sectionKey || (!brand && !serialNo)) {
+      setScbaItemModal((current) => ({
+        ...current,
+        error: 'Enter at least a brand or serial number.',
+      }))
+      return
+    }
+
+    const currentForm = getLatestForm()
+    setIsSavingScbaCatalog(true)
+    let effectiveSectionKey = sectionKey
+    let catalogSectionId = ''
+    try {
+      if (!getScbaChecksField(sectionKey)) {
+        const ensuredSection = await ensureScbaCatalogSection(currentForm, sectionKey)
+        effectiveSectionKey = ensuredSection?.key || sectionKey
+        catalogSectionId = ensuredSection?.catalogSectionId || ''
+      }
+    } catch (error) {
+      setScbaItemModal((current) => ({
+        ...current,
+        error: error?.message || 'Unable to save SCBA catalog item.',
+      }))
+      setIsSavingScbaCatalog(false)
+      return
+    }
+    const latestForm = getLatestForm()
+    const rowId =
+      scbaItemModal.mode === 'edit' && scbaItemModal.rowId
+        ? scbaItemModal.rowId
+        : `${effectiveSectionKey}:custom:${slugSegment(mainLocation)}:${slugSegment(brand)}:${slugSegment(
+            serialNo,
+          )}:${uid()}`
+    const existing = getScbaExistingCheck(latestForm, effectiveSectionKey, rowId) || {}
+    let catalogRowPatch = {}
+    try {
+      if (!getScbaChecksField(effectiveSectionKey) && catalogSectionId) {
+        const itemPayload = {
+          location: mainLocation,
+          mainLocation,
+          brand,
+          serialNo,
+          displayName: `${brand} ${serialNo}`.trim(),
+          equipmentDescription: scbaItemModal.equipmentDescription,
+        }
+        const savedItem =
+          scbaItemModal.mode === 'edit' && scbaItemModal.catalogItemId
+            ? await updateScbaCatalogItem(scbaItemModal.catalogItemId, itemPayload)
+            : await createScbaCatalogItem(catalogSectionId, itemPayload)
+        catalogRowPatch = savedItem
+          ? {
+              id: savedItem.id || rowId,
+              catalogItemId: savedItem.catalogItemId,
+              catalogSectionId: savedItem.catalogSectionId || catalogSectionId,
+            }
+          : {}
+      }
+    } catch (error) {
+      setScbaItemModal((current) => ({
+        ...current,
+        error: error?.message || 'Unable to save SCBA catalog item.',
+      }))
+      setIsSavingScbaCatalog(false)
+      return
+    }
+    const nextRowId = String(catalogRowPatch.id || rowId)
+    const nextRow = buildScbaCheckRow(
+      effectiveSectionKey,
+      {
+        ...existing,
+        id: nextRowId,
+        ...catalogRowPatch,
+        sectionKey: effectiveSectionKey,
+        location: mainLocation,
+        mainLocation,
+        brand,
+        serialNo,
+        size: scbaItemModal.size,
+        cylinderType: scbaItemModal.cylinderType,
+        equipmentDescription: scbaItemModal.equipmentDescription,
+        equipmentSource: 'custom',
+        isCustomEquipment: true,
+      },
+      existing,
+      {
+        ...catalogRowPatch,
+        brand,
+        serialNo,
+        size: scbaItemModal.size,
+        cylinderType: scbaItemModal.cylinderType,
+        equipmentDescription: scbaItemModal.equipmentDescription,
+        equipmentSource: 'custom',
+        isCustomEquipment: true,
+      },
+    )
+    const checksFieldKey = getScbaChecksField(effectiveSectionKey)
+    if (checksFieldKey) {
+      const currentChecks = Array.isArray(latestForm[checksFieldKey])
+        ? latestForm[checksFieldKey]
+        : []
+      updateForm({
+        ...latestForm,
+        [checksFieldKey]: [
+          nextRow,
+          ...currentChecks.filter(
+            (check) => String(check.id || '') !== rowId && String(check.id || '') !== nextRowId,
+          ),
+        ],
+      })
+    } else {
+      updateForm({
+        ...latestForm,
+        scbaCustomSections: updateScbaCustomSectionRows(latestForm, effectiveSectionKey, (rows) => [
+          nextRow,
+          ...rows.filter(
+            (check) => String(check.id || '') !== rowId && String(check.id || '') !== nextRowId,
+          ),
+        ]),
+      })
+    }
+    setIsSavingScbaCatalog(false)
+    closeScbaItemModal()
+  }
+
+  const getScbaRemovedMeta = () => ({
+    removed: true,
+    removedAt: new Date().toISOString(),
+    removedBy: String(user?.name || user?.email || user?.id || '').trim(),
+  })
+
+  const scbaRowHasInspectionData = (row = {}, sectionKey = '') => {
+    const fields = scbaSectionFieldMap[sectionKey] || []
+    if (String(row.remarks || '').trim() || (Array.isArray(row.photos) && row.photos.length > 0)) {
+      return true
+    }
+    return fields.some((field) => {
+      if (String(row[field.key] || '').trim()) return true
+      const { remarksKey, photosKey } = getScbaFieldEvidenceKeys(field)
+      return (
+        String(row[remarksKey] || '').trim() ||
+        (Array.isArray(row[photosKey]) && row[photosKey].length > 0)
+      )
+    })
+  }
+
+  const requestRemoveScbaItem = (sectionKey, row = {}) => {
+    const rowId = String(row.id || '').trim()
+    if (!rowId || row.isCustomEquipment !== true) return
+    setScbaRemoveTarget({
+      type: 'item',
+      sectionKey,
+      row,
+      message: scbaRowHasInspectionData(row, sectionKey)
+        ? 'This item has checks, remarks, or photos. Remove it from this inspection?'
+        : 'Remove this item from this inspection?',
+    })
+  }
+
+  const removeScbaItemFromInspection = (sectionKey, row = {}) => {
+    const rowId = String(row.id || '').trim()
+    if (!rowId || row.isCustomEquipment !== true) return
+    const currentForm = getLatestForm()
+    const checksFieldKey = getScbaChecksField(sectionKey)
+    const removedMeta = getScbaRemovedMeta()
+    if (checksFieldKey) {
+      const currentChecks = Array.isArray(currentForm[checksFieldKey])
+        ? currentForm[checksFieldKey]
+        : []
+      updateForm({
+        ...currentForm,
+        [checksFieldKey]: currentChecks.map((check) =>
+          String(check.id || '') === rowId ? { ...check, ...removedMeta } : check,
+        ),
+      })
+      return
+    }
+    updateForm({
+      ...currentForm,
+      scbaCustomSections: updateScbaCustomSectionRows(currentForm, sectionKey, (rows) =>
+        rows.map((check) =>
+          String(check.id || '') === rowId ? { ...check, ...removedMeta } : check,
+        ),
+      ),
+    })
+  }
+
+  const restoreScbaItem = (sectionKey, row = {}) => {
+    const rowId = String(row.id || '').trim()
+    if (!rowId) return
+    const currentForm = getLatestForm()
+    updateForm({
+      ...currentForm,
+      scbaCustomSections: updateScbaCustomSectionRows(currentForm, sectionKey, (rows) =>
+        rows.map((check) =>
+          String(check.id || '') === rowId
+            ? {
+                ...check,
+                removed: false,
+                removedAt: '',
+                removedBy: '',
+                removedReason: '',
+              }
+            : check,
+        ),
+      ),
+    })
+  }
+
+  const openAddScbaSectionModal = () => {
+    setScbaSectionModal({
+      visible: true,
+      mode: 'add',
+      sectionKey: '',
+      catalogSectionId: '',
+      title: '',
+      shortLabel: '',
+      checksText: '',
+      error: '',
+    })
+  }
+
+  const openEditScbaSectionModal = (section = {}) => {
+    setScbaSectionModal({
+      visible: true,
+      mode: 'edit',
+      sectionKey: String(section.key || '').trim(),
+      catalogSectionId: String(section.catalogSectionId || section.catalog_section_id || '').trim(),
+      title: String(section.title || '').trim(),
+      shortLabel: String(section.shortLabel || '').trim(),
+      checksText: (section.fields || []).map((field) => field.label).join('\n'),
+      error: '',
+    })
+  }
+
+  const closeScbaSectionModal = () =>
+    setScbaSectionModal((current) => ({
+      ...current,
+      visible: false,
+      error: '',
+    }))
+
+  const saveScbaSectionModal = async () => {
+    const title = String(scbaSectionModal.title || '').trim()
+    const labels = String(scbaSectionModal.checksText || '')
+      .split(/\n|,/)
+      .map((label) => label.trim())
+      .filter(Boolean)
+    if (!title || labels.length === 0) {
+      setScbaSectionModal((current) => ({
+        ...current,
+        error: 'Enter a section title and at least one check.',
+      }))
+      return
+    }
+    const uniqueLabels = Array.from(new Set(labels))
+    const currentForm = getLatestForm()
+    const currentSections = normalizeScbaCustomSections(
+      currentForm.scbaCustomSections || currentForm.scba_custom_sections,
+    )
+    const editingSection = currentSections.find(
+      (section) => section.key === scbaSectionModal.sectionKey,
+    )
+    const existingKeysByLabel = new Map(
+      (editingSection?.fields || []).map((field) => [
+        slugSegment(field.label),
+        String(field.key || '').trim(),
+      ]),
+    )
+    const fields = uniqueLabels.map((label) => ({
+      key: existingKeysByLabel.get(slugSegment(label)) || customFieldKeyFromLabel(label),
+      label,
+      kind: 'status',
+    }))
+    setIsSavingScbaCatalog(true)
+    let savedSection = null
+    try {
+      savedSection =
+        scbaSectionModal.mode === 'edit' && scbaSectionModal.catalogSectionId
+          ? await updateScbaCatalogSection(scbaSectionModal.catalogSectionId, {
+              title,
+              shortLabel: String(scbaSectionModal.shortLabel || title).trim(),
+              fields,
+            })
+          : await createScbaCatalogSection({
+              title,
+              shortLabel: String(scbaSectionModal.shortLabel || title).trim(),
+              fields,
+            })
+    } catch (error) {
+      setScbaSectionModal((current) => ({
+        ...current,
+        error: error?.message || 'Unable to save SCBA catalog section.',
+      }))
+      setIsSavingScbaCatalog(false)
+      return
+    }
+
+    const sectionKey =
+      savedSection?.key ||
+      (scbaSectionModal.mode === 'edit' && editingSection?.key
+        ? editingSection.key
+        : `customScba-${slugSegment(title)}-${uid()}`)
+    const nextSection = {
+      ...(editingSection || {}),
+      ...(savedSection || {}),
+      id: savedSection?.id || editingSection?.id || sectionKey,
+      catalogSectionId: savedSection?.catalogSectionId || editingSection?.catalogSectionId || '',
+      key: sectionKey,
+      title: savedSection?.title || title,
+      shortLabel: savedSection?.shortLabel || String(scbaSectionModal.shortLabel || title).trim(),
+      isCustomSection: true,
+      fields: savedSection?.fields || fields,
+      rows: (editingSection?.rows || []).map((row) => ({
+        ...row,
+        sectionKey,
+        catalogSectionId: savedSection?.catalogSectionId || row.catalogSectionId || '',
+      })),
+    }
+    if (savedSection) upsertScbaCatalogSectionCache(nextSection)
+    updateForm({
+      ...currentForm,
+      scbaCustomSections:
+        scbaSectionModal.mode === 'edit'
+          ? currentSections.map((section) =>
+              section.key === scbaSectionModal.sectionKey ? nextSection : section,
+            )
+          : [...currentSections, nextSection],
+    })
+    setIsSavingScbaCatalog(false)
+    closeScbaSectionModal()
+  }
+
+  const requestRemoveScbaSection = (section = {}) => {
+    const sectionKey = String(section.key || '').trim()
+    if (!sectionKey || section.isCustomSection !== true) return
+    const hasData =
+      (section.rows || []).length > 0 ||
+      (section.rows || []).some((row) => scbaRowHasInspectionData(row, sectionKey))
+    setScbaRemoveTarget({
+      type: 'section',
+      section,
+      message: hasData
+        ? 'This section contains items or inspection evidence. Remove it from this inspection?'
+        : 'Remove this section from this inspection?',
+    })
+  }
+
+  const removeScbaSectionFromInspection = (section = {}) => {
+    const sectionKey = String(section.key || '').trim()
+    if (!sectionKey || section.isCustomSection !== true) return
+    const currentForm = getLatestForm()
+    const removedMeta = getScbaRemovedMeta()
+    updateForm({
+      ...currentForm,
+      scbaCustomSections: normalizeScbaCustomSections(
+        currentForm.scbaCustomSections || currentForm.scba_custom_sections,
+      ).map((candidate) =>
+        candidate.key === sectionKey
+          ? {
+              ...candidate,
+              ...removedMeta,
+              rows: (candidate.rows || []).map((row) => ({ ...row, ...removedMeta })),
+            }
+          : candidate,
+      ),
+    })
+  }
+
+  const restoreScbaSection = (section = {}) => {
+    const sectionKey = String(section.key || '').trim()
+    if (!sectionKey) return
+    const currentForm = getLatestForm()
+    updateForm({
+      ...currentForm,
+      scbaCustomSections: normalizeScbaCustomSections(
+        currentForm.scbaCustomSections || currentForm.scba_custom_sections,
+      ).map((candidate) =>
+        candidate.key === sectionKey
+          ? {
+              ...candidate,
+              removed: false,
+              removedAt: '',
+              removedBy: '',
+              removedReason: '',
+              rows: (candidate.rows || []).map((row) => ({
+                ...row,
+                removed: false,
+                removedAt: '',
+                removedBy: '',
+                removedReason: '',
+              })),
+            }
+          : candidate,
+      ),
+    })
+  }
+
+  const requestArchiveScbaSection = (section = {}) => {
+    if (!section.catalogSectionId) return
+    setScbaArchiveTarget({
+      type: 'section',
+      section,
+      message: 'Archive this for future inspections? Previous reports are unchanged.',
+    })
+  }
+
+  const requestArchiveScbaItem = (sectionKey, row = {}) => {
+    if (!row.catalogItemId) return
+    setScbaArchiveTarget({
+      type: 'item',
+      sectionKey,
+      row,
+      message: 'Archive this for future inspections? Previous reports are unchanged.',
+    })
+  }
+
+  const archiveScbaCatalogTarget = async () => {
+    if (!scbaArchiveTarget) return
+    try {
+      if (scbaArchiveTarget.type === 'section') {
+        await archiveScbaCatalogSection(scbaArchiveTarget.section.catalogSectionId)
+        setScbaCatalogSections((current) =>
+          current.filter(
+            (section) => section.catalogSectionId !== scbaArchiveTarget.section.catalogSectionId,
+          ),
+        )
+      } else if (scbaArchiveTarget.type === 'item') {
+        await archiveScbaCatalogItem(scbaArchiveTarget.row.catalogItemId)
+        setScbaCatalogSections((current) =>
+          current.map((section) =>
+            section.key === scbaArchiveTarget.sectionKey
+              ? {
+                  ...section,
+                  rows: (section.rows || []).filter(
+                    (row) => row.catalogItemId !== scbaArchiveTarget.row.catalogItemId,
+                  ),
+                }
+              : section,
+          ),
+        )
+      }
+      setScbaArchiveTarget(null)
+    } catch (error) {
+      pushToast?.({
+        title: 'SCBA catalog',
+        body: error?.message || 'Unable to archive SCBA catalog item.',
+        color: 'danger',
+      })
+    }
   }
 
   const markAllHydraulicOk = () => {
@@ -1143,7 +2363,11 @@ const InspectionForm = ({
     const byId = new Map(currentChecks.map((check) => [String(check.id || ''), check]))
     const visibleIds = new Set(visibleRows.map((row) => String(row.id || '')))
     const nextVisibleChecks = visibleRows.map((row) =>
-      buildHydraulicCheckRow(row, byId.get(String(row.id || '')), hydraulicOkPatch),
+      buildHydraulicCheckRow(
+        row,
+        byId.get(String(row.id || '')),
+        buildHydraulicFillBlankOkPatch({ ...row, ...(byId.get(String(row.id || '')) || {}) }),
+      ),
     )
 
     updateForm({
@@ -1187,7 +2411,11 @@ const InspectionForm = ({
     const byId = new Map(currentChecks.map((check) => [String(check.id || ''), check]))
     const visibleIds = new Set(visibleRows.map((row) => String(row.id || '')))
     const nextVisibleChecks = visibleRows.map((row) =>
-      buildHighAngleCheckRow(row, byId.get(String(row.id || '')), highAngleGoodPatch),
+      buildHighAngleCheckRow(
+        row,
+        byId.get(String(row.id || '')),
+        buildHighAngleFillBlankGoodPatch({ ...row, ...(byId.get(String(row.id || '')) || {}) }),
+      ),
     )
 
     updateForm({
@@ -1233,6 +2461,28 @@ const InspectionForm = ({
 
     visibleSections.forEach((section) => {
       const checksFieldKey = getScbaChecksField(section.key)
+      if (!checksFieldKey) {
+        nextForm.scbaCustomSections = updateScbaCustomSectionRows(nextForm, section.key, (rows) => {
+          const byId = new Map(rows.map((check) => [String(check.id || ''), check]))
+          const visibleIds = new Set(section.visibleRows.map((row) => String(row.id || '')))
+          const nextVisibleChecks = section.visibleRows.map((row) =>
+            buildScbaCheckRow(
+              section.key,
+              row,
+              byId.get(String(row.id || '')),
+              buildScbaFillBlankGoodPatch(section.key, {
+                ...row,
+                ...(byId.get(String(row.id || '')) || {}),
+              }),
+            ),
+          )
+          return [
+            ...nextVisibleChecks,
+            ...rows.filter((check) => !visibleIds.has(String(check.id || ''))),
+          ]
+        })
+        return
+      }
       const currentChecks = Array.isArray(nextForm[checksFieldKey]) ? nextForm[checksFieldKey] : []
       const byId = new Map(currentChecks.map((check) => [String(check.id || ''), check]))
       const visibleIds = new Set(section.visibleRows.map((row) => String(row.id || '')))
@@ -1241,7 +2491,10 @@ const InspectionForm = ({
           section.key,
           row,
           byId.get(String(row.id || '')),
-          scbaGoodPatchBySection[section.key] || {},
+          buildScbaFillBlankGoodPatch(section.key, {
+            ...row,
+            ...(byId.get(String(row.id || '')) || {}),
+          }),
         ),
       )
       nextForm[checksFieldKey] = [
@@ -1261,6 +2514,76 @@ const InspectionForm = ({
         : normalizeHydraulicEquipmentRows(rows))
     setEquipmentRows(normalizedRows)
     saveCachedInspectionEquipmentCatalog(selectedType, mainLocation, normalizedRows)
+  }
+
+  const getLocalManageableEquipmentRows = () => {
+    const sourceRows =
+      equipmentRows.length > 0 ? equipmentRows : currentStructuredSummary?.visibleChecks || []
+
+    return sourceRows.map((row) => {
+      const rowId = String(row?.id || row?.equipmentId || row?.equipment || '').trim()
+      return {
+        ...row,
+        id: rowId,
+        equipmentId: row?.equipmentId || '',
+        equipment: row?.equipment || row?.title || row?.name || '',
+        title: row?.title || row?.equipment || row?.name || '',
+        description: row?.description || row?.equipmentDescription || '',
+        equipmentDescription: row?.equipmentDescription || row?.description || '',
+        equipmentSource:
+          row?.equipmentSource && row.equipmentSource !== 'seed' ? row.equipmentSource : 'local',
+        isLocalSeedEquipment: row?.isLocalSeedEquipment === true || !row?.equipmentId,
+        canEdit: true,
+        canDelete: true,
+      }
+    })
+  }
+
+  const getEquipmentBackendId = (row = {}) =>
+    String(
+      row?.equipmentId ??
+        row?.equipment_id ??
+        row?.equipmentCatalogId ??
+        row?.equipment_catalog_id ??
+        '',
+    ).trim()
+
+  const getEquipmentRowId = (row = {}) => String(row?.id || '').trim()
+
+  const getEquipmentName = (row = {}) =>
+    String(row?.equipment || row?.title || row?.name || row?.value || '').trim()
+
+  const isSameEquipmentRow = (target = {}, candidate = {}) => {
+    const targetBackendId = getEquipmentBackendId(target)
+    const candidateBackendId = getEquipmentBackendId(candidate)
+    if (targetBackendId && candidateBackendId) return targetBackendId === candidateBackendId
+
+    const targetRowId = getEquipmentRowId(target)
+    const candidateRowId = getEquipmentRowId(candidate)
+    if (targetRowId && candidateRowId) return targetRowId === candidateRowId
+
+    const targetName = getEquipmentName(target).toLowerCase()
+    const candidateName = getEquipmentName(candidate).toLowerCase()
+    return Boolean(targetName && candidateName && targetName === candidateName)
+  }
+
+  const removeEquipmentLocally = (row) => {
+    const nextRows = getLocalManageableEquipmentRows().filter(
+      (currentRow) => !isSameEquipmentRow(row, currentRow),
+    )
+    const latest = getLatestForm()
+    persistEquipmentRows(nextRows)
+    updateForm({
+      ...latest,
+      ...(equipmentRowsField ? { [equipmentRowsField]: nextRows } : {}),
+      ...(checksField
+        ? {
+            [checksField]: (latest[checksField] || []).filter(
+              (check) => !isSameEquipmentRow(row, check),
+            ),
+          }
+        : {}),
+    })
   }
 
   const persistFireExtinguisherRows = (rows) => {
@@ -1303,7 +2626,12 @@ const InspectionForm = ({
           String(currentRow.catalogId || currentRow.id || '') === catalogId ? saved : currentRow,
         ),
       )
-      pushToast('Fire extinguisher updated.', { title: 'Catalog saved', color: 'success' })
+      pushToast(
+        row?.equipmentSource === 'seed'
+          ? 'Shared extinguisher updated.'
+          : 'Fire extinguisher updated.',
+        { title: 'Catalog saved', color: 'success' },
+      )
     } catch (error) {
       pushToast(
         error?.response?.data?.message || error?.message || 'Unable to update extinguisher.',
@@ -1332,7 +2660,12 @@ const InspectionForm = ({
           (check) => String(check.id || '') !== rowId,
         ),
       })
-      pushToast('Fire extinguisher deleted.', { title: 'Catalog updated', color: 'success' })
+      pushToast(
+        row?.equipmentSource === 'seed'
+          ? 'Shared extinguisher removed from catalog.'
+          : 'Fire extinguisher deleted.',
+        { title: 'Catalog updated', color: 'success' },
+      )
     } catch (error) {
       pushToast(error?.response?.data?.message || 'Unable to delete extinguisher.', {
         title: 'Delete failed',
@@ -1344,15 +2677,55 @@ const InspectionForm = ({
   const openAddEquipmentModal = () => {
     setEquipmentEditMode(false)
     setEditingEquipmentId('')
+    setEditingLocalEquipmentId('')
     setNewEquipmentName('')
     setNewEquipmentDescription('')
     setEquipmentError('')
     setShowEquipmentModal(true)
   }
 
+  const persistFireTruckRows = (rows) => {
+    const nextRows = normalizeFireTruckCatalogRows(rows)
+    setFireTruckRows(nextRows)
+    saveCachedFireTruckCatalog(nextRows)
+    return nextRows
+  }
+
+  const openAddFireTruckModal = () => {
+    setEditingFireTruckId('')
+    setEditingFireTruckPlateNo('')
+    setNewTruckPlateNo('')
+    setNewTruckName('')
+    setNewTruckRoadTaxExpiry('')
+    setNewTruckInsuranceExpiry('')
+    setNewTruckPuspakomExpiry('')
+    setFireTruckError('')
+    setShowFireTruckModal(true)
+  }
+
+  const startEditFireTruck = (truck) => {
+    const normalizedTruck = normalizeFrtTruckOption(truck)
+    if (!normalizedTruck) return
+    setEditingFireTruckId(String(normalizedTruck.truckId || normalizedTruck.id || '').trim())
+    setEditingFireTruckPlateNo(normalizedTruck.plateNo)
+    setNewTruckPlateNo(normalizedTruck.plateNo)
+    setNewTruckName(normalizedTruck.name || '')
+    setNewTruckRoadTaxExpiry(normalizedTruck.roadTaxExpiry || '')
+    setNewTruckInsuranceExpiry(normalizedTruck.insuranceExpiry || '')
+    setNewTruckPuspakomExpiry(normalizedTruck.puspakomExpiry || '')
+    setFireTruckError('')
+    setShowFireTruckModal(true)
+  }
+
   const startEditEquipment = (row) => {
     setEquipmentEditMode(false)
-    setEditingEquipmentId(String(row?.equipmentId || row?.id || ''))
+    const equipmentId = String(row?.equipmentId || '').trim()
+    const localId =
+      checksField === 'erAuxChecks' && !equipmentId && row?.isLocalSeedEquipment === true
+        ? String(row?.id || '').trim()
+        : ''
+    setEditingEquipmentId(equipmentId)
+    setEditingLocalEquipmentId(localId)
     setNewEquipmentName(String(row?.equipment || row?.title || '').trim())
     setNewEquipmentDescription(String(row?.description || '').trim())
     setEquipmentError('')
@@ -1362,9 +2735,132 @@ const InspectionForm = ({
     setShowEquipmentModal(false)
     setEquipmentEditMode(false)
     setEditingEquipmentId('')
+    setEditingLocalEquipmentId('')
     setNewEquipmentName('')
     setNewEquipmentDescription('')
     setEquipmentError('')
+  }
+
+  const closeFireTruckModal = () => {
+    setShowFireTruckModal(false)
+    setEditingFireTruckId('')
+    setEditingFireTruckPlateNo('')
+    setNewTruckPlateNo('')
+    setNewTruckName('')
+    setNewTruckRoadTaxExpiry('')
+    setNewTruckInsuranceExpiry('')
+    setNewTruckPuspakomExpiry('')
+    setFireTruckError('')
+  }
+
+  const saveFireTruck = async () => {
+    const plateNo = String(newTruckPlateNo || '')
+      .trim()
+      .toUpperCase()
+    const truckId = String(editingFireTruckId || '').trim()
+    if (!plateNo) {
+      setFireTruckError('Enter a truck plate number.')
+      return
+    }
+
+    try {
+      const payload = {
+        plateNo,
+        name: newTruckName,
+        roadTaxExpiry: newTruckRoadTaxExpiry,
+        insuranceExpiry: newTruckInsuranceExpiry,
+        puspakomExpiry: newTruckPuspakomExpiry,
+      }
+      const saved = truckId
+        ? await updateFireTruckOption(truckId, payload)
+        : await createFireTruckOption(payload)
+      if (!saved) throw new Error('Truck was not saved.')
+
+      let didReplaceTruck = false
+      const nextRows = truckId
+        ? fireTruckRows.map((row) => {
+            if (String(row.truckId || row.id || '').trim() !== truckId) return row
+            didReplaceTruck = true
+            return saved
+          })
+        : [...fireTruckRows, saved]
+      if (truckId && !didReplaceTruck) nextRows.push(saved)
+      persistFireTruckRows(nextRows)
+      const latest = getLatestForm()
+      const selectedId = String(latest.frtTruckId || latest.mainLocationId || '').trim()
+      const selectedPlate = String(resolveSelectedFrtTruckPlate(latest) || '')
+        .trim()
+        .toUpperCase()
+      const wasSelected =
+        !truckId ||
+        (selectedId && selectedId === truckId) ||
+        (editingFireTruckPlateNo &&
+          selectedPlate ===
+            String(editingFireTruckPlateNo || '')
+              .trim()
+              .toUpperCase())
+      if (wasSelected) selectFireTruck(saved)
+      closeFireTruckModal()
+      pushToast(truckId ? 'Truck updated.' : 'Truck added.', {
+        title: 'Truck saved',
+        color: 'success',
+      })
+    } catch (error) {
+      setFireTruckError(error?.response?.data?.message || error?.message || 'Unable to save truck.')
+    }
+  }
+
+  const deleteFireTruck = async (truck) => {
+    const normalizedTruck = normalizeFrtTruckOption(truck)
+    const truckId = String(
+      normalizedTruck?.truckId || normalizedTruck?.id || truck?.truckId || truck?.id || '',
+    ).trim()
+    const plateNo = String(normalizedTruck?.plateNo || truck?.plateNo || truck?.value || '')
+      .trim()
+      .toUpperCase()
+    if (!truckId) return
+
+    try {
+      await deleteFireTruckOption(truckId)
+      persistFireTruckRows(
+        fireTruckRows.filter((row) => String(row.truckId || row.id || '').trim() !== truckId),
+      )
+      const latest = getLatestForm()
+      const selectedId = String(latest.frtTruckId || latest.mainLocationId || '').trim()
+      const selectedPlate = String(resolveSelectedFrtTruckPlate(latest) || '')
+        .trim()
+        .toUpperCase()
+      if ((selectedId && selectedId === truckId) || (plateNo && selectedPlate === plateNo)) {
+        updateForm({
+          ...latest,
+          mainLocation: '',
+          selectedLocation: '',
+          subLocation: '',
+          mainLocationId: '',
+          subLocationId: '',
+          frtTruckId: '',
+          frtTruckPlateNo: '',
+          frtTruckReference: {
+            truckId: '',
+            name: '',
+            plateNo: '',
+            roadTaxExpiry: '',
+            insuranceExpiry: '',
+            puspakomExpiry: '',
+          },
+        })
+      }
+      setFireTruckDeleteTarget(null)
+      pushToast('Truck deleted.', {
+        title: 'Truck updated',
+        color: 'success',
+      })
+    } catch (error) {
+      pushToast(error?.response?.data?.message || 'Unable to delete truck.', {
+        title: 'Delete failed',
+        color: 'danger',
+      })
+    }
   }
 
   const saveEquipment = async () => {
@@ -1375,6 +2871,49 @@ const InspectionForm = ({
     }
     if (!mainLocation) {
       setEquipmentError('Choose a main location first.')
+      return
+    }
+
+    if (editingLocalEquipmentId) {
+      const nextRows = getLocalManageableEquipmentRows().map((row) =>
+        String(row.id || '') === String(editingLocalEquipmentId)
+          ? {
+              ...row,
+              equipment: name,
+              title: name,
+              value: name,
+              description: newEquipmentDescription,
+              equipmentDescription: newEquipmentDescription,
+              canEdit: true,
+              canDelete: true,
+            }
+          : row,
+      )
+      persistEquipmentRows(nextRows)
+      updateForm({
+        ...getLatestForm(),
+        ...(equipmentRowsField ? { [equipmentRowsField]: nextRows } : {}),
+        ...(checksField
+          ? {
+              [checksField]: (getLatestForm()[checksField] || []).map((check) =>
+                String(check.id || '') === String(editingLocalEquipmentId)
+                  ? {
+                      ...check,
+                      equipment: name,
+                      title: name,
+                      equipmentDescription: newEquipmentDescription,
+                      description: newEquipmentDescription,
+                    }
+                  : check,
+              ),
+            }
+          : {}),
+      })
+      closeEquipmentModal()
+      pushToast('Equipment updated.', {
+        title: 'Equipment saved',
+        color: 'success',
+      })
       return
     }
 
@@ -1412,36 +2951,51 @@ const InspectionForm = ({
   }
 
   const deleteEquipment = async (row) => {
-    const equipmentId = String(row?.equipmentId || row?.id || '').trim()
-    if (!equipmentId) return
+    if (isDeletingEquipment) return
+    const equipmentId = getEquipmentBackendId(row)
+
+    if (!equipmentId) {
+      removeEquipmentLocally(row)
+      setEquipmentDeleteTarget(null)
+      pushToast('Equipment deleted.', {
+        title: 'Equipment updated',
+        color: 'success',
+      })
+      return
+    }
+
+    setIsDeletingEquipment(true)
     try {
       await deleteInspectionEquipmentOption(equipmentId)
-      const rowId = String(row?.id || '').trim()
-      persistEquipmentRows(
-        equipmentRows.filter(
-          (currentRow) => String(currentRow.equipmentId || currentRow.id || '') !== equipmentId,
-        ),
-      )
-      updateForm({
-        ...getLatestForm(),
-        ...(checksField
-          ? {
-              [checksField]: (getLatestForm()[checksField] || []).filter(
-                (check) => String(check.id || '') !== rowId,
-              ),
-            }
-          : {}),
-      })
+      removeEquipmentLocally(row)
       setEquipmentDeleteTarget(null)
       pushToast('Equipment deleted.', {
         title: 'Equipment updated',
         color: 'success',
       })
     } catch (error) {
-      pushToast(error?.response?.data?.message || 'Unable to delete equipment.', {
-        title: 'Delete failed',
-        color: 'danger',
-      })
+      if (Number(error?.status || 0) === 404) {
+        removeEquipmentLocally(row)
+        setEquipmentDeleteTarget(null)
+        pushToast('Removed stale equipment from this form.', {
+          title: 'Equipment updated',
+          color: 'warning',
+        })
+      } else {
+        setEquipmentDeleteTarget(null)
+        pushToast(
+          error?.response?.data?.message ||
+            error?.payload?.message ||
+            error?.message ||
+            'Unable to delete equipment.',
+          {
+            title: 'Delete failed',
+            color: 'danger',
+          },
+        )
+      }
+    } finally {
+      setIsDeletingEquipment(false)
     }
   }
 
@@ -1464,6 +3018,52 @@ const InspectionForm = ({
     const firstTarget = validation?.firstTarget || null
     const firstMissing = firstTarget?.field || getFirstMissingInspectionField(currentForm)
     if (!firstMissing) return
+    if (firstTarget?.rowId && String(firstMissing || '').startsWith('erAux')) {
+      const row = Array.from(document.querySelectorAll('[data-inspection-er-aux-row-id]')).find(
+        (element) => element.getAttribute('data-inspection-er-aux-row-id') === firstTarget.rowId,
+      )
+      const detailTarget =
+        row && firstTarget.detailKey
+          ? Array.from(row.querySelectorAll('[data-inspection-er-aux-detail-key]')).find(
+              (element) =>
+                element.getAttribute('data-inspection-er-aux-detail-key') === firstTarget.detailKey,
+            )
+          : null
+      const target = detailTarget || row
+      if (target) {
+        target.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
+        const focusTarget = target.querySelector?.('textarea, input, button, [tabindex]') || target
+        window.setTimeout(() => focusTarget.focus?.(), 150)
+        return
+      }
+    }
+    if (firstTarget?.rowId && String(firstMissing || '').startsWith('frt')) {
+      window.dispatchEvent(
+        new CustomEvent('inspection:focus-frt-row', {
+          detail: { rowId: firstTarget.rowId },
+        }),
+      )
+      window.setTimeout(() => {
+        const row = Array.from(document.querySelectorAll('[data-inspection-frt-row-id]')).find(
+          (element) => element.getAttribute('data-inspection-frt-row-id') === firstTarget.rowId,
+        )
+        const detailTarget =
+          row && firstTarget.detailKey
+            ? Array.from(row.querySelectorAll('[data-inspection-frt-detail-key]')).find(
+                (element) =>
+                  element.getAttribute('data-inspection-frt-detail-key') === firstTarget.detailKey,
+              )
+            : null
+        const target = detailTarget || row
+        if (target) {
+          target.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
+          const focusTarget =
+            target.querySelector?.('textarea, input, button, [tabindex]') || target
+          focusTarget.focus?.()
+        }
+      }, 150)
+      return
+    }
     if (firstTarget?.rowId) {
       const row = Array.from(document.querySelectorAll('[data-fire-extinguisher-row-id]')).find(
         (element) => element.getAttribute('data-fire-extinguisher-row-id') === firstTarget.rowId,
@@ -1503,6 +3103,7 @@ const InspectionForm = ({
     }
     const fieldRefs = {
       inspectionType: inspectionTypeRef,
+      inspectedAt: inspectedAtRef,
       selectedLocation: selectedLocationRef,
       erAuxSession: erAuxChecksRef,
       erAuxChecks: erAuxChecksRef,
@@ -1574,27 +3175,30 @@ const InspectionForm = ({
         validationStatusMessage || draftStatus || 'Unsaved changes are not submitted yet.'
 
       return (
-        <FormActionGroup
-          className={className}
-          mobileVariant="compact-sticky"
-          statusMessage={mobileDraftStatus}
-        >
-          <CButton
-            color="secondary"
-            variant="outline"
-            className="inspection-form-sticky-draft-btn"
-            onClick={() => onSaveDraft?.(getLatestForm())}
+        <>
+          <FormActionGroup
+            className={className}
+            mobileVariant="compact-sticky"
+            statusMessage={mobileDraftStatus}
           >
-            Save Draft
-          </CButton>
-          <CButton
-            color="primary"
-            className="inspection-form-sticky-review-btn"
-            onClick={requestReview}
-          >
-            Save &amp; Review
-          </CButton>
-        </FormActionGroup>
+            <CButton
+              color="secondary"
+              variant="outline"
+              className="inspection-form-sticky-draft-btn"
+              onClick={() => onSaveDraft?.(getLatestForm())}
+            >
+              Save Draft
+            </CButton>
+            <CButton
+              color="primary"
+              className="inspection-form-sticky-review-btn"
+              onClick={requestReview}
+            >
+              Save &amp; Review
+            </CButton>
+          </FormActionGroup>
+          <div className="inspection-form-sticky-spacer" aria-hidden="true" />
+        </>
       )
     }
 
@@ -1622,20 +3226,23 @@ const InspectionForm = ({
   const renderDraftOnlyActions = (className = '', isMobileSticky = false) => {
     if (isMobileSticky) {
       return (
-        <FormActionGroup
-          className={className}
-          mobileVariant="compact-sticky"
-          statusMessage={draftStatus || 'This inspection type can be saved as draft only.'}
-        >
-          <CButton
-            color="secondary"
-            variant="outline"
-            className="inspection-form-sticky-draft-btn"
-            onClick={() => onSaveDraft?.(getLatestForm())}
+        <>
+          <FormActionGroup
+            className={className}
+            mobileVariant="compact-sticky"
+            statusMessage={draftStatus || 'This inspection type can be saved as draft only.'}
           >
-            Save Draft
-          </CButton>
-        </FormActionGroup>
+            <CButton
+              color="secondary"
+              variant="outline"
+              className="inspection-form-sticky-draft-btn"
+              onClick={() => onSaveDraft?.(getLatestForm())}
+            >
+              Save Draft
+            </CButton>
+          </FormActionGroup>
+          <div className="inspection-form-sticky-spacer" aria-hidden="true" />
+        </>
       )
     }
 
@@ -1672,7 +3279,6 @@ const InspectionForm = ({
       onUploadPhoto={() => requestRootPhotoUpload(uploadInputRef)}
       onRemovePhoto={removePhoto}
       onChangePhotoDescription={updatePhotoDescription}
-      onApplyPhotoCaption={applyPhotoCaption}
     />
   )
 
@@ -1728,11 +3334,11 @@ const InspectionForm = ({
         : undefined,
     onTakeGeneralPhoto:
       selectedTypeDefinition?.fieldRefKey === 'hseObservation'
-        ? () => requestRootPhotoUpload(cameraInputRef)
+        ? (caption) => requestRootPhotoUpload(cameraInputRef, caption)
         : undefined,
     onUploadGeneralPhoto:
       selectedTypeDefinition?.fieldRefKey === 'hseObservation'
-        ? () => requestRootPhotoUpload(uploadInputRef)
+        ? (caption) => requestRootPhotoUpload(uploadInputRef, caption)
         : undefined,
     onMarkEquipmentOk:
       checksField === 'erAuxChecks'
@@ -1761,49 +3367,124 @@ const InspectionForm = ({
                 ? markAllScbaOk
                 : undefined,
     onRequestPhotoUpload:
-      checksField === 'hydraulicChecks'
-        ? requestHydraulicPhotoUpload
-        : checksField === 'fireExtinguisherChecks'
-          ? requestFireExtinguisherPhotoUpload
-          : undefined,
+      checksField === 'erAuxChecks'
+        ? requestErAuxPhotoUpload
+        : checksField === 'hydraulicChecks'
+          ? requestHydraulicPhotoUpload
+          : checksField === 'fireExtinguisherChecks'
+            ? requestFireExtinguisherPhotoUpload
+            : selectedTypeDefinition?.fieldRefKey === 'scbaChecks'
+              ? requestScbaPhotoUpload
+              : undefined,
     onRequestDefectPhotoUpload:
-      checksField === 'hydraulicChecks'
-        ? requestHydraulicDefectPhotoUpload
-        : checksField === 'fireExtinguisherChecks'
-          ? requestFireExtinguisherDefectPhotoUpload
-          : undefined,
+      checksField === 'erAuxChecks'
+        ? requestErAuxDefectPhotoUpload
+        : checksField === 'hydraulicChecks'
+          ? requestHydraulicDefectPhotoUpload
+          : checksField === 'fireExtinguisherChecks'
+            ? requestFireExtinguisherDefectPhotoUpload
+            : undefined,
+    onRequestFrtIssuePhotoUpload:
+      selectedTypeDefinition?.fieldRefKey === 'frtChecks' ? requestFrtIssuePhotoUpload : undefined,
+    onRequestHighAngleIssuePhotoUpload:
+      checksField === 'highAngleChecks' ? requestHighAngleIssuePhotoUpload : undefined,
+    onRequestScbaIssuePhotoUpload:
+      selectedTypeDefinition?.fieldRefKey === 'scbaChecks'
+        ? requestScbaIssuePhotoUpload
+        : undefined,
     onRemovePhoto:
-      checksField === 'hydraulicChecks'
-        ? removeHydraulicPhoto
-        : checksField === 'fireExtinguisherChecks'
-          ? removeFireExtinguisherPhoto
-          : undefined,
+      checksField === 'erAuxChecks'
+        ? removeErAuxPhoto
+        : checksField === 'hydraulicChecks'
+          ? removeHydraulicPhoto
+          : checksField === 'fireExtinguisherChecks'
+            ? removeFireExtinguisherPhoto
+            : selectedTypeDefinition?.fieldRefKey === 'frtChecks'
+              ? removeFrtPhoto
+              : checksField === 'highAngleChecks'
+                ? removeHighAnglePhoto
+                : selectedTypeDefinition?.fieldRefKey === 'scbaChecks'
+                  ? removeScbaPhoto
+                  : undefined,
     onChangePhotoDescription:
-      checksField === 'hydraulicChecks'
-        ? updateHydraulicPhotoDescription
-        : checksField === 'fireExtinguisherChecks'
-          ? updateFireExtinguisherPhotoDescription
-          : undefined,
+      checksField === 'erAuxChecks'
+        ? updateErAuxPhotoDescription
+        : checksField === 'hydraulicChecks'
+          ? updateHydraulicPhotoDescription
+          : checksField === 'fireExtinguisherChecks'
+            ? updateFireExtinguisherPhotoDescription
+            : selectedTypeDefinition?.fieldRefKey === 'frtChecks'
+              ? updateFrtPhotoDescription
+              : checksField === 'highAngleChecks'
+                ? updateHighAnglePhotoDescription
+                : selectedTypeDefinition?.fieldRefKey === 'scbaChecks'
+                  ? updateScbaPhotoDescription
+                  : undefined,
     onApplyPhotoCaption:
-      checksField === 'hydraulicChecks'
-        ? applyHydraulicPhotoCaption
-        : checksField === 'fireExtinguisherChecks'
-          ? applyFireExtinguisherPhotoCaption
-          : undefined,
+      checksField === 'erAuxChecks'
+        ? applyErAuxPhotoCaption
+        : checksField === 'hydraulicChecks'
+          ? applyHydraulicPhotoCaption
+          : checksField === 'fireExtinguisherChecks'
+            ? applyFireExtinguisherPhotoCaption
+            : selectedTypeDefinition?.fieldRefKey === 'frtChecks'
+              ? applyFrtPhotoCaption
+              : checksField === 'highAngleChecks'
+                ? applyHighAnglePhotoCaption
+                : selectedTypeDefinition?.fieldRefKey === 'scbaChecks'
+                  ? applyScbaPhotoCaption
+                  : undefined,
     onAddExtinguisher: addFireExtinguisher,
     onUpdateExtinguisher: updateFireExtinguisher,
-    onDeleteExtinguisher: deleteFireExtinguisher,
+    onDeleteExtinguisher: (row) =>
+      setFireExtinguisherDeleteTarget({
+        label: row?.idLocNo || row?.barcodeNo || row?.feType || 'shared extinguisher',
+        row,
+      }),
     onAddEquipment: openAddEquipmentModal,
+    onAddScbaSection:
+      selectedTypeDefinition?.fieldRefKey === 'scbaChecks' ? openAddScbaSectionModal : undefined,
+    onEditScbaSection:
+      selectedTypeDefinition?.fieldRefKey === 'scbaChecks' ? openEditScbaSectionModal : undefined,
+    onDeleteScbaSection:
+      selectedTypeDefinition?.fieldRefKey === 'scbaChecks' ? requestRemoveScbaSection : undefined,
+    onArchiveScbaSection:
+      selectedTypeDefinition?.fieldRefKey === 'scbaChecks' ? requestArchiveScbaSection : undefined,
+    onRestoreScbaSection:
+      selectedTypeDefinition?.fieldRefKey === 'scbaChecks' ? restoreScbaSection : undefined,
+    onAddScbaItem:
+      selectedTypeDefinition?.fieldRefKey === 'scbaChecks' ? openAddScbaItemModal : undefined,
+    onEditScbaItem:
+      selectedTypeDefinition?.fieldRefKey === 'scbaChecks' ? openEditScbaItemModal : undefined,
+    onDeleteScbaItem:
+      selectedTypeDefinition?.fieldRefKey === 'scbaChecks' ? requestRemoveScbaItem : undefined,
+    onArchiveScbaItem:
+      selectedTypeDefinition?.fieldRefKey === 'scbaChecks' ? requestArchiveScbaItem : undefined,
+    onRestoreScbaItem:
+      selectedTypeDefinition?.fieldRefKey === 'scbaChecks' ? restoreScbaItem : undefined,
     onEditEquipment: (row) => {
       setShowEquipmentModal(true)
       startEditEquipment(row)
     },
     onDeleteEquipment: (row) =>
       setEquipmentDeleteTarget({
-        value: row?.equipmentId || row?.id,
+        value: getEquipmentBackendId(row) || getEquipmentRowId(row),
         label: row?.equipment,
         row,
       }),
+    selectedTruckOption:
+      selectedTypeDefinition?.fieldRefKey === 'frtChecks' ? selectedFireTruckOption : null,
+    onEditTruck:
+      selectedTypeDefinition?.fieldRefKey === 'frtChecks' ? startEditFireTruck : undefined,
+    onDeleteTruck:
+      selectedTypeDefinition?.fieldRefKey === 'frtChecks'
+        ? (truck) =>
+            setFireTruckDeleteTarget({
+              value: truck?.truckId || truck?.id,
+              label: truck?.plateNo || truck?.value || truck?.title,
+              truck,
+            })
+        : undefined,
   }
 
   return (
@@ -1812,9 +3493,13 @@ const InspectionForm = ({
         visible={Boolean(locationDeleteTarget)}
         title="Delete Location"
         message={
-          locationDeleteTarget?.label
-            ? `Delete "${locationDeleteTarget.label}"? This cannot be undone.`
-            : 'Delete this location?'
+          locationDeleteTarget?.row?.custom
+            ? locationDeleteTarget?.label
+              ? `Delete "${locationDeleteTarget.label}"?`
+              : 'Delete this location?'
+            : locationDeleteTarget?.isSubLocation
+              ? 'Delete this shared sub-location? This will remove it from all future inspections. Past inspection records will not be changed.'
+              : 'Delete this shared location? This will remove it and its sub-locations from all future inspections. Past inspection records will not be changed.'
         }
         confirmLabel="Delete"
         confirmColor="danger"
@@ -1822,6 +3507,25 @@ const InspectionForm = ({
         onConfirm={() => {
           if (locationDeleteTarget?.value) location.removeType(locationDeleteTarget.value)
           setLocationDeleteTarget(null)
+        }}
+      />
+      <ActionConfirmModal
+        visible={Boolean(fireExtinguisherDeleteTarget)}
+        title="Delete Extinguisher"
+        message={
+          fireExtinguisherDeleteTarget?.row?.equipmentSource === 'seed'
+            ? 'Delete this shared extinguisher? This will remove it from all future inspections. Past inspection records will not be changed.'
+            : fireExtinguisherDeleteTarget?.label
+              ? `Delete "${fireExtinguisherDeleteTarget.label}"?`
+              : 'Delete this extinguisher?'
+        }
+        confirmLabel="Delete"
+        confirmColor="danger"
+        onClose={() => setFireExtinguisherDeleteTarget(null)}
+        onConfirm={() => {
+          const targetRow = fireExtinguisherDeleteTarget?.row
+          setFireExtinguisherDeleteTarget(null)
+          if (targetRow) deleteFireExtinguisher(targetRow)
         }}
       />
       <ActionConfirmModal
@@ -1848,11 +3552,223 @@ const InspectionForm = ({
             ? `Delete "${equipmentDeleteTarget.label}"? Existing entries for this equipment in the current form will be removed.`
             : 'Delete this equipment?'
         }
-        confirmLabel="Delete"
+        confirmLabel={isDeletingEquipment ? 'Deleting...' : 'Delete'}
         confirmColor="danger"
-        onClose={() => setEquipmentDeleteTarget(null)}
+        confirmDisabled={isDeletingEquipment}
+        cancelDisabled={isDeletingEquipment}
+        onClose={() => {
+          if (!isDeletingEquipment) setEquipmentDeleteTarget(null)
+        }}
         onConfirm={() => deleteEquipment(equipmentDeleteTarget?.row)}
       />
+      <ActionConfirmModal
+        visible={Boolean(fireTruckDeleteTarget)}
+        title="Delete Truck"
+        message={
+          fireTruckDeleteTarget?.label
+            ? `Delete truck "${fireTruckDeleteTarget.label}"? If it is selected, the current FRT readiness form will need another truck before review.`
+            : 'Delete this truck?'
+        }
+        confirmLabel="Delete"
+        confirmColor="danger"
+        onClose={() => setFireTruckDeleteTarget(null)}
+        onConfirm={() => deleteFireTruck(fireTruckDeleteTarget?.truck)}
+      />
+      <ActionConfirmModal
+        visible={Boolean(scbaRemoveTarget)}
+        title="Remove SCBA Item"
+        message={scbaRemoveTarget?.message || 'Remove this from this inspection?'}
+        confirmLabel="Remove"
+        confirmColor="danger"
+        onClose={() => setScbaRemoveTarget(null)}
+        onConfirm={() => {
+          if (scbaRemoveTarget?.type === 'section') {
+            removeScbaSectionFromInspection(scbaRemoveTarget.section)
+          } else if (scbaRemoveTarget?.type === 'item') {
+            removeScbaItemFromInspection(scbaRemoveTarget.sectionKey, scbaRemoveTarget.row)
+          }
+          setScbaRemoveTarget(null)
+        }}
+      />
+      <ActionConfirmModal
+        visible={Boolean(scbaArchiveTarget)}
+        title="Archive SCBA Catalog"
+        message={
+          scbaArchiveTarget?.message ||
+          'Archive this for future inspections? Previous reports are unchanged.'
+        }
+        confirmLabel="Archive"
+        confirmColor="danger"
+        onClose={() => setScbaArchiveTarget(null)}
+        onConfirm={archiveScbaCatalogTarget}
+      />
+
+      <CModal visible={scbaSectionModal.visible} onClose={closeScbaSectionModal}>
+        <CModalHeader>
+          <CModalTitle>
+            {scbaSectionModal.mode === 'edit' ? 'Edit SCBA Section' : 'Add SCBA Section'}
+          </CModalTitle>
+        </CModalHeader>
+        <CModalBody className="d-grid gap-3">
+          <div>
+            <CFormLabel>Section title</CFormLabel>
+            <CFormInput
+              value={scbaSectionModal.title}
+              placeholder="e.g. Regulator"
+              onChange={(event) =>
+                setScbaSectionModal((current) => ({
+                  ...current,
+                  title: event.target.value,
+                  error: '',
+                }))
+              }
+            />
+          </div>
+          <div>
+            <CFormLabel>Short label</CFormLabel>
+            <CFormInput
+              value={scbaSectionModal.shortLabel}
+              placeholder="Optional"
+              onChange={(event) =>
+                setScbaSectionModal((current) => ({
+                  ...current,
+                  shortLabel: event.target.value,
+                  error: '',
+                }))
+              }
+            />
+          </div>
+          <div>
+            <CFormLabel>Inspection checks for each item</CFormLabel>
+            <CFormTextarea
+              rows={4}
+              value={scbaSectionModal.checksText}
+              placeholder={'One check per line\ne.g. Physical Condition\nLeak Test'}
+              onChange={(event) =>
+                setScbaSectionModal((current) => ({
+                  ...current,
+                  checksText: event.target.value,
+                  error: '',
+                }))
+              }
+            />
+            <div className="small text-body-secondary mt-1">
+              These checks appear inside every item added to this section.
+            </div>
+          </div>
+          <FormFieldError>{scbaSectionModal.error}</FormFieldError>
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" variant="outline" onClick={closeScbaSectionModal}>
+            Cancel
+          </CButton>
+          <CButton color="primary" onClick={saveScbaSectionModal} disabled={isSavingScbaCatalog}>
+            {isSavingScbaCatalog
+              ? 'Saving...'
+              : scbaSectionModal.mode === 'edit'
+                ? 'Update section'
+                : 'Add section'}
+          </CButton>
+        </CModalFooter>
+      </CModal>
+
+      <CModal visible={scbaItemModal.visible} onClose={closeScbaItemModal}>
+        <CModalHeader>
+          <CModalTitle>
+            {scbaItemModal.mode === 'edit' ? 'Edit SCBA Item' : 'Add SCBA Item'}
+          </CModalTitle>
+        </CModalHeader>
+        <CModalBody className="d-grid gap-3">
+          <div>
+            <CFormLabel>Brand</CFormLabel>
+            <CFormInput
+              value={scbaItemModal.brand}
+              placeholder="e.g. MSA"
+              onChange={(event) =>
+                setScbaItemModal((current) => ({
+                  ...current,
+                  brand: event.target.value,
+                  error: '',
+                }))
+              }
+            />
+          </div>
+          <div>
+            <CFormLabel>Serial No.</CFormLabel>
+            <CFormInput
+              value={scbaItemModal.serialNo}
+              placeholder="e.g. MSA 04"
+              onChange={(event) =>
+                setScbaItemModal((current) => ({
+                  ...current,
+                  serialNo: event.target.value,
+                  error: '',
+                }))
+              }
+            />
+          </div>
+          {scbaItemModal.sectionKey === 'cylinder' ? (
+            <div className="row g-3">
+              <div className="col-12 col-sm-6">
+                <CFormLabel>Size</CFormLabel>
+                <CFormInput
+                  value={scbaItemModal.size}
+                  placeholder="e.g. 6.8"
+                  onChange={(event) =>
+                    setScbaItemModal((current) => ({
+                      ...current,
+                      size: event.target.value,
+                      error: '',
+                    }))
+                  }
+                />
+              </div>
+              <div className="col-12 col-sm-6">
+                <CFormLabel>Cylinder Type</CFormLabel>
+                <CFormInput
+                  value={scbaItemModal.cylinderType}
+                  placeholder="e.g. Composite"
+                  onChange={(event) =>
+                    setScbaItemModal((current) => ({
+                      ...current,
+                      cylinderType: event.target.value,
+                      error: '',
+                    }))
+                  }
+                />
+              </div>
+            </div>
+          ) : null}
+          <div>
+            <CFormLabel>Details</CFormLabel>
+            <CFormTextarea
+              rows={2}
+              value={scbaItemModal.equipmentDescription}
+              placeholder="Optional"
+              onChange={(event) =>
+                setScbaItemModal((current) => ({
+                  ...current,
+                  equipmentDescription: event.target.value,
+                  error: '',
+                }))
+              }
+            />
+          </div>
+          <FormFieldError>{scbaItemModal.error}</FormFieldError>
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" variant="outline" onClick={closeScbaItemModal}>
+            Cancel
+          </CButton>
+          <CButton color="primary" onClick={saveScbaItemModal} disabled={isSavingScbaCatalog}>
+            {isSavingScbaCatalog
+              ? 'Saving...'
+              : scbaItemModal.mode === 'edit'
+                ? 'Update item'
+                : 'Add item'}
+          </CButton>
+        </CModalFooter>
+      </CModal>
 
       <TypeManagerModal
         visible={location.showAddLocationModal}
@@ -1863,7 +3779,17 @@ const InspectionForm = ({
         addTitle={location.isEditingSubLocation ? 'Add Sub-location' : 'Add Main Location'}
         options={location.editLocationOptions}
         onStartEdit={location.startEditType}
-        onRequestDelete={({ value, label }) => setLocationDeleteTarget({ value, label })}
+        onRequestDelete={({ value, label }) => {
+          const row = location.editLocationOptions.find(
+            (option) => String(option.value || '').trim() === String(value || '').trim(),
+          )
+          setLocationDeleteTarget({
+            value,
+            label,
+            row,
+            isSubLocation: location.isEditingSubLocation,
+          })
+        }}
         nameLabel={location.isEditingSubLocation ? 'Sub-location Name' : 'Main Location Name'}
         nameValue={location.newLocationName}
         onChangeName={(nextValue) => {
@@ -1887,8 +3813,20 @@ const InspectionForm = ({
         }
         onSave={location.saveType}
         saveLabel={location.isEditingSubLocation ? 'Save Sub-location' : 'Save Location'}
-        updateLabel={location.isEditingSubLocation ? 'Update Sub-location' : 'Update Location'}
+        updateLabel={
+          location.editingLocationRow && !location.editingLocationRow.custom
+            ? 'Save global change'
+            : location.isEditingSubLocation
+              ? 'Update Sub-location'
+              : 'Update Location'
+        }
         showRowIcon={false}
+        getRowBadgeLabel={(row) => (row?.custom ? '' : 'Shared')}
+        warningNotice={
+          location.editingLocationRow && !location.editingLocationRow.custom
+            ? 'This item is shared across inspections. Changes will affect future inspections.'
+            : ''
+        }
         iconOptions={[]}
         iconValue={location.newLocationIconKey}
         onChangeIcon={location.setNewLocationIconKey}
@@ -1955,7 +3893,7 @@ const InspectionForm = ({
         onChangeDescription={setNewEquipmentDescription}
         descriptionPlaceholder="Subtext shown below equipment name."
         error={equipmentError}
-        editingKey={editingEquipmentId}
+        editingKey={editingEquipmentId || editingLocalEquipmentId}
         editingLabel="Editing equipment"
         editButtonLabel="Edit Equipment"
         onSave={saveEquipment}
@@ -1964,6 +3902,70 @@ const InspectionForm = ({
         showRowIcon={false}
         iconOptions={[]}
       />
+
+      <CModal visible={showFireTruckModal} onClose={closeFireTruckModal} alignment="center">
+        <CModalHeader>
+          <CModalTitle>{editingFireTruckId ? 'Edit Truck' : 'Add Truck'}</CModalTitle>
+        </CModalHeader>
+        <CModalBody>
+          <div className="d-grid gap-3">
+            <div>
+              <CFormLabel className="small fw-semibold text-muted">Plate Number</CFormLabel>
+              <CFormInput
+                value={newTruckPlateNo}
+                placeholder="e.g. AJG9555"
+                onChange={(event) => {
+                  setNewTruckPlateNo(event.target.value.toUpperCase())
+                  if (fireTruckError) setFireTruckError('')
+                }}
+              />
+            </div>
+            <div>
+              <CFormLabel className="small fw-semibold text-muted">Truck Name</CFormLabel>
+              <CFormInput
+                value={newTruckName}
+                placeholder="e.g. Fire Truck"
+                onChange={(event) => setNewTruckName(event.target.value)}
+              />
+            </div>
+            <div className="row g-3">
+              <div className="col-12 col-md-4">
+                <CFormLabel className="small fw-semibold text-muted">Road Tax Expiry</CFormLabel>
+                <CFormInput
+                  type="date"
+                  value={newTruckRoadTaxExpiry}
+                  onChange={(event) => setNewTruckRoadTaxExpiry(event.target.value)}
+                />
+              </div>
+              <div className="col-12 col-md-4">
+                <CFormLabel className="small fw-semibold text-muted">Insurance Expiry</CFormLabel>
+                <CFormInput
+                  type="date"
+                  value={newTruckInsuranceExpiry}
+                  onChange={(event) => setNewTruckInsuranceExpiry(event.target.value)}
+                />
+              </div>
+              <div className="col-12 col-md-4">
+                <CFormLabel className="small fw-semibold text-muted">Puspakom Expiry</CFormLabel>
+                <CFormInput
+                  type="date"
+                  value={newTruckPuspakomExpiry}
+                  onChange={(event) => setNewTruckPuspakomExpiry(event.target.value)}
+                />
+              </div>
+            </div>
+            <FormFieldError>{fireTruckError}</FormFieldError>
+          </div>
+        </CModalBody>
+        <CModalFooter>
+          <CButton color="secondary" variant="outline" onClick={closeFireTruckModal}>
+            Cancel
+          </CButton>
+          <CButton color="primary" onClick={saveFireTruck}>
+            {editingFireTruckId ? 'Update Truck' : 'Save Truck'}
+          </CButton>
+        </CModalFooter>
+      </CModal>
 
       <input
         ref={uploadInputRef}
@@ -1994,7 +3996,12 @@ const InspectionForm = ({
                   onClick={() => setIsEditingType(true)}
                 />
               </div>
-              <InspectionSelectedTypeCard inspectionType={selectedType} icon={SelectedTypeIcon} />
+              <InspectionSelectedTypeCard
+                inspectionType={
+                  selectedTypeDefinition?.title || selectedTypeOption?.title || selectedType
+                }
+                icon={SelectedTypeIcon}
+              />
             </>
           ) : (
             <>
@@ -2024,9 +4031,23 @@ const InspectionForm = ({
                     incident.setShowAllIncidentTypes((prev) => !prev)
                     return
                   }
+                  const nextDefinition = getInspectionTypeDefinition(nextValue)
+                  const nextIsFireTruckCatalog = nextDefinition?.supportsFireTruckCatalog === true
                   updateForm({
                     ...form,
                     inspectionType: String(nextValue || '').trim(),
+                    inspectedAt: form.inspectedAt || getDefaultInspectionDateTime(),
+                    ...(nextIsFireTruckCatalog
+                      ? {
+                          selectedLocation: '',
+                          mainLocation: '',
+                          subLocation: '',
+                          mainLocationId: '',
+                          subLocationId: '',
+                          frtTruckId: '',
+                          frtTruckPlateNo: '',
+                        }
+                      : {}),
                   })
                   setIsEditingType(false)
                 }}
@@ -2045,10 +4066,35 @@ const InspectionForm = ({
           </FormFieldError>
         </div>
 
+        <div className="inspection-form-section d-grid gap-3" ref={inspectedAtRef}>
+          <div className="fw-semibold text-muted">Date and time of inspection</div>
+          <div className="row g-3">
+            <div className="col-12 col-md-6">
+              <CFormInput
+                type="datetime-local"
+                aria-label="Date and time of inspection"
+                value={String(form.inspectedAt || '')}
+                onChange={(event) => updateInspectedAt(event.target.value)}
+              />
+            </div>
+          </div>
+          <FormFieldError>
+            {fieldErrors.inspectedAt ? 'Enter the inspection date and time.' : ''}
+          </FormFieldError>
+        </div>
+
         <div className="inspection-form-section d-grid gap-3" ref={selectedLocationRef}>
           <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <div className="fw-semibold text-muted">Choose Main Location</div>
-            {supportsCustomLocations ? (
+            <div className="fw-semibold text-muted">
+              {selectedTypeDefinition?.mainLocationLabel || 'Choose Main Location'}
+            </div>
+            {isFireTruckCatalogInspectionForm ? (
+              <CreateActionButton
+                label="Add Truck"
+                className="inspection-compact-action-btn"
+                onClick={openAddFireTruckModal}
+              />
+            ) : supportsCustomLocations ? (
               <CreateActionButton
                 label="Add main location"
                 className="inspection-compact-action-btn"
@@ -2057,10 +4103,23 @@ const InspectionForm = ({
             ) : null}
           </div>
           <InspectionLocationOptionPicker
-            options={location.mainLocationOptions}
-            visibleOptions={location.visibleMainLocationOptions}
-            value={mainLocation}
+            options={
+              isFireTruckCatalogInspectionForm ? fireTruckOptions : location.mainLocationOptions
+            }
+            visibleOptions={
+              isFireTruckCatalogInspectionForm
+                ? fireTruckOptions
+                : location.visibleMainLocationOptions
+            }
+            value={isFireTruckCatalogInspectionForm ? selectedFireTruckPlate : mainLocation}
             onChange={(nextValue) => {
+              if (isFireTruckCatalogInspectionForm) {
+                const truck = fireTruckOptions.find(
+                  (option) => String(option.value || '') === String(nextValue || ''),
+                )
+                selectFireTruck(truck)
+                return
+              }
               if (nextValue === LOCATION_TOGGLE_VALUE) {
                 location.setShowAllMainLocationTypes((prev) => !prev)
                 return
@@ -2070,10 +4129,16 @@ const InspectionForm = ({
             variant="compact"
             showDescription
             columns={{ xs: 6, md: 3 }}
-            searchPlaceholder="Search main location..."
-            searchAriaLabel="Search main location"
-            clearSearchAriaLabel="Clear main location search"
-            toggleValue={LOCATION_TOGGLE_VALUE}
+            searchPlaceholder={
+              selectedTypeDefinition?.mainLocationSearchPlaceholder || 'Search main location...'
+            }
+            searchAriaLabel={
+              isFireTruckCatalogInspectionForm ? 'Search truck plate' : 'Search main location'
+            }
+            clearSearchAriaLabel={
+              isFireTruckCatalogInspectionForm ? 'Clear truck search' : 'Clear main location search'
+            }
+            toggleValue={isFireTruckCatalogInspectionForm ? '' : LOCATION_TOGGLE_VALUE}
             cardProps={(option, isSelected) => {
               if (option?.value === LOCATION_TOGGLE_VALUE) return TOGGLE_CARD_PROPS
               return {
@@ -2086,11 +4151,17 @@ const InspectionForm = ({
             }}
           />
           <FormFieldError>
-            {fieldErrors.selectedLocation ? 'Choose a main inspection location.' : ''}
+            {fieldErrors.selectedLocation
+              ? selectedTypeDefinition?.mainLocationErrorLabel ||
+                'Choose a main inspection location.'
+              : ''}
           </FormFieldError>
         </div>
 
-        {mainLocation && supportsSubLocations ? (
+        {!isFireTruckCatalogInspectionForm &&
+        mainLocation &&
+        supportsSubLocations &&
+        (location.subLocationOptions.length > 0 || subLocation) ? (
           <div className="inspection-form-section d-grid gap-3">
             <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
               <div className="d-flex flex-wrap align-items-baseline gap-2">
@@ -2099,7 +4170,7 @@ const InspectionForm = ({
                   (optional under {location.selectedMainLocationTitle || mainLocation})
                 </div>
               </div>
-              {supportsCustomLocations ? (
+              {supportsCustomLocations && location.subLocationOptions.length > 0 ? (
                 <CreateActionButton
                   label={`Add sub-location (${location.subLocationOptions.length})`}
                   className="inspection-compact-action-btn"
@@ -2163,7 +4234,7 @@ const InspectionForm = ({
             </div>
 
             <div className="inspection-form-section d-grid gap-3" ref={descriptionRef}>
-              <div className="fw-semibold text-muted">Describe</div>
+              <CFormLabel className="fw-semibold text-muted mb-0">Describe</CFormLabel>
               <ChipRow>
                 {INSPECTION_DESCRIPTION_CHIPS.map((chip) => (
                   <ChipButton key={chip} onClick={() => appendDescription(chip)}>
@@ -2199,8 +4270,12 @@ const InspectionForm = ({
             <div className="inspection-form-section d-grid gap-3" ref={structuredSectionRef}>
               <StructuredEditSection
                 mainLocation={mainLocation}
-                mainLocationLabel={location.selectedMainLocationTitle}
-                form={form}
+                mainLocationLabel={
+                  isFireTruckCatalogInspectionForm
+                    ? selectedFireTruckPlate
+                    : location.selectedMainLocationTitle
+                }
+                form={structuredDisplayForm}
                 summary={currentStructuredSummary}
                 fieldErrors={fieldErrors}
                 validationState={validationState}

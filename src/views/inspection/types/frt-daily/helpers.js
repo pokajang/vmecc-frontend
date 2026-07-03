@@ -1,8 +1,10 @@
+import { dedupePhotos } from 'src/views/inspection/inspectionSharedUtils'
 import { FRT_REFERENCE, FRT_TRUCK_REFERENCE } from './reference'
 
 export { FRT_REFERENCE, FRT_TRUCK_REFERENCE } from './reference'
 
-export const FRT_DAILY_INSPECTION_TYPE = 'FRT Daily Inspection'
+export const FRT_DAILY_INSPECTION_TYPE = 'Fire Truck Daily Readiness'
+export const FRT_DAILY_LEGACY_INSPECTION_TYPE = 'FRT Daily Inspection'
 export const FRT_DAILY_STATUS_OPTIONS = [
   { value: 'Checked', label: 'Checked' },
   { value: 'Issue', label: 'Issue' },
@@ -21,6 +23,15 @@ const slugSegment = (value) =>
   normalizeKey(value)
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
+
+const hasOwn = (item, key) => Object.prototype.hasOwnProperty.call(item || {}, key)
+
+const normalizePhotos = (photos) =>
+  dedupePhotos(
+    (Array.isArray(photos) ? photos : []).filter(
+      (photo) => photo && typeof photo === 'object' && String(photo.url || '').trim(),
+    ),
+  )
 
 const buildDailyRow = (section, row) => {
   const [rowNumber, equipment, quantity, rowKind] = row
@@ -72,18 +83,72 @@ const normalizeFrtOneOffStatus = (value) => {
   return matched?.value || ''
 }
 
-export const normalizeFrtTruckReference = (value = {}) => ({
-  plateNo: String(value.plateNo || value.plate_no || FRT_TRUCK_REFERENCE.plateNo || '').trim(),
-  roadTaxExpiry: String(
-    value.roadTaxExpiry || value.road_tax_expiry || FRT_TRUCK_REFERENCE.roadTaxExpiry || '',
-  ).trim(),
-  insuranceExpiry: String(
-    value.insuranceExpiry || value.insurance_expiry || FRT_TRUCK_REFERENCE.insuranceExpiry || '',
-  ).trim(),
-  puspakomExpiry: String(
-    value.puspakomExpiry || value.puspakom_expiry || FRT_TRUCK_REFERENCE.puspakomExpiry || '',
-  ).trim(),
-})
+export const normalizeFrtTruckReference = (value = {}) => {
+  const hasExplicitReference = [
+    'truckId',
+    'truck_id',
+    'id',
+    'name',
+    'truckName',
+    'truck_name',
+    'plateNo',
+    'plate_no',
+    'value',
+    'title',
+    'roadTaxExpiry',
+    'road_tax_expiry',
+    'insuranceExpiry',
+    'insurance_expiry',
+    'puspakomExpiry',
+    'puspakom_expiry',
+  ].some((key) => hasOwn(value, key))
+  const fallback = hasExplicitReference ? {} : FRT_TRUCK_REFERENCE
+
+  return {
+    truckId: String(value.truckId ?? value.truck_id ?? value.id ?? '').trim(),
+    name: String(value.name ?? value.truckName ?? value.truck_name ?? '').trim(),
+    plateNo: String(
+      value.plateNo ?? value.plate_no ?? value.value ?? value.title ?? fallback.plateNo ?? '',
+    ).trim(),
+    roadTaxExpiry: String(
+      value.roadTaxExpiry ?? value.road_tax_expiry ?? fallback.roadTaxExpiry ?? '',
+    ).trim(),
+    insuranceExpiry: String(
+      value.insuranceExpiry ?? value.insurance_expiry ?? fallback.insuranceExpiry ?? '',
+    ).trim(),
+    puspakomExpiry: String(
+      value.puspakomExpiry ?? value.puspakom_expiry ?? fallback.puspakomExpiry ?? '',
+    ).trim(),
+  }
+}
+
+export const normalizeFrtTruckOption = (value = {}) => {
+  const reference = normalizeFrtTruckReference(value)
+  const plateNo = String(reference.plateNo || value.value || value.title || '')
+    .trim()
+    .toUpperCase()
+  if (!plateNo) return null
+  return {
+    ...value,
+    id: String(value.truckId || value.truck_id || value.id || plateNo).trim(),
+    truckId: String(value.truckId || value.truck_id || value.id || '').trim(),
+    plateNo,
+    value: plateNo,
+    title: plateNo,
+    name: String(reference.name || value.description || '').trim(),
+    description: String(reference.name || value.description || '').trim(),
+    roadTaxExpiry: reference.roadTaxExpiry,
+    insuranceExpiry: reference.insuranceExpiry,
+    puspakomExpiry: reference.puspakomExpiry,
+  }
+}
+
+export const defaultFrtTruckOption = () =>
+  normalizeFrtTruckOption({
+    ...FRT_TRUCK_REFERENCE,
+    name: 'Fire Truck',
+    value: FRT_TRUCK_REFERENCE.plateNo,
+  })
 
 const normalizeFrtDailyCheck = (check = {}) => {
   if (!check || typeof check !== 'object') return null
@@ -114,6 +179,7 @@ const normalizeFrtDailyCheck = (check = {}) => {
     status: normalizeFrtDailyStatus(check.status),
     readingValue: String(check.readingValue || check.reading_value || '').trim(),
     remarks: String(check.remarks || check.remark || '').trim(),
+    photos: normalizePhotos(check.photos),
   }
 }
 
@@ -139,6 +205,7 @@ const normalizeFrtOneOffCheck = (check = {}) => {
     equipment,
     condition: normalizeFrtOneOffStatus(check.condition),
     remarks: String(check.remarks || check.remark || '').trim(),
+    photos: normalizePhotos(check.photos),
   }
 }
 
@@ -162,11 +229,30 @@ export const normalizeFrtOneOffChecks = (checks) => {
   return Array.from(byId.values())
 }
 
-const resolveSelectedTruck = (form = {}) =>
-  String(form.mainLocation || form.main_location || form.selectedLocation || form.location || '')
-    .split('>')
-    .map((part) => part.trim())
-    .filter(Boolean)[0] || ''
+export const resolveSelectedFrtTruckPlate = (form = {}) => {
+  const reference = normalizeFrtTruckReference(form.frtTruckReference || form.frt_truck_reference)
+  const direct =
+    String(
+      form.frtTruckPlateNo ||
+        form.frt_truck_plate_no ||
+        form.mainLocation ||
+        form.main_location ||
+        form.selectedLocation ||
+        form.location ||
+        '',
+    )
+      .split('>')
+      .map((part) => part.trim())
+      .filter(Boolean)[0] || ''
+  if (direct) {
+    if (normalizeKey(direct) === normalizeKey('FIRE TRUCK')) return reference.plateNo
+    if (form.frtTruckPlateNo || form.frt_truck_plate_no || form.frtTruckId || form.frt_truck_id) {
+      return direct
+    }
+    return /\d/.test(direct) ? direct : ''
+  }
+  return form.frtTruckId || form.frt_truck_id ? reference.plateNo : ''
+}
 
 const mergeSeededRows = (seedRows, currentRows, emptyPatch = {}) => {
   const currentById = new Map(currentRows.map((row) => [String(row.id || ''), row]))
@@ -188,24 +274,26 @@ const mergeSeededRows = (seedRows, currentRows, emptyPatch = {}) => {
 }
 
 export const getFrtVisibleDailyChecks = (form = {}) => {
-  if (normalizeKey(resolveSelectedTruck(form)) !== normalizeKey('FIRE TRUCK')) return []
+  if (!resolveSelectedFrtTruckPlate(form)) return []
   const currentRows = normalizeFrtDailyChecks(form.frtDailyChecks || form.frt_daily_checks)
   return FRT_DAILY_SECTION_DEFINITIONS.flatMap((section) =>
     mergeSeededRows(section.rows, currentRows, {
       status: '',
       readingValue: '',
       remarks: '',
+      photos: [],
     }),
   )
 }
 
 export const getFrtVisibleOneOffChecks = (form = {}) => {
-  if (normalizeKey(resolveSelectedTruck(form)) !== normalizeKey('FIRE TRUCK')) return []
+  if (!resolveSelectedFrtTruckPlate(form)) return []
   const currentRows = normalizeFrtOneOffChecks(form.frtOneOffChecks || form.frt_one_off_checks)
   return FRT_ONE_OFF_SECTION_DEFINITIONS.flatMap((section) =>
     mergeSeededRows(section.rows, currentRows, {
       condition: '',
       remarks: '',
+      photos: [],
     }),
   )
 }
@@ -229,6 +317,11 @@ const buildSectionSummary = (section, rows, kind) => {
       ? row.status === 'Issue' && !String(row.remarks || '').trim()
       : row.condition === 'Not Good' && !String(row.remarks || '').trim(),
   ).length
+  const incompletePhotoCount = visibleRows.filter((row) =>
+    kind === 'daily'
+      ? row.status === 'Issue' && normalizePhotos(row.photos).length === 0
+      : row.condition === 'Not Good' && normalizePhotos(row.photos).length === 0,
+  ).length
 
   return {
     ...section,
@@ -236,11 +329,12 @@ const buildSectionSummary = (section, rows, kind) => {
     checkedCount,
     issueCount,
     incompleteRemarksCount,
+    incompletePhotoCount,
   }
 }
 
 export const getFrtCheckSummary = (form = {}) => {
-  const selectedTruck = resolveSelectedTruck(form)
+  const selectedTruck = resolveSelectedFrtTruckPlate(form)
   const dailyRows = getFrtVisibleDailyChecks(form)
   const oneOffRows = getFrtVisibleOneOffChecks(form)
   const visibleDailySections = FRT_DAILY_SECTION_DEFINITIONS.map((section) =>
@@ -286,15 +380,21 @@ export const getFrtCheckSummary = (form = {}) => {
       (sum, section) => sum + section.incompleteRemarksCount,
       0,
     ),
+    dailyIncompletePhotoCount: visibleDailySections.reduce(
+      (sum, section) => sum + section.incompletePhotoCount,
+      0,
+    ),
+    oneOffIncompletePhotoCount: visibleOneOffSections.reduce(
+      (sum, section) => sum + section.incompletePhotoCount,
+      0,
+    ),
     truckReference: normalizeFrtTruckReference(form.frtTruckReference || form.frt_truck_reference),
   }
 }
 
 export const getFrtMissingFields = (form = {}) => {
-  const inspectedBy = String(form.frtInspectedBy || form.frt_inspected_by || '').trim()
-  const inspectionDate = String(form.frtInspectionDate || form.frt_inspection_date || '').trim()
-  const shift = String(form.frtShift || form.frt_shift || '').trim()
   const summary = getFrtCheckSummary(form)
+  const selectedTruck = resolveSelectedFrtTruckPlate(form)
   const hasIncompleteDaily = summary.dailyRows.some((row) =>
     row.rowKind === 'reading'
       ? !String(row.readingValue || '').trim()
@@ -303,15 +403,65 @@ export const getFrtMissingFields = (form = {}) => {
   const hasIncompleteOneOff = summary.oneOffRows.some((row) => !String(row.condition || '').trim())
 
   return {
-    frtSession: !inspectedBy || !inspectionDate || !shift,
+    frtSession: !selectedTruck,
     frtDailyChecks: summary.dailyRows.length === 0 || hasIncompleteDaily,
     frtDailyRemarks: summary.dailyRows.some(
-      (row) => row.status === 'Issue' && !String(row.remarks || '').trim(),
+      (row) =>
+        row.status === 'Issue' &&
+        (!String(row.remarks || '').trim() || normalizePhotos(row.photos).length === 0),
     ),
     frtOneOffChecks: summary.oneOffRows.length === 0 || hasIncompleteOneOff,
     frtOneOffRemarks: summary.oneOffRows.some(
-      (row) => row.condition === 'Not Good' && !String(row.remarks || '').trim(),
+      (row) =>
+        row.condition === 'Not Good' &&
+        (!String(row.remarks || '').trim() || normalizePhotos(row.photos).length === 0),
     ),
+  }
+}
+
+export const getFrtValidationDetails = (form = {}) => {
+  const summary = getFrtCheckSummary(form)
+  const rowDetails = []
+  let firstTarget = null
+
+  const addRowDetail = (row, field, detailKey) => {
+    const detail = {
+      field,
+      rowId: String(row.id || '').trim(),
+      checkKey: '',
+      detailKey,
+      sectionKey: String(row.location || '').trim(),
+      checklistKind: String(row.checklistKind || '').trim(),
+    }
+    rowDetails.push(detail)
+    if (!firstTarget) firstTarget = detail
+  }
+
+  summary.dailyRows.forEach((row) => {
+    if (row.rowKind === 'reading') {
+      if (!String(row.readingValue || '').trim())
+        addRowDetail(row, 'frtDailyChecks', 'readingValue')
+      return
+    }
+    if (!String(row.status || '').trim()) addRowDetail(row, 'frtDailyChecks', 'status')
+    if (row.status === 'Issue') {
+      if (!String(row.remarks || '').trim()) addRowDetail(row, 'frtDailyRemarks', 'remarks')
+      if (normalizePhotos(row.photos).length === 0) addRowDetail(row, 'frtDailyRemarks', 'photos')
+    }
+  })
+
+  summary.oneOffRows.forEach((row) => {
+    if (!String(row.condition || '').trim()) addRowDetail(row, 'frtOneOffChecks', 'condition')
+    if (row.condition === 'Not Good') {
+      if (!String(row.remarks || '').trim()) addRowDetail(row, 'frtOneOffRemarks', 'remarks')
+      if (normalizePhotos(row.photos).length === 0) addRowDetail(row, 'frtOneOffRemarks', 'photos')
+    }
+  })
+
+  return {
+    rowDetails,
+    firstTarget,
+    errorCount: rowDetails.length,
   }
 }
 
@@ -321,9 +471,10 @@ const makeChecklistId = (label) =>
 export const buildFrtChecklist = (form = {}) => {
   const summary = getFrtCheckSummary(form)
   const rows = []
+  const truckPlate = summary.selectedTruck || 'selected truck'
 
   if (summary.dailyRows.length > 0 && summary.dailyCheckedCount === summary.dailyRows.length) {
-    const label = 'FIRE TRUCK daily roster completed'
+    const label = `${truckPlate} daily readiness roster completed`
     rows.push({
       id: makeChecklistId(label),
       label,
@@ -334,7 +485,7 @@ export const buildFrtChecklist = (form = {}) => {
   }
 
   if (summary.oneOffRows.length > 0 && summary.oneOffCheckedCount === summary.oneOffRows.length) {
-    const label = 'FIRE TRUCK one-off checklist completed'
+    const label = `${truckPlate} one-off readiness checklist completed`
     rows.push({
       id: makeChecklistId(label),
       label,
@@ -376,13 +527,13 @@ export const buildFrtChecklist = (form = {}) => {
 export const buildFrtDescription = (form = {}) => {
   const inspectedBy = String(form.frtInspectedBy || form.frt_inspected_by || '').trim()
   const inspectionDate = String(form.frtInspectionDate || form.frt_inspection_date || '').trim()
-  const shift = String(form.frtShift || form.frt_shift || '').trim()
   const dailyRemarks = String(form.frtDailyRemarks || form.frt_daily_remarks || '').trim()
   const oneOffRemarks = String(form.frtOneOffRemarks || form.frt_one_off_remarks || '').trim()
   const summary = getFrtCheckSummary(form)
+  const truckPlate = summary.selectedTruck || 'selected truck'
 
   const lines = [
-    `FRT Daily inspection checked for FIRE TRUCK${inspectionDate ? ` on ${inspectionDate}` : ''}${shift ? ` (${shift} shift)` : ''}${inspectedBy ? ` by ${inspectedBy}` : ''}.`,
+    `Fire Truck Daily Readiness completed for ${truckPlate}${inspectionDate ? ` on ${inspectionDate}` : ''}${inspectedBy ? ` by ${inspectedBy}` : ''}.`,
     `Daily roster completed: ${summary.dailyCheckedCount}/${summary.dailyRows.length}.`,
     `One-off checklist completed: ${summary.oneOffCheckedCount}/${summary.oneOffRows.length}.`,
     `Issue row(s): ${summary.issueCount}.`,
@@ -409,4 +560,6 @@ export const buildFrtDescription = (form = {}) => {
 }
 
 export const isFrtDailyInspectionType = (inspectionType) =>
-  normalizeKey(inspectionType) === normalizeKey(FRT_DAILY_INSPECTION_TYPE)
+  [FRT_DAILY_INSPECTION_TYPE, FRT_DAILY_LEGACY_INSPECTION_TYPE].some(
+    (type) => normalizeKey(inspectionType) === normalizeKey(type),
+  )

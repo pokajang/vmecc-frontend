@@ -24,7 +24,7 @@ const hseInspectionDefinition = {
   checksField: 'hseSelections',
   fieldRefKey: 'hseObservation',
   photoEvidenceTitle: 'HSE Evidence Photos',
-  missingFieldKeys: ['hseSession', 'hseSelection', 'hseDetails'],
+  missingFieldKeys: ['hseSelection', 'hseDetails'],
   initialFormState: HSE_FORM_DEFAULTS,
   isInspectionType: isHseInspectionType,
   getSummary: getHseCheckSummary,

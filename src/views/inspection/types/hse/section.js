@@ -34,32 +34,9 @@ const DetailBlock = ({ label, value }) => {
   )
 }
 
-const HseSessionFields = ({ form, readOnly = false, onUpdateSessionMeta }) => (
-  <CRow className="g-3">
-    <CCol xs={12} md={6}>
-      <CFormInput
-        label="Inspected By"
-        value={form.hseInspectedBy}
-        readOnly={readOnly}
-        placeholder="Inspector name"
-        onChange={(event) => onUpdateSessionMeta?.('hseInspectedBy', event.target.value)}
-      />
-    </CCol>
-    <CCol xs={12} md={6}>
-      <CFormInput
-        type="date"
-        label="Inspection Date"
-        value={form.hseInspectionDate}
-        readOnly={readOnly}
-        onChange={(event) => onUpdateSessionMeta?.('hseInspectionDate', event.target.value)}
-      />
-    </CCol>
-  </CRow>
-)
-
 const HseSelectionButtons = ({ selections = [], readOnly = false, onToggleHseSelection }) => (
   <div className="d-grid gap-2">
-    <div className="fw-semibold">What did you find in this area?</div>
+    <div className="small fw-semibold text-muted">Outcome</div>
     <div className="row g-2">
       {HSE_SELECTION_OPTIONS.map((option) => {
         const selected = selections.includes(option.value)
@@ -69,7 +46,7 @@ const HseSelectionButtons = ({ selections = [], readOnly = false, onToggleHseSel
               type="button"
               color={selected ? 'primary' : 'light'}
               variant={selected ? undefined : 'outline'}
-              className="w-100 text-start h-100 rounded-3"
+              className="inspection-hse-choice-btn w-100 text-start h-100 rounded-3"
               disabled={readOnly}
               onClick={() => onToggleHseSelection?.(option.value)}
             >
@@ -83,7 +60,7 @@ const HseSelectionButtons = ({ selections = [], readOnly = false, onToggleHseSel
   </div>
 )
 
-const HseInlineEvidenceActions = ({ handlers = {} }) => {
+const HseInlineEvidenceActions = ({ handlers = {}, caption = '' }) => {
   if (!handlers.onTakeGeneralPhoto && !handlers.onUploadGeneralPhoto) return null
   return (
     <div className="d-flex flex-wrap gap-2">
@@ -92,7 +69,7 @@ const HseInlineEvidenceActions = ({ handlers = {} }) => {
           label="Take HSE photo"
           className="inspection-compact-action-btn"
           showIcon={false}
-          onClick={handlers.onTakeGeneralPhoto}
+          onClick={() => handlers.onTakeGeneralPhoto?.(caption)}
         />
       ) : null}
       {handlers.onUploadGeneralPhoto ? (
@@ -100,7 +77,7 @@ const HseInlineEvidenceActions = ({ handlers = {} }) => {
           label="Upload HSE photo"
           className="inspection-compact-action-btn"
           showIcon={false}
-          onClick={handlers.onUploadGeneralPhoto}
+          onClick={() => handlers.onUploadGeneralPhoto?.(caption)}
         />
       ) : null}
     </div>
@@ -122,21 +99,11 @@ export const HseEditSection = ({
   const hseFieldErrors = validationState?.hse?.missingFields || {}
 
   return (
-    <CCard>
-      <CCardHeader className="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <div>
-          <div className="fw-semibold">HSE Observation</div>
-          <div className="small text-body-secondary">
-            Select the inspection outcome first, then complete only the relevant details.
-          </div>
-        </div>
+    <CCard className="inspection-hydraulic-card inspection-check-card">
+      <CCardHeader className="inspection-hydraulic-card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div className="fw-semibold text-muted">HSE Observation</div>
       </CCardHeader>
-      <CCardBody className="d-grid gap-4">
-        <HseSessionFields form={normalized} onUpdateSessionMeta={handlers.onUpdateSessionMeta} />
-        <FormFieldError>
-          {fieldErrors.hseSession ? 'Enter inspector name and inspection date.' : ''}
-        </FormFieldError>
-
+      <CCardBody className="inspection-hydraulic-card-body d-grid gap-4">
         <HseSelectionButtons
           selections={normalized.hseSelections}
           onToggleHseSelection={handlers.onToggleHseSelection}
@@ -159,7 +126,7 @@ export const HseEditSection = ({
             <FormFieldError>
               {hseFieldErrors.hseAreaConditionRemarks ? 'Area condition remarks are required.' : ''}
             </FormFieldError>
-            <HseInlineEvidenceActions handlers={handlers} />
+            <HseInlineEvidenceActions handlers={handlers} caption="Area Satisfactory" />
           </div>
         ) : null}
 
@@ -188,6 +155,9 @@ export const HseEditSection = ({
 
             {selectedFindings.map((selection) => {
               const field = HSE_DETAIL_FIELDS[selection]
+              const option = HSE_SELECTION_OPTIONS.find(
+                (candidate) => candidate.value === selection,
+              )
               return (
                 <div key={selection} className="d-grid gap-2" data-hse-field={field.key}>
                   <CFormTextarea
@@ -200,10 +170,19 @@ export const HseEditSection = ({
                   <FormFieldError>
                     {hseFieldErrors[field.key] ? `${field.label} is required.` : ''}
                   </FormFieldError>
-                  <HseInlineEvidenceActions handlers={handlers} />
+                  <HseInlineEvidenceActions
+                    handlers={handlers}
+                    caption={option?.label || field.label}
+                  />
                 </div>
               )
             })}
+
+            <FormFieldError>
+              {hseFieldErrors.hsePhotoEvidence
+                ? 'Add at least one evidence photo for the selected HSE finding.'
+                : ''}
+            </FormFieldError>
 
             <CRow className="g-3">
               <CCol xs={12} md={6}>
@@ -260,7 +239,7 @@ export const HseEditSection = ({
 
         <FormFieldError>
           {fieldErrors.hseDetails
-            ? 'Complete the required remarks/details and severity for the selected HSE outcome.'
+            ? 'Complete the required remarks/details, severity, and evidence for the selected HSE outcome.'
             : ''}
         </FormFieldError>
       </CCardBody>
@@ -280,13 +259,11 @@ export const HseReadOnlySection = ({ form }) => {
 
   return (
     <div className="inspection-form-section d-grid gap-3">
-      <CCard>
-        <CCardHeader>
-          <div className="fw-semibold">HSE Observation</div>
+      <CCard className="inspection-hydraulic-card inspection-check-card">
+        <CCardHeader className="inspection-hydraulic-card-header">
+          <div className="fw-semibold text-muted">HSE Observation</div>
         </CCardHeader>
-        <CCardBody className="d-grid gap-4">
-          <HseSessionFields form={normalized} readOnly />
-
+        <CCardBody className="inspection-hydraulic-card-body d-grid gap-4">
           <div>
             <div className="small text-muted mb-2">Selected Outcome</div>
             <div className="d-flex flex-wrap gap-2">

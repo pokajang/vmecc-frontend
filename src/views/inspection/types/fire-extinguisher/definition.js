@@ -27,11 +27,7 @@ const fireExtinguisherInspectionDefinition = {
   catalogRowsField: 'fireExtinguisherCatalogRows',
   fieldRefKey: 'fireExtinguisherChecks',
   photoEvidenceTitle: 'General Evidence Photos',
-  missingFieldKeys: [
-    'fireExtinguisherSession',
-    'fireExtinguisherChecks',
-    'fireExtinguisherRemarks',
-  ],
+  missingFieldKeys: ['fireExtinguisherChecks', 'fireExtinguisherRemarks'],
   initialFormState: {
     fireExtinguisherInspectedBy: '',
     fireExtinguisherInspectionDate: '',

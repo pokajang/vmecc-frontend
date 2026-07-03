@@ -95,6 +95,7 @@ export default defineConfig(() => {
     plugins: [react(), appVersionPlugin(buildMetadata)],
     test: {
       exclude: ['**/node_modules/**', '**/dist/**', '**/build/**', 'tests/e2e/**'],
+      fileParallelism: false,
       setupFiles: ['src/test/setupTests.js'],
       testTimeout: 15000,
     },

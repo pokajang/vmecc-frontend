@@ -1495,6 +1495,18 @@ html {
   white-space: nowrap;
 }
 
+.inspection-evidence-action-row {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  text-align: left;
+}
+
+.inspection-evidence-action-row .inspection-compact-action-btn {
+  margin-left: 0;
+  margin-right: auto;
+}
+
 .workflow-scope-segmented,
 .inspection-scope-segmented {
   gap: 0;
@@ -1600,34 +1612,69 @@ html {
   padding: 0.85rem;
 }
 
+.inspection-check-card-grid,
 .inspection-hydraulic-card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  align-items: start;
 }
 
+.inspection-check-card,
 .inspection-hydraulic-card {
   min-width: 0;
   overflow: hidden;
 }
 
+.inspection-check-card-header,
 .inspection-hydraulic-card-header {
   min-height: 2.75rem;
   padding: 0.65rem 0.85rem;
   background: var(--cui-body-bg);
 }
 
+.inspection-check-card-header .inspection-compact-action-btn,
+.inspection-hydraulic-card-header .inspection-compact-action-btn {
+  padding: 0.28rem 0.55rem;
+}
+
+.inspection-check-card-body,
 .inspection-hydraulic-card-body {
   padding: 0.85rem;
 }
 
+@media (max-width: 430px) {
+  .inspection-check-card-header,
+  .inspection-hydraulic-card-header {
+    min-height: 2.35rem;
+    padding: 0.4rem 0.55rem;
+  }
+
+  .inspection-check-card-header .fw-semibold,
+  .inspection-hydraulic-card-header .fw-semibold {
+    font-size: 0.88rem;
+    line-height: 1.2;
+  }
+
+  .inspection-check-card-header .inspection-compact-action-btn,
+  .inspection-hydraulic-card-header .inspection-compact-action-btn {
+    min-height: 32px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.78rem;
+    line-height: 1.15;
+  }
+}
+
+.inspection-check-section-heading,
 .inspection-hydraulic-section-heading {
   min-width: 0;
 }
 
+.inspection-check-summary-pills,
 .inspection-hydraulic-summary-pills {
-  min-width: 0;
+  display: none !important;
 }
 
+.inspection-check-summary-pill,
 .inspection-hydraulic-summary-pill {
   max-width: 100%;
   padding: 0.25rem 0.45rem;
@@ -1637,15 +1684,45 @@ html {
   white-space: normal;
 }
 
+.inspection-check-label,
 .inspection-hydraulic-check-label {
+  min-width: 6.5rem;
+  max-width: 12rem;
+  overflow-wrap: normal;
+  white-space: normal;
+}
+
+.inspection-check-row,
+.inspection-hydraulic-check-row {
+  display: grid !important;
+  grid-template-columns: minmax(6.5rem, 1fr) auto;
+  align-items: center;
+  column-gap: 0.75rem;
+  row-gap: 0.5rem;
   min-width: 0;
 }
 
-.inspection-hydraulic-status-group {
-  align-items: center;
-  flex-shrink: 0;
+.inspection-check-row--stacked,
+.inspection-hydraulic-check-row--stacked {
+  grid-template-columns: 1fr;
+  align-items: flex-start;
 }
 
+.inspection-check-row--stacked .inspection-check-label,
+.inspection-hydraulic-check-row--stacked .inspection-hydraulic-check-label {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.inspection-check-status-group,
+.inspection-hydraulic-status-group {
+  align-items: center;
+  gap: 0.5rem !important;
+  flex-shrink: 0;
+  max-width: 100%;
+}
+
+.inspection-check-status-btn,
 .inspection-hydraulic-status-btn {
   min-height: 2.25rem;
   min-width: 3rem;
@@ -1655,14 +1732,74 @@ html {
   white-space: nowrap;
 }
 
-@media (max-width: 22rem) {
+@media (max-width: 575.98px) {
+  .inspection-check-row,
   .inspection-hydraulic-check-row {
-    align-items: flex-start !important;
-    flex-direction: column;
+    grid-template-columns: 1fr;
+    align-items: flex-start;
   }
 
+  .inspection-check-label,
+  .inspection-hydraulic-check-label {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .inspection-check-status-group,
   .inspection-hydraulic-status-group {
     justify-content: flex-start !important;
+  }
+}
+
+.inspection-check-card-grid--managed {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+}
+
+.inspection-check-card__meta {
+  color: var(--cui-secondary-color);
+  font-size: 0.78rem;
+  line-height: 1.25;
+}
+
+.inspection-check-card__collapsed-summary {
+  border-top: 1px solid var(--cui-border-color-translucent);
+  padding: 0.55rem 0.85rem;
+  color: var(--cui-secondary-color);
+  font-size: 0.78rem;
+}
+
+.inspection-check-toolbar {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.inspection-check-toolbar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.inspection-hse-choice-btn {
+  min-height: 3.4rem;
+  border-color: var(--cui-border-color);
+  color: var(--cui-body-color);
+}
+
+.inspection-hse-choice-btn.btn-light {
+  background: var(--cui-body-bg);
+}
+
+@media (max-width: 575.98px) {
+  .inspection-check-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .inspection-check-toolbar__actions {
+    justify-content: flex-start;
   }
 }
 
@@ -1881,6 +2018,16 @@ html {
   }
 }
 
+.modal .modal-dialog:not([class*='modal-fullscreen']) {
+  display: flex;
+  align-items: center;
+  min-height: calc(100dvh - 1.5rem);
+}
+
+.modal .modal-dialog:not([class*='modal-fullscreen']) .modal-content {
+  width: 100%;
+}
+
 @include media-breakpoint-down(md) {
   .type-manager-modal .modal-dialog {
     margin: 0.75rem;
@@ -1964,10 +2111,8 @@ html {
 
   .inspection-form-sticky-actions,
   .inspection-review-sticky-actions {
-    position: fixed;
-    right: 0.75rem;
+    position: sticky;
     bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 0.75rem);
-    left: 0.75rem;
     z-index: 1020;
     padding: 0.65rem;
     border: 1px solid rgba(148, 163, 184, 0.24);
@@ -2015,7 +2160,7 @@ html {
 
   .inspection-form-sticky-spacer {
     display: block;
-    height: calc(64px + env(safe-area-inset-bottom, 0px) + 6rem);
+    height: calc(64px + env(safe-area-inset-bottom, 0px) + 2rem);
   }
 
   .inspection-review-sticky-spacer {

@@ -10,7 +10,7 @@ describe('inspectionTypeRegistry', () => {
     const options = getInspectionTypeOptions()
 
     expect(options.some((option) => option.value === 'ER Aux Equipment Inspection')).toBe(true)
-    expect(options.some((option) => option.value === 'FRT Daily Inspection')).toBe(true)
+    expect(options.some((option) => option.value === 'Fire Truck Daily Readiness')).toBe(true)
     expect(options.some((option) => option.value === 'Hydraulic Rescue Tools Inspection')).toBe(
       true,
     )
@@ -27,6 +27,7 @@ describe('inspectionTypeRegistry', () => {
     const hydraulic = getInspectionTypeDefinition('Hydraulic Rescue Tools Inspection')
     const scba = getInspectionTypeDefinition('SCBA Inspection')
     const highAngle = getInspectionTypeDefinition('High Angle Rescue Equipment Inspection')
+    const general = getInspectionTypeDefinition('General Inspection')
 
     expect(erAux?.formMode).toBe('structured')
     expect(typeof erAux?.getSummary).toBe('function')
@@ -48,6 +49,10 @@ describe('inspectionTypeRegistry', () => {
     expect(highAngle?.formMode).toBe('structured')
     expect(typeof highAngle?.getSummary).toBe('function')
     expect(typeof highAngle?.ReadOnlySection).toBe('function')
+
+    expect(general?.formMode).toBe('generic')
+    expect(typeof general?.getSummary).toBe('function')
+    expect(typeof general?.ReadOnlySection).toBe('function')
   })
 
   it('aggregates per-type initial form state fragments', () => {
@@ -59,6 +64,8 @@ describe('inspectionTypeRegistry', () => {
       frtInspectedBy: '',
       frtInspectionDate: '',
       frtShift: '',
+      frtTruckId: '',
+      frtTruckPlateNo: '',
       frtDailyChecks: [],
       frtDailyRemarks: '',
       frtOneOffChecks: [],

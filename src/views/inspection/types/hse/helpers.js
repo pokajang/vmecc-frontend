@@ -161,6 +161,7 @@ export const getHseCheckSummary = (form = {}) => {
   const findingSelections = selections.filter((selection) =>
     HSE_FINDING_SELECTIONS.includes(selection),
   )
+  const photoCount = (Array.isArray(form.photos) ? form.photos : []).filter(Boolean).length
   const visibleChecks = selections.map((selection) => {
     const option = HSE_SELECTION_OPTIONS.find((candidate) => candidate.value === selection)
     return {
@@ -176,6 +177,7 @@ export const getHseCheckSummary = (form = {}) => {
     isAreaSatisfactory: selections.includes('areaSatisfactory'),
     hasFindings: findingSelections.length > 0,
     severity: normalizeHseSeverity(form.hseSeverity),
+    photoCount,
   }
 }
 
@@ -186,6 +188,8 @@ export const getHseValidationDetails = (form = {}) => {
   const findingSelections = selections.filter((selection) =>
     HSE_FINDING_SELECTIONS.includes(selection),
   )
+  const hasEvidencePhotos =
+    (Array.isArray(form.photos) ? form.photos : []).filter(Boolean).length > 0
   const missingFields = {}
 
   if (isAreaSatisfactory && !normalized.hseAreaConditionRemarks) {
@@ -198,6 +202,9 @@ export const getHseValidationDetails = (form = {}) => {
     const key = HSE_DETAIL_FIELDS[selection]?.key
     if (key && !text(normalized[key])) missingFields[key] = true
   })
+  if (findingSelections.length > 0 && !hasEvidencePhotos) {
+    missingFields.hsePhotoEvidence = true
+  }
 
   const firstField = [
     'hseAreaConditionRemarks',
@@ -205,6 +212,7 @@ export const getHseValidationDetails = (form = {}) => {
     'hseUnsafeActDetails',
     'hseUnsafeConditionDetails',
     'hseEnvironmentalDetails',
+    'hsePhotoEvidence',
   ].find((field) => missingFields[field])
 
   return {
@@ -221,10 +229,10 @@ export const getHseMissingFields = (form = {}) => {
   const findingSelections = selections.filter((selection) =>
     HSE_FINDING_SELECTIONS.includes(selection),
   )
-  const details = getHseValidationDetails(normalized)
+  const details = getHseValidationDetails(form)
 
   return {
-    hseSession: !normalized.hseInspectedBy || !normalized.hseInspectionDate,
+    hseSession: false,
     hseSelection: selections.length === 0,
     hseDetails:
       (isAreaSatisfactory && !normalized.hseAreaConditionRemarks) ||
@@ -236,10 +244,14 @@ export const buildHseChecklist = (form = {}) => {
   const normalized = normalizeHseFormFields(form)
   return normalized.hseSelections.map((selection) => {
     const option = HSE_SELECTION_OPTIONS.find((candidate) => candidate.value === selection)
+    const label =
+      HSE_FINDING_SELECTIONS.includes(selection) && normalized.hseSeverity
+        ? `${option?.label || selection} - ${normalized.hseSeverity}`
+        : option?.label || selection
     return {
       id: `hse:${selection}`,
       inspectionType: HSE_INSPECTION_TYPE,
-      label: option?.label || selection,
+      label,
       selected: true,
       selectedAt: '',
     }
@@ -249,16 +261,50 @@ export const buildHseChecklist = (form = {}) => {
 export const buildHseDescription = (form = {}) => {
   const normalized = normalizeHseFormFields(form)
   const selections = normalized.hseSelections
-  const labels = selections
-    .map((selection) => HSE_SELECTION_OPTIONS.find((option) => option.value === selection)?.label)
+  const selectedOptions = selections
+    .map((selection) => HSE_SELECTION_OPTIONS.find((option) => option.value === selection))
     .filter(Boolean)
+  const labels = selectedOptions.map((option) => option.label)
   const location = text(form.selectedLocation || form.location) || 'selected area'
   const inspector = normalized.hseInspectedBy || 'inspector'
   const date = normalized.hseInspectionDate || 'inspection date'
-  const summary = labels.length > 0 ? labels.join(', ') : 'No HSE outcome selected'
-  const severity =
-    hasHseFinding(normalized) && normalized.hseSeverity
-      ? ` Severity: ${normalized.hseSeverity}.`
-      : ''
-  return `HSE inspection for ${location} by ${inspector} on ${date}: ${summary}.${severity}`
+  const lines = [
+    `HSE inspection for ${location} by ${inspector} on ${date}.`,
+    labels.length > 0 ? `Selected outcome(s): ${labels.join(', ')}.` : 'No HSE outcome selected.',
+  ]
+
+  if (normalized.hseSelections.includes('areaSatisfactory') && normalized.hseAreaConditionRemarks) {
+    lines.push(`Area Condition Remarks: ${normalized.hseAreaConditionRemarks}`)
+  }
+
+  if (hasHseFinding(normalized) && normalized.hseSeverity) {
+    lines.push(`Severity: ${normalized.hseSeverity}.`)
+  }
+
+  HSE_FINDING_SELECTIONS.forEach((selection) => {
+    if (!normalized.hseSelections.includes(selection)) return
+    const field = HSE_DETAIL_FIELDS[selection]
+    const option = HSE_SELECTION_OPTIONS.find((candidate) => candidate.value === selection)
+    const detail = text(normalized[field?.key])
+    if (!field || !detail) return
+    lines.push(`- ${option?.label || field.label}: ${detail}`)
+  })
+
+  if (normalized.hseImmediateAction) {
+    lines.push(`Immediate Action: ${normalized.hseImmediateAction}`)
+  }
+  if (normalized.hseCorrectiveAction) {
+    lines.push(`Corrective Action: ${normalized.hseCorrectiveAction}`)
+  }
+  if (normalized.hseResponsiblePerson) {
+    lines.push(`Responsible Person: ${normalized.hseResponsiblePerson}`)
+  }
+  if (normalized.hseTargetDate) {
+    lines.push(`Target Date: ${normalized.hseTargetDate}`)
+  }
+  if (normalized.hseRemarks) {
+    lines.push(`General HSE Remarks: ${normalized.hseRemarks}`)
+  }
+
+  return lines.join('\n')
 }

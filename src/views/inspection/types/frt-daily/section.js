@@ -18,6 +18,13 @@ export const FrtDailyEditSection = ({
     onUpdateCheck={handlers.onUpdateCheck}
     onMarkRowOk={handlers.onMarkRowOk}
     onMarkAllOk={handlers.onMarkAllOk}
+    onRequestIssuePhotoUpload={handlers.onRequestFrtIssuePhotoUpload}
+    onRemovePhoto={handlers.onRemovePhoto}
+    onChangePhotoDescription={handlers.onChangePhotoDescription}
+    onApplyPhotoCaption={handlers.onApplyPhotoCaption}
+    selectedTruckOption={handlers.selectedTruckOption}
+    onEditTruck={handlers.onEditTruck}
+    onDeleteTruck={handlers.onDeleteTruck}
     fieldErrors={fieldErrors}
   />
 )

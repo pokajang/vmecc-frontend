@@ -456,6 +456,21 @@ vi.mock('../inspectionFormHelpers', () => {
   return {
     defaultInspectionForm,
     normalizeInspectionForm,
+    applySessionInspector: (form = {}, user = {}) => {
+      const normalizedForm = normalizeInspectionForm(form)
+      return {
+        ...normalizedForm,
+        inspectionActor: {
+          userId: user?.id || normalizedForm.inspectionActor?.userId || null,
+          name: user?.name || normalizedForm.inspectionActor?.name || '',
+          email: user?.email || normalizedForm.inspectionActor?.email || '',
+          role: user?.role || normalizedForm.inspectionActor?.role || '',
+          roleCode: user?.roleCode || normalizedForm.inspectionActor?.roleCode || '',
+        },
+        submittedByRole: user?.role || normalizedForm.submittedByRole || '',
+        submittedByRoleCode: user?.roleCode || normalizedForm.submittedByRoleCode || '',
+      }
+    },
     createInspectionFormSignature: (form) => JSON.stringify(normalizeInspectionForm(form)),
     buildInspectionDraftPayload: ({ form, mode, editReportId }) => ({
       ...normalizeInspectionForm(form),

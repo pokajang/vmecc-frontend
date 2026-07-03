@@ -14,18 +14,19 @@ export const ErAuxEditSection = ({
     mainLocationLabel={mainLocationLabel}
     checks={form.erAuxChecks}
     summary={summary}
-    inspectedBy={form.erAuxInspectedBy}
-    inspectionDate={form.erAuxInspectionDate}
     onUpdateCheck={handlers.onUpdateCheck}
-    onUpdateSessionMeta={handlers.onUpdateSessionMeta}
     onMarkEquipmentOk={handlers.onMarkEquipmentOk}
     onMarkAllOk={handlers.onMarkAllOk}
+    onRequestPhotoUpload={handlers.onRequestPhotoUpload}
+    onRequestDefectPhotoUpload={handlers.onRequestDefectPhotoUpload}
+    onRemovePhoto={handlers.onRemovePhoto}
+    onChangePhotoDescription={handlers.onChangePhotoDescription}
+    onApplyPhotoCaption={handlers.onApplyPhotoCaption}
     onAddEquipment={handlers.onAddEquipment}
     onEditEquipment={handlers.onEditEquipment}
     onDeleteEquipment={handlers.onDeleteEquipment}
     fieldError={fieldErrors.erAuxChecks}
     remarksError={fieldErrors.erAuxRemarks}
-    sessionError={fieldErrors.erAuxSession}
   />
 )
 
@@ -37,8 +38,6 @@ export const ErAuxReadOnlySection = ({ mainLocation, mainLocationLabel, form, su
       mainLocationLabel={mainLocationLabel}
       checks={form.erAuxChecks}
       summary={summary}
-      inspectedBy={form.erAuxInspectedBy}
-      inspectionDate={form.erAuxInspectionDate}
     />
   </div>
 )

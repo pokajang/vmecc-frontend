@@ -5,6 +5,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 
 import OnboardingTourPrompt from '../OnboardingTourPrompt'
 import OnboardingTourTooltip from '../OnboardingTourTooltip'
+import { Joyride } from './joyrideTestMock'
 
 afterEach(() => cleanup())
 
@@ -147,5 +148,29 @@ describe('Onboarding tour primitives', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Continue to application' }))
     expect(onPrimaryAction).toHaveBeenCalledTimes(1)
     expect(onNext).toHaveBeenCalledTimes(0)
+  })
+
+  it('advances and reverses tooltip steps through the shared Joyride mock', async () => {
+    render(
+      <Joyride
+        run
+        steps={[
+          { title: 'Workspace', content: 'Start here.' },
+          { title: 'Records', content: 'Review rows here.' },
+        ]}
+        tooltipComponent={(props) => <OnboardingTourTooltip {...props} locale="en" />}
+      />,
+    )
+
+    expect(screen.getByRole('dialog', { name: 'Workspace' })).toBeTruthy()
+    expect(screen.getByText('Step 1 of 2')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }))
+    expect(await screen.findByRole('dialog', { name: 'Records' })).toBeTruthy()
+    expect(screen.getByText('Step 2 of 2')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }))
+    expect(await screen.findByRole('dialog', { name: 'Workspace' })).toBeTruthy()
+    expect(screen.getByText('Step 1 of 2')).toBeTruthy()
   })
 })

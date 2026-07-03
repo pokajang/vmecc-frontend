@@ -92,23 +92,20 @@ const RowActions = ({
                       ...(item.style || {}),
                       ...(disabled ? { color: 'var(--cui-secondary-color)' } : {}),
                     }}
-                    disabled={disabled}
                     onClick={(event) => {
                       stopActionEvent(event)
                       if (disabled) {
                         return
                       }
                       setVisible(false)
-                      window.setTimeout(() => {
-                        try {
-                          item.onClick?.()
-                        } catch (err) {
-                          console.error(
-                            `RowActions: onClick failed for "${item.key || item.label}"`,
-                            err,
-                          )
-                        }
-                      }, 0)
+                      try {
+                        item.onClick?.()
+                      } catch (err) {
+                        console.error(
+                          `RowActions: onClick failed for "${item.key || item.label}"`,
+                          err,
+                        )
+                      }
                     }}
                     onMouseDown={stopBubblingEvent}
                     onMouseUp={stopBubblingEvent}

@@ -105,13 +105,18 @@ export const buildInspectionContinuationPrompt = ({
   }
 }
 
-export const buildInspectionContinuationForm = ({ inspectionType, mainLocation } = {}) => ({
+export const buildInspectionContinuationForm = ({
+  inspectionType,
+  mainLocation,
+  inspectedAt,
+} = {}) => ({
   selectedLocation: String(mainLocation || '').trim(),
   mainLocation: String(mainLocation || '').trim(),
   subLocation: '',
   mainLocationId: '',
   subLocationId: '',
   inspectionType: String(inspectionType || '').trim(),
+  inspectedAt: String(inspectedAt || '').trim(),
   description: '',
   photos: [],
   checklist: [],
