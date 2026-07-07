@@ -1,5 +1,5 @@
 import React from 'react'
-import { ScbaInspectionChecks } from 'src/views/inspection/components/InspectionFormDisplaySections'
+import { ScbaInspectionChecks } from 'src/views/inspection/form/components/InspectionFormDisplaySections'
 
 export const ScbaEditSection = ({
   mainLocation,
@@ -7,6 +7,7 @@ export const ScbaEditSection = ({
   form,
   summary,
   fieldErrors = {},
+  isLoadingRows = false,
   handlers = {},
 }) => (
   <ScbaInspectionChecks
@@ -15,6 +16,8 @@ export const ScbaEditSection = ({
     form={form}
     summary={summary}
     onUpdateGroupedCheck={handlers.onUpdateGroupedCheck}
+    onSaveGroupedRowDraft={handlers.onSaveGroupedRowDraft}
+    onResetGroupedCheck={handlers.onResetGroupedCheck}
     onMarkRowOk={handlers.onMarkRowOk}
     onMarkAllOk={handlers.onMarkAllOk}
     onAddSection={handlers.onAddScbaSection}
@@ -34,6 +37,7 @@ export const ScbaEditSection = ({
     onApplyPhotoCaption={handlers.onApplyPhotoCaption}
     fieldError={fieldErrors.scbaChecks}
     remarksError={fieldErrors.scbaRemarks}
+    isLoadingRows={isLoadingRows}
   />
 )
 

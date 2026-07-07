@@ -277,7 +277,7 @@ const StaffDetails = () => {
   }
 
   return (
-    <CContainer fluid data-tour-id="staff-directory-module">
+    <CContainer fluid data-testid="staff-directory-module">
       <ModulePageHeader
         title="Staff Directory"
         subtitle="Review staff profiles, employment status, roles, teams, and contact details."
@@ -285,7 +285,7 @@ const StaffDetails = () => {
       />
       <CRow>
         <CCol>
-          <CCard className="mb-4" data-tour-id="staff-directory-records">
+          <CCard className="mb-4" data-testid="staff-directory-records">
             <CCardHeader className="d-flex align-items-center gap-2">
               <span>Staff Records</span>
               {refreshing && <Loader size={14} className="icon-spin" />}
@@ -296,7 +296,7 @@ const StaffDetails = () => {
 
               {!error && (
                 <>
-                  <div data-tour-id="staff-directory-filters">
+                  <div data-testid="staff-directory-filters">
                     <TableFilters
                       searchValue={search}
                       onSearchChange={setSearch}
@@ -336,7 +336,7 @@ const StaffDetails = () => {
                       showDesktopLabels
                     />
                   </div>
-                  <div data-tour-id="staff-directory-list">
+                  <div data-testid="staff-directory-list">
                     <ResponsiveRecordCollection
                       isLoading={loading}
                       isEmpty={visibleRows.length === 0}

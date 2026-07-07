@@ -281,7 +281,7 @@ const ClaimListTable = ({
         actions: (
           <RowActions
             items={getClaimActionItems(claim)}
-            tourId={
+            testId={
               claim?.isDraft && firstDraftClaimId === String(claim.id || '').trim()
                 ? 'payroll-claim-draft-resume-action'
                 : ''
@@ -392,7 +392,7 @@ const ClaimListTable = ({
                   >
                     <RowActions
                       items={getClaimActionItems(claim)}
-                      tourId={
+                      testId={
                         isDraft && firstDraftClaimId === String(claim.id || '').trim()
                           ? 'payroll-claim-draft-resume-action'
                           : ''

@@ -59,7 +59,7 @@ export const getLeaveTypeOption = (value) =>
 
 const LeaveTypeSelection = ({ selectedType, onSelect, onContinue, onBack = () => {} }) => {
   return (
-    <div className="d-grid gap-4" data-tour-id="leave-type-selection">
+    <div className="d-grid gap-4" data-testid="leave-type-selection">
       <div className="fw-semibold">Choose Leave Type</div>
       <IconOptionGrid
         options={LEAVE_TYPE_OPTIONS}
@@ -78,7 +78,7 @@ const LeaveTypeSelection = ({ selectedType, onSelect, onContinue, onBack = () =>
         </CButton>
         <CButton
           color="primary"
-          data-tour-id="leave-type-continue"
+          data-testid="leave-type-continue"
           disabled={!selectedType}
           onClick={() => onContinue(selectedType)}
         >

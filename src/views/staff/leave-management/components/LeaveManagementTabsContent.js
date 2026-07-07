@@ -88,7 +88,7 @@ const LeaveManagementTabsContent = ({
   isHolidaysLoading,
 }) => (
   <>
-    <div data-tour-id="leave-management-nav">
+    <div data-testid="leave-management-nav">
       <RouteNavTabs
         currentPath={resolvedManagementTab}
         navigate={(tab) => switchManagementTab(tab)}

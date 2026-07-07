@@ -1,5 +1,5 @@
 import React from 'react'
-import { ErAuxEquipmentChecks } from 'src/views/inspection/components/InspectionFormDisplaySections'
+import { ErAuxEquipmentChecks } from 'src/views/inspection/form/components/InspectionFormDisplaySections'
 
 export const ErAuxEditSection = ({
   mainLocation,
@@ -7,6 +7,7 @@ export const ErAuxEditSection = ({
   form,
   summary,
   fieldErrors = {},
+  isLoadingRows = false,
   handlers = {},
 }) => (
   <ErAuxEquipmentChecks
@@ -15,6 +16,8 @@ export const ErAuxEditSection = ({
     checks={form.erAuxChecks}
     summary={summary}
     onUpdateCheck={handlers.onUpdateCheck}
+    onSaveRowDraft={handlers.onSaveRowDraft}
+    onResetCheck={handlers.onResetCheck}
     onMarkEquipmentOk={handlers.onMarkEquipmentOk}
     onMarkAllOk={handlers.onMarkAllOk}
     onRequestPhotoUpload={handlers.onRequestPhotoUpload}
@@ -27,6 +30,7 @@ export const ErAuxEditSection = ({
     onDeleteEquipment={handlers.onDeleteEquipment}
     fieldError={fieldErrors.erAuxChecks}
     remarksError={fieldErrors.erAuxRemarks}
+    isLoadingRows={isLoadingRows}
   />
 )
 

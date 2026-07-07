@@ -19,15 +19,15 @@ const StaffMessageModal = ({
   onClose,
   onSend,
   sending = false,
-  tourId,
-  composerTourId,
+  testId,
+  composerTestId,
 }) => (
   <CModal visible={visible} onClose={sending ? undefined : onClose} alignment="center">
     <CModalHeader>
       <CModalTitle>{`Send Message${recipientName ? ` to ${recipientName}` : ''}`}</CModalTitle>
     </CModalHeader>
-    <CModalBody data-tour-id={visible ? tourId : undefined}>
-      <div className="mb-2" data-tour-id={visible ? composerTourId : undefined}>
+    <CModalBody data-testid={visible ? testId : undefined}>
+      <div className="mb-2" data-testid={visible ? composerTestId : undefined}>
         <CFormLabel htmlFor="staff-message-body">Message</CFormLabel>
         <CFormTextarea
           id="staff-message-body"

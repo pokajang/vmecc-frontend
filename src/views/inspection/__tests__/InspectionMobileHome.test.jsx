@@ -2,7 +2,7 @@
 import React from 'react'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import InspectionMobileHome from '../module/InspectionMobileHome'
+import InspectionMobileHome from '../app/InspectionMobileHome'
 
 afterEach(() => {
   cleanup()
@@ -54,6 +54,26 @@ const recentRows = [
 ]
 
 describe('InspectionMobileHome', () => {
+  it('uses constrained mobile-home layout hooks for type and records controls', () => {
+    const { container } = render(
+      <InspectionMobileHome
+        {...baseProps}
+        typeOptions={[
+          {
+            value: 'Emergency Response Auxiliary Equipment',
+            title: 'Emergency Response Auxiliary Equipment',
+          },
+        ]}
+        recordsCount={12}
+      />,
+    )
+
+    expect(container.querySelector('.inspection-mobile-home')).toBeTruthy()
+    expect(container.querySelector('.inspection-mobile-home__type-grid')).toBeTruthy()
+    expect(container.querySelector('.inspection-mobile-home__records-toolbar')).toBeTruthy()
+    expect(container.querySelector('.inspection-view-all-btn')).toBeTruthy()
+  })
+
   it('renders recent records as a grouped mobile list and opens selected rows', () => {
     const onOpenRecord = vi.fn()
     const onViewRecords = vi.fn()
@@ -88,5 +108,39 @@ describe('InspectionMobileHome', () => {
 
     rerender(<InspectionMobileHome {...baseProps} />)
     expect(screen.getByText('No records yet.')).toBeTruthy()
+  })
+
+  it('surfaces fire extinguisher draft progress and pending sync state', () => {
+    const onContinueDraft = vi.fn()
+    const onDeleteDraft = vi.fn()
+
+    render(
+      <InspectionMobileHome
+        {...baseProps}
+        onContinueDraft={onContinueDraft}
+        onDeleteDraft={onDeleteDraft}
+        draftRow={{
+          id: 'draft-inspection-new',
+          incidentType: 'Fire Extinguisher Inspection',
+          location: 'Reception',
+          savedAt: '2026-07-05T13:52:00.000Z',
+          draftProgressSummary: '19/20 checked',
+          draftDefectSummary: '2 defects',
+          syncStatus: 'failed',
+        }}
+      />,
+    )
+
+    expect(
+      screen.getByText('Fire Extinguisher - Reception - 19/20 checked - 2 defects'),
+    ).toBeTruthy()
+    expect(screen.getByText('Sync pending')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continue inspection draft' }))
+    expect(onContinueDraft).toHaveBeenCalledTimes(1)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete draft' }))
+    expect(onDeleteDraft).toHaveBeenCalledTimes(1)
+    expect(onContinueDraft).toHaveBeenCalledTimes(1)
   })
 })

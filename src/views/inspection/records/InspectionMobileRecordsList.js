@@ -27,13 +27,25 @@ const InspectionMobileRecordsList = ({
     ]
       .filter(Boolean)
       .join(' - ')
+    const isDraft = row?.recordKind === 'draft'
+    const mobileDate = formatMobileInspectionRecordDate(row)
+    const canInlineDraftLabel = isDraft && mobileDate !== 'Draft'
+    const compactStatus = renderCompactInspectionStatus(row)
+    const mobileTitle = canInlineDraftLabel ? (
+      <div className="d-inline-flex align-items-center gap-1">
+        <span>{mobileDate}</span>
+        {compactStatus}
+      </div>
+    ) : (
+      mobileDate
+    )
 
     return {
       key: row.recordKey || row.id,
       layout: 'compact',
-      title: formatMobileInspectionRecordDate(row),
+      title: mobileTitle,
       subtitle: mobileSubtitle,
-      status: renderCompactInspectionStatus(row),
+      status: isDraft ? null : compactStatus,
       ariaLabel: `Open inspection record ${displayId} summary`,
       onOpen: () =>
         row.recordKind === 'queued'
@@ -46,7 +58,11 @@ const InspectionMobileRecordsList = ({
           <ButtonLoader label="Generating..." size={13} />
         </span>
       ) : (
-        <RowActions hitArea={44} items={buildActions(row)} />
+        <RowActions
+          hitArea={44}
+          items={buildActions(row)}
+          toggleClassName="inspection-mobile-kebab"
+        />
       ),
     }
   })

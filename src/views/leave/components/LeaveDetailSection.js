@@ -104,7 +104,7 @@ const LeaveDetailSection = ({
             <CButton
               color="primary"
               variant="outline"
-              data-tour-id="leave-edit-action"
+              data-testid="leave-edit-action"
               disabled={!canEdit}
               onClick={() => onEdit?.(selectedRecord)}
             >
@@ -113,7 +113,7 @@ const LeaveDetailSection = ({
             <CButton
               color="warning"
               variant="outline"
-              data-tour-id="leave-cancel-action"
+              data-testid="leave-cancel-action"
               disabled={!canCancel}
               onClick={() => onCancel?.(selectedRecord)}
             >
@@ -122,7 +122,7 @@ const LeaveDetailSection = ({
             <CButton
               color="danger"
               variant="outline"
-              data-tour-id="leave-delete-action"
+              data-testid="leave-delete-action"
               disabled={!canDelete}
               onClick={() => onDelete?.(selectedRecord)}
             >

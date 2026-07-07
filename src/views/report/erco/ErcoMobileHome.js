@@ -2,11 +2,11 @@ import React, { useMemo, useState } from 'react'
 import { CButton } from '@coreui/react'
 import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
-import ButtonLoader from 'src/components/ButtonLoader'
 import CreateActionButton from 'src/components/CreateActionButton'
 import IconOptionGrid from 'src/components/IconOptionGrid'
 import MobileRecordList from 'src/components/MobileRecordList'
 import RecordScopeSegmentedControl from 'src/components/report-workflow/RecordScopeSegmentedControl'
+import TableLoader from 'src/components/TableLoader'
 import TypeManagerModal from 'src/components/report-workflow/TypeManagerModal'
 import { formatMobileReportDate } from '../reportUiUtils'
 import { recordTypeUsage } from './typeUsageStorage'
@@ -23,6 +23,8 @@ const TOGGLE_CARD_PROPS = {
   titleClassName: 'fw-semibold text-primary',
   descriptionClassName: 'mb-0 mt-1 text-body-secondary',
 }
+
+const MOBILE_HOME_RECENT_RECORD_LIMIT = 3
 
 const ErcoMobileHome = ({
   user,
@@ -53,41 +55,22 @@ const ErcoMobileHome = ({
       option?.value === INCIDENT_TYPE_TOGGLE_VALUE ? { ...option, icon: toggleIcon } : option,
     )
   }, [incident.showAllIncidentTypes, incident.visibleTypeOptions])
-  const draftRecordItems = draftRows.map((draft) => ({
-    key: draft.recordKey || draft.id,
-    layout: 'compact',
-    title: 'Continue Draft',
-    subtitle: `${draft.incidentType || 'ERCO'} - ${draft.location || 'No location'}`,
-    status: (
-      <div className="small text-body-secondary text-nowrap">
-        {formatMobileReportDate(draft, 'Saved')}
-      </div>
-    ),
-    ariaLabel: `Continue ERCO draft ${draft.recordKey || draft.id || ''}`.trim(),
-    onOpen: () => onContinueDraft?.(draft),
-    actions: (
-      <CButton
-        type="button"
-        color="link"
-        size="sm"
-        className="inspection-draft-delete-btn p-1 text-danger shadow-none border-0"
-        aria-label="Delete draft"
-        onClick={() => onDeleteDraft?.(draft)}
-      >
-        <Trash2 size={15} />
-      </CButton>
-    ),
-  }))
-  const recentRecordItems = recentRecords.map((row) => ({
+  const draftRow = draftRows[0] || null
+  const draftSummary = draftRow
+    ? [draftRow.incidentType || 'ERCO', draftRow.location || 'No location']
+        .filter(Boolean)
+        .join(' - ')
+    : ''
+  const recentRecordItems = recentRecords.slice(0, MOBILE_HOME_RECENT_RECORD_LIMIT).map((row) => ({
     key: row.recordKey || row.id,
     layout: 'compact',
     title: row.incidentType || 'Record',
     subtitle: row.location || 'No location',
     status: (
-      <div className="text-end">
+      <>
         <div className="small fw-semibold text-nowrap">{row.status || '--'}</div>
         <div className="small text-body-secondary text-nowrap">{formatMobileReportDate(row)}</div>
-      </div>
+      </>
     ),
     ariaLabel: `Open ERCO record ${row.incidentType || 'Record'} ${
       row.location || 'No location'
@@ -96,10 +79,13 @@ const ErcoMobileHome = ({
   }))
 
   return (
-    <div className="d-md-none d-grid gap-3 mb-3" data-tour-id="erco-report-mobile-home">
+    <div
+      className="inspection-mobile-home d-md-none d-grid gap-3 mb-3"
+      data-testid="erco-report-mobile-home"
+    >
       <ActionConfirmModal
         visible={Boolean(deleteTypeTarget)}
-        tourId="erco-report-type-manager-delete-modal"
+        testId="erco-report-type-manager-delete-modal"
         title="Delete Type"
         message={
           deleteTypeTarget?.label
@@ -117,7 +103,7 @@ const ErcoMobileHome = ({
 
       <TypeManagerModal
         visible={incident.showAddTypeModal}
-        tourId="erco-report-type-manager-modal"
+        testId="erco-report-type-manager-modal"
         onClose={incident.closeAddModal}
         editMode={incident.incidentEditMode}
         onSetEditMode={incident.setIncidentEditMode}
@@ -150,10 +136,17 @@ const ErcoMobileHome = ({
         showIconPicker
       />
 
-      <div className="d-grid gap-3 mb-2" data-tour-id="erco-report-mobile-type-selection">
-        <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
-          <div className="fw-semibold text-muted">Choose Emergency / Incident Type</div>
-          <CreateActionButton label="Add type" onClick={incident.openAddModal} />
+      <div
+        className="inspection-mobile-home__section d-grid gap-3 mb-2"
+        data-testid="erco-report-mobile-type-selection"
+      >
+        <div className="inspection-mobile-home__section-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div className="fw-semibold text-muted">Choose Type</div>
+          <CreateActionButton
+            label="Add type"
+            className="inspection-compact-action-btn"
+            onClick={incident.openAddModal}
+          />
         </div>
         <IconOptionGrid
           options={typeOptions}
@@ -170,29 +163,78 @@ const ErcoMobileHome = ({
           }}
           variant="compact"
           showDescription={false}
-          columns={{ xs: 6 }}
+          columns={{ xs: 12 }}
+          rowClassName="inspection-mobile-home__type-grid g-2 mx-0"
           cardProps={(option) =>
             option?.value === INCIDENT_TYPE_TOGGLE_VALUE ? TOGGLE_CARD_PROPS : {}
           }
         />
       </div>
 
-      {draftRows.length > 0 ? (
-        <MobileRecordList
-          sections={[{ key: 'erco-drafts', items: draftRecordItems }]}
-          variant="list-group"
-        />
+      {draftRow ? (
+        <div className="inspection-mobile-home__draft-list list-group list-group-flush overflow-hidden border rounded-3">
+          <article
+            className="inspection-draft-card list-group-item p-3 bg-white cursor-pointer"
+            role="button"
+            tabIndex={0}
+            aria-label="Continue ERCO draft"
+            onClick={() => onContinueDraft?.(draftRow)}
+            onKeyDown={(event) => {
+              if (event.key !== 'Enter' && event.key !== ' ') return
+              event.preventDefault()
+              onContinueDraft?.(draftRow)
+            }}
+          >
+            <div className="inspection-draft-card__grid">
+              <div className="inspection-draft-card__main">
+                <div className="inspection-draft-card__summary small text-body-secondary">
+                  <span className="fw-semibold text-body">Continue Draft</span>
+                  {draftSummary ? (
+                    <span className="inspection-draft-card__summary-detail"> {draftSummary}</span>
+                  ) : null}
+                </div>
+                <div className="inspection-draft-card__date small text-body-secondary">
+                  {formatMobileReportDate(draftRow, 'Saved')}
+                </div>
+              </div>
+              <div
+                className="inspection-draft-card__meta"
+                onClick={(event) => event.stopPropagation()}
+                onMouseDown={(event) => event.stopPropagation()}
+                onKeyDown={(event) => event.stopPropagation()}
+              >
+                <CButton
+                  type="button"
+                  color="link"
+                  size="sm"
+                  className="inspection-draft-delete-btn p-1 text-danger shadow-none border-0"
+                  aria-label="Delete draft"
+                  onClick={() => onDeleteDraft?.(draftRow)}
+                >
+                  <Trash2 size={15} />
+                </CButton>
+              </div>
+            </div>
+          </article>
+        </div>
       ) : null}
 
-      <div className="d-grid gap-2 mb-1">
+      <div
+        className="inspection-mobile-home__section d-grid gap-2 mb-1"
+        data-testid="erco-report-mobile-records"
+      >
         <div className="fw-semibold text-muted">Recent Records</div>
-        <div className="d-flex align-items-center justify-content-between gap-2">
-          <RecordScopeSegmentedControl value={recordScope} onChange={onRecordScopeChange} />
+        <div className="inspection-mobile-home__records-toolbar d-flex align-items-center justify-content-between gap-2">
+          <RecordScopeSegmentedControl
+            value={recordScope}
+            onChange={onRecordScopeChange}
+            data-testid="erco-report-scope"
+          />
           <CButton
             color="secondary"
             variant="outline"
             size="sm"
-            className="inspection-view-all-btn d-inline-flex align-items-center"
+            className="inspection-view-all-btn inspection-compact-action-btn d-inline-flex align-items-center"
             disabled={isRecordsLoading}
             onClick={onViewRecords}
           >
@@ -204,12 +246,13 @@ const ErcoMobileHome = ({
 
       {isRecordsLoading ? (
         <div className="border rounded-3 bg-white">
-          <ButtonLoader label="Loading records..." />
+          <TableLoader message="Loading records..." minHeight={112} />
         </div>
       ) : recentRecords.length > 0 ? (
         <MobileRecordList
-          sections={[{ key: 'recent-erco-records', items: recentRecordItems }]}
-          variant="list-group"
+          sections={[
+            { key: 'recent-erco-records', variant: 'list-group', items: recentRecordItems },
+          ]}
         />
       ) : (
         <div className="border rounded-3 bg-white p-3 text-body-secondary">No records yet.</div>

@@ -1,0 +1,338 @@
+import React, { useState } from 'react'
+import { CButton, CFormInput, CModal, CModalBody, CModalHeader, CModalTitle } from '@coreui/react'
+import { Trash2 } from 'lucide-react'
+import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
+import { PhotoPreview } from 'src/components/report-workflow/ReportViewComponents'
+import useMediaQuery from 'src/hooks/useMediaQuery'
+import { dedupePhotos } from 'src/views/inspection/inspectionSharedUtils'
+import {
+  appendInspectionText,
+  INSPECTION_PHOTO_CAPTION_CHIPS,
+} from 'src/views/inspection/inspectionFormHelpers'
+
+export const FormFieldError = ({ children }) =>
+  children ? <div className="inspection-field-error text-danger small mt-2">{children}</div> : null
+
+export const ChipButton = ({ children, onClick, className = '' }) => (
+  <button
+    type="button"
+    className={`inspection-helper-chip btn btn-sm btn-light border ${className}`.trim()}
+    onClick={onClick}
+  >
+    {children}
+  </button>
+)
+
+export const ChipRow = ({ children, className = '' }) => (
+  <div className={`inspection-helper-chip-row d-flex flex-wrap gap-2 ${className}`.trim()}>
+    {children}
+  </div>
+)
+
+export const PhotoGallery = ({
+  photos,
+  onRemove,
+  onChangeDescription,
+  onApplyCaption,
+  emptyMessage = 'No photos yet. Upload photos to continue.',
+  readOnly = false,
+  showDescriptionInput = true,
+}) => {
+  const visiblePhotos = dedupePhotos(photos)
+  if (!visiblePhotos.length) {
+    const message = String(emptyMessage || '').trim()
+    return message ? <div className="text-body-secondary">{message}</div> : null
+  }
+
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+        gap: '0.75rem',
+      }}
+    >
+      {visiblePhotos.map((photo, index) => (
+        <div
+          key={photo.id || `${photo.fileName || 'photo'}-${index}`}
+          className="rounded-3 border border-light-subtle p-2 d-grid gap-2"
+        >
+          <PhotoPreview photo={photo} />
+          <div className="small text-truncate">{photo.fileName || 'Photo'}</div>
+          {readOnly ? (
+            String(photo?.description || '').trim() ? (
+              <div className="small text-body-secondary" style={{ whiteSpace: 'pre-wrap' }}>
+                {photo.description}
+              </div>
+            ) : null
+          ) : (
+            <>
+              {showDescriptionInput ? (
+                <div className="d-grid gap-2">
+                  <CFormInput
+                    size="sm"
+                    value={String(photo?.description || '')}
+                    placeholder="Describe this photo"
+                    onChange={(event) => onChangeDescription?.(photo.id, event.target.value)}
+                  />
+                  {onApplyCaption ? (
+                    <ChipRow className="inspection-photo-caption-chips">
+                      {INSPECTION_PHOTO_CAPTION_CHIPS.map((caption) => (
+                        <ChipButton key={caption} onClick={() => onApplyCaption(photo.id, caption)}>
+                          {caption}
+                        </ChipButton>
+                      ))}
+                    </ChipRow>
+                  ) : null}
+                </div>
+              ) : null}
+              {onRemove ? (
+                <CButton
+                  type="button"
+                  color="danger"
+                  variant="outline"
+                  size="sm"
+                  className="d-inline-flex align-items-center justify-content-center gap-1"
+                  onClick={() => onRemove(photo.id)}
+                >
+                  <Trash2 size={14} />
+                  Remove
+                </CButton>
+              ) : null}
+            </>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export const InspectionPhotoEvidenceSummary = ({
+  photos,
+  onView,
+  readOnly = false,
+  label = 'View photos',
+}) => {
+  const visiblePhotos = dedupePhotos(photos)
+  if (!visiblePhotos.length) return null
+
+  return (
+    <div className="rounded-3 border bg-light-subtle p-2 d-flex flex-wrap align-items-center justify-content-between gap-2">
+      <div className="small text-body-secondary">
+        {visiblePhotos.length} photo{visiblePhotos.length === 1 ? '' : 's'} added
+      </div>
+      <CButton
+        type="button"
+        color="secondary"
+        variant="outline"
+        size="sm"
+        className="inspection-compact-action-btn"
+        onClick={onView}
+        disabled={!onView}
+      >
+        {readOnly ? 'View photos' : label}
+      </CButton>
+    </div>
+  )
+}
+
+const InspectionPhotoViewerModalContent = ({ viewer, onClose }) => {
+  const [visiblePhotos, setVisiblePhotos] = useState(() => dedupePhotos(viewer?.photos))
+  const useMobileDrawer = useMediaQuery('(max-width: 575.98px)')
+
+  const removePhoto = (photoId) => {
+    viewer?.onRemove?.(photoId)
+    setVisiblePhotos((currentPhotos) =>
+      currentPhotos.filter((photo) => String(photo.id || '') !== String(photoId || '')),
+    )
+  }
+
+  const updatePhotoDescription = (photoId, description) => {
+    viewer?.onChangeDescription?.(photoId, description)
+    setVisiblePhotos((currentPhotos) =>
+      currentPhotos.map((photo) =>
+        String(photo.id || '') === String(photoId || '') ? { ...photo, description } : photo,
+      ),
+    )
+  }
+
+  const applyPhotoCaption = (photoId, caption) => {
+    viewer?.onApplyCaption?.(photoId, caption)
+    setVisiblePhotos((currentPhotos) =>
+      currentPhotos.map((photo) =>
+        String(photo.id || '') === String(photoId || '')
+          ? { ...photo, description: appendInspectionText(photo.description, caption) }
+          : photo,
+      ),
+    )
+  }
+
+  const body = (
+    <>
+      <div className="small text-body-secondary">
+        {visiblePhotos.length} photo{visiblePhotos.length === 1 ? '' : 's'}
+      </div>
+      <PhotoGallery
+        photos={visiblePhotos}
+        readOnly={viewer?.readOnly === true}
+        showDescriptionInput={viewer?.showDescriptionInput !== false}
+        onRemove={viewer?.onRemove ? removePhoto : undefined}
+        onChangeDescription={viewer?.onChangeDescription ? updatePhotoDescription : undefined}
+        onApplyCaption={viewer?.onApplyCaption ? applyPhotoCaption : undefined}
+        emptyMessage="No photos added."
+      />
+    </>
+  )
+
+  if (useMobileDrawer) {
+    return (
+      <MobileBottomDrawer
+        visible
+        title={viewer?.title || 'Photos'}
+        bodyClassName="inspection-equipment-detail-drawer-shell"
+        onClose={onClose}
+      >
+        <div className="inspection-mobile-detail-drawer-body inspection-equipment-detail-drawer-body d-grid">
+          {body}
+        </div>
+      </MobileBottomDrawer>
+    )
+  }
+
+  return (
+    <CModal visible onClose={onClose} size="lg" scrollable>
+      <CModalHeader onClose={onClose}>
+        <CModalTitle>{viewer?.title || 'Photos'}</CModalTitle>
+      </CModalHeader>
+      <CModalBody className="d-grid gap-3">{body}</CModalBody>
+    </CModal>
+  )
+}
+
+export const InspectionPhotoViewerModal = ({ viewer, onClose }) => {
+  if (!viewer) return null
+  const viewerKey = dedupePhotos(viewer?.photos)
+    .map((photo) => String(photo?.id || photo?.url || photo?.fileName || ''))
+    .join('|')
+
+  return (
+    <InspectionPhotoViewerModalContent
+      key={`${viewer?.title || 'photos'}:${viewerKey}`}
+      viewer={viewer}
+      onClose={onClose}
+    />
+  )
+}
+
+export const EvidenceBlock = ({
+  title,
+  remarks = '',
+  photos = [],
+  readOnly = false,
+  children = null,
+  onViewPhotos,
+}) => {
+  const visiblePhotos = dedupePhotos(photos)
+  const hasRemarks = String(remarks || '').trim() !== ''
+  if (readOnly && !hasRemarks && visiblePhotos.length === 0 && !children) return null
+
+  return (
+    <div className="inspection-hydraulic-defect-evidence rounded-3 border bg-light-subtle p-2 d-grid gap-2">
+      {title ? <div className="small fw-semibold text-body-secondary">{title}</div> : null}
+      {hasRemarks ? (
+        <div className="small" style={{ whiteSpace: 'pre-wrap' }}>
+          {remarks}
+        </div>
+      ) : null}
+      {children}
+      {visiblePhotos.length > 0 ? (
+        <InspectionPhotoEvidenceSummary
+          photos={visiblePhotos}
+          readOnly={readOnly}
+          onView={onViewPhotos}
+        />
+      ) : null}
+    </div>
+  )
+}
+
+const normalizeSearchText = (value) =>
+  String(value || '')
+    .trim()
+    .toLowerCase()
+
+export const isCompactInspectionViewport = () =>
+  typeof window !== 'undefined' &&
+  typeof window.matchMedia === 'function' &&
+  window.matchMedia('(max-width: 575.98px)').matches
+
+export const rowContainsSearch = (row = {}, fields = [], search = '') => {
+  const query = normalizeSearchText(search)
+  if (!query) return true
+  const haystack = fields.map((field) => row?.[field]).join(' ')
+  return normalizeSearchText(haystack).includes(query)
+}
+
+export const ManagedCheckToolbar = ({
+  search,
+  onSearch,
+  searchPlaceholder,
+  onNextIncomplete,
+  onExpandAll,
+  onCollapseAll,
+  resultCount,
+  totalCount,
+  readOnly = false,
+}) => {
+  if (readOnly) return null
+
+  return (
+    <div className="inspection-check-toolbar">
+      <CFormInput
+        size="sm"
+        className="inspection-search-input"
+        value={search}
+        placeholder={searchPlaceholder}
+        aria-label={searchPlaceholder}
+        onChange={(event) => onSearch?.(event.target.value)}
+      />
+      <div className="inspection-check-toolbar__actions">
+        <CButton
+          type="button"
+          color="secondary"
+          variant="outline"
+          size="sm"
+          className="inspection-compact-action-btn"
+          onClick={onNextIncomplete}
+        >
+          Next incomplete
+        </CButton>
+        <CButton
+          type="button"
+          color="secondary"
+          variant="outline"
+          size="sm"
+          className="inspection-compact-action-btn"
+          onClick={onExpandAll}
+        >
+          Expand all
+        </CButton>
+        <CButton
+          type="button"
+          color="secondary"
+          variant="outline"
+          size="sm"
+          className="inspection-compact-action-btn"
+          onClick={onCollapseAll}
+        >
+          Collapse all
+        </CButton>
+      </div>
+      {search ? (
+        <div className="small text-body-secondary">
+          Showing {resultCount} of {totalCount}
+        </div>
+      ) : null}
+    </div>
+  )
+}

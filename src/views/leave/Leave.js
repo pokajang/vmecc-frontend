@@ -355,13 +355,13 @@ const Leave = () => {
   }
 
   return (
-    <CContainer fluid data-tour-id="leave-module">
+    <CContainer fluid data-testid="leave-module">
       <ModulePageHeader
         title="Leave"
         subtitle="Track leave balances, review requests, and submit new leave applications."
         actions={
           activeSection === 'new-leave' ? null : (
-            <div data-tour-id="leave-new-action">
+            <div data-testid="leave-new-action">
               <CreateActionButton
                 label="Apply Leave"
                 importance="primary"
@@ -385,7 +385,7 @@ const Leave = () => {
         onConfirm={confirmDiscardAndContinue}
       />
       <LeaveCancelConfirmModal
-        tourId="leave-cancel-modal"
+        testId="leave-cancel-modal"
         visible={isCancelConfirmVisible}
         record={cancelPreviewRecord}
         statusLabel={getWorkflowStatusLabel(cancelPreviewRecord)}
@@ -395,7 +395,7 @@ const Leave = () => {
         onConfirm={confirmCancelLeave}
       />
       <ActionConfirmModal
-        tourId="leave-delete-modal"
+        testId="leave-delete-modal"
         visible={isDeleteConfirmVisible}
         title="Delete Leave Request"
         message={
@@ -442,7 +442,7 @@ const Leave = () => {
       </CNav>
 
       {activeSection === 'leave-records' && (
-        <div data-tour-id="leave-records">
+        <div data-testid="leave-records">
           <LeaveRecordsSection
             title="My Leave Records"
             showPrimaryAction={false}
@@ -480,13 +480,13 @@ const Leave = () => {
             getEndDateTimeLabel={getEndDateTimeLabel}
             formatDate={formatDate}
             isLoading={isLeaveLoading}
-            filtersTourId="leave-filters"
+            filtersTestId="leave-filters"
           />
         </div>
       )}
 
       {activeSection === 'leave-detail' && (
-        <div data-tour-id="leave-detail">
+        <div data-testid="leave-detail">
           <LeaveDetailSection
             selectedRecord={selectedRecord}
             selectedRecordPendingActionHint={selectedRecordPendingActionHint}

@@ -20,7 +20,7 @@ const normalizeKey = (value) =>
     .trim()
     .toLowerCase()
 
-const slugSegment = (value) =>
+export const slugHighAngleSegment = (value) =>
   normalizeKey(value)
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
@@ -84,7 +84,7 @@ const buildSeedRow = (kit, row = {}) => {
   const quantity = String(row.quantity || '').trim()
 
   return {
-    id: `${slugSegment(normalizedKit)}:${rowNumber || slugSegment(equipment)}`,
+    id: `${slugHighAngleSegment(normalizedKit)}:${rowNumber || slugHighAngleSegment(equipment)}`,
     rowNumber,
     mainLocation: normalizedKit,
     location,
@@ -101,7 +101,7 @@ const buildKitDefinitions = () =>
       buildSeedRow(normalizedKit, row),
     )
     return {
-      key: slugSegment(normalizedKit),
+      key: slugHighAngleSegment(normalizedKit),
       title: normalizedKit,
       sourceLabel: normalizedKit,
       rows: normalizedRows,
@@ -133,6 +133,80 @@ export const HIGH_ANGLE_REFERENCE = {
 export const isHighAngleInspectionType = (inspectionType) =>
   normalizeKey(inspectionType) === normalizeKey(HIGH_ANGLE_RESCUE_EQUIPMENT_INSPECTION_TYPE)
 
+const normalizeHighAngleCustomMainLocation = (row = {}) => {
+  if (!row || typeof row !== 'object') return null
+  const name = normalizeKitName(row.name || row.title || row.value || row.mainLocation)
+  if (!name) return null
+  const id = String(row.id || '').trim() || `custom-main-location:${slugHighAngleSegment(name)}`
+  return {
+    id,
+    name,
+    title: name,
+    value: name,
+    custom: true,
+  }
+}
+
+export const normalizeHighAngleCustomMainLocations = (rows = []) => {
+  const byKey = new Map()
+  ;(Array.isArray(rows) ? rows : []).forEach((row) => {
+    const normalized = normalizeHighAngleCustomMainLocation(row)
+    if (!normalized) return
+    const key = normalizeKey(normalized.name)
+    if (!key || byKey.has(key)) return
+    byKey.set(key, normalized)
+  })
+  return Array.from(byKey.values())
+}
+
+const normalizeHighAngleCustomCompartment = (row = {}) => {
+  if (!row || typeof row !== 'object') return null
+  const mainLocation = normalizeKitName(row.mainLocation || row.main_location || row.kit)
+  const location = String(row.location || '').trim()
+  const subLocation = String(row.subLocation || row.sub_location || '').trim()
+  if (!mainLocation || (!isMeaningfulValue(location) && !isMeaningfulValue(subLocation))) {
+    return null
+  }
+  const id =
+    String(row.id || '').trim() ||
+    `custom-compartment:${slugHighAngleSegment(mainLocation)}:${slugHighAngleSegment(
+      `${location} ${subLocation}`,
+    )}`
+  return {
+    id,
+    mainLocation,
+    location,
+    subLocation,
+    custom: true,
+  }
+}
+
+export const normalizeHighAngleCustomCompartments = (rows = []) => {
+  const byKey = new Map()
+  ;(Array.isArray(rows) ? rows : []).forEach((row) => {
+    const normalized = normalizeHighAngleCustomCompartment(row)
+    if (!normalized) return
+    const key = `${normalizeKey(normalized.mainLocation)}::${makeGroupKey(normalized)}`
+    if (byKey.has(key)) return
+    byKey.set(key, normalized)
+  })
+  return Array.from(byKey.values())
+}
+
+export const getHighAngleMainLocationOptions = (form = {}) => {
+  const customLocations = normalizeHighAngleCustomMainLocations(
+    form.highAngleCustomMainLocations || form.high_angle_custom_main_locations,
+  )
+  const byKey = new Map()
+  HIGH_ANGLE_REFERENCE.supportedMainLocations.forEach((title) => {
+    byKey.set(normalizeKey(title), { title, value: title, custom: false })
+  })
+  customLocations.forEach((row) => {
+    if (!byKey.has(normalizeKey(row.name))) byKey.set(normalizeKey(row.name), row)
+  })
+  return Array.from(byKey.values())
+}
+
 const normalizeHighAngleCondition = (value) => {
   const normalized = normalizeKey(value)
   const matched = HIGH_ANGLE_STATUS_OPTIONS.find(
@@ -163,7 +237,7 @@ const normalizeHighAngleCheck = (check = {}) => {
     ...check,
     id:
       String(check.id || '').trim() ||
-      `${slugSegment(mainLocation)}:${rowNumber || slugSegment(`${location} ${subLocation} ${equipment}`)}`,
+      `${slugHighAngleSegment(mainLocation)}:${rowNumber || slugHighAngleSegment(`${location} ${subLocation} ${equipment}`)}`,
     rowNumber,
     mainLocation,
     location,
@@ -182,6 +256,8 @@ const normalizeHighAngleCheck = (check = {}) => {
     conditionPhotos: normalizePhotos(
       check.conditionPhotos || check.condition_photos || check.photos,
     ),
+    additionalNotes: String(check.additionalNotes || check.additional_notes || '').trim(),
+    additionalPhotos: normalizePhotos(check.additionalPhotos || check.additional_photos),
   }
 }
 
@@ -205,43 +281,54 @@ export const getHighAngleKitDefinition = (kit) =>
 
 const getHighAngleMergedRowsForKit = (form = {}, kit = '') => {
   const definition = getHighAngleKitDefinition(kit)
-  if (!definition) return []
+  const resolvedKit = definition?.title || normalizeKitName(kit)
+  if (!resolvedKit) return []
 
   const normalizedChecks = normalizeHighAngleChecks(form.highAngleChecks || form.high_angle_checks)
-  const seededIds = rowIdsByKitKey.get(normalizeKey(definition.title)) || new Set()
+  const seededIds = definition
+    ? rowIdsByKitKey.get(normalizeKey(definition.title)) || new Set()
+    : new Set()
   const checkById = new Map(normalizedChecks.map((row) => [row.id, row]))
 
-  const seededRows = definition.rows.map((row) => ({
-    ...row,
-    ...(checkById.get(row.id) || {}),
-    mainLocation: definition.title,
-    location: String((checkById.get(row.id) || {}).location || row.location || '').trim(),
-    subLocation: String((checkById.get(row.id) || {}).subLocation || row.subLocation || '').trim(),
-    equipment: String((checkById.get(row.id) || {}).equipment || row.equipment || '').trim(),
-    quantity: String((checkById.get(row.id) || {}).quantity || row.quantity || '').trim(),
-    condition: normalizeHighAngleCondition((checkById.get(row.id) || {}).condition),
-    remarks: String((checkById.get(row.id) || {}).remarks || '').trim(),
-    conditionRemarks: String(
-      (checkById.get(row.id) || {}).conditionRemarks ||
-        ((checkById.get(row.id) || {}).condition === 'Not Good'
-          ? (checkById.get(row.id) || {}).remarks
-          : '') ||
-        '',
-    ).trim(),
-    conditionPhotos: normalizePhotos((checkById.get(row.id) || {}).conditionPhotos),
-    isWorkbookSeedRow: true,
-    isExtensionRow: false,
-  }))
+  const seededRows = definition
+    ? definition.rows.map((row) => ({
+        ...row,
+        ...(checkById.get(row.id) || {}),
+        mainLocation: definition.title,
+        location: String((checkById.get(row.id) || {}).location || row.location || '').trim(),
+        subLocation: String(
+          (checkById.get(row.id) || {}).subLocation || row.subLocation || '',
+        ).trim(),
+        equipment: String((checkById.get(row.id) || {}).equipment || row.equipment || '').trim(),
+        quantity: String((checkById.get(row.id) || {}).quantity || row.quantity || '').trim(),
+        condition: normalizeHighAngleCondition((checkById.get(row.id) || {}).condition),
+        remarks: String((checkById.get(row.id) || {}).remarks || '').trim(),
+        conditionRemarks: String(
+          (checkById.get(row.id) || {}).conditionRemarks ||
+            ((checkById.get(row.id) || {}).condition === 'Not Good'
+              ? (checkById.get(row.id) || {}).remarks
+              : '') ||
+            '',
+        ).trim(),
+        conditionPhotos: normalizePhotos((checkById.get(row.id) || {}).conditionPhotos),
+        additionalNotes: String((checkById.get(row.id) || {}).additionalNotes || '').trim(),
+        additionalPhotos: normalizePhotos((checkById.get(row.id) || {}).additionalPhotos),
+        isWorkbookSeedRow: true,
+        isExtensionRow: false,
+        equipmentSource: 'seed',
+      }))
+    : []
 
   const extraRows = normalizedChecks
     .filter(
       (row) =>
-        normalizeKey(row.mainLocation) === normalizeKey(definition.title) && !seededIds.has(row.id),
+        normalizeKey(row.mainLocation) === normalizeKey(resolvedKit) && !seededIds.has(row.id),
     )
     .map((row) => ({
       ...row,
       isWorkbookSeedRow: false,
       isExtensionRow: true,
+      equipmentSource: row.equipmentSource || 'custom',
     }))
 
   return [...seededRows, ...extraRows]
@@ -253,8 +340,10 @@ export const getHighAngleVisibleChecks = (form = {}) => {
   return getHighAngleMergedRowsForKit(form, kit)
 }
 
-const makeGroupKey = (row = {}) =>
+export const makeHighAngleGroupKey = (row = {}) =>
   [String(row.location || '').trim(), String(row.subLocation || '').trim()].join('::')
+
+const makeGroupKey = makeHighAngleGroupKey
 
 export const formatHighAngleGroupLabel = (row = {}) => {
   const location = String(row.location || '').trim()
@@ -265,9 +354,55 @@ export const formatHighAngleGroupLabel = (row = {}) => {
   return parts.join(' - ') || 'General Kit Items'
 }
 
-const buildVisibleGroups = (rows = []) => {
+export const getHighAngleCompartmentsForKit = (form = {}, kit = '') => {
+  const normalizedKit = normalizeKitName(kit)
+  if (!normalizedKit) return []
+  const seededRows = getHighAngleKitDefinition(normalizedKit)?.rows || []
+  const customCompartments = normalizeHighAngleCustomCompartments(
+    form.highAngleCustomCompartments || form.high_angle_custom_compartments,
+  ).filter((row) => normalizeKey(row.mainLocation) === normalizeKey(normalizedKit))
+  const itemCompartments = normalizeHighAngleChecks(
+    form.highAngleChecks || form.high_angle_checks,
+  ).filter((row) => normalizeKey(row.mainLocation) === normalizeKey(normalizedKit))
+
   const groups = []
   const byKey = new Map()
+  ;[...seededRows, ...customCompartments, ...itemCompartments].forEach((row) => {
+    const key = makeGroupKey(row)
+    if (byKey.has(key)) return
+    const group = {
+      key: key || `group-${groups.length + 1}`,
+      title: formatHighAngleGroupLabel(row),
+      location: String(row.location || '').trim(),
+      subLocation: String(row.subLocation || '').trim(),
+      rows: [],
+      custom: row.custom === true,
+    }
+    byKey.set(key, group)
+    groups.push(group)
+  })
+  return groups
+}
+
+const buildVisibleGroups = (rows = [], compartmentRows = []) => {
+  const groups = []
+  const byKey = new Map()
+
+  compartmentRows.forEach((row) => {
+    const key = makeGroupKey(row)
+    if (!byKey.has(key)) {
+      const nextGroup = {
+        key: key || `group-${groups.length + 1}`,
+        title: formatHighAngleGroupLabel(row),
+        location: String(row.location || '').trim(),
+        subLocation: String(row.subLocation || '').trim(),
+        rows: [],
+        custom: row.custom === true,
+      }
+      byKey.set(key, nextGroup)
+      groups.push(nextGroup)
+    }
+  })
 
   rows.forEach((row) => {
     const key = makeGroupKey(row)
@@ -278,6 +413,7 @@ const buildVisibleGroups = (rows = []) => {
         location: String(row.location || '').trim(),
         subLocation: String(row.subLocation || '').trim(),
         rows: [],
+        custom: row.custom === true,
       }
       byKey.set(key, nextGroup)
       groups.push(nextGroup)
@@ -314,8 +450,10 @@ export const getHighAngleCheckSummary = (form = {}) => {
       normalizePhotos(row.conditionPhotos || row.photos).length > 0
     )
   }).length
-  const visibleGroups = buildVisibleGroups(visibleChecks)
+  const compartmentRows = getHighAngleCompartmentsForKit(form, selectedKit)
+  const visibleGroups = buildVisibleGroups(visibleChecks, compartmentRows)
   const kitDefinition = getHighAngleKitDefinition(selectedKit)
+  const supportedKits = getHighAngleMainLocationOptions(form).map((row) => row.title || row.name)
 
   return {
     selectedKit,
@@ -327,7 +465,7 @@ export const getHighAngleCheckSummary = (form = {}) => {
     retainedEvidenceCount,
     visibleChecks,
     visibleGroups,
-    supportedKits: HIGH_ANGLE_REFERENCE.supportedMainLocations,
+    supportedKits,
     sourceWorkbook: HIGH_ANGLE_REFERENCE.sourceWorkbook,
     rowCountByKit: Object.fromEntries(
       HIGH_ANGLE_KIT_DEFINITIONS.map((definition) => [definition.title, definition.rowCount]),
@@ -364,7 +502,7 @@ export const getHighAngleMissingFields = (form = {}) => {
 }
 
 const makeChecklistId = (label) =>
-  `${slugSegment(HIGH_ANGLE_RESCUE_EQUIPMENT_INSPECTION_TYPE)}:${slugSegment(label)}`
+  `${slugHighAngleSegment(HIGH_ANGLE_RESCUE_EQUIPMENT_INSPECTION_TYPE)}:${slugHighAngleSegment(label)}`
 
 export const buildHighAngleChecklist = (form = {}) => {
   const summary = getHighAngleCheckSummary(form)

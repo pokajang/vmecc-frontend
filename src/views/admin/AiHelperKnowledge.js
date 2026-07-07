@@ -213,13 +213,13 @@ const AiHelperKnowledge = () => {
   }
 
   return (
-    <CContainer fluid>
+    <CContainer fluid data-testid="ai-helper-knowledge-module">
       <ModulePageHeader
         title="Ask AI Knowledge"
         subtitle="Review shared guidance before it is used by Ask AI."
       />
 
-      <CCard className="mb-4">
+      <CCard className="mb-4" data-testid="ai-helper-knowledge-diagnostics">
         <CCardBody>
           <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
             <div>
@@ -292,9 +292,12 @@ const AiHelperKnowledge = () => {
         </CCardBody>
       </CCard>
 
-      <CCard className="mb-4">
+      <CCard className="mb-4" data-testid="ai-helper-knowledge-records">
         <CCardBody>
-          <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+          <div
+            className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"
+            data-testid="ai-helper-knowledge-filters"
+          >
             <CButtonGroup role="group" aria-label="Ask AI knowledge filters">
               {FILTERS.map((item) => (
                 <CButton
@@ -330,7 +333,9 @@ const AiHelperKnowledge = () => {
                   <CTableHeaderCell>Scope</CTableHeaderCell>
                   <CTableHeaderCell>Uploaded</CTableHeaderCell>
                   <CTableHeaderCell>Status</CTableHeaderCell>
-                  <CTableHeaderCell className="text-end">Action</CTableHeaderCell>
+                  <CTableHeaderCell className="table-sticky-action-cell text-end">
+                    Action
+                  </CTableHeaderCell>
                 </CTableRow>
               </CTableHead>
               <CTableBody>
@@ -352,7 +357,7 @@ const AiHelperKnowledge = () => {
                         {statusText(entry)}
                       </CBadge>
                     </CTableDataCell>
-                    <CTableDataCell className="text-end">
+                    <CTableDataCell className="table-sticky-action-cell text-end">
                       <CButton
                         size="sm"
                         color="primary"

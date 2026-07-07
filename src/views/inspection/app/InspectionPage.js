@@ -2,8 +2,8 @@ import React, { useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { Navigate } from 'react-router-dom'
 import { hasPermission } from 'src/utils/authz'
-import { migrateInspectionRecords } from 'src/views/inspection/utils'
-import InspectionModule from '../InspectionModule'
+import { migrateInspectionRecords } from 'src/views/inspection/form/utils'
+import InspectionModule from './InspectionModule'
 
 const InspectionPage = () => {
   const user = useSelector((state) => state.authUser)

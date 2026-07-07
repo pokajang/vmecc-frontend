@@ -41,7 +41,7 @@ const ClaimsSection = ({
   onRetry = () => {},
   showPrimaryAction = true,
 }) => (
-  <CCard data-tour-id="payroll-claims">
+  <CCard data-testid="payroll-claims">
     <CCardHeader className="d-flex flex-wrap justify-content-between align-items-center gap-2">
       <span>Claim Records</span>
       {showPrimaryAction ? (
@@ -64,7 +64,7 @@ const ClaimsSection = ({
           </CButton>
         </CAlert>
       ) : null}
-      <div data-tour-id="payroll-claims-filters">
+      <div data-testid="payroll-claims-filters">
         <TableFilters
           searchValue={search}
           onSearchChange={onSearchChange}

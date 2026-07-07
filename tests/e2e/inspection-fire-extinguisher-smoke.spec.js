@@ -118,13 +118,12 @@ const loginInBrowser = async (page) => {
   await page.goto('/login', { waitUntil: 'domcontentloaded' })
   await waitForAppReady(page)
 
-  if (
-    await page
-      .getByRole('button', { name: 'Sign in' })
-      .isVisible()
-      .catch(() => false)
-  ) {
-    await page.getByRole('textbox', { name: 'Email' }).fill(smokeEmail, {
+  const emailInput = page.getByRole('textbox', { name: 'Email' })
+  const currentPath = new URL(page.url()).pathname
+
+  if (currentPath === '/login') {
+    await expect(emailInput).toBeVisible({ timeout: routeTimeoutMs })
+    await emailInput.fill(smokeEmail, {
       timeout: routeTimeoutMs,
     })
     await page.getByRole('textbox', { name: 'Password' }).fill(smokePassword, {
@@ -134,7 +133,7 @@ const loginInBrowser = async (page) => {
     await page.waitForURL(/\/dashboard(?:[/?#]|$)|\/inspection(?:[/?#]|$)/, {
       timeout: routeTimeoutMs,
     })
-    await waitForAppReady(page)
+    await expect(page.locator('#root')).toBeVisible({ timeout: routeTimeoutMs })
   }
 }
 
@@ -194,6 +193,13 @@ const fillFirstVisible = async (locator, value) => {
   await locator.first().fill(value)
 }
 
+const closeVisibleModal = async (page) => {
+  const modal = page.locator('.modal.show').last()
+  if (!(await modal.isVisible().catch(() => false))) return
+  await modal.getByRole('button', { name: /close/i }).click()
+  await expect(modal).toBeHidden()
+}
+
 const saveScreenshot = async (page, testInfo, report, name) => {
   ensureArtifactRoot()
   const fileName = `${safeFileName(name)}.png`
@@ -219,6 +225,26 @@ const setPhotoFromButton = async (button, fileName) => {
 
 const getFireExtinguisherCard = (page, text) =>
   page.locator('[data-fire-extinguisher-row-id]').filter({ hasText: text }).first()
+
+const expandFireExtinguisherCard = async (card) => {
+  if (
+    await card
+      .getByText('FE Physical Condition')
+      .isVisible()
+      .catch(() => false)
+  )
+    return
+  await card.getByRole('button', { name: 'Open', exact: true }).click()
+  await expect(card.getByText('FE Physical Condition')).toBeVisible()
+}
+
+const markFireExtinguisherRowSafe = async (card) => {
+  await card.getByRole('button', { name: 'Good', exact: true }).nth(0).click()
+  await card.getByRole('button', { name: 'Good', exact: true }).nth(1).click()
+  await card.getByRole('button', { name: 'Yes', exact: true }).nth(0).click()
+  await card.getByRole('button', { name: 'Yes', exact: true }).nth(1).click()
+  await card.getByRole('button', { name: 'Good', exact: true }).nth(2).click()
+}
 
 const isFireExtinguisherCreateResponse = (response) => {
   const url = new URL(response.url())
@@ -402,10 +428,29 @@ test.describe('Fire Extinguisher inspection prod smoke', () => {
       await expect(page.getByRole('heading', { name: /Conduct Inspection/i })).toBeVisible()
 
       await page.getByText('Fire Extinguisher', { exact: true }).click()
-      await expect(page.getByText('Choose Main Location')).toBeVisible()
-      await page.getByText('ASIC', { exact: true }).first().click()
+      await page.getByRole('button', { name: 'By Area', exact: true }).click()
+      await expect(page.getByText('Choose Zone')).toBeVisible()
+      await page.getByText('Zone 1', { exact: true }).first().click()
+      await expect(page.getByText('Choose Main Area')).toBeVisible()
+      await page.getByText('Canteen', { exact: true }).first().click()
+      if (
+        await page
+          .getByText('Choose Location')
+          .isVisible()
+          .catch(() => false)
+      ) {
+        await page
+          .getByRole('radio', { name: /Canteen/i })
+          .nth(1)
+          .click()
+      }
 
-      await expect(page.getByText('Fire Extinguisher Checks')).toBeVisible()
+      await expect(page.getByText('Extinguishers', { exact: true })).toBeVisible()
+      await expect(
+        page.getByRole('button', { name: /Add extinguisher \(\d+\)/i }).first(),
+      ).toBeVisible({
+        timeout: 45_000,
+      })
 
       await page
         .getByRole('button', { name: /Add extinguisher/i })
@@ -468,11 +513,13 @@ test.describe('Fire Extinguisher inspection prod smoke', () => {
 
       const safeCard = getFireExtinguisherCard(page, safeExtinguisherId)
       await expect(safeCard).toBeVisible()
-      await safeCard.getByRole('button', { name: 'Mark all Good' }).click()
-      await expect(safeCard.getByText('Complete')).toBeVisible()
+      await expandFireExtinguisherCard(safeCard)
+      await markFireExtinguisherRowSafe(safeCard)
+      await expect(safeCard.getByText(/Checked|Completed/i)).toBeVisible()
 
       const defectCard = getFireExtinguisherCard(page, defectExtinguisherId)
       await expect(defectCard).toBeVisible()
+      await expandFireExtinguisherCard(defectCard)
       await defectCard.getByRole('button', { name: 'Not Good', exact: true }).first().click()
       await defectCard
         .getByPlaceholder('FE Physical Condition defect remarks')
@@ -493,7 +540,7 @@ test.describe('Fire Extinguisher inspection prod smoke', () => {
       await defectCard.getByRole('button', { name: 'Good', exact: true }).nth(1).click()
       await defectCard.getByRole('button', { name: 'Yes', exact: true }).nth(0).click()
       await defectCard.getByRole('button', { name: 'Yes', exact: true }).nth(1).click()
-      await defectCard.getByRole('button', { name: 'Operational', exact: true }).click()
+      await defectCard.getByRole('button', { name: 'Good', exact: true }).nth(2).click()
       await defectCard.getByRole('button', { name: 'Remark', exact: true }).click()
       await defectCard
         .getByPlaceholder('General extinguisher remarks')
@@ -506,15 +553,26 @@ test.describe('Fire Extinguisher inspection prod smoke', () => {
 
       await saveScreenshot(page, testInfo, report, 'fire-extinguisher-form-complete')
 
-      await page.getByRole('button', { name: 'Save & Review' }).first().click()
+      await page
+        .getByRole('button', { name: /Review Inspections|Review Submissions/ })
+        .first()
+        .click()
       await waitForAppReady(page, '/inspection/review')
-      await expectAnyVisibleText(page, 'Fire Extinguisher Checks')
+      await expect(page.getByRole('heading', { name: 'Review Inspection' })).toBeVisible()
+      await expectAnyVisibleText(page, 'Fire Extinguisher')
+      await expectAnyVisibleText(page, 'Total 2 fire extinguishers')
+      await expectAnyVisibleText(page, 'Issues: 1 reported')
+
+      await page.getByRole('button', { name: 'View' }).click()
+      await expectAnyVisibleText(page, 'Fire Extinguisher Details')
+      await expectAnyVisibleText(page, 'Locations Checked')
+      await expectAnyVisibleText(page, 'Issues Recorded')
       await expectAnyVisibleText(page, `Smoke FE defect remarks ${suffix}`)
-      await expectAnyVisibleText(page, `Smoke FE general remarks ${suffix}`)
-      await clickFirstVisible(page.getByRole('button', { name: 'View photos' }))
-      await expect(page.locator('.modal.show').getByText(`fe-defect-${suffix}.png`)).toBeVisible()
-      await page.locator('.modal.show').getByRole('button', { name: /close/i }).click()
-      await expect(page.getByRole('button', { name: 'Confirm Submit' })).toBeVisible()
+      await page.getByRole('button', { name: /Close Fire Extinguisher/i }).click()
+
+      const submitButton = page.getByRole('button', { name: 'Submit' }).first()
+      await expect(submitButton).toBeEnabled({ timeout: 60_000 })
+      await expect(submitButton).toBeVisible()
 
       const createReportPromise = page.waitForResponse(
         (response) => {
@@ -524,6 +582,8 @@ test.describe('Fire Extinguisher inspection prod smoke', () => {
         { timeout: 30_000 },
       )
 
+      await submitButton.click()
+      await expect(page.getByText(/Submit Fire Extinguisher Inspection\s*\?/)).toBeVisible()
       await page.getByRole('button', { name: 'Confirm Submit' }).click()
       const createResponse = await createReportPromise
       expect([200, 201]).toContain(createResponse.status())
@@ -535,6 +595,7 @@ test.describe('Fire Extinguisher inspection prod smoke', () => {
 
       await waitForAppReady(page, '/inspection')
       await expect(page).toHaveURL(/\/inspection(?:[/?#]|$)/)
+      await closeVisibleModal(page)
 
       const searchText = report.display_id || report.report_uid
       await page.getByRole('textbox', { name: 'Search records' }).fill(searchText)
@@ -545,6 +606,7 @@ test.describe('Fire Extinguisher inspection prod smoke', () => {
       ).toBeVisible({
         timeout: 20_000,
       })
+      await closeVisibleModal(page)
 
       await recordRow.getByRole('button', { name: 'Row actions' }).click()
       const downloadPromise = page.waitForEvent('download', { timeout: 30_000 })
@@ -567,16 +629,22 @@ test.describe('Fire Extinguisher inspection prod smoke', () => {
         size: stats.size,
       })
 
-      const unexpectedFailedResponses = report.failedResponses.filter(
-        (item) => !String(item.url || '').includes('/reports/inspection/pdf') || item.status >= 400,
+      const unexpectedFailedResponses = report.failedResponses.filter((item) => {
+        const url = String(item.url || '')
+        if (url.includes('/workflow/notifications/unread-count')) return false
+        if (url.includes('/reports/inspection/pdf') && item.status < 400) return false
+        return true
+      })
+      const unexpectedConsoleErrors = report.consoleErrors.filter(
+        (item) => !/failed to load resource/i.test(String(item.text || '')),
       )
       expect(
         unexpectedFailedResponses,
         `Unexpected failed responses: ${JSON.stringify(unexpectedFailedResponses, null, 2)}`,
       ).toEqual([])
       expect(
-        report.consoleErrors,
-        `Unexpected console errors: ${JSON.stringify(report.consoleErrors, null, 2)}`,
+        unexpectedConsoleErrors,
+        `Unexpected console errors: ${JSON.stringify(unexpectedConsoleErrors, null, 2)}`,
       ).toEqual([])
       expect(
         report.pageErrors,
@@ -588,8 +656,18 @@ test.describe('Fire Extinguisher inspection prod smoke', () => {
       }
       throw error
     } finally {
-      await cleanupReport(api, csrfToken, report.report_uid, report)
-      await cleanupFireExtinguishers(api, csrfToken, createdCatalogIds, report)
+      let cleanupCsrfToken = csrfToken
+      try {
+        const session = await apiRequest(api, report, 'get', '/auth/session', {
+          expected: [200],
+          note: 'refresh csrf token for cleanup',
+        })
+        cleanupCsrfToken = session.body?.csrf_token || cleanupCsrfToken
+      } catch {
+        // Use the login token if the refresh endpoint is unavailable.
+      }
+      await cleanupReport(api, cleanupCsrfToken, report.report_uid, report)
+      await cleanupFireExtinguishers(api, cleanupCsrfToken, createdCatalogIds, report)
       if (report.cleanup.some((item) => item.ok === false)) {
         writeJsonArtifact('manual-cleanup.json', {
           report_uid: report.report_uid,

@@ -69,7 +69,7 @@ const LeaveApplySection = ({
         onBack={onBack}
       />
     ) : (
-      <CForm onSubmit={onSubmit} data-tour-id="leave-apply">
+      <CForm onSubmit={onSubmit} data-testid="leave-apply">
         <div className="mb-3">
           <BackButton onClick={onBackToLeaveType} label="Back" />
         </div>
@@ -103,7 +103,7 @@ const LeaveApplySection = ({
             </div>
           </CCol>
           <CCol xs={12} md={7} lg={8}>
-            <div className="rounded-3 border bg-white p-3 h-100" data-tour-id="leave-balance">
+            <div className="rounded-3 border bg-white p-3 h-100" data-testid="leave-balance">
               <div className="fw-semibold mb-2">Leave Balance</div>
               <CRow className="g-2 g-lg-3">
                 {balanceStats.map((item) => (
@@ -233,7 +233,7 @@ const LeaveApplySection = ({
                   </CCol>
                 )}
                 {activeFieldRule.showAttachment && (
-                  <CCol md={6} data-tour-id="leave-attachments">
+                  <CCol md={6} data-testid="leave-attachments">
                     <CFormLabel htmlFor="leave-attachment">
                       Supporting Attachment (
                       {activeFieldRule.attachmentRequired ? 'Required' : 'Optional'})
@@ -340,11 +340,11 @@ const LeaveApplySection = ({
             </CCol>
           </CRow>
         </div>
-        <FormActionGroup className="mt-4" data-tour-id="leave-draft-panel">
+        <FormActionGroup className="mt-4" data-testid="leave-draft-panel">
           <CButton color="secondary" variant="outline" type="button" onClick={onClearForm}>
             Clear form
           </CButton>
-          <span data-tour-id="leave-draft-action">
+          <span data-testid="leave-draft-action">
             <CButton color="light" type="button" onClick={onDraft}>
               Save draft
             </CButton>
@@ -352,7 +352,7 @@ const LeaveApplySection = ({
           <CButton
             color="primary"
             type="submit"
-            data-tour-id="leave-submit-action"
+            data-testid="leave-submit-action"
             disabled={isSubmitBlockedByBalance || isAttachmentProcessing}
           >
             {editingRecordId ? 'Update request' : 'Submit request'}

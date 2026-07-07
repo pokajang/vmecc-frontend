@@ -12,12 +12,14 @@ const MobileRecordList = ({ sections = [], emptyMessage = null, variant = 'card'
   if (visibleSections.length === 0) return emptyMessage
 
   return (
-    <div className="d-md-none d-grid gap-3">
+    <div className="mobile-record-list d-md-none d-grid gap-3">
       {visibleSections.map((section) => (
         <section
           key={section.key || section.label || 'records'}
           className={
-            section.variant === 'list-group' || variant === 'list-group' ? '' : 'd-grid gap-2'
+            section.variant === 'list-group' || variant === 'list-group'
+              ? 'mobile-record-list__section'
+              : 'mobile-record-list__section d-grid gap-2'
           }
         >
           {section.label ? (
@@ -29,7 +31,7 @@ const MobileRecordList = ({ sections = [], emptyMessage = null, variant = 'card'
             </div>
           ) : null}
           {section.variant === 'list-group' || variant === 'list-group' ? (
-            <div className="list-group overflow-hidden border rounded-3">
+            <div className="mobile-record-list__group list-group list-group-flush overflow-hidden border rounded-3">
               {section.items.map((item) => (
                 <RecordCard key={item.key} item={item} variant="list-group" />
               ))}

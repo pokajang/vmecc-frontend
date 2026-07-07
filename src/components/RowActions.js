@@ -22,7 +22,7 @@ const RowActions = ({
   toggleClassName = '',
   toggleStyle,
   hitArea = 44,
-  tourId = '',
+  testId = '',
   toggleAriaLabel = 'Row actions',
 }) => {
   const [visible, setVisible] = useState(false)
@@ -46,7 +46,8 @@ const RowActions = ({
 
   return (
     <div
-      {...(tourId ? { 'data-tour-id': tourId } : {})}
+      {...(testId ? { 'data-testid': testId } : {})}
+      className="row-actions"
       onClick={stopBubblingEvent}
       onMouseDown={stopBubblingEvent}
       onMouseUp={stopBubblingEvent}
@@ -70,7 +71,7 @@ const RowActions = ({
         >
           <MoreVertical size={iconSize} />
         </CDropdownToggle>
-        <CDropdownMenu aria-hidden={!visible}>
+        <CDropdownMenu className="row-actions-menu" aria-hidden={!visible}>
           {visible
             ? items.map((item) => {
                 const disabled = Boolean(item.disabled)

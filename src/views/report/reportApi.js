@@ -63,6 +63,13 @@ export const refreshReportRecord = async (reportUid) => {
   return response?.data || null
 }
 
+export const deleteReportRecord = async (reportUid) => {
+  const id = String(reportUid || '').trim()
+  if (!id) return false
+  await apiRequest(`/reports/${encodeURIComponent(id)}`, { method: 'DELETE' })
+  return true
+}
+
 export const persistReportRecords = async (userId, rows, options = {}) => {
   if (!userId) return false
   const desiredRows = Array.isArray(rows) ? rows : []

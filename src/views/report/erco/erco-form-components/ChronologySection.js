@@ -2,13 +2,11 @@ import React from 'react'
 import {
   CAlert,
   CButton,
-  CCol,
   CDropdown,
   CDropdownItem,
   CDropdownMenu,
   CDropdownToggle,
   CFormInput,
-  CRow,
   CTooltip,
 } from '@coreui/react'
 import {
@@ -70,7 +68,7 @@ const ChronologySection = ({
     <div className="d-grid gap-3">
       {/* ── Toolbar ── */}
       <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <div className="fw-semibold">Chronology of Event</div>
+        <div className="fw-semibold text-muted">Chronology of Event</div>
         {!showChronologyStarter ? (
           <div className="d-flex align-items-center gap-1 flex-wrap">
             <CTooltip content="Reset events">
@@ -250,71 +248,71 @@ const ChronologySection = ({
           ) : null}
 
           {/* ── Mobile read-only list — mirrors ChronologyRow grid, inputs replaced with text ── */}
-          <div className="d-md-none">
+          <div className="erco-chronology-mobile-list d-md-none">
             {chronologyRows.map((row, idx) => {
               const isFirst = idx === 0
               const isLast = idx >= chronologyRows.length - 1
               const isOnly = chronologyRows.length <= 1
               return (
-                <CRow key={row.id} className="g-2 mb-2 align-items-end">
-                  <CCol xs={5} className="order-1">
-                    <div className="form-control form-control-sm text-body-secondary bg-transparent border-secondary-subtle">
+                <div key={row.id} className="erco-chronology-mobile-row">
+                  <button
+                    type="button"
+                    className="erco-chronology-mobile-row__main"
+                    onClick={() => onOpenEditRowModal(row)}
+                    aria-label={`Edit chronology row ${idx + 1}`}
+                  >
+                    <span className="erco-chronology-mobile-row__time">
                       {String(row.time || '').trim() || '--:--'}
-                    </div>
-                  </CCol>
-                  <CCol xs={7} className="order-2 d-flex justify-content-end gap-1">
-                    <CButton
+                    </span>
+                    <span className="erco-chronology-mobile-row__action">
+                      {String(row.action || '').trim() || 'No action recorded.'}
+                    </span>
+                  </button>
+                  <CDropdown alignment="end">
+                    <CDropdownToggle
                       type="button"
                       color="light"
                       size="sm"
-                      className="p-1 border-0 bg-transparent text-primary shadow-none"
-                      onClick={() => onOpenEditRowModal(row)}
-                      aria-label="Edit row"
+                      caret={false}
+                      className="erco-chronology-mobile-row__menu"
+                      aria-label={`Chronology row ${idx + 1} actions`}
                     >
-                      <Pencil size={14} />
-                    </CButton>
-                    <CButton
-                      type="button"
-                      color="light"
-                      size="sm"
-                      disabled={isFirst}
-                      className="p-1 border-0 bg-transparent text-body-secondary shadow-none"
-                      onClick={() => moveChronologyRow(idx, idx - 1)}
-                      aria-label="Move up"
-                    >
-                      <ArrowUp size={14} />
-                    </CButton>
-                    <CButton
-                      type="button"
-                      color="light"
-                      size="sm"
-                      disabled={isLast}
-                      className="p-1 border-0 bg-transparent text-body-secondary shadow-none"
-                      onClick={() => moveChronologyRow(idx, idx + 1)}
-                      aria-label="Move down"
-                    >
-                      <ArrowDown size={14} />
-                    </CButton>
-                    <CButton
-                      type="button"
-                      color="light"
-                      size="sm"
-                      disabled={isOnly}
-                      className="p-1 border-0 bg-transparent text-danger shadow-none"
-                      onClick={() => removeChronologyRow(row.id)}
-                      aria-label="Delete row"
-                    >
-                      <Trash2 size={14} />
-                    </CButton>
-                  </CCol>
-                  <CCol xs={12} className="order-3">
-                    <div className="form-control form-control-sm bg-transparent border-secondary-subtle">
-                      {String(row.action || '').trim() || (
-                        <span className="text-body-secondary fst-italic">No action recorded.</span>
-                      )}
-                    </div>
-                  </CCol>
-                </CRow>
+                      <MoreHorizontal size={16} />
+                    </CDropdownToggle>
+                    <CDropdownMenu>
+                      <CDropdownItem onClick={() => onOpenEditRowModal(row)}>
+                        <span className="d-inline-flex align-items-center gap-2">
+                          <Pencil size={14} /> Edit
+                        </span>
+                      </CDropdownItem>
+                      <CDropdownItem
+                        disabled={isFirst}
+                        onClick={() => moveChronologyRow(idx, idx - 1)}
+                      >
+                        <span className="d-inline-flex align-items-center gap-2">
+                          <ArrowUp size={14} /> Move up
+                        </span>
+                      </CDropdownItem>
+                      <CDropdownItem
+                        disabled={isLast}
+                        onClick={() => moveChronologyRow(idx, idx + 1)}
+                      >
+                        <span className="d-inline-flex align-items-center gap-2">
+                          <ArrowDown size={14} /> Move down
+                        </span>
+                      </CDropdownItem>
+                      <CDropdownItem
+                        disabled={isOnly}
+                        className="text-danger"
+                        onClick={() => removeChronologyRow(row.id)}
+                      >
+                        <span className="d-inline-flex align-items-center gap-2">
+                          <Trash2 size={14} /> Delete
+                        </span>
+                      </CDropdownItem>
+                    </CDropdownMenu>
+                  </CDropdown>
+                </div>
               )
             })}
           </div>

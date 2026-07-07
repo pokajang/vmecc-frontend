@@ -1,5 +1,5 @@
 import React from 'react'
-import { HighAngleInspectionChecks } from 'src/views/inspection/components/InspectionFormDisplaySections'
+import { HighAngleInspectionChecks } from 'src/views/inspection/form/components/InspectionFormDisplaySections'
 
 export const HighAngleEditSection = ({
   mainLocation,
@@ -14,8 +14,16 @@ export const HighAngleEditSection = ({
     mainLocationLabel={mainLocationLabel}
     summary={summary}
     onUpdateCheck={handlers.onUpdateCheck}
+    onSaveRowDraft={handlers.onSaveRowDraft}
+    onResetCheck={handlers.onResetCheck}
     onMarkRowOk={handlers.onMarkRowOk}
     onMarkAllOk={handlers.onMarkAllOk}
+    onAddCompartment={handlers.onAddHighAngleCompartment}
+    onUpdateCompartment={handlers.onUpdateHighAngleCompartment}
+    onDeleteCompartment={handlers.onDeleteHighAngleCompartment}
+    onAddItem={handlers.onAddHighAngleItem}
+    onUpdateItem={handlers.onUpdateHighAngleItem}
+    onDeleteItem={handlers.onDeleteHighAngleItem}
     onRequestIssuePhotoUpload={handlers.onRequestHighAngleIssuePhotoUpload}
     onRemovePhoto={handlers.onRemovePhoto}
     onChangePhotoDescription={handlers.onChangePhotoDescription}

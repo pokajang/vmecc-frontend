@@ -461,8 +461,8 @@ const UserProfile = () => {
   }
 
   return (
-    <CContainer fluid data-tour-id="users-module">
-      <div data-tour-id="users-profile-entry">
+    <CContainer fluid data-testid="users-module">
+      <div data-testid="users-profile-entry">
         <div className="mb-3 d-flex justify-content-between align-items-center">
           <BackButton to="/admin/users" />
           <div className="d-flex align-items-center gap-2">

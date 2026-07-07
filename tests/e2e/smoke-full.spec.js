@@ -20,14 +20,19 @@ const personas = [
   {
     role: 'System Administrator',
     email: 'codex.smoke.sysadmin@vmecc.local',
-    mustAllow: ['GET dashboard/me', 'GET users', 'GET audit-logs', 'GET settings/role-permissions'],
+    mustAllow: [
+      'GET stats/payroll',
+      'GET users',
+      'GET audit-logs',
+      'GET settings/role-permissions',
+    ],
     mustDeny: [],
     routes: ['/dashboard', '/admin/users', '/settings'],
   },
   {
     role: 'Contract Manager',
     email: 'codex.smoke.contract-manager@vmecc.local',
-    mustAllow: ['GET dashboard/me', 'GET reports', 'GET rosters', 'GET teams'],
+    mustAllow: ['GET stats/reports', 'GET reports', 'GET rosters', 'GET teams'],
     mustDeny: ['GET audit-logs', 'GET settings/role-permissions', 'POST users'],
     routes: ['/dashboard', '/team/details', '/inspection'],
   },
@@ -35,7 +40,7 @@ const personas = [
     role: 'Human Resource',
     email: 'codex.smoke.human-resource@vmecc.local',
     mustAllow: [
-      'GET dashboard/me',
+      'GET stats/leave',
       'GET users',
       'GET staff/leave/records',
       'GET staff/salary-claims/records',
@@ -47,7 +52,7 @@ const personas = [
     role: 'Finance',
     email: 'codex.smoke.finance@vmecc.local',
     mustAllow: [
-      'GET dashboard/me',
+      'GET stats/payroll',
       'GET staff/salary-claims/records',
       'GET staff/salary-assignments',
     ],
@@ -57,14 +62,14 @@ const personas = [
   {
     role: 'Admin',
     email: 'codex.smoke.admin-role@vmecc.local',
-    mustAllow: ['GET dashboard/me', 'GET teams', 'GET rosters', 'GET users'],
+    mustAllow: ['GET stats/roster', 'GET teams', 'GET rosters', 'GET users'],
     mustDeny: ['GET audit-logs', 'GET settings/role-permissions', 'GET staff/leave/records'],
     routes: ['/dashboard', '/team/details', '/roster/overview'],
   },
   {
     role: 'Incident Commander',
     email: 'codex.smoke.incident-commander@vmecc.local',
-    mustAllow: ['GET dashboard/me', 'GET teams', 'GET rosters', 'GET reports'],
+    mustAllow: ['GET stats/reports', 'GET teams', 'GET rosters', 'GET reports'],
     mustDeny: [
       'GET audit-logs',
       'GET settings/role-permissions',
@@ -75,7 +80,7 @@ const personas = [
   {
     role: 'Assistant Incident Commander',
     email: 'codex.smoke.assistant-incident-commander@vmecc.local',
-    mustAllow: ['GET dashboard/me', 'GET teams', 'GET reports'],
+    mustAllow: ['GET stats/reports', 'GET teams', 'GET reports'],
     mustDeny: [
       'GET audit-logs',
       'GET settings/role-permissions',
@@ -87,7 +92,7 @@ const personas = [
     role: 'Tactical Response Team',
     email: 'codex.smoke.tactical-response-team@vmecc.local',
     mustAllow: [
-      'GET dashboard/me',
+      'GET stats/roster',
       'GET teams',
       'GET reports',
       'GET leave',
@@ -100,14 +105,14 @@ const personas = [
   {
     role: 'Client Contract Manager',
     email: 'codex.smoke.client-contract-manager@vmecc.local',
-    mustAllow: ['GET dashboard/me', 'GET teams', 'GET messages/threads'],
+    mustAllow: ['GET teams', 'GET messages/threads'],
     mustDeny: ['GET users', 'GET audit-logs', 'GET leave', 'GET payroll/claims'],
     routes: ['/dashboard', '/messages', '/team/details'],
   },
   {
     role: 'Representative',
     email: 'codex.smoke.representative@vmecc.local',
-    mustAllow: ['GET dashboard/me', 'GET teams', 'GET messages/threads'],
+    mustAllow: ['GET teams', 'GET messages/threads'],
     mustDeny: ['GET users', 'GET audit-logs', 'GET leave', 'GET payroll/claims'],
     routes: ['/dashboard', '/messages', '/team/details'],
   },
@@ -293,7 +298,7 @@ const isExpectedRoute = (currentPath, expectedRoute) => {
   )
 }
 const hasDashboardSettledState = () => {
-  const overview = document.querySelector('[data-tour-id="dashboard-overview"]')
+  const overview = document.querySelector('[data-testid="dashboard-overview"]')
   if (!overview) return false
   const actionQueue = document.querySelector('[data-testid="dashboard-action-queue"]')
   if (!actionQueue) return false

@@ -137,11 +137,12 @@ export const refreshCsrfToken = async () => {
 
 export const fetchWithCsrfRetry = async (url, options = {}, retried = false) => {
   const method = String(options.method || 'GET').toUpperCase()
-  if (isUnsafeMethod(method) && !csrfToken) {
+  const skipCsrfRefresh = options.skipCsrfRefresh === true
+  if (isUnsafeMethod(method) && !csrfToken && !skipCsrfRefresh) {
     await refreshCsrfToken()
   }
 
-  const { headers: _headers, ...fetchOptions } = options
+  const { headers: _headers, skipCsrfRefresh: _skipCsrfRefresh, ...fetchOptions } = options
   const response = await fetch(url, {
     ...fetchOptions,
     method,

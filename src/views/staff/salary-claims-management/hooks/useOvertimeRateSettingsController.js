@@ -19,6 +19,7 @@ const useOvertimeRateSettingsController = ({
   const [baseError, setBaseError] = useState(null)
   const [sampleBasicSalaryInput, setSampleBasicSalaryInput] = useState(SAMPLE_BASIC_SALARY_DEFAULT)
   const [isSampleBasicSalaryEditing, setIsSampleBasicSalaryEditing] = useState(false)
+  const [pendingDiscardContinuation, setPendingDiscardContinuation] = useState(null)
   const rateHistory = Array.isArray(otRateSettings?.rateHistory) ? otRateSettings.rateHistory : []
 
   const baseHourCalculation = useMemo(
@@ -272,18 +273,38 @@ const useOvertimeRateSettingsController = ({
     setIsApplicabilityEditing(false)
   }, [reloadOvertimeRates])
 
-  const discardUnsavedOtEdits = useCallback(() => {
-    const shouldDiscard =
-      !otRateDirty ||
-      window.confirm('You have unsaved OT settings changes. Discard them and continue?')
-    if (!shouldDiscard) return false
+  const discardOtEditState = useCallback(() => {
     reloadOvertimeRates()
     setIsRateEditing(false)
     setIsBaseEditing(false)
     setIsApplicabilityEditing(false)
     setBaseError(null)
+  }, [reloadOvertimeRates])
+
+  const discardUnsavedOtEdits = useCallback(
+    (onDiscard) => {
+      if (!otRateDirty) {
+        discardOtEditState()
+        onDiscard?.()
+        return true
+      }
+      setPendingDiscardContinuation(() => (typeof onDiscard === 'function' ? onDiscard : null))
+      return false
+    },
+    [discardOtEditState, otRateDirty],
+  )
+
+  const cancelDiscardUnsavedOtEdits = useCallback(() => {
+    setPendingDiscardContinuation(null)
+  }, [])
+
+  const confirmDiscardUnsavedOtEdits = useCallback(() => {
+    const continuation = pendingDiscardContinuation
+    setPendingDiscardContinuation(null)
+    discardOtEditState()
+    continuation?.()
     return true
-  }, [otRateDirty, reloadOvertimeRates])
+  }, [discardOtEditState, pendingDiscardContinuation])
 
   return {
     isApplicabilityEditing,
@@ -318,6 +339,9 @@ const useOvertimeRateSettingsController = ({
     handleApplicabilitySave,
     handleApplicabilityCancel,
     discardUnsavedOtEdits,
+    pendingDiscardUnsavedOtEdits: Boolean(pendingDiscardContinuation),
+    cancelDiscardUnsavedOtEdits,
+    confirmDiscardUnsavedOtEdits,
   }
 }
 

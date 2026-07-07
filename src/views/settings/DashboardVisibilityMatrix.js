@@ -210,7 +210,7 @@ const DashboardVisibilityMatrix = () => {
     <>
       <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
 
-      <div className="mb-4" data-tour-id="settings-dashboard-visibility-panel">
+      <div className="mb-4" data-testid="settings-dashboard-visibility-panel">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <div>
             <div className="fw-semibold">

@@ -1,5 +1,5 @@
 import React from 'react'
-import { FrtDailyInspectionChecks } from 'src/views/inspection/components/InspectionFormDisplaySections'
+import { FrtDailyInspectionChecks } from './frtDailyInspectionChecks'
 
 export const FrtDailyEditSection = ({
   mainLocation,
@@ -7,6 +7,8 @@ export const FrtDailyEditSection = ({
   form,
   summary,
   fieldErrors = {},
+  validationState = null,
+  draftStatus = '',
   handlers = {},
 }) => (
   <FrtDailyInspectionChecks
@@ -16,6 +18,7 @@ export const FrtDailyEditSection = ({
     form={form}
     onUpdateSessionMeta={handlers.onUpdateSessionMeta}
     onUpdateCheck={handlers.onUpdateCheck}
+    onResetCheck={handlers.onResetCheck}
     onMarkRowOk={handlers.onMarkRowOk}
     onMarkAllOk={handlers.onMarkAllOk}
     onRequestIssuePhotoUpload={handlers.onRequestFrtIssuePhotoUpload}
@@ -25,7 +28,12 @@ export const FrtDailyEditSection = ({
     selectedTruckOption={handlers.selectedTruckOption}
     onEditTruck={handlers.onEditTruck}
     onDeleteTruck={handlers.onDeleteTruck}
+    onSaveFrtRowDraft={handlers.onSaveFrtRowDraft}
+    onAddItem={handlers.onAddFrtItem}
+    onDeleteItem={handlers.onDeleteFrtItem}
     fieldErrors={fieldErrors}
+    validationState={validationState}
+    draftStatus={draftStatus}
   />
 )
 

@@ -26,8 +26,8 @@ const Profile = () => {
   }
 
   return (
-    <CContainer fluid>
-      <CNav variant="underline" role="tablist" className="mb-3">
+    <CContainer fluid data-testid="profile-module">
+      <CNav variant="underline" role="tablist" className="mb-3" data-testid="profile-nav">
         <CNavItem role="presentation">
           <CNavLink
             active={activeSection === 'profile'}
@@ -51,14 +51,26 @@ const Profile = () => {
       </CNav>
 
       {activeSection === 'security' ? (
-        <SecuritySection />
+        <div data-testid="profile-security">
+          <SecuritySection />
+        </div>
       ) : (
         <>
-          <AccountSection user={user} roles={userRoles} />
-          <EmergencySection contact={user.emergency_contact} user={user} />
-          <BankingSection banking={user.banking_info} />
-          <StatutorySection statutory={user.statutory_info} />
-          <MedicalSection medical={user.medical_info} />
+          <div data-testid="profile-personal">
+            <AccountSection user={user} roles={userRoles} />
+          </div>
+          <div data-testid="profile-emergency">
+            <EmergencySection contact={user.emergency_contact} user={user} />
+          </div>
+          <div data-testid="profile-banking">
+            <BankingSection banking={user.banking_info} />
+          </div>
+          <div data-testid="profile-statutory">
+            <StatutorySection statutory={user.statutory_info} />
+          </div>
+          <div data-testid="profile-medical">
+            <MedicalSection medical={user.medical_info} />
+          </div>
         </>
       )}
     </CContainer>

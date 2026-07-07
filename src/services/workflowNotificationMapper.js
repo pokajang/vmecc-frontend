@@ -48,17 +48,43 @@ export const buildWorkflowNotificationDeepLink = ({
   recordId = '',
   ownerUserId = '',
   actionRequiredForViewer = false,
+  reportType = '',
+  reportUid = '',
 } = {}) => {
   const normalizedModule = normalizeText(module).toLowerCase()
   const normalizedRecordType = normalizeText(recordType).toLowerCase()
+  const normalizedReportType = normalizeText(reportType).toLowerCase()
   const routeKey = normalizeText(detailRouteKey)
+  const normalizedReportUid = normalizeText(reportUid) || routeKey
   const displayId = normalizeText(recordDisplayId)
   const id = normalizeText(recordId)
   const owner = normalizeText(ownerUserId)
 
+  if (normalizedModule === 'report' || normalizedRecordType === 'report') {
+    if (normalizedReportType === 'inspection') {
+      return normalizedReportUid
+        ? `/inspection/${encodeURIComponent(normalizedReportUid)}`
+        : '/reports?reportType=inspection'
+    }
+
+    return normalizedReportType && normalizedReportUid
+      ? `/report/${encodeURIComponent(normalizedReportType)}/${encodeURIComponent(normalizedReportUid)}`
+      : '/reports'
+  }
+
+  if (normalizedModule === 'inspection') {
+    return normalizedReportUid
+      ? `/inspection/${encodeURIComponent(normalizedReportUid)}`
+      : '/reports?reportType=inspection'
+  }
+
   if (routeKey) {
     if (normalizedRecordType === 'team' || normalizedModule === 'team') {
       return `/team/details/${encodeURIComponent(routeKey)}`
+    }
+
+    if (normalizedRecordType === 'roster' || normalizedModule === 'roster') {
+      return '/roster'
     }
 
     if (normalizedRecordType === 'overtime' || normalizedModule === 'overtime') {
@@ -98,6 +124,10 @@ export const buildWorkflowNotificationDeepLink = ({
 
   if (normalizedRecordType === 'team' || normalizedModule === 'team') {
     return id ? `/team/details/${encodeURIComponent(id)}` : '/team/details'
+  }
+
+  if (normalizedRecordType === 'roster' || normalizedModule === 'roster') {
+    return '/roster'
   }
 
   if (normalizedModule === 'overtime') {
@@ -150,6 +180,8 @@ export const toWorkflowNotificationPayload = (event = {}) => {
   const recordDisplayId = normalizeText(event?.recordDisplayId || event?.metadata?.recordDisplayId)
   const recordId = normalizeText(event?.recordId || event?.metadata?.recordId)
   const ownerUserId = normalizeText(event?.ownerUserId || event?.metadata?.ownerUserId)
+  const reportType = normalizeText(event?.reportType || event?.metadata?.reportType).toLowerCase()
+  const reportUid = normalizeText(event?.reportUid || event?.metadata?.reportUid)
   const actionRequiredForViewer = Boolean(event?.actionRequiredForViewer)
   const read = deriveReadState(event)
 
@@ -161,6 +193,8 @@ export const toWorkflowNotificationPayload = (event = {}) => {
     recordDisplayId,
     recordId,
     ownerUserId,
+    reportType,
+    reportUid,
     read,
     unread: !read,
     actionRequired: Boolean(event?.actionRequired),
@@ -173,6 +207,8 @@ export const toWorkflowNotificationPayload = (event = {}) => {
       recordId,
       ownerUserId,
       actionRequiredForViewer,
+      reportType,
+      reportUid,
     }),
   }
 }

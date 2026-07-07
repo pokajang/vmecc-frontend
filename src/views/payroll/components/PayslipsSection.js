@@ -91,7 +91,7 @@ const PayslipsSection = ({
 
   const renderDownloadActions = (row) => (
     <RowActions
-      tourId={
+      testId={
         firstDownloadableRowId === String(row?.payslipId || row?.id || '').trim()
           ? 'payroll-payslip-download-action'
           : ''
@@ -280,7 +280,7 @@ const PayslipsSection = ({
   ]
 
   return (
-    <CCard data-tour-id="payroll-payslips">
+    <CCard data-testid="payroll-payslips">
       <CCardHeader>Payslips</CCardHeader>
       <CCardBody>
         {errorMessage && (
@@ -401,7 +401,7 @@ const PayslipsSection = ({
                           onMouseDown={(event) => event.stopPropagation()}
                         >
                           <RowActions
-                            tourId={
+                            testId={
                               firstDownloadableRowId ===
                               String(row?.payslipId || row?.id || '').trim()
                                 ? 'payroll-payslip-download-action'

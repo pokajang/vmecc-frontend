@@ -104,7 +104,7 @@ const SalaryAdjustmentCard = ({
             onChange={(e) => onUpdateDraftItem({ lineNotes: e.target.value })}
           />
         </CCol>
-        <CCol md={6} data-tour-id="payroll-claim-attachments">
+        <CCol md={6} data-testid="payroll-claim-attachments">
           <CFormLabel htmlFor="salary-attachment">Supporting Attachment (Optional)</CFormLabel>
           <CFormInput
             id="salary-attachment"

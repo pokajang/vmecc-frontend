@@ -14,7 +14,7 @@ const UserManagementHeader = ({
   actionsOnly = false,
 }) => {
   const actionSurface = (
-    <div data-tour-id="users-create-action" className="d-flex flex-wrap align-items-center gap-2">
+    <div data-testid="users-create-action" className="d-flex flex-wrap align-items-center gap-2">
       <CreateActionButton
         label={showForm ? 'Close' : 'Create User'}
         disabled={submitStatus.loading}

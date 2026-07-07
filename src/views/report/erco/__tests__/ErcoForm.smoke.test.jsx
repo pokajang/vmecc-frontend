@@ -1,12 +1,20 @@
 // @vitest-environment jsdom
 import React, { useState } from 'react'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import ErcoSetupStep from '../ErcoSetupStep'
 import ErcoRespondingTeamStep from '../ErcoRespondingTeamStep'
 import ErcoDetailsStep from '../ErcoDetailsStep'
 import { defaultErcoForm } from '../utils'
 import { PostIncidentAnalysisSection } from '../erco-form-components'
+
+const { streamAiHelperMessage } = vi.hoisted(() => ({
+  streamAiHelperMessage: vi.fn(),
+}))
+
+vi.mock('src/services/api/aiHelperApi', () => ({
+  streamAiHelperMessage,
+}))
 
 const createStorageMock = () => {
   let store = {}
@@ -25,6 +33,40 @@ const createStorageMock = () => {
 }
 
 vi.stubGlobal('localStorage', createStorageMock())
+
+beforeEach(() => {
+  streamAiHelperMessage.mockReset()
+  streamAiHelperMessage.mockImplementation(async (payload, handlers) => {
+    if (String(payload?.message || '').includes('Check this ERCO report')) {
+      const reviewJson = JSON.stringify({
+        items: [
+          {
+            status: 'needs_attention',
+            message: 'Chronology has a gap that may need a short note if relevant.',
+          },
+        ],
+      })
+      handlers.onDelta?.({
+        text: reviewJson,
+      })
+      handlers.onDone?.({
+        message: {
+          content: reviewJson,
+        },
+      })
+      return
+    }
+
+    handlers.onDelta?.({
+      text: 'Generated incident summary from AI.',
+    })
+    handlers.onDone?.({
+      message: {
+        content: 'Generated incident summary from AI.',
+      },
+    })
+  })
+})
 
 afterEach(() => {
   cleanup()
@@ -280,6 +322,78 @@ describe('ERCO step smoke flow', () => {
       )
     })
   })
+
+  it('generates an ERCO summary through Ask AI and applies the preview', async () => {
+    await proceedToDetailsStep()
+
+    fireEvent.click(screen.getByRole('button', { name: /Generate AI summary/i }))
+    await waitFor(() => expect(screen.getByText('Generate Incident Summary')).toBeTruthy())
+    fireEvent.click(screen.getByRole('button', { name: 'Generate Summary' }))
+
+    await waitFor(() => {
+      expect(streamAiHelperMessage).toHaveBeenCalledTimes(1)
+      expect(screen.getByDisplayValue('Generated incident summary from AI.')).toBeTruthy()
+    })
+
+    const [payload] = streamAiHelperMessage.mock.calls[0]
+    expect(payload.response_language).toBe('en')
+    expect(payload.page_context.route_key).toBe('reports.erco.form')
+    expect(payload.message).toContain('Generate an ERCO emergency response incident summary')
+    expect(payload.message).toContain('Do not invent facts')
+    expect(payload.message).toContain('Do not include unrelated HSE, inspection')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Use This Summary' }))
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('Generated incident summary from AI.')).toBeTruthy()
+    })
+  })
+
+  it('improves an existing summary without changing the form until preview is accepted', async () => {
+    await proceedToDetailsStep()
+
+    const summaryInput = screen.getByLabelText('Summary of Emergency / Incident')
+    fireEvent.change(summaryInput, {
+      target: { value: 'Existing summary that needs clearer wording.' },
+    })
+
+    expect(screen.getByRole('button', { name: /Improve Summary with AI/i })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: /Improve Summary with AI/i }))
+    await waitFor(() => expect(screen.getByText('Improve Incident Summary')).toBeTruthy())
+    fireEvent.click(screen.getByRole('button', { name: 'Improve Summary' }))
+
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('Generated incident summary from AI.')).toBeTruthy()
+    })
+
+    const [payload] = streamAiHelperMessage.mock.calls[0]
+    expect(payload.message).toContain(
+      'Improve the existing ERCO emergency response incident summary',
+    )
+    expect(payload.message).toContain('Preserve the original meaning and facts')
+  })
+
+  it('checks the ERCO report with AI as an optional non-blocking review', async () => {
+    await proceedToDetailsStep()
+
+    fireEvent.click(screen.getByRole('button', { name: /Check report with AI/i }))
+    await waitFor(() => expect(screen.getByText('Check Report with AI')).toBeTruthy())
+    expect(screen.getByText(/does not block submission/i)).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Check Report' }))
+
+    await waitFor(() => {
+      expect(screen.getByText('Needs attention')).toBeTruthy()
+      expect(
+        screen.getByText('Chronology has a gap that may need a short note if relevant.'),
+      ).toBeTruthy()
+    })
+
+    const [payload] = streamAiHelperMessage.mock.calls[0]
+    expect(payload.response_language).toBe('en')
+    expect(payload.page_context.route_key).toBe('reports.erco.form')
+    expect(payload.message).toContain('Check this ERCO report')
+    expect(payload.message).toContain('Return strict JSON only')
+  })
 })
 
 describe('ERCO mobile setup polish', () => {
@@ -295,7 +409,7 @@ describe('ERCO mobile setup polish', () => {
     expect(screen.getByText('Choose Incident Type')).toBeTruthy()
   })
 
-  it('keeps area open for multi-select on mobile until Done is tapped', async () => {
+  it('keeps area open for multi-select on mobile until Confirm Areas is tapped', async () => {
     const scrollSpy = vi.fn()
     window.HTMLElement.prototype.scrollIntoView = scrollSpy
 
@@ -304,7 +418,7 @@ describe('ERCO mobile setup polish', () => {
     fireEvent.click(screen.getByText('Zone 1'))
     fireEvent.click(screen.getByText('Zone 2'))
     expect(scrollSpy).not.toHaveBeenCalled()
-    fireEvent.click(screen.getByRole('button', { name: 'Done' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm Areas' }))
 
     await waitFor(() => expect(screen.getByText('2 areas selected')).toBeTruthy())
   })
@@ -332,13 +446,17 @@ describe('ERCO mobile setup polish', () => {
     await waitFor(() => expect(screen.getByText('Choose Area')).toBeTruthy())
   })
 
-  it('keeps desktop setup expanded', () => {
+  it('collapses completed desktop setup groups into summaries', () => {
     renderSetupStep({ mobile: false })
 
+    expect(screen.getByRole('group', { name: 'Incident Type' })).toBeTruthy()
+    expect(screen.getByRole('group', { name: 'Weather' })).toBeTruthy()
+    expect(screen.getByRole('group', { name: 'Area' })).toBeTruthy()
+    expect(screen.getByRole('group', { name: 'Date & Time' })).toBeTruthy()
+    expect(screen.queryByText('Choose Emergency / Incident Type')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Incident Type' }))
     expect(screen.getByText('Choose Emergency / Incident Type')).toBeTruthy()
-    expect(screen.getByText('Choose Weather')).toBeTruthy()
-    expect(screen.getByText('Choose Location / Area')).toBeTruthy()
-    expect(screen.queryByText('Date & Time')).toBeNull()
   })
 })
 

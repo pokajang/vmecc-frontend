@@ -8,7 +8,7 @@ const stopActionPropagation = (event) => {
 const RowActionCell = ({ children, className = 'text-center', ...props }) => (
   <CTableDataCell
     {...props}
-    className={className}
+    className={['row-action-cell', className].filter(Boolean).join(' ')}
     onClick={stopActionPropagation}
     onMouseDown={stopActionPropagation}
     onKeyDown={stopActionPropagation}

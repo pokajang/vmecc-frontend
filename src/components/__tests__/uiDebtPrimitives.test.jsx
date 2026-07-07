@@ -208,6 +208,7 @@ describe('UI debt shared primitives', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
     expect(handleAction).toHaveBeenCalledTimes(1)
     expect(handleRowOpen).not.toHaveBeenCalled()
+    expect(screen.getAllByRole('cell')[1].className).toContain('row-action-cell')
   })
 
   it('renders bulk selection action bars with summary, controls, actions, and mobile tray class', () => {
@@ -274,24 +275,24 @@ describe('UI debt shared primitives', () => {
       <FormActionGroup
         leading={<button type="button">Reset</button>}
         mobileVariant="compact-sticky"
-        statusMessage="Saved locally. Keep browser data to recover later."
+        statusMessage="Saved locally. Backend sync pending"
       >
         <button type="button">Save Draft</button>
-        <button type="button">Save & Review</button>
+        <button type="button">Review Inspections</button>
       </FormActionGroup>,
     )
 
     const group = screen.getByRole('group', { name: 'Form actions' })
     expect(group.className).toContain('action-row-thumb--compact-sticky')
     expect(group.className).toContain('action-row-thumb--has-leading')
-    expect(screen.getByText('Saved locally. Keep browser data to recover later.')).toBeTruthy()
+    expect(screen.getByText('Saved locally. Backend sync pending')).toBeTruthy()
     expect(document.querySelector('.action-row-thumb-spacer--compact')).toBeTruthy()
     expect(document.querySelector('.action-row-thumb-spacer--compact-with-leading')).toBeTruthy()
     expect(
       within(group)
         .getAllByRole('button')
         .map((button) => button.textContent),
-    ).toEqual(['Reset', 'Save Draft', 'Save & Review'])
+    ).toEqual(['Reset', 'Save Draft', 'Review Inspections'])
   })
 
   it('keeps search inline while exposing structured filters through a mobile drawer trigger', () => {

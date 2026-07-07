@@ -48,7 +48,7 @@ const DeleteTeamModalContent = ({ visible, team, onClose, onDeleted }) => {
         <CModalTitle className="text-danger">Delete {team?.name || 'Team'}</CModalTitle>
       </CModalHeader>
 
-      <CModalBody data-tour-id="team-directory-delete-modal">
+      <CModalBody data-testid="team-directory-delete-modal">
         {activeCount > 0 && (
           <div
             className="rounded-2 px-3 py-2 mb-3"

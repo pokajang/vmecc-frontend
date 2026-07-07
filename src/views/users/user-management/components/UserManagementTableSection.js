@@ -95,7 +95,7 @@ const UserManagementTableSection = ({
   ]
 
   return (
-    <div data-tour-id="users-list">
+    <div data-testid="users-list">
       {selectedCount > 0 && (
         <UserBulkActionsBar
           selectedCount={selectedCount}
@@ -108,7 +108,7 @@ const UserManagementTableSection = ({
         />
       )}
 
-      <div data-tour-id="users-filters">
+      <div data-testid="users-filters">
         <TableFilters
           searchValue={search}
           onSearchChange={onSearchChange}

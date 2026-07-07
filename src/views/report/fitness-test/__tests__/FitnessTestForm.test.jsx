@@ -50,16 +50,16 @@ describe('FitnessTestForm', () => {
     await waitFor(() => expect(screen.getByText('Heat Stress Test')).toBeTruthy())
     expect(screen.queryByText('Choose Fitness Test Type')).toBeNull()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Type' }))
     expect(screen.getByText('Choose Fitness Test Type')).toBeTruthy()
 
     fireEvent.click(screen.getByText('Team Readiness Test'))
     await waitFor(() => expect(screen.getByText('Team Readiness Test')).toBeTruthy())
     expect(screen.queryByText('Choose Fitness Test Type')).toBeNull()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Type' }))
     expect(screen.getByText('Choose Fitness Test Type')).toBeTruthy()
-    fireEvent.click(screen.getByRole('button', { name: 'Done' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm Test Type' }))
     expect(screen.queryByText('Choose Fitness Test Type')).toBeNull()
   })
 

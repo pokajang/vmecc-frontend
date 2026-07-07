@@ -62,7 +62,7 @@ const OvertimeRecordsSection = ({
   getEndDateTimeLabel,
   isLoading = false,
   showPrimaryAction = true,
-  filtersTourId = null,
+  filtersTestId = null,
 }) => {
   const indexedVisibleRows = (Array.isArray(visibleRows) ? visibleRows : []).map((row, index) => ({
     row,
@@ -204,7 +204,7 @@ const OvertimeRecordsSection = ({
         ) : null}
       </CCardHeader>
       <CCardBody>
-        <div {...(filtersTourId ? { 'data-tour-id': filtersTourId } : {})}>
+        <div {...(filtersTestId ? { 'data-testid': filtersTestId } : {})}>
           <TableFilters
             searchValue={search}
             onSearchChange={setSearch}

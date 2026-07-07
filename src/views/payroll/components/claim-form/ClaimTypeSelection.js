@@ -47,7 +47,7 @@ const ClaimTypeSelection = ({
   const selectedSalaryPeriodLockReason = isSalaryType ? salaryPeriodLocks?.[periodValue] || '' : ''
 
   return (
-    <div className="d-grid gap-4" data-tour-id="payroll-claim-type-selection">
+    <div className="d-grid gap-4" data-testid="payroll-claim-type-selection">
       <div>
         <div className="fw-semibold">Choose Claim Type</div>
         {typeLocked && (
@@ -112,7 +112,7 @@ const ClaimTypeSelection = ({
         )}
         <CButton
           color="primary"
-          data-tour-id="payroll-claim-type-continue"
+          data-testid="payroll-claim-type-continue"
           disabled={!selectedType || !periodValue || Boolean(selectedSalaryPeriodLockReason)}
           onClick={() => onContinue(selectedType)}
         >

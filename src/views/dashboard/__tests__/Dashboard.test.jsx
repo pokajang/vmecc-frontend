@@ -53,15 +53,10 @@ vi.mock('react-redux', () => ({
   useSelector: (selector) => selector({ authUser, moduleActivation }),
 }))
 
-vi.mock('../hooks/useMyStats', () => ({
-  default: () => ({ stats: {}, loading: false, error: null }),
-}))
-
 vi.mock('../hooks/useDashboardStats', () => ({
   default: () => dashboardStats,
 }))
 
-vi.mock('../components/MyStats', () => ({ default: () => <div>My stats</div> }))
 vi.mock('../components/PayrollStats', () => ({
   PayrollKpiTiles: () => <div>Payroll KPI</div>,
   PayrollOperationsCard: () => <div>Payroll operations</div>,

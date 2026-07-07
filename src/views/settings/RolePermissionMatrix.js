@@ -195,7 +195,7 @@ const RolePermissionMatrix = () => {
       <style>{scrollbarStyle}</style>
       <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
 
-      <div className="mb-4" data-tour-id="settings-role-permissions-panel">
+      <div className="mb-4" data-testid="settings-role-permissions-panel">
         <div className="d-flex justify-content-between align-items-center mb-3">
           <span className="fw-semibold">
             {viewMode === VIEW_MODE_ROLE ? 'Role Permission Editor' : 'Role Permission Matrix'}

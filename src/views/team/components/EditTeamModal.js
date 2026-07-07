@@ -360,7 +360,7 @@ const EditTeamModalContent = ({
           <StatusPill label={rosterStatus || 'Unscheduled'} />
         </div>
       </CModalHeader>
-      <CModalBody data-tour-id="team-directory-edit-modal">
+      <CModalBody data-testid="team-directory-edit-modal">
         {error && (
           <CAlert color="danger" className="mb-3">
             {error}
@@ -387,7 +387,7 @@ const EditTeamModalContent = ({
             </CCol>
 
             {/* Members */}
-            <CCol xs={12} data-tour-id="team-directory-members-editor">
+            <CCol xs={12} data-testid="team-directory-members-editor">
               <CFormLabel>Members</CFormLabel>
               <Select
                 key={selectReset}
@@ -444,7 +444,7 @@ const EditTeamModalContent = ({
             </CCol>
 
             {/* Image picker */}
-            <CCol xs={12} data-tour-id="team-directory-image-picker">
+            <CCol xs={12} data-testid="team-directory-image-picker">
               <CFormLabel>Team Photo</CFormLabel>
               <ImagePicker
                 key={`${team?.id ?? 'none'}-${team?.image_url || 'no-image'}`}
@@ -462,7 +462,7 @@ const EditTeamModalContent = ({
               variant="ghost"
               disabled={saving}
               onClick={() => setShowDeleteModal(true)}
-              data-tour-id="team-directory-delete-action"
+              data-testid="team-directory-delete-action"
             >
               Delete team
             </CButton>

@@ -5,7 +5,7 @@ const ClaimDraftHeaderBar = ({ activeDraftId }) =>
   activeDraftId ? (
     <div
       className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center gap-2"
-      data-tour-id="payroll-claim-draft-panel"
+      data-testid="payroll-claim-draft-panel"
     >
       <CBadge color="info">Editing Draft</CBadge>
       <span className="text-body-secondary small">Draft ID: {activeDraftId}</span>

@@ -15,7 +15,7 @@ import {
   CToaster,
   CTooltip,
 } from '@coreui/react'
-import { Bell, BookOpen, Flag, MessageSquareText, Menu, Sparkles, User } from 'lucide-react'
+import { Bell, Flag, MessageSquareText, Menu, Sparkles, User } from 'lucide-react'
 
 import { AppHeaderDropdown } from './header/index'
 import FeedbackReportModal from './header/FeedbackReportModal'
@@ -23,7 +23,6 @@ import MobileNavSheet from './header/MobileNavSheet'
 import NotificationDrawer from './NotificationDrawer'
 import WorkflowNotifications from 'src/views/notifications/workflow/WorkflowNotifications'
 import ErrorBoundary from './ErrorBoundary'
-import TutorialHubModal from 'src/components/onboarding/TutorialHubModal'
 import useWorkflowNotificationCounts from 'src/hooks/useWorkflowNotificationCounts'
 import useMessageUnreadCount from 'src/hooks/useMessageUnreadCount'
 import useOnDutyTeam from 'src/hooks/useOnDutyTeam'
@@ -35,8 +34,7 @@ import { hasAnyPermission, hasPermission, isSystemAdministrator } from 'src/util
 import { isModuleEnabled } from 'src/utils/modules'
 import navigation from 'src/_nav'
 import { useGuardedNavigate } from 'src/contexts/NavigationGuardContext'
-import { getVisibleTutorialHubItems } from 'src/onboarding/tutorialRegistry'
-import useOnboardingVisibilityOptions from 'src/onboarding/useOnboardingVisibilityOptions'
+import useHeaderVisibilityOptions from 'src/hooks/useHeaderVisibilityOptions'
 import { PWA_INSTALL_ACTION } from 'src/constants/pwa'
 
 const HEADER_TOOLTIP_TRIGGER = ['hover']
@@ -83,26 +81,22 @@ const AppHeader = () => {
   const canLeave = hasPermission(authUser, 'self.leave')
   const canOvertimePermission = hasPermission(authUser, 'self.overtime')
   const isSysAdmin = isSystemAdministrator(authUser)
-  const onboardingVisibilityOptions = useOnboardingVisibilityOptions()
+  const headerVisibilityOptions = useHeaderVisibilityOptions()
   const canOvertime = isSysAdmin
     ? overtimeEnabled && canOvertimePermission
     : overtimeEnabled &&
       canOvertimePermission &&
-      onboardingVisibilityOptions.overtimeEligibilityResolved &&
-      onboardingVisibilityOptions.overtimeEligible
+      headerVisibilityOptions.overtimeEligibilityResolved &&
+      headerVisibilityOptions.overtimeEligible
 
   const menuData = useMemo(
     () =>
       getVisibleNavigationWithOptions(navigation, authUser, unreadCount, {
-        overtimeEligible: onboardingVisibilityOptions.overtimeEligible,
-        moduleActivation: onboardingVisibilityOptions.moduleActivation,
+        overtimeEligible: headerVisibilityOptions.overtimeEligible,
+        moduleActivation: headerVisibilityOptions.moduleActivation,
         showNavInstallItem,
       }),
-    [authUser, onboardingVisibilityOptions, showNavInstallItem, unreadCount],
-  )
-  const tutorialItems = useMemo(
-    () => getVisibleTutorialHubItems(authUser, onboardingVisibilityOptions),
-    [authUser, onboardingVisibilityOptions],
+    [authUser, headerVisibilityOptions, showNavInstallItem, unreadCount],
   )
   useEffect(() => {
     const handleScroll = () => {
@@ -195,13 +189,6 @@ const AppHeader = () => {
     setMobileOverlay(null)
     dispatch({ type: 'set', aiHelperOpen: true, sidebarShow: false })
   }, [dispatch])
-
-  const openTutorialHub = useCallback((event) => {
-    event?.preventDefault?.()
-    returnFocusRef.current = event?.currentTarget || null
-    event?.currentTarget?.blur?.()
-    setMobileOverlay('tutorial')
-  }, [])
 
   const closeFeedbackReportModal = useCallback(() => {
     if (isSubmittingFeedback) return
@@ -299,21 +286,6 @@ const AppHeader = () => {
           </NavLink>
         </CNavItem>
       )}
-
-      <CNavItem>
-        <CTooltip content="Tutorial" placement="bottom" trigger={HEADER_TOOLTIP_TRIGGER}>
-          <CNavLink
-            as="button"
-            type="button"
-            className="px-2 border-0 bg-transparent d-inline-flex align-items-center gap-1"
-            onClick={openTutorialHub}
-            aria-label="Open tutorial"
-          >
-            <BookOpen size={16} />
-            <span className="d-none d-lg-inline">Tutorial</span>
-          </CNavLink>
-        </CTooltip>
-      </CNavItem>
 
       <CNavItem>
         <CTooltip content="Report issue" placement="bottom" trigger={HEADER_TOOLTIP_TRIGGER}>
@@ -417,19 +389,6 @@ const AppHeader = () => {
 
         <button
           type="button"
-          className="app-bottom-nav-item"
-          onClick={openTutorialHub}
-          aria-label="Open tutorial"
-          aria-haspopup="dialog"
-          aria-expanded={mobileOverlay === 'tutorial'}
-          data-active={mobileOverlay === 'tutorial'}
-        >
-          <BookOpen size={20} />
-          <span className="app-bottom-nav-label">Tutorial</span>
-        </button>
-
-        <button
-          type="button"
           className={`app-bottom-nav-item${aiHelperOpen ? ' active' : ''}`}
           onClick={openAiHelper}
           aria-label="Ask AI"
@@ -502,15 +461,6 @@ const AppHeader = () => {
           </ErrorBoundary>
         ) : null}
       </NotificationDrawer>
-
-      <TutorialHubModal
-        visible={mobileOverlay === 'tutorial'}
-        onClose={closeMobileOverlay}
-        onNavigate={(to) => guardedNavigate(to)}
-        tutorials={tutorialItems}
-        user={authUser}
-        returnFocusRef={returnFocusRef}
-      />
 
       <FeedbackReportModal
         visible={feedbackModalVisible}

@@ -30,8 +30,12 @@ const IncidentTitleField = ({
 }) => (
   <div className="d-grid gap-3">
     <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
-      <div className="fw-semibold">Title of Incident</div>
-      <CreateActionButton label="Add title" onClick={titleManager.openAddModal} />
+      <div className="fw-semibold text-muted">Title of Incident</div>
+      <CreateActionButton
+        label="Add title"
+        className="inspection-compact-action-btn"
+        onClick={titleManager.openAddModal}
+      />
     </div>
     <Select
       inputId="erco-incident-title"

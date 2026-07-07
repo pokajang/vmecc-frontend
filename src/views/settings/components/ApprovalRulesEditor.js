@@ -198,7 +198,9 @@ const ApprovalRulesEditor = ({
                     <CTableHeaderCell key={stage.key}>{stage.label}</CTableHeaderCell>
                   ))}
                   <CTableHeaderCell className="text-center">Active</CTableHeaderCell>
-                  <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
+                  <CTableHeaderCell className="table-sticky-action-cell text-center">
+                    Action
+                  </CTableHeaderCell>
                 </CTableRow>
               </CTableHead>
               <CTableBody>
@@ -253,7 +255,7 @@ const ApprovalRulesEditor = ({
                         disabled={!editMode || loading}
                       />
                     </CTableDataCell>
-                    <CTableDataCell className="text-center">
+                    <CTableDataCell className="table-sticky-action-cell text-center">
                       {editMode ? (
                         <CButton
                           size="sm"

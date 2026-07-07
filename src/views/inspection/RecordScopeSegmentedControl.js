@@ -1,1 +1,1 @@
-export { default } from 'src/components/report-workflow/RecordScopeSegmentedControl'
+export { default } from './ui/RecordScopeSegmentedControl'

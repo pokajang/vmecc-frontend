@@ -1,5 +1,6 @@
 import React from 'react'
 import { CCol, CRow } from '@coreui/react'
+import { CheckCircle2 } from 'lucide-react'
 import IconOptionCard from 'src/components/IconOptionCard'
 
 const sanitizeSegment = (value) =>
@@ -15,6 +16,31 @@ const resolveCardProps = (cardProps, option, isSelected) =>
 const isOptionSelected = (value, optionValue) => {
   if (Array.isArray(value)) return value.includes(optionValue)
   return value === optionValue
+}
+
+const META_TONE_CLASS = {
+  success: 'text-success',
+  muted: 'text-muted',
+}
+
+const META_ICON = {
+  check: CheckCircle2,
+}
+
+export const OptionMetaLabel = ({ iconKey = '', label = '', tone = '' }) => {
+  const text = String(label || '').trim()
+  if (!text) return null
+  const Icon = META_ICON[iconKey] || null
+  return (
+    <span
+      className={`inspection-option-meta d-inline-flex align-items-center gap-1 ${
+        META_TONE_CLASS[tone] || 'text-body-secondary'
+      }`.trim()}
+    >
+      {Icon ? <Icon size={13} aria-hidden="true" /> : null}
+      <span>{text}</span>
+    </span>
+  )
 }
 
 const IconOptionGrid = ({
@@ -47,6 +73,19 @@ const IconOptionGrid = ({
       {options.map((option) => {
         const optionValue = option?.value
         const optionTitle = option?.title || option?.label || String(optionValue || '')
+        const optionMetaLabel = String(option?.metaLabel || '').trim()
+        const titleContent = optionMetaLabel ? (
+          <span className="inspection-option-title-with-meta">
+            <span>{optionTitle}</span>
+            <OptionMetaLabel
+              iconKey={option?.metaIconKey}
+              label={optionMetaLabel}
+              tone={option?.metaTone}
+            />
+          </span>
+        ) : (
+          optionTitle
+        )
         const optionDescription = option?.description || ''
         const optionIcon = option?.icon
         const isSelected = isOptionSelected(value, optionValue)
@@ -64,7 +103,7 @@ const IconOptionGrid = ({
         return (
           <CCol key={String(key)} {...colProps}>
             <IconOptionCard
-              title={optionTitle}
+              title={titleContent}
               description={optionDescription}
               icon={optionIcon}
               fallbackIcon={option?.fallbackIcon || fallbackIcon}

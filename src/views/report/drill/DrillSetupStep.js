@@ -6,6 +6,7 @@ import IconOptionGrid from 'src/components/IconOptionGrid'
 import TypeManagerModal from 'src/components/report-workflow/TypeManagerModal'
 import { DRILL_ENVIRONMENT_OPTIONS } from './constants'
 import SelectionCards from '../components/SelectionCards'
+import { ReportSetupActions, ReportSetupSummaryRow } from '../components/ReportWorkflowUi'
 import useDrillTypeManager, { DRILL_TYPE_TOGGLE_VALUE } from './useDrillTypeManager'
 import useDrillLocationManager, { DRILL_LOCATION_TOGGLE_VALUE } from './useDrillLocationManager'
 import { recordDrillTypeUsage } from './typeUsageStorage'
@@ -16,7 +17,7 @@ const TOGGLE_CARD_PROPS = {
     borderColor: 'var(--cui-border-color, #d8dbe0)',
     borderStyle: 'dashed',
   },
-  className: 'text-primary',
+  className: 'report-option-card text-primary',
   iconContainerClassName: 'bg-white text-primary',
   titleClassName: 'fw-semibold text-primary',
 }
@@ -30,9 +31,19 @@ const DrillSetupStep = ({
   datePresetOptions,
   timePresetOptions,
   pushToast,
+  onSaveDraft,
   onContinue,
 }) => {
   const [isEditingType, setIsEditingType] = useState(() => !String(form.incidentType || '').trim())
+  const [isEditingEnvironment, setIsEditingEnvironment] = useState(
+    () => !String(form.weather || '').trim(),
+  )
+  const [isEditingLocation, setIsEditingLocation] = useState(
+    () => !String(form.location || '').trim(),
+  )
+  const [isEditingDateTime, setIsEditingDateTime] = useState(
+    () => !String(form.reportDate || '').trim() || !String(form.reportTime || '').trim(),
+  )
   const [deleteTypeTarget, setDeleteTypeTarget] = useState(null)
   const [deleteLocationTarget, setDeleteLocationTarget] = useState(null)
 
@@ -42,6 +53,13 @@ const DrillSetupStep = ({
   }
 
   const showTypePicker = isEditingType || !String(form.incidentType || '').trim()
+  const showEnvironmentPicker = isEditingEnvironment || !String(form.weather || '').trim()
+  const showLocationPicker = isEditingLocation || !String(form.location || '').trim()
+  const showDateTimePicker =
+    isEditingDateTime ||
+    !String(form.reportDate || '').trim() ||
+    !String(form.reportTime || '').trim()
+  const dateTimeLabel = [form.reportDate, form.reportTime].filter(Boolean).join(' ')
 
   const drillType = useDrillTypeManager({
     userId: user?.id,
@@ -60,7 +78,7 @@ const DrillSetupStep = ({
     <div className="mb-3 d-grid gap-4">
       <ActionConfirmModal
         visible={Boolean(deleteTypeTarget)}
-        tourId="drill-report-type-manager-delete-modal"
+        testId="drill-report-type-manager-delete-modal"
         title="Delete Type"
         message={
           deleteTypeTarget?.label
@@ -77,7 +95,7 @@ const DrillSetupStep = ({
       />
       <ActionConfirmModal
         visible={Boolean(deleteLocationTarget)}
-        tourId="drill-report-location-manager-delete-modal"
+        testId="drill-report-location-manager-delete-modal"
         title="Delete Location"
         message={
           deleteLocationTarget?.label
@@ -95,7 +113,7 @@ const DrillSetupStep = ({
 
       <TypeManagerModal
         visible={drillType.showAddTypeModal}
-        tourId="drill-report-type-manager-modal"
+        testId="drill-report-type-manager-modal"
         onClose={drillType.closeAddModal}
         editMode={drillType.drillTypeEditMode}
         onSetEditMode={drillType.setDrillTypeEditMode}
@@ -129,7 +147,7 @@ const DrillSetupStep = ({
       />
       <TypeManagerModal
         visible={drillLocation.showAddLocationModal}
-        tourId="drill-report-location-manager-modal"
+        testId="drill-report-location-manager-modal"
         onClose={drillLocation.closeAddModal}
         editMode={drillLocation.locationEditMode}
         onSetEditMode={drillLocation.setLocationEditMode}
@@ -159,36 +177,26 @@ const DrillSetupStep = ({
         showRowIcon={false}
       />
 
-      <div className="d-grid gap-4">
+      <div className="report-setup-grid d-grid gap-4">
         <div className="d-grid gap-3">
           {!showTypePicker ? (
             <>
-              <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
-                <div className="fw-semibold text-muted">Type</div>
-                <CreateActionButton
-                  label="Edit"
-                  showIcon={false}
-                  onClick={() => setIsEditingType(true)}
-                />
-              </div>
-              <div className="border rounded-3 bg-white p-3">
-                <div className="fw-semibold">{form.incidentType}</div>
-              </div>
+              <ReportSetupSummaryRow
+                label="Type"
+                value={form.incidentType}
+                showDesktop
+                onEdit={() => setIsEditingType(true)}
+                onReset={() => {
+                  updateSetupField('incidentType', '')
+                  setIsEditingType(true)
+                }}
+              />
             </>
           ) : (
             <>
               <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <div className="fw-semibold text-muted">Choose Drill Type</div>
-                <div className="d-flex align-items-center gap-2">
-                  <CreateActionButton label="Add type" onClick={drillType.openAddModal} />
-                  {form.incidentType ? (
-                    <CreateActionButton
-                      label="Done"
-                      showIcon={false}
-                      onClick={() => setIsEditingType(false)}
-                    />
-                  ) : null}
-                </div>
+                <CreateActionButton label="Add type" onClick={drillType.openAddModal} />
               </div>
               <IconOptionGrid
                 options={drillType.visibleTypeOptions}
@@ -207,20 +215,64 @@ const DrillSetupStep = ({
                 showDescription
                 columns={{ xs: 6, md: 3 }}
                 cardProps={(option) =>
-                  option?.value === DRILL_TYPE_TOGGLE_VALUE ? TOGGLE_CARD_PROPS : {}
+                  option?.value === DRILL_TYPE_TOGGLE_VALUE
+                    ? TOGGLE_CARD_PROPS
+                    : { className: 'report-option-card' }
                 }
               />
+              {form.incidentType ? (
+                <div className="report-setup-confirm-row">
+                  <CButton
+                    type="button"
+                    color="secondary"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsEditingType(false)}
+                  >
+                    Confirm Drill Type
+                  </CButton>
+                </div>
+              ) : null}
             </>
           )}
         </div>
-        <SelectionCards
-          label="Choose Environment / Condition"
-          options={DRILL_ENVIRONMENT_OPTIONS}
-          selectedValue={form.weather}
-          onSelect={(value) => updateSetupField('weather', value)}
-          cols={{ xs: 6, md: 4 }}
-        />
-        <div className="d-grid gap-3">
+        {form.weather && !showEnvironmentPicker ? (
+          <ReportSetupSummaryRow
+            label="Environment"
+            value={form.weather}
+            showDesktop
+            onEdit={() => setIsEditingEnvironment(true)}
+            onReset={() => {
+              updateSetupField('weather', '')
+              setIsEditingEnvironment(true)
+            }}
+          />
+        ) : null}
+        <div className={form.weather && !showEnvironmentPicker ? 'd-none' : ''}>
+          <SelectionCards
+            label="Choose Environment / Condition"
+            options={DRILL_ENVIRONMENT_OPTIONS}
+            selectedValue={form.weather}
+            onSelect={(value) => {
+              updateSetupField('weather', value)
+              setIsEditingEnvironment(false)
+            }}
+            cols={{ xs: 6, md: 4 }}
+          />
+        </div>
+        {form.location && !showLocationPicker ? (
+          <ReportSetupSummaryRow
+            label="Location"
+            value={form.location}
+            showDesktop
+            onEdit={() => setIsEditingLocation(true)}
+            onReset={() => {
+              updateSetupField('location', '')
+              setIsEditingLocation(true)
+            }}
+          />
+        ) : null}
+        <div className={form.location && !showLocationPicker ? 'd-none' : 'd-grid gap-3'}>
           <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
             <div className="fw-semibold text-muted">Choose Drill Location</div>
             <CreateActionButton label="Add location" onClick={drillLocation.openAddModal} />
@@ -234,6 +286,7 @@ const DrillSetupStep = ({
                 return
               }
               updateSetupField('location', String(nextValue || '').trim())
+              setIsEditingLocation(false)
             }}
             variant="compact"
             showDescription
@@ -241,51 +294,79 @@ const DrillSetupStep = ({
             cardProps={(option) =>
               option?.value === DRILL_LOCATION_TOGGLE_VALUE
                 ? TOGGLE_CARD_PROPS
-                : { showDescription: true }
+                : { className: 'report-option-card', showDescription: true }
             }
           />
         </div>
-        <SelectionCards
-          label="Choose Drill Date"
-          options={datePresetOptions}
-          selectedValue={form.reportDate}
-          onSelect={(value) => updateSetupField('reportDate', value)}
-          cols={{ xs: 6, md: 6 }}
-        />
-        <CRow className="g-2">
-          <CCol xs={12} md={4}>
-            <CFormLabel>Custom Drill Date</CFormLabel>
-            <CFormInput
-              type="date"
-              value={form.reportDate}
-              invalid={Boolean(setupFieldErrors.reportDate)}
-              onChange={(event) => updateSetupField('reportDate', event.target.value)}
-            />
-          </CCol>
-        </CRow>
-        <SelectionCards
-          label="Choose Start Time"
-          options={timePresetOptions}
-          selectedValue={form.reportTime}
-          onSelect={(value) => updateSetupField('reportTime', value)}
-          cols={{ xs: 6, md: 3 }}
-        />
-        <CRow className="g-2">
-          <CCol xs={12} md={4}>
-            <CFormLabel>Custom Start Time</CFormLabel>
-            <CFormInput
-              type="time"
-              value={form.reportTime}
-              invalid={Boolean(setupFieldErrors.reportTime)}
-              onChange={(event) => updateSetupField('reportTime', event.target.value)}
-            />
-          </CCol>
-        </CRow>
-        <div className="d-flex flex-column flex-sm-row justify-content-end gap-2">
-          <CButton color="primary" onClick={onContinue}>
-            Continue
-          </CButton>
+        {form.reportDate && form.reportTime && !showDateTimePicker ? (
+          <ReportSetupSummaryRow
+            label="Date & Time"
+            value={dateTimeLabel}
+            showDesktop
+            onEdit={() => setIsEditingDateTime(true)}
+            onReset={() => {
+              updateSetupField('reportDate', '')
+              updateSetupField('reportTime', '')
+              setIsEditingDateTime(true)
+            }}
+          />
+        ) : null}
+        <div
+          className={
+            form.reportDate && form.reportTime && !showDateTimePicker ? 'd-none' : 'd-grid gap-3'
+          }
+        >
+          <SelectionCards
+            label="Choose Drill Date"
+            options={datePresetOptions}
+            selectedValue={form.reportDate}
+            onSelect={(value) => updateSetupField('reportDate', value)}
+            cols={{ xs: 6, md: 6 }}
+          />
+          <CRow className="g-2">
+            <CCol xs={12} md={4}>
+              <CFormLabel>Custom Drill Date</CFormLabel>
+              <CFormInput
+                type="date"
+                value={form.reportDate}
+                invalid={Boolean(setupFieldErrors.reportDate)}
+                onChange={(event) => updateSetupField('reportDate', event.target.value)}
+              />
+            </CCol>
+          </CRow>
+          <SelectionCards
+            label="Choose Start Time"
+            options={timePresetOptions}
+            selectedValue={form.reportTime}
+            onSelect={(value) => updateSetupField('reportTime', value)}
+            cols={{ xs: 6, md: 3 }}
+          />
+          <CRow className="g-2">
+            <CCol xs={12} md={4}>
+              <CFormLabel>Custom Start Time</CFormLabel>
+              <CFormInput
+                type="time"
+                value={form.reportTime}
+                invalid={Boolean(setupFieldErrors.reportTime)}
+                onChange={(event) => updateSetupField('reportTime', event.target.value)}
+              />
+            </CCol>
+          </CRow>
+          {form.reportDate && form.reportTime ? (
+            <div className="report-setup-confirm-row">
+              <CButton
+                type="button"
+                color="secondary"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditingDateTime(false)}
+              >
+                Confirm Date & Time
+              </CButton>
+            </div>
+          ) : null}
         </div>
+        <ReportSetupActions onSaveDraft={onSaveDraft} onContinue={onContinue} />
       </div>
     </div>
   )

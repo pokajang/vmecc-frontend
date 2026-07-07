@@ -13,7 +13,7 @@ import {
 } from '@coreui/react'
 import { useSelector } from 'react-redux'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { ChevronLeft } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { hasPermission } from 'src/utils/authz'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import CreateActionButton from 'src/components/CreateActionButton'
@@ -42,6 +42,14 @@ import {
   recordToDraft,
   statusToneMap,
 } from './reportDraftDomain'
+
+const initialRouteDetailState = {
+  status: 'idle',
+  record: null,
+  errorStatus: null,
+  routeKey: '',
+}
+
 const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTypeMeta } = {}) => {
   const location = useLocation()
   const navigate = useNavigate()
@@ -64,7 +72,7 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
   const [formSessionKey, setFormSessionKey] = useState(0)
   const [draftVersion, setDraftVersion] = useState(0)
   const [showMobileRecords, setShowMobileRecords] = useState(false)
-  const [routeDetailRecord, setRouteDetailRecord] = useState(null)
+  const [routeDetailState, setRouteDetailState] = useState(initialRouteDetailState)
   const toaster = useRef()
 
   const {
@@ -94,6 +102,14 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
     reportTypeLabel,
     user,
   })
+  const routeDetailKey =
+    activeSection === 'detail' && reportId
+      ? `${activeFormSlug}:${String(reportId || '').trim()}`
+      : ''
+  const isRouteDetailStateCurrent =
+    Boolean(routeDetailKey) && routeDetailState.routeKey === routeDetailKey
+  const routeDetailRecord = isRouteDetailStateCurrent ? routeDetailState.record : null
+  const routeDetailStatus = isRouteDetailStateCurrent ? routeDetailState.status : 'idle'
 
   const {
     records,
@@ -245,7 +261,7 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
   const isDrillReport = activeFormSlug === 'drill'
   const isFitnessTestReport = activeFormSlug === 'fitness-test'
   const isWorkFirstReport = isErcoReport || isDrillReport || isFitnessTestReport
-  const onboardingAnchorPrefix = activeFormSlug ? `${activeFormSlug}-report` : ''
+  const testAnchorPrefix = activeFormSlug ? `${activeFormSlug}-report` : ''
   const selectedEditingRecord =
     records.find((row) => String(row.id || '').trim() === editingReportId) || null
   const routeDetailRecordMatches =
@@ -254,6 +270,18 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
     String(routeDetailRecord?.reportType || '').toLowerCase() === activeFormSlug
   const selectedDetailRecord =
     selectedRecord || (routeDetailRecordMatches ? routeDetailRecord : null)
+  const shouldShowRouteDetailLoading =
+    activeSection === 'detail' &&
+    !selectedDetailRecord &&
+    ['idle', 'loading'].includes(routeDetailStatus)
+  const routeDetailErrorMessage =
+    activeSection === 'detail' &&
+    !selectedDetailRecord &&
+    (routeDetailStatus === 'not-found'
+      ? 'Report not found.'
+      : routeDetailStatus === 'error'
+        ? 'Unable to load report. Please try again.'
+        : '')
   const editingDraftSeed = selectedEditingRecord
     ? recordToDraft(selectedEditingRecord, activeFormSlug)
     : null
@@ -298,26 +326,51 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
       : null
 
   useEffect(() => {
-    if (activeSection !== 'detail' || !reportId || selectedRecord) {
+    const routeReportId = String(reportId || '').trim()
+    if (activeSection !== 'detail' || !routeReportId) {
       return undefined
     }
+    const nextRouteKey = `${activeFormSlug}:${routeReportId}`
     let cancelled = false
     const loadRouteDetailRecord = async () => {
+      setRouteDetailState({
+        status: 'loading',
+        record: null,
+        errorStatus: null,
+        routeKey: nextRouteKey,
+      })
       try {
-        const row = normalizeReportRecord(await refreshReportRecord(reportId))
-        if (cancelled || !row || String(row.reportType || '').toLowerCase() !== activeFormSlug) {
+        const row = normalizeReportRecord(await refreshReportRecord(routeReportId))
+        if (cancelled) {
           return
         }
-        setRouteDetailRecord(row)
-      } catch {
-        if (!cancelled) setRouteDetailRecord(null)
+        const isMatchingRouteRecord =
+          row &&
+          String(row.id || '').trim() === routeReportId &&
+          String(row.reportType || '').toLowerCase() === activeFormSlug
+
+        setRouteDetailState(
+          isMatchingRouteRecord
+            ? { status: 'loaded', record: row, errorStatus: null, routeKey: nextRouteKey }
+            : { status: 'not-found', record: null, errorStatus: null, routeKey: nextRouteKey },
+        )
+      } catch (error) {
+        if (!cancelled) {
+          const status = Number(error?.status || error?.payload?.status || 0) || null
+          setRouteDetailState({
+            status: status === 403 || status === 404 ? 'not-found' : 'error',
+            record: null,
+            errorStatus: status,
+            routeKey: nextRouteKey,
+          })
+        }
       }
     }
     loadRouteDetailRecord()
     return () => {
       cancelled = true
     }
-  }, [activeFormSlug, activeSection, reportId, selectedRecord])
+  }, [activeFormSlug, activeSection, reportId])
 
   const recentMobileRecords = useMemo(
     () => submittedRecordsInScope.slice(0, 5),
@@ -412,7 +465,7 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
       (activeSection === 'records' && showMobileRecords))
   const mobileTitle =
     isWorkFirstReport && activeSection === 'records' && !showMobileRecords
-      ? reportTypeLabel
+      ? `Conduct ${reportTypeLabel}`
       : isWorkFirstReport && (activeSection === 'new' || activeSection === 'review')
         ? `Conduct ${reportTypeLabel}`
         : isWorkFirstReport && activeSection === 'records' && showMobileRecords
@@ -453,7 +506,8 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
   return (
     <CContainer
       fluid
-      {...(onboardingAnchorPrefix ? { 'data-tour-id': `${onboardingAnchorPrefix}-module` } : {})}
+      className={isWorkFirstReport ? 'inspection-module-page' : undefined}
+      {...(testAnchorPrefix ? { 'data-testid': `${testAnchorPrefix}-module` } : {})}
     >
       <ModulePageHeader
         title={pageTitle}
@@ -465,10 +519,11 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
                 type="button"
                 color="secondary"
                 variant="outline"
-                className="inspection-header-back-btn d-md-none d-inline-flex align-items-center gap-1"
+                size="sm"
+                className="inspection-header-back-btn inspection-compact-action-btn d-md-none d-inline-flex align-items-center gap-1"
                 onClick={handleMobileBack}
               >
-                <ChevronLeft size={16} />
+                <ArrowLeft size={14} />
                 Back
               </CButton>
             ) : null}
@@ -555,7 +610,7 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
       />
       <ActionConfirmModal
         visible={Boolean(deleteTarget)}
-        tourId={onboardingAnchorPrefix ? `${onboardingAnchorPrefix}-delete-modal` : ''}
+        testId={testAnchorPrefix ? `${testAnchorPrefix}-delete-modal` : ''}
         title={deleteTarget?.recordKind === 'draft' ? 'Delete Draft' : 'Delete Report'}
         message={
           deleteTarget?.recordKind === 'draft'
@@ -593,7 +648,7 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
 
       <div
         className="d-none d-md-block"
-        {...(onboardingAnchorPrefix ? { 'data-tour-id': `${onboardingAnchorPrefix}-nav` } : {})}
+        {...(testAnchorPrefix ? { 'data-testid': `${testAnchorPrefix}-nav` } : {})}
       >
         <ModuleNavTabs
           items={[
@@ -728,61 +783,62 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
                   ? 'Drill Type'
                   : 'Incident Type'
             }
-            onboardingAnchorPrefix={onboardingAnchorPrefix}
+            testAnchorPrefix={testAnchorPrefix}
           />
         </div>
       ) : null}
 
       {activeSection === 'detail' ? (
-        <div
-          {...(onboardingAnchorPrefix
-            ? { 'data-tour-id': `${onboardingAnchorPrefix}-detail` }
-            : {})}
-        >
-          <ReportDetailSection
-            selectedRecord={selectedDetailRecord}
-            onBack={() => navigate(reportBasePath)}
-            formatDateTime={formatDateTime}
-            renderStatusBadge={renderStatusBadge}
-            onDownloadRecord={downloadRecord}
-            onEditRecord={editRecord}
-            onDeleteRecord={requestDeleteRecord}
-            canEditRecord={canEditRecord}
-            canDeleteRecord={canDeleteRecord}
-            downloadingId={downloadingId}
-            onReviewRecord={transitionReview}
-            onApproveRecord={transitionApprove}
-            onRejectRecord={transitionReject}
-            isActionBusy={isActionBusy}
-            onboardingAnchorPrefix={onboardingAnchorPrefix}
-            typeLabel={
-              isFitnessTestReport
-                ? 'Fitness Test Type'
-                : isDrillReport
-                  ? 'Drill Type'
-                  : 'Incident Type'
-            }
-            conditionLabel={isDrillReport || isFitnessTestReport ? 'Condition' : 'Weather'}
-            detailsLabel={
-              isFitnessTestReport
-                ? 'Test Details'
-                : isDrillReport
-                  ? 'Drill Scenario'
-                  : 'Incident Title'
-            }
-            summaryLabel={
-              isFitnessTestReport ? 'Test Summary' : isDrillReport ? 'Outcome Summary' : 'Summary'
-            }
-          />
+        <div {...(testAnchorPrefix ? { 'data-testid': `${testAnchorPrefix}-detail` } : {})}>
+          {shouldShowRouteDetailLoading ? (
+            <TableLoader message="Loading report..." />
+          ) : routeDetailErrorMessage ? (
+            <div className={routeDetailStatus === 'not-found' ? 'text-warning' : 'text-danger'}>
+              {routeDetailErrorMessage}
+            </div>
+          ) : (
+            <ReportDetailSection
+              selectedRecord={selectedDetailRecord}
+              onBack={() => navigate(reportBasePath)}
+              formatDateTime={formatDateTime}
+              renderStatusBadge={renderStatusBadge}
+              onDownloadRecord={downloadRecord}
+              onEditRecord={editRecord}
+              onDeleteRecord={requestDeleteRecord}
+              canEditRecord={canEditRecord}
+              canDeleteRecord={canDeleteRecord}
+              downloadingId={downloadingId}
+              onReviewRecord={transitionReview}
+              onApproveRecord={transitionApprove}
+              onRejectRecord={transitionReject}
+              isActionBusy={isActionBusy}
+              testAnchorPrefix={testAnchorPrefix}
+              typeLabel={
+                isFitnessTestReport
+                  ? 'Fitness Test Type'
+                  : isDrillReport
+                    ? 'Drill Type'
+                    : 'Incident Type'
+              }
+              conditionLabel={isDrillReport || isFitnessTestReport ? 'Condition' : 'Weather'}
+              detailsLabel={
+                isFitnessTestReport
+                  ? 'Test Details'
+                  : isDrillReport
+                    ? 'Drill Scenario'
+                    : 'Incident Title'
+              }
+              summaryLabel={
+                isFitnessTestReport ? 'Test Summary' : isDrillReport ? 'Outcome Summary' : 'Summary'
+              }
+              workFirstMobileDetail={isWorkFirstReport}
+            />
+          )}
         </div>
       ) : null}
 
       {activeSection === 'review' ? (
-        <div
-          {...(onboardingAnchorPrefix
-            ? { 'data-tour-id': `${onboardingAnchorPrefix}-review` }
-            : {})}
-        >
+        <div {...(testAnchorPrefix ? { 'data-testid': `${testAnchorPrefix}-review` } : {})}>
           <ReportDetailSection
             selectedRecord={reviewRecord}
             mode="review"
@@ -797,7 +853,7 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
             changeSummary={displayReviewChangeSummary}
             formatDateTime={formatDateTime}
             renderStatusBadge={renderStatusBadge}
-            onboardingAnchorPrefix={onboardingAnchorPrefix}
+            testAnchorPrefix={testAnchorPrefix}
             typeLabel={
               isFitnessTestReport
                 ? 'Fitness Test Type'
@@ -816,14 +872,13 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
             summaryLabel={
               isFitnessTestReport ? 'Test Summary' : isDrillReport ? 'Outcome Summary' : 'Summary'
             }
+            workFirstMobileDetail={isWorkFirstReport}
           />
         </div>
       ) : null}
 
       {activeSection === 'new' ? (
-        <div
-          {...(onboardingAnchorPrefix ? { 'data-tour-id': `${onboardingAnchorPrefix}-form` } : {})}
-        >
+        <div {...(testAnchorPrefix ? { 'data-testid': `${testAnchorPrefix}-form` } : {})}>
           {supportsNewForm ? (
             <ActiveFormComponent
               key={`${activeFormSlug}-${formSessionKey}`}

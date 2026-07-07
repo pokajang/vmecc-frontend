@@ -16,8 +16,8 @@ const UserConfirmModal = ({
   zIndex,
   className,
   style,
-  tourId,
-  bodyTourId,
+  testId,
+  bodyTestId,
 }) => {
   const hasCustomModalStyle = zIndex != null || style != null
   const mergedStyle = hasCustomModalStyle
@@ -63,10 +63,10 @@ const UserConfirmModal = ({
         className={className}
         {...(mergedStyle ? { style: mergedStyle } : {})}
       >
-        <CModalHeader data-tour-id={visible ? tourId : undefined}>
+        <CModalHeader data-testid={visible ? testId : undefined}>
           <CModalTitle>{title}</CModalTitle>
         </CModalHeader>
-        <CModalBody data-tour-id={visible ? bodyTourId : undefined}>{message}</CModalBody>
+        <CModalBody data-testid={visible ? bodyTestId : undefined}>{message}</CModalBody>
         <CModalFooter>
           <CButton color="secondary" variant="outline" onClick={onClose} disabled={cancelDisabled}>
             {cancelLabel}

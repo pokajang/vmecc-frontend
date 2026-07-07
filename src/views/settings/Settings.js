@@ -163,13 +163,13 @@ const Settings = () => {
   }
 
   return (
-    <CContainer fluid data-tour-id="settings-module">
+    <CContainer fluid data-testid="settings-module">
       <ModulePageHeader
         title="Settings"
         subtitle="Maintain system controls, role permissions, and dashboard visibility rules."
       />
 
-      <div data-tour-id="settings-nav">
+      <div data-testid="settings-nav">
         <RouteNavTabs
           currentPath={activeTab}
           navigate={(tabPath) => navigate(tabPath)}
@@ -203,7 +203,7 @@ const Settings = () => {
       </div>
 
       {activeTab === TAB_GENERAL && (
-        <div data-tour-id="settings-general">
+        <div data-testid="settings-general">
           <CCard className="mb-3">
             <CCardBody>
               <div className="d-flex justify-content-between align-items-start gap-3">
@@ -267,7 +267,7 @@ const Settings = () => {
       )}
 
       {activeTab === TAB_ROLES && (
-        <div data-tour-id="settings-role-permissions">
+        <div data-testid="settings-role-permissions">
           <Suspense
             fallback={
               <div className="py-5" aria-label="Loading role permissions">
@@ -281,7 +281,7 @@ const Settings = () => {
       )}
 
       {activeTab === TAB_DASHBOARD && (
-        <div data-tour-id="settings-dashboard-visibility">
+        <div data-testid="settings-dashboard-visibility">
           <Suspense
             fallback={
               <div className="py-5" aria-label="Loading dashboard visibility">
@@ -295,7 +295,7 @@ const Settings = () => {
       )}
 
       {activeTab === TAB_MODULES && (
-        <div data-tour-id="settings-modules">
+        <div data-testid="settings-modules">
           <Suspense
             fallback={
               <div className="py-5" aria-label="Loading module activation">

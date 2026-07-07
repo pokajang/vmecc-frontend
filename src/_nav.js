@@ -52,7 +52,7 @@ const _nav = [
     name: 'Inspection',
     to: '/inspection',
     matchPrefix: ['/inspection'],
-    'data-tour-id': 'inspection-nav',
+    'data-testid': 'inspection-nav',
     icon: <ClipboardList className="nav-icon" size={20} />,
   },
   {

@@ -275,7 +275,7 @@ const HolidaysTab = ({
   }))
 
   return (
-    <CCard data-tour-id="leave-management-holidays">
+    <CCard data-testid="leave-management-holidays">
       <CCardHeader className="d-flex justify-content-between align-items-center gap-2">
         <span>Set Holidays</span>
         <CreateActionButton label="Configure holidays" onClick={openCreateModal} />

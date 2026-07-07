@@ -1,5 +1,6 @@
 import React from 'react'
 import { Navigate, useLocation, useParams } from 'react-router-dom'
+import { preloadInspectionRoute } from './routePreloaders'
 
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
 const UserManagement = React.lazy(() => import('./views/users/UserManagement'))
@@ -13,7 +14,7 @@ const Payroll = React.lazy(() => import('./views/payroll/Payroll'))
 const Leave = React.lazy(() => import('./views/leave/Leave'))
 const Overtime = React.lazy(() => import('./views/overtime/Overtime'))
 const Reports = React.lazy(() => import('./views/report/Reports'))
-const Inspection = React.lazy(() => import('./views/inspection/InspectionPage'))
+const Inspection = React.lazy(preloadInspectionRoute)
 const ReportingWorkflowSettings = React.lazy(
   () => import('./views/settings/ReportingWorkflowSettings'),
 )
@@ -280,6 +281,7 @@ const routes = [
   { path: '/inspection/new', name: 'New Inspection', element: Inspection },
   { path: '/inspection/new/:newSection', name: 'New Inspection Section', element: Inspection },
   { path: '/inspection/review', name: 'Inspection Review', element: Inspection },
+  { path: '/inspection/all-extinguishers', name: 'All Extinguishers', element: Inspection },
   { path: '/inspection/:reportId/edit', name: 'Inspection Edit', element: Inspection },
   { path: '/inspection/:reportId', name: 'Inspection Detail', element: Inspection },
   {

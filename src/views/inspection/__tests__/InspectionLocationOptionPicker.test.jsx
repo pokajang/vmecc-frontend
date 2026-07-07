@@ -2,7 +2,8 @@
 import React from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import InspectionLocationOptionPicker from '../components/InspectionLocationOptionPicker'
+import { ChevronDown } from 'lucide-react'
+import InspectionLocationOptionPicker from '../form/components/InspectionLocationOptionPicker'
 
 const makeOptions = (count) =>
   Array.from({ length: count }, (_, index) => {
@@ -45,7 +46,11 @@ describe('InspectionLocationOptionPicker', () => {
     const options = makeOptions(14)
     const visibleOptions = [
       ...options.slice(0, 3),
-      { value: '__inspection_location_types_toggle__', title: 'Show more' },
+      {
+        value: '__inspection_location_types_toggle__',
+        title: 'Show more',
+        icon: ChevronDown,
+      },
     ]
 
     render(
@@ -58,11 +63,13 @@ describe('InspectionLocationOptionPicker', () => {
         searchAriaLabel="Search main location"
         clearSearchAriaLabel="Clear main location search"
         toggleValue="__inspection_location_types_toggle__"
+        isCompactViewport
       />,
     )
 
     expect(screen.getByPlaceholderText('Search main location...')).toBeTruthy()
     expect(screen.getByText('Show more')).toBeTruthy()
+    expect(screen.getByLabelText('Show more icon')).toBeTruthy()
     expect(screen.queryByText('Location 14')).toBeNull()
 
     fireEvent.change(screen.getByLabelText('Search main location'), {
@@ -94,5 +101,53 @@ describe('InspectionLocationOptionPicker', () => {
     })
 
     expect(screen.getByText('No locations match this search.')).toBeTruthy()
+  })
+
+  it('can render the full option list without a show-more toggle', () => {
+    const options = makeOptions(6)
+    const visibleOptions = [
+      ...options.slice(0, 3),
+      { value: '__inspection_location_types_toggle__', title: 'Show more' },
+    ]
+
+    render(
+      <InspectionLocationOptionPicker
+        options={options}
+        visibleOptions={visibleOptions}
+        value=""
+        onChange={vi.fn()}
+        toggleValue="__inspection_location_types_toggle__"
+        showAllOptions
+      />,
+    )
+
+    expect(screen.getByText('Location 6')).toBeTruthy()
+    expect(screen.queryByText('Show more')).toBeNull()
+  })
+
+  it('shows a collapsed mobile selector row after selection and reopens through the edit affordance', () => {
+    const onRequestEdit = vi.fn()
+
+    render(
+      <InspectionLocationOptionPicker
+        options={makeOptions(3)}
+        visibleOptions={makeOptions(3)}
+        value="Location 2"
+        selectedLabel="Location 2"
+        sectionLabel="Choose Main Location"
+        isCompactViewport
+        isExpanded={false}
+        onChange={vi.fn()}
+        onRequestEdit={onRequestEdit}
+      />,
+    )
+
+    expect(screen.getByText('Choose Main Location')).toBeTruthy()
+    expect(screen.getByText('Location 2')).toBeTruthy()
+    expect(screen.queryByText('Location 1')).toBeNull()
+
+    fireEvent.click(screen.getByLabelText('Edit Choose Main Location'))
+
+    expect(onRequestEdit).toHaveBeenCalledTimes(1)
   })
 })

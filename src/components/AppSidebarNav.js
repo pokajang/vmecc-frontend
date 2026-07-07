@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import PropTypes from 'prop-types'
 
@@ -6,9 +6,33 @@ import SimpleBar from 'simplebar-react'
 import 'simplebar-react/dist/simplebar.min.css'
 
 import { CBadge, CNavLink, CSidebarNav } from '@coreui/react'
+import { preloadInspectionRoute } from 'src/routePreloaders'
+
+const isInspectionRoute = (item = {}) => String(item.to || '').startsWith('/inspection')
+
+const hasInspectionRoute = (items = []) =>
+  items.some((item) => {
+    if (isInspectionRoute(item)) return true
+    return Array.isArray(item?.items) && hasInspectionRoute(item.items)
+  })
+
+const scheduleInspectionRoutePreload = () => {
+  if (typeof window === 'undefined') return
+  if (typeof window.requestIdleCallback === 'function') {
+    window.requestIdleCallback(() => preloadInspectionRoute(), { timeout: 2500 })
+    return
+  }
+  window.setTimeout(() => preloadInspectionRoute(), 750)
+}
 
 export const AppSidebarNav = ({ items, onAction }) => {
   const location = useLocation()
+  useEffect(() => {
+    if (!hasInspectionRoute(items)) return undefined
+    scheduleInspectionRoutePreload()
+    return undefined
+  }, [items])
+
   const navLink = (name, icon, badge, indent = false) => {
     return (
       <>
@@ -44,6 +68,13 @@ export const AppSidebarNav = ({ items, onAction }) => {
     const actionClassName = [rest.className, action ? 'w-100 text-start' : null]
       .filter(Boolean)
       .join(' ')
+    const preloadProps = isInspectionRoute(item)
+      ? {
+          onFocus: preloadInspectionRoute,
+          onMouseEnter: preloadInspectionRoute,
+          onTouchStart: preloadInspectionRoute,
+        }
+      : {}
 
     return (
       <Component as="div" key={index}>
@@ -52,6 +83,7 @@ export const AppSidebarNav = ({ items, onAction }) => {
             {...(rest.to && { as: NavLink })}
             {...(rest.href && { target: '_blank', rel: 'noopener noreferrer' })}
             {...rest}
+            {...preloadProps}
             {...prefixActive}
           >
             {navLink(name, icon, badge, indent)}

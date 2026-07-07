@@ -311,6 +311,7 @@ const DrillForm = ({
             datePresetOptions={datePresetOptions}
             timePresetOptions={timePresetOptions}
             pushToast={pushToast}
+            onSaveDraft={saveDraft}
             onContinue={() => {
               if (!validateSetupBeforeContinue()) return
               setSetupConfirmed(true)

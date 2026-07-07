@@ -160,15 +160,18 @@ const FeedbackReports = () => {
   }
 
   return (
-    <CContainer fluid>
+    <CContainer fluid data-testid="feedback-reports-module">
       <ModulePageHeader
         title="Feedback Reports"
         subtitle="Review and triage submitted user feedback and bug reports."
       />
 
-      <CCard className="mb-4">
+      <CCard className="mb-4" data-testid="feedback-reports-records">
         <CCardBody>
-          <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+          <div
+            className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"
+            data-testid="feedback-reports-filters"
+          >
             <CButtonGroup role="group" aria-label="Feedback report status filters">
               {['new', 'reviewing', 'resolved', 'dismissed', 'all'].map((item) => (
                 <CButton
@@ -204,7 +207,9 @@ const FeedbackReports = () => {
                   <CTableHeaderCell>Page</CTableHeaderCell>
                   <CTableHeaderCell>Reported</CTableHeaderCell>
                   <CTableHeaderCell>Status</CTableHeaderCell>
-                  <CTableHeaderCell className="text-end">Action</CTableHeaderCell>
+                  <CTableHeaderCell className="table-sticky-action-cell text-end">
+                    Action
+                  </CTableHeaderCell>
                 </CTableRow>
               </CTableHead>
               <CTableBody>
@@ -221,7 +226,7 @@ const FeedbackReports = () => {
                         {STATUS_LABELS[report.status] || report.status}
                       </CBadge>
                     </CTableDataCell>
-                    <CTableDataCell className="text-end">
+                    <CTableDataCell className="table-sticky-action-cell text-end">
                       <CButton
                         size="sm"
                         color="primary"

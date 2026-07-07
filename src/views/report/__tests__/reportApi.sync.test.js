@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { apiRequest } from 'src/services/apiClient'
-import { persistReportRecords, runReportApiBackfillMigration } from '../reportApi'
+import {
+  deleteReportRecord,
+  persistReportRecords,
+  runReportApiBackfillMigration,
+} from '../reportApi'
 import { loadReportRecords, saveReportRecords } from '../reportStorage'
 
 vi.mock('src/services/apiClient', () => ({
@@ -68,6 +72,18 @@ describe('reportApi sync hardening', () => {
     expect(ok).toBe(true)
     expect(deletedPaths).toContain('/reports/erco-2')
     expect(deletedPaths).not.toContain('/reports/drill-1')
+  })
+
+  it('deletes a single report directly without updating sibling reports', async () => {
+    apiRequest.mockResolvedValue({ data: null })
+
+    const ok = await deleteReportRecord('report-erco-260429-fbac5462a3')
+
+    expect(ok).toBe(true)
+    expect(apiRequest).toHaveBeenCalledTimes(1)
+    expect(apiRequest).toHaveBeenCalledWith('/reports/report-erco-260429-fbac5462a3', {
+      method: 'DELETE',
+    })
   })
 
   it('scopes active report persistence away from unrelated local fallback rows', async () => {

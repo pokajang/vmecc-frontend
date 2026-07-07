@@ -309,6 +309,7 @@ const FitnessTestForm = ({
             setSetupFieldErrors={setSetupFieldErrors}
             datePresetOptions={datePresetOptions}
             timePresetOptions={timePresetOptions}
+            onSaveDraft={saveDraft}
             onContinue={() => {
               if (!validateSetupBeforeContinue()) return
               setSetupConfirmed(true)

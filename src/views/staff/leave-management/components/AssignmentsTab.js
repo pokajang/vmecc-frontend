@@ -336,16 +336,16 @@ const AssignmentsTab = ({
   }
 
   const detailPrimaryRow = detailRows?.[0] || null
-  const assignmentDetailSelector = '[data-tour-id="leave-management-assignment-detail"]'
+  const assignmentDetailSelector = '[data-testid="leave-management-assignment-detail"]'
 
   return (
-    <CCard data-tour-id="leave-management-assignments">
+    <CCard data-testid="leave-management-assignments">
       <CCardHeader className="d-flex justify-content-between align-items-center gap-2">
         <span>Set Leaves</span>
         <CreateActionButton
           label="Assign entitlement"
           onClick={openAssignmentForm}
-          data-tour-id="leave-management-assignment-create-action"
+          data-testid="leave-management-assignment-create-action"
         />
       </CCardHeader>
       <CCardBody>
@@ -373,7 +373,7 @@ const AssignmentsTab = ({
           <CModalHeader onClose={closeAssignmentDetail}>
             <CModalTitle>Leave Assignment Details</CModalTitle>
           </CModalHeader>
-          <CModalBody data-tour-id={detailRows ? 'leave-management-assignment-detail' : undefined}>
+          <CModalBody data-testid={detailRows ? 'leave-management-assignment-detail' : undefined}>
             {detailPrimaryRow ? (
               <div className="d-grid gap-3">
                 <div>
@@ -523,7 +523,7 @@ const AssignmentsTab = ({
                           key={employeeRow.key}
                           {...(index === 0
                             ? {
-                                'data-tour-id': assignmentDetailEntryReady
+                                'data-testid': assignmentDetailEntryReady
                                   ? 'leave-management-assignment-detail-entry'
                                   : 'leave-management-assignment-row-actions',
                               }
@@ -606,7 +606,7 @@ const AssignmentsTab = ({
                           key={row.id}
                           {...(groupIndex === 0 && rowIndex === 0
                             ? {
-                                'data-tour-id': assignmentDetailEntryReady
+                                'data-testid': assignmentDetailEntryReady
                                   ? 'leave-management-assignment-detail-entry'
                                   : 'leave-management-assignment-row-actions',
                               }

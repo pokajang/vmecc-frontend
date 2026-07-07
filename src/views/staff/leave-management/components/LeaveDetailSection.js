@@ -31,7 +31,7 @@ const LeaveDetailSection = ({
     {!selectedRecord ? (
       <div className="text-danger">Leave record not found.</div>
     ) : (
-      <div data-tour-id="leave-management-detail">
+      <div data-testid="leave-management-detail">
         <CRow className="g-4">
           <CCol xs={12} md={6}>
             <CCard className="h-100">

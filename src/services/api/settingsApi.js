@@ -48,7 +48,8 @@ export const savePayrollCompanyProfile = (payload) =>
     body: JSON.stringify(payload || {}),
   })
 
-export const fetchSystemMaintenanceSetting = () => apiRequest('/settings/system-maintenance')
+export const fetchSystemMaintenanceSetting = (options = {}) =>
+  apiRequest('/settings/system-maintenance', options)
 export const saveSystemMaintenanceSetting = (payload) =>
   apiRequest('/settings/system-maintenance', {
     method: 'POST',

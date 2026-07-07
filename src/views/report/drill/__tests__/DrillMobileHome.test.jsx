@@ -66,7 +66,7 @@ describe('DrillMobileHome', () => {
   it('renders work-first drill type selection before draft and recent records', () => {
     render(<DrillMobileHome {...buildProps()} />)
 
-    const typeHeading = screen.getByText('Choose Drill Type')
+    const typeHeading = screen.getByText('Choose Type')
     const draftHeading = screen.getByText('Continue Draft')
     const recentHeading = screen.getByText('Recent Records')
 
@@ -76,6 +76,85 @@ describe('DrillMobileHome', () => {
     )
     expect(screen.getByRole('button', { name: /View all/i }).textContent).toContain('View all (1)')
     expect(screen.getByRole('button', { name: 'Mine' }).getAttribute('data-active')).toBe('true')
+  })
+
+  it('uses the shared inspection-style mobile landing hooks', () => {
+    const { container } = render(<DrillMobileHome {...buildProps()} />)
+
+    expect(container.querySelector('.inspection-mobile-home')).toBeTruthy()
+    expect(container.querySelector('.inspection-mobile-home__type-grid')).toBeTruthy()
+    expect(container.querySelector('.inspection-mobile-home__records-toolbar')).toBeTruthy()
+  })
+
+  it('shows only the first draft and caps recent records on the landing page', () => {
+    render(
+      <DrillMobileHome
+        {...buildProps({
+          draftRows: [
+            {
+              id: 'draft-1',
+              recordKind: 'draft',
+              incidentType: 'Fire Drill',
+              location: 'Workshop',
+              savedAt: '2026-04-28T10:00:00.000Z',
+            },
+            {
+              id: 'draft-2',
+              recordKind: 'draft',
+              incidentType: 'Rescue Drill',
+              location: 'Yard',
+              savedAt: '2026-04-28T11:00:00.000Z',
+            },
+          ],
+          recentRecords: [
+            {
+              id: 'DRL-001',
+              incidentType: 'Rescue Drill',
+              location: 'Main plant',
+              status: 'Submitted',
+              reportDate: '2026-04-29',
+            },
+            {
+              id: 'DRL-002',
+              incidentType: 'Fire Drill',
+              location: 'Workshop',
+              status: 'Approved',
+              reportDate: '2026-04-30',
+            },
+            {
+              id: 'DRL-003',
+              incidentType: 'Evacuation Drill',
+              location: 'Office',
+              status: 'Submitted',
+              reportDate: '2026-05-01',
+            },
+            {
+              id: 'DRL-004',
+              incidentType: 'Confined Space Drill',
+              location: 'Plant 2',
+              status: 'Submitted',
+              reportDate: '2026-05-02',
+            },
+          ],
+          recordsCount: 4,
+        })}
+      />,
+    )
+
+    expect(screen.getAllByText('Continue Draft')).toHaveLength(1)
+    expect(
+      screen.getByRole('button', { name: /Open drill record Rescue Drill Main plant/i }),
+    ).toBeTruthy()
+    expect(
+      screen.getByRole('button', { name: /Open drill record Fire Drill Workshop/i }),
+    ).toBeTruthy()
+    expect(
+      screen.getByRole('button', { name: /Open drill record Evacuation Drill Office/i }),
+    ).toBeTruthy()
+    expect(
+      screen.queryByRole('button', { name: /Open drill record Confined Space Drill Plant 2/i }),
+    ).toBeNull()
+    expect(screen.getByRole('button', { name: 'View all (4)' })).toBeTruthy()
   })
 
   it('starts a new drill with the selected type', () => {

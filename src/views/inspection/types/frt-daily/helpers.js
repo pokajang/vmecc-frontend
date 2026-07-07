@@ -1,7 +1,20 @@
 import { dedupePhotos } from 'src/views/inspection/inspectionSharedUtils'
+import { getScopedProgressLabel } from 'src/views/inspection/form/inspectionCountLabels'
 import { FRT_REFERENCE, FRT_TRUCK_REFERENCE } from './reference'
+import {
+  defaultFrtTruckOption,
+  normalizeFrtTruckOption,
+  normalizeFrtTruckReference,
+  resolveSelectedFrtTruckPlate,
+} from './truckReferenceHelpers'
 
 export { FRT_REFERENCE, FRT_TRUCK_REFERENCE } from './reference'
+export {
+  defaultFrtTruckOption,
+  normalizeFrtTruckOption,
+  normalizeFrtTruckReference,
+  resolveSelectedFrtTruckPlate,
+} from './truckReferenceHelpers'
 
 export const FRT_DAILY_INSPECTION_TYPE = 'Fire Truck Daily Readiness'
 export const FRT_DAILY_LEGACY_INSPECTION_TYPE = 'FRT Daily Inspection'
@@ -19,12 +32,35 @@ const normalizeKey = (value) =>
     .trim()
     .toLowerCase()
 
+const text = (value) => String(value || '').trim()
+
 const slugSegment = (value) =>
   normalizeKey(value)
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
 
-const hasOwn = (item, key) => Object.prototype.hasOwnProperty.call(item || {}, key)
+const normalizeCompartmentTitle = (value) => {
+  const normalized = text(value).replace(/\s+/g, ' ').toUpperCase()
+  const lockerMatch = normalized.match(/^LOCKER\s+(?:NO\s+)?0?(\d+)$/)
+  if (lockerMatch) return `LOCKER ${lockerMatch[1].padStart(2, '0')}`
+  if (normalized === 'TRUCK CHECKLIST') return 'FIRE TRUCK'
+  return normalized
+}
+
+const getFrtCompartment = (row = {}) => normalizeCompartmentTitle(row.compartment || row.location)
+
+const getSelectedFrtCompartment = (form = {}) =>
+  normalizeCompartmentTitle(form.frtCompartment || form.frt_compartment || form.subLocation)
+
+export const normalizeFrtCustomCompartments = (compartments) => {
+  const byValue = new Map()
+  ;(Array.isArray(compartments) ? compartments : []).forEach((value) => {
+    const normalized = normalizeCompartmentTitle(value)
+    if (!normalized) return
+    byValue.set(normalized, normalized)
+  })
+  return Array.from(byValue.values())
+}
 
 const normalizePhotos = (photos) =>
   dedupePhotos(
@@ -35,12 +71,14 @@ const normalizePhotos = (photos) =>
 
 const buildDailyRow = (section, row) => {
   const [rowNumber, equipment, quantity, rowKind] = row
+  const compartment = normalizeCompartmentTitle(section.title)
   return {
     id: `daily:fire-truck:${rowNumber}`,
     checklistKind: 'daily',
     rowNumber: String(rowNumber || '').trim(),
     mainLocation: 'FIRE TRUCK',
     location: section.title,
+    compartment,
     equipment: String(equipment || '').trim(),
     quantity: String(quantity || '').trim(),
     rowKind: String(rowKind || 'status').trim(),
@@ -49,12 +87,14 @@ const buildDailyRow = (section, row) => {
 
 const buildOneOffRow = (section, row) => {
   const [rowNumber, equipment] = row
+  const compartment = normalizeCompartmentTitle(section.title)
   return {
     id: `one-off:fire-truck:${rowNumber}`,
     checklistKind: 'oneOff',
     rowNumber: String(rowNumber || '').trim(),
     mainLocation: 'FIRE TRUCK',
     location: section.title,
+    compartment,
     equipment: String(equipment || '').trim(),
   }
 }
@@ -83,73 +123,6 @@ const normalizeFrtOneOffStatus = (value) => {
   return matched?.value || ''
 }
 
-export const normalizeFrtTruckReference = (value = {}) => {
-  const hasExplicitReference = [
-    'truckId',
-    'truck_id',
-    'id',
-    'name',
-    'truckName',
-    'truck_name',
-    'plateNo',
-    'plate_no',
-    'value',
-    'title',
-    'roadTaxExpiry',
-    'road_tax_expiry',
-    'insuranceExpiry',
-    'insurance_expiry',
-    'puspakomExpiry',
-    'puspakom_expiry',
-  ].some((key) => hasOwn(value, key))
-  const fallback = hasExplicitReference ? {} : FRT_TRUCK_REFERENCE
-
-  return {
-    truckId: String(value.truckId ?? value.truck_id ?? value.id ?? '').trim(),
-    name: String(value.name ?? value.truckName ?? value.truck_name ?? '').trim(),
-    plateNo: String(
-      value.plateNo ?? value.plate_no ?? value.value ?? value.title ?? fallback.plateNo ?? '',
-    ).trim(),
-    roadTaxExpiry: String(
-      value.roadTaxExpiry ?? value.road_tax_expiry ?? fallback.roadTaxExpiry ?? '',
-    ).trim(),
-    insuranceExpiry: String(
-      value.insuranceExpiry ?? value.insurance_expiry ?? fallback.insuranceExpiry ?? '',
-    ).trim(),
-    puspakomExpiry: String(
-      value.puspakomExpiry ?? value.puspakom_expiry ?? fallback.puspakomExpiry ?? '',
-    ).trim(),
-  }
-}
-
-export const normalizeFrtTruckOption = (value = {}) => {
-  const reference = normalizeFrtTruckReference(value)
-  const plateNo = String(reference.plateNo || value.value || value.title || '')
-    .trim()
-    .toUpperCase()
-  if (!plateNo) return null
-  return {
-    ...value,
-    id: String(value.truckId || value.truck_id || value.id || plateNo).trim(),
-    truckId: String(value.truckId || value.truck_id || value.id || '').trim(),
-    plateNo,
-    value: plateNo,
-    title: plateNo,
-    name: String(reference.name || value.description || '').trim(),
-    description: String(reference.name || value.description || '').trim(),
-    roadTaxExpiry: reference.roadTaxExpiry,
-    insuranceExpiry: reference.insuranceExpiry,
-    puspakomExpiry: reference.puspakomExpiry,
-  }
-}
-
-export const defaultFrtTruckOption = () =>
-  normalizeFrtTruckOption({
-    ...FRT_TRUCK_REFERENCE,
-    name: 'Fire Truck',
-    value: FRT_TRUCK_REFERENCE.plateNo,
-  })
-
 const normalizeFrtDailyCheck = (check = {}) => {
   if (!check || typeof check !== 'object') return null
 
@@ -173,6 +146,7 @@ const normalizeFrtDailyCheck = (check = {}) => {
       check.mainLocation || check.main_location || check.selectedLocation || 'FIRE TRUCK',
     ).trim(),
     location,
+    compartment: normalizeCompartmentTitle(check.compartment || check.compartment_name || location),
     equipment,
     quantity: String(check.quantity || '').trim(),
     rowKind,
@@ -180,6 +154,8 @@ const normalizeFrtDailyCheck = (check = {}) => {
     readingValue: String(check.readingValue || check.reading_value || '').trim(),
     remarks: String(check.remarks || check.remark || '').trim(),
     photos: normalizePhotos(check.photos),
+    additionalNotes: String(check.additionalNotes || check.additional_notes || '').trim(),
+    additionalPhotos: normalizePhotos(check.additionalPhotos || check.additional_photos),
   }
 }
 
@@ -202,10 +178,13 @@ const normalizeFrtOneOffCheck = (check = {}) => {
       check.mainLocation || check.main_location || check.selectedLocation || 'FIRE TRUCK',
     ).trim(),
     location,
+    compartment: normalizeCompartmentTitle(check.compartment || check.compartment_name || location),
     equipment,
     condition: normalizeFrtOneOffStatus(check.condition),
     remarks: String(check.remarks || check.remark || '').trim(),
     photos: normalizePhotos(check.photos),
+    additionalNotes: String(check.additionalNotes || check.additional_notes || '').trim(),
+    additionalPhotos: normalizePhotos(check.additionalPhotos || check.additional_photos),
   }
 }
 
@@ -229,31 +208,6 @@ export const normalizeFrtOneOffChecks = (checks) => {
   return Array.from(byId.values())
 }
 
-export const resolveSelectedFrtTruckPlate = (form = {}) => {
-  const reference = normalizeFrtTruckReference(form.frtTruckReference || form.frt_truck_reference)
-  const direct =
-    String(
-      form.frtTruckPlateNo ||
-        form.frt_truck_plate_no ||
-        form.mainLocation ||
-        form.main_location ||
-        form.selectedLocation ||
-        form.location ||
-        '',
-    )
-      .split('>')
-      .map((part) => part.trim())
-      .filter(Boolean)[0] || ''
-  if (direct) {
-    if (normalizeKey(direct) === normalizeKey('FIRE TRUCK')) return reference.plateNo
-    if (form.frtTruckPlateNo || form.frt_truck_plate_no || form.frtTruckId || form.frt_truck_id) {
-      return direct
-    }
-    return /\d/.test(direct) ? direct : ''
-  }
-  return form.frtTruckId || form.frt_truck_id ? reference.plateNo : ''
-}
-
 const mergeSeededRows = (seedRows, currentRows, emptyPatch = {}) => {
   const currentById = new Map(currentRows.map((row) => [String(row.id || ''), row]))
   const merged = seedRows.map((row) => ({
@@ -265,6 +219,7 @@ const mergeSeededRows = (seedRows, currentRows, emptyPatch = {}) => {
     rowNumber: row.rowNumber,
     mainLocation: row.mainLocation,
     location: row.location,
+    compartment: row.compartment,
     equipment: row.equipment,
     quantity: row.quantity,
     rowKind: row.rowKind || emptyPatch.rowKind || '',
@@ -273,30 +228,71 @@ const mergeSeededRows = (seedRows, currentRows, emptyPatch = {}) => {
   return merged
 }
 
-export const getFrtVisibleDailyChecks = (form = {}) => {
+const getCustomRows = (currentRows, seedRows) => {
+  const seededIds = new Set(seedRows.map((row) => String(row.id || '')))
+  return currentRows.filter((row) => {
+    const rowId = String(row.id || '').trim()
+    return rowId && !seededIds.has(rowId)
+  })
+}
+
+const hasPhotos = (value) => normalizePhotos(value).length > 0
+
+const isFrtDailyRowComplete = (row = {}) => {
+  if (row.rowKind === 'reading') return text(row.readingValue) !== ''
+  if (!text(row.status)) return false
+  if (row.status !== 'Issue') return true
+  return text(row.remarks) !== '' && hasPhotos(row.photos)
+}
+
+const isFrtOneOffRowComplete = (row = {}) => {
+  if (!text(row.condition)) return false
+  if (row.condition !== 'Not Good') return true
+  return text(row.remarks) !== '' && hasPhotos(row.photos)
+}
+
+const filterRowsByCompartment = (rows = [], compartment = '') => {
+  const selectedCompartment = normalizeCompartmentTitle(compartment)
+  if (!selectedCompartment) return rows
+  return rows.filter((row) => getFrtCompartment(row) === selectedCompartment)
+}
+
+const getFrtDailyRows = (form = {}, { filterCompartment = true } = {}) => {
   if (!resolveSelectedFrtTruckPlate(form)) return []
   const currentRows = normalizeFrtDailyChecks(form.frtDailyChecks || form.frt_daily_checks)
-  return FRT_DAILY_SECTION_DEFINITIONS.flatMap((section) =>
+  const seedRows = FRT_DAILY_SECTION_DEFINITIONS.flatMap((section) => section.rows)
+  const rows = FRT_DAILY_SECTION_DEFINITIONS.flatMap((section) =>
     mergeSeededRows(section.rows, currentRows, {
       status: '',
       readingValue: '',
       remarks: '',
       photos: [],
+      additionalNotes: '',
+      additionalPhotos: [],
     }),
-  )
+  ).concat(getCustomRows(currentRows, seedRows))
+  return filterCompartment ? filterRowsByCompartment(rows, getSelectedFrtCompartment(form)) : rows
 }
 
-export const getFrtVisibleOneOffChecks = (form = {}) => {
+const getFrtOneOffRows = (form = {}, { filterCompartment = true } = {}) => {
   if (!resolveSelectedFrtTruckPlate(form)) return []
   const currentRows = normalizeFrtOneOffChecks(form.frtOneOffChecks || form.frt_one_off_checks)
-  return FRT_ONE_OFF_SECTION_DEFINITIONS.flatMap((section) =>
+  const seedRows = FRT_ONE_OFF_SECTION_DEFINITIONS.flatMap((section) => section.rows)
+  const rows = FRT_ONE_OFF_SECTION_DEFINITIONS.flatMap((section) =>
     mergeSeededRows(section.rows, currentRows, {
       condition: '',
       remarks: '',
       photos: [],
+      additionalNotes: '',
+      additionalPhotos: [],
     }),
-  )
+  ).concat(getCustomRows(currentRows, seedRows))
+  return filterCompartment ? filterRowsByCompartment(rows, getSelectedFrtCompartment(form)) : rows
 }
+
+export const getFrtVisibleDailyChecks = (form = {}) => getFrtDailyRows(form)
+
+export const getFrtVisibleOneOffChecks = (form = {}) => getFrtOneOffRows(form)
 
 const buildSectionSummary = (section, rows, kind) => {
   const visibleRows = rows.filter(
@@ -325,6 +321,7 @@ const buildSectionSummary = (section, rows, kind) => {
 
   return {
     ...section,
+    title: normalizeCompartmentTitle(section.title) || section.title,
     visibleRows,
     checkedCount,
     issueCount,
@@ -333,14 +330,120 @@ const buildSectionSummary = (section, rows, kind) => {
   }
 }
 
+const buildCompartmentOptionRows = () => {
+  const byCompartment = new Map()
+  const addSection = (section, rows, kind) => {
+    const compartment = normalizeCompartmentTitle(section.title)
+    if (!compartment) return
+    const current = byCompartment.get(compartment) || {
+      value: compartment,
+      title: compartment,
+      description: '',
+      dailyRowCount: 0,
+      oneOffRowCount: 0,
+    }
+    if (kind === 'daily') current.dailyRowCount += rows.length
+    else current.oneOffRowCount += rows.length
+    byCompartment.set(compartment, current)
+  }
+  FRT_DAILY_SECTION_DEFINITIONS.forEach((section) => addSection(section, section.rows, 'daily'))
+  FRT_ONE_OFF_SECTION_DEFINITIONS.forEach((section) => addSection(section, section.rows, 'oneOff'))
+  return Array.from(byCompartment.values()).map((row) => ({
+    ...row,
+    description: `${row.dailyRowCount + row.oneOffRowCount} item${
+      row.dailyRowCount + row.oneOffRowCount === 1 ? '' : 's'
+    }`,
+  }))
+}
+
+const FRT_COMPARTMENT_OPTION_ROWS = buildCompartmentOptionRows()
+
+const buildDynamicSectionDefinitions = (baseSections, rows, form) => {
+  const byTitle = new Map(
+    baseSections.map((section) => [normalizeCompartmentTitle(section.title), section]),
+  )
+  ;[
+    ...normalizeFrtCustomCompartments(form.frtCustomCompartments || form.frt_custom_compartments),
+    ...rows.map((row) => getFrtCompartment(row)),
+  ].forEach((compartment) => {
+    const normalized = normalizeCompartmentTitle(compartment)
+    if (!normalized || byTitle.has(normalized)) return
+    byTitle.set(normalized, {
+      key: `custom:${slugSegment(normalized)}`,
+      title: normalized,
+      rows: [],
+      custom: true,
+    })
+  })
+  return Array.from(byTitle.values())
+}
+
+export const getFrtCompartmentOptions = (form = {}) => {
+  const dailyRows = getFrtDailyRows(form, { filterCompartment: false })
+  const oneOffRows = getFrtOneOffRows(form, { filterCompartment: false })
+  const allRows = [...dailyRows, ...oneOffRows]
+  const optionRowsByValue = new Map(
+    FRT_COMPARTMENT_OPTION_ROWS.map((option) => [option.value, option]),
+  )
+  ;[
+    ...normalizeFrtCustomCompartments(form.frtCustomCompartments || form.frt_custom_compartments),
+    ...allRows.map((row) => getFrtCompartment(row)),
+  ].forEach((compartment) => {
+    const normalized = normalizeCompartmentTitle(compartment)
+    if (!normalized || optionRowsByValue.has(normalized)) return
+    optionRowsByValue.set(normalized, {
+      value: normalized,
+      title: normalized,
+      description: 'Custom compartment',
+      dailyRowCount: 0,
+      oneOffRowCount: 0,
+    })
+  })
+  return Array.from(optionRowsByValue.values()).map((option) => {
+    const rows = allRows.filter((row) => getFrtCompartment(row) === option.value)
+    const inspectedCount = rows.filter((row) =>
+      row.checklistKind === 'oneOff' ? isFrtOneOffRowComplete(row) : isFrtDailyRowComplete(row),
+    ).length
+    const totalCount = rows.length || option.dailyRowCount + option.oneOffRowCount
+    const isDone = totalCount > 0 && inspectedCount === totalCount
+    return {
+      ...option,
+      metaLabel: getScopedProgressLabel({
+        completedCount: inspectedCount,
+        totalCount,
+        singular: 'check',
+        plural: 'checks',
+      }),
+      metaTone: isDone ? 'success' : 'muted',
+      metaIconKey: isDone ? 'check' : '',
+      progress: {
+        inspectedCount,
+        totalCount,
+        isDone,
+      },
+    }
+  })
+}
+
 export const getFrtCheckSummary = (form = {}) => {
   const selectedTruck = resolveSelectedFrtTruckPlate(form)
+  const selectedCompartment = getSelectedFrtCompartment(form)
   const dailyRows = getFrtVisibleDailyChecks(form)
   const oneOffRows = getFrtVisibleOneOffChecks(form)
-  const visibleDailySections = FRT_DAILY_SECTION_DEFINITIONS.map((section) =>
+  const dailySections = buildDynamicSectionDefinitions(
+    FRT_DAILY_SECTION_DEFINITIONS,
+    dailyRows,
+    form,
+  )
+  const oneOffSections = buildDynamicSectionDefinitions(
+    FRT_ONE_OFF_SECTION_DEFINITIONS,
+    oneOffRows,
+    form,
+  )
+  const visibleDailySections = dailySections.map((section) =>
     buildSectionSummary(section, dailyRows, 'daily'),
   )
-  const visibleOneOffSections = FRT_ONE_OFF_SECTION_DEFINITIONS.map((section) =>
+  const visibleOneOffSections = oneOffSections.map((section) =>
     buildSectionSummary(section, oneOffRows, 'oneOff'),
   )
 
@@ -360,6 +463,7 @@ export const getFrtCheckSummary = (form = {}) => {
 
   return {
     selectedTruck,
+    selectedCompartment,
     totalCount: dailyRows.length + oneOffRows.length,
     checkedCount: dailyCheckedCount + oneOffCheckedCount,
     issueCount: dailyIssueCount + oneOffIssueCount,
@@ -395,6 +499,7 @@ export const getFrtCheckSummary = (form = {}) => {
 export const getFrtMissingFields = (form = {}) => {
   const summary = getFrtCheckSummary(form)
   const selectedTruck = resolveSelectedFrtTruckPlate(form)
+  const selectedCompartment = getSelectedFrtCompartment(form)
   const hasIncompleteDaily = summary.dailyRows.some((row) =>
     row.rowKind === 'reading'
       ? !String(row.readingValue || '').trim()
@@ -404,6 +509,7 @@ export const getFrtMissingFields = (form = {}) => {
 
   return {
     frtSession: !selectedTruck,
+    frtCompartment: !selectedCompartment,
     frtDailyChecks: summary.dailyRows.length === 0 || hasIncompleteDaily,
     frtDailyRemarks: summary.dailyRows.some(
       (row) =>
@@ -422,18 +528,31 @@ export const getFrtMissingFields = (form = {}) => {
 export const getFrtValidationDetails = (form = {}) => {
   const summary = getFrtCheckSummary(form)
   const rowDetails = []
+  const missingStatusesByRow = {}
+  const missingRemarksByRow = {}
+  const missingPhotosByRow = {}
   let firstTarget = null
 
   const addRowDetail = (row, field, detailKey) => {
+    const rowId = String(row.id || '').trim()
     const detail = {
       field,
-      rowId: String(row.id || '').trim(),
+      rowId,
       checkKey: '',
       detailKey,
       sectionKey: String(row.location || '').trim(),
       checklistKind: String(row.checklistKind || '').trim(),
     }
     rowDetails.push(detail)
+    if (['status', 'condition', 'readingValue'].includes(detailKey)) {
+      missingStatusesByRow[rowId] = [...(missingStatusesByRow[rowId] || []), detailKey]
+    }
+    if (detailKey === 'remarks') {
+      missingRemarksByRow[rowId] = [...(missingRemarksByRow[rowId] || []), detailKey]
+    }
+    if (detailKey === 'photos') {
+      missingPhotosByRow[rowId] = [...(missingPhotosByRow[rowId] || []), detailKey]
+    }
     if (!firstTarget) firstTarget = detail
   }
 
@@ -460,6 +579,9 @@ export const getFrtValidationDetails = (form = {}) => {
 
   return {
     rowDetails,
+    missingStatusesByRow,
+    missingRemarksByRow,
+    missingPhotosByRow,
     firstTarget,
     errorCount: rowDetails.length,
   }
@@ -529,6 +651,10 @@ export const buildFrtDescription = (form = {}) => {
   const inspectionDate = String(form.frtInspectionDate || form.frt_inspection_date || '').trim()
   const dailyRemarks = String(form.frtDailyRemarks || form.frt_daily_remarks || '').trim()
   const oneOffRemarks = String(form.frtOneOffRemarks || form.frt_one_off_remarks || '').trim()
+  const generalRemarks =
+    dailyRemarks && oneOffRemarks && dailyRemarks !== oneOffRemarks
+      ? [dailyRemarks, oneOffRemarks].join('\n')
+      : dailyRemarks || oneOffRemarks
   const summary = getFrtCheckSummary(form)
   const truckPlate = summary.selectedTruck || 'selected truck'
 
@@ -553,8 +679,7 @@ export const buildFrtDescription = (form = {}) => {
       )
     })
 
-  if (dailyRemarks) lines.push(`Daily remarks: ${dailyRemarks}`)
-  if (oneOffRemarks) lines.push(`One-off remarks: ${oneOffRemarks}`)
+  if (generalRemarks) lines.push(`Remarks: ${generalRemarks}`)
 
   return lines.join('\n')
 }

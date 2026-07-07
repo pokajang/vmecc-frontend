@@ -71,9 +71,9 @@ const WorkflowNotifications = ({ onClose }) => {
 
   return (
     <>
-      <div className="notification-drawer-content">
+      <div className="notification-drawer-content" data-testid="workflow-notifications-module">
         {/* Batch actions */}
-        <div className="notification-drawer-actions">
+        <div className="notification-drawer-actions" data-testid="workflow-notifications-actions">
           <button
             className="notification-drawer-action-btn"
             onClick={markAllRead}
@@ -139,30 +139,34 @@ const WorkflowNotifications = ({ onClose }) => {
         {!loading && error && <div className="notification-drawer-empty text-danger">{error}</div>}
 
         {!loading && !error && items.length === 0 && (
-          <div className="notification-drawer-empty">No notifications yet.</div>
+          <div className="notification-drawer-empty" data-testid="workflow-notifications-empty">
+            No notifications yet.
+          </div>
         )}
 
-        {!loading &&
-          !error &&
-          groupedItems.map((group) => (
-            <section key={group.key} className="notification-drawer-group">
-              <MobileOverlaySection
-                className="notification-drawer-group-title"
-                count={group.items.length}
-              >
-                {group.label}
-              </MobileOverlaySection>
-              {group.items.map((item) => (
-                <WorkflowNotificationCard
-                  key={item.id}
-                  item={item}
-                  onClick={handleClick}
-                  onDelete={deleteOne}
-                  onMarkRead={markRead}
-                />
-              ))}
-            </section>
-          ))}
+        {!loading && !error && groupedItems.length > 0 ? (
+          <div data-testid="workflow-notifications-list">
+            {groupedItems.map((group) => (
+              <section key={group.key} className="notification-drawer-group">
+                <MobileOverlaySection
+                  className="notification-drawer-group-title"
+                  count={group.items.length}
+                >
+                  {group.label}
+                </MobileOverlaySection>
+                {group.items.map((item) => (
+                  <WorkflowNotificationCard
+                    key={item.id}
+                    item={item}
+                    onClick={handleClick}
+                    onDelete={deleteOne}
+                    onMarkRead={markRead}
+                  />
+                ))}
+              </section>
+            ))}
+          </div>
+        ) : null}
       </div>
     </>
   )

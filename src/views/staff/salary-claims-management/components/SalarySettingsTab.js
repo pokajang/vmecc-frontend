@@ -95,7 +95,7 @@ const AssignmentTableRow = memo(
     onRowClick,
     onEdit,
     onDelete,
-    actionTourId = '',
+    actionTestId = '',
   }) => {
     const isDraft = String(row?.status || '') === ASSIGNMENT_DRAFT_STATUS
     const employeeContributions = row?.employeeContributions || {}
@@ -131,7 +131,7 @@ const AssignmentTableRow = memo(
           <CTableDataCell className="fw-semibold">{formatCurrency(netAssigned)}</CTableDataCell>
           <CTableDataCell className="text-end">
             <RowActions
-              tourId={actionTourId}
+              testId={actionTestId}
               items={[
                 { key: 'edit', label: 'Edit', onClick: () => onEdit(row, isDraft) },
                 {
@@ -323,7 +323,7 @@ const SalarySettingsTab = ({ vm, handlers }) => {
               onRowClick={handleRowClick}
               onEdit={handleEdit}
               onDelete={handleDelete}
-              actionTourId={
+              actionTestId={
                 String(row?.status || '') === ASSIGNMENT_DRAFT_STATUS &&
                 firstDraftAssignmentId === String(row?.id || '').trim()
                   ? 'salary-claims-management-assignment-draft-resume-action'
@@ -455,7 +455,7 @@ const SalarySettingsTab = ({ vm, handlers }) => {
               actions: (
                 <RowActions
                   toggleAriaLabel="Mobile row actions"
-                  tourId={
+                  testId={
                     isDraft && firstDraftAssignmentId === String(row?.id || '').trim()
                       ? 'salary-claims-management-assignment-draft-resume-action'
                       : firstDeleteAssignmentId === String(row?.id || '').trim()
@@ -493,10 +493,10 @@ const SalarySettingsTab = ({ vm, handlers }) => {
 
   return (
     <>
-      <CCard data-tour-id="salary-claims-management-assignment-list">
+      <CCard data-testid="salary-claims-management-assignment-list">
         <CCardHeader className="d-flex justify-content-between align-items-center gap-2">
           <span>Salary Assignments</span>
-          <div data-tour-id="salary-claims-management-assignment-create-action">
+          <div data-testid="salary-claims-management-assignment-create-action">
             <CreateActionButton label="Assign Salary" onClick={openCreateAssignment} />
           </div>
         </CCardHeader>
@@ -602,14 +602,14 @@ const SalarySettingsTab = ({ vm, handlers }) => {
 
       <div className="mt-3 d-grid gap-2">
         {isLoading ? (
-          <CCard data-tour-id="salary-claims-management-assignment-history">
+          <CCard data-testid="salary-claims-management-assignment-history">
             <CCardHeader>History</CCardHeader>
             <CCardBody>
               <TableLoader />
             </CCardBody>
           </CCard>
         ) : (
-          <div data-tour-id="salary-claims-management-assignment-history">
+          <div data-testid="salary-claims-management-assignment-history">
             <AuditHistoryPanel
               title={
                 hiddenHistoryCount > 0

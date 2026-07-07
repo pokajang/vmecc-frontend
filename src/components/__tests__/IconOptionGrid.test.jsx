@@ -81,11 +81,7 @@ describe('IconOptionGrid', () => {
     const weekdayCard = screen.getByTestId('option-weekday')
     fireEvent.keyDown(weekdayCard, { key: 'Enter' })
     fireEvent.keyDown(weekdayCard, { key: ' ' })
-    expect(handleChange).toHaveBeenCalledWith(
-      'weekday',
-      expect.objectContaining({ value: 'weekday' }),
-    )
-    expect(handleChange).toHaveBeenCalledTimes(3)
+    expect(handleChange).toHaveBeenCalledTimes(1)
   })
 
   it('prevents interaction when disabled', () => {
@@ -105,8 +101,7 @@ describe('IconOptionGrid', () => {
     fireEvent.click(weekendCard)
     fireEvent.keyDown(weekendCard, { key: 'Enter' })
 
-    expect(weekendCard.getAttribute('tabindex')).toBe('-1')
-    expect(weekendCard.getAttribute('aria-disabled')).toBe('true')
+    expect(weekendCard.getAttribute('disabled')).toBe('')
     expect(handleChange).not.toHaveBeenCalled()
   })
 

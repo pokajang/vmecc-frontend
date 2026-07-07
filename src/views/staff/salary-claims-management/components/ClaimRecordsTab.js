@@ -288,10 +288,10 @@ const ClaimRecordsTab = ({ vm, handlers }) => {
   )
 
   return (
-    <CCard data-tour-id="salary-claims-management-claims">
+    <CCard data-testid="salary-claims-management-claims">
       <CCardHeader>Claim Records</CCardHeader>
       <CCardBody>
-        <div data-tour-id="salary-claims-management-claims-filters">
+        <div data-testid="salary-claims-management-claims-filters">
           <TableFilters
             searchValue={search}
             onSearchChange={setSearch}

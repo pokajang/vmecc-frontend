@@ -16,19 +16,29 @@ const DataTableFooter = ({
   onRowsToShowChange = () => {},
   filteredCount = 0,
   totalCount = 0,
+  visibleCount: visibleCountOverride = null,
   options = DEFAULT_OPTIONS,
   showFilteredFrom = true,
+  currentPage = 1,
+  lastPage = 1,
+  onPageChange = null,
   className = '',
 }) => {
   if (!filteredCount) return null
 
   const isShowingAll = rowsToShow === ALL_ROWS_VALUE || rowsToShow >= filteredCount
-  const visibleCount = isShowingAll ? filteredCount : rowsToShow
+  const visibleCount =
+    visibleCountOverride === null
+      ? isShowingAll
+        ? filteredCount
+        : rowsToShow
+      : visibleCountOverride
   const showFiltered = showFilteredFrom && totalCount > 0 && totalCount !== filteredCount
+  const showPagination = typeof onPageChange === 'function' && lastPage > 1
 
   return (
     <div
-      className={`d-flex justify-content-end align-items-center gap-2 text-muted small mt-2 ${className}`.trim()}
+      className={`d-flex flex-wrap justify-content-end align-items-center gap-2 text-muted small mt-2 ${className}`.trim()}
     >
       <span>Show</span>
       <CFormSelect
@@ -52,6 +62,29 @@ const DataTableFooter = ({
         Showing {visibleCount} of {filteredCount}
         {showFiltered ? <span className="ms-1">(filtered from {totalCount})</span> : null}
       </span>
+      {showPagination ? (
+        <>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-secondary"
+            disabled={currentPage <= 1}
+            onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+          >
+            Previous
+          </button>
+          <span>
+            Page {currentPage} of {lastPage}
+          </span>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-secondary"
+            disabled={currentPage >= lastPage}
+            onClick={() => onPageChange(Math.min(lastPage, currentPage + 1))}
+          >
+            Next
+          </button>
+        </>
+      ) : null}
     </div>
   )
 }

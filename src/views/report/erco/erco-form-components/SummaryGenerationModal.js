@@ -24,11 +24,14 @@ const SummaryGenerationModal = ({
   currentSummary,
   generatedSummary,
   errorMessage,
+  mode = 'generate',
   onClose,
   onGenerate,
   onRetry,
   onUseGenerated,
 }) => {
+  const isImproveMode = mode === 'improve'
+
   return (
     <CModal
       alignment="center"
@@ -38,14 +41,17 @@ const SummaryGenerationModal = ({
       scrollable
     >
       <CModalHeader>
-        <CModalTitle>Generate Incident Summary</CModalTitle>
+        <CModalTitle>
+          {isImproveMode ? 'Improve Incident Summary' : 'Generate Incident Summary'}
+        </CModalTitle>
       </CModalHeader>
       <CModalBody className="d-grid gap-3">
         {stage === 'confirm' ? (
           <>
             <div className="text-body-secondary">
-              Ensure you have completed chronology and other inputs. A template-based draft will be
-              generated from your current form data for review before applying.
+              {isImproveMode
+                ? 'Ask AI will improve the wording of your current summary using this ERCO form only. Review it before applying.'
+                : 'Ensure you have completed chronology and other inputs. Ask AI will generate a draft from your current ERCO form data for review before applying.'}
             </div>
           </>
         ) : null}
@@ -93,7 +99,7 @@ const SummaryGenerationModal = ({
               onClick={onGenerate}
             >
               <Sparkles size={14} />
-              Generate Summary
+              {isImproveMode ? 'Improve Summary' : 'Generate Summary'}
             </CButton>
           </>
         ) : null}

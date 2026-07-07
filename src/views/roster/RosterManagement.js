@@ -77,7 +77,7 @@ const OverviewTab = ({ canManageRoster, exportedBy }) => {
   } = useRosterState(canManageRoster, true, 'all') // publishedOnly=true, fetch all historical data
 
   return (
-    <section data-tour-id="roster-management-overview">
+    <section data-testid="roster-management-overview">
       <RosterStat
         stats={stats}
         statuses={teamStatuses}
@@ -161,7 +161,7 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
   const readModeActions = !editMode ? (
     <div
       className="d-flex flex-wrap align-items-center gap-2"
-      data-tour-id="roster-management-read-actions"
+      data-testid="roster-management-read-actions"
     >
       <CButton
         size="sm"
@@ -187,7 +187,7 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
         size="sm"
         className={`d-inline-flex align-items-center ${ghostBtn}`}
         onClick={() => setEditMode(true)}
-        data-tour-id="roster-management-edit-action"
+        data-testid="roster-management-edit-action"
         disabled={loading}
       >
         <Pencil size={13} className="me-1 align-text-bottom" />
@@ -207,7 +207,7 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
         }
         actions={readModeActions}
       />
-      <CCard className="mb-4" data-tour-id="roster-management-schedule">
+      <CCard className="mb-4" data-testid="roster-management-schedule">
         <CCardHeader className="d-flex flex-wrap align-items-center justify-content-between gap-2">
           <div className="d-flex flex-wrap align-items-center gap-2">
             <span>Roster Schedule</span>
@@ -220,7 +220,7 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
           {editMode && (
             <div
               className="d-flex flex-wrap align-items-center gap-2 justify-content-end"
-              data-tour-id="roster-management-edit-actions"
+              data-testid="roster-management-edit-actions"
             >
               <CButton
                 size="sm"
@@ -228,7 +228,7 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
                 disabled={isSavingDraft || isPublishing}
                 onClick={handleSaveDraft}
                 title="Save privately - teams will not be notified"
-                data-tour-id="roster-management-save-draft-action"
+                data-testid="roster-management-save-draft-action"
               >
                 {isSavingDraft ? <ButtonLoader label="Saving..." /> : 'Save Draft'}
               </CButton>
@@ -238,7 +238,7 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
                 disabled={isSavingDraft || isPublishing}
                 onClick={() => setShowPublishConfirm(true)}
                 title="Publish and notify all assigned teams"
-                data-tour-id="roster-management-publish-action"
+                data-testid="roster-management-publish-action"
               >
                 {isPublishing ? <ButtonLoader label="Publishing..." /> : 'Publish'}
               </CButton>
@@ -247,7 +247,7 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
                 className={ghostBtn}
                 disabled={isSavingDraft || isPublishing}
                 onClick={handleCancelClick}
-                data-tour-id="roster-management-cancel-action"
+                data-testid="roster-management-cancel-action"
               >
                 Cancel
               </CButton>
@@ -267,7 +267,7 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
             </CAlert>
           )}
 
-          <div data-tour-id="roster-management-filters">
+          <div data-testid="roster-management-filters">
             <RosterFilter
               rangeType={rangeType}
               onRangeChange={handleRangeChange}
@@ -357,7 +357,7 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
         </CModalHeader>
         <CModalBody
           className="text-body-secondary"
-          data-tour-id={showCancelConfirm ? 'roster-management-cancel-modal' : undefined}
+          data-testid={showCancelConfirm ? 'roster-management-cancel-modal' : undefined}
         >
           You have unsaved roster changes for <strong>{scopeLabel}</strong>. Cancelling will discard
           them.
@@ -366,7 +366,7 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
           <CButton
             color="light"
             onClick={() => setShowCancelConfirm(false)}
-            data-tour-id={
+            data-testid={
               showCancelConfirm ? 'roster-management-cancel-modal-close-action' : undefined
             }
           >
@@ -394,7 +394,7 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
           <CModalTitle>Publish Roster?</CModalTitle>
         </CModalHeader>
         <CModalBody
-          data-tour-id={showPublishConfirm ? 'roster-management-publish-modal' : undefined}
+          data-testid={showPublishConfirm ? 'roster-management-publish-modal' : undefined}
         >
           <p className="mb-3">
             You are about to publish the roster for <strong>{scopeLabel}</strong>.
@@ -443,12 +443,12 @@ const RosterManagement = () => {
   }
 
   return (
-    <CContainer fluid data-tour-id="roster-management-module">
+    <CContainer fluid data-testid="roster-management-module">
       <ModulePageHeader
         title="Roster Management"
         subtitle="Review published coverage and manage roster assignments by shift."
       />
-      <div data-tour-id="roster-management-nav">
+      <div data-testid="roster-management-nav">
         <RouteNavTabs
           currentPath={resolvedTab}
           navigate={(tab) => switchTab(tab)}

@@ -97,11 +97,12 @@ describe('ErcoMobileHome', () => {
     fireEvent.click(screen.getByRole('radio', { name: /Fire/i }))
     expect(onSelectType).toHaveBeenCalledWith('Fire')
 
-    expect(screen.getAllByText('Continue Draft')).toHaveLength(3)
-    fireEvent.click(screen.getAllByText('Continue Draft')[0])
+    expect(screen.getAllByText('Continue Draft')).toHaveLength(1)
+    expect(screen.getByText('Fire - Zone 1')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Continue ERCO draft' }))
     expect(onContinueDraft).toHaveBeenCalledWith(draftRows[0])
 
-    fireEvent.click(screen.getAllByLabelText('Delete draft')[0])
+    fireEvent.click(screen.getByLabelText('Delete draft'))
     expect(onDeleteDraft).toHaveBeenCalledWith(draftRows[0])
 
     fireEvent.click(screen.getByRole('button', { name: /View all/i }))
@@ -112,5 +113,62 @@ describe('ErcoMobileHome', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Fire Zone 1/i }))
     expect(onOpenRecord).toHaveBeenCalledWith(recentRecords[0])
+  })
+
+  it('uses the inspection landing layout hooks for mobile spacing and controls', () => {
+    const { container } = render(
+      <ErcoMobileHome
+        user={{ id: 'u-1', name: 'Alex Tan' }}
+        draftRows={[]}
+        recentRecords={[]}
+        recordsCount={0}
+        recordScope="mine"
+        onRecordScopeChange={vi.fn()}
+        onSelectType={vi.fn()}
+        onContinueDraft={vi.fn()}
+        onDeleteDraft={vi.fn()}
+        onOpenRecord={vi.fn()}
+        onViewRecords={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByText('Choose Type')).toBeTruthy()
+    expect(container.querySelector('.inspection-mobile-home')).toBeTruthy()
+    expect(container.querySelector('.inspection-mobile-home__type-grid')).toBeTruthy()
+    expect(container.querySelector('.inspection-mobile-home__records-toolbar')).toBeTruthy()
+    expect(container.querySelector('.inspection-view-all-btn')).toBeTruthy()
+    expect(screen.getByText('No records yet.')).toBeTruthy()
+  })
+
+  it('limits recent records to the inspection landing count', () => {
+    render(
+      <ErcoMobileHome
+        user={{ id: 'u-1', name: 'Alex Tan' }}
+        draftRows={[]}
+        recentRecords={[
+          { id: 'record-1', incidentType: 'Oil Spill', location: 'Zone 1', status: 'Approved' },
+          {
+            id: 'record-2',
+            incidentType: 'Special Assistance',
+            location: 'Zone 1',
+            status: 'Submitted',
+          },
+          { id: 'record-3', incidentType: 'Hazmat', location: 'Zone 898', status: 'Submitted' },
+          { id: 'record-4', incidentType: 'Fire', location: 'Zone 2', status: 'Submitted' },
+        ]}
+        recordsCount={4}
+        recordScope="mine"
+        onRecordScopeChange={vi.fn()}
+        onSelectType={vi.fn()}
+        onContinueDraft={vi.fn()}
+        onDeleteDraft={vi.fn()}
+        onOpenRecord={vi.fn()}
+        onViewRecords={vi.fn()}
+      />,
+    )
+
+    expect(screen.getAllByRole('button', { name: /Open ERCO record/i })).toHaveLength(3)
+    expect(screen.queryByRole('button', { name: /Open ERCO record Fire Zone 2/i })).toBeNull()
+    expect(screen.getByRole('button', { name: 'View all (4)' })).toBeTruthy()
   })
 })

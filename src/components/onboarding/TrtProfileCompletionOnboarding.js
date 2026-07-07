@@ -29,10 +29,6 @@ import {
   getTrtProfileOnboardingStorageKey,
   hasCriticalMedicalInfoAcknowledgement,
 } from 'src/onboarding/trtProfileCompletion'
-import {
-  INSPECTION_TOUR_SOURCE_REQUEST,
-  TRT_INSPECTION_TOUR_REQUEST_EVENT,
-} from 'src/onboarding/inspectionOnboardingContract'
 
 const WELCOME_PROMPT_DELAY_MS = 2000
 
@@ -375,24 +371,6 @@ const TrtProfileCompletionOnboarding = () => {
   }
 
   const handleExploreMyself = () => {
-    setVisible(false)
-  }
-
-  const handleStartQuickTour = () => {
-    const now = new Date().toISOString()
-    writeStorageRecord(storageKey, {
-      ...(readStorageRecord(storageKey) || {}),
-      quickTourRequestedAt: now,
-    })
-
-    if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function') {
-      window.dispatchEvent(
-        new CustomEvent(TRT_INSPECTION_TOUR_REQUEST_EVENT, {
-          detail: { source: INSPECTION_TOUR_SOURCE_REQUEST, userId: authUser.id },
-        }),
-      )
-    }
-
     setVisible(false)
   }
 
@@ -755,11 +733,8 @@ const TrtProfileCompletionOnboarding = () => {
         )}
         {mode === 'complete' && (
           <>
-            <CButton color="secondary" variant="outline" onClick={handleExploreMyself}>
-              Explore myself
-            </CButton>
-            <CButton color="primary" onClick={handleStartQuickTour}>
-              Start tutorial
+            <CButton color="primary" onClick={handleExploreMyself}>
+              Continue
             </CButton>
           </>
         )}

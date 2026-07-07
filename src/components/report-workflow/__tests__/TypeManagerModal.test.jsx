@@ -85,4 +85,12 @@ describe('TypeManagerModal', () => {
     ).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Update Type' })).toBeTruthy()
   })
+
+  it('renders a clear empty state when edit mode has no options', () => {
+    render(<TypeManagerModal {...baseProps} options={[]} />)
+
+    expect(screen.getByText('No items available to edit.')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Back' })).toBeTruthy()
+    expect(screen.getAllByRole('button', { name: 'Close' }).length).toBeGreaterThan(0)
+  })
 })

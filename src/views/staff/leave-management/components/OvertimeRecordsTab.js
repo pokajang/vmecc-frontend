@@ -312,10 +312,10 @@ const OvertimeRecordsTab = (props) => {
   })
 
   return (
-    <CCard data-tour-id="overtime-management-records">
+    <CCard data-testid="overtime-management-records">
       <CCardHeader>Overtime Records</CCardHeader>
       <CCardBody>
-        <div data-tour-id="overtime-management-filters">
+        <div data-testid="overtime-management-filters">
           <TableFilters
             searchValue={search}
             onSearchChange={setSearch}

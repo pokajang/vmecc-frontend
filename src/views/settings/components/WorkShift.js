@@ -154,7 +154,7 @@ const BuiltinShifts = () => {
   ]
 
   return (
-    <CCard className="mb-4">
+    <CCard className="mb-4" data-testid="shift-settings-built-in">
       <CCardHeader className="d-flex justify-content-between align-items-center">
         <span>Work Shift Windows</span>
         <EditControls
@@ -344,10 +344,12 @@ const CustomShifts = () => {
 
   return (
     <>
-      <CCard className="mb-4">
+      <CCard className="mb-4" data-testid="shift-settings-custom">
         <CCardHeader className="d-flex justify-content-between align-items-center">
           <span>Custom Shifts</span>
-          <CreateActionButton label="Add Shift" onClick={openAdd} disabled={loading} />
+          <span data-testid="shift-settings-custom-create-action">
+            <CreateActionButton label="Add Shift" onClick={openAdd} disabled={loading} />
+          </span>
         </CCardHeader>
         <CCardBody>
           <p className="text-muted mb-3">Add custom shift types beyond normal, day, and night.</p>
@@ -368,7 +370,10 @@ const CustomShifts = () => {
                       <CTableHeaderCell>Name</CTableHeaderCell>
                       <CTableHeaderCell>Start</CTableHeaderCell>
                       <CTableHeaderCell>End</CTableHeaderCell>
-                      <CTableHeaderCell style={{ width: 80 }} />
+                      <CTableHeaderCell
+                        className="table-sticky-action-cell"
+                        style={{ width: 80 }}
+                      />
                     </CTableRow>
                   </CTableHead>
                   <CTableBody>
@@ -380,7 +385,7 @@ const CustomShifts = () => {
                         <CTableDataCell>{shift.name}</CTableDataCell>
                         <CTableDataCell>{shift.start}</CTableDataCell>
                         <CTableDataCell>{shift.end}</CTableDataCell>
-                        <CTableDataCell className="text-center align-middle">
+                        <CTableDataCell className="table-sticky-action-cell text-center align-middle">
                           <div className="d-flex gap-1 justify-content-end">
                             <CButton
                               size="sm"

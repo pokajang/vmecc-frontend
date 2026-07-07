@@ -12,8 +12,6 @@ import {
   TRT_PROFILE_ONBOARDING_VERSION,
   getTrtProfileOnboardingStorageKey,
 } from 'src/onboarding/trtProfileCompletion'
-import { TRT_INSPECTION_TOUR_REQUEST_EVENT } from 'src/onboarding/trtInspectionTour'
-import { INSPECTION_TOUR_SOURCE_REQUEST } from 'src/onboarding/inspectionOnboardingContract'
 
 vi.mock('src/services/apiClient', () => ({
   updateOnboardingState: vi.fn(),
@@ -270,15 +268,11 @@ describe('TrtProfileCompletionOnboarding', () => {
     )
     expect(await screen.findByText('Profile ready')).toBeTruthy()
     expect(screen.getByText('Your operational profile is ready.')).toBeTruthy()
-    expect(screen.getByRole('button', { name: /start tutorial/i })).toBeTruthy()
-    expect(screen.getByRole('button', { name: /explore myself/i })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /continue/i })).toBeTruthy()
     expect(store.getState().authUser).toEqual(completeUser)
   })
 
-  it('records quick tour intent from the profile-ready state', async () => {
-    const tourRequested = vi.fn()
-    window.addEventListener(TRT_INSPECTION_TOUR_REQUEST_EVENT, tourRequested)
-
+  it('closes the profile-ready state without launching extra guidance', async () => {
     const medicalComplete = {
       ...completeUser,
       medical_info: null,
@@ -293,18 +287,9 @@ describe('TrtProfileCompletionOnboarding', () => {
     fireEvent.click(screen.getByRole('button', { name: /save and continue/i }))
 
     await screen.findByText('Profile ready')
-    fireEvent.click(screen.getByRole('button', { name: /start tutorial/i }))
+    fireEvent.click(screen.getByRole('button', { name: /continue/i }))
 
-    const record = JSON.parse(
-      localStorage.getItem(getTrtProfileOnboardingStorageKey(completeUser.id)),
-    )
-    expect(record.quickTourRequestedAt).toBeTruthy()
-    expect(tourRequested).toHaveBeenCalledTimes(1)
-    expect(tourRequested.mock.calls[0][0].detail).toEqual({
-      source: INSPECTION_TOUR_SOURCE_REQUEST,
-      userId: completeUser.id,
-    })
-
-    window.removeEventListener(TRT_INSPECTION_TOUR_REQUEST_EVENT, tourRequested)
+    await waitFor(() => expect(document.querySelector('.modal.show')).toBeNull())
+    expect(localStorage.getItem(getTrtProfileOnboardingStorageKey(completeUser.id))).toBeNull()
   })
 })

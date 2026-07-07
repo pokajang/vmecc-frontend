@@ -3,7 +3,7 @@ import { CBadge, CCard, CCardBody, CCardHeader } from '@coreui/react'
 import {
   HydraulicEquipmentChecks,
   PhotoGallery,
-} from 'src/views/inspection/components/InspectionFormDisplaySections'
+} from 'src/views/inspection/form/components/InspectionFormDisplaySections'
 import { HYDRAULIC_CHECK_FIELDS, getHydraulicRetainedEvidenceFields } from './helpers'
 
 export const HydraulicEditSection = ({
@@ -12,6 +12,7 @@ export const HydraulicEditSection = ({
   form,
   summary,
   fieldErrors = {},
+  isLoadingRows = false,
   handlers = {},
 }) => (
   <HydraulicEquipmentChecks
@@ -20,6 +21,8 @@ export const HydraulicEditSection = ({
     checks={form.hydraulicChecks}
     summary={summary}
     onUpdateCheck={handlers.onUpdateCheck}
+    onSaveRowDraft={handlers.onSaveRowDraft}
+    onResetCheck={handlers.onResetCheck}
     onMarkEquipmentOk={handlers.onMarkEquipmentOk}
     onMarkAllOk={handlers.onMarkAllOk}
     onRequestPhotoUpload={handlers.onRequestPhotoUpload}
@@ -32,6 +35,7 @@ export const HydraulicEditSection = ({
     onDeleteEquipment={handlers.onDeleteEquipment}
     fieldError={fieldErrors.hydraulicChecks}
     remarksError={fieldErrors.hydraulicRemarks}
+    isLoadingRows={isLoadingRows}
   />
 )
 
@@ -118,7 +122,7 @@ export const HydraulicReadOnlySection = ({ mainLocation, form, summary }) => {
   if (visibleChecks.length === 0) {
     return (
       <div className="inspection-form-section d-grid gap-2">
-        <div className="fw-semibold text-muted">Hydraulic Equipment Checks</div>
+        <div className="fw-semibold text-muted">Equipment</div>
         <div className="rounded-3 border bg-light-subtle p-3 text-body-secondary">
           No hydraulic equipment has been added for this location.
         </div>
@@ -128,7 +132,7 @@ export const HydraulicReadOnlySection = ({ mainLocation, form, summary }) => {
 
   return (
     <div className="inspection-form-section d-grid gap-3">
-      <div className="fw-semibold text-muted">Hydraulic Equipment Checks</div>
+      <div className="fw-semibold text-muted">Equipment</div>
       <div className="inspection-hydraulic-card-grid gap-4">
         {visibleChecks.map((row) => {
           const hasDefect = HYDRAULIC_CHECK_FIELDS.some((field) => row?.[field.key] === 'Defect')

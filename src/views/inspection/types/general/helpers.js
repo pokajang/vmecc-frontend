@@ -1,14 +1,10 @@
+import { normalizeInspectionIssues } from '../inspectionIssues'
+
 export const GENERAL_INSPECTION_TYPE = 'General Inspection'
 
 const text = (value) => String(value || '').trim()
 
 const normalizeKey = (value) => text(value).toLowerCase().replace(/\s+/g, ' ')
-
-const slugSegment = (value) =>
-  text(value)
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '')
 
 const formatLocation = (form = {}) => {
   const selectedLocation = text(form.selectedLocation || form.location)
@@ -18,79 +14,51 @@ const formatLocation = (form = {}) => {
   return [mainLocation, subLocation].filter(Boolean).join(' > ')
 }
 
-const normalizeChecklistItem = (item = {}) => {
-  const label = text(item?.label || item)
-  if (!label) return null
-  return {
-    id: text(item?.id) || `${slugSegment(GENERAL_INSPECTION_TYPE)}:${slugSegment(label)}`,
-    label,
-    selected: item?.selected !== false,
-    selectedAt: text(item?.selectedAt || item?.selected_at),
-  }
-}
-
-const getSelectedChecklistItems = (checklist = []) =>
-  (Array.isArray(checklist) ? checklist : [])
-    .map(normalizeChecklistItem)
-    .filter((item) => item && item.selected !== false)
-
 export const isGeneralInspectionType = (inspectionType) =>
   normalizeKey(inspectionType) === normalizeKey(GENERAL_INSPECTION_TYPE)
 
 export const getGeneralCheckSummary = (form = {}) => {
-  const visibleChecks = getSelectedChecklistItems(form.checklist)
-  const description = text(form.description)
+  const findings = normalizeInspectionIssues(form.inspectionIssues || form.issues)
+  const description = buildGeneralDescription(form)
 
   return {
-    totalCount: visibleChecks.length,
-    visibleChecks,
-    hasDescription: description !== '',
-    hasContent: visibleChecks.length > 0 || description !== '',
+    totalCount: findings.length,
+    visibleChecks: [],
+    hasDescription: false,
+    hasContent: findings.length > 0,
     description,
   }
 }
 
 export const getGeneralMissingFields = (form = {}) => ({
-  description: text(form.description) === '',
-  photos: !Array.isArray(form.photos) || form.photos.length === 0,
+  description: false,
+  photos: false,
 })
 
 export const getGeneralValidationDetails = (form = {}) => {
-  const missing = getGeneralMissingFields(form)
-  const orderedFields = ['description', 'photos']
-  const missingFields = orderedFields.reduce((next, field) => {
-    if (missing[field]) next[field] = true
-    return next
-  }, {})
-  const firstField = orderedFields.find((field) => missing[field]) || ''
-
   return {
-    missingFields,
-    firstTarget: firstField ? { field: firstField } : null,
-    errorCount: Object.keys(missingFields).length,
+    missingFields: {},
+    firstTarget: null,
+    errorCount: 0,
   }
 }
 
-export const buildGeneralChecklist = (form = {}) =>
-  getSelectedChecklistItems(form.checklist).map((item) => ({
-    id: item.id,
-    inspectionType: GENERAL_INSPECTION_TYPE,
-    label: item.label,
-    selected: true,
-    selectedAt: item.selectedAt || '',
-  }))
+export const buildGeneralChecklist = () => []
 
 export const buildGeneralDescription = (form = {}) => {
   const description = text(form.description)
   if (description) return description
 
   const location = formatLocation(form)
-  const checklistLabels = getSelectedChecklistItems(form.checklist).map((item) => item.label)
-  if (checklistLabels.length === 0) return ''
+  const findings = normalizeInspectionIssues(form.inspectionIssues || form.issues)
+  const summary = location
+    ? `General inspection completed at ${location}.`
+    : 'General inspection completed.'
+  if (findings.length === 0) return summary
 
   return [
-    `General inspection completed${location ? ` at ${location}` : ''}.`,
-    `Quick checks recorded: ${checklistLabels.length}.`,
-    ...checklistLabels.map((label) => `- ${label}`),
+    summary,
+    `Finding${findings.length === 1 ? '' : 's'} recorded: ${findings.length}.`,
+    ...findings.map((finding) => `- ${text(finding.description)}`),
   ].join('\n')
 }

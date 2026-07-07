@@ -1,0 +1,394 @@
+import React from 'react'
+import { CButton, CFormLabel, CFormTextarea } from '@coreui/react'
+import { Camera, CheckCircle2, Circle, TriangleAlert } from 'lucide-react'
+import CreateActionButton from 'src/components/CreateActionButton'
+import { hasHighAngleInspectionData } from '../inspectionResetActions'
+import InspectionItemAdditionalInfo from './InspectionItemAdditionalInfo'
+import { buildInspectionElementActions, InspectionElementCard } from './InspectionElementUi'
+import {
+  HIGH_ANGLE_CONDITION_FIELD,
+  HIGH_ANGLE_STATUS_OPTIONS,
+  getHighAngleRetainedEvidenceRows,
+} from 'src/views/inspection/types/high-angle/helpers'
+import {
+  EvidenceBlock,
+  FormFieldError,
+  InspectionPhotoEvidenceSummary,
+} from './InspectionDisplayShared'
+
+const text = (value) => String(value || '').trim()
+
+const getHighAngleRowId = (row = {}) =>
+  text(row.id) || `${text(row.mainLocation)}:${text(row.rowNumber)}`
+
+const stripHighAngleDisplayMeta = (row = {}) => {
+  const { groupKey, groupTitle, ...sourceRow } = row
+  return sourceRow
+}
+
+const formatHighAngleRowMeta = (row = {}) =>
+  `Row ${row.rowNumber || '--'} - Qty ${row.quantity || '--'}`
+
+const HighAngleStatusSegment = ({ value, onChange, readOnly = false }) => (
+  <div className="inspection-hydraulic-status-group d-flex flex-nowrap justify-content-start gap-2 overflow-auto pb-1">
+    {HIGH_ANGLE_STATUS_OPTIONS.map((option) =>
+      readOnly ? (
+        <span
+          key={option.value}
+          className={`inspection-hydraulic-status-btn btn btn-sm ${
+            value === option.value ? 'btn-primary' : 'btn-outline-secondary'
+          } pe-none`.trim()}
+          aria-current={value === option.value ? 'true' : undefined}
+        >
+          {option.label}
+        </span>
+      ) : (
+        <CButton
+          key={option.value}
+          type="button"
+          color={value === option.value ? 'primary' : 'secondary'}
+          variant={value === option.value ? undefined : 'outline'}
+          size="sm"
+          className="inspection-hydraulic-status-btn"
+          onClick={() => onChange(option.value)}
+        >
+          {option.label}
+        </CButton>
+      ),
+    )}
+  </div>
+)
+
+const HighAngleStatusInline = ({ row, hasIssue = false, hasRetainedEvidence = false }) => {
+  const isComplete = text(row.condition) !== ''
+  const completionLabel = isComplete ? 'Checked' : 'Not checked'
+
+  return (
+    <span className="inspection-fire-extinguisher-status-inline d-inline-flex flex-wrap align-items-center gap-2 small">
+      <span
+        className={`d-inline-flex align-items-center gap-1 ${
+          isComplete ? 'text-muted' : 'text-body-tertiary'
+        }`}
+        aria-label={completionLabel}
+        title={completionLabel}
+      >
+        {isComplete ? (
+          <CheckCircle2 size={14} className="text-success" aria-hidden="true" />
+        ) : (
+          <Circle size={14} aria-hidden="true" />
+        )}
+        <span className="fw-normal">{completionLabel}</span>
+      </span>
+      {hasIssue ? (
+        <span
+          className="d-inline-flex align-items-center gap-1 text-danger"
+          aria-label="Issue"
+          title="Issue"
+        >
+          <TriangleAlert size={14} aria-hidden="true" />
+          <span className="fw-normal">Issue</span>
+        </span>
+      ) : null}
+      {hasRetainedEvidence ? (
+        <span
+          className="d-inline-flex align-items-center gap-1 text-warning-emphasis"
+          aria-label="Retained evidence"
+          title="Retained evidence"
+        >
+          <TriangleAlert size={14} aria-hidden="true" />
+          <span className="fw-normal">Retained evidence</span>
+        </span>
+      ) : null}
+    </span>
+  )
+}
+
+export const HighAngleInspectionRowDetails = ({
+  row,
+  readOnly = false,
+  remarksError = false,
+  setPhotoViewer,
+  onUpdateCheck,
+  onRequestPhotoUpload,
+  onRequestIssuePhotoUpload,
+  onRemovePhoto,
+  onChangePhotoDescription,
+  onApplyPhotoCaption,
+}) => {
+  const hasIssue = text(row.condition) === 'Not Good'
+  const conditionRemarks = String(row.conditionRemarks || row.remarks || '')
+  const hasConditionRemarks = text(conditionRemarks) !== ''
+  const conditionPhotos = Array.isArray(row.conditionPhotos) ? row.conditionPhotos : []
+  const retainedEvidenceRows = getHighAngleRetainedEvidenceRows([row])
+  const hasRetainedEvidence = retainedEvidenceRows.length > 0
+  const sourceRow = stripHighAngleDisplayMeta(row)
+
+  return readOnly ? (
+    <>
+      <div className="inspection-hydraulic-check-row inspection-hydraulic-check-row--stacked d-grid gap-2">
+        <div className="inspection-hydraulic-check-label small fw-semibold text-muted">
+          Condition
+        </div>
+        <div className="fw-semibold">{row.condition || '--'}</div>
+      </div>
+      {hasIssue ? (
+        <EvidenceBlock
+          title="Condition issue evidence"
+          remarks={conditionRemarks}
+          photos={conditionPhotos}
+          readOnly
+          onViewPhotos={() =>
+            setPhotoViewer({
+              title: `${row.equipment} - condition issue photos`,
+              photos: conditionPhotos,
+              readOnly: true,
+              showDescriptionInput: false,
+            })
+          }
+        />
+      ) : null}
+      {hasRetainedEvidence ? (
+        <EvidenceBlock
+          title="Condition retained evidence from earlier status"
+          remarks={conditionRemarks}
+          photos={conditionPhotos}
+          readOnly
+          onViewPhotos={() =>
+            setPhotoViewer({
+              title: `${row.equipment} - retained evidence photos`,
+              photos: conditionPhotos,
+              readOnly: true,
+              showDescriptionInput: false,
+            })
+          }
+        >
+          <div className="small text-body-secondary">
+            Audit context only. Current condition is not Not Good.
+          </div>
+        </EvidenceBlock>
+      ) : null}
+      <InspectionItemAdditionalInfo
+        row={row}
+        readOnly
+        remarksKey="additionalNotes"
+        photosKey="additionalPhotos"
+        remarksTitle="General equipment remarks"
+        setPhotoViewer={setPhotoViewer}
+      />
+    </>
+  ) : (
+    <>
+      <div className="inspection-hydraulic-check-row inspection-hydraulic-check-row--stacked d-grid gap-2">
+        <CFormLabel className="inspection-hydraulic-check-label small fw-semibold text-muted mb-0">
+          Condition
+        </CFormLabel>
+        <HighAngleStatusSegment
+          value={row.condition}
+          onChange={(nextValue) =>
+            onUpdateCheck?.(sourceRow, {
+              condition: nextValue,
+            })
+          }
+        />
+      </div>
+      {hasIssue ? (
+        <div className="inspection-hydraulic-defect-evidence rounded-3 border bg-light-subtle p-2 d-grid gap-2">
+          <CFormLabel className="small fw-semibold text-muted mb-1">Issue evidence</CFormLabel>
+          <CFormTextarea
+            rows={2}
+            value={conditionRemarks}
+            placeholder="Issue remarks"
+            onChange={(event) =>
+              onUpdateCheck?.(sourceRow, {
+                remarks: event.target.value,
+                [HIGH_ANGLE_CONDITION_FIELD.remarksKey]: event.target.value,
+              })
+            }
+          />
+          <div className="d-flex flex-wrap justify-content-end gap-2">
+            <CreateActionButton
+              label="Add issue photo"
+              className="inspection-compact-action-btn"
+              icon={<Camera size={13} className="me-1 align-text-bottom" />}
+              onClick={() => onRequestIssuePhotoUpload?.(sourceRow)}
+            />
+          </div>
+          {remarksError && !hasConditionRemarks ? (
+            <FormFieldError>Remarks are required for issue rows.</FormFieldError>
+          ) : null}
+          {remarksError && conditionPhotos.length === 0 ? (
+            <FormFieldError>Issue photo is required.</FormFieldError>
+          ) : null}
+          {conditionPhotos.length > 0 ? (
+            <InspectionPhotoEvidenceSummary
+              photos={conditionPhotos}
+              label="View photos"
+              onView={() =>
+                setPhotoViewer({
+                  title: `${row.equipment} - condition issue photos`,
+                  photos: conditionPhotos,
+                  onRemove: (photoId) =>
+                    onRemovePhoto?.(sourceRow, photoId, HIGH_ANGLE_CONDITION_FIELD.photosKey),
+                  onChangeDescription: (photoId, description) =>
+                    onChangePhotoDescription?.(
+                      sourceRow,
+                      photoId,
+                      description,
+                      HIGH_ANGLE_CONDITION_FIELD.photosKey,
+                    ),
+                  onApplyCaption: (photoId, caption) =>
+                    onApplyPhotoCaption?.(
+                      sourceRow,
+                      photoId,
+                      caption,
+                      HIGH_ANGLE_CONDITION_FIELD.photosKey,
+                    ),
+                })
+              }
+            />
+          ) : null}
+        </div>
+      ) : null}
+      {hasRetainedEvidence ? (
+        <EvidenceBlock
+          title="Condition retained evidence from earlier status"
+          remarks={conditionRemarks}
+          photos={conditionPhotos}
+          onViewPhotos={() =>
+            setPhotoViewer({
+              title: `${row.equipment} - retained evidence photos`,
+              photos: conditionPhotos,
+              onRemove: (photoId) =>
+                onRemovePhoto?.(sourceRow, photoId, HIGH_ANGLE_CONDITION_FIELD.photosKey),
+              onChangeDescription: (photoId, description) =>
+                onChangePhotoDescription?.(
+                  sourceRow,
+                  photoId,
+                  description,
+                  HIGH_ANGLE_CONDITION_FIELD.photosKey,
+                ),
+              onApplyCaption: (photoId, caption) =>
+                onApplyPhotoCaption?.(
+                  sourceRow,
+                  photoId,
+                  caption,
+                  HIGH_ANGLE_CONDITION_FIELD.photosKey,
+                ),
+            })
+          }
+        >
+          <div className="d-flex flex-wrap justify-content-end gap-2">
+            <CButton
+              type="button"
+              color="warning"
+              variant="outline"
+              size="sm"
+              className="inspection-compact-action-btn"
+              onClick={() =>
+                onUpdateCheck?.(sourceRow, {
+                  remarks: '',
+                  [HIGH_ANGLE_CONDITION_FIELD.remarksKey]: '',
+                  [HIGH_ANGLE_CONDITION_FIELD.photosKey]: [],
+                })
+              }
+            >
+              Clear retained evidence
+            </CButton>
+          </div>
+        </EvidenceBlock>
+      ) : null}
+      <InspectionItemAdditionalInfo
+        row={sourceRow}
+        remarksKey="additionalNotes"
+        photosKey="additionalPhotos"
+        remarksTitle="General equipment remarks"
+        remarksPlaceholder="General equipment remarks"
+        photoTitle={`${row.equipment || 'Equipment'} - additional photos`}
+        setPhotoViewer={setPhotoViewer}
+        onUpdateCheck={onUpdateCheck}
+        onRequestPhotoUpload={onRequestPhotoUpload}
+        onRemovePhoto={onRemovePhoto}
+        onChangePhotoDescription={onChangePhotoDescription}
+        onApplyPhotoCaption={onApplyPhotoCaption}
+      />
+    </>
+  )
+}
+
+const HighAngleInspectionRowCard = ({
+  row,
+  readOnly = false,
+  remarksError = false,
+  setPhotoViewer,
+  onUpdateCheck,
+  onRequestPhotoUpload,
+  onResetCheck,
+  onRequestIssuePhotoUpload,
+  onRemovePhoto,
+  onChangePhotoDescription,
+  onApplyPhotoCaption,
+  onEditItem,
+  onDeleteItem,
+  active = false,
+  expanded = true,
+  onToggleExpanded,
+}) => {
+  const hasIssue = text(row.condition) === 'Not Good'
+  const hasRetainedEvidence = getHighAngleRetainedEvidenceRows([row]).length > 0
+  const rowId = getHighAngleRowId(row)
+  const bodyId = `high-angle-checks-${rowId.replace(/[^A-Za-z0-9_-]/g, '-')}`
+  const canToggle = !readOnly && typeof onToggleExpanded === 'function'
+  const sourceRow = stripHighAngleDisplayMeta(row)
+  const canReset = typeof onResetCheck === 'function' && hasHighAngleInspectionData(row)
+  const canManageItem =
+    !readOnly &&
+    (row.isExtensionRow === true || row.equipmentSource === 'custom') &&
+    (typeof onEditItem === 'function' || typeof onDeleteItem === 'function')
+  const actionItems = buildInspectionElementActions({
+    canReset,
+    onReset: () => onResetCheck(sourceRow),
+    canEdit: canManageItem && typeof onEditItem === 'function',
+    onEdit: () => onEditItem(sourceRow),
+    canDelete: canManageItem && typeof onDeleteItem === 'function',
+    onDelete: () => onDeleteItem(sourceRow),
+  })
+
+  return (
+    <InspectionElementCard
+      title={row.equipment || 'Equipment'}
+      meta={formatHighAngleRowMeta(row)}
+      status={
+        <HighAngleStatusInline
+          row={row}
+          hasIssue={hasIssue}
+          hasRetainedEvidence={hasRetainedEvidence}
+        />
+      }
+      actions={actionItems}
+      actionLabel={`High angle actions for ${row.equipment || 'Equipment'}`}
+      expanded={expanded}
+      active={active}
+      readOnly={readOnly}
+      onToggle={canToggle ? () => onToggleExpanded(row) : undefined}
+      bodyId={bodyId}
+      dataAttributes={{
+        'data-inspection-high-angle-row-id': rowId,
+      }}
+    >
+      <HighAngleInspectionRowDetails
+        row={row}
+        readOnly={readOnly}
+        remarksError={remarksError}
+        setPhotoViewer={setPhotoViewer}
+        onUpdateCheck={onUpdateCheck}
+        onRequestPhotoUpload={onRequestPhotoUpload}
+        onRequestIssuePhotoUpload={onRequestIssuePhotoUpload}
+        onRemovePhoto={onRemovePhoto}
+        onChangePhotoDescription={onChangePhotoDescription}
+        onApplyPhotoCaption={onApplyPhotoCaption}
+      />
+    </InspectionElementCard>
+  )
+}
+
+export default HighAngleInspectionRowCard

@@ -241,12 +241,12 @@ const ReportRecordsSection = ({
   isMobileCardless = false,
   moduleContextLabel = '',
   typeLabel = 'Incident Type',
-  onboardingAnchorPrefix = '',
+  testAnchorPrefix = '',
 }) => {
-  const anchorPrefix = String(onboardingAnchorPrefix || '').trim()
-  const moduleRecordsTourId = anchorPrefix ? `${anchorPrefix}-records` : undefined
-  const moduleFiltersTourId = anchorPrefix ? `${anchorPrefix}-filters` : undefined
-  const moduleNewActionTourId = anchorPrefix ? `${anchorPrefix}-new-action` : undefined
+  const anchorPrefix = String(testAnchorPrefix || '').trim()
+  const moduleRecordsTestId = anchorPrefix ? `${anchorPrefix}-records` : undefined
+  const moduleFiltersTestId = anchorPrefix ? `${anchorPrefix}-filters` : undefined
+  const moduleNewActionTestId = anchorPrefix ? `${anchorPrefix}-new-action` : undefined
   const firstDraftRow = visibleRows.find((row) => row?.recordKind === 'draft') || null
   const firstDraftRowKey = String(firstDraftRow?.recordKey || firstDraftRow?.id || '').trim()
   const resolvedContextLabel = String(moduleContextLabel || reportTypeLabel || 'report')
@@ -303,7 +303,8 @@ const ReportRecordsSection = ({
         <RowActions
           hitArea={40}
           items={buildActions(row)}
-          tourId={
+          toggleClassName={isMobileCardless ? 'inspection-mobile-kebab' : ''}
+          testId={
             row.recordKind === 'draft' &&
             firstDraftRowKey === String(row.recordKey || row.id || '').trim() &&
             anchorPrefix
@@ -340,7 +341,9 @@ const ReportRecordsSection = ({
         },
       ]}
       onClear={clearFilters}
-      rowClassName="flex-md-nowrap align-items-md-end"
+      rowClassName={`flex-md-nowrap align-items-md-end ${
+        isMobileCardless ? 'inspection-records-filter-row' : ''
+      }`.trim()}
       searchColMd={3}
       periodColMd={2}
       filterColMd={2}
@@ -374,17 +377,17 @@ const ReportRecordsSection = ({
             <CreateActionButton
               label="New"
               onClick={startNew}
-              {...(moduleNewActionTourId ? { 'data-tour-id': moduleNewActionTourId } : {})}
+              {...(moduleNewActionTestId ? { 'data-testid': moduleNewActionTestId } : {})}
             />
           ) : null}
         </div>
-        <div {...(moduleFiltersTourId ? { 'data-tour-id': moduleFiltersTourId } : {})}>
+        <div {...(moduleFiltersTestId ? { 'data-testid': moduleFiltersTestId } : {})}>
           {filters}
         </div>
         {isLoading ? null : filteredRecords.length === 0 ? (
           emptyMessage
         ) : (
-          <div {...(moduleRecordsTourId ? { 'data-tour-id': moduleRecordsTourId } : {})}>
+          <div {...(moduleRecordsTestId ? { 'data-testid': moduleRecordsTestId } : {})}>
             <MobileRecordList
               sections={[{ key: 'reports', items: mobileItems }]}
               variant="list-group"
@@ -402,7 +405,7 @@ const ReportRecordsSection = ({
 
       <CCard
         className="d-none d-md-block"
-        {...(moduleRecordsTourId ? { 'data-tour-id': moduleRecordsTourId } : {})}
+        {...(moduleRecordsTestId ? { 'data-testid': moduleRecordsTestId } : {})}
       >
         <CCardHeader className="d-flex justify-content-between align-items-center">
           <RecordScopeSegmentedControl value={recordScope} onChange={setRecordScope} />
@@ -410,12 +413,12 @@ const ReportRecordsSection = ({
             <CreateActionButton
               label={`New ${reportTypeLabel} Report`}
               onClick={startNew}
-              {...(moduleNewActionTourId ? { 'data-tour-id': moduleNewActionTourId } : {})}
+              {...(moduleNewActionTestId ? { 'data-testid': moduleNewActionTestId } : {})}
             />
           ) : null}
         </CCardHeader>
         <CCardBody>
-          <div {...(moduleFiltersTourId ? { 'data-tour-id': moduleFiltersTourId } : {})}>
+          <div {...(moduleFiltersTestId ? { 'data-testid': moduleFiltersTestId } : {})}>
             {filters}
           </div>
           <ResponsiveRecordCollection
@@ -498,7 +501,7 @@ const ReportRecordsSection = ({
                               <RowActions
                                 hitArea={40}
                                 items={buildActions(row)}
-                                tourId={
+                                testId={
                                   row.recordKind === 'draft' &&
                                   firstDraftRowKey ===
                                     String(row.recordKey || row.id || '').trim() &&

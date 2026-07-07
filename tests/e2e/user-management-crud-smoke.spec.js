@@ -165,11 +165,11 @@ const isKnownDisabledMessagesNoise = (value) => {
 }
 
 const waitForUsersPage = async (page) => {
-  await expect(page.locator('[data-tour-id="users-module"]')).toBeVisible({ timeout: 30_000 })
+  await expect(page.locator('[data-testid="users-module"]')).toBeVisible({ timeout: 30_000 })
   await expect(page.getByText('User Records')).toBeVisible({ timeout: 20_000 })
   await page.waitForFunction(
     () => {
-      const list = document.querySelector('[data-tour-id="users-list"]')
+      const list = document.querySelector('[data-testid="users-list"]')
       if (!list) return false
       const text = String(list.textContent || '')
       if (/Loading/i.test(text)) return false

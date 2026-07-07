@@ -1,1 +1,1 @@
-export { default } from 'src/components/report-workflow/TypeManagerModal'
+export { default } from './ui/TypeManagerModal'

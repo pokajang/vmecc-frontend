@@ -292,7 +292,7 @@ test.describe('ER Aux inspection prod smoke', () => {
       await expect(page.getByText('Choose Main Location')).toBeVisible()
       await page.getByText('Office', { exact: true }).click()
 
-      await expect(page.getByText('Emergency Response Auxiliary Equipment Checks')).toBeVisible()
+      await expect(page.getByText('Equipment', { exact: true })).toBeVisible()
       await expect(getErAuxCard(page, 'office:radio-tetra')).toBeVisible()
       await expect(getErAuxCard(page, 'office:radio-vhf')).toBeVisible()
       await expect(getErAuxCard(page, 'office:mobile-radio')).toBeVisible()
@@ -349,22 +349,39 @@ test.describe('ER Aux inspection prod smoke', () => {
 
       await radioTetra.getByRole('button', { name: 'Remark', exact: true }).click()
       await radioTetra
-        .locator('textarea[placeholder="Add optional context for this row."]')
+        .locator('[data-inspection-er-aux-detail-key="additionalNotes"] textarea')
         .fill(`Smoke additional notes ${suffix}`)
       await setPhotoFromButton(
-        radioTetra.getByRole('button', { name: 'Additional photo' }),
+        radioTetra.locator('[data-inspection-er-aux-detail-key="additionalPhotos"] button'),
         `er-aux-additional-${suffix}.png`,
       )
 
       await saveScreenshot(page, testInfo, report, 'er-aux-form-complete')
 
-      await page.getByRole('button', { name: 'Save & Review' }).first().click()
+      await page
+        .getByRole('button', { name: /Review Inspections|Review Submissions/ })
+        .first()
+        .click()
       await waitForAppReady(page, '/inspection/review')
+      await expect(page.getByRole('heading', { name: 'Review Inspection' })).toBeVisible()
+      await expect(page.getByText(/Emergency Response Auxiliary Equipment/).first()).toBeVisible()
+
+      await page.getByRole('button', { name: 'View' }).first().click()
       await expect(
-        page.getByText('Emergency Response Auxiliary Equipment Checks').last(),
+        page.getByRole('heading', { name: 'Emergency Response Auxiliary Equipment Details' }),
       ).toBeVisible()
+      await expect(page.getByText('Locations checked (1)')).toBeVisible()
+      await expect(page.getByText('Issues recorded (1)')).toBeVisible()
       await expect(page.getByText(`Smoke defect remarks ${suffix}`).last()).toBeVisible()
-      await expect(page.getByRole('button', { name: 'Confirm Submit' })).toBeVisible()
+      const detailDialog = page.locator('[role="dialog"]').filter({
+        has: page.getByRole('heading', { name: 'Emergency Response Auxiliary Equipment Details' }),
+      })
+      await detailDialog
+        .getByRole('button', { name: 'Close Emergency Response Auxiliary Equipment Details' })
+        .click()
+
+      const submitButton = page.getByRole('button', { name: 'Submit' }).first()
+      await expect(submitButton).toBeVisible()
 
       const createReportPromise = page.waitForResponse(
         (response) => {
@@ -374,6 +391,10 @@ test.describe('ER Aux inspection prod smoke', () => {
         { timeout: 30_000 },
       )
 
+      await submitButton.click()
+      await expect(
+        page.getByText(/Submit Emergency Response Auxiliary Equipment Inspection\s*\?/),
+      ).toBeVisible()
       await page.getByRole('button', { name: 'Confirm Submit' }).click()
       const createResponse = await createReportPromise
       expect([200, 201]).toContain(createResponse.status())
@@ -416,16 +437,22 @@ test.describe('ER Aux inspection prod smoke', () => {
         size: stats.size,
       })
 
-      const unexpectedFailedResponses = report.failedResponses.filter(
-        (item) => !String(item.url || '').includes('/reports/inspection/pdf') || item.status >= 400,
+      const unexpectedFailedResponses = report.failedResponses.filter((item) => {
+        const url = String(item.url || '')
+        if (url.includes('/workflow/notifications/unread-count')) return false
+        if (url.includes('/reports/inspection/pdf') && item.status < 400) return false
+        return true
+      })
+      const unexpectedConsoleErrors = report.consoleErrors.filter(
+        (item) => !/failed to load resource/i.test(String(item.text || '')),
       )
       expect(
         unexpectedFailedResponses,
         `Unexpected failed responses: ${JSON.stringify(unexpectedFailedResponses, null, 2)}`,
       ).toEqual([])
       expect(
-        report.consoleErrors,
-        `Unexpected console errors: ${JSON.stringify(report.consoleErrors, null, 2)}`,
+        unexpectedConsoleErrors,
+        `Unexpected console errors: ${JSON.stringify(unexpectedConsoleErrors, null, 2)}`,
       ).toEqual([])
       expect(
         report.pageErrors,

@@ -75,20 +75,23 @@ const Login = () => {
         password: formValues.password,
         remember: formValues.remember,
       })
-      let moduleActivation = null
-      try {
-        moduleActivation = normalizeModuleActivationPayload(await fetchModuleActivation())
-      } catch {
-        moduleActivation = null
-      }
       dispatch({
         type: 'set',
         authStatus: 'authenticated',
         authUser: response?.user || response,
         authError: null,
-        ...(moduleActivation ? { moduleActivation } : {}),
       })
       navigate('/', { replace: true })
+      void (async () => {
+        try {
+          const moduleActivation = normalizeModuleActivationPayload(await fetchModuleActivation())
+          if (moduleActivation) {
+            dispatch({ type: 'set', moduleActivation })
+          }
+        } catch {
+          // Keep the default module activation fallback after sign-in.
+        }
+      })()
     } catch (error) {
       setErrorMessage(error.payload?.message || error.message || 'Unable to sign in')
       dispatch({ type: 'set', authStatus: 'anonymous', authUser: null, authError: error.message })
@@ -100,7 +103,7 @@ const Login = () => {
   const togglePassword = () => setShowPassword((prev) => !prev)
 
   const handleGoogleSignIn = async () => {
-    if (isSubmitting || isGoogleLoading || isAuthLoading) {
+    if (isSubmitting || isGoogleLoading) {
       return
     }
     setErrorMessage(null)
@@ -119,7 +122,6 @@ const Login = () => {
     }
   }
 
-  const isAuthLoading = authStatus === 'checking' || authStatus === 'unknown'
   const maintenanceEnabled = Boolean(systemMaintenance?.enabled)
   const maintenanceIsGrace = isGracePhase(systemMaintenance)
   const maintenanceRemainingMs = toRemainingMs(systemMaintenance?.graceEndsAt)
@@ -198,7 +200,7 @@ const Login = () => {
                       autoComplete="username"
                       value={formValues.email}
                       onChange={handleChange}
-                      disabled={isSubmitting || isAuthLoading}
+                      disabled={isSubmitting}
                       required
                     />
                   </CInputGroup>
@@ -213,7 +215,7 @@ const Login = () => {
                       autoComplete="current-password"
                       value={formValues.password}
                       onChange={handleChange}
-                      disabled={isSubmitting || isAuthLoading}
+                      disabled={isSubmitting}
                       required
                     />
                     <CInputGroupText
@@ -233,22 +235,17 @@ const Login = () => {
                       label="Remember me"
                       checked={formValues.remember}
                       onChange={handleChange}
-                      disabled={isSubmitting || isAuthLoading || isGoogleLoading}
+                      disabled={isSubmitting || isGoogleLoading}
                     />
                   </div>
                   <div className="d-flex align-items-center justify-content-between gap-2 mb-2 w-100">
-                    <CButton
-                      type="submit"
-                      color="primary"
-                      className="px-4"
-                      disabled={isSubmitting || isAuthLoading}
-                    >
+                    <CButton type="submit" color="primary" className="px-4" disabled={isSubmitting}>
                       {isSubmitting ? <ButtonLoader label="Signing in..." /> : 'Sign in'}
                     </CButton>
                     <CButton
                       color="link"
                       className="px-0 text-nowrap ms-auto"
-                      disabled={isSubmitting || isAuthLoading}
+                      disabled={isSubmitting}
                       onClick={() => navigate('/forgot-password')}
                     >
                       Forgot password?
@@ -266,7 +263,7 @@ const Login = () => {
                   <CButton
                     color="secondary"
                     variant="outline"
-                    disabled={isSubmitting || isAuthLoading || isGoogleLoading}
+                    disabled={isSubmitting || isGoogleLoading}
                     onClick={handleGoogleSignIn}
                     className="d-flex align-items-center justify-content-center gap-2"
                   >

@@ -267,7 +267,7 @@ const ModuleActivationMatrix = () => {
   }
 
   return (
-    <div data-tour-id="settings-modules-panel">
+    <div data-testid="settings-modules-panel">
       <CToaster push={toast} placement="bottom-end" className="mb-3 me-3" />
       <div className="d-flex justify-content-between align-items-start gap-3 mb-3">
         <div>

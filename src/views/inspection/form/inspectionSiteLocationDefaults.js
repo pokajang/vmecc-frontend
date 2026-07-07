@@ -1,0 +1,745 @@
+// Generated from vmecc-backend/database/seeders/data/fire_extinguishers.json.
+// Keep this as a frontend fallback for site-location selectors when API/cache is unavailable.
+export const SITE_ZONE_LOCATION_ROWS = [
+  {
+    value: '1',
+    title: '1',
+    subLocations: [
+      {
+        value: 'Manjung Hub',
+        title: 'Manjung Hub',
+        subLocations: [
+          { value: 'Reception', title: 'Reception' },
+          { value: 'Infront Auditorium', title: 'Infront Auditorium' },
+          { value: 'Infront H.Room', title: 'Infront H.Room' },
+          { value: 'Opreration LAB', title: 'Opreration LAB' },
+          { value: 'Training Utility', title: 'Training Utility' },
+          { value: 'Vulcanizing LAB', title: 'Vulcanizing LAB' },
+          { value: 'Infront Nursing Room', title: 'Infront Nursing Room' },
+          { value: 'Relaxing Area', title: 'Relaxing Area' },
+          { value: 'Infront Training Room 1', title: 'Infront Training Room 1' },
+          { value: 'Cafeteria', title: 'Cafeteria' },
+          { value: 'Male Toilet', title: 'Male Toilet' },
+          { value: 'Admin', title: 'Admin' },
+          { value: 'Training Room 1', title: 'Training Room 1' },
+        ],
+      },
+      {
+        value: 'Canteen',
+        title: 'Canteen',
+        subLocations: [
+          { value: 'Canteen', title: 'Canteen' },
+          { value: 'Dry Store', title: 'Dry Store' },
+        ],
+      },
+      {
+        value: 'Generator House',
+        title: 'Generator House',
+        subLocations: [{ value: 'Generator', title: 'Generator' }],
+      },
+      {
+        value: 'Gate House',
+        title: 'Gate House',
+        subLocations: [{ value: 'Gate House', title: 'Gate House' }],
+      },
+      {
+        value: 'Security Office',
+        title: 'Security Office',
+        subLocations: [{ value: 'SCR', title: 'SCR' }],
+      },
+      {
+        value: 'Water Room',
+        title: 'Water Room',
+        subLocations: [{ value: 'Water Room', title: 'Water Room' }],
+      },
+      {
+        value: 'ID Pass Office',
+        title: 'ID Pass Office',
+        subLocations: [
+          { value: 'ID Main Entrance', title: 'ID Main Entrance' },
+          { value: 'Induction Room', title: 'Induction Room' },
+          { value: 'Pass Inssurance', title: 'Pass Inssurance' },
+          { value: 'Store', title: 'Store' },
+        ],
+      },
+      {
+        value: 'IT Server Room',
+        title: 'IT Server Room',
+        subLocations: [{ value: 'IT Main Entrance', title: 'IT Main Entrance' }],
+      },
+      {
+        value: 'First Aid Station',
+        title: 'First Aid Station',
+        subLocations: [
+          { value: 'Clinic', title: 'Clinic' },
+          { value: 'Treatment Room', title: 'Treatment Room' },
+        ],
+      },
+      {
+        value: 'Fire Station',
+        title: 'Fire Station',
+        subLocations: [
+          { value: 'Bay', title: 'Bay' },
+          { value: 'FRT', title: 'FRT' },
+        ],
+      },
+      {
+        value: 'Training Centre 2',
+        title: 'Training Centre 2',
+        subLocations: [{ value: 'DOJO Room', title: 'DOJO Room' }],
+      },
+      {
+        value: 'Training Centre 3',
+        title: 'Training Centre 3',
+        subLocations: [{ value: 'Passageway', title: 'Passageway' }],
+      },
+      {
+        value: 'Training Centre 4',
+        title: 'Training Centre 4',
+        subLocations: [{ value: 'Passageway', title: 'Passageway' }],
+      },
+      {
+        value: 'Training Centre 5',
+        title: 'Training Centre 5',
+        subLocations: [{ value: 'Office Room', title: 'Office Room' }],
+      },
+      {
+        value: 'Vale Eco Centre',
+        title: 'Vale Eco Centre',
+        subLocations: [
+          { value: 'Pantry Room', title: 'Pantry Room' },
+          { value: 'Server Room', title: 'Server Room' },
+        ],
+      },
+    ],
+  },
+  {
+    value: 'Others',
+    title: 'Others',
+    subLocations: [
+      {
+        value: 'Vehicle',
+        title: 'Vehicle',
+        subLocations: [
+          { value: 'WGG 01', title: 'WGG 01' },
+          { value: 'WGG 02', title: 'WGG 02' },
+          { value: 'VMM', title: 'VMM' },
+          { value: 'Forklift 1', title: 'Forklift 1' },
+          { value: 'Forklift 2', title: 'Forklift 2' },
+          { value: 'Forklift 3', title: 'Forklift 3' },
+          { value: 'Forklift 4', title: 'Forklift 4' },
+          { value: 'AKY 3912', title: 'AKY 3912' },
+          { value: 'AKY 3914', title: 'AKY 3914' },
+          { value: 'AKY 3918', title: 'AKY 3918' },
+          { value: 'AKY 3920', title: 'AKY 3920' },
+        ],
+      },
+    ],
+  },
+  {
+    value: '2',
+    title: '2',
+    subLocations: [
+      {
+        value: 'Central Control Room (CCR)',
+        title: 'Central Control Room (CCR)',
+        subLocations: [
+          { value: 'Ground Floor - Lobby', title: 'Ground Floor - Lobby' },
+          { value: 'Infront IT Panel Room', title: 'Infront IT Panel Room' },
+          { value: '1st Lobby', title: '1st Lobby' },
+          {
+            value: 'Level 1 - Control Room( DEPAN PINTU)',
+            title: 'Level 1 - Control Room( DEPAN PINTU)',
+          },
+          { value: 'Infront New Server Room', title: 'Infront New Server Room' },
+          { value: 'Level 1 - Control Room', title: 'Level 1 - Control Room' },
+          { value: 'Level 1 Control Room 1', title: 'Level 1 Control Room 1' },
+          { value: 'Level 2 - 2nd Lobby', title: 'Level 2 - 2nd Lobby' },
+          { value: 'Level 2 - Pantry', title: 'Level 2 - Pantry' },
+          { value: 'Level 4', title: 'Level 4' },
+          { value: 'HSE OFFICE', title: 'HSE OFFICE' },
+        ],
+      },
+      {
+        value: 'Workshop and Warehouse',
+        title: 'Workshop and Warehouse',
+        subLocations: [
+          { value: 'Warehouse Office', title: 'Warehouse Office' },
+          { value: 'Warehouse Yard', title: 'Warehouse Yard' },
+          { value: 'Store/Lubrication Storage', title: 'Store/Lubrication Storage' },
+          { value: 'VAC ROOM', title: 'VAC ROOM' },
+          { value: 'Infront Chemical Storage', title: 'Infront Chemical Storage' },
+          { value: 'Warehouse Cool Room', title: 'Warehouse Cool Room' },
+          { value: 'Shift supervisor', title: 'Shift supervisor' },
+          { value: 'W/Shop Yard', title: 'W/Shop Yard' },
+          { value: 'Washing Bay', title: 'Washing Bay' },
+          { value: 'Hot Work Section', title: 'Hot Work Section' },
+          { value: 'Store Room', title: 'Store Room' },
+          { value: 'Compressor Room', title: 'Compressor Room' },
+          { value: 'W/Shop Office', title: 'W/Shop Office' },
+          { value: 'Level 1 W/Shop Office', title: 'Level 1 W/Shop Office' },
+          { value: 'Level 1 W/Shop Pantry', title: 'Level 1 W/Shop Pantry' },
+          { value: 'Level 1 W/Shop PCM', title: 'Level 1 W/Shop PCM' },
+          { value: 'Level 1 Meeting Room', title: 'Level 1 Meeting Room' },
+          { value: 'Cafeteria', title: 'Cafeteria' },
+        ],
+      },
+      {
+        value: 'Potable Water Pump House',
+        title: 'Potable Water Pump House',
+        subLocations: [{ value: 'Portable Water Pump House', title: 'Portable Water Pump House' }],
+      },
+      {
+        value: 'Main Sub Station',
+        title: 'Main Sub Station',
+        subLocations: [
+          { value: 'Cable Room', title: 'Cable Room' },
+          { value: 'Battery Room', title: 'Battery Room' },
+          { value: 'SKADA', title: 'SKADA' },
+          { value: 'Switchgear Room', title: 'Switchgear Room' },
+        ],
+      },
+    ],
+  },
+  {
+    value: '3',
+    title: '3',
+    subLocations: [
+      {
+        value: 'ER-01',
+        title: 'ER-01',
+        subLocations: [
+          { value: 'Level 1', title: 'Level 1' },
+          { value: 'Level 2', title: 'Level 2' },
+          { value: 'Level 3', title: 'Level 3' },
+          { value: 'Boom Area', title: 'Boom Area' },
+          { value: 'Cabin Crew', title: 'Cabin Crew' },
+          { value: 'MV Room', title: 'MV Room' },
+          { value: 'LV Room', title: 'LV Room' },
+          { value: 'Transformer Room', title: 'Transformer Room' },
+          { value: 'Upper E.Room', title: 'Upper E.Room' },
+        ],
+      },
+      {
+        value: 'ER-02',
+        title: 'ER-02',
+        subLocations: [
+          { value: 'Level 1', title: 'Level 1' },
+          { value: 'Level 2', title: 'Level 2' },
+          { value: 'Level 3', title: 'Level 3' },
+          { value: 'Boom Area', title: 'Boom Area' },
+          { value: 'MV Room', title: 'MV Room' },
+          { value: 'LV Room', title: 'LV Room' },
+          { value: 'Transformer Room', title: 'Transformer Room' },
+          { value: 'Upper E.Room', title: 'Upper E.Room' },
+        ],
+      },
+      {
+        value: 'EP-03',
+        title: 'EP-03',
+        subLocations: [
+          { value: 'Level 1', title: 'Level 1' },
+          { value: 'Level 2', title: 'Level 2' },
+          { value: 'Level 3', title: 'Level 3' },
+          { value: 'Boom Area', title: 'Boom Area' },
+          { value: 'MV Room', title: 'MV Room' },
+          { value: 'LV Room', title: 'LV Room' },
+          { value: 'Transformer Room', title: 'Transformer Room' },
+        ],
+      },
+      {
+        value: 'ER-04',
+        title: 'ER-04',
+        subLocations: [
+          { value: 'Level 1', title: 'Level 1' },
+          { value: 'Level 2', title: 'Level 2' },
+          { value: 'Level 3', title: 'Level 3' },
+          { value: 'Boom Area', title: 'Boom Area' },
+          { value: 'LV Room', title: 'LV Room' },
+          { value: 'MV Room', title: 'MV Room' },
+          { value: 'Transformer Room', title: 'Transformer Room' },
+          { value: 'Upper E.Room', title: 'Upper E.Room' },
+        ],
+      },
+      {
+        value: 'ER-05',
+        title: 'ER-05',
+        subLocations: [
+          { value: 'Level 1', title: 'Level 1' },
+          { value: 'Level 2', title: 'Level 2' },
+          { value: 'Level 3', title: 'Level 3' },
+          { value: 'Boom Area', title: 'Boom Area' },
+          { value: 'Boom area', title: 'Boom area' },
+          { value: 'LV Room', title: 'LV Room' },
+          { value: 'MV Room', title: 'MV Room' },
+          { value: 'Transformer Room', title: 'Transformer Room' },
+          { value: 'Upper E.Room', title: 'Upper E.Room' },
+        ],
+      },
+      {
+        value: 'CT-15',
+        title: 'CT-15',
+        subLocations: [
+          { value: 'Ground Floor', title: 'Ground Floor' },
+          { value: 'Level 1', title: 'Level 1' },
+          { value: 'Level 2', title: 'Level 2' },
+        ],
+      },
+      {
+        value: 'CT-17',
+        title: 'CT-17',
+        subLocations: [
+          { value: 'Ground Floor', title: 'Ground Floor' },
+          { value: 'Level 1', title: 'Level 1' },
+          { value: 'Level 2', title: 'Level 2' },
+        ],
+      },
+      {
+        value: 'CT-18',
+        title: 'CT-18',
+        subLocations: [
+          { value: 'Ground Floor', title: 'Ground Floor' },
+          { value: 'Level 1', title: 'Level 1' },
+          { value: 'Level 2', title: 'Level 2' },
+          { value: 'Level 3', title: 'Level 3' },
+        ],
+      },
+      {
+        value: 'CT-19',
+        title: 'CT-19',
+        subLocations: [
+          { value: 'Ground Floor', title: 'Ground Floor' },
+          { value: 'Level 1', title: 'Level 1' },
+          { value: 'Level 2', title: 'Level 2' },
+        ],
+      },
+      {
+        value: 'Service Water Pump House',
+        title: 'Service Water Pump House',
+        subLocations: [{ value: 'New Pump House', title: 'New Pump House' }],
+      },
+      {
+        value: 'Secondary Sub Station - 02 (Yard)',
+        title: 'Secondary Sub Station - 02 (Yard)',
+        subLocations: [
+          { value: 'Feeder Room', title: 'Feeder Room' },
+          { value: 'Blower Room', title: 'Blower Room' },
+          { value: 'Battery Room', title: 'Battery Room' },
+        ],
+      },
+      {
+        value: 'Secondary Sub Station - 03 (Yard)',
+        title: 'Secondary Sub Station - 03 (Yard)',
+        subLocations: [
+          { value: 'LV Room', title: 'LV Room' },
+          { value: 'MV Room', title: 'MV Room' },
+          { value: 'Battery Room', title: 'Battery Room' },
+        ],
+      },
+    ],
+  },
+  {
+    value: '4 & 4B',
+    title: '4 & 4B',
+    subLocations: [
+      {
+        value: 'Storm Water Pump House',
+        title: 'Storm Water Pump House',
+        subLocations: [
+          { value: 'Storm Water Pond Pump House - 02', title: 'Storm Water Pond Pump House - 02' },
+        ],
+      },
+      {
+        value: 'SW1 Pump House',
+        title: 'SW1 Pump House',
+        subLocations: [
+          { value: 'Storm Water Pump House - 02', title: 'Storm Water Pump House - 02' },
+        ],
+      },
+      {
+        value: 'SW2 Pump House',
+        title: 'SW2 Pump House',
+        subLocations: [
+          { value: 'Storm Water Pump House - 05', title: 'Storm Water Pump House - 05' },
+        ],
+      },
+      {
+        value: 'Fire Water Pump House',
+        title: 'Fire Water Pump House',
+        subLocations: [
+          { value: 'Fire Fighting System Pump House', title: 'Fire Fighting System Pump House' },
+        ],
+      },
+      {
+        value: 'RW2 Pump House',
+        title: 'RW2 Pump House',
+        subLocations: [
+          { value: 'Raw Water 2 Pump House - 07', title: 'Raw Water 2 Pump House - 07' },
+        ],
+      },
+      {
+        value: 'RW1 Pump House',
+        title: 'RW1 Pump House',
+        subLocations: [
+          { value: 'Raw Water 1 Pump House - 06', title: 'Raw Water 1 Pump House - 06' },
+        ],
+      },
+      {
+        value: 'RCC Pump House',
+        title: 'RCC Pump House',
+        subLocations: [
+          {
+            value: 'Recirculating Pond Pump House - 01',
+            title: 'Recirculating Pond Pump House - 01',
+          },
+        ],
+      },
+      {
+        value: 'Sewage Treatment Plant',
+        title: 'Sewage Treatment Plant',
+        subLocations: [
+          { value: 'Sewage Treatment Plant (Zone 4)', title: 'Sewage Treatment Plant (Zone 4)' },
+        ],
+      },
+      {
+        value: 'Waste Water Treatment Plant',
+        title: 'Waste Water Treatment Plant',
+        subLocations: [
+          {
+            value: 'Waste Water Treatment Plant (WTP) (Beside CT09)',
+            title: 'Waste Water Treatment Plant (WTP) (Beside CT09)',
+          },
+        ],
+      },
+      {
+        value: 'Laboratory',
+        title: 'Laboratory',
+        subLocations: [
+          { value: 'Entrance', title: 'Entrance' },
+          { value: 'Lobby', title: 'Lobby' },
+          { value: 'Sample Preparation Area', title: 'Sample Preparation Area' },
+          { value: 'Sample Archive Storage', title: 'Sample Archive Storage' },
+          { value: 'Electrical Room', title: 'Electrical Room' },
+          { value: 'Balance and Pulp Storage', title: 'Balance and Pulp Storage' },
+          { value: 'General Storage', title: 'General Storage' },
+          { value: 'Borate Lab', title: 'Borate Lab' },
+          { value: 'XRF Lab', title: 'XRF Lab' },
+          { value: 'Outside Lab', title: 'Outside Lab' },
+          { value: 'IT Room', title: 'IT Room' },
+          { value: 'Analytical Room', title: 'Analytical Room' },
+          { value: 'Regent Storage', title: 'Regent Storage' },
+        ],
+      },
+      {
+        value: 'Central Control Room 2 (CCR2)',
+        title: 'Central Control Room 2 (CCR2)',
+        subLocations: [
+          { value: 'Enterance', title: 'Enterance' },
+          { value: 'Mersc', title: 'Mersc' },
+          { value: 'CCR 2', title: 'CCR 2' },
+          { value: 'Server Room', title: 'Server Room' },
+          { value: 'Level 1', title: 'Level 1' },
+        ],
+      },
+      {
+        value: 'CT-08',
+        title: 'CT-08',
+        subLocations: [
+          { value: 'Ground Floor', title: 'Ground Floor' },
+          { value: 'Level 1', title: 'Level 1' },
+          { value: 'Level 2', title: 'Level 2' },
+          { value: 'Level 3', title: 'Level 3' },
+          { value: 'Level 4', title: 'Level 4' },
+        ],
+      },
+      {
+        value: 'CT-09',
+        title: 'CT-09',
+        subLocations: [
+          { value: 'Ground Level', title: 'Ground Level' },
+          { value: 'Level 1', title: 'Level 1' },
+          { value: 'Level 2', title: 'Level 2' },
+          { value: 'Level 3', title: 'Level 3' },
+          { value: 'Level 4', title: 'Level 4' },
+        ],
+      },
+      {
+        value: 'CT-03',
+        title: 'CT-03',
+        subLocations: [
+          { value: 'Ground Floor', title: 'Ground Floor' },
+          { value: 'Level 1', title: 'Level 1' },
+          { value: 'Level 2', title: 'Level 2' },
+        ],
+      },
+      {
+        value: 'CT-19A',
+        title: 'CT-19A',
+        subLocations: [
+          { value: 'Level 1', title: 'Level 1' },
+          { value: 'Level 2', title: 'Level 2' },
+        ],
+      },
+      {
+        value: 'Secondary Sub Station - 01 (Yard)',
+        title: 'Secondary Sub Station - 01 (Yard)',
+        subLocations: [
+          { value: 'Switchboard Area', title: 'Switchboard Area' },
+          { value: 'Battery Room', title: 'Battery Room' },
+        ],
+      },
+      {
+        value: 'TR-13',
+        title: 'TR-13',
+        subLocations: [
+          { value: 'Stairs - 1', title: 'Stairs - 1' },
+          { value: 'Stairs - 2', title: 'Stairs - 2' },
+          { value: 'Stairs - 3', title: 'Stairs - 3' },
+          { value: 'Stair - 4', title: 'Stair - 4' },
+          { value: 'Stair - 5', title: 'Stair - 5' },
+        ],
+      },
+    ],
+  },
+  {
+    value: '5',
+    title: '5',
+    subLocations: [
+      {
+        value: 'Port Office',
+        title: 'Port Office',
+        subLocations: [
+          { value: 'Galley', title: 'Galley' },
+          { value: 'Male Surau', title: 'Male Surau' },
+          { value: 'Port Office Lobby', title: 'Port Office Lobby' },
+          { value: 'Level 1 -Office', title: 'Level 1 -Office' },
+          { value: 'LOTO Cabin 3', title: 'LOTO Cabin 3' },
+        ],
+      },
+      {
+        value: 'CT-01',
+        title: 'CT-01',
+        subLocations: [
+          { value: 'Level 1 ( Stair )', title: 'Level 1 ( Stair )' },
+          { value: 'Level 1', title: 'Level 1' },
+          { value: 'Level 2 ( Stair )', title: 'Level 2 ( Stair )' },
+          { value: 'Level 2', title: 'Level 2' },
+          { value: 'Level 3 (Stair)', title: 'Level 3 (Stair)' },
+          { value: 'Level 3', title: 'Level 3' },
+          { value: 'LEVEL 3', title: 'LEVEL 3' },
+          { value: 'Level 4 ( Stair )', title: 'Level 4 ( Stair )' },
+          { value: 'Level 4', title: 'Level 4' },
+        ],
+      },
+      {
+        value: 'Minor Export Wharf',
+        title: 'Minor Export Wharf',
+        subLocations: [
+          { value: 'E-07', title: 'E-07' },
+          { value: 'E-15', title: 'E-15' },
+          { value: 'E-21', title: 'E-21' },
+          { value: 'E-27', title: 'E-27' },
+          { value: 'E-13', title: 'E-13' },
+          { value: 'OUTER TUG WHARF', title: 'OUTER TUG WHARF' },
+        ],
+      },
+      {
+        value: 'DN-10',
+        title: 'DN-10',
+        subLocations: [
+          { value: 'Infront lift', title: 'Infront lift' },
+          { value: 'Inside Lift', title: 'Inside Lift' },
+          { value: 'Level 1', title: 'Level 1' },
+          { value: 'Level 2', title: 'Level 2' },
+          { value: 'Level 3', title: 'Level 3' },
+          { value: 'Level 4', title: 'Level 4' },
+        ],
+      },
+      {
+        value: 'DN-11',
+        title: 'DN-11',
+        subLocations: [
+          { value: 'Level 4', title: 'Level 4' },
+          { value: 'Cabin operator', title: 'Cabin operator' },
+          { value: 'Level 1', title: 'Level 1' },
+          { value: 'Level 2', title: 'Level 2' },
+          { value: 'Level 3', title: 'Level 3' },
+          { value: 'Lift', title: 'Lift' },
+          { value: 'Infront Lift', title: 'Infront Lift' },
+        ],
+      },
+      {
+        value: 'DN-12',
+        title: 'DN-12',
+        subLocations: [
+          { value: 'Chute', title: 'Chute' },
+          { value: 'Lift Entrance Level 1 Port Side', title: 'Lift Entrance Level 1 Port Side' },
+          { value: 'Slewinng Deck', title: 'Slewinng Deck' },
+          { value: 'Entrance Level 4 (Pangkor)', title: 'Entrance Level 4 (Pangkor)' },
+          { value: 'Entrance Level 4 (Port Office)', title: 'Entrance Level 4 (Port Office)' },
+          { value: 'Entrance Cabin', title: 'Entrance Cabin' },
+          { value: 'Entrance E.Room (Port Office)', title: 'Entrance E.Room (Port Office)' },
+          { value: 'Generator', title: 'Generator' },
+          { value: 'Entrance E.Room (Pangkor)', title: 'Entrance E.Room (Pangkor)' },
+          { value: 'Wire Rope Level4', title: 'Wire Rope Level4' },
+          { value: 'Inside Lift', title: 'Inside Lift' },
+          { value: 'Cabin Operator', title: 'Cabin Operator' },
+        ],
+      },
+      {
+        value: 'Major Import Wharf',
+        title: 'Major Import Wharf',
+        subLocations: [
+          { value: 'J25', title: 'J25' },
+          { value: 'J31', title: 'J31' },
+          { value: 'J37', title: 'J37' },
+          { value: 'J43', title: 'J43' },
+          { value: 'INNER TUG WHARF', title: 'INNER TUG WHARF' },
+        ],
+      },
+      {
+        value: 'CN-01',
+        title: 'CN-01',
+        subLocations: [
+          { value: 'Level 1', title: 'Level 1' },
+          { value: 'Level 2', title: 'Level 2' },
+          { value: 'Transfer Tower', title: 'Transfer Tower' },
+          { value: 'Lower LV Room', title: 'Lower LV Room' },
+          { value: 'Upper LV Room', title: 'Upper LV Room' },
+          { value: 'Mechanical Room', title: 'Mechanical Room' },
+          { value: 'Upper MV Room', title: 'Upper MV Room' },
+          { value: 'Cabin', title: 'Cabin' },
+        ],
+      },
+      {
+        value: 'Secondary Sub Station - 01 (Port)',
+        title: 'Secondary Sub Station - 01 (Port)',
+        subLocations: [
+          { value: 'LV MCC Room', title: 'LV MCC Room' },
+          { value: 'Battery Room', title: 'Battery Room' },
+          { value: 'MV Switch Gear', title: 'MV Switch Gear' },
+          { value: 'Transformer', title: 'Transformer' },
+          { value: 'Power Transformer', title: 'Power Transformer' },
+          { value: 'Dist Transformer', title: 'Dist Transformer' },
+        ],
+      },
+      {
+        value: 'Secondary Sub Station - 02 (Port)',
+        title: 'Secondary Sub Station - 02 (Port)',
+        subLocations: [
+          { value: 'MV Room', title: 'MV Room' },
+          { value: 'LV Room', title: 'LV Room' },
+          { value: 'Battery Room', title: 'Battery Room' },
+          { value: 'Power Transformer Room 1', title: 'Power Transformer Room 1' },
+          { value: 'Power Transformer Room 2', title: 'Power Transformer Room 2' },
+          { value: 'Distribution Transformer', title: 'Distribution Transformer' },
+        ],
+      },
+      {
+        value: 'TR-11',
+        title: 'TR-11',
+        subLocations: [{ value: 'Outer-T01', title: 'Outer-T01' }],
+      },
+      {
+        value: 'TR-12',
+        title: 'TR-12',
+        subLocations: [{ value: 'Inner-T01', title: 'Inner-T01' }],
+      },
+      {
+        value: 'TR-13',
+        title: 'TR-13',
+        subLocations: [{ value: 'Outer-T15', title: 'Outer-T15' }],
+      },
+      {
+        value: 'TR-14',
+        title: 'TR-14',
+        subLocations: [{ value: 'Inner-T15', title: 'Inner-T15' }],
+      },
+      {
+        value: 'TR-15',
+        title: 'TR-15',
+        subLocations: [{ value: 'Outer-T41', title: 'Outer-T41' }],
+      },
+      {
+        value: 'TR-16',
+        title: 'TR-16',
+        subLocations: [{ value: 'Inner-T41', title: 'Inner-T41' }],
+      },
+      {
+        value: 'TR-17',
+        title: 'TR-17',
+        subLocations: [{ value: 'Outer-T63', title: 'Outer-T63' }],
+      },
+      {
+        value: 'TR-18',
+        title: 'TR-18',
+        subLocations: [{ value: 'Inner-T63', title: 'Inner-T63' }],
+      },
+      {
+        value: 'TR-19',
+        title: 'TR-19',
+        subLocations: [{ value: 'Outer-T-PP', title: 'Outer-T-PP' }],
+      },
+      {
+        value: 'TR-20',
+        title: 'TR-20',
+        subLocations: [{ value: 'Inner-T-PP', title: 'Inner-T-PP' }],
+      },
+      {
+        value: 'TR-01 (Export)',
+        title: 'TR-01 (Export)',
+        subLocations: [
+          { value: 'Outer-T-C-12.5', title: 'Outer-T-C-12.5' },
+          { value: 'Inner-T-C-12.5', title: 'Inner-T-C-12.5' },
+          { value: 'Outer-L2', title: 'Outer-L2' },
+        ],
+      },
+    ],
+  },
+  {
+    value: '6',
+    title: '6',
+    subLocations: [
+      {
+        value: 'Old Warehouse',
+        title: 'Old Warehouse',
+        subLocations: [
+          { value: 'Old Warehouse', title: 'Old Warehouse' },
+          { value: 'Kasturi Store', title: 'Kasturi Store' },
+          { value: 'Forklift', title: 'Forklift' },
+          { value: 'Office', title: 'Office' },
+        ],
+      },
+      {
+        value: 'Centre of Material Disposal',
+        title: 'Centre of Material Disposal',
+        subLocations: [
+          { value: 'Pantry', title: 'Pantry' },
+          { value: 'Office', title: 'Office' },
+          { value: 'Storage Area', title: 'Storage Area' },
+          { value: 'Store Room', title: 'Store Room' },
+          { value: 'Cool Room', title: 'Cool Room' },
+        ],
+      },
+      {
+        value: 'Diesel Skid Tank',
+        title: 'Diesel Skid Tank',
+        subLocations: [{ value: 'Skid Tank', title: 'Skid Tank' }],
+      },
+      {
+        value: 'Techical Service Cabin',
+        title: 'Techical Service Cabin',
+        subLocations: [
+          { value: 'CABIN 1(L)', title: 'CABIN 1(L)' },
+          { value: 'CABIN 1(M)', title: 'CABIN 1(M)' },
+          { value: 'CABIN 1(R)', title: 'CABIN 1(R)' },
+        ],
+      },
+      {
+        value: 'ASIC',
+        title: 'ASIC',
+        subLocations: [{ value: 'ASIC', title: 'ASIC' }],
+      },
+    ],
+  },
+]

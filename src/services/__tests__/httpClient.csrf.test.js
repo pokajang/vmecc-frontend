@@ -51,7 +51,7 @@ describe('httpClient CSRF handling', () => {
 
     expect(getClientMode()).toBe('pwa')
 
-    await apiRequest('/dashboard/me')
+    await apiRequest('/stats/payroll?period=this_month')
 
     expect(fetch.mock.calls[0][1].headers['X-Client-Mode']).toBe('pwa')
   })

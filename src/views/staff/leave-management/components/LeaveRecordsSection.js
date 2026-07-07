@@ -353,7 +353,7 @@ const LeaveRecordsSection = ({
   }
 
   return (
-    <CCard data-tour-id="leave-management-records">
+    <CCard data-testid="leave-management-records">
       <CCardHeader className="d-flex flex-wrap justify-content-between align-items-center gap-2">
         <span>{title}</span>
         <div className="d-flex align-items-center gap-2">
@@ -375,7 +375,7 @@ const LeaveRecordsSection = ({
         </div>
       </CCardHeader>
       <CCardBody>
-        <div data-tour-id="leave-management-records-filters">
+        <div data-testid="leave-management-records-filters">
           <TableFilters
             searchValue={search}
             onSearchChange={setSearch}

@@ -145,31 +145,39 @@ const ReportingWorkflowSettings = () => {
   }
 
   return (
-    <CContainer fluid>
+    <CContainer fluid data-testid="reporting-settings-module">
       <ModulePageHeader
         title="Reporting Settings"
         subtitle="Configure reporting workflow policies across inspection and other report modules."
       />
 
-      <RouteNavTabs
-        currentPath={`/reporting-settings/${activeModuleKey}`}
-        navigate={(path) => navigate(path)}
-        items={REPORTING_WORKFLOW_MODULE_DEFS.map((moduleDef) => ({
-          key: moduleDef.key,
-          label: moduleDef.label,
-          to: moduleDef.path,
-          match: `/reporting-settings/${moduleDef.key}`,
-        }))}
-      />
+      <div data-testid="reporting-settings-nav">
+        <RouteNavTabs
+          currentPath={`/reporting-settings/${activeModuleKey}`}
+          navigate={(path) => navigate(path)}
+          items={REPORTING_WORKFLOW_MODULE_DEFS.map((moduleDef) => ({
+            key: moduleDef.key,
+            label: moduleDef.label,
+            to: moduleDef.path,
+            match: `/reporting-settings/${moduleDef.key}`,
+          }))}
+        />
+      </div>
 
       {loading ? (
         <TableLoader />
       ) : (
         <>
           {error ? <CAlert color="warning">{error}</CAlert> : null}
-          {activeModuleKey === 'inspection' && <InspectionWorkflowRules />}
+          {activeModuleKey === 'inspection' && (
+            <div data-testid="reporting-settings-rules">
+              <InspectionWorkflowRules />
+            </div>
+          )}
           {activeModuleKey !== 'inspection' && activeModule ? (
-            <ReadOnlyReportingWorkflowRules moduleDef={activeModule} rules={activeModuleRules} />
+            <div data-testid="reporting-settings-rules">
+              <ReadOnlyReportingWorkflowRules moduleDef={activeModule} rules={activeModuleRules} />
+            </div>
           ) : null}
         </>
       )}

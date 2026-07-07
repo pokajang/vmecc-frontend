@@ -2,13 +2,29 @@ import React from 'react'
 import { CAlert } from '@coreui/react'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import TypeManagerModal from 'src/components/report-workflow/TypeManagerModal'
+import { safeAiHelperError } from 'src/components/ai-helper/constants'
+import { streamAiHelperMessage } from 'src/services/api/aiHelperApi'
+import {
+  ReportBasicPathSummary,
+  ReportMobileActionGroup,
+  ReportMobileContextPanel,
+} from '../components/ReportWorkflowUi'
 import { formatErcoLocation, resolveRespondingTeamLabel } from './utils'
 import { sortResponders } from './chronologyUtils'
+import {
+  buildErcoAiContext,
+  buildErcoAiPayload,
+  buildErcoReviewPrompt,
+  buildErcoSummaryPrompt,
+  normalizeGeneratedSummary,
+  parseAiReviewItems,
+} from './aiAssist'
 import useIncidentTitleManager from './useIncidentTitleManager'
 import { useChronology } from './useChronology'
 import {
   ChronologySection,
   DetailsStepActions,
+  ErcoAiReviewModal,
   IncidentSummaryPanel,
   SummaryGenerationModal,
   IncidentSummaryTextarea,
@@ -16,70 +32,8 @@ import {
   PreMobModeModal,
   ChronologyStartModeModal,
 } from './erco-form-components'
+import useIsMobile from './erco-form-components/useIsMobile'
 import useIncidentTitleSuggestions from './useIncidentTitleSuggestions'
-
-// Placeholder: builds a template-based summary from form data.
-// Replace with a real API call when AI generation is wired up.
-const buildDummySummary = ({ form, teamLabel, respondersSummaryValue, chronologyRows }) => {
-  const incidentType = String(form.incidentType || '').trim() || 'Incident'
-  const weather = String(form.weather || '').trim() || 'N/A'
-  const area = formatErcoLocation(form.location) || 'N/A'
-  const incidentDate = String(form.incidentDate || '').trim() || 'N/A'
-  const incidentTime = String(form.incidentTime || '').trim() || 'N/A'
-  const keyRows = (Array.isArray(chronologyRows) ? chronologyRows : [])
-    .filter((row) => String(row?.time || '').trim() || String(row?.action || '').trim())
-    .slice(0, 4)
-
-  const chronologyText =
-    keyRows.length === 0
-      ? 'Chronology details are pending update.'
-      : keyRows
-          .map((row) => {
-            const time = String(row?.time || '').trim() || '--:--'
-            const action = String(row?.action || '').trim() || 'Action recorded.'
-            return `${time} ${action}`
-          })
-          .join(' | ')
-
-  return [
-    `${incidentType} reported at ${area} on ${incidentDate} ${incidentTime} under ${weather} weather.`,
-    `Responding team: ${teamLabel}. Members involved: ${respondersSummaryValue}.`,
-    `Operational chronology: ${chronologyText}`,
-    'Status: Initial response actions completed and incident details logged for supervisor review.',
-  ].join(' ')
-}
-
-const ErcoBasicPathSummary = ({ form, teamLabel, respondersSummaryValue, chronologyCount }) => (
-  <div className="rounded-3 border bg-white p-3 d-grid gap-2">
-    <div className="fw-semibold">Basic Report Path</div>
-    <div className="small text-body-secondary">
-      Complete the report title and incident summary first. Chronology and operational audit details
-      remain available below when needed.
-    </div>
-    <div className="row g-2 small">
-      <div className="col-6 col-md-3">
-        <div className="text-body-secondary">Type</div>
-        <div className="fw-semibold">{String(form.incidentType || '').trim() || '-'}</div>
-      </div>
-      <div className="col-6 col-md-3">
-        <div className="text-body-secondary">Location</div>
-        <div className="fw-semibold">{formatErcoLocation(form.location) || '-'}</div>
-      </div>
-      <div className="col-6 col-md-3">
-        <div className="text-body-secondary">Team</div>
-        <div className="fw-semibold">{teamLabel || '-'}</div>
-      </div>
-      <div className="col-6 col-md-3">
-        <div className="text-body-secondary">Chronology</div>
-        <div className="fw-semibold">{chronologyCount} rows</div>
-      </div>
-      <div className="col-12">
-        <div className="text-body-secondary">Responders</div>
-        <div className="fw-semibold">{respondersSummaryValue || '-'}</div>
-      </div>
-    </div>
-  </div>
-)
 
 const ErcoDetailsStep = ({
   form,
@@ -93,13 +47,22 @@ const ErcoDetailsStep = ({
   userId,
   showActions = true,
 }) => {
+  const isMobile = useIsMobile()
   const [isTitleMenuOpen, setIsTitleMenuOpen] = React.useState(false)
   const [deleteTitleTarget, setDeleteTitleTarget] = React.useState(null)
   const [showSummaryGenerationModal, setShowSummaryGenerationModal] = React.useState(false)
   const [summaryGenerationStage, setSummaryGenerationStage] = React.useState('confirm')
+  const [summaryGenerationMode, setSummaryGenerationMode] = React.useState('generate')
   const [isGeneratingSummary, setIsGeneratingSummary] = React.useState(false)
   const [generatedSummaryDraft, setGeneratedSummaryDraft] = React.useState('')
   const [summaryGenerationError, setSummaryGenerationError] = React.useState('')
+  const [showAiReviewModal, setShowAiReviewModal] = React.useState(false)
+  const [aiReviewStage, setAiReviewStage] = React.useState('confirm')
+  const [isReviewingWithAi, setIsReviewingWithAi] = React.useState(false)
+  const [aiReviewItems, setAiReviewItems] = React.useState([])
+  const [aiReviewError, setAiReviewError] = React.useState('')
+  const summaryAbortControllerRef = React.useRef(null)
+  const reviewAbortControllerRef = React.useRef(null)
 
   const teamLabel = resolveRespondingTeamLabel(form.respondingTeamName, form.respondingAttendance)
   const shiftLabel = String(form.respondingTeamShift || '').trim()
@@ -128,6 +91,7 @@ const ErcoDetailsStep = ({
     .filter(Boolean)
   const respondersSummaryValue =
     selectedResponderNames.length === 0 ? 'None selected' : selectedResponderNames.join(', ')
+  const respondersCount = selectedResponderNames.length
 
   const {
     chronologyRows,
@@ -184,6 +148,15 @@ const ErcoDetailsStep = ({
     setRowModalDraft,
     commitRowModal,
   } = useChronology({ form, setForm, pushToast })
+  const chronologyCount = chronologyRows.length
+  const dateTimeLabel = `${String(form.incidentDate || '').trim() || '--'} ${String(
+    form.incidentTime || '',
+  ).trim()}`.trim()
+  const basicPathMobileSummary = `${
+    [String(form.incidentType || '').trim(), formatErcoLocation(form.location), teamLabel]
+      .filter(Boolean)
+      .join(' - ') || '-'
+  } - ${chronologyCount} chronology row${chronologyCount === 1 ? '' : 's'} - ${respondersCount} responder${respondersCount === 1 ? '' : 's'}`
 
   const incidentSummaryItems = [
     { label: 'Incident Type', value: String(form.incidentType || '').trim() || '--' },
@@ -200,6 +173,14 @@ const ErcoDetailsStep = ({
     form,
     titleTypeOptions: titleManager.typeOptions,
   })
+
+  React.useEffect(
+    () => () => {
+      summaryAbortControllerRef.current?.abort()
+      reviewAbortControllerRef.current?.abort()
+    },
+    [],
+  )
 
   const chronologyRowProps = {
     rowsCount: chronologyRows.length,
@@ -223,12 +204,25 @@ const ErcoDetailsStep = ({
     incidentTime: form.incidentTime,
   }
 
+  const buildCurrentAiPayload = React.useCallback(
+    () =>
+      buildErcoAiPayload({
+        form,
+        teamLabel,
+        shiftLabel,
+        respondersSummaryValue,
+        chronologyRows,
+      }),
+    [chronologyRows, form, respondersSummaryValue, shiftLabel, teamLabel],
+  )
+
   const openSummaryGenerationModal = React.useCallback(() => {
+    setSummaryGenerationMode(String(form.summary || '').trim() ? 'improve' : 'generate')
     setShowSummaryGenerationModal(true)
     setSummaryGenerationStage('confirm')
     setSummaryGenerationError('')
     setGeneratedSummaryDraft('')
-  }, [])
+  }, [form.summary])
 
   const closeSummaryGenerationModal = React.useCallback(() => {
     if (isGeneratingSummary) return
@@ -238,28 +232,136 @@ const ErcoDetailsStep = ({
     setGeneratedSummaryDraft('')
   }, [isGeneratingSummary])
 
+  const openAiReviewModal = React.useCallback(() => {
+    setShowAiReviewModal(true)
+    setAiReviewStage('confirm')
+    setAiReviewError('')
+    setAiReviewItems([])
+  }, [])
+
+  const closeAiReviewModal = React.useCallback(() => {
+    if (isReviewingWithAi) return
+    setShowAiReviewModal(false)
+    setAiReviewStage('confirm')
+    setAiReviewError('')
+    setAiReviewItems([])
+  }, [isReviewingWithAi])
+
   const handleGenerateSummary = React.useCallback(async () => {
     if (isGeneratingSummary) return
     setSummaryGenerationError('')
     setSummaryGenerationStage('loading')
     setIsGeneratingSummary(true)
+    const abortController = new AbortController()
+    summaryAbortControllerRef.current = abortController
+    let streamedText = ''
+    let doneText = ''
+    let streamError = null
+
     try {
-      await new Promise((resolve) => window.setTimeout(resolve, 700))
-      const nextSummary = buildDummySummary({
-        form,
-        teamLabel,
-        respondersSummaryValue,
-        chronologyRows,
-      })
+      const payload = buildCurrentAiPayload()
+      await streamAiHelperMessage(
+        {
+          thread_id: null,
+          new_thread: true,
+          conversation_purpose: 'embedded_helper',
+          message: buildErcoSummaryPrompt(payload, summaryGenerationMode),
+          page_context: buildErcoAiContext(payload),
+          response_language: 'en',
+        },
+        {
+          onDelta: (payload) => {
+            streamedText += String(payload?.text || '')
+          },
+          onDone: (payload) => {
+            doneText = String(payload?.message?.content || '')
+          },
+          onError: (payload) => {
+            streamError = new Error(payload?.message || 'Ask AI could not generate the summary.')
+          },
+        },
+        { signal: abortController.signal },
+      )
+
+      if (streamError) throw streamError
+
+      const nextSummary = normalizeGeneratedSummary(doneText || streamedText)
+      if (!nextSummary) {
+        throw new Error('Ask AI returned an empty summary.')
+      }
+
       setGeneratedSummaryDraft(nextSummary)
       setSummaryGenerationStage('preview')
-    } catch {
-      setSummaryGenerationError('Unable to generate summary right now. Please try again.')
+    } catch (error) {
+      setSummaryGenerationError(
+        safeAiHelperError(error, error?.message || 'Unable to generate summary right now.'),
+      )
       setSummaryGenerationStage('error')
     } finally {
+      if (summaryAbortControllerRef.current === abortController) {
+        summaryAbortControllerRef.current = null
+      }
       setIsGeneratingSummary(false)
     }
-  }, [chronologyRows, form, isGeneratingSummary, respondersSummaryValue, teamLabel])
+  }, [buildCurrentAiPayload, isGeneratingSummary, summaryGenerationMode])
+
+  const handleRunAiReview = React.useCallback(async () => {
+    if (isReviewingWithAi) return
+    setAiReviewError('')
+    setAiReviewStage('loading')
+    setIsReviewingWithAi(true)
+    const abortController = new AbortController()
+    reviewAbortControllerRef.current = abortController
+    let streamedText = ''
+    let doneText = ''
+    let streamError = null
+
+    try {
+      const payload = buildCurrentAiPayload()
+      await streamAiHelperMessage(
+        {
+          thread_id: null,
+          new_thread: true,
+          conversation_purpose: 'embedded_helper',
+          message: buildErcoReviewPrompt(payload),
+          page_context: buildErcoAiContext(payload),
+          response_language: 'en',
+        },
+        {
+          onDelta: (eventPayload) => {
+            streamedText += String(eventPayload?.text || '')
+          },
+          onDone: (eventPayload) => {
+            doneText = String(eventPayload?.message?.content || '')
+          },
+          onError: (eventPayload) => {
+            streamError = new Error(eventPayload?.message || 'Ask AI could not check the report.')
+          },
+        },
+        { signal: abortController.signal },
+      )
+
+      if (streamError) throw streamError
+
+      const nextItems = parseAiReviewItems(doneText || streamedText)
+      if (nextItems.length === 0) {
+        throw new Error('Ask AI returned an empty review.')
+      }
+
+      setAiReviewItems(nextItems)
+      setAiReviewStage('results')
+    } catch (error) {
+      setAiReviewError(
+        safeAiHelperError(error, error?.message || 'Ask AI could not check the report.'),
+      )
+      setAiReviewStage('error')
+    } finally {
+      if (reviewAbortControllerRef.current === abortController) {
+        reviewAbortControllerRef.current = null
+      }
+      setIsReviewingWithAi(false)
+    }
+  }, [buildCurrentAiPayload, isReviewingWithAi])
 
   const applyGeneratedSummary = React.useCallback(() => {
     if (!generatedSummaryDraft) return
@@ -300,10 +402,20 @@ const ErcoDetailsStep = ({
         currentSummary={String(form.summary || '')}
         generatedSummary={generatedSummaryDraft}
         errorMessage={summaryGenerationError}
+        mode={summaryGenerationMode}
         onClose={closeSummaryGenerationModal}
         onGenerate={handleGenerateSummary}
         onRetry={handleGenerateSummary}
         onUseGenerated={applyGeneratedSummary}
+      />
+      <ErcoAiReviewModal
+        visible={showAiReviewModal}
+        stage={aiReviewStage}
+        items={aiReviewItems}
+        errorMessage={aiReviewError}
+        onClose={closeAiReviewModal}
+        onRun={handleRunAiReview}
+        onRetry={handleRunAiReview}
       />
 
       <TypeManagerModal
@@ -356,17 +468,37 @@ const ErcoDetailsStep = ({
         <CAlert color="danger">{fieldErrors.respondingAttendance}</CAlert>
       ) : null}
 
-      <IncidentSummaryPanel
-        teamLabel={teamLabel}
-        shiftLabel={shiftLabel}
-        incidentSummaryItems={incidentSummaryItems}
-      />
+      {isMobile ? (
+        <ReportMobileContextPanel
+          title="Incident Context"
+          items={[
+            { label: 'Type', value: String(form.incidentType || '').trim() || '--' },
+            { label: 'Area', value: formatErcoLocation(form.location) || '--' },
+            { label: 'Date & Time', value: dateTimeLabel },
+            { label: 'Team', value: teamLabel || '--' },
+            { label: 'Responders', value: `${respondersCount} selected` },
+            { label: 'Chronology', value: `${chronologyCount} rows` },
+          ]}
+        />
+      ) : (
+        <IncidentSummaryPanel
+          teamLabel={teamLabel}
+          shiftLabel={shiftLabel}
+          incidentSummaryItems={incidentSummaryItems}
+        />
+      )}
 
-      <ErcoBasicPathSummary
-        form={form}
-        teamLabel={teamLabel}
-        respondersSummaryValue={respondersSummaryValue}
-        chronologyCount={chronologyRows.length}
+      <ReportBasicPathSummary
+        title="Basic Report Path"
+        description="Complete the report title and incident summary first. Chronology and operational audit details remain available below when needed."
+        mobileSummary={basicPathMobileSummary}
+        items={[
+          { label: 'Type', value: String(form.incidentType || '').trim() || '-' },
+          { label: 'Location', value: formatErcoLocation(form.location) || '-' },
+          { label: 'Team', value: teamLabel || '-' },
+          { label: 'Chronology', value: `${chronologyCount} rows` },
+          { label: 'Responders', value: respondersSummaryValue || '-', fullWidth: true },
+        ]}
       />
 
       <IncidentTitleField
@@ -424,18 +556,24 @@ const ErcoDetailsStep = ({
         invalid={Boolean(fieldErrors.summary)}
         onChange={(e) => setForm((p) => ({ ...p, summary: e.target.value }))}
         onGenerate={openSummaryGenerationModal}
+        onReview={openAiReviewModal}
         isGenerating={isGeneratingSummary}
+        isReviewing={isReviewingWithAi}
       />
 
       {showActions ? (
-        <DetailsStepActions
-          onBack={onBack}
-          onClear={onClear}
-          onSaveDraft={onSaveDraft}
-          primaryLabel="Continue"
-          primaryType="button"
-          onPrimary={onContinue}
-        />
+        isMobile ? (
+          <ReportMobileActionGroup onSaveDraft={onSaveDraft} onPrimary={onContinue} />
+        ) : (
+          <DetailsStepActions
+            onBack={onBack}
+            onClear={onClear}
+            onSaveDraft={onSaveDraft}
+            primaryLabel="Continue"
+            primaryType="button"
+            onPrimary={onContinue}
+          />
+        )
       ) : null}
     </div>
   )

@@ -28,7 +28,7 @@ const ShiftSettings = () => {
   }
 
   return (
-    <CContainer fluid>
+    <CContainer fluid data-testid="shift-settings-module">
       <ModulePageHeader
         title="Shift Settings"
         subtitle="Manage built-in shift windows and custom roster shift types."

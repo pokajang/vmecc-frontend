@@ -1,4 +1,4 @@
-// @vitest-environment jsdom
+﻿// @vitest-environment jsdom
 import React from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
@@ -136,7 +136,7 @@ describe('Payroll salary period lock reason', () => {
     )
 
     const reason = screen.getByTestId('salary-period-lock-reason').textContent || ''
-    expect(reason).toContain('Already claimed (CLM-001 • Approved)')
-    expect(reason.includes('â€¢')).toBe(false)
+    expect(reason).toContain(`Already claimed (CLM-001 \u2022 Approved)`)
+    expect(reason.includes('\uFFFD')).toBe(false)
   })
 })

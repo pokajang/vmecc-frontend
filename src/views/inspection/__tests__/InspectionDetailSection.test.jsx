@@ -9,8 +9,8 @@ afterEach(() => {
 })
 
 describe('InspectionDetailSection', () => {
-  it('renders General Inspection checklist, description, and evidence in read-only detail mode', () => {
-    render(
+  it('renders General Inspection findings and optional evidence in read-only detail mode', () => {
+    const { container } = render(
       <InspectionDetailSection
         selectedRecord={{
           id: 'inspection-general-detail-1',
@@ -23,6 +23,14 @@ describe('InspectionDetailSection', () => {
           mainLocation: 'Zone A',
           incidentType: 'General Inspection',
           description: 'General inspection summary for Zone A.',
+          inspectionIssues: [
+            {
+              id: 'finding-1',
+              description: 'Blocked access near Zone A.',
+              actionRequired: 'Clear stored items.',
+              photos: [],
+            },
+          ],
           checklist: [
             { id: 'housekeeping', label: 'Housekeeping checked', selected: true },
             { id: 'access', label: 'Access clear', selected: true },
@@ -47,13 +55,19 @@ describe('InspectionDetailSection', () => {
         onDownloadRecord={vi.fn()}
       />,
     )
+    const wrapper = container.firstElementChild
+    expect(wrapper?.className || '').toContain('inspection-detail-section')
+    expect(wrapper?.className || '').not.toContain('inspection-mobile-section')
 
-    expect(screen.getByText('Quick Checks')).toBeTruthy()
-    expect(screen.getByText('Housekeeping checked')).toBeTruthy()
-    expect(screen.getByText('Access clear')).toBeTruthy()
-    expect(screen.getByText('Describe')).toBeTruthy()
-    expect(screen.getByText('General inspection summary for Zone A.')).toBeTruthy()
-    expect(screen.getByText('Upload Photos and Describe')).toBeTruthy()
+    expect(screen.queryByText('Checks')).toBeNull()
+    expect(screen.queryByText('Housekeeping checked')).toBeNull()
+    expect(screen.queryByText('Access clear')).toBeNull()
+    expect(screen.queryByText('Describe')).toBeNull()
+    expect(screen.queryByText('General inspection summary for Zone A.')).toBeNull()
+    expect(screen.getByText('Findings')).toBeTruthy()
+    expect(screen.getByText('1. Blocked access near Zone A.')).toBeTruthy()
+    expect(screen.getByText('Clear stored items.')).toBeTruthy()
+    expect(screen.getByText('General Evidence Photos')).toBeTruthy()
     expect(screen.getByText('General evidence photo')).toBeTruthy()
   })
 
@@ -163,7 +177,7 @@ describe('InspectionDetailSection', () => {
 
     expect(screen.getByText('Inspection Date/Time')).toBeTruthy()
     expect(screen.queryByText('Inspection Session')).toBeNull()
-    expect(screen.getByText('Emergency Response Auxiliary Equipment Checks')).toBeTruthy()
+    expect(screen.getByText('Equipment')).toBeTruthy()
     expect(screen.getByText('Fire Jacket')).toBeTruthy()
     expect(screen.getByText('Chainsaw')).toBeTruthy()
     expect(screen.getAllByText('15').length).toBeGreaterThan(0)
@@ -217,7 +231,7 @@ describe('InspectionDetailSection', () => {
       />,
     )
 
-    expect(screen.getAllByText('Hydraulic Equipment Checks').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Equipment').length).toBeGreaterThan(0)
     expect(screen.getByText('Hydraulic Pump Motor 1')).toBeTruthy()
     expect(screen.getAllByText('No Leakage').length).toBeGreaterThan(0)
     expect(screen.getByText('Minor hose leak found.')).toBeTruthy()
@@ -262,7 +276,7 @@ describe('InspectionDetailSection', () => {
               signageCondition: 'Good',
               boxKeyAvailability: 'Yes',
               boxGlassAvailability: 'Yes',
-              operationalCondition: 'Operational',
+              operationalCondition: 'Good',
               remarks: 'Needs replacement.',
             },
           ],
@@ -279,7 +293,7 @@ describe('InspectionDetailSection', () => {
       />,
     )
 
-    expect(screen.getByText('Fire Extinguisher Checks')).toBeTruthy()
+    expect(screen.getByText('Extinguishers')).toBeTruthy()
     expect(screen.getByText('ADO-001')).toBeTruthy()
     expect(
       screen.getAllByText((_, node) => node?.textContent?.includes('DP 6KG') || false).length,
@@ -319,7 +333,7 @@ describe('InspectionDetailSection', () => {
               signageCondition: 'Good',
               boxKeyAvailability: 'Yes',
               boxGlassAvailability: 'Yes',
-              operationalCondition: 'Operational',
+              operationalCondition: 'Good',
               remarks: 'Captured before archive.',
             },
           ],
@@ -423,7 +437,7 @@ describe('InspectionDetailSection', () => {
       />,
     )
 
-    expect(screen.getAllByText('SCBA Checks').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('SCBA Items').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Back Plate').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Cylinder').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Face Mask').length).toBeGreaterThan(0)
@@ -492,7 +506,7 @@ describe('InspectionDetailSection', () => {
       />,
     )
 
-    expect(screen.getAllByText('High Angle Rescue Equipment Checks').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Equipment').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Response Kit #1').length).toBeGreaterThan(0)
     expect(screen.getAllByText('General Kit Items').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Main Compartment').length).toBeGreaterThan(0)
@@ -584,7 +598,7 @@ describe('InspectionDetailSection', () => {
       />,
     )
 
-    expect(screen.getAllByText('Daily Readiness Roster').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Truck Readiness').length).toBeGreaterThan(0)
     expect(screen.getAllByText('One-Off Readiness Checklist').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Plate No.').length).toBeGreaterThan(0)
     expect(screen.getAllByText('LOCKER 01').length).toBeGreaterThan(0)
@@ -594,7 +608,7 @@ describe('InspectionDetailSection', () => {
     expect(container.textContent || '').toContain('Mute switch sticking.')
 
     const detailText = container.textContent || ''
-    expect(detailText.indexOf('Daily Readiness Roster')).toBeLessThan(
+    expect(detailText.indexOf('Truck Readiness')).toBeLessThan(
       detailText.indexOf('One-Off Readiness Checklist'),
     )
   })

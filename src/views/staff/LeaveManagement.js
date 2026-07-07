@@ -280,7 +280,7 @@ const LeaveManagement = () => {
   }
 
   return (
-    <CContainer fluid data-tour-id="leave-management-module">
+    <CContainer fluid data-testid="leave-management-module">
       <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
       {!isDetailSection ? (
         <ModulePageHeader

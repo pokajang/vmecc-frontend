@@ -105,7 +105,7 @@ const TeamDetails = () => {
   }, [canManageTeams, canViewTeams, loadPageData, loadMembers])
 
   return (
-    <CContainer fluid data-tour-id="team-directory-module">
+    <CContainer fluid data-testid="team-directory-module">
       <ModulePageHeader
         title="Team Directory"
         subtitle="Review operational teams, members, and current roster coverage."
@@ -115,14 +115,14 @@ const TeamDetails = () => {
               label="Add Team"
               importance="primary"
               onClick={() => setShowCreate(true)}
-              data-tour-id="team-directory-create-action"
+              data-testid="team-directory-create-action"
             />
           ) : null
         }
       />
       <CRow>
         <CCol>
-          <CCard className="mb-4" data-tour-id="team-directory-teams">
+          <CCard className="mb-4" data-testid="team-directory-teams">
             <CCardHeader>Teams</CCardHeader>
             <CCardBody>
               {!loading && error && <CAlert color="danger">{error}</CAlert>}
@@ -155,7 +155,7 @@ const TeamDetails = () => {
                   </CCol>
                 </CRow>
               ) : (
-                <div data-tour-id="team-directory-grid">
+                <div data-testid="team-directory-grid">
                   {(() => {
                     const hasGroups = teams.some((t) => t.group)
                     const groupMap = {}

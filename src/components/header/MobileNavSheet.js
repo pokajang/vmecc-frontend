@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { CBadge } from '@coreui/react'
 import {
   CalendarCheck,
@@ -20,6 +20,15 @@ import { isTitle } from 'src/utils/navigation'
 import MobileOverlayItem from './MobileOverlayItem'
 import MobileOverlaySection from './MobileOverlaySection'
 import MobileOverlayShell from './MobileOverlayShell'
+import { preloadInspectionRoute } from 'src/routePreloaders'
+
+const isInspectionRoute = (item = {}) => String(item.to || '').startsWith('/inspection')
+
+const hasInspectionRoute = (items = []) =>
+  items.some((item) => {
+    if (isInspectionRoute(item)) return true
+    return Array.isArray(item?.items) && hasInspectionRoute(item.items)
+  })
 
 const collectLeafRows = (items = [], rows) => {
   items.forEach((item) => {
@@ -95,6 +104,11 @@ const MobileNavSheet = ({
   const canQuickActions = canClaim || canLeave || canOvertime
   const canMyRecords = canClaim || canLeave || canOvertime
 
+  useEffect(() => {
+    if (!open || mode !== 'menu' || !hasInspectionRoute(menuData)) return
+    preloadInspectionRoute()
+  }, [menuData, mode, open])
+
   if (!open) return null
 
   const title = mode === 'account' ? 'Account' : activeGroup?.name ? activeGroup.name : 'Menu'
@@ -128,10 +142,18 @@ const MobileNavSheet = ({
             }
 
             const { item } = row
+            const preloadProps = isInspectionRoute(item)
+              ? {
+                  onFocus: preloadInspectionRoute,
+                  onPointerEnter: preloadInspectionRoute,
+                  onTouchStart: preloadInspectionRoute,
+                }
+              : {}
             return (
               <MobileOverlayItem
                 key={row.key}
                 onClick={() => onNavigate(item)}
+                {...preloadProps}
                 icon={item.icon}
                 label={item.name}
                 badge={

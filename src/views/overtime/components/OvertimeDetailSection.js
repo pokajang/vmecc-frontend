@@ -104,7 +104,7 @@ const OvertimeDetailSection = ({
             <CButton
               color="primary"
               variant="outline"
-              data-tour-id="overtime-edit-action"
+              data-testid="overtime-edit-action"
               disabled={!canEdit}
               onClick={() => onEdit?.(selectedRecord)}
             >
@@ -113,7 +113,7 @@ const OvertimeDetailSection = ({
             <CButton
               color="warning"
               variant="outline"
-              data-tour-id="overtime-cancel-action"
+              data-testid="overtime-cancel-action"
               disabled={!canCancel}
               onClick={() => onCancel?.(selectedRecord)}
             >
@@ -122,7 +122,7 @@ const OvertimeDetailSection = ({
             <CButton
               color="danger"
               variant="outline"
-              data-tour-id="overtime-delete-action"
+              data-testid="overtime-delete-action"
               disabled={!canDelete}
               onClick={() => onDelete?.(selectedRecord)}
             >

@@ -5,6 +5,7 @@ import IconOptionCard from 'src/components/IconOptionCard'
 import IconOptionGrid from 'src/components/IconOptionGrid'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import TypeManagerModal from 'src/components/report-workflow/TypeManagerModal'
+import { ReportMobileActionGroup, ReportSetupSummaryRow } from '../components/ReportWorkflowUi'
 import { DetailsStepActions } from './erco-form-components'
 import { normalizeErcoLocationList } from './utils'
 import { recordTypeUsage } from './typeUsageStorage'
@@ -66,24 +67,6 @@ const getInitialMobileSetupGroup = (form) => {
   return rememberedGroup
 }
 
-const SetupSummaryRow = ({ label, value, detail, onEdit }) => (
-  <div className="erco-mobile-setup-summary d-md-none">
-    <button
-      type="button"
-      className="erco-mobile-setup-summary__main"
-      onClick={onEdit}
-      aria-label={`Edit ${label}`}
-    >
-      <span className="erco-mobile-setup-summary__label">{label}</span>
-      <span className="erco-mobile-setup-summary__value">{value || '--'}</span>
-      {detail ? <span className="erco-mobile-setup-summary__detail">{detail}</span> : null}
-    </button>
-    <CButton type="button" color="secondary" variant="outline" size="sm" onClick={onEdit}>
-      Edit
-    </CButton>
-  </div>
-)
-
 const ErcoSetupStep = ({
   userId,
   form,
@@ -98,11 +81,9 @@ const ErcoSetupStep = ({
 }) => {
   const isMobile = useIsMobile()
   const [deleteTarget, setDeleteTarget] = useState(null)
-  const [isIncidentTypeEditing, setIsIncidentTypeEditing] = useState(
-    () => !String(form.incidentType || '').trim(),
-  )
   const [activeMobileGroup, setActiveMobileGroup] = useState(() => getInitialMobileSetupGroup(form))
   const [mobileEditOverride, setMobileEditOverride] = useState('')
+  const [desktopEditGroup, setDesktopEditGroup] = useState('')
 
   const updateSetupField = (field, value) => {
     if (field === 'incidentDate' || field === 'incidentTime') {
@@ -257,7 +238,8 @@ const ErcoSetupStep = ({
     }
   }
 
-  const shouldShowMobileEditor = (group) => !isMobile || effectiveMobileGroup === group
+  const shouldShowSetupEditor = (group) =>
+    isMobile ? effectiveMobileGroup === group : !completion[group] || desktopEditGroup === group
 
   const handleContinueClick = () => {
     if (isMobile) {
@@ -269,19 +251,60 @@ const ErcoSetupStep = ({
     onContinue?.()
   }
 
-  const renderMobileSummary = (group, label, value, detail = '') => {
-    if (!isMobile || !completion[group] || effectiveMobileGroup === group) return null
+  const openMobileGroup = (group) => {
+    if (isMobile) {
+      rememberMobileSetupGroup(group)
+      setMobileEditOverride(group)
+      setActiveMobileGroup(group)
+      return
+    }
+    setDesktopEditGroup(group)
+  }
+
+  const resetMobileGroup = (group) => {
+    openMobileGroup(group)
+
+    if (group === 'incident') {
+      setForm((prev) => ({ ...prev, incidentType: '' }))
+      setSetupFieldErrors((prev) => ({ ...prev, incidentType: undefined }))
+      return
+    }
+
+    if (group === 'weather') {
+      setForm((prev) => ({ ...prev, weather: '' }))
+      setSetupFieldErrors((prev) => ({ ...prev, weather: undefined }))
+      return
+    }
+
+    if (group === 'area') {
+      setForm((prev) => ({ ...prev, location: [] }))
+      setSetupFieldErrors((prev) => ({ ...prev, location: undefined }))
+      return
+    }
+
+    if (group === 'datetime') {
+      setForm((prev) => ({ ...prev, incidentDate: '', incidentTime: '' }))
+      setSetupFieldErrors((prev) => ({
+        ...prev,
+        incidentDate: undefined,
+        incidentTime: undefined,
+      }))
+    }
+  }
+
+  const collapseDesktopGroup = (group) => {
+    if (!isMobile && desktopEditGroup === group) setDesktopEditGroup('')
+  }
+
+  const renderSetupSummary = (group, label, value) => {
+    if (!completion[group] || shouldShowSetupEditor(group)) return null
     return (
-      <SetupSummaryRow
+      <ReportSetupSummaryRow
         label={label}
         value={value}
-        detail={detail}
-        onEdit={() => {
-          rememberMobileSetupGroup(group)
-          setMobileEditOverride(group)
-          setActiveMobileGroup(group)
-          if (group === 'incident') setIsIncidentTypeEditing(true)
-        }}
+        showDesktop
+        onEdit={() => openMobileGroup(group)}
+        onReset={() => resetMobileGroup(group)}
       />
     )
   }
@@ -406,107 +429,88 @@ const ErcoSetupStep = ({
 
       <div className="erco-mobile-setup-grid d-grid gap-4">
         <div className="d-grid gap-2">
-          {renderMobileSummary(
+          {renderSetupSummary(
             'incident',
             'Incident Type',
             selectedIncidentOption?.label || form.incidentType,
-            selectedIncidentOption?.description || '',
           )}
-          {shouldShowMobileEditor('incident') ? (
-            form.incidentType && !isIncidentTypeEditing && !isMobile ? (
-              <div className="rounded-3 border bg-white p-3 d-flex align-items-center justify-content-between gap-3">
-                <div className="min-w-0">
-                  <div className="small text-body-secondary">Choose Emergency / Incident Type</div>
-                  <div className="fw-semibold text-truncate">
-                    {selectedIncidentOption?.label || form.incidentType}
-                  </div>
-                  {selectedIncidentOption?.description ? (
-                    <div className="small text-body-secondary text-truncate">
-                      {selectedIncidentOption.description}
-                    </div>
-                  ) : null}
+          {shouldShowSetupEditor('incident') ? (
+            <>
+              <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div className="fw-semibold text-muted">
+                  <span className="d-md-none">Choose Incident Type</span>
+                  <span className="d-none d-md-inline">Choose Emergency / Incident Type</span>
                 </div>
-                <CButton
-                  type="button"
-                  color="secondary"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsIncidentTypeEditing(true)}
-                >
-                  Edit
-                </CButton>
-              </div>
-            ) : (
-              <>
-                <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
-                  <div className="fw-semibold">
-                    <span className="d-md-none">Choose Incident Type</span>
-                    <span className="d-none d-md-inline">Choose Emergency / Incident Type</span>
-                  </div>
-                  <CreateActionButton label="Add type" onClick={incident.openAddModal} />
-                </div>
-                <IconOptionGrid
-                  options={incident.visibleTypeOptions}
-                  value={form.incidentType}
-                  onChange={(value) => {
-                    if (value === INCIDENT_TYPE_TOGGLE_VALUE) {
-                      incident.setShowAllIncidentTypes((prev) => !prev)
-                      return
-                    }
-                    recordTypeUsage(userId, 'incident', value)
-                    updateSetupField('incidentType', value)
-                    setIsIncidentTypeEditing(false)
-                    rememberMobileSetupGroup('weather')
-                    setMobileEditOverride('')
-                    setActiveMobileGroup('weather')
-                  }}
-                  variant="compact"
-                  columns={{ xs: 6, md: 3 }}
-                  cardProps={(option, isSelected) => {
-                    if (option?.value === INCIDENT_TYPE_TOGGLE_VALUE) {
-                      return {
-                        style: {
-                          backgroundColor: TOGGLE_CARD_BG,
-                          borderColor: TOGGLE_CARD_BORDER,
-                          borderStyle: 'dashed',
-                        },
-                        className: 'text-primary',
-                        iconContainerClassName: 'bg-white text-primary',
-                        titleClassName: 'fw-semibold text-primary',
-                        descriptionClassName: 'mb-0 mt-1 text-body-secondary',
-                      }
-                    }
-
-                    return isSelected
-                      ? {
-                          style: {
-                            backgroundColor: ACTIVE_CARD_BG,
-                            borderColor: ACTIVE_CARD_BORDER,
-                          },
-                        }
-                      : {}
-                  }}
+                <CreateActionButton
+                  label="Add type"
+                  className="inspection-compact-action-btn"
+                  onClick={incident.openAddModal}
                 />
-              </>
-            )
+              </div>
+              <IconOptionGrid
+                options={incident.visibleTypeOptions}
+                value={form.incidentType}
+                onChange={(value) => {
+                  if (value === INCIDENT_TYPE_TOGGLE_VALUE) {
+                    incident.setShowAllIncidentTypes((prev) => !prev)
+                    return
+                  }
+                  recordTypeUsage(userId, 'incident', value)
+                  updateSetupField('incidentType', value)
+                  collapseDesktopGroup('incident')
+                  rememberMobileSetupGroup('weather')
+                  setMobileEditOverride('')
+                  setActiveMobileGroup('weather')
+                }}
+                variant="compact"
+                columns={{ xs: 12, md: 3 }}
+                cardProps={(option, isSelected) => {
+                  if (option?.value === INCIDENT_TYPE_TOGGLE_VALUE) {
+                    return {
+                      style: {
+                        backgroundColor: TOGGLE_CARD_BG,
+                        borderColor: TOGGLE_CARD_BORDER,
+                        borderStyle: 'dashed',
+                      },
+                      className: 'text-primary',
+                      iconContainerClassName: 'bg-white text-primary',
+                      titleClassName: 'fw-semibold text-primary',
+                      descriptionClassName: 'mb-0 mt-1 text-body-secondary',
+                    }
+                  }
+
+                  return isSelected
+                    ? {
+                        style: {
+                          backgroundColor: ACTIVE_CARD_BG,
+                          borderColor: ACTIVE_CARD_BORDER,
+                        },
+                      }
+                    : {}
+                }}
+              />
+            </>
           ) : null}
         </div>
 
         <div className="d-grid gap-2">
-          {renderMobileSummary(
+          {renderSetupSummary(
             'weather',
             'Weather',
             selectedWeatherOption?.label || selectedWeatherOption?.title || form.weather,
-            selectedWeatherOption?.description || '',
           )}
-          {shouldShowMobileEditor('weather') ? (
+          {shouldShowSetupEditor('weather') ? (
             <>
               <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
-                <div className="fw-semibold">
+                <div className="fw-semibold text-muted">
                   <span className="d-md-none">Weather</span>
                   <span className="d-none d-md-inline">Choose Weather</span>
                 </div>
-                <CreateActionButton label="Add weather" onClick={weather.openAddModal} />
+                <CreateActionButton
+                  label="Add weather"
+                  className="inspection-compact-action-btn"
+                  onClick={weather.openAddModal}
+                />
               </div>
               <IconOptionGrid
                 options={weather.visibleTypeOptions}
@@ -518,12 +522,13 @@ const ErcoSetupStep = ({
                   }
                   recordTypeUsage(userId, 'weather', value)
                   updateSetupField('weather', value)
+                  collapseDesktopGroup('weather')
                   rememberMobileSetupGroup('area')
                   setMobileEditOverride('')
                   setActiveMobileGroup('area')
                 }}
                 variant="compact"
-                columns={{ xs: 6, md: 3 }}
+                columns={{ xs: 12, md: 3 }}
                 cardProps={(option, isSelected) => {
                   if (option?.value === WEATHER_TOGGLE_VALUE) {
                     return {
@@ -554,18 +559,17 @@ const ErcoSetupStep = ({
         </div>
 
         <div className="d-grid gap-2">
-          {renderMobileSummary(
+          {renderSetupSummary(
             'area',
             'Area',
             selectedLocationLabels.length === 1
               ? selectedLocationLabels[0]
               : `${selectedLocationLabels.length} areas selected`,
-            selectedLocationLabels.length > 1 ? selectedLocationLabels.join(', ') : '',
           )}
-          {shouldShowMobileEditor('area') ? (
+          {shouldShowSetupEditor('area') ? (
             <>
               <div className="d-flex justify-content-between align-items-start gap-2">
-                <div className="fw-semibold" style={{ minWidth: 0 }}>
+                <div className="fw-semibold text-muted" style={{ minWidth: 0 }}>
                   <span className="d-md-none">Choose Area</span>
                   <span className="d-none d-md-inline">Choose Location / Area</span>
                   <span className="fw-normal text-body-secondary ms-1 d-md-none">
@@ -576,22 +580,11 @@ const ErcoSetupStep = ({
                   </span>
                 </div>
                 <div className="flex-shrink-0 d-inline-flex align-items-center gap-2">
-                  {isMobile && selectedLocations.length > 0 ? (
-                    <CButton
-                      type="button"
-                      color="secondary"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        rememberMobileSetupGroup('datetime')
-                        setMobileEditOverride('')
-                        setActiveMobileGroup('datetime')
-                      }}
-                    >
-                      Done
-                    </CButton>
-                  ) : null}
-                  <CreateActionButton label="Add area" onClick={location.openAddModal} />
+                  <CreateActionButton
+                    label="Add area"
+                    className="inspection-compact-action-btn"
+                    onClick={location.openAddModal}
+                  />
                 </div>
               </div>
               <IconOptionGrid
@@ -615,7 +608,7 @@ const ErcoSetupStep = ({
                 }}
                 variant="compact"
                 showDescription
-                columns={{ xs: 6, md: 3 }}
+                columns={{ xs: 12, md: 3 }}
                 cardProps={(option) => {
                   if (option?.value === LOCATION_TOGGLE_VALUE) {
                     return {
@@ -638,20 +631,39 @@ const ErcoSetupStep = ({
                   }
                 }}
               />
+              {selectedLocations.length > 0 ? (
+                <div className="d-flex justify-content-end">
+                  <CButton
+                    type="button"
+                    color="secondary"
+                    variant="outline"
+                    size="sm"
+                    className="inspection-compact-action-btn flex-grow-0"
+                    onClick={() => {
+                      rememberMobileSetupGroup('datetime')
+                      setMobileEditOverride('')
+                      setActiveMobileGroup('datetime')
+                      collapseDesktopGroup('area')
+                    }}
+                  >
+                    Confirm Areas
+                  </CButton>
+                </div>
+              ) : null}
             </>
           ) : null}
         </div>
 
         <div className="d-grid gap-4">
-          {renderMobileSummary(
+          {renderSetupSummary(
             'datetime',
             'Date & Time',
             `${form.incidentDate || '--'} ${form.incidentTime || ''}`.trim(),
           )}
-          {shouldShowMobileEditor('datetime') ? (
+          {shouldShowSetupEditor('datetime') ? (
             <>
               <div className="d-grid gap-2">
-                <div className="fw-semibold">
+                <div className="fw-semibold text-muted">
                   <span className="d-md-none">Incident Date</span>
                   <span className="d-none d-md-inline">Choose Incident Date</span>
                 </div>
@@ -701,25 +713,10 @@ const ErcoSetupStep = ({
               <CRow className="g-2">
                 <CCol xs={12} md={4}>
                   <div className="d-flex align-items-center justify-content-between gap-2 mb-2">
-                    <div className="fw-semibold">
+                    <div className="fw-semibold text-muted">
                       <span className="d-md-none">Incident Time</span>
                       <span className="d-none d-md-inline">Choose Incident Time</span>
                     </div>
-                    {isMobile && completion.datetime ? (
-                      <CButton
-                        type="button"
-                        color="secondary"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          rememberMobileSetupGroup('')
-                          setMobileEditOverride('')
-                          setActiveMobileGroup('')
-                        }}
-                      >
-                        Done
-                      </CButton>
-                    ) : null}
                   </div>
                   <CFormInput
                     type="time"
@@ -728,6 +725,25 @@ const ErcoSetupStep = ({
                     invalid={Boolean(setupFieldErrors.incidentTime)}
                     onChange={(event) => updateSetupField('incidentTime', event.target.value)}
                   />
+                  {completion.datetime ? (
+                    <div className="d-flex justify-content-end mt-2">
+                      <CButton
+                        type="button"
+                        color="secondary"
+                        variant="outline"
+                        size="sm"
+                        className="inspection-compact-action-btn flex-grow-0"
+                        onClick={() => {
+                          rememberMobileSetupGroup('')
+                          setMobileEditOverride('')
+                          setActiveMobileGroup('')
+                          collapseDesktopGroup('datetime')
+                        }}
+                      >
+                        Confirm Date & Time
+                      </CButton>
+                    </div>
+                  ) : null}
                 </CCol>
               </CRow>
             </>
@@ -735,12 +751,16 @@ const ErcoSetupStep = ({
         </div>
 
         {showActions ? (
-          <DetailsStepActions
-            onSaveDraft={onSaveDraft}
-            primaryLabel="Continue"
-            primaryType="button"
-            onPrimary={handleContinueClick}
-          />
+          isMobile ? (
+            <ReportMobileActionGroup onSaveDraft={onSaveDraft} onPrimary={handleContinueClick} />
+          ) : (
+            <DetailsStepActions
+              onSaveDraft={onSaveDraft}
+              primaryLabel="Continue"
+              primaryType="button"
+              onPrimary={handleContinueClick}
+            />
+          )
         ) : null}
       </div>
     </div>

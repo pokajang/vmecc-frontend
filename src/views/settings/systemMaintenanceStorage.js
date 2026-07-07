@@ -52,9 +52,9 @@ export const normalizeSystemMaintenanceSetting = (value, fallback = DEFAULT_SYST
   }
 }
 
-export const loadSystemMaintenanceSetting = async () => {
+export const loadSystemMaintenanceSetting = async (options = {}) => {
   try {
-    const result = await fetchSystemMaintenanceSetting()
+    const result = await fetchSystemMaintenanceSetting(options)
     const payload = result?.data ?? result
     if (!hasMaintenanceKeys(payload)) {
       return { ok: false, data: { ...DEFAULT_SYSTEM_MAINTENANCE } }

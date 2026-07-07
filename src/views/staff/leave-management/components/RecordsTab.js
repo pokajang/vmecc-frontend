@@ -108,7 +108,9 @@ const RecordsTab = ({
                     <CTableHeaderCell>Days</CTableHeaderCell>
                     <CTableHeaderCell>Status</CTableHeaderCell>
                     <CTableHeaderCell>Applied On</CTableHeaderCell>
-                    <CTableHeaderCell className="text-end">Action</CTableHeaderCell>
+                    <CTableHeaderCell className="table-sticky-action-cell text-end">
+                      Action
+                    </CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
@@ -128,7 +130,7 @@ const RecordsTab = ({
                         />
                       </CTableDataCell>
                       <CTableDataCell>{formatDate(row.appliedAt)}</CTableDataCell>
-                      <CTableDataCell className="text-end">
+                      <CTableDataCell className="table-sticky-action-cell text-end">
                         <div className="d-flex justify-content-end gap-2 flex-wrap">
                           <CButton color="light" size="sm" onClick={() => openRecord(row)}>
                             View

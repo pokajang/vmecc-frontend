@@ -18,10 +18,8 @@ import { getPrimaryRoleLabel, hasPermission } from 'src/utils/authz'
 import { isModuleEnabled } from 'src/utils/modules'
 import { DASHBOARD_SECTION_PERMISSIONS } from 'src/constants/dashboardVisibility'
 import useDashboardStats from './hooks/useDashboardStats'
-import useMyStats from './hooks/useMyStats'
 import { PERIOD_OPTIONS, resolvePeriodLabel } from './components/DashboardHeader'
 import { MODULE_ACCENTS } from './utils/chartDefaults'
-import MyStats from './components/MyStats'
 import {
   PayrollKpiTiles,
   PayrollOperationsCard,
@@ -189,11 +187,7 @@ const buildDashboardActionQueue = ({
 }
 
 const DashboardActionQueue = ({ items, loading, periodLabel, hasModuleErrors = false }) => (
-  <CCard
-    className="mb-4"
-    data-tour-id="dashboard-action-queue"
-    data-testid="dashboard-action-queue"
-  >
+  <CCard className="mb-4" data-testid="dashboard-action-queue">
     <CCardBody>
       <div className="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3">
         <div>
@@ -301,8 +295,6 @@ const DashboardModuleCardGuard = ({ moduleKey, moduleStats, onRetry, children })
 const Dashboard = () => {
   const authUser = useSelector((state) => state.authUser)
   const moduleActivation = useSelector((state) => state.moduleActivation)
-  const { stats: myStats, loading: myStatsLoading } = useMyStats()
-  const [myStatsVisible, setMyStatsVisible] = useState(true)
   const [period, setPeriod] = useState('this_month')
   const [dashboardRefreshToken, setDashboardRefreshToken] = useState(0)
   const periodLabel = resolvePeriodLabel(period)
@@ -383,10 +375,10 @@ const Dashboard = () => {
   }
 
   return (
-    <div data-tour-id="dashboard-module">
+    <div data-testid="dashboard-module">
       <CCard
         className="mb-4 border-0"
-        data-tour-id="dashboard-overview"
+        data-testid="dashboard-overview"
         style={{ background: 'rgba(0, 126, 122, 0.08)' }}
       >
         <CCardBody>
@@ -399,7 +391,7 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="d-flex flex-wrap align-items-center gap-2">
-              <CDropdown alignment="end" data-tour-id="dashboard-period-control">
+              <CDropdown alignment="end" data-testid="dashboard-period-control">
                 <CDropdownToggle size="sm" color="primary" variant="outline">
                   {periodLabel}
                 </CDropdownToggle>
@@ -415,22 +407,8 @@ const Dashboard = () => {
                   ))}
                 </CDropdownMenu>
               </CDropdown>
-              <CButton
-                size="sm"
-                className="px-2 py-1 d-inline-flex align-items-center border-0 bg-transparent shadow-none text-primary"
-                onClick={() => setMyStatsVisible((v) => !v)}
-                aria-label={myStatsVisible ? 'Hide my stats' : 'Show my stats'}
-                title={myStatsVisible ? 'Hide my stats' : 'Show my stats'}
-              >
-                {myStatsVisible ? <EyeOff size={14} /> : <Eye size={14} />}
-              </CButton>
             </div>
           </div>
-          {myStatsVisible && (
-            <div className="mt-4" data-tour-id="dashboard-my-stats">
-              <MyStats stats={myStats} loading={myStatsLoading} />
-            </div>
-          )}
         </CCardBody>
       </CCard>
 

@@ -65,35 +65,47 @@ const IconOptionCard = ({
     resolvedHideDescriptionOnMobile ? 'd-none d-md-block' : '',
   )
 
+  const Element = typeof onSelect === 'function' ? 'button' : 'div'
+  const interactiveProps =
+    Element === 'button'
+      ? {
+          type: 'button',
+          disabled,
+          onClick: () => {
+            if (!isInteractive) return
+            onSelect()
+          },
+        }
+      : {}
+
   return (
-    <div
+    <Element
       role={role}
-      tabIndex={isInteractive ? 0 : -1}
+      tabIndex={Element === 'button' ? undefined : isInteractive ? 0 : -1}
       aria-pressed={role === 'button' ? selected : undefined}
       aria-checked={role === 'radio' ? selected : undefined}
-      aria-disabled={!isInteractive}
+      aria-disabled={Element === 'button' ? undefined : !isInteractive}
       data-testid={testId}
       className={buildClassName(
-        'rounded-3 border h-100 w-100',
+        'inspection-option-card rounded-3 border h-100 w-100 text-start',
         resolvedPaddingClassName,
         selected ? 'border-primary bg-primary bg-opacity-10' : 'border-light-subtle',
         className,
       )}
       style={{
         cursor: isInteractive ? 'pointer' : 'not-allowed',
+        ...(selected ? {} : { backgroundColor: 'transparent' }),
         ...style,
       }}
-      onClick={() => {
-        if (!isInteractive) return
-        onSelect()
-      }}
       onKeyDown={(event) => {
+        if (Element === 'button') return
         if (!isInteractive) return
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault()
           onSelect()
         }
       }}
+      {...interactiveProps}
     >
       <div className={resolvedBodyClassName} style={{ minWidth: 0 }}>
         {IconToRender ? (
@@ -132,7 +144,7 @@ const IconOptionCard = ({
           ) : null}
         </div>
       </div>
-    </div>
+    </Element>
   )
 }
 

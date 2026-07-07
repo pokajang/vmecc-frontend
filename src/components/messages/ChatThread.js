@@ -133,7 +133,7 @@ const ChatThread = ({
     <div
       className={`flex-grow-1 d-flex flex-column bg-body ${showThreadPanel ? '' : 'd-none'}`}
       style={{ minHeight: 0 }}
-      data-tour-id="messages-thread-panel"
+      data-testid="messages-thread-panel"
     >
       {activeThread?.user?.id ? (
         <>
@@ -272,7 +272,7 @@ const ChatThread = ({
           <div
             className="border-top p-3 bg-white mt-auto"
             style={isMobile ? { position: 'sticky', bottom: 0, zIndex: 1 } : undefined}
-            data-tour-id="messages-composer"
+            data-testid="messages-composer"
           >
             {/* Image preview */}
             {imagePreview && (
@@ -350,7 +350,7 @@ const ChatThread = ({
       ) : (
         <div
           className="flex-grow-1 d-flex align-items-center justify-content-center text-muted"
-          data-tour-id="messages-thread-empty"
+          data-testid="messages-thread-empty"
         >
           Select a chat to start messaging.
         </div>

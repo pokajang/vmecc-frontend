@@ -34,7 +34,7 @@ describe('inspectionTypeRegistry', () => {
     expect(typeof erAux?.EditSection).toBe('function')
 
     expect(frt?.formMode).toBe('structured')
-    expect(frt?.supportsSubLocations).toBe(false)
+    expect(frt?.supportsSubLocations).toBe(true)
     expect(typeof frt?.getSummary).toBe('function')
     expect(typeof frt?.ReadOnlySection).toBe('function')
 

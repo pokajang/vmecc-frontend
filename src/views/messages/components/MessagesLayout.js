@@ -60,7 +60,7 @@ const MessagesLayout = ({
     fluid
     className="d-flex flex-column flex-grow-1 p-0"
     style={{ minHeight: 0 }}
-    data-tour-id="messages-module"
+    data-testid="messages-module"
   >
     {isMobile && mobileView === 'thread' && (
       <div className="d-flex justify-content-start mb-2">
@@ -70,7 +70,7 @@ const MessagesLayout = ({
     <CCard className="flex-grow-1" style={{ minHeight: 0, height: '100%', overflow: 'hidden' }}>
       <CCardHeader
         className="d-flex justify-content-between align-items-center"
-        data-tour-id="messages-header"
+        data-testid="messages-header"
       >
         <div className="d-flex align-items-center gap-2">
           <span>Messages</span>
@@ -84,7 +84,7 @@ const MessagesLayout = ({
           label="Create chat"
           onClick={onOpenNewChat}
           icon={<Plus size={13} className="me-1 align-text-bottom" />}
-          data-tour-id="messages-create-action"
+          data-testid="messages-create-action"
         />
       </CCardHeader>
       <CCardBody className="p-0 d-flex flex-column" style={{ minHeight: 0 }}>

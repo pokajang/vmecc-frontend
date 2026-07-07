@@ -44,6 +44,10 @@ export const featureFlags = {
     false,
   ),
   reportLocalFallbackEnabled: asBool(import.meta.env.VITE_REPORT_LOCAL_FALLBACK_ENABLED, false),
+  inspectionSessionFireExtinguisherEnabled: asBool(
+    import.meta.env.VITE_INSPECTION_SESSION_FIRE_EXTINGUISHER_ENABLED,
+    true,
+  ),
   holidayGuidanceCohortUserIds: asCsvList(import.meta.env.VITE_HOLIDAY_GUIDANCE_COHORT_USER_IDS),
   holidayGuidanceCohortEmails: asCsvList(import.meta.env.VITE_HOLIDAY_GUIDANCE_COHORT_EMAILS),
 }

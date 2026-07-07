@@ -55,15 +55,15 @@ const RecordCard = ({ item = {}, className = '', variant = 'card' }) => {
       <article
         className={
           isListGroup
-            ? `list-group-item p-3 bg-white ${className}`.trim()
-            : `border rounded-3 p-3 bg-white shadow-sm ${className}`.trim()
+            ? `record-card record-card--compact list-group-item p-3 bg-white ${className}`.trim()
+            : `record-card record-card--compact border rounded-3 p-3 bg-white shadow-sm ${className}`.trim()
         }
       >
         <div
           {...interactiveProps}
-          className={`d-flex align-items-start justify-content-between gap-2 ${interactiveProps.className || ''}`.trim()}
+          className={`record-card__compact-row d-flex min-w-0 align-items-start justify-content-between gap-2 ${interactiveProps.className || ''}`.trim()}
         >
-          <div className="min-w-0 flex-grow-1">
+          <div className="record-card__main min-w-0 flex-grow-1" style={{ minWidth: 0 }}>
             {item.eyebrow ? (
               <div
                 className="record-card-eyebrow text-body-tertiary mb-1"
@@ -79,12 +79,13 @@ const RecordCard = ({ item = {}, className = '', variant = 'card' }) => {
             {item.searchText ? <span className="visually-hidden">{item.searchText}</span> : null}
           </div>
           <div
-            className="d-flex flex-shrink-0 align-items-center justify-content-end gap-1"
+            className="record-card__meta d-flex min-w-0 flex-shrink-1 align-items-center justify-content-end gap-1"
+            style={{ maxWidth: item.actions ? '48%' : '55%' }}
             onClick={item.actions ? stopActionEvent : undefined}
             onMouseDown={item.actions ? stopActionEvent : undefined}
             onKeyDown={item.actions ? stopActionEvent : undefined}
           >
-            {item.status ? <div className="text-end">{item.status}</div> : null}
+            {item.status ? <div className="min-w-0 text-end">{item.status}</div> : null}
             {item.actions ? item.actions : null}
           </div>
         </div>

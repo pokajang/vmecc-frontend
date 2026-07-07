@@ -1,5 +1,6 @@
 import React from 'react'
 import { CAlert } from '@coreui/react'
+import { ReportMobileActionGroup } from '../components/ReportWorkflowUi'
 import { sortResponders } from './chronologyUtils'
 import { formatErcoLocation, resolveRespondingTeamLabel } from './utils'
 import {
@@ -7,6 +8,7 @@ import {
   DetailsStepActions,
   IncidentSummaryPanel,
 } from './erco-form-components'
+import useIsMobile from './erco-form-components/useIsMobile'
 
 const ErcoPostAnalysisStep = ({
   form,
@@ -20,6 +22,7 @@ const ErcoPostAnalysisStep = ({
   showActions = true,
   primaryLabel = 'Submit Report',
 }) => {
+  const isMobile = useIsMobile()
   const teamLabel = resolveRespondingTeamLabel(form.respondingTeamName, form.respondingAttendance)
   const shiftLabel = String(form.respondingTeamShift || '').trim()
   const selectedResponderNames = sortResponders(
@@ -64,12 +67,20 @@ const ErcoPostAnalysisStep = ({
       />
 
       {showActions ? (
-        <DetailsStepActions
-          onBack={onBack}
-          onClear={onClear}
-          onSaveDraft={onSaveDraft}
-          primaryLabel={primaryLabel}
-        />
+        isMobile ? (
+          <ReportMobileActionGroup
+            onSaveDraft={onSaveDraft}
+            primaryLabel={primaryLabel}
+            primaryType="submit"
+          />
+        ) : (
+          <DetailsStepActions
+            onBack={onBack}
+            onClear={onClear}
+            onSaveDraft={onSaveDraft}
+            primaryLabel={primaryLabel}
+          />
+        )
       ) : null}
     </div>
   )

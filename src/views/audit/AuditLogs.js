@@ -257,15 +257,15 @@ const AuditLogs = () => {
   }
 
   return (
-    <CContainer fluid data-tour-id="audit-module">
+    <CContainer fluid data-testid="audit-module">
       <ModulePageHeader
         title="Audit Logs"
         subtitle="Review administrative activity, security events, and operational changes."
       />
-      <CCard className="mb-4" data-tour-id="audit-records-card">
+      <CCard className="mb-4" data-testid="audit-records-card">
         <CCardHeader>Activity Records</CCardHeader>
         <CCardBody>
-          <div data-tour-id="audit-filters">
+          <div data-testid="audit-filters">
             <TableFilters
               searchValue={search}
               onSearchChange={setSearch}
@@ -333,7 +333,7 @@ const AuditLogs = () => {
 
           {error && <CAlert color="danger">{error}</CAlert>}
 
-          <div data-tour-id="audit-records">
+          <div data-testid="audit-records">
             {!error && (
               <ResponsiveRecordCollection
                 isLoading={loading}
@@ -384,7 +384,7 @@ const AuditLogs = () => {
                   </div>
                 )}
                 footer={
-                  <div data-tour-id="audit-results-footer">
+                  <div data-testid="audit-results-footer">
                     <DataTableFooter
                       rowsToShow={rowsToShow}
                       onRowsToShowChange={setRowsToShow}

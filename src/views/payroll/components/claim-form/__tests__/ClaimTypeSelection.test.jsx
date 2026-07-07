@@ -44,7 +44,7 @@ describe('ClaimTypeSelection', () => {
     fireEvent.click(expenseCard)
     fireEvent.keyDown(expenseCard, { key: 'Enter' })
 
-    expect(expenseCard.getAttribute('aria-disabled')).toBe('true')
+    expect(expenseCard.getAttribute('disabled')).toBe('')
     expect(onSelect).not.toHaveBeenCalled()
   })
 
@@ -70,7 +70,7 @@ describe('ClaimTypeSelection', () => {
 
   it('disables blocked salary month card and shows lock reason', () => {
     const blockedPeriod = buildClaimPeriodOptions(2)[0]?.value || ''
-    const blockedReason = 'Already claimed (CLM-2026-008 - Approved)'
+    const blockedReason = 'Already claimed (CLM-2026-008 \u2022 Approved)'
     render(
       <ClaimTypeSelection
         selectedType="salary"
@@ -86,13 +86,13 @@ describe('ClaimTypeSelection', () => {
     )
 
     const blockedCard = screen.getByTestId(`claim-period-${blockedPeriod}`)
-    expect(blockedCard.getAttribute('aria-disabled')).toBe('true')
+    expect(blockedCard.getAttribute('disabled')).toBe('')
     expect(screen.getByText(blockedReason)).toBeTruthy()
   })
 
   it('disables Continue when selected salary period is blocked', () => {
     const blockedPeriod = buildClaimPeriodOptions(2)[0]?.value || ''
-    const blockedReason = 'Already claimed (CLM-2026-008 - Approved)'
+    const blockedReason = 'Already claimed (CLM-2026-008 \u2022 Approved)'
     render(
       <ClaimTypeSelection
         selectedType="salary"

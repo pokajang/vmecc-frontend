@@ -8,10 +8,10 @@ const useDrillForm = () => {
   const [setupFieldErrors, setSetupFieldErrors] = useState({})
   const [setupConfirmed, setSetupConfirmed] = useState(false)
 
-  const addChronology = () =>
+  const addChronology = (patch = {}) =>
     setForm((prev) => ({
       ...prev,
-      chronology: [...prev.chronology, { id: uid(), time: '', action: '' }],
+      chronology: [...prev.chronology, { id: uid(), time: '', action: '', ...patch }],
     }))
 
   const updateChronology = (rowId, patch) =>

@@ -416,10 +416,10 @@ const SalaryRecordsTab = ({ vm, handlers }) => {
   )
 
   return (
-    <CCard data-tour-id="salary-claims-management-salary">
+    <CCard data-testid="salary-claims-management-salary">
       <CCardHeader>Salary Records</CCardHeader>
       <CCardBody>
-        <div data-tour-id="salary-claims-management-salary-filters">
+        <div data-testid="salary-claims-management-salary-filters">
           <TableFilters
             searchValue={salarySearch}
             onSearchChange={setSalarySearch}

@@ -99,4 +99,44 @@ describe('workflowNotificationMapper', () => {
     })
     expect(ownerPath).toBe('/staff/set-salary/set-salary?assignmentId=77')
   })
+
+  it('routes inspection reports to the inspection detail screen', () => {
+    const path = buildWorkflowNotificationDeepLink({
+      module: 'report',
+      recordType: 'report',
+      reportType: 'inspection',
+      reportUid: 'report-ins-001',
+      detailRouteKey: 'report-ins-001',
+    })
+
+    expect(path).toBe('/inspection/report-ins-001')
+  })
+
+  it('routes drill and erco reports through the canonical report detail route', () => {
+    const drillPath = buildWorkflowNotificationDeepLink({
+      module: 'report',
+      recordType: 'report',
+      reportType: 'drill',
+      reportUid: 'report-drill-001',
+    })
+    const ercoPath = buildWorkflowNotificationDeepLink({
+      module: 'report',
+      recordType: 'report',
+      reportType: 'erco',
+      reportUid: 'report-erco-001',
+    })
+
+    expect(drillPath).toBe('/report/drill/report-drill-001')
+    expect(ercoPath).toBe('/report/erco/report-erco-001')
+  })
+
+  it('routes roster notifications to the roster module', () => {
+    const path = buildWorkflowNotificationDeepLink({
+      module: 'roster',
+      recordType: 'roster',
+      detailRouteKey: 'roster',
+    })
+
+    expect(path).toBe('/roster')
+  })
 })

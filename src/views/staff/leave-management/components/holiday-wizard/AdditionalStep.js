@@ -43,7 +43,9 @@ const AdditionalStep = ({
             <CTableHeaderCell>Holiday</CTableHeaderCell>
             <CTableHeaderCell className="text-center">Scope</CTableHeaderCell>
             <CTableHeaderCell className="text-center">State</CTableHeaderCell>
-            <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
+            <CTableHeaderCell className="table-sticky-action-cell text-center">
+              Action
+            </CTableHeaderCell>
           </CTableRow>
         </CTableHead>
         <CTableBody>
@@ -56,7 +58,7 @@ const AdditionalStep = ({
                 <CTableDataCell className="text-center">
                   {row.scope === 'State' ? row.state : '-'}
                 </CTableDataCell>
-                <CTableDataCell className="text-center">
+                <CTableDataCell className="table-sticky-action-cell text-center">
                   <div className="d-inline-flex gap-2">
                     <CButton
                       type="button"

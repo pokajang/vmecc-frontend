@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { CAlert, CBadge, CCol, CFormCheck, CRow } from '@coreui/react'
-import { Users } from 'lucide-react'
+import { ChevronDown, Users } from 'lucide-react'
 import IconOptionGrid from 'src/components/IconOptionGrid'
 import TableLoader from 'src/components/TableLoader'
 import { fetchRosters, fetchShiftWindows, fetchTeams } from 'src/services/apiClient'
+import { ReportMobileActionGroup } from '../components/ReportWorkflowUi'
 import { DetailsStepActions } from './erco-form-components'
+import useIsMobile from './erco-form-components/useIsMobile'
 import { formatErcoLocation, resolveRespondingTeamLabel } from './utils'
 
 const ACTIVE_CARD_BG = 'rgba(0, 126, 122, 0.2)'
@@ -20,6 +22,8 @@ const normalizeKey = (value) =>
   String(value || '')
     .trim()
     .toLowerCase()
+
+const teamAccordionKey = (teamName) => normalizeKey(teamName).replace(/[^a-z0-9]+/g, '-') || 'team'
 
 const toMinutes = (value) => {
   const [h, m] = String(value || '00:00')
@@ -97,11 +101,24 @@ const ErcoRespondingTeamStep = ({
   onContinue,
   showActions = true,
 }) => {
+  const isMobile = useIsMobile()
   const [isLoadingMembers, setIsLoadingMembers] = useState(false)
   const [teamLoadError, setTeamLoadError] = useState('')
   const [useGroupedFallbackView, setUseGroupedFallbackView] = useState(false)
+  const [expandedTeamKeys, setExpandedTeamKeys] = useState(() => new Set())
   const actionsRef = React.useRef(null)
   const hasAutoScrolledMemberSelectionRef = React.useRef(false)
+
+  const handleContinueClick = () => {
+    if (!attendanceRows.length) {
+      pushToast('No team members available to mark attendance.', {
+        title: 'No members found',
+        color: 'warning',
+      })
+      return
+    }
+    onContinue()
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -317,6 +334,48 @@ const ErcoRespondingTeamStep = ({
       icon: Users,
     }))
 
+  useEffect(() => {
+    if (!useGroupedFallbackView || attendanceGroups.length === 0) return
+    setExpandedTeamKeys((current) => {
+      const availableKeys = new Set(
+        attendanceGroups.map((group) => teamAccordionKey(group.teamName)),
+      )
+      const next = new Set([...current].filter((key) => availableKeys.has(key)))
+      if (next.size === 0) {
+        next.add(teamAccordionKey(attendanceGroups[0].teamName))
+      }
+      return next
+    })
+  }, [attendanceGroups, useGroupedFallbackView])
+
+  const setTeamExpanded = (teamName, expanded) => {
+    if (!String(teamName || '').trim()) return
+    const teamKey = teamAccordionKey(teamName)
+    setExpandedTeamKeys((current) => {
+      const next = new Set(current)
+      if (expanded) {
+        next.add(teamKey)
+      } else {
+        next.delete(teamKey)
+      }
+      return next
+    })
+  }
+
+  const toggleTeamExpanded = (teamName) => {
+    if (!String(teamName || '').trim()) return
+    const teamKey = teamAccordionKey(teamName)
+    setExpandedTeamKeys((current) => {
+      const next = new Set(current)
+      if (next.has(teamKey)) {
+        next.delete(teamKey)
+      } else {
+        next.add(teamKey)
+      }
+      return next
+    })
+  }
+
   const scrollToActionsOnMobile = () => {
     if (typeof window === 'undefined') return
     if (!window.matchMedia('(max-width: 575.98px)').matches) return
@@ -343,11 +402,14 @@ const ErcoRespondingTeamStep = ({
     }))
     if (clearError) clearError()
     if (willSelect && !hasAutoScrolledMemberSelectionRef.current) {
+      setTeamExpanded(selectedRow?.teamName, true)
       hasAutoScrolledMemberSelectionRef.current = true
       scrollToActionsOnMobile()
+    } else if (willSelect) {
+      setTeamExpanded(selectedRow?.teamName, true)
     }
   }
-  const toggleTeamMembers = (rows, present) => {
+  const toggleTeamMembers = (teamName, rows, present) => {
     const memberKeys = new Set(
       (Array.isArray(rows) ? rows : []).map((row) => normalizeKey(row?.memberKey)).filter(Boolean),
     )
@@ -363,7 +425,10 @@ const ErcoRespondingTeamStep = ({
       }),
     }))
     if (clearError) clearError()
-    if (present) scrollToActionsOnMobile()
+    if (present) {
+      setTeamExpanded(teamName, true)
+      scrollToActionsOnMobile()
+    }
   }
   const teamLabel = resolveRespondingTeamLabel(form.respondingTeamName, attendanceRows)
   const shiftLabel = String(form.respondingTeamShift || '').trim()
@@ -450,55 +515,82 @@ const ErcoRespondingTeamStep = ({
         ) : attendanceRows.length === 0 ? (
           <div className="text-body-secondary small">No members found for this shift.</div>
         ) : useGroupedFallbackView ? (
-          <div className="d-grid gap-3">
+          <div className="erco-team-accordion d-grid gap-2">
             {attendanceGroups.map((group) => (
-              <div key={group.teamName} className="d-grid gap-2">
-                <div className="d-flex align-items-center flex-wrap gap-2">
-                  {(() => {
-                    const allSelected =
-                      group.rows.length > 0 && group.rows.every((row) => Boolean(row?.present))
-                    const someSelected = group.rows.some((row) => Boolean(row?.present))
-                    const checkboxId = `erco-team-select-${normalizeKey(group.teamName).replace(/[^a-z0-9]+/g, '-') || 'team'}`
-                    return (
-                      <>
+              <div key={group.teamName} className="erco-team-accordion__item rounded-3 border">
+                {(() => {
+                  const groupKey = teamAccordionKey(group.teamName)
+                  const panelId = `erco-team-panel-${groupKey}`
+                  const allSelected =
+                    group.rows.length > 0 && group.rows.every((row) => Boolean(row?.present))
+                  const selectedCount = group.rows.filter((row) => Boolean(row?.present)).length
+                  const someSelected = selectedCount > 0
+                  const isExpanded = expandedTeamKeys.has(groupKey)
+                  const checkboxId = `erco-team-select-${groupKey}`
+                  return (
+                    <>
+                      <div className="erco-team-accordion__header d-flex align-items-center gap-2">
                         <CFormCheck
                           id={checkboxId}
                           checked={allSelected}
                           indeterminate={someSelected && !allSelected}
-                          onChange={(event) => toggleTeamMembers(group.rows, event.target.checked)}
+                          onChange={(event) =>
+                            toggleTeamMembers(group.teamName, group.rows, event.target.checked)
+                          }
                         />
-                        <label className="fw-semibold mb-0" htmlFor={checkboxId}>
-                          {group.teamName}
-                        </label>
-                      </>
-                    )
-                  })()}
-                </div>
-                <IconOptionGrid
-                  options={buildMemberOptions(group.rows)}
-                  value={selectedMemberKeys}
-                  onChange={toggleMember}
-                  variant="compact"
-                  showDescription
-                  columns={resolveMemberColumns(group.rows.length)}
-                  cardProps={(option, isSelected) =>
-                    isSelected
-                      ? {
-                          style: {
-                            backgroundColor: ACTIVE_CARD_BG,
-                            borderColor: ACTIVE_CARD_BORDER,
-                          },
-                          icon: null,
-                          bodyClassName: 'd-flex align-items-start',
-                          paddingClassName: 'p-3',
-                        }
-                      : {
-                          icon: null,
-                          bodyClassName: 'd-flex align-items-start',
-                          paddingClassName: 'p-3',
-                        }
-                  }
-                />
+                        <button
+                          type="button"
+                          className="erco-team-accordion__toggle"
+                          aria-expanded={isExpanded}
+                          aria-controls={panelId}
+                          onClick={() => toggleTeamExpanded(group.teamName)}
+                        >
+                          <span className="erco-team-accordion__team fw-semibold">
+                            {group.teamName}
+                          </span>
+                          <span className="erco-team-accordion__count text-body-secondary">
+                            {selectedCount} selected
+                          </span>
+                          <ChevronDown
+                            size={17}
+                            className={`erco-team-accordion__chevron${
+                              isExpanded ? ' erco-team-accordion__chevron--open' : ''
+                            }`}
+                          />
+                        </button>
+                      </div>
+                      {isExpanded ? (
+                        <div id={panelId} className="erco-team-accordion__body">
+                          <IconOptionGrid
+                            options={buildMemberOptions(group.rows)}
+                            value={selectedMemberKeys}
+                            onChange={toggleMember}
+                            variant="compact"
+                            showDescription
+                            columns={resolveMemberColumns(group.rows.length)}
+                            cardProps={(option, isSelected) =>
+                              isSelected
+                                ? {
+                                    style: {
+                                      backgroundColor: ACTIVE_CARD_BG,
+                                      borderColor: ACTIVE_CARD_BORDER,
+                                    },
+                                    icon: null,
+                                    bodyClassName: 'd-flex align-items-start',
+                                    paddingClassName: 'p-3',
+                                  }
+                                : {
+                                    icon: null,
+                                    bodyClassName: 'd-flex align-items-start',
+                                    paddingClassName: 'p-3',
+                                  }
+                            }
+                          />
+                        </div>
+                      ) : null}
+                    </>
+                  )
+                })()}
               </div>
             ))}
           </div>
@@ -533,22 +625,17 @@ const ErcoRespondingTeamStep = ({
 
       {showActions ? (
         <div ref={actionsRef}>
-          <DetailsStepActions
-            onBack={onBack}
-            onSaveDraft={onSaveDraft}
-            primaryLabel="Continue"
-            primaryType="button"
-            onPrimary={() => {
-              if (!attendanceRows.length) {
-                pushToast('No team members available to mark attendance.', {
-                  title: 'No members found',
-                  color: 'warning',
-                })
-                return
-              }
-              onContinue()
-            }}
-          />
+          {isMobile ? (
+            <ReportMobileActionGroup onSaveDraft={onSaveDraft} onPrimary={handleContinueClick} />
+          ) : (
+            <DetailsStepActions
+              onBack={onBack}
+              onSaveDraft={onSaveDraft}
+              primaryLabel="Continue"
+              primaryType="button"
+              onPrimary={handleContinueClick}
+            />
+          )}
         </div>
       ) : null}
     </div>

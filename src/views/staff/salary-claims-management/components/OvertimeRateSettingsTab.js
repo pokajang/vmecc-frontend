@@ -21,6 +21,7 @@ import {
 } from '@coreui/react'
 import { Pencil } from 'lucide-react'
 import EditControls from 'src/components/EditControls'
+import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import useOvertimeRateSettingsController from '../hooks/useOvertimeRateSettingsController'
 import { OVERTIME_BASE_HOUR_MODES, OVERTIME_NORMAL_HOURS_STRATEGIES } from '../utils'
 import { ROLE_OPTIONS } from 'src/constants/roles'
@@ -75,6 +76,9 @@ const OvertimeRateSettingsTab = ({ vm, handlers }) => {
     handleApplicabilitySave,
     handleApplicabilityCancel,
     discardUnsavedOtEdits,
+    pendingDiscardUnsavedOtEdits,
+    cancelDiscardUnsavedOtEdits,
+    confirmDiscardUnsavedOtEdits,
   } = useOvertimeRateSettingsController({
     otRateSettings,
     otRateDirty,
@@ -93,7 +97,7 @@ const OvertimeRateSettingsTab = ({ vm, handlers }) => {
             loading={false}
             onEdit={() => {
               if (isRateEditing || isBaseEditing) {
-                if (!discardUnsavedOtEdits()) return
+                if (!discardUnsavedOtEdits(() => setIsApplicabilityEditing(true))) return
               }
               setIsApplicabilityEditing(true)
             }}
@@ -167,7 +171,14 @@ const OvertimeRateSettingsTab = ({ vm, handlers }) => {
               loading={false}
               onEdit={() => {
                 if (isBaseEditing || isApplicabilityEditing) {
-                  if (!discardUnsavedOtEdits()) return
+                  if (
+                    !discardUnsavedOtEdits(() => {
+                      setIsApplicabilityEditing(false)
+                      setIsRateEditing(true)
+                    })
+                  ) {
+                    return
+                  }
                 }
                 setIsApplicabilityEditing(false)
                 setIsRateEditing(true)
@@ -268,7 +279,15 @@ const OvertimeRateSettingsTab = ({ vm, handlers }) => {
               loading={false}
               onEdit={() => {
                 if (isRateEditing || isApplicabilityEditing) {
-                  if (!discardUnsavedOtEdits()) return
+                  if (
+                    !discardUnsavedOtEdits(() => {
+                      setIsApplicabilityEditing(false)
+                      setBaseError(null)
+                      setIsBaseEditing(true)
+                    })
+                  ) {
+                    return
+                  }
                 }
                 setIsApplicabilityEditing(false)
                 setBaseError(null)
@@ -688,6 +707,17 @@ const OvertimeRateSettingsTab = ({ vm, handlers }) => {
               ))}
         </CCardBody>
       </CCard>
+      <ActionConfirmModal
+        visible={pendingDiscardUnsavedOtEdits}
+        title="Discard changes?"
+        message="You have unsaved OT settings changes. Discard them and continue?"
+        confirmLabel="Discard"
+        confirmColor="danger"
+        cancelLabel="Keep editing"
+        mobileDrawer
+        onClose={cancelDiscardUnsavedOtEdits}
+        onConfirm={confirmDiscardUnsavedOtEdits}
+      />
     </>
   )
 }

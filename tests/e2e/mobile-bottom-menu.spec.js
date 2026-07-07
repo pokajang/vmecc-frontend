@@ -187,12 +187,6 @@ for (const viewport of [
     await attachScreenshot(page, `${viewport.width}x${viewport.height}-account`)
     await closeOverlay(dialog)
 
-    dialog = await openOverlay(page, 'Open tutorial', 'Tutorial')
-    await expect(dialog.getByText('Modules')).toBeVisible()
-    await expectOverlayTextFits(dialog)
-    await attachScreenshot(page, `${viewport.width}x${viewport.height}-tutorial`)
-    await closeOverlay(dialog)
-
     dialog = await openOverlay(page, 'Notifications', 'Notifications')
     await expect(dialog.getByText('No notifications yet.')).toBeVisible()
     await attachScreenshot(page, `${viewport.width}x${viewport.height}-alerts-empty`)

@@ -551,13 +551,13 @@ const Overtime = () => {
   }
 
   return (
-    <CContainer fluid data-tour-id="overtime-module">
+    <CContainer fluid data-testid="overtime-module">
       <ModulePageHeader
         title="Overtime"
         subtitle="Review overtime records, resume drafts, and submit new overtime requests."
         actions={
           activeSection === 'new-overtime' ? null : (
-            <div data-tour-id="overtime-new-action">
+            <div data-testid="overtime-new-action">
               <CreateActionButton
                 label="Apply Overtime"
                 importance="primary"
@@ -595,7 +595,7 @@ const Overtime = () => {
         onConfirm={confirmDiscardDraftChanges}
       />
       <ActionConfirmModal
-        tourId="overtime-cancel-modal"
+        testId="overtime-cancel-modal"
         visible={isCancelConfirmVisible}
         title="Cancel Overtime Claim"
         message={
@@ -609,7 +609,7 @@ const Overtime = () => {
         onConfirm={confirmCancelOvertime}
       />
       <ActionConfirmModal
-        tourId="overtime-delete-modal"
+        testId="overtime-delete-modal"
         visible={isDeleteConfirmVisible}
         title={deletePreviewRecord?.isDraft ? 'Delete Overtime Draft' : 'Delete Overtime Claim'}
         message={
@@ -658,7 +658,7 @@ const Overtime = () => {
       </CNav>
 
       {activeSection === 'overtime-records' ? (
-        <div data-tour-id="overtime-records">
+        <div data-testid="overtime-records">
           <OvertimeRecordsSection
             search={search}
             setSearch={setSearch}
@@ -689,13 +689,13 @@ const Overtime = () => {
             getEndDateTimeLabel={getEndDateTimeLabel}
             isLoading={isOvertimeLoading}
             showPrimaryAction={false}
-            filtersTourId="overtime-filters"
+            filtersTestId="overtime-filters"
           />
         </div>
       ) : null}
 
       {activeSection === 'overtime-detail' ? (
-        <div data-tour-id="overtime-detail">
+        <div data-testid="overtime-detail">
           <OvertimeDetailSection
             selectedRecord={selectedRecord}
             selectedRecordPendingActionHint={selectedRecordPendingActionHint}

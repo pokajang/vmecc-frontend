@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
+  hasFireExtinguisherZoneHierarchy,
   loadCachedInspectionLocationCatalog,
   saveCachedInspectionLocationCatalog,
 } from '../inspectionLocationApi'
@@ -14,9 +15,6 @@ const createStorageMock = () => {
     removeItem: vi.fn((key) => {
       delete store[key]
     }),
-    clear: vi.fn(() => {
-      store = {}
-    }),
   }
 }
 
@@ -30,44 +28,64 @@ afterEach(() => {
 })
 
 describe('inspectionLocationApi', () => {
-  it('keeps cached seeded main and sub-locations actionable by default', () => {
-    saveCachedInspectionLocationCatalog('Fire Extinguisher Inspection', [
+  it('detects recursive fire extinguisher zone hierarchy', () => {
+    expect(
+      hasFireExtinguisherZoneHierarchy([
+        {
+          value: '1',
+          subLocations: [
+            {
+              value: 'Manjung Hub',
+              subLocations: [{ value: 'Reception' }],
+            },
+          ],
+        },
+      ]),
+    ).toBe(true)
+
+    expect(
+      hasFireExtinguisherZoneHierarchy([
+        {
+          value: '1',
+          children: [
+            {
+              value: 'Manjung Hub',
+              children: [{ value: 'Reception' }],
+            },
+          ],
+        },
+      ]),
+    ).toBe(true)
+
+    expect(
+      hasFireExtinguisherZoneHierarchy([
+        {
+          value: 'ASIC',
+          subLocations: [{ value: 'ASIC' }],
+        },
+      ]),
+    ).toBe(false)
+  })
+
+  it('does not load or save stale two-level fire extinguisher location catalogs', () => {
+    const staleRows = [
       {
-        id: 10,
-        value: 'Manjung Hub',
-        title: 'Manjung Hub',
-        source: 'seed',
-        subLocations: [
-          {
-            id: 11,
-            value: 'Reception',
-            title: 'Reception',
-            source: 'seed',
-          },
-        ],
+        value: 'ASIC',
+        subLocations: [{ value: 'ASIC' }],
       },
-    ])
+    ]
 
-    const [mainRow] = loadCachedInspectionLocationCatalog('Fire Extinguisher Inspection')
-    const [subRow] = mainRow.subLocations
+    saveCachedInspectionLocationCatalog('Fire Extinguisher Inspection', staleRows)
+    expect(localStorage.setItem).not.toHaveBeenCalled()
 
-    expect(mainRow).toMatchObject({
-      id: 10,
-      value: 'Manjung Hub',
-      title: 'Manjung Hub',
-      source: 'seed',
-      custom: false,
-    })
-    expect(subRow).toMatchObject({
-      id: 11,
-      value: 'Reception',
-      title: 'Reception',
-      source: 'seed',
-      custom: false,
-    })
-    expect(mainRow.canEdit).not.toBe(false)
-    expect(mainRow.canDelete).not.toBe(false)
-    expect(subRow.canEdit).not.toBe(false)
-    expect(subRow.canDelete).not.toBe(false)
+    localStorage.setItem(
+      'inspection_location_catalog_cache_v3_fire-extinguisher-inspection',
+      JSON.stringify({ data: staleRows }),
+    )
+
+    expect(loadCachedInspectionLocationCatalog('Fire Extinguisher Inspection')).toEqual([])
+    expect(
+      localStorage.getItem('inspection_location_catalog_cache_v3_fire-extinguisher-inspection'),
+    ).toBeNull()
   })
 })

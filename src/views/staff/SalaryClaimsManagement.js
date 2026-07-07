@@ -88,6 +88,7 @@ const SalaryClaimsManagement = () => {
     Boolean(assignmentId)
   const isAssignmentFormRoute =
     isAssignmentCreateRoute || isAssignmentEditRoute || isAssignmentViewRoute
+  const isSalarySettingsRoute = location.pathname.startsWith('/staff/set-salary')
 
   const toaster = useRef()
   const assignmentRouteInitRef = useRef('')
@@ -449,7 +450,12 @@ const SalaryClaimsManagement = () => {
   }
 
   return (
-    <CContainer fluid data-tour-id="salary-claims-management-module">
+    <CContainer
+      fluid
+      data-testid={
+        isSalarySettingsRoute ? 'salary-settings-module' : 'salary-claims-management-module'
+      }
+    >
       <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
 
       <SalaryWorkflowActionModal
@@ -526,7 +532,7 @@ const SalaryClaimsManagement = () => {
         visible={actions.assignmentDeleteModalVisible}
         alignment="center"
         onClose={actions.closeAssignmentDeleteModal}
-        data-tour-id="salary-claims-management-assignment-delete-modal"
+        data-testid="salary-claims-management-assignment-delete-modal"
       >
         <CModalHeader onClose={actions.closeAssignmentDeleteModal}>
           <CModalTitle>Delete Assignment</CModalTitle>
@@ -552,7 +558,11 @@ const SalaryClaimsManagement = () => {
             title="Salary & Claims Management"
             subtitle="Review payroll claims, manage salary records, configure pay settings, and maintain workflow rules."
           />
-          <div data-tour-id="salary-claims-management-nav">
+          <div
+            data-testid={
+              isSalarySettingsRoute ? 'salary-settings-nav' : 'salary-claims-management-nav'
+            }
+          >
             <SalaryClaimsTabsNav
               activeTab={pageState.activeTab}
               onSwitch={pageState.switchTab}
@@ -632,21 +642,29 @@ const SalaryClaimsManagement = () => {
         )}
 
         {!isClaimDetailRoute && !isAssignmentFormRoute && pageState.tab === 'assignment' && (
-          <ErrorBoundary>
-            <SalarySettingsTab vm={assignmentTabVm} handlers={assignmentTabHandlers} />
-          </ErrorBoundary>
+          <div data-testid="salary-settings-assignments">
+            <ErrorBoundary>
+              <SalarySettingsTab vm={assignmentTabVm} handlers={assignmentTabHandlers} />
+            </ErrorBoundary>
+          </div>
         )}
 
         {!isClaimDetailRoute && !isAssignmentFormRoute && pageState.tab === 'otRates' && (
-          <OvertimeRateSettingsTab vm={overtimeRatesVm} handlers={overtimeRatesHandlers} />
+          <div data-testid="salary-settings-overtime-rates">
+            <OvertimeRateSettingsTab vm={overtimeRatesVm} handlers={overtimeRatesHandlers} />
+          </div>
         )}
 
         {!isClaimDetailRoute && !isAssignmentFormRoute && pageState.tab === 'workflowRules' && (
-          <SalaryWorkflowRules />
+          <div data-testid="salary-settings-workflow-rules">
+            <SalaryWorkflowRules />
+          </div>
         )}
 
         {!isClaimDetailRoute && !isAssignmentFormRoute && pageState.tab === 'companyLegal' && (
-          <CompanyLegalInfoTab />
+          <div data-testid="salary-settings-company-legal">
+            <CompanyLegalInfoTab />
+          </div>
         )}
       </div>
     </CContainer>

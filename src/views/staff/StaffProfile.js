@@ -189,22 +189,22 @@ const StaffProfile = () => {
 
   const primaryAction = getPrimaryAction(user)
   const menuItems = getActionItems(user).filter((item) => item.key !== primaryAction?.key)
-  const primaryActionTourIdMap = {
+  const primaryActionTestIdMap = {
     'send-message': 'staff-directory-send-message-action',
     terminate: 'staff-directory-terminate-action',
     rehire: 'staff-directory-rehire-action',
     'change-role': 'staff-directory-manage-roles-action',
   }
-  const primaryActionTourId =
-    primaryActionTourIdMap[primaryAction?.key] || 'staff-directory-profile-primary-action'
+  const primaryActionTestId =
+    primaryActionTestIdMap[primaryAction?.key] || 'staff-directory-profile-primary-action'
 
   return (
-    <CContainer fluid data-tour-id="staff-directory-module">
+    <CContainer fluid data-testid="staff-directory-module">
       <div className="mb-3 d-flex justify-content-between align-items-center">
         <BackButton onClick={() => navigate('/staff/details')} />
         <div className="d-flex align-items-center gap-2">
           {primaryAction && (
-            <div data-tour-id="staff-directory-profile-primary-action">
+            <div data-testid="staff-directory-profile-primary-action">
               <CButton
                 size="sm"
                 color={primaryAction.buttonColor || 'secondary'}
@@ -212,14 +212,14 @@ const StaffProfile = () => {
                 disabled={primaryAction.disabled}
                 onClick={primaryAction.onClick}
                 title={primaryAction.title}
-                data-tour-id={primaryActionTourId}
+                data-testid={primaryActionTestId}
               >
                 {actionUpdating ? <ButtonLoader label="Updating..." /> : primaryAction.label}
               </CButton>
             </div>
           )}
           {menuItems.length > 0 && (
-            <CDropdown alignment="end" data-tour-id="staff-directory-more-actions">
+            <CDropdown alignment="end" data-testid="staff-directory-more-actions">
               <CDropdownToggle color="secondary" variant="outline" size="sm">
                 More
               </CDropdownToggle>
@@ -247,7 +247,7 @@ const StaffProfile = () => {
         </CAlert>
       )}
 
-      <CRow data-tour-id="staff-directory-profile">
+      <CRow data-testid="staff-directory-profile">
         <CCol lg={6}>
           <CCard className="mb-4">
             <CCardHeader>Personal</CCardHeader>

@@ -34,6 +34,7 @@ import { normalizeReportRecord } from '../inspectionSharedUtils'
 import {
   FRT_DAILY_SECTION_DEFINITIONS,
   FRT_ONE_OFF_SECTION_DEFINITIONS,
+  getFrtCompartmentOptions,
 } from '../types/frt-daily/helpers'
 import { getErAuxCheckSummary } from '../types/er-aux/helpers'
 import {
@@ -84,6 +85,8 @@ describe('inspectionFormHelpers', () => {
 
     expect(form).toEqual({
       selectedLocation: 'Zone 2',
+      zone: '',
+      zoneId: '',
       mainLocation: 'Zone 2',
       subLocation: '',
       mainLocationId: '',
@@ -96,6 +99,8 @@ describe('inspectionFormHelpers', () => {
       inspectionActor: null,
       submittedByRole: '',
       submittedByRoleCode: '',
+      inspectionIssues: [],
+      inspectionTypeDrafts: {},
       erAuxInspectedBy: '',
       erAuxInspectionDate: '',
       erAuxChecks: [],
@@ -104,6 +109,9 @@ describe('inspectionFormHelpers', () => {
       fireExtinguisherInspectionDate: '',
       fireExtinguisherChecks: [],
       fireExtinguisherCatalogRows: [],
+      fireExtinguisherEntryMode: '',
+      fireExtinguisherFocusedAssetKey: '',
+      fireExtinguisherScannedLocator: '',
       frtInspectedBy: '',
       frtInspectionDate: '',
       frtShift: '',
@@ -123,6 +131,8 @@ describe('inspectionFormHelpers', () => {
       frtOneOffRemarks: '',
       highAngleInspectedBy: '',
       highAngleInspectionDate: '',
+      highAngleCustomMainLocations: [],
+      highAngleCustomCompartments: [],
       highAngleChecks: [],
       scbaInspectedBy: '',
       scbaInspectionDate: '',
@@ -146,6 +156,51 @@ describe('inspectionFormHelpers', () => {
       hydraulicChecks: [],
       hydraulicEquipmentRows: [],
     })
+  })
+
+  it('infers fire extinguisher zone from saved rows when legacy records have only area and location', () => {
+    const form = recordToInspectionForm({
+      incidentType: 'Fire Extinguisher Inspection',
+      selectedLocation: 'Manjung Hub > Reception',
+      mainLocation: 'Manjung Hub',
+      subLocation: 'Reception',
+      fireExtinguisherChecks: [
+        {
+          id: 'fe:1',
+          zone: 'Zone 1',
+          mainLocation: 'Manjung Hub',
+          subLocation: 'Reception',
+          idLocNo: 'ADO-001',
+        },
+      ],
+    })
+
+    expect(form).toEqual(
+      expect.objectContaining({
+        zone: '1',
+        mainLocation: 'Manjung Hub',
+        subLocation: 'Reception',
+        selectedLocation: 'Zone 1 > Manjung Hub > Reception',
+      }),
+    )
+  })
+
+  it('preserves a selected fire extinguisher zone before a main area is selected', () => {
+    const form = normalizeInspectionForm({
+      inspectionType: 'Fire Extinguisher Inspection',
+      zone: '1',
+      mainLocation: '',
+      subLocation: '',
+    })
+
+    expect(form).toEqual(
+      expect.objectContaining({
+        zone: '1',
+        mainLocation: '',
+        subLocation: '',
+        selectedLocation: 'Zone 1',
+      }),
+    )
   })
 
   it('normalizes shared inspection date/time and derives it from legacy session dates', () => {
@@ -289,6 +344,123 @@ describe('inspectionFormHelpers', () => {
 
     expect(form.erAuxChecks[0].defectRemarks).toBe('makan nasi ')
     expect(form.erAuxChecks[0].additionalNotes).toBe('optional note ')
+  })
+
+  it('persists separate General Inspection issues while dropping blank draft issue cards', () => {
+    const payload = buildInspectionPayloadSnapshot({
+      inspectionType: 'General Inspection',
+      inspectedAt: '2026-07-05T10:00',
+      mainLocation: 'Manjung Hub',
+      subLocation: 'Reception',
+      description: 'General walkdown completed.',
+      inspectionIssues: [
+        {
+          id: 'issue-1',
+          description: 'Blocked emergency exit.',
+          actionRequired: 'Remove stored items.',
+          photos: [
+            {
+              id: 'photo-1',
+              fileName: 'blocked-exit.jpg',
+              description: 'Blocked exit evidence',
+              url: 'data:image/jpeg;base64,abc123',
+            },
+          ],
+        },
+        {
+          id: 'issue-2',
+          description: '',
+          actionRequired: '',
+          photos: [],
+        },
+      ],
+      photos: [],
+    })
+
+    expect(payload.inspectionIssues).toEqual([
+      expect.objectContaining({
+        id: 'issue-1',
+        description: 'Blocked emergency exit.',
+        actionRequired: 'Remove stored items.',
+        photos: [
+          expect.objectContaining({
+            id: 'photo-1',
+            description: 'Blocked exit evidence',
+          }),
+        ],
+      }),
+    ])
+    expect(payload.issues).toEqual(payload.inspectionIssues)
+  })
+
+  it('requires a description when a General or HSE issue card has other evidence', () => {
+    const generalState = getInspectionFormValidationState({
+      inspectionType: 'General Inspection',
+      inspectedAt: '2026-07-05T10:00',
+      mainLocation: 'Manjung Hub',
+      subLocation: 'Reception',
+      description: 'General walkdown completed.',
+      inspectionIssues: [
+        {
+          id: 'issue-1',
+          description: '',
+          actionRequired: 'Follow up with housekeeping.',
+          photos: [],
+        },
+      ],
+      photos: [],
+    })
+
+    const hseState = getInspectionFormValidationState({
+      inspectionType: 'Health Safety Environment Inspection',
+      inspectedAt: '2026-07-05T10:00',
+      mainLocation: 'Manjung Hub',
+      subLocation: 'Reception',
+      description: 'HSE observation completed.',
+      hseSelections: ['area-condition'],
+      hseAreaConditionRemarks: 'Area checked.',
+      inspectionIssues: [
+        {
+          id: 'issue-2',
+          description: '',
+          actionRequired: '',
+          photos: [{ id: 'photo-2', description: 'Issue evidence' }],
+        },
+      ],
+      photos: [],
+    })
+
+    expect(generalState.inspectionIssues).toEqual(
+      expect.objectContaining({
+        errorCount: 1,
+        firstTarget: { field: 'inspectionIssues', issueId: 'issue-1' },
+      }),
+    )
+    expect(generalState.errorCount).toBeGreaterThanOrEqual(1)
+    expect(hseState.inspectionIssues).toEqual(
+      expect.objectContaining({
+        errorCount: 1,
+        firstTarget: { field: 'inspectionIssues', issueId: 'issue-2' },
+      }),
+    )
+  })
+
+  it('only treats legacy issues arrays as separate issue cards for General and HSE forms', () => {
+    expect(
+      normalizeInspectionForm({
+        inspectionType: 'Health Safety Environment Inspection',
+        issues: [{ id: 'issue-1', description: 'Loose cable.' }],
+      }).inspectionIssues,
+    ).toEqual([expect.objectContaining({ id: 'issue-1', description: 'Loose cable.' })])
+
+    expect(
+      normalizeInspectionForm({
+        inspectionType: 'High Angle Rescue Equipment Inspection',
+        issues: [
+          { id: 'legacy-row-issue', description: 'Do not treat as General/HSE issue card.' },
+        ],
+      }).inspectionIssues,
+    ).toEqual([])
   })
 
   it('formats and splits hierarchical inspection locations', () => {
@@ -470,6 +642,43 @@ describe('inspectionFormHelpers', () => {
     expect(submittedRecord.checklistVersion).toBe('inspection-checklist-v1')
   })
 
+  it('removes transient per-type draft maps from submitted inspection records', () => {
+    const submittedRecord = buildInspectionSubmittedRecord(
+      {
+        id: 'preview-1',
+        displayId: 'INS-PREVIEW-1',
+        incidentType: 'Fire Extinguisher Inspection',
+        inspectionType: 'Fire Extinguisher Inspection',
+        fireExtinguisherChecks: [{ id: 'fe-1', idLocNo: 'CAN-001' }],
+        inspectionTypeDrafts: {
+          'general inspection': {
+            inspectionType: 'General Inspection',
+            inspectionIssues: [{ id: 'issue-1', description: 'Should not submit with FE.' }],
+          },
+        },
+        inspection_type_drafts: {
+          'health safety environment inspection': {
+            inspectionType: 'Health Safety Environment Inspection',
+          },
+        },
+      },
+      { name: 'Jang' },
+      '2026-04-29T06:00:00.000Z',
+    )
+
+    expect(submittedRecord).toEqual(
+      expect.not.objectContaining({
+        inspectionTypeDrafts: expect.any(Object),
+        inspection_type_drafts: expect.any(Object),
+      }),
+    )
+    expect(submittedRecord.fireExtinguisherChecks).toEqual([
+      expect.objectContaining({ id: 'fe-1', idLocNo: 'CAN-001' }),
+    ])
+    expect(submittedRecord.inspectionIssues || []).toEqual([])
+    expect(submittedRecord.status).toBe('Submitted')
+  })
+
   it('formats the session actor role from backend primary role fields', () => {
     const user = {
       roles: ['Tactical Response Team'],
@@ -514,6 +723,7 @@ describe('inspectionFormHelpers', () => {
       erAuxChecks: false,
       erAuxRemarks: false,
       frtSession: true,
+      frtCompartment: true,
       frtDailyChecks: true,
       frtDailyRemarks: false,
       frtOneOffChecks: true,
@@ -638,7 +848,7 @@ describe('inspectionFormHelpers', () => {
     })
   })
 
-  it('builds an owned General Inspection payload summary from checklist selections', () => {
+  it('builds an owned General Inspection payload summary from description only', () => {
     const payload = buildInspectionPayloadSnapshot({
       mainLocation: 'Zone 1',
       selectedLocation: 'Zone 1',
@@ -652,12 +862,9 @@ describe('inspectionFormHelpers', () => {
     })
 
     expect(payload.description).toContain('General inspection completed at Zone 1.')
-    expect(payload.description).toContain('- Housekeeping checked')
-    expect(payload.description).toContain('- Access clear')
-    expect(payload.checklist.map((item) => item.label)).toEqual([
-      'Housekeeping checked',
-      'Access clear',
-    ])
+    expect(payload.description).not.toContain('- Housekeeping checked')
+    expect(payload.description).not.toContain('- Access clear')
+    expect(payload.checklist).toEqual([])
   })
 
   it('normalizes hydraulic checks and builds a structured hydraulic payload summary', () => {
@@ -926,7 +1133,7 @@ describe('inspectionFormHelpers', () => {
         signageCondition: 'GOOD',
         boxKeyAvailability: 'N/A',
         boxGlassAvailability: 'n/a',
-        operationalCondition: 'Operational',
+        operationalCondition: 'Good',
       },
       {
         id: 'fe:102',
@@ -943,7 +1150,7 @@ describe('inspectionFormHelpers', () => {
         boxKeyAvailability: 'Yes',
         boxGlassAvailability: 'No',
         boxGlassAvailabilityRemarks: 'Glass missing.',
-        operationalCondition: 'Not Operational',
+        operationalCondition: 'Not Good',
         operationalConditionRemarks: 'Pressure failed.',
       },
       {
@@ -955,7 +1162,6 @@ describe('inspectionFormHelpers', () => {
         idLocNo: '',
         barcodeNo: 'SR012021Y017142',
         feType: 'DP 6KG',
-        certificationValidityRaw: 'Removed',
       },
     ])
 
@@ -987,7 +1193,6 @@ describe('inspectionFormHelpers', () => {
         sourceRowNumber: '517',
         idLocNo: '',
         barcodeNo: 'SR012021Y017142',
-        certificationValidityRaw: 'Removed',
       }),
     )
   })
@@ -1038,7 +1243,7 @@ describe('inspectionFormHelpers', () => {
               url: 'data:image/png;base64,glass123',
             },
           ],
-          operationalCondition: 'Operational',
+          operationalCondition: 'Good',
         },
       ],
     }
@@ -1061,9 +1266,31 @@ describe('inspectionFormHelpers', () => {
     expect(filterFireExtinguisherRows(summary.visibleChecks, 'auditorium')).toHaveLength(0)
   })
 
+  it('does not expose Fire Extinguisher rows before a sub-location is selected', () => {
+    const summary = getFireExtinguisherCheckSummary({
+      mainLocation: 'Manjung Hub',
+      inspectionType: 'Fire Extinguisher Inspection',
+      fireExtinguisherCatalogRows: [
+        {
+          id: 'fe:1',
+          catalogId: 1,
+          mainLocation: 'Manjung Hub',
+          subLocation: 'Reception',
+          idLocNo: 'ADO-001',
+          barcodeNo: 'EE042021Y544896',
+          feType: 'DP 6KG',
+        },
+      ],
+    })
+
+    expect(summary.visibleChecks).toEqual([])
+    expect(summary.totalCount).toBe(0)
+  })
+
   it('returns exact Fire Extinguisher validation row targets for statuses, defect remarks, and defect photos', () => {
     const baseFireForm = {
       mainLocation: 'Manjung Hub',
+      subLocation: 'Reception',
       inspectionType: 'Fire Extinguisher Inspection',
       fireExtinguisherInspectedBy: 'Inspector Fire',
       fireExtinguisherInspectionDate: '2026-06-29',
@@ -1120,7 +1347,7 @@ describe('inspectionFormHelpers', () => {
           signageCondition: 'Good',
           boxKeyAvailability: 'Yes',
           boxGlassAvailability: 'Yes',
-          operationalCondition: 'Operational',
+          operationalCondition: 'Good',
         },
       ],
     })
@@ -1155,7 +1382,7 @@ describe('inspectionFormHelpers', () => {
           signageCondition: 'Good',
           boxKeyAvailability: 'Yes',
           boxGlassAvailability: 'Yes',
-          operationalCondition: 'Operational',
+          operationalCondition: 'Good',
         },
       ],
     })
@@ -1178,18 +1405,56 @@ describe('inspectionFormHelpers', () => {
     })
   })
 
+  it('does not block Fire Extinguisher review for session-completed rows without local payload', () => {
+    const validationState = getInspectionFormValidationState({
+      mainLocation: 'Canteen',
+      subLocation: 'Canteen',
+      inspectionType: 'Fire Extinguisher Inspection',
+      fireExtinguisherInspectedBy: 'Inspector Fire',
+      fireExtinguisherInspectionDate: '2026-06-29',
+      fireExtinguisherCatalogRows: [
+        {
+          id: 'fe:session-completed',
+          catalogId: 101,
+          mainLocation: 'Canteen',
+          subLocation: 'Canteen',
+          idLocNo: 'CAN-001',
+          barcodeNo: 'SR072024Y171594',
+          feType: 'DP 9KG',
+          sessionResult: {
+            status: 'completed',
+            checkedBy: 'Inspector A',
+            checkedAt: '2026-06-29T09:30:00Z',
+          },
+        },
+      ],
+      fireExtinguisherChecks: [],
+    })
+
+    expect(validationState.missing).toEqual(
+      expect.objectContaining({
+        fireExtinguisherChecks: false,
+        fireExtinguisherRemarks: false,
+      }),
+    )
+    expect(validationState.fireExtinguisher.errorCount).toBe(0)
+    expect(validationState.fireExtinguisher.missingStatusesByRow).toEqual({})
+  })
+
   it('omits pending Fire Extinguisher checklist items from derived payloads', () => {
     const payload = buildInspectionPayloadSnapshot(
       normalizeInspectionForm({
         inspectionType: 'Fire Extinguisher Inspection',
         mainLocation: 'Manjung Hub',
-        selectedLocation: 'Manjung Hub',
+        subLocation: 'Reception',
+        selectedLocation: 'Manjung Hub > Reception',
         fireExtinguisherInspectedBy: 'Inspector Fire',
         fireExtinguisherInspectionDate: '2026-06-29',
         fireExtinguisherChecks: [
           {
             id: 'fe:1',
             mainLocation: 'Manjung Hub',
+            subLocation: 'Reception',
             idLocNo: 'ADO-001',
             physicalCondition: 'Good',
           },
@@ -2257,10 +2522,60 @@ describe('inspectionFormHelpers', () => {
     expect(otherLocation.oneOffRows).toHaveLength(0)
   })
 
+  it('surfaces custom FRT compartments and custom items in the selected compartment', () => {
+    const form = {
+      mainLocation: 'AJG9555',
+      selectedLocation: 'AJG9555',
+      subLocation: 'ROOF LOCKER',
+      frtTruckPlateNo: 'AJG9555',
+      frtCustomCompartments: ['ROOF LOCKER'],
+      frtTruckReference: { plateNo: 'AJG9555' },
+      frtDailyChecks: [
+        {
+          id: 'custom:frt:daily:roof-locker-nozzle',
+          checklistKind: 'daily',
+          rowNumber: 'Custom',
+          mainLocation: 'FIRE TRUCK',
+          location: 'ROOF LOCKER',
+          compartment: 'ROOF LOCKER',
+          equipment: 'SPARE NOZZLE',
+          quantity: '1',
+          rowKind: 'status',
+        },
+      ],
+      frtOneOffChecks: [],
+    }
+
+    const compartmentOptions = getFrtCompartmentOptions(form)
+    const customCompartment = compartmentOptions.find((option) => option.value === 'ROOF LOCKER')
+    const summary = getFrtCheckSummary(form)
+
+    expect(customCompartment).toEqual(
+      expect.objectContaining({
+        title: 'ROOF LOCKER',
+        description: 'Custom compartment',
+      }),
+    )
+    expect(summary.dailyRows).toEqual([
+      expect.objectContaining({
+        id: 'custom:frt:daily:roof-locker-nozzle',
+        equipment: 'SPARE NOZZLE',
+        compartment: 'ROOF LOCKER',
+      }),
+    ])
+    expect(summary.visibleDailySections.find((section) => section.title === 'ROOF LOCKER')).toEqual(
+      expect.objectContaining({
+        custom: true,
+        visibleRows: [expect.objectContaining({ equipment: 'SPARE NOZZLE' })],
+      }),
+    )
+  })
+
   it('builds the seeded FRT payload, checklist, and description consistently', () => {
     const payload = buildInspectionPayloadSnapshot({
       mainLocation: 'FIRE TRUCK',
       selectedLocation: 'FIRE TRUCK',
+      subLocation: 'FIRE TRUCK',
       inspectionType: 'FRT Daily Inspection',
       frtInspectedBy: 'Inspector Truck',
       frtInspectionDate: '2026-06-29',
@@ -2314,6 +2629,15 @@ describe('inspectionFormHelpers', () => {
           rowKind: 'reading',
           readingValue: '123456',
           remarks: '',
+          additionalNotes: 'Reading confirmed after refuel.',
+          additionalPhotos: [
+            {
+              id: 'frt-reading-additional-photo-1',
+              fileName: 'frt-reading-additional-photo.png',
+              description: 'Odometer context.',
+              url: 'data:image/png;base64,CCCC',
+            },
+          ],
         },
         {
           id: 'daily:fire-truck:92',
@@ -2336,6 +2660,15 @@ describe('inspectionFormHelpers', () => {
           equipment: 'POWER WINDOW',
           condition: 'Good',
           remarks: '',
+          additionalNotes: 'Lubricated during inspection.',
+          additionalPhotos: [
+            {
+              id: 'frt-one-off-additional-photo-1',
+              fileName: 'frt-one-off-additional-photo.png',
+              description: 'Power window context.',
+              url: 'data:image/png;base64,DDDD',
+            },
+          ],
         },
         {
           id: 'one-off:fire-truck:16',
@@ -2366,22 +2699,31 @@ describe('inspectionFormHelpers', () => {
         insuranceExpiry: '13/02/2026',
       }),
     )
-    expect(payload.frtDailyChecks).toHaveLength(92)
-    expect(payload.frtOneOffChecks).toHaveLength(46)
+    expect(payload.frtDailyChecks).toHaveLength(37)
+    expect(payload.frtOneOffChecks).toHaveLength(23)
     expect(payload.frtDailyChecks.find((row) => row.rowNumber === '90')?.photos).toEqual([
       expect.objectContaining({ id: 'frt-daily-photo-1' }),
     ])
     expect(payload.frtOneOffChecks.find((row) => row.rowNumber === '16')?.photos).toEqual([
       expect.objectContaining({ id: 'frt-one-off-photo-1' }),
     ])
-    expect(payload.frtDailyChecks[90]).toEqual(
+    expect(payload.frtDailyChecks.find((row) => row.rowNumber === '91')).toEqual(
       expect.objectContaining({
         equipment: 'MILEAGE (ODOMETER)',
         rowKind: 'reading',
         readingValue: '123456',
+        additionalNotes: 'Reading confirmed after refuel.',
+        additionalPhotos: [expect.objectContaining({ id: 'frt-reading-additional-photo-1' })],
       }),
     )
-    expect(payload.frtDailyChecks[91]).toEqual(
+    expect(payload.frtOneOffChecks.find((row) => row.rowNumber === '1')).toEqual(
+      expect.objectContaining({
+        condition: 'Good',
+        additionalNotes: 'Lubricated during inspection.',
+        additionalPhotos: [expect.objectContaining({ id: 'frt-one-off-additional-photo-1' })],
+      }),
+    )
+    expect(payload.frtDailyChecks.find((row) => row.rowNumber === '92')).toEqual(
       expect.objectContaining({
         equipment: 'FUEL LEVEL (%)',
         rowKind: 'reading',
@@ -2397,8 +2739,8 @@ describe('inspectionFormHelpers', () => {
     expect(payload.description).toContain(
       'Fire Truck Daily Readiness completed for AJG9555 on 2026-06-29 by Inspector Truck.',
     )
-    expect(payload.description).toContain('Daily roster completed: 4/92.')
-    expect(payload.description).toContain('One-off checklist completed: 2/46.')
+    expect(payload.description).toContain('Daily roster completed: 3/37.')
+    expect(payload.description).toContain('One-off checklist completed: 2/23.')
     expect(payload.description).toContain(
       'Daily FIRE TRUCK / OVERALL BODY: Panel dent needs repair.',
     )
@@ -2411,6 +2753,7 @@ describe('inspectionFormHelpers', () => {
     const payload = buildInspectionPayloadSnapshot({
       mainLocation: 'FIRE TRUCK',
       selectedLocation: 'FIRE TRUCK',
+      subLocation: 'FIRE TRUCK',
       inspectionType: 'FRT Daily Inspection',
       frtInspectedBy: 'Inspector Truck',
       frtInspectionDate: '2026-06-29',
@@ -2423,12 +2766,12 @@ describe('inspectionFormHelpers', () => {
       },
       frtDailyChecks: [
         {
-          id: 'daily:fire-truck:1',
-          rowNumber: '1',
+          id: 'daily:fire-truck:90',
+          rowNumber: '90',
           mainLocation: 'FIRE TRUCK',
-          location: 'LOCKER 01',
-          equipment: 'FIRE HOSE 2.5"',
-          quantity: '6',
+          location: 'FIRE TRUCK',
+          equipment: 'OVERALL BODY',
+          quantity: 'N/A',
           rowKind: 'STATUS',
           status: 'Checked',
           remarks: '',
@@ -2459,9 +2802,9 @@ describe('inspectionFormHelpers', () => {
       frtOneOffRemarks: '',
     })
 
-    expect(payload.frtDailyChecks.find((row) => row.rowNumber === '1')?.rowKind).toBe('status')
+    expect(payload.frtDailyChecks.find((row) => row.rowNumber === '90')?.rowKind).toBe('status')
     expect(payload.frtDailyChecks.find((row) => row.rowNumber === '91')?.rowKind).toBe('reading')
-    expect(payload.frtDailyChecks[90]).toEqual(
+    expect(payload.frtDailyChecks.find((row) => row.rowNumber === '91')).toEqual(
       expect.objectContaining({
         rowNumber: '91',
         rowKind: 'reading',
@@ -2474,6 +2817,7 @@ describe('inspectionFormHelpers', () => {
     const incomplete = getInspectionFormMissingFields({
       mainLocation: 'FIRE TRUCK',
       selectedLocation: 'FIRE TRUCK',
+      subLocation: 'FIRE TRUCK',
       inspectionType: 'FRT Daily Inspection',
       inspectedAt: '2026-06-29T09:30',
       frtInspectedBy: '',
@@ -2481,12 +2825,12 @@ describe('inspectionFormHelpers', () => {
       frtShift: '',
       frtDailyChecks: [
         {
-          id: 'daily:fire-truck:1',
-          rowNumber: '1',
+          id: 'daily:fire-truck:90',
+          rowNumber: '90',
           mainLocation: 'FIRE TRUCK',
-          location: 'LOCKER 01',
-          equipment: 'FIRE HOSE 2.5"',
-          quantity: '6',
+          location: 'FIRE TRUCK',
+          equipment: 'OVERALL BODY',
+          quantity: 'N/A',
           rowKind: 'status',
           status: 'Issue',
           remarks: '',
@@ -2527,6 +2871,7 @@ describe('inspectionFormHelpers', () => {
       erAuxChecks: false,
       erAuxRemarks: false,
       frtSession: false,
+      frtCompartment: false,
       frtDailyChecks: true,
       frtDailyRemarks: true,
       frtOneOffChecks: true,
@@ -2590,6 +2935,7 @@ describe('inspectionFormHelpers', () => {
     const incomplete = getInspectionFormMissingFields({
       mainLocation: 'FIRE TRUCK',
       selectedLocation: 'FIRE TRUCK',
+      subLocation: 'FIRE TRUCK',
       inspectionType: 'FRT Daily Inspection',
       inspectedAt: '2026-06-29T09:30',
       frtInspectedBy: 'Inspector Truck',
@@ -2603,6 +2949,7 @@ describe('inspectionFormHelpers', () => {
     expect(incomplete).toEqual(
       expect.objectContaining({
         frtSession: false,
+        frtCompartment: false,
         frtDailyChecks: false,
         frtDailyRemarks: false,
         frtOneOffChecks: false,
@@ -2628,6 +2975,7 @@ describe('inspectionFormHelpers', () => {
       'No leakage checked',
       'Function test recorded',
     ])
+    expect(getInspectionChecklistChips('General Inspection')).toEqual([])
     expect(getInspectionChecklistChips('Other Inspection')).toContain('Area checked')
     expect(getInspectionChecklistChips('Unknown Type')).toContain('Condition recorded')
   })
@@ -2736,9 +3084,7 @@ describe('inspectionFormHelpers', () => {
           idLocNo: 'ADO-001',
           barcodeNo: 'EE042021Y544896',
           feType: 'DP 6KG',
-          certificationValidity: 'Valid',
-          certificationValidityRaw: '01/12/2026',
-          daysLeftToExpire: '180',
+          certificationValidity: '2026-12-01',
         },
       ],
       fireExtinguisherChecks: [
@@ -2754,7 +3100,7 @@ describe('inspectionFormHelpers', () => {
           signageCondition: 'Good',
           boxKeyAvailability: 'Yes',
           boxGlassAvailability: 'Yes',
-          operationalCondition: 'Operational',
+          operationalCondition: 'Good',
         },
         {
           id: 'fe:999',
@@ -2764,9 +3110,7 @@ describe('inspectionFormHelpers', () => {
           idLocNo: 'ADO-999',
           barcodeNo: 'EE042021Y999999',
           feType: 'CO2 5KG',
-          certificationValidity: 'Expired',
-          certificationValidityRaw: '01/01/2024',
-          daysLeftToExpire: '-10',
+          certificationValidity: '2024-01-01',
           physicalCondition: 'Not Good',
           physicalConditionRemarks: 'Cylinder body dented.',
         },
@@ -2778,7 +3122,6 @@ describe('inspectionFormHelpers', () => {
       id: 'fe:1',
       zone: 'Zone 1',
       idLocNo: 'ADO-001',
-      daysLeftToExpire: '180',
       isOrphanedSavedRow: false,
     })
     expect(visibleChecks[1]).toMatchObject({
@@ -2809,9 +3152,7 @@ describe('inspectionFormHelpers', () => {
           subLocation: 'Reception',
           idLocNo: 'ADO-001',
           barcodeNo: 'EE042021Y544896',
-          certificationValidity: 'Valid',
-          certificationValidityRaw: '01/12/2026',
-          daysLeftToExpire: '180',
+          certificationValidity: '2026-12-01',
         },
       ],
       fireExtinguisherChecks: [
@@ -2827,7 +3168,7 @@ describe('inspectionFormHelpers', () => {
           signageCondition: 'Good',
           boxKeyAvailability: 'Yes',
           boxGlassAvailability: 'Yes',
-          operationalCondition: 'Operational',
+          operationalCondition: 'Good',
         },
         {
           id: 'fe:999',
@@ -2849,7 +3190,7 @@ describe('inspectionFormHelpers', () => {
           signageCondition: 'Good',
           boxKeyAvailability: 'Yes',
           boxGlassAvailability: 'Yes',
-          operationalCondition: 'Operational',
+          operationalCondition: 'Good',
           remarks: 'Needs replacement.',
         },
       ],
@@ -2869,7 +3210,9 @@ describe('inspectionFormHelpers', () => {
         }),
       ]),
     )
-    expect(payload.description).toContain('Fire extinguishers checked at Manjung Hub > Reception.')
+    expect(payload.description).toContain(
+      'Fire extinguishers checked at Zone 1 > Manjung Hub > Reception.',
+    )
     expect(payload.description).toContain('Defect/remark item(s): 1.')
     expect(payload.description).toContain(
       '- ADO-999 - FE Physical Condition: Cylinder body dented.',
@@ -3038,6 +3381,8 @@ describe('inspectionFormHelpers', () => {
           condition: 'Not Good',
           conditionRemarks: 'Gate spring is sticking.',
           conditionPhotos: [],
+          additionalNotes: 'Stored in upper pouch.',
+          additionalPhotos: [basePhotos[1]],
         },
       ],
       photos: [],
@@ -3077,6 +3422,8 @@ describe('inspectionFormHelpers', () => {
       condition: 'Good',
       [HIGH_ANGLE_CONDITION_FIELD.remarksKey]: 'Gate spring is sticking.',
       [HIGH_ANGLE_CONDITION_FIELD.photosKey]: [basePhotos[0]],
+      additionalNotes: 'Stored in upper pouch.',
+      additionalPhotos: [basePhotos[1]],
     })
   })
 

@@ -76,7 +76,7 @@ const LeaveRecordsSection = ({
   getStartDateTimeLabel,
   getEndDateTimeLabel,
   isLoading = false,
-  filtersTourId = null,
+  filtersTestId = null,
 }) => {
   const monthFormatter = new Intl.DateTimeFormat('en-MY', { month: 'long', year: 'numeric' })
   const shouldGroupByMonth = enableMonthGrouping ? Boolean(groupByMonth) : true
@@ -229,7 +229,7 @@ const LeaveRecordsSection = ({
         </div>
       </CCardHeader>
       <CCardBody>
-        <div {...(filtersTourId ? { 'data-tour-id': filtersTourId } : {})}>
+        <div {...(filtersTestId ? { 'data-testid': filtersTestId } : {})}>
           <TableFilters
             searchValue={search}
             onSearchChange={setSearch}

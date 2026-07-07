@@ -189,7 +189,7 @@ const Payroll = () => {
       const periodValueResolved = resolvePeriodValue(claim)
       if (!/^\d{4}-\d{2}$/.test(periodValueResolved)) return
       const status = String(claim?.status || '').trim()
-      const reason = `Already claimed (${claimId || 'Existing claim'}${status ? ` • ${status}` : ''})`
+      const reason = `Already claimed (${claimId || 'Existing claim'}${status ? ` ${String.fromCharCode(8226)} ${status}` : ''})`
       const existing = locks[periodValueResolved]
       if (!existing) {
         locks[periodValueResolved] = reason
@@ -197,7 +197,7 @@ const Payroll = () => {
       }
       const existingClaimId =
         String(existing)
-          .match(/\(([^•\)]+)/)?.[1]
+          .match(/\(([^ï¿½\)]+)/)?.[1]
           ?.trim() || ''
       if (!existingClaimId && claimId) {
         locks[periodValueResolved] = reason
@@ -259,13 +259,13 @@ const Payroll = () => {
   }
 
   return (
-    <CContainer fluid data-tour-id="payroll-module">
+    <CContainer fluid data-testid="payroll-module">
       <ModulePageHeader
         title="Payroll"
         subtitle="Review claim records, payslips, and submit new salary or expense claims."
         actions={
           activeSection.startsWith('new-claim') ? null : (
-            <div data-tour-id={activeSection === 'claims' ? 'payroll-new-claim-action' : undefined}>
+            <div data-testid={activeSection === 'claims' ? 'payroll-new-claim-action' : undefined}>
               <CreateActionButton
                 label="Apply Claim"
                 importance="primary"
@@ -277,7 +277,7 @@ const Payroll = () => {
         }
       />
       <div
-        data-tour-id={
+        data-testid={
           activeSection === 'claims' || activeSection === 'payslips' ? 'payroll-nav' : undefined
         }
       >

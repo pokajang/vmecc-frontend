@@ -23,7 +23,7 @@ const InspectionRecordsFilters = ({
   sortOptions,
   clearFilters,
 }) => (
-  <div data-tour-id="inspection-filters">
+  <div data-testid="inspection-filters">
     <TableFilters
       searchValue={search}
       onSearchChange={setSearch}
@@ -66,8 +66,7 @@ const InspectionRecordsFilters = ({
         },
       ]}
       onClear={clearFilters}
-      rowClassName="align-items-md-end"
-      autoWidth={false}
+      rowClassName="inspection-records-filter-row align-items-md-end"
       searchColMd={3}
       periodColMd={2}
       filterColMd={2}

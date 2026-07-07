@@ -599,7 +599,7 @@ const OvertimeManagement = () => {
   }
 
   return (
-    <CContainer fluid data-tour-id="overtime-management-module">
+    <CContainer fluid data-testid="overtime-management-module">
       <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
 
       <OvertimeWorkflowActionModal
@@ -637,7 +637,7 @@ const OvertimeManagement = () => {
             subtitle="Review overtime records, process workflow decisions, and maintain overtime rules."
           />
 
-          <div data-tour-id="overtime-management-nav">
+          <div data-testid="overtime-management-nav">
             <RouteNavTabs
               currentPath={resolvedTab}
               navigate={(tab) => switchTab(tab)}
@@ -709,13 +709,13 @@ const OvertimeManagement = () => {
           ) : null}
 
           {resolvedTab === 'otRules' ? (
-            <div data-tour-id="overtime-management-rules">
+            <div data-testid="overtime-management-rules">
               <OvertimeApprovalRules />
             </div>
           ) : null}
         </>
       ) : (
-        <div data-tour-id="overtime-management-detail">
+        <div data-testid="overtime-management-detail">
           <OvertimeDetailSection
             selectedRecord={selectedRecord}
             selectedRecordStatusLabel={selectedRecordStatusLabel}

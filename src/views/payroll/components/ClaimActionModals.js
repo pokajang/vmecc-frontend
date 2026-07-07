@@ -19,7 +19,7 @@ const ClaimActionModals = ({
       visible={cancelModalVisible}
       onClose={onCancelClose}
       alignment="center"
-      data-tour-id="payroll-claim-cancel-modal"
+      data-testid="payroll-claim-cancel-modal"
     >
       <CModalHeader>Cancel Claim</CModalHeader>
       <CModalBody>
@@ -49,7 +49,7 @@ const ClaimActionModals = ({
       visible={deleteModalVisible}
       onClose={onDeleteClose}
       alignment="center"
-      data-tour-id="payroll-claim-delete-modal"
+      data-testid="payroll-claim-delete-modal"
     >
       <CModalHeader>Delete Claim</CModalHeader>
       <CModalBody>

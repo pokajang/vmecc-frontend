@@ -3,18 +3,21 @@ import { apiRequest, clearCsrfToken } from './httpClient'
 export const loginRequest = (credentials) =>
   apiRequest('/auth/login', {
     method: 'POST',
+    skipCsrfRefresh: true,
     body: JSON.stringify(credentials),
   })
 
 export const requestPasswordReset = (payload) =>
   apiRequest('/password/forgot', {
     method: 'POST',
+    skipCsrfRefresh: true,
     body: JSON.stringify(payload),
   })
 
 export const resetPassword = (payload) =>
   apiRequest('/password/reset', {
     method: 'POST',
+    skipCsrfRefresh: true,
     body: JSON.stringify(payload),
   })
 
@@ -28,7 +31,7 @@ export const logoutRequest = async () => {
   }
 }
 
-export const fetchSession = () => apiRequest('/auth/session')
+export const fetchSession = (options = {}) => apiRequest('/auth/session', options)
 
 export const fetchGoogleAuthUrl = (options = {}) => {
   const query = new URLSearchParams()

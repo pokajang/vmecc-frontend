@@ -5,7 +5,6 @@ import AiHelperPanel from 'src/components/ai-helper/AiHelperPanel'
 import AppUpdateBanner from 'src/components/AppUpdateBanner'
 import MaintenanceGraceBanner from 'src/components/MaintenanceGraceBanner'
 import TrtProfileCompletionOnboarding from 'src/components/onboarding/TrtProfileCompletionOnboarding'
-import OnboardingTourHost from 'src/components/onboarding/OnboardingTourHost'
 import PwaInstallBanner from 'src/components/PwaInstallBanner'
 import { PwaInstallProvider } from 'src/hooks/usePwaInstallPrompt'
 
@@ -21,7 +20,6 @@ const DefaultLayout = () => {
         >
           <AppHeader />
           <TrtProfileCompletionOnboarding />
-          <OnboardingTourHost />
           <MaintenanceGraceBanner />
           <PwaInstallBanner />
           <AppUpdateBanner />

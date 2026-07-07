@@ -32,7 +32,7 @@ const RosterMobileDayEditor = ({
       visible={visible}
       onHide={onClose}
       className="d-md-none"
-      data-tour-id="roster-management-mobile-editor"
+      data-testid="roster-management-mobile-editor"
     >
       <COffcanvasHeader>
         <COffcanvasTitle>

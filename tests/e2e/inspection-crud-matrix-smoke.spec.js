@@ -266,8 +266,6 @@ const fireExtinguisherRow = (suffix, catalogId = null) => ({
   barcodeNo: `SMOKE-BC-${suffix}`,
   feType: 'CO2',
   certificationValidity: '2027-07-03',
-  certificationValidityRaw: '2027-07-03',
-  daysLeftToExpire: '365',
   physicalCondition: 'Not Good',
   physicalConditionRemarks: `FE physical smoke defect ${suffix}`,
   physicalConditionPhotos: [smokePhoto(`fe-physical-${suffix}`)],
@@ -888,8 +886,6 @@ test.describe.serial('inspection CRUD endpoint matrix smoke', () => {
             barcodeNo: `SMOKE-BC-${suffix}`,
             feType: 'CO2',
             certificationValidity: '2027-07-03',
-            certificationValidityRaw: '2027-07-03',
-            daysLeftToExpire: '365',
           },
         },
       )
@@ -909,8 +905,6 @@ test.describe.serial('inspection CRUD endpoint matrix smoke', () => {
           barcodeNo: `SMOKE-BC-${suffix}`,
           feType: 'ABC',
           certificationValidity: '2028-07-03',
-          certificationValidityRaw: '2028-07-03',
-          daysLeftToExpire: '730',
         },
       })
 

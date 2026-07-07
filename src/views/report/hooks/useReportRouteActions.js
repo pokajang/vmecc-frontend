@@ -8,7 +8,12 @@ import {
   saveReportDraft,
   updateErcoDraft,
 } from '../reportStorage'
-import { downloadDrillReportPdf, downloadErcoReportPdf } from '../reportApi'
+import {
+  deleteReportRecord,
+  downloadDrillReportPdf,
+  downloadErcoReportPdf,
+  isReportApiEnabled,
+} from '../reportApi'
 import { recordToDraft } from '../reportDraftDomain'
 import { buildReportPdfFilename } from '../reportUiUtils'
 import { toDateTime } from '../utils'
@@ -462,10 +467,20 @@ const useReportRouteActions = ({
         pushToast('Draft deleted.', { title: 'Draft deleted', color: 'info' })
         return
       }
-      const sameTypeRecords = records.filter(
-        (row) => String(row?.reportType || '').toLowerCase() === activeFormSlug,
-      )
-      const { saved } = await persistRecords(sameTypeRecords.filter((row) => row.id !== target.id))
+      let saved = false
+      if (isReportApiEnabled(activeFormSlug)) {
+        try {
+          saved = await deleteReportRecord(target.id)
+        } catch {
+          saved = false
+        }
+      } else {
+        const sameTypeRecords = records.filter(
+          (row) => String(row?.reportType || '').toLowerCase() === activeFormSlug,
+        )
+        const result = await persistRecords(sameTypeRecords.filter((row) => row.id !== target.id))
+        saved = Boolean(result?.saved)
+      }
       if (!saved) {
         pushToast('Unable to delete this report. Please try again.', {
           title: 'Delete failed',

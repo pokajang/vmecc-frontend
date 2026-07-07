@@ -9,6 +9,69 @@ afterEach(() => {
 })
 
 describe('InspectionReviewSection', () => {
+  it('hides repeated workflow labels and audit-only fields during active submission review', () => {
+    render(
+      <InspectionReviewSection
+        selectedRecord={{
+          id: 'inspection-fe-submit-1',
+          displayId: 'INS-01-772026',
+          status: 'Draft',
+          location: 'Zone 2 > Potable Water Pump House',
+          incidentType: 'Fire Extinguisher Inspection',
+          submittedByRole: 'System Administrator',
+          submittedByRoleCode: 'SA',
+        }}
+        reviewSummary={{ metrics: { count: 1, defectCount: 0 } }}
+        reviewActions={{
+          onBackToEdit: vi.fn(),
+          onConfirm: vi.fn(),
+          confirmLabel: 'Submit Inspection',
+          hideSaveDraft: true,
+        }}
+      />,
+    )
+
+    expect(screen.queryByText('Review Inspection')).toBeNull()
+    expect(screen.getAllByText('Ready to submit')).toHaveLength(1)
+    expect(screen.getAllByText('Fire Extinguisher')).toHaveLength(1)
+    expect(screen.getByText('1 saved item')).toBeTruthy()
+    expect(screen.getByText('INS-01-772026')).toBeTruthy()
+    expect(screen.queryByText('Status')).toBeNull()
+    expect(screen.queryByText('Type')).toBeNull()
+    expect(screen.queryByText('Role')).toBeNull()
+    expect(screen.queryByText('System Administrator (SA)')).toBeNull()
+    expect(screen.getByText('Inspection Date/Time')).toBeTruthy()
+    expect(screen.getByText('Location')).toBeTruthy()
+  })
+
+  it('keeps audit metadata visible outside the active submission review flow', () => {
+    render(
+      <InspectionReviewSection
+        selectedRecord={{
+          id: 'inspection-fe-submitted-1',
+          displayId: 'INS-SUB-001',
+          status: 'Submitted',
+          location: 'Zone 2 > Potable Water Pump House',
+          incidentType: 'Fire Extinguisher Inspection',
+          submittedBy: 'Jang',
+          submittedByRole: 'System Administrator',
+          submittedByRoleCode: 'SA',
+          submittedAt: '2026-07-07T12:01:00',
+        }}
+        reviewActions={{
+          onBackToEdit: vi.fn(),
+        }}
+      />,
+    )
+
+    expect(screen.getByText('Status')).toBeTruthy()
+    expect(screen.getByText('Type')).toBeTruthy()
+    expect(screen.getByText('Role')).toBeTruthy()
+    expect(screen.getByText('System Administrator (SA)')).toBeTruthy()
+    expect(screen.getByText('Submitted By')).toBeTruthy()
+    expect(screen.getByText('Jang')).toBeTruthy()
+  })
+
   it('renders a compact mobile review action group with an explicit back-to-edit path', () => {
     const { container } = render(
       <InspectionReviewSection
@@ -30,7 +93,7 @@ describe('InspectionReviewSection', () => {
     )
 
     const actionGroup = screen.getByRole('group', { name: 'Inspection review actions' })
-    expect(within(actionGroup).getByRole('button', { name: 'Back to Edit' })).toBeTruthy()
+    expect(within(actionGroup).getByRole('button', { name: 'Edit' })).toBeTruthy()
     expect(within(actionGroup).getByRole('button', { name: 'Save Draft' })).toBeTruthy()
     expect(within(actionGroup).getByRole('button', { name: 'Confirm Submit' })).toBeTruthy()
   })
@@ -62,7 +125,7 @@ describe('InspectionReviewSection', () => {
     expect(screen.getAllByRole('button', { name: 'Queue for sync' }).length).toBeGreaterThan(0)
   })
 
-  it('renders General Inspection checklist, description, and evidence during review', () => {
+  it('renders General Inspection findings and optional evidence during review', () => {
     render(
       <InspectionReviewSection
         selectedRecord={{
@@ -73,6 +136,14 @@ describe('InspectionReviewSection', () => {
           mainLocation: 'Zone A',
           incidentType: 'General Inspection',
           description: 'General inspection summary for Zone A.',
+          inspectionIssues: [
+            {
+              id: 'finding-1',
+              description: 'Blocked access near Zone A.',
+              actionRequired: 'Clear stored items.',
+              photos: [],
+            },
+          ],
           checklist: [
             { id: 'housekeeping', label: 'Housekeeping checked', selected: true },
             { id: 'access', label: 'Access clear', selected: true },
@@ -95,12 +166,15 @@ describe('InspectionReviewSection', () => {
       />,
     )
 
-    expect(screen.getAllByText('Quick Checks').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Housekeeping checked').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Access clear').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Describe').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('General inspection summary for Zone A.').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Upload Photos and Describe').length).toBeGreaterThan(0)
+    expect(screen.queryByText('Checks')).toBeNull()
+    expect(screen.queryByText('Housekeeping checked')).toBeNull()
+    expect(screen.queryByText('Access clear')).toBeNull()
+    expect(screen.queryByText('Describe')).toBeNull()
+    expect(screen.queryByText('General inspection summary for Zone A.')).toBeNull()
+    expect(screen.getAllByText('Findings').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('1. Blocked access near Zone A.').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Clear stored items.').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('General Evidence Photos').length).toBeGreaterThan(0)
     expect(screen.getAllByText('General evidence photo').length).toBeGreaterThan(0)
   })
 
@@ -190,9 +264,7 @@ describe('InspectionReviewSection', () => {
 
     expect(screen.getAllByText('Inspection Date/Time').length).toBeGreaterThan(0)
     expect(screen.queryByText('Inspection Session')).toBeNull()
-    expect(
-      screen.getAllByText('Emergency Response Auxiliary Equipment Checks').length,
-    ).toBeGreaterThan(0)
+    expect(screen.getAllByText('Equipment').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Fire Jacket').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Chainsaw').length).toBeGreaterThan(0)
     expect(screen.getAllByText('15').length).toBeGreaterThan(0)
@@ -250,7 +322,7 @@ describe('InspectionReviewSection', () => {
       />,
     )
 
-    expect(screen.getAllByText('Hydraulic Equipment Checks').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Equipment').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Hydraulic Pump Motor 1').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Physical Condition').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Mechanical Condition').length).toBeGreaterThan(0)
@@ -269,7 +341,6 @@ describe('InspectionReviewSection', () => {
     expect(screen.getAllByText('Requires seal replacement.').length).toBeGreaterThan(0)
     expect(screen.queryByRole('button', { name: 'All OK' })).toBeNull()
     expect(screen.queryByRole('button', { name: 'Mark OK' })).toBeNull()
-    expect(screen.queryByRole('button', { name: 'Edit' })).toBeNull()
     expect(screen.queryByRole('button', { name: 'Delete' })).toBeNull()
     expect(screen.queryByRole('button', { name: 'Add defect photo' })).toBeNull()
     expect(screen.queryByRole('button', { name: 'Remark' })).toBeNull()
@@ -310,7 +381,7 @@ describe('InspectionReviewSection', () => {
               signageCondition: 'Good',
               boxKeyAvailability: 'Yes',
               boxGlassAvailability: 'Yes',
-              operationalCondition: 'Operational',
+              operationalCondition: 'Good',
               remarks: 'Needs replacement.',
             },
           ],
@@ -324,7 +395,7 @@ describe('InspectionReviewSection', () => {
       />,
     )
 
-    expect(screen.getAllByText('Fire Extinguisher Checks').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Extinguishers').length).toBeGreaterThan(0)
     expect(screen.getAllByText('ADO-001').length).toBeGreaterThan(0)
     expect(
       screen.getAllByText((_, node) => node?.textContent?.includes('DP 6KG') || false).length,
@@ -362,7 +433,7 @@ describe('InspectionReviewSection', () => {
               signageCondition: 'Good',
               boxKeyAvailability: 'Yes',
               boxGlassAvailability: 'Yes',
-              operationalCondition: 'Operational',
+              operationalCondition: 'Good',
               remarks: 'Captured before archive.',
             },
           ],
@@ -457,7 +528,7 @@ describe('InspectionReviewSection', () => {
       />,
     )
 
-    expect(screen.getAllByText('SCBA Checks').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('SCBA Items').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Back Plate').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Cylinder').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Face Mask').length).toBeGreaterThan(0)
@@ -520,12 +591,12 @@ describe('InspectionReviewSection', () => {
       />,
     )
 
-    expect(screen.getAllByText('High Angle Rescue Equipment Checks').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Equipment').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Response Kit #1').length).toBeGreaterThan(0)
     expect(screen.getAllByText('General Kit Items').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Main Compartment').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Locking Carabiner - CT - Steel - S').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('10').length).toBeGreaterThan(0)
+    expect(container.textContent || '').toContain('Qty 10')
     expect(container.textContent || '').toContain('Gate spring is sticking.')
   })
 
@@ -596,7 +667,7 @@ describe('InspectionReviewSection', () => {
       />,
     )
 
-    expect(screen.getAllByText('Daily Readiness Roster').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Truck Readiness').length).toBeGreaterThan(0)
     expect(screen.getAllByText('One-Off Readiness Checklist').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Plate No.').length).toBeGreaterThan(0)
     expect(screen.getAllByText('LOCKER 01').length).toBeGreaterThan(0)
@@ -606,7 +677,7 @@ describe('InspectionReviewSection', () => {
     expect(container.textContent || '').toContain('Mute switch sticking.')
 
     const reviewText = container.textContent || ''
-    expect(reviewText.indexOf('Daily Readiness Roster')).toBeLessThan(
+    expect(reviewText.indexOf('Truck Readiness')).toBeLessThan(
       reviewText.indexOf('One-Off Readiness Checklist'),
     )
   })

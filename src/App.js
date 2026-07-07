@@ -30,10 +30,34 @@ const MAINTENANCE_POLL_INTERVAL_AUTHENTICATED_MS = 10000
 const MAINTENANCE_POLL_INTERVAL_PUBLIC_MS = 30000
 const AUTH_BOOTSTRAP_TIMEOUT_MS = 12_000
 
-const withTimeout = (promise, timeoutMs, timeoutMessage) => {
+const PUBLIC_AUTH_BOOTSTRAP_PATHS = new Set(['/login', '/forgot-password', '/reset-password'])
+
+const createLinkedAbortController = (signal) => {
+  const controller = new AbortController()
+  if (!signal) {
+    return { controller, cleanup: () => {} }
+  }
+
+  const abort = () => controller.abort(signal.reason)
+  if (signal.aborted) {
+    abort()
+    return { controller, cleanup: () => {} }
+  }
+
+  signal.addEventListener('abort', abort, { once: true })
+  return {
+    controller,
+    cleanup: () => signal.removeEventListener('abort', abort),
+  }
+}
+
+const withTimeout = (promise, timeoutMs, timeoutMessage, onTimeout) => {
   let timeoutId
   const timeoutPromise = new Promise((_, reject) => {
-    timeoutId = setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs)
+    timeoutId = setTimeout(() => {
+      onTimeout?.()
+      reject(new Error(timeoutMessage))
+    }, timeoutMs)
   })
 
   return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId))
@@ -54,9 +78,10 @@ const App = () => {
   }, [systemMaintenance])
 
   const loadSession = useCallback(
-    async ({ silent = false, isActive = () => true } = {}) => {
+    async ({ silent = false, isActive = () => true, signal = null } = {}) => {
       if (sessionCheckInFlightRef.current) return false
       sessionCheckInFlightRef.current = true
+      const { controller, cleanup: cleanupAbortLink } = createLinkedAbortController(signal)
 
       if (!silent && isActive()) {
         dispatch({ type: 'set', authStatus: 'checking', authError: null })
@@ -64,9 +89,10 @@ const App = () => {
 
       try {
         const session = await withTimeout(
-          fetchSession(),
+          fetchSession({ signal: controller.signal }),
           AUTH_BOOTSTRAP_TIMEOUT_MS,
           'Session bootstrap timed out.',
+          () => controller.abort(),
         )
         if (!isActive()) {
           return false
@@ -113,6 +139,7 @@ const App = () => {
         }
         return false
       } finally {
+        cleanupAbortLink()
         sessionCheckInFlightRef.current = false
       }
     },
@@ -152,21 +179,37 @@ const App = () => {
 
   useEffect(() => {
     let isMounted = true
+    const controller = new AbortController()
+    const currentPath = window.location?.pathname || '/'
 
-    void loadSession({ isActive: () => isMounted })
+    if (PUBLIC_AUTH_BOOTSTRAP_PATHS.has(currentPath)) {
+      dispatch({ type: 'set', authStatus: 'anonymous', authUser: null, authError: null })
+      return () => {
+        isMounted = false
+        controller.abort()
+      }
+    }
+
+    void loadSession({ isActive: () => isMounted, signal: controller.signal })
     return () => {
       isMounted = false
+      controller.abort()
     }
-  }, [loadSession])
+  }, [dispatch, loadSession])
 
   useEffect(() => {
     if (authStatus !== 'anonymous') return undefined
+    const controllers = new Set()
 
     const recheckSession = () => {
       if (document.visibilityState && document.visibilityState !== 'visible') {
         return
       }
-      void loadSession({ silent: true })
+      const controller = new AbortController()
+      controllers.add(controller)
+      void loadSession({ silent: true, signal: controller.signal }).finally(() => {
+        controllers.delete(controller)
+      })
     }
 
     window.addEventListener('focus', recheckSession)
@@ -177,6 +220,8 @@ const App = () => {
       window.removeEventListener('focus', recheckSession)
       window.removeEventListener('pageshow', recheckSession)
       document.removeEventListener('visibilitychange', recheckSession)
+      controllers.forEach((controller) => controller.abort())
+      controllers.clear()
     }
   }, [authStatus, loadSession])
 
@@ -184,11 +229,19 @@ const App = () => {
     let isMounted = true
     let timer = null
     let inFlight = false
+    let controller = null
 
     const nextDelay = () =>
       authStatus === 'authenticated'
         ? MAINTENANCE_POLL_INTERVAL_AUTHENTICATED_MS
         : MAINTENANCE_POLL_INTERVAL_PUBLIC_MS
+
+    const currentPath = window.location?.pathname || '/'
+    if (authStatus !== 'authenticated' && PUBLIC_AUTH_BOOTSTRAP_PATHS.has(currentPath)) {
+      return () => {
+        isMounted = false
+      }
+    }
 
     const scheduleNext = () => {
       if (!isMounted) return
@@ -201,7 +254,9 @@ const App = () => {
     const loadMaintenanceSetting = async () => {
       if (inFlight) return
       inFlight = true
-      const result = await loadSystemMaintenanceSetting()
+      controller = new AbortController()
+      const result = await loadSystemMaintenanceSetting({ signal: controller.signal })
+      controller = null
       if (!isMounted) return
       // Keep the last known state on transient fetch failures to prevent
       // maintenance page flicker that looks like app auto-refresh.
@@ -215,6 +270,7 @@ const App = () => {
     return () => {
       isMounted = false
       if (timer) clearTimeout(timer)
+      controller?.abort()
     }
   }, [applySystemMaintenance, authStatus])
 
@@ -269,9 +325,6 @@ const App = () => {
   const renderPublicRoute = (element) => {
     if (authStatus === 'authenticated') {
       return <Navigate to="/" replace />
-    }
-    if (authStatus === 'checking' || authStatus === 'unknown') {
-      return renderLoadingState()
     }
     return element
   }

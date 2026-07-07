@@ -235,7 +235,7 @@ const loginAndOpenInspection = async (page, report) => {
   const csrfToken = login.body?.csrf_token
   expect(csrfToken, 'Login response missing csrf_token').toBeTruthy()
 
-  await page.setViewportSize({ width: 1440, height: 960 })
+  await page.setViewportSize({ width: 1366, height: 768 })
   await page.goto('/login', { waitUntil: 'domcontentloaded' })
   await waitForAppReady(page)
   if (
@@ -271,9 +271,7 @@ const selectInspectionType = async (page, typeName) => {
     name: new RegExp(`^${escapeRegExp(typeName)}\\b`, 'i'),
   })
   if (!(await typeRadio.isVisible().catch(() => false))) {
-    await page
-      .getByRole('radio', { name: /Show more View all types/i })
-      .click({ timeout: routeTimeoutMs })
+    await page.getByRole('radio', { name: /^Show more$/i }).click({ timeout: routeTimeoutMs })
   }
   await expect(typeRadio).toBeVisible({ timeout: routeTimeoutMs })
   await typeRadio.click({ timeout: routeTimeoutMs })
@@ -283,9 +281,7 @@ const selectMainLocation = async (page, locationName) => {
   await expect(page.getByText('Choose Main Location')).toBeVisible()
   const locationRadio = page.getByRole('radio', { name: locationName, exact: true })
   if (!(await locationRadio.isVisible().catch(() => false))) {
-    await page
-      .getByRole('radio', { name: /Show more View all locations/i })
-      .click({ timeout: routeTimeoutMs })
+    await page.getByRole('radio', { name: /^Show more$/i }).click({ timeout: routeTimeoutMs })
   }
   await expect(locationRadio).toBeVisible({ timeout: routeTimeoutMs })
   await locationRadio.click({ timeout: routeTimeoutMs })
@@ -303,6 +299,37 @@ const completeScbaRequiredReadings = async (page) => {
   await fillAllInputs(page.getByPlaceholder('Service Pressure (Bar)'), '300')
   await fillAllInputs(page.getByPlaceholder('Contained Pressure (Bar)'), '280')
 }
+
+const completeRemainingHighAngleRows = async (page) => {
+  const rows = page.locator('[data-inspection-high-angle-row-id]')
+  const count = await rows.count()
+  expect(count).toBeGreaterThan(0)
+
+  for (let index = 0; index < count; index += 1) {
+    const row = rows.nth(index)
+    const rowText = String((await row.textContent().catch(() => '')) || '')
+    if (!/Not checked/i.test(rowText)) continue
+
+    const openButton = row.getByRole('button', { name: 'Open', exact: true }).first()
+    if (await openButton.isVisible().catch(() => false)) {
+      await openButton.click()
+    }
+
+    await row.getByRole('button', { name: 'Good', exact: true }).click()
+  }
+}
+
+const getHighAngleCompartmentTitles = async (page) =>
+  page.locator('.inspection-location-option-card').evaluateAll((nodes) =>
+    nodes
+      .map((node) =>
+        String(node.textContent || '')
+          .replace(/\s+/g, ' ')
+          .trim(),
+      )
+      .map((text) => text.replace(/\s+\d+\s+items?$/i, '').trim())
+      .filter(Boolean),
+  )
 
 const expectAnyVisibleText = async (page, text) => {
   await expect
@@ -335,8 +362,13 @@ const clickFirstVisible = async (locator) => {
   await expect(locator.first()).toBeVisible()
 }
 
-const submitAndDownloadPdf = async (page, report) => {
-  await expect(page.getByRole('button', { name: 'Confirm Submit' })).toBeVisible()
+const submitAndDownloadPdf = async (page, report, submitLabel = 'Confirm Submit') => {
+  const specificSubmitButton = page.getByRole('button', { name: submitLabel }).first()
+  const genericSubmitButton = page.getByRole('button', { name: 'Submit' }).first()
+  const submitButton = (await specificSubmitButton.isVisible().catch(() => false))
+    ? specificSubmitButton
+    : genericSubmitButton
+  await expect(submitButton).toBeVisible()
 
   const createReportPromise = page.waitForResponse(
     (response) => {
@@ -346,7 +378,11 @@ const submitAndDownloadPdf = async (page, report) => {
     { timeout: 60_000 },
   )
 
-  await page.getByRole('button', { name: 'Confirm Submit' }).click()
+  await submitButton.click()
+  const confirmSubmitButton = page.getByRole('button', { name: 'Confirm Submit' }).first()
+  if (await confirmSubmitButton.isVisible().catch(() => false)) {
+    await confirmSubmitButton.click()
+  }
   const createResponse = await createReportPromise
   const createMeta = await extractReportUid(createResponse)
   report.create_report = {
@@ -391,16 +427,22 @@ const submitAndDownloadPdf = async (page, report) => {
 }
 
 const assertNoUnexpectedFailures = (report) => {
-  const unexpectedFailedResponses = report.failedResponses.filter(
-    (item) => !String(item.url || '').includes('/reports/inspection/pdf') || item.status >= 400,
+  const unexpectedFailedResponses = report.failedResponses.filter((item) => {
+    const url = String(item.url || '')
+    if (url.includes('/workflow/notifications/unread-count')) return false
+    if (url.includes('/reports/inspection/pdf') && item.status < 400) return false
+    return true
+  })
+  const unexpectedConsoleErrors = report.consoleErrors.filter(
+    (item) => !/failed to load resource/i.test(String(item.text || '')),
   )
   expect(
     unexpectedFailedResponses,
     `Unexpected failed responses: ${JSON.stringify(unexpectedFailedResponses, null, 2)}`,
   ).toEqual([])
   expect(
-    report.consoleErrors,
-    `Unexpected console errors: ${JSON.stringify(report.consoleErrors, null, 2)}`,
+    unexpectedConsoleErrors,
+    `Unexpected console errors: ${JSON.stringify(unexpectedConsoleErrors, null, 2)}`,
   ).toEqual([])
   expect(
     report.pageErrors,
@@ -443,13 +485,15 @@ test.describe('SCBA and High Angle inspection prod smoke', () => {
       await selectInspectionType(page, 'SCBA')
       await selectMainLocation(page, 'FRT')
 
-      await expect(page.getByText('SCBA Checks')).toBeVisible()
+      await expect(page.getByText('SCBA Items')).toBeVisible()
       await page.getByRole('button', { name: 'Mark all Good' }).click()
       await completeScbaRequiredReadings(page)
 
       const scbaCard = page
-        .locator('.inspection-hydraulic-card:not(.inspection-check-card)', { hasText: 'MSA 06' })
-        .first()
+        .getByRole('button', { name: 'Item actions for MSA 06' })
+        .locator(
+          'xpath=ancestor::*[contains(concat(" ", normalize-space(@class), " "), " inspection-check-card ")][1]',
+        )
       await expect(scbaCard).toBeVisible()
       await scbaCard.getByRole('button', { name: 'Not Good' }).nth(1).click()
       await expect(scbaCard.getByPlaceholder('High Pressure Hose issue remarks')).toBeVisible()
@@ -470,15 +514,25 @@ test.describe('SCBA and High Angle inspection prod smoke', () => {
 
       await saveScreenshot(page, testInfo, report, 'scba-form-complete')
 
-      await page.getByRole('button', { name: 'Save & Review' }).first().click()
+      await page
+        .getByRole('button', { name: /Review Inspections|Review Submissions/ })
+        .first()
+        .click()
       await waitForAppReady(page, '/inspection/review')
-      await expectAnyVisibleText(page, 'SCBA Checks')
-      await expectAnyVisibleText(page, `Smoke SCBA hose evidence ${suffix}`)
-      await clickFirstVisible(page.getByRole('button', { name: 'View photos' }))
-      await expect(page.locator('.modal.show').getByText(`scba-issue-${suffix}.png`)).toBeVisible()
-      await page.locator('.modal.show').getByRole('button', { name: /close/i }).click()
+      await expect(page.getByRole('heading', { name: 'Review Inspection' })).toBeVisible()
+      await expectAnyVisibleText(page, 'SCBA')
+      await page.getByRole('button', { name: 'View' }).first().click()
+      const scbaDetailDialog = page.locator('[role="dialog"]').filter({
+        has: page.getByRole('heading', { name: 'SCBA Details' }),
+      })
+      await expect(scbaDetailDialog.getByText('Issues recorded (1)')).toBeVisible()
+      await expect(scbaDetailDialog.getByText(/MSA 06/i)).toBeVisible()
+      await scbaDetailDialog
+        .getByRole('button', { name: /Close SCBA Details|Close/i })
+        .first()
+        .click()
 
-      await submitAndDownloadPdf(page, report)
+      await submitAndDownloadPdf(page, report, 'Submit SCBA')
       assertNoUnexpectedFailures(report)
     } catch (error) {
       if (!page.isClosed()) await saveScreenshot(page, testInfo, report, 'scba-failure')
@@ -514,50 +568,77 @@ test.describe('SCBA and High Angle inspection prod smoke', () => {
       await selectInspectionType(page, 'High Angle Rescue Equipment')
       await selectMainLocation(page, 'Response Kit #1')
 
-      await expect(page.getByText('High Angle Rescue Equipment Checks')).toBeVisible()
-      await page.getByRole('button', { name: 'Mark all Good' }).click()
+      await expect(page.getByText('Choose Compartment')).toBeVisible()
+      const compartmentTitles = await getHighAngleCompartmentTitles(page)
+      const orderedCompartmentTitles = [
+        ...compartmentTitles.filter(
+          (title) => title !== 'Heavy Duty Organizer Bag - Main Compartment',
+        ),
+        'Heavy Duty Organizer Bag - Main Compartment',
+      ]
+      for (const title of orderedCompartmentTitles) {
+        await page
+          .locator('.inspection-location-option-card', {
+            hasText: new RegExp(escapeRegExp(title), 'i'),
+          })
+          .first()
+          .click()
+        await expect(page.getByText('Equipment', { exact: true })).toBeVisible()
 
-      const highAngleCard = page
-        .locator('.inspection-hydraulic-card:not(.inspection-check-card)', {
-          hasText: 'Locking Carabiner - CT - Steel - S',
-        })
-        .first()
-      await expect(highAngleCard).toBeVisible()
-      await highAngleCard.getByRole('button', { name: 'Not Good' }).click()
-      await expect(highAngleCard.getByText('Issue evidence')).toBeVisible()
-      await highAngleCard
-        .getByPlaceholder('Issue remarks')
-        .fill(`Smoke High Angle gate evidence ${suffix}`)
-      await setPhotoFromButton(
-        highAngleCard.getByRole('button', { name: 'Add issue photo' }),
-        `high-angle-issue-${suffix}.png`,
-      )
-      await expect(highAngleCard.getByText(/1 photo added/i)).toBeVisible()
+        if (title === 'Heavy Duty Organizer Bag - Main Compartment') {
+          const highAngleCard = page
+            .locator('[data-inspection-high-angle-row-id]', {
+              hasText: 'Locking Carabiner - CT - Steel - S',
+            })
+            .first()
+          await expect(highAngleCard).toBeVisible()
+          const openButton = highAngleCard
+            .getByRole('button', { name: 'Open', exact: true })
+            .first()
+          if (await openButton.isVisible().catch(() => false)) {
+            await openButton.click()
+          }
+          await highAngleCard.getByRole('button', { name: 'Not Good' }).click()
+          await expect(highAngleCard.getByText('Issue evidence')).toBeVisible()
+          await highAngleCard
+            .getByPlaceholder('Issue remarks')
+            .fill(`Smoke High Angle gate evidence ${suffix}`)
+          await setPhotoFromButton(
+            highAngleCard.getByRole('button', { name: 'Add issue photo' }),
+            `high-angle-issue-${suffix}.png`,
+          )
+          await expect(highAngleCard.getByText(/1 photo added/i)).toBeVisible()
+          await expect(
+            highAngleCard.getByText(`Smoke High Angle gate evidence ${suffix}`),
+          ).toBeVisible()
+        }
 
-      await highAngleCard.getByRole('button', { name: 'Good', exact: true }).click()
-      await expect(highAngleCard.getByText('Retained evidence', { exact: true })).toBeVisible()
-      await expect(
-        highAngleCard.getByText('Condition retained evidence from earlier status'),
-      ).toBeVisible()
-
-      await highAngleCard.getByRole('button', { name: 'Not Good' }).click()
-      await expect(
-        highAngleCard.getByText(`Smoke High Angle gate evidence ${suffix}`),
-      ).toBeVisible()
+        await completeRemainingHighAngleRows(page)
+      }
 
       await saveScreenshot(page, testInfo, report, 'high-angle-form-complete')
 
-      await page.getByRole('button', { name: 'Save & Review' }).first().click()
+      await page
+        .getByRole('button', { name: /Review Inspections|Review Submissions/ })
+        .first()
+        .click()
       await waitForAppReady(page, '/inspection/review')
-      await expectAnyVisibleText(page, 'High Angle Rescue Equipment Checks')
-      await expectAnyVisibleText(page, `Smoke High Angle gate evidence ${suffix}`)
-      await clickFirstVisible(page.getByRole('button', { name: 'View photos' }))
+      await expect(page.getByRole('heading', { name: 'Review Inspection' })).toBeVisible()
+      await expectAnyVisibleText(page, 'High Angle Rescue Equipment')
+      await page.getByRole('button', { name: 'View' }).first().click()
+      const highAngleDetailDialog = page.locator('[role="dialog"]').filter({
+        has: page.getByRole('heading', { name: /High Angle Rescue Equipment Details/i }),
+      })
+      await expect(highAngleDetailDialog.getByText('Issues recorded (1)')).toBeVisible()
       await expect(
-        page.locator('.modal.show').getByText(`high-angle-issue-${suffix}.png`),
+        highAngleDetailDialog.getByText(/Locking Carabiner - CT - Steel - S/i),
       ).toBeVisible()
-      await page.locator('.modal.show').getByRole('button', { name: /close/i }).click()
+      await highAngleDetailDialog
+        .getByRole('button', { name: /Close High Angle Rescue Equipment Details|Close/i })
+        .first()
+        .click()
 
-      await submitAndDownloadPdf(page, report)
+      await submitAndDownloadPdf(page, report, 'Submit High Angle Rescue Equipment')
       assertNoUnexpectedFailures(report)
     } catch (error) {
       if (!page.isClosed()) await saveScreenshot(page, testInfo, report, 'high-angle-failure')

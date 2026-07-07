@@ -208,7 +208,7 @@ const TeamView = () => {
   })
 
   return (
-    <CContainer fluid data-tour-id="team-directory-module">
+    <CContainer fluid data-testid="team-directory-module">
       <ModulePageHeader
         title={team.name || 'Team Detail'}
         subtitle="Review team members, roles, and roster status."
@@ -219,7 +219,7 @@ const TeamView = () => {
               color="primary"
               className="d-inline-flex align-items-center gap-1"
               onClick={handleOpenEdit}
-              data-tour-id="team-directory-detail-edit-action"
+              data-testid="team-directory-detail-edit-action"
             >
               <Pencil size={14} />
               Edit Team
@@ -227,7 +227,7 @@ const TeamView = () => {
           ) : null
         }
       />
-      <CRow className="g-3" data-tour-id="team-directory-detail">
+      <CRow className="g-3" data-testid="team-directory-detail">
         {/* Left: team identity card */}
         <CCol md={6} lg={5} xl={4}>
           <div

@@ -62,7 +62,7 @@ vi.mock('src/components/ModuleNavTabs', () => ({
   default: ({ items = [], className = '' }) => (
     <div data-testid="module-nav-tabs" data-classname={className}>
       {items.map((item) => (
-        <button key={item.key} type="button" onClick={item.onClick}>
+        <button key={item.key} type="button" data-active={item.active} onClick={item.onClick}>
           {item.label}
         </button>
       ))}
@@ -78,14 +78,11 @@ vi.mock('src/components/report-workflow/TypeManagerModal', () => ({
   default: () => null,
 }))
 
-vi.mock('../module/InspectionModuleHeaderActions', () => ({
-  default: ({ onStartNew, onStartTutorial, showMobileBackAction, onMobileBack }) => (
+vi.mock('../app/InspectionModuleHeaderActions', () => ({
+  default: ({ onStartNew, showMobileBackAction, onMobileBack }) => (
     <div>
       <button type="button" onClick={onStartNew}>
         Start new
-      </button>
-      <button type="button" onClick={onStartTutorial}>
-        Start tutorial
       </button>
       {showMobileBackAction ? (
         <button type="button" onClick={onMobileBack}>
@@ -190,13 +187,13 @@ vi.mock('../InspectionForm', () => ({
           })
         }
       >
-        Save & Review
+        Review Inspections
       </button>
     </section>
   ),
 }))
 
-vi.mock('../module/InspectionMobileHome', () => ({
+vi.mock('../app/InspectionMobileHome', () => ({
   default: ({ onSelectType, onContinueDraft, onViewRecords }) => (
     <section>
       <div>Inspection mobile home</div>
@@ -213,7 +210,7 @@ vi.mock('../module/InspectionMobileHome', () => ({
   ),
 }))
 
-vi.mock('../module/InspectionConfirmModals', () => ({
+vi.mock('../app/InspectionConfirmModals', () => ({
   default: ({
     showDiscard,
     onConfirmDiscard,
@@ -254,7 +251,7 @@ vi.mock('../module/InspectionConfirmModals', () => ({
   ),
 }))
 
-vi.mock('../module/InspectionContinuationModal', () => ({
+vi.mock('../app/InspectionContinuationModal', () => ({
   default: ({ prompt, onSelectLocation, onDismiss }) =>
     prompt ? (
       <div>
@@ -269,11 +266,11 @@ vi.mock('../module/InspectionContinuationModal', () => ({
     ) : null,
 }))
 
-vi.mock('../module/InspectionQueueConflictModal', () => ({
+vi.mock('../app/InspectionQueueConflictModal', () => ({
   default: () => null,
 }))
 
-vi.mock('../components/InspectionWorkflowActionModal', () => ({
+vi.mock('../ui/InspectionWorkflowActionModal', () => ({
   default: ({ visible }) => (visible ? <div>Workflow action modal</div> : null),
 }))
 
@@ -309,7 +306,7 @@ vi.mock('../useIncidentTypeManager', () => ({
   }),
 }))
 
-vi.mock('../hooks/useInspectionDraftRows', () => ({
+vi.mock('../state/useInspectionDraftRows', () => ({
   default: () => ({
     setDraftVersion: vi.fn(),
     activeDraftRows: inspectionHarness.activeDraftRows,
@@ -318,7 +315,7 @@ vi.mock('../hooks/useInspectionDraftRows', () => ({
   }),
 }))
 
-vi.mock('../hooks/useInspectionQueueController', () => ({
+vi.mock('../state/useInspectionQueueController', () => ({
   default: () => ({
     queueRows: inspectionHarness.queuedRecordRows,
     queuedRecordRows: inspectionHarness.queuedRecordRows,
@@ -333,7 +330,7 @@ vi.mock('../hooks/useInspectionQueueController', () => ({
   }),
 }))
 
-vi.mock('../hooks/useInspectionOfflineHealthController', () => ({
+vi.mock('../state/useInspectionOfflineHealthController', () => ({
   default: () => ({
     offlineHealth: inspectionHarness.offlineHealth,
     isOfflineHealthLoading: false,
@@ -343,7 +340,7 @@ vi.mock('../hooks/useInspectionOfflineHealthController', () => ({
   }),
 }))
 
-vi.mock('../hooks/useInspectionRecords', () => ({
+vi.mock('../state/useInspectionRecords', () => ({
   default: ({ reportId, draftRows = [] }) => {
     const rows = [...inspectionHarness.records, ...draftRows]
     const selectedRecord =
@@ -385,11 +382,11 @@ vi.mock('../hooks/useInspectionRecords', () => ({
   },
 }))
 
-vi.mock('../hooks/useInspectionUnsavedChangesGuard', () => ({
+vi.mock('../state/useInspectionUnsavedChangesGuard', () => ({
   default: () => {},
 }))
 
-vi.mock('../hooks/useInspectionWorkflowActions', () => ({
+vi.mock('../state/useInspectionWorkflowActions', () => ({
   default: () => ({
     workflowActionState: { visible: false, actionType: '', record: null },
     workflowRemarks: '',
@@ -551,16 +548,7 @@ vi.mock('../inspectionContinuation', () => ({
   buildInspectionContinuationPrompt: vi.fn(() => null),
 }))
 
-vi.mock('src/onboarding/inspectionOnboardingContract', () => ({
-  INSPECTION_TOUR_SOURCE_REPLAY: 'replay',
-  TRT_INSPECTION_TOUR_REPLAY_EVENT: 'vmecc:onboarding:trt-inspection-tour-replay',
-}))
-
-vi.mock('src/onboarding/trtInspectionTour', () => ({
-  getTrtInspectionTourEligibility: () => ({ eligible: true }),
-}))
-
-vi.mock('../module/inspectionModuleUtils', () => ({
+vi.mock('../app/inspectionModuleUtils', () => ({
   REPORT_WORKFLOW_DECLARATION_LABEL: 'Declaration',
   buildInspectionPdfFilename: () => 'inspection.pdf',
   buildQueueConflictFields: () => [],
@@ -597,6 +585,7 @@ const renderModule = (initialPath = '/inspection') => {
           <Route path="/inspection/new" element={<InspectionModule />} />
           <Route path="/inspection/new/:newSection" element={<InspectionModule />} />
           <Route path="/inspection/review" element={<InspectionModule />} />
+          <Route path="/inspection/all-extinguishers" element={<InspectionModule />} />
           <Route path="/inspection/:reportId/edit" element={<InspectionModule />} />
           <Route path="/inspection/:reportId" element={<InspectionModule />} />
         </Routes>
@@ -630,6 +619,19 @@ afterEach(() => {
 })
 
 describe('InspectionModule route family', () => {
+  it('opens the All Extinguishers tab without treating it as a detail record', async () => {
+    renderModule('/inspection')
+
+    fireEvent.click(screen.getByRole('button', { name: 'All Extinguishers' }))
+
+    await waitFor(() =>
+      expect(screen.getByTestId('location-path').textContent).toBe('/inspection/all-extinguishers'),
+    )
+    expect(screen.getByRole('button', { name: 'All Extinguishers' }).dataset.active).toBe('true')
+    expect(screen.getByTestId('all-extinguishers-section')).toBeTruthy()
+    expect(screen.queryByText('Inspection detail shell')).toBeNull()
+  })
+
   it('opens a detail route from the records shell', async () => {
     renderModule('/inspection')
 
@@ -652,11 +654,20 @@ describe('InspectionModule route family', () => {
     )
     expect(screen.getByText('Inspection form shell')).toBeTruthy()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Save & Review' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Review Inspections' }))
     await waitFor(() =>
       expect(screen.getByTestId('location-path').textContent).toBe('/inspection/review'),
     )
     expect(screen.getByText('Inspection review shell')).toBeTruthy()
+    await waitFor(() =>
+      expect(inspectionHarness.saveInspectionDraft).toHaveBeenCalledWith(
+        'user-1',
+        expect.objectContaining({
+          inspectionType: 'General Inspection',
+          description: 'Review payload',
+        }),
+      ),
+    )
 
     fireEvent.click(screen.getByRole('button', { name: 'Back to Edit' }))
     await waitFor(() =>
@@ -671,7 +682,7 @@ describe('InspectionModule route family', () => {
     expect(screen.getByText('Inspection form shell')).toBeTruthy()
     expect(screen.getByTestId('form-type').textContent).toBe('General Inspection')
 
-    fireEvent.click(screen.getByRole('button', { name: 'Save & Review' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Review Inspections' }))
     await waitFor(() =>
       expect(screen.getByTestId('location-path').textContent).toBe('/inspection/review'),
     )
@@ -685,7 +696,7 @@ describe('InspectionModule route family', () => {
   it('submits a reviewed inspection and returns to the records route', async () => {
     renderModule('/inspection/new')
 
-    fireEvent.click(screen.getByRole('button', { name: 'Save & Review' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Review Inspections' }))
     await waitFor(() =>
       expect(screen.getByTestId('location-path').textContent).toBe('/inspection/review'),
     )
@@ -740,5 +751,36 @@ describe('InspectionModule route family', () => {
     await waitFor(() =>
       expect(screen.getByTestId('location-path').textContent).toBe('/inspection/new'),
     )
+  })
+
+  it('opens the mobile continue-draft card with draft data loaded in the form', async () => {
+    const draftPayload = {
+      __draftMode: 'new',
+      formVersion: 'inspection',
+      incidentType: 'Fire Extinguisher Inspection',
+      mainLocation: 'Manjung Hub',
+      selectedLocation: 'Zone 1 > Manjung Hub > Reception',
+      description: 'Draft fire extinguisher payload',
+    }
+    inspectionHarness.activeDraftPayload = draftPayload
+    inspectionHarness.activeDraftRows = [
+      {
+        id: 'draft-inspection-new',
+        displayId: 'Draft',
+        recordKind: 'draft',
+        __rawDraftPayload: draftPayload,
+      },
+    ]
+
+    renderModule('/inspection')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continue draft' }))
+
+    await waitFor(() =>
+      expect(screen.getByTestId('location-path').textContent).toBe('/inspection/new'),
+    )
+    expect(screen.getByText('Inspection form shell')).toBeTruthy()
+    expect(screen.getByTestId('form-type').textContent).toBe('Fire Extinguisher Inspection')
+    expect(screen.getByTestId('form-location').textContent).toBe('Manjung Hub')
   })
 })
