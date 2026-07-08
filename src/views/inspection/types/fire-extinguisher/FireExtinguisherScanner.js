@@ -165,14 +165,11 @@ const FireExtinguisherScanner = ({ isChecking = false, visible = false, onClose,
               : await getCameraPermissionState(),
         }
 
+        setPhase('scanning')
         const devices = await navigator.mediaDevices.enumerateDevices().catch(() => [])
         selectedDevice = selectPreferredVideoDevice(devices, streamDevice.deviceId) || streamDevice
-        clearActiveScanner()
-
-        setPhase('scanning')
-        const selectedDeviceId = text(selectedDevice?.deviceId) || undefined
-        const controls = await reader.decodeFromVideoDevice(
-          selectedDeviceId,
+        const controls = await reader.decodeFromStream(
+          bootstrapStream,
           videoRef.current,
           (result) => {
             if (!result || cancelled || scannedRef.current) return
@@ -310,10 +307,13 @@ const FireExtinguisherScanner = ({ isChecking = false, visible = false, onClose,
               {diagnostics.policyAllowsCamera === null ? null : (
                 <div>Policy allows camera: {diagnostics.policyAllowsCamera ? 'yes' : 'no'}</div>
               )}
+              <div>Media devices supported: {diagnostics.supportsMediaDevices ? 'yes' : 'no'}</div>
+              {diagnostics.phase ? <div>Phase: {diagnostics.phase}</div> : null}
               {diagnostics.selectedDeviceLabel || diagnostics.selectedDeviceId ? (
                 <div>Device: {diagnostics.selectedDeviceLabel || diagnostics.selectedDeviceId}</div>
               ) : null}
               {diagnostics.errorName ? <div>Error: {diagnostics.errorName}</div> : null}
+              {diagnostics.errorMessage ? <div>Message: {diagnostics.errorMessage}</div> : null}
             </div>
           </details>
         ) : null}
