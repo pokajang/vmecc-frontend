@@ -251,6 +251,19 @@ const isFrtOneOffRowComplete = (row = {}) => {
   return text(row.remarks) !== '' && hasPhotos(row.photos)
 }
 
+const isFrtDailyInspectionCandidateRow = (row = {}) =>
+  isFrtDailyRowComplete(row) ||
+  text(row.readingValue) !== '' ||
+  text(row.status) !== '' ||
+  text(row.remarks) !== '' ||
+  hasPhotos(row.photos)
+
+const isFrtOneOffInspectionCandidateRow = (row = {}) =>
+  isFrtOneOffRowComplete(row) ||
+  text(row.condition) !== '' ||
+  text(row.remarks) !== '' ||
+  hasPhotos(row.photos)
+
 const filterRowsByCompartment = (rows = [], compartment = '') => {
   const selectedCompartment = normalizeCompartmentTitle(compartment)
   if (!selectedCompartment) return rows
@@ -293,6 +306,20 @@ const getFrtOneOffRows = (form = {}, { filterCompartment = true } = {}) => {
 export const getFrtVisibleDailyChecks = (form = {}) => getFrtDailyRows(form)
 
 export const getFrtVisibleOneOffChecks = (form = {}) => getFrtOneOffRows(form)
+
+export const getFrtSubmissionDailyChecks = (form = {}) => {
+  if (!resolveSelectedFrtTruckPlate(form)) return []
+  return normalizeFrtDailyChecks(form.frtDailyChecks || form.frt_daily_checks).filter(
+    isFrtDailyInspectionCandidateRow,
+  )
+}
+
+export const getFrtSubmissionOneOffChecks = (form = {}) => {
+  if (!resolveSelectedFrtTruckPlate(form)) return []
+  return normalizeFrtOneOffChecks(form.frtOneOffChecks || form.frt_one_off_checks).filter(
+    isFrtOneOffInspectionCandidateRow,
+  )
+}
 
 const buildSectionSummary = (section, rows, kind) => {
   const visibleRows = rows.filter(
@@ -425,11 +452,15 @@ export const getFrtCompartmentOptions = (form = {}) => {
   })
 }
 
-export const getFrtCheckSummary = (form = {}) => {
+export const getFrtCheckSummary = (form = {}, options = {}) => {
   const selectedTruck = resolveSelectedFrtTruckPlate(form)
   const selectedCompartment = getSelectedFrtCompartment(form)
-  const dailyRows = getFrtVisibleDailyChecks(form)
-  const oneOffRows = getFrtVisibleOneOffChecks(form)
+  const dailyRows = Array.isArray(options.dailyRows)
+    ? options.dailyRows
+    : getFrtVisibleDailyChecks(form)
+  const oneOffRows = Array.isArray(options.oneOffRows)
+    ? options.oneOffRows
+    : getFrtVisibleOneOffChecks(form)
   const dailySections = buildDynamicSectionDefinitions(
     FRT_DAILY_SECTION_DEFINITIONS,
     dailyRows,
@@ -590,8 +621,8 @@ export const getFrtValidationDetails = (form = {}) => {
 const makeChecklistId = (label) =>
   `${slugSegment(FRT_DAILY_INSPECTION_TYPE) || 'frt-daily-inspection'}:${slugSegment(label)}`
 
-export const buildFrtChecklist = (form = {}) => {
-  const summary = getFrtCheckSummary(form)
+export const buildFrtChecklist = (form = {}, options = {}) => {
+  const summary = getFrtCheckSummary(form, options)
   const rows = []
   const truckPlate = summary.selectedTruck || 'selected truck'
 
@@ -646,7 +677,7 @@ export const buildFrtChecklist = (form = {}) => {
   return rows
 }
 
-export const buildFrtDescription = (form = {}) => {
+export const buildFrtDescription = (form = {}, options = {}) => {
   const inspectedBy = String(form.frtInspectedBy || form.frt_inspected_by || '').trim()
   const inspectionDate = String(form.frtInspectionDate || form.frt_inspection_date || '').trim()
   const dailyRemarks = String(form.frtDailyRemarks || form.frt_daily_remarks || '').trim()
@@ -655,7 +686,7 @@ export const buildFrtDescription = (form = {}) => {
     dailyRemarks && oneOffRemarks && dailyRemarks !== oneOffRemarks
       ? [dailyRemarks, oneOffRemarks].join('\n')
       : dailyRemarks || oneOffRemarks
-  const summary = getFrtCheckSummary(form)
+  const summary = getFrtCheckSummary(form, options)
   const truckPlate = summary.selectedTruck || 'selected truck'
 
   const lines = [

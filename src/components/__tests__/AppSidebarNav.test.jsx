@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { CNavItem } from '@coreui/react'
-import { Download, LayoutDashboard } from 'lucide-react'
+import { Download, LayoutDashboard, Settings } from 'lucide-react'
 
 import { AppSidebarNav } from '../AppSidebarNav'
 import { PWA_INSTALL_ACTION } from 'src/constants/pwa'
@@ -55,5 +55,25 @@ describe('AppSidebarNav', () => {
     )
 
     expect(screen.getByRole('link', { name: 'Dashboard' }).getAttribute('href')).toBe('/dashboard')
+  })
+
+  it('marks prefix-matched navigation items active', () => {
+    render(
+      <MemoryRouter initialEntries={['/reporting-settings/erco']}>
+        <AppSidebarNav
+          items={[
+            {
+              component: CNavItem,
+              name: 'Reporting Settings',
+              to: '/reporting-settings/inspection',
+              matchPrefix: ['/reporting-settings'],
+              icon: <Settings className="nav-icon" size={20} />,
+            },
+          ]}
+        />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('link', { name: 'Reporting Settings' }).className).toContain('active')
   })
 })

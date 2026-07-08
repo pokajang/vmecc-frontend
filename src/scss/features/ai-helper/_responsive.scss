@@ -1,0 +1,83 @@
+@use '../../tools/coreui-tools' as *;
+
+@include media-breakpoint-down(md) {
+  .ai-helper-launcher {
+    right: 1rem;
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 0.9rem);
+  }
+
+  .ai-helper-panel {
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+    z-index: 1029;
+    width: 100%;
+    max-width: 100%;
+    border-left: 0;
+    box-shadow: 0 -0.75rem 2rem rgba(15, 23, 42, 0.12);
+  }
+
+  .ai-helper-header {
+    gap: 0.55rem;
+    min-height: 3.9rem;
+    padding: 0.75rem 0.75rem 0.72rem 0.85rem;
+  }
+
+  .ai-helper-header__brand {
+    gap: 0.55rem;
+  }
+
+  .ai-helper-header__actions {
+    gap: 0.08rem;
+    margin-inline-start: 0.2rem;
+  }
+
+  .ai-helper-icon {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .ai-helper-language-toggle {
+    font-size: 0.84rem;
+    padding-inline: 0.42rem;
+  }
+
+  .ai-helper-footnote {
+    display: none;
+  }
+}
+
+@media (pointer: coarse) {
+  .ai-helper-message__bubble--actionable {
+    padding-bottom: 2.9rem;
+  }
+
+  .ai-helper-icon-btn,
+  .ai-helper-language-toggle,
+  .ai-helper-send,
+  .ai-helper-error button,
+  .ai-helper-notice button,
+  .ai-helper-message__action,
+  .ai-helper-history__header button,
+  .ai-helper-history__open,
+  .ai-helper-history__delete,
+  .ai-helper-knowledge__delete,
+  .ai-helper-starters button,
+  .ai-helper-guidance-preview__header button,
+  .ai-helper-guidance-preview__list button,
+  .ai-helper-history-confirm__actions button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .ai-helper-header__actions .ai-helper-icon-btn {
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  .ai-helper-header__actions .ai-helper-language-toggle {
+    min-width: auto;
+    min-height: 40px;
+  }
+}

@@ -144,7 +144,7 @@ export const knowledgeScopeLabel = (entry = {}) => {
 }
 
 export const knowledgeEntryName = (entry = {}) =>
-  entry.source_filename || entry.title || 'Uploaded PDF'
+  entry.title || entry.source_filename || 'Uploaded PDF'
 
 export const makeLocalMessage = (role, content, status = 'completed', extra = {}) => ({
   id: `${role}-${Date.now()}-${Math.random().toString(36).slice(2)}`,

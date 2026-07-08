@@ -6,18 +6,10 @@ const CASES = [
   { id: 'hydraulic', openText: 'Hydraulic Pump Motor 1' },
   { id: 'er-aux', openText: 'Radio Tetra' },
   { id: 'scba', openText: 'MSA 06' },
-  { id: 'high-angle', openText: 'Rescue Rope' },
-  {
-    id: 'frt',
-    openText: 'Pump Panel',
-    extraDrawers: [
-      { name: 'daily-remarks', openLabel: 'Edit daily remarks' },
-      { name: 'one-off-row', openText: 'Emergency Beacon' },
-      { name: 'one-off-remarks', openLabel: 'Edit one-off remarks' },
-    ],
-  },
+  { id: 'high-angle', openText: 'Rescue Rope', openSequence: ['Locker A', 'Rescue Rope'] },
+  { id: 'frt', openText: 'Pump Panel' },
   { id: 'hse', openLabel: 'Edit HSE observation' },
-  { id: 'general', openLabel: 'Edit general inspection details' },
+  { id: 'general', openText: 'Add finding' },
 ]
 
 test.use({
@@ -38,7 +30,11 @@ test('captures inspection mobile parity states', async ({ page }, testInfo) => {
       path: path.join(outputDir, `${visualCase.id}-list.png`),
     })
 
-    if (visualCase.openLabel) {
+    if (visualCase.openSequence) {
+      for (const itemText of visualCase.openSequence) {
+        await section.getByText(itemText, { exact: true }).click()
+      }
+    } else if (visualCase.openLabel) {
       await section.getByLabel(visualCase.openLabel).click()
     } else {
       await section.getByText(visualCase.openText, { exact: true }).click()

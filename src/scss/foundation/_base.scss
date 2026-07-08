@@ -1,0 +1,114 @@
+body {
+  background-color: #ffffff;
+}
+
+html {
+  font-size: 14px;
+}
+
+@media (max-width: 767.98px) {
+  html {
+    font-size: 16px;
+  }
+
+  .form-control,
+  .form-select,
+  .form-control-plaintext,
+  .input-group-text,
+  .form-check-label,
+  .btn-link {
+    font-weight: 500;
+  }
+
+  .form-control::placeholder,
+  .form-select::placeholder,
+  .form-control-plaintext::placeholder,
+  textarea.form-control::placeholder {
+    font-weight: 400;
+  }
+}
+
+:root {
+  --vmecc-focus-ring: 0 0 0 0.16rem rgba(0, 126, 122, 0.28);
+  --vmecc-radius-card: 0.5rem;
+  --ai-helper-width: clamp(360px, 30vw, 420px);
+  --vmecc-status-draft-bg: #fef3c7;
+  --vmecc-status-draft-text: #92400e;
+  --vmecc-status-success-bg: #d1fae5;
+  --vmecc-status-success-text: #065f46;
+  --vmecc-status-danger-bg: #fde8e8;
+  --vmecc-status-danger-text: #991b1b;
+  --vmecc-status-muted-bg: var(--cui-secondary-bg);
+  --vmecc-status-muted-text: var(--cui-secondary-color);
+  --mobile-overlay-nav-height: 64px;
+  --mobile-overlay-side-gap: 10px;
+  --mobile-overlay-bottom-gap: 8px;
+  --mobile-overlay-max-width: 46rem;
+  --mobile-overlay-radius: 14px;
+  --mobile-overlay-item-radius: 0.65rem;
+  --mobile-overlay-danger-radius: 0.58rem;
+  --mobile-overlay-shadow: 0 12px 32px rgba(15, 23, 42, 0.24);
+  --mobile-overlay-backdrop: rgba(15, 23, 42, 0.36);
+  --mobile-overlay-padding: 0.65rem;
+  --mobile-overlay-row-min-height: 44px;
+  --mobile-overlay-menu-row-min-height: 46px;
+  --mobile-overlay-icon-slot: 1.25rem;
+  --mobile-overlay-icon-size: 18px;
+  --mobile-overlay-label-line-height: 1.25rem;
+  --mobile-overlay-section-gap: 0.7rem;
+  --mobile-overlay-section-bottom-gap: 0.22rem;
+  --mobile-overlay-row-gap: 0.32rem;
+  --mobile-overlay-list-gap: 0.6rem;
+  --mobile-overlay-scrollbar: #e2e8f0;
+  --mobile-overlay-scrollbar-hover: #cbd5e1;
+  --mobile-overlay-danger-bg: #dc2626;
+  --mobile-overlay-danger-bg-hover: #b91c1c;
+  --mobile-overlay-danger-text: #ffffff;
+}
+
+.btn:focus-visible,
+.nav-link:focus-visible,
+.dropdown-item:focus-visible,
+.form-control:focus-visible,
+.form-select:focus-visible,
+.form-check-input:focus-visible,
+[role='button']:focus-visible,
+[role='radio']:focus-visible,
+.mobile-nav-sheet-row:focus-visible,
+.mobile-overlay-list-row:focus-within,
+.mobile-overlay-shell-icon-btn:focus-visible,
+.app-bottom-nav-item:focus-visible {
+  outline: 0;
+  box-shadow: var(--vmecc-focus-ring);
+}
+
+.workflow-status-summary {
+  max-width: 18rem;
+}
+
+.pwa-install-banner__text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.pwa-install-banner__dismiss {
+  width: 2rem;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0;
+}
+
+.matrix-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.matrix-table-shell .table {
+  min-width: 720px;
+}
+
+.matrix-table-shell th,
+.matrix-table-shell td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}

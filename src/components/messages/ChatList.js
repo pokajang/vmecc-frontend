@@ -145,7 +145,7 @@ const ChatList = ({
                       {roleLabel && (
                         <span
                           className="text-muted small fw-normal flex-shrink-0"
-                          style={{ fontSize: '0.7rem' }}
+                          style={{ fontSize: '0.78rem' }}
                         >
                           {roleLabel}
                         </span>
@@ -187,7 +187,7 @@ const ChatList = ({
       </div>
 
       {isCapped && (
-        <div className="text-center text-muted py-2 border-top" style={{ fontSize: '0.72rem' }}>
+        <div className="text-center text-muted py-2 border-top" style={{ fontSize: '0.78rem' }}>
           Showing the 300 most recent conversations.
         </div>
       )}

@@ -67,6 +67,8 @@ const normalizePhotos = (photos) =>
     ),
   )
 
+const hasPhotos = (photos) => Array.isArray(photos) && photos.length > 0
+
 const hasOwn = (item, key) => Object.prototype.hasOwnProperty.call(item || {}, key)
 
 const resolveQuantity = (item = {}, fallback = '') => {
@@ -329,6 +331,35 @@ export const getErAuxVisibleChecks = (form = {}) => {
   return visible
 }
 
+const isErAuxSessionCompletedRow = (check = {}) => isErAuxRowComplete(check)
+
+const hasErAuxMeaningfulInput = (check = {}) =>
+  hasErAuxRowText(check.quantity) ||
+  hasErAuxRowText(check.condition) ||
+  hasErAuxRowText(check.remarks) ||
+  hasErAuxRowText(check.defectRemarks) ||
+  hasErAuxRowText(check.additionalNotes) ||
+  hasPhotos(check.defectPhotos) ||
+  hasPhotos(check.photos)
+
+const hasErAuxRowText = (value) => String(value || '').trim() !== ''
+
+export const isErAuxInspectionCandidateRow = (row = {}) =>
+  isErAuxSessionCompletedRow(row) || hasErAuxMeaningfulInput(row)
+
+export const getErAuxSubmissionCandidateRows = (form = {}) => {
+  const catalogRows = normalizeErAuxEquipmentRows(
+    form?.erAuxEquipmentRows || form?.er_aux_equipment_rows,
+  )
+  const checks = normalizeErAuxChecks(form?.erAuxChecks || form?.er_aux_checks)
+  const catalogById = new Map(catalogRows.map((row) => [String(row.id || '').trim(), row]))
+
+  return checks.filter(isErAuxInspectionCandidateRow).map((check) => {
+    const catalog = catalogById.get(String(check.id || ''))
+    return catalog ? { ...catalog, ...check, id: check.id } : check
+  })
+}
+
 const isIssueCondition = (value) => ['Defect', 'Missing', 'N/A'].includes(normalizeCondition(value))
 const isDefectCondition = (value) => normalizeCondition(value) === 'Defect'
 
@@ -400,8 +431,8 @@ export const getErAuxValidationDetails = (form = {}) => {
   }
 }
 
-export const getErAuxCheckSummary = (form = {}) => {
-  const visibleChecks = getErAuxVisibleChecks(form)
+export const getErAuxCheckSummary = (form = {}, options = {}) => {
+  const visibleChecks = Array.isArray(options.checks) ? options.checks : getErAuxVisibleChecks(form)
   const checkedCount = visibleChecks.filter(isErAuxRowComplete).length
   const issueCount = visibleChecks.filter((check) => isIssueCondition(check.condition)).length
   const incompleteRemarksCount = visibleChecks.filter(
@@ -426,8 +457,11 @@ export const getErAuxCheckSummary = (form = {}) => {
   }
 }
 
-export const getErAuxMissingFields = (form = {}) => {
-  const { visibleChecks } = getErAuxCheckSummary(form)
+export const getErAuxMissingFields = (form = {}, options = {}) => {
+  const { visibleChecks } = getErAuxCheckSummary(
+    form,
+    Array.isArray(options.checks) ? { checks: options.checks } : {},
+  )
 
   return {
     erAuxSession: false,
@@ -443,10 +477,11 @@ export const getErAuxMissingFields = (form = {}) => {
   }
 }
 
-export const buildErAuxChecklist = (form = {}) => {
+export const buildErAuxChecklist = (form = {}, options = {}) => {
   const inspectionType = String(form.inspectionType || ER_AUX_EQUIPMENT_INSPECTION_TYPE).trim()
+  const checks = Array.isArray(options.checks) ? options.checks : getErAuxVisibleChecks(form)
 
-  return getErAuxVisibleChecks(form)
+  return checks
     .map((check) => {
       const condition = normalizeCondition(check.condition)
       const quantity = String(check.quantity || '').trim()
@@ -462,13 +497,16 @@ export const buildErAuxChecklist = (form = {}) => {
     .filter(Boolean)
 }
 
-export const buildErAuxDescription = (form = {}) => {
+export const buildErAuxDescription = (form = {}, options = {}) => {
   const location = String(form.location || form.selectedLocation || getMainLocation(form)).trim()
   const inspectedBy = String(form.erAuxInspectedBy || form.er_aux_inspected_by || '').trim()
   const inspectionDate = String(
     form.erAuxInspectionDate || form.er_aux_inspection_date || '',
   ).trim()
-  const { totalCount, issueCount, visibleChecks } = getErAuxCheckSummary(form)
+  const { totalCount, issueCount, visibleChecks } = getErAuxCheckSummary(
+    form,
+    Array.isArray(options.checks) ? { checks: options.checks } : {},
+  )
   const issueRows = visibleChecks
     .filter((check) => isIssueCondition(check.condition))
     .map((check) => {

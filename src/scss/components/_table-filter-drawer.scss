@@ -1,0 +1,37 @@
+.offcanvas-bottom.table-filter-drawer {
+  --cui-offcanvas-height: auto;
+  height: auto;
+  max-height: min(82dvh, 620px);
+  border-radius: 14px 14px 0 0;
+}
+
+.table-filter-drawer__header {
+  padding: 1.25rem 1.35rem 1rem;
+}
+
+.table-filter-drawer .offcanvas-body {
+  flex: 0 1 auto;
+  padding: 0.75rem 1.35rem 1.35rem;
+  overflow-y: auto;
+}
+
+.table-filter-drawer__controls {
+  gap: 1rem;
+}
+
+.table-filter-drawer .form-label {
+  margin-bottom: 0.4rem;
+  line-height: 1.25;
+}
+
+.table-filter-drawer .form-select {
+  min-height: 2.75rem;
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
+}
+
+@media (max-height: 520px) {
+  .table-filter-drawer .offcanvas-body {
+    overflow-y: auto;
+  }
+}

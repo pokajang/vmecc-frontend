@@ -1,0 +1,543 @@
+@use '../../tools/coreui-tools' as *;
+
+.erco-title-select__menu-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.erco-title-select__menu-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.erco-title-select__menu-list::-webkit-scrollbar-thumb {
+  background-color: rgba(129, 137, 151, 0.7);
+  border-radius: 999px;
+}
+
+.erco-title-select__menu-list::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(129, 137, 151, 0.9);
+}
+
+.erco-team-accordion__item {
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.erco-team-accordion__header {
+  min-width: 0;
+  padding: 0.65rem 0.75rem;
+}
+
+.erco-team-accordion__toggle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  column-gap: 0.55rem;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.erco-team-accordion__team {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.erco-team-accordion__count {
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.erco-team-accordion__chevron {
+  flex: 0 0 auto;
+  color: var(--cui-primary);
+  transition: transform 0.16s ease;
+}
+
+.erco-team-accordion__chevron--open {
+  transform: rotate(180deg);
+}
+
+.erco-team-accordion__body {
+  padding: 0 0.75rem 0.75rem;
+}
+
+.erco-mobile-context {
+  padding: 0.75rem;
+}
+
+.erco-mobile-context__title {
+  margin-bottom: 0.55rem;
+}
+
+.erco-mobile-context__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem 0.75rem;
+}
+
+.erco-mobile-context__item {
+  min-width: 0;
+}
+
+.erco-mobile-context__label {
+  color: var(--cui-secondary-color);
+  font-size: 0.82rem;
+  line-height: 1.2;
+}
+
+.erco-mobile-context__value {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 600;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.erco-chronology-mobile-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.erco-chronology-mobile-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.55rem 0.55rem 0.65rem;
+  border: 1px solid var(--cui-border-color);
+  border-radius: 0.45rem;
+  background: #ffffff;
+}
+
+.erco-chronology-mobile-row__main {
+  display: grid;
+  grid-template-columns: 3.8rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.erco-chronology-mobile-row__time {
+  color: var(--cui-primary);
+  font-size: 0.86rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.erco-chronology-mobile-row__action {
+  min-width: 0;
+  overflow: hidden;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.erco-chronology-mobile-row__menu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--cui-secondary-color);
+  box-shadow: none !important;
+}
+
+.report-setup-summary-row__value {
+  display: inline-flex;
+  min-width: 0;
+  align-items: flex-start;
+}
+
+.report-setup-summary-row--desktop {
+  display: grid;
+  grid-template-columns: minmax(0, 7.25rem) minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 0.75rem;
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.45rem 0.55rem 0.45rem 0.75rem;
+}
+
+.report-setup-summary-row__section-label {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 400;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.report-setup-summary-row__actions {
+  justify-self: end;
+}
+
+.report-setup-summary-row__edit,
+.report-setup-summary-row__reset {
+  display: inline-flex;
+  width: 2.25rem;
+  height: 2.25rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.report-setup-confirm-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.report-setup-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.report-setup-actions__button {
+  min-width: 0;
+}
+
+.report-option-card.inspection-option-card {
+  min-height: 3.45rem;
+}
+
+.report-option-card.inspection-option-card.border-primary {
+  border-color: rgba(0, 126, 122, 0.7) !important;
+}
+
+.report-option-card.inspection-option-card.bg-primary {
+  background-color: rgba(0, 126, 122, 0.12) !important;
+}
+
+.report-mobile-context {
+  padding: 0.75rem;
+}
+
+.report-mobile-context__title {
+  margin-bottom: 0.55rem;
+}
+
+.report-mobile-context__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem 0.75rem;
+}
+
+.report-mobile-context__item {
+  min-width: 0;
+}
+
+.report-mobile-context__label {
+  color: var(--cui-secondary-color);
+  font-size: 0.82rem;
+  line-height: 1.2;
+}
+
+.report-mobile-context__value {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 600;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.report-workfirst-detail {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.report-workfirst-detail__header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.75rem;
+  padding: 0.85rem 0.95rem;
+}
+
+.report-workfirst-detail__status {
+  display: inline-flex;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.report-workfirst-detail__card {
+  display: grid;
+  gap: 0;
+  padding: 0.35rem 0.95rem;
+}
+
+.report-workfirst-detail__row {
+  display: grid;
+  grid-template-columns: minmax(0, 7.5rem) minmax(0, 1fr);
+  align-items: start;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.58rem 0;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.report-workfirst-detail__row:last-child {
+  border-bottom: 0;
+}
+
+.report-workfirst-detail__label {
+  min-width: 0;
+  color: var(--cui-secondary-color);
+  font-size: 0.84rem;
+  line-height: 1.25;
+}
+
+.report-workfirst-detail__value {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: right;
+  text-overflow: ellipsis;
+}
+
+.report-workfirst-detail__text-block {
+  min-width: 0;
+  padding: 0.65rem 0;
+}
+
+.report-workfirst-detail__text-block + .report-workfirst-detail__text-block {
+  border-top: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.report-workfirst-detail__actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding-top: 0.35rem;
+}
+
+.report-workfirst-detail__actions .btn {
+  min-height: 2.35rem;
+  padding-inline: 0.65rem;
+  white-space: nowrap;
+}
+
+.report-chronology-mobile-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.report-chronology-mobile-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.55rem 0.55rem 0.65rem;
+  border: 1px solid var(--cui-border-color);
+  border-radius: 0.45rem;
+  background: #ffffff;
+}
+
+.report-chronology-mobile-row__main {
+  display: grid;
+  grid-template-columns: 3.8rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+}
+
+.report-chronology-mobile-row__time {
+  color: var(--cui-primary);
+  font-size: 0.86rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.report-chronology-mobile-row__action {
+  min-width: 0;
+  overflow: hidden;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.report-chronology-mobile-row__menu {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--cui-secondary-color);
+  box-shadow: none !important;
+}
+
+@include media-breakpoint-down(md) {
+  .report-option-card.inspection-option-card {
+    min-height: 3.35rem;
+  }
+
+  .report-setup-grid {
+    display: flex !important;
+    min-height: calc(
+      100dvh - var(--mobile-overlay-nav-height) - env(safe-area-inset-bottom, 0px) - 10rem
+    );
+    flex-direction: column;
+    gap: 0.9rem !important;
+  }
+
+  .report-setup-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.5rem;
+    margin-top: auto;
+    padding-top: 1.25rem;
+  }
+
+  .report-setup-actions__button {
+    min-width: 0;
+    min-height: 2.35rem;
+    padding-inline: 0.65rem;
+    white-space: nowrap;
+  }
+
+  .report-setup-actions__button:only-child {
+    grid-column: 2;
+  }
+}
+
+@include media-breakpoint-down(md) {
+  .erco-mobile-setup-grid {
+    display: flex !important;
+    min-height: calc(
+      100dvh - var(--mobile-overlay-nav-height) - env(safe-area-inset-bottom, 0px) - 10rem
+    );
+    flex-direction: column;
+    gap: 0.9rem !important;
+  }
+
+  .erco-setup-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.5rem;
+    margin-top: auto;
+    padding-top: 1.25rem;
+  }
+
+  .erco-setup-actions__button {
+    min-width: 0;
+    min-height: 2.35rem;
+    padding-inline: 0.65rem;
+    white-space: nowrap;
+  }
+
+  .erco-setup-actions__button:only-child {
+    grid-column: 2;
+  }
+
+  .erco-mobile-setup-grid
+    .rounded-3.border:not(.inspection-mobile-selector-chip):not(.border-primary) {
+    border-color: rgba(148, 163, 184, 0.28) !important;
+    box-shadow: none !important;
+  }
+
+  .erco-mobile-setup-summary {
+    width: 100%;
+  }
+
+  .erco-mobile-setup-summary__value {
+    min-width: 0;
+    overflow: hidden;
+    line-height: 1.3;
+  }
+
+  .erco-incident-summary-panel {
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .erco-incident-summary-panel .row {
+    --cui-gutter-y: 0;
+  }
+
+  .erco-incident-summary-panel__field {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.48rem 0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+  }
+
+  .erco-incident-summary-panel__field > :first-child {
+    flex: 0 0 auto;
+  }
+
+  .erco-incident-summary-panel__field > :last-child {
+    min-width: 0;
+    max-width: 62%;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+
+  .erco-analysis-mobile-accordion {
+    display: grid;
+    gap: 0.7rem;
+  }
+
+  .erco-analysis-mobile-section {
+    border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+  }
+
+  .erco-analysis-mobile-section__header {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.68rem 0;
+    border: 0;
+    background: transparent;
+    text-align: left;
+  }
+
+  .erco-analysis-mobile-section__title {
+    min-width: 0;
+    font-weight: 600;
+  }
+
+  .erco-analysis-mobile-section__meta {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--cui-secondary-color);
+    font-size: 0.84rem;
+    white-space: nowrap;
+  }
+
+  .erco-analysis-mobile-section__body {
+    padding: 0.25rem 0 0.95rem;
+  }
+}
+
+.app-header-dropdown-section-header {
+  background-color: #e8ebef;
+  border-top: 0;
+}

@@ -171,7 +171,7 @@ const RosterCard = ({ monthBlock, editMode = false, teams = [], allShifts = [], 
                 >
                   <div
                     style={{
-                      fontSize: '0.75rem',
+                      fontSize: '0.82rem',
                       fontWeight: 600,
                       color: isToday(row.date) ? '#2563eb' : 'var(--cui-secondary-color)',
                       textTransform: 'uppercase',

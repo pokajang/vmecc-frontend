@@ -1,0 +1,86 @@
+.reporting-workflow-settings {
+  &__shell {
+    width: min(100%, 820px);
+  }
+
+  &__nav .nav {
+    margin-bottom: 1.125rem !important;
+  }
+}
+
+.reporting-workflow-card {
+  --reporting-workflow-muted: #5f6f86;
+  --reporting-workflow-disabled-check: #86c7c4;
+
+  max-width: 100%;
+
+  &__header {
+    min-height: 2.5rem;
+    padding: 0.65rem 0.875rem;
+  }
+
+  &__title {
+    font-weight: 500;
+  }
+
+  &__body {
+    padding: 1rem 0.875rem 1.1rem;
+  }
+
+  &__summary {
+    margin-bottom: 0.15rem;
+  }
+
+  &__field-label {
+    margin-bottom: 0.4rem;
+    font-size: 0.875rem;
+  }
+
+  &__select.form-select {
+    min-height: 2.1rem;
+    font-size: 0.875rem;
+  }
+
+  &__select.form-select:disabled {
+    border-color: var(--cui-border-color);
+    background-color: var(--cui-secondary-bg);
+    color: var(--cui-body-color);
+    opacity: 1;
+  }
+
+  &__help {
+    min-height: 2.3rem;
+    color: var(--reporting-workflow-muted);
+  }
+
+  &__options {
+    padding-top: 0.1rem;
+  }
+
+  &__option.form-check {
+    min-height: 1.25rem;
+  }
+
+  &__option .form-check-input:disabled {
+    border-color: var(--reporting-workflow-disabled-check);
+    background-color: var(--reporting-workflow-disabled-check);
+    opacity: 1;
+  }
+
+  &__option .form-check-input:disabled ~ .form-check-label {
+    color: var(--reporting-workflow-muted);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .reporting-workflow-card {
+    &__body {
+      padding: 0.875rem;
+    }
+
+    &__help {
+      min-height: 0;
+    }
+  }
+}

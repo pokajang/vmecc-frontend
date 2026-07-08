@@ -1,0 +1,321 @@
+.inspection-next-location-card {
+  max-width: 100%;
+}
+
+.inspection-next-location-options {
+  min-width: 0;
+  gap: 0.45rem !important;
+}
+
+.inspection-next-location-btn {
+  --cui-btn-padding-x: 0.7rem;
+  --cui-btn-padding-y: 0.28rem;
+  --cui-btn-font-size: 0.9rem;
+  --cui-btn-border-radius: 999px;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 2rem;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inspection-mobile-selector-row {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.inspection-mobile-selector-chip {
+  display: grid !important;
+  grid-template-columns: minmax(0, 5.5rem) minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 0.6rem;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  min-height: 3.35rem;
+  padding: 0.45rem 0.55rem 0.45rem 0.65rem;
+}
+
+.inspection-mobile-selector-chip__label {
+  min-width: 0;
+}
+
+.inspection-mobile-selector-chip__section-label {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 400;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inspection-mobile-selector-chip__actions {
+  justify-self: end;
+  min-width: 0;
+}
+
+.inspection-mobile-selector-chip__edit,
+.inspection-mobile-selector-chip__reset {
+  display: inline-flex;
+  width: 2.25rem;
+  height: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+}
+
+.inspection-mobile-datetime-card {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, max-content) minmax(0, 1fr);
+  align-items: center;
+  column-gap: 0.6rem;
+  min-width: 0;
+  min-height: 3.35rem;
+  padding: 0.45rem 0.55rem 0.45rem 0.65rem;
+}
+
+.inspection-mobile-datetime-label {
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.inspection-mobile-datetime-input.form-control {
+  min-height: 1.65rem;
+  padding: 0 0.35rem 0 0;
+  border: 0;
+  background-color: transparent;
+  box-shadow: none;
+  color: var(--cui-body-color);
+  font-weight: 600;
+  text-align: left;
+}
+
+.inspection-mobile-datetime-input.form-control:focus {
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.offcanvas-bottom.inspection-mobile-setup-drawer {
+  --cui-offcanvas-height: auto;
+  height: auto;
+  max-height: min(82dvh, 640px);
+  border-radius: 16px 16px 0 0;
+}
+
+.offcanvas.mobile-bottom-drawer--confirm {
+  z-index: 1210;
+}
+
+.inspection-mobile-setup-drawer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.1rem 0.75rem;
+}
+
+.inspection-mobile-setup-drawer__title {
+  min-width: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.inspection-mobile-setup-drawer__title-row {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.inspection-mobile-setup-drawer__actions {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.45rem;
+}
+
+.inspection-mobile-setup-drawer__close {
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.inspection-mobile-setup-drawer__body {
+  flex: 0 1 auto;
+  padding: 0.75rem 1.1rem calc(2rem + env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  scrollbar-color: #cfd5dd #f3f5f7;
+  scrollbar-width: thin;
+}
+
+.inspection-mobile-setup-drawer__body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.inspection-mobile-setup-drawer__body::-webkit-scrollbar-track {
+  background-color: #f3f5f7;
+  border-radius: 999px;
+}
+
+.inspection-mobile-setup-drawer__body::-webkit-scrollbar-thumb {
+  background-color: #cfd5dd;
+  border-radius: 999px;
+}
+
+.inspection-mobile-setup-drawer__body::-webkit-scrollbar-thumb:hover {
+  background-color: #b8c0ca;
+}
+
+.inspection-mobile-setup-drawer__field-label {
+  margin-bottom: -0.5rem;
+  font-weight: 400;
+}
+
+.inspection-mobile-setup-drawer__done {
+  justify-self: end;
+}
+
+.inspection-fire-extinguisher-detail-drawer-shell {
+  padding-top: 0.25rem;
+}
+
+.inspection-fire-extinguisher-detail-drawer-body {
+  gap: 1.65rem;
+}
+
+.inspection-fire-extinguisher-detail-drawer-summary {
+  margin: 0.1rem 0 0.95rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inspection-equipment-detail-drawer-shell {
+  padding-top: 0.25rem;
+}
+
+.inspection-equipment-detail-drawer-body {
+  gap: 1.35rem;
+}
+
+.inspection-equipment-detail-drawer-summary {
+  margin: -0.05rem 0 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inspection-frt-remarks-drawer__done {
+  justify-self: end;
+  width: auto;
+}
+
+.inspection-fire-extinguisher-drawer-title-action {
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: 1.9rem;
+  height: 1.9rem;
+  align-items: center;
+  justify-content: center;
+  color: var(--cui-primary);
+  text-decoration: none;
+}
+
+.mobile-bottom-drawer__footer {
+  margin-top: 1rem;
+}
+
+.inspection-fire-extinguisher-drawer-footer {
+  position: relative;
+  margin-top: 1.75rem;
+  margin-right: -1.1rem;
+  margin-left: -1.1rem;
+  padding: 1.15rem 1.1rem 0.9rem;
+  border-top: 0;
+}
+
+.inspection-fire-extinguisher-drawer-footer::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  border-top: 1px solid var(--cui-border-color);
+  content: '';
+}
+
+.inspection-fire-extinguisher-drawer-footer__status {
+  min-width: 0;
+}
+
+.inspection-fire-extinguisher-drawer-footer__actions {
+  flex: 0 0 auto;
+}
+
+.inspection-form-setup-body-gap {
+  margin-top: 0.75rem;
+}
+
+.inspection-form-body-sections:empty {
+  display: none !important;
+}
+
+.inspection-form-body-start {
+  margin-top: 0;
+}
+
+.inspection-general-evidence-mobile-compact {
+  justify-items: start;
+}
+
+.inspection-general-evidence-drawer-body {
+  min-width: 0;
+}
+
+.inspection-general-evidence-drawer-actions {
+  margin-top: -0.25rem;
+}
+
+.inspection-general-evidence-drawer-action {
+  min-height: 2.25rem;
+}
+
+@media (max-width: 575.98px) {
+  .inspection-form-edit-sections {
+    gap: 0 !important;
+  }
+
+  .inspection-form-edit-sections .inspection-form-setup-sections {
+    gap: 0.75rem !important;
+  }
+
+  .inspection-form-setup-body-gap {
+    margin-top: 1rem;
+  }
+
+  .inspection-form-body-start {
+    margin-top: 0;
+  }
+
+  .inspection-mobile-selector-chip {
+    min-height: 3rem;
+    padding: 0.32rem 0.45rem 0.32rem 0.6rem;
+  }
+
+  .inspection-mobile-datetime-card {
+    min-height: 3rem;
+    padding: 0.32rem 0.45rem 0.32rem 0.6rem;
+  }
+
+  .inspection-mobile-selector-chip__edit,
+  .inspection-mobile-selector-chip__reset {
+    height: 2rem;
+    width: 2rem;
+  }
+}

@@ -153,7 +153,7 @@ const ChatThread = ({
                 <div className="d-flex align-items-baseline gap-2">
                   <span className="fw-semibold">{activeUserName}</span>
                   {getPrimaryRoleLabel(activeThread?.user) && (
-                    <span className="text-muted fw-normal" style={{ fontSize: '0.7rem' }}>
+                    <span className="text-muted fw-normal" style={{ fontSize: '0.78rem' }}>
                       {ROLE_ABBREVIATIONS[getPrimaryRoleLabel(activeThread?.user)] ??
                         getPrimaryRoleLabel(activeThread?.user)}
                     </span>
@@ -243,7 +243,7 @@ const ChatThread = ({
                             )}
                             <div
                               className="text-muted ms-auto"
-                              style={{ fontSize: '0.65rem', lineHeight: 1.4, whiteSpace: 'nowrap' }}
+                              style={{ fontSize: '0.75rem', lineHeight: 1.4, whiteSpace: 'nowrap' }}
                             >
                               {formatChatTime(message.created_at)}
                               {showSeen && <span className="ms-1">· Seen</span>}

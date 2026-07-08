@@ -1,7 +1,7 @@
 import {
   buildErAuxChecklist,
   buildErAuxDescription,
-  getErAuxVisibleChecks,
+  getErAuxSubmissionCandidateRows,
   isErAuxInspectionType,
   normalizeErAuxChecks,
   normalizeErAuxEquipmentRows,
@@ -10,15 +10,15 @@ import {
   buildFireExtinguisherChecklist,
   buildFireExtinguisherDescription,
   getFireExtinguisherInspectionCandidateRows,
-  getFireExtinguisherVisibleChecks,
+  getFireExtinguisherSubmissionCandidateRows,
   isFireExtinguisherInspectionType,
   normalizeFireExtinguisherChecks,
 } from 'src/views/inspection/types/fire-extinguisher/helpers'
 import {
   buildFrtChecklist,
   buildFrtDescription,
-  getFrtVisibleDailyChecks,
-  getFrtVisibleOneOffChecks,
+  getFrtSubmissionDailyChecks,
+  getFrtSubmissionOneOffChecks,
   isFrtDailyInspectionType,
   normalizeFrtDailyChecks,
   normalizeFrtOneOffChecks,
@@ -31,7 +31,7 @@ import {
 import {
   buildHighAngleChecklist,
   buildHighAngleDescription,
-  getHighAngleVisibleChecks,
+  getHighAngleSubmissionCandidateRows,
   HIGH_ANGLE_CONDITION_FIELD,
   isHighAngleInspectionType,
   normalizeHighAngleCustomCompartments,
@@ -51,7 +51,7 @@ import {
 import {
   buildHydraulicChecklist,
   buildHydraulicDescription,
-  getHydraulicVisibleChecks,
+  getHydraulicSubmissionCandidateRows,
   HYDRAULIC_CHECK_FIELDS,
   normalizeHydraulicChecks,
   normalizeHydraulicEquipmentRows,
@@ -61,6 +61,7 @@ import {
   buildScbaChecklist,
   buildScbaDescription,
   getScbaFieldEvidenceKeys,
+  getScbaSubmissionCandidateSections,
   isScbaInspectionType,
   normalizeScbaBackPlateChecks,
   normalizeScbaCustomSections,
@@ -289,22 +290,22 @@ export const buildInspectionPayloadSnapshot = (form = {}) => {
   const locationPath = [zone ? `Zone ${zone}` : '', mainLocation, subLocation].filter(Boolean)
   const locationIds = [zoneId, mainLocationId, subLocationId].filter(Boolean)
   const erAuxChecks = isErAuxInspectionType(inspectionType)
-    ? getErAuxVisibleChecks(normalizedForm)
+    ? getErAuxSubmissionCandidateRows(normalizedForm)
     : []
   const hydraulicChecks = isHydraulicInspectionType(inspectionType)
-    ? getHydraulicVisibleChecks(normalizedForm)
+    ? getHydraulicSubmissionCandidateRows(normalizedForm)
     : []
   const fireExtinguisherChecks = isFireExtinguisherInspectionType(inspectionType)
-    ? getFireExtinguisherInspectionCandidateRows(normalizedForm)
+    ? getFireExtinguisherSubmissionCandidateRows(normalizedForm)
     : []
   const frtDailyChecks = isFrtDailyInspectionType(inspectionType)
-    ? getFrtVisibleDailyChecks(normalizedForm)
+    ? getFrtSubmissionDailyChecks(normalizedForm)
     : []
   const frtOneOffChecks = isFrtDailyInspectionType(inspectionType)
-    ? getFrtVisibleOneOffChecks(normalizedForm)
+    ? getFrtSubmissionOneOffChecks(normalizedForm)
     : []
   const highAngleChecks = isHighAngleInspectionType(inspectionType)
-    ? getHighAngleVisibleChecks(normalizedForm)
+    ? getHighAngleSubmissionCandidateRows(normalizedForm)
     : []
   const highAngleCustomMainLocations = isHighAngleInspectionType(inspectionType)
     ? normalizeHighAngleCustomMainLocations(normalizedForm.highAngleCustomMainLocations)
@@ -312,52 +313,79 @@ export const buildInspectionPayloadSnapshot = (form = {}) => {
   const highAngleCustomCompartments = isHighAngleInspectionType(inspectionType)
     ? normalizeHighAngleCustomCompartments(normalizedForm.highAngleCustomCompartments)
     : []
-  const scbaBackPlateChecks = isScbaInspectionType(inspectionType)
-    ? normalizeScbaBackPlateChecks(normalizedForm.scbaBackPlateChecks)
+  const scbaSubmissionSections = isScbaInspectionType(inspectionType)
+    ? getScbaSubmissionCandidateSections(normalizedForm)
     : []
-  const scbaCylinderChecks = isScbaInspectionType(inspectionType)
-    ? normalizeScbaCylinderChecks(normalizedForm.scbaCylinderChecks)
+  const scbaBackPlateSection = Array.isArray(scbaSubmissionSections)
+    ? scbaSubmissionSections.find((section) => section.key === 'backPlate')
     : []
-  const scbaFaceMaskChecks = isScbaInspectionType(inspectionType)
-    ? normalizeScbaFaceMaskChecks(normalizedForm.scbaFaceMaskChecks)
+  const scbaCylinderSection = Array.isArray(scbaSubmissionSections)
+    ? scbaSubmissionSections.find((section) => section.key === 'cylinder')
     : []
-  const scbaCustomSections = isScbaInspectionType(inspectionType)
-    ? normalizeScbaCustomSections(normalizedForm.scbaCustomSections)
+  const scbaFaceMaskSection = Array.isArray(scbaSubmissionSections)
+    ? scbaSubmissionSections.find((section) => section.key === 'faceMask')
+    : []
+  const scbaBackPlateChecks = scbaBackPlateSection?.visibleRows || scbaBackPlateSection?.rows || []
+  const scbaCylinderChecks = scbaCylinderSection?.visibleRows || scbaCylinderSection?.rows || []
+  const scbaFaceMaskChecks = scbaFaceMaskSection?.visibleRows || scbaFaceMaskSection?.rows || []
+  const scbaCustomSections = Array.isArray(scbaSubmissionSections)
+    ? scbaSubmissionSections.filter(
+        (section) => section.key && section.key.startsWith('customScba-'),
+      )
     : []
   const hseFields = isHseInspectionType(inspectionType)
     ? normalizeHseFormFields(normalizedForm)
     : normalizeHseFormFields()
   const description =
     isHydraulicInspectionType(inspectionType) && !String(normalizedForm.description || '').trim()
-      ? buildHydraulicDescription({ ...normalizedForm, hydraulicChecks })
+      ? buildHydraulicDescription({ ...normalizedForm }, { checks: hydraulicChecks })
       : isFireExtinguisherInspectionType(inspectionType) &&
           !String(normalizedForm.description || '').trim()
-        ? buildFireExtinguisherDescription({
-            ...normalizedForm,
-            location,
-            fireExtinguisherChecks,
-          })
-        : isFrtDailyInspectionType(inspectionType) &&
-            !String(normalizedForm.description || '').trim()
-          ? buildFrtDescription({
+        ? buildFireExtinguisherDescription(
+            {
               ...normalizedForm,
               location,
-              frtDailyChecks,
-              frtOneOffChecks,
-            })
+              fireExtinguisherChecks,
+            },
+            { checks: fireExtinguisherChecks },
+          )
+        : isFrtDailyInspectionType(inspectionType) &&
+            !String(normalizedForm.description || '').trim()
+          ? buildFrtDescription(
+              {
+                ...normalizedForm,
+                location,
+                frtDailyChecks,
+                frtOneOffChecks,
+              },
+              {
+                dailyRows: frtDailyChecks,
+                oneOffRows: frtOneOffChecks,
+              },
+            )
           : isHighAngleInspectionType(inspectionType) &&
               !String(normalizedForm.description || '').trim()
-            ? buildHighAngleDescription({ ...normalizedForm, location, highAngleChecks })
-            : isScbaInspectionType(inspectionType) &&
-                !String(normalizedForm.description || '').trim()
-              ? buildScbaDescription({
+            ? buildHighAngleDescription(
+                {
                   ...normalizedForm,
                   location,
-                  scbaBackPlateChecks,
-                  scbaCylinderChecks,
-                  scbaFaceMaskChecks,
-                  scbaCustomSections,
-                })
+                  highAngleChecks,
+                },
+                { checks: highAngleChecks },
+              )
+            : isScbaInspectionType(inspectionType) &&
+                !String(normalizedForm.description || '').trim()
+              ? buildScbaDescription(
+                  {
+                    ...normalizedForm,
+                    location,
+                    scbaBackPlateChecks,
+                    scbaCylinderChecks,
+                    scbaFaceMaskChecks,
+                    scbaCustomSections,
+                  },
+                  { sections: scbaSubmissionSections },
+                )
               : isHseInspectionType(inspectionType) &&
                   !String(normalizedForm.description || '').trim()
                 ? buildHseDescription({ ...normalizedForm, ...hseFields, location })
@@ -366,34 +394,50 @@ export const buildInspectionPayloadSnapshot = (form = {}) => {
                   ? buildGeneralDescription({ ...normalizedForm, location })
                   : isErAuxInspectionType(inspectionType) &&
                       !String(normalizedForm.description || '').trim()
-                    ? buildErAuxDescription({ ...normalizedForm, location, erAuxChecks })
+                    ? buildErAuxDescription(
+                        { ...normalizedForm, location, erAuxChecks },
+                        { checks: erAuxChecks },
+                      )
                     : String(normalizedForm.description || '').trim()
   const photos = normalizePhotos(normalizedForm.photos)
   const inspectionIssues = normalizeInspectionIssues(normalizedForm.inspectionIssues)
   const structuredChecklist = [
     ...(isScbaInspectionType(inspectionType)
-      ? buildScbaChecklist({
-          ...normalizedForm,
-          scbaBackPlateChecks,
-          scbaCylinderChecks,
-          scbaFaceMaskChecks,
-          scbaCustomSections,
-        })
+      ? buildScbaChecklist(
+          {
+            ...normalizedForm,
+            scbaBackPlateChecks,
+            scbaCylinderChecks,
+            scbaFaceMaskChecks,
+            scbaCustomSections,
+          },
+          { sections: scbaSubmissionSections },
+        )
       : []),
     ...(isErAuxInspectionType(inspectionType)
-      ? buildErAuxChecklist({ ...normalizedForm, erAuxChecks })
+      ? buildErAuxChecklist({ ...normalizedForm, erAuxChecks }, { checks: erAuxChecks })
       : []),
     ...(isHydraulicInspectionType(inspectionType)
-      ? buildHydraulicChecklist({ ...normalizedForm, hydraulicChecks })
+      ? buildHydraulicChecklist({ ...normalizedForm, hydraulicChecks }, { checks: hydraulicChecks })
       : []),
     ...(isFireExtinguisherInspectionType(inspectionType)
-      ? buildFireExtinguisherChecklist({ ...normalizedForm, fireExtinguisherChecks })
+      ? buildFireExtinguisherChecklist(
+          { ...normalizedForm, fireExtinguisherChecks },
+          { checks: fireExtinguisherChecks },
+        )
       : []),
     ...(isFrtDailyInspectionType(inspectionType)
-      ? buildFrtChecklist({ ...normalizedForm, frtDailyChecks, frtOneOffChecks })
+      ? buildFrtChecklist(
+          {
+            ...normalizedForm,
+            frtDailyChecks,
+            frtOneOffChecks,
+          },
+          { dailyRows: frtDailyChecks, oneOffRows: frtOneOffChecks },
+        )
       : []),
     ...(isHighAngleInspectionType(inspectionType)
-      ? buildHighAngleChecklist({ ...normalizedForm, highAngleChecks })
+      ? buildHighAngleChecklist({ ...normalizedForm, highAngleChecks }, { checks: highAngleChecks })
       : []),
     ...(isHseInspectionType(inspectionType)
       ? buildHseChecklist({ ...normalizedForm, ...hseFields })

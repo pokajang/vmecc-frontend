@@ -1,0 +1,445 @@
+@use '../../../tools/coreui-tools' as *;
+
+.type-manager-modal .modal-content {
+  max-height: min(92dvh, 44rem);
+}
+
+.type-manager-modal__body {
+  align-content: start;
+}
+
+.type-manager-modal__edit-row {
+  min-height: 0;
+}
+
+.type-manager-modal__edit-row .btn {
+  min-width: 2rem;
+  min-height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.type-manager-modal__edit-row .text-muted {
+  line-height: 1.35;
+}
+
+.type-manager-modal__icon-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.type-manager-modal__icon-choice {
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: var(--cui-light-bg-subtle, #f8f9fa);
+  color: var(--cui-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.type-manager-modal__icon-choice:hover,
+.type-manager-modal__icon-choice:focus-visible {
+  background: rgba(0, 126, 122, 0.08);
+  border-color: rgba(0, 126, 122, 0.28);
+}
+
+.type-manager-modal__icon-choice:focus-visible {
+  outline: 0;
+  box-shadow: 0 0 0 0.18rem rgba(0, 126, 122, 0.16);
+}
+
+.type-manager-modal__icon-choice--selected {
+  background: rgba(0, 126, 122, 0.16);
+  border-color: rgba(0, 126, 122, 0.5);
+  box-shadow: 0 0 0 0.12rem rgba(0, 126, 122, 0.12);
+}
+
+.inspection-detail-drawer.offcanvas {
+  width: min(100vw, 58rem);
+}
+
+.inspection-detail-drawer__header {
+  align-items: center;
+  border-bottom: 1px solid var(--cui-border-color);
+}
+
+.inspection-detail-drawer__close {
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.inspection-detail-drawer__body {
+  min-width: 0;
+  background: var(--cui-body-bg);
+}
+
+@media (max-width: 575.98px) {
+  .inspection-detail-drawer.offcanvas {
+    width: 100vw;
+  }
+
+  .inspection-detail-drawer__body {
+    padding: 1rem;
+  }
+}
+
+.workflow-detail-field,
+.inspection-detail-field {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.workflow-detail-field__label,
+.inspection-detail-field__label {
+  flex: 0 0 auto;
+  color: var(--cui-secondary-color);
+  font-size: 0.8125rem;
+}
+
+.workflow-detail-field__value,
+.inspection-detail-field__value {
+  min-width: 0;
+  max-width: 68%;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+@include media-breakpoint-up(md) {
+  .workflow-detail-field,
+  .inspection-detail-field {
+    display: block;
+  }
+
+  .workflow-detail-field__value,
+  .inspection-detail-field__value {
+    max-width: none;
+    margin-top: 0.25rem;
+    text-align: left;
+  }
+}
+
+.inspection-workflow-modal .modal-content,
+.inspection-queue-details-modal .modal-content {
+  max-height: min(92dvh, 42rem);
+}
+
+.inspection-workflow-modal__body,
+.inspection-queue-details-modal .modal-body {
+  align-content: start;
+  overflow-y: auto;
+}
+
+.modal .modal-dialog:not([class*='modal-fullscreen']) {
+  display: flex;
+  align-items: center;
+  min-height: calc(100dvh - 1.5rem);
+}
+
+.modal .modal-dialog:not([class*='modal-fullscreen']) .modal-content {
+  width: 100%;
+}
+
+@include media-breakpoint-down(md) {
+  .type-manager-modal .modal-dialog {
+    margin: 0.75rem;
+  }
+
+  .inspection-workflow-modal .modal-dialog,
+  .inspection-queue-details-modal .modal-dialog {
+    margin: 0.75rem;
+  }
+
+  .type-manager-modal .modal-content {
+    max-height: calc(100dvh - 1.5rem);
+  }
+
+  .inspection-workflow-modal .modal-content,
+  .inspection-queue-details-modal .modal-content {
+    max-height: calc(100dvh - 1.5rem);
+  }
+
+  .type-manager-modal__body {
+    gap: 1rem !important;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .inspection-workflow-modal__body,
+  .inspection-queue-details-modal .modal-body {
+    gap: 1rem !important;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .inspection-toaster.toast-container {
+    top: 4rem !important;
+    right: 0.75rem !important;
+    left: auto !important;
+    width: min(22rem, calc(100vw - 1.5rem));
+    max-width: calc(100vw - 1.5rem);
+  }
+
+  .inspection-toaster .toast {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .inspection-toaster .toast-header {
+    min-height: 0;
+    padding: 0.55rem 0.75rem;
+  }
+
+  .inspection-toaster .toast-body {
+    padding: 0.65rem 0.85rem;
+  }
+
+  .type-manager-modal__body .form-label {
+    margin-bottom: 0.4rem;
+  }
+
+  .type-manager-modal__edit-row {
+    padding-top: 0.65rem !important;
+    padding-bottom: 0.65rem !important;
+  }
+
+  .type-manager-modal .btn-close {
+    min-width: 44px;
+    min-height: 44px;
+    background-position: center;
+  }
+
+  .inspection-toaster .btn-close {
+    width: 2rem;
+    height: 2rem;
+    min-width: 2rem;
+    min-height: 2rem;
+    margin-right: -0.25rem;
+    margin-left: 0.5rem;
+    padding: 0.45rem;
+    background-position: center;
+  }
+
+  .inspection-form-sticky-actions,
+  .inspection-review-sticky-actions {
+    position: sticky;
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 0.75rem);
+    z-index: 1020;
+    padding: 0.65rem;
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    border-radius: 0.5rem;
+    background: #ffffff;
+    box-shadow: 0 -0.75rem 2rem rgba(15, 23, 42, 0.14);
+  }
+
+  .inspection-form-sticky-actions {
+    display: grid;
+    justify-items: center;
+    gap: 0.45rem;
+    padding: 0.45rem 0.5rem;
+  }
+
+  .inspection-form-inline-actions.action-row-thumb {
+    position: static;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    z-index: auto;
+    display: grid;
+    justify-items: end;
+    gap: 0.45rem;
+    width: 100%;
+    min-width: 0;
+    max-height: none;
+    max-width: 100%;
+    margin-top: 1rem;
+    overflow: visible;
+    padding: 0.15rem 0 0.35rem;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none !important;
+  }
+
+  .inspection-form-sticky-actions.action-row-thumb--compact-sticky .action-row-thumb-actions {
+    justify-content: center;
+    width: min(100%, 15rem);
+    margin-inline: auto;
+  }
+
+  .inspection-form-inline-actions.action-row-thumb--compact-sticky .action-row-thumb-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: end;
+    order: 1;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    margin-left: auto;
+  }
+
+  .inspection-form-inline-actions .action-row-thumb-status {
+    order: 2;
+    width: min(100%, 13.5rem);
+    margin-top: 0.15rem;
+    margin-left: auto;
+    text-align: center;
+  }
+
+  .inspection-review-sticky-actions {
+    padding: 0.65rem;
+  }
+
+  .inspection-form-sticky-message {
+    width: 100%;
+    overflow: hidden;
+    font-size: 0.84rem;
+    line-height: 1.2;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .inspection-form-sticky-button-row {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    justify-content: center;
+    gap: 0.5rem;
+    width: min(100%, 15rem);
+  }
+
+  .inspection-form-sticky-actions .btn {
+    min-height: 44px;
+    padding-top: 0.35rem;
+    padding-bottom: 0.35rem;
+    line-height: 1.15;
+    white-space: nowrap;
+  }
+
+  .inspection-form-inline-actions .btn {
+    flex: 1 1 auto;
+    min-height: 36px;
+    width: auto;
+    max-width: 100%;
+    padding: 0.32rem 0.6rem;
+    font-size: 0.88rem;
+    line-height: 1.15;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .inspection-review-sticky-actions .btn {
+    min-height: 44px;
+  }
+
+  .inspection-form-sticky-spacer {
+    display: block;
+    height: calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
+  }
+
+  .inspection-form-inline-actions-spacer {
+    display: block;
+    height: calc(env(safe-area-inset-bottom, 0px) + 1rem);
+  }
+
+  .inspection-review-sticky-spacer {
+    display: block;
+    height: calc(64px + env(safe-area-inset-bottom, 0px) + 8.5rem);
+  }
+
+  .workflow-scope-segmented,
+  .inspection-scope-segmented {
+    min-height: 31px;
+  }
+
+  .workflow-scope-segment,
+  .inspection-scope-segment {
+    min-height: 44px;
+    min-width: 0;
+    padding: 0.32rem 0.65rem;
+    font-size: 0.84rem;
+  }
+
+  .inspection-compact-action-btn,
+  .inspection-view-all-btn,
+  .table-filter-trigger {
+    min-height: 44px;
+  }
+
+  .type-manager-modal__edit-row .btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+@include media-breakpoint-down(md) {
+  .inspection-module-page .inspection-header-back-btn,
+  .inspection-module-page .inspection-view-all-btn,
+  .inspection-module-page .inspection-compact-action-btn,
+  .inspection-mobile-home .inspection-view-all-btn,
+  .inspection-mobile-home .inspection-compact-action-btn {
+    flex: 0 0 auto;
+    min-height: 0 !important;
+    height: auto;
+    align-self: center;
+    padding: 0.38rem 0.65rem;
+    line-height: 1.2;
+  }
+
+  .inspection-module-page .workflow-scope-segmented,
+  .inspection-module-page .inspection-scope-segmented,
+  .inspection-mobile-home .workflow-scope-segmented,
+  .inspection-mobile-home .inspection-scope-segmented,
+  .inspection-mobile-section .workflow-scope-segmented,
+  .inspection-mobile-section .inspection-scope-segmented {
+    flex: 0 0 auto;
+    min-height: 0;
+    align-items: center;
+  }
+
+  .inspection-module-page .workflow-scope-segment,
+  .inspection-module-page .inspection-scope-segment,
+  .inspection-mobile-home .workflow-scope-segment,
+  .inspection-mobile-home .inspection-scope-segment,
+  .inspection-mobile-section .workflow-scope-segment,
+  .inspection-mobile-section .inspection-scope-segment {
+    flex: 0 0 auto;
+    min-height: 0;
+    height: auto;
+    padding: 0.36rem 0.65rem;
+    line-height: 1.2;
+  }
+
+  .inspection-module-page .inspection-hse-choice-btn {
+    min-height: 0;
+    height: auto !important;
+    align-self: start;
+  }
+
+  .inspection-module-page .inspection-hydraulic-status-btn,
+  .inspection-module-page .inspection-check-status-btn {
+    flex: 0 0 auto;
+    align-self: center;
+  }
+
+  .inspection-module-page .action-row-thumb-leading .btn {
+    flex: 0 0 auto;
+    align-self: center;
+  }
+}

@@ -1481,4 +1481,90 @@ describe('InspectionFormSetupSections', () => {
     expect(screen.queryByText('Scanned Fire Extinguisher')).toBeNull()
     expect(screen.getByText('Mock FE scanner')).toBeTruthy()
   })
+
+  it('shows duplicate scan matches and offers catalog edit actions', () => {
+    mockCompactViewport(false)
+    const onEditDuplicate = vi.fn()
+    const onChangeMode = vi.fn()
+    const onOpenScanner = vi.fn()
+
+    render(
+      <InspectionFormSetupSections
+        {...baseProps}
+        form={{
+          ...baseProps.form,
+          inspectionType: 'Fire Extinguisher Inspection',
+          inspectedAt: '2026-07-05T23:09',
+          fireExtinguisherEntryMode: 'scan',
+          fireExtinguisherScannedLocator: 'EE072021Z047268',
+        }}
+        fireExtinguisherScan={{
+          duplicateRows: [
+            {
+              id: 'fe-dup-1',
+              catalogId: 'fe-dup-1',
+              zone: '1',
+              mainLocation: 'Manjung Hub',
+              subLocation: 'Reception',
+              idLocNo: 'ADO-001',
+              barcodeNo: 'EE072021Z047268',
+              feType: 'DP 6KG',
+              certificationValidity: '2026-12-31',
+            },
+            {
+              id: 'fe-dup-2',
+              catalogId: 'fe-dup-2',
+              zone: '1',
+              mainLocation: 'Pump House',
+              subLocation: 'Store',
+              idLocNo: 'ADO-099',
+              barcodeNo: 'EE072021Z047268',
+              feType: 'CO2 5KG',
+              certificationValidity: '2027-01-15',
+            },
+          ],
+          error:
+            'Multiple active extinguishers use this locator. Resolve the catalog duplicate before inspection.',
+          onChangeMode,
+          onEditDuplicate,
+          onOpenScanner,
+          status: '',
+        }}
+        isEditingType={false}
+        isFireExtinguisherCatalogInspectionForm
+        selectedType="Fire Extinguisher Inspection"
+        selectedTypeDefinition={{
+          supportsFireExtinguisherCatalog: true,
+          usesZoneLocationFlow: true,
+        }}
+        selectedTypeOption={{
+          value: 'Fire Extinguisher Inspection',
+          title: 'Fire Extinguisher',
+        }}
+        supportsCustomLocations
+        supportsSubLocations
+      />,
+    )
+
+    expect(screen.getByText('Duplicate locator found')).toBeTruthy()
+    expect(screen.getByText('ADO-001')).toBeTruthy()
+    expect(screen.getByText('ADO-099')).toBeTruthy()
+    expect(screen.getByText('Switch to area mode')).toBeTruthy()
+    expect(
+      screen.queryByText(
+        'Multiple active extinguishers use this locator. Resolve the catalog duplicate before inspection.',
+      ),
+    ).toBeNull()
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Edit catalog' })[0])
+    expect(onEditDuplicate).toHaveBeenCalledWith(
+      expect.objectContaining({ catalogId: 'fe-dup-1', barcodeNo: 'EE072021Z047268' }),
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Switch to area mode' }))
+    expect(onChangeMode).toHaveBeenCalledWith('area')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Scan another' }))
+    expect(onOpenScanner).toHaveBeenCalled()
+  })
 })

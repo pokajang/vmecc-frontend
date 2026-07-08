@@ -1,8 +1,10 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import {
   applyPhotoCaptionById,
   getRowPhotoList,
+  isCameraFailureToRetry,
   prepareInspectionPhotoUploads,
+  normalizePhotoFailure,
   removePhotoById,
   updatePhotoDescriptionById,
 } from './inspectionPhotoUtils'
@@ -28,25 +30,114 @@ const useInspectionFormPhotos = ({
   const uploadInputRef = useRef(null)
   const cameraInputRef = useRef(null)
   const photoUploadTargetRef = useRef({ kind: 'root' })
+  const activePhotoInputRef = useRef('upload')
+  const photoSelectionSequenceRef = useRef(0)
+  const [cameraUploadFallback, setCameraUploadFallback] = useState(null)
+  const CAMERA_FALLBACK_ERROR_TITLES = {
+    low_memory:
+      'Camera processing failed due to low memory. Upload the photo manually to continue.',
+    processing_failed: 'Camera processing failed. Upload the photo manually.',
+    compressed_too_large: 'Photo is too large after compression. Upload manually.',
+    total_size_exceeded: 'Combined photos are too large. Upload fewer photos manually.',
+    read_failed: 'Unable to read photo. Upload the photo manually.',
+    max_photo_count: 'Photo limit reached.',
+    unsupported_file_type: 'This photo format is not supported. Upload the photo manually.',
+    invalid_file: 'This photo file is invalid. Upload a valid photo manually.',
+    no_photo_data: 'Photo has no readable data. Upload the photo manually.',
+    operation_timeout: 'Photo upload timed out. Upload the photo manually.',
+    scan_timeout_or_decode_failure: 'Camera decode timed out. Retry or upload the photo manually.',
+  }
+
+  const getCameraFallbackMessage = (failure = {}) => {
+    const { code, message } = normalizePhotoFailure(failure)
+    if (!isCameraFailureToRetry(code)) return null
+    return (
+      message ||
+      CAMERA_FALLBACK_ERROR_TITLES[code] ||
+      CAMERA_FALLBACK_ERROR_TITLES.processing_failed
+    )
+  }
 
   const openPhotoInput = (target, inputRef) => {
     photoUploadTargetRef.current = target || { kind: 'root' }
+    clearCameraUploadFallback()
+    activePhotoInputRef.current = inputRef === cameraInputRef ? 'camera' : 'upload'
+    if (inputRef.current) inputRef.current.value = ''
     inputRef.current?.click()
   }
 
   const handlePhotoSelect = async (event) => {
+    const selectionSequence = ++photoSelectionSequenceRef.current
     const files = Array.from(event.target.files || [])
     event.target.value = ''
     if (files.length === 0) return
+
     const uploadTarget = photoUploadTargetRef.current || { kind: 'root' }
-    const nextPhotos = await prepareInspectionPhotoUploads({
-      files,
-      form,
-      pushToast,
-      defaultDescription: uploadTarget?.defaultDescription || uploadTarget?.caption || '',
-      createPhotoId,
-    })
-    if (!nextPhotos || nextPhotos.length === 0) return
+    const source = activePhotoInputRef.current
+    const currentForm = typeof getLatestForm === 'function' ? getLatestForm() : form
+    let nextPhotos = []
+    let lastFailure = null
+    let lastRetryableFailure = null
+    let hadRetryableFailure = false
+
+    try {
+      const nextResult = await prepareInspectionPhotoUploads({
+        files,
+        form: currentForm,
+        pushToast,
+        defaultDescription: uploadTarget?.defaultDescription || uploadTarget?.caption || '',
+        createPhotoId,
+        isCameraUpload: source === 'camera',
+        suppressToasts: source === 'camera',
+        onFailure: (failure) => {
+          lastFailure = failure || null
+          if (failure && isCameraFailureToRetry(failure?.code)) {
+            hadRetryableFailure = true
+            lastRetryableFailure = failure
+          }
+        },
+      })
+      if (selectionSequence !== photoSelectionSequenceRef.current) return
+      nextPhotos = nextResult || []
+    } catch (error) {
+      if (selectionSequence !== photoSelectionSequenceRef.current) return
+      lastFailure = {
+        code: 'unexpected_error',
+        message: String(error?.message || '').trim() || 'Camera capture failed.',
+      }
+      hadRetryableFailure = true
+    }
+
+    if (selectionSequence !== photoSelectionSequenceRef.current) return
+
+    if (!nextPhotos || nextPhotos.length === 0) {
+      if (source === 'camera' && hadRetryableFailure) {
+        const fallbackFailure = lastRetryableFailure || lastFailure
+        const fallbackMessage = getCameraFallbackMessage(fallbackFailure)
+        if (fallbackMessage) {
+          setCameraUploadFallback({
+            message: fallbackMessage,
+            errorCode: fallbackFailure?.code || 'camera_capture_failed',
+          })
+        }
+      }
+      return
+    }
+
+    if (source === 'camera' && hadRetryableFailure) {
+      const fallbackFailure = lastRetryableFailure || lastFailure
+      const fallbackMessage = getCameraFallbackMessage(fallbackFailure)
+      if (fallbackMessage) {
+        setCameraUploadFallback({
+          message: fallbackMessage,
+          errorCode: fallbackFailure?.code || 'camera_capture_failed',
+        })
+      } else {
+        setCameraUploadFallback(null)
+      }
+    } else {
+      setCameraUploadFallback(null)
+    }
 
     if (uploadTarget?.kind === 'inspectionIssue') {
       if (typeof uploadTarget.onAddPhotos === 'function') {
@@ -54,9 +145,11 @@ const useInspectionFormPhotos = ({
         return
       }
       const issueId = String(uploadTarget.issueId || '').trim()
-      const currentIssues = Array.isArray(form.inspectionIssues) ? form.inspectionIssues : []
+      const currentIssues = Array.isArray(currentForm.inspectionIssues)
+        ? currentForm.inspectionIssues
+        : []
       updateForm({
-        ...form,
+        ...currentForm,
         inspectionIssues: currentIssues.map((issue) =>
           String(issue?.id || '').trim() === issueId
             ? {
@@ -77,7 +170,10 @@ const useInspectionFormPhotos = ({
       const row = uploadTarget.row || {}
       const rowId = String(row.id || '').trim()
       const existingCheck =
-        form.fireExtinguisherChecks.find((check) => String(check.id || '') === rowId) || row
+        (Array.isArray(currentForm?.fireExtinguisherChecks)
+          ? currentForm.fireExtinguisherChecks
+          : []
+        ).find((check) => String(check.id || '') === rowId) || row
       const photosKey =
         uploadTarget?.kind === 'fireExtinguisherDefect' ? uploadTarget.photosKey : 'photos'
       if (typeof uploadTarget.onAddPhotos === 'function') {
@@ -100,7 +196,9 @@ const useInspectionFormPhotos = ({
       const row = uploadTarget.row || {}
       const rowId = String(row.id || '').trim()
       const existingCheck =
-        form.hydraulicChecks.find((check) => String(check.id || '') === rowId) || row
+        (Array.isArray(currentForm?.hydraulicChecks) ? currentForm.hydraulicChecks : []).find(
+          (check) => String(check.id || '') === rowId,
+        ) || row
       const photosKey = uploadTarget?.kind === 'hydraulicDefect' ? uploadTarget.photosKey : 'photos'
       if (typeof uploadTarget.onAddPhotos === 'function') {
         uploadTarget.onAddPhotos(row, photosKey, [
@@ -123,7 +221,7 @@ const useInspectionFormPhotos = ({
       const rowId = String(row.id || '').trim()
       const isOneOff = String(row?.checklistKind || '').trim() === 'oneOff'
       const checksKey = isOneOff ? 'frtOneOffChecks' : 'frtDailyChecks'
-      const checks = Array.isArray(form[checksKey]) ? form[checksKey] : []
+      const checks = Array.isArray(currentForm[checksKey]) ? currentForm[checksKey] : []
       const existingCheck = checks.find((check) => String(check.id || '') === rowId) || row
       const photosKey = uploadTarget.photosKey || 'photos'
       if (typeof uploadTarget.onAddPhotos === 'function') {
@@ -147,7 +245,9 @@ const useInspectionFormPhotos = ({
       const row = uploadTarget.row || {}
       const rowId = String(row.id || '').trim()
       const existingCheck =
-        form.highAngleChecks.find((check) => String(check.id || '') === rowId) || row
+        (Array.isArray(currentForm?.highAngleChecks) ? currentForm.highAngleChecks : []).find(
+          (check) => String(check.id || '') === rowId,
+        ) || row
       const photosKey = uploadTarget.photosKey || defaultHighAnglePhotosKey
       if (typeof uploadTarget.onAddPhotos === 'function') {
         uploadTarget.onAddPhotos(row, photosKey, [
@@ -169,7 +269,6 @@ const useInspectionFormPhotos = ({
       const row = uploadTarget.row || {}
       const rowId = String(row.id || '').trim()
       const sectionKey = uploadTarget.sectionKey || row.sectionKey
-      const currentForm = getLatestForm()
       const existingCheck = getScbaExistingCheck(currentForm, sectionKey, rowId) || row
       const photosKey = uploadTarget.photosKey || 'photos'
       if (!photosKey) return
@@ -193,7 +292,9 @@ const useInspectionFormPhotos = ({
       const row = uploadTarget.row || {}
       const rowId = String(row.id || '').trim()
       const existingCheck =
-        form.erAuxChecks.find((check) => String(check.id || '') === rowId) || row
+        (Array.isArray(currentForm?.erAuxChecks) ? currentForm.erAuxChecks : []).find(
+          (check) => String(check.id || '') === rowId,
+        ) || row
       const photosKey = uploadTarget?.kind === 'erAuxDefect' ? 'defectPhotos' : 'photos'
       if (typeof uploadTarget.onAddPhotos === 'function') {
         uploadTarget.onAddPhotos(row, photosKey, [
@@ -212,10 +313,15 @@ const useInspectionFormPhotos = ({
     }
 
     updateForm({
-      ...form,
-      photos: [...form.photos, ...nextPhotos],
+      ...currentForm,
+      photos: [...(Array.isArray(currentForm.photos) ? currentForm.photos : []), ...nextPhotos],
     })
   }
+
+  const requestUploadFromCameraFallback = () =>
+    openPhotoInput(photoUploadTargetRef.current || { kind: 'root' }, uploadInputRef)
+
+  const clearCameraUploadFallback = () => setCameraUploadFallback(null)
 
   const requestRootPhotoUpload = (inputRef, defaultDescription = '') =>
     openPhotoInput(
@@ -411,6 +517,9 @@ const useInspectionFormPhotos = ({
     requestRootPhotoUpload,
     requestScbaIssuePhotoUpload,
     requestScbaPhotoUpload,
+    cameraUploadFallback,
+    clearCameraUploadFallback,
+    requestUploadFromCameraFallback,
     updateErAuxPhotoDescription: (...args) => erAuxPhotoHandlers.updatePhotoDescription(...args),
     updateFireExtinguisherPhotoDescription: (...args) =>
       fireExtinguisherPhotoHandlers.updatePhotoDescription(...args),

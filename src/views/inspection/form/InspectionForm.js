@@ -36,6 +36,8 @@ import { normalizeFireTruckCatalogRows } from 'src/views/inspection/inspectionFi
 import {
   createFireExtinguisherOption,
   lookupFireExtinguisherByLocator,
+  normalizeFireExtinguisherCatalogRows,
+  updateFireExtinguisherOption,
 } from 'src/views/inspection/inspectionFireExtinguisherApi'
 import { getFireExtinguisherCanonicalAssetKey } from '../types/fire-extinguisher/identity'
 import { extractFireExtinguisherLocator } from '../types/fire-extinguisher/locator'
@@ -252,6 +254,75 @@ const getFireExtinguisherLocationContinuation = ({
         }
       : null,
     remainingLocationCount: currentIndex >= 0 ? Math.max(options.length - currentIndex - 1, 0) : 0,
+  }
+}
+
+const buildInspectionLocationContinuation = ({
+  currentLocation = '',
+  currentValue = '',
+  enabled,
+  label = 'location',
+  locationOptions = [],
+  mainLocation = '',
+  onBeforeOpen,
+  options = null,
+  parentLabel = '',
+  scope = 'subLocation',
+}) => {
+  if (!enabled) return null
+  const current = String(currentValue || currentLocation || '').trim()
+  const normalizedOptions = (
+    Array.isArray(options || locationOptions) ? options || locationOptions : []
+  )
+    .map((option) => {
+      const value = String(option?.value || option?.title || '').trim()
+      if (!value) return null
+
+      return {
+        ...option,
+        value,
+        title: String(option?.title || value).trim(),
+      }
+    })
+    .filter(Boolean)
+
+  if (normalizedOptions.length === 0) return null
+
+  const currentKey = normalizeLocationOptionKey(current)
+  const currentIndex = normalizedOptions.findIndex(
+    (option) => normalizeLocationOptionKey(option?.value || option?.title) === currentKey,
+  )
+  const nextOption =
+    currentIndex >= 0
+      ? normalizedOptions.slice(currentIndex + 1).find((option) => option?.value)
+      : null
+  const nextLocation = String(nextOption?.value || '').trim()
+  const nextLocationLabel = String(nextOption?.title || nextLocation).trim()
+
+  return {
+    currentLocation: current,
+    currentValue: current,
+    label,
+    locationOptions: normalizedOptions,
+    mainLocation,
+    options: normalizedOptions,
+    parentLabel,
+    scope,
+    value: current,
+    nextLocation,
+    nextLocationLabel,
+    nextLocationOption: nextOption
+      ? {
+          ...nextOption,
+          value: nextLocation,
+          title: nextLocationLabel || nextLocation,
+        }
+      : null,
+    remainingLocationCount:
+      currentIndex >= 0
+        ? Math.max(normalizedOptions.length - currentIndex - 1, 0)
+        : normalizedOptions.length,
+    ...(onBeforeOpen ? { onBeforeOpen } : {}),
   }
 }
 
@@ -502,6 +573,8 @@ const InspectionForm = ({
   const [fireExtinguisherScanStatus, setFireExtinguisherScanStatus] = useState('')
   const [fireExtinguisherScanError, setFireExtinguisherScanError] = useState('')
   const [fireExtinguisherRegistrationDraft, setFireExtinguisherRegistrationDraft] = useState(null)
+  const [fireExtinguisherScanDuplicates, setFireExtinguisherScanDuplicates] = useState([])
+  const [fireExtinguisherDuplicateEditDraft, setFireExtinguisherDuplicateEditDraft] = useState(null)
   const checklistChips = useMemo(() => getInspectionChecklistChips(selectedType), [selectedType])
   const selectedTypeDefinition = useMemo(
     () => getInspectionTypeDefinition(selectedType),
@@ -628,6 +701,8 @@ const InspectionForm = ({
     }
     setFireExtinguisherRows([row])
     setFireExtinguisherRegistrationDraft(null)
+    setFireExtinguisherScanDuplicates([])
+    setFireExtinguisherDuplicateEditDraft(null)
     setFireExtinguisherScanError('')
     setFireExtinguisherScanStatus('')
     updateForm(nextForm)
@@ -654,6 +729,8 @@ const InspectionForm = ({
       })
       setFireExtinguisherRows([])
       setFireExtinguisherRegistrationDraft(null)
+      setFireExtinguisherScanDuplicates([])
+      setFireExtinguisherDuplicateEditDraft(null)
       setFireExtinguisherScanStatus('')
       setFireExtinguisherScanError('')
       setShowFireExtinguisherScanner(false)
@@ -678,6 +755,8 @@ const InspectionForm = ({
       })
       setFireExtinguisherRows([])
       setFireExtinguisherRegistrationDraft(null)
+      setFireExtinguisherScanDuplicates([])
+      setFireExtinguisherDuplicateEditDraft(null)
       setFireExtinguisherScanStatus('')
       setFireExtinguisherScanError('')
       setShowFireExtinguisherScanner(true)
@@ -693,6 +772,8 @@ const InspectionForm = ({
     })
     setFireExtinguisherRows([])
     setFireExtinguisherRegistrationDraft(null)
+    setFireExtinguisherScanDuplicates([])
+    setFireExtinguisherDuplicateEditDraft(null)
     setFireExtinguisherScanStatus('')
     setFireExtinguisherScanError('')
     setShowFireExtinguisherScanner(false)
@@ -727,6 +808,8 @@ const InspectionForm = ({
       fireExtinguisherCatalogRows: [],
     })
     setFireExtinguisherRows([])
+    setFireExtinguisherScanDuplicates([])
+    setFireExtinguisherDuplicateEditDraft(null)
     setFireExtinguisherScanStatus('')
     setFireExtinguisherScanError('')
   }
@@ -758,6 +841,9 @@ const InspectionForm = ({
 
     setFireExtinguisherScanStatus(`Looking up ${locator}...`)
     setFireExtinguisherScanError('')
+    setFireExtinguisherRegistrationDraft(null)
+    setFireExtinguisherScanDuplicates([])
+    setFireExtinguisherDuplicateEditDraft(null)
     try {
       const { data } = await lookupFireExtinguisherByLocator(locator)
       if (!isCurrentScanRequest()) return
@@ -786,6 +872,14 @@ const InspectionForm = ({
         })
         return
       }
+      if (error?.status === 409) {
+        const duplicateRows = normalizeFireExtinguisherCatalogRows(error?.payload?.data || [])
+        setFireExtinguisherRegistrationDraft(null)
+        setFireExtinguisherScanDuplicates(duplicateRows)
+        setFireExtinguisherDuplicateEditDraft(null)
+        setFireExtinguisherScanError('')
+        return
+      }
       setFireExtinguisherScanStatus('')
       setFireExtinguisherScanError(getFireExtinguisherScanLookupErrorMessage(error))
     }
@@ -796,6 +890,34 @@ const InspectionForm = ({
       ...(current || {}),
       [field]: value,
     }))
+  }
+
+  const startEditingFireExtinguisherDuplicate = (row) => {
+    if (!row) return
+    setFireExtinguisherDuplicateEditDraft({
+      catalogId: String(row.catalogId || row.id || '').trim(),
+      zone: String(row.zone || '').trim(),
+      mainLocation: String(row.mainLocation || row.location || '').trim(),
+      subLocation: String(row.subLocation || '').trim(),
+      idLocNo: String(row.idLocNo || '').trim(),
+      barcodeNo: String(row.barcodeNo || '').trim(),
+      feType: String(row.feType || '').trim(),
+      certificationValidity: String(row.certificationValidity || '').trim(),
+    })
+    setFireExtinguisherScanError('')
+    setFireExtinguisherScanStatus('')
+  }
+
+  const updateFireExtinguisherDuplicateEditDraft = (field, value) => {
+    setFireExtinguisherDuplicateEditDraft((current) => ({
+      ...(current || {}),
+      [field]: value,
+    }))
+  }
+
+  const cancelFireExtinguisherDuplicateEdit = () => {
+    setFireExtinguisherDuplicateEditDraft(null)
+    setFireExtinguisherScanStatus('')
   }
 
   const registerScannedFireExtinguisher = async () => {
@@ -837,6 +959,53 @@ const InspectionForm = ({
       setFireExtinguisherScanStatus('')
       setFireExtinguisherScanError(
         error?.payload?.message || error?.message || 'Unable to register fire extinguisher.',
+      )
+    }
+  }
+
+  const saveFireExtinguisherDuplicateEdit = async () => {
+    if (/saving duplicate/i.test(fireExtinguisherScanStatus)) return
+    const draft = fireExtinguisherDuplicateEditDraft || {}
+    const catalogId = String(draft.catalogId || '').trim()
+    const barcodeNo = extractFireExtinguisherLocator(draft.barcodeNo)
+    const payload = {
+      zone: String(draft.zone || '').trim(),
+      mainLocation: String(draft.mainLocation || '').trim(),
+      subLocation: String(draft.subLocation || '').trim(),
+      idLocNo: String(draft.idLocNo || '').trim(),
+      barcodeNo,
+      feType: String(draft.feType || '').trim(),
+      certificationValidity: String(draft.certificationValidity || '').trim(),
+    }
+    const missingRequired =
+      !catalogId ||
+      !payload.barcodeNo ||
+      !payload.zone ||
+      !payload.mainLocation ||
+      !payload.subLocation ||
+      !payload.feType ||
+      !payload.certificationValidity
+    if (missingRequired) {
+      setFireExtinguisherScanError(
+        'Complete S/N / QR / Barcode, zone, main area, location, FE type, and certification validity.',
+      )
+      return
+    }
+
+    setFireExtinguisherScanStatus('Saving duplicate catalog entry...')
+    setFireExtinguisherScanError('')
+    try {
+      await updateFireExtinguisherOption(catalogId, payload)
+      pushToast?.('Fire extinguisher duplicate updated. Retrying scan lookup...', {
+        title: 'Catalog saved',
+        color: 'success',
+      })
+      setFireExtinguisherDuplicateEditDraft(null)
+      await lookupScannedFireExtinguisher(payload.barcodeNo || form.fireExtinguisherScannedLocator)
+    } catch (error) {
+      setFireExtinguisherScanStatus('')
+      setFireExtinguisherScanError(
+        error?.payload?.message || error?.message || 'Unable to update extinguisher.',
       )
     }
   }
@@ -1132,11 +1301,12 @@ const InspectionForm = ({
     updateSetupField: updateLocationField,
     pushToast,
   })
+  const selectedFireTruckPlate = String(resolveSelectedFrtTruckPlate(form) || '').trim()
 
   const fireExtinguisherLocationContinuation = useMemo(() => {
     const continuation = getFireExtinguisherLocationContinuation({
       areaRows: fireExtinguisherAreaRows,
-      enabled: isFireExtinguisherCatalogInspectionForm,
+      enabled: isFireExtinguisherCatalogInspectionForm && isStructuredInspectionForm,
       mainLocation,
       currentSummary: currentStructuredSummary,
       completedLocations: fireExtinguisherSessionSync.meta?.completedLocations,
@@ -1148,6 +1318,12 @@ const InspectionForm = ({
     return continuation
       ? {
           ...continuation,
+          currentValue: continuation.currentLocation,
+          label: 'location',
+          options: continuation.locationOptions,
+          parentLabel: mainLocation,
+          scope: 'subLocation',
+          value: continuation.currentLocation,
           onBeforeOpen: fireExtinguisherSessionSync.refreshResults,
         }
       : continuation
@@ -1157,33 +1333,103 @@ const InspectionForm = ({
     fireExtinguisherSessionSync.meta?.completedLocations,
     fireExtinguisherSessionSync.refreshResults,
     fireExtinguisherSessionSync.results,
+    isStructuredInspectionForm,
     isFireExtinguisherCatalogInspectionForm,
     location.subLocationOptions,
     mainLocation,
     subLocation,
   ])
+  const typeScopeContinuation = useMemo(() => {
+    const typeDefinition = selectedTypeDefinition || {}
+    const typeKey = String(typeDefinition.key || '').trim()
+    const isExcluded =
+      typeKey === 'general-inspection' || typeKey === 'health-safety-environment-inspection'
+    if (!isStructuredInspectionForm || isExcluded) return null
 
-  const selectNextFireExtinguisherLocation = (nextLocationOption) => {
-    const fallbackOption = fireExtinguisherLocationContinuation?.nextLocationOption || null
-    const option =
-      nextLocationOption && typeof nextLocationOption === 'object'
-        ? nextLocationOption
-        : fallbackOption
-    const nextSubLocation = String(
-      option?.value || option?.title || nextLocationOption || '',
-    ).trim()
-    if (!nextSubLocation) return
+    const context = {
+      location,
+      mainLocation,
+      mainLocationOptions: location.mainLocationOptions,
+      selectedFireTruckPlate,
+      subLocation,
+      subLocationOptions: location.subLocationOptions,
+    }
+    const configuredContinuation =
+      typeof typeDefinition.buildContinuationOptions === 'function'
+        ? typeDefinition.buildContinuationOptions(form, currentStructuredSummary, context)
+        : null
+    if (configuredContinuation) {
+      return buildInspectionLocationContinuation({
+        currentValue: configuredContinuation.currentValue,
+        enabled: true,
+        label: configuredContinuation.label || 'location',
+        mainLocation,
+        options: configuredContinuation.options,
+        parentLabel: configuredContinuation.parentLabel || '',
+        scope: configuredContinuation.scope || 'subLocation',
+      })
+    }
 
+    if (typeof typeDefinition.getCompartmentOptions !== 'function') return null
+    const continuationOptions = typeDefinition.getCompartmentOptions(form)
+    const continuation = buildInspectionLocationContinuation({
+      currentValue: subLocation,
+      enabled: String(mainLocation || '').trim() && String(subLocation || '').trim(),
+      label: 'compartment',
+      locationOptions: continuationOptions,
+      mainLocation,
+      parentLabel: selectedFireTruckPlate || mainLocation,
+      scope: 'subLocation',
+    })
+    return continuation
+  }, [
+    currentStructuredSummary,
+    form,
+    isStructuredInspectionForm,
+    location,
+    location.mainLocationOptions,
+    location.subLocationOptions,
+    mainLocation,
+    selectedFireTruckPlate,
+    selectedTypeDefinition,
+    subLocation,
+  ])
+
+  const scopeContinuation = fireExtinguisherLocationContinuation || typeScopeContinuation
+
+  const selectNextScope = (nextLocationOption) => {
     const latest = getLatestForm()
+    const option =
+      nextLocationOption && typeof nextLocationOption === 'object' ? nextLocationOption : null
+    const nextLocation = String(option?.value || option?.title || nextLocationOption || '').trim()
+    if (!nextLocation) return
+
+    const nextScope = String(option?.scope || scopeContinuation?.scope || 'subLocation').trim()
+    if (nextScope === 'mainLocation') {
+      updateLocationField('locationSelection', {
+        zone: option?.zone ?? latest.zone ?? zone,
+        zoneId: String(option?.zoneId || latest.zoneId || '').trim(),
+        mainLocation: nextLocation,
+        mainLocationId: String(option?.mainLocationId || option?.id || '').trim(),
+        subLocation: '',
+        subLocationId: '',
+      })
+      return
+    }
+
     updateLocationField('locationSelection', {
       zone,
       zoneId: latest.zoneId,
       mainLocation,
       mainLocationId: latest.mainLocationId,
-      subLocation: nextSubLocation,
+      subLocation: nextLocation,
       subLocationId: String(option?.subLocationId || option?.id || '').trim(),
     })
   }
+  const selectNextLocation = (nextLocationOption) => selectNextScope(nextLocationOption)
+  const selectNextFireExtinguisherLocation = (nextLocationOption) =>
+    selectNextScope(nextLocationOption)
+  const locationContinuation = scopeContinuation
 
   const incident = useIncidentTypeManager({
     userId: user?.id,
@@ -1203,7 +1449,6 @@ const InspectionForm = ({
   )
   const SelectedTypeIcon = selectedTypeOption?.icon || resolveTypeIcon(selectedTypeOption?.iconKey)
 
-  const selectedFireTruckPlate = String(resolveSelectedFrtTruckPlate(form) || '').trim()
   const fireTruckOptions = useMemo(
     () =>
       normalizeFireTruckCatalogRows(
@@ -1627,6 +1872,8 @@ const InspectionForm = ({
       ...scbaRuntime,
       ...highAngleCatalogActions,
       checksField,
+      scopeContinuation,
+      locationContinuation,
       fireExtinguisherLocationContinuation,
       resetFireExtinguisherCheck: resetFireExtinguisherSessionCheck,
       saveFireExtinguisherRowDraft,
@@ -1635,6 +1882,8 @@ const InspectionForm = ({
       saveInspectionFindingDraft,
       saveStructuredGroupedRowDraft,
       saveStructuredRowDraft,
+      selectNextScope,
+      selectNextLocation,
       selectNextFireExtinguisherLocation,
       selectedFireTruckOption,
     },
@@ -1697,14 +1946,20 @@ const InspectionForm = ({
           usesZoneLocationFlow,
           mainLocation,
           fireExtinguisherScan: {
+            duplicateEditDraft: fireExtinguisherDuplicateEditDraft,
+            duplicateRows: fireExtinguisherScanDuplicates,
             error: fireExtinguisherScanError,
             isLookupLoading: isFireExtinguisherScanLookupLoading,
             isScannerOpen: showFireExtinguisherScanner,
+            onCancelDuplicateEdit: cancelFireExtinguisherDuplicateEdit,
+            onChangeDuplicateEditDraft: updateFireExtinguisherDuplicateEditDraft,
             onChangeMode: updateFireExtinguisherEntryMode,
             onCloseScanner: closeFireExtinguisherScanner,
+            onEditDuplicate: startEditingFireExtinguisherDuplicate,
             onOpenScanner: openFireExtinguisherScanner,
             onRegister: registerScannedFireExtinguisher,
             onScan: lookupScannedFireExtinguisher,
+            onSaveDuplicateEdit: saveFireExtinguisherDuplicateEdit,
             registrationDraft: fireExtinguisherRegistrationDraft,
             status: fireExtinguisherScanStatus,
             updateRegistrationDraft: updateFireExtinguisherRegistrationDraft,

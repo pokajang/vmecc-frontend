@@ -1,6 +1,29 @@
 import { DRAFT_STATUS_LABELS } from './inspectionModuleFlow'
+import { isFrtDailyInspectionType } from 'src/views/inspection/types/frt-daily/helpers'
 
 const text = (value) => String(value || '').trim()
+const isSeededChecklistError = (error) => {
+  const message = text(
+    error?.message || error?.payload?.message || error?.payload?.error || error?.code || '',
+  ).toLowerCase()
+  return (
+    message.includes('checklist must include') &&
+    message.includes('seeded') &&
+    message.includes('rows')
+  )
+}
+const getFriendlySubmitMessage = (error = {}, record = {}) => {
+  if (
+    isFrtDailyInspectionType(record?.inspectionType || record?.incidentType) &&
+    isSeededChecklistError(error)
+  ) {
+    return 'Please complete inspection on all compartment before submission.'
+  }
+  return (
+    text(error?.message || error?.payload?.message || '') ||
+    'Unable to save this report. Please try again.'
+  )
+}
 
 export const continueInspectionToLocation = ({
   option,
@@ -204,7 +227,7 @@ export const submitInspectionRecordAction = async ({
         return
       }
     }
-    pushToast(error?.message || 'Unable to save this report. Please try again.', {
+    pushToast(getFriendlySubmitMessage(error, record), {
       title: 'Save failed',
       color: 'danger',
     })

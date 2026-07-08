@@ -81,7 +81,7 @@ export const UserGroupLabel = ({
       ) : (
         <span
           className="rounded-circle bg-body-secondary text-body-secondary d-inline-flex align-items-center justify-content-center small"
-          style={{ width: 24, height: 24, fontSize: '0.65rem' }}
+          style={{ width: 24, height: 24, fontSize: '0.75rem' }}
           data-testid={`${testId}-avatar`}
         >
           {initials || '?'}

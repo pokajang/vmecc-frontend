@@ -149,6 +149,11 @@ it('renders a global period control and an action queue from existing stats', ()
   expect(screen.getAllByText('Requests pending approval').length).toBeGreaterThan(0)
   expect(screen.getByText('Draft days pending publish')).toBeTruthy()
   expect(screen.getByText('Reports pending review')).toBeTruthy()
+  expect(
+    screen
+      .getAllByRole('link')
+      .some((link) => link.getAttribute('href') === '/staff/salary-claims/claims'),
+  ).toBe(true)
   expect(screen.getByTestId('dashboard-module-payroll').getAttribute('data-visible')).toBe(
     'visible',
   )

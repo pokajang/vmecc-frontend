@@ -198,7 +198,7 @@ export const RolePermissionMatrixTable = ({
                     style={{
                       letterSpacing: '0.04em',
                       textTransform: 'uppercase',
-                      fontSize: '0.7rem',
+                      fontSize: '0.78rem',
                     }}
                   >
                     {item.group}
@@ -289,7 +289,7 @@ export const RolePermissionRoleEditor = ({
             <div
               key={`role-group-${item.group}-${index}`}
               className="small fw-semibold text-muted mt-3 mb-2"
-              style={{ letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: '0.7rem' }}
+              style={{ letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: '0.78rem' }}
             >
               {item.group}
             </div>

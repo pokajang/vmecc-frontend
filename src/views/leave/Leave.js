@@ -151,7 +151,11 @@ const Leave = () => {
     clearAttachment,
     handleAttachmentChange,
     openCameraCapture,
+    uploadInputRef,
     untrackTransientAttachment,
+    cameraUploadFallback,
+    clearCameraUploadFallback,
+    requestUploadFromCameraFallback,
     deleteBlob: deleteAttachmentBlobSafe,
     cleanupTransientOnly,
     commitAttachmentReplacement,
@@ -541,6 +545,10 @@ const Leave = () => {
             openCameraCapture={openCameraCapture}
             isAttachmentProcessing={isAttachmentProcessing}
             cameraInputRef={cameraInputRef}
+            uploadInputRef={uploadInputRef}
+            cameraUploadFallback={cameraUploadFallback}
+            clearCameraUploadFallback={clearCameraUploadFallback}
+            requestUploadFromCameraFallback={requestUploadFromCameraFallback}
             attachmentStatus={attachmentStatus}
             attachmentMeta={attachmentMeta}
             clearAttachment={clearAttachment}

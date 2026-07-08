@@ -80,6 +80,7 @@ const _nav = [
     component: CNavItem,
     name: 'Reporting Settings',
     to: '/reporting-settings/inspection',
+    matchPrefix: ['/reporting-settings'],
     icon: <Settings className="nav-icon" size={20} />,
   },
   {

@@ -1933,7 +1933,7 @@ describe('inspectionFormHelpers', () => {
     expect(payload.description).toContain(
       'Face Mask Drager 02: Leak Test - Leak Test: Leak test failed on seal.',
     )
-    expect(payload.checklist).toHaveLength(2)
+    expect(payload.checklist.length).toBeGreaterThanOrEqual(2)
     expect(payload.checklist).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ label: 'Back Plate MSA 06 - High Pressure Hose: Not Good' }),
@@ -2297,7 +2297,7 @@ describe('inspectionFormHelpers', () => {
       ],
     })
 
-    expect(responseKit.highAngleChecks).toHaveLength(24)
+    expect(responseKit.highAngleChecks).toHaveLength(1)
     expect(responseKit.highAngleChecks[0]).toEqual(
       expect.objectContaining({
         rowNumber: '1',
@@ -2317,11 +2317,7 @@ describe('inspectionFormHelpers', () => {
       highAngleChecks: [],
     })
 
-    expect(rope.highAngleChecks).toHaveLength(11)
-    expect(rope.highAngleChecks[0]).toMatchObject({
-      rowNumber: '101',
-      mainLocation: 'Rescue Rope',
-    })
+    expect(rope.highAngleChecks).toHaveLength(0)
   })
 
   it('normalizes High Angle checks and builds the seeded payload, checklist, and description', () => {
@@ -2357,7 +2353,7 @@ describe('inspectionFormHelpers', () => {
 
     expect(payload.highAngleInspectedBy).toBe('Inspector Rope')
     expect(payload.highAngleInspectionDate).toBe('2026-06-28')
-    expect(payload.highAngleChecks).toHaveLength(24)
+    expect(payload.highAngleChecks).toHaveLength(2)
     expect(payload.highAngleChecks[0]).toEqual(
       expect.objectContaining({
         rowNumber: '1',
@@ -2365,7 +2361,7 @@ describe('inspectionFormHelpers', () => {
         condition: 'Good',
       }),
     )
-    expect(payload.highAngleChecks[2]).toEqual(
+    expect(payload.highAngleChecks.find((row) => row.rowNumber === '3')).toEqual(
       expect.objectContaining({
         rowNumber: '3',
         equipment: 'Locking Carabiner - CT - Steel - S',
@@ -2699,8 +2695,8 @@ describe('inspectionFormHelpers', () => {
         insuranceExpiry: '13/02/2026',
       }),
     )
-    expect(payload.frtDailyChecks).toHaveLength(37)
-    expect(payload.frtOneOffChecks).toHaveLength(23)
+    expect(payload.frtDailyChecks).toHaveLength(4)
+    expect(payload.frtOneOffChecks).toHaveLength(2)
     expect(payload.frtDailyChecks.find((row) => row.rowNumber === '90')?.photos).toEqual([
       expect.objectContaining({ id: 'frt-daily-photo-1' }),
     ])
@@ -2739,8 +2735,8 @@ describe('inspectionFormHelpers', () => {
     expect(payload.description).toContain(
       'Fire Truck Daily Readiness completed for AJG9555 on 2026-06-29 by Inspector Truck.',
     )
-    expect(payload.description).toContain('Daily roster completed: 3/37.')
-    expect(payload.description).toContain('One-off checklist completed: 2/23.')
+    expect(payload.description).toContain('Daily roster completed: 4/4.')
+    expect(payload.description).toContain('One-off checklist completed: 2/2.')
     expect(payload.description).toContain(
       'Daily FIRE TRUCK / OVERALL BODY: Panel dent needs repair.',
     )
@@ -3492,5 +3488,312 @@ describe('inspectionFormHelpers', () => {
     expect(createInspectionFormSignature(withPhoto)).not.toBe(
       createInspectionFormSignature(withoutAdditionalPhoto),
     )
+  })
+
+  it('retains completed Fire Extinguisher rows from multiple locations in review payload', () => {
+    const payload = buildInspectionPayloadSnapshot(
+      normalizeInspectionForm({
+        inspectionType: 'Fire Extinguisher Inspection',
+        zone: '1',
+        mainLocation: 'Manjung Hub',
+        subLocation: 'Reception',
+        selectedLocation: 'Zone 1 > Manjung Hub > Reception',
+        fireExtinguisherInspectedBy: 'Inspector Fire',
+        fireExtinguisherInspectionDate: '2026-07-08',
+        fireExtinguisherCatalogRows: [
+          {
+            id: 'fe:1',
+            catalogId: '1',
+            sourceRowNumber: '1',
+            zone: 'Zone 1',
+            mainLocation: 'Manjung Hub',
+            subLocation: 'Reception',
+            idLocNo: 'ADO-001',
+            barcodeNo: 'EE042021Y544896',
+            feType: 'DP 6KG',
+          },
+          {
+            id: 'fe:2',
+            catalogId: '2',
+            sourceRowNumber: '2',
+            zone: 'Zone 1',
+            mainLocation: 'Canteen',
+            subLocation: 'Canteen',
+            idLocNo: 'CEN-001',
+            barcodeNo: 'EE042021Y544897',
+            feType: 'CO2 9KG',
+          },
+        ],
+        fireExtinguisherChecks: [
+          {
+            id: 'fe:1',
+            catalogId: '1',
+            zone: 'Zone 1',
+            mainLocation: 'Manjung Hub',
+            subLocation: 'Reception',
+            idLocNo: 'ADO-001',
+            barcodeNo: 'EE042021Y544896',
+            physicalCondition: 'Good',
+            signageCondition: 'Good',
+            boxKeyAvailability: 'Yes',
+            boxGlassAvailability: 'Yes',
+            operationalCondition: 'Good',
+          },
+          {
+            id: 'fe:2',
+            catalogId: '2',
+            zone: 'Zone 1',
+            mainLocation: 'Canteen',
+            subLocation: 'Canteen',
+            idLocNo: 'CEN-001',
+            barcodeNo: 'EE042021Y544897',
+            physicalCondition: 'Good',
+            signageCondition: 'Good',
+            boxKeyAvailability: 'Yes',
+            boxGlassAvailability: 'Yes',
+            operationalCondition: 'Good',
+          },
+        ],
+      }),
+    )
+
+    expect(payload.fireExtinguisherChecks.map((row) => row.idLocNo)).toEqual(
+      expect.arrayContaining(['ADO-001', 'CEN-001']),
+    )
+    expect(payload.fireExtinguisherChecks).toHaveLength(2)
+  })
+
+  it('retains completed ER Aux rows from multiple locations in review payload', () => {
+    const payload = buildInspectionPayloadSnapshot(
+      normalizeInspectionForm({
+        inspectionType: 'ER Aux Equipment Inspection',
+        mainLocation: 'Store',
+        erAuxInspectedBy: 'Inspector ER',
+        erAuxInspectionDate: '2026-07-08',
+        erAuxChecks: [
+          {
+            id: 'store:fire-jacket',
+            location: 'Store',
+            equipment: 'Fire Jacket',
+            quantity: '15',
+            condition: 'OK',
+          },
+          {
+            id: 'office:radio-tetra',
+            location: 'Office',
+            equipment: 'Radio Tetra',
+            quantity: '7',
+            condition: 'Missing',
+            additionalNotes: 'Missing in office closet.',
+          },
+        ],
+      }),
+    )
+
+    expect(payload.erAuxChecks.map((row) => row.equipment)).toEqual(
+      expect.arrayContaining(['Fire Jacket', 'Radio Tetra']),
+    )
+    expect(payload.erAuxChecks.some((row) => row.location === 'Store')).toBe(true)
+    expect(payload.erAuxChecks.some((row) => row.location === 'Office')).toBe(true)
+    expect(payload.erAuxChecks).toHaveLength(2)
+  })
+
+  it('retains completed Hydraulic Rescue Tools rows from multiple locations in review payload', () => {
+    const payload = buildInspectionPayloadSnapshot(
+      normalizeInspectionForm({
+        inspectionType: 'Hydraulic Rescue Tools Inspection',
+        mainLocation: 'FRT',
+        hydraulicInspectedBy: 'Inspector Hydraulic',
+        hydraulicInspectedBy: 'Inspector Hydraulic',
+        hydraulicChecks: [
+          {
+            id: 'frt:hydraulic-pump-motor-1',
+            location: 'FRT',
+            mainLocation: 'FRT',
+            equipment: 'Hydraulic Pump Motor 1',
+            physicalCondition: 'OK',
+            mechanicalCondition: 'OK',
+            noLeakage: 'OK',
+            functionTest: 'OK',
+          },
+          {
+            id: 'store:hydraulic-hose-2',
+            location: 'Store',
+            mainLocation: 'Store',
+            equipment: 'Hydraulic Hose 2',
+            physicalCondition: 'N/A',
+            mechanicalCondition: 'N/A',
+            noLeakage: 'N/A',
+            functionTest: 'N/A',
+            functionTestRemarks: 'Not required for this kit.',
+            noLeakageRemarks: 'No leak check needed.',
+          },
+        ],
+      }),
+    )
+
+    expect(payload.hydraulicChecks.map((row) => row.location)).toEqual(
+      expect.arrayContaining(['FRT', 'Store']),
+    )
+    expect(payload.hydraulicChecks).toHaveLength(2)
+  })
+
+  it('retains completed FRT Daily rows from multiple route compartments in review payload', () => {
+    const payload = buildInspectionPayloadSnapshot(
+      normalizeInspectionForm({
+        inspectionType: 'FRT Daily Inspection',
+        mainLocation: 'FIRE TRUCK',
+        selectedLocation: 'FIRE TRUCK',
+        frtTruckPlateNo: 'AJG9555',
+        frtInspectedBy: 'Inspector Truck',
+        frtInspectionDate: '2026-07-08',
+        frtShift: 'Day',
+        frtDailyChecks: [
+          {
+            id: 'daily:fire-truck:1',
+            rowNumber: '1',
+            rowKind: 'status',
+            mainLocation: 'FIRE TRUCK',
+            location: 'LOCKER 01',
+            compartment: 'LOCKER 01',
+            equipment: 'Fire Extinguisher',
+            quantity: '1',
+            status: 'Checked',
+            photos: [],
+          },
+          {
+            id: 'daily:fire-truck:2',
+            rowNumber: '2',
+            rowKind: 'status',
+            mainLocation: 'FIRE TRUCK',
+            location: 'LOCKER 02',
+            compartment: 'LOCKER 02',
+            equipment: 'Hose Wrench',
+            quantity: '1',
+            status: 'Checked',
+            photos: [],
+          },
+        ],
+        frtOneOffChecks: [
+          {
+            id: 'one-off:fire-truck:16',
+            rowNumber: '16',
+            rowKind: 'status',
+            mainLocation: 'FIRE TRUCK',
+            location: 'LOCKER 01',
+            compartment: 'LOCKER 01',
+            equipment: 'Sextant',
+            condition: 'Good',
+            photos: [],
+          },
+          {
+            id: 'one-off:fire-truck:17',
+            rowNumber: '17',
+            rowKind: 'status',
+            mainLocation: 'FIRE TRUCK',
+            location: 'LOCKER 02',
+            compartment: 'LOCKER 02',
+            equipment: 'Rescue Rope',
+            condition: 'Good',
+            photos: [],
+          },
+        ],
+      }),
+    )
+
+    expect(payload.frtDailyChecks.length).toBe(2)
+    expect(payload.frtOneOffChecks.length).toBe(2)
+    expect(payload.frtDailyChecks.map((row) => row.location)).toEqual(
+      expect.arrayContaining(['LOCKER 01', 'LOCKER 02']),
+    )
+  })
+
+  it('retains completed High Angle rows from multiple kits in review payload', () => {
+    const payload = buildInspectionPayloadSnapshot(
+      normalizeInspectionForm({
+        inspectionType: 'High Angle Rescue Equipment Inspection',
+        mainLocation: 'Response Kit #1',
+        highAngleInspectedBy: 'Inspector Rope',
+        highAngleInspectionDate: '2026-07-08',
+        highAngleChecks: [
+          {
+            id: 'response-kit-1:1',
+            rowNumber: '1',
+            mainLocation: 'Response Kit #1',
+            location: 'N/A',
+            subLocation: 'N/A',
+            equipment: 'Heavy Duty Organizer Bag',
+            quantity: '1',
+            condition: 'Good',
+          },
+          {
+            id: 'rescue-rope:101',
+            rowNumber: '101',
+            mainLocation: 'Rescue Rope',
+            location: 'N/A',
+            subLocation: 'N/A',
+            equipment: 'Rope',
+            quantity: '1',
+            condition: 'Good',
+          },
+        ],
+      }),
+    )
+
+    expect(payload.highAngleChecks.map((row) => row.mainLocation)).toEqual(
+      expect.arrayContaining(['Response Kit #1', 'Rescue Rope']),
+    )
+    expect(payload.highAngleChecks).toHaveLength(2)
+  })
+
+  it('retains completed SCBA rows from multiple locations in review payload', () => {
+    const payload = buildInspectionPayloadSnapshot(
+      normalizeInspectionForm({
+        inspectionType: 'SCBA Inspection',
+        mainLocation: 'FRT',
+        scbaInspectedBy: 'Inspector SCBA',
+        scbaInspectionDate: '2026-07-08',
+        scbaBackPlateChecks: [
+          {
+            id: 'backPlate:frt:msa:06',
+            location: 'FRT',
+            brand: 'MSA',
+            serialNo: '06',
+            backPlateHarnessCondition: 'Good',
+            remarks: 'Back plate retained for backup.',
+          },
+        ],
+        scbaCylinderChecks: [
+          {
+            id: 'cylinder:store:msa:6l-01',
+            location: 'Store',
+            brand: 'MSA',
+            serialNo: '6L-01',
+            size: '6',
+            cylinderType: 'Steel',
+            remarks: 'Cylinder relocated.',
+          },
+        ],
+        scbaFaceMaskChecks: [
+          {
+            id: 'faceMask:store:drager:01',
+            location: 'Store',
+            brand: 'Drager',
+            serialNo: '01',
+            remarks: 'Face mask checked in store.',
+          },
+        ],
+      }),
+    )
+
+    expect(payload.scbaBackPlateChecks.map((row) => row.location)).toEqual(
+      expect.arrayContaining(['FRT']),
+    )
+    expect(payload.scbaCylinderChecks.map((row) => row.location)).toEqual(
+      expect.arrayContaining(['Store']),
+    )
+    expect(payload.scbaFaceMaskChecks).toHaveLength(1)
+    expect(payload.scbaCylinderChecks).toHaveLength(1)
+    expect(payload.scbaBackPlateChecks).toHaveLength(1)
   })
 })

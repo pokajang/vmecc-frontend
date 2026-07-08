@@ -20,6 +20,8 @@ const normalizeKey = (value) =>
     .trim()
     .toLowerCase()
 
+const text = (value) => String(value || '').trim()
+
 export const slugHighAngleSegment = (value) =>
   normalizeKey(value)
     .replace(/[^a-z0-9]+/g, '-')
@@ -340,6 +342,19 @@ export const getHighAngleVisibleChecks = (form = {}) => {
   return getHighAngleMergedRowsForKit(form, kit)
 }
 
+const isHighAngleInspectionCandidateRow = (row = {}) =>
+  text(row.condition) ||
+  text(row.remarks) ||
+  text(row.conditionRemarks) ||
+  text(row.additionalNotes) ||
+  normalizePhotos(row.conditionPhotos || row.photos).length > 0 ||
+  normalizePhotos(row.additionalPhotos).length > 0
+
+export const getHighAngleSubmissionCandidateRows = (form = {}) =>
+  normalizeHighAngleChecks(form.highAngleChecks || form.high_angle_checks).filter(
+    isHighAngleInspectionCandidateRow,
+  )
+
 export const makeHighAngleGroupKey = (row = {}) =>
   [String(row.location || '').trim(), String(row.subLocation || '').trim()].join('::')
 
@@ -432,9 +447,11 @@ const buildVisibleGroups = (rows = [], compartmentRows = []) => {
   })
 }
 
-export const getHighAngleCheckSummary = (form = {}) => {
+export const getHighAngleCheckSummary = (form = {}, options = {}) => {
   const selectedKit = resolveSelectedKit(form)
-  const visibleChecks = getHighAngleVisibleChecks(form)
+  const visibleChecks = Array.isArray(options.checks)
+    ? options.checks
+    : getHighAngleVisibleChecks(form)
   const checkedCount = visibleChecks.filter((row) => row.condition).length
   const issueRows = visibleChecks.filter((row) => row.condition === 'Not Good')
   const incompleteRemarksCount = issueRows.filter(
@@ -504,8 +521,8 @@ export const getHighAngleMissingFields = (form = {}) => {
 const makeChecklistId = (label) =>
   `${slugHighAngleSegment(HIGH_ANGLE_RESCUE_EQUIPMENT_INSPECTION_TYPE)}:${slugHighAngleSegment(label)}`
 
-export const buildHighAngleChecklist = (form = {}) => {
-  const summary = getHighAngleCheckSummary(form)
+export const buildHighAngleChecklist = (form = {}, options = {}) => {
+  const summary = getHighAngleCheckSummary(form, options)
   const inspectedBy = String(form.highAngleInspectedBy || form.high_angle_inspected_by || '').trim()
   const inspectionDate = String(
     form.highAngleInspectionDate || form.high_angle_inspection_date || '',
@@ -542,8 +559,8 @@ export const buildHighAngleChecklist = (form = {}) => {
   return items
 }
 
-export const buildHighAngleDescription = (form = {}) => {
-  const summary = getHighAngleCheckSummary(form)
+export const buildHighAngleDescription = (form = {}, options = {}) => {
+  const summary = getHighAngleCheckSummary(form, options)
   const inspectedBy = String(form.highAngleInspectedBy || form.high_angle_inspected_by || '').trim()
   const inspectionDate = String(
     form.highAngleInspectionDate || form.high_angle_inspection_date || '',

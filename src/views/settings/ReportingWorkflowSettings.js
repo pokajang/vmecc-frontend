@@ -1,13 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import {
-  CAlert,
-  CCard,
-  CCardBody,
-  CCardHeader,
-  CContainer,
-  CListGroup,
-  CListGroupItem,
-} from '@coreui/react'
+import { CAlert, CContainer } from '@coreui/react'
 import { Navigate, useParams } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
@@ -16,69 +8,13 @@ import { hasPermission } from 'src/utils/authz'
 import RouteNavTabs from 'src/components/RouteNavTabs'
 import ModulePageHeader from 'src/components/ModulePageHeader'
 import TableLoader from 'src/components/TableLoader'
-import InspectionWorkflowRules from './components/InspectionWorkflowRules'
+import ReportingWorkflowRulesEditor from './components/ReportingWorkflowRulesEditor'
 import {
   REPORTING_WORKFLOW_MODULE_DEFS,
   loadReportingWorkflowRules,
+  saveReportingWorkflowRules,
   resolveReportingModuleKey,
 } from './reportingWorkflowStorage'
-
-const ReadOnlyReportingWorkflowRules = ({ moduleDef, rules }) => {
-  const fallback = rules?.fallback || {}
-  const options = rules?.options || {}
-
-  return (
-    <CCard>
-      <CCardHeader>
-        <div className="fw-semibold">{moduleDef.label} Reporting Workflow</div>
-      </CCardHeader>
-      <CCardBody className="d-grid gap-3">
-        <CAlert color="info" className="mb-0">
-          {moduleDef.description}
-        </CAlert>
-        <div className="d-grid gap-2">
-          <div>
-            <div className="small text-body-secondary">Review role</div>
-            <div>{fallback.reviewRole || '-'}</div>
-          </div>
-          <div>
-            <div className="small text-body-secondary">Fallback review role</div>
-            <div>{fallback.fallbackReviewRole || '-'}</div>
-          </div>
-          <div>
-            <div className="small text-body-secondary">Approval role</div>
-            <div>{fallback.approveRole || '-'}</div>
-          </div>
-        </div>
-        <div className="d-grid gap-1">
-          <div className="small text-body-secondary">Options</div>
-          <CListGroup>
-            <CListGroupItem className="d-flex justify-content-between">
-              <span>Use same-team AIC for review</span>
-              <span>{options.useTeamScopedAic ? 'Yes' : 'No'}</span>
-            </CListGroupItem>
-            <CListGroupItem className="d-flex justify-content-between">
-              <span>Allow submission without a team</span>
-              <span>{options.allowSubmitWithoutTeam ? 'Yes' : 'No'}</span>
-            </CListGroupItem>
-            <CListGroupItem className="d-flex justify-content-between">
-              <span>IC fallback review</span>
-              <span>{options.allowIcFallbackReview ? 'Yes' : 'No'}</span>
-            </CListGroupItem>
-            <CListGroupItem className="d-flex justify-content-between">
-              <span>Prevent submitter self-review</span>
-              <span>{options.preventSelfReview ? 'Yes' : 'No'}</span>
-            </CListGroupItem>
-            <CListGroupItem className="d-flex justify-content-between">
-              <span>Prevent submitter self-approval</span>
-              <span>{options.preventSelfApprove ? 'Yes' : 'No'}</span>
-            </CListGroupItem>
-          </CListGroup>
-        </div>
-      </CCardBody>
-    </CCard>
-  )
-}
 
 const ReportingWorkflowSettings = () => {
   const authUser = useSelector((state) => state.authUser)
@@ -128,6 +64,21 @@ const ReportingWorkflowSettings = () => {
     [activeModuleKey, reportingRules],
   )
 
+  const handleSaveModuleRules = async (moduleKey, moduleRules) => {
+    const payload = {
+      modules: {
+        ...(reportingRules?.modules || {}),
+        [moduleKey]: moduleRules,
+      },
+    }
+    const result = await saveReportingWorkflowRules(payload)
+    if (!result?.ok) {
+      throw result?.error || new Error('Unable to save reporting workflow rules.')
+    }
+    setReportingRules(result?.data || payload)
+    return result.data?.modules?.[moduleKey] || moduleRules
+  }
+
   if (!authUser) {
     return (
       <div className="my-4 text-danger">
@@ -145,42 +96,50 @@ const ReportingWorkflowSettings = () => {
   }
 
   return (
-    <CContainer fluid data-testid="reporting-settings-module">
-      <ModulePageHeader
-        title="Reporting Settings"
-        subtitle="Configure reporting workflow policies across inspection and other report modules."
-      />
-
-      <div data-testid="reporting-settings-nav">
-        <RouteNavTabs
-          currentPath={`/reporting-settings/${activeModuleKey}`}
-          navigate={(path) => navigate(path)}
-          items={REPORTING_WORKFLOW_MODULE_DEFS.map((moduleDef) => ({
-            key: moduleDef.key,
-            label: moduleDef.label,
-            to: moduleDef.path,
-            match: `/reporting-settings/${moduleDef.key}`,
-          }))}
+    <CContainer
+      fluid
+      className="reporting-workflow-settings"
+      data-testid="reporting-settings-module"
+    >
+      <div className="reporting-workflow-settings__shell">
+        <ModulePageHeader
+          title="Reporting Settings"
+          subtitle="Configure reporting workflow policies across inspection and other report modules."
         />
-      </div>
 
-      {loading ? (
-        <TableLoader />
-      ) : (
-        <>
-          {error ? <CAlert color="warning">{error}</CAlert> : null}
-          {activeModuleKey === 'inspection' && (
-            <div data-testid="reporting-settings-rules">
-              <InspectionWorkflowRules />
-            </div>
-          )}
-          {activeModuleKey !== 'inspection' && activeModule ? (
-            <div data-testid="reporting-settings-rules">
-              <ReadOnlyReportingWorkflowRules moduleDef={activeModule} rules={activeModuleRules} />
-            </div>
-          ) : null}
-        </>
-      )}
+        <div className="reporting-workflow-settings__nav" data-testid="reporting-settings-nav">
+          <RouteNavTabs
+            currentPath={`/reporting-settings/${activeModuleKey}`}
+            navigate={(path) => navigate(path)}
+            items={REPORTING_WORKFLOW_MODULE_DEFS.map((moduleDef) => ({
+              key: moduleDef.key,
+              label: moduleDef.label,
+              to: moduleDef.path,
+              match: `/reporting-settings/${moduleDef.key}`,
+            }))}
+          />
+        </div>
+
+        {loading ? (
+          <TableLoader />
+        ) : (
+          <>
+            {error ? <CAlert color="warning">{error}</CAlert> : null}
+            {activeModule ? (
+              <div data-testid="reporting-settings-rules">
+                <ReportingWorkflowRulesEditor
+                  key={activeModule.key}
+                  moduleKey={activeModule.key}
+                  moduleLabel={activeModule.label}
+                  description={activeModule.description}
+                  rules={activeModuleRules}
+                  onSave={handleSaveModuleRules}
+                />
+              </div>
+            ) : null}
+          </>
+        )}
+      </div>
     </CContainer>
   )
 }

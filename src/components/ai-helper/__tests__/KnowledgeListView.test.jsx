@@ -17,6 +17,8 @@ afterEach(() => {
 })
 
 describe('KnowledgeListView', () => {
+  HTMLElement.prototype.scrollIntoView = vi.fn()
+
   const entry = {
     id: 42,
     title: 'Inspection guide',
@@ -40,6 +42,7 @@ describe('KnowledgeListView', () => {
     render(
       <KnowledgeListView
         authUser={{ id: 7 }}
+        canManageKnowledge={false}
         knowledgeDeleteTarget={null}
         knowledgeEntries={[entry]}
         knowledgeInitialLoading={false}
@@ -52,7 +55,7 @@ describe('KnowledgeListView', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: /open inspection-guide\.pdf/i }))
+    fireEvent.click(screen.getByRole('button', { name: /open inspection guide/i }))
 
     expect(handleOpen).toHaveBeenCalledWith(42)
   })
@@ -64,6 +67,7 @@ describe('KnowledgeListView', () => {
     render(
       <KnowledgeListView
         authUser={{ id: 7 }}
+        canManageKnowledge={false}
         knowledgeDeleteTarget={null}
         knowledgeEntries={[entry]}
         knowledgeInitialLoading={false}
@@ -76,9 +80,82 @@ describe('KnowledgeListView', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: /delete inspection-guide\.pdf/i }))
+    fireEvent.click(screen.getByRole('button', { name: /delete inspection guide/i }))
 
     expect(handleDeleteTarget).toHaveBeenCalledWith(entry)
     expect(handleOpen).not.toHaveBeenCalled()
+  })
+
+  it('allows system administrators to delete markdown uploaded by another user', () => {
+    const handleDeleteTarget = vi.fn()
+    const markdownEntry = {
+      ...entry,
+      id: 99,
+      title: 'Shared guidance',
+      source_filename: 'shared-guidance.md',
+      source_mime: 'text/markdown',
+      uploaded_by: 13,
+    }
+
+    render(
+      <KnowledgeListView
+        authUser={{ id: 7 }}
+        canManageKnowledge
+        knowledgeDeleteTarget={null}
+        knowledgeEntries={[markdownEntry]}
+        knowledgeInitialLoading={false}
+        knowledgeLoading={false}
+        knowledgeUpdatingId={null}
+        onConfirmDeleteKnowledge={vi.fn()}
+        onKnowledgeDeleteTargetChange={handleDeleteTarget}
+        onLoadKnowledge={vi.fn()}
+        onOpenKnowledge={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /delete shared guidance/i }))
+
+    expect(handleDeleteTarget).toHaveBeenCalledWith(markdownEntry)
+  })
+
+  it('scrolls the confirmation prompt into view when a delete target is set', () => {
+    const scrollIntoView = vi.spyOn(HTMLElement.prototype, 'scrollIntoView')
+
+    const { rerender } = render(
+      <KnowledgeListView
+        authUser={{ id: 7 }}
+        canManageKnowledge={false}
+        knowledgeDeleteTarget={null}
+        knowledgeEntries={[entry]}
+        knowledgeInitialLoading={false}
+        knowledgeLoading={false}
+        knowledgeUpdatingId={null}
+        onConfirmDeleteKnowledge={vi.fn()}
+        onKnowledgeDeleteTargetChange={vi.fn()}
+        onLoadKnowledge={vi.fn()}
+        onOpenKnowledge={vi.fn()}
+      />,
+    )
+
+    rerender(
+      <KnowledgeListView
+        authUser={{ id: 7 }}
+        canManageKnowledge={false}
+        knowledgeDeleteTarget={entry}
+        knowledgeEntries={[entry]}
+        knowledgeInitialLoading={false}
+        knowledgeLoading={false}
+        knowledgeUpdatingId={null}
+        onConfirmDeleteKnowledge={vi.fn()}
+        onKnowledgeDeleteTargetChange={vi.fn()}
+        onLoadKnowledge={vi.fn()}
+        onOpenKnowledge={vi.fn()}
+      />,
+    )
+
+    expect(scrollIntoView).toHaveBeenCalledWith({
+      behavior: 'smooth',
+      block: 'start',
+    })
   })
 })

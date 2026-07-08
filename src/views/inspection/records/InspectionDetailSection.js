@@ -1,23 +1,18 @@
 import React from 'react'
-import { CAlert, CBadge, CButton, CRow } from '@coreui/react'
-import {
-  INSPECTION_TYPE_DEFINITIONS,
-  getInspectionTypeDefinition,
-} from '../app/inspectionTypeRegistry'
-import { formatTimestamp } from '../domain/utils/inspectionSharedUtils'
+import { CAlert, CBadge, CRow } from '@coreui/react'
 import { DetailField } from 'src/components/report-workflow/ReportViewComponents'
-import {
-  formatInspectionRole,
-  isGeneralInspectionType,
-  recordToInspectionForm,
-} from '../form/inspectionFormHelpers'
+import { getInspectionTypeDefinition } from '../app/inspectionTypeRegistry'
+import { formatTimestamp } from '../domain/utils/inspectionSharedUtils'
+import { formatInspectionRole, recordToInspectionForm } from '../form/inspectionFormHelpers'
 import {
   ChipRow,
   InspectionGeneralEvidenceCard,
-  InspectionReadOnlyLocationSections,
-  InspectionSelectedTypeCard,
   formatInspectionDisplayLocationTitle,
 } from '../form/components/InspectionFormDisplaySections'
+import InspectionDetailActionBar from './InspectionDetailActionBar'
+import InspectionDetailFindingsSection from './InspectionDetailFindingsSection'
+
+const text = (value) => String(value || '').trim()
 
 const hasStructuredSummaryContent = (summary) =>
   summary?.hasContent === true ||
@@ -44,8 +39,8 @@ const hasRows = (value) => Array.isArray(value) && value.length > 0
 const getFirstRowValue = (rows = [], fields = []) => {
   const row = (Array.isArray(rows) ? rows : []).find((item) => item && typeof item === 'object')
   if (!row) return ''
-  const field = fields.find((key) => String(row?.[key] || '').trim())
-  return field ? String(row[field] || '').trim() : ''
+  const field = fields.find((key) => text(row?.[key]))
+  return field ? text(row[field]) : ''
 }
 
 const withStructuredDetailFallbacks = (form = {}, record = {}) => {
@@ -113,19 +108,82 @@ const getInspectionTypeDefinitionForDetail = (inspectionType, form = {}, record 
 
 const getSelectedChecklistItems = (checklist = []) =>
   (Array.isArray(checklist) ? checklist : []).filter(
-    (item) => item && item.selected !== false && String(item.label || item).trim(),
+    (item) => item && item.selected !== false && text(item.label || item),
   )
 
-const getChecklistLabel = (item) => String(item?.label || item || '').trim()
+const getChecklistLabel = (item) => text(item?.label || item)
+
+const buildFallbackDetailContextFields = (selectedType, form = {}, record = {}) => {
+  const fields = [{ key: 'type', label: 'Type', value: text(selectedType) || '--' }]
+  const mainLocation = text(form.mainLocation || record.mainLocation || record.location)
+  const subLocation = text(form.subLocation || record.subLocation)
+
+  if (mainLocation) {
+    fields.push({
+      key: 'location',
+      label: 'Location',
+      value: formatInspectionDisplayLocationTitle(selectedType, mainLocation) || mainLocation,
+    })
+  }
+  if (subLocation) {
+    fields.push({
+      key: 'sub-location',
+      label: 'Sub-location',
+      value:
+        formatInspectionDisplayLocationTitle(selectedType, subLocation, mainLocation) ||
+        subLocation,
+    })
+  }
+  return fields
+}
+
+const ReadOnlyChecklist = ({ checklist, label = 'Checklist' }) => {
+  const selected = getSelectedChecklistItems(checklist)
+  if (selected.length === 0) return null
+
+  return (
+    <div className="inspection-form-section d-grid gap-3">
+      <div className="fw-semibold text-muted">{label}</div>
+      <ChipRow>
+        {selected.map((item) => {
+          const labelValue = getChecklistLabel(item)
+          return (
+            <span
+              key={String(item?.id || labelValue)}
+              className="inspection-helper-chip btn btn-sm btn-light border active pe-none"
+            >
+              {labelValue}
+            </span>
+          )
+        })}
+      </ChipRow>
+    </div>
+  )
+}
+
+const ReadOnlyDescription = ({ description, label = 'Summary' }) => {
+  const descriptionText = text(description)
+  if (!descriptionText) return null
+
+  return (
+    <div className="inspection-form-section d-grid gap-3">
+      <div className="fw-semibold text-muted">{label}</div>
+      <div className="rounded-3 border bg-light-subtle p-3" style={{ whiteSpace: 'pre-wrap' }}>
+        {descriptionText}
+      </div>
+    </div>
+  )
+}
 
 const WorkflowActor = ({ entry }) => {
-  const actor = String(entry?.by || '').trim() || '--'
-  const remarks = String(entry?.remarks || '').trim()
+  const actor = text(entry?.by) || '--'
+  const remarks = text(entry?.remarks)
   const meta = entry?.meta && typeof entry.meta === 'object' ? entry.meta : {}
   const role = formatInspectionRole(
     entry?.actorRole || meta.actorRole,
     entry?.actorRoleCode || meta.actorRoleCode,
   )
+
   return (
     <>
       <div>{actor}</div>
@@ -140,87 +198,21 @@ const WorkflowActor = ({ entry }) => {
 }
 
 const findWorkflowAction = (entries = [], name) =>
-  entries.find(
-    (entry) =>
-      String(entry?.action || '')
-        .trim()
-        .toLowerCase() === name.toLowerCase(),
-  ) || null
+  entries.find((entry) => text(entry?.action).toLowerCase() === name.toLowerCase()) || null
 
-const ReadOnlyChecklist = ({ checklist, label = 'Checks' }) => {
-  const selected = getSelectedChecklistItems(checklist)
-  if (selected.length === 0) return null
+const getWorkflowHistoryEntries = (entries = []) =>
+  [
+    ['Reviewed By', findWorkflowAction(entries, 'Reviewed')],
+    ['Approved By', findWorkflowAction(entries, 'Approved')],
+    ['Rejected By', findWorkflowAction(entries, 'Rejected')],
+  ].filter(([, entry]) => entry)
 
-  return (
-    <div className="inspection-form-section d-grid gap-3">
-      <div className="fw-semibold text-muted">{label}</div>
-      <ChipRow>
-        {selected.map((item) => {
-          const label = getChecklistLabel(item)
-          return (
-            <span
-              key={String(item?.id || label)}
-              className="inspection-helper-chip btn btn-sm btn-light border active pe-none"
-            >
-              {label}
-            </span>
-          )
-        })}
-      </ChipRow>
-    </div>
+const renderStatusBadge = (status, customRenderer) =>
+  typeof customRenderer === 'function' ? (
+    customRenderer(status || 'Unknown')
+  ) : (
+    <CBadge color="secondary">{status || 'Unknown'}</CBadge>
   )
-}
-
-const ReadOnlyDescription = ({ description, label = 'Describe' }) => {
-  const text = String(description || '').trim()
-  if (!text) return null
-
-  return (
-    <div className="inspection-form-section d-grid gap-3">
-      <div className="fw-semibold text-muted">{label}</div>
-      <div className="rounded-3 border bg-light-subtle p-3" style={{ whiteSpace: 'pre-wrap' }}>
-        {text}
-      </div>
-    </div>
-  )
-}
-
-const WorkflowActivity = ({ entries = [] }) => {
-  const submittedEntry = findWorkflowAction(entries, 'Submitted')
-  const reviewedEntry = findWorkflowAction(entries, 'Reviewed')
-  const approvedEntry = findWorkflowAction(entries, 'Approved')
-  const rejectedEntry = findWorkflowAction(entries, 'Rejected')
-
-  if (!submittedEntry && !reviewedEntry && !approvedEntry && !rejectedEntry) return null
-
-  return (
-    <div className="inspection-form-section d-grid gap-3">
-      <div className="fw-semibold text-muted">Workflow Activity</div>
-      <CRow className="g-3">
-        {submittedEntry ? (
-          <DetailField label="Submitted By" xs={12} md={4}>
-            <WorkflowActor entry={submittedEntry} />
-          </DetailField>
-        ) : null}
-        {reviewedEntry ? (
-          <DetailField label="Reviewed By" xs={12} md={4}>
-            <WorkflowActor entry={reviewedEntry} />
-          </DetailField>
-        ) : null}
-        {approvedEntry ? (
-          <DetailField label="Approved By" xs={12} md={4}>
-            <WorkflowActor entry={approvedEntry} />
-          </DetailField>
-        ) : null}
-        {rejectedEntry ? (
-          <DetailField label="Rejected By" xs={12} md={4}>
-            <WorkflowActor entry={rejectedEntry} />
-          </DetailField>
-        ) : null}
-      </CRow>
-    </div>
-  )
-}
 
 const InspectionRecordMeta = ({
   record,
@@ -228,7 +220,8 @@ const InspectionRecordMeta = ({
   inspectedAt,
   submittedAt,
   submittedEntry,
-  renderStatusBadge,
+  timeline,
+  renderStatusBadge: customStatusRenderer,
 }) => {
   const submittedRole = formatInspectionRole(
     record.submittedByRole ||
@@ -240,17 +233,15 @@ const InspectionRecordMeta = ({
       record.inspectionActor?.roleCode ||
       form.inspectionActor?.roleCode,
   )
+  const workflowHistoryEntries = getWorkflowHistoryEntries(timeline)
 
   return (
-    <div className="inspection-form-section d-grid gap-3">
-      <div className="fw-semibold text-muted">Report Details</div>
+    <section className="inspection-form-section d-grid gap-3">
+      <div className="fw-semibold text-muted">Report Metadata</div>
       <CRow className="g-3">
+        <DetailField label="Report ID">{record.displayId || '--'}</DetailField>
         <DetailField label="Status">
-          {typeof renderStatusBadge === 'function' ? (
-            renderStatusBadge(record.status || 'Unknown')
-          ) : (
-            <CBadge color="secondary">{record.status || 'Unknown'}</CBadge>
-          )}
+          {renderStatusBadge(record.status || 'Unknown', customStatusRenderer)}
         </DetailField>
         <DetailField label="Inspection Date/Time">{inspectedAt || '--'}</DetailField>
         <DetailField label="Submitted By">
@@ -261,16 +252,74 @@ const InspectionRecordMeta = ({
         {record.nextActionRole ? (
           <DetailField label="Next Action">Next action: {record.nextActionRole}</DetailField>
         ) : null}
+        {workflowHistoryEntries.map(([label, entry]) => (
+          <DetailField key={label} label={label}>
+            <WorkflowActor entry={entry} />
+          </DetailField>
+        ))}
       </CRow>
-    </div>
+    </section>
   )
+}
+
+const InspectionContextSection = ({ fields = [] }) => {
+  const visibleFields = (Array.isArray(fields) ? fields : []).filter(
+    (field) => field && text(field.label) && text(field.value),
+  )
+  if (visibleFields.length === 0) return null
+
+  return (
+    <section className="inspection-form-section d-grid gap-3">
+      <div className="fw-semibold text-muted">Inspection Context</div>
+      <CRow className="g-3">
+        {visibleFields.map((field) => (
+          <DetailField key={field.key || field.label} label={field.label} xs={12} md={4}>
+            {field.value}
+          </DetailField>
+        ))}
+      </CRow>
+    </section>
+  )
+}
+
+const buildFallbackFindingsContent = (form = {}, record = {}) => {
+  const description = text(form.description || record.description)
+  const checklistItems = getSelectedChecklistItems(form.checklist || record.checklist)
+
+  if (!description && checklistItems.length === 0) return null
+
+  return (
+    <>
+      <ReadOnlyDescription description={description} />
+      <ReadOnlyChecklist checklist={checklistItems} />
+    </>
+  )
+}
+
+const hasBlockFindingData = (definition, form = {}, summary = null) => {
+  if (!definition?.ReadOnlySection) return false
+  if (hasStructuredSummaryContent(summary)) return true
+  if (definition.key === 'general-inspection') {
+    return (
+      Array.isArray(form.inspectionIssues || form.issues) &&
+      (form.inspectionIssues || form.issues).length > 0
+    )
+  }
+  if (definition.key === 'health-safety-environment-inspection') {
+    return (
+      (Array.isArray(form.hseSelections) && form.hseSelections.length > 0) ||
+      (Array.isArray(form.inspectionIssues || form.issues) &&
+        (form.inspectionIssues || form.issues).length > 0)
+    )
+  }
+  return definition.formMode === 'structured'
 }
 
 const InspectionDetailSection = ({
   selectedRecord,
   onBack,
   formatDateTime,
-  renderStatusBadge,
+  renderStatusBadge: customStatusRenderer,
   onEditRecord,
   canEditRecord,
   onReviewRecord,
@@ -282,15 +331,17 @@ const InspectionDetailSection = ({
 }) => {
   if (!selectedRecord) return <CAlert color="warning">Report not found.</CAlert>
 
-  const r = selectedRecord
-  const form = withStructuredDetailFallbacks(recordToInspectionForm(r), r)
-  const selectedType = String(form.inspectionType || r.incidentType || '').trim()
-  const selectedTypeDefinition = getInspectionTypeDefinitionForDetail(selectedType, form, r)
-  const isGeneral = isGeneralInspectionType(selectedType)
-  const dateTime = formatDateTime(r.incidentDate || r.reportDate, r.incidentTime || r.reportTime)
-  const inspectedAt = formatTimestamp(form.inspectedAt || r.inspectedAt, '--')
-  const submittedAt = formatTimestamp(r.submittedAt, '') || dateTime || '--'
-  const timeline = Array.isArray(r.timeline) ? r.timeline : []
+  const record = selectedRecord
+  const form = withStructuredDetailFallbacks(recordToInspectionForm(record), record)
+  const selectedType = text(form.inspectionType || record.incidentType)
+  const selectedTypeDefinition = getInspectionTypeDefinitionForDetail(selectedType, form, record)
+  const dateTime = formatDateTime(
+    record.incidentDate || record.reportDate,
+    record.incidentTime || record.reportTime,
+  )
+  const inspectedAt = formatTimestamp(form.inspectedAt || record.inspectedAt, '--')
+  const submittedAt = formatTimestamp(record.submittedAt, '') || dateTime || '--'
+  const timeline = Array.isArray(record.timeline) ? record.timeline : []
   const submittedEntry = findWorkflowAction(timeline, 'Submitted')
   const readOnlySummary = selectedTypeDefinition?.getSummary?.({
     ...form,
@@ -303,135 +354,111 @@ const InspectionDetailSection = ({
       : {}),
   })
   const mainLocationLabel = formatInspectionDisplayLocationTitle(selectedType, form.mainLocation)
-  const ReadOnlySection = selectedTypeDefinition?.ReadOnlySection || null
-
-  const renderActions = () => (
-    <div className="d-flex flex-column flex-sm-row flex-wrap gap-2 justify-content-end">
-      <CButton color="light" onClick={onBack}>
-        Back to records
-      </CButton>
-      {typeof onEditRecord === 'function' && canEditRecord?.(r) ? (
-        <CButton color="primary" variant="outline" onClick={() => onEditRecord(r)}>
-          Edit record
-        </CButton>
-      ) : null}
-      <CButton
-        color="secondary"
-        variant="outline"
-        disabled={Boolean(downloadingId)}
-        onClick={() => onDownloadRecord?.(r.id)}
-      >
-        {downloadingId === r.id ? 'Generating...' : 'Download'}
-      </CButton>
-      {r.canReview === true ? (
-        <CButton
-          color="info"
-          variant="outline"
-          disabled={isActionBusy}
-          onClick={() => onReviewRecord?.(r)}
-        >
-          Review
-        </CButton>
-      ) : null}
-      {r.canApprove === true || r.canReject === true ? (
-        <>
-          {r.canApprove === true ? (
-            <CButton
-              color="success"
-              variant="outline"
-              disabled={isActionBusy}
-              onClick={() => onApproveRecord?.(r)}
-            >
-              Approve
-            </CButton>
-          ) : null}
-          {r.canReject === true ? (
-            <CButton
-              color="danger"
-              variant="outline"
-              disabled={isActionBusy}
-              onClick={() => onRejectRecord?.(r)}
-            >
-              Reject
-            </CButton>
-          ) : null}
-        </>
-      ) : null}
-    </div>
-  )
+  const BlockReadOnlySection = selectedTypeDefinition?.ReadOnlySection || null
+  const detailContextFields =
+    selectedTypeDefinition?.detailContextFields?.(form, record) ||
+    buildFallbackDetailContextFields(selectedTypeDefinition?.title || selectedType, form, record)
+  const detailFindingsMode = selectedTypeDefinition?.detailFindingsMode || 'block'
+  const detailFindingItems =
+    detailFindingsMode === 'itemized'
+      ? selectedTypeDefinition?.buildDetailFindingItems?.(form, readOnlySummary, record) || []
+      : []
+  const blockFindingContent =
+    detailFindingsMode === 'block' &&
+    BlockReadOnlySection &&
+    hasBlockFindingData(selectedTypeDefinition, form, readOnlySummary) ? (
+      <BlockReadOnlySection
+        mainLocation={form.mainLocation}
+        mainLocationLabel={mainLocationLabel}
+        form={form}
+        summary={readOnlySummary}
+      />
+    ) : null
+  const fallbackFindingsContent =
+    detailFindingsMode === 'itemized' && detailFindingItems.length > 0
+      ? null
+      : blockFindingContent || buildFallbackFindingsContent(form, record)
 
   return (
     <div className="inspection-detail-section">
       <div className="inspection-form-sections d-grid gap-4">
         <div className="d-flex flex-wrap justify-content-between align-items-start gap-3">
           <div>
-            <div className="fw-semibold">{r.displayId}</div>
+            <div className="fw-semibold">{record.displayId}</div>
             <div className="small text-body-secondary">{submittedAt}</div>
           </div>
-          <div className="d-none d-md-block">{renderActions()}</div>
+          <InspectionDetailActionBar
+            mode="desktop"
+            record={record}
+            onBack={onBack}
+            onEditRecord={onEditRecord}
+            canEditRecord={canEditRecord}
+            onReviewRecord={onReviewRecord}
+            onApproveRecord={onApproveRecord}
+            onRejectRecord={onRejectRecord}
+            onDownloadRecord={onDownloadRecord}
+            downloadingId={downloadingId}
+            isActionBusy={isActionBusy}
+          />
         </div>
 
         <InspectionRecordMeta
-          record={r}
+          record={record}
           form={form}
           inspectedAt={inspectedAt}
           submittedAt={submittedAt}
           submittedEntry={submittedEntry}
-          renderStatusBadge={renderStatusBadge}
+          timeline={timeline}
+          renderStatusBadge={customStatusRenderer}
         />
 
-        <div className="inspection-form-section d-grid gap-3">
-          <div className="fw-semibold text-muted">Type</div>
-          <InspectionSelectedTypeCard
-            inspectionType={selectedTypeDefinition?.title || selectedType}
-          />
-        </div>
+        <InspectionContextSection fields={detailContextFields} />
 
-        <InspectionReadOnlyLocationSections
-          inspectionType={selectedType}
-          mainLocation={form.mainLocation}
-          subLocation={form.subLocation}
-        />
-
-        {selectedTypeDefinition?.formMode === 'structured' ? (
-          <>
-            <ReadOnlyDescription description={form.description || r.description} label="Summary" />
-            <ReadOnlyChecklist checklist={form.checklist} label="Checklist" />
-          </>
-        ) : null}
-
-        {ReadOnlySection &&
-        (selectedTypeDefinition?.formMode === 'structured' ||
-          hasStructuredSummaryContent(readOnlySummary)) ? (
-          <ReadOnlySection
-            mainLocation={form.mainLocation}
-            mainLocationLabel={mainLocationLabel}
-            form={form}
-            summary={readOnlySummary}
-          />
-        ) : null}
-
-        {!isGeneral && selectedTypeDefinition?.formMode !== 'structured' ? (
-          <>
-            <ReadOnlyDescription description={form.description || r.description} label="Summary" />
-            <ReadOnlyChecklist checklist={form.checklist} label="Checklist" />
-          </>
-        ) : null}
-
-        <InspectionGeneralEvidenceCard
-          readOnly
-          title={selectedTypeDefinition?.photoEvidenceTitle || 'Upload Photos and Describe'}
-          photos={form.photos}
-          emptyMessage={
-            selectedTypeDefinition?.formMode === 'structured'
-              ? 'No general evidence photos added.'
-              : 'No inspection photos were added.'
+        <InspectionDetailFindingsSection
+          sectionTitle="Inspection Findings"
+          findingsTitle={
+            detailFindingsMode === 'itemized'
+              ? selectedTypeDefinition?.detailFindingsTitle || ''
+              : ''
           }
+          items={detailFindingItems}
+          renderItemContent={(item) =>
+            selectedTypeDefinition?.renderDetailFindingContent?.(item, {
+              form,
+              summary: readOnlySummary,
+              record,
+            }) || null
+          }
+          fallbackContent={fallbackFindingsContent}
         />
 
-        <WorkflowActivity entries={timeline} />
+        <section className="inspection-form-section d-grid gap-3">
+          <div className="fw-semibold text-muted">Evidence</div>
+          <InspectionGeneralEvidenceCard
+            readOnly
+            title={selectedTypeDefinition?.photoEvidenceTitle || 'Upload Photos and Describe'}
+            photos={form.photos}
+            emptyMessage={
+              selectedTypeDefinition?.formMode === 'structured'
+                ? 'No general evidence photos added.'
+                : 'No inspection photos were added.'
+            }
+          />
+        </section>
 
-        <div className="d-md-none">{renderActions()}</div>
+        <InspectionDetailActionBar
+          mode="mobile"
+          record={record}
+          onBack={onBack}
+          onEditRecord={onEditRecord}
+          canEditRecord={canEditRecord}
+          onReviewRecord={onReviewRecord}
+          onApproveRecord={onApproveRecord}
+          onRejectRecord={onRejectRecord}
+          onDownloadRecord={onDownloadRecord}
+          downloadingId={downloadingId}
+          isActionBusy={isActionBusy}
+        />
       </div>
     </div>
   )

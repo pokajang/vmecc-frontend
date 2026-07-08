@@ -8,7 +8,7 @@ const { fetchDashboardModuleStats } = vi.hoisted(() => ({
 }))
 
 vi.mock('src/services/apiClient', () => ({
-  fetchDashboardModuleStats: (...args) => fetchDashboardModuleStats(...args),
+  fetchDashboardModulesStats: (...args) => fetchDashboardModuleStats(...args),
 }))
 
 describe('useDashboardStats', () => {
@@ -18,9 +18,10 @@ describe('useDashboardStats', () => {
   })
 
   it('fetches visible dashboard modules for the selected period', async () => {
-    fetchDashboardModuleStats.mockImplementation((module) =>
-      Promise.resolve({ marker: `${module}-stats` }),
-    )
+    fetchDashboardModuleStats.mockResolvedValue({
+      payroll: { marker: 'payroll-stats' },
+      leave: { marker: 'leave-stats' },
+    })
 
     const { result } = renderHook(() =>
       useDashboardStats({ period: '3m', modules: ['payroll', 'leave'] }),
@@ -28,16 +29,9 @@ describe('useDashboardStats', () => {
 
     await waitFor(() => expect(result.current.loading).toBe(false))
 
-    expect(fetchDashboardModuleStats).toHaveBeenCalledTimes(2)
-    expect(fetchDashboardModuleStats).toHaveBeenNthCalledWith(
-      1,
-      'payroll',
-      '3m',
-      expect.objectContaining({ signal: expect.any(AbortSignal) }),
-    )
-    expect(fetchDashboardModuleStats).toHaveBeenNthCalledWith(
-      2,
-      'leave',
+    expect(fetchDashboardModuleStats).toHaveBeenCalledTimes(1)
+    expect(fetchDashboardModuleStats).toHaveBeenCalledWith(
+      ['payroll', 'leave'],
       '3m',
       expect.objectContaining({ signal: expect.any(AbortSignal) }),
     )
@@ -61,13 +55,13 @@ describe('useDashboardStats', () => {
 
     expect(fetchDashboardModuleStats).toHaveBeenNthCalledWith(
       1,
-      'reports',
+      ['reports'],
       'this_month',
       expect.objectContaining({ signal: expect.any(AbortSignal) }),
     )
     expect(fetchDashboardModuleStats).toHaveBeenNthCalledWith(
       2,
-      'reports',
+      ['reports'],
       'last_month',
       expect.objectContaining({ signal: expect.any(AbortSignal) }),
     )
@@ -86,16 +80,11 @@ describe('useDashboardStats', () => {
     rerender({ modules: ['payroll', 'leave'] })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
-    expect(fetchDashboardModuleStats).toHaveBeenCalledTimes(2)
+    expect(fetchDashboardModuleStats).toHaveBeenCalledTimes(1)
   })
 
-  it('returns empty stats and a non-blocking error when a module fails', async () => {
-    fetchDashboardModuleStats.mockImplementation((module) => {
-      if (module === 'overtime') {
-        return Promise.reject(new Error('Request failed'))
-      }
-      return Promise.resolve({ pendingApprovals: 2 })
-    })
+  it('returns empty stats and errors when the batch request fails', async () => {
+    fetchDashboardModuleStats.mockRejectedValue(new Error('Request failed'))
 
     const { result } = renderHook(() =>
       useDashboardStats({ period: 'this_month', modules: ['payroll', 'overtime'] }),
@@ -103,20 +92,16 @@ describe('useDashboardStats', () => {
 
     await waitFor(() => expect(result.current.loading).toBe(false))
 
-    expect(result.current.stats.payroll).toEqual({ pendingApprovals: 2 })
+    expect(result.current.stats.payroll).toEqual({})
     expect(result.current.stats.overtime).toEqual({})
     expect(result.current.error?.message).toContain('overtime')
     expect(result.current.moduleStats?.payroll?.loading).toBe(false)
+    expect(result.current.moduleStats?.payroll?.error).toContain('Request failed')
     expect(result.current.moduleStats?.overtime?.error).toContain('Request failed')
   })
 
-  it('does not block successful modules when another module times out', async () => {
-    fetchDashboardModuleStats.mockImplementation((module) => {
-      if (module === 'reports') {
-        return new Promise(() => {})
-      }
-      return Promise.resolve({ pendingApprovals: 2, source: module })
-    })
+  it('marks selected modules as timed out when the batch request times out', async () => {
+    fetchDashboardModuleStats.mockImplementation(() => new Promise(() => {}))
 
     const { result } = renderHook(() =>
       useDashboardStats({ period: 'this_month', modules: ['payroll', 'reports'] }),
@@ -128,7 +113,8 @@ describe('useDashboardStats', () => {
     expect(result.current.moduleStats?.payroll?.loading).toBe(false)
     expect(result.current.moduleStats?.reports?.loading).toBe(false)
 
-    expect(result.current.stats.payroll).toEqual({ pendingApprovals: 2, source: 'payroll' })
+    expect(result.current.stats.payroll).toEqual({})
+    expect(result.current.moduleStats?.payroll?.error).toContain('timed out')
     expect(result.current.moduleStats?.reports?.error).toContain('timed out')
     expect(result.current.loading).toBe(false)
   }, 20_000)

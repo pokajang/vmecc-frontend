@@ -1,0 +1,135 @@
+.inspection-mobile-selector-btn {
+  min-height: 3rem;
+  padding: 0.65rem 0.8rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.inspection-mobile-selector-btn__icon {
+  width: 1rem;
+  color: currentColor;
+}
+
+.inspection-option-title-with-meta {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  line-height: 1.2;
+}
+
+.inspection-option-title {
+  min-width: 0;
+  line-height: 1.2;
+}
+
+.inspection-option-meta {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.18rem;
+  font-size: 0.82em;
+  font-weight: 400;
+  line-height: 1.2;
+  vertical-align: middle;
+}
+
+.inspection-mobile-selector-btn.btn-light,
+.inspection-mobile-selector-btn.btn-outline-light {
+  border-color: var(--cui-border-color);
+  background: var(--cui-body-bg);
+  color: var(--cui-body-color);
+}
+
+.inspection-mobile-selector-btn--selected {
+  box-shadow: none;
+}
+
+.inspection-mobile-selector-btn--selected .inspection-option-meta,
+.inspection-mobile-selector-btn--selected .text-body-secondary {
+  color: #ffffff !important;
+}
+
+.inspection-fire-extinguisher-mode-card--idle,
+.inspection-fire-extinguisher-mode-card--idle:hover,
+.inspection-fire-extinguisher-mode-card--idle:active,
+.inspection-fire-extinguisher-mode-card--idle:focus,
+.inspection-fire-extinguisher-mode-card--idle:focus-visible {
+  border-color: var(--cui-border-color) !important;
+  box-shadow: none !important;
+}
+
+.inspection-fire-extinguisher-scanner {
+  width: min(100%, 22rem);
+  aspect-ratio: 1;
+}
+
+.inspection-fire-extinguisher-scanner__video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.inspection-fire-extinguisher-scan-location-summary
+  .inspection-mobile-selector-chip__label
+  .text-truncate {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+.inspection-fire-extinguisher-scan-location-summary--loading
+  .inspection-mobile-selector-chip__label
+  .text-truncate {
+  color: var(--cui-secondary-color, #6c757d);
+}
+
+.inspection-fire-truck-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.inspection-fire-truck-form-field,
+.inspection-fire-truck-form-error {
+  min-width: 0;
+}
+
+.inspection-fire-truck-form-error {
+  grid-column: 1 / -1;
+}
+
+.inspection-fire-truck-actions {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.inspection-fire-truck-actions__toggle {
+  min-width: 2rem;
+  min-height: 2rem;
+  padding: 0.35rem;
+}
+
+.inspection-fire-truck-actions__menu {
+  position: absolute;
+  top: calc(100% + 0.2rem);
+  right: 0;
+  z-index: 5;
+  min-width: 11.5rem;
+  overflow: hidden;
+}
+
+.inspection-fire-truck-actions__menu .dropdown-item {
+  padding: 0.55rem 0.8rem;
+  font-size: 0.95rem;
+  line-height: 1.2;
+}
+
+@media (max-width: 575.98px) {
+  .inspection-fire-truck-form-grid {
+    grid-template-columns: 1fr;
+  }
+}

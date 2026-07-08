@@ -387,35 +387,43 @@ export const getFirstIncompleteFireExtinguisherRow = (rows = []) =>
     (row) => !getFireExtinguisherRowValidation(row).isComplete,
   ) || null
 
-export const getFireExtinguisherInspectionCandidateRows = (form = {}) =>
-  (() => {
-    const candidateKeys = new Set()
-    const checks = normalizeFireExtinguisherChecks(form.fireExtinguisherChecks).filter(
-      isFireExtinguisherInspectionCandidateRow,
-    )
+export const getFireExtinguisherInspectionCandidateRows = (form = {}) => {
+  const checks = normalizeFireExtinguisherChecks(form.fireExtinguisherChecks)
+  const candidateKeys = new Set(
+    checks
+      .filter(
+        (row) =>
+          isFireExtinguisherSessionCompletedRow(row) ||
+          isFireExtinguisherInspectionCandidateRow(row),
+      )
+      .map(fireRowIdentity)
+      .filter(Boolean),
+  )
 
-    checks.forEach((check) => {
-      const checkKey = fireRowIdentity(check)
-      if (checkKey) candidateKeys.add(checkKey)
-    })
+  if (candidateKeys.size === 0) return []
 
-    getFireExtinguisherVisibleChecks(form).forEach((row) => {
-      const rowKey = fireRowIdentity(row)
-      if (!rowKey) return
-      if (isFireExtinguisherSessionCompletedRow(row) || candidateKeys.has(rowKey)) {
-        candidateKeys.add(rowKey)
-      }
-    })
+  return getFireExtinguisherVisibleChecks(form).filter((row) =>
+    candidateKeys.has(fireRowIdentity(row)),
+  )
+}
 
-    if (candidateKeys.size === 0) return []
+export const getFireExtinguisherSubmissionCandidateRows = (form = {}) => {
+  const catalogRows = normalizeFireExtinguisherCatalogRows(form.fireExtinguisherCatalogRows)
+  const checks = normalizeFireExtinguisherChecks(form.fireExtinguisherChecks)
+  const candidateRows = mergeCatalogAndChecks(catalogRows, checks).filter(
+    (row) =>
+      isFireExtinguisherSessionCompletedRow(row) || isFireExtinguisherInspectionCandidateRow(row),
+  )
+  const candidateKeys = new Set(candidateRows.map(fireRowIdentity).filter(Boolean))
+  return Array.from(candidateKeys)
+    .map((identity) => candidateRows.find((row) => fireRowIdentity(row) === identity))
+    .filter(Boolean)
+}
 
-    return getFireExtinguisherVisibleChecks(form).filter((row) =>
-      candidateKeys.has(fireRowIdentity(row)),
-    )
-  })()
-
-export const getFireExtinguisherValidationDetails = (form = {}) => {
-  const visibleChecks = getFireExtinguisherInspectionCandidateRows(form)
+export const getFireExtinguisherValidationDetails = (form = {}, options = {}) => {
+  const visibleChecks = Array.isArray(options.checks)
+    ? options.checks
+    : getFireExtinguisherSubmissionCandidateRows(form)
   const rowDetails = visibleChecks.map(getFireExtinguisherRowValidation)
   const missingStatusesByRow = rowDetails.reduce((next, detail) => {
     if (detail.missingStatusKeys.length > 0) next[detail.rowId] = detail.missingStatusKeys
@@ -462,8 +470,10 @@ export const getFireExtinguisherValidationDetails = (form = {}) => {
   }
 }
 
-export const getFireExtinguisherMissingFields = (form = {}) => {
-  const visibleChecks = getFireExtinguisherInspectionCandidateRows(form)
+export const getFireExtinguisherMissingFields = (form = {}, options = {}) => {
+  const visibleChecks = Array.isArray(options.checks)
+    ? options.checks
+    : getFireExtinguisherSubmissionCandidateRows(form)
   const rowDetails = visibleChecks.map(getFireExtinguisherRowValidation)
   const checksMissing =
     visibleChecks.length === 0 || rowDetails.some((detail) => detail.missingStatusKeys.length > 0)
@@ -477,8 +487,11 @@ export const getFireExtinguisherMissingFields = (form = {}) => {
   }
 }
 
-export const buildFireExtinguisherChecklist = (form = {}) =>
-  getFireExtinguisherInspectionCandidateRows(form).flatMap((row) =>
+export const buildFireExtinguisherChecklist = (form = {}, options = {}) =>
+  (Array.isArray(options.checks)
+    ? options.checks
+    : getFireExtinguisherInspectionCandidateRows(form)
+  ).flatMap((row) =>
     FIRE_EXTINGUISHER_CHECK_FIELDS.map((field) => {
       const status = text(row[field.key])
       if (!status) return null
@@ -492,9 +505,11 @@ export const buildFireExtinguisherChecklist = (form = {}) =>
     }).filter(Boolean),
   )
 
-export const buildFireExtinguisherDescription = (form = {}) => {
+export const buildFireExtinguisherDescription = (form = {}, options = {}) => {
   const location = text(form.selectedLocation || form.location)
-  const visibleChecks = getFireExtinguisherInspectionCandidateRows(form)
+  const visibleChecks = Array.isArray(options.checks)
+    ? options.checks
+    : getFireExtinguisherInspectionCandidateRows(form)
   const totalCount = visibleChecks.length
   const defectFieldCount = visibleChecks.reduce(
     (count, row) => count + getFireExtinguisherDefectFields(row).length,

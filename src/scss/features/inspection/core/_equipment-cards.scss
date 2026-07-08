@@ -1,0 +1,202 @@
+.inspection-check-card-grid--managed {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+}
+
+.inspection-fire-extinguisher-card-stack {
+  gap: 1rem;
+}
+
+.inspection-high-angle-group-heading {
+  grid-column: 1 / -1;
+  min-width: 0;
+  padding: 0.15rem 0 0.1rem;
+}
+
+.inspection-fire-extinguisher-card--collapsed > .inspection-fire-extinguisher-card-header {
+  border-bottom: 0;
+}
+
+.inspection-fire-extinguisher-loading-card {
+  display: grid;
+  gap: 0.55rem;
+  padding: 1rem;
+}
+
+.inspection-loading-line {
+  position: relative;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--cui-light-bg-subtle, #f3f5f7);
+}
+
+.inspection-loading-line::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(var(--cui-body-bg-rgb, 255, 255, 255), 0.7),
+    transparent
+  );
+  content: '';
+  transform: translateX(-100%);
+  animation: inspection-loading-shimmer 1.2s ease-in-out infinite;
+}
+
+.inspection-loading-line--title {
+  width: 34%;
+  height: 1rem;
+}
+
+.inspection-loading-line--wide {
+  width: 72%;
+  height: 0.85rem;
+}
+
+@keyframes inspection-loading-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.inspection-fire-extinguisher-card-title,
+.inspection-fire-extinguisher-card-mobile-line {
+  min-width: 0;
+}
+
+.inspection-fire-extinguisher-card-header,
+.inspection-fire-extinguisher-card-actions {
+  min-width: 0;
+}
+
+.inspection-fire-extinguisher-card-mobile-line {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fire-extinguisher-drawer-location-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.fire-extinguisher-drawer-location-meta__item {
+  min-width: 0;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid rgba(13, 148, 136, 0.28);
+  border-radius: 0.65rem;
+  background: rgba(13, 148, 136, 0.08);
+}
+
+.fire-extinguisher-drawer-location-meta__label,
+.fire-extinguisher-drawer-location-meta__value {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fire-extinguisher-drawer-location-meta__label {
+  color: var(--cui-secondary-color);
+  font-size: 0.82rem;
+  line-height: 1.2;
+}
+
+.fire-extinguisher-drawer-location-meta__value {
+  margin-top: 0.12rem;
+  color: var(--cui-body-color);
+  font-weight: 600;
+}
+
+.fire-extinguisher-drawer-field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 0.85rem;
+}
+
+@media (max-width: 430px) {
+  .fire-extinguisher-drawer-location-meta,
+  .fire-extinguisher-drawer-field-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.inspection-check-card__meta {
+  color: var(--cui-secondary-color);
+  font-size: 0.84rem;
+  line-height: 1.25;
+}
+
+.inspection-check-card__collapsed-summary {
+  border-top: 1px solid var(--cui-border-color-translucent);
+  padding: 0.55rem 0.85rem;
+  color: var(--cui-secondary-color);
+  font-size: 0.84rem;
+}
+
+.inspection-check-toolbar {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.inspection-check-toolbar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.inspection-search-input.form-control {
+  min-width: 0;
+}
+
+.inspection-hse-choice-btn {
+  min-height: 3.4rem;
+  border-color: var(--cui-border-color);
+  color: var(--cui-body-color);
+}
+
+.inspection-hse-choice-btn.btn-light {
+  background: var(--cui-body-bg);
+}
+
+@media (max-width: 575.98px) {
+  .inspection-check-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .inspection-search-input.form-control {
+    min-height: 3rem;
+    padding: 0.68rem 1rem 0.68rem 2.75rem;
+    border-width: 2px;
+    border-radius: 999px;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3ccircle cx='11' cy='11' r='8'/%3e%3cpath d='m21 21-4.35-4.35'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: 1rem 50%;
+    background-size: 1rem 1rem;
+    line-height: 1.25;
+  }
+
+  .inspection-check-toolbar__actions {
+    justify-content: flex-start;
+  }
+}
+
+.inspection-draft-status {
+  min-height: 1.25rem;
+  max-width: 100%;
+  overflow: hidden;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inspection-form-sticky-spacer,
+.inspection-review-sticky-spacer {
+  display: none;
+}

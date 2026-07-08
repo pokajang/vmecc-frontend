@@ -7,6 +7,7 @@ import {
   getGeneralMissingFields,
   isGeneralInspectionType,
 } from './helpers'
+import { createZoneLocationDetailContextFields } from '../detailConfigHelpers'
 import { GeneralReadOnlySection } from './section'
 
 const generalInspectionDefinition = {
@@ -32,6 +33,12 @@ const generalInspectionDefinition = {
   buildChecklist: buildGeneralChecklist,
   buildDescription: buildGeneralDescription,
   ReadOnlySection: GeneralReadOnlySection,
+  detailContextFields: createZoneLocationDetailContextFields({
+    typeLabel: 'General Inspection',
+    inspectionType: GENERAL_INSPECTION_TYPE,
+  }),
+  detailFindingsMode: 'block',
+  detailFindingsTitle: 'Findings',
 }
 
 export default generalInspectionDefinition

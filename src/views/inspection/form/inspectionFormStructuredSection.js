@@ -31,6 +31,8 @@ export const buildStructuredSectionHandlers = ({
   applyScbaPhotoCaption,
   checksField,
   fireExtinguisherLocationContinuation,
+  locationContinuation,
+  scopeContinuation,
   fieldRefKey,
   markAllErAuxOk,
   markAllFrtOk,
@@ -72,6 +74,8 @@ export const buildStructuredSectionHandlers = ({
   saveInspectionFindingDraft,
   saveStructuredGroupedRowDraft,
   saveStructuredRowDraft,
+  selectNextScope,
+  selectNextLocation,
   selectNextFireExtinguisherLocation,
   deleteFrtItem,
   resetErAuxCheck,
@@ -284,6 +288,10 @@ export const buildStructuredSectionHandlers = ({
   onUpdateExtinguisher: updateFireExtinguisher,
   onSaveFireExtinguisherRowDraft:
     checksField === 'fireExtinguisherChecks' ? saveFireExtinguisherRowDraft : undefined,
+  onSelectNextScope: selectNextScope || selectNextLocation,
+  onSelectNextLocation: selectNextLocation,
+  scopeContinuation: scopeContinuation || locationContinuation || null,
+  locationContinuation: scopeContinuation || locationContinuation || null,
   onSelectNextFireExtinguisherLocation:
     checksField === 'fireExtinguisherChecks' ? selectNextFireExtinguisherLocation : undefined,
   fireExtinguisherLocationContinuation:

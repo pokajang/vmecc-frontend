@@ -74,6 +74,10 @@ const baseProps = {
   onDraft: vi.fn(),
   isSubmitBlockedByBalance: false,
   editingRecordId: null,
+  requestUploadFromCameraFallback: vi.fn(),
+  uploadInputRef: { current: null },
+  cameraUploadFallback: null,
+  clearCameraUploadFallback: vi.fn(),
 }
 
 describe('LeaveApplySection', () => {
@@ -95,5 +99,27 @@ describe('LeaveApplySection', () => {
       'Save draft',
       'Submit request',
     ])
+  })
+
+  it('renders camera fallback banner with manual upload action', () => {
+    render(
+      <MemoryRouter>
+        <LeaveApplySection
+          {...baseProps}
+          activeFieldRule={{
+            showCoverage: false,
+            showAttachment: true,
+            coverageRequired: false,
+            attachmentRequired: false,
+          }}
+          cameraUploadFallback={{ message: 'Camera processing failed. Upload the photo manually.' }}
+          requestUploadFromCameraFallback={vi.fn()}
+          clearCameraUploadFallback={vi.fn()}
+        />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByText('Camera processing failed. Upload the photo manually.')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Upload photo' })).toBeTruthy()
   })
 })

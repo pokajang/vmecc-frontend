@@ -96,7 +96,7 @@ export const UserGroupLabel = ({
           style={{
             width: '26px',
             height: '26px',
-            fontSize: '11px',
+            fontSize: '12px',
             backgroundColor: colors.bg,
             color: colors.color,
           }}

@@ -1,0 +1,328 @@
+.inspection-general-evidence-card {
+  overflow: hidden;
+}
+
+.inspection-general-evidence-card-header {
+  min-height: 2.75rem;
+  padding: 0.65rem 0.85rem;
+  background: var(--cui-body-bg);
+}
+
+.inspection-general-evidence-card-body {
+  padding: 0.85rem;
+}
+
+.inspection-check-card-grid,
+.inspection-hydraulic-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  align-items: start;
+}
+
+.inspection-check-card,
+.inspection-hydraulic-card {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.inspection-check-card-header,
+.inspection-hydraulic-card-header {
+  min-height: 2.75rem;
+  padding: 0.65rem 0.85rem;
+  background: var(--cui-body-bg);
+}
+
+.inspection-check-card-header .inspection-compact-action-btn,
+.inspection-hydraulic-card-header .inspection-compact-action-btn {
+  padding: 0.28rem 0.55rem;
+}
+
+.inspection-check-card-body,
+.inspection-hydraulic-card-body {
+  padding: 0.85rem;
+}
+
+.inspection-finding-card {
+  min-width: 0;
+  overflow: hidden;
+  background: var(--cui-body-bg);
+  border: 1px solid var(--cui-border-color);
+  box-shadow: none;
+}
+
+.inspection-finding-card__content {
+  padding: 0.85rem 0.95rem;
+}
+
+.inspection-finding-card__description,
+.inspection-finding-card__action {
+  overflow-wrap: anywhere;
+}
+
+.inspection-finding-card__action {
+  color: var(--cui-secondary-color);
+  display: -webkit-box;
+  font-size: 0.88rem;
+  line-height: 1.3;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.inspection-finding-card__meta {
+  color: var(--cui-secondary-color);
+  font-size: 0.84rem;
+  line-height: 1.25;
+}
+
+@media (max-width: 430px) {
+  .inspection-check-card-header,
+  .inspection-hydraulic-card-header {
+    min-height: 2.35rem;
+    padding: 0.4rem 0.55rem;
+  }
+
+  .inspection-check-card-header .fw-semibold,
+  .inspection-hydraulic-card-header .fw-semibold {
+    font-size: 0.88rem;
+    line-height: 1.2;
+  }
+
+  .inspection-check-card-header .inspection-compact-action-btn,
+  .inspection-hydraulic-card-header .inspection-compact-action-btn {
+    min-height: 32px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.84rem;
+    line-height: 1.15;
+  }
+}
+
+.inspection-check-section-heading,
+.inspection-hydraulic-section-heading {
+  min-width: 0;
+}
+
+.inspection-check-label,
+.inspection-hydraulic-check-label {
+  min-width: 6.5rem;
+  max-width: 12rem;
+  overflow-wrap: normal;
+  white-space: normal;
+}
+
+.inspection-check-row,
+.inspection-hydraulic-check-row {
+  display: grid !important;
+  grid-template-columns: minmax(6.5rem, 1fr) auto;
+  align-items: center;
+  column-gap: 0.75rem;
+  row-gap: 0.5rem;
+  min-width: 0;
+}
+
+.inspection-check-row--stacked,
+.inspection-hydraulic-check-row--stacked {
+  grid-template-columns: 1fr;
+  align-items: flex-start;
+}
+
+.inspection-check-row--stacked .inspection-check-label,
+.inspection-hydraulic-check-row--stacked .inspection-hydraulic-check-label {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.inspection-check-status-group,
+.inspection-hydraulic-status-group {
+  align-items: center;
+  gap: 0.5rem !important;
+  flex-shrink: 0;
+  max-width: 100%;
+}
+
+.inspection-check-status-btn,
+.inspection-hydraulic-status-btn {
+  min-height: 2.25rem;
+  min-width: 3rem;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+@media (max-width: 575.98px) {
+  .inspection-hydraulic-card-grid.gap-5,
+  .inspection-check-card-grid.gap-5,
+  .inspection-check-card-grid--managed.gap-5 {
+    gap: 0.75rem !important;
+  }
+
+  .inspection-check-card > .inspection-check-card-header:only-child,
+  .inspection-check-card > .inspection-hydraulic-card-header:only-child,
+  .inspection-hydraulic-card > .inspection-hydraulic-card-header:only-child {
+    border-bottom: 0;
+  }
+
+  .inspection-check-card > .inspection-hydraulic-card-body.d-grid {
+    gap: 0.75rem !important;
+  }
+
+  .inspection-fire-extinguisher-card-stack {
+    gap: 0.75rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .inspection-fire-extinguisher-card-stack .inspection-check-card,
+  .inspection-fire-extinguisher-card-stack .inspection-hydraulic-card {
+    margin: 0;
+  }
+
+  .inspection-fire-extinguisher-card-summary {
+    gap: 0.2rem !important;
+  }
+
+  .inspection-fire-extinguisher-card-header {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    column-gap: 0.5rem;
+    row-gap: 0;
+  }
+
+  .inspection-fire-extinguisher-card-actions {
+    align-self: start;
+    justify-self: end;
+    flex-wrap: nowrap !important;
+  }
+
+  .inspection-fire-extinguisher-card-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .inspection-check-row,
+  .inspection-hydraulic-check-row {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
+  }
+
+  .inspection-check-label,
+  .inspection-hydraulic-check-label {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .inspection-check-status-group,
+  .inspection-hydraulic-status-group {
+    justify-content: flex-start !important;
+  }
+
+  .inspection-check-toolbar__actions {
+    display: none !important;
+  }
+
+  .inspection-fire-extinguisher-detail-drawer-body .inspection-hydraulic-check-row {
+    grid-template-columns: minmax(7.5rem, 1fr) auto;
+    align-items: center;
+    column-gap: 0.75rem;
+    row-gap: 1rem;
+  }
+
+  .inspection-fire-extinguisher-detail-drawer-summary {
+    margin-bottom: 0.25rem;
+  }
+
+  .inspection-fire-extinguisher-detail-drawer-body .inspection-hydraulic-check-with-evidence {
+    row-gap: 1.7rem !important;
+  }
+
+  .inspection-fire-extinguisher-detail-drawer-body
+    .inspection-hydraulic-check-row--stacked
+    .inspection-hydraulic-check-label {
+    min-width: 0;
+    max-width: 11rem;
+  }
+
+  .inspection-fire-extinguisher-detail-drawer-body .inspection-hydraulic-status-group {
+    justify-content: flex-end !important;
+    justify-self: end;
+    padding-bottom: 0 !important;
+  }
+
+  .inspection-fire-extinguisher-detail-drawer-body .inspection-hydraulic-status-btn {
+    min-height: 2rem;
+    min-width: 2.8rem;
+    padding-left: 0.55rem;
+    padding-right: 0.55rem;
+  }
+
+  .inspection-fire-extinguisher-detail-drawer-body .inspection-fire-extinguisher-additional-actions,
+  .inspection-fire-extinguisher-detail-drawer-body .inspection-equipment-additional-actions {
+    justify-content: flex-end !important;
+  }
+
+  .inspection-fire-extinguisher-detail-drawer-body .inspection-fire-extinguisher-additional-info,
+  .inspection-fire-extinguisher-detail-drawer-body .inspection-equipment-additional-info {
+    grid-template-columns: minmax(7.5rem, 1fr) auto;
+    align-items: center;
+    column-gap: 0.75rem;
+    row-gap: 1rem;
+    margin-top: 0.15rem;
+  }
+
+  .inspection-fire-extinguisher-detail-drawer-body
+    .inspection-fire-extinguisher-additional-info
+    > :not(.inspection-fire-extinguisher-additional-actions):not(:first-child),
+  .inspection-fire-extinguisher-detail-drawer-body
+    .inspection-equipment-additional-info
+    > :not(.inspection-equipment-additional-actions):not(:first-child) {
+    grid-column: 1 / -1;
+  }
+
+  .inspection-equipment-detail-drawer-body .inspection-hydraulic-check-row {
+    grid-template-columns: minmax(7.5rem, 1fr) auto;
+    align-items: center;
+    column-gap: 0.75rem;
+  }
+
+  .inspection-equipment-detail-drawer-body .inspection-hydraulic-check-with-evidence {
+    row-gap: 1rem !important;
+  }
+
+  .inspection-equipment-detail-drawer-body
+    .inspection-hydraulic-check-row--stacked
+    .inspection-hydraulic-check-label {
+    min-width: 0;
+    max-width: 11rem;
+  }
+
+  .inspection-equipment-detail-drawer-body .inspection-hydraulic-status-group {
+    justify-content: flex-end !important;
+    justify-self: end;
+    padding-bottom: 0 !important;
+  }
+
+  .inspection-equipment-detail-drawer-body .inspection-hydraulic-status-btn {
+    min-height: 2rem;
+    min-width: 2.8rem;
+    padding-left: 0.55rem;
+    padding-right: 0.55rem;
+  }
+
+  .inspection-equipment-detail-drawer-body .inspection-equipment-additional-actions {
+    justify-content: flex-end !important;
+  }
+
+  .inspection-equipment-detail-drawer-body .inspection-equipment-additional-info {
+    grid-template-columns: minmax(7.5rem, 1fr) auto;
+    align-items: center;
+    column-gap: 0.75rem;
+  }
+
+  .inspection-equipment-detail-drawer-body
+    .inspection-equipment-additional-info
+    > :not(.inspection-equipment-additional-actions):not(:first-child) {
+    grid-column: 1 / -1;
+  }
+}

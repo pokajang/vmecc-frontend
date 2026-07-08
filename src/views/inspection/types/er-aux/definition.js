@@ -10,6 +10,8 @@ import {
   normalizeErAuxChecks,
   normalizeErAuxEquipmentRows,
 } from './helpers'
+import { createLocationDetailContextFields } from '../detailConfigHelpers'
+import { buildMainLocationContinuationOptions } from '../continuationHelpers'
 import { ErAuxEditSection, ErAuxReadOnlySection } from './section'
 
 const erAuxInspectionDefinition = {
@@ -39,10 +41,25 @@ const erAuxInspectionDefinition = {
   getVisibleChecks: getErAuxVisibleChecks,
   getSummary: getErAuxCheckSummary,
   getMissingFields: getErAuxMissingFields,
+  buildContinuationOptions: (form, _summary, context = {}) =>
+    buildMainLocationContinuationOptions({
+      form,
+      context,
+      getSummary: getErAuxCheckSummary,
+      getMissingFields: getErAuxMissingFields,
+      label: 'location',
+    }),
   buildChecklist: buildErAuxChecklist,
   buildDescription: buildErAuxDescription,
   EditSection: ErAuxEditSection,
   ReadOnlySection: ErAuxReadOnlySection,
+  detailContextFields: createLocationDetailContextFields({
+    typeLabel: 'Emergency Response Auxiliary Equipment',
+    inspectionType: ER_AUX_EQUIPMENT_INSPECTION_TYPE,
+    primaryLabel: 'Location',
+  }),
+  detailFindingsMode: 'block',
+  detailFindingsTitle: 'Equipment',
 }
 
 export default erAuxInspectionDefinition

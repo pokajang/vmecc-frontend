@@ -145,7 +145,7 @@ const TableFilters = ({
                 <CBadge
                   color="danger"
                   className="position-absolute top-0 start-100 translate-middle rounded-pill"
-                  style={{ fontSize: '0.6rem' }}
+                  style={{ fontSize: '0.78rem' }}
                 >
                   {activeFilterItems.length}
                 </CBadge>

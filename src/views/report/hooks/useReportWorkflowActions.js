@@ -15,15 +15,24 @@ const useReportWorkflowActions = ({ navigate, pushToast, reloadRecords, reportBa
 
   const canReviewRecord = useCallback((row) => {
     if (!row || row.recordKind === 'draft') return false
+    if (typeof row.canReview === 'boolean') return row.canReview
     return String(row.status || '').trim() === 'Submitted'
   }, [])
 
   const canApproveRecord = useCallback((row) => {
     if (!row || row.recordKind === 'draft') return false
+    if (typeof row.canApprove === 'boolean') return row.canApprove
     return String(row.status || '').trim() === 'Reviewed'
   }, [])
 
-  const canRejectRecord = useCallback((row) => canApproveRecord(row), [canApproveRecord])
+  const canRejectRecord = useCallback(
+    (row) => {
+      if (!row || row.recordKind === 'draft') return false
+      if (typeof row.canReject === 'boolean') return row.canReject
+      return canApproveRecord(row)
+    },
+    [canApproveRecord],
+  )
 
   const closeWorkflowActionModal = useCallback(() => {
     setWorkflowActionState({ visible: false, actionType: '', record: null })

@@ -50,8 +50,13 @@ const normalizeType = (value) =>
 export const isReportApiEnabled = (reportTypeSlug) =>
   REPORT_API_ENABLED_TYPES.includes(normalizeType(reportTypeSlug))
 
-export const fetchReportRecords = async () => {
-  const response = await apiRequest('/reports')
+export const fetchReportRecords = async (options = {}) => {
+  const query = new URLSearchParams()
+  const reportType = normalizeType(options?.reportTypeSlug || options?.reportType)
+  if (reportType) query.set('reportType', reportType)
+  if (options?.scope) query.set('scope', String(options.scope))
+  const path = query.toString() ? `/reports?${query.toString()}` : '/reports'
+  const response = await apiRequest(path)
   const rows = Array.isArray(response?.data) ? response.data : []
   return normalizeReportRecords(rows)
 }

@@ -30,7 +30,7 @@ const useReportRecords = ({ user = null, userId, reportTypeSlug, reportId, draft
     setIsLoading(true)
     try {
       const rows = apiEnabledForType
-        ? await fetchReportRecords(userId)
+        ? await fetchReportRecords({ reportTypeSlug, scope: recordScope })
         : loadReportRecords(userId).filter(
             (row) =>
               String(row?.reportType || '').toLowerCase() ===
@@ -53,7 +53,7 @@ const useReportRecords = ({ user = null, userId, reportTypeSlug, reportId, draft
           await runReportApiBackfillMigration({ userId, reportTypeSlug })
         }
         const rows = apiEnabledForType
-          ? await fetchReportRecords(userId)
+          ? await fetchReportRecords({ reportTypeSlug, scope: recordScope })
           : loadReportRecords(userId).filter(
               (row) =>
                 String(row?.reportType || '').toLowerCase() ===
@@ -71,7 +71,7 @@ const useReportRecords = ({ user = null, userId, reportTypeSlug, reportId, draft
     return () => {
       cancelled = true
     }
-  }, [apiEnabledForType, reportTypeSlug, shouldRunBackfill, userId])
+  }, [apiEnabledForType, recordScope, reportTypeSlug, shouldRunBackfill, userId])
 
   useEffect(() => {
     if (period === 'all') return

@@ -56,6 +56,8 @@ const sectionShortLabelByKey = Object.fromEntries(
   SCBA_SECTION_DEFINITIONS.map((section) => [section.key, section.shortLabel]),
 )
 
+const sectionByKey = new Map(SCBA_SECTION_DEFINITIONS.map((section) => [section.key, section]))
+
 const sectionKeyByField = Object.entries(fieldMapBySection).reduce((next, [sectionKey, fields]) => {
   fields.forEach((field) => {
     next[field.key] = sectionKey
@@ -244,6 +246,53 @@ export const normalizeScbaCustomSections = (sections = []) => {
     .filter(Boolean)
 }
 
+const toText = (value) => String(value || '').trim()
+
+const isScbaSectionRowRemoved = (row = {}) => row?.removed === true
+
+const isScbaSubmissionCandidateRow = (row = {}, fields = []) => {
+  if (!row || typeof row !== 'object' || isScbaSectionRowRemoved(row)) return false
+  if (fields.every((field) => toText(row?.[field.key]) !== '')) return true
+
+  if (toText(row.remarks) || normalizePhotos(row.photos).length > 0) return true
+  if (toText(row.additionalNotes) || normalizePhotos(row.additionalPhotos).length > 0) return true
+
+  return fields.some((field) => {
+    const value = toText(row[field.key])
+    if (value) return true
+    if (field.kind !== 'status') return false
+    const { remarksKey, photosKey } = getScbaFieldEvidenceKeys(field)
+    return toText(row[remarksKey]) || normalizePhotos(row[photosKey]).length > 0
+  })
+}
+
+const getScbaSubmissionCandidateSection = (section = {}, rows = []) => {
+  const fields = Array.isArray(section.fields) ? section.fields : []
+  const visibleRows = (Array.isArray(rows) ? rows : [])
+    .filter((row) => isScbaSubmissionCandidateRow(row, fields))
+    .map((row) => ({ ...row, sectionKey: section.key, label: row.label || getRowLabel(row) }))
+
+  return {
+    ...section,
+    rows: visibleRows,
+    visibleRows,
+  }
+}
+
+export const getScbaSubmissionCandidateSections = (form = {}) => {
+  const candidateCustomSections = normalizeScbaCustomSections(
+    form.scbaCustomSections || form.scba_custom_sections,
+  )
+  return [
+    ...SCBA_SECTION_DEFINITIONS.map((section) =>
+      getScbaSubmissionCandidateSection(section, getScbaSectionChecks(form, section.key)),
+    ),
+    ...candidateCustomSections
+      .filter((section) => section.removed !== true)
+      .map((section) => getScbaSubmissionCandidateSection(section, section.rows)),
+  ]
+}
+
 const getMainLocation = (form = {}) =>
   String(form.mainLocation || form.main_location || form.selectedLocation || form.location || '')
     .split('>')
@@ -271,7 +320,7 @@ export const isScbaInspectionType = (inspectionType) =>
   normalizeKey(inspectionType) === normalizeKey(SCBA_INSPECTION_TYPE)
 
 const isScbaRowComplete = (row = {}, fields = []) =>
-  fields.every((field) => String(row?.[field.key] || '').trim())
+  fields.every((field) => toText(row?.[field.key]))
 
 const getScbaRowIssueFields = (row = {}, fields = []) =>
   fields.filter(
@@ -419,8 +468,10 @@ export const getScbaVisibleSections = (form = {}) => [
     .map((section) => buildVisibleSection(section, form)),
 ]
 
-export const getScbaCheckSummary = (form = {}) => {
-  const visibleSections = getScbaVisibleSections(form)
+export const getScbaCheckSummary = (form = {}, options = {}) => {
+  const visibleSections = Array.isArray(options.sections)
+    ? options.sections
+    : getScbaVisibleSections(form)
   const visibleRows = visibleSections.flatMap((section) =>
     section.visibleRows.map((row) => ({ ...row, sectionKey: section.key })),
   )
@@ -467,9 +518,9 @@ export const getScbaMissingFields = (form = {}) => {
 const makeChecklistId = (inspectionType, label) =>
   `${slugSegment(inspectionType) || 'scba-inspection'}:${slugSegment(label)}`
 
-export const buildScbaChecklist = (form = {}) => {
+export const buildScbaChecklist = (form = {}, options = {}) => {
   const inspectionType = String(form.inspectionType || SCBA_INSPECTION_TYPE).trim()
-  const summary = getScbaCheckSummary(form)
+  const summary = getScbaCheckSummary(form, options)
   const rows = []
 
   summary.visibleSections.forEach((section) => {
@@ -504,11 +555,11 @@ export const buildScbaChecklist = (form = {}) => {
   return rows
 }
 
-export const buildScbaDescription = (form = {}) => {
+export const buildScbaDescription = (form = {}, options = {}) => {
   const location = String(form.location || form.selectedLocation || getMainLocation(form)).trim()
   const inspectedBy = String(form.scbaInspectedBy || form.scba_inspected_by || '').trim()
   const inspectionDate = String(form.scbaInspectionDate || form.scba_inspection_date || '').trim()
-  const summary = getScbaCheckSummary(form)
+  const summary = getScbaCheckSummary(form, options)
 
   const headerParts = [`SCBA checked${location ? ` at ${location}` : ''}`]
   if (inspectedBy) headerParts.push(`by ${inspectedBy}`)

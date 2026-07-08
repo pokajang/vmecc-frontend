@@ -51,7 +51,7 @@ const PublishBadge = ({ status }) => {
     return (
       <span
         className="d-inline-flex align-items-center gap-1 rounded-pill px-2 py-1 fw-semibold"
-        style={{ background: '#d1fae5', color: '#065f46', fontSize: '0.7rem' }}
+        style={{ background: '#d1fae5', color: '#065f46', fontSize: '0.78rem' }}
       >
         <BookCheck size={11} />
         Published
@@ -61,7 +61,7 @@ const PublishBadge = ({ status }) => {
   return (
     <span
       className="d-inline-flex align-items-center gap-1 rounded-pill px-2 py-1 fw-semibold"
-      style={{ background: '#fef3c7', color: '#92400e', fontSize: '0.7rem' }}
+      style={{ background: '#fef3c7', color: '#92400e', fontSize: '0.78rem' }}
     >
       <FileEdit size={11} />
       Draft

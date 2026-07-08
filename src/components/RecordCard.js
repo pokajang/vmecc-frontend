@@ -67,7 +67,7 @@ const RecordCard = ({ item = {}, className = '', variant = 'card' }) => {
             {item.eyebrow ? (
               <div
                 className="record-card-eyebrow text-body-tertiary mb-1"
-                style={{ fontSize: '0.75rem', lineHeight: 1.2 }}
+                style={{ fontSize: '0.82rem', lineHeight: 1.2 }}
               >
                 {item.eyebrow}
               </div>

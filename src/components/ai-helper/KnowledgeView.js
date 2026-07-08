@@ -9,6 +9,7 @@ import PdfKnowledgeForm from './PdfKnowledgeForm'
 const KnowledgeView = ({
   authUser,
   backButtonRef,
+  canManageKnowledge,
   isSysAdmin,
   knowledgeAcknowledged,
   knowledgeDeleteTarget,
@@ -167,6 +168,7 @@ const KnowledgeView = ({
         {knowledgeView === KNOWLEDGE_VIEW_LIST ? (
           <KnowledgeListView
             authUser={authUser}
+            canManageKnowledge={canManageKnowledge}
             knowledgeDeleteTarget={knowledgeDeleteTarget}
             knowledgeEntries={knowledgeEntries}
             knowledgeInitialLoading={knowledgeInitialLoading}

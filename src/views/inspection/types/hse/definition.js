@@ -9,6 +9,7 @@ import {
   isHseInspectionType,
   normalizeHseFormFields,
 } from './helpers'
+import { createZoneLocationDetailContextFields } from '../detailConfigHelpers'
 import { HseEditSection, HseReadOnlySection } from './section'
 
 const hseInspectionDefinition = {
@@ -38,6 +39,12 @@ const hseInspectionDefinition = {
   normalizeChecks: normalizeHseFormFields,
   EditSection: HseEditSection,
   ReadOnlySection: HseReadOnlySection,
+  detailContextFields: createZoneLocationDetailContextFields({
+    typeLabel: 'Health Safety Environment',
+    inspectionType: HSE_INSPECTION_TYPE,
+  }),
+  detailFindingsMode: 'block',
+  detailFindingsTitle: 'HSE Observation',
 }
 
 export default hseInspectionDefinition

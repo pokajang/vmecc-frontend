@@ -12,6 +12,8 @@ import {
   normalizeHydraulicChecks,
   normalizeHydraulicEquipmentRows,
 } from './helpers'
+import { createLocationDetailContextFields } from '../detailConfigHelpers'
+import { buildMainLocationContinuationOptions } from '../continuationHelpers'
 import { HydraulicEditSection, HydraulicReadOnlySection } from './section'
 
 const hydraulicInspectionDefinition = {
@@ -39,12 +41,27 @@ const hydraulicInspectionDefinition = {
   getVisibleChecks: getHydraulicVisibleChecks,
   getSummary: getHydraulicCheckSummary,
   getMissingFields: getHydraulicMissingFields,
+  buildContinuationOptions: (form, _summary, context = {}) =>
+    buildMainLocationContinuationOptions({
+      form,
+      context,
+      getSummary: getHydraulicCheckSummary,
+      getMissingFields: getHydraulicMissingFields,
+      label: 'location',
+    }),
   buildChecklist: buildHydraulicChecklist,
   buildDescription: buildHydraulicDescription,
   statusOptions: HYDRAULIC_CHECK_STATUS_OPTIONS,
   checkFields: HYDRAULIC_CHECK_FIELDS,
   EditSection: HydraulicEditSection,
   ReadOnlySection: HydraulicReadOnlySection,
+  detailContextFields: createLocationDetailContextFields({
+    typeLabel: 'Hydraulic Rescue Tools',
+    inspectionType: HYDRAULIC_RESCUE_TOOLS_INSPECTION_TYPE,
+    primaryLabel: 'Location',
+  }),
+  detailFindingsMode: 'block',
+  detailFindingsTitle: 'Equipment',
 }
 
 export default hydraulicInspectionDefinition

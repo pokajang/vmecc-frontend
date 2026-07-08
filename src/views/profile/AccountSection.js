@@ -164,7 +164,7 @@ const AccountSection = ({ user, roles }) => {
             ) : (
               <span
                 className="rounded-circle d-inline-flex align-items-center justify-content-center fw-semibold border"
-                style={{ width: '34px', height: '34px', fontSize: '11px' }}
+                style={{ width: '34px', height: '34px', fontSize: '12px' }}
               >
                 {toInitials(user?.name)}
               </span>

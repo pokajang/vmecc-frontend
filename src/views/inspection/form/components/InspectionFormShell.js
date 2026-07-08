@@ -1,4 +1,6 @@
 import React from 'react'
+import { CAlert, CButton } from '@coreui/react'
+import { Upload } from 'lucide-react'
 import InspectionFormBodySections from './InspectionFormBodySections'
 import InspectionFormManagerModals from './InspectionFormManagerModals'
 import InspectionFormModals from './InspectionFormModals'
@@ -52,6 +54,9 @@ const InspectionFormShell = ({
   const {
     cameraInputRef,
     handlePhotoSelect,
+    cameraUploadFallback,
+    clearCameraUploadFallback,
+    requestUploadFromCameraFallback,
     removePhoto,
     requestInspectionIssuePhotoUpload,
     requestRootPhotoUpload,
@@ -80,6 +85,33 @@ const InspectionFormShell = ({
         setIncidentDeleteTarget={setIncidentDeleteTarget}
         setLocationDeleteTarget={setLocationDeleteTarget}
       />
+
+      {cameraUploadFallback ? (
+        <CAlert
+          color="warning"
+          className="mx-3 mx-md-4 mt-3"
+          dismissible
+          onClose={() => clearCameraUploadFallback?.()}
+        >
+          <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2">
+            <div className="small">{cameraUploadFallback.message}</div>
+            <div className="d-flex align-items-center gap-2">
+              <CButton
+                type="button"
+                color="warning"
+                size="sm"
+                onClick={() => {
+                  clearCameraUploadFallback?.()
+                  requestUploadFromCameraFallback?.()
+                }}
+              >
+                <Upload size={14} className="me-1" />
+                Upload photo
+              </CButton>
+            </div>
+          </div>
+        </CAlert>
+      ) : null}
 
       <input
         ref={uploadInputRef}

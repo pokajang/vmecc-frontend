@@ -12,6 +12,8 @@ import {
   normalizeFrtOneOffChecks,
   normalizeFrtTruckReference,
 } from './helpers'
+import { createTruckDetailContextFields } from '../detailConfigHelpers'
+import { buildSubLocationContinuationOptions } from '../continuationHelpers'
 import { FrtDailyEditSection, FrtDailyReadOnlySection } from './section'
 
 const frtDailyInspectionDefinition = {
@@ -63,6 +65,14 @@ const frtDailyInspectionDefinition = {
   getVisibleChecks: getFrtVisibleDailyChecks,
   getMissingFields: getFrtMissingFields,
   getCompartmentOptions: getFrtCompartmentOptions,
+  buildContinuationOptions: (form, _summary, context = {}) =>
+    buildSubLocationContinuationOptions({
+      form,
+      getOptions: getFrtCompartmentOptions,
+      label: 'compartment',
+      parentLabel:
+        context.selectedFireTruckPlate || form.frtTruckPlateNo || form.mainLocation || 'Fire truck',
+    }),
   buildChecklist: buildFrtChecklist,
   buildDescription: buildFrtDescription,
   normalizeDailyChecks: normalizeFrtDailyChecks,
@@ -70,6 +80,12 @@ const frtDailyInspectionDefinition = {
   normalizeTruckReference: normalizeFrtTruckReference,
   EditSection: FrtDailyEditSection,
   ReadOnlySection: FrtDailyReadOnlySection,
+  detailContextFields: createTruckDetailContextFields({
+    typeLabel: 'Fire Truck Daily Readiness',
+    inspectionType: FRT_DAILY_INSPECTION_TYPE,
+  }),
+  detailFindingsMode: 'block',
+  detailFindingsTitle: 'Truck Readiness',
 }
 
 export default frtDailyInspectionDefinition

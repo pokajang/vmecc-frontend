@@ -367,6 +367,7 @@ const AiHelperPanel = () => {
         <KnowledgeView
           authUser={authUser}
           backButtonRef={backButtonRef}
+          canManageKnowledge={isSysAdmin}
           isSysAdmin={isSysAdmin}
           knowledgeAcknowledged={knowledge.knowledgeAcknowledged}
           knowledgeDeleteTarget={knowledge.knowledgeDeleteTarget}

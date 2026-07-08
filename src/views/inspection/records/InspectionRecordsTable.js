@@ -34,7 +34,7 @@ const DraftStatus = ({ direction = 'vertical' }) => {
     >
       <div className="d-flex align-items-center" style={{ gap: '4px' }}>
         <FilePenLine size={11} color="#f9b115" strokeWidth={3} />
-        <span style={{ fontSize: '0.7rem', color: '#f9b115', lineHeight: 1 }}>Draft</span>
+        <span style={{ fontSize: '0.78rem', color: '#f9b115', lineHeight: 1 }}>Draft</span>
       </div>
     </div>
   )
@@ -43,7 +43,7 @@ const DraftStatus = ({ direction = 'vertical' }) => {
 const QueuedStatus = () => (
   <div className="d-flex align-items-center" style={{ gap: '4px' }}>
     <FilePenLine size={11} color="#6b7280" strokeWidth={3} />
-    <span style={{ fontSize: '0.7rem', color: '#6b7280', lineHeight: 1 }}>Queued</span>
+    <span style={{ fontSize: '0.78rem', color: '#6b7280', lineHeight: 1 }}>Queued</span>
   </div>
 )
 

@@ -1,0 +1,69 @@
+/* Mobile bottom navigation bar */
+.app-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1030;
+  height: var(--mobile-overlay-nav-height);
+  background-color: #ffffff;
+  border-top: 1px solid var(--cui-border-color);
+  display: flex;
+  align-items: stretch;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.app-bottom-nav-item {
+  flex: 1 1 0; // equal slots, never grow beyond share
+  min-width: 0; // allow shrinking below content size
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: var(--cui-secondary-color);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    color 0.15s,
+    background-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+
+  &:hover,
+  &:focus {
+    color: var(--cui-primary);
+    background-color: rgba(0, 126, 122, 0.06);
+    outline: none;
+  }
+
+  &.active,
+  &[data-active='true'],
+  &[aria-current='page'] {
+    color: var(--cui-primary);
+    background-color: rgba(0, 126, 122, 0.1);
+  }
+
+  // Strip dropdown toggle's own nav-link padding so it fits the slot
+  .nav-link {
+    padding: 0;
+    color: inherit;
+  }
+}
+
+.app-bottom-nav-profile {
+  color: var(--cui-secondary-color);
+}
+
+.app-bottom-nav-label {
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  pointer-events: none;
+}
+
+// Badges inside bottom nav slots - keep inside the slot boundary

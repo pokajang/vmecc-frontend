@@ -9,7 +9,13 @@ import {
   isFireExtinguisherInspectionType,
   normalizeFireExtinguisherChecks,
 } from './helpers'
-import { FireExtinguisherEditSection, FireExtinguisherReadOnlySection } from './section'
+import { createZoneLocationDetailContextFields } from '../detailConfigHelpers'
+import {
+  buildFireExtinguisherDetailFindingItems,
+  FireExtinguisherEditSection,
+  FireExtinguisherReadOnlySection,
+  renderFireExtinguisherDetailFindingContent,
+} from './section'
 
 const fireExtinguisherInspectionDefinition = {
   key: 'fire-extinguisher-inspection',
@@ -52,6 +58,14 @@ const fireExtinguisherInspectionDefinition = {
   normalizeChecks: normalizeFireExtinguisherChecks,
   EditSection: FireExtinguisherEditSection,
   ReadOnlySection: FireExtinguisherReadOnlySection,
+  detailContextFields: createZoneLocationDetailContextFields({
+    typeLabel: 'Fire Extinguisher',
+    inspectionType: FIRE_EXTINGUISHER_INSPECTION_TYPE,
+  }),
+  detailFindingsMode: 'itemized',
+  detailFindingsTitle: 'Extinguishers',
+  buildDetailFindingItems: buildFireExtinguisherDetailFindingItems,
+  renderDetailFindingContent: renderFireExtinguisherDetailFindingContent,
 }
 
 export default fireExtinguisherInspectionDefinition

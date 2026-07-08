@@ -1,5 +1,6 @@
 import React from 'react'
 import {
+  CAlert,
   CButton,
   CCol,
   CForm,
@@ -10,7 +11,7 @@ import {
   CFormTextarea,
   CRow,
 } from '@coreui/react'
-import { Camera, Pencil } from 'lucide-react'
+import { Camera, Pencil, Upload } from 'lucide-react'
 import BackButton from 'src/components/BackButton'
 import FormActionGroup from 'src/components/FormActionGroup'
 import LeaveTypeSelection from 'src/views/leave/components/LeaveTypeSelection'
@@ -45,8 +46,12 @@ const LeaveApplySection = ({
   onCoverByChange,
   handleAttachmentChange,
   openCameraCapture,
+  requestUploadFromCameraFallback,
   isAttachmentProcessing,
   cameraInputRef,
+  uploadInputRef,
+  cameraUploadFallback,
+  clearCameraUploadFallback,
   attachmentStatus,
   attachmentMeta,
   clearAttachment,
@@ -238,6 +243,32 @@ const LeaveApplySection = ({
                       Supporting Attachment (
                       {activeFieldRule.attachmentRequired ? 'Required' : 'Optional'})
                     </CFormLabel>
+                    {cameraUploadFallback ? (
+                      <CAlert
+                        color="warning"
+                        className="mb-2"
+                        dismissible
+                        onClose={() => {
+                          if (clearCameraUploadFallback) clearCameraUploadFallback()
+                        }}
+                      >
+                        <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2">
+                          <div className="small">{cameraUploadFallback.message}</div>
+                          <CButton
+                            type="button"
+                            color="warning"
+                            size="sm"
+                            onClick={() => {
+                              if (clearCameraUploadFallback) clearCameraUploadFallback()
+                              if (requestUploadFromCameraFallback) requestUploadFromCameraFallback()
+                            }}
+                          >
+                            <Upload size={14} className="me-1" />
+                            Upload photo
+                          </CButton>
+                        </div>
+                      </CAlert>
+                    ) : null}
                     <div className="d-flex align-items-center gap-2">
                       <CFormInput
                         id="leave-attachment"
@@ -280,6 +311,13 @@ const LeaveApplySection = ({
                       capture="environment"
                       className="d-none"
                       ref={cameraInputRef}
+                      onChange={handleAttachmentChange}
+                    />
+                    <input
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
+                      className="d-none"
+                      ref={uploadInputRef}
                       onChange={handleAttachmentChange}
                     />
                     <div className="small text-body-secondary mt-1">

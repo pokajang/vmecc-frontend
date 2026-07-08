@@ -5,6 +5,9 @@ import useAttachment from '../hooks/useAttachment'
 
 const putLeaveAttachmentBlob = vi.fn()
 const deleteLeaveAttachmentBlob = vi.fn()
+const mockIsImageAttachment = vi.fn(() => false)
+const mockIsPdfAttachment = vi.fn((file) => String(file?.type || '') === 'application/pdf')
+const mockIsSupportedAttachment = vi.fn(() => true)
 
 vi.mock('../leavePersistence', () => ({
   putLeaveAttachmentBlob: (...args) => putLeaveAttachmentBlob(...args),
@@ -14,14 +17,17 @@ vi.mock('../leavePersistence', () => ({
 vi.mock('../utils', () => ({
   compressImageAttachment: vi.fn(async (file) => ({ file, wasCompressed: false })),
   formatFileSize: vi.fn(() => '1 KB'),
-  isImageAttachment: vi.fn(() => false),
-  isPdfAttachment: vi.fn((file) => String(file?.type || '') === 'application/pdf'),
-  isSupportedAttachment: vi.fn(() => true),
+  isImageAttachment: (...args) => mockIsImageAttachment(...args),
+  isPdfAttachment: (...args) => mockIsPdfAttachment(...args),
+  isSupportedAttachment: (...args) => mockIsSupportedAttachment(...args),
 }))
 
 describe('useAttachment lifecycle safety', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockIsImageAttachment.mockReturnValue(false)
+    mockIsPdfAttachment.mockImplementation((file) => String(file?.type || '') === 'application/pdf')
+    mockIsSupportedAttachment.mockReturnValue(true)
     putLeaveAttachmentBlob.mockResolvedValue({ ok: true, attachmentId: 'temp-2' })
     deleteLeaveAttachmentBlob.mockResolvedValue({ ok: true })
   })
@@ -108,5 +114,66 @@ describe('useAttachment lifecycle safety', () => {
 
     expect(result.current.attachmentId).toBe('temp-2')
     expect(deleteLeaveAttachmentBlob).not.toHaveBeenCalledWith('orig-1')
+  })
+
+  it('marks camera upload failure with retryable state and stops toasts', async () => {
+    mockIsSupportedAttachment.mockReturnValue(true)
+    mockIsImageAttachment.mockReturnValue(true)
+    putLeaveAttachmentBlob.mockResolvedValueOnce({
+      ok: true,
+      attachmentId: null,
+      unsupported: true,
+    })
+
+    const { result } = renderHook(() =>
+      useAttachment({
+        userId: '1',
+      }),
+    )
+
+    const event = {
+      currentTarget: { value: 'camera-target' },
+      target: {
+        files: [new File(['data'], 'fire_exit.jpg', { type: 'image/jpeg' })],
+        value: 'x',
+      },
+    }
+
+    await act(async () => {
+      await result.current.handleAttachmentChange(event, { source: 'camera' })
+    })
+
+    expect(result.current.cameraUploadFallback).not.toBeNull()
+    expect(result.current.cameraUploadFallback?.message).toBeTruthy()
+    expect(result.current.attachmentStatus?.tone).toBe('warning')
+  })
+
+  it('supports pdf files directly', async () => {
+    mockIsSupportedAttachment.mockReturnValue(true)
+    mockIsPdfAttachment.mockImplementation((file) => file?.type === 'application/pdf')
+    mockIsImageAttachment.mockReturnValue(false)
+
+    const { result } = renderHook(() =>
+      useAttachment({
+        userId: '1',
+      }),
+    )
+
+    const pdf = new File(['pdf'], 'report.pdf', { type: 'application/pdf' })
+    const event = {
+      currentTarget: { value: 'manual-target' },
+      target: {
+        files: [pdf],
+        value: 'x',
+      },
+    }
+
+    await act(async () => {
+      await result.current.handleAttachmentChange(event, { source: 'upload' })
+    })
+
+    expect(result.current.attachmentMeta?.name).toBe('report.pdf')
+    expect(result.current.attachmentStatus?.tone).toBe('success')
+    expect(result.current.attachmentMeta?.type).toBe('application/pdf')
   })
 })

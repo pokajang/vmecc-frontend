@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import InspectionDetailSection from '../InspectionDetailSection'
 
 afterEach(() => {
@@ -611,5 +611,209 @@ describe('InspectionDetailSection', () => {
     expect(detailText.indexOf('Truck Readiness')).toBeLessThan(
       detailText.indexOf('One-Off Readiness Checklist'),
     )
+  })
+
+  it('renders workflow history inside report metadata without a detached workflow section', () => {
+    render(
+      <InspectionDetailSection
+        selectedRecord={{
+          id: 'inspection-workflow-detail-1',
+          displayId: 'INS-WORKFLOW-001',
+          status: 'Reviewed',
+          submittedAt: '2026-07-08T03:44:00.000Z',
+          submittedBy: 'Jang',
+          submittedByRole: 'System Administrator',
+          submittedByRoleCode: 'SA',
+          location: 'Zone 2 > Potable Water Pump House',
+          selectedLocation: 'Zone 2 > Potable Water Pump House',
+          mainLocation: 'Potable Water Pump House',
+          incidentType: 'General Inspection',
+          inspectionIssues: [
+            {
+              id: 'finding-1',
+              description: 'Blocked access near the pump house.',
+              actionRequired: 'Clear access lane.',
+              photos: [],
+            },
+          ],
+          timeline: [
+            {
+              action: 'Submitted',
+              by: 'Jang',
+              actorRole: 'System Administrator',
+              actorRoleCode: 'SA',
+            },
+            {
+              action: 'Reviewed',
+              by: 'Reviewer One',
+              actorRole: 'Incident Commander',
+              actorRoleCode: 'IC',
+              remarks: 'Looks complete.',
+            },
+          ],
+        }}
+        onBack={vi.fn()}
+        formatDateTime={() => ''}
+        renderStatusBadge={(status) => <span>{status}</span>}
+        onEditRecord={vi.fn()}
+        canEditRecord={() => false}
+        onReviewRecord={vi.fn()}
+        onApproveRecord={vi.fn()}
+        onRejectRecord={vi.fn()}
+        onDownloadRecord={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByText('Report Metadata')).toBeTruthy()
+    expect(screen.getByText('Reviewed By')).toBeTruthy()
+    expect(screen.getByText('Reviewer One')).toBeTruthy()
+    expect(screen.getByText('Incident Commander (IC)')).toBeTruthy()
+    expect(screen.getByText('Remarks: Looks complete.')).toBeTruthy()
+    expect(screen.queryByText('Workflow Activity')).toBeNull()
+  })
+
+  it('shows display context labels for fire extinguisher details instead of setup labels', () => {
+    render(
+      <InspectionDetailSection
+        selectedRecord={{
+          id: 'inspection-fe-context-1',
+          displayId: 'INSP-FE-CONTEXT-001',
+          status: 'Submitted',
+          submittedAt: '2026-07-08T03:44:00.000Z',
+          submittedBy: 'Inspector Fire',
+          zone: '2',
+          location: 'Manjung Hub > Reception',
+          selectedLocation: 'Manjung Hub > Reception',
+          mainLocation: 'Manjung Hub',
+          subLocation: 'Reception',
+          incidentType: 'Fire Extinguisher Inspection',
+          fireExtinguisherChecks: [
+            {
+              id: 'fe:1',
+              zone: '2',
+              mainLocation: 'Manjung Hub',
+              subLocation: 'Reception',
+              idLocNo: 'ADO-001',
+              barcodeNo: 'EE042021Y544896',
+              feType: 'DP 6KG',
+              physicalCondition: 'Good',
+              signageCondition: 'Good',
+              boxKeyAvailability: 'Yes',
+              boxGlassAvailability: 'Yes',
+              operationalCondition: 'Good',
+            },
+          ],
+        }}
+        onBack={vi.fn()}
+        formatDateTime={() => ''}
+        renderStatusBadge={(status) => <span>{status}</span>}
+        onEditRecord={vi.fn()}
+        canEditRecord={() => false}
+        onReviewRecord={vi.fn()}
+        onApproveRecord={vi.fn()}
+        onRejectRecord={vi.fn()}
+        onDownloadRecord={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByText('Inspection Context')).toBeTruthy()
+    expect(screen.getByText('Type')).toBeTruthy()
+    expect(screen.getByText('Zone')).toBeTruthy()
+    expect(screen.getByText('Main Area')).toBeTruthy()
+    expect(screen.getByText('Location')).toBeTruthy()
+    expect(screen.queryByText('Choose Main Location')).toBeNull()
+    expect(screen.queryByText('Choose Sub-location')).toBeNull()
+  })
+
+  it('renders sticky mobile actions with More for reviewable records', () => {
+    const onBack = vi.fn()
+    const onReviewRecord = vi.fn()
+    const onDownloadRecord = vi.fn()
+
+    render(
+      <InspectionDetailSection
+        selectedRecord={{
+          id: 'inspection-mobile-actions-1',
+          displayId: 'INS-MOBILE-001',
+          status: 'Submitted',
+          submittedAt: '2026-07-08T03:44:00.000Z',
+          submittedBy: 'Jang',
+          location: 'Zone A',
+          selectedLocation: 'Zone A',
+          mainLocation: 'Zone A',
+          incidentType: 'General Inspection',
+          canReview: true,
+          inspectionIssues: [
+            {
+              id: 'finding-1',
+              description: 'Blocked access lane.',
+              actionRequired: 'Clear it.',
+              photos: [],
+            },
+          ],
+        }}
+        onBack={onBack}
+        formatDateTime={() => ''}
+        renderStatusBadge={(status) => <span>{status}</span>}
+        onEditRecord={vi.fn()}
+        canEditRecord={() => false}
+        onReviewRecord={onReviewRecord}
+        onApproveRecord={vi.fn()}
+        onRejectRecord={vi.fn()}
+        onDownloadRecord={onDownloadRecord}
+      />,
+    )
+
+    const actionGroup = screen.getByRole('group', { name: 'Inspection detail actions' })
+    expect(within(actionGroup).getByRole('button', { name: 'Review' })).toBeTruthy()
+    expect(within(actionGroup).getByRole('button', { name: 'More' })).toBeTruthy()
+
+    fireEvent.click(within(actionGroup).getByRole('button', { name: 'More' }))
+
+    const moreDrawer = screen.getByRole('dialog')
+    expect(within(moreDrawer).getByRole('button', { name: 'Download' })).toBeTruthy()
+    expect(within(moreDrawer).getByRole('button', { name: 'Back to records' })).toBeTruthy()
+  })
+
+  it('renders approve, reject, and more as the direct mobile action set for decision states', () => {
+    render(
+      <InspectionDetailSection
+        selectedRecord={{
+          id: 'inspection-mobile-decision-1',
+          displayId: 'INS-MOBILE-DECISION-001',
+          status: 'Reviewed',
+          submittedAt: '2026-07-08T03:44:00.000Z',
+          submittedBy: 'Jang',
+          location: 'Zone A',
+          selectedLocation: 'Zone A',
+          mainLocation: 'Zone A',
+          incidentType: 'General Inspection',
+          canApprove: true,
+          canReject: true,
+          inspectionIssues: [
+            {
+              id: 'finding-1',
+              description: 'Blocked access lane.',
+              actionRequired: 'Clear it.',
+              photos: [],
+            },
+          ],
+        }}
+        onBack={vi.fn()}
+        formatDateTime={() => ''}
+        renderStatusBadge={(status) => <span>{status}</span>}
+        onEditRecord={vi.fn()}
+        canEditRecord={() => false}
+        onReviewRecord={vi.fn()}
+        onApproveRecord={vi.fn()}
+        onRejectRecord={vi.fn()}
+        onDownloadRecord={vi.fn()}
+      />,
+    )
+
+    const actionGroup = screen.getByRole('group', { name: 'Inspection detail actions' })
+    expect(within(actionGroup).getByRole('button', { name: 'Approve' })).toBeTruthy()
+    expect(within(actionGroup).getByRole('button', { name: 'Reject' })).toBeTruthy()
+    expect(within(actionGroup).getByRole('button', { name: 'More' })).toBeTruthy()
   })
 })

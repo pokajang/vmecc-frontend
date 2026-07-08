@@ -23,6 +23,8 @@ import {
   FIRE_EXTINGUISHER_CHECK_FIELDS,
   filterFireExtinguisherRows,
   getFirstIncompleteFireExtinguisherRow,
+  getFireExtinguisherRowWorkflowState,
+  formatFireExtinguisherLastInspection,
   isFireExtinguisherDefectStatus,
 } from './helpers'
 import {
@@ -52,6 +54,54 @@ const getInitialExpandedFireExtinguisherRow = (rows = []) => {
     getFirstIncompleteFireExtinguisherRow(normalizedRows) ||
     null
   )
+}
+
+const getFireExtinguisherDefectCount = (row = {}) =>
+  FIRE_EXTINGUISHER_CHECK_FIELDS.filter((field) => isFireExtinguisherDefectStatus(row[field.key]))
+    .length
+
+const formatSessionCheckedAt = (value) => {
+  const raw = text(value)
+  if (!raw) return ''
+  const parsed = new Date(raw)
+  if (Number.isNaN(parsed.getTime())) return ''
+  return parsed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
+
+const getFireExtinguisherDetailSummaryLines = (row = {}) => {
+  const workflowState = getFireExtinguisherRowWorkflowState(row)
+  const sessionCompleted = row?.sessionResult?.status === 'completed'
+  const sessionActor = text(row?.sessionResult?.checkedBy)
+  const sessionTime = formatSessionCheckedAt(row?.sessionResult?.checkedAt)
+  const completionLabel = sessionCompleted
+    ? `Completed${sessionActor ? ` by ${sessionActor}` : ''}${sessionTime ? ` at ${sessionTime}` : ''}`
+    : workflowState.isComplete
+      ? 'Checked'
+      : 'Not checked'
+  const metadataLabel = [formatFireExtinguisherMeta(row), formatFireExtinguisherCertification(row)]
+    .filter(Boolean)
+    .join(' | ')
+  return [completionLabel, metadataLabel, formatFireExtinguisherLastInspection(row.lastInspection)]
+}
+
+const getFireExtinguisherDetailBadges = (row = {}) => {
+  const workflowState = getFireExtinguisherRowWorkflowState(row)
+  const badges = []
+  if (workflowState.isComplete) {
+    badges.push({ key: 'checked', label: 'Checked', color: 'success' })
+  }
+  if (workflowState.hasDefect) {
+    const defectCount = getFireExtinguisherDefectCount(row)
+    badges.push({
+      key: 'defect',
+      label: defectCount > 0 ? `Defect (${defectCount})` : 'Defect',
+      color: 'danger',
+    })
+  }
+  if (!workflowState.isComplete && !workflowState.hasDefect) {
+    badges.push({ key: 'pending', label: 'Pending', color: 'secondary' })
+  }
+  return badges
 }
 
 const FireExtinguisherListView = ({
@@ -759,3 +809,24 @@ export const FireExtinguisherReadOnlySection = ({
     />
   </div>
 )
+
+export const buildFireExtinguisherDetailFindingItems = (form = {}, summary = null) => {
+  const visibleChecks = Array.isArray(summary?.visibleChecks) ? summary.visibleChecks : []
+  return visibleChecks.map((row) => ({
+    key: text(row.id) || getFireExtinguisherRowTitle(row),
+    title: getFireExtinguisherRowTitle(row),
+    badges: getFireExtinguisherDetailBadges(row),
+    summaryLines: getFireExtinguisherDetailSummaryLines(row),
+    row,
+  }))
+}
+
+export const renderFireExtinguisherDetailFindingContent = (item) => {
+  const row = item?.row
+  if (!row) return null
+  return (
+    <div className="inspection-form-section d-grid gap-3">
+      <FireExtinguisherRowDetails readOnly row={row} />
+    </div>
+  )
+}

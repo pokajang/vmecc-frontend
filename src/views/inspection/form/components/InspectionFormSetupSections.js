@@ -270,6 +270,146 @@ const FireExtinguisherScanRegistrationCard = ({
   )
 }
 
+const buildFireExtinguisherDuplicateLabel = (row = {}) =>
+  [row.zone ? `Zone ${row.zone}` : '', row.mainLocation, row.subLocation]
+    .filter(Boolean)
+    .join(' > ')
+
+const buildFireExtinguisherDuplicateMeta = (row = {}) =>
+  [row.idLocNo, row.feType, row.certificationValidity].filter(Boolean).join(' | ')
+
+const isFireExtinguisherDuplicateConflictError = (error = '') =>
+  /multiple active extinguishers use this locator|resolve the catalog duplicate/i.test(
+    String(error || ''),
+  )
+
+const FireExtinguisherDuplicateConflictCard = ({
+  duplicateRows = [],
+  locator,
+  onEditDuplicate,
+  onScanAnother,
+  onSwitchToArea,
+  status,
+}) => {
+  const rows = Array.isArray(duplicateRows) ? duplicateRows : []
+  if (rows.length === 0) return null
+
+  return (
+    <CCard className="inspection-hydraulic-card inspection-check-card border-danger">
+      <CCardHeader className="inspection-hydraulic-card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <div className="fw-semibold text-danger">Duplicate locator found</div>
+        <div className="d-flex flex-wrap gap-2">
+          <CButton color="secondary" variant="outline" size="sm" onClick={onSwitchToArea}>
+            Switch to area mode
+          </CButton>
+          <CreateActionButton
+            label="Scan another"
+            className="inspection-compact-action-btn"
+            onClick={onScanAnother}
+          />
+        </div>
+      </CCardHeader>
+      <CCardBody className="d-grid gap-3">
+        {locator ? (
+          <div>
+            <div className="small text-body-secondary">S/N / QR / Barcode</div>
+            <div className="fw-semibold text-break">{locator}</div>
+          </div>
+        ) : null}
+        <div className="text-body-secondary">
+          This QR / barcode matches {rows.length} active catalog items. Resolve the duplicate before
+          inspection so future scans stay unambiguous.
+        </div>
+        <div className="d-grid gap-2">
+          {rows.map((row) => (
+            <div
+              key={String(row.id || row.catalogId || row.barcodeNo)}
+              className="rounded-3 border p-3 d-grid gap-2"
+            >
+              <div className="d-flex flex-wrap justify-content-between gap-2">
+                <div className="fw-semibold text-break">
+                  {row.idLocNo || row.barcodeNo || 'Fire extinguisher'}
+                </div>
+                {row.canEdit !== false ? (
+                  <CButton
+                    color="primary"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onEditDuplicate?.(row)}
+                  >
+                    Edit catalog
+                  </CButton>
+                ) : null}
+              </div>
+              <div className="small text-body-secondary text-break">
+                {buildFireExtinguisherDuplicateLabel(row) || 'Location unavailable'}
+              </div>
+              <div className="small text-body-secondary text-break">
+                {buildFireExtinguisherDuplicateMeta(row) || 'Catalog details unavailable'}
+              </div>
+            </div>
+          ))}
+        </div>
+        {status ? <div className="small text-body-secondary">{status}</div> : null}
+      </CCardBody>
+    </CCard>
+  )
+}
+
+const FireExtinguisherDuplicateEditCard = ({
+  draft,
+  error,
+  onCancel,
+  onSave,
+  status,
+  updateDraft,
+}) => {
+  if (!draft) return null
+
+  const fields = [
+    ['barcodeNo', 'S/N / QR / Barcode', 'text'],
+    ['zone', 'Zone', 'text'],
+    ['mainLocation', 'Main Area', 'text'],
+    ['subLocation', 'Location', 'text'],
+    ['feType', 'FE Type', 'text'],
+    ['certificationValidity', 'Certification Validity', 'date'],
+    ['idLocNo', 'ID Loc. No. (optional)', 'text'],
+  ]
+
+  return (
+    <CCard className="inspection-hydraulic-card inspection-check-card border-warning">
+      <CCardHeader className="inspection-hydraulic-card-header">
+        <div className="fw-semibold text-muted">Edit Duplicate Fire Extinguisher</div>
+      </CCardHeader>
+      <CCardBody className="d-grid gap-3">
+        <div className="row g-2">
+          {fields.map(([field, label, type]) => (
+            <div className="col-12 col-md-4" key={field}>
+              <CFormInput
+                size="sm"
+                type={type}
+                label={label}
+                value={String(draft?.[field] || '')}
+                onChange={(event) => updateDraft?.(field, event.target.value)}
+              />
+            </div>
+          ))}
+        </div>
+        {status ? <div className="small text-body-secondary">{status}</div> : null}
+        <FormFieldError>{error || ''}</FormFieldError>
+        <div className="d-flex flex-wrap justify-content-end gap-2">
+          <CButton color="secondary" variant="outline" size="sm" onClick={onCancel}>
+            Back to duplicates
+          </CButton>
+          <CButton color="primary" size="sm" onClick={onSave}>
+            Save and retry scan
+          </CButton>
+        </div>
+      </CCardBody>
+    </CCard>
+  )
+}
+
 const normalizeCountKey = (value) =>
   String(value || '')
     .trim()
@@ -366,6 +506,9 @@ const InspectionFormSetupSections = ({
   const shouldShowFireExtinguisherScanPanel =
     isFireExtinguisherScanMode &&
     (Boolean(fireExtinguisherScan?.registrationDraft) ||
+      Boolean(fireExtinguisherScan?.duplicateEditDraft) ||
+      (Array.isArray(fireExtinguisherScan?.duplicateRows) &&
+        fireExtinguisherScan.duplicateRows.length > 0) ||
       (!isFireExtinguisherScanLookupLoading && fireExtinguisherScanStatusText !== '') ||
       String(fireExtinguisherScan?.error || '').trim() !== '')
   const fireExtinguisherDisplayEntryMode =
@@ -855,6 +998,36 @@ const InspectionFormSetupSections = ({
           updateDraft={fireExtinguisherScan.updateRegistrationDraft}
           onRegister={fireExtinguisherScan.onRegister}
           onCancel={() => fireExtinguisherScan.onChangeMode?.('area')}
+        />
+      )
+    }
+
+    if (fireExtinguisherScan?.duplicateEditDraft) {
+      return (
+        <FireExtinguisherDuplicateEditCard
+          draft={fireExtinguisherScan.duplicateEditDraft}
+          error={fireExtinguisherScan.error}
+          status={fireExtinguisherScan.status}
+          updateDraft={fireExtinguisherScan.onChangeDuplicateEditDraft}
+          onSave={fireExtinguisherScan.onSaveDuplicateEdit}
+          onCancel={fireExtinguisherScan.onCancelDuplicateEdit}
+        />
+      )
+    }
+
+    if (
+      Array.isArray(fireExtinguisherScan?.duplicateRows) &&
+      fireExtinguisherScan.duplicateRows.length > 0
+    ) {
+      return (
+        <FireExtinguisherDuplicateConflictCard
+          duplicateRows={fireExtinguisherScan.duplicateRows}
+          error={fireExtinguisherScan.error}
+          locator={String(form.fireExtinguisherScannedLocator || '').trim()}
+          status={fireExtinguisherScan.status}
+          onEditDuplicate={fireExtinguisherScan.onEditDuplicate}
+          onScanAnother={fireExtinguisherScan.onOpenScanner}
+          onSwitchToArea={() => fireExtinguisherScan.onChangeMode?.('area')}
         />
       )
     }

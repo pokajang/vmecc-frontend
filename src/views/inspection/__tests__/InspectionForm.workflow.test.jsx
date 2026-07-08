@@ -418,6 +418,26 @@ const makeHydraulicChecks = (location = 'FRT', overrides = {}) =>
     ...(overrides[equipment] || {}),
   }))
 
+const makeCompletedFrtLockerOneRows = () => ({
+  dailyChecks: Array.from({ length: 6 }, (_, index) => {
+    const rowNumber = String(index + 1)
+    return {
+      id: `daily:fire-truck:${rowNumber}`,
+      rowNumber,
+      location: 'LOCKER 01',
+      compartment: 'LOCKER 01',
+      status: 'Checked',
+    }
+  }),
+  oneOffChecks: ['24', '25'].map((rowNumber) => ({
+    id: `one-off:fire-truck:${rowNumber}`,
+    rowNumber,
+    location: 'LOCKER NO 01',
+    compartment: 'LOCKER 01',
+    condition: 'Good',
+  })),
+})
+
 describe('InspectionForm workflow', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -1576,6 +1596,78 @@ describe('InspectionForm workflow', () => {
     expect(screen.queryByText('Actual field coming soon')).toBeNull()
     expect(screen.queryByRole('button', { name: 'Review Inspections' })).toBeNull()
     expect(screen.getAllByText('Save Draft').length).toBeGreaterThan(0)
+  })
+
+  it('continues a completed FRT compartment by updating only the sub-location', async () => {
+    const onChange = vi.fn()
+    const completedLocker = makeCompletedFrtLockerOneRows()
+
+    render(
+      <InspectionForm
+        {...baseProps}
+        onChange={onChange}
+        value={{
+          mainLocation: 'AJG9555',
+          selectedLocation: 'AJG9555 > LOCKER 01',
+          mainLocationId: 'truck-1',
+          inspectionType: 'FRT Daily Inspection',
+          subLocation: 'LOCKER 01',
+          photos: [],
+          frtTruckId: 'truck-1',
+          frtTruckPlateNo: 'AJG9555',
+          frtTruckReference: {
+            truckId: 'truck-1',
+            name: 'Fire Truck',
+            plateNo: 'AJG9555',
+          },
+          frtDailyChecks: completedLocker.dailyChecks,
+          frtDailyRemarks: '',
+          frtOneOffChecks: completedLocker.oneOffChecks,
+          frtOneOffRemarks: '',
+        }}
+      />,
+    )
+
+    expect(await screen.findByText('Next compartment')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'LOCKER 02' }))
+
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mainLocation: 'AJG9555',
+        subLocation: 'LOCKER 02',
+        selectedLocation: 'AJG9555 > LOCKER 02',
+      }),
+    )
+  })
+
+  it('continues a completed equipment location by updating main location and clearing sub-location', async () => {
+    const onChange = vi.fn()
+
+    render(
+      <InspectionForm
+        {...baseProps}
+        onChange={onChange}
+        value={{
+          mainLocation: 'FRT',
+          selectedLocation: 'FRT',
+          subLocation: 'Dock',
+          inspectionType: 'Hydraulic Rescue Tools Inspection',
+          hydraulicChecks: makeHydraulicChecks('FRT'),
+          photos: [],
+        }}
+      />,
+    )
+
+    expect(await screen.findByText('Next location')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Store' }))
+
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mainLocation: 'Store',
+        subLocation: '',
+        selectedLocation: 'Store',
+      }),
+    )
   })
 
   it('resets stale setup and checklist data when switching inspection type', async () => {

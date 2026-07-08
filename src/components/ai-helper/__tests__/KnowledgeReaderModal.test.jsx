@@ -54,9 +54,7 @@ describe('KnowledgeReaderModal', () => {
       />,
     )
 
-    expect(screen.getByTitle('guide.pdf').getAttribute('src')).toBe(
-      'blob:http://localhost/pdf-preview',
-    )
+    expect(screen.getByTitle('Guide').getAttribute('src')).toBe('blob:http://localhost/pdf-preview')
     expect(screen.getByRole('link', { name: /open in new tab/i }).getAttribute('href')).toBe(
       'http://localhost:8000/api/ai-helper/knowledge/3/file',
     )

@@ -1,35 +1,34 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   CAlert,
-  CBadge,
-  CButton,
-  CButtonGroup,
   CCard,
   CCardBody,
-  CCol,
+  CCardHeader,
   CContainer,
-  CFormLabel,
-  CFormSelect,
-  CFormTextarea,
   CModal,
   CModalBody,
   CModalFooter,
   CModalHeader,
   CModalTitle,
-  CRow,
-  CSpinner,
   CTable,
   CTableBody,
   CTableDataCell,
   CTableHead,
   CTableHeaderCell,
   CTableRow,
-  CTooltip,
 } from '@coreui/react'
 import { useSelector } from 'react-redux'
 
+import DataTableFooter from 'src/components/DataTableFooter'
 import ModulePageHeader from 'src/components/ModulePageHeader'
+import ResponsiveRecordCollection from 'src/components/ResponsiveRecordCollection'
+import RowActionCell from 'src/components/RowActionCell'
+import RowActions from 'src/components/RowActions'
+import TableFilters from 'src/components/TableFilters'
+import { knowledgeEntryName } from 'src/components/ai-helper/constants'
+import useTableRows from 'src/hooks/useTableRows'
 import {
+  buildAiHelperKnowledgeFileUrl,
   deleteAiHelperKnowledgeReview,
   fetchAiHelperDiagnostics,
   fetchAiHelperKnowledgeReview,
@@ -38,60 +37,36 @@ import {
 } from 'src/services/apiClient'
 import { isSystemAdministrator } from 'src/utils/authz'
 import { formatDateTime } from 'src/utils/users'
-
-const FILTERS = ['pending', 'approved', 'rejected', 'processing', 'failed', 'all']
-const FILTER_LABELS = {
-  pending: 'Pending',
-  approved: 'Approved',
-  rejected: 'Rejected',
-  processing: 'Processing',
-  failed: 'Failed',
-  all: 'All',
-}
-const REVIEW_COLORS = {
-  pending: 'warning',
-  approved: 'success',
-  rejected: 'danger',
-}
-
-const truncate = (value, length = 120) => {
-  const text = String(value || '').trim()
-  if (text.length <= length) return text
-  return `${text.slice(0, length).trim()}...`
-}
-
-const uploaderName = (entry) => entry?.uploader_name || 'Unknown user'
-
-const formatBytes = (value) => {
-  const size = Number(value || 0)
-  if (!size) return '0 KB'
-  if (size < 1024 * 1024) return `${Math.max(1, Math.round(size / 1024))} KB`
-  if (size < 1024 * 1024 * 1024) return `${(size / (1024 * 1024)).toFixed(1)} MB`
-  return `${(size / (1024 * 1024 * 1024)).toFixed(2)} GB`
-}
-
-const statusText = (entry = {}) => {
-  if (entry.status === 'processing') return 'Processing'
-  if (entry.status === 'failed') return 'Failed'
-  if (entry.review_status === 'rejected') return 'Rejected'
-  if (entry.visibility === 'shared' && entry.review_status === 'pending') return 'Pending review'
-  if (entry.visibility === 'shared')
-    return entry.active ? 'Approved shared' : 'Approved shared - disabled'
-  return entry.active ? 'Personal ready' : 'Personal disabled'
-}
+import AiHelperKnowledgeDiagnosticsCard from './ai-helper-knowledge/AiHelperKnowledgeDiagnosticsCard'
+import AiHelperKnowledgeReviewModal from './ai-helper-knowledge/AiHelperKnowledgeReviewModal'
+import {
+  REVIEW_FILTERS,
+  REVIEW_FILTER_LABELS,
+  SCOPE_FILTER_OPTIONS,
+  VISIBILITY_FILTER_OPTIONS,
+  knowledgeRowSummary,
+  matchesKnowledgeFilters,
+  renderStatusBadges,
+  scopeSummary,
+  uploaderName,
+} from './ai-helper-knowledge/helpers'
 
 const AiHelperKnowledge = () => {
   const authUser = useSelector((state) => state.authUser)
   const canReview = useMemo(() => isSystemAdministrator(authUser), [authUser])
-  const [filter, setFilter] = useState('pending')
+
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [scopeFilter, setScopeFilter] = useState('all')
+  const [visibilityFilter, setVisibilityFilter] = useState('all')
+  const [search, setSearch] = useState('')
   const [entries, setEntries] = useState([])
-  const [counts, setCounts] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [selected, setSelected] = useState(null)
   const [detailLoading, setDetailLoading] = useState(false)
   const [detailError, setDetailError] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState(null)
   const [reviewStatus, setReviewStatus] = useState('pending')
   const [entryStatus, setEntryStatus] = useState('active')
   const [reviewNote, setReviewNote] = useState('')
@@ -118,15 +93,33 @@ const AiHelperKnowledge = () => {
     setLoading(true)
     setError(null)
     try {
-      const response = await fetchAiHelperKnowledgeReview({ status: filter, per_page: 50 })
-      setEntries(response?.data || [])
-      setCounts(response?.meta?.counts || {})
+      const fetchPage = (page) =>
+        fetchAiHelperKnowledgeReview({
+          status: 'all',
+          per_page: 50,
+          page,
+        })
+
+      const firstResponse = await fetchPage(1)
+      const lastPage = Math.max(1, Number(firstResponse?.meta?.last_page || 1))
+      const allEntries = [...(firstResponse?.data || [])]
+
+      if (lastPage > 1) {
+        const remainingResponses = await Promise.all(
+          Array.from({ length: lastPage - 1 }, (_, index) => fetchPage(index + 2)),
+        )
+        remainingResponses.forEach((response) => {
+          allEntries.push(...(response?.data || []))
+        })
+      }
+
+      setEntries(allEntries)
     } catch (err) {
       setError(err.payload?.message || 'Unable to load Ask AI knowledge.')
     } finally {
       setLoading(false)
     }
-  }, [canReview, filter])
+  }, [canReview])
 
   useEffect(() => {
     if (canReview) {
@@ -137,9 +130,25 @@ const AiHelperKnowledge = () => {
     }
   }, [canReview, loadDiagnostics, loadEntries])
 
+  const filteredEntries = useMemo(
+    () =>
+      entries.filter((entry) =>
+        matchesKnowledgeFilters(entry, {
+          search,
+          scope: scopeFilter,
+          status: statusFilter,
+          visibility: visibilityFilter,
+        }),
+      ),
+    [entries, scopeFilter, search, statusFilter, visibilityFilter],
+  )
+
+  const { rowsToShow, setRowsToShow, visibleRows } = useTableRows(filteredEntries)
+
   const openDetail = useCallback(async (entryId) => {
     setDetailLoading(true)
     setDetailError(null)
+    setSelected(null)
     try {
       const response = await fetchAiHelperKnowledgeReviewDetail(entryId)
       const detail = response?.data || null
@@ -166,6 +175,7 @@ const AiHelperKnowledge = () => {
       setDetailError('Review note is required when rejecting knowledge.')
       return
     }
+
     setSaving(true)
     setDetailError(null)
     try {
@@ -173,9 +183,11 @@ const AiHelperKnowledge = () => {
         review_status: reviewStatus,
         review_note: reviewNote,
       }
+
       if (!['processing', 'failed'].includes(selected.status)) {
         payload.status = entryStatus
       }
+
       const response = await updateAiHelperKnowledgeReview(selected.id, payload)
       const updated = response?.data || null
       setSelected(updated)
@@ -188,21 +200,136 @@ const AiHelperKnowledge = () => {
     }
   }, [entryStatus, loadEntries, reviewNote, reviewStatus, saving, selected])
 
-  const deleteSelected = useCallback(async () => {
-    if (!selected?.id || saving) return
+  const requestDelete = useCallback(
+    (entry) => {
+      if (!entry?.id || saving) return
+      setDeleteTarget(entry)
+    },
+    [saving],
+  )
+
+  const closeDeleteTarget = useCallback(() => {
+    if (saving) return
+    setDeleteTarget(null)
+  }, [saving])
+
+  const confirmDelete = useCallback(async () => {
+    if (!deleteTarget?.id || saving) return
     setSaving(true)
     setDetailError(null)
     try {
-      await deleteAiHelperKnowledgeReview(selected.id)
-      setEntries((prev) => prev.filter((item) => item.id !== selected.id))
-      setSelected(null)
+      await deleteAiHelperKnowledgeReview(deleteTarget.id)
+      setEntries((prev) => prev.filter((item) => item.id !== deleteTarget.id))
+      if (selected?.id === deleteTarget.id) {
+        setSelected(null)
+      }
+      setDeleteTarget(null)
       await loadEntries()
     } catch (err) {
       setDetailError(err.payload?.message || 'Unable to delete knowledge.')
     } finally {
       setSaving(false)
     }
-  }, [loadEntries, saving, selected])
+  }, [deleteTarget, loadEntries, saving, selected])
+
+  const openOriginal = useCallback((entryId) => {
+    if (!entryId || typeof window === 'undefined') return
+    window.open(buildAiHelperKnowledgeFileUrl(entryId), '_blank', 'noopener,noreferrer')
+  }, [])
+
+  const buildActionItems = useCallback(
+    (entry) => [
+      {
+        key: 'review',
+        label: 'Review details',
+        onClick: () => openDetail(entry.id),
+      },
+      {
+        key: 'original',
+        label: 'Open original',
+        onClick: () => openOriginal(entry.id),
+      },
+      {
+        key: 'delete',
+        label: 'Delete',
+        className: 'text-danger',
+        onClick: () => requestDelete(entry),
+      },
+    ],
+    [openDetail, openOriginal, requestDelete],
+  )
+
+  const mobileSections = useMemo(
+    () => [
+      {
+        key: 'knowledge-records',
+        items: visibleRows.map((entry, index) => ({
+          key: entry.id,
+          layout: 'compact',
+          eyebrow: `#${index + 1}`,
+          title: entry.title || knowledgeEntryName(entry),
+          subtitle: knowledgeRowSummary(entry),
+          status: renderStatusBadges(entry),
+          fields: [
+            { key: 'uploader', label: 'Uploader', value: uploaderName(entry) },
+            { key: 'scope', label: 'Scope', value: scopeSummary(entry) },
+            { key: 'uploaded', label: 'Uploaded', value: formatDateTime(entry.created_at) },
+          ],
+          actions: (
+            <RowActions
+              items={buildActionItems(entry)}
+              testId={`ai-helper-knowledge-mobile-actions-${entry.id}`}
+            />
+          ),
+          onOpen: () => openDetail(entry.id),
+          ariaLabel: `Open knowledge review for ${entry.title || knowledgeEntryName(entry)}`,
+        })),
+        variant: 'list-group',
+      },
+    ],
+    [buildActionItems, openDetail, visibleRows],
+  )
+
+  const statusOptions = useMemo(() => {
+    const derivedCounts = entries.reduce(
+      (acc, entry) => {
+        if (entry?.status === 'processing') {
+          acc.processing += 1
+        } else if (entry?.status === 'failed') {
+          acc.failed += 1
+        } else if (entry?.review_status === 'approved') {
+          acc.approved += 1
+        } else if (entry?.review_status === 'rejected') {
+          acc.rejected += 1
+        } else {
+          acc.pending += 1
+        }
+
+        acc.all += 1
+        return acc
+      },
+      {
+        pending: 0,
+        approved: 0,
+        rejected: 0,
+        processing: 0,
+        failed: 0,
+        all: 0,
+      },
+    )
+
+    return REVIEW_FILTERS.map((item) => ({
+      value: item,
+      label: `${REVIEW_FILTER_LABELS[item]} (${derivedCounts[item] || 0})`,
+    }))
+  }, [entries])
+
+  const clearFilters = useCallback(() => {
+    setSearch('')
+    setStatusFilter('all')
+    setScopeFilter('all')
+    setVisibilityFilter('all')
+  }, [])
 
   if (!canReview) {
     return (
@@ -219,298 +346,193 @@ const AiHelperKnowledge = () => {
         subtitle="Review shared guidance before it is used by Ask AI."
       />
 
-      <CCard className="mb-4" data-testid="ai-helper-knowledge-diagnostics">
-        <CCardBody>
-          <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-            <div>
-              <h5 className="mb-1">Ask AI diagnostics</h5>
-              <div className="text-muted small">
-                Operational status for configuration, queue, storage, and failed processing.
-              </div>
-            </div>
-            <CButton
-              size="sm"
-              color="secondary"
-              variant="outline"
-              onClick={loadDiagnostics}
-              disabled={diagnosticsLoading}
-            >
-              {diagnosticsLoading ? 'Refreshing...' : 'Refresh'}
-            </CButton>
-          </div>
-
-          {diagnosticsError ? <CAlert color="danger">{diagnosticsError}</CAlert> : null}
-          {diagnosticsLoading && !diagnostics ? (
-            <div className="text-muted">
-              <CSpinner size="sm" className="me-2" />
-              Loading diagnostics...
-            </div>
-          ) : diagnostics ? (
-            <>
-              <CRow className="g-3 mb-3">
-                <CCol md={3}>
-                  <div className="text-muted small">Feature</div>
-                  <CBadge color={diagnostics.enabled ? 'success' : 'secondary'}>
-                    {diagnostics.enabled ? 'Enabled' : 'Disabled'}
-                  </CBadge>
-                </CCol>
-                <CCol md={3}>
-                  <div className="text-muted small">Provider config</div>
-                  <CBadge color={diagnostics.configured ? 'success' : 'warning'}>
-                    {diagnostics.configured ? 'Configured' : 'Missing'}
-                  </CBadge>
-                </CCol>
-                <CCol md={3}>
-                  <div className="text-muted small">Queue</div>
-                  <div>{diagnostics.queue?.default_connection || 'Unknown'}</div>
-                </CCol>
-                <CCol md={3}>
-                  <div className="text-muted small">Ask AI storage</div>
-                  <div>
-                    {formatBytes(diagnostics.storage?.used_bytes)}
-                    {diagnostics.storage?.max_total_bytes
-                      ? ` / ${formatBytes(diagnostics.storage.max_total_bytes)}`
-                      : ''}
-                  </div>
-                </CCol>
-              </CRow>
-              {(diagnostics.recent_failed_uploads || []).length ? (
-                <div className="border rounded p-3 bg-light">
-                  <div className="fw-semibold mb-2">Recent failed uploads</div>
-                  {diagnostics.recent_failed_uploads.map((item) => (
-                    <div key={item.id} className="mb-2 text-break">
-                      <div>{item.source_filename || item.title}</div>
-                      <div className="text-muted small">{truncate(item.error, 160)}</div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-muted small">No recent failed uploads.</div>
-              )}
-            </>
-          ) : null}
-        </CCardBody>
-      </CCard>
+      <AiHelperKnowledgeDiagnosticsCard
+        diagnostics={diagnostics}
+        diagnosticsError={diagnosticsError}
+        diagnosticsLoading={diagnosticsLoading}
+        onRefresh={loadDiagnostics}
+      />
 
       <CCard className="mb-4" data-testid="ai-helper-knowledge-records">
-        <CCardBody>
-          <div
-            className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"
-            data-testid="ai-helper-knowledge-filters"
+        <CCardHeader className="d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <span>Knowledge Records</span>
+          <button
+            type="button"
+            className="btn btn-sm btn-outline-secondary"
+            onClick={loadEntries}
+            disabled={loading}
           >
-            <CButtonGroup role="group" aria-label="Ask AI knowledge filters">
-              {FILTERS.map((item) => (
-                <CButton
-                  key={item}
-                  color={filter === item ? 'primary' : 'secondary'}
-                  variant={filter === item ? undefined : 'outline'}
-                  size="sm"
-                  onClick={() => setFilter(item)}
-                >
-                  {FILTER_LABELS[item]} {counts[item] ? `(${counts[item]})` : ''}
-                </CButton>
-              ))}
-            </CButtonGroup>
-            <CButton size="sm" color="secondary" variant="outline" onClick={loadEntries}>
-              Refresh
-            </CButton>
-          </div>
-
+            Refresh
+          </button>
+        </CCardHeader>
+        <CCardBody>
           {error ? <CAlert color="danger">{error}</CAlert> : null}
           {detailError && !selected ? <CAlert color="danger">{detailError}</CAlert> : null}
 
-          {loading ? (
-            <div className="text-center text-muted py-5">
-              <CSpinner size="sm" className="me-2" />
-              Loading Ask AI knowledge...
-            </div>
-          ) : entries.length ? (
-            <CTable align="middle" responsive hover>
-              <CTableHead color="light">
-                <CTableRow>
-                  <CTableHeaderCell>Title</CTableHeaderCell>
-                  <CTableHeaderCell>Uploader</CTableHeaderCell>
-                  <CTableHeaderCell>Scope</CTableHeaderCell>
-                  <CTableHeaderCell>Uploaded</CTableHeaderCell>
-                  <CTableHeaderCell>Status</CTableHeaderCell>
-                  <CTableHeaderCell className="table-sticky-action-cell text-end">
-                    Action
-                  </CTableHeaderCell>
-                </CTableRow>
-              </CTableHead>
-              <CTableBody>
-                {entries.map((entry) => (
-                  <CTableRow key={entry.id}>
-                    <CTableDataCell className="text-break">
-                      <div className="fw-semibold">{entry.title}</div>
-                      <div className="text-muted small">
-                        {truncate(entry.summary || entry.source_filename)}
+          {!error ? (
+            <>
+              <div data-testid="ai-helper-knowledge-filters">
+                <TableFilters
+                  searchValue={search}
+                  onSearchChange={setSearch}
+                  searchPlaceholder="Search title, file, or uploader"
+                  showPeriod={false}
+                  searchColMd={4}
+                  filterColMd={2}
+                  clearColMd={2}
+                  filters={[
+                    {
+                      key: 'status',
+                      label: 'Review',
+                      defaultValue: 'all',
+                      value: statusFilter,
+                      onChange: setStatusFilter,
+                      options: statusOptions,
+                    },
+                    {
+                      key: 'scope',
+                      label: 'Scope',
+                      defaultValue: 'all',
+                      value: scopeFilter,
+                      onChange: setScopeFilter,
+                      options: SCOPE_FILTER_OPTIONS,
+                    },
+                    {
+                      key: 'visibility',
+                      label: 'Visibility',
+                      defaultValue: 'all',
+                      value: visibilityFilter,
+                      onChange: setVisibilityFilter,
+                      options: VISIBILITY_FILTER_OPTIONS,
+                    },
+                  ]}
+                  onClear={clearFilters}
+                  rowClassName="align-items-md-end"
+                  showDesktopLabels
+                />
+              </div>
+
+              <div data-testid="ai-helper-knowledge-list">
+                <ResponsiveRecordCollection
+                  isLoading={loading}
+                  isEmpty={filteredEntries.length === 0}
+                  emptyMessage={
+                    <div className="text-body-secondary">
+                      No Ask AI knowledge matches the current filters.
+                    </div>
+                  }
+                  mobileSections={mobileSections}
+                  mobileVariant="list-group"
+                  renderDesktop={() => (
+                    <div className="d-none d-md-block">
+                      <div className="rounded-3 shadow-sm overflow-hidden bg-white">
+                        <CTable align="middle" className="mb-0" hover responsive>
+                          <CTableHead color="light">
+                            <CTableRow>
+                              <CTableHeaderCell className="text-center">#</CTableHeaderCell>
+                              <CTableHeaderCell>Title</CTableHeaderCell>
+                              <CTableHeaderCell>Uploader</CTableHeaderCell>
+                              <CTableHeaderCell>Scope</CTableHeaderCell>
+                              <CTableHeaderCell>Uploaded</CTableHeaderCell>
+                              <CTableHeaderCell>Status</CTableHeaderCell>
+                              <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
+                            </CTableRow>
+                          </CTableHead>
+                          <CTableBody>
+                            {visibleRows.map((entry, index) => (
+                              <CTableRow
+                                key={entry.id}
+                                role="button"
+                                className="cursor-pointer"
+                                onClick={() => openDetail(entry.id)}
+                              >
+                                <CTableDataCell className="text-center">{index + 1}</CTableDataCell>
+                                <CTableDataCell className="text-break">
+                                  <div className="fw-semibold">
+                                    {entry.title || knowledgeEntryName(entry)}
+                                  </div>
+                                  <div className="small text-body-secondary">
+                                    {knowledgeRowSummary(entry)}
+                                  </div>
+                                </CTableDataCell>
+                                <CTableDataCell className="text-break">
+                                  {uploaderName(entry)}
+                                </CTableDataCell>
+                                <CTableDataCell className="text-break">
+                                  {scopeSummary(entry)}
+                                </CTableDataCell>
+                                <CTableDataCell>{formatDateTime(entry.created_at)}</CTableDataCell>
+                                <CTableDataCell>{renderStatusBadges(entry)}</CTableDataCell>
+                                <RowActionCell className="text-center align-middle">
+                                  <RowActions
+                                    items={buildActionItems(entry)}
+                                    testId={`ai-helper-knowledge-row-actions-${entry.id}`}
+                                  />
+                                </RowActionCell>
+                              </CTableRow>
+                            ))}
+                          </CTableBody>
+                        </CTable>
                       </div>
-                    </CTableDataCell>
-                    <CTableDataCell className="text-break">{uploaderName(entry)}</CTableDataCell>
-                    <CTableDataCell>
-                      {entry.scope_type === 'module' ? entry.module_key : entry.route_key}
-                    </CTableDataCell>
-                    <CTableDataCell>{formatDateTime(entry.created_at)}</CTableDataCell>
-                    <CTableDataCell>
-                      <CBadge color={REVIEW_COLORS[entry.review_status] || 'secondary'}>
-                        {statusText(entry)}
-                      </CBadge>
-                    </CTableDataCell>
-                    <CTableDataCell className="table-sticky-action-cell text-end">
-                      <CButton
-                        size="sm"
-                        color="primary"
-                        variant="outline"
-                        onClick={() => openDetail(entry.id)}
-                      >
-                        View
-                      </CButton>
-                    </CTableDataCell>
-                  </CTableRow>
-                ))}
-              </CTableBody>
-            </CTable>
-          ) : (
-            <div className="text-center text-muted py-5">No Ask AI knowledge found.</div>
-          )}
+                    </div>
+                  )}
+                  footer={
+                    <DataTableFooter
+                      rowsToShow={rowsToShow}
+                      onRowsToShowChange={setRowsToShow}
+                      filteredCount={filteredEntries.length}
+                      totalCount={entries.length}
+                    />
+                  }
+                />
+              </div>
+            </>
+          ) : null}
         </CCardBody>
       </CCard>
 
-      <CModal
-        size="lg"
-        scrollable
-        visible={Boolean(selected) || detailLoading}
+      <AiHelperKnowledgeReviewModal
+        key={selected?.id || (detailLoading ? 'loading' : 'empty')}
+        detailError={detailError}
+        detailLoading={detailLoading}
+        entryStatus={entryStatus}
         onClose={closeDetail}
-      >
-        <CModalHeader>
-          <CModalTitle>Ask AI knowledge</CModalTitle>
+        onDelete={() => requestDelete(selected)}
+        onEntryStatusChange={setEntryStatus}
+        onReviewNoteChange={setReviewNote}
+        onReviewStatusChange={setReviewStatus}
+        onSave={saveDetail}
+        reviewNote={reviewNote}
+        reviewStatus={reviewStatus}
+        saving={saving}
+        selected={selected}
+      />
+
+      <CModal visible={Boolean(deleteTarget)} onClose={closeDeleteTarget} alignment="center">
+        <CModalHeader onClose={closeDeleteTarget}>
+          <CModalTitle>Delete Knowledge</CModalTitle>
         </CModalHeader>
         <CModalBody>
-          {detailLoading ? (
-            <div className="text-center text-muted py-5">
-              <CSpinner size="sm" className="me-2" />
-              Loading knowledge...
-            </div>
-          ) : selected ? (
-            <>
-              {detailError ? <CAlert color="danger">{detailError}</CAlert> : null}
-              <CRow className="g-3 mb-3">
-                <CCol md={6}>
-                  <div className="text-muted small">Title</div>
-                  <div>{selected.title}</div>
-                </CCol>
-                <CCol md={6}>
-                  <div className="text-muted small">Uploader</div>
-                  <div>{uploaderName(selected)}</div>
-                </CCol>
-                <CCol md={6}>
-                  <div className="text-muted small">File</div>
-                  <CTooltip content={selected.source_filename || 'Uploaded PDF'} placement="top">
-                    <div className="text-break">{selected.source_filename || 'Uploaded PDF'}</div>
-                  </CTooltip>
-                </CCol>
-                <CCol md={6}>
-                  <div className="text-muted small">Uploaded</div>
-                  <div>{formatDateTime(selected.created_at)}</div>
-                </CCol>
-                <CCol md={6}>
-                  <div className="text-muted small">Scope</div>
-                  <div>
-                    {selected.scope_type === 'module' ? selected.module_key : selected.route_key}
-                  </div>
-                </CCol>
-                <CCol md={6}>
-                  <div className="text-muted small">Visibility</div>
-                  <div>{selected.visibility === 'shared' ? 'Shared guidance' : 'Personal'}</div>
-                </CCol>
-              </CRow>
-
-              <section className="mb-3">
-                <h6>Summary</h6>
-                <div className="border rounded p-3 bg-light text-break">
-                  {selected.summary || 'No summary available yet.'}
-                </div>
-              </section>
-
-              <section className="mb-3">
-                <h6>Extracted preview</h6>
-                <div className="border rounded p-3 bg-light text-break white-space-pre-wrap">
-                  {selected.content_preview ||
-                    selected.error ||
-                    'No extracted content available yet.'}
-                </div>
-              </section>
-
-              <section className="mb-3">
-                <h6>Retrieved chunks</h6>
-                <div className="border rounded p-3 bg-light">
-                  {(selected.chunks || []).map((chunk) => (
-                    <div key={chunk.id} className="mb-3">
-                      <div className="small fw-semibold text-muted">
-                        Chunk {chunk.chunk_index + 1}
-                      </div>
-                      <div className="text-break white-space-pre-wrap">{chunk.content}</div>
-                    </div>
-                  ))}
-                  {(selected.chunks || []).length === 0 ? (
-                    <div className="text-muted">No chunks available yet.</div>
-                  ) : null}
-                </div>
-              </section>
-
-              <CRow className="g-3">
-                <CCol md={4}>
-                  <CFormLabel>Review</CFormLabel>
-                  <CFormSelect
-                    value={reviewStatus}
-                    onChange={(event) => setReviewStatus(event.target.value)}
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="approved">Approved</option>
-                    <option value="rejected">Rejected</option>
-                  </CFormSelect>
-                </CCol>
-                <CCol md={4}>
-                  <CFormLabel>Use status</CFormLabel>
-                  <CFormSelect
-                    value={entryStatus}
-                    onChange={(event) => setEntryStatus(event.target.value)}
-                    disabled={['processing', 'failed'].includes(selected.status)}
-                  >
-                    <option value="active">Enabled</option>
-                    <option value="disabled">Disabled</option>
-                  </CFormSelect>
-                </CCol>
-                <CCol md={12}>
-                  <CFormLabel>Review note</CFormLabel>
-                  <CFormTextarea
-                    value={reviewNote}
-                    onChange={(event) => setReviewNote(event.target.value)}
-                    rows={3}
-                    maxLength={2000}
-                    placeholder="Required context for rejection, optional for approval"
-                  />
-                </CCol>
-              </CRow>
-            </>
-          ) : null}
+          Delete <strong>{deleteTarget?.title || knowledgeEntryName(deleteTarget || {})}</strong>?
+          This cannot be undone.
         </CModalBody>
         <CModalFooter>
-          <CButton
-            color="danger"
-            variant="outline"
-            onClick={deleteSelected}
-            disabled={!selected || saving}
+          <button
+            type="button"
+            className="btn btn-outline-secondary"
+            onClick={closeDeleteTarget}
+            disabled={saving}
           >
-            Delete
-          </CButton>
-          <CButton color="secondary" variant="outline" onClick={closeDetail} disabled={saving}>
-            Close
-          </CButton>
-          <CButton color="primary" onClick={saveDetail} disabled={!selected || saving}>
-            {saving ? 'Saving...' : 'Save'}
-          </CButton>
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="btn btn-danger"
+            onClick={confirmDelete}
+            disabled={saving}
+          >
+            {saving ? 'Deleting...' : 'Delete'}
+          </button>
         </CModalFooter>
       </CModal>
     </CContainer>

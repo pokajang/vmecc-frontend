@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { fetchDashboardModuleStats } from '../api/dashboardApi'
+import { fetchDashboardModuleStats, fetchDashboardModulesStats } from '../api/dashboardApi'
 
 const { apiRequest } = vi.hoisted(() => ({
   apiRequest: vi.fn(),
@@ -19,5 +19,14 @@ describe('dashboardApi', () => {
     await fetchDashboardModuleStats('payroll', 'last_month')
 
     expect(apiRequest).toHaveBeenCalledWith('/stats/payroll?period=last_month', expect.any(Object))
+  })
+
+  it('fetches multiple dashboard module stats in one request', async () => {
+    await fetchDashboardModulesStats(['payroll', 'leave'], '3m')
+
+    expect(apiRequest).toHaveBeenCalledWith(
+      '/stats?period=3m&modules=payroll%2Cleave',
+      expect.any(Object),
+    )
   })
 })

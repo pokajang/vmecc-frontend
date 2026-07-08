@@ -1,0 +1,41 @@
+@media (pointer: coarse) {
+  .mobile-nav-sheet-icon-btn,
+  .notification-drawer-close,
+  .notification-drawer-action-btn,
+  .notification-drawer-inline-confirm__btn,
+  .table-filter-drawer .btn,
+  .app-bottom-nav-item,
+  .action-row-thumb .btn,
+  .dropdown-toggle[aria-label='Row actions'] {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .action-row-thumb.action-row-thumb--compact-sticky .btn {
+    min-height: 36px;
+  }
+
+  .notification-drawer-action-btn,
+  .notification-drawer-inline-confirm__btn {
+    justify-content: center;
+    padding: 0.5rem 0.65rem;
+  }
+
+  .header-toggler,
+  .header .btn-sm,
+  .header .nav-link {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  [aria-label^='Clear'][aria-label$='filter'] {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}

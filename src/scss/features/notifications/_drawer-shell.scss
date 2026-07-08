@@ -1,0 +1,107 @@
+@use '../../tools/coreui-tools' as *;
+
+// Notification Drawer
+.notification-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1170;
+  background: rgba(15, 23, 42, 0.3);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+
+  &.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.notification-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 1180;
+  width: 440px;
+  max-width: min(92vw, 440px);
+  height: 100dvh;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  border-radius: 0;
+  box-shadow: -8px 0 40px rgba(15, 23, 42, 0.2);
+  transform: translateX(100%);
+  opacity: 0;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
+  outline: none;
+  pointer-events: none;
+
+  &.show {
+    transform: translateX(0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  @include media-breakpoint-down(md) {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: 100%;
+    height: min(72dvh, 680px);
+    max-height: calc(100dvh - 64px - env(safe-area-inset-bottom, 0px));
+    border-radius: 14px 14px 0 0;
+    transform: translateY(10px) scale(0.99);
+    box-shadow: 0 -4px 24px rgba(15, 23, 42, 0.14);
+
+    &.show {
+      transform: translateY(0) scale(1);
+    }
+  }
+}
+
+.notification-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1rem 0.75rem;
+  border-bottom: 1px solid var(--cui-border-color);
+  flex-shrink: 0;
+}
+
+.notification-drawer-title {
+  font-weight: 600;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.notification-drawer-count {
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: #e9ecef;
+  color: #495057;
+  border-radius: 10px;
+  padding: 1px 7px;
+}
+
+.notification-drawer-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 0;
+  border-radius: 0.45rem;
+  background: transparent;
+  color: var(--cui-secondary-color);
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.06);
+    color: var(--cui-body-color);
+  }
+}

@@ -28,7 +28,7 @@ const ApprovalGates = ({
         return (
           <div key={gate.action} className="d-flex align-items-center" style={{ gap: '4px' }}>
             <Check size={11} color={color} strokeWidth={3} />
-            <span style={{ fontSize: '0.7rem', color, lineHeight: 1 }}>{gate.label}</span>
+            <span style={{ fontSize: '0.78rem', color, lineHeight: 1 }}>{gate.label}</span>
           </div>
         )
       })}

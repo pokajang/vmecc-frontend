@@ -1,0 +1,36 @@
+@use '../tools/coreui-tools' as *;
+
+// Chat message delete button - reveal on bubble hover
+.d-flex:hover > .chat-message-delete-btn {
+  opacity: 1 !important;
+}
+
+// Chat thread delete button - reveal on row hover
+.chat-thread-row:hover .chat-thread-delete-btn {
+  opacity: 1 !important;
+}
+
+.bulk-selection-action-bar {
+  padding: 1rem;
+}
+
+@include media-breakpoint-down(md) {
+  .bulk-selection-action-bar--mobile-sticky {
+    position: fixed;
+    right: 0.75rem;
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 0.75rem);
+    left: 0.75rem;
+    z-index: 1020;
+    max-height: min(62dvh, 440px);
+    overflow-y: auto;
+    box-shadow: 0 1rem 2.5rem rgba(15, 23, 42, 0.2);
+  }
+
+  .bulk-selection-action-bar-spacer {
+    height: 12rem;
+  }
+
+  .salary-bulk-mode-spacer {
+    display: none;
+  }
+}

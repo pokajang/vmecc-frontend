@@ -74,6 +74,14 @@ const normalizeContinuationLocationKey = (value) =>
 const getContinuationOptionValue = (option = {}) =>
   String(option?.value || option?.title || '').trim()
 
+const toContinuationLabel = (value = 'location') =>
+  String(value || 'location')
+    .trim()
+    .toLowerCase()
+
+const toTitleLabel = (value = 'location') =>
+  toContinuationLabel(value).replace(/\b\w/g, (character) => character.toUpperCase())
+
 const isCompletedContinuationOption = (option = {}) =>
   option?.progress?.isDone === true ||
   String(option?.metaLabel || '')
@@ -184,8 +192,12 @@ const InspectionNextLocationCard = ({ continueAction = null, onContinueToLocatio
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [isOpeningDrawer, setIsOpeningDrawer] = useState(false)
   const continueOptions = Array.isArray(continueAction?.options) ? continueAction.options : []
-  const currentLocation = String(continueAction?.value || '').trim()
-  const mainLocation = String(continueAction?.mainLocation || '').trim()
+  const currentLocation = String(continueAction?.currentValue || continueAction?.value || '').trim()
+  const label = toContinuationLabel(continueAction?.label || 'location')
+  const labelTitle = toTitleLabel(label)
+  const parentLabel = String(
+    continueAction?.parentLabel || continueAction?.mainLocation || '',
+  ).trim()
   const recommendedOptions = getRecommendedContinuationOptions(continueOptions, currentLocation, 6)
   const incompleteOptionCount = getIncompleteContinuationOptionCount(
     continueOptions,
@@ -222,7 +234,7 @@ const InspectionNextLocationCard = ({ continueAction = null, onContinueToLocatio
 
   return (
     <div className="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2">
-      <div className="small fw-semibold text-body-secondary">Next location</div>
+      <div className="small fw-semibold text-body-secondary">Next {label}</div>
       <div className="inspection-next-location-options d-flex flex-wrap gap-2">
         {recommendedOptions.map((option) => {
           const value = getContinuationOptionValue(option)
@@ -256,7 +268,7 @@ const InspectionNextLocationCard = ({ continueAction = null, onContinueToLocatio
       </div>
       <MobileBottomDrawer
         visible={drawerOpen}
-        title={mainLocation ? `Continue in ${mainLocation}` : 'Continue to'}
+        title={parentLabel ? `Continue in ${parentLabel}` : `Continue to ${label}`}
         bodyClassName="inspection-equipment-detail-drawer-shell"
         onClose={() => setDrawerOpen(false)}
       >
@@ -266,11 +278,11 @@ const InspectionNextLocationCard = ({ continueAction = null, onContinueToLocatio
             visibleOptions={continueOptions}
             value={currentLocation}
             onChange={selectLocation}
-            sectionLabel="Location"
-            searchPlaceholder="Search location..."
-            searchAriaLabel="Search continuation locations"
-            clearSearchAriaLabel="Clear continuation location search"
-            emptySearchMessage="No locations match this search."
+            sectionLabel={labelTitle}
+            searchPlaceholder={`Search ${label}...`}
+            searchAriaLabel={`Search continuation ${label}`}
+            clearSearchAriaLabel={`Clear continuation ${label} search`}
+            emptySearchMessage={`No ${label}s match this search.`}
             showAllOptions
             showDescription={false}
             columns={{ xs: 12, md: 6 }}
@@ -1213,28 +1225,53 @@ const InspectionFormBodySections = ({
     isFireTruckCatalogInspectionForm &&
     String(mainLocation || '').trim() &&
     !String(form.subLocation || '').trim()
-  const fireExtinguisherLocationContinuation =
-    structuredSectionHandlers?.fireExtinguisherLocationContinuation || null
-  const fireExtinguisherContinueOptions = Array.isArray(
-    fireExtinguisherLocationContinuation?.locationOptions,
-  )
-    ? fireExtinguisherLocationContinuation.locationOptions
-    : subLocationOptions
+  const scopeContinuation =
+    structuredSectionHandlers?.scopeContinuation ||
+    structuredSectionHandlers?.locationContinuation ||
+    structuredSectionHandlers?.fireExtinguisherLocationContinuation ||
+    null
+  const locationContinueOptions = Array.isArray(scopeContinuation?.options)
+    ? scopeContinuation.options
+    : Array.isArray(scopeContinuation?.locationOptions)
+      ? scopeContinuation.locationOptions
+      : subLocationOptions
+  const currentScopeValue = String(
+    scopeContinuation?.currentValue ||
+      scopeContinuation?.value ||
+      (scopeContinuation?.scope === 'mainLocation' ? mainLocation : form.subLocation) ||
+      '',
+  ).trim()
+  const isContinuationOptionComplete = (option) =>
+    option?.progress?.isDone === true ||
+    String(option?.metaLabel || '')
+      .trim()
+      .toLowerCase() === 'completed'
   const isCurrentFireExtinguisherLocationComplete =
     isFireExtinguisherLocationComplete(currentStructuredSummary)
-  const canContinueFireExtinguisherLocation =
+  const isCurrentLocationComplete = isFireExtinguisherCatalogInspectionForm
+    ? isCurrentFireExtinguisherLocationComplete
+    : (() => {
+        const currentOption = locationContinueOptions.find(
+          (option) =>
+            String(option?.value || '')
+              .trim()
+              .toLowerCase() === currentScopeValue.toLowerCase(),
+        )
+        return Boolean(currentOption && isContinuationOptionComplete(currentOption))
+      })()
+  const canContinueNextLocation =
     isStructuredInspectionForm &&
-    isFireExtinguisherCatalogInspectionForm &&
-    fireExtinguisherEntryMode !== 'scan' &&
-    isCurrentFireExtinguisherLocationComplete &&
-    fireExtinguisherContinueOptions.length > 1 &&
-    String(form.subLocation || '').trim()
-  const continueAction = canContinueFireExtinguisherLocation
+    locationContinueOptions.length > 1 &&
+    currentScopeValue &&
+    isCurrentLocationComplete &&
+    (isFireExtinguisherCatalogInspectionForm ? fireExtinguisherEntryMode !== 'scan' : true)
+  const continueAction = canContinueNextLocation
     ? {
-        ...fireExtinguisherLocationContinuation,
+        ...scopeContinuation,
+        currentValue: currentScopeValue,
         mainLocation,
-        options: fireExtinguisherContinueOptions,
-        value: String(form.subLocation || '').trim(),
+        options: locationContinueOptions,
+        value: currentScopeValue,
       }
     : null
   const canScanAnotherFireExtinguisher =
@@ -1263,7 +1300,11 @@ const InspectionFormBodySections = ({
     continueAction ? (
       <InspectionNextLocationCard
         continueAction={continueAction}
-        onContinueToLocation={structuredSectionHandlers?.onSelectNextFireExtinguisherLocation}
+        onContinueToLocation={
+          structuredSectionHandlers?.onSelectNextScope ||
+          structuredSectionHandlers?.onSelectNextLocation ||
+          structuredSectionHandlers?.onSelectNextFireExtinguisherLocation
+        }
       />
     ) : null
 

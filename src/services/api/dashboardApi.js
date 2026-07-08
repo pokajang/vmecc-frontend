@@ -5,3 +5,16 @@ export const fetchDashboardModuleStats = (module, period = 'this_month', options
     ...(options || {}),
     signal: options?.signal,
   })
+
+export const fetchDashboardModulesStats = (modules, period = 'this_month', options = {}) => {
+  const selectedModules = Array.isArray(modules) ? modules.filter(Boolean) : []
+  const query = new URLSearchParams({
+    period,
+    modules: selectedModules.join(','),
+  })
+
+  return apiRequest(`/stats?${query.toString()}`, {
+    ...(options || {}),
+    signal: options?.signal,
+  })
+}

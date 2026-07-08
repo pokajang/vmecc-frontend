@@ -349,6 +349,24 @@ export const getHydraulicVisibleChecks = (form = {}) => {
 const isHydraulicCheckComplete = (check = {}) =>
   HYDRAULIC_CHECK_FIELDS.every((field) => String(check?.[field.key] || '').trim())
 
+const hasHydraulicMeaningfulInput = (check = {}) =>
+  HYDRAULIC_CHECK_FIELDS.some(
+    (field) =>
+      String(check?.[field.key] || '').trim() ||
+      String(check?.[field.remarksKey] || '').trim() ||
+      normalizePhotos(check?.[field.photosKey]).length > 0,
+  ) ||
+  String(check?.remarks || '').trim() ||
+  normalizePhotos(check?.photos).length > 0
+
+export const isHydraulicInspectionCandidateRow = (row = {}) =>
+  isHydraulicCheckComplete(row) || hasHydraulicMeaningfulInput(row)
+
+export const getHydraulicSubmissionCandidateRows = (form = {}) => {
+  const checks = normalizeHydraulicChecks(form?.hydraulicChecks || form?.hydraulic_checks)
+  return checks.filter(isHydraulicInspectionCandidateRow)
+}
+
 const getHydraulicDefectFields = (check = {}) =>
   HYDRAULIC_CHECK_FIELDS.filter(
     (field) => normalizeHydraulicStatus(check?.[field.key]) === 'Defect',
@@ -378,8 +396,10 @@ const getHydraulicIncompleteNaReasonCount = (check = {}) =>
   getHydraulicNaFields(check).filter((field) => !String(check?.[field.remarksKey] || '').trim())
     .length
 
-export const getHydraulicCheckSummary = (form = {}) => {
-  const visibleChecks = getHydraulicVisibleChecks(form)
+export const getHydraulicCheckSummary = (form = {}, options = {}) => {
+  const visibleChecks = Array.isArray(options.checks)
+    ? options.checks
+    : getHydraulicVisibleChecks(form)
   const checkedCount = visibleChecks.filter(isHydraulicCheckComplete).length
   const defectCount = visibleChecks.reduce(
     (count, check) => count + getHydraulicDefectFields(check).length,
@@ -413,8 +433,11 @@ export const getHydraulicCheckSummary = (form = {}) => {
   }
 }
 
-export const getHydraulicMissingFields = (form = {}) => {
-  const { visibleChecks } = getHydraulicCheckSummary(form)
+export const getHydraulicMissingFields = (form = {}, options = {}) => {
+  const { visibleChecks } = getHydraulicCheckSummary(
+    form,
+    Array.isArray(options.checks) ? { checks: options.checks } : {},
+  )
   const hasVisibleEquipment = visibleChecks.length > 0
   const hasIncompleteChecks = visibleChecks.some((check) => !isHydraulicCheckComplete(check))
   const hasIncompleteDefectEvidence = visibleChecks.some(
@@ -429,11 +452,13 @@ export const getHydraulicMissingFields = (form = {}) => {
   }
 }
 
-export const buildHydraulicChecklist = (form = {}) => {
+export const buildHydraulicChecklist = (form = {}, options = {}) => {
   const inspectionType = String(
     form.inspectionType || HYDRAULIC_RESCUE_TOOLS_INSPECTION_TYPE,
   ).trim()
-  return getHydraulicVisibleChecks(form)
+  const checks = Array.isArray(options.checks) ? options.checks : getHydraulicVisibleChecks(form)
+
+  return checks
     .flatMap((check) =>
       HYDRAULIC_CHECK_FIELDS.map((field) => {
         const status = normalizeHydraulicStatus(check[field.key])
@@ -451,9 +476,12 @@ export const buildHydraulicChecklist = (form = {}) => {
     .filter(Boolean)
 }
 
-export const buildHydraulicDescription = (form = {}) => {
+export const buildHydraulicDescription = (form = {}, options = {}) => {
   const location = normalizeInspectionLocation(form).location
-  const { totalCount, defectCount, visibleChecks } = getHydraulicCheckSummary(form)
+  const { totalCount, defectCount, visibleChecks } = getHydraulicCheckSummary(
+    form,
+    Array.isArray(options.checks) ? { checks: options.checks } : {},
+  )
   const remarkRows = visibleChecks.flatMap((check) => {
     const defectRows = getHydraulicDefectFields(check).map((field) => {
       const remarks = String(check[field.remarksKey] || '').trim()

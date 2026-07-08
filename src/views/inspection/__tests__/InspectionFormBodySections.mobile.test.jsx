@@ -455,6 +455,233 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
     expect(screen.getByText('Completed')).toBeTruthy()
   })
 
+  it('shows shared continuation for a completed FRT compartment', () => {
+    setMobileViewport()
+    const onSelectNextScope = vi.fn()
+
+    renderBodySections({
+      form: {
+        inspectionType: 'Fire Truck Daily Readiness',
+        mainLocation: 'FIRE TRUCK',
+        subLocation: 'LOCKER 01',
+        photos: [],
+      },
+      isFireTruckCatalogInspectionForm: true,
+      isStructuredInspectionForm: true,
+      location: { selectedMainLocationTitle: 'FIRE TRUCK', subLocationOptions: [] },
+      mainLocation: 'FIRE TRUCK',
+      selectedFireTruckPlate: 'WGG 01',
+      selectedTypeDefinition: { key: 'frt-daily-inspection' },
+      StructuredEditSection: () => <div>FRT rows mounted</div>,
+      structuredSectionHandlers: {
+        onSelectNextScope,
+        scopeContinuation: {
+          scope: 'subLocation',
+          label: 'compartment',
+          parentLabel: 'WGG 01',
+          currentValue: 'LOCKER 01',
+          options: [
+            {
+              value: 'LOCKER 01',
+              title: 'LOCKER 01',
+              progress: { isDone: true, inspectedCount: 2, totalCount: 2 },
+              metaLabel: 'Completed',
+              metaIconKey: 'check',
+            },
+            {
+              value: 'LOCKER 02',
+              title: 'LOCKER 02',
+              progress: { isDone: false, inspectedCount: 0, totalCount: 2 },
+              metaLabel: '0/2 checks',
+            },
+          ],
+        },
+      },
+    })
+
+    expect(screen.getByText('Next compartment')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'LOCKER 02' }))
+    expect(onSelectNextScope).toHaveBeenCalledWith({
+      value: 'LOCKER 02',
+      title: 'LOCKER 02',
+      progress: { isDone: false, inspectedCount: 0, totalCount: 2 },
+      metaLabel: '0/2 checks',
+    })
+  })
+
+  it('hides shared continuation for an incomplete FRT compartment', () => {
+    renderBodySections({
+      form: {
+        inspectionType: 'Fire Truck Daily Readiness',
+        mainLocation: 'FIRE TRUCK',
+        subLocation: 'LOCKER 01',
+        photos: [],
+      },
+      isFireTruckCatalogInspectionForm: true,
+      isStructuredInspectionForm: true,
+      location: { selectedMainLocationTitle: 'FIRE TRUCK', subLocationOptions: [] },
+      mainLocation: 'FIRE TRUCK',
+      selectedFireTruckPlate: 'WGG 01',
+      selectedTypeDefinition: { key: 'frt-daily-inspection' },
+      StructuredEditSection: () => <div>FRT rows mounted</div>,
+      structuredSectionHandlers: {
+        scopeContinuation: {
+          scope: 'subLocation',
+          label: 'compartment',
+          currentValue: 'LOCKER 01',
+          options: [
+            {
+              value: 'LOCKER 01',
+              title: 'LOCKER 01',
+              progress: { isDone: false, inspectedCount: 1, totalCount: 2 },
+              metaLabel: '1/2 checks',
+            },
+            { value: 'LOCKER 02', title: 'LOCKER 02' },
+          ],
+        },
+      },
+    })
+
+    expect(screen.queryByText('Next compartment')).toBeNull()
+  })
+
+  it('shows shared continuation for completed main-location equipment inspections', () => {
+    const onSelectNextScope = vi.fn()
+
+    renderBodySections({
+      form: {
+        inspectionType: 'ER Aux Equipment Inspection',
+        mainLocation: 'Store',
+        photos: [],
+      },
+      isStructuredInspectionForm: true,
+      location: { selectedMainLocationTitle: 'Store', subLocationOptions: [] },
+      mainLocation: 'Store',
+      selectedTypeDefinition: { key: 'er-aux-equipment-inspection' },
+      StructuredEditSection: () => <div>ER Aux rows mounted</div>,
+      structuredSectionHandlers: {
+        onSelectNextScope,
+        scopeContinuation: {
+          scope: 'mainLocation',
+          label: 'location',
+          currentValue: 'Store',
+          options: [
+            {
+              value: 'Store',
+              title: 'Store',
+              progress: { isDone: true, inspectedCount: 2, totalCount: 2 },
+              metaLabel: 'Completed',
+            },
+            {
+              value: 'Office',
+              title: 'Office',
+              progress: { isDone: false, inspectedCount: 0, totalCount: 2 },
+              metaLabel: '0/2 checks',
+            },
+          ],
+        },
+      },
+    })
+
+    expect(screen.getByText('Next location')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Office' }))
+    expect(onSelectNextScope).toHaveBeenCalledWith({
+      value: 'Office',
+      title: 'Office',
+      progress: { isDone: false, inspectedCount: 0, totalCount: 2 },
+      metaLabel: '0/2 checks',
+    })
+  })
+
+  it('shows shared continuation for completed High Angle kits', () => {
+    renderBodySections({
+      form: {
+        inspectionType: 'High Angle Rescue Equipment Inspection',
+        mainLocation: 'Response Kit #1',
+        photos: [],
+      },
+      isStructuredInspectionForm: true,
+      location: { selectedMainLocationTitle: 'Response Kit #1', subLocationOptions: [] },
+      mainLocation: 'Response Kit #1',
+      selectedTypeDefinition: { key: 'high-angle-rescue-equipment-inspection' },
+      StructuredEditSection: () => <div>High Angle rows mounted</div>,
+      structuredSectionHandlers: {
+        onSelectNextScope: vi.fn(),
+        scopeContinuation: {
+          scope: 'mainLocation',
+          label: 'kit',
+          currentValue: 'Response Kit #1',
+          options: [
+            {
+              value: 'Response Kit #1',
+              title: 'Response Kit #1',
+              progress: { isDone: true, inspectedCount: 2, totalCount: 2 },
+              metaLabel: 'Completed',
+            },
+            {
+              value: 'Response Kit #2',
+              title: 'Response Kit #2',
+              progress: { isDone: false, inspectedCount: 0, totalCount: 2 },
+              metaLabel: '0/2 checks',
+            },
+          ],
+        },
+      },
+    })
+
+    expect(screen.getByText('Next kit')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Response Kit #2' })).toBeTruthy()
+  })
+
+  it('does not render shared continuation for General or HSE inspection bodies', () => {
+    renderBodySections({
+      form: {
+        inspectionType: 'General Inspection',
+        zone: '1',
+        mainLocation: 'Manjung Hub',
+        subLocation: 'Reception',
+        inspectionIssues: [],
+        photos: [],
+      },
+      isFullInspectionForm: true,
+      location: {
+        selectedMainLocationTitle: 'Manjung Hub',
+        subLocationOptions: [{ value: 'Reception', title: 'Reception' }],
+      },
+      mainLocation: 'Manjung Hub',
+      selectedTypeDefinition: { key: 'general-inspection', usesZoneLocationFlow: true },
+      zone: '1',
+    })
+
+    expect(screen.queryByText(/Next /)).toBeNull()
+
+    cleanup()
+
+    renderBodySections({
+      form: {
+        inspectionType: 'Health Safety Environment Inspection',
+        zone: '1',
+        mainLocation: 'Manjung Hub',
+        subLocation: 'Reception',
+        photos: [],
+      },
+      isStructuredInspectionForm: true,
+      location: {
+        selectedMainLocationTitle: 'Manjung Hub',
+        subLocationOptions: [{ value: 'Reception', title: 'Reception' }],
+      },
+      mainLocation: 'Manjung Hub',
+      selectedTypeDefinition: {
+        key: 'health-safety-environment-inspection',
+        usesZoneLocationFlow: true,
+      },
+      StructuredEditSection: () => <div>HSE fields</div>,
+      zone: '1',
+    })
+
+    expect(screen.queryByText(/Next /)).toBeNull()
+  })
+
   it('translates mixed-language finding text only after user confirmation', async () => {
     const updateForm = vi.fn()
     const onSaveDraft = vi.fn(async () => ({ saved: true, synced: true }))

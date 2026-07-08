@@ -6,9 +6,12 @@ import {
   getHighAngleMissingFields,
   getHighAngleVisibleChecks,
   HIGH_ANGLE_RESCUE_EQUIPMENT_INSPECTION_TYPE,
+  getHighAngleMainLocationOptions,
   isHighAngleInspectionType,
   normalizeHighAngleChecks,
 } from './helpers'
+import { createLocationDetailContextFields } from '../detailConfigHelpers'
+import { buildMainLocationContinuationOptions } from '../continuationHelpers'
 import { HighAngleEditSection, HighAngleReadOnlySection } from './section'
 
 const highAngleInspectionDefinition = {
@@ -40,11 +43,27 @@ const highAngleInspectionDefinition = {
   getSummary: getHighAngleCheckSummary,
   getVisibleChecks: getHighAngleVisibleChecks,
   getMissingFields: getHighAngleMissingFields,
+  buildContinuationOptions: (form) =>
+    buildMainLocationContinuationOptions({
+      form,
+      options: getHighAngleMainLocationOptions(form),
+      getSummary: getHighAngleCheckSummary,
+      getMissingFields: getHighAngleMissingFields,
+      label: 'kit',
+    }),
   buildChecklist: buildHighAngleChecklist,
   buildDescription: buildHighAngleDescription,
   normalizeChecks: normalizeHighAngleChecks,
   EditSection: HighAngleEditSection,
   ReadOnlySection: HighAngleReadOnlySection,
+  detailContextFields: createLocationDetailContextFields({
+    typeLabel: 'High Angle Rescue Equipment',
+    inspectionType: HIGH_ANGLE_RESCUE_EQUIPMENT_INSPECTION_TYPE,
+    primaryLabel: 'Main Location',
+    secondaryLabel: 'Compartment',
+  }),
+  detailFindingsMode: 'block',
+  detailFindingsTitle: 'Equipment',
 }
 
 export default highAngleInspectionDefinition

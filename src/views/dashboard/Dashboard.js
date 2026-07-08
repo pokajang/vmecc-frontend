@@ -6,11 +6,14 @@ import {
   CButton,
   CCard,
   CCardBody,
+  CCardHeader,
   CCol,
   CDropdown,
   CDropdownItem,
   CDropdownMenu,
   CDropdownToggle,
+  CListGroup,
+  CListGroupItem,
   CRow,
 } from '@coreui/react'
 import { CalendarDays, Clock3, Eye, EyeOff, LayoutGrid, TriangleAlert, Wallet } from 'lucide-react'
@@ -52,19 +55,26 @@ const ModuleSectionHeader = ({
     PERIOD_OPTIONS.find((option) => option.value === period)?.label || resolvePeriodLabel(period)
 
   return (
-    <div className={visible ? 'mt-5' : 'mt-3'}>
-      <div className="mb-4 px-3 py-2 rounded" style={{ background: 'var(--cui-tertiary-bg)' }}>
-        <div className="d-flex align-items-start justify-content-between gap-3 flex-wrap">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            {Icon && <Icon size={20} style={{ color: accentColor, flexShrink: 0 }} />}
-            <div className="d-flex align-items-baseline gap-2 flex-wrap">
-              <div className="fw-semibold" style={{ fontSize: '1.2rem' }}>
-                {title}
-              </div>
-              {subtext && <div className="text-muted">{subtext}</div>}
+    <CCard className={`${visible ? 'mt-5' : 'mt-3'} mb-4 dashboard-module-card`}>
+      <CCardHeader
+        className={`px-3 px-md-4 py-3 ${visible ? 'border-bottom' : 'border-bottom-0'}`}
+        style={{ borderLeft: `4px solid ${accentColor}` }}
+      >
+        <div
+          className="d-flex align-items-start justify-content-between gap-3 flex-wrap"
+          style={{ minWidth: 0 }}
+        >
+          <div
+            className="me-auto"
+            style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}
+          >
+            {Icon && <Icon size={18} style={{ color: accentColor, flexShrink: 0 }} />}
+            <div className="d-md-flex align-items-md-baseline gap-md-2" style={{ minWidth: 0 }}>
+              <div className="fw-semibold text-break">{title}</div>
+              {subtext && <div className="text-muted text-break d-none d-md-block">{subtext}</div>}
             </div>
           </div>
-          <div className="d-flex align-items-center gap-2">
+          <div className="d-flex align-items-center gap-2 ms-auto flex-shrink-0">
             {period && onPeriodChange && (
               <CDropdown alignment="end">
                 <CDropdownToggle
@@ -98,17 +108,15 @@ const ModuleSectionHeader = ({
             </CButton>
           </div>
         </div>
-      </div>
-      {visible && children}
-    </div>
+      </CCardHeader>
+      {visible && <CCardBody className="p-3 p-md-4">{children}</CCardBody>}
+    </CCard>
   )
 }
 
 const SectionHeading = ({ title, subtext }) => (
   <div className="mb-3 mt-3">
-    <span className="fw-semibold" style={{ fontSize: '0.9rem' }}>
-      {title}
-    </span>
+    <span className="fw-semibold">{title}</span>
     {subtext && <span className="text-muted ms-2">{subtext}</span>}
   </div>
 )
@@ -186,64 +194,79 @@ const buildDashboardActionQueue = ({
   return items
 }
 
-const DashboardActionQueue = ({ items, loading, periodLabel, hasModuleErrors = false }) => (
-  <CCard className="mb-4" data-testid="dashboard-action-queue">
-    <CCardBody>
-      <div className="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3">
-        <div>
-          <h5 className="mb-1 fw-semibold">Action Queue</h5>
-          <div className="text-body-secondary small">
-            Items needing attention now - {periodLabel}
+const DashboardActionQueue = ({ items, loading, periodLabel, hasModuleErrors = false }) => {
+  const [visible, setVisible] = useState(true)
+
+  return (
+    <CCard className="mb-4" data-testid="dashboard-action-queue">
+      <CCardHeader className={`px-3 px-md-4 py-3 ${visible ? 'border-bottom' : 'border-bottom-0'}`}>
+        <div className="d-flex flex-wrap align-items-start justify-content-between gap-2">
+          <div>
+            <div className="mb-1 fw-semibold">Action Queue</div>
+            <div className="text-body-secondary small d-none d-md-block">
+              Items needing attention now - {periodLabel}
+            </div>
           </div>
+          <CButton
+            size="sm"
+            className="px-2 py-1 d-inline-flex align-items-center border-0 bg-transparent shadow-none text-primary ms-auto flex-shrink-0"
+            onClick={() => setVisible((value) => !value)}
+            aria-label={visible ? 'Hide action queue' : 'Show action queue'}
+            title={visible ? 'Hide action queue' : 'Show action queue'}
+          >
+            {visible ? <EyeOff size={14} /> : <Eye size={14} />}
+          </CButton>
         </div>
-        {items.length > 0 && (
-          <span className="badge text-bg-light border">{items.length} groups</span>
-        )}
-      </div>
-      {loading ? (
-        <div className="text-body-secondary small" data-testid="dashboard-action-queue-loading">
-          Loading action queue...
-        </div>
-      ) : hasModuleErrors && items.length === 0 ? (
-        <div className="text-body-secondary small" data-testid="dashboard-action-queue-error">
-          Some dashboard modules could not be loaded. Action queue values may be partial.
-        </div>
-      ) : items.length === 0 ? (
-        <div className="text-body-secondary small" data-testid="dashboard-action-queue-empty">
-          No dashboard actions need attention.
-        </div>
-      ) : (
-        <div className="d-grid gap-2" data-testid="dashboard-action-queue-items">
-          {items.map((item) => (
-            <Link
-              key={item.key}
-              to={item.to}
-              className="d-flex flex-wrap align-items-center justify-content-between gap-2 rounded border bg-body px-3 py-2 text-decoration-none text-body"
-            >
-              <span className="d-flex align-items-center gap-2" style={{ minWidth: 0 }}>
-                <span
-                  aria-hidden="true"
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    background: item.tone,
-                    flexShrink: 0,
-                  }}
-                />
-                <span className="d-grid" style={{ minWidth: 0 }}>
-                  <span className="fw-semibold text-break">{item.label}</span>
-                  <span className="small text-body-secondary">{item.module}</span>
-                </span>
-              </span>
-              <span className="fw-semibold">{item.count}</span>
-            </Link>
-          ))}
-        </div>
+      </CCardHeader>
+      {visible && (
+        <CCardBody className="p-3 p-md-4">
+          {loading ? (
+            <div className="text-body-secondary small" data-testid="dashboard-action-queue-loading">
+              Loading action queue...
+            </div>
+          ) : hasModuleErrors && items.length === 0 ? (
+            <div className="text-body-secondary small" data-testid="dashboard-action-queue-error">
+              Some dashboard modules could not be loaded. Action queue values may be partial.
+            </div>
+          ) : items.length === 0 ? (
+            <div className="text-body-secondary small" data-testid="dashboard-action-queue-empty">
+              No dashboard actions need attention.
+            </div>
+          ) : (
+            <CListGroup data-testid="dashboard-action-queue-items">
+              {items.map((item) => (
+                <CListGroupItem
+                  as={Link}
+                  key={item.key}
+                  to={item.to}
+                  className="list-group-item-action d-flex flex-wrap align-items-center justify-content-between gap-2 text-decoration-none text-body"
+                >
+                  <span className="d-flex align-items-center gap-2" style={{ minWidth: 0 }}>
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        background: item.tone,
+                        flexShrink: 0,
+                      }}
+                    />
+                    <span className="d-grid" style={{ minWidth: 0 }}>
+                      <span className="fw-semibold text-break">{item.label}</span>
+                      <span className="small text-body-secondary">{item.module}</span>
+                    </span>
+                  </span>
+                  <span className="fw-semibold">{item.count}</span>
+                </CListGroupItem>
+              ))}
+            </CListGroup>
+          )}
+        </CCardBody>
       )}
-    </CCardBody>
-  </CCard>
-)
+    </CCard>
+  )
+}
 
 const DashboardModuleSlot = ({ moduleKey, isVisible, children }) => (
   <div
@@ -382,15 +405,9 @@ const Dashboard = () => {
         style={{ background: 'rgba(0, 126, 122, 0.08)' }}
       >
         <CCardBody>
-          <div className="d-flex align-items-start justify-content-between gap-3 flex-wrap">
-            <div>
-              <h4 className="mb-1 fw-semibold">Dashboard Overview</h4>
-              <div className="text-body-secondary">
-                {userName ? `Welcome back, ${userName}` : ''}
-                {userName && userRole ? ` (${userRole})` : ''}
-              </div>
-            </div>
-            <div className="d-flex flex-wrap align-items-center gap-2">
+          <div>
+            <div className="d-flex align-items-start justify-content-between gap-3 mb-1">
+              <div className="fw-semibold">Dashboard Overview</div>
               <CDropdown alignment="end" data-testid="dashboard-period-control">
                 <CDropdownToggle size="sm" color="primary" variant="outline">
                   {periodLabel}
@@ -407,6 +424,10 @@ const Dashboard = () => {
                   ))}
                 </CDropdownMenu>
               </CDropdown>
+            </div>
+            <div className="text-body-secondary text-break">
+              {userName ? `Welcome back, ${userName}` : ''}
+              {userName && userRole ? ` (${userRole})` : ''}
             </div>
           </div>
         </CCardBody>

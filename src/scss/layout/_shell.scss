@@ -1,0 +1,330 @@
+@use '../tools/coreui-tools' as *;
+
+.wrapper {
+  width: 100%;
+  padding-inline: var(--cui-sidebar-occupy-start, 0) var(--cui-sidebar-occupy-end, 0);
+  will-change: auto;
+  @include transition(padding 0.15s);
+}
+
+@include media-breakpoint-up(xl) {
+  .wrapper.ai-helper-open > .body,
+  .wrapper.ai-helper-open > .app-footer {
+    padding-inline-end: calc(var(--cui-sidebar-occupy-end, 0px) + var(--ai-helper-width));
+  }
+}
+
+.header > .container-fluid,
+.sidebar-header {
+  min-height: 3.25rem;
+  padding-block: 0.35rem;
+}
+
+@include media-breakpoint-down(md) {
+  .header > .container-fluid,
+  .sidebar-header {
+    min-height: 3rem;
+    padding-block: 0.25rem;
+  }
+
+  .sidebar-header.sidebar-brand-header {
+    min-height: 3rem;
+    height: 3rem;
+    padding-block: 0;
+  }
+}
+
+.sidebar-brand-full {
+  margin-left: 3px;
+}
+
+.sidebar-header.sidebar-brand-header {
+  min-height: 3.25rem;
+  height: 3.25rem;
+  padding-inline: 0.75rem;
+  padding-block: 0;
+}
+
+.sidebar-header.sidebar-brand-header .sidebar-brand {
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.sidebar-header {
+  .nav-underline-border {
+    --cui-nav-underline-border-link-padding-x: 1rem;
+    --cui-nav-underline-border-gap: 0;
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    min-height: calc(4rem + 1px); // stylelint-disable-line function-disallowed-list
+  }
+}
+
+.sidebar-toggler {
+  margin-inline-start: auto;
+}
+
+.sidebar-narrow,
+.sidebar-narrow-unfoldable:not(:hover) {
+  .sidebar-toggler {
+    margin-inline-end: auto;
+  }
+}
+
+.header > .container-fluid + .container-fluid {
+  min-height: 3rem;
+}
+
+.header .app-header-ask-ai {
+  min-height: 2.15rem;
+  color: var(--cui-primary);
+  font-weight: 600;
+  line-height: 1.2;
+  transition: color 0.15s ease;
+
+  &:hover,
+  &:focus {
+    color: #006966;
+  }
+
+  &:focus-visible {
+    outline: 0;
+    box-shadow: var(--vmecc-focus-ring);
+  }
+
+  &.active,
+  &[aria-pressed='true'] {
+    color: var(--cui-primary);
+  }
+}
+
+.footer {
+  min-height: calc(3rem + 1px); // stylelint-disable-line function-disallowed-list
+  background-color: #ffffff;
+  --cui-footer-bg: #ffffff;
+}
+
+.app-footer {
+  flex-shrink: 0;
+  gap: 0.75rem;
+  line-height: 1.5;
+  overflow: visible;
+}
+
+.app-footer > div {
+  min-width: 0;
+}
+
+.app-footer span {
+  display: inline-block;
+  padding-block: 0.125rem;
+}
+
+@include color-mode(dark) {
+  body {
+    background-color: #ffffff;
+  }
+
+  .footer {
+    background-color: #ffffff;
+    --cui-footer-bg: #ffffff;
+  }
+}
+
+/* Header navbar active styles: match sidebar active background */
+.header .nav-link.active,
+.header .nav-link[aria-current='page'],
+.header .nav-link.show {
+  background-color: rgba(0, 126, 122, 0.2);
+  color: var(--cui-primary);
+  border-radius: var(--cui-border-radius);
+}
+
+.header .nav-link.app-header-ask-ai.active,
+.header .nav-link.app-header-ask-ai[aria-pressed='true'] {
+  background: transparent;
+  color: var(--cui-primary);
+}
+
+/* Ensure icons/text inside active links remain legible */
+.header .nav-link.active .c-icon,
+.header .nav-link.active .nav-icon {
+  color: inherit;
+}
+
+/* Sidebar active item: match bg-primary with 10% opacity */
+.sidebar.sidebar-main .nav-link.active,
+.sidebar.sidebar-main .nav-link[aria-current='page'],
+.sidebar.sidebar-main .sidebar-nav .nav-link.active,
+.sidebar.sidebar-main .sidebar-nav .nav-link.active:hover,
+.sidebar.sidebar-main .sidebar-nav .nav-link.active:focus {
+  background-color: rgba(0, 126, 122, 0.2) !important;
+  color: var(--cui-primary) !important;
+}
+
+.sidebar-main .nav-link,
+.sidebar-main .nav-group-toggle {
+  padding: 0.45rem 0.95rem;
+  border-radius: 0.85rem;
+  margin-inline: 0.35rem;
+  margin-block: 0.15rem;
+  font-weight: 500;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.sidebar-main .nav-link:hover,
+.sidebar-main .nav-group-toggle:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+  transform: translateX(2px);
+}
+
+.sidebar-main .nav-group-toggle {
+  background-color: transparent;
+  color: var(--cui-body-color);
+}
+
+.sidebar-main .nav-icon-bullet {
+  display: none;
+}
+
+.sidebar-main .nav-group-items .nav-link {
+  padding-inline-start: 2.25rem;
+}
+
+.sidebar-main .simplebar-track.simplebar-vertical {
+  width: 8px;
+}
+
+.sidebar-main .simplebar-scrollbar::before {
+  background: #cfd4dc;
+  opacity: 0.85;
+  inset-inline: 2px;
+}
+
+.sidebar-main .simplebar-scrollbar.simplebar-visible::before {
+  opacity: 1;
+}
+
+.sidebar-message-badge {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background-color: rgba(0, 126, 122, 0.14);
+  color: #007e7a;
+  border: 1px solid rgba(0, 126, 122, 0.2);
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+
+.header-message-badge,
+.header-alert-badge {
+  position: absolute;
+  top: -4px;
+  right: -2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background-color: rgba(0, 126, 122, 0.14);
+  color: #007e7a;
+  border: 1px solid rgba(0, 126, 122, 0.2);
+  font-weight: 600;
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+.icon-spin {
+  animation: vmecc-spin 0.9s linear infinite;
+}
+
+@keyframes vmecc-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Keep parent toggles from showing primary when children are active */
+.sidebar-main .nav-group-toggle.active {
+  background-color: transparent;
+  color: var(--cui-body-color);
+}
+
+/* Keep icons readable on active */
+.sidebar .nav-link.active .c-icon,
+.sidebar .nav-link.active .nav-icon {
+  color: inherit;
+}
+
+/* Keep Lucide sidebar icons outline (override CoreUI fill) */
+.sidebar-main svg.nav-icon[class*='lucide-'] {
+  fill: none;
+  stroke: currentColor;
+}
+
+.header .nav-link {
+  padding-block: 0.3rem;
+}
+
+.sidebar-nav .nav-link.active,
+.sidebar-nav .nav-link[aria-current='page'] {
+  background-color: rgba(0, 126, 122, 0.1) !important;
+  color: var(--cui-primary) !important;
+}
+
+/* Dropdown items should show pointer cursor by default */
+.dropdown-item {
+  cursor: pointer;
+}
+
+.dropdown-item.disabled,
+.dropdown-item:disabled {
+  cursor: not-allowed;
+}
+
+.app-header-dropdown-user-header {
+  background-color: rgba(0, 126, 122, 0.2);
+  color: var(--cui-primary);
+}
+
+.app-header-dropdown-user-name {
+  color: var(--cui-emphasis-color);
+}
+
+.app-header-dropdown-user-role {
+  color: #006a67;
+}
+
+.app-header-account-toggle {
+  width: 2.15rem;
+  height: 2.15rem;
+  border-radius: var(--cui-border-radius);
+}
+
+.app-header-account-tooltip-target {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  line-height: 1;
+}
+
+.app-header-account-menu {
+  --cui-dropdown-zindex: 1050;
+}

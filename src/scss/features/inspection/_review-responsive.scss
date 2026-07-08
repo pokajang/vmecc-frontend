@@ -1,0 +1,27 @@
+@use '../../tools/coreui-tools' as *;
+
+@include media-breakpoint-down(md) {
+  .inspection-review-page {
+    gap: 0.75rem !important;
+  }
+
+  .inspection-review-hero,
+  .inspection-review-section {
+    border-radius: 0.45rem;
+    padding: 0.85rem;
+  }
+
+  .inspection-review-hero {
+    flex-direction: column;
+  }
+
+  .inspection-review-type-card__actions {
+    .btn {
+      width: auto;
+    }
+  }
+
+  .inspection-review-actions {
+    display: none !important;
+  }
+}

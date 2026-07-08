@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
-import { saveInspectionDraftAction } from '../app/inspectionModuleActions'
+import {
+  saveInspectionDraftAction,
+  submitInspectionRecordAction,
+} from '../app/inspectionModuleActions'
 
 const buildDraftActionHarness = ({ saveResult, saveError } = {}) => {
   let draftVersion = 1
@@ -40,6 +43,70 @@ const buildDraftActionHarness = ({ saveResult, saveError } = {}) => {
   return {
     args,
     getDraftVersion: () => draftVersion,
+  }
+}
+
+const buildSubmitActionHarness = ({ record, persistError, inspectSessionError } = {}) => {
+  const draftRecord = {
+    id: 'inspection-record-1',
+    displayId: 'INS-1',
+    inspectionType: 'FRT Daily Inspection',
+    version: 0,
+    ...record,
+  }
+  const persistInspectionRecord = vi.fn(async () => {
+    if (persistError) throw persistError
+    return { displayId: 'INS-1' }
+  })
+  const submitInspectionSessionReport = vi.fn(async () => {
+    if (inspectSessionError) throw inspectSessionError
+    return { displayId: 'INS-1' }
+  })
+  const submitLockRef = { current: false }
+  const clearInspectionDraft = vi.fn()
+  const refreshQueueRows = vi.fn()
+  const clearWorkingState = vi.fn()
+  const setDraftVersion = vi.fn((updater) => (typeof updater === 'function' ? updater(1) : updater))
+  const setIsSubmitting = vi.fn()
+  const pushToast = vi.fn()
+  const enqueueInspectionSubmission = vi.fn(() => null)
+  const args = {
+    record: draftRecord,
+    submitLockRef,
+    setIsSubmitting,
+    makeInspectionSubmissionKey: vi.fn(() => 'inspection-submission-key'),
+    userId: 7,
+    persistInspectionRecord,
+    submitInspectionSessionReport,
+    prepareContinuationPrompt: vi.fn(() => null),
+    reloadRecords: vi.fn(),
+    clearInspectionDraft,
+    setDraftVersion,
+    clearWorkingState,
+    pushToast,
+    reportTypeLabel: 'Inspection',
+    navigate: vi.fn(),
+    reportBasePath: '/inspection',
+    setContinuationPrompt: vi.fn(),
+    isInspectionQueueableError: vi.fn((error) => Number(error?.status || 0) >= 500),
+    enqueueInspectionSubmission,
+    editingRecord: null,
+    refreshQueueRows,
+    onSubmitted: vi.fn(),
+  }
+
+  return {
+    args,
+    draftRecord,
+    submitInspectionSessionReport,
+    persistInspectionRecord,
+    enqueueInspectionSubmission,
+    pushToast,
+    setIsSubmitting,
+    clearWorkingState,
+    clearInspectionDraft,
+    refreshQueueRows,
+    setDraftVersion,
   }
 }
 
@@ -97,6 +164,40 @@ describe('saveInspectionDraftAction', () => {
     expect(args.setDraftStatus).toHaveBeenCalledWith('Draft save failed')
     expect(args.pushToast).toHaveBeenCalledWith('Database unavailable.', {
       title: 'Draft save failed',
+      color: 'danger',
+    })
+  })
+})
+
+describe('submitInspectionRecordAction', () => {
+  it('replaces FRT seeded-row validation errors with user-friendly submission copy', async () => {
+    const seededRowsError = new Error('checklist must include 92 seeded rows')
+    seededRowsError.status = 422
+    const { args, pushToast } = buildSubmitActionHarness({ persistError: seededRowsError })
+
+    await submitInspectionRecordAction(args)
+
+    expect(pushToast).toHaveBeenCalledWith(
+      'Please complete inspection on all compartment before submission.',
+      {
+        title: 'Save failed',
+        color: 'danger',
+      },
+    )
+  })
+
+  it('keeps raw message for non-FRT submission errors', async () => {
+    const otherError = new Error('Some unrelated submit issue')
+    otherError.status = 400
+    const { args, pushToast } = buildSubmitActionHarness({
+      record: { inspectionType: 'General Inspection' },
+      persistError: otherError,
+    })
+
+    await submitInspectionRecordAction(args)
+
+    expect(pushToast).toHaveBeenCalledWith('Some unrelated submit issue', {
+      title: 'Save failed',
       color: 'danger',
     })
   })

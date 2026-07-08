@@ -12,6 +12,8 @@ import {
   normalizeScbaFaceMaskChecks,
   SCBA_INSPECTION_TYPE,
 } from './helpers'
+import { createLocationDetailContextFields } from '../detailConfigHelpers'
+import { buildMainLocationContinuationOptions } from '../continuationHelpers'
 import { ScbaEditSection, ScbaReadOnlySection } from './section'
 
 const scbaInspectionDefinition = {
@@ -40,6 +42,14 @@ const scbaInspectionDefinition = {
   getSummary: getScbaCheckSummary,
   getVisibleChecks: getScbaVisibleSections,
   getMissingFields: getScbaMissingFields,
+  buildContinuationOptions: (form, _summary, context = {}) =>
+    buildMainLocationContinuationOptions({
+      form,
+      context,
+      getSummary: getScbaCheckSummary,
+      getMissingFields: getScbaMissingFields,
+      label: 'location',
+    }),
   buildChecklist: buildScbaChecklist,
   buildDescription: buildScbaDescription,
   normalizeBackPlateChecks: normalizeScbaBackPlateChecks,
@@ -48,6 +58,13 @@ const scbaInspectionDefinition = {
   normalizeCustomSections: normalizeScbaCustomSections,
   EditSection: ScbaEditSection,
   ReadOnlySection: ScbaReadOnlySection,
+  detailContextFields: createLocationDetailContextFields({
+    typeLabel: 'SCBA',
+    inspectionType: SCBA_INSPECTION_TYPE,
+    primaryLabel: 'Location',
+  }),
+  detailFindingsMode: 'block',
+  detailFindingsTitle: 'SCBA Items',
 }
 
 export default scbaInspectionDefinition
