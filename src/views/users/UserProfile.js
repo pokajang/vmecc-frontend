@@ -85,6 +85,7 @@ const MODAL_KEYS = [
   'activate',
   'reset',
   'delete',
+  'permanentDelete',
   'restore',
   'lock',
   'unlock',
@@ -297,6 +298,25 @@ const UserProfile = () => {
     if (!user || actionUpdating || isSelf) return
     setActionUpdating(true)
     try {
+      await deleteUser(user.id)
+      setUser((prev) => (prev ? { ...prev, deleted_at: new Date().toISOString() } : prev))
+      pushActionMessage('success', 'User deleted. You can restore this user later.')
+      dispatchModal({ type: 'close', modal: 'delete' })
+    } catch (err) {
+      pushActionMessage('danger', err.payload?.message || 'Unable to delete user.')
+    } finally {
+      setActionUpdating(false)
+    }
+  }, [actionUpdating, isSelf, pushActionMessage, user])
+
+  const handlePermanentDeleteUser = useCallback(async () => {
+    if (!user || actionUpdating || isSelf) return
+    if (!user.deleted_at) {
+      pushActionMessage('warning', 'Delete the user first before permanent delete.')
+      return
+    }
+    setActionUpdating(true)
+    try {
       await deleteUser(user.id, { permanent: true })
       pushActionMessage('success', 'User permanently deleted.')
       navigate('/admin/users')
@@ -503,13 +523,22 @@ const UserProfile = () => {
                   {exporting ? <ButtonLoader label="Exporting..." /> : 'Export CSV'}
                 </CDropdownItem>
                 {user.deleted_at ? (
-                  <CDropdownItem
-                    onClick={() => dispatchModal({ type: 'open', modal: 'restore' })}
-                    disabled={actionUpdating}
-                    className="cursor-pointer"
-                  >
-                    Restore user
-                  </CDropdownItem>
+                  <>
+                    <CDropdownItem
+                      onClick={() => dispatchModal({ type: 'open', modal: 'restore' })}
+                      disabled={actionUpdating}
+                      className="cursor-pointer"
+                    >
+                      Restore user
+                    </CDropdownItem>
+                    <CDropdownItem
+                      onClick={() => dispatchModal({ type: 'open', modal: 'permanentDelete' })}
+                      disabled={actionUpdating || isSelf}
+                      className="text-danger cursor-pointer"
+                    >
+                      Delete permanently
+                    </CDropdownItem>
+                  </>
                 ) : (
                   <>
                     <CDropdownItem
@@ -616,12 +645,24 @@ const UserProfile = () => {
 
         <UserConfirmModal
           visible={modalState.delete}
-          title="Delete User Permanently"
-          message={`This will permanently delete ${user?.name || 'this user'} and cannot be undone. The account cannot be restored after this action.`}
-          confirmLabel="Delete permanently"
+          title="Delete User"
+          message={`Delete ${user?.name || 'this user'} from active user management? You can restore this user later.`}
+          confirmLabel="Delete"
           confirmColor="danger"
           onConfirm={handleDeleteUser}
           onClose={() => dispatchModal({ type: 'close', modal: 'delete' })}
+          confirmDisabled={actionUpdating || isSelf}
+          cancelDisabled={actionUpdating}
+        />
+
+        <UserConfirmModal
+          visible={modalState.permanentDelete}
+          title="Delete User Permanently"
+          message={`This will permanently delete ${user?.name || 'this user'} and cannot be undone.`}
+          confirmLabel="Delete permanently"
+          confirmColor="danger"
+          onConfirm={handlePermanentDeleteUser}
+          onClose={() => dispatchModal({ type: 'close', modal: 'permanentDelete' })}
           confirmDisabled={actionUpdating || isSelf}
           cancelDisabled={actionUpdating}
         />

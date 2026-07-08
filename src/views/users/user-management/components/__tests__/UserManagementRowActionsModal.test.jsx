@@ -62,7 +62,12 @@ const baseProps = {
   totalCount: 1,
 }
 
-const Harness = ({ goProfile = vi.fn() }) => {
+const Harness = ({
+  goProfile = vi.fn(),
+  visibleUser = user,
+  onRestore = vi.fn(),
+  onPermanentDelete = vi.fn(),
+}) => {
   const [actionUser, setActionUser] = useState(null)
   const [activeModal, setActiveModal] = useState(null)
 
@@ -75,8 +80,11 @@ const Harness = ({ goProfile = vi.fn() }) => {
     <>
       <UserManagementTableSection
         {...baseProps}
+        visibleUsers={[visibleUser]}
         goProfile={goProfile}
+        openRestoreModal={onRestore}
         openDeleteModal={openDeleteModal}
+        openPermanentDeleteModal={onPermanentDelete}
       />
       <UserActionModals
         actionUser={actionUser}
@@ -130,13 +138,39 @@ describe('UserManagement row actions', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Delete user' }))
 
     await waitFor(() => {
-      expect(screen.getByText('Delete User Permanently')).toBeTruthy()
+      expect(screen.getByText('Delete User')).toBeTruthy()
       expect(
         screen.getByText(
-          'This will permanently delete Alice Admin and cannot be undone. The account cannot be restored after this action.',
+          'Delete Alice Admin from active user management? You can restore this user later.',
         ),
       ).toBeTruthy()
     })
     expect(goProfile).not.toHaveBeenCalled()
+  })
+
+  it('shows restore and permanent delete actions for a deleted row', async () => {
+    const deletedUser = { ...user, deleted_at: '2026-07-08T00:00:00.000Z' }
+    const onRestore = vi.fn()
+    const onPermanentDelete = vi.fn()
+    const { container } = render(
+      <Harness
+        visibleUser={deletedUser}
+        onRestore={onRestore}
+        onPermanentDelete={onPermanentDelete}
+      />,
+    )
+    const row = Array.from(container.querySelectorAll('tbody tr')).find((entry) =>
+      entry.textContent?.includes('Alice Admin'),
+    )
+
+    fireEvent.click(within(row).getByRole('button', { name: 'Row actions' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Restore' }))
+
+    expect(onRestore).toHaveBeenCalledWith(deletedUser)
+
+    fireEvent.click(within(row).getByRole('button', { name: 'Row actions' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete permanently' }))
+
+    expect(onPermanentDelete).toHaveBeenCalledWith(deletedUser)
   })
 })

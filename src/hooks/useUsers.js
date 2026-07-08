@@ -415,12 +415,15 @@ const useUsers = ({ isAdmin, roles = [], isSelf }) => {
     }
     setActionUpdating(true)
     try {
-      await deleteUser(actionUser.id, { permanent: true })
-      setUsers((prev) => prev.filter((u) => u.id !== actionUser.id))
-      pushStatus('success', 'User permanently deleted.')
+      await deleteUser(actionUser.id)
+      const deletedAt = new Date().toISOString()
+      setUsers((prev) =>
+        prev.map((u) => (u.id === actionUser.id ? { ...u, deleted_at: deletedAt } : u)),
+      )
+      pushStatus('success', 'User deleted. You can restore this user later.')
       dispatchModal({ type: 'close', modal: 'delete' })
     } catch (err) {
-      pushStatus('danger', err.payload?.message || 'Unable to permanently delete user.')
+      pushStatus('danger', err.payload?.message || 'Unable to delete user.')
     } finally {
       setActionUpdating(false)
     }
