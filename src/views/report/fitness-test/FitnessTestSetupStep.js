@@ -18,6 +18,8 @@ const FitnessTestSetupStep = ({
   timePresetOptions,
   onSaveDraft,
   onContinue,
+  saveLabel = 'Save Draft',
+  draftStatus = '',
 }) => {
   const [isEditingType, setIsEditingType] = useState(() => !String(form.incidentType || '').trim())
   const [isEditingCondition, setIsEditingCondition] = useState(
@@ -209,7 +211,12 @@ const FitnessTestSetupStep = ({
             </div>
           ) : null}
         </div>
-        <ReportSetupActions onSaveDraft={onSaveDraft} onContinue={onContinue} />
+        <ReportSetupActions
+          onSaveDraft={onSaveDraft}
+          onContinue={onContinue}
+          saveLabel={saveLabel}
+          statusMessage={draftStatus}
+        />
       </div>
     </div>
   )

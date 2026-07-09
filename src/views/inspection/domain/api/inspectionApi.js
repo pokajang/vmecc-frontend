@@ -141,6 +141,8 @@ const upsertInspectionRecordToApi = async (row, { submissionKey = '', expectedVe
     report_type: INSPECTION_TYPE,
     payload: toPayload(row),
     status: toApiStatus(row?.status),
+    submitted_at: String(row?.submittedAt || '').trim(),
+    inspected_at: String(row?.inspectedAt || '').trim(),
     ...(String(submissionKey || row?.submissionKey || '').trim()
       ? { submission_key: String(submissionKey || row?.submissionKey || '').trim() }
       : {}),

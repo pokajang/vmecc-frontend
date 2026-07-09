@@ -5,6 +5,7 @@ import {
   markStaffPayrollClaimPaidApiFirst,
   unmarkStaffPayrollClaimPaidApiFirst,
 } from 'src/services/payrollClaimsApi'
+import { getLocalDateInputValue } from 'src/utils/localDate'
 import { normalizeClaimWorkflowRecord } from '../utils'
 
 const useClaimPaymentActions = ({
@@ -36,7 +37,7 @@ const useClaimPaymentActions = ({
 
   const openSinglePaymentModal = useCallback((claimRow, mode = 'mark') => {
     const normalizedMode = mode === 'unmark' ? 'unmark' : 'mark'
-    const today = new Date().toISOString().slice(0, 10)
+    const today = getLocalDateInputValue()
     setPaymentModalState({
       visible: true,
       mode: normalizedMode,
@@ -67,7 +68,7 @@ const useClaimPaymentActions = ({
         )
         return
       }
-      const today = new Date().toISOString().slice(0, 10)
+      const today = getLocalDateInputValue()
       setPaymentModalState({
         visible: true,
         mode: normalizedMode,

@@ -1,13 +1,15 @@
-import React from 'react'
-import { CAlert, CBadge, CButton, CCard, CCardBody, CCardHeader, CRow } from '@coreui/react'
-import { DetailField, SectionHeading } from 'src/components/report-workflow/ReportViewComponents'
+import React, { useState } from 'react'
+import { CAlert, CBadge, CButton, CRow } from '@coreui/react'
+import FormActionGroup from 'src/components/FormActionGroup'
+import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
+import { DetailField } from 'src/components/report-workflow/ReportViewComponents'
 
 const ChronologyRows = ({ chronology }) => {
   const rows = (Array.isArray(chronology) ? chronology : []).filter((r) => r.time || r.action)
   if (rows.length === 0) return null
   return (
-    <div className="d-grid gap-2">
-      <SectionHeading>Chronology</SectionHeading>
+    <section className="inspection-form-section d-grid gap-3">
+      <div className="fw-semibold text-muted">Chronology</div>
       <div className="rounded-3 border overflow-hidden">
         {rows.map((row, i) => (
           <div
@@ -24,7 +26,7 @@ const ChronologyRows = ({ chronology }) => {
           </div>
         ))}
       </div>
-    </div>
+    </section>
   )
 }
 
@@ -32,8 +34,8 @@ const RespondingTeamRows = ({ respondingTeam }) => {
   if (!respondingTeam) return null
   const attendance = Array.isArray(respondingTeam.attendance) ? respondingTeam.attendance : []
   return (
-    <div className="d-grid gap-2">
-      <SectionHeading>Responding Team</SectionHeading>
+    <section className="inspection-form-section d-grid gap-3">
+      <div className="fw-semibold text-muted">Responding Team</div>
       <CRow className="g-3">
         <DetailField label="Team">{respondingTeam.name || '--'}</DetailField>
         {respondingTeam.shift ? (
@@ -57,7 +59,7 @@ const RespondingTeamRows = ({ respondingTeam }) => {
           </div>
         </div>
       ) : null}
-    </div>
+    </section>
   )
 }
 
@@ -77,8 +79,8 @@ const PostAnalysisRows = ({ analysis, fallbackPhotos = [] }) => {
   if (!strengths.length && !resources.length && !improvements.length && !photos.length) return null
 
   return (
-    <div className="d-grid gap-3">
-      <SectionHeading>Post-Incident Analysis</SectionHeading>
+    <section className="inspection-form-section d-grid gap-3">
+      <div className="fw-semibold text-muted">Post-Incident Analysis</div>
       {strengths.length > 0 ? (
         <div>
           <div className="small text-body-secondary mb-1">Strengths</div>
@@ -139,7 +141,7 @@ const PostAnalysisRows = ({ analysis, fallbackPhotos = [] }) => {
           </div>
         </div>
       ) : null}
-    </div>
+    </section>
   )
 }
 
@@ -168,8 +170,9 @@ const ReportDetailSection = ({
   detailsLabel = 'Incident Title',
   summaryLabel = 'Summary',
   testAnchorPrefix = '',
-  workFirstMobileDetail = false,
 }) => {
+  const [moreActionsOpen, setMoreActionsOpen] = useState(false)
+
   if (!selectedRecord) {
     return (
       <CAlert color="warning">
@@ -236,235 +239,182 @@ const ReportDetailSection = ({
       ? renderStatusBadge(displayStatus)
       : displayStatus || '--'
 
-  const renderDetailActions = ({ mobile = false } = {}) => (
-    <div
-      className={
-        mobile
-          ? 'report-workfirst-detail__actions d-grid gap-2'
-          : 'd-flex flex-column flex-sm-row flex-wrap gap-2 justify-content-end'
-      }
+  const buildActionDescriptors = () => {
+    if (isReviewMode) {
+      return [
+        {
+          key: 'back',
+          label: 'Back to Edit',
+          color: 'light',
+          onClick: () => reviewActions?.onBackToEdit?.(),
+        },
+        {
+          key: 'draft',
+          label: 'Save Draft',
+          color: 'secondary',
+          onClick: () => reviewActions?.onSaveDraft?.(),
+        },
+        {
+          key: 'confirm',
+          label: reviewActions?.confirmLabel || 'Confirm Submit',
+          color: 'primary',
+          disabled: isSubmittingReview,
+          onClick: () => reviewActions?.onConfirm?.(),
+        },
+      ]
+    }
+
+    return [
+      {
+        key: 'back',
+        label: 'Back to records',
+        color: 'light',
+        onClick: onBack,
+      },
+      {
+        key: 'download',
+        label: downloadingId === r.id ? 'Generating...' : 'Download',
+        color: 'secondary',
+        variant: 'outline',
+        disabled: Boolean(downloadingId),
+        testId: testAnchorPrefix ? `${testAnchorPrefix}-download-action` : '',
+        onClick: () => onDownloadRecord?.(r.id),
+      },
+      {
+        key: 'edit',
+        label: 'Edit',
+        color: 'primary',
+        variant: 'outline',
+        disabled: !canEditCurrentRecord,
+        testId: testAnchorPrefix ? `${testAnchorPrefix}-edit-action` : '',
+        onClick: () => onEditRecord?.(r),
+      },
+      {
+        key: 'delete',
+        label: 'Delete',
+        color: 'danger',
+        variant: 'outline',
+        disabled: !canDeleteCurrentRecord,
+        testId: testAnchorPrefix ? `${testAnchorPrefix}-delete-action` : '',
+        onClick: () => onDeleteRecord?.(r),
+      },
+      ...(String(r.status || '').trim() === 'Submitted'
+        ? [
+            {
+              key: 'review',
+              label: 'Review',
+              color: 'info',
+              variant: 'outline',
+              disabled: isActionBusy,
+              onClick: () => onReviewRecord?.(r),
+            },
+          ]
+        : []),
+      ...(String(r.status || '').trim() === 'Reviewed'
+        ? [
+            {
+              key: 'approve',
+              label: 'Approve',
+              color: 'success',
+              variant: 'outline',
+              disabled: isActionBusy,
+              onClick: () => onApproveRecord?.(r),
+            },
+            {
+              key: 'reject',
+              label: 'Reject',
+              color: 'danger',
+              variant: 'outline',
+              disabled: isActionBusy,
+              onClick: () => onRejectRecord?.(r),
+            },
+          ]
+        : []),
+    ]
+  }
+
+  const buildActionButton = (action, className = '') => (
+    <CButton
+      key={action.key}
+      color={action.color}
+      variant={action.variant}
+      className={className}
+      disabled={action.disabled}
+      {...(action.testId ? { 'data-testid': action.testId } : {})}
+      onClick={action.onClick}
     >
-      {isReviewMode ? (
-        <>
-          {!mobile ? (
-            <CButton color="light" onClick={() => reviewActions?.onBackToEdit?.()}>
-              Back to Edit
-            </CButton>
-          ) : null}
-          <CButton
-            color="secondary"
-            variant={mobile ? 'outline' : undefined}
-            onClick={() => reviewActions?.onSaveDraft?.()}
-          >
-            Save Draft
-          </CButton>
-          <CButton
-            color="primary"
-            disabled={isSubmittingReview}
-            onClick={() => reviewActions?.onConfirm?.()}
-          >
-            {reviewActions?.confirmLabel || 'Confirm Submit'}
-          </CButton>
-        </>
-      ) : (
-        <>
-          {!mobile ? (
-            <CButton color="light" onClick={onBack}>
-              Back to records
-            </CButton>
-          ) : null}
-          <CButton
-            color="secondary"
-            variant="outline"
-            {...(testAnchorPrefix ? { 'data-testid': `${testAnchorPrefix}-download-action` } : {})}
-            disabled={Boolean(downloadingId)}
-            onClick={() => onDownloadRecord?.(r.id)}
-          >
-            {downloadingId === r.id ? 'Generating...' : 'Download'}
-          </CButton>
-          <CButton
-            color="primary"
-            variant="outline"
-            {...(testAnchorPrefix ? { 'data-testid': `${testAnchorPrefix}-edit-action` } : {})}
-            disabled={!canEditCurrentRecord}
-            onClick={() => onEditRecord?.(r)}
-          >
-            Edit
-          </CButton>
-          <CButton
-            color="danger"
-            variant="outline"
-            {...(testAnchorPrefix ? { 'data-testid': `${testAnchorPrefix}-delete-action` } : {})}
-            disabled={!canDeleteCurrentRecord}
-            onClick={() => onDeleteRecord?.(r)}
-          >
-            Delete
-          </CButton>
-          {String(r.status || '').trim() === 'Submitted' ? (
-            <CButton
-              color="info"
-              variant="outline"
-              disabled={isActionBusy}
-              onClick={() => onReviewRecord?.(r)}
-            >
-              Review
-            </CButton>
-          ) : null}
-          {String(r.status || '').trim() === 'Reviewed' ? (
-            <>
-              <CButton
-                color="success"
-                variant="outline"
-                disabled={isActionBusy}
-                onClick={() => onApproveRecord?.(r)}
-              >
-                Approve
-              </CButton>
-              <CButton
-                color="danger"
-                variant="outline"
-                disabled={isActionBusy}
-                onClick={() => onRejectRecord?.(r)}
-              >
-                Reject
-              </CButton>
-            </>
-          ) : null}
-        </>
-      )}
-    </div>
+      {action.label}
+    </CButton>
   )
 
-  const renderWorkFirstMobileContent = () => {
-    const mobileRows = [
-      { label: 'Status', value: renderStatusValue(), node: true },
-      { label: 'Submitted By', value: submittedBy },
-      { label: 'Submitted At', value: submittedAt },
-      { label: 'Date / Time', value: dateTime || '--' },
-      { label: typeLabel, value: r.incidentType || '--' },
-      ...(r.weather ? [{ label: conditionLabel, value: r.weather }] : []),
-      { label: 'Location', value: r.location || '--' },
-      ...(r.teamInCharge || r.respondingTeamName
-        ? [{ label: 'Team In Charge', value: r.teamInCharge || r.respondingTeamName }]
-        : []),
-      ...(r.aicInCharge ? [{ label: 'AIC In Charge', value: r.aicInCharge }] : []),
-    ]
-    const title = detailsText || r.incidentType || r.displayId || 'Report'
+  const renderDetailActions = ({ mobile = false } = {}) => {
+    const actions = buildActionDescriptors()
+    if (!mobile) {
+      return (
+        <div className="d-none d-md-flex flex-column flex-sm-row flex-wrap gap-2 justify-content-end">
+          {actions.map((action) => buildActionButton(action))}
+        </div>
+      )
+    }
+
+    const primaryKeys = isReviewMode
+      ? ['confirm']
+      : String(r.status || '').trim() === 'Submitted'
+        ? ['review']
+        : String(r.status || '').trim() === 'Reviewed'
+          ? ['approve']
+          : ['edit']
+    const primaryActions = primaryKeys
+      .map((key) => actions.find((action) => action.key === key))
+      .filter(Boolean)
+    const drawerActions = actions.filter(
+      (action) => !primaryKeys.includes(action.key) && action.key !== 'back',
+    )
+    const utilityActions = actions.filter((action) => action.key === 'back')
 
     return (
-      <div className="report-workfirst-detail inspection-mobile-section d-md-none">
-        <div className="report-workfirst-detail__header rounded-3 border bg-white">
-          <div className="min-w-0">
-            <div className="small text-body-secondary text-truncate">{r.displayId}</div>
-            <div className="fw-semibold text-truncate">{title}</div>
-            <div className="small text-body-secondary text-truncate">{dateTime || '--'}</div>
-          </div>
-          <div className="report-workfirst-detail__status">{renderStatusValue()}</div>
-        </div>
-
-        {isReviewMode && reviewBannerText ? (
-          <CAlert color="info" className="mb-0 py-2">
-            {reviewBannerText}
-          </CAlert>
-        ) : null}
-
-        <div className="report-workfirst-detail__card rounded-3 border bg-white">
-          {mobileRows.map((item, index) => (
-            <div key={`${item.label}-${index}`} className="report-workfirst-detail__row">
-              <div className="report-workfirst-detail__label">{item.label}</div>
-              <div className="report-workfirst-detail__value">
-                {item.node ? item.value : String(item.value || '--')}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {detailsText || summaryText ? (
-          <div className="report-workfirst-detail__card rounded-3 border bg-white">
-            {detailsText ? (
-              <div className="report-workfirst-detail__text-block">
-                <div className="report-workfirst-detail__label">{detailsLabel}</div>
-                <div className="fw-semibold">{detailsText}</div>
-              </div>
-            ) : null}
-            {summaryText ? (
-              <div className="report-workfirst-detail__text-block">
-                <div className="report-workfirst-detail__label">{summaryLabel}</div>
-                <div style={{ whiteSpace: 'pre-wrap' }}>{summaryText}</div>
-              </div>
-            ) : null}
-          </div>
-        ) : null}
-
-        {submittedEntry || reviewedEntry || approvedEntry || rejectedEntry ? (
-          <div className="report-workfirst-detail__card rounded-3 border bg-white">
-            <SectionHeading>Workflow Activity</SectionHeading>
-            <div className="d-grid gap-2 mt-2">
-              {submittedEntry ? (
-                <div>
-                  <div className="report-workfirst-detail__label">Submitted By</div>
-                  {renderWorkflowActor(submittedEntry)}
-                </div>
-              ) : null}
-              {reviewedEntry ? (
-                <div>
-                  <div className="report-workfirst-detail__label">Reviewed By</div>
-                  {renderWorkflowActor(reviewedEntry)}
-                </div>
-              ) : null}
-              {approvedEntry ? (
-                <div>
-                  <div className="report-workfirst-detail__label">Approved By</div>
-                  {renderWorkflowActor(approvedEntry)}
-                </div>
-              ) : null}
-              {rejectedEntry ? (
-                <div>
-                  <div className="report-workfirst-detail__label">Rejected By</div>
-                  {renderWorkflowActor(rejectedEntry)}
-                </div>
-              ) : null}
-            </div>
-          </div>
-        ) : null}
-
-        {isReviewMode ? (
-          <div className="report-workfirst-detail__card rounded-3 border bg-white">
-            <SectionHeading>Changed Fields</SectionHeading>
-            {Array.isArray(changeSummary) && changeSummary.length > 0 ? (
-              <div className="rounded-3 border overflow-hidden mt-2">
-                {changeSummary.map((entry, index) => (
-                  <div
-                    key={`${entry.label}-${index}`}
-                    className={`px-3 py-2 ${index < changeSummary.length - 1 ? 'border-bottom' : ''}`}
-                  >
-                    <div className="small text-body-secondary">{entry.label}</div>
-                    <div className="small">
-                      <span className="text-body-secondary">From:</span> {entry.before || '--'}
-                    </div>
-                    <div className="small">
-                      <span className="text-body-secondary">To:</span> {entry.after || '--'}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="small text-body-secondary mt-2">No changes detected.</div>
+      <>
+        <FormActionGroup
+          className="inspection-detail-inline-actions d-md-none"
+          mobileThumb={false}
+          ariaLabel="Report detail actions"
+        >
+          {primaryActions.map((action) =>
+            buildActionButton(action, 'inspection-detail-sticky-action-btn'),
+          )}
+          {drawerActions.length || utilityActions.length ? (
+            <CButton
+              color="secondary"
+              variant="outline"
+              className="inspection-detail-sticky-action-btn"
+              onClick={() => setMoreActionsOpen(true)}
+            >
+              More
+            </CButton>
+          ) : null}
+        </FormActionGroup>
+        <MobileBottomDrawer
+          visible={moreActionsOpen}
+          title="More actions"
+          bodyClassName="inspection-equipment-detail-drawer-shell"
+          onClose={() => setMoreActionsOpen(false)}
+        >
+          <div className="inspection-detail-more-actions">
+            {[...drawerActions, ...utilityActions].map((action) =>
+              buildActionButton(
+                {
+                  ...action,
+                  onClick: () => {
+                    setMoreActionsOpen(false)
+                    action.onClick?.()
+                  },
+                },
+                'w-100',
+              ),
             )}
           </div>
-        ) : null}
-
-        {hasRespondingTeam ? <RespondingTeamRows respondingTeam={r.respondingTeam} /> : null}
-        {hasChronology ? <ChronologyRows chronology={r.chronology} /> : null}
-        {isErco && (r.postIncidentAnalysis || (Array.isArray(r.photos) && r.photos.length > 0)) ? (
-          <PostAnalysisRows
-            analysis={r.postIncidentAnalysis || {}}
-            fallbackPhotos={Array.isArray(r.photos) ? r.photos : []}
-          />
-        ) : null}
-
-        {renderDetailActions({ mobile: true })}
-      </div>
+        </MobileBottomDrawer>
+      </>
     )
   }
 
@@ -476,35 +426,42 @@ const ReportDetailSection = ({
         </CAlert>
       ) : null}
 
-      <CRow className="g-3">
-        <DetailField label="Status">
-          {typeof renderStatusBadge === 'function'
-            ? renderStatusBadge(displayStatus)
-            : displayStatus || '--'}
-        </DetailField>
-        <DetailField label="Submitted By">{submittedBy}</DetailField>
-        <DetailField label="Submitted At">{submittedAt}</DetailField>
-        <DetailField label="Action Owner">{r.actionOwner || '--'}</DetailField>
-        <DetailField label="Date / Time">{dateTime || '--'}</DetailField>
-        <DetailField label={typeLabel}>{r.incidentType || '--'}</DetailField>
-        {r.weather ? <DetailField label={conditionLabel}>{r.weather}</DetailField> : null}
-        <DetailField label="Location" xs={12} md={r.weather ? 4 : 8}>
-          {r.location || '--'}
-        </DetailField>
-        {r.teamInCharge || r.respondingTeamName ? (
-          <DetailField label="Team In Charge" xs={12} md={4}>
-            {r.teamInCharge || r.respondingTeamName}
+      <section className="inspection-form-section d-grid gap-3">
+        <div className="fw-semibold text-muted">Report Metadata</div>
+        <CRow className="g-3">
+          <DetailField label="Report ID">{r.displayId || '--'}</DetailField>
+          <DetailField label="Status">{renderStatusValue()}</DetailField>
+          <DetailField label="Submitted By">{submittedBy}</DetailField>
+          <DetailField label="Submitted At">{submittedAt}</DetailField>
+          <DetailField label="Action Owner">{r.actionOwner || '--'}</DetailField>
+          <DetailField label="Date / Time">{dateTime || '--'}</DetailField>
+        </CRow>
+      </section>
+
+      <section className="inspection-form-section d-grid gap-3">
+        <div className="fw-semibold text-muted">Report Context</div>
+        <CRow className="g-3">
+          <DetailField label={typeLabel}>{r.incidentType || '--'}</DetailField>
+          {r.weather ? <DetailField label={conditionLabel}>{r.weather}</DetailField> : null}
+          <DetailField label="Location" xs={12} md={r.weather ? 4 : 8}>
+            {r.location || '--'}
           </DetailField>
-        ) : null}
-        {r.aicInCharge ? (
-          <DetailField label="AIC In Charge" xs={12} md={4}>
-            {r.aicInCharge}
-          </DetailField>
-        ) : null}
-      </CRow>
+          {r.teamInCharge || r.respondingTeamName ? (
+            <DetailField label="Team In Charge" xs={12} md={4}>
+              {r.teamInCharge || r.respondingTeamName}
+            </DetailField>
+          ) : null}
+          {r.aicInCharge ? (
+            <DetailField label="AIC In Charge" xs={12} md={4}>
+              {r.aicInCharge}
+            </DetailField>
+          ) : null}
+        </CRow>
+      </section>
 
       {detailsText || summaryText ? (
-        <div className="d-grid gap-3">
+        <section className="inspection-form-section d-grid gap-3">
+          <div className="fw-semibold text-muted">Report Details</div>
           {detailsText ? (
             <div>
               <div className="small text-body-secondary">{detailsLabel}</div>
@@ -517,12 +474,12 @@ const ReportDetailSection = ({
               <div style={{ whiteSpace: 'pre-wrap' }}>{summaryText}</div>
             </div>
           ) : null}
-        </div>
+        </section>
       ) : null}
 
       {submittedEntry || reviewedEntry || approvedEntry || rejectedEntry ? (
-        <div className="d-grid gap-2">
-          <SectionHeading>Workflow Activity</SectionHeading>
+        <section className="inspection-form-section d-grid gap-3">
+          <div className="fw-semibold text-muted">Workflow Activity</div>
           <CRow className="g-3">
             {submittedEntry ? (
               <DetailField label="Submitted By" xs={12} md={4}>
@@ -545,12 +502,12 @@ const ReportDetailSection = ({
               </DetailField>
             ) : null}
           </CRow>
-        </div>
+        </section>
       ) : null}
 
       {isReviewMode ? (
-        <div className="d-grid gap-2">
-          <SectionHeading>Changed Fields</SectionHeading>
+        <section className="inspection-form-section d-grid gap-3">
+          <div className="fw-semibold text-muted">Changed Fields</div>
           {Array.isArray(changeSummary) && changeSummary.length > 0 ? (
             <div className="rounded-3 border overflow-hidden">
               {changeSummary.map((entry, index) => (
@@ -571,7 +528,7 @@ const ReportDetailSection = ({
           ) : (
             <div className="small text-body-secondary">No changes detected.</div>
           )}
-        </div>
+        </section>
       ) : null}
 
       {hasRespondingTeam ? <RespondingTeamRows respondingTeam={r.respondingTeam} /> : null}
@@ -583,28 +540,23 @@ const ReportDetailSection = ({
           fallbackPhotos={Array.isArray(r.photos) ? r.photos : []}
         />
       ) : null}
-
-      {renderDetailActions()}
     </div>
   )
 
   return (
-    <>
-      {workFirstMobileDetail ? (
-        renderWorkFirstMobileContent()
-      ) : (
-        <div className="inspection-mobile-section d-md-none">
-          <div className="fw-semibold mb-3">{r.displayId}</div>
-          {renderDetailContent()}
+    <div className="inspection-detail-section">
+      <div className="inspection-form-sections d-grid gap-4">
+        <div className="d-flex flex-wrap justify-content-between align-items-start gap-3">
+          <div>
+            <div className="fw-semibold">{r.displayId}</div>
+            <div className="small text-body-secondary">{submittedAt}</div>
+          </div>
+          {renderDetailActions()}
         </div>
-      )}
-      <CCard className="d-none d-md-block">
-        <CCardHeader>
-          <strong>{r.displayId}</strong>
-        </CCardHeader>
-        <CCardBody>{renderDetailContent()}</CCardBody>
-      </CCard>
-    </>
+        {renderDetailContent()}
+        {renderDetailActions({ mobile: true })}
+      </div>
+    </div>
   )
 }
 

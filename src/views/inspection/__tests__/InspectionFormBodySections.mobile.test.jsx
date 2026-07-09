@@ -13,6 +13,7 @@ vi.mock('src/services/api/aiHelperApi', () => ({
 
 import InspectionFormBodySections from '../form/components/InspectionFormBodySections'
 import { INSPECTION_REPORT_EVIDENCE_COPY } from '../inspectionReportEvidenceCopy'
+import { HseEditSection } from '../types/hse/section'
 
 const setMobileViewport = () => {
   Object.defineProperty(window, 'matchMedia', {
@@ -1616,5 +1617,120 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
         description: 'Oil spill finding photo.',
       }),
     ])
+  })
+
+  it('discards staged HSE evidence photos when the mobile observation drawer is cancelled', async () => {
+    setMobileViewport()
+    const onSaveHseObservationDraft = vi.fn()
+    const onUploadGeneralPhoto = vi.fn()
+    const form = {
+      hseSelections: ['unsafeAct'],
+      hseSeverity: 'High',
+      hseUnsafeActDetails: 'Unsafe work at height.',
+      photos: [],
+    }
+
+    render(
+      <HseEditSection
+        form={form}
+        handlers={{
+          onSaveHseObservationDraft,
+          onUploadGeneralPhoto,
+        }}
+      />,
+    )
+
+    fireEvent.click(screen.getByText('Unsafe Act - High'))
+    fireEvent.click(screen.getByText('Upload HSE photo'))
+
+    expect(onUploadGeneralPhoto).toHaveBeenCalledWith('Unsafe Act', {
+      rootPhotos: [],
+      onAddPhotos: expect.any(Function),
+    })
+
+    await act(async () => {
+      onUploadGeneralPhoto.mock.calls[0][1].onAddPhotos([
+        {
+          id: 'hse-photo-1',
+          fileName: 'hse.jpg',
+          url: 'data:image/png;base64,QUFB',
+          description: 'Unsafe act evidence.',
+        },
+      ])
+    })
+
+    expect(screen.getByText('1 HSE photo ready to save')).toBeTruthy()
+
+    fireEvent.click(screen.getByText('Cancel'))
+
+    expect(onSaveHseObservationDraft).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByText('Unsafe Act - High'))
+
+    expect(screen.getByText('0 HSE photos attached')).toBeTruthy()
+    expect(screen.queryByText('1 HSE photo ready to save')).toBeNull()
+  })
+
+  it('commits staged HSE evidence photos with the mobile observation drawer save', async () => {
+    setMobileViewport()
+    const onSaveHseObservationDraft = vi.fn(() => ({ saved: true }))
+    const onTakeGeneralPhoto = vi.fn()
+    const existingPhoto = {
+      id: 'existing-hse-photo',
+      fileName: 'existing.jpg',
+      url: 'data:image/png;base64,QUFB',
+    }
+    const addedPhoto = {
+      id: 'hse-photo-2',
+      fileName: 'hse-2.jpg',
+      url: 'data:image/png;base64,QkJC',
+      description: 'Saved HSE evidence.',
+    }
+    const form = {
+      hseSelections: ['unsafeAct'],
+      hseSeverity: 'High',
+      hseUnsafeActDetails: 'Unsafe work at height.',
+      photos: [existingPhoto],
+    }
+
+    render(
+      <HseEditSection
+        form={form}
+        handlers={{
+          onSaveHseObservationDraft,
+          onTakeGeneralPhoto,
+        }}
+      />,
+    )
+
+    fireEvent.click(screen.getByText('Unsafe Act - High'))
+    expect(screen.getByText('1 HSE photo attached')).toBeTruthy()
+
+    fireEvent.click(screen.getByText('Take HSE photo'))
+
+    expect(onTakeGeneralPhoto).toHaveBeenCalledWith('Unsafe Act', {
+      rootPhotos: [existingPhoto],
+      onAddPhotos: expect.any(Function),
+    })
+
+    await act(async () => {
+      onTakeGeneralPhoto.mock.calls[0][1].onAddPhotos([addedPhoto])
+    })
+
+    expect(screen.getByText('2 HSE photos ready to save')).toBeTruthy()
+
+    fireEvent.click(screen.getByText('Save'))
+
+    expect(onSaveHseObservationDraft).toHaveBeenCalledWith(
+      expect.objectContaining({
+        hseSelections: ['unsafeAct'],
+        hseSeverity: 'High',
+        hseUnsafeActDetails: 'Unsafe work at height.',
+        photos: [
+          expect.objectContaining({ id: 'existing-hse-photo' }),
+          expect.objectContaining({ id: 'hse-photo-2', description: 'Saved HSE evidence.' }),
+        ],
+      }),
+    )
   })
 })

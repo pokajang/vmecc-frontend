@@ -130,12 +130,14 @@ const InspectionFormActions = ({
   draftStatus,
   draftSyncState,
   isMobileSticky = false,
+  isUpdateMode = false,
   onRequestReview,
   onRetryDraftSync,
   validationStatusMessage,
 }) => {
   const syncStatus = String(draftSyncState?.status || '').trim()
   const syncFailed = syncStatus === 'failed'
+  const reviewLabel = isUpdateMode ? 'Review Updates' : 'Review Inspections'
   if (isMobileSticky) {
     return (
       <FormActionGroup
@@ -158,7 +160,7 @@ const InspectionFormActions = ({
           className="inspection-form-sticky-review-btn"
           onClick={onRequestReview}
         >
-          Review Inspections
+          {reviewLabel}
         </CButton>
       </FormActionGroup>
     )
@@ -183,7 +185,7 @@ const InspectionFormActions = ({
         </CButton>
       ) : null}
       <CButton color="primary" onClick={onRequestReview}>
-        Review Inspections
+        {reviewLabel}
       </CButton>
     </div>
   )
@@ -297,15 +299,20 @@ const InspectionNextLocationCard = ({ continueAction = null, onContinueToLocatio
 
 const InspectionFormDraftOnlyActions = ({
   className = '',
+  disabledReviewMessage = '',
   draftStatus,
   draftSyncState,
   getLatestForm,
   isMobileSticky = false,
+  isUpdateMode = false,
   onRetryDraftSync,
   onSaveDraft,
   statusMessage = '',
 }) => {
   const syncFailed = String(draftSyncState?.status || '').trim() === 'failed'
+  const saveLabel = isUpdateMode ? 'Save Update Draft' : 'Save Draft'
+  const reviewLabel = isUpdateMode ? 'Review Updates' : 'Review Inspections'
+  const showDisabledReview = Boolean(disabledReviewMessage)
   if (isMobileSticky) {
     return (
       <>
@@ -313,6 +320,7 @@ const InspectionFormDraftOnlyActions = ({
           className={className}
           mobileVariant="compact-sticky"
           spacerClassName="inspection-form-inline-actions-spacer d-md-none"
+          statusMessage={disabledReviewMessage}
         >
           <CButton
             color="secondary"
@@ -320,8 +328,18 @@ const InspectionFormDraftOnlyActions = ({
             className="inspection-form-sticky-draft-btn"
             onClick={() => onSaveDraft?.(getLatestForm())}
           >
-            Save Draft
+            {saveLabel}
           </CButton>
+          {showDisabledReview ? (
+            <CButton
+              color="primary"
+              className="inspection-form-sticky-review-btn"
+              disabled
+              title={disabledReviewMessage}
+            >
+              {reviewLabel}
+            </CButton>
+          ) : null}
           {syncFailed ? (
             <CButton
               color="warning"
@@ -342,11 +360,19 @@ const InspectionFormDraftOnlyActions = ({
       className={`inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2 ${className}`.trim()}
     >
       <div className="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center">
-        {statusMessage || draftStatus || 'This inspection type can be saved as draft only.'}
+        {disabledReviewMessage ||
+          statusMessage ||
+          draftStatus ||
+          'This inspection type can be saved as draft only.'}
       </div>
       <CButton color="secondary" variant="outline" onClick={() => onSaveDraft?.(getLatestForm())}>
-        Save Draft
+        {saveLabel}
       </CButton>
+      {showDisabledReview ? (
+        <CButton color="primary" disabled title={disabledReviewMessage}>
+          {reviewLabel}
+        </CButton>
+      ) : null}
       {syncFailed ? (
         <CButton color="warning" variant="outline" onClick={() => onRetryDraftSync?.()}>
           Retry Sync
@@ -385,6 +411,7 @@ const InspectionFormPhotoEvidence = ({
   onChangePhotoDescription,
   onChangeReportRemarks,
   onRemovePhoto,
+  onSavePhotos,
   onTakePhoto,
   onUploadPhoto,
   photosRef,
@@ -396,6 +423,7 @@ const InspectionFormPhotoEvidence = ({
     remarks={form.reportRemarks}
     fieldError={fieldErrors.photos}
     compactOnMobile={isStructuredInspectionForm || isGeneralInspectionForm}
+    stageDrawerPhotos={isStructuredInspectionForm || isGeneralInspectionForm}
     compactActionLabel={INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel}
     drawerDescription={INSPECTION_REPORT_EVIDENCE_COPY.helperText}
     emptyMessage={INSPECTION_REPORT_EVIDENCE_COPY.emptyPhotosMessage}
@@ -406,6 +434,7 @@ const InspectionFormPhotoEvidence = ({
     onRemovePhoto={onRemovePhoto}
     onChangePhotoDescription={onChangePhotoDescription}
     onChangeRemarks={onChangeReportRemarks}
+    onSavePhotos={onSavePhotos}
   />
 )
 
@@ -906,28 +935,33 @@ const InspectionFindingsSection = ({
           compactActionLabel="Add finding photos"
           drawerDescription="Optional. Attach photos that belong to this finding only."
           emptyMessage="No finding photos added."
-          onTakePhoto={() =>
+          onTakePhoto={(options) =>
             requestInspectionIssuePhotoUpload?.(
               {
                 ...editor.issue,
                 label: 'Finding',
-                onAddPhotos: addEditorPhotos,
+                onAddPhotos: options?.onAddPhotos || addEditorPhotos,
               },
               cameraInputRef,
             )
           }
-          onUploadPhoto={() =>
+          onUploadPhoto={(options) =>
             requestInspectionIssuePhotoUpload?.(
               {
                 ...editor.issue,
                 label: 'Finding',
-                onAddPhotos: addEditorPhotos,
+                onAddPhotos: options?.onAddPhotos || addEditorPhotos,
               },
               uploadInputRef,
             )
           }
           onRemovePhoto={removeEditorPhoto}
           onChangePhotoDescription={updateEditorPhotoDescription}
+          onSavePhotos={(nextPhotos) =>
+            updateEditorIssue({
+              photos: Array.isArray(nextPhotos) ? nextPhotos : [],
+            })
+          }
         />
         {editorError ? <FormFieldError>{editorError}</FormFieldError> : null}
         <div className="d-flex flex-wrap justify-content-end gap-2">
@@ -1148,6 +1182,7 @@ const InspectionFormBodySections = ({
   isFireTruckCatalogInspectionForm,
   isFullInspectionForm,
   isStructuredInspectionForm,
+  isUpdateMode = false,
   location,
   mainLocation,
   onRequestReview,
@@ -1275,6 +1310,9 @@ const InspectionFormBodySections = ({
     String(form.fireExtinguisherFocusedAssetKey || '').trim() &&
     isCurrentFireExtinguisherLocationComplete &&
     typeof fireExtinguisherScan?.onOpenScanner === 'function'
+  const showBlockedReviewAction =
+    selectedTypeDefinition?.key === 'er-aux-equipment-inspection' ||
+    selectedTypeDefinition?.inspectionType === 'ER Aux Equipment Inspection'
 
   const renderActions = (className = '', isMobileSticky = false) => (
     <InspectionFormActions
@@ -1283,6 +1321,7 @@ const InspectionFormBodySections = ({
       draftSyncState={draftSyncState}
       getLatestForm={getLatestForm}
       isMobileSticky={isMobileSticky}
+      isUpdateMode={isUpdateMode}
       onRequestReview={onRequestReview}
       onRetryDraftSync={onRetryDraftSync}
       onSaveDraft={onSaveDraft}
@@ -1309,13 +1348,20 @@ const InspectionFormBodySections = ({
       />
     ) : null
 
-  const renderDraftOnlyActions = (className = '', isMobileSticky = false, statusMessage = '') => (
+  const renderDraftOnlyActions = (
+    className = '',
+    isMobileSticky = false,
+    statusMessage = '',
+    disabledReviewMessage = '',
+  ) => (
     <InspectionFormDraftOnlyActions
       className={className}
+      disabledReviewMessage={disabledReviewMessage}
       draftStatus={draftStatus}
       draftSyncState={draftSyncState}
       getLatestForm={getLatestForm}
       isMobileSticky={isMobileSticky}
+      isUpdateMode={isUpdateMode}
       onRetryDraftSync={onRetryDraftSync}
       onSaveDraft={onSaveDraft}
       statusMessage={statusMessage}
@@ -1334,6 +1380,14 @@ const InspectionFormBodySections = ({
     selectedTypeDefinition,
     showComingSoonNotice,
   })
+  const blockedReviewMessage =
+    showBlockedReviewAction && !reviewReadiness.canReview
+      ? reviewReadiness.validationState?.errorCount > 0
+        ? `${reviewReadiness.validationState.errorCount} item${
+            reviewReadiness.validationState.errorCount === 1 ? '' : 's'
+          } need attention before review.`
+        : 'Complete required inspection items before review.'
+      : ''
   const renderReviewOrDraftActions = (desktopClassName, mobileClassName) =>
     reviewReadiness.canReview ? (
       <>
@@ -1346,8 +1400,9 @@ const InspectionFormBodySections = ({
           desktopClassName,
           false,
           'Complete required inspection items before review.',
+          blockedReviewMessage,
         )}
-        {renderDraftOnlyActions(mobileClassName, true)}
+        {renderDraftOnlyActions(mobileClassName, true, '', blockedReviewMessage)}
       </>
     )
 
@@ -1365,8 +1420,14 @@ const InspectionFormBodySections = ({
         })
       }
       onRemovePhoto={removePhoto}
-      onTakePhoto={() => requestRootPhotoUpload(cameraInputRef)}
-      onUploadPhoto={() => requestRootPhotoUpload(uploadInputRef)}
+      onSavePhotos={(nextPhotos) =>
+        updateForm({
+          ...(typeof getLatestForm === 'function' ? getLatestForm() : form),
+          photos: Array.isArray(nextPhotos) ? nextPhotos : [],
+        })
+      }
+      onTakePhoto={(options) => requestRootPhotoUpload(cameraInputRef, '', options)}
+      onUploadPhoto={(options) => requestRootPhotoUpload(uploadInputRef, '', options)}
       photosRef={photosRef}
     />
   )

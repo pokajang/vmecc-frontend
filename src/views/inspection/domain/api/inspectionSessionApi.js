@@ -129,6 +129,8 @@ export const submitInspectionSessionReport = async ({
   displayId = '',
   submissionKey = '',
   remarks = '',
+  inspectedAt = '',
+  submittedAt = '',
 } = {}) => {
   const uid = text(sessionUid)
   if (!uid) return null
@@ -138,6 +140,8 @@ export const submitInspectionSessionReport = async ({
       display_id: displayId,
       submission_key: submissionKey,
       remarks,
+      inspected_at: inspectedAt,
+      submitted_at: submittedAt,
     }),
   })
   return response?.data || null

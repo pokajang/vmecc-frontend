@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import Reports from '../Reports'
 
@@ -105,7 +105,18 @@ vi.mock('src/components/ModuleNavTabs', () => ({
 }))
 
 vi.mock('src/views/shared/ActionConfirmModal', () => ({
-  default: () => null,
+  default: ({ visible, title, message, confirmLabel = 'Confirm', onConfirm, onClose }) =>
+    visible ? (
+      <section role="dialog" aria-label={title}>
+        <div>{message}</div>
+        <button type="button" onClick={onClose}>
+          Cancel
+        </button>
+        <button type="button" onClick={onConfirm}>
+          {confirmLabel}
+        </button>
+      </section>
+    ) : null,
 }))
 
 vi.mock('../components/ReportWorkflowActionModal', () => ({
@@ -150,7 +161,7 @@ const buildRecordsState = (overrides = {}) => ({
   ...overrides,
 })
 
-const buildRouteActions = () => ({
+const buildRouteActions = (overrides = {}) => ({
   backFromReview: vi.fn(),
   canApproveRecord: () => false,
   canDeleteRecord: () => true,
@@ -201,6 +212,7 @@ const buildRouteActions = () => ({
   workflowDeclarationError: '',
   workflowRejectError: '',
   workflowRemarks: '',
+  ...overrides,
 })
 
 const renderReportsRoute = (initialPath = '/report/erco/erco-001') =>
@@ -304,5 +316,24 @@ describe('Reports direct detail route loading', () => {
     expect(screen.getByText('ERCO-LIST')).toBeTruthy()
     expect(screen.getByText('List sourced record')).toBeTruthy()
     expect(screen.queryByText('ERCO-API')).toBeNull()
+  })
+
+  it('discarding dirty form changes does not delete the saved draft', () => {
+    const pendingAction = vi.fn()
+    const removeDraft = vi.fn()
+    mocks.useReportRouteActions.mockReturnValue(
+      buildRouteActions({
+        showDiscard: true,
+        pendingAction,
+        removeDraft,
+      }),
+    )
+
+    renderReportsRoute('/report/erco')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Discard' }))
+
+    expect(removeDraft).not.toHaveBeenCalled()
+    expect(pendingAction).toHaveBeenCalled()
   })
 })

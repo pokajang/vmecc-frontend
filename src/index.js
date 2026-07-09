@@ -14,7 +14,35 @@ createRoot(document.getElementById('root')).render(
 
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js').catch(() => {})
+    let hasReloadedForUpdate = false
+    const hadServiceWorkerController = Boolean(navigator.serviceWorker.controller)
+
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadServiceWorkerController || hasReloadedForUpdate) return
+      hasReloadedForUpdate = true
+      window.location.reload()
+    })
+
+    navigator.serviceWorker
+      .register('/service-worker.js')
+      .then((registration) => {
+        registration.update?.()
+        registration.addEventListener('updatefound', () => {
+          const installingWorker = registration.installing
+          installingWorker?.addEventListener('statechange', () => {
+            if (
+              installingWorker.state === 'activated' &&
+              hadServiceWorkerController &&
+              navigator.serviceWorker.controller &&
+              !hasReloadedForUpdate
+            ) {
+              hasReloadedForUpdate = true
+              window.location.reload()
+            }
+          })
+        })
+      })
+      .catch(() => {})
   })
 }
 

@@ -69,7 +69,7 @@ describe('fireExtinguisher scanner support', () => {
     ).toBe(SCANNER_FAILURE_TYPES.PERMISSION_DENIED_SESSION)
   })
 
-  it('classifies missing and busy cameras separately', () => {
+  it('classifies missing, overconstrained, and busy cameras separately', () => {
     expect(
       classifyScannerFailure({
         environment: {
@@ -96,11 +96,46 @@ describe('fireExtinguisher scanner support', () => {
           policyAllowsCamera: true,
         },
         error: {
+          name: 'OverconstrainedError',
+          message: 'Requested camera size is unavailable',
+        },
+      }),
+    ).toBe(SCANNER_FAILURE_TYPES.CAMERA_OVERCONSTRAINED)
+
+    expect(
+      classifyScannerFailure({
+        environment: {
+          isSecureContext: true,
+          isTopLevelContext: true,
+          supportsMediaDevices: true,
+          permissionState: 'granted',
+          policyAllowsCamera: true,
+        },
+        error: {
           name: 'NotReadableError',
           message: 'Camera busy',
         },
       }),
     ).toBe(SCANNER_FAILURE_TYPES.CAMERA_BUSY_OR_UNREADABLE)
+  })
+
+  it('does not report generic startup errors as unsupported when media APIs exist', () => {
+    expect(
+      classifyScannerFailure({
+        environment: {
+          isSecureContext: true,
+          isTopLevelContext: true,
+          supportsMediaDevices: true,
+          permissionState: 'prompt',
+          policyAllowsCamera: true,
+        },
+        error: {
+          name: 'TypeError',
+          message: 'Browser returned a generic startup failure.',
+        },
+        phase: 'requesting',
+      }),
+    ).toBe(SCANNER_FAILURE_TYPES.STARTUP_FAILED)
   })
 
   it('prefers rear-facing cameras when labels are available', () => {
@@ -124,6 +159,10 @@ describe('fireExtinguisher scanner support', () => {
         supportsMediaDevices: true,
         permissionState: 'denied',
         policyAllowsCamera: true,
+        displayMode: 'browser',
+        serviceWorkerSupported: true,
+        serviceWorkerControlled: true,
+        serviceWorkerCacheVersion: 'vmecc-app-shell-v5',
         userAgent: 'UnitTest Browser',
       },
       error: {
@@ -143,6 +182,9 @@ describe('fireExtinguisher scanner support', () => {
         failureType: SCANNER_FAILURE_TYPES.PERMISSION_BLOCKED_PERSISTED,
         permissionState: 'denied',
         topLevelContext: false,
+        displayMode: 'browser',
+        serviceWorkerControlled: true,
+        serviceWorkerCacheVersion: 'vmecc-app-shell-v5',
         selectedDeviceId: 'rear-1',
         selectedDeviceLabel: 'Back Camera',
       }),

@@ -1,6 +1,7 @@
 import React from 'react'
 
-import { formatReportDisplayId } from 'src/views/inspection/inspectionSharedUtils'
+import { parseLocalDateValue } from 'src/utils/localDate'
+import { formatReportDisplayId, formatTimestamp } from 'src/views/inspection/inspectionSharedUtils'
 import { INSPECTION_INCIDENT_TYPE_OPTIONS } from 'src/views/inspection/constants'
 
 const LEGACY_RANDOM_DISPLAY_ID = /^[A-Z]+-\d{6}-[A-Z0-9]+$/i
@@ -20,6 +21,11 @@ export const formatInspectionRowDateTime = (row, formatDateTime) => {
     const savedAt = new Date(row.savedAt)
     if (!Number.isNaN(savedAt.getTime())) return `Saved ${savedAt.toLocaleString()}`
   }
+  const inspectedAt = String(row?.inspectedAt || row?.inspected_at || '').trim()
+  if (inspectedAt) {
+    const display = formatTimestamp(inspectedAt, '')
+    if (display) return display
+  }
   const display = formatDateTime(
     row?.incidentDate || row?.reportDate,
     row?.incidentTime || row?.reportTime,
@@ -37,24 +43,40 @@ const MOBILE_DATE_FORMATTER = new Intl.DateTimeFormat('en-GB', {
   month: 'short',
   year: 'numeric',
 })
+const MOBILE_TIME_FORMATTER = new Intl.DateTimeFormat('en-GB', {
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+})
 
 const parseDateValue = (dateValue, timeValue = '') => {
   const dateText = String(dateValue || '').trim()
   if (!dateText) return null
   const timeText = String(timeValue || '').trim()
   const value = dateText.includes('T') || !timeText ? dateText : `${dateText}T${timeText}`
-  const parsed = new Date(value)
-  return Number.isNaN(parsed.getTime()) ? null : parsed
+  const parsed = parseLocalDateValue(value)
+  if (!parsed || Number.isNaN(parsed.getTime())) return null
+  return {
+    date: parsed,
+    hasTime: Boolean(timeText || /T\d{2}:\d{2}/.test(dateText)),
+  }
+}
+
+const formatMobileDateTime = (parsed, prefix = '') => {
+  if (!parsed?.date) return ''
+  const dateText = MOBILE_DATE_FORMATTER.format(parsed.date)
+  const timeText = parsed.hasTime ? `, ${MOBILE_TIME_FORMATTER.format(parsed.date)}` : ''
+  return `${prefix}${dateText}${timeText}`
 }
 
 export const formatMobileInspectionRecordDate = (row) => {
   if (row?.recordKind === 'draft') {
     const savedAt = parseDateValue(row.savedAt)
-    return savedAt ? `Saved ${MOBILE_DATE_FORMATTER.format(savedAt)}` : 'Draft'
+    return savedAt ? formatMobileDateTime(savedAt, 'Saved ') : 'Draft'
   }
 
   const primaryDate = parseDateValue(
-    row?.incidentDate || row?.reportDate,
+    row?.inspectedAt || row?.inspected_at || row?.incidentDate || row?.reportDate,
     row?.incidentTime || row?.reportTime,
   )
   const fallbackDate =
@@ -62,7 +84,7 @@ export const formatMobileInspectionRecordDate = (row) => {
     parseDateValue(row?.submittedAt) ||
     parseDateValue(row?.createdAt)
   const displayDate = primaryDate || fallbackDate
-  return displayDate ? MOBILE_DATE_FORMATTER.format(displayDate) : '--'
+  return displayDate ? formatMobileDateTime(displayDate) : '--'
 }
 
 export const getCompactInspectionStatusLabel = (row) => {

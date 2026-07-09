@@ -1,3 +1,5 @@
+import { getLocalDateInputValue, parseLocalDateValue } from 'src/utils/localDate'
+
 const MOBILE_DATE_FORMATTER = new Intl.DateTimeFormat('en-GB', {
   day: '2-digit',
   month: 'short',
@@ -26,8 +28,8 @@ const parseDateValue = (dateValue, timeValue = '') => {
   if (!dateText) return null
   const timeText = String(timeValue || '').trim()
   const value = dateText.includes('T') || !timeText ? dateText : `${dateText}T${timeText}`
-  const parsed = new Date(value)
-  return Number.isNaN(parsed.getTime()) ? null : parsed
+  const parsed = parseLocalDateValue(value)
+  return parsed && !Number.isNaN(parsed.getTime()) ? parsed : null
 }
 
 export const formatMobileReportDate = (record, fallback = '--') => {
@@ -76,7 +78,7 @@ const formatFilenameDate = (record) => {
 
   for (const candidate of candidates) {
     const parsed = new Date(candidate)
-    if (!Number.isNaN(parsed.getTime())) return parsed.toISOString().slice(0, 10)
+    if (!Number.isNaN(parsed.getTime())) return getLocalDateInputValue(parsed)
   }
 
   return FILE_DATE_FALLBACK

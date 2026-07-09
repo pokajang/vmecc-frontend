@@ -237,6 +237,93 @@ describe('InspectionReviewView pending submissions', () => {
     expect(screen.queryByText('PMP-001')).toBeNull()
   })
 
+  it('shows grouped inspection photos in the details drawer', () => {
+    render(
+      <InspectionReviewView
+        backFromReview={vi.fn()}
+        buildPendingReviewRecord={(item) => ({
+          id: `record:${item.key}`,
+          displayId: `INS-${item.key}`,
+          status: 'Draft',
+          incidentType: item.inspectionType,
+          ...item.form,
+        })}
+        clearInspectionTypeDraft={vi.fn()}
+        isSubmitting={false}
+        pendingSubmissionSummary={{
+          items: [
+            buildItem({
+              form: {
+                inspectionType: 'Fire Extinguisher Inspection',
+                inspectedAt: '2026-07-06T08:00',
+                zone: '1',
+                mainLocation: 'Canteen',
+                subLocation: 'Kitchen',
+                fireExtinguisherChecks: [
+                  {
+                    id: 'fe-1',
+                    idLocNo: 'CAN-001',
+                    zone: '1',
+                    mainLocation: 'Canteen',
+                    subLocation: 'Kitchen',
+                    physicalConditionPhotos: [
+                      {
+                        id: 'physical-photo-1',
+                        fileName: 'physical.jpg',
+                        description: 'Physical condition evidence',
+                        url: 'data:image/png;base64,physical',
+                      },
+                    ],
+                  },
+                ],
+                photos: [
+                  {
+                    id: 'general-photo-1',
+                    fileName: 'general.jpg',
+                    description: 'General location evidence',
+                    url: 'data:image/png;base64,general',
+                  },
+                ],
+              },
+              groups: [
+                {
+                  zone: '1',
+                  mainLocation: 'Canteen',
+                  subLocation: 'Kitchen',
+                  label: 'CAN-001',
+                  status: 'Checked',
+                },
+              ],
+            }),
+          ],
+        }}
+        renderStatusBadge={(status) => <span>{status}</span>}
+        reviewMayQueue={false}
+        reviewRecord={null}
+        reviewWorkspace={{ mode: 'new' }}
+        saveDraft={vi.fn()}
+        sessionReviewForm={{}}
+        submit={vi.fn()}
+        user={{ name: 'Inspector' }}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'View' }))
+
+    const photoLink = screen.getByRole('button', { name: 'Inspection photos (2 total)' })
+    expect(photoLink).toBeTruthy()
+    expect(screen.queryByText('general.jpg')).toBeNull()
+
+    fireEvent.click(photoLink)
+
+    expect(screen.getByText('General Evidence Photos')).toBeTruthy()
+    expect(screen.getByText('CAN-001 - Physical Condition Photos')).toBeTruthy()
+    expect(screen.getByText('general.jpg')).toBeTruthy()
+    expect(screen.getByText('General location evidence')).toBeTruthy()
+    expect(screen.getByText('physical.jpg')).toBeTruthy()
+    expect(screen.getByText('Physical condition evidence')).toBeTruthy()
+  })
+
   it('renders non-fire-extinguisher issue rows in the details drawer', () => {
     render(
       <InspectionReviewView

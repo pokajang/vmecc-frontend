@@ -1551,8 +1551,80 @@ describe('InspectionForm workflow', () => {
     ).toBe('3')
     expect(screen.queryByText('Actual field coming soon')).toBeNull()
     expect(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle)).toBeTruthy()
-    expect(screen.queryByRole('button', { name: 'Review Inspections' })).toBeNull()
+    expect(screen.getAllByRole('button', { name: 'Review Inspections' })[0].disabled).toBe(true)
+    expect(screen.getAllByText(/items? need attention before review\./).length).toBeGreaterThan(0)
     expect(screen.getAllByText('Save Draft').length).toBeGreaterThan(0)
+  })
+
+  it('sends completed ER Aux subset rows to the Review Inspections flow', () => {
+    const onRequestReview = vi.fn()
+    render(
+      <InspectionForm
+        {...baseProps}
+        onRequestReview={onRequestReview}
+        value={{
+          mainLocation: 'Store',
+          inspectedAt: '2026-07-03T07:10',
+          inspectionType: 'ER Aux Equipment Inspection',
+          photos: [],
+          erAuxInspectedBy: '',
+          erAuxInspectionDate: '',
+          erAuxChecks: [
+            {
+              id: 'store:fire-jacket',
+              location: 'Store',
+              equipment: 'Fire Jacket',
+              quantity: '15',
+              condition: 'OK',
+            },
+          ],
+        }}
+      />,
+    )
+
+    const reviewButton = screen
+      .getAllByRole('button', { name: 'Review Inspections' })
+      .find((button) => !button.disabled)
+
+    expect(reviewButton).toBeTruthy()
+    fireEvent.click(reviewButton)
+    expect(onRequestReview).toHaveBeenCalledTimes(1)
+  })
+
+  it('uses Review Updates for completed ER Aux subset rows in edit mode', () => {
+    const onRequestReview = vi.fn()
+    render(
+      <InspectionForm
+        {...baseProps}
+        isUpdateMode
+        onRequestReview={onRequestReview}
+        value={{
+          mainLocation: 'Store',
+          inspectedAt: '2026-07-03T07:10',
+          inspectionType: 'ER Aux Equipment Inspection',
+          photos: [],
+          erAuxChecks: [
+            {
+              id: 'store:fire-jacket',
+              location: 'Store',
+              equipment: 'Fire Jacket',
+              quantity: '15',
+              condition: 'OK',
+            },
+          ],
+        }}
+      />,
+    )
+
+    expect(screen.queryByRole('button', { name: 'Review Inspections' })).toBeNull()
+
+    const reviewButton = screen
+      .getAllByRole('button', { name: 'Review Updates' })
+      .find((button) => !button.disabled)
+
+    expect(reviewButton).toBeTruthy()
+    fireEvent.click(reviewButton)
+    expect(onRequestReview).toHaveBeenCalledTimes(1)
   })
 
   it('shows Fire Truck Daily Readiness structured cards for a selected truck compartment', () => {
@@ -3030,7 +3102,7 @@ describe('InspectionForm workflow', () => {
     )
   })
 
-  it('hides Review Inspections for incomplete ER Aux rows', () => {
+  it('shows disabled Review Inspections for incomplete ER Aux rows', () => {
     const onRequestReview = vi.fn()
     render(
       <InspectionForm
@@ -3055,7 +3127,45 @@ describe('InspectionForm workflow', () => {
               location: 'Office',
               equipment: 'Radio Tetra',
               quantity: '',
-              condition: '',
+              condition: 'Missing',
+            },
+          ],
+        }}
+      />,
+    )
+
+    expect(screen.getAllByRole('button', { name: 'Review Inspections' })[0].disabled).toBe(true)
+    expect(screen.getAllByText(/items? need attention before review\./).length).toBeGreaterThan(0)
+    expect(onRequestReview).not.toHaveBeenCalled()
+  })
+
+  it('shows disabled Review Updates for incomplete ER Aux rows in edit mode', () => {
+    const onRequestReview = vi.fn()
+    render(
+      <InspectionForm
+        {...baseProps}
+        isUpdateMode
+        onRequestReview={onRequestReview}
+        value={{
+          mainLocation: 'Office',
+          inspectedAt: '2026-07-03T07:10',
+          inspectionType: 'ER Aux Equipment Inspection',
+          photos: [],
+          erAuxEquipmentRows: [
+            {
+              id: 'office:radio-tetra',
+              location: 'Office',
+              equipment: 'Radio Tetra',
+              defaultQuantity: '7',
+            },
+          ],
+          erAuxChecks: [
+            {
+              id: 'office:radio-tetra',
+              location: 'Office',
+              equipment: 'Radio Tetra',
+              quantity: '',
+              condition: 'Missing',
             },
           ],
         }}
@@ -3063,6 +3173,9 @@ describe('InspectionForm workflow', () => {
     )
 
     expect(screen.queryByRole('button', { name: 'Review Inspections' })).toBeNull()
+    expect(screen.getAllByRole('button', { name: 'Review Updates' })[0].disabled).toBe(true)
+    expect(screen.getAllByText(/items? need attention before review\./).length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Save Update Draft').length).toBeGreaterThan(0)
     expect(onRequestReview).not.toHaveBeenCalled()
   })
 

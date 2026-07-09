@@ -32,6 +32,11 @@ const AUTH_BOOTSTRAP_TIMEOUT_MS = 12_000
 
 const PUBLIC_AUTH_BOOTSTRAP_PATHS = new Set(['/login', '/forgot-password', '/reset-password'])
 
+const isGoogleAuthSuccessCallback = (path, search) => {
+  if (path !== '/login') return false
+  return new URLSearchParams(search || '').get('status') === 'success'
+}
+
 const createLinkedAbortController = (signal) => {
   const controller = new AbortController()
   if (!signal) {
@@ -181,8 +186,12 @@ const App = () => {
     let isMounted = true
     const controller = new AbortController()
     const currentPath = window.location?.pathname || '/'
+    const currentSearch = window.location?.search || ''
 
-    if (PUBLIC_AUTH_BOOTSTRAP_PATHS.has(currentPath)) {
+    if (
+      PUBLIC_AUTH_BOOTSTRAP_PATHS.has(currentPath) &&
+      !isGoogleAuthSuccessCallback(currentPath, currentSearch)
+    ) {
       dispatch({ type: 'set', authStatus: 'anonymous', authUser: null, authError: null })
       return () => {
         isMounted = false

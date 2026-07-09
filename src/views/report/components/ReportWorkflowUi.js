@@ -1,4 +1,5 @@
 import React from 'react'
+import FormActionGroup from 'src/components/FormActionGroup'
 import {
   CAlert,
   CButton,
@@ -28,7 +29,7 @@ const getIsMobile = () => {
   return matchesQuery || Number(window.innerWidth || 0) <= MOBILE_BREAKPOINT
 }
 
-const useReportIsMobile = () => {
+export const useReportIsMobile = () => {
   const [isMobile, setIsMobile] = React.useState(() => getIsMobile())
   React.useEffect(() => {
     if (typeof window === 'undefined') return undefined
@@ -160,8 +161,18 @@ export const ReportMobileActionGroup = ({
   saveDisabled = false,
   primaryDisabled = false,
   primaryType = 'button',
+  statusMessage = '',
 }) => (
-  <div className="report-setup-actions">
+  <FormActionGroup
+    className="inspection-form-inline-actions report-setup-actions"
+    mobileThumb={false}
+    leading={
+      statusMessage ? (
+        <div className="inspection-draft-status small text-body-secondary">{statusMessage}</div>
+      ) : null
+    }
+    ariaLabel="Report form actions"
+  >
     {typeof onSaveDraft === 'function' ? (
       <CButton
         type="button"
@@ -185,20 +196,24 @@ export const ReportMobileActionGroup = ({
     >
       {primaryLabel}
     </CButton>
-  </div>
+  </FormActionGroup>
 )
 
 export const ReportSetupActions = ({
   onSaveDraft,
   onContinue,
   continueLabel = 'Continue',
+  saveLabel = 'Save Draft',
   primaryType = 'button',
+  statusMessage = '',
 }) => (
   <ReportMobileActionGroup
     onSaveDraft={onSaveDraft}
     onPrimary={onContinue}
+    saveLabel={saveLabel}
     primaryLabel={continueLabel}
     primaryType={primaryType}
+    statusMessage={statusMessage}
   />
 )
 

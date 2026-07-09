@@ -68,6 +68,8 @@ const ErcoForm = ({
   const [respondingTeamError, setRespondingTeamError] = useState('')
   const [editViewMode, setEditViewMode] = useState(preferSavedEditDraft ? 'draft' : 'original')
   const [hasDraftSeed, setHasDraftSeed] = useState(false)
+  const [draftStatus, setDraftStatus] = useState('')
+  const [draftDirtyStatus, setDraftDirtyStatus] = useState('')
   const originalSeedRef = useRef(null)
   const draftSeedRef = useRef(null)
   const activeDraftIdRef = useRef(String(activeDraftId || '').trim())
@@ -154,6 +156,7 @@ const ErcoForm = ({
         draftSeedRef.current = draftForm
         setHasDraftSeed(true)
       }
+      setDraftStatus('Draft loaded')
       onDirtyChange(false)
     },
   })
@@ -193,10 +196,18 @@ const ErcoForm = ({
   }, [activeDraftId])
 
   useEffect(() => {
-    onDirtyChange(
-      isErcoDirty(form) && createDraftSignature(form) !== lastSavedDraftSignatureRef.current,
-    )
+    const isDirty =
+      isErcoDirty(form) && createDraftSignature(form) !== lastSavedDraftSignatureRef.current
+    onDirtyChange(isDirty)
+    const timerId = window.setTimeout(() => {
+      setDraftDirtyStatus(isDirty ? 'Unsaved changes' : '')
+    }, 0)
+    return () => window.clearTimeout(timerId)
   }, [form, onDirtyChange])
+
+  const displayDraftStatus = draftStatus.includes('failed')
+    ? draftStatus
+    : draftDirtyStatus || draftStatus
 
   useEffect(() => {
     const editId = String(editingRecord?.id || '').trim()
@@ -295,6 +306,7 @@ const ErcoForm = ({
       ? unlockedSectionIndex
       : Math.min(requestedSectionIndex, unlockedSectionIndex)
   const activeSection = ERCO_NEW_SECTIONS[activeSectionIndex]
+  const saveDraftLabel = editingRecord ? 'Save Update Draft' : 'Save Draft'
 
   const navigateToSection = useCallback(
     (section, replace = false) => {
@@ -365,6 +377,8 @@ const ErcoForm = ({
       saved = null
     }
     if (!saved) {
+      setDraftDirtyStatus('')
+      setDraftStatus('Draft save failed. Retry required.')
       pushToast('Unable to save draft in browser storage. Please try again.', {
         title: 'Draft save failed',
         color: 'danger',
@@ -374,6 +388,8 @@ const ErcoForm = ({
     if (!silentSuccess) {
       pushToast('Draft saved.', { title: 'Draft saved', color: 'success' })
     }
+    setDraftDirtyStatus('')
+    setDraftStatus('Draft saved')
     draftSeedRef.current = {
       ...form,
       setupConfirmed,
@@ -401,6 +417,8 @@ const ErcoForm = ({
       setSetupConfirmed(false)
       setRespondingTeamConfirmed(false)
       setDetailsConfirmed(false)
+      setDraftDirtyStatus('')
+      setDraftStatus('')
       setRespondingTeamError('')
       navigateToSection('setup')
       setShowReset(false)
@@ -502,6 +520,11 @@ const ErcoForm = ({
           ...nextRecord,
           id: editingRecord.id,
           displayId: editingRecord.displayId,
+          ownerUserId: editingRecord.ownerUserId || nextRecord.ownerUserId,
+          submittedAt: editingRecord.submittedAt || nextRecord.submittedAt,
+          submittedBy: editingRecord.submittedBy || nextRecord.submittedBy,
+          ...(editingRecord.version !== undefined ? { version: editingRecord.version } : {}),
+          ...(editingRecord.revision !== undefined ? { revision: editingRecord.revision } : {}),
           timeline: Array.isArray(editingRecord.timeline)
             ? editingRecord.timeline
             : nextRecord.timeline,
@@ -595,6 +618,8 @@ const ErcoForm = ({
             datePresetOptions={datePresetOptions}
             pushToast={pushToast}
             onSaveDraft={() => saveDraft()}
+            saveLabel={saveDraftLabel}
+            draftStatus={displayDraftStatus}
             onContinue={() => {
               if (!validateSetupBeforeContinue()) return
               setSetupConfirmed(true)
@@ -612,6 +637,8 @@ const ErcoForm = ({
             clearError={() => setRespondingTeamError('')}
             pushToast={pushToast}
             onSaveDraft={() => saveDraft()}
+            saveLabel={saveDraftLabel}
+            draftStatus={displayDraftStatus}
             onBack={() => {
               setSetupConfirmed(false)
               setRespondingTeamConfirmed(false)
@@ -656,6 +683,8 @@ const ErcoForm = ({
             }}
             onClear={() => setShowReset(true)}
             onSaveDraft={saveDraft}
+            saveLabel={saveDraftLabel}
+            draftStatus={displayDraftStatus}
           />
         ) : null}
         {activeSection === 'analysis' ? (
@@ -670,6 +699,8 @@ const ErcoForm = ({
             }}
             onClear={() => setShowReset(true)}
             onSaveDraft={saveDraft}
+            saveLabel={saveDraftLabel}
+            draftStatus={displayDraftStatus}
             primaryLabel={editingRecord ? 'Review & Update' : 'Review & Submit'}
           />
         ) : null}

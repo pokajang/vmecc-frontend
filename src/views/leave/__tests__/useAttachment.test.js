@@ -148,6 +148,41 @@ describe('useAttachment lifecycle safety', () => {
     expect(result.current.attachmentStatus?.tone).toBe('warning')
   })
 
+  it('classifies oversized camera attachments as file_too_large', async () => {
+    mockIsSupportedAttachment.mockReturnValue(true)
+    mockIsImageAttachment.mockReturnValue(true)
+    mockIsPdfAttachment.mockReturnValue(false)
+
+    const { result } = renderHook(() =>
+      useAttachment({
+        userId: '1',
+      }),
+    )
+
+    const event = {
+      currentTarget: { value: 'camera-target' },
+      target: {
+        files: [
+          {
+            name: 'large-camera-photo.jpg',
+            type: 'image/jpeg',
+            size: 13 * 1024 * 1024,
+          },
+        ],
+        value: 'x',
+      },
+    }
+
+    await act(async () => {
+      await result.current.handleAttachmentChange(event, { source: 'camera' })
+    })
+
+    expect(result.current.cameraUploadFallback).toMatchObject({
+      errorCode: 'file_too_large',
+    })
+    expect(putLeaveAttachmentBlob).not.toHaveBeenCalled()
+  })
+
   it('supports pdf files directly', async () => {
     mockIsSupportedAttachment.mockReturnValue(true)
     mockIsPdfAttachment.mockImplementation((file) => file?.type === 'application/pdf')

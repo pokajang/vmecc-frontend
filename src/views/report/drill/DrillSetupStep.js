@@ -33,6 +33,8 @@ const DrillSetupStep = ({
   pushToast,
   onSaveDraft,
   onContinue,
+  saveLabel = 'Save Draft',
+  draftStatus = '',
 }) => {
   const [isEditingType, setIsEditingType] = useState(() => !String(form.incidentType || '').trim())
   const [isEditingEnvironment, setIsEditingEnvironment] = useState(
@@ -366,7 +368,12 @@ const DrillSetupStep = ({
             </div>
           ) : null}
         </div>
-        <ReportSetupActions onSaveDraft={onSaveDraft} onContinue={onContinue} />
+        <ReportSetupActions
+          onSaveDraft={onSaveDraft}
+          onContinue={onContinue}
+          saveLabel={saveLabel}
+          statusMessage={draftStatus}
+        />
       </div>
     </div>
   )

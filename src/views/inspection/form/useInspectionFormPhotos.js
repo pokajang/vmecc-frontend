@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { buildCameraDiagnostics, inspectCameraEnvironment } from 'src/utils/cameraDiagnostics'
 import {
   applyPhotoCaptionById,
   getRowPhotoList,
@@ -58,6 +59,34 @@ const useInspectionFormPhotos = ({
     )
   }
 
+  const buildCameraUploadFallback = async (failure = {}, phase = 'photo_processing') => {
+    const fallbackMessage = getCameraFallbackMessage(failure)
+    if (!fallbackMessage) return null
+
+    const environment = await inspectCameraEnvironment().catch(() => null)
+    const error = {
+      name: failure?.code || 'camera_capture_failed',
+      message: failure?.message || fallbackMessage,
+    }
+    const diagnostics = environment
+      ? {
+          ...buildCameraDiagnostics({
+            environment,
+            error,
+            phase,
+          }),
+          failureType: failure?.code || 'camera_capture_failed',
+        }
+      : null
+
+    return {
+      message: fallbackMessage,
+      errorCode: failure?.code || 'camera_capture_failed',
+      phase,
+      diagnostics,
+    }
+  }
+
   const openPhotoInput = (target, inputRef) => {
     photoUploadTargetRef.current = target || { kind: 'root' }
     clearCameraUploadFallback()
@@ -75,6 +104,9 @@ const useInspectionFormPhotos = ({
     const uploadTarget = photoUploadTargetRef.current || { kind: 'root' }
     const source = activePhotoInputRef.current
     const currentForm = typeof getLatestForm === 'function' ? getLatestForm() : form
+    const currentFormForUpload = Array.isArray(uploadTarget?.rootPhotos)
+      ? { ...currentForm, photos: uploadTarget.rootPhotos }
+      : currentForm
     let nextPhotos = []
     let lastFailure = null
     let lastRetryableFailure = null
@@ -83,7 +115,7 @@ const useInspectionFormPhotos = ({
     try {
       const nextResult = await prepareInspectionPhotoUploads({
         files,
-        form: currentForm,
+        form: currentFormForUpload,
         pushToast,
         defaultDescription: uploadTarget?.defaultDescription || uploadTarget?.caption || '',
         createPhotoId,
@@ -113,25 +145,17 @@ const useInspectionFormPhotos = ({
     if (!nextPhotos || nextPhotos.length === 0) {
       if (source === 'camera' && hadRetryableFailure) {
         const fallbackFailure = lastRetryableFailure || lastFailure
-        const fallbackMessage = getCameraFallbackMessage(fallbackFailure)
-        if (fallbackMessage) {
-          setCameraUploadFallback({
-            message: fallbackMessage,
-            errorCode: fallbackFailure?.code || 'camera_capture_failed',
-          })
-        }
+        const nextFallback = await buildCameraUploadFallback(fallbackFailure)
+        if (nextFallback) setCameraUploadFallback(nextFallback)
       }
       return
     }
 
     if (source === 'camera' && hadRetryableFailure) {
       const fallbackFailure = lastRetryableFailure || lastFailure
-      const fallbackMessage = getCameraFallbackMessage(fallbackFailure)
-      if (fallbackMessage) {
-        setCameraUploadFallback({
-          message: fallbackMessage,
-          errorCode: fallbackFailure?.code || 'camera_capture_failed',
-        })
+      const nextFallback = await buildCameraUploadFallback(fallbackFailure)
+      if (nextFallback) {
+        setCameraUploadFallback(nextFallback)
       } else {
         setCameraUploadFallback(null)
       }
@@ -312,6 +336,11 @@ const useInspectionFormPhotos = ({
       return
     }
 
+    if (typeof uploadTarget?.onAddPhotos === 'function') {
+      uploadTarget.onAddPhotos(nextPhotos)
+      return
+    }
+
     updateForm({
       ...currentForm,
       photos: [...(Array.isArray(currentForm.photos) ? currentForm.photos : []), ...nextPhotos],
@@ -323,9 +352,9 @@ const useInspectionFormPhotos = ({
 
   const clearCameraUploadFallback = () => setCameraUploadFallback(null)
 
-  const requestRootPhotoUpload = (inputRef, defaultDescription = '') =>
+  const requestRootPhotoUpload = (inputRef, defaultDescription = '', options = {}) =>
     openPhotoInput(
-      { kind: 'root', defaultDescription: String(defaultDescription || '').trim() },
+      { kind: 'root', defaultDescription: String(defaultDescription || '').trim(), ...options },
       inputRef,
     )
 

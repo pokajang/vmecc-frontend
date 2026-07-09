@@ -72,9 +72,11 @@ const RecordCard = ({ item = {}, className = '', variant = 'card' }) => {
                 {item.eyebrow}
               </div>
             ) : null}
-            <div className="fw-semibold text-truncate">{item.title}</div>
+            <div className="record-card__title fw-semibold text-truncate">{item.title}</div>
             {item.subtitle ? (
-              <div className="small text-body-secondary text-truncate mt-1">{item.subtitle}</div>
+              <div className="record-card__subtitle small text-body-secondary text-truncate mt-1">
+                {item.subtitle}
+              </div>
             ) : null}
             {item.searchText ? <span className="visually-hidden">{item.searchText}</span> : null}
           </div>

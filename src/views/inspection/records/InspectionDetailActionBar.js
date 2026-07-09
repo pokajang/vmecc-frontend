@@ -176,8 +176,8 @@ const InspectionDetailActionBar = ({
 
       {showMobile ? (
         <FormActionGroup
-          className="inspection-detail-sticky-actions d-md-none"
-          mobileVariant="compact-sticky"
+          className="inspection-detail-inline-actions d-md-none"
+          mobileThumb={false}
           ariaLabel="Inspection detail actions"
         >
           {mobilePrimaryActions.map((action) =>
@@ -202,7 +202,7 @@ const InspectionDetailActionBar = ({
         bodyClassName="inspection-equipment-detail-drawer-shell"
         onClose={() => setMoreOpen(false)}
       >
-        <div className="d-grid gap-2">
+        <div className="inspection-detail-more-actions">
           {drawerActions.map((action) =>
             buildMobileButton(
               {

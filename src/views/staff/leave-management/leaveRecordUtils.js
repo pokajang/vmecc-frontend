@@ -1,3 +1,5 @@
+import { formatLocalDate } from 'src/utils/localDate'
+
 const LEAVE_TYPE_ID_MARKERS = {
   'Annual Leave': 'AL',
   'Medical Leave': 'ML',
@@ -43,10 +45,7 @@ const shiftConfigs = {
 }
 
 export const formatDate = (value) => {
-  if (!value) return '-'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return date.toLocaleDateString('en-MY', { day: '2-digit', month: 'short', year: 'numeric' })
+  return formatLocalDate(value)
 }
 
 export const formatDateTime = (value) => {

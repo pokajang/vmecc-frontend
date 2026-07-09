@@ -87,6 +87,82 @@
   background: var(--cui-body-bg);
 }
 
+.inspection-detail-finding-accordion-item {
+  --cui-accordion-active-bg: rgba(0, 126, 122, 0.08);
+  --cui-accordion-active-color: var(--cui-body-color);
+  --cui-accordion-btn-focus-border-color: rgba(0, 126, 122, 0.45);
+  --cui-accordion-btn-focus-box-shadow: 0 0 0 0.16rem rgba(0, 126, 122, 0.12);
+}
+
+.inspection-detail-finding-accordion-item .accordion-button {
+  color: var(--cui-body-color);
+}
+
+.inspection-detail-finding-accordion-item .accordion-button:not(.collapsed) {
+  color: var(--cui-body-color);
+  background-color: rgba(0, 126, 122, 0.08);
+  box-shadow: inset 0 calc(-1 * var(--cui-accordion-border-width)) 0
+    var(--cui-accordion-border-color);
+}
+
+.inspection-detail-finding-accordion-item .accordion-button::after {
+  color: var(--cui-primary);
+}
+
+.inspection-detail-finding-accordion-item .accordion-body {
+  padding: 0.75rem 1rem;
+}
+
+.inspection-detail-finding-accordion-title-row {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 1.25rem;
+  row-gap: 0.15rem;
+}
+
+.inspection-detail-finding-accordion-title-row > * {
+  min-width: 0;
+}
+
+.inspection-detail-finding-accordion-item .inspection-form-section {
+  gap: 0.6rem !important;
+}
+
+.inspection-detail-finding-accordion-item .inspection-review-status-row {
+  border-bottom: 0;
+  padding: 0.32rem 0;
+  gap: 0.6rem;
+}
+
+.inspection-detail-finding-accordion-item .inspection-review-status-pill {
+  min-width: 4rem;
+  padding: 0.2rem 0.5rem;
+}
+
+.inspection-detail-inline-actions,
+.inspection-review-inline-actions {
+  width: 100%;
+}
+
+.inspection-detail-inline-actions .action-row-thumb-actions,
+.inspection-review-inline-actions .action-row-thumb-actions {
+  width: 100%;
+}
+
+.inspection-detail-more-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.inspection-detail-more-actions .btn {
+  flex: 1 1 0;
+  min-width: min(100%, 8rem);
+}
+
 @media (max-width: 575.98px) {
   .inspection-detail-drawer.offcanvas {
     width: 100vw;
@@ -94,6 +170,32 @@
 
   .inspection-detail-drawer__body {
     padding: 1rem;
+  }
+
+  .inspection-detail-inline-actions,
+  .inspection-review-inline-actions {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr);
+    justify-content: stretch;
+  }
+
+  .inspection-review-inline-actions .action-row-thumb-leading,
+  .inspection-detail-inline-actions .action-row-thumb-actions,
+  .inspection-review-inline-actions .action-row-thumb-actions {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
+    width: 100%;
+  }
+
+  .inspection-review-inline-actions .action-row-thumb-leading .btn,
+  .inspection-detail-inline-actions .btn,
+  .inspection-review-inline-actions .btn {
+    min-height: 44px;
+  }
+
+  .inspection-review-inline-actions .action-row-thumb-leading .btn {
+    width: 100%;
   }
 }
 
@@ -187,28 +289,6 @@
     padding-bottom: 1rem;
   }
 
-  .inspection-toaster.toast-container {
-    top: 4rem !important;
-    right: 0.75rem !important;
-    left: auto !important;
-    width: min(22rem, calc(100vw - 1.5rem));
-    max-width: calc(100vw - 1.5rem);
-  }
-
-  .inspection-toaster .toast {
-    width: 100%;
-    max-width: 100%;
-  }
-
-  .inspection-toaster .toast-header {
-    min-height: 0;
-    padding: 0.55rem 0.75rem;
-  }
-
-  .inspection-toaster .toast-body {
-    padding: 0.65rem 0.85rem;
-  }
-
   .type-manager-modal__body .form-label {
     margin-bottom: 0.4rem;
   }
@@ -221,17 +301,6 @@
   .type-manager-modal .btn-close {
     min-width: 44px;
     min-height: 44px;
-    background-position: center;
-  }
-
-  .inspection-toaster .btn-close {
-    width: 2rem;
-    height: 2rem;
-    min-width: 2rem;
-    min-height: 2rem;
-    margin-right: -0.25rem;
-    margin-left: 0.5rem;
-    padding: 0.45rem;
     background-position: center;
   }
 

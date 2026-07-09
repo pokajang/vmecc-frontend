@@ -73,7 +73,7 @@ describe('InspectionReviewSection', () => {
     expect(screen.getByText('Jang')).toBeTruthy()
   })
 
-  it('renders a compact mobile review action group with an explicit back-to-edit path', () => {
+  it('renders an inline mobile review action group with an explicit back-to-edit path', () => {
     const { container } = render(
       <InspectionReviewSection
         selectedRecord={{
@@ -94,6 +94,8 @@ describe('InspectionReviewSection', () => {
     )
 
     const actionGroup = screen.getByRole('group', { name: 'Inspection review actions' })
+    expect(actionGroup.className).toContain('inspection-review-inline-actions')
+    expect(actionGroup.className).not.toContain('action-row-thumb')
     expect(within(actionGroup).getByRole('button', { name: 'Edit' })).toBeTruthy()
     expect(within(actionGroup).getByRole('button', { name: 'Save Draft' })).toBeTruthy()
     expect(within(actionGroup).getByRole('button', { name: 'Confirm Submit' })).toBeTruthy()
@@ -271,6 +273,7 @@ describe('InspectionReviewSection', () => {
     expect(screen.getAllByText('Equipment').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Fire Jacket').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Chainsaw').length).toBeGreaterThan(0)
+    expect(screen.queryByText('Animal catcher net')).toBeNull()
     expect(screen.getAllByText('15').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Sent for replacement.').length).toBeGreaterThan(0)
   })

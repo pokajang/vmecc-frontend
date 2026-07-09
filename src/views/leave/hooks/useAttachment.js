@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { buildCameraDiagnostics, inspectCameraEnvironment } from 'src/utils/cameraDiagnostics'
 import { deleteLeaveAttachmentBlob, putLeaveAttachmentBlob } from '../leavePersistence'
 import {
   compressImageAttachment,
@@ -7,7 +8,11 @@ import {
   isPdfAttachment,
   isSupportedAttachment,
 } from '../utils'
-import { IMAGE_COMPRESSION_TRIGGER_BYTES, MAX_ATTACHMENT_BYTES } from '../constants'
+import {
+  IMAGE_COMPRESSION_TRIGGER_BYTES,
+  MAX_ATTACHMENT_BYTES,
+  MAX_CAMERA_ATTACHMENT_BYTES,
+} from '../constants'
 
 const asText = (value, fallback = '') => String(value || fallback).trim()
 
@@ -19,7 +24,7 @@ const CAMERA_FALLBACK_MESSAGES = {
   invalid_file: 'The captured file is invalid. Upload the photo manually.',
   read_failed: 'Unable to read the captured photo. Upload the photo manually.',
   file_too_large:
-    'Camera captured file is too large. Upload a smaller photo manually or try again.',
+    'Camera captured file is too large for in-browser processing. Upload a smaller photo manually or try again.',
   compression_failed: 'Camera photo compression failed. Upload the photo manually.',
   unexpected_error: 'Camera upload failed unexpectedly. Upload the photo manually.',
 }
@@ -109,14 +114,31 @@ export default function useAttachment({
 
   const setCameraFailure = (code, fileName = '') => {
     if (!CAMERA_RETRYABLE_CODES.has(code)) return
+    const message = resolveCameraFailureMessage(code, fileName)
     setCameraUploadFallback({
-      message: resolveCameraFailureMessage(code, fileName),
+      message,
       errorCode: code,
+      phase: 'photo_processing',
     })
+    inspectCameraEnvironment()
+      .then((environment) => {
+        const diagnostics = {
+          ...buildCameraDiagnostics({
+            environment,
+            error: { name: code, message },
+            phase: 'photo_processing',
+          }),
+          failureType: code,
+        }
+        setCameraUploadFallback((current) =>
+          current?.errorCode === code ? { ...current, diagnostics } : current,
+        )
+      })
+      .catch(() => {})
     setAttachmentStatus({
       tone: 'warning',
       label: 'Attachment retry needed',
-      detail: resolveCameraFailureMessage(code, fileName),
+      detail: message,
     })
   }
 
@@ -241,6 +263,20 @@ export default function useAttachment({
           statusTone: 'danger',
           toastTitle: 'Unsupported file',
           toastColor: 'danger',
+        })
+        return
+      }
+
+      if (isCameraUpload && selectedFile.size > MAX_CAMERA_ATTACHMENT_BYTES) {
+        recordFailure({
+          code: 'file_too_large',
+          detail: `Camera photo is too large (${formatFileSize(selectedFile.size)}). Maximum camera processing size is ${formatFileSize(MAX_CAMERA_ATTACHMENT_BYTES)}.`,
+          message: `Camera photo is too large (${formatFileSize(selectedFile.size)}). Upload a smaller photo manually or retake it at a lower resolution.`,
+          statusTone: 'danger',
+          statusLabel: 'Attachment rejected',
+          toastTitle: 'File too large',
+          toastColor: 'danger',
+          suppressToast: true,
         })
         return
       }
@@ -409,7 +445,7 @@ export default function useAttachment({
         )
 
       try {
-        const result = await compressImageAttachment(selectedFile)
+        const result = await compressImageAttachment(selectedFile, { isCameraUpload })
         const finalFile = result.file
         const putResult = await putLeaveAttachmentBlob(uid, finalFile, {
           name: finalFile.name,

@@ -14,10 +14,38 @@ import {
   downloadErcoReportPdf,
   isReportApiEnabled,
 } from '../reportApi'
+import { hasPermission, isSystemAdministrator } from 'src/utils/authz'
 import { recordToDraft } from '../reportDraftDomain'
 import { buildReportPdfFilename } from '../reportUiUtils'
-import { toDateTime } from '../utils'
+import { toDateTime, uid } from '../utils'
 import useReportWorkflowActions from './useReportWorkflowActions'
+
+const REPORT_PERMISSION_SLUGS = {
+  erco: 'erco',
+  drill: 'drill',
+  'fitness-test': 'fitness',
+}
+
+const getReportPermission = (reportType, action) => {
+  const slug =
+    REPORT_PERMISSION_SLUGS[
+      String(reportType || '')
+        .trim()
+        .toLowerCase()
+    ]
+  return slug ? `reports.${slug}.${action}` : ''
+}
+
+const getReportOwnerId = (row = {}) =>
+  String(row.ownerUserId || row.owner_user_id || row.createdById || row.created_by_id || '').trim()
+
+const isOwnReport = (row = {}, user = {}) => {
+  const ownerId = getReportOwnerId(row)
+  if (ownerId) return ownerId === String(user?.id || '').trim()
+  const submittedBy = String(row.submittedBy || row.createdBy || row.reportedBy || '').trim()
+  const userName = String(user?.name || user?.email || '').trim()
+  return Boolean(submittedBy && userName && submittedBy === userName)
+}
 
 const useReportRouteActions = ({
   activeFormSlug,
@@ -154,13 +182,30 @@ const useReportRouteActions = ({
     [activeSection, isFormDirty],
   )
 
-  const canEditRecord = useCallback((row) => {
-    if (!row) return false
-    if (row.recordKind === 'draft') return true
-    return ['Submitted', 'Rejected'].includes(String(row.status || '').trim())
-  }, [])
+  const canEditRecord = useCallback(
+    (row) => {
+      if (!row) return false
+      if (row.recordKind === 'draft') return true
+      if (isSystemAdministrator(user)) return true
+      const permission = getReportPermission(row.reportType || activeFormSlug, 'edit')
+      if (permission && hasPermission(user, permission)) return true
+      if (!isOwnReport(row, user)) return false
+      return ['Submitted', 'Rejected'].includes(String(row.status || '').trim())
+    },
+    [activeFormSlug, user],
+  )
 
-  const canDeleteRecord = useCallback((row) => Boolean(row), [])
+  const canDeleteRecord = useCallback(
+    (row) => {
+      if (!row) return false
+      if (row.recordKind === 'draft') return true
+      if (isSystemAdministrator(user)) return true
+      const permission = getReportPermission(row.reportType || activeFormSlug, 'delete')
+      if (permission && hasPermission(user, permission)) return true
+      return isOwnReport(row, user)
+    },
+    [activeFormSlug, user],
+  )
 
   const startNew = useCallback(() => {
     const run = async () => {
@@ -521,7 +566,38 @@ const useReportRouteActions = ({
         const sameTypeRecords = records.filter(
           (row) => String(row?.reportType || '').toLowerCase() === activeFormSlug,
         )
-        const next = [record, ...sameTypeRecords.filter((row) => row.id !== record.id)].sort(
+        const existingRecord =
+          sameTypeRecords.find((row) => String(row?.id || '') === String(record?.id || '')) || null
+        const isUpdate = Boolean(existingRecord)
+        const nowIso = new Date().toISOString()
+        const actor = user?.name || user?.email || 'Requester'
+        const nextRecord = isUpdate
+          ? {
+              ...record,
+              ownerUserId: record.ownerUserId || existingRecord.ownerUserId || '',
+              submittedAt: record.submittedAt || existingRecord.submittedAt || '',
+              submittedBy: record.submittedBy || existingRecord.submittedBy || '',
+              updatedAt: nowIso,
+              updatedBy: actor,
+              version: Number(existingRecord.version || record.version || 0) + 1,
+              revision: Number(existingRecord.revision || record.revision || 0) + 1,
+              timeline: [
+                ...(Array.isArray(record.timeline)
+                  ? record.timeline
+                  : Array.isArray(existingRecord.timeline)
+                    ? existingRecord.timeline
+                    : []),
+                {
+                  id: `t-${uid()}`,
+                  action: 'Updated',
+                  by: actor,
+                  at: nowIso,
+                  remarks: 'Report updated.',
+                },
+              ],
+            }
+          : record
+        const next = [nextRecord, ...sameTypeRecords.filter((row) => row.id !== record.id)].sort(
           (a, b) => toDateTime(b) - toDateTime(a),
         )
         const { saved, trimmed } = await persistRecords(next)
@@ -542,10 +618,13 @@ const useReportRouteActions = ({
         await removeDraft(queryDraftId)
         setIsFormDirty(false)
         setFormSessionKey((prev) => prev + 1)
-        pushToast(`${reportTypeLabel} report ${record.displayId} submitted.`, {
-          title: 'Submitted',
-          color: 'success',
-        })
+        pushToast(
+          `${reportTypeLabel} report ${record.displayId} ${isUpdate ? 'updated' : 'submitted'}.`,
+          {
+            title: isUpdate ? 'Updated' : 'Submitted',
+            color: 'success',
+          },
+        )
         navigate(reportBasePath)
       } catch {
         pushToast('Unable to save this report. Please try again.', {
@@ -569,6 +648,8 @@ const useReportRouteActions = ({
       reportTypeLabel,
       setFormSessionKey,
       setIsFormDirty,
+      user?.email,
+      user?.name,
     ],
   )
 

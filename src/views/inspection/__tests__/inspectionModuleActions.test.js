@@ -170,6 +170,28 @@ describe('saveInspectionDraftAction', () => {
 })
 
 describe('submitInspectionRecordAction', () => {
+  it('passes client inspection timestamps when submitting an inspection session report', async () => {
+    const { args, submitInspectionSessionReport, persistInspectionRecord } =
+      buildSubmitActionHarness({
+        record: {
+          inspectionSessionUid: 'inspection-session-123',
+          inspectedAt: '2026-07-08T21:07',
+          submittedAt: '2026-07-08T13:07:00.000Z',
+        },
+      })
+
+    await submitInspectionRecordAction(args)
+
+    expect(persistInspectionRecord).not.toHaveBeenCalled()
+    expect(submitInspectionSessionReport).toHaveBeenCalledWith({
+      sessionUid: 'inspection-session-123',
+      displayId: 'INS-1',
+      submissionKey: 'inspection-submission-key',
+      inspectedAt: '2026-07-08T21:07',
+      submittedAt: '2026-07-08T13:07:00.000Z',
+    })
+  })
+
   it('replaces FRT seeded-row validation errors with user-friendly submission copy', async () => {
     const seededRowsError = new Error('checklist must include 92 seeded rows')
     seededRowsError.status = 422

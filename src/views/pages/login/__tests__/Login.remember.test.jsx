@@ -14,13 +14,13 @@ vi.mock('src/services/apiClient', () => ({
   loginRequest: vi.fn(),
 }))
 
-const reducer = (
-  state = { authStatus: 'anonymous', systemMaintenance: { enabled: false } },
-  action,
-) => (action.type === 'set' ? { ...state, ...action } : state)
+const defaultState = { authStatus: 'anonymous', systemMaintenance: { enabled: false } }
 
-const renderLogin = () =>
-  render(
+const renderLogin = (initialState = defaultState) => {
+  const reducer = (state = initialState, action) =>
+    action.type === 'set' ? { ...state, ...action } : state
+
+  return render(
     <Provider store={createStore(reducer)}>
       <MemoryRouter initialEntries={['/login']}>
         <Routes>
@@ -30,6 +30,7 @@ const renderLogin = () =>
       </MemoryRouter>
     </Provider>,
   )
+}
 
 afterEach(() => {
   cleanup()
@@ -37,6 +38,7 @@ afterEach(() => {
 })
 
 beforeEach(() => {
+  window.history.pushState({}, '', '/login')
   fetchModuleActivation.mockResolvedValue(null)
   loginRequest.mockResolvedValue({ user: { id: 1, email: 'user@example.test' } })
   fetchGoogleAuthUrl.mockResolvedValue({})
@@ -93,5 +95,14 @@ describe('Login remember me', () => {
     fireEvent.click(screen.getByRole('button', { name: /continue with google/i }))
 
     await waitFor(() => expect(fetchGoogleAuthUrl).toHaveBeenCalledWith({ remember: false }))
+  })
+
+  it('shows progress while completing a Google callback session check', async () => {
+    window.history.pushState({}, '', '/login?status=success')
+    renderLogin({ ...defaultState, authStatus: 'checking' })
+
+    expect(await screen.findByText('Completing Google sign-in...')).toBeTruthy()
+    expect(screen.getByRole('button', { name: /^sign in$/i }).disabled).toBe(true)
+    expect(screen.getByRole('button', { name: /continue with google/i }).disabled).toBe(true)
   })
 })

@@ -40,6 +40,8 @@ const DrillForm = ({
   const [showReset, setShowReset] = useState(false)
   const [editViewMode, setEditViewMode] = useState(preferSavedEditDraft ? 'draft' : 'original')
   const [hasDraftSeed, setHasDraftSeed] = useState(false)
+  const [draftStatus, setDraftStatus] = useState('')
+  const [draftDirtyStatus, setDraftDirtyStatus] = useState('')
   const originalSeedRef = useRef(null)
   const draftSeedRef = useRef(null)
 
@@ -71,6 +73,7 @@ const DrillForm = ({
         draftSeedRef.current = draftForm
         setHasDraftSeed(true)
       }
+      setDraftStatus('Draft loaded')
       onDirtyChange(false)
     },
   })
@@ -90,10 +93,18 @@ const DrillForm = ({
   }, [initialFormSeed, setForm, setSetupConfirmed])
 
   useEffect(() => {
-    onDirtyChange(
-      isDrillDirty(form) && createDraftSignature(form) !== lastSavedDraftSignatureRef.current,
-    )
+    const isDirty =
+      isDrillDirty(form) && createDraftSignature(form) !== lastSavedDraftSignatureRef.current
+    onDirtyChange(isDirty)
+    const timerId = window.setTimeout(() => {
+      setDraftDirtyStatus(isDirty ? 'Unsaved changes' : '')
+    }, 0)
+    return () => window.clearTimeout(timerId)
   }, [form, onDirtyChange])
+
+  const displayDraftStatus = draftStatus.includes('failed')
+    ? draftStatus
+    : draftDirtyStatus || draftStatus
 
   useEffect(() => {
     const editId = String(editingRecord?.id || '').trim()
@@ -156,6 +167,8 @@ const DrillForm = ({
     }
     const saved = await saveReportDraft(user?.id, draftPayload, reportTypeSlug)
     if (!saved) {
+      setDraftDirtyStatus('')
+      setDraftStatus('Draft save failed. Retry required.')
       pushToast('Unable to save draft in browser storage. Please try again.', {
         title: 'Draft save failed',
         color: 'danger',
@@ -165,6 +178,8 @@ const DrillForm = ({
     if (!silentSuccess) {
       pushToast('Draft saved.', { title: 'Draft saved', color: 'success' })
     }
+    setDraftDirtyStatus('')
+    setDraftStatus('Draft saved')
     draftSeedRef.current = { ...form, setupConfirmed, ...overrides }
     setHasDraftSeed(true)
     lastSavedDraftSignatureRef.current = createDraftSignature(form)
@@ -180,6 +195,8 @@ const DrillForm = ({
       lastSavedDraftSignatureRef.current = null
       setForm(defaultDrillForm())
       setSetupConfirmed(false)
+      setDraftDirtyStatus('')
+      setDraftStatus('')
       setShowReset(false)
       pushToast('Form reset.', { title: 'Report reset', color: 'info' })
     }
@@ -227,6 +244,11 @@ const DrillForm = ({
           ...nextRecord,
           id: editingRecord.id,
           displayId: editingRecord.displayId,
+          ownerUserId: editingRecord.ownerUserId || nextRecord.ownerUserId,
+          submittedAt: editingRecord.submittedAt || nextRecord.submittedAt,
+          submittedBy: editingRecord.submittedBy || nextRecord.submittedBy,
+          ...(editingRecord.version !== undefined ? { version: editingRecord.version } : {}),
+          ...(editingRecord.revision !== undefined ? { revision: editingRecord.revision } : {}),
           timeline: Array.isArray(editingRecord.timeline)
             ? editingRecord.timeline
             : nextRecord.timeline,
@@ -312,6 +334,8 @@ const DrillForm = ({
             timePresetOptions={timePresetOptions}
             pushToast={pushToast}
             onSaveDraft={saveDraft}
+            saveLabel={editingRecord ? 'Save Update Draft' : 'Save Draft'}
+            draftStatus={displayDraftStatus}
             onContinue={() => {
               if (!validateSetupBeforeContinue()) return
               setSetupConfirmed(true)
@@ -330,7 +354,9 @@ const DrillForm = ({
             removeChronology={removeChronology}
             onClear={() => setShowReset(true)}
             onSaveDraft={saveDraft}
+            saveLabel={editingRecord ? 'Save Update Draft' : 'Save Draft'}
             submitLabel={editingRecord ? 'Review & Update' : 'Review & Submit'}
+            draftStatus={displayDraftStatus}
           />
         ) : null}
       </form>

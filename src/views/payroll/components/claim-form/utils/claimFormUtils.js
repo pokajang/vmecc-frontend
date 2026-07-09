@@ -1,4 +1,5 @@
 import { BadgeDollarSign, ReceiptText, ShieldCheck } from 'lucide-react'
+import { formatLocalDate } from 'src/utils/localDate'
 
 export const LOCAL_AUTOSAVE_KEY_PREFIX = 'payroll-claim-autosave'
 export const LOCAL_AUTOSAVE_DELAY_MS = 450
@@ -32,10 +33,7 @@ export const parseAmount = (value) => {
 }
 
 export const formatDate = (value) => {
-  if (!value) return ''
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return date.toLocaleDateString('en-MY', { day: '2-digit', month: 'short', year: 'numeric' })
+  return formatLocalDate(value, '')
 }
 
 export const buildLocalAutosaveKey = (userId, type) =>

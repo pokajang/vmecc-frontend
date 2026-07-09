@@ -155,16 +155,21 @@ const InspectionReviewSection = ({
   const form = recordToInspectionForm(r)
   const selectedTypeDefinition = getInspectionTypeDefinition(r.incidentType || form.inspectionType)
   const inspectionType = selectedTypeDefinition?.title || stripInspectionContext(r.incidentType)
-  const readOnlySummary = selectedTypeDefinition?.getSummary?.({
-    ...form,
-    ...(selectedTypeDefinition?.checksField
-      ? {
-          [selectedTypeDefinition.checksField]: form[selectedTypeDefinition.checksField] || [],
-          [selectedTypeDefinition.equipmentRowsField]:
-            form[selectedTypeDefinition.checksField] || [],
-        }
-      : {}),
-  })
+  const readOnlyChecks = selectedTypeDefinition?.checksField
+    ? form[selectedTypeDefinition.checksField] || []
+    : []
+  const readOnlySummary = selectedTypeDefinition?.getSummary?.(
+    {
+      ...form,
+      ...(selectedTypeDefinition?.checksField
+        ? {
+            [selectedTypeDefinition.checksField]: readOnlyChecks,
+            [selectedTypeDefinition.equipmentRowsField]: readOnlyChecks,
+          }
+        : {}),
+    },
+    selectedTypeDefinition?.checksField ? { checks: readOnlyChecks } : {},
+  )
   const isGeneral = isGeneralInspectionType(r.incidentType || form.inspectionType)
   const mainLocationLabel = formatInspectionDisplayLocationTitle(r.incidentType, form.mainLocation)
   const ReadOnlySection = selectedTypeDefinition?.ReadOnlySection || null
@@ -184,8 +189,10 @@ const InspectionReviewSection = ({
   const statusLabel = getReviewStatusLabel(r, Boolean(reviewActions?.onConfirm))
   const summaryCount = getItemCountSummary(reviewSummary)
   const blockers = Array.isArray(reviewActions?.blockers) ? reviewActions.blockers : []
+  const isUpdateMode = reviewActions?.isUpdateMode === true
   const submitLabel = reviewActions?.confirmLabel || 'Confirm Submit'
-  const mobileSubmitLabel = submitLabel.length > 18 ? 'Submit' : submitLabel
+  const mobileSubmitLabel =
+    submitLabel.length > 18 ? (isUpdateMode ? 'Update' : 'Submit') : submitLabel
   const isSubmissionReview = Boolean(reviewActions?.onConfirm)
   const detailFieldWidth = isSubmissionReview ? 6 : 3
 
@@ -212,10 +219,8 @@ const InspectionReviewSection = ({
       return (
         <FormActionGroup
           className={className}
-          mobileVariant="compact-sticky"
+          mobileThumb={false}
           leading={pendingButton || editButton}
-          statusMessage="Review details before final submission."
-          spacerClassName="inspection-review-sticky-spacer d-md-none"
           ariaLabel="Inspection review actions"
         >
           {pendingButton ? editButton : null}
@@ -359,7 +364,7 @@ const InspectionReviewSection = ({
       </ReviewSectionBlock>
 
       {renderReviewActions('justify-content-end d-none d-md-flex')}
-      {renderReviewActions('inspection-review-sticky-actions d-md-none', true)}
+      {renderReviewActions('inspection-review-inline-actions d-md-none', true)}
     </section>
   )
 }

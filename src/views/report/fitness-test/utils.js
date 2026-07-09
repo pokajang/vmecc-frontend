@@ -1,7 +1,8 @@
 import { uid } from '../utils'
+import { getLocalDateInputValue } from 'src/utils/localDate'
 
 export const defaultFitnessTestForm = () => ({
-  reportDate: new Date().toISOString().slice(0, 10),
+  reportDate: getLocalDateInputValue(),
   reportTime: '',
   weather: 'Routine',
   incidentType: 'Endurance Test',

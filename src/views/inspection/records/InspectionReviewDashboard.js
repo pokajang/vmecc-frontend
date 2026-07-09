@@ -35,15 +35,17 @@ const formatInspectionDate = (value) => {
   })
 }
 
-const getSubmitTitle = (item = {}) => {
+const getSubmitTitle = (item = {}, isUpdateMode = false) => {
   const title = String(item.displayTitle || 'Inspection').trim()
-  return `Submit ${/inspection$/i.test(title) ? title : `${title} Inspection`}?`
+  const action = isUpdateMode ? 'Update' : 'Submit'
+  return `${action} ${/inspection$/i.test(title) ? title : `${title} Inspection`}?`
 }
 
 const InspectionReviewTypeCard = ({
   item,
   selected,
   isSubmitting,
+  isUpdateMode = false,
   onViewDetails,
   onSubmit,
   onRetrySync,
@@ -83,7 +85,11 @@ const InspectionReviewTypeCard = ({
             </CButton>
           ) : null}
           <CButton size="sm" color="primary" disabled={!canSubmit} onClick={() => onSubmit(item)}>
-            {backgroundSyncBlocker ? backgroundSyncBlocker.message || 'Syncing...' : 'Submit'}
+            {backgroundSyncBlocker
+              ? backgroundSyncBlocker.message || 'Syncing...'
+              : isUpdateMode
+                ? 'Update'
+                : 'Submit'}
           </CButton>
           <CButton
             size="sm"
@@ -101,8 +107,46 @@ const InspectionReviewTypeCard = ({
   )
 }
 
+const InspectionReviewInlinePhotoGroups = ({ groups = [] }) => {
+  if (!Array.isArray(groups) || groups.length === 0) return null
+
+  return (
+    <div className="inspection-review-photo-groups">
+      {groups.map((group) => (
+        <div className="inspection-review-photo-group" key={group.key}>
+          <div className="inspection-review-photo-group__title">{group.title}</div>
+          <div className="inspection-review-photo-group__grid">
+            {group.photos.map((photo, index) => (
+              <div className="inspection-review-photo-card" key={photo.key || index}>
+                {photo.url ? (
+                  <img
+                    className="inspection-review-photo-card__image"
+                    src={photo.url}
+                    alt={photo.description || photo.fileName || 'Inspection photo'}
+                  />
+                ) : null}
+                {photo.fileName ? (
+                  <div className="inspection-review-photo-card__name" title={photo.fileName}>
+                    {photo.fileName}
+                  </div>
+                ) : null}
+                {photo.description ? (
+                  <div className="inspection-review-photo-card__description">
+                    {photo.description}
+                  </div>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 const InspectionReviewLocationsList = ({ item }) => {
   const locationRows = item.locationRows || []
+  const [expandedPhotoLocationKey, setExpandedPhotoLocationKey] = useState('')
 
   if (locationRows.length === 0) {
     return (
@@ -114,21 +158,46 @@ const InspectionReviewLocationsList = ({ item }) => {
 
   return (
     <CListGroup className="inspection-review-detail-location-list">
-      {locationRows.map((location, index) => (
-        <CListGroupItem className="inspection-review-detail-location-list__item" key={location.key}>
-          <div className="inspection-review-detail-location-list__index">{index + 1}</div>
-          <div className="inspection-review-detail-location-list__content">
-            <div className="inspection-review-detail-location-list__path">
-              {[location.zoneLabel, location.areaLabel || location.title, location.locationLabel]
-                .filter(Boolean)
-                .join(' > ')}
+      {locationRows.map((location, index) => {
+        const photoCount = Number(location.photoCount || 0)
+        const photosExpanded = expandedPhotoLocationKey === location.key
+
+        return (
+          <CListGroupItem
+            className="inspection-review-detail-location-list__item"
+            key={location.key}
+          >
+            <div className="inspection-review-detail-location-list__index">{index + 1}</div>
+            <div className="inspection-review-detail-location-list__content">
+              <div className="inspection-review-detail-location-list__path">
+                {[location.zoneLabel, location.areaLabel || location.title, location.locationLabel]
+                  .filter(Boolean)
+                  .join(' > ')}
+              </div>
+              <div className="inspection-review-detail-location-list__count">
+                {location.itemSummary}
+              </div>
+              {photoCount > 0 ? (
+                <button
+                  type="button"
+                  className="inspection-review-photo-link"
+                  aria-expanded={photosExpanded}
+                  onClick={() =>
+                    setExpandedPhotoLocationKey((current) =>
+                      current === location.key ? '' : location.key,
+                    )
+                  }
+                >
+                  Inspection photos ({photoCount} total)
+                </button>
+              ) : null}
+              {photosExpanded ? (
+                <InspectionReviewInlinePhotoGroups groups={location.photoGroups} />
+              ) : null}
             </div>
-            <div className="inspection-review-detail-location-list__count">
-              {location.itemSummary}
-            </div>
-          </div>
-        </CListGroupItem>
-      ))}
+          </CListGroupItem>
+        )
+      })}
     </CListGroup>
   )
 }
@@ -216,16 +285,25 @@ const InspectionReviewDetailDrawer = ({ item, visible, onClose }) => {
   )
 }
 
-const InspectionReviewSubmitDrawer = ({ item, visible, isSubmitting, onClose, onConfirm }) => {
+const InspectionReviewSubmitDrawer = ({
+  item,
+  visible,
+  isSubmitting,
+  isUpdateMode = false,
+  onClose,
+  onConfirm,
+}) => {
   if (!item) return null
 
   return (
     <ActionConfirmModal
       visible={visible}
-      title={getSubmitTitle(item)}
+      title={getSubmitTitle(item, isUpdateMode)}
       message={
         <div className="d-grid gap-2">
-          <div>Confirm that you want to submit the following inspection:</div>
+          <div>
+            Confirm that you want to {isUpdateMode ? 'update' : 'submit'} the following inspection:
+          </div>
           <div className="inspection-review-submit-summary">
             <div>Date: {formatInspectionDate(item.form?.inspectedAt || item.inspectedAt)}</div>
             <div>{item.groupSummary}</div>
@@ -234,7 +312,7 @@ const InspectionReviewSubmitDrawer = ({ item, visible, isSubmitting, onClose, on
           </div>
         </div>
       }
-      confirmLabel="Confirm Submit"
+      confirmLabel={isUpdateMode ? 'Confirm Update' : 'Confirm Submit'}
       confirmDisabled={isSubmitting}
       cancelDisabled={isSubmitting}
       mobileDrawer
@@ -244,7 +322,13 @@ const InspectionReviewSubmitDrawer = ({ item, visible, isSubmitting, onClose, on
   )
 }
 
-const InspectionReviewDashboard = ({ items, isSubmitting = false, onRetrySync, onSubmit }) => {
+const InspectionReviewDashboard = ({
+  items,
+  isSubmitting = false,
+  isUpdateMode = false,
+  onRetrySync,
+  onSubmit,
+}) => {
   const dashboardItems = useMemo(() => buildInspectionReviewDashboardItems(items), [items])
   const [detailTargetKey, setDetailTargetKey] = useState('')
   const [submitTargetKey, setSubmitTargetKey] = useState('')
@@ -291,6 +375,7 @@ const InspectionReviewDashboard = ({ items, isSubmitting = false, onRetrySync, o
               item={item}
               selected={detailTargetKey === item.key}
               isSubmitting={isSubmitting}
+              isUpdateMode={isUpdateMode}
               onViewDetails={openDetails}
               onSubmit={requestSubmit}
               onRetrySync={onRetrySync}
@@ -309,6 +394,7 @@ const InspectionReviewDashboard = ({ items, isSubmitting = false, onRetrySync, o
         item={submitTarget}
         visible={Boolean(submitTarget)}
         isSubmitting={isSubmitting}
+        isUpdateMode={isUpdateMode}
         onClose={closeSubmitDrawer}
         onConfirm={confirmSubmit}
       />

@@ -20,7 +20,9 @@ const ErcoPostAnalysisStep = ({
   onSaveDraft,
   showIncidentSummary = true,
   showActions = true,
+  saveLabel = 'Save Draft',
   primaryLabel = 'Submit Report',
+  draftStatus = '',
 }) => {
   const isMobile = useIsMobile()
   const teamLabel = resolveRespondingTeamLabel(form.respondingTeamName, form.respondingAttendance)
@@ -70,15 +72,19 @@ const ErcoPostAnalysisStep = ({
         isMobile ? (
           <ReportMobileActionGroup
             onSaveDraft={onSaveDraft}
+            saveLabel={saveLabel}
             primaryLabel={primaryLabel}
             primaryType="submit"
+            statusMessage={draftStatus}
           />
         ) : (
           <DetailsStepActions
             onBack={onBack}
             onClear={onClear}
             onSaveDraft={onSaveDraft}
+            saveLabel={saveLabel}
             primaryLabel={primaryLabel}
+            statusMessage={draftStatus}
           />
         )
       ) : null}

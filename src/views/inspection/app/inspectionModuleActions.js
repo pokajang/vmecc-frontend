@@ -185,12 +185,15 @@ export const submitInspectionRecordAction = async ({
   setIsSubmitting(true)
   const submissionKey = makeInspectionSubmissionKey(userId, record)
   const inspectionSessionUid = text(record?.inspectionSessionUid || record?.inspection_session_uid)
+  const isUpdate = Number(record?.version || 0) > 0
   try {
     const saved = inspectionSessionUid
       ? await submitInspectionSessionReport?.({
           sessionUid: inspectionSessionUid,
           displayId: record.displayId,
           submissionKey,
+          inspectedAt: record.inspectedAt,
+          submittedAt: record.submittedAt,
         })
       : await persistInspectionRecord(userId, record, { submissionKey })
     if (!saved) throw new Error('Unable to save this report in database/API. Please try again.')
@@ -200,10 +203,15 @@ export const submitInspectionRecordAction = async ({
     setDraftVersion((prev) => prev + 1)
     if (clearWorkingStateOnSuccess) clearWorkingState()
     onSubmitted?.(saved, record)
-    pushToast(`${reportTypeLabel} report ${saved.displayId || record.displayId} submitted.`, {
-      title: 'Submitted',
-      color: 'success',
-    })
+    pushToast(
+      `${reportTypeLabel} report ${saved.displayId || record.displayId} ${
+        isUpdate ? 'updated' : 'submitted'
+      }.`,
+      {
+        title: isUpdate ? 'Updated' : 'Submitted',
+        color: 'success',
+      },
+    )
     if (navigateOnSuccess) navigate(reportBasePath)
     if (nextContinuationPrompt) setContinuationPrompt(nextContinuationPrompt)
   } catch (error) {

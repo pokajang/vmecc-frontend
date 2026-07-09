@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   CBadge,
   CButton,
@@ -6,17 +6,18 @@ import {
   CCardBody,
   CCardHeader,
   CContainer,
-  CToast,
-  CToastBody,
-  CToastHeader,
-  CToaster,
+  COffcanvas,
+  COffcanvasBody,
+  COffcanvasHeader,
+  COffcanvasTitle,
 } from '@coreui/react'
 import { useSelector } from 'react-redux'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, X } from 'lucide-react'
 import { hasPermission } from 'src/utils/authz'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import CreateActionButton from 'src/components/CreateActionButton'
+import InlineFeedbackMessage from 'src/components/InlineFeedbackMessage'
 import ModuleNavTabs from 'src/components/ModuleNavTabs'
 import ModulePageHeader from 'src/components/ModulePageHeader'
 import TableLoader from 'src/components/TableLoader'
@@ -24,6 +25,7 @@ import { SORT_OPTIONS } from './constants'
 import { FORM_REGISTRY } from './formRegistry'
 import ReportDetailSection from './components/ReportDetailSection'
 import ReportRecordsSection from './components/ReportRecordsSection'
+import ReportReviewSection from './components/ReportReviewSection'
 import ReportWorkflowActionModal from './components/ReportWorkflowActionModal'
 import { refreshReportRecord } from './reportApi'
 import useReportMetadata from './hooks/useReportMetadata'
@@ -67,13 +69,12 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
     ? hasPermission(user, requiredRoutePermission)
     : false
 
-  const [toast, addToast] = useState(0)
+  const [feedback, setFeedback] = useState(null)
   const [isFormDirty, setIsFormDirty] = useState(false)
   const [formSessionKey, setFormSessionKey] = useState(0)
   const [draftVersion, setDraftVersion] = useState(0)
   const [showMobileRecords, setShowMobileRecords] = useState(false)
   const [routeDetailState, setRouteDetailState] = useState(initialRouteDetailState)
-  const toaster = useRef()
 
   const {
     reportTypeSlug,
@@ -159,17 +160,22 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
   }, [location.search, location.state?.editReportId])
 
   const pushToast = useCallback((message, { title, color = 'light', delay = 5000 } = {}) => {
-    addToast(
-      <CToast autohide delay={delay} color={color}>
-        {title ? (
-          <CToastHeader closeButton>
-            <strong className="me-auto">{title}</strong>
-          </CToastHeader>
-        ) : null}
-        <CToastBody>{message}</CToastBody>
-      </CToast>,
-    )
+    setFeedback((current) => ({
+      id: Number(current?.id || 0) + 1,
+      message,
+      title,
+      color,
+      delay,
+    }))
   }, [])
+
+  useEffect(() => {
+    if (!feedback?.message || !feedback.delay) return undefined
+    const timerId = window.setTimeout(() => {
+      setFeedback((current) => (current?.id === feedback.id ? null : current))
+    }, feedback.delay)
+    return () => window.clearTimeout(timerId)
+  }, [feedback])
   const {
     backFromReview,
     canApproveRecord,
@@ -194,7 +200,6 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
     pendingAction,
     pendingReviewBackSection,
     pendingReviewRecord,
-    removeDraft,
     requestDeleteRecord,
     requestReview,
     runGuardedAction,
@@ -391,6 +396,7 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
   )
   const isCreateSection = activeSection === 'new' || activeSection === 'review'
   const recordsSectionActive = activeSection === 'records' || activeSection === 'detail'
+  const shouldRenderRecordsSection = activeSection === 'records'
   const createSectionActive = isCreateSection
 
   const navigateToMobileHome = useCallback(() => {
@@ -480,6 +486,48 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
     reportTypeLabel
   )
 
+  const renderReportDetailContent = () => {
+    if (shouldShowRouteDetailLoading) {
+      return <TableLoader message="Loading report..." />
+    }
+    if (routeDetailErrorMessage) {
+      return (
+        <div className={routeDetailStatus === 'not-found' ? 'text-warning' : 'text-danger'}>
+          {routeDetailErrorMessage}
+        </div>
+      )
+    }
+    return (
+      <ReportDetailSection
+        selectedRecord={selectedDetailRecord}
+        onBack={() => navigate(reportBasePath)}
+        formatDateTime={formatDateTime}
+        renderStatusBadge={renderStatusBadge}
+        onDownloadRecord={downloadRecord}
+        onEditRecord={editRecord}
+        onDeleteRecord={requestDeleteRecord}
+        canEditRecord={canEditRecord}
+        canDeleteRecord={canDeleteRecord}
+        downloadingId={downloadingId}
+        onReviewRecord={transitionReview}
+        onApproveRecord={transitionApprove}
+        onRejectRecord={transitionReject}
+        isActionBusy={isActionBusy}
+        testAnchorPrefix={testAnchorPrefix}
+        typeLabel={
+          isFitnessTestReport ? 'Fitness Test Type' : isDrillReport ? 'Drill Type' : 'Incident Type'
+        }
+        conditionLabel={isDrillReport || isFitnessTestReport ? 'Condition' : 'Weather'}
+        detailsLabel={
+          isFitnessTestReport ? 'Test Details' : isDrillReport ? 'Drill Scenario' : 'Incident Title'
+        }
+        summaryLabel={
+          isFitnessTestReport ? 'Test Summary' : isDrillReport ? 'Outcome Summary' : 'Summary'
+        }
+      />
+    )
+  }
+
   if (!user) {
     return (
       <div className="my-4 text-danger">Unable to load reports page. Please sign in again.</div>
@@ -538,12 +586,7 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
           </>
         }
       />
-      <CToaster
-        ref={toaster}
-        push={toast}
-        placement="bottom-end"
-        className="inspection-toaster mb-3 me-3"
-      />
+      <InlineFeedbackMessage feedback={feedback} className="mb-3" />
       {isDeleting || isSubmitting ? (
         <div
           style={{
@@ -582,7 +625,6 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
           setShowDiscard(false)
           const action = pendingAction
           setPendingAction(null)
-          void removeDraft()
           setIsFormDirty(false)
           setFormSessionKey((prev) => prev + 1)
           if (typeof action === 'function') action()
@@ -732,8 +774,14 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
         />
       ) : null}
 
-      {activeSection === 'records' ? (
-        <div className={isWorkFirstReport && !showMobileRecords ? 'd-none d-md-block' : ''}>
+      {shouldRenderRecordsSection ? (
+        <div
+          className={
+            isWorkFirstReport && activeSection === 'records' && !showMobileRecords
+              ? 'd-none d-md-block'
+              : ''
+          }
+        >
           <ReportRecordsSection
             reportTypeLabel={reportTypeLabel}
             startNew={startNew}
@@ -790,59 +838,41 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
 
       {activeSection === 'detail' ? (
         <div {...(testAnchorPrefix ? { 'data-testid': `${testAnchorPrefix}-detail` } : {})}>
-          {shouldShowRouteDetailLoading ? (
-            <TableLoader message="Loading report..." />
-          ) : routeDetailErrorMessage ? (
-            <div className={routeDetailStatus === 'not-found' ? 'text-warning' : 'text-danger'}>
-              {routeDetailErrorMessage}
-            </div>
+          {isWorkFirstReport ? (
+            <COffcanvas
+              visible
+              placement="end"
+              onHide={() => navigate(reportBasePath)}
+              className="inspection-detail-drawer report-detail-drawer"
+              backdrop
+              scroll
+            >
+              <COffcanvasHeader className="inspection-detail-drawer__header">
+                <COffcanvasTitle>{reportTypeLabel} Details</COffcanvasTitle>
+                <CButton
+                  type="button"
+                  color="link"
+                  className="inspection-detail-drawer__close p-1 text-body-secondary"
+                  aria-label="Close report details"
+                  onClick={() => navigate(reportBasePath)}
+                >
+                  <X size={18} />
+                </CButton>
+              </COffcanvasHeader>
+              <COffcanvasBody className="inspection-detail-drawer__body">
+                {renderReportDetailContent()}
+              </COffcanvasBody>
+            </COffcanvas>
           ) : (
-            <ReportDetailSection
-              selectedRecord={selectedDetailRecord}
-              onBack={() => navigate(reportBasePath)}
-              formatDateTime={formatDateTime}
-              renderStatusBadge={renderStatusBadge}
-              onDownloadRecord={downloadRecord}
-              onEditRecord={editRecord}
-              onDeleteRecord={requestDeleteRecord}
-              canEditRecord={canEditRecord}
-              canDeleteRecord={canDeleteRecord}
-              downloadingId={downloadingId}
-              onReviewRecord={transitionReview}
-              onApproveRecord={transitionApprove}
-              onRejectRecord={transitionReject}
-              isActionBusy={isActionBusy}
-              testAnchorPrefix={testAnchorPrefix}
-              typeLabel={
-                isFitnessTestReport
-                  ? 'Fitness Test Type'
-                  : isDrillReport
-                    ? 'Drill Type'
-                    : 'Incident Type'
-              }
-              conditionLabel={isDrillReport || isFitnessTestReport ? 'Condition' : 'Weather'}
-              detailsLabel={
-                isFitnessTestReport
-                  ? 'Test Details'
-                  : isDrillReport
-                    ? 'Drill Scenario'
-                    : 'Incident Title'
-              }
-              summaryLabel={
-                isFitnessTestReport ? 'Test Summary' : isDrillReport ? 'Outcome Summary' : 'Summary'
-              }
-              workFirstMobileDetail={isWorkFirstReport}
-            />
+            renderReportDetailContent()
           )}
         </div>
       ) : null}
 
       {activeSection === 'review' ? (
         <div {...(testAnchorPrefix ? { 'data-testid': `${testAnchorPrefix}-review` } : {})}>
-          <ReportDetailSection
+          <ReportReviewSection
             selectedRecord={reviewRecord}
-            mode="review"
-            reviewBannerText={isDrillReport ? '' : 'Review Mode - not submitted yet.'}
             reviewActions={{
               onBackToEdit: handleBackFromReview,
               onSaveDraft: handleSaveReviewDraft,
@@ -872,7 +902,6 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
             summaryLabel={
               isFitnessTestReport ? 'Test Summary' : isDrillReport ? 'Outcome Summary' : 'Summary'
             }
-            workFirstMobileDetail={isWorkFirstReport}
           />
         </div>
       ) : null}

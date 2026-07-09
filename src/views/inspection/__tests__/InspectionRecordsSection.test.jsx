@@ -153,7 +153,7 @@ describe('InspectionRecordsSection', () => {
     const mobileArticle = mobileCard.closest('article')
     expect(mobileArticle.className).toContain('list-group-item')
     expect(mobileArticle.closest('.list-group')).toBeTruthy()
-    expect(mobileArticle.textContent).toContain('16 Apr 2026')
+    expect(mobileArticle.textContent).toContain('16 Apr 2026, 14:00')
     expect(mobileArticle.textContent).toContain('Safety - Workshop')
     expect(mobileArticle.textContent).toContain('Submitted')
     expect(mobileArticle.textContent).not.toContain('Monthly safety inspection.')

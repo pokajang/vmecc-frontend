@@ -25,6 +25,7 @@ import RowActionCell from 'src/components/RowActionCell'
 import RowActions from 'src/components/RowActions'
 import TableFilters from 'src/components/TableFilters'
 import useMediaQuery from 'src/hooks/useMediaQuery'
+import { formatLocalDate, getLocalDateInputValue } from 'src/utils/localDate'
 import { InspectionPhotoViewerModal } from 'src/views/inspection/form/components/InspectionDisplayShared'
 import {
   fetchFireExtinguisherCoverage,
@@ -33,14 +34,7 @@ import {
 
 const ALL_ROWS_VALUE = 'all'
 
-const formatDateInputValue = (date) => {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-const getTodayDateInputValue = () => formatDateInputValue(new Date())
+const getTodayDateInputValue = () => getLocalDateInputValue()
 
 const PERIOD_OPTIONS = [
   { value: 'all', label: 'All time' },
@@ -262,10 +256,7 @@ const getZoneSortValue = (zone = '') => {
 }
 
 const formatDate = (value) => {
-  if (!value) return '--'
-  const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) return value
-  return parsed.toLocaleDateString([], { day: '2-digit', month: 'short', year: 'numeric' })
+  return formatLocalDate(value, '--')
 }
 
 const formatDateTime = (value) => {

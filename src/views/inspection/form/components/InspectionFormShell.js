@@ -1,6 +1,7 @@
 import React from 'react'
 import { CAlert, CButton } from '@coreui/react'
 import { Upload } from 'lucide-react'
+import { formatCameraDiagnosticsLines } from 'src/utils/cameraDiagnostics'
 import InspectionFormBodySections from './InspectionFormBodySections'
 import InspectionFormManagerModals from './InspectionFormManagerModals'
 import InspectionFormModals from './InspectionFormModals'
@@ -38,6 +39,7 @@ const InspectionFormShell = ({
   location,
   locationDeleteTarget,
   onSaveDraft,
+  isUpdateMode = false,
   photoRuntime,
   refs,
   reviewRequest,
@@ -93,22 +95,34 @@ const InspectionFormShell = ({
           dismissible
           onClose={() => clearCameraUploadFallback?.()}
         >
-          <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2">
-            <div className="small">{cameraUploadFallback.message}</div>
-            <div className="d-flex align-items-center gap-2">
-              <CButton
-                type="button"
-                color="warning"
-                size="sm"
-                onClick={() => {
-                  clearCameraUploadFallback?.()
-                  requestUploadFromCameraFallback?.()
-                }}
-              >
-                <Upload size={14} className="me-1" />
-                Upload photo
-              </CButton>
+          <div className="d-flex flex-column gap-2">
+            <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2">
+              <div className="small">{cameraUploadFallback.message}</div>
+              <div className="d-flex align-items-center gap-2">
+                <CButton
+                  type="button"
+                  color="warning"
+                  size="sm"
+                  onClick={() => {
+                    clearCameraUploadFallback?.()
+                    requestUploadFromCameraFallback?.()
+                  }}
+                >
+                  <Upload size={14} className="me-1" />
+                  Upload photo
+                </CButton>
+              </div>
             </div>
+            {cameraUploadFallback.diagnostics ? (
+              <details className="small">
+                <summary>Camera diagnostics</summary>
+                <div className="mt-2 d-grid gap-1">
+                  {formatCameraDiagnosticsLines(cameraUploadFallback.diagnostics).map((line) => (
+                    <div key={line}>{line}</div>
+                  ))}
+                </div>
+              </details>
+            ) : null}
           </div>
         </CAlert>
       ) : null}
@@ -196,6 +210,7 @@ const InspectionFormShell = ({
             isLoadingScbaCatalogSections={isLoadingScbaCatalogSections}
             isFullInspectionForm={structured.isFullInspectionForm}
             isStructuredInspectionForm={structured.isStructuredInspectionForm}
+            isUpdateMode={isUpdateMode}
             location={location}
             mainLocation={setup.mainLocation}
             onRequestReview={reviewRequest.requestReview}
