@@ -158,11 +158,13 @@ const buildFireExtinguisherMetrics = (form = {}) => {
   return {
     count: rows.length,
     checkedCount: validations.filter((row) => row.isComplete).length,
-    defectCount: validations.reduce((count, row) => count + Number(row.defectCount || 0), 0),
+    defectCount: validations.filter((row) => row.hasDefect).length,
     incompleteCount: validations.filter((row) => !row.isComplete).length,
     evidenceIssueCount: validations.reduce(
       (count, row) =>
-        count + Number(row.incompleteRemarksCount || 0) + Number(row.incompletePhotoCount || 0),
+        count +
+        (Array.isArray(row.missingRemarkKeys) ? row.missingRemarkKeys.length : 0) +
+        (Array.isArray(row.missingPhotoKeys) ? row.missingPhotoKeys.length : 0),
       0,
     ),
   }

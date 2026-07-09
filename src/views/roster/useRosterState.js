@@ -7,6 +7,7 @@ import {
   saveRosters,
   publishRosters,
 } from 'src/services/apiClient'
+import { getLocalDateInputValue } from 'src/utils/localDate'
 import rosterFlowReducer, { initialRosterFlowState } from './rosterFlowReducer'
 import { validateRosterAssignment } from './rosterConflictValidator'
 
@@ -27,7 +28,7 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
     return date
   }
 
-  const formatISO = (d) => d.toISOString().slice(0, 10)
+  const formatISO = (d) => getLocalDateInputValue(d)
   const defaultWeekStart = formatISO(getMonday(today))
 
   const [rangeType, setRangeType] = useState(defaultRangeType)

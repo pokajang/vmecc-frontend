@@ -389,9 +389,11 @@ const getErAuxFirstMissingDetailKey = (labels = []) => {
   return ''
 }
 
-export const getErAuxValidationDetails = (form = {}) => {
-  const visibleChecks = getErAuxVisibleChecks(form)
-  const incompleteCheckDetails = visibleChecks
+export const getErAuxValidationDetails = (form = {}, options = {}) => {
+  const checks = Array.isArray(options.checks)
+    ? options.checks
+    : getErAuxSubmissionCandidateRows(form)
+  const incompleteCheckDetails = checks
     .map((check) => {
       const missing = getErAuxMissingCheckLabels(check)
       if (missing.length === 0) return null
@@ -403,7 +405,7 @@ export const getErAuxValidationDetails = (form = {}) => {
       }
     })
     .filter(Boolean)
-  const incompleteEvidenceDetails = visibleChecks
+  const incompleteEvidenceDetails = checks
     .map((check) => {
       const missing = getErAuxMissingEvidenceLabels(check)
       if (missing.length === 0) return null
@@ -443,7 +445,7 @@ export const getErAuxCheckSummary = (form = {}, options = {}) => {
     const photos = Array.isArray(check.defectPhotos) ? check.defectPhotos : []
     return photos.length === 0
   }).length
-  const validationDetails = getErAuxValidationDetails({ ...form, erAuxChecks: visibleChecks })
+  const validationDetails = getErAuxValidationDetails(form, { checks: visibleChecks })
 
   return {
     totalCount: visibleChecks.length,
@@ -458,22 +460,15 @@ export const getErAuxCheckSummary = (form = {}, options = {}) => {
 }
 
 export const getErAuxMissingFields = (form = {}, options = {}) => {
-  const { visibleChecks } = getErAuxCheckSummary(
-    form,
-    Array.isArray(options.checks) ? { checks: options.checks } : {},
-  )
+  const checks = Array.isArray(options.checks)
+    ? options.checks
+    : getErAuxSubmissionCandidateRows(form)
+  const validationDetails = getErAuxValidationDetails(form, { checks })
 
   return {
     erAuxSession: false,
-    erAuxChecks:
-      visibleChecks.length === 0 || visibleChecks.some((check) => !isErAuxRowComplete(check)),
-    erAuxRemarks: visibleChecks.some(
-      (check) =>
-        isDefectCondition(check.condition) &&
-        (!String(check.defectRemarks || '').trim() ||
-          !Array.isArray(check.defectPhotos) ||
-          check.defectPhotos.length === 0),
-    ),
+    erAuxChecks: checks.length === 0 || validationDetails.incompleteCheckDetails.length > 0,
+    erAuxRemarks: validationDetails.incompleteEvidenceDetails.length > 0,
   }
 }
 

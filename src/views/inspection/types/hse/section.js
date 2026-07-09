@@ -14,6 +14,7 @@ import { Pencil } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import useMediaQuery from 'src/hooks/useMediaQuery'
+import { dedupePhotos } from 'src/views/inspection/inspectionSharedUtils'
 import { FormFieldError } from 'src/views/inspection/form/components/InspectionFormDisplaySections'
 import { normalizeInspectionIssues } from 'src/views/inspection/types/inspectionIssues'
 import {
@@ -26,6 +27,16 @@ import {
 } from './helpers'
 
 const text = (value) => String(value || '').trim()
+
+const getPhotoSignature = (photos = []) =>
+  JSON.stringify(
+    dedupePhotos(photos).map((photo) => ({
+      id: String(photo?.id || ''),
+      fileName: String(photo?.fileName || ''),
+      url: String(photo?.url || ''),
+      description: String(photo?.description || ''),
+    })),
+  )
 
 const HSE_EDITABLE_TEXT_FIELDS = [
   ['hseAreaConditionRemarks', 'hse_area_condition_remarks'],
@@ -296,9 +307,11 @@ export const HseEditSection = ({
 }) => {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [mobileDraftFields, setMobileDraftFields] = useState(null)
+  const [mobileDraftPhotos, setMobileDraftPhotos] = useState([])
   const useMobileDrawer = useMediaQuery('(max-width: 575.98px)')
   const normalized = normalizeHseFormFields(form)
   const editableForm = getEditableHseFormFields(form, normalized)
+  const savedPhotos = Array.isArray(form?.photos) ? form.photos : []
   const selectedFindings = normalized.hseSelections.filter((selection) =>
     HSE_FINDING_SELECTIONS.includes(selection),
   )
@@ -307,13 +320,18 @@ export const HseEditSection = ({
   const hseFieldErrors = validationState?.hse?.missingFields || {}
   const hasSelection = normalized.hseSelections.length > 0
   const outcomeLabel = getHseSelectedOutcomeLabel(normalized)
+  const mobilePhotoDirty = getPhotoSignature(mobileDraftPhotos) !== getPhotoSignature(savedPhotos)
+  const mobileDraftPhotoCount = dedupePhotos(mobileDraftPhotos).length
+  const savedPhotoCount = dedupePhotos(savedPhotos).length
   const openMobileDrawer = () => {
     setMobileDraftFields({ ...editableForm })
+    setMobileDraftPhotos(savedPhotos)
     setDrawerOpen(true)
   }
   const closeMobileDrawer = () => {
     setDrawerOpen(false)
     setMobileDraftFields(null)
+    setMobileDraftPhotos([])
   }
   const patchMobileDraftField = (field, value) => {
     setMobileDraftFields((current) =>
@@ -347,9 +365,21 @@ export const HseEditSection = ({
       }
     })
   }
+  const addMobileDraftPhotos = (nextPhotos = []) => {
+    const additions = Array.isArray(nextPhotos) ? nextPhotos.filter(Boolean) : []
+    if (additions.length === 0) return
+    setMobileDraftPhotos((currentPhotos) => dedupePhotos([...currentPhotos, ...additions]))
+  }
+  const getMobileDraftPhotoUploadOptions = () => ({
+    rootPhotos: mobileDraftPhotos,
+    onAddPhotos: addMobileDraftPhotos,
+  })
   const saveMobileDraft = () => {
     if (!mobileDraftFields) return
-    const result = handlers.onSaveHseObservationDraft?.(mobileDraftFields)
+    const result = handlers.onSaveHseObservationDraft?.({
+      ...mobileDraftFields,
+      photos: dedupePhotos(mobileDraftPhotos),
+    })
     if (result === false) return
     closeMobileDrawer()
   }
@@ -399,20 +429,31 @@ export const HseEditSection = ({
                   ...handlers,
                   onToggleHseSelection: toggleMobileDraftSelection,
                   onUpdateHseField: patchMobileDraftField,
+                  onTakeGeneralPhoto: (caption) =>
+                    handlers.onTakeGeneralPhoto?.(caption, getMobileDraftPhotoUploadOptions()),
+                  onUploadGeneralPhoto: (caption) =>
+                    handlers.onUploadGeneralPhoto?.(caption, getMobileDraftPhotoUploadOptions()),
                 }}
               />
-              <div className="d-flex justify-content-end gap-2">
-                <CButton
-                  type="button"
-                  color="secondary"
-                  variant="outline"
-                  onClick={closeMobileDrawer}
-                >
-                  Cancel
-                </CButton>
-                <CButton type="button" color="primary" onClick={saveMobileDraft}>
-                  Save
-                </CButton>
+              <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <div className="small text-body-secondary" aria-live="polite">
+                  {mobilePhotoDirty
+                    ? `${mobileDraftPhotoCount} HSE photo${mobileDraftPhotoCount === 1 ? '' : 's'} ready to save`
+                    : `${savedPhotoCount} HSE photo${savedPhotoCount === 1 ? '' : 's'} attached`}
+                </div>
+                <div className="d-flex justify-content-end gap-2">
+                  <CButton
+                    type="button"
+                    color="secondary"
+                    variant="outline"
+                    onClick={closeMobileDrawer}
+                  >
+                    Cancel
+                  </CButton>
+                  <CButton type="button" color="primary" onClick={saveMobileDraft}>
+                    Save
+                  </CButton>
+                </div>
               </div>
             </div>
           ) : null}

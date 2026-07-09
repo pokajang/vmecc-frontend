@@ -3,16 +3,26 @@ import { CAccordion, CAccordionBody, CAccordionHeader, CAccordionItem, CBadge } 
 
 const text = (value) => String(value || '').trim()
 
+const isRedundantCheckedBadge = (badge = {}) => text(badge.label).toLowerCase() === 'checked'
+
 const FindingSummaryHeader = ({ item }) => {
   const summaryLines = (Array.isArray(item?.summaryLines) ? item.summaryLines : []).filter((line) =>
     text(line),
   )
-  const badges = Array.isArray(item?.badges) ? item.badges : []
+  const [primarySummaryLine, ...secondarySummaryLines] = summaryLines
+  const badges = (Array.isArray(item?.badges) ? item.badges : []).filter(
+    (badge) => !isRedundantCheckedBadge(badge),
+  )
 
   return (
     <div className="d-grid gap-2 w-100">
       <div className="d-flex flex-wrap align-items-start justify-content-between gap-2">
-        <div className="fw-semibold text-break">{item?.title || 'Finding item'}</div>
+        <div className="inspection-detail-finding-accordion-title-row">
+          <span className="fw-semibold text-break">{item?.title || 'Finding item'}</span>
+          {primarySummaryLine ? (
+            <span className="small text-body-secondary">{primarySummaryLine}</span>
+          ) : null}
+        </div>
         {badges.length > 0 ? (
           <div className="d-flex flex-wrap gap-2">
             {badges.map((badge) => (
@@ -23,7 +33,7 @@ const FindingSummaryHeader = ({ item }) => {
           </div>
         ) : null}
       </div>
-      {summaryLines.map((line, index) => (
+      {secondarySummaryLines.map((line, index) => (
         <div
           key={`${item?.key || item?.title || 'summary'}:${index}`}
           className="small text-body-secondary"

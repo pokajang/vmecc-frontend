@@ -180,6 +180,7 @@ describe('InspectionDetailSection', () => {
     expect(screen.getByText('Equipment')).toBeTruthy()
     expect(screen.getByText('Fire Jacket')).toBeTruthy()
     expect(screen.getByText('Chainsaw')).toBeTruthy()
+    expect(screen.queryByText('Animal catcher net')).toBeNull()
     expect(screen.getAllByText('15').length).toBeGreaterThan(0)
     expect(screen.getByText('Sent for replacement.')).toBeTruthy()
   })
@@ -278,6 +279,11 @@ describe('InspectionDetailSection', () => {
               boxGlassAvailability: 'Yes',
               operationalCondition: 'Good',
               remarks: 'Needs replacement.',
+              sessionResult: {
+                status: 'completed',
+                checkedBy: 'Inspector Fire',
+                checkedAt: '2026-06-29T03:31:00.000Z',
+              },
             },
           ],
         }}
@@ -295,6 +301,14 @@ describe('InspectionDetailSection', () => {
 
     expect(screen.getByText('Extinguishers')).toBeTruthy()
     expect(screen.getByText('ADO-001')).toBeTruthy()
+    const extinguisherHeader = screen
+      .getByRole('button', { name: /ADO-001/ })
+      .querySelector('.inspection-detail-finding-accordion-title-row')
+    expect(extinguisherHeader?.textContent || '').toContain('ADO-001')
+    expect(extinguisherHeader?.textContent || '').toContain('Completed by Inspector Fire')
+    expect(
+      within(screen.getByRole('button', { name: /ADO-001/ })).queryByText('Checked'),
+    ).toBeNull()
     expect(
       screen.getAllByText((_, node) => node?.textContent?.includes('DP 6KG') || false).length,
     ).toBeGreaterThan(0)
@@ -725,7 +739,7 @@ describe('InspectionDetailSection', () => {
     expect(screen.queryByText('Choose Sub-location')).toBeNull()
   })
 
-  it('renders sticky mobile actions with More for reviewable records', () => {
+  it('renders inline mobile actions with More for reviewable records', () => {
     const onBack = vi.fn()
     const onReviewRecord = vi.fn()
     const onDownloadRecord = vi.fn()
@@ -765,12 +779,15 @@ describe('InspectionDetailSection', () => {
     )
 
     const actionGroup = screen.getByRole('group', { name: 'Inspection detail actions' })
+    expect(actionGroup.className).toContain('inspection-detail-inline-actions')
+    expect(actionGroup.className).not.toContain('action-row-thumb')
     expect(within(actionGroup).getByRole('button', { name: 'Review' })).toBeTruthy()
     expect(within(actionGroup).getByRole('button', { name: 'More' })).toBeTruthy()
 
     fireEvent.click(within(actionGroup).getByRole('button', { name: 'More' }))
 
     const moreDrawer = screen.getByRole('dialog')
+    expect(moreDrawer.querySelector('.inspection-detail-more-actions')).toBeTruthy()
     expect(within(moreDrawer).getByRole('button', { name: 'Download' })).toBeTruthy()
     expect(within(moreDrawer).getByRole('button', { name: 'Back to records' })).toBeTruthy()
   })

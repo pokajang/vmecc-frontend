@@ -96,6 +96,15 @@
   .inspection-module-page .module-page-header,
   .inspection-module-page .module-page-header__title,
   .inspection-module-page .module-page-header__actions,
+  .inspection-mobile-home .mobile-record-list,
+  .inspection-mobile-home .mobile-record-list__section,
+  .inspection-mobile-home .mobile-record-list__group,
+  .inspection-mobile-home .list-group,
+  .inspection-mobile-home .list-group-item,
+  .inspection-mobile-home .record-card,
+  .inspection-mobile-home .record-card__compact-row,
+  .inspection-mobile-home .record-card__main,
+  .inspection-mobile-home .record-card__meta,
   .inspection-mobile-section,
   .inspection-mobile-section > *,
   .inspection-mobile-section .mobile-record-list,
@@ -134,10 +143,15 @@
     overflow-x: clip;
   }
 
+  .inspection-mobile-home .list-group,
   .inspection-mobile-section .list-group {
     width: 100%;
   }
 
+  .inspection-mobile-home .mobile-record-list,
+  .inspection-mobile-home .mobile-record-list__section,
+  .inspection-mobile-home .mobile-record-list__group,
+  .inspection-mobile-home .record-card,
   .inspection-mobile-section .mobile-record-list,
   .inspection-mobile-section .mobile-record-list__section,
   .inspection-mobile-section .mobile-record-list__group,
@@ -145,21 +159,45 @@
     width: 100%;
   }
 
+  .inspection-mobile-home .list-group-item,
   .inspection-mobile-section .list-group-item {
     overflow: hidden;
   }
 
+  .inspection-mobile-home .record-card__compact-row,
   .inspection-mobile-section .record-card__compact-row {
     width: 100%;
   }
 
+  .inspection-mobile-home .record-card__main,
   .inspection-mobile-section .record-card__main {
+    flex: 1 1 0;
     overflow: hidden;
   }
 
+  .inspection-mobile-home .record-card__meta,
   .inspection-mobile-section .record-card__meta {
     flex: 0 1 auto;
     align-items: flex-start !important;
+  }
+
+  .inspection-mobile-home .record-card__title,
+  .inspection-mobile-home .record-card__subtitle,
+  .inspection-mobile-section .record-card__title,
+  .inspection-mobile-section .record-card__subtitle {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .inspection-mobile-home .record-card__subtitle,
+  .inspection-mobile-section .record-card__subtitle {
+    display: -webkit-box;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    text-overflow: ellipsis;
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
   }
 
   .inspection-mobile-section .inspection-mobile-kebab {

@@ -9,13 +9,15 @@ import {
 
 const MAX_PHOTO_BYTES = 1.5 * 1024 * 1024
 const TARGET_PHOTO_BYTES = 1.0 * 1024 * 1024
+const CAMERA_TARGET_PHOTO_BYTES = 750 * 1024
 const MAX_PHOTO_COUNT = 10
 const MAX_TOTAL_PHOTO_BYTES = 12 * 1024 * 1024
-const MAX_CAMERA_FILE_BYTES = 20 * 1024 * 1024
+const MAX_CAMERA_FILE_BYTES = 12 * 1024 * 1024
 const IMAGE_OPERATION_TIMEOUT_MS = 12000
 const COMPRESS_DIMENSION_CANDIDATES = [2048, 1920, 1600, 1365, 1280, 1024, 900, 768, 640, 512]
-const CAMERA_COMPRESS_DIMENSION_CANDIDATES = [1600, 1365, 1280, 1024, 900, 768, 640, 512]
+const CAMERA_COMPRESS_DIMENSION_CANDIDATES = [1280, 1024]
 const COMPRESS_QUALITY_CANDIDATES = [0.88, 0.8, 0.72, 0.64, 0.56, 0.48, 0.4, 0.32, 0.25]
+const CAMERA_COMPRESS_QUALITY_CANDIDATES = [0.72, 0.58, 0.45]
 
 const FAILURE_TITLES = {
   invalid_file: 'Invalid photo',
@@ -25,6 +27,7 @@ const FAILURE_TITLES = {
   compressed_too_large: 'Photo too large',
   total_size_exceeded: 'Photos too large',
   read_failed: 'Read failed',
+  file_too_large: 'Photo too large',
   low_memory: 'Camera memory limit',
   unsupported_file_type: 'Unsupported file type',
   operation_timeout: 'Upload timeout',
@@ -39,6 +42,7 @@ const FAILURE_COLORS = {
   compressed_too_large: 'warning',
   total_size_exceeded: 'warning',
   read_failed: 'danger',
+  file_too_large: 'warning',
   low_memory: 'warning',
   unsupported_file_type: 'warning',
   operation_timeout: 'warning',
@@ -53,6 +57,8 @@ const DEFAULT_FAILURE_MESSAGES = {
   compressed_too_large: 'Photo is too large even after compression.',
   total_size_exceeded: 'Total photo size must be 12 MB or smaller.',
   read_failed: 'Unable to read selected photo.',
+  file_too_large:
+    'Camera photo is too large for in-browser processing. Upload a smaller photo manually.',
   low_memory:
     'Camera processing failed due to low device memory. You can upload the photo manually to continue.',
   unsupported_file_type:
@@ -254,8 +260,8 @@ const classifyValidationFailure = (file = {}, isCameraUpload = false) => {
 
   if (isCameraUpload && normalizedSize > MAX_CAMERA_FILE_BYTES) {
     return buildPhotoFailure(
-      'low_memory',
-      `Unable to complete due to low memory for "${fileName}".`,
+      'file_too_large',
+      `"${fileName}" is over 12 MB. Upload a smaller photo manually or retake the photo at a lower resolution.`,
     )
   }
 
@@ -366,23 +372,25 @@ const compressInspectionPhoto = async (file, targetBytes, options = {}) => {
   const dimensions = isCameraUpload
     ? CAMERA_COMPRESS_DIMENSION_CANDIDATES
     : COMPRESS_DIMENSION_CANDIDATES
+  const qualities = isCameraUpload
+    ? CAMERA_COMPRESS_QUALITY_CANDIDATES
+    : COMPRESS_QUALITY_CANDIDATES
+  const canvas = document.createElement('canvas')
+  const context = canvas.getContext('2d')
+  if (!context) throw new Error('Unable to process selected image.')
 
   for (const maxDimension of dimensions) {
     const ratio = Math.min(1, maxDimension / Math.max(image.width || 1, image.height || 1))
     const nextWidth = Math.max(1, Math.round((image.width || 1) * ratio))
     const nextHeight = Math.max(1, Math.round((image.height || 1) * ratio))
-    const canvas = document.createElement('canvas')
     canvas.width = nextWidth
     canvas.height = nextHeight
-
-    const context = canvas.getContext('2d')
-    if (!context) throw new Error('Unable to process selected image.')
 
     context.fillStyle = '#ffffff'
     context.fillRect(0, 0, nextWidth, nextHeight)
     context.drawImage(image, 0, 0, nextWidth, nextHeight)
 
-    for (const quality of COMPRESS_QUALITY_CANDIDATES) {
+    for (const quality of qualities) {
       const candidate = await canvasToBlob(canvas, targetMime, quality)
       if (!bestBlob || candidate.size < bestBlob.size) bestBlob = candidate
       if (candidate.size <= targetBytes) break
@@ -470,7 +478,11 @@ export const prepareInspectionPhotoUploads = async ({
 
     let nextFile = file
     try {
-      nextFile = await compressInspectionPhoto(file, TARGET_PHOTO_BYTES, { isCameraUpload })
+      nextFile = await compressInspectionPhoto(
+        file,
+        isCameraUpload ? CAMERA_TARGET_PHOTO_BYTES : TARGET_PHOTO_BYTES,
+        { isCameraUpload },
+      )
     } catch (error) {
       const failureCode = classifyPhotoError(error, 'processing_failed')
       notifyFailureOnce(

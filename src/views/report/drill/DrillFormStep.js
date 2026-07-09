@@ -17,7 +17,9 @@ const DrillFormStep = ({
   removeChronology,
   onClear,
   onSaveDraft,
+  saveLabel = 'Save Draft',
   submitLabel = 'Submit Report',
+  draftStatus = '',
 }) => {
   const dateTimeLabel = [form.reportDate, form.reportTime].filter(Boolean).join(' ')
   const chronologyCount = Array.isArray(form.chronology) ? form.chronology.length : 0
@@ -71,6 +73,11 @@ const DrillFormStep = ({
       />
 
       <div className="d-none d-md-flex flex-md-row justify-content-end gap-2 mb-4">
+        {draftStatus ? (
+          <div className="small text-body-secondary me-md-auto align-self-md-center">
+            {draftStatus}
+          </div>
+        ) : null}
         <CButton type="button" color="light" onClick={() => setSetupConfirmed(false)}>
           Back
         </CButton>
@@ -78,7 +85,7 @@ const DrillFormStep = ({
           Reset
         </CButton>
         <CButton type="button" color="secondary" onClick={() => onSaveDraft()}>
-          Save Draft
+          {saveLabel}
         </CButton>
         <CButton type="submit" color="primary">
           {submitLabel}
@@ -87,8 +94,10 @@ const DrillFormStep = ({
       <div className="d-md-none">
         <ReportSetupActions
           onSaveDraft={onSaveDraft}
+          saveLabel={saveLabel}
           continueLabel={submitLabel}
           primaryType="submit"
+          statusMessage={draftStatus}
         />
       </div>
     </>

@@ -1,4 +1,5 @@
 import { CLAIM_STATUS_COLOR, TERMINAL_CLAIM_STATUSES } from './payrollConstants'
+import { formatLocalDate, getLocalDateInputValue } from 'src/utils/localDate'
 
 export const formatCurrency = (value) =>
   new Intl.NumberFormat('en-MY', { style: 'currency', currency: 'MYR' }).format(value || 0)
@@ -8,12 +9,7 @@ export const parseAmount = (value) => {
   return Number.isFinite(parsed) ? parsed : 0
 }
 
-export const formatDate = (value) => {
-  if (!value) return '-'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return date.toLocaleDateString('en-MY', { day: '2-digit', month: 'short', year: 'numeric' })
-}
+export const formatDate = (value) => formatLocalDate(value)
 
 export const getClaimStatusColor = (status) => CLAIM_STATUS_COLOR[status] || 'secondary'
 export const isTerminalClaimStatus = (status) =>
@@ -43,9 +39,11 @@ const MONTH_INDEX_BY_NAME = {
 
 export const toIsoDateInput = (value) => {
   if (!value) return ''
+  const text = String(value || '').trim()
+  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return ''
-  return date.toISOString().slice(0, 10)
+  return getLocalDateInputValue(date)
 }
 
 export const resolvePeriodValue = (claim) => {

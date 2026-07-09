@@ -77,6 +77,8 @@ const ErcoSetupStep = ({
   pushToast,
   onSaveDraft,
   onContinue,
+  saveLabel = 'Save Draft',
+  draftStatus = '',
   showActions = true,
 }) => {
   const isMobile = useIsMobile()
@@ -752,13 +754,20 @@ const ErcoSetupStep = ({
 
         {showActions ? (
           isMobile ? (
-            <ReportMobileActionGroup onSaveDraft={onSaveDraft} onPrimary={handleContinueClick} />
+            <ReportMobileActionGroup
+              onSaveDraft={onSaveDraft}
+              onPrimary={handleContinueClick}
+              saveLabel={saveLabel}
+              statusMessage={draftStatus}
+            />
           ) : (
             <DetailsStepActions
               onSaveDraft={onSaveDraft}
+              saveLabel={saveLabel}
               primaryLabel="Continue"
               primaryType="button"
               onPrimary={handleContinueClick}
+              statusMessage={draftStatus}
             />
           )
         ) : null}

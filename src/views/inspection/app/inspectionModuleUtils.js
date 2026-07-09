@@ -1,4 +1,5 @@
 import { stripInspectionContext } from 'src/views/inspection/typeOptionUtils'
+import { getLocalDateInputValue, parseLocalDateValue } from 'src/utils/localDate'
 
 export const REPORT_WORKFLOW_DECLARATION_LABEL =
   'I confirm this report workflow action is accurate and aligned with submitted incident details.'
@@ -22,8 +23,8 @@ const HOME_DATE_FORMATTER = new Intl.DateTimeFormat('en-GB', {
 const FILE_DATE_FALLBACK = 'undated'
 
 const parseHomeDate = (value) => {
-  const parsed = new Date(String(value || '').trim())
-  return Number.isNaN(parsed.getTime()) ? null : parsed
+  const parsed = parseLocalDateValue(value)
+  return parsed && !Number.isNaN(parsed.getTime()) ? parsed : null
 }
 
 export const formatHomeDate = (value, fallback = '--') => {
@@ -49,16 +50,23 @@ const truncateFilenameSegment = (value, maxLength) => {
 }
 
 const formatFilenameDate = (record) => {
-  const rawDate = String(record?.incidentDate || record?.reportDate || '').trim()
+  const rawDate = String(
+    record?.inspectedAt || record?.incidentDate || record?.reportDate || '',
+  ).trim()
   if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) return rawDate
+  if (/^\d{4}-\d{2}-\d{2}T/.test(rawDate)) return rawDate.slice(0, 10)
 
-  const candidates = [rawDate, record?.submittedAt, record?.createdAt, record?.updatedAt].filter(
-    Boolean,
-  )
+  const candidates = [
+    rawDate,
+    record?.inspected_at,
+    record?.submittedAt,
+    record?.createdAt,
+    record?.updatedAt,
+  ].filter(Boolean)
 
   for (const candidate of candidates) {
     const parsed = new Date(candidate)
-    if (!Number.isNaN(parsed.getTime())) return parsed.toISOString().slice(0, 10)
+    if (!Number.isNaN(parsed.getTime())) return getLocalDateInputValue(parsed)
   }
 
   return FILE_DATE_FALLBACK
@@ -105,9 +113,11 @@ export const buildInspectionPdfFilename = (record, user) => {
 }
 
 export const getRecordDateValue = (row) =>
-  row?.timeline?.[0]?.at ||
+  row?.inspectedAt ||
+  row?.inspected_at ||
   row?.incidentDate ||
   row?.reportDate ||
+  row?.timeline?.[0]?.at ||
   row?.submittedAt ||
   row?.createdAt
 

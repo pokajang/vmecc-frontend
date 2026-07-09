@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { CToast, CToastBody, CToastHeader } from '@coreui/react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { ChevronDown, ChevronUp } from 'lucide-react'
@@ -52,13 +51,12 @@ const InspectionModule = () => {
   const navigate = useNavigate()
   const { reportId } = useParams()
   const user = useSelector((state) => state.authUser)
-  const toaster = useRef()
   const submitLockRef = useRef(false)
   const queueSyncLockRef = useRef(false)
   const reloadRecordsRef = useRef(null)
   const offlineWarningShownRef = useRef(false)
 
-  const [toast, addToast] = useState(0)
+  const [feedback, setFeedback] = useState(null)
   const [showDiscard, setShowDiscard] = useState(false)
   const [showDraftChoice, setShowDraftChoice] = useState(false)
   const [pendingAction, setPendingAction] = useState(null)
@@ -81,17 +79,22 @@ const InspectionModule = () => {
   const routeRecordId = isEditRoute ? String(reportId || '').trim() : ''
 
   const pushToast = useCallback((message, { title, color = 'light', delay = 5000 } = {}) => {
-    addToast(
-      <CToast autohide delay={delay} color={color}>
-        {title ? (
-          <CToastHeader closeButton>
-            <strong className="me-auto">{title}</strong>
-          </CToastHeader>
-        ) : null}
-        <CToastBody>{message}</CToastBody>
-      </CToast>,
-    )
+    setFeedback((current) => ({
+      id: Number(current?.id || 0) + 1,
+      message,
+      title,
+      color,
+      delay,
+    }))
   }, [])
+
+  useEffect(() => {
+    if (!feedback?.message || !feedback.delay) return undefined
+    const timerId = window.setTimeout(() => {
+      setFeedback((current) => (current?.id === feedback.id ? null : current))
+    }, feedback.delay)
+    return () => window.clearTimeout(timerId)
+  }, [feedback])
 
   const { setDraftVersion, activeDraftRows, setActiveDraftRows, activeDraftPayload } =
     useInspectionDraftRows(user)
@@ -293,6 +296,11 @@ const InspectionModule = () => {
     applySessionInspector,
     buildInspectionReviewRecord,
   })
+  const isUpdatingExistingRecord =
+    (activeSection === 'form' && routeMode === 'edit' && Boolean(routeRecordId)) ||
+    (activeSection === 'review' &&
+      reviewWorkspace?.mode === 'edit' &&
+      Boolean(reviewWorkspace?.recordId))
   const fireExtinguisherDraft =
     sessionReviewForm?.inspectionTypeDrafts?.[
       getPendingSubmissionTypeKey('Fire Extinguisher Inspection')
@@ -313,7 +321,13 @@ const InspectionModule = () => {
       ? buildInspectionReviewRecord({
           form: pendingItem.form,
           mode: reviewWorkspace?.mode || 'new',
-          editingRecord: null,
+          editingRecord:
+            reviewWorkspace?.mode === 'edit'
+              ? records.find(
+                  (row) =>
+                    String(row.id || '').trim() === String(reviewWorkspace?.recordId || '').trim(),
+                ) || editingRecord
+              : null,
           reportTypeSlug: 'inspection',
           reportTypeIdPrefix,
           sequence: nextReportSequence,
@@ -412,6 +426,7 @@ const InspectionModule = () => {
   })
   const pageTitle = buildInspectionPageTitle({
     activeSection,
+    isUpdatingExistingRecord,
     recordsSectionActive,
     showMobileRecords,
   })
@@ -439,6 +454,7 @@ const InspectionModule = () => {
         draftStatus,
         draftSyncState,
         formState,
+        isUpdatingExistingRecord,
         isFormReady,
         pushToast,
         requestReview,
@@ -569,6 +585,7 @@ const InspectionModule = () => {
         buildPendingReviewRecord,
         clearInspectionTypeDraft,
         isSubmitting,
+        isUpdatingExistingRecord,
         pendingSubmissionSummary,
         renderStatusBadge: renderInspectionStatusBadge,
         reviewMayQueue,
@@ -581,8 +598,7 @@ const InspectionModule = () => {
       })}
       runGuardedAction={runGuardedAction}
       startNew={startNew}
-      toast={toast}
-      toaster={toaster}
+      feedback={feedback}
     />
   )
 }

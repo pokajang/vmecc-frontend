@@ -94,6 +94,7 @@ describe('InspectionMobileHome', () => {
     expect(screen.getByText('FRT')).toBeTruthy()
     expect(screen.getByText('Store')).toBeTruthy()
     expect(screen.getByText('Hydraulic Training Yard')).toBeTruthy()
+    expect(screen.getByText('Hydraulic Training Yard').className).toContain('record-card__subtitle')
 
     fireEvent.click(screen.getByRole('button', { name: 'Open inspection record INS-002 summary' }))
     expect(onOpenRecord).toHaveBeenCalledWith(recentRows[1])

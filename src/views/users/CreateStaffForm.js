@@ -12,6 +12,7 @@ import {
 import { Plus, Trash2 } from 'lucide-react'
 import ButtonLoader from 'src/components/ButtonLoader'
 import { ROLE_OPTIONS, ROLE_SCOPE_MAP } from 'src/constants/roles'
+import { getLocalDateInputValue } from 'src/utils/localDate'
 
 export const roles = ROLE_OPTIONS
 export const roleScopeMap = ROLE_SCOPE_MAP
@@ -26,7 +27,7 @@ export const createDefaultAssignment = (role = 'Contract Manager') => ({
   role,
   scope_type: roleScopeMap[role] || 'office',
   team_id: null,
-  start_date: new Date().toISOString().slice(0, 10),
+  start_date: getLocalDateInputValue(),
   end_date: null,
   is_primary: true,
 })

@@ -281,6 +281,45 @@ describe('pending submission summary', () => {
     )
   })
 
+  it('counts Fire Extinguisher defect and evidence blockers from row validation details', () => {
+    const summary = buildPendingSubmissionSummary({
+      form: {
+        inspectionType: 'Fire Extinguisher Inspection',
+        fireExtinguisherChecks: [
+          {
+            ...completeFireExtinguisherRow,
+            id: 'fe-defect-1',
+            idLocNo: 'CAN-DEFECT-001',
+            physicalCondition: 'Not Good',
+            physicalConditionRemarks: '',
+            physicalConditionPhotos: [],
+          },
+        ],
+      },
+      draftSyncState: { status: 'synced' },
+    })
+
+    const fireExtinguisher = summary.items.find(
+      (item) => item.inspectionType === 'Fire Extinguisher Inspection',
+    )
+    expect(fireExtinguisher).toEqual(
+      expect.objectContaining({
+        status: 'needs_attention',
+        metrics: expect.objectContaining({
+          count: 1,
+          checkedCount: 0,
+          defectCount: 1,
+          incompleteCount: 1,
+          evidenceIssueCount: 2,
+        }),
+        blockers: expect.arrayContaining([
+          expect.objectContaining({ key: 'incomplete-items' }),
+          expect.objectContaining({ key: 'evidence' }),
+        ]),
+      }),
+    )
+  })
+
   it('summarizes non-FE structured equipment types independently', () => {
     const summary = buildPendingSubmissionSummary({
       form: {

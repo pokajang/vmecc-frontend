@@ -343,16 +343,21 @@ const InspectionDetailSection = ({
   const submittedAt = formatTimestamp(record.submittedAt, '') || dateTime || '--'
   const timeline = Array.isArray(record.timeline) ? record.timeline : []
   const submittedEntry = findWorkflowAction(timeline, 'Submitted')
-  const readOnlySummary = selectedTypeDefinition?.getSummary?.({
-    ...form,
-    ...(selectedTypeDefinition?.checksField
-      ? {
-          [selectedTypeDefinition.checksField]: form[selectedTypeDefinition.checksField] || [],
-          [selectedTypeDefinition.equipmentRowsField]:
-            form[selectedTypeDefinition.checksField] || [],
-        }
-      : {}),
-  })
+  const readOnlyChecks = selectedTypeDefinition?.checksField
+    ? form[selectedTypeDefinition.checksField] || []
+    : []
+  const readOnlySummary = selectedTypeDefinition?.getSummary?.(
+    {
+      ...form,
+      ...(selectedTypeDefinition?.checksField
+        ? {
+            [selectedTypeDefinition.checksField]: readOnlyChecks,
+            [selectedTypeDefinition.equipmentRowsField]: readOnlyChecks,
+          }
+        : {}),
+    },
+    selectedTypeDefinition?.checksField ? { checks: readOnlyChecks } : {},
+  )
   const mainLocationLabel = formatInspectionDisplayLocationTitle(selectedType, form.mainLocation)
   const BlockReadOnlySection = selectedTypeDefinition?.ReadOnlySection || null
   const detailContextFields =

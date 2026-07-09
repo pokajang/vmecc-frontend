@@ -2,6 +2,9 @@ import {
   IMAGE_COMPRESSION_MAX_DIMENSION,
   IMAGE_COMPRESSION_MIN_QUALITY,
   IMAGE_COMPRESSION_TARGET_BYTES,
+  IMAGE_CAMERA_COMPRESSION_MAX_DIMENSION,
+  IMAGE_CAMERA_COMPRESSION_MIN_QUALITY,
+  IMAGE_CAMERA_COMPRESSION_TARGET_BYTES,
   LEAVE_TYPE_ID_MARKERS,
   MOCK_LEAVE_RECORD_IDS,
   SUPPORTED_DOCUMENT_MIME_TYPES,
@@ -9,6 +12,7 @@ import {
   SUPPORTED_IMAGE_MIME_TYPES,
   shiftConfigs,
 } from './constants'
+import { formatLocalDate } from 'src/utils/localDate'
 
 export const formatFileSize = (sizeInBytes) => {
   const size = Number(sizeInBytes || 0)
@@ -72,42 +76,49 @@ const canvasToBlob = (canvas, mimeType, quality) =>
     )
   })
 
-export const compressImageAttachment = async (file) => {
+export const compressImageAttachment = async (file, options = {}) => {
+  const { isCameraUpload = false } = options
   const image = await loadImageElement(file)
   const mimeType = SUPPORTED_IMAGE_MIME_TYPES.has(String(file.type || '').toLowerCase())
     ? file.type
     : 'image/jpeg'
-  const dimensionCandidates = [IMAGE_COMPRESSION_MAX_DIMENSION, 1600, 1280]
+  const targetBytes = isCameraUpload
+    ? IMAGE_CAMERA_COMPRESSION_TARGET_BYTES
+    : IMAGE_COMPRESSION_TARGET_BYTES
+  const dimensionCandidates = isCameraUpload
+    ? [IMAGE_CAMERA_COMPRESSION_MAX_DIMENSION, 1024]
+    : [IMAGE_COMPRESSION_MAX_DIMENSION, 1600, 1280]
+  const qualityCandidates = isCameraUpload
+    ? [0.72, 0.58, IMAGE_CAMERA_COMPRESSION_MIN_QUALITY]
+    : [0.86, 0.78, 0.7, 0.62, IMAGE_COMPRESSION_MIN_QUALITY]
   let bestBlob = null
+  const canvas = document.createElement('canvas')
+  const context = canvas.getContext('2d')
+  if (!context) {
+    throw new Error('Unable to process selected image.')
+  }
 
   for (const maxDimension of dimensionCandidates) {
     const ratio = Math.min(1, maxDimension / Math.max(image.width || 1, image.height || 1))
     const nextWidth = Math.max(1, Math.round((image.width || 1) * ratio))
     const nextHeight = Math.max(1, Math.round((image.height || 1) * ratio))
 
-    const canvas = document.createElement('canvas')
     canvas.width = nextWidth
     canvas.height = nextHeight
 
-    const context = canvas.getContext('2d')
-    if (!context) {
-      throw new Error('Unable to process selected image.')
-    }
-
     context.drawImage(image, 0, 0, nextWidth, nextHeight)
 
-    const qualityCandidates = [0.86, 0.78, 0.7, 0.62, IMAGE_COMPRESSION_MIN_QUALITY]
     for (const quality of qualityCandidates) {
       const nextBlob = await canvasToBlob(canvas, mimeType, quality)
       if (!bestBlob || nextBlob.size < bestBlob.size) {
         bestBlob = nextBlob
       }
-      if (nextBlob.size <= IMAGE_COMPRESSION_TARGET_BYTES) {
+      if (nextBlob.size <= targetBytes) {
         break
       }
     }
 
-    if (bestBlob?.size <= IMAGE_COMPRESSION_TARGET_BYTES) {
+    if (bestBlob?.size <= targetBytes) {
       break
     }
   }
@@ -160,12 +171,7 @@ export const getBusinessDaysInRange = (startDate, endDate) => {
   return count
 }
 
-export const formatDate = (value) => {
-  if (!value) return '-'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return date.toLocaleDateString('en-MY', { day: '2-digit', month: 'short', year: 'numeric' })
-}
+export const formatDate = (value) => formatLocalDate(value)
 
 export const formatDateTime = (value) => {
   if (!value) return '-'

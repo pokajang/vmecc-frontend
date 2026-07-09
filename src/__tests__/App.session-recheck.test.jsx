@@ -44,6 +44,7 @@ const renderApp = () => {
 }
 
 beforeEach(() => {
+  window.history.pushState({}, '', '/')
   fetchModuleActivation.mockResolvedValue(null)
   vi.stubGlobal('localStorage', {
     getItem: vi.fn(() => null),
@@ -71,6 +72,17 @@ afterEach(() => {
 })
 
 describe('App session recheck', () => {
+  it('bootstraps the session immediately after a successful Google callback', async () => {
+    window.history.pushState({}, '', '/login?status=success')
+    fetchSession.mockResolvedValueOnce({ user: { id: 1, email: 'user@example.test' } })
+
+    const store = renderApp()
+
+    await waitFor(() => expect(fetchSession).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(store.getState().authStatus).toBe('authenticated'))
+    expect(store.getState().authUser).toEqual({ id: 1, email: 'user@example.test' })
+  })
+
   it('silently rechecks the session when an anonymous app regains focus', async () => {
     fetchSession
       .mockRejectedValueOnce(Object.assign(new Error('Unauthenticated'), { status: 401 }))

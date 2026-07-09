@@ -693,6 +693,33 @@ describe('InspectionModule route family', () => {
     )
   })
 
+  it('updates an existing inspection record from the edit review flow', async () => {
+    renderModule('/inspection/inspection-1/edit')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Review Inspections' }))
+    await waitFor(() =>
+      expect(screen.getByTestId('location-path').textContent).toBe('/inspection/review'),
+    )
+
+    expect(screen.getByText('INSP-2026-001')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm Update' }))
+
+    await waitFor(() =>
+      expect(inspectionHarness.persistInspectionRecord).toHaveBeenCalledWith(
+        'user-1',
+        expect.objectContaining({
+          id: 'inspection-1',
+          displayId: 'INSP-2026-001',
+          version: 2,
+          status: 'Submitted',
+        }),
+        expect.objectContaining({
+          submissionKey: expect.any(String),
+        }),
+      ),
+    )
+  })
+
   it('submits a reviewed inspection and returns to the records route', async () => {
     renderModule('/inspection/new')
 

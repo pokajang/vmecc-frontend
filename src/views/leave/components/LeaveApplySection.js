@@ -12,6 +12,7 @@ import {
   CRow,
 } from '@coreui/react'
 import { Camera, Pencil, Upload } from 'lucide-react'
+import { formatCameraDiagnosticsLines } from 'src/utils/cameraDiagnostics'
 import BackButton from 'src/components/BackButton'
 import FormActionGroup from 'src/components/FormActionGroup'
 import LeaveTypeSelection from 'src/views/leave/components/LeaveTypeSelection'
@@ -252,20 +253,35 @@ const LeaveApplySection = ({
                           if (clearCameraUploadFallback) clearCameraUploadFallback()
                         }}
                       >
-                        <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2">
-                          <div className="small">{cameraUploadFallback.message}</div>
-                          <CButton
-                            type="button"
-                            color="warning"
-                            size="sm"
-                            onClick={() => {
-                              if (clearCameraUploadFallback) clearCameraUploadFallback()
-                              if (requestUploadFromCameraFallback) requestUploadFromCameraFallback()
-                            }}
-                          >
-                            <Upload size={14} className="me-1" />
-                            Upload photo
-                          </CButton>
+                        <div className="d-flex flex-column gap-2">
+                          <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2">
+                            <div className="small">{cameraUploadFallback.message}</div>
+                            <CButton
+                              type="button"
+                              color="warning"
+                              size="sm"
+                              onClick={() => {
+                                if (clearCameraUploadFallback) clearCameraUploadFallback()
+                                if (requestUploadFromCameraFallback)
+                                  requestUploadFromCameraFallback()
+                              }}
+                            >
+                              <Upload size={14} className="me-1" />
+                              Upload photo
+                            </CButton>
+                          </div>
+                          {cameraUploadFallback.diagnostics ? (
+                            <details className="small">
+                              <summary>Camera diagnostics</summary>
+                              <div className="mt-2 d-grid gap-1">
+                                {formatCameraDiagnosticsLines(cameraUploadFallback.diagnostics).map(
+                                  (line) => (
+                                    <div key={line}>{line}</div>
+                                  ),
+                                )}
+                              </div>
+                            </details>
+                          ) : null}
                         </div>
                       </CAlert>
                     ) : null}

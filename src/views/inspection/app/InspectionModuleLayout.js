@@ -7,9 +7,9 @@ import {
   COffcanvasBody,
   COffcanvasHeader,
   COffcanvasTitle,
-  CToaster,
 } from '@coreui/react'
 import { X } from 'lucide-react'
+import InlineFeedbackMessage from 'src/components/InlineFeedbackMessage'
 import ModuleNavTabs from 'src/components/ModuleNavTabs'
 import ModulePageHeader from 'src/components/ModulePageHeader'
 import TableLoader from 'src/components/TableLoader'
@@ -27,10 +27,13 @@ import InspectionModuleHeaderActions from './InspectionModuleHeaderActions'
 
 export const buildInspectionPageTitle = ({
   activeSection,
+  isUpdatingExistingRecord = false,
   recordsSectionActive,
   showMobileRecords,
 }) => {
-  if (activeSection === 'review') return 'Review Inspection'
+  if (activeSection === 'review') {
+    return isUpdatingExistingRecord ? 'Review Updates' : 'Review Inspection'
+  }
   if (activeSection === 'extinguishers') return 'All Extinguishers'
 
   if (activeSection === 'records' && !showMobileRecords) {
@@ -42,7 +45,8 @@ export const buildInspectionPageTitle = ({
     )
   }
 
-  return recordsSectionActive ? 'Inspection Records' : 'Conduct Inspection'
+  if (recordsSectionActive) return 'Inspection Records'
+  return isUpdatingExistingRecord ? 'Edit Inspection' : 'Conduct Inspection'
 }
 
 export const buildInspectionHeaderActions = ({
@@ -82,18 +86,12 @@ const InspectionModuleLayout = ({
   clearContinuationState,
   navigate,
   reportBasePath,
-  toast,
-  toaster,
+  feedback,
 }) => {
   return (
     <CContainer fluid className="inspection-module-page" data-testid="inspection-module">
       <ModulePageHeader title={pageTitle} actions={headerActions} />
-      <CToaster
-        ref={toaster}
-        push={toast}
-        placement="top-end"
-        className="inspection-toaster mt-3 me-3"
-      />
+      <InlineFeedbackMessage feedback={feedback} className="mb-3" />
       {(isDeleting || isSubmitting) && (
         <div
           style={{

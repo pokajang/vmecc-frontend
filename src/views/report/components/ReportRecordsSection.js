@@ -18,6 +18,7 @@ import MobileRecordList from 'src/components/MobileRecordList'
 import ResponsiveRecordCollection from 'src/components/ResponsiveRecordCollection'
 import RowActionCell from 'src/components/RowActionCell'
 import RowActions from 'src/components/RowActions'
+import TableLoader from 'src/components/TableLoader'
 import TableFilters from 'src/components/TableFilters'
 import WorkflowStatusSummary from 'src/components/WorkflowStatusSummary'
 import RecordScopeSegmentedControl from 'src/components/report-workflow/RecordScopeSegmentedControl'
@@ -396,7 +397,7 @@ const ReportRecordsSection = ({
         )}
         {isLoading ? (
           <div className="border rounded-3 bg-white">
-            <ResponsiveRecordCollection isLoading />
+            <TableLoader message="Loading records..." minHeight={144} />
           </div>
         ) : filteredRecords.length > 0 ? (
           footer
@@ -427,7 +428,7 @@ const ReportRecordsSection = ({
             emptyMessage={emptyMessage}
             mobileSections={[]}
             renderDesktop={() => (
-              <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
+              <div className="d-none d-md-block">
                 <CTable align="middle" className="mb-0" hover responsive>
                   <CTableHead color="light">
                     <CTableRow>

@@ -1,14 +1,10 @@
 import { parseAmount } from './money'
+import { formatLocalDate } from 'src/utils/localDate'
 
 export const formatCurrency = (value) =>
   new Intl.NumberFormat('en-MY', { style: 'currency', currency: 'MYR' }).format(parseAmount(value))
 
-export const formatDate = (value) => {
-  if (!value) return '-'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return date.toLocaleDateString('en-MY', { day: '2-digit', month: 'short', year: 'numeric' })
-}
+export const formatDate = (value) => formatLocalDate(value)
 
 export const formatDateTime = (value) => {
   if (!value) return '-'

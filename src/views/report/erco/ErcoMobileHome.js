@@ -56,6 +56,7 @@ const ErcoMobileHome = ({
     )
   }, [incident.showAllIncidentTypes, incident.visibleTypeOptions])
   const draftRow = draftRows[0] || null
+  const draftSyncStatus = String(draftRow?.syncStatus || draftRow?.__offlineSyncStatus || '').trim()
   const draftSummary = draftRow
     ? [draftRow.incidentType || 'ERCO', draftRow.location || 'No location']
         .filter(Boolean)
@@ -187,6 +188,7 @@ const ErcoMobileHome = ({
           >
             <div className="inspection-draft-card__grid">
               <div className="inspection-draft-card__main">
+                <div className="inspection-draft-card__eyebrow">Draft in progress</div>
                 <div className="inspection-draft-card__summary small text-body-secondary">
                   <span className="fw-semibold text-body">Continue Draft</span>
                   {draftSummary ? (
@@ -203,6 +205,9 @@ const ErcoMobileHome = ({
                 onMouseDown={(event) => event.stopPropagation()}
                 onKeyDown={(event) => event.stopPropagation()}
               >
+                {draftSyncStatus && draftSyncStatus !== 'synced' ? (
+                  <div className="small text-warning-emphasis">Sync pending</div>
+                ) : null}
                 <CButton
                   type="button"
                   color="link"

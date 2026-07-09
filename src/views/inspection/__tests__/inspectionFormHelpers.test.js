@@ -594,6 +594,89 @@ describe('inspectionFormHelpers', () => {
     expect(reviewRecord.revision).toBe(2)
   })
 
+  it('keeps edited ER Aux submitted subsets intact through review and update submission', () => {
+    const submittedRecord = {
+      id: 'report-eraux-001',
+      displayId: 'INS-ERAUX-001',
+      version: 3,
+      revision: 1,
+      mainLocation: 'Store',
+      inspectedAt: '2026-07-03T07:10',
+      incidentType: 'ER Aux Equipment Inspection',
+      inspectionType: 'ER Aux Equipment Inspection',
+      erAuxEquipmentRows: [
+        {
+          id: 'store:fire-jacket',
+          location: 'Store',
+          equipment: 'Fire Jacket',
+          defaultQuantity: '15',
+        },
+        {
+          id: 'store:animal-catcher-net',
+          location: 'Store',
+          equipment: 'Animal catcher net',
+          defaultQuantity: '3',
+        },
+      ],
+      erAuxChecks: [
+        {
+          id: 'store:fire-jacket',
+          location: 'Store',
+          equipment: 'Fire Jacket',
+          quantity: '15',
+          condition: 'OK',
+        },
+      ],
+      photos: [],
+    }
+    const initial = selectInspectionInitialForm({
+      routeMode: 'edit',
+      routeRecordId: 'report-eraux-001',
+      record: submittedRecord,
+    })
+
+    const reviewRecord = buildInspectionReviewRecord({
+      form: {
+        ...initial.form,
+        erAuxChecks: [
+          {
+            ...initial.form.erAuxChecks[0],
+            condition: 'Missing',
+            additionalNotes: 'Replacement requested.',
+          },
+        ],
+      },
+      mode: 'edit',
+      editingRecord: submittedRecord,
+      reportTypeSlug: 'inspection',
+      reportTypeIdPrefix: 'INS',
+      sequence: 10,
+      user: { name: 'Inspector Aux' },
+    })
+    const updatedRecord = buildInspectionSubmittedRecord(
+      reviewRecord,
+      { name: 'Inspector Aux' },
+      '2026-07-08T09:30:00.000Z',
+    )
+
+    expect(initial.form.erAuxChecks).toHaveLength(1)
+    expect(reviewRecord.id).toBe('report-eraux-001')
+    expect(reviewRecord.version).toBe(3)
+    expect(reviewRecord.erAuxChecks).toEqual([
+      expect.objectContaining({
+        id: 'store:fire-jacket',
+        condition: 'Missing',
+        additionalNotes: 'Replacement requested.',
+      }),
+    ])
+    expect(reviewRecord.erAuxChecks).toHaveLength(1)
+    expect(updatedRecord.erAuxChecks).toHaveLength(1)
+    expect(updatedRecord.erAuxChecks[0].equipment).toBe('Fire Jacket')
+    expect(updatedRecord.erAuxChecks.some((row) => row.equipment === 'Animal catcher net')).toBe(
+      false,
+    )
+  })
+
   it('stamps submitted metadata only when converting a review preview into a final submitted record', () => {
     const formWithChecklist = toggleInspectionChecklistItem(
       baseForm,
@@ -1777,7 +1860,7 @@ describe('inspectionFormHelpers', () => {
           location: 'Office',
           equipment: 'Radio Tetra',
           quantity: '',
-          condition: '',
+          condition: 'Missing',
         },
       ],
     })
@@ -1788,7 +1871,7 @@ describe('inspectionFormHelpers', () => {
         expect.objectContaining({
           id: 'office:radio-tetra',
           equipment: 'Radio Tetra',
-          missing: ['quantity', 'condition'],
+          missing: ['quantity'],
           detailKey: 'quantity',
         }),
       ]),
@@ -1798,6 +1881,41 @@ describe('inspectionFormHelpers', () => {
       rowId: 'office:radio-tetra',
       detailKey: 'quantity',
     })
+  })
+
+  it('allows ER Aux review for completed saved rows without requiring untouched catalog rows', () => {
+    const incomplete = getInspectionFormMissingFields({
+      mainLocation: 'Store',
+      inspectedAt: '2026-07-03T07:10',
+      inspectionType: 'ER Aux Equipment Inspection',
+      erAuxEquipmentRows: [
+        {
+          id: 'store:fire-jacket',
+          location: 'Store',
+          equipment: 'Fire Jacket',
+          defaultQuantity: '15',
+        },
+        {
+          id: 'store:animal-catcher-net',
+          location: 'Store',
+          equipment: 'Animal catcher net',
+          defaultQuantity: '3',
+        },
+      ],
+      erAuxChecks: [
+        {
+          id: 'store:fire-jacket',
+          location: 'Store',
+          equipment: 'Fire Jacket',
+          quantity: '15',
+          condition: 'OK',
+        },
+      ],
+      photos: [],
+    })
+
+    expect(incomplete.erAuxChecks).toBe(false)
+    expect(incomplete.erAuxRemarks).toBe(false)
   })
 
   it('requires ER Aux quantities and conditions for review when defect remarks/photos are optional until defect', () => {
@@ -3603,7 +3721,6 @@ describe('inspectionFormHelpers', () => {
       normalizeInspectionForm({
         inspectionType: 'Hydraulic Rescue Tools Inspection',
         mainLocation: 'FRT',
-        hydraulicInspectedBy: 'Inspector Hydraulic',
         hydraulicInspectedBy: 'Inspector Hydraulic',
         hydraulicChecks: [
           {

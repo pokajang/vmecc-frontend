@@ -519,6 +519,7 @@ const withClearedActiveTypeWorkingState = (form = {}, selectedTypeDefinition = {
 const InspectionForm = ({
   user,
   value,
+  isUpdateMode = false,
   pushToast,
   onChange,
   onCommitDraftSnapshot,
@@ -1387,8 +1388,6 @@ const InspectionForm = ({
     form,
     isStructuredInspectionForm,
     location,
-    location.mainLocationOptions,
-    location.subLocationOptions,
     mainLocation,
     selectedFireTruckPlate,
     selectedTypeDefinition,
@@ -1924,6 +1923,7 @@ const InspectionForm = ({
         location={location}
         locationDeleteTarget={locationDeleteTarget}
         onSaveDraft={onSaveDraft}
+        isUpdateMode={isUpdateMode}
         onRetryDraftSync={onRetryDraftSync}
         photoRuntime={photoRuntime}
         refs={{

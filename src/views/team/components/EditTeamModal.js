@@ -21,6 +21,7 @@ import { getPrimaryRoleLabel } from 'src/utils/authz'
 import { PRESET_IMAGES, toPresetValue } from './teamImageUtils'
 import { TEAM_ELIGIBLE_ROLES } from './teamRoleUtils'
 import ButtonLoader from 'src/components/ButtonLoader'
+import { getLocalDateInputValue } from 'src/utils/localDate'
 
 const getActiveAssignments = (user) => {
   if (Array.isArray(user?.role_assignments) && user.role_assignments.length > 0) {
@@ -272,7 +273,7 @@ const EditTeamModalContent = ({
   onSaved,
   onDeleted,
 }) => {
-  const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), [])
+  const todayStr = useMemo(() => getLocalDateInputValue(), [])
   const [members, setMembers] = useState(() => buildInitialMembers(team, membersSource, todayStr))
   const [group, setGroup] = useState(team?.group || '')
   const [selectReset, setSelectReset] = useState(0)

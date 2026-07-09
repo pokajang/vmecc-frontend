@@ -186,11 +186,11 @@ export const buildStructuredSectionHandlers = ({
     fieldRefKey === 'hseObservation' ? toggleHseObservationSelection : undefined,
   onTakeGeneralPhoto:
     fieldRefKey === 'hseObservation'
-      ? (caption) => requestRootPhotoUpload(cameraInputRef, caption)
+      ? (caption, options) => requestRootPhotoUpload(cameraInputRef, caption, options)
       : undefined,
   onUploadGeneralPhoto:
     fieldRefKey === 'hseObservation'
-      ? (caption) => requestRootPhotoUpload(uploadInputRef, caption)
+      ? (caption, options) => requestRootPhotoUpload(uploadInputRef, caption, options)
       : undefined,
   onMarkEquipmentOk:
     checksField === 'erAuxChecks'

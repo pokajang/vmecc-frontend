@@ -125,6 +125,7 @@ const Login = () => {
   const maintenanceEnabled = Boolean(systemMaintenance?.enabled)
   const maintenanceIsGrace = isGracePhase(systemMaintenance)
   const maintenanceRemainingMs = toRemainingMs(systemMaintenance?.graceEndsAt)
+  const isCompletingGoogleSignIn = authStatus === 'checking' && statusType === 'success'
 
   useEffect(() => {
     if (!maintenanceIsGrace) return undefined
@@ -185,7 +186,11 @@ const Login = () => {
                     className="text-center py-2 mb-3"
                     data-testid="login-error"
                   >
-                    {errorMessage || statusMessage}
+                    {isCompletingGoogleSignIn ? (
+                      <ButtonLoader label="Completing Google sign-in..." />
+                    ) : (
+                      errorMessage || statusMessage
+                    )}
                   </CAlert>
                 )}
                 <CForm onSubmit={handleSubmit}>
@@ -200,7 +205,7 @@ const Login = () => {
                       autoComplete="username"
                       value={formValues.email}
                       onChange={handleChange}
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isCompletingGoogleSignIn}
                       required
                     />
                   </CInputGroup>
@@ -215,7 +220,7 @@ const Login = () => {
                       autoComplete="current-password"
                       value={formValues.password}
                       onChange={handleChange}
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isCompletingGoogleSignIn}
                       required
                     />
                     <CInputGroupText
@@ -223,7 +228,7 @@ const Login = () => {
                       role="button"
                       aria-label={showPassword ? 'Hide password' : 'Show password'}
                       style={{ cursor: 'pointer' }}
-                      onClick={togglePassword}
+                      onClick={isCompletingGoogleSignIn ? undefined : togglePassword}
                     >
                       <CIcon icon={showPassword ? cilShieldAlt : cilLowVision} />
                     </CInputGroupText>
@@ -235,17 +240,22 @@ const Login = () => {
                       label="Remember me"
                       checked={formValues.remember}
                       onChange={handleChange}
-                      disabled={isSubmitting || isGoogleLoading}
+                      disabled={isSubmitting || isGoogleLoading || isCompletingGoogleSignIn}
                     />
                   </div>
                   <div className="d-flex align-items-center justify-content-between gap-2 mb-2 w-100">
-                    <CButton type="submit" color="primary" className="px-4" disabled={isSubmitting}>
+                    <CButton
+                      type="submit"
+                      color="primary"
+                      className="px-4"
+                      disabled={isSubmitting || isCompletingGoogleSignIn}
+                    >
                       {isSubmitting ? <ButtonLoader label="Signing in..." /> : 'Sign in'}
                     </CButton>
                     <CButton
                       color="link"
                       className="px-0 text-nowrap ms-auto"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || isCompletingGoogleSignIn}
                       onClick={() => navigate('/forgot-password')}
                     >
                       Forgot password?
@@ -263,7 +273,7 @@ const Login = () => {
                   <CButton
                     color="secondary"
                     variant="outline"
-                    disabled={isSubmitting || isGoogleLoading}
+                    disabled={isSubmitting || isGoogleLoading || isCompletingGoogleSignIn}
                     onClick={handleGoogleSignIn}
                     className="d-flex align-items-center justify-content-center gap-2"
                   >

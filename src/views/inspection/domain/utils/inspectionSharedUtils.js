@@ -1,3 +1,5 @@
+import { parseLocalDateValue } from 'src/utils/localDate'
+
 export const dedupePhotos = (photos) => {
   const seen = new Set()
   return (Array.isArray(photos) ? photos : []).filter((photo) => {
@@ -239,23 +241,35 @@ export const normalizeReportRecord = (row) => {
 export const normalizeReportRecords = (rows) =>
   (Array.isArray(rows) ? rows : []).map(normalizeReportRecord).filter(Boolean)
 
-export const toDateTime = (row) => {
+const parseTimestampValue = (value) => {
+  const text = String(value || '').trim()
+  if (!text) return null
+  const parsed = parseLocalDateValue(text)
+  return parsed && !Number.isNaN(parsed.getTime()) ? parsed : null
+}
+
+export const getInspectionEventTimestamp = (row) => {
+  const inspectedAt = parseTimestampValue(row?.inspectedAt || row?.inspected_at)
+  if (inspectedAt) return inspectedAt.getTime()
+
   const date = String(row?.incidentDate || row?.reportDate || '').trim()
   const time = String(row?.incidentTime || row?.reportTime || '').trim()
   if (!date && row?.savedAt) {
-    const savedAt = new Date(row.savedAt)
-    return Number.isNaN(savedAt.getTime()) ? Number.NEGATIVE_INFINITY : savedAt.getTime()
+    const savedAt = parseTimestampValue(row.savedAt)
+    return savedAt ? savedAt.getTime() : Number.NEGATIVE_INFINITY
   }
   if (!date) {
-    const submittedAt = new Date(String(row?.submittedAt || '').trim())
-    if (!Number.isNaN(submittedAt.getTime())) return submittedAt.getTime()
-    const createdAt = new Date(String(row?.createdAt || '').trim())
-    if (!Number.isNaN(createdAt.getTime())) return createdAt.getTime()
+    const submittedAt = parseTimestampValue(row?.submittedAt || row?.submitted_at)
+    if (submittedAt) return submittedAt.getTime()
+    const createdAt = parseTimestampValue(row?.createdAt || row?.created_at)
+    if (createdAt) return createdAt.getTime()
   }
   if (!date) return Number.NEGATIVE_INFINITY
   const dt = new Date(`${date}T${time || '00:00'}:00`)
   return Number.isNaN(dt.getTime()) ? Number.NEGATIVE_INFINITY : dt.getTime()
 }
+
+export const toDateTime = getInspectionEventTimestamp
 
 export const formatDateTime = (date, time) => {
   if (!date && !time) return '--'

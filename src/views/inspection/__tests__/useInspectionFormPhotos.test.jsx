@@ -203,6 +203,63 @@ describe('useInspectionFormPhotos', () => {
     })
   })
 
+  it('routes root uploads to a custom staged photo target when provided', async () => {
+    const prepare = await import('../form/inspectionPhotoUtils')
+    const updateForm = vi.fn()
+    const onAddPhotos = vi.fn()
+    const existingPhoto = { id: 'existing', fileName: 'existing.jpg', url: 'data:' }
+    const stagedPhoto = {
+      id: 'staged-photo',
+      fileName: 'staged.jpg',
+      url: 'data:image/jpeg;base64,ZmFrZQ==',
+    }
+    const { result } = renderHook(() =>
+      useInspectionFormPhotos({
+        appendInspectionText: noop,
+        createPhotoId: () => 'photo-id',
+        defaultHighAnglePhotosKey: 'photos',
+        form: { photos: [] },
+        getLatestForm: () => ({ photos: [] }),
+        getScbaExistingCheck: () => null,
+        getScbaFieldEvidenceKeys: () => ({ photosKey: 'photos' }),
+        pushToast: noop,
+        updateErAuxCheck: noop,
+        updateFireExtinguisherCheck: noop,
+        updateForm,
+        updateFrtCheck: noop,
+        updateHighAngleCheck: noop,
+        updateHydraulicCheck: noop,
+        updateScbaGroupedCheck: noop,
+      }),
+    )
+
+    prepare.prepareInspectionPhotoUploads.mockResolvedValueOnce([stagedPhoto])
+
+    act(() => {
+      result.current.requestRootPhotoUpload(result.current.uploadInputRef, '', {
+        rootPhotos: [existingPhoto],
+        onAddPhotos,
+      })
+    })
+    await act(async () => {
+      await result.current.handlePhotoSelect({
+        target: {
+          files: [new File(['photo'], 'staged.jpg', { type: 'image/jpeg' })],
+          value: '',
+        },
+      })
+    })
+
+    expect(prepare.prepareInspectionPhotoUploads).toHaveBeenCalledWith(
+      expect.objectContaining({
+        form: expect.objectContaining({ photos: [existingPhoto] }),
+        isCameraUpload: false,
+      }),
+    )
+    expect(onAddPhotos).toHaveBeenCalledWith([stagedPhoto])
+    expect(updateForm).not.toHaveBeenCalled()
+  })
+
   it('retains retryable fallback when a non-retryable error is also reported', async () => {
     const prepare = await import('../form/inspectionPhotoUtils')
     const { result } = createTestHook()

@@ -235,6 +235,7 @@ export const InspectionReviewView = ({
   pendingSubmissionSummary,
   reviewMayQueue,
   isSubmitting,
+  isUpdatingExistingRecord = false,
   renderStatusBadge,
 }) => {
   const items = Array.isArray(pendingSubmissionSummary?.items) ? pendingSubmissionSummary.items : []
@@ -244,6 +245,7 @@ export const InspectionReviewView = ({
     return (
       <InspectionReviewDashboard
         items={items}
+        isUpdateMode={isUpdatingExistingRecord}
         onRetrySync={retryDraftSync}
         onSubmit={(item) => {
           const selectedReviewRecord = buildPendingReviewRecord?.(item)
@@ -268,7 +270,14 @@ export const InspectionReviewView = ({
         onBackToEdit: backFromReview,
         onSaveDraft: () => saveDraft(sessionReviewForm, reviewWorkspace),
         onConfirm: () => reviewRecord && submit(buildInspectionSubmittedRecord(reviewRecord, user)),
-        confirmLabel: reviewMayQueue ? 'Queue for sync' : 'Confirm Submit',
+        confirmLabel: reviewMayQueue
+          ? isUpdatingExistingRecord
+            ? 'Queue update'
+            : 'Queue for sync'
+          : isUpdatingExistingRecord
+            ? 'Confirm Update'
+            : 'Confirm Submit',
+        isUpdateMode: isUpdatingExistingRecord,
       }}
       queueWarning={
         reviewMayQueue
@@ -284,6 +293,7 @@ export const InspectionReviewView = ({
 export const InspectionFormView = ({
   clearInspectionTypeDraft,
   isFormReady,
+  isUpdatingExistingRecord = false,
   user,
   formState,
   pushToast,
@@ -300,6 +310,7 @@ export const InspectionFormView = ({
     <InspectionForm
       user={user}
       value={formState}
+      isUpdateMode={isUpdatingExistingRecord}
       pushToast={pushToast}
       draftStatus={draftStatus}
       draftSyncState={draftSyncState}

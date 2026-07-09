@@ -1,4 +1,5 @@
 import { ROLE_OPTIONS, ROLE_SCOPE_MAP, normalizeLegacyRole } from 'src/constants/roles'
+import { getLocalDateInputValue } from 'src/utils/localDate'
 
 export const isScopedScopeType = (scopeType) => scopeType === 'site' || scopeType === 'client_site'
 
@@ -12,7 +13,7 @@ export const createAssignmentFromRole = (role) => {
     role: normalizedRole,
     scope_type: scopeType,
     team_id: null,
-    start_date: new Date().toISOString().slice(0, 10),
+    start_date: getLocalDateInputValue(),
     end_date: null,
     is_primary: true,
     active: true,
@@ -38,7 +39,7 @@ export const ensurePrimaryAssignment = (assignments = []) => {
       role,
       scope_type: scopeType,
       team_id: isScopedScopeType(scopeType) ? (row.team_id ?? null) : null,
-      start_date: row.start_date || new Date().toISOString().slice(0, 10),
+      start_date: row.start_date || getLocalDateInputValue(),
       end_date: row.end_date || null,
       is_primary: !!isPrimary,
       active: row.active ?? true,
@@ -77,7 +78,7 @@ export const toApiRoleAssignmentsPayload = (assignments = []) =>
         ? Number(row.team_id)
         : null
       : null,
-    start_date: row.start_date || new Date().toISOString().slice(0, 10),
+    start_date: row.start_date || getLocalDateInputValue(),
     end_date: row.end_date || null,
     is_primary: !!row.is_primary,
   }))

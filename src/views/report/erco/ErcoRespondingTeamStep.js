@@ -99,6 +99,8 @@ const ErcoRespondingTeamStep = ({
   onBack,
   onSaveDraft,
   onContinue,
+  saveLabel = 'Save Draft',
+  draftStatus = '',
   showActions = true,
 }) => {
   const isMobile = useIsMobile()
@@ -626,14 +628,21 @@ const ErcoRespondingTeamStep = ({
       {showActions ? (
         <div ref={actionsRef}>
           {isMobile ? (
-            <ReportMobileActionGroup onSaveDraft={onSaveDraft} onPrimary={handleContinueClick} />
+            <ReportMobileActionGroup
+              onSaveDraft={onSaveDraft}
+              onPrimary={handleContinueClick}
+              saveLabel={saveLabel}
+              statusMessage={draftStatus}
+            />
           ) : (
             <DetailsStepActions
               onBack={onBack}
               onSaveDraft={onSaveDraft}
+              saveLabel={saveLabel}
               primaryLabel="Continue"
               primaryType="button"
               onPrimary={handleContinueClick}
+              statusMessage={draftStatus}
             />
           )}
         </div>

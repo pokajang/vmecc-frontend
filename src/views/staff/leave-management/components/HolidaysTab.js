@@ -22,17 +22,14 @@ import MobileRecordList from 'src/components/MobileRecordList'
 import RowActions from 'src/components/RowActions'
 import TableFilters from 'src/components/TableFilters'
 import TableLoader from 'src/components/TableLoader'
+import { formatLocalDate, parseLocalDateValue } from 'src/utils/localDate'
 import HolidayCreateModal from './HolidayCreateModal'
 
-const formatDate = (value) => {
-  if (!value) return '-'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return date.toLocaleDateString('en-MY', { day: '2-digit', month: 'short', year: 'numeric' })
-}
+const formatDate = (value) => formatLocalDate(value)
 
 const getYear = (value) => {
-  const date = new Date(value)
+  const date = parseLocalDateValue(value)
+  if (!date) return '-'
   if (Number.isNaN(date.getTime())) return '-'
   return String(date.getFullYear())
 }

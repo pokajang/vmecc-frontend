@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
   CButton,
   CCard,
@@ -16,6 +16,7 @@ import CreateActionButton from 'src/components/CreateActionButton'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import RowActions from 'src/components/RowActions'
 import useMediaQuery from 'src/hooks/useMediaQuery'
+import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import { dedupePhotos } from 'src/views/inspection/inspectionSharedUtils'
 import {
   ACTIVE_CARD_STYLE,
@@ -57,6 +58,21 @@ export {
 }
 
 const FALLBACK_INSPECTION_TYPE_ICON = resolveTypeIcon('ShieldAlert')
+
+const getPhotoSignature = (items = []) =>
+  JSON.stringify(
+    (Array.isArray(items) ? items : []).map((photo) => ({
+      id: String(photo?.id || ''),
+      fileName: String(photo?.fileName || ''),
+      url: String(photo?.url || ''),
+      description: String(photo?.description || ''),
+    })),
+  )
+
+const clonePhotoList = (items = []) =>
+  dedupePhotos(items).map((photo) => ({
+    ...photo,
+  }))
 
 export const formatInspectionDisplayLocationTitle = (inspectionType, value, parentValue = '') => {
   const rawValue = String(value || '').trim()
@@ -203,6 +219,7 @@ export const InspectionGeneralEvidenceCard = ({
   readOnly = false,
   fieldError = false,
   compactOnMobile = false,
+  stageDrawerPhotos = false,
   drawerDescription = '',
   emptyMessage = 'No photos yet. Upload photos to continue.',
   compactActionLabel = 'Add photos (optional)',
@@ -210,12 +227,80 @@ export const InspectionGeneralEvidenceCard = ({
   onUploadPhoto,
   onRemovePhoto,
   onChangePhotoDescription,
+  onSavePhotos,
   cardRef,
 }) => {
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [draftPhotos, setDraftPhotos] = useState(() => (Array.isArray(photos) ? photos : []))
+  const [drawerBaselinePhotos, setDrawerBaselinePhotos] = useState(() =>
+    clonePhotoList(Array.isArray(photos) ? photos : []),
+  )
+  const [confirmCloseDraftPhotos, setConfirmCloseDraftPhotos] = useState(false)
   const useMobileDrawer = useMediaQuery('(max-width: 575.98px)')
-  const photoCount = Array.isArray(photos) ? photos.length : 0
+  const savedPhotos = useMemo(() => (Array.isArray(photos) ? photos : []), [photos])
+  const photoCount = savedPhotos.length
+  const draftPhotoCount = draftPhotos.length
   const showCompactMobile = compactOnMobile && useMobileDrawer && !readOnly
+  const useStagedDrawer = showCompactMobile && stageDrawerPhotos
+  const savedPhotoSignature = getPhotoSignature(savedPhotos)
+  const draftPhotoSignature = getPhotoSignature(draftPhotos)
+  const hasDraftChanges = draftPhotoSignature !== savedPhotoSignature
+
+  const addDraftPhotos = (nextPhotos = []) => {
+    const additions = Array.isArray(nextPhotos) ? nextPhotos.filter(Boolean) : []
+    if (additions.length === 0) return
+    setDraftPhotos((currentPhotos) => dedupePhotos([...currentPhotos, ...additions]))
+  }
+
+  const removeDraftPhoto = (photoId) => {
+    setDraftPhotos((currentPhotos) =>
+      currentPhotos.filter((photo) => String(photo?.id || '') !== String(photoId || '')),
+    )
+  }
+
+  const updateDraftPhotoDescription = (photoId, description) => {
+    setDraftPhotos((currentPhotos) =>
+      currentPhotos.map((photo) =>
+        String(photo?.id || '') === String(photoId || '') ? { ...photo, description } : photo,
+      ),
+    )
+  }
+
+  const getDraftUploadOptions = () => ({
+    rootPhotos: draftPhotos,
+    onAddPhotos: addDraftPhotos,
+  })
+
+  const openStagedDrawer = () => {
+    const baselinePhotos = clonePhotoList(savedPhotos)
+    setDrawerBaselinePhotos(baselinePhotos)
+    setDraftPhotos(baselinePhotos)
+    setDrawerOpen(true)
+  }
+
+  const discardDraftPhotoChanges = () => {
+    setDraftPhotos(clonePhotoList(drawerBaselinePhotos))
+    setDrawerOpen(false)
+  }
+
+  const handleDrawerClose = () => {
+    if (useStagedDrawer && hasDraftChanges) {
+      setConfirmCloseDraftPhotos(true)
+      return
+    }
+
+    discardDraftPhotoChanges()
+  }
+
+  const handleResetDraftPhotos = () => {
+    setDraftPhotos(clonePhotoList(drawerBaselinePhotos))
+  }
+
+  const handleSaveDraftPhotos = () => {
+    if (typeof onSavePhotos === 'function') onSavePhotos(draftPhotos)
+    setConfirmCloseDraftPhotos(false)
+    setDrawerOpen(false)
+  }
 
   const actions = (
     <div className="d-flex align-items-center gap-2">
@@ -244,7 +329,7 @@ export const InspectionGeneralEvidenceCard = ({
         color="primary"
         size="sm"
         className="inspection-general-evidence-drawer-action d-inline-flex align-items-center justify-content-center gap-1"
-        onClick={onTakePhoto}
+        onClick={() => (useStagedDrawer ? onTakePhoto?.(getDraftUploadOptions()) : onTakePhoto?.())}
       >
         <Camera size={14} aria-hidden="true" />
         Take photo
@@ -255,7 +340,9 @@ export const InspectionGeneralEvidenceCard = ({
         variant="outline"
         size="sm"
         className="inspection-general-evidence-drawer-action d-inline-flex align-items-center justify-content-center gap-1"
-        onClick={onUploadPhoto}
+        onClick={() =>
+          useStagedDrawer ? onUploadPhoto?.(getDraftUploadOptions()) : onUploadPhoto?.()
+        }
       >
         <Upload size={14} aria-hidden="true" />
         Upload photo
@@ -282,18 +369,89 @@ export const InspectionGeneralEvidenceCard = ({
         <CreateActionButton
           label={`${compactActionLabel}${photoCount ? ` (${photoCount})` : ''}`}
           className="inspection-compact-action-btn justify-self-start"
-          onClick={() => setDrawerOpen(true)}
+          onClick={() => {
+            if (useStagedDrawer) {
+              openStagedDrawer()
+              return
+            }
+            setDrawerOpen(true)
+          }}
         />
         <FormFieldError>{fieldError ? 'Upload at least one inspection photo.' : ''}</FormFieldError>
-        <MobileBottomDrawer visible={drawerOpen} title={title} onClose={() => setDrawerOpen(false)}>
+        <MobileBottomDrawer
+          visible={drawerOpen}
+          title={title}
+          onClose={useStagedDrawer ? handleDrawerClose : () => setDrawerOpen(false)}
+        >
           <div className="inspection-general-evidence-drawer-body d-grid gap-3">
             {drawerActions}
             {drawerDescription ? (
               <div className="small text-body-secondary">{drawerDescription}</div>
             ) : null}
-            {gallery}
+            {useStagedDrawer ? (
+              <>
+                <PhotoGallery
+                  photos={draftPhotos}
+                  readOnly={readOnly}
+                  onRemove={removeDraftPhoto}
+                  onChangeDescription={updateDraftPhotoDescription}
+                  emptyMessage={emptyMessage}
+                />
+                <FormFieldError>
+                  {fieldError ? 'Upload at least one inspection photo.' : ''}
+                </FormFieldError>
+              </>
+            ) : (
+              gallery
+            )}
           </div>
+          {useStagedDrawer ? (
+            <div className="inspection-general-evidence-drawer-footer mobile-bottom-drawer__footer">
+              <div className="inspection-general-evidence-drawer-footer__status small text-body-secondary">
+                {hasDraftChanges
+                  ? `${draftPhotoCount} ${draftPhotoCount === 1 ? 'photo' : 'photos'} ready to save`
+                  : `${photoCount} ${photoCount === 1 ? 'photo' : 'photos'} attached to this report`}
+              </div>
+              <div className="inspection-general-evidence-drawer-footer__actions d-flex gap-2">
+                <CButton
+                  type="button"
+                  color="secondary"
+                  variant="outline"
+                  size="sm"
+                  disabled={!hasDraftChanges}
+                  onClick={handleResetDraftPhotos}
+                >
+                  Reset
+                </CButton>
+                <CButton
+                  type="button"
+                  color="primary"
+                  size="sm"
+                  disabled={!hasDraftChanges || typeof onSavePhotos !== 'function'}
+                  onClick={handleSaveDraftPhotos}
+                >
+                  Save photos
+                </CButton>
+              </div>
+            </div>
+          ) : null}
         </MobileBottomDrawer>
+        {useStagedDrawer ? (
+          <ActionConfirmModal
+            visible={confirmCloseDraftPhotos}
+            title="Save photos first?"
+            message="You have photo changes ready to save. Save them before closing, or discard the changes."
+            confirmLabel="Discard changes"
+            confirmColor="danger"
+            cancelLabel="Keep editing"
+            mobileDrawer
+            onClose={() => setConfirmCloseDraftPhotos(false)}
+            onConfirm={() => {
+              setConfirmCloseDraftPhotos(false)
+              discardDraftPhotoChanges()
+            }}
+          />
+        ) : null}
       </div>
     )
   }
