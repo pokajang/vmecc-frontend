@@ -5,6 +5,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import InspectionForm from '../InspectionForm'
 import { ErAuxEquipmentChecks } from '../form/components/InspectionFormDisplaySections'
 import { buildInspectionPayloadSnapshot, normalizeInspectionForm } from '../inspectionFormHelpers'
+import { INSPECTION_REPORT_EVIDENCE_COPY } from '../inspectionReportEvidenceCopy'
 
 const typeManagerModalMock = vi.hoisted(() => ({
   props: [],
@@ -1431,7 +1432,7 @@ describe('InspectionForm workflow', () => {
 
     expect(screen.getByText('HSE Observation')).toBeTruthy()
     expect(screen.queryByText('Actual field coming soon')).toBeNull()
-    expect(screen.getByText('HSE Evidence Photos')).toBeTruthy()
+    expect(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle)).toBeTruthy()
 
     fireEvent.click(screen.getAllByText('Review Inspections')[0])
 
@@ -1549,7 +1550,7 @@ describe('InspectionForm workflow', () => {
       ).getByPlaceholderText('Quantity').value,
     ).toBe('3')
     expect(screen.queryByText('Actual field coming soon')).toBeNull()
-    expect(screen.getByText('General Evidence Photos')).toBeTruthy()
+    expect(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle)).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Review Inspections' })).toBeNull()
     expect(screen.getAllByText('Save Draft').length).toBeGreaterThan(0)
   })
@@ -1937,7 +1938,7 @@ describe('InspectionForm workflow', () => {
     expect(screen.getByText('Hydraulic Cylinder Ramp 1')).toBeTruthy()
     expect(screen.queryByText('Hydraulic Pump Motor 2')).toBeNull()
     expect(screen.getAllByText('FRT').length).toBeGreaterThan(0)
-    expect(screen.getByText('General Evidence Photos')).toBeTruthy()
+    expect(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle)).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Review Inspections' })).toBeNull()
     expect(screen.getAllByText('Save Draft').length).toBeGreaterThan(0)
   })

@@ -11,6 +11,7 @@ import {
 } from './helpers'
 import { createZoneLocationDetailContextFields } from '../detailConfigHelpers'
 import { HseEditSection, HseReadOnlySection } from './section'
+import { INSPECTION_REPORT_EVIDENCE_COPY } from '../../inspectionReportEvidenceCopy'
 
 const hseInspectionDefinition = {
   key: 'health-safety-environment-inspection',
@@ -28,7 +29,7 @@ const hseInspectionDefinition = {
   mainLocationErrorLabel: 'Choose a zone and main area.',
   checksField: 'hseSelections',
   fieldRefKey: 'hseObservation',
-  photoEvidenceTitle: 'HSE Evidence Photos',
+  photoEvidenceTitle: INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle,
   missingFieldKeys: ['hseSelection', 'hseDetails'],
   initialFormState: HSE_FORM_DEFAULTS,
   isInspectionType: isHseInspectionType,

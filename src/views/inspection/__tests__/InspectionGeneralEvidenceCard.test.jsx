@@ -3,6 +3,7 @@ import React from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { InspectionGeneralEvidenceCard } from '../form/components/InspectionFormDisplaySections'
+import { INSPECTION_REPORT_EVIDENCE_COPY } from '../inspectionReportEvidenceCopy'
 
 const setMobileViewport = () => {
   Object.defineProperty(window, 'matchMedia', {
@@ -33,18 +34,19 @@ describe('InspectionGeneralEvidenceCard', () => {
 
     render(
       <InspectionGeneralEvidenceCard
-        title="General Evidence Photos"
+        title={INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle}
         photos={[]}
         compactOnMobile
-        drawerDescription="Optional. Use this only for extra location photos not already attached to a unit defect."
-        emptyMessage="No general evidence photos added."
+        compactActionLabel={INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel}
+        drawerDescription={INSPECTION_REPORT_EVIDENCE_COPY.helperText}
+        emptyMessage={INSPECTION_REPORT_EVIDENCE_COPY.emptyPhotosMessage}
       />,
     )
 
-    expect(screen.getByText('Add photos (optional)')).toBeTruthy()
-    expect(screen.queryByText('No general evidence photos added.')).toBeNull()
+    expect(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel)).toBeTruthy()
+    expect(screen.queryByText(INSPECTION_REPORT_EVIDENCE_COPY.emptyPhotosMessage)).toBeNull()
 
-    fireEvent.click(screen.getByText('Add photos (optional)'))
+    fireEvent.click(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel))
 
     const drawerBody = document.querySelector('.inspection-general-evidence-drawer-body')
     expect(drawerBody).toBeTruthy()
@@ -57,23 +59,59 @@ describe('InspectionGeneralEvidenceCard', () => {
     ).toBeNull()
     expect(
       screen.getByText(
-        'Optional. Use this only for extra location photos not already attached to a unit defect.',
+        INSPECTION_REPORT_EVIDENCE_COPY.helperText,
       ),
     ).toBeTruthy()
-    expect(screen.getByText('No general evidence photos added.')).toBeTruthy()
+    expect(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.emptyPhotosMessage)).toBeTruthy()
   })
 
   it('keeps the existing card presentation outside compact mobile mode', () => {
     render(
       <InspectionGeneralEvidenceCard
-        title="General Evidence Photos"
+        title={INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle}
         photos={[]}
-        emptyMessage="No general evidence photos added."
+        emptyMessage={INSPECTION_REPORT_EVIDENCE_COPY.emptyPhotosMessage}
       />,
     )
 
-    expect(screen.getByText('General Evidence Photos')).toBeTruthy()
-    expect(screen.getByText('No general evidence photos added.')).toBeTruthy()
+    expect(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle)).toBeTruthy()
+    expect(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.emptyPhotosMessage)).toBeTruthy()
     expect(screen.queryByText('Add photos (optional)')).toBeNull()
+  })
+
+  it('edits optional report remarks and shows saved remarks read-only', () => {
+    const onChangeRemarks = vi.fn()
+    const { rerender } = render(
+      <InspectionGeneralEvidenceCard
+        title={INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle}
+        photos={[]}
+        remarks=""
+        remarksLabel={INSPECTION_REPORT_EVIDENCE_COPY.remarksLabel}
+        remarksPlaceholder={INSPECTION_REPORT_EVIDENCE_COPY.remarksPlaceholder}
+        onChangeRemarks={onChangeRemarks}
+      />,
+    )
+
+    const remarksInput = screen.getByLabelText(INSPECTION_REPORT_EVIDENCE_COPY.remarksLabel)
+    expect(remarksInput.getAttribute('maxlength')).toBe('2000')
+
+    fireEvent.change(remarksInput, {
+      target: { value: 'Access limited during night shift.' },
+    })
+
+    expect(onChangeRemarks).toHaveBeenCalledWith('Access limited during night shift.')
+
+    rerender(
+      <InspectionGeneralEvidenceCard
+        title={INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle}
+        photos={[]}
+        remarks="Access limited during night shift."
+        remarksLabel={INSPECTION_REPORT_EVIDENCE_COPY.remarksLabel}
+        readOnly
+      />,
+    )
+
+    expect(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.remarksLabel)).toBeTruthy()
+    expect(screen.getByText('Access limited during night shift.')).toBeTruthy()
   })
 })

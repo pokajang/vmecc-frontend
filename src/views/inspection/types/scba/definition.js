@@ -15,6 +15,7 @@ import {
 import { createLocationDetailContextFields } from '../detailConfigHelpers'
 import { buildMainLocationContinuationOptions } from '../continuationHelpers'
 import { ScbaEditSection, ScbaReadOnlySection } from './section'
+import { INSPECTION_REPORT_EVIDENCE_COPY } from '../../inspectionReportEvidenceCopy'
 
 const scbaInspectionDefinition = {
   key: 'scba-inspection',
@@ -28,7 +29,7 @@ const scbaInspectionDefinition = {
   supportsEquipmentCatalog: false,
   checksField: 'scbaChecks',
   fieldRefKey: 'scbaChecks',
-  photoEvidenceTitle: 'General Evidence Photos',
+  photoEvidenceTitle: INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle,
   missingFieldKeys: ['scbaChecks', 'scbaRemarks'],
   initialFormState: {
     scbaInspectedBy: '',

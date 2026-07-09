@@ -15,6 +15,7 @@ import {
 import { createTruckDetailContextFields } from '../detailConfigHelpers'
 import { buildSubLocationContinuationOptions } from '../continuationHelpers'
 import { FrtDailyEditSection, FrtDailyReadOnlySection } from './section'
+import { INSPECTION_REPORT_EVIDENCE_COPY } from '../../inspectionReportEvidenceCopy'
 
 const frtDailyInspectionDefinition = {
   key: 'frt-daily-inspection',
@@ -38,7 +39,7 @@ const frtDailyInspectionDefinition = {
   subLocationErrorLabel: 'Choose a compartment.',
   checksField: 'frtDailyChecks',
   fieldRefKey: 'frtChecks',
-  photoEvidenceTitle: 'General Evidence Photos',
+  photoEvidenceTitle: INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle,
   missingFieldKeys: [
     'frtSession',
     'frtCompartment',

@@ -366,6 +366,7 @@ const buildResetInspectionFormForType = (inspectionType) => {
     mainLocationId: '',
     subLocationId: '',
     description: '',
+    reportRemarks: '',
     photos: [],
     checklist: [],
   })

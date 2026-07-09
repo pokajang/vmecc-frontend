@@ -12,6 +12,7 @@ vi.mock('src/services/api/aiHelperApi', () => ({
 }))
 
 import InspectionFormBodySections from '../form/components/InspectionFormBodySections'
+import { INSPECTION_REPORT_EVIDENCE_COPY } from '../inspectionReportEvidenceCopy'
 
 const setMobileViewport = () => {
   Object.defineProperty(window, 'matchMedia', {
@@ -327,17 +328,15 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
       location: { selectedMainLocationTitle: 'Manjung Hub' },
       mainLocation: 'Manjung Hub',
       selectedType: 'Fire Extinguisher Inspection',
-      selectedTypeDefinition: { photoEvidenceTitle: 'General Evidence Photos' },
+      selectedTypeDefinition: { photoEvidenceTitle: INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle },
       StructuredEditSection: () => <div>Fire extinguisher rows mounted</div>,
       zone: '1',
     })
 
-    fireEvent.click(screen.getByText('Add photos (optional)'))
+    fireEvent.click(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel))
 
     expect(
-      screen.getByText(
-        'Optional. Use this only for extra location photos not already attached to a unit defect.',
-      ),
+      screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.helperText),
     ).toBeTruthy()
   })
 
@@ -426,7 +425,7 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
 
     expect(screen.getByText('Next location')).toBeTruthy()
     const mountedRows = screen.getByText('Fire extinguisher rows mounted')
-    const addPhotos = screen.getByText('Add photos (optional)')
+    const addPhotos = screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel)
     const nextLocation = screen.getByText('Next location')
     const saveReview = screen.getAllByText('Review Inspections')[0]
     expect(mountedRows.compareDocumentPosition(addPhotos)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)

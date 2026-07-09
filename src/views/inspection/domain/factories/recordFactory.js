@@ -42,6 +42,7 @@ export const buildInspectionPayloadSnapshot = ({
     description:
       String(finalDescription || '').trim() ||
       String(normalizedFindings[0]?.selectedDescription || '').trim(),
+    reportRemarks: String(form?.reportRemarks ?? form?.report_remarks ?? '').trim(),
     photos,
     findings: normalizedFindings,
   }
@@ -73,6 +74,7 @@ export const buildInspectionRecord = ({
     incidentType: payloadSnapshot.incidentType,
     location: payloadSnapshot.location,
     description: payloadSnapshot.description,
+    reportRemarks: payloadSnapshot.reportRemarks,
     photos: payloadSnapshot.photos,
     inspectionIssues: payloadSnapshot.inspectionIssues,
     issues: payloadSnapshot.inspectionIssues,

@@ -72,6 +72,7 @@ import {
 import {
   INSPECTION_CHECKLIST_VERSION,
   deriveDescription,
+  deriveReportRemarks,
   deriveInspectedAt,
   derivePhotos,
   deriveType,
@@ -142,6 +143,7 @@ export const normalizeInspectionForm = (form = {}) => {
     inspectionType,
     inspectedAt,
     description: deriveDescription(source),
+    reportRemarks: deriveReportRemarks(source),
     photos: derivePhotos(source),
     inspectionIssues: normalizeInspectionIssueDrafts(
       getInspectionIssuesSource(source, inspectionType),
@@ -483,6 +485,7 @@ export const buildInspectionPayloadSnapshot = (form = {}) => {
     locationIds,
     inspectedAt: String(normalizedForm.inspectedAt || '').trim(),
     description,
+    reportRemarks: String(normalizedForm.reportRemarks || '').trim(),
     photos,
     inspectionIssues,
     inspectionTypeDrafts: normalizedForm.inspectionTypeDrafts || {},

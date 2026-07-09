@@ -13,6 +13,7 @@ import {
 import { createLocationDetailContextFields } from '../detailConfigHelpers'
 import { buildMainLocationContinuationOptions } from '../continuationHelpers'
 import { HighAngleEditSection, HighAngleReadOnlySection } from './section'
+import { INSPECTION_REPORT_EVIDENCE_COPY } from '../../inspectionReportEvidenceCopy'
 
 const highAngleInspectionDefinition = {
   key: 'high-angle-rescue-equipment-inspection',
@@ -30,7 +31,7 @@ const highAngleInspectionDefinition = {
   supportsHighAngleCustomItems: true,
   checksField: 'highAngleChecks',
   fieldRefKey: 'highAngleChecks',
-  photoEvidenceTitle: 'General Evidence Photos',
+  photoEvidenceTitle: INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle,
   missingFieldKeys: ['highAngleChecks', 'highAngleRemarks'],
   initialFormState: {
     highAngleInspectedBy: '',

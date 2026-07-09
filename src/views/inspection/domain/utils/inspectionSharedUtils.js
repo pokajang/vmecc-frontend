@@ -187,6 +187,7 @@ export const normalizeReportRecord = (row) => {
     reportTime: reportTime || incidentTime,
     incidentType: String(merged.incidentType || merged.incident_type || '').trim(),
     description: String(merged.description || merged.details || '').trim(),
+    reportRemarks: String(merged.reportRemarks ?? merged.report_remarks ?? '').trim(),
     location,
     mainLocation,
     subLocation,

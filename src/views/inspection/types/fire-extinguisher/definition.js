@@ -16,6 +16,7 @@ import {
   FireExtinguisherReadOnlySection,
   renderFireExtinguisherDetailFindingContent,
 } from './section'
+import { INSPECTION_REPORT_EVIDENCE_COPY } from '../../inspectionReportEvidenceCopy'
 
 const fireExtinguisherInspectionDefinition = {
   key: 'fire-extinguisher-inspection',
@@ -36,7 +37,7 @@ const fireExtinguisherInspectionDefinition = {
   checksField: 'fireExtinguisherChecks',
   catalogRowsField: 'fireExtinguisherCatalogRows',
   fieldRefKey: 'fireExtinguisherChecks',
-  photoEvidenceTitle: 'General Evidence Photos',
+  photoEvidenceTitle: INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle,
   missingFieldKeys: ['fireExtinguisherChecks', 'fireExtinguisherRemarks'],
   initialFormState: {
     zone: '',

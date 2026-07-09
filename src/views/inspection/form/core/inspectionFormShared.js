@@ -46,6 +46,7 @@ export const defaultInspectionForm = {
   inspectionType: '',
   inspectedAt: '',
   description: '',
+  reportRemarks: '',
   photos: [],
   inspectionIssues: [],
   inspectionTypeDrafts: {},
@@ -489,6 +490,9 @@ export const deriveDescription = (source = {}) =>
       source.findings?.[0]?.description ||
       '',
   )
+
+export const deriveReportRemarks = (source = {}) =>
+  String(source.reportRemarks ?? source.report_remarks ?? '')
 
 export const derivePhotos = (source = {}) => {
   const directPhotos = normalizePhotos(source.photos)

@@ -200,21 +200,28 @@ export const InspectionReadOnlyLocationSections = ({
 export const InspectionGeneralEvidenceCard = ({
   title,
   photos,
+  remarks = '',
   readOnly = false,
   fieldError = false,
   compactOnMobile = false,
   drawerDescription = '',
   emptyMessage = 'No photos yet. Upload photos to continue.',
   compactActionLabel = 'Add photos (optional)',
+  remarksLabel = '',
+  remarksPlaceholder = '',
   onTakePhoto,
   onUploadPhoto,
   onRemovePhoto,
   onChangePhotoDescription,
+  onChangeRemarks,
   cardRef,
 }) => {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const useMobileDrawer = useMediaQuery('(max-width: 575.98px)')
   const photoCount = Array.isArray(photos) ? photos.length : 0
+  const remarksText = String(remarks || '')
+  const hasRemarks = remarksText.trim() !== ''
+  const showRemarks = Boolean(remarksLabel && (readOnly ? hasRemarks : true))
   const showCompactMobile = compactOnMobile && useMobileDrawer && !readOnly
 
   const actions = (
@@ -276,6 +283,27 @@ export const InspectionGeneralEvidenceCard = ({
     </>
   )
 
+  const remarksField = showRemarks ? (
+    readOnly ? (
+      <div className="inspection-report-remarks-readonly small">
+        <div className="fw-semibold text-body-secondary">{remarksLabel}</div>
+        <div style={{ whiteSpace: 'pre-wrap' }}>{remarksText}</div>
+      </div>
+    ) : (
+      <div className="d-grid gap-1">
+        <CFormLabel className="small fw-semibold text-muted mb-0">{remarksLabel}</CFormLabel>
+        <CFormTextarea
+          rows={3}
+          value={remarksText}
+          placeholder={remarksPlaceholder}
+          aria-label={remarksLabel}
+          maxLength={2000}
+          onChange={(event) => onChangeRemarks?.(event.target.value)}
+        />
+      </div>
+    )
+  ) : null
+
   if (showCompactMobile) {
     return (
       <div ref={cardRef} className="inspection-general-evidence-mobile-compact d-grid gap-2">
@@ -291,6 +319,7 @@ export const InspectionGeneralEvidenceCard = ({
             {drawerDescription ? (
               <div className="small text-body-secondary">{drawerDescription}</div>
             ) : null}
+            {remarksField}
             {gallery}
           </div>
         </MobileBottomDrawer>
@@ -305,6 +334,10 @@ export const InspectionGeneralEvidenceCard = ({
         {!readOnly ? actions : null}
       </CCardHeader>
       <CCardBody className="inspection-general-evidence-card-body d-grid gap-3">
+        {drawerDescription && !readOnly ? (
+          <div className="small text-body-secondary">{drawerDescription}</div>
+        ) : null}
+        {remarksField}
         {gallery}
       </CCardBody>
     </CCard>

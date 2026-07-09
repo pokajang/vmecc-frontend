@@ -217,6 +217,7 @@ const buildBaseInspectionRecord = ({
     locationIds: payloadSnapshot.locationIds,
     inspectedAt: payloadSnapshot.inspectedAt,
     description: payloadSnapshot.description,
+    reportRemarks: payloadSnapshot.reportRemarks,
     photos: payloadSnapshot.photos,
     inspectionIssues: payloadSnapshot.inspectionIssues,
     issues: payloadSnapshot.inspectionIssues,

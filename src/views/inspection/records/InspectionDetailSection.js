@@ -9,6 +9,7 @@ import {
   InspectionGeneralEvidenceCard,
   formatInspectionDisplayLocationTitle,
 } from '../form/components/InspectionFormDisplaySections'
+import { INSPECTION_REPORT_EVIDENCE_COPY } from '../inspectionReportEvidenceCopy'
 import InspectionDetailActionBar from './InspectionDetailActionBar'
 import InspectionDetailFindingsSection from './InspectionDetailFindingsSection'
 
@@ -433,16 +434,16 @@ const InspectionDetailSection = ({
         />
 
         <section className="inspection-form-section d-grid gap-3">
-          <div className="fw-semibold text-muted">Evidence</div>
+          <div className="fw-semibold text-muted">
+            {INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle}
+          </div>
           <InspectionGeneralEvidenceCard
             readOnly
-            title={selectedTypeDefinition?.photoEvidenceTitle || 'Upload Photos and Describe'}
+            title={INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle}
             photos={form.photos}
-            emptyMessage={
-              selectedTypeDefinition?.formMode === 'structured'
-                ? 'No general evidence photos added.'
-                : 'No inspection photos were added.'
-            }
+            remarks={form.reportRemarks}
+            emptyMessage={INSPECTION_REPORT_EVIDENCE_COPY.emptyPhotosMessage}
+            remarksLabel={INSPECTION_REPORT_EVIDENCE_COPY.remarksLabel}
           />
         </section>
 

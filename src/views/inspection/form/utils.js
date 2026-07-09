@@ -106,6 +106,7 @@ export const normalizeInspectionRecord = (record) => {
     incidentType: String(record.incidentType || '').trim(),
     location: String(record.location || '').trim(),
     description: String(record.description || '').trim(),
+    reportRemarks: String(record.reportRemarks ?? record.report_remarks ?? '').trim(),
     photos: Array.isArray(record.photos) ? record.photos.filter(Boolean) : [],
     findings: Array.isArray(record.findings) ? record.findings : [],
     checklist: Array.isArray(record.checklist) ? record.checklist.filter(Boolean) : [],

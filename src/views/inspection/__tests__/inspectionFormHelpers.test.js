@@ -71,6 +71,7 @@ const baseForm = {
   inspectionType: 'Hydraulic Rescue Tools Inspection',
   inspectedAt: '2026-06-29T09:30',
   description: 'Observed normal physical condition and no leakage.',
+  reportRemarks: 'Access was limited to the front bay during inspection.',
   photos: basePhotos,
 }
 
@@ -80,6 +81,7 @@ describe('inspectionFormHelpers', () => {
       selectedLocation: 'Zone 2',
       incidentType: 'ER Aux Equipment Inspection',
       description: 'Equipment quantity and condition recorded.',
+      report_remarks: 'Overall report note.',
       photos: basePhotos,
     })
 
@@ -94,6 +96,7 @@ describe('inspectionFormHelpers', () => {
       inspectionType: 'ER Aux Equipment Inspection',
       inspectedAt: '',
       description: 'Equipment quantity and condition recorded.',
+      reportRemarks: 'Overall report note.',
       photos: basePhotos,
       checklist: [],
       inspectionActor: null,
@@ -156,6 +159,19 @@ describe('inspectionFormHelpers', () => {
       hydraulicChecks: [],
       hydraulicEquipmentRows: [],
     })
+  })
+
+  it('keeps an explicitly cleared reportRemarks value over legacy snake-case data', () => {
+    const form = recordToInspectionForm({
+      selectedLocation: 'Zone 2',
+      incidentType: 'General Inspection',
+      description: 'Inspection summary.',
+      reportRemarks: '',
+      report_remarks: 'Legacy remark that should not return.',
+      photos: [],
+    })
+
+    expect(form.reportRemarks).toBe('')
   })
 
   it('infers fire extinguisher zone from saved rows when legacy records have only area and location', () => {
@@ -540,6 +556,7 @@ describe('inspectionFormHelpers', () => {
     expect(payload.subLocation).toBe('')
     expect(payload.locationPath).toEqual([baseForm.selectedLocation])
     expect(payload.description).toBe(baseForm.description)
+    expect(payload.reportRemarks).toBe(baseForm.reportRemarks)
     expect(payload.photos).toEqual(basePhotos)
     expect(payload.checklist).toEqual([])
     expect(payload.hydraulicChecks).toEqual([])
@@ -585,6 +602,7 @@ describe('inspectionFormHelpers', () => {
 
     expect(reviewRecord.id).toBe('report-ins-001')
     expect(reviewRecord.displayId).toBe('INS-01-29042026')
+    expect(reviewRecord.reportRemarks).toBe(baseForm.reportRemarks)
     expect(reviewRecord.photos).toEqual(basePhotos)
     expect(reviewRecord.findings).toHaveLength(1)
     expect(reviewRecord.status).toBe('Draft')
@@ -3603,7 +3621,6 @@ describe('inspectionFormHelpers', () => {
       normalizeInspectionForm({
         inspectionType: 'Hydraulic Rescue Tools Inspection',
         mainLocation: 'FRT',
-        hydraulicInspectedBy: 'Inspector Hydraulic',
         hydraulicInspectedBy: 'Inspector Hydraulic',
         hydraulicChecks: [
           {

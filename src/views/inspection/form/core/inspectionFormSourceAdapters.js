@@ -23,6 +23,7 @@ export const buildInspectionFormSourceInput = (source = {}) => ({
   inspectionType: source.incidentType || source.inspectionType || source.inspection_type || '',
   inspectedAt: source.inspectedAt || source.inspected_at || '',
   description: source.description || '',
+  reportRemarks: source.reportRemarks ?? source.report_remarks ?? '',
   photos: source.photos || [],
   inspectionIssues: getInspectionIssuesSource(source),
   findings: source.findings || [],

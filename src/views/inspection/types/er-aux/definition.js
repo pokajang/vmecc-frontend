@@ -13,6 +13,7 @@ import {
 import { createLocationDetailContextFields } from '../detailConfigHelpers'
 import { buildMainLocationContinuationOptions } from '../continuationHelpers'
 import { ErAuxEditSection, ErAuxReadOnlySection } from './section'
+import { INSPECTION_REPORT_EVIDENCE_COPY } from '../../inspectionReportEvidenceCopy'
 
 const erAuxInspectionDefinition = {
   key: 'er-aux-equipment-inspection',
@@ -26,7 +27,7 @@ const erAuxInspectionDefinition = {
   supportsEquipmentCatalog: true,
   equipmentRowsField: 'erAuxEquipmentRows',
   checksField: 'erAuxChecks',
-  photoEvidenceTitle: 'General Evidence Photos',
+  photoEvidenceTitle: INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle,
   fieldRefKey: 'erAuxChecks',
   missingFieldKeys: ['erAuxChecks', 'erAuxRemarks'],
   initialFormState: {

@@ -22,6 +22,7 @@ import {
   getFireExtinguisherRowValidation,
   isFireExtinguisherSessionCompletedRow,
 } from '../../types/fire-extinguisher/helpers'
+import { INSPECTION_REPORT_EVIDENCE_COPY } from '../../inspectionReportEvidenceCopy'
 import { FormFieldError, InspectionGeneralEvidenceCard } from './InspectionFormDisplaySections'
 import InspectionLocationOptionPicker from './InspectionLocationOptionPicker'
 
@@ -382,36 +383,29 @@ const InspectionFormPhotoEvidence = ({
   isGeneralInspectionForm,
   isStructuredInspectionForm,
   onChangePhotoDescription,
+  onChangeReportRemarks,
   onRemovePhoto,
   onTakePhoto,
   onUploadPhoto,
   photosRef,
-  selectedTypeDefinition,
 }) => (
   <InspectionGeneralEvidenceCard
     cardRef={photosRef}
-    title={
-      isStructuredInspectionForm || isGeneralInspectionForm
-        ? selectedTypeDefinition?.photoEvidenceTitle || 'General Evidence Photos'
-        : 'Upload Photos and Describe'
-    }
+    title={INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle}
     photos={form.photos}
+    remarks={form.reportRemarks}
     fieldError={fieldErrors.photos}
     compactOnMobile={isStructuredInspectionForm || isGeneralInspectionForm}
-    drawerDescription={
-      isStructuredInspectionForm || isGeneralInspectionForm
-        ? 'Optional. Use this only for extra location photos not already attached to a unit defect.'
-        : ''
-    }
-    emptyMessage={
-      isStructuredInspectionForm || isGeneralInspectionForm
-        ? 'No general evidence photos added.'
-        : 'No photos yet. Upload photos to continue.'
-    }
+    compactActionLabel={INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel}
+    drawerDescription={INSPECTION_REPORT_EVIDENCE_COPY.helperText}
+    emptyMessage={INSPECTION_REPORT_EVIDENCE_COPY.emptyPhotosMessage}
+    remarksLabel={INSPECTION_REPORT_EVIDENCE_COPY.remarksLabel}
+    remarksPlaceholder={INSPECTION_REPORT_EVIDENCE_COPY.remarksPlaceholder}
     onTakePhoto={onTakePhoto}
     onUploadPhoto={onUploadPhoto}
     onRemovePhoto={onRemovePhoto}
     onChangePhotoDescription={onChangePhotoDescription}
+    onChangeRemarks={onChangeReportRemarks}
   />
 )
 
@@ -1364,11 +1358,16 @@ const InspectionFormBodySections = ({
       isGeneralInspectionForm={isFullInspectionForm}
       isStructuredInspectionForm={isStructuredInspectionForm}
       onChangePhotoDescription={updatePhotoDescription}
+      onChangeReportRemarks={(nextRemarks) =>
+        updateForm({
+          ...(typeof getLatestForm === 'function' ? getLatestForm() : form),
+          reportRemarks: nextRemarks,
+        })
+      }
       onRemovePhoto={removePhoto}
       onTakePhoto={() => requestRootPhotoUpload(cameraInputRef)}
       onUploadPhoto={() => requestRootPhotoUpload(uploadInputRef)}
       photosRef={photosRef}
-      selectedTypeDefinition={selectedTypeDefinition}
     />
   )
 

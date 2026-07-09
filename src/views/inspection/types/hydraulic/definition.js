@@ -15,6 +15,7 @@ import {
 import { createLocationDetailContextFields } from '../detailConfigHelpers'
 import { buildMainLocationContinuationOptions } from '../continuationHelpers'
 import { HydraulicEditSection, HydraulicReadOnlySection } from './section'
+import { INSPECTION_REPORT_EVIDENCE_COPY } from '../../inspectionReportEvidenceCopy'
 
 const hydraulicInspectionDefinition = {
   key: 'hydraulic-rescue-tools-inspection',
@@ -28,7 +29,7 @@ const hydraulicInspectionDefinition = {
   supportsEquipmentCatalog: true,
   equipmentRowsField: 'hydraulicEquipmentRows',
   checksField: 'hydraulicChecks',
-  photoEvidenceTitle: 'General Evidence Photos',
+  photoEvidenceTitle: INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle,
   fieldRefKey: 'hydraulicChecks',
   missingFieldKeys: ['hydraulicChecks', 'hydraulicRemarks'],
   initialFormState: {

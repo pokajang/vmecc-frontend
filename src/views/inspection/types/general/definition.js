@@ -9,6 +9,7 @@ import {
 } from './helpers'
 import { createZoneLocationDetailContextFields } from '../detailConfigHelpers'
 import { GeneralReadOnlySection } from './section'
+import { INSPECTION_REPORT_EVIDENCE_COPY } from '../../inspectionReportEvidenceCopy'
 
 const generalInspectionDefinition = {
   key: 'general-inspection',
@@ -24,7 +25,7 @@ const generalInspectionDefinition = {
   mainLocationLabel: 'Choose Main Area',
   mainLocationSearchPlaceholder: 'Search main area...',
   mainLocationErrorLabel: 'Choose a zone and main area.',
-  photoEvidenceTitle: 'General Evidence Photos',
+  photoEvidenceTitle: INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle,
   initialFormState: {},
   missingFieldKeys: [],
   isInspectionType: isGeneralInspectionType,

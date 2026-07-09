@@ -525,66 +525,71 @@ const HseCase = () => {
   )
 }
 
-const GeneralCase = () => (
-  <VisualCase
-    id="general"
-    title="General Inspection"
-    setupType="General Inspection"
-    setupItems={[{ label: 'Main Location', value: 'Office' }]}
-  >
-    <InspectionFormBodySections
-      appendDescription={noop}
-      checklistChips={['Housekeeping']}
-      currentStructuredSummary={null}
-      descriptionRef={createRef()}
-      draftStatus=""
-      fieldErrors={{}}
-      form={{
-        inspectionType: 'General Inspection',
-        checklist: [
-          {
-            id: 'general-inspection:housekeeping',
-            label: 'Housekeeping',
-            selected: true,
-          },
-        ],
-        description: 'Walkway clear.',
-        photos: [],
-      }}
-      getLatestForm={noop}
-      isFireExtinguisherCatalogInspectionForm={false}
-      isLoadingEquipmentRows={false}
-      isLoadingFireExtinguisherRows={false}
-      isLoadingScbaCatalogSections={false}
-      isFireTruckCatalogInspectionForm={false}
-      isFullInspectionForm
-      isStructuredInspectionForm={false}
-      location={{}}
-      mainLocation="Office"
-      onRequestReview={noop}
-      onSaveDraft={noop}
-      photosRef={createRef()}
-      removePhoto={noop}
-      requestRootPhotoUpload={noop}
-      selectedFireTruckPlate=""
-      selectedType="General Inspection"
-      selectedTypeDefinition={null}
-      showComingSoonNotice={false}
-      structuredDisplayForm={{}}
-      structuredSectionHandlers={{}}
-      structuredSectionRef={createRef()}
-      StructuredEditSection={null}
-      toggleChecklistChip={noop}
-      updateForm={noop}
-      updatePhotoDescription={noop}
-      uploadInputRef={createRef()}
-      cameraInputRef={createRef()}
-      validationState={null}
-      validationStatusMessage=""
-      zone=""
-    />
-  </VisualCase>
-)
+const GeneralCase = () => {
+  const [form, setForm] = useState({
+    inspectionType: 'General Inspection',
+    checklist: [
+      {
+        id: 'general-inspection:housekeeping',
+        label: 'Housekeeping',
+        selected: true,
+      },
+    ],
+    description: 'Walkway clear.',
+    reportRemarks: 'Whole office accessible except the archive room.',
+    photos: [],
+  })
+
+  return (
+    <VisualCase
+      id="general"
+      title="General Inspection"
+      setupType="General Inspection"
+      setupItems={[{ label: 'Main Location', value: 'Office' }]}
+    >
+      <InspectionFormBodySections
+        appendDescription={noop}
+        checklistChips={['Housekeeping']}
+        currentStructuredSummary={null}
+        descriptionRef={createRef()}
+        draftStatus=""
+        fieldErrors={{}}
+        form={form}
+        getLatestForm={noop}
+        isFireExtinguisherCatalogInspectionForm={false}
+        isLoadingEquipmentRows={false}
+        isLoadingFireExtinguisherRows={false}
+        isLoadingScbaCatalogSections={false}
+        isFireTruckCatalogInspectionForm={false}
+        isFullInspectionForm
+        isStructuredInspectionForm={false}
+        location={{}}
+        mainLocation="Office"
+        onRequestReview={noop}
+        onSaveDraft={noop}
+        photosRef={createRef()}
+        removePhoto={noop}
+        requestRootPhotoUpload={noop}
+        selectedFireTruckPlate=""
+        selectedType="General Inspection"
+        selectedTypeDefinition={null}
+        showComingSoonNotice={false}
+        structuredDisplayForm={{}}
+        structuredSectionHandlers={{}}
+        structuredSectionRef={createRef()}
+        StructuredEditSection={null}
+        toggleChecklistChip={noop}
+        updateForm={(patch) => setForm((current) => ({ ...current, ...patch }))}
+        updatePhotoDescription={noop}
+        uploadInputRef={createRef()}
+        cameraInputRef={createRef()}
+        validationState={null}
+        validationStatusMessage=""
+        zone=""
+      />
+    </VisualCase>
+  )
+}
 
 const App = () => (
   <>

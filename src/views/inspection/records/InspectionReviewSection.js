@@ -14,6 +14,7 @@ import {
   isGeneralInspectionType,
   recordToInspectionForm,
 } from '../form/inspectionFormHelpers'
+import { INSPECTION_REPORT_EVIDENCE_COPY } from '../inspectionReportEvidenceCopy'
 
 const text = (value) => String(value || '').trim()
 
@@ -346,16 +347,14 @@ const InspectionReviewSection = ({
         </ReviewSectionBlock>
       ) : null}
 
-      <ReviewSectionBlock title="Photos">
+      <ReviewSectionBlock title={INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle}>
         <InspectionGeneralEvidenceCard
           readOnly
-          title={selectedTypeDefinition?.photoEvidenceTitle || 'Upload Photos and Describe'}
-          photos={r.photos}
-          emptyMessage={
-            selectedTypeDefinition?.formMode === 'structured'
-              ? 'No general evidence photos added.'
-              : 'No inspection photos were added.'
-          }
+          title={INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle}
+          photos={form.photos}
+          remarks={form.reportRemarks}
+          emptyMessage={INSPECTION_REPORT_EVIDENCE_COPY.emptyPhotosMessage}
+          remarksLabel={INSPECTION_REPORT_EVIDENCE_COPY.remarksLabel}
         />
       </ReviewSectionBlock>
 

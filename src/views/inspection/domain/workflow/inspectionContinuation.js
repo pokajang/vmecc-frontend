@@ -228,6 +228,7 @@ export const buildInspectionContinuationForm = ({
     inspectionType: normalizedInspectionType,
     inspectedAt: String(inspectedAt || '').trim(),
     description: '',
+    reportRemarks: '',
     photos: [],
     checklist: [],
     hydraulicChecks: [],
