@@ -338,8 +338,8 @@ export const getScbaRowRetainedEvidenceFields = (row = {}, fields = []) =>
 
 const getScbaIncompleteIssueEvidenceCount = (row = {}, fields = []) =>
   getScbaRowIssueFields(row, fields).filter((field) => {
-    const { remarksKey, photosKey } = getScbaFieldEvidenceKeys(field)
-    return !String(row?.[remarksKey] || '').trim() || normalizePhotos(row?.[photosKey]).length === 0
+    const { remarksKey } = getScbaFieldEvidenceKeys(field)
+    return !String(row?.[remarksKey] || '').trim()
   }).length
 
 const buildVisibleSection = (section, form) => {
@@ -370,10 +370,7 @@ const buildVisibleSection = (section, form) => {
     const incompleteRemarksCount = visibleRows.filter(
       (row) => getScbaIncompleteIssueEvidenceCount(row, section.fields) > 0,
     ).length
-    const incompletePhotoCount = visibleRows.reduce(
-      (count, row) => count + getScbaIncompleteIssueEvidenceCount(row, section.fields),
-      0,
-    )
+    const incompletePhotoCount = 0
     const retainedEvidenceCount = visibleRows.reduce(
       (count, row) => count + getScbaRowRetainedEvidenceFields(row, section.fields).length,
       0,
@@ -440,10 +437,7 @@ const buildVisibleSection = (section, form) => {
   const incompleteRemarksCount = visibleRows.filter(
     (row) => getScbaIncompleteIssueEvidenceCount(row, section.fields) > 0,
   ).length
-  const incompletePhotoCount = visibleRows.reduce(
-    (count, row) => count + getScbaIncompleteIssueEvidenceCount(row, section.fields),
-    0,
-  )
+  const incompletePhotoCount = 0
   const retainedEvidenceCount = visibleRows.reduce(
     (count, row) => count + getScbaRowRetainedEvidenceFields(row, section.fields).length,
     0,

@@ -3,7 +3,9 @@ import { act, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import useInspectionFormPhotos from '../form/useInspectionFormPhotos'
 import { isCameraFailureToRetry } from '../form/inspectionPhotoUtils'
+import * as cameraRecovery from 'src/utils/cameraRecovery'
 import { getPendingCameraOperation } from 'src/utils/cameraRecovery'
+import * as cameraCaptureUtils from '../form/inspectionCameraCaptureUtils'
 
 const noop = vi.fn()
 
@@ -39,10 +41,13 @@ vi.mock('../form/inspectionPhotoUtils', async () => {
 })
 
 beforeEach(() => {
+  vi.spyOn(cameraCaptureUtils, 'supportsInAppInspectionCamera').mockReturnValue(true)
+  vi.spyOn(cameraRecovery, 'isLikelyEmbeddedBrowser').mockReturnValue(false)
   sessionStorage.clear()
 })
 
 afterEach(() => {
+  vi.restoreAllMocks()
   vi.clearAllMocks()
   noop.mockReset()
 })
@@ -186,7 +191,7 @@ describe('useInspectionFormPhotos', () => {
     expect(getPendingCameraOperation()).toBeNull()
   })
 
-  it('consumes the camera marker when the native picker returns without a photo', async () => {
+  it('does not show a recoverable fallback when an in-app capture is cancelled', async () => {
     const { result } = createTestHook()
 
     act(() => result.current.requestFireExtinguisherPhotoUpload({ id: 'row-cancelled' }, {}))
@@ -196,10 +201,7 @@ describe('useInspectionFormPhotos', () => {
       await result.current.handlePhotoSelect({ target: { files: [], value: '' } })
     })
 
-    expect(result.current.cameraUploadFallback).toMatchObject({
-      errorCode: 'camera_interrupted',
-      phase: 'picker',
-    })
+    expect(result.current.cameraUploadFallback).toBeNull()
     expect(getPendingCameraOperation()).toBeNull()
   })
 

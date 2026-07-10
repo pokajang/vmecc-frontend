@@ -290,10 +290,7 @@ export const getFireExtinguisherCheckSummary = (form = {}) => {
     (count, row) => count + getFireExtinguisherIncompleteDefectRemarkCount(row),
     0,
   )
-  const incompleteDefectPhotoCount = visibleChecks.reduce(
-    (count, row) => count + getFireExtinguisherIncompleteDefectPhotoCount(row),
-    0,
-  )
+  const incompleteDefectPhotoCount = 0
   return {
     visibleChecks,
     totalCount: visibleChecks.length,
@@ -312,9 +309,6 @@ const getFireExtinguisherDefectFields = (row = {}) =>
 
 const getFireExtinguisherIncompleteDefectRemarkCount = (row = {}) =>
   getFireExtinguisherDefectFields(row).filter((field) => !text(row[field.remarksKey])).length
-
-const getFireExtinguisherIncompleteDefectPhotoCount = (row = {}) =>
-  getFireExtinguisherDefectFields(row).filter((field) => !hasPhotos(row[field.photosKey])).length
 
 export const isFireExtinguisherSessionCompletedRow = (row = {}) =>
   text(row?.sessionResult?.status || row?.sessionStatus).toLowerCase() === 'completed'
@@ -350,19 +344,14 @@ export const getFireExtinguisherRowValidation = (row = {}) => {
   const missingRemarkKeys = FIRE_EXTINGUISHER_CHECK_FIELDS.filter(
     (field) => isFireExtinguisherDefectStatus(row[field.key]) && !text(row[field.remarksKey]),
   ).map((field) => field.remarksKey)
-  const missingPhotoKeys = FIRE_EXTINGUISHER_CHECK_FIELDS.filter(
-    (field) => isFireExtinguisherDefectStatus(row[field.key]) && !hasPhotos(row[field.photosKey]),
-  ).map((field) => field.photosKey)
+  const missingPhotoKeys = []
 
   return {
     rowId: text(row.id),
     missingStatusKeys,
     missingRemarkKeys,
     missingPhotoKeys,
-    isComplete:
-      missingStatusKeys.length === 0 &&
-      missingRemarkKeys.length === 0 &&
-      missingPhotoKeys.length === 0,
+    isComplete: missingStatusKeys.length === 0 && missingRemarkKeys.length === 0,
     hasDefect: FIRE_EXTINGUISHER_CHECK_FIELDS.some((field) =>
       isFireExtinguisherDefectStatus(row[field.key]),
     ),
@@ -476,10 +465,7 @@ export const getFireExtinguisherValidationDetails = (form = {}, options = {}) =>
     return next
   }, {})
   const firstMissingRow = rowDetails.find(
-    (detail) =>
-      detail.missingStatusKeys.length > 0 ||
-      detail.missingRemarkKeys.length > 0 ||
-      detail.missingPhotoKeys.length > 0,
+    (detail) => detail.missingStatusKeys.length > 0 || detail.missingRemarkKeys.length > 0,
   )
 
   return {
@@ -498,13 +484,12 @@ export const getFireExtinguisherValidationDetails = (form = {}, options = {}) =>
           detailKey:
             firstMissingRow.missingStatusKeys.length > 0
               ? ''
-              : firstMissingRow.missingRemarkKeys[0] || firstMissingRow.missingPhotoKeys[0] || '',
+              : firstMissingRow.missingRemarkKeys[0] || '',
         }
       : null,
     errorCount:
       Object.values(missingStatusesByRow).reduce((sum, keys) => sum + keys.length, 0) +
-      Object.values(missingRemarksByRow).reduce((sum, keys) => sum + keys.length, 0) +
-      Object.values(missingPhotosByRow).reduce((sum, keys) => sum + keys.length, 0),
+      Object.values(missingRemarksByRow).reduce((sum, keys) => sum + keys.length, 0),
   }
 }
 
@@ -515,9 +500,7 @@ export const getFireExtinguisherMissingFields = (form = {}, options = {}) => {
   const rowDetails = visibleChecks.map(getFireExtinguisherRowValidation)
   const checksMissing =
     visibleChecks.length === 0 || rowDetails.some((detail) => detail.missingStatusKeys.length > 0)
-  const remarksMissing = rowDetails.some(
-    (detail) => detail.missingRemarkKeys.length > 0 || detail.missingPhotoKeys.length > 0,
-  )
+  const remarksMissing = rowDetails.some((detail) => detail.missingRemarkKeys.length > 0)
   return {
     fireExtinguisherSession: false,
     fireExtinguisherChecks: checksMissing,

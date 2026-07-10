@@ -428,16 +428,14 @@ export const FrtDailyInspectionChecks = ({
             {fieldErrors.frtDailyChecks ? 'Complete all daily roster rows before review.' : ''}
           </FormFieldError>
           <FormFieldError>
-            {fieldErrors.frtDailyRemarks
-              ? 'Add remarks and issue photos for daily issue rows before review.'
-              : ''}
+            {fieldErrors.frtDailyRemarks ? 'Add remarks for daily issue rows before review.' : ''}
           </FormFieldError>
           <FormFieldError>
             {fieldErrors.frtOneOffChecks ? 'Complete all one-off rows before review.' : ''}
           </FormFieldError>
           <FormFieldError>
             {fieldErrors.frtOneOffRemarks
-              ? 'Add remarks and issue photos for one-off issue rows before review.'
+              ? 'Add remarks for one-off issue rows before review.'
               : ''}
           </FormFieldError>
         </>

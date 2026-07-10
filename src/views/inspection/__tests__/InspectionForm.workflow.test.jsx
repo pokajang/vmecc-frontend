@@ -3338,7 +3338,7 @@ describe('InspectionForm workflow', () => {
 
     fireEvent.click(screen.getAllByText('Photo')[0])
 
-    const cameraInput = container.querySelector('input[type="file"][capture="environment"]')
+    const cameraInput = container.querySelector('input[type="file"]')
     expect(cameraInput).toBeTruthy()
 
     const file = new File(['photo'], 'er-aux-photo.png', { type: 'image/png' })
@@ -3421,14 +3421,14 @@ describe('InspectionForm workflow', () => {
     )
     const getRow = () =>
       within(container.querySelector('[data-inspection-er-aux-row-id="office:radio-tetra"]'))
-    const cameraInput = container.querySelector('input[type="file"][capture="environment"]')
+    const cameraInput = container.querySelectorAll('input[type="file"]')[0]
     expect(cameraInput).toBeTruthy()
 
     fireEvent.click(getRow().getByRole('button', { name: 'Defect' }))
     let latestForm = onChange.mock.calls[onChange.mock.calls.length - 1][0]
     rerender(<InspectionForm {...baseProps} onChange={onChange} value={latestForm} />)
 
-    fireEvent.click(getRow().getByRole('button', { name: 'Add defect photo' }))
+    fireEvent.click(getRow().getByRole('button', { name: 'Add photo' }))
     fireEvent.change(cameraInput, {
       target: { files: [new File(['defect'], 'er-aux-defect.png', { type: 'image/png' })] },
     })
@@ -3657,7 +3657,7 @@ describe('InspectionForm workflow', () => {
 
     expect(screen.getByPlaceholderText('Physical Condition defect remarks')).toBeTruthy()
     expect(screen.getByPlaceholderText('No Leakage defect remarks')).toBeTruthy()
-    expect(screen.getAllByText('Add defect photo').length).toBeGreaterThanOrEqual(2)
+    expect(screen.getAllByText('Add photo').length).toBeGreaterThanOrEqual(2)
     expect(screen.queryByRole('button', { name: 'Continue to Review' })).toBeNull()
     expect(onRequestReview).not.toHaveBeenCalled()
     onRequestReview.mockClear()
@@ -3772,6 +3772,6 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    expect(container.querySelector('input[type="file"][capture="environment"]')).toBeTruthy()
+    expect(container.querySelector('input[type="file"]')).toBeTruthy()
   })
 })

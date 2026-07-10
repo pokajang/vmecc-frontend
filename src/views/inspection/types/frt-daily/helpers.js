@@ -243,13 +243,13 @@ const isFrtDailyRowComplete = (row = {}) => {
   if (row.rowKind === 'reading') return text(row.readingValue) !== ''
   if (!text(row.status)) return false
   if (row.status !== 'Issue') return true
-  return text(row.remarks) !== '' && hasPhotos(row.photos)
+  return text(row.remarks) !== ''
 }
 
 const isFrtOneOffRowComplete = (row = {}) => {
   if (!text(row.condition)) return false
   if (row.condition !== 'Not Good') return true
-  return text(row.remarks) !== '' && hasPhotos(row.photos)
+  return text(row.remarks) !== ''
 }
 
 const isFrtDailyInspectionCandidateRow = (row = {}) =>
@@ -341,11 +341,7 @@ const buildSectionSummary = (section, rows, kind) => {
       ? row.status === 'Issue' && !String(row.remarks || '').trim()
       : row.condition === 'Not Good' && !String(row.remarks || '').trim(),
   ).length
-  const incompletePhotoCount = visibleRows.filter((row) =>
-    kind === 'daily'
-      ? row.status === 'Issue' && normalizePhotos(row.photos).length === 0
-      : row.condition === 'Not Good' && normalizePhotos(row.photos).length === 0,
-  ).length
+  const incompletePhotoCount = 0
 
   return {
     ...section,
@@ -544,15 +540,11 @@ export const getFrtMissingFields = (form = {}) => {
     frtCompartment: !selectedCompartment,
     frtDailyChecks: summary.dailyRows.length === 0 || hasIncompleteDaily,
     frtDailyRemarks: summary.dailyRows.some(
-      (row) =>
-        row.status === 'Issue' &&
-        (!String(row.remarks || '').trim() || normalizePhotos(row.photos).length === 0),
+      (row) => row.status === 'Issue' && !String(row.remarks || '').trim(),
     ),
     frtOneOffChecks: summary.oneOffRows.length === 0 || hasIncompleteOneOff,
     frtOneOffRemarks: summary.oneOffRows.some(
-      (row) =>
-        row.condition === 'Not Good' &&
-        (!String(row.remarks || '').trim() || normalizePhotos(row.photos).length === 0),
+      (row) => row.condition === 'Not Good' && !String(row.remarks || '').trim(),
     ),
   }
 }
@@ -597,7 +589,6 @@ export const getFrtValidationDetails = (form = {}) => {
     if (!String(row.status || '').trim()) addRowDetail(row, 'frtDailyChecks', 'status')
     if (row.status === 'Issue') {
       if (!String(row.remarks || '').trim()) addRowDetail(row, 'frtDailyRemarks', 'remarks')
-      if (normalizePhotos(row.photos).length === 0) addRowDetail(row, 'frtDailyRemarks', 'photos')
     }
   })
 
@@ -605,7 +596,6 @@ export const getFrtValidationDetails = (form = {}) => {
     if (!String(row.condition || '').trim()) addRowDetail(row, 'frtOneOffChecks', 'condition')
     if (row.condition === 'Not Good') {
       if (!String(row.remarks || '').trim()) addRowDetail(row, 'frtOneOffRemarks', 'remarks')
-      if (normalizePhotos(row.photos).length === 0) addRowDetail(row, 'frtOneOffRemarks', 'photos')
     }
   })
 

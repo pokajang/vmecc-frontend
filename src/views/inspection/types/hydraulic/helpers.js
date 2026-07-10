@@ -388,11 +388,8 @@ export const getHydraulicRetainedEvidenceFields = (check = {}) =>
   })
 
 const getHydraulicIncompleteDefectEvidenceCount = (check = {}) =>
-  getHydraulicDefectFields(check).filter(
-    (field) =>
-      !String(check?.[field.remarksKey] || '').trim() ||
-      normalizePhotos(check?.[field.photosKey]).length === 0,
-  ).length
+  getHydraulicDefectFields(check).filter((field) => !String(check?.[field.remarksKey] || '').trim())
+    .length
 
 const getHydraulicIncompleteNaReasonCount = (check = {}) =>
   getHydraulicNaFields(check).filter((field) => !String(check?.[field.remarksKey] || '').trim())

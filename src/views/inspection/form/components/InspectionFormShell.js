@@ -64,7 +64,6 @@ const InspectionFormShell = ({
     cameraUploadFallback,
     clearCameraUploadFallback,
     requestUploadFromCameraFallback,
-    useNativeCameraFallback,
     removePhoto,
     requestInspectionIssuePhotoUpload,
     requestRootPhotoUpload,
@@ -88,7 +87,7 @@ const InspectionFormShell = ({
         visible={cameraCaptureVisible}
         onCapture={handleInAppCameraCapture}
         onClose={closeInAppCamera}
-        onUseNativeCamera={useNativeCameraFallback}
+        onUploadPhoto={() => requestUploadFromCameraFallback?.()}
       />
       {isPhotoProcessing ? (
         <div className="small text-body-secondary mb-2" role="status">
@@ -150,15 +149,6 @@ const InspectionFormShell = ({
         type="file"
         accept="image/*"
         multiple
-        className="d-none"
-        onChange={handlePhotoSelect}
-        disabled={isPhotoProcessing}
-      />
-      <input
-        ref={cameraInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
         className="d-none"
         onChange={handlePhotoSelect}
         disabled={isPhotoProcessing}

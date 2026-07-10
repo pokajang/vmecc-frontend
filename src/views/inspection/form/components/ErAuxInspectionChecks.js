@@ -90,8 +90,7 @@ const getErAuxWorkflowState = (row = {}) => {
   const isDefect = condition === 'Defect'
   const hasDefectRemarks = String(row.defectRemarks || '').trim() !== ''
   const defectPhotos = Array.isArray(row.defectPhotos) ? row.defectPhotos : []
-  const missingEvidenceCount =
-    (isDefect && !hasDefectRemarks ? 1 : 0) + (isDefect && defectPhotos.length === 0 ? 1 : 0)
+  const missingEvidenceCount = isDefect && !hasDefectRemarks ? 1 : 0
   const missingCount = (condition ? 0 : 1) + (quantity ? 0 : 1) + missingEvidenceCount
 
   return {
@@ -147,7 +146,6 @@ const getErAuxRowState = (row = {}, expandedAdditionalNotes = {}, readOnly = fal
     hasDefectRemarks,
     isDefect,
     missingCondition: !String(row.condition || '').trim(),
-    missingPhoto: isDefect && defectPhotos.length === 0,
     missingQuantity: !String(quantity || '').trim(),
     missingRemark: isDefect && !hasDefectRemarks,
     photos,
@@ -179,7 +177,6 @@ const ErAuxEquipmentCheckDetails = ({
     hasDefectRemarks,
     isDefect,
     missingCondition,
-    missingPhoto,
     missingQuantity,
     missingRemark,
     photos,
@@ -256,7 +253,7 @@ const ErAuxEquipmentCheckDetails = ({
             data-inspection-er-aux-detail-key="defectPhotos"
           >
             <CreateActionButton
-              label="Add defect photo"
+              label="Add photo"
               className="inspection-compact-action-btn"
               icon={<Camera size={13} className="me-1 align-text-bottom" />}
               onClick={() => onRequestDefectPhotoUpload?.(row)}
@@ -290,9 +287,6 @@ const ErAuxEquipmentCheckDetails = ({
           />
           {remarksError && missingRemark ? (
             <FormFieldError>Defect remarks are required.</FormFieldError>
-          ) : null}
-          {remarksError && missingPhoto ? (
-            <FormFieldError>Photo evidence is required for defects.</FormFieldError>
           ) : null}
           {defectPhotos.length > 0 ? (
             <InspectionPhotoEvidenceSummary
@@ -826,7 +820,7 @@ export const ErAuxEquipmentChecks = ({
                     ))}
                   </ul>
                 ) : (
-                  <div>Each defect row needs remarks and at least one defect photo.</div>
+                  <div>Each defect row needs remarks.</div>
                 )}
               </>
             ) : (

@@ -140,9 +140,8 @@ export const ScbaInspectionChecks = ({
     const hasMissingValue = fields.some((field) => !String(row[field.key] || '').trim())
     const hasIncompleteIssueEvidence = fields.some((field) => {
       if (field.kind !== 'status' || String(row[field.key] || '') !== 'Not Good') return false
-      const { remarksKey, photosKey } = getScbaFieldEvidenceKeys(field)
-      const photos = Array.isArray(row[photosKey]) ? row[photosKey] : []
-      return !String(row[remarksKey] || '').trim() || photos.length === 0
+      const { remarksKey } = getScbaFieldEvidenceKeys(field)
+      return !String(row[remarksKey] || '').trim()
     })
     return hasMissingValue || hasIncompleteIssueEvidence
   }
@@ -365,9 +364,7 @@ export const ScbaInspectionChecks = ({
             {fieldError ? 'Complete all SCBA rows before review.' : ''}
           </FormFieldError>
           <FormFieldError>
-            {remarksError
-              ? 'Add remarks and issue photos for SCBA issue fields before review.'
-              : ''}
+            {remarksError ? 'Add remarks for SCBA issue fields before review.' : ''}
           </FormFieldError>
         </>
       ) : null}

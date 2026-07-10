@@ -65,9 +65,7 @@ const getHydraulicWorkflowState = (row = {}) => {
   const missingEvidenceCount = HYDRAULIC_CHECK_FIELDS.reduce((count, field) => {
     const status = String(row[field.key] || '').trim()
     const remarks = String(row[field.remarksKey] || '').trim()
-    const photos = Array.isArray(row[field.photosKey]) ? row[field.photosKey] : []
-
-    if (status === 'Defect') return count + (remarks ? 0 : 1) + (photos.length > 0 ? 0 : 1)
+    if (status === 'Defect') return count + (remarks ? 0 : 1)
     if (status === 'N/A') return count + (remarks ? 0 : 1)
     return count
   }, 0)
@@ -148,7 +146,6 @@ export const HydraulicEquipmentCheckDetails = ({
           (retainedField) => retainedField.key === field.key,
         )
         const isMissingRemark = isDefect && !defectRemarks.trim()
-        const isMissingPhoto = isDefect && defectPhotos.length === 0
         const isMissingNaReason = isNotApplicable && !defectRemarks.trim()
 
         return (
@@ -188,7 +185,7 @@ export const HydraulicEquipmentCheckDetails = ({
                   />
                   <div className="d-flex flex-wrap justify-content-end gap-2">
                     <CreateActionButton
-                      label="Add defect photo"
+                      label="Add photo"
                       className="inspection-compact-action-btn"
                       icon={<Camera size={13} className="me-1 align-text-bottom" />}
                       onClick={() => onRequestDefectPhotoUpload?.(row, field)}
@@ -196,9 +193,6 @@ export const HydraulicEquipmentCheckDetails = ({
                   </div>
                   {remarksError && isMissingRemark ? (
                     <FormFieldError>{field.label} defect remarks are required.</FormFieldError>
-                  ) : null}
-                  {remarksError && isMissingPhoto ? (
-                    <FormFieldError>{field.label} defect photo is required.</FormFieldError>
                   ) : null}
                   {defectPhotos.length > 0 ? (
                     <InspectionPhotoEvidenceSummary

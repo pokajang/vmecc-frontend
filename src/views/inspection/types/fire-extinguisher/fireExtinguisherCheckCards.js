@@ -83,12 +83,7 @@ const FireExtinguisherInspectionStatusInline = ({ row, defectCount = 0, workflow
   )
 }
 
-const FireExtinguisherLegacyStatusBadges = ({
-  missingCount,
-  missingPhotoKeys,
-  missingRemarkKeys,
-  row,
-}) => (
+const FireExtinguisherLegacyStatusBadges = ({ missingCount, missingRemarkKeys, row }) => (
   <>
     {row.equipmentSource === 'seed' ? (
       <CBadge color="warning" className="d-none d-md-inline-flex">
@@ -105,7 +100,7 @@ const FireExtinguisherLegacyStatusBadges = ({
         {missingCount} missing
       </CBadge>
     ) : null}
-    {missingRemarkKeys.length > 0 || missingPhotoKeys.length > 0 ? (
+    {missingRemarkKeys.length > 0 ? (
       <span className="badge rounded-pill text-bg-danger d-none d-md-inline-flex align-items-center">
         Needs evidence
       </span>
@@ -370,7 +365,6 @@ export const FireExtinguisherRowDetails = ({
   readOnly = false,
   missingStatusKeys = [],
   missingRemarkKeys = [],
-  missingPhotoKeys = [],
   onViewPhotos,
   handlers = {},
 }) => {
@@ -383,7 +377,6 @@ export const FireExtinguisherRowDetails = ({
         const isDefect = isFireExtinguisherDefectStatus(status)
         const missingStatus = missingStatusKeys.includes(field.key)
         const missingRemarks = missingRemarkKeys.includes(field.remarksKey)
-        const missingPhotos = missingPhotoKeys.includes(field.photosKey)
         const defectRemarks = String(row[field.remarksKey] || '')
         const defectPhotos = getFireExtinguisherPhotos(row, field.photosKey)
 
@@ -435,7 +428,7 @@ export const FireExtinguisherRowDetails = ({
                   />
                   <div className="d-flex flex-wrap justify-content-end gap-2">
                     <CreateActionButton
-                      label="Add defect photo"
+                      label="Add photo"
                       className="inspection-compact-action-btn"
                       icon={<Camera size={13} className="me-1 align-text-bottom" />}
                       data-fire-extinguisher-detail-key={field.photosKey}
@@ -444,9 +437,6 @@ export const FireExtinguisherRowDetails = ({
                   </div>
                   <FormFieldError>
                     {missingRemarks ? `${field.label} remarks are required for this status.` : ''}
-                  </FormFieldError>
-                  <FormFieldError>
-                    {missingPhotos ? `${field.label} defect photo is required.` : ''}
                   </FormFieldError>
                   {defectPhotos.length > 0 ? (
                     <InspectionPhotoEvidenceSummary
@@ -489,7 +479,6 @@ export const FireExtinguisherRowCard = ({
   active = false,
   missingStatusKeys = [],
   missingRemarkKeys = [],
-  missingPhotoKeys = [],
   onToggleExpanded,
   onViewPhotos,
   handlers = {},
@@ -497,7 +486,7 @@ export const FireExtinguisherRowCard = ({
   const workflowState = getFireExtinguisherRowWorkflowState(row)
   const defectCount = getFireExtinguisherDefectCount(row)
   const title = getFireExtinguisherRowTitle(row)
-  const missingCount = missingStatusKeys.length + missingRemarkKeys.length + missingPhotoKeys.length
+  const missingCount = missingStatusKeys.length + missingRemarkKeys.length
   const bodyId = `fire-extinguisher-checks-${String(row.id || '').replace(/[^A-Za-z0-9_-]/g, '-')}`
   const toggleExpanded = () => onToggleExpanded?.(row)
   const canReset =
@@ -568,7 +557,6 @@ export const FireExtinguisherRowCard = ({
             />
             <FireExtinguisherLegacyStatusBadges
               missingCount={missingCount}
-              missingPhotoKeys={missingPhotoKeys}
               missingRemarkKeys={missingRemarkKeys}
               row={row}
             />
@@ -635,7 +623,6 @@ export const FireExtinguisherRowCard = ({
             readOnly={readOnly}
             missingStatusKeys={missingStatusKeys}
             missingRemarkKeys={missingRemarkKeys}
-            missingPhotoKeys={missingPhotoKeys}
             handlers={handlers}
             onViewPhotos={onViewPhotos}
           />

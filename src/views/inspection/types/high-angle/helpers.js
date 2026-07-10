@@ -404,10 +404,7 @@ const isHighAngleRowComplete = (row = {}) => {
   if (!condition) return false
   if (condition !== 'Not Good') return true
 
-  return (
-    String(row.conditionRemarks || row.remarks || '').trim() &&
-    normalizePhotos(row.conditionPhotos || row.photos).length > 0
-  )
+  return String(row.conditionRemarks || row.remarks || '').trim()
 }
 
 const buildVisibleGroups = (rows = [], compartmentRows = []) => {
@@ -468,9 +465,7 @@ export const getHighAngleCheckSummary = (form = {}, options = {}) => {
   const incompleteRemarksCount = issueRows.filter(
     (row) => !String(row.conditionRemarks || row.remarks || '').trim(),
   ).length
-  const incompletePhotoCount = issueRows.filter(
-    (row) => normalizePhotos(row.conditionPhotos || row.photos).length === 0,
-  ).length
+  const incompletePhotoCount = 0
   const retainedEvidenceCount = visibleChecks.filter((row) => {
     if (row.condition === 'Not Good') return false
     return (
@@ -517,9 +512,7 @@ export const getHighAngleMissingFields = (form = {}) => {
   const hasIncompleteChecks = visibleChecks.some((row) => !isHighAngleRowComplete(row))
   const hasMissingRemarks = visibleChecks.some(
     (row) =>
-      row.condition === 'Not Good' &&
-      (!String(row.conditionRemarks || row.remarks || '').trim() ||
-        normalizePhotos(row.conditionPhotos || row.photos).length === 0),
+      row.condition === 'Not Good' && !String(row.conditionRemarks || row.remarks || '').trim(),
   )
 
   return {

@@ -338,7 +338,7 @@ describe('FrtDailyInspectionChecks mobile detail drawer', () => {
     expect(screen.queryByText('Status')).toBeNull()
   })
 
-  it('reports missing FRT issue photos by row', () => {
+  it('does not report missing FRT issue photos by row', () => {
     const row = {
       id: 'daily:fire-truck:1',
       checklistKind: 'daily',
@@ -358,10 +358,9 @@ describe('FrtDailyInspectionChecks mobile detail drawer', () => {
       frtOneOffChecks: [],
     })
 
-    expect(validation.missingPhotosByRow['daily:fire-truck:1']).toEqual(['photos'])
-    expect(validation.firstTarget).toEqual(
+    expect(validation.missingPhotosByRow['daily:fire-truck:1']).toBeUndefined()
+    expect(validation.firstTarget).not.toEqual(
       expect.objectContaining({
-        field: 'frtDailyRemarks',
         rowId: 'daily:fire-truck:1',
         detailKey: 'photos',
       }),

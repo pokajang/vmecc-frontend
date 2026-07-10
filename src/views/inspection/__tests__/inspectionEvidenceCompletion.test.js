@@ -76,7 +76,7 @@ describe('evidence-aware inspection completion', () => {
       rowNumber: '1',
       equipment: 'Rescue Rope',
       condition: 'Not Good',
-      conditionRemarks: 'Frayed sheath.',
+      conditionRemarks: '',
       conditionPhotos: [],
     }
     const highAngleIncomplete = getHighAngleCheckSummary(
@@ -85,7 +85,7 @@ describe('evidence-aware inspection completion', () => {
     )
     const highAngleComplete = getHighAngleCheckSummary(
       { mainLocation: kit },
-      { checks: [{ ...highAngleIssue, conditionPhotos: [photo] }] },
+      { checks: [{ ...highAngleIssue, conditionRemarks: 'Frayed sheath.' }] },
     )
 
     expect(highAngleIncomplete.checkedCount).toBe(0)
@@ -98,7 +98,7 @@ describe('evidence-aware inspection completion', () => {
     expect(
       buildHighAngleChecklist(
         { mainLocation: kit },
-        { checks: [{ ...highAngleIssue, conditionPhotos: [photo] }] },
+        { checks: [{ ...highAngleIssue, conditionRemarks: 'Frayed sheath.' }] },
       ),
     ).toHaveLength(2)
 
@@ -112,7 +112,7 @@ describe('evidence-aware inspection completion', () => {
         section.fields.map((field) => [field.key, field.kind === 'status' ? 'Good' : 'Recorded']),
       ),
       [issueField.key]: 'Not Good',
-      [remarksKey]: 'Worn hose coupling.',
+      [remarksKey]: '',
       [photosKey]: [],
     }
     const scbaSections = (row, checkedCount, incompletePhotoCount) => [
@@ -127,7 +127,7 @@ describe('evidence-aware inspection completion', () => {
       },
     ]
     const scbaIncomplete = getScbaCheckSummary({}, { sections: scbaSections(scbaIssue, 0, 1) })
-    const scbaCompleteRow = { ...scbaIssue, [photosKey]: [photo] }
+    const scbaCompleteRow = { ...scbaIssue, [remarksKey]: 'Worn hose coupling.' }
     const scbaComplete = getScbaCheckSummary({}, { sections: scbaSections(scbaCompleteRow, 1, 0) })
 
     expect(scbaIncomplete.checkedCount).toBe(0)

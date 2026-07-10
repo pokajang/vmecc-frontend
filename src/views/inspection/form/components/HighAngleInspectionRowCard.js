@@ -37,9 +37,7 @@ export const getHighAngleWorkflowState = (row = {}) => {
   const condition = text(row.condition)
   const hasIssue = condition === 'Not Good'
   const hasRemarks = text(row.conditionRemarks || row.remarks) !== ''
-  const photos = Array.isArray(row.conditionPhotos) ? row.conditionPhotos : []
-  const missingEvidenceCount =
-    (hasIssue && !hasRemarks ? 1 : 0) + (hasIssue && photos.length === 0 ? 1 : 0)
+  const missingEvidenceCount = hasIssue && !hasRemarks ? 1 : 0
   const missingCount = (condition ? 0 : 1) + missingEvidenceCount
 
   return {
@@ -251,7 +249,7 @@ export const HighAngleInspectionRowDetails = ({
           />
           <div className="d-flex flex-wrap justify-content-end gap-2">
             <CreateActionButton
-              label="Add issue photo"
+              label="Add photo"
               className="inspection-compact-action-btn"
               icon={<Camera size={13} className="me-1 align-text-bottom" />}
               onClick={() => onRequestIssuePhotoUpload?.(sourceRow)}
@@ -259,9 +257,6 @@ export const HighAngleInspectionRowDetails = ({
           </div>
           {remarksError && !hasConditionRemarks ? (
             <FormFieldError>Remarks are required for issue rows.</FormFieldError>
-          ) : null}
-          {remarksError && conditionPhotos.length === 0 ? (
-            <FormFieldError>Issue photo is required.</FormFieldError>
           ) : null}
           {conditionPhotos.length > 0 ? (
             <InspectionPhotoEvidenceSummary

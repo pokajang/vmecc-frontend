@@ -60,10 +60,9 @@ const getScbaWorkflowState = (row = {}, fields = []) => {
   ).length
   const missingEvidenceCount = visibleFields.reduce((count, field) => {
     if (field.kind !== 'status' || String(row[field.key] || '') !== 'Not Good') return count
-    const { remarksKey, photosKey } = getScbaFieldEvidenceKeys(field)
+    const { remarksKey } = getScbaFieldEvidenceKeys(field)
     const hasRemarks = String(row[remarksKey] || '').trim() !== ''
-    const photos = Array.isArray(row[photosKey]) ? row[photosKey] : []
-    return count + (hasRemarks ? 0 : 1) + (photos.length > 0 ? 0 : 1)
+    return count + (hasRemarks ? 0 : 1)
   }, 0)
   const missingCount = missingValueCount + missingEvidenceCount
 
@@ -323,7 +322,7 @@ const ScbaSectionCards = ({
         />
         <div className="d-flex flex-wrap justify-content-end gap-2">
           <CreateActionButton
-            label="Add issue photo"
+            label="Add photo"
             className="inspection-compact-action-btn"
             icon={<Camera size={13} className="me-1 align-text-bottom" />}
             onClick={() => activeOnRequestIssuePhotoUpload?.(sectionKey, row, field)}
@@ -331,9 +330,6 @@ const ScbaSectionCards = ({
         </div>
         {remarksError && !hasRemarks ? (
           <FormFieldError>{field.label} issue remarks are required.</FormFieldError>
-        ) : null}
-        {remarksError && photos.length === 0 ? (
-          <FormFieldError>{field.label} issue photo is required.</FormFieldError>
         ) : null}
         {photos.length > 0 ? (
           <InspectionPhotoEvidenceSummary

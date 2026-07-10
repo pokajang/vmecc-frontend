@@ -162,9 +162,7 @@ const buildFireExtinguisherMetrics = (form = {}) => {
     incompleteCount: validations.filter((row) => !row.isComplete).length,
     evidenceIssueCount: validations.reduce(
       (count, row) =>
-        count +
-        (Array.isArray(row.missingRemarkKeys) ? row.missingRemarkKeys.length : 0) +
-        (Array.isArray(row.missingPhotoKeys) ? row.missingPhotoKeys.length : 0),
+        count + (Array.isArray(row.missingRemarkKeys) ? row.missingRemarkKeys.length : 0),
       0,
     ),
   }
@@ -186,8 +184,6 @@ const isIssueStatus = (value) =>
     text(value).toLowerCase(),
   )
 
-const hasPhotos = (value) => Array.isArray(value) && value.length > 0
-
 const buildErAuxMetrics = (form = {}) => {
   const rows = Array.isArray(form.erAuxChecks) ? form.erAuxChecks : []
   const checkedRows = rows.filter((row) => text(row.quantity) && text(row.condition))
@@ -197,9 +193,7 @@ const buildErAuxMetrics = (form = {}) => {
     checkedCount: checkedRows.length,
     defectCount: rows.filter((row) => isIssueStatus(row.condition)).length,
     incompleteCount: rows.length - checkedRows.length,
-    evidenceIssueCount: defectRows.filter(
-      (row) => !text(row.defectRemarks) || !hasPhotos(row.defectPhotos),
-    ).length,
+    evidenceIssueCount: defectRows.filter((row) => !text(row.defectRemarks)).length,
   }
 }
 
@@ -225,9 +219,8 @@ const buildHydraulicMetrics = (form = {}) => {
     defectCount: defectFields.length + naFields.length,
     incompleteCount: rows.length - checkedRows.length,
     evidenceIssueCount:
-      defectFields.filter(
-        ({ row, field }) => !text(row[field.remarksKey]) || !hasPhotos(row[field.photosKey]),
-      ).length + naFields.filter(({ row, field }) => !text(row[field.remarksKey])).length,
+      defectFields.filter(({ row, field }) => !text(row[field.remarksKey])).length +
+      naFields.filter(({ row, field }) => !text(row[field.remarksKey])).length,
   }
 }
 
@@ -240,11 +233,8 @@ const buildHighAngleMetrics = (form = {}) => {
     checkedCount: checkedRows.length,
     defectCount: issueRows.length,
     incompleteCount: rows.length - checkedRows.length,
-    evidenceIssueCount: issueRows.filter(
-      (row) =>
-        !text(row.conditionRemarks || row.remarks) ||
-        (!hasPhotos(row.conditionPhotos) && !hasPhotos(row.photos)),
-    ).length,
+    evidenceIssueCount: issueRows.filter((row) => !text(row.conditionRemarks || row.remarks))
+      .length,
   }
 }
 
@@ -266,9 +256,8 @@ const buildFrtMetrics = (form = {}) => {
     defectCount: dailyIssueRows.length + oneOffIssueRows.length,
     incompleteCount:
       dailyRows.length + oneOffRows.length - completeDailyRows.length - completeOneOffRows.length,
-    evidenceIssueCount: [...dailyIssueRows, ...oneOffIssueRows].filter(
-      (row) => !text(row.remarks) || !hasPhotos(row.photos),
-    ).length,
+    evidenceIssueCount: [...dailyIssueRows, ...oneOffIssueRows].filter((row) => !text(row.remarks))
+      .length,
   }
 }
 
@@ -319,8 +308,8 @@ const isScbaRowComplete = (row = {}, fields = []) =>
 
 const getScbaEvidenceIssueCount = (row = {}, fields = []) =>
   getScbaIssueFields(row, fields).filter((field) => {
-    const { remarksKey, photosKey } = getScbaFieldEvidenceKeys(field)
-    return !text(row[remarksKey]) || !hasPhotos(row[photosKey])
+    const { remarksKey } = getScbaFieldEvidenceKeys(field)
+    return !text(row[remarksKey])
   }).length
 
 const buildScbaMetrics = (form = {}) => {

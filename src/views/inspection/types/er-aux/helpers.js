@@ -369,7 +369,7 @@ const isErAuxRowComplete = (check = {}) => {
   if (!hasInspectionValues || !isDefectCondition(check.condition))
     return Boolean(hasInspectionValues)
 
-  return String(check.defectRemarks || '').trim() && normalizePhotos(check.defectPhotos).length > 0
+  return String(check.defectRemarks || '').trim()
 }
 
 const getErAuxMissingCheckLabels = (check = {}) => [
@@ -379,12 +379,7 @@ const getErAuxMissingCheckLabels = (check = {}) => [
 
 const getErAuxMissingEvidenceLabels = (check = {}) => {
   if (!isDefectCondition(check.condition)) return []
-  return [
-    ...(!String(check.defectRemarks || '').trim() ? ['defect remarks'] : []),
-    ...(!Array.isArray(check.defectPhotos) || check.defectPhotos.length === 0
-      ? ['defect photo']
-      : []),
-  ]
+  return [...(!String(check.defectRemarks || '').trim() ? ['defect remarks'] : [])]
 }
 
 const getErAuxFirstMissingDetailKey = (labels = []) => {
@@ -446,11 +441,7 @@ export const getErAuxCheckSummary = (form = {}, options = {}) => {
   const incompleteRemarksCount = visibleChecks.filter(
     (check) => isDefectCondition(check.condition) && !String(check.defectRemarks || '').trim(),
   ).length
-  const incompletePhotoCount = visibleChecks.filter((check) => {
-    if (!isDefectCondition(check.condition)) return false
-    const photos = Array.isArray(check.defectPhotos) ? check.defectPhotos : []
-    return photos.length === 0
-  }).length
+  const incompletePhotoCount = 0
   const validationDetails = getErAuxValidationDetails(form, { checks: visibleChecks })
 
   return {

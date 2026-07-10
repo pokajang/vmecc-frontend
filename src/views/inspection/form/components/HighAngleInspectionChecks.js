@@ -619,9 +619,7 @@ export const HighAngleInspectionChecks = ({
             {fieldError ? 'Complete all High Angle rows before review.' : ''}
           </FormFieldError>
           <FormFieldError>
-            {remarksError
-              ? 'Add remarks and issue photos for High Angle issue rows before review.'
-              : ''}
+            {remarksError ? 'Add remarks for High Angle issue rows before review.' : ''}
           </FormFieldError>
         </>
       ) : null}

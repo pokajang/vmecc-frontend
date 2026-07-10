@@ -1409,7 +1409,7 @@ describe('inspectionFormHelpers', () => {
     expect(summary.totalCount).toBe(0)
   })
 
-  it('returns exact Fire Extinguisher validation row targets for statuses, defect remarks, and defect photos', () => {
+  it('returns exact Fire Extinguisher validation row targets for statuses and defect remarks', () => {
     const baseFireForm = {
       mainLocation: 'Manjung Hub',
       subLocation: 'Reception',
@@ -1483,9 +1483,7 @@ describe('inspectionFormHelpers', () => {
     expect(missingRemarkState.fireExtinguisher.missingRemarksByRow['fe:1']).toEqual([
       'physicalConditionRemarks',
     ])
-    expect(missingRemarkState.fireExtinguisher.missingPhotosByRow['fe:1']).toEqual([
-      'physicalConditionPhotos',
-    ])
+    expect(missingRemarkState.fireExtinguisher.missingPhotosByRow['fe:1']).toBeUndefined()
     expect(missingRemarkState.firstTarget).toEqual({
       field: 'fireExtinguisherRemarks',
       rowId: 'fe:1',
@@ -1493,7 +1491,7 @@ describe('inspectionFormHelpers', () => {
       detailKey: 'physicalConditionRemarks',
     })
 
-    const missingPhotoState = getInspectionFormValidationState({
+    const remarksOnlyState = getInspectionFormValidationState({
       ...baseFireForm,
       fireExtinguisherChecks: [
         {
@@ -1509,22 +1507,15 @@ describe('inspectionFormHelpers', () => {
       ],
     })
 
-    expect(missingPhotoState.missing).toEqual(
+    expect(remarksOnlyState.missing).toEqual(
       expect.objectContaining({
         fireExtinguisherChecks: false,
-        fireExtinguisherRemarks: true,
+        fireExtinguisherRemarks: false,
       }),
     )
-    expect(missingPhotoState.fireExtinguisher.missingRemarksByRow['fe:1']).toBeUndefined()
-    expect(missingPhotoState.fireExtinguisher.missingPhotosByRow['fe:1']).toEqual([
-      'physicalConditionPhotos',
-    ])
-    expect(missingPhotoState.firstTarget).toEqual({
-      field: 'fireExtinguisherRemarks',
-      rowId: 'fe:1',
-      checkKey: '',
-      detailKey: 'physicalConditionPhotos',
-    })
+    expect(remarksOnlyState.fireExtinguisher.missingRemarksByRow['fe:1']).toBeUndefined()
+    expect(remarksOnlyState.fireExtinguisher.missingPhotosByRow['fe:1']).toBeUndefined()
+    expect(remarksOnlyState.firstTarget).toBeNull()
   })
 
   it('does not block Fire Extinguisher review for session-completed rows without local payload', () => {
@@ -2064,7 +2055,7 @@ describe('inspectionFormHelpers', () => {
     const payload = buildInspectionPayloadSnapshot(form)
 
     expect(summary.totalCount).toBe(23)
-    expect(summary.checkedCount).toBe(1)
+    expect(summary.checkedCount).toBe(3)
     expect(summary.issueCount).toBe(2)
     expect(summary.visibleSections.map((section) => section.title)).toEqual([
       'Back Plate',
@@ -3521,7 +3512,7 @@ describe('inspectionFormHelpers', () => {
     expect(deselected.description).toBe('Existing note\nPhysical condition checked')
   })
 
-  it('requires High Angle issue photos and treats cleared-status evidence as retained audit context', () => {
+  it('allows optional High Angle issue photos and treats cleared-status evidence as retained audit context', () => {
     const form = normalizeInspectionForm({
       inspectionType: 'High Angle Rescue Equipment Inspection',
       mainLocation: 'Response Kit #1',
@@ -3541,8 +3532,9 @@ describe('inspectionFormHelpers', () => {
       photos: [],
     })
 
-    expect(getInspectionFormMissingFields(form).highAngleRemarks).toBe(true)
-    expect(getHighAngleCheckSummary(form).checkedCount).toBe(0)
+    expect(getInspectionFormMissingFields(form).highAngleRemarks).toBe(false)
+    expect(getHighAngleCheckSummary(form).incompletePhotoCount).toBe(0)
+    expect(getHighAngleCheckSummary(form).checkedCount).toBe(1)
 
     const withPhoto = normalizeInspectionForm({
       ...form,
@@ -3582,7 +3574,7 @@ describe('inspectionFormHelpers', () => {
     })
   })
 
-  it('requires SCBA issue photos and keeps field evidence in payload snapshots', () => {
+  it('allows optional SCBA issue photos and keeps field evidence in payload snapshots', () => {
     const field = SCBA_SECTION_DEFINITIONS[0].fields.find(
       (candidate) => candidate.key === 'highPressureHose',
     )
@@ -3614,12 +3606,12 @@ describe('inspectionFormHelpers', () => {
       photos: [],
     })
 
-    expect(getInspectionFormMissingFields(form).scbaRemarks).toBe(true)
-    expect(getScbaCheckSummary(form).incompletePhotoCount).toBe(1)
+    expect(getInspectionFormMissingFields(form).scbaRemarks).toBe(false)
+    expect(getScbaCheckSummary(form).incompletePhotoCount).toBe(0)
     expect(
       getScbaCheckSummary(form).visibleSections.find((section) => section.key === 'backPlate')
         .checkedCount,
-    ).toBe(0)
+    ).toBe(1)
 
     const withPhoto = normalizeInspectionForm({
       ...form,

@@ -47,18 +47,18 @@ describe('InspectionCameraCapture', () => {
     expect(track.stop).toHaveBeenCalled()
   })
 
-  it('offers the native phone camera when streaming is denied', async () => {
-    const onUseNativeCamera = vi.fn()
+  it('offers a fallback upload button when in-app streaming is denied', async () => {
+    const onUploadPhoto = vi.fn()
     render(
       <InspectionCameraCapture
         visible
         startCameraStream={vi.fn().mockRejectedValue(new DOMException('Denied', 'NotAllowedError'))}
-        onUseNativeCamera={onUseNativeCamera}
+        onUploadPhoto={onUploadPhoto}
       />,
     )
 
-    const nativeButton = await screen.findByRole('button', { name: 'Use phone camera' })
-    fireEvent.click(nativeButton)
-    expect(onUseNativeCamera).toHaveBeenCalledTimes(1)
+    const uploadButton = await screen.findByRole('button', { name: 'Upload photo' })
+    fireEvent.click(uploadButton)
+    expect(onUploadPhoto).toHaveBeenCalledTimes(1)
   })
 })

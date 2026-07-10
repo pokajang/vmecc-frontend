@@ -2,12 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import { deleteReportMedia } from 'src/services/api/reportMediaApi'
 import {
   clearPendingCameraOperation,
-  consumeInterruptedCameraFallback,
   getInterruptedCameraFallback,
   isLikelyEmbeddedBrowser,
   markPendingCameraOperation,
   markPendingCameraUploadStarted,
-  subscribeToCameraReturn,
 } from 'src/utils/cameraRecovery'
 import { buildCameraDiagnostics, inspectCameraEnvironment } from 'src/utils/cameraDiagnostics'
 import { supportsInAppInspectionCamera } from './inspectionCameraCaptureUtils'
@@ -56,16 +54,10 @@ const useInspectionFormPhotos = ({
 
   useEffect(() => () => photoUploadAbortRef.current?.abort(), [])
   useEffect(() => {
-    if (interruptedCameraFallbackRef.current) clearPendingCameraOperation()
+    if (interruptedCameraFallbackRef.current) {
+      clearPendingCameraOperation()
+    }
   }, [])
-  useEffect(
-    () =>
-      subscribeToCameraReturn('inspection', () => {
-        const fallback = consumeInterruptedCameraFallback('inspection')
-        if (fallback) setCameraUploadFallback(fallback)
-      }),
-    [],
-  )
   const CAMERA_FALLBACK_ERROR_TITLES = {
     low_memory:
       'Camera processing failed due to low memory. Upload the photo manually to continue.',
@@ -120,10 +112,14 @@ const useInspectionFormPhotos = ({
   }
 
   const openPhotoInput = (target, inputRef) => {
-    photoUploadTargetRef.current = target || { kind: 'root' }
+    const nextTarget = target || { kind: 'root' }
+    photoUploadTargetRef.current = nextTarget
     clearCameraUploadFallback()
-    activePhotoInputRef.current = inputRef === cameraInputRef ? 'camera' : 'upload'
-    if (inputRef === cameraInputRef) {
+    const isExplicitUpload = inputRef === uploadInputRef
+    const canUseInAppCamera =
+      !isExplicitUpload && !isLikelyEmbeddedBrowser() && supportsInAppInspectionCamera()
+    activePhotoInputRef.current = canUseInAppCamera ? 'camera' : 'upload'
+    if (canUseInAppCamera) {
       if (navigator.onLine === false) {
         setCameraUploadFallback({
           message: 'Connect to the internet before taking or uploading a photo.',
@@ -134,22 +130,21 @@ const useInspectionFormPhotos = ({
       }
       markPendingCameraOperation({
         module: 'inspection',
-        targetKind: target?.kind || 'root',
-        targetId: target?.row?.id || target?.issueId || '',
-        photosKey: target?.photosKey || 'photos',
+        targetKind: nextTarget?.kind || 'root',
+        targetId: nextTarget?.row?.id || nextTarget?.issueId || '',
+        photosKey: nextTarget?.photosKey || 'photos',
       })
       try {
-        Promise.resolve(onBeforeCameraOpen?.(target)).catch(() => {})
+        Promise.resolve(onBeforeCameraOpen?.(nextTarget)).catch(() => {})
       } catch {
-        // Draft persistence is best-effort and must not block the native camera.
+        // Draft persistence is best-effort and must not block camera open.
       }
-      if (!isLikelyEmbeddedBrowser() && supportsInAppInspectionCamera()) {
-        setCameraCaptureVisible(true)
-        return
-      }
+      setCameraCaptureVisible(true)
+      return
     }
-    if (inputRef.current) inputRef.current.value = ''
-    inputRef.current?.click()
+    const fallbackInputRef = uploadInputRef
+    if (fallbackInputRef?.current) fallbackInputRef.current.value = ''
+    fallbackInputRef?.current?.click()
   }
 
   const handlePhotoSelect = async (event) => {
@@ -160,10 +155,7 @@ const useInspectionFormPhotos = ({
     const files = Array.from(event.target.files || [])
     event.target.value = ''
     if (files.length === 0) {
-      if (activePhotoInputRef.current === 'camera') {
-        const fallback = consumeInterruptedCameraFallback('inspection')
-        if (fallback) setCameraUploadFallback(fallback)
-      }
+      if (activePhotoInputRef.current === 'camera') clearPendingCameraOperation()
       return
     }
 
@@ -442,13 +434,6 @@ const useInspectionFormPhotos = ({
     clearPendingCameraOperation()
   }
 
-  const useNativeCameraFallback = () => {
-    setCameraCaptureVisible(false)
-    activePhotoInputRef.current = 'camera'
-    if (cameraInputRef.current) cameraInputRef.current.value = ''
-    cameraInputRef.current?.click()
-  }
-
   const requestUploadFromCameraFallback = () =>
     openPhotoInput(photoUploadTargetRef.current || { kind: 'root' }, uploadInputRef)
 
@@ -651,7 +636,6 @@ const useInspectionFormPhotos = ({
     cameraCaptureVisible,
     closeInAppCamera,
     handleInAppCameraCapture,
-    useNativeCameraFallback,
     cameraUploadFallback,
     isPhotoProcessing,
     photoUploadProgress,

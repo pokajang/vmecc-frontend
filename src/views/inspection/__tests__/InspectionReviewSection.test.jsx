@@ -351,7 +351,7 @@ describe('InspectionReviewSection', () => {
     expect(screen.queryByRole('button', { name: 'All OK' })).toBeNull()
     expect(screen.queryByRole('button', { name: 'Mark OK' })).toBeNull()
     expect(screen.queryByRole('button', { name: 'Delete' })).toBeNull()
-    expect(screen.queryByRole('button', { name: 'Add defect photo' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Add photo' })).toBeNull()
     expect(screen.queryByRole('button', { name: 'Remark' })).toBeNull()
     expect(screen.queryByRole('button', { name: 'Photo' })).toBeNull()
   })

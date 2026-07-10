@@ -56,8 +56,7 @@ const isFrtRowComplete = (row = {}, kind = 'daily') => {
   const status = kind === 'daily' ? text(row.status) : text(row.condition)
   if (!status) return false
   if (!isFrtRowIssue(row, kind)) return true
-  const photos = Array.isArray(row.photos) ? row.photos.filter(Boolean) : []
-  return text(row.remarks) !== '' && photos.length > 0
+  return text(row.remarks) !== ''
 }
 
 const isFrtRowIncomplete = (row = {}, kind = 'daily') => !isFrtRowComplete(row, kind)
@@ -111,12 +110,8 @@ const FrtInspectionStatusInline = ({ row, kind }) => {
   )
 }
 
-const FrtValidationBadges = ({
-  missingStatusKeys = [],
-  missingRemarkKeys = [],
-  missingPhotoKeys = [],
-}) => {
-  const missingCount = missingStatusKeys.length + missingRemarkKeys.length + missingPhotoKeys.length
+const FrtValidationBadges = ({ missingStatusKeys = [], missingRemarkKeys = [] }) => {
+  const missingCount = missingStatusKeys.length + missingRemarkKeys.length
 
   return (
     <>
@@ -125,7 +120,7 @@ const FrtValidationBadges = ({
           {missingCount} missing
         </CBadge>
       ) : null}
-      {missingRemarkKeys.length > 0 || missingPhotoKeys.length > 0 ? (
+      {missingRemarkKeys.length > 0 ? (
         <span className="badge rounded-pill text-bg-danger d-none d-md-inline-flex align-items-center">
           Needs evidence
         </span>
@@ -168,7 +163,6 @@ const FrtIssueEvidence = ({
   row,
   photos,
   missingRemarks = false,
-  missingPhotos = false,
   emptyRemarkMessage,
   setPhotoViewer,
   onUpdateCheck,
@@ -199,13 +193,12 @@ const FrtIssueEvidence = ({
       <div data-inspection-frt-detail-key="photos">
         <div className="d-flex flex-wrap justify-content-end gap-2">
           <CreateActionButton
-            label="Add issue photo"
+            label="Add photo"
             className="inspection-compact-action-btn"
             icon={<Camera size={13} className="me-1 align-text-bottom" />}
             onClick={() => onRequestIssuePhotoUpload?.(row)}
           />
         </div>
-        {missingPhotos ? <FormFieldError>Issue photo is required.</FormFieldError> : null}
       </div>
       {photos.length > 0 ? (
         <InspectionPhotoEvidenceSummary
@@ -257,7 +250,6 @@ export const FrtDailyRowDetails = ({
   fieldErrors = {},
   missingStatusKeys = [],
   missingRemarkKeys = [],
-  missingPhotoKeys = [],
   onUpdateCheck,
   onRequestPhotoUpload,
   onRequestIssuePhotoUpload,
@@ -271,7 +263,6 @@ export const FrtDailyRowDetails = ({
   const missingReading = missingStatusKeys.includes('readingValue')
   const missingStatus = missingStatusKeys.includes('status')
   const missingRemarks = missingRemarkKeys.includes('remarks')
-  const missingPhotos = missingPhotoKeys.includes('photos')
   const readingId = `frt-${getFrtRowId(row).replace(/[^A-Za-z0-9_-]/g, '-')}-reading`
 
   if (readOnly) {
@@ -379,7 +370,6 @@ export const FrtDailyRowDetails = ({
           missingRemarks={
             missingRemarks || (fieldErrors.frtDailyRemarks && !String(row.remarks || '').trim())
           }
-          missingPhotos={missingPhotos || (fieldErrors.frtDailyRemarks && photos.length === 0)}
           emptyRemarkMessage="Remarks are required for issue rows."
           setPhotoViewer={setPhotoViewer}
           onUpdateCheck={onUpdateCheck}
@@ -415,7 +405,6 @@ export const FrtOneOffRowDetails = ({
   fieldErrors = {},
   missingStatusKeys = [],
   missingRemarkKeys = [],
-  missingPhotoKeys = [],
   onUpdateCheck,
   onRequestPhotoUpload,
   onRequestIssuePhotoUpload,
@@ -427,7 +416,6 @@ export const FrtOneOffRowDetails = ({
   const photos = Array.isArray(row.photos) ? row.photos : []
   const missingCondition = missingStatusKeys.includes('condition')
   const missingRemarks = missingRemarkKeys.includes('remarks')
-  const missingPhotos = missingPhotoKeys.includes('photos')
 
   if (readOnly) {
     return (
@@ -473,7 +461,6 @@ export const FrtOneOffRowDetails = ({
           missingRemarks={
             missingRemarks || (fieldErrors.frtOneOffRemarks && !String(row.remarks || '').trim())
           }
-          missingPhotos={missingPhotos || (fieldErrors.frtOneOffRemarks && photos.length === 0)}
           emptyRemarkMessage="Remarks are required for Not Good rows."
           setPhotoViewer={setPhotoViewer}
           onUpdateCheck={onUpdateCheck}
@@ -512,7 +499,6 @@ const FrtRowCard = ({
   fieldErrors = {},
   missingStatusKeys = [],
   missingRemarkKeys = [],
-  missingPhotoKeys = [],
   onToggleExpanded,
   onUpdateCheck,
   onResetCheck,
@@ -542,7 +528,6 @@ const FrtRowCard = ({
     fieldErrors,
     missingStatusKeys,
     missingRemarkKeys,
-    missingPhotoKeys,
     onUpdateCheck,
     onRequestPhotoUpload,
     onRequestIssuePhotoUpload,
@@ -560,7 +545,6 @@ const FrtRowCard = ({
         <FrtValidationBadges
           missingStatusKeys={missingStatusKeys}
           missingRemarkKeys={missingRemarkKeys}
-          missingPhotoKeys={missingPhotoKeys}
         />
       }
       actions={actionItems}

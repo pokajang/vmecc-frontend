@@ -9,7 +9,7 @@ import {
   CModalTitle,
   CSpinner,
 } from '@coreui/react'
-import { Camera, Smartphone } from 'lucide-react'
+import { Camera } from 'lucide-react'
 import {
   captureInspectionCameraFrame,
   startInspectionCameraStream,
@@ -19,13 +19,13 @@ import {
 const cameraErrorMessage = (error) => {
   const name = String(error?.name || '')
   if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
-    return 'In-app camera permission was not granted. Use the phone camera option below.'
+    return 'In-app camera permission was not granted. Upload the photo instead.'
   }
   if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
-    return 'No in-app camera was found. Use the phone camera option below.'
+    return 'No in-app camera was found. Upload the photo instead.'
   }
   if (name === 'NotReadableError' || name === 'TrackStartError') {
-    return 'The camera is busy in another app. Close it there, or use the phone camera option.'
+    return 'The camera is busy in another app. Upload the photo instead.'
   }
   return String(error?.message || '').trim() || 'The in-app camera could not start.'
 }
@@ -34,7 +34,7 @@ const InspectionCameraCapture = ({
   visible,
   onCapture,
   onClose,
-  onUseNativeCamera,
+  onUploadPhoto,
   startCameraStream = startInspectionCameraStream,
   captureFrame = captureInspectionCameraFrame,
 }) => {
@@ -103,9 +103,16 @@ const InspectionCameraCapture = ({
       stopCamera()
       await onCapture?.(file)
     } catch (error) {
+      stopCamera()
       setErrorMessage(cameraErrorMessage(error))
-      setPhase(streamRef.current ? 'ready' : 'error')
+      setPhase('error')
     }
+  }
+
+  const handleUploadPhoto = () => {
+    stopCamera()
+    onClose?.()
+    onUploadPhoto?.()
   }
 
   const handleClose = () => {
@@ -113,13 +120,9 @@ const InspectionCameraCapture = ({
     onClose?.()
   }
 
-  const handleNativeCamera = () => {
-    stopCamera()
-    onUseNativeCamera?.()
-  }
-
   const isStarting = phase === 'starting' || phase === 'streaming'
   const isCapturing = phase === 'capturing'
+  const canUploadPhoto = phase === 'error' && typeof onUploadPhoto === 'function'
 
   return (
     <CModal
@@ -171,17 +174,19 @@ const InspectionCameraCapture = ({
         <CButton color="light" onClick={handleClose} disabled={isCapturing}>
           Cancel
         </CButton>
-        <CButton
-          type="button"
-          color="secondary"
-          variant="outline"
-          className="d-inline-flex align-items-center gap-2"
-          onClick={handleNativeCamera}
-          disabled={isCapturing}
-        >
-          <Smartphone size={17} aria-hidden="true" />
-          Use phone camera
-        </CButton>
+        {canUploadPhoto ? (
+          <CButton
+            type="button"
+            color="secondary"
+            variant="outline"
+            size="sm"
+            className="ms-auto d-inline-flex align-items-center gap-2 opacity-75 border-0 text-body-secondary"
+            onClick={handleUploadPhoto}
+            disabled={isCapturing}
+          >
+            Upload photo
+          </CButton>
+        ) : null}
         <CButton
           color="primary"
           className="d-inline-flex align-items-center gap-2"
