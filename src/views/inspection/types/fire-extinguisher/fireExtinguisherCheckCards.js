@@ -14,6 +14,7 @@ import RowActions from 'src/components/RowActions'
 import { hasFireExtinguisherInspectionData } from '../../form/inspectionResetActions'
 import {
   FormFieldError,
+  InspectionPhotoActionRow,
   InspectionPhotoEvidenceSummary,
 } from '../../form/components/InspectionFormDisplaySections'
 import {
@@ -232,11 +233,17 @@ const getFireExtinguisherPhotoViewer = ({
   readOnly,
   handlers,
   showDescriptionInput = true,
+  onAddMorePhoto,
 }) => ({
   title,
   photos,
   readOnly,
   showDescriptionInput,
+  showCaptionChips: false,
+  onAddMorePhoto: readOnly ? undefined : onAddMorePhoto,
+  onSave: readOnly
+    ? undefined
+    : (nextPhotos) => handlers.onUpdateCheck?.(row, { [photosKey]: nextPhotos }),
   onRemove: readOnly ? undefined : (photoId) => handlers.onRemovePhoto?.(row, photoId, photosKey),
   onChangeDescription: readOnly
     ? undefined
@@ -379,6 +386,25 @@ export const FireExtinguisherRowDetails = ({
         const missingRemarks = missingRemarkKeys.includes(field.remarksKey)
         const defectRemarks = String(row[field.remarksKey] || '')
         const defectPhotos = getFireExtinguisherPhotos(row, field.photosKey)
+        const openDefectPhotoViewer = (photos = defectPhotos) =>
+          onViewPhotos?.(
+            getFireExtinguisherPhotoViewer({
+              row,
+              title: `${title} - ${field.label} defect photos`,
+              photos,
+              photosKey: field.photosKey,
+              readOnly,
+              handlers,
+              onAddMorePhoto: () =>
+                handlers.onRequestDefectPhotoUpload?.(row, field, {
+                  onAfterAddPhotos: ({ photos: nextPhotos }) => openDefectPhotoViewer(nextPhotos),
+                }),
+            }),
+          )
+        const requestDefectPhoto = () =>
+          handlers.onRequestDefectPhotoUpload?.(row, field, {
+            onAfterAddPhotos: ({ photos: nextPhotos }) => openDefectPhotoViewer(nextPhotos),
+          })
 
         return (
           <div
@@ -426,36 +452,16 @@ export const FireExtinguisherRowDetails = ({
                       handlers.onUpdateCheck?.(row, { [field.remarksKey]: event.target.value })
                     }
                   />
-                  <div className="d-flex flex-wrap justify-content-end gap-2">
-                    <CreateActionButton
-                      label="Add photo"
-                      className="inspection-compact-action-btn"
-                      icon={<Camera size={13} className="me-1 align-text-bottom" />}
-                      data-fire-extinguisher-detail-key={field.photosKey}
-                      onClick={() => handlers.onRequestDefectPhotoUpload?.(row, field)}
-                    />
-                  </div>
                   <FormFieldError>
                     {missingRemarks ? `${field.label} remarks are required for this status.` : ''}
                   </FormFieldError>
-                  {defectPhotos.length > 0 ? (
-                    <InspectionPhotoEvidenceSummary
+                  <div data-fire-extinguisher-detail-key={field.photosKey}>
+                    <InspectionPhotoActionRow
                       photos={defectPhotos}
-                      label="View photos"
-                      onView={() =>
-                        onViewPhotos?.(
-                          getFireExtinguisherPhotoViewer({
-                            row,
-                            title: `${title} - ${field.label} defect photos`,
-                            photos: defectPhotos,
-                            photosKey: field.photosKey,
-                            readOnly,
-                            handlers,
-                          }),
-                        )
-                      }
+                      onView={() => openDefectPhotoViewer(defectPhotos)}
+                      onAddPhoto={requestDefectPhoto}
                     />
-                  ) : null}
+                  </div>
                 </div>
               )
             ) : null}

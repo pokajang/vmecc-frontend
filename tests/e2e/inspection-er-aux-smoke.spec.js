@@ -406,13 +406,20 @@ test.describe('ER Aux inspection prod smoke', () => {
       await expect(radioTetra.getByText('Defect remarks')).toBeVisible()
 
       await setPhotoFromButton(
-        radioTetra.getByRole('button', { name: 'Add defect photo' }),
+        radioTetra.getByRole('button', { name: 'Add photo (optional)' }),
         `er-aux-defect-${suffix}.png`,
       )
+      const defectPhotoModal = page
+        .locator('.modal.show', { hasText: 'Radio Tetra - defect photos' })
+        .last()
+      await expect(defectPhotoModal).toBeVisible()
+      await expect(defectPhotoModal.getByText(`er-aux-defect-${suffix}.png`)).toBeVisible()
+      await defectPhotoModal.getByRole('button', { name: 'Save' }).click()
+      await expect(defectPhotoModal).toBeHidden()
       await radioTetra
         .locator('textarea[placeholder="Describe the defect and the corrective action."]')
         .fill(`Smoke defect remarks ${suffix}`)
-      await expect(radioTetra.getByText(/photo added/i).first()).toBeVisible()
+      await expect(radioTetra.getByRole('button', { name: 'View photos' })).toBeVisible()
 
       await radioTetra.getByRole('button', { name: 'Remark', exact: true }).click()
       await radioTetra

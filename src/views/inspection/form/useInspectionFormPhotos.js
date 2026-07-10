@@ -44,6 +44,7 @@ const useInspectionFormPhotos = ({
   const activePhotoInputRef = useRef('upload')
   const photoSelectionSequenceRef = useRef(0)
   const photoUploadAbortRef = useRef(null)
+  const photoAddedNotificationTimersRef = useRef(new Set())
   const interruptedCameraFallbackRef = useRef(getInterruptedCameraFallback('inspection'))
   const [cameraUploadFallback, setCameraUploadFallback] = useState(
     () => interruptedCameraFallbackRef.current,
@@ -52,7 +53,14 @@ const useInspectionFormPhotos = ({
   const [photoUploadProgress, setPhotoUploadProgress] = useState(null)
   const [cameraCaptureVisible, setCameraCaptureVisible] = useState(false)
 
-  useEffect(() => () => photoUploadAbortRef.current?.abort(), [])
+  useEffect(
+    () => () => {
+      photoUploadAbortRef.current?.abort()
+      photoAddedNotificationTimersRef.current.forEach((timerId) => clearTimeout(timerId))
+      photoAddedNotificationTimersRef.current.clear()
+    },
+    [],
+  )
   useEffect(() => {
     if (interruptedCameraFallbackRef.current) {
       clearPendingCameraOperation()
@@ -109,6 +117,22 @@ const useInspectionFormPhotos = ({
       phase,
       diagnostics,
     }
+  }
+
+  const notifyPhotosAdded = (uploadTarget, photosKey, photos, context = {}) => {
+    if (typeof uploadTarget?.onAfterAddPhotos !== 'function') return
+    const payload = {
+      photosKey,
+      photos: Array.isArray(photos) ? photos : [],
+      addedPhotos: context.addedPhotos || [],
+      row: context.row,
+      sectionKey: context.sectionKey,
+    }
+    const timerId = setTimeout(() => {
+      photoAddedNotificationTimersRef.current.delete(timerId)
+      uploadTarget.onAfterAddPhotos(payload)
+    }, 0)
+    photoAddedNotificationTimersRef.current.add(timerId)
   }
 
   const openPhotoInput = (target, inputRef) => {
@@ -242,24 +266,32 @@ const useInspectionFormPhotos = ({
     if (uploadTarget?.kind === 'inspectionIssue') {
       if (typeof uploadTarget.onAddPhotos === 'function') {
         uploadTarget.onAddPhotos(nextPhotos)
+        notifyPhotosAdded(uploadTarget, 'photos', nextPhotos, { addedPhotos: nextPhotos })
         return
       }
       const issueId = String(uploadTarget.issueId || '').trim()
       const currentIssues = Array.isArray(committedForm.inspectionIssues)
         ? committedForm.inspectionIssues
         : []
+      const existingIssue =
+        currentIssues.find((issue) => String(issue?.id || '').trim() === issueId) || {}
+      const photos = [
+        ...(Array.isArray(existingIssue.photos) ? existingIssue.photos : []),
+        ...nextPhotos,
+      ]
       updateForm({
         ...committedForm,
         inspectionIssues: currentIssues.map((issue) =>
           String(issue?.id || '').trim() === issueId
             ? {
                 ...issue,
-                photos: [...(Array.isArray(issue.photos) ? issue.photos : []), ...nextPhotos],
+                photos,
                 updatedAt: new Date().toISOString(),
               }
             : issue,
         ),
       })
+      notifyPhotosAdded(uploadTarget, 'photos', photos, { addedPhotos: nextPhotos })
       return
     }
 
@@ -277,18 +309,17 @@ const useInspectionFormPhotos = ({
       const photosKey =
         uploadTarget?.kind === 'fireExtinguisherDefect' ? uploadTarget.photosKey : 'photos'
       if (typeof uploadTarget.onAddPhotos === 'function') {
-        uploadTarget.onAddPhotos(row, photosKey, [
-          ...(Array.isArray(row[photosKey]) ? row[photosKey] : []),
-          ...nextPhotos,
-        ])
+        const photos = [...(Array.isArray(row[photosKey]) ? row[photosKey] : []), ...nextPhotos]
+        uploadTarget.onAddPhotos(row, photosKey, photos)
+        notifyPhotosAdded(uploadTarget, photosKey, photos, { addedPhotos: nextPhotos, row })
         return
       }
-      updateFireExtinguisherCheck(row, {
-        [photosKey]: [
-          ...(Array.isArray(existingCheck[photosKey]) ? existingCheck[photosKey] : []),
-          ...nextPhotos,
-        ],
-      })
+      const photos = [
+        ...(Array.isArray(existingCheck[photosKey]) ? existingCheck[photosKey] : []),
+        ...nextPhotos,
+      ]
+      updateFireExtinguisherCheck(row, { [photosKey]: photos })
+      notifyPhotosAdded(uploadTarget, photosKey, photos, { addedPhotos: nextPhotos, row })
       return
     }
 
@@ -301,18 +332,17 @@ const useInspectionFormPhotos = ({
         ) || row
       const photosKey = uploadTarget?.kind === 'hydraulicDefect' ? uploadTarget.photosKey : 'photos'
       if (typeof uploadTarget.onAddPhotos === 'function') {
-        uploadTarget.onAddPhotos(row, photosKey, [
-          ...(Array.isArray(row[photosKey]) ? row[photosKey] : []),
-          ...nextPhotos,
-        ])
+        const photos = [...(Array.isArray(row[photosKey]) ? row[photosKey] : []), ...nextPhotos]
+        uploadTarget.onAddPhotos(row, photosKey, photos)
+        notifyPhotosAdded(uploadTarget, photosKey, photos, { addedPhotos: nextPhotos, row })
         return
       }
-      updateHydraulicCheck(row, {
-        [photosKey]: [
-          ...(Array.isArray(existingCheck[photosKey]) ? existingCheck[photosKey] : []),
-          ...nextPhotos,
-        ],
-      })
+      const photos = [
+        ...(Array.isArray(existingCheck[photosKey]) ? existingCheck[photosKey] : []),
+        ...nextPhotos,
+      ]
+      updateHydraulicCheck(row, { [photosKey]: photos })
+      notifyPhotosAdded(uploadTarget, photosKey, photos, { addedPhotos: nextPhotos, row })
       return
     }
 
@@ -325,10 +355,9 @@ const useInspectionFormPhotos = ({
       const existingCheck = checks.find((check) => String(check.id || '') === rowId) || row
       const photosKey = uploadTarget.photosKey || 'photos'
       if (typeof uploadTarget.onAddPhotos === 'function') {
-        uploadTarget.onAddPhotos(row, photosKey, [
-          ...(Array.isArray(row[photosKey]) ? row[photosKey] : []),
-          ...nextPhotos,
-        ])
+        const photos = [...(Array.isArray(row[photosKey]) ? row[photosKey] : []), ...nextPhotos]
+        uploadTarget.onAddPhotos(row, photosKey, photos)
+        notifyPhotosAdded(uploadTarget, photosKey, photos, { addedPhotos: nextPhotos, row })
         return
       }
       const photos = [
@@ -338,6 +367,7 @@ const useInspectionFormPhotos = ({
       updateFrtCheck(row, {
         [photosKey]: photos,
       })
+      notifyPhotosAdded(uploadTarget, photosKey, photos, { addedPhotos: nextPhotos, row })
       return
     }
 
@@ -350,18 +380,17 @@ const useInspectionFormPhotos = ({
         ) || row
       const photosKey = uploadTarget.photosKey || defaultHighAnglePhotosKey
       if (typeof uploadTarget.onAddPhotos === 'function') {
-        uploadTarget.onAddPhotos(row, photosKey, [
-          ...(Array.isArray(row[photosKey]) ? row[photosKey] : []),
-          ...nextPhotos,
-        ])
+        const photos = [...(Array.isArray(row[photosKey]) ? row[photosKey] : []), ...nextPhotos]
+        uploadTarget.onAddPhotos(row, photosKey, photos)
+        notifyPhotosAdded(uploadTarget, photosKey, photos, { addedPhotos: nextPhotos, row })
         return
       }
-      updateHighAngleCheck(row, {
-        [photosKey]: [
-          ...(Array.isArray(existingCheck[photosKey]) ? existingCheck[photosKey] : []),
-          ...nextPhotos,
-        ],
-      })
+      const photos = [
+        ...(Array.isArray(existingCheck[photosKey]) ? existingCheck[photosKey] : []),
+        ...nextPhotos,
+      ]
+      updateHighAngleCheck(row, { [photosKey]: photos })
+      notifyPhotosAdded(uploadTarget, photosKey, photos, { addedPhotos: nextPhotos, row })
       return
     }
 
@@ -373,17 +402,24 @@ const useInspectionFormPhotos = ({
       const photosKey = uploadTarget.photosKey || 'photos'
       if (!photosKey) return
       if (typeof uploadTarget.onAddPhotos === 'function') {
-        uploadTarget.onAddPhotos(sectionKey, row, photosKey, [
-          ...(Array.isArray(row[photosKey]) ? row[photosKey] : []),
-          ...nextPhotos,
-        ])
+        const photos = [...(Array.isArray(row[photosKey]) ? row[photosKey] : []), ...nextPhotos]
+        uploadTarget.onAddPhotos(sectionKey, row, photosKey, photos)
+        notifyPhotosAdded(uploadTarget, photosKey, photos, {
+          addedPhotos: nextPhotos,
+          row,
+          sectionKey,
+        })
         return
       }
-      updateScbaGroupedCheck(sectionKey, row, {
-        [photosKey]: [
-          ...(Array.isArray(existingCheck[photosKey]) ? existingCheck[photosKey] : []),
-          ...nextPhotos,
-        ],
+      const photos = [
+        ...(Array.isArray(existingCheck[photosKey]) ? existingCheck[photosKey] : []),
+        ...nextPhotos,
+      ]
+      updateScbaGroupedCheck(sectionKey, row, { [photosKey]: photos })
+      notifyPhotosAdded(uploadTarget, photosKey, photos, {
+        addedPhotos: nextPhotos,
+        row,
+        sectionKey,
       })
       return
     }
@@ -397,30 +433,35 @@ const useInspectionFormPhotos = ({
         ) || row
       const photosKey = uploadTarget?.kind === 'erAuxDefect' ? 'defectPhotos' : 'photos'
       if (typeof uploadTarget.onAddPhotos === 'function') {
-        uploadTarget.onAddPhotos(row, photosKey, [
-          ...(Array.isArray(row[photosKey]) ? row[photosKey] : []),
-          ...nextPhotos,
-        ])
+        const photos = [...(Array.isArray(row[photosKey]) ? row[photosKey] : []), ...nextPhotos]
+        uploadTarget.onAddPhotos(row, photosKey, photos)
+        notifyPhotosAdded(uploadTarget, photosKey, photos, { addedPhotos: nextPhotos, row })
         return
       }
-      updateErAuxCheck(row, {
-        [photosKey]: [
-          ...(Array.isArray(existingCheck[photosKey]) ? existingCheck[photosKey] : []),
-          ...nextPhotos,
-        ],
-      })
+      const photos = [
+        ...(Array.isArray(existingCheck[photosKey]) ? existingCheck[photosKey] : []),
+        ...nextPhotos,
+      ]
+      updateErAuxCheck(row, { [photosKey]: photos })
+      notifyPhotosAdded(uploadTarget, photosKey, photos, { addedPhotos: nextPhotos, row })
       return
     }
 
     if (typeof uploadTarget?.onAddPhotos === 'function') {
       uploadTarget.onAddPhotos(nextPhotos)
+      notifyPhotosAdded(uploadTarget, 'photos', nextPhotos, { addedPhotos: nextPhotos })
       return
     }
 
+    const photos = [
+      ...(Array.isArray(committedForm.photos) ? committedForm.photos : []),
+      ...nextPhotos,
+    ]
     updateForm({
       ...committedForm,
-      photos: [...(Array.isArray(committedForm.photos) ? committedForm.photos : []), ...nextPhotos],
+      photos,
     })
+    notifyPhotosAdded(uploadTarget, 'photos', photos, { addedPhotos: nextPhotos })
   }
 
   const handleInAppCameraCapture = (file) => {
@@ -445,7 +486,7 @@ const useInspectionFormPhotos = ({
       inputRef,
     )
 
-  const requestInspectionIssuePhotoUpload = (issue, inputRef = cameraInputRef) => {
+  const requestInspectionIssuePhotoUpload = (issue, inputRef = cameraInputRef, options = {}) => {
     const label = String(issue?.label || issue?.description || 'Finding').trim()
     openPhotoInput(
       {
@@ -453,6 +494,7 @@ const useInspectionFormPhotos = ({
         issueId: issue?.id,
         defaultDescription: label,
         onAddPhotos: issue?.onAddPhotos,
+        ...options,
       },
       inputRef,
     )

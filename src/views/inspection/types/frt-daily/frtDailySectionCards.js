@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { CBadge, CButton, CFormInput, CFormLabel, CFormTextarea } from '@coreui/react'
-import { Camera, CheckCircle2, Circle, TriangleAlert } from 'lucide-react'
-import CreateActionButton from 'src/components/CreateActionButton'
+import { CheckCircle2, Circle, TriangleAlert } from 'lucide-react'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import RowActions from 'src/components/RowActions'
 import useMediaQuery from 'src/hooks/useMediaQuery'
@@ -20,6 +19,7 @@ import {
 } from 'src/views/inspection/types/frt-daily/helpers'
 import {
   FormFieldError,
+  InspectionPhotoActionRow,
   InspectionPhotoEvidenceSummary,
 } from 'src/views/inspection/form/components/InspectionDisplayShared'
 
@@ -166,13 +166,32 @@ const FrtIssueEvidence = ({
   emptyRemarkMessage,
   setPhotoViewer,
   onUpdateCheck,
-  onRequestPhotoUpload,
   onRequestIssuePhotoUpload,
   onRemovePhoto,
   onChangePhotoDescription,
   onApplyPhotoCaption,
 }) => {
   const remarksId = `frt-${getFrtRowId(row).replace(/[^A-Za-z0-9_-]/g, '-')}-issue-remarks`
+  const openIssuePhotoViewer = (nextPhotos = photos) =>
+    setPhotoViewer({
+      title: `${row.equipment} - issue photos`,
+      photos: nextPhotos,
+      showCaptionChips: false,
+      onAddMorePhoto: () =>
+        onRequestIssuePhotoUpload?.(row, {
+          onAfterAddPhotos: ({ photos: addedPhotos }) => openIssuePhotoViewer(addedPhotos),
+        }),
+      onSave: (savedPhotos) =>
+        onUpdateCheck?.(row, { photos: Array.isArray(savedPhotos) ? savedPhotos : [] }),
+      onRemove: (photoId) => onRemovePhoto?.(row, photoId),
+      onChangeDescription: (photoId, description) =>
+        onChangePhotoDescription?.(row, photoId, description),
+      onApplyCaption: (photoId, caption) => onApplyPhotoCaption?.(row, photoId, caption),
+    })
+  const requestIssuePhoto = () =>
+    onRequestIssuePhotoUpload?.(row, {
+      onAfterAddPhotos: ({ photos: nextPhotos }) => openIssuePhotoViewer(nextPhotos),
+    })
 
   return (
     <div
@@ -191,31 +210,12 @@ const FrtIssueEvidence = ({
       />
       {missingRemarks ? <FormFieldError>{emptyRemarkMessage}</FormFieldError> : null}
       <div data-inspection-frt-detail-key="photos">
-        <div className="d-flex flex-wrap justify-content-end gap-2">
-          <CreateActionButton
-            label="Add photo"
-            className="inspection-compact-action-btn"
-            icon={<Camera size={13} className="me-1 align-text-bottom" />}
-            onClick={() => onRequestIssuePhotoUpload?.(row)}
-          />
-        </div>
-      </div>
-      {photos.length > 0 ? (
-        <InspectionPhotoEvidenceSummary
+        <InspectionPhotoActionRow
           photos={photos}
-          label="View photos"
-          onView={() =>
-            setPhotoViewer({
-              title: `${row.equipment} - issue photos`,
-              photos,
-              onRemove: (photoId) => onRemovePhoto?.(row, photoId),
-              onChangeDescription: (photoId, description) =>
-                onChangePhotoDescription?.(row, photoId, description),
-              onApplyCaption: (photoId, caption) => onApplyPhotoCaption?.(row, photoId, caption),
-            })
-          }
+          onView={() => openIssuePhotoViewer(photos)}
+          onAddPhoto={requestIssuePhoto}
         />
-      ) : null}
+      </div>
     </div>
   )
 }
@@ -796,7 +796,6 @@ const FrtSectionCards = ({
     return {
       missingStatusKeys: validationState?.frt?.missingStatusesByRow?.[rowId] || [],
       missingRemarkKeys: validationState?.frt?.missingRemarksByRow?.[rowId] || [],
-      missingPhotoKeys: validationState?.frt?.missingPhotosByRow?.[rowId] || [],
     }
   }
 

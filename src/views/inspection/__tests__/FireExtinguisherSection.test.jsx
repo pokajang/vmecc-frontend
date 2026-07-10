@@ -328,7 +328,7 @@ describe('FireExtinguisherEditSection', () => {
     expect(onResetCheck).toHaveBeenCalledWith(expect.objectContaining({ id: 'fe:ok' }))
   })
 
-  it('keeps incomplete rows marked not checked while still showing defect count', () => {
+  it('keeps rows checked when defect remarks are complete and photos are omitted', () => {
     const row = buildCompleteOkRow({
       operationalCondition: 'Not Good',
       operationalConditionRemarks: 'Motor issue',
@@ -344,7 +344,7 @@ describe('FireExtinguisherEditSection', () => {
       },
     })
 
-    expect(screen.getByTestId('fire-extinguisher-status-not-inspected')).toBeTruthy()
+    expect(screen.getByTestId('fire-extinguisher-status-inspected')).toBeTruthy()
     expect(screen.getByTestId('fire-extinguisher-status-defect')).toBeTruthy()
     expect(screen.getByLabelText('Defect (1)')).toBeTruthy()
   })

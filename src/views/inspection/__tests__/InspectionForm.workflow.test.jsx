@@ -1302,7 +1302,7 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    expect(screen.queryByRole('button', { name: 'Continue to Review' })).toBeNull()
+    expect(screen.getAllByText('Continue to Review').length).toBeGreaterThan(0)
     expect(onRequestReview).not.toHaveBeenCalled()
     onRequestReview.mockClear()
 
@@ -2866,7 +2866,7 @@ describe('InspectionForm workflow', () => {
     )
   })
 
-  it('applies quick captions to hydraulic defect evidence photos', () => {
+  it('shows hydraulic defect photos without quick caption helper chips', () => {
     const onChange = vi.fn()
     render(
       <InspectionForm
@@ -2897,22 +2897,8 @@ describe('InspectionForm workflow', () => {
     fireEvent.click(screen.getByRole('button', { name: 'View photos' }))
     const dialog = screen.getByRole('dialog')
     expect(within(dialog).getByPlaceholderText('Describe this photo')).toBeTruthy()
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Defect' }))
-
-    const latestForm = onChange.mock.calls[onChange.mock.calls.length - 1][0]
-    expect(latestForm.hydraulicChecks).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          equipment: 'Hydraulic Pump Motor 1',
-          functionTestPhotos: [
-            expect.objectContaining({
-              id: 'defect-photo-1',
-              description: 'Existing caption\nDefect',
-            }),
-          ],
-        }),
-      ]),
-    )
+    expect(within(dialog).queryByRole('button', { name: 'Defect' })).toBeNull()
+    expect(within(dialog).getByRole('button', { name: 'Save' })).toBeTruthy()
   })
 
   it('hides redundant ER Aux card-level OK shortcuts for single-check cards', () => {
@@ -3428,10 +3414,14 @@ describe('InspectionForm workflow', () => {
     let latestForm = onChange.mock.calls[onChange.mock.calls.length - 1][0]
     rerender(<InspectionForm {...baseProps} onChange={onChange} value={latestForm} />)
 
-    fireEvent.click(getRow().getByRole('button', { name: 'Add photo' }))
+    fireEvent.click(getRow().getByRole('button', { name: 'Add photo (optional)' }))
     fireEvent.change(cameraInput, {
       target: { files: [new File(['defect'], 'er-aux-defect.png', { type: 'image/png' })] },
     })
+
+    expect(await screen.findByText('Radio Tetra - defect photos')).toBeTruthy()
+    expect(screen.getByText('er-aux-defect.png')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     await waitFor(() => {
       latestForm = onChange.mock.calls[onChange.mock.calls.length - 1]?.[0]
@@ -3498,7 +3488,7 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'View defect photos' }))
+    fireEvent.click(screen.getByRole('button', { name: 'View photos' }))
     expect(await screen.findByText('Radio Tetra - defect photos')).toBeTruthy()
     expect(screen.getByText('1 photo')).toBeTruthy()
     expect(screen.getByText('defect-photo.png')).toBeTruthy()
@@ -3657,7 +3647,7 @@ describe('InspectionForm workflow', () => {
 
     expect(screen.getByPlaceholderText('Physical Condition defect remarks')).toBeTruthy()
     expect(screen.getByPlaceholderText('No Leakage defect remarks')).toBeTruthy()
-    expect(screen.getAllByText('Add photo').length).toBeGreaterThanOrEqual(2)
+    expect(screen.getAllByText('Add photo (optional)').length).toBeGreaterThanOrEqual(2)
     expect(screen.queryByRole('button', { name: 'Continue to Review' })).toBeNull()
     expect(onRequestReview).not.toHaveBeenCalled()
     onRequestReview.mockClear()

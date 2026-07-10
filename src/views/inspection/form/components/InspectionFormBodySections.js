@@ -1041,6 +1041,7 @@ const InspectionFindingsSection = ({
                 onAddPhotos: options?.onAddPhotos || addEditorPhotos,
               },
               cameraInputRef,
+              ...(options ? [options] : []),
             )
           }
           onUploadPhoto={(options) =>
@@ -1051,6 +1052,7 @@ const InspectionFindingsSection = ({
                 onAddPhotos: options?.onAddPhotos || addEditorPhotos,
               },
               uploadInputRef,
+              ...(options ? [options] : []),
             )
           }
           onRemovePhoto={removeEditorPhoto}

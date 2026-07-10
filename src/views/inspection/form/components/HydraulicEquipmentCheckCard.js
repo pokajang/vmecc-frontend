@@ -16,6 +16,7 @@ import {
 import {
   EvidenceBlock,
   FormFieldError,
+  InspectionPhotoActionRow,
   InspectionPhotoEvidenceSummary,
 } from './InspectionDisplayShared'
 
@@ -147,6 +148,28 @@ export const HydraulicEquipmentCheckDetails = ({
         )
         const isMissingRemark = isDefect && !defectRemarks.trim()
         const isMissingNaReason = isNotApplicable && !defectRemarks.trim()
+        const openDefectPhotoViewer = (photos = defectPhotos) =>
+          setPhotoViewer({
+            title: `${row.equipment} - ${field.label} defect photos`,
+            photos,
+            showCaptionChips: false,
+            onAddMorePhoto: () =>
+              onRequestDefectPhotoUpload?.(row, field, {
+                onAfterAddPhotos: ({ photos: nextPhotos }) => openDefectPhotoViewer(nextPhotos),
+              }),
+            onSave: (nextPhotos) => updateHydraulicPhotoList(nextPhotos),
+            onRemove: (photoId) => onRemovePhoto?.(row, photoId, field.photosKey),
+            onChangeDescription: (photoId, description) =>
+              onChangePhotoDescription?.(row, photoId, description, field.photosKey),
+            onApplyCaption: (photoId, caption) =>
+              onApplyPhotoCaption?.(row, photoId, caption, field.photosKey),
+          })
+        const updateHydraulicPhotoList = (photos) =>
+          onUpdateCheck(row, { [field.photosKey]: Array.isArray(photos) ? photos : [] })
+        const requestDefectPhoto = () =>
+          onRequestDefectPhotoUpload?.(row, field, {
+            onAfterAddPhotos: ({ photos: nextPhotos }) => openDefectPhotoViewer(nextPhotos),
+          })
 
         return (
           <div key={field.key} className="inspection-hydraulic-check-with-evidence d-grid gap-2">
@@ -183,34 +206,14 @@ export const HydraulicEquipmentCheckDetails = ({
                       onUpdateCheck(row, { [field.remarksKey]: event.target.value })
                     }
                   />
-                  <div className="d-flex flex-wrap justify-content-end gap-2">
-                    <CreateActionButton
-                      label="Add photo"
-                      className="inspection-compact-action-btn"
-                      icon={<Camera size={13} className="me-1 align-text-bottom" />}
-                      onClick={() => onRequestDefectPhotoUpload?.(row, field)}
-                    />
-                  </div>
                   {remarksError && isMissingRemark ? (
                     <FormFieldError>{field.label} defect remarks are required.</FormFieldError>
                   ) : null}
-                  {defectPhotos.length > 0 ? (
-                    <InspectionPhotoEvidenceSummary
-                      photos={defectPhotos}
-                      label="View photos"
-                      onView={() =>
-                        setPhotoViewer({
-                          title: `${row.equipment} - ${field.label} defect photos`,
-                          photos: defectPhotos,
-                          onRemove: (photoId) => onRemovePhoto?.(row, photoId, field.photosKey),
-                          onChangeDescription: (photoId, description) =>
-                            onChangePhotoDescription?.(row, photoId, description, field.photosKey),
-                          onApplyCaption: (photoId, caption) =>
-                            onApplyPhotoCaption?.(row, photoId, caption, field.photosKey),
-                        })
-                      }
-                    />
-                  ) : null}
+                  <InspectionPhotoActionRow
+                    photos={defectPhotos}
+                    onView={() => openDefectPhotoViewer(defectPhotos)}
+                    onAddPhoto={requestDefectPhoto}
+                  />
                 </div>
               )
             ) : null}

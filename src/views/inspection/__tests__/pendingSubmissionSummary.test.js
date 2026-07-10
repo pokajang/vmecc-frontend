@@ -148,7 +148,7 @@ describe('pending submission summary', () => {
     )
   })
 
-  it('marks only the syncing or failed type as blocked by draft sync state', () => {
+  it('keeps failed draft sync retryable without blocking final submit', () => {
     const summary = buildPendingSubmissionSummary({
       form: {
         inspectionType: 'General Inspection',
@@ -171,12 +171,13 @@ describe('pending submission summary', () => {
       summary.items.find((item) => item.inspectionType === 'Fire Extinguisher Inspection')?.status,
     ).toBe('ready')
     const general = summary.items.find((item) => item.inspectionType === 'General Inspection')
-    expect(general?.status).toBe('failed')
+    expect(general?.status).toBe('ready')
     expect(general?.blockers).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           key: 'draft-sync-failed',
           message: 'Backend draft sync failed.',
+          nonBlocking: true,
         }),
       ]),
     )
@@ -281,7 +282,7 @@ describe('pending submission summary', () => {
     )
   })
 
-  it('counts Fire Extinguisher defect and evidence blockers from row validation details', () => {
+  it('counts Fire Extinguisher defect blockers from missing issue remarks only', () => {
     const summary = buildPendingSubmissionSummary({
       form: {
         inspectionType: 'Fire Extinguisher Inspection',
@@ -310,7 +311,7 @@ describe('pending submission summary', () => {
           checkedCount: 0,
           defectCount: 1,
           incompleteCount: 1,
-          evidenceIssueCount: 2,
+          evidenceIssueCount: 1,
         }),
         blockers: expect.arrayContaining([
           expect.objectContaining({ key: 'incomplete-items' }),
@@ -507,7 +508,7 @@ describe('pending submission summary', () => {
     )
   })
 
-  it('blocks SCBA submission when issue rows are missing evidence', () => {
+  it('allows SCBA issue rows with remarks even when photos are omitted', () => {
     const summary = buildPendingSubmissionSummary({
       form: {
         inspectionType: 'SCBA Inspection',
@@ -534,22 +535,16 @@ describe('pending submission summary', () => {
     })
 
     const scba = summary.items.find((item) => item.inspectionType === 'SCBA Inspection')
-    expect(scba?.status).toBe('needs_attention')
+    expect(scba?.status).toBe('ready')
     expect(scba?.metrics).toEqual(
       expect.objectContaining({
         count: 1,
         checkedCount: 1,
         defectCount: 1,
-        evidenceIssueCount: 1,
+        evidenceIssueCount: 0,
       }),
     )
-    expect(scba?.blockers).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          key: 'evidence',
-        }),
-      ]),
-    )
+    expect(scba?.blockers).toEqual([])
   })
 
   it('summarizes saved structured rows across locations instead of only the active location', () => {

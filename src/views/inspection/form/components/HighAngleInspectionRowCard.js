@@ -1,7 +1,6 @@
 import React from 'react'
 import { CButton, CFormLabel, CFormTextarea } from '@coreui/react'
-import { Camera, CheckCircle2, Circle, TriangleAlert } from 'lucide-react'
-import CreateActionButton from 'src/components/CreateActionButton'
+import { CheckCircle2, Circle, TriangleAlert } from 'lucide-react'
 import { hasHighAngleInspectionData } from '../inspectionResetActions'
 import InspectionItemAdditionalInfo from './InspectionItemAdditionalInfo'
 import {
@@ -14,11 +13,7 @@ import {
   HIGH_ANGLE_STATUS_OPTIONS,
   getHighAngleRetainedEvidenceRows,
 } from 'src/views/inspection/types/high-angle/helpers'
-import {
-  EvidenceBlock,
-  FormFieldError,
-  InspectionPhotoEvidenceSummary,
-} from './InspectionDisplayShared'
+import { EvidenceBlock, FormFieldError, InspectionPhotoActionRow } from './InspectionDisplayShared'
 
 const text = (value) => String(value || '').trim()
 
@@ -143,6 +138,35 @@ export const HighAngleInspectionRowDetails = ({
   const retainedEvidenceRows = getHighAngleRetainedEvidenceRows([row])
   const hasRetainedEvidence = retainedEvidenceRows.length > 0
   const sourceRow = stripHighAngleDisplayMeta(row)
+  const openConditionPhotoViewer = (photos = conditionPhotos) =>
+    setPhotoViewer({
+      title: `${row.equipment} - condition issue photos`,
+      photos,
+      showCaptionChips: false,
+      onAddMorePhoto: () =>
+        onRequestIssuePhotoUpload?.(sourceRow, {
+          onAfterAddPhotos: ({ photos: nextPhotos }) => openConditionPhotoViewer(nextPhotos),
+        }),
+      onSave: (nextPhotos) =>
+        onUpdateCheck?.(sourceRow, {
+          [HIGH_ANGLE_CONDITION_FIELD.photosKey]: Array.isArray(nextPhotos) ? nextPhotos : [],
+        }),
+      onRemove: (photoId) =>
+        onRemovePhoto?.(sourceRow, photoId, HIGH_ANGLE_CONDITION_FIELD.photosKey),
+      onChangeDescription: (photoId, description) =>
+        onChangePhotoDescription?.(
+          sourceRow,
+          photoId,
+          description,
+          HIGH_ANGLE_CONDITION_FIELD.photosKey,
+        ),
+      onApplyCaption: (photoId, caption) =>
+        onApplyPhotoCaption?.(sourceRow, photoId, caption, HIGH_ANGLE_CONDITION_FIELD.photosKey),
+    })
+  const requestConditionPhoto = () =>
+    onRequestIssuePhotoUpload?.(sourceRow, {
+      onAfterAddPhotos: ({ photos: nextPhotos }) => openConditionPhotoViewer(nextPhotos),
+    })
 
   return readOnly ? (
     <>
@@ -247,45 +271,14 @@ export const HighAngleInspectionRowDetails = ({
               })
             }
           />
-          <div className="d-flex flex-wrap justify-content-end gap-2">
-            <CreateActionButton
-              label="Add photo"
-              className="inspection-compact-action-btn"
-              icon={<Camera size={13} className="me-1 align-text-bottom" />}
-              onClick={() => onRequestIssuePhotoUpload?.(sourceRow)}
-            />
-          </div>
           {remarksError && !hasConditionRemarks ? (
             <FormFieldError>Remarks are required for issue rows.</FormFieldError>
           ) : null}
-          {conditionPhotos.length > 0 ? (
-            <InspectionPhotoEvidenceSummary
-              photos={conditionPhotos}
-              label="View photos"
-              onView={() =>
-                setPhotoViewer({
-                  title: `${row.equipment} - condition issue photos`,
-                  photos: conditionPhotos,
-                  onRemove: (photoId) =>
-                    onRemovePhoto?.(sourceRow, photoId, HIGH_ANGLE_CONDITION_FIELD.photosKey),
-                  onChangeDescription: (photoId, description) =>
-                    onChangePhotoDescription?.(
-                      sourceRow,
-                      photoId,
-                      description,
-                      HIGH_ANGLE_CONDITION_FIELD.photosKey,
-                    ),
-                  onApplyCaption: (photoId, caption) =>
-                    onApplyPhotoCaption?.(
-                      sourceRow,
-                      photoId,
-                      caption,
-                      HIGH_ANGLE_CONDITION_FIELD.photosKey,
-                    ),
-                })
-              }
-            />
-          ) : null}
+          <InspectionPhotoActionRow
+            photos={conditionPhotos}
+            onView={() => openConditionPhotoViewer(conditionPhotos)}
+            onAddPhoto={requestConditionPhoto}
+          />
         </div>
       ) : null}
       {hasRetainedEvidence ? (

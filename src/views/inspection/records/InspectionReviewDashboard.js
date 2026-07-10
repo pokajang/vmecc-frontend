@@ -14,6 +14,9 @@ const getRetryableSyncBlocker = (blockers = []) =>
 const getBackgroundSyncBlocker = (blockers = []) =>
   blockers.find((blocker) => BACKGROUND_SYNC_BLOCKERS.has(blocker?.key))
 
+const getBlockingBlockers = (blockers = []) =>
+  blockers.filter((blocker) => blocker?.nonBlocking !== true)
+
 const getVisibleWarningBlocker = (blockers = []) =>
   blockers.find(
     (blocker) =>
@@ -52,7 +55,7 @@ const InspectionReviewTypeCard = ({
   onRetrySync,
 }) => {
   const blockers = Array.isArray(item.blockers) ? item.blockers : []
-  const canSubmit = blockers.length === 0 && !isSubmitting
+  const canSubmit = getBlockingBlockers(blockers).length === 0 && !isSubmitting
   const retryableSyncBlocker = getRetryableSyncBlocker(blockers)
   const backgroundSyncBlocker = getBackgroundSyncBlocker(blockers)
   const visibleWarningBlocker = getVisibleWarningBlocker(blockers)

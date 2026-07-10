@@ -553,17 +553,15 @@ test.describe('Fire Extinguisher inspection prod smoke', () => {
         .getByPlaceholder('FE Physical Condition defect remarks')
         .fill(`Smoke FE defect remarks ${suffix}`)
       await setPhotoFromButton(
-        defectCard.getByRole('button', { name: 'Add defect photo' }),
+        defectCard.getByRole('button', { name: 'Add photo (optional)' }),
         `fe-defect-${suffix}.png`,
       )
-      await expect(defectCard.getByText(/1 photo added/i)).toBeVisible()
-
-      await defectCard.getByRole('button', { name: 'View photos' }).click()
       const photoModal = page.locator('.modal.show', { hasText: 'defect photos' }).last()
       await expect(photoModal).toBeVisible()
       await expect(photoModal.getByText(`fe-defect-${suffix}.png`)).toBeVisible()
-      await photoModal.getByRole('button', { name: /close/i }).click()
+      await photoModal.getByRole('button', { name: 'Save' }).click()
       await expect(photoModal).toBeHidden()
+      await expect(defectCard.getByRole('button', { name: 'View photos' })).toBeVisible()
 
       await defectCard.getByRole('button', { name: 'Good', exact: true }).nth(1).click()
       await defectCard.getByRole('button', { name: 'Yes', exact: true }).nth(0).click()

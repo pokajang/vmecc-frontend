@@ -144,12 +144,11 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           <div
             class="d-grid gap-2"
           >
-            <input
+            <textarea
               aria-label="Photo description"
-              class="form-control form-control-sm"
+              class="form-control"
               placeholder="Describe this photo"
-              type="text"
-              value=""
+              rows="2"
             />
           </div>
           <button
@@ -553,12 +552,11 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           <div
             class="d-grid gap-2"
           >
-            <input
+            <textarea
               aria-label="Photo description"
-              class="form-control form-control-sm"
+              class="form-control"
               placeholder="Describe this photo"
-              type="text"
-              value=""
+              rows="2"
             />
           </div>
           <button
@@ -934,12 +932,11 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           <div
             class="d-grid gap-2"
           >
-            <input
+            <textarea
               aria-label="Photo description"
-              class="form-control form-control-sm"
+              class="form-control"
               placeholder="Describe this photo"
-              type="text"
-              value=""
+              rows="2"
             />
           </div>
           <button
@@ -1376,12 +1373,11 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           <div
             class="d-grid gap-2"
           >
-            <input
+            <textarea
               aria-label="Photo description"
-              class="form-control form-control-sm"
+              class="form-control"
               placeholder="Describe this photo"
-              type="text"
-              value=""
+              rows="2"
             />
           </div>
           <button
@@ -1803,12 +1799,11 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           <div
             class="d-grid gap-2"
           >
-            <input
+            <textarea
               aria-label="Photo description"
-              class="form-control form-control-sm"
+              class="form-control"
               placeholder="Describe this photo"
-              type="text"
-              value=""
+              rows="2"
             />
           </div>
           <button
@@ -2184,12 +2179,11 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           <div
             class="d-grid gap-2"
           >
-            <input
+            <textarea
               aria-label="Photo description"
-              class="form-control form-control-sm"
+              class="form-control"
               placeholder="Describe this photo"
-              type="text"
-              value=""
+              rows="2"
             />
           </div>
           <button
@@ -2549,12 +2543,11 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           <div
             class="d-grid gap-2"
           >
-            <input
+            <textarea
               aria-label="Photo description"
-              class="form-control form-control-sm"
+              class="form-control"
               placeholder="Describe this photo"
-              type="text"
-              value=""
+              rows="2"
             />
           </div>
           <button
@@ -2914,12 +2907,11 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           <div
             class="d-grid gap-2"
           >
-            <input
+            <textarea
               aria-label="Photo description"
-              class="form-control form-control-sm"
+              class="form-control"
               placeholder="Describe this photo"
-              type="text"
-              value=""
+              rows="2"
             />
           </div>
           <button

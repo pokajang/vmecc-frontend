@@ -11,6 +11,7 @@ import { hasErAuxInspectionData } from '../inspectionResetActions'
 import {
   EvidenceBlock,
   FormFieldError,
+  InspectionPhotoActionRow,
   InspectionPhotoEvidenceSummary,
   InspectionPhotoViewerModal,
   rowContainsSearch,
@@ -184,6 +185,27 @@ const ErAuxEquipmentCheckDetails = ({
     rowId,
     showAdditionalNotes,
   } = getErAuxRowState(row, expandedAdditionalNotes, readOnly)
+  const openDefectPhotoViewer = (nextPhotos = defectPhotos) =>
+    setPhotoViewer({
+      title: `${row.equipment} - defect photos`,
+      photos: nextPhotos,
+      showCaptionChips: false,
+      onAddMorePhoto: () =>
+        onRequestDefectPhotoUpload?.(row, {
+          onAfterAddPhotos: ({ photos: addedPhotos }) => openDefectPhotoViewer(addedPhotos),
+        }),
+      onSave: (savedPhotos) =>
+        onUpdateCheck?.(row, { defectPhotos: Array.isArray(savedPhotos) ? savedPhotos : [] }),
+      onRemove: (photoId) => onRemovePhoto?.(row, photoId, 'defectPhotos'),
+      onChangeDescription: (photoId, description) =>
+        onChangePhotoDescription?.(row, photoId, description, 'defectPhotos'),
+      onApplyCaption: (photoId, caption) =>
+        onApplyPhotoCaption?.(row, photoId, caption, 'defectPhotos'),
+    })
+  const requestDefectPhoto = () =>
+    onRequestDefectPhotoUpload?.(row, {
+      onAfterAddPhotos: ({ photos: nextPhotos }) => openDefectPhotoViewer(nextPhotos),
+    })
 
   if (readOnly) {
     return (
@@ -248,17 +270,6 @@ const ErAuxEquipmentCheckDetails = ({
       </div>
       {isDefect ? (
         <div className="d-grid gap-1">
-          <div
-            className="inspection-evidence-action-row"
-            data-inspection-er-aux-detail-key="defectPhotos"
-          >
-            <CreateActionButton
-              label="Add photo"
-              className="inspection-compact-action-btn"
-              icon={<Camera size={13} className="me-1 align-text-bottom" />}
-              onClick={() => onRequestDefectPhotoUpload?.(row)}
-            />
-          </div>
           <div className="d-flex align-items-center justify-content-between gap-2">
             <CFormLabel className="small fw-semibold text-muted mb-0">Defect remarks</CFormLabel>
             {hasDefectRemarks ? (
@@ -288,24 +299,13 @@ const ErAuxEquipmentCheckDetails = ({
           {remarksError && missingRemark ? (
             <FormFieldError>Defect remarks are required.</FormFieldError>
           ) : null}
-          {defectPhotos.length > 0 ? (
-            <InspectionPhotoEvidenceSummary
+          <div data-inspection-er-aux-detail-key="defectPhotos">
+            <InspectionPhotoActionRow
               photos={defectPhotos}
-              label="View defect photos"
-              onView={() =>
-                setPhotoViewer({
-                  title: `${row.equipment} - defect photos`,
-                  photos: defectPhotos,
-                  showDescriptionInput: false,
-                  onRemove: (photoId) => onRemovePhoto?.(row, photoId, 'defectPhotos'),
-                  onChangeDescription: (photoId, description) =>
-                    onChangePhotoDescription?.(row, photoId, description, 'defectPhotos'),
-                  onApplyCaption: (photoId, caption) =>
-                    onApplyPhotoCaption?.(row, photoId, caption, 'defectPhotos'),
-                })
-              }
+              onView={() => openDefectPhotoViewer(defectPhotos)}
+              onAddPhoto={requestDefectPhoto}
             />
-          ) : null}
+          </div>
         </div>
       ) : null}
       <div className="inspection-equipment-additional-info d-grid gap-2">

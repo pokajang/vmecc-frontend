@@ -159,7 +159,7 @@ describe('HighAngleInspectionChecks mobile detail drawer', () => {
     expect(screen.getByText('Row 1 - Qty 2 | Locker A - Top shelf')).toBeTruthy()
   })
 
-  it('keeps Not Good rows unchecked until issue evidence is complete', () => {
+  it('treats Not Good rows as checked when issue remarks are complete and photos are omitted', () => {
     const row = {
       id: 'high-angle:issue',
       mainLocation: 'High Angle Rescue Kit',
@@ -194,8 +194,8 @@ describe('HighAngleInspectionChecks mobile detail drawer', () => {
 
     fireEvent.click(screen.getByText('Locker A'))
 
-    expect(screen.getByText('Not checked')).toBeTruthy()
-    expect(screen.getByText('Needs evidence')).toBeTruthy()
+    expect(screen.getByText('Checked')).toBeTruthy()
+    expect(screen.queryByText('Needs evidence')).toBeNull()
   })
 
   it('uses the supplied High Angle quick-mark handlers', () => {

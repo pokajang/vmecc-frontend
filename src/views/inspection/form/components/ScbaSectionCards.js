@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { CButton, CFormInput, CFormLabel, CFormTextarea } from '@coreui/react'
-import { Camera, CheckCircle2, Circle, TriangleAlert } from 'lucide-react'
+import { CheckCircle2, Circle, TriangleAlert } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import RowActions from 'src/components/RowActions'
@@ -12,11 +12,7 @@ import {
   getScbaSectionFields,
   getScbaSectionTitle,
 } from 'src/views/inspection/types/scba/helpers'
-import {
-  EvidenceBlock,
-  FormFieldError,
-  InspectionPhotoEvidenceSummary,
-} from './InspectionDisplayShared'
+import { EvidenceBlock, FormFieldError, InspectionPhotoActionRow } from './InspectionDisplayShared'
 import {
   buildInspectionElementActions,
   InspectionElementCard,
@@ -287,6 +283,29 @@ const ScbaSectionCards = ({
     const remarks = String(row[remarksKey] || '')
     const hasRemarks = remarks.trim() !== ''
     const photos = Array.isArray(row[photosKey]) ? row[photosKey] : []
+    const openIssuePhotoViewer = (nextPhotos = photos) =>
+      setPhotoViewer?.({
+        title: `${getScbaDisplayLabel(row)} - ${field.label} issue photos`,
+        photos: nextPhotos,
+        showCaptionChips: false,
+        onAddMorePhoto: () =>
+          activeOnRequestIssuePhotoUpload?.(sectionKey, row, field, {
+            onAfterAddPhotos: ({ photos: addedPhotos }) => openIssuePhotoViewer(addedPhotos),
+          }),
+        onSave: (savedPhotos) =>
+          activeOnUpdateGroupedCheck?.(sectionKey, row, {
+            [photosKey]: Array.isArray(savedPhotos) ? savedPhotos : [],
+          }),
+        onRemove: (photoId) => activeOnRemovePhoto?.(sectionKey, row, photoId, photosKey),
+        onChangeDescription: (photoId, description) =>
+          activeOnChangePhotoDescription?.(sectionKey, row, photoId, description, photosKey),
+        onApplyCaption: (photoId, caption) =>
+          activeOnApplyPhotoCaption?.(sectionKey, row, photoId, caption, photosKey),
+      })
+    const requestIssuePhoto = () =>
+      activeOnRequestIssuePhotoUpload?.(sectionKey, row, field, {
+        onAfterAddPhotos: ({ photos: nextPhotos }) => openIssuePhotoViewer(nextPhotos),
+      })
 
     if (readOnly) {
       return (
@@ -320,40 +339,14 @@ const ScbaSectionCards = ({
             })
           }
         />
-        <div className="d-flex flex-wrap justify-content-end gap-2">
-          <CreateActionButton
-            label="Add photo"
-            className="inspection-compact-action-btn"
-            icon={<Camera size={13} className="me-1 align-text-bottom" />}
-            onClick={() => activeOnRequestIssuePhotoUpload?.(sectionKey, row, field)}
-          />
-        </div>
         {remarksError && !hasRemarks ? (
           <FormFieldError>{field.label} issue remarks are required.</FormFieldError>
         ) : null}
-        {photos.length > 0 ? (
-          <InspectionPhotoEvidenceSummary
-            photos={photos}
-            label="View photos"
-            onView={() =>
-              setPhotoViewer?.({
-                title: `${getScbaDisplayLabel(row)} - ${field.label} issue photos`,
-                photos,
-                onRemove: (photoId) => activeOnRemovePhoto?.(sectionKey, row, photoId, photosKey),
-                onChangeDescription: (photoId, description) =>
-                  activeOnChangePhotoDescription?.(
-                    sectionKey,
-                    row,
-                    photoId,
-                    description,
-                    photosKey,
-                  ),
-                onApplyCaption: (photoId, caption) =>
-                  activeOnApplyPhotoCaption?.(sectionKey, row, photoId, caption, photosKey),
-              })
-            }
-          />
-        ) : null}
+        <InspectionPhotoActionRow
+          photos={photos}
+          onView={() => openIssuePhotoViewer(photos)}
+          onAddPhoto={requestIssuePhoto}
+        />
       </div>
     )
   }

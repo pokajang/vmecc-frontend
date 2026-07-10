@@ -428,7 +428,8 @@ const buildBlockers = ({ definition, form, metrics, draftSyncState, sessionRetry
   if (draftSyncState?.status === 'failed') {
     blockers.push({
       key: 'draft-sync-failed',
-      message: draftSyncState.lastError || 'Sync failed. Retry to continue.',
+      message: draftSyncState.lastError || 'Draft sync failed. Retry is available.',
+      nonBlocking: true,
     })
   }
   return blockers
@@ -604,14 +605,13 @@ export const buildPendingSubmissionSummary = ({
           : null,
         sessionRetryCount,
       })
+      const blockingBlockers = blockers.filter((blocker) => blocker?.nonBlocking !== true)
       const status =
         typeSyncState?.status === 'syncing' || typeSyncState?.status === 'local_saved'
           ? 'syncing'
-          : typeSyncState?.status === 'failed'
-            ? 'failed'
-            : blockers.length > 0
-              ? 'needs_attention'
-              : 'ready'
+          : blockingBlockers.length > 0
+            ? 'needs_attention'
+            : 'ready'
 
       return {
         key: definition.key,

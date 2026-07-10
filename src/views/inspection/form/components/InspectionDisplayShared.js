@@ -1,6 +1,15 @@
 import React, { useState } from 'react'
-import { CButton, CFormInput, CModal, CModalBody, CModalHeader, CModalTitle } from '@coreui/react'
-import { Trash2 } from 'lucide-react'
+import {
+  CButton,
+  CFormInput,
+  CFormTextarea,
+  CModal,
+  CModalBody,
+  CModalFooter,
+  CModalHeader,
+  CModalTitle,
+} from '@coreui/react'
+import { Camera, Trash2 } from 'lucide-react'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import { PhotoPreview } from 'src/components/report-workflow/ReportViewComponents'
 import useMediaQuery from 'src/hooks/useMediaQuery'
@@ -37,6 +46,8 @@ export const PhotoGallery = ({
   emptyMessage = 'No photos yet. Upload photos to continue.',
   readOnly = false,
   showDescriptionInput = true,
+  fullWidth = false,
+  showCaptionChips = true,
 }) => {
   const visiblePhotos = dedupePhotos(photos)
   if (!visiblePhotos.length) {
@@ -48,7 +59,7 @@ export const PhotoGallery = ({
     <div
       style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+        gridTemplateColumns: fullWidth ? '1fr' : 'repeat(auto-fill, minmax(180px, 1fr))',
         gap: '0.75rem',
       }}
     >
@@ -69,14 +80,14 @@ export const PhotoGallery = ({
             <>
               {showDescriptionInput ? (
                 <div className="d-grid gap-2">
-                  <CFormInput
-                    size="sm"
+                  <CFormTextarea
+                    rows={2}
                     aria-label="Photo description"
                     value={String(photo?.description || '')}
                     placeholder="Describe this photo"
                     onChange={(event) => onChangeDescription?.(photo.id, event.target.value)}
                   />
-                  {onApplyCaption ? (
+                  {showCaptionChips && onApplyCaption ? (
                     <ChipRow className="inspection-photo-caption-chips">
                       {INSPECTION_PHOTO_CAPTION_CHIPS.map((caption) => (
                         <ChipButton key={caption} onClick={() => onApplyCaption(photo.id, caption)}>
@@ -104,6 +115,53 @@ export const PhotoGallery = ({
           )}
         </div>
       ))}
+    </div>
+  )
+}
+
+export const InspectionPhotoActionRow = ({
+  photos,
+  onView,
+  onAddPhoto,
+  readOnly = false,
+  addLabel = 'Add photo (optional)',
+}) => {
+  const visiblePhotos = dedupePhotos(photos)
+  const count = visiblePhotos.length
+  if (readOnly && count === 0) return null
+
+  return (
+    <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+      {count > 0 ? (
+        <CButton
+          type="button"
+          color="secondary"
+          variant="outline"
+          size="sm"
+          className="inspection-compact-action-btn"
+          aria-label="View photos"
+          onClick={onView}
+          disabled={!onView}
+        >
+          View photos ({count})
+        </CButton>
+      ) : (
+        <span className="small text-body-secondary">No photos added</span>
+      )}
+      {!readOnly ? (
+        <CButton
+          type="button"
+          color="secondary"
+          variant="outline"
+          size="sm"
+          className="inspection-compact-action-btn d-inline-flex align-items-center gap-1"
+          onClick={onAddPhoto}
+          disabled={!onAddPhoto}
+        >
+          <Camera size={13} aria-hidden="true" />
+          {addLabel}
+        </CButton>
+      ) : null}
     </div>
   )
 }
@@ -168,6 +226,15 @@ const InspectionPhotoViewerModalContent = ({ viewer, onClose }) => {
     )
   }
 
+  const handleAddMorePhoto = () => {
+    viewer?.onAddMorePhoto?.()
+  }
+
+  const handleSave = () => {
+    viewer?.onSave?.(visiblePhotos)
+    onClose?.()
+  }
+
   const body = (
     <>
       <div className="small text-body-secondary">
@@ -177,13 +244,44 @@ const InspectionPhotoViewerModalContent = ({ viewer, onClose }) => {
         photos={visiblePhotos}
         readOnly={viewer?.readOnly === true}
         showDescriptionInput={viewer?.showDescriptionInput !== false}
+        fullWidth
+        showCaptionChips={viewer?.showCaptionChips === true}
         onRemove={viewer?.onRemove ? removePhoto : undefined}
         onChangeDescription={viewer?.onChangeDescription ? updatePhotoDescription : undefined}
         onApplyCaption={viewer?.onApplyCaption ? applyPhotoCaption : undefined}
         emptyMessage="No photos added."
       />
+      {viewer?.readOnly === true ? null : (
+        <div className="d-flex justify-content-end gap-2">
+          {viewer?.onAddMorePhoto ? (
+            <CButton
+              type="button"
+              color="secondary"
+              variant="outline"
+              size="sm"
+              className="inspection-compact-action-btn d-inline-flex align-items-center gap-1"
+              onClick={handleAddMorePhoto}
+            >
+              <Camera size={13} aria-hidden="true" />
+              Add more photo
+            </CButton>
+          ) : null}
+        </div>
+      )}
     </>
   )
+
+  const footer =
+    viewer?.readOnly === true ? null : (
+      <div className="mobile-bottom-drawer__footer d-flex align-items-center justify-content-end gap-2">
+        <CButton type="button" color="secondary" variant="outline" onClick={onClose}>
+          Cancel
+        </CButton>
+        <CButton type="button" color="primary" onClick={handleSave}>
+          Save
+        </CButton>
+      </div>
+    )
 
   if (useMobileDrawer) {
     return (
@@ -196,6 +294,7 @@ const InspectionPhotoViewerModalContent = ({ viewer, onClose }) => {
         <div className="inspection-mobile-detail-drawer-body inspection-equipment-detail-drawer-body d-grid">
           {body}
         </div>
+        {footer}
       </MobileBottomDrawer>
     )
   }
@@ -206,6 +305,7 @@ const InspectionPhotoViewerModalContent = ({ viewer, onClose }) => {
         <CModalTitle>{viewer?.title || 'Photos'}</CModalTitle>
       </CModalHeader>
       <CModalBody className="d-grid gap-3">{body}</CModalBody>
+      {footer ? <CModalFooter>{footer}</CModalFooter> : null}
     </CModal>
   )
 }
