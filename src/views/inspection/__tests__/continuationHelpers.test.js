@@ -55,14 +55,14 @@ describe('inspection continuation helpers', () => {
     expect(continuation.options[0]).toEqual(
       expect.objectContaining({
         value: 'Store',
-        metaLabel: 'Completed',
+        metaLabel: '',
         progress: expect.objectContaining({ isDone: true }),
       }),
     )
     expect(continuation.options[1]).toEqual(
       expect.objectContaining({
         value: 'Office',
-        metaLabel: '0/2 checks',
+        metaLabel: '2 checks',
         progress: expect.objectContaining({ isDone: false }),
       }),
     )

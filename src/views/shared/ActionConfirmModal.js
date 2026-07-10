@@ -5,22 +5,26 @@ import useMediaQuery from 'src/hooks/useMediaQuery'
 
 const ActionConfirmModal = ({
   visible = false,
-  title = 'Confirm Action',
+  title = 'Confirm action',
   message = 'Are you sure you want to continue?',
   confirmLabel = 'Confirm',
   confirmColor = 'primary',
   cancelLabel = 'Cancel',
   confirmDisabled = false,
   cancelDisabled = false,
-  mobileDrawer = false,
+  mobileDrawer = true,
   testId = '',
   onClose,
   onConfirm,
 }) => {
   const useMobileDrawer = useMediaQuery('(max-width: 575.98px)')
+  const handleClose = () => {
+    if (cancelDisabled) return
+    onClose?.()
+  }
   const actions = (
     <>
-      <CButton color="light" onClick={onClose} disabled={cancelDisabled}>
+      <CButton color="secondary" variant="outline" onClick={handleClose} disabled={cancelDisabled}>
         {cancelLabel}
       </CButton>
       <CButton color={confirmColor} onClick={onConfirm} disabled={confirmDisabled}>
@@ -31,19 +35,22 @@ const ActionConfirmModal = ({
 
   if (mobileDrawer && useMobileDrawer) {
     return (
-      <MobileBottomDrawer
-        visible={visible}
-        title={title}
-        className="mobile-bottom-drawer--confirm"
-        onClose={onClose}
-      >
-        <div className="inspection-mobile-detail-drawer-body inspection-equipment-detail-drawer-body d-grid">
-          <div>{message}</div>
-        </div>
-        <div className="mobile-bottom-drawer__footer d-flex align-items-center justify-content-end gap-2">
-          {actions}
-        </div>
-      </MobileBottomDrawer>
+      <div {...(testId ? { 'data-testid': testId } : {})}>
+        <MobileBottomDrawer
+          visible={visible}
+          title={title}
+          className="mobile-bottom-drawer--confirm"
+          onClose={handleClose}
+          closeDisabled={cancelDisabled}
+        >
+          <div className="inspection-mobile-detail-drawer-body inspection-equipment-detail-drawer-body d-grid">
+            <div>{message}</div>
+          </div>
+          <div className="mobile-bottom-drawer__footer d-flex align-items-center justify-content-end gap-2">
+            {actions}
+          </div>
+        </MobileBottomDrawer>
+      </div>
     )
   }
 
@@ -51,10 +58,10 @@ const ActionConfirmModal = ({
     <CModal
       visible={visible}
       alignment="center"
-      onClose={onClose}
+      onClose={handleClose}
       {...(testId ? { 'data-testid': testId } : {})}
     >
-      <CModalHeader onClose={onClose}>
+      <CModalHeader onClose={handleClose}>
         <CModalTitle>{title}</CModalTitle>
       </CModalHeader>
       <CModalBody>{message}</CModalBody>

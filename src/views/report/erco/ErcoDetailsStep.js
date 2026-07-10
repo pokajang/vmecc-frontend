@@ -514,7 +514,7 @@ const ErcoDetailsStep = ({
         updateIncidentTitleField={updateIncidentTitleField}
       />
 
-      <details className="rounded-3 border bg-white p-3">
+      <details className="rounded-3 border bg-body p-3">
         <summary className="fw-semibold">Chronology</summary>
         <div className="mt-3">
           <ChronologySection
@@ -556,6 +556,7 @@ const ErcoDetailsStep = ({
       <IncidentSummaryTextarea
         value={form.summary}
         invalid={Boolean(fieldErrors.summary)}
+        error={fieldErrors.summary}
         onChange={(e) => setForm((p) => ({ ...p, summary: e.target.value }))}
         onGenerate={openSummaryGenerationModal}
         onReview={openAiReviewModal}

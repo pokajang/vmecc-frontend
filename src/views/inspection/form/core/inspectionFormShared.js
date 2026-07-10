@@ -464,10 +464,17 @@ const normalizePhoto = (photo = {}) => {
   const url = String(photo.url || '').trim()
   if (!url) return null
   return {
+    ...photo,
     id: String(photo.id || '').trim(),
+    mediaId: String(photo.mediaId || photo.media_id || '').trim(),
     fileName: String(photo.fileName || '').trim(),
     description: String(photo.description || ''),
     url,
+    thumbnailUrl: String(photo.thumbnailUrl || photo.thumbnail_url || '').trim(),
+    mimeType: String(photo.mimeType || photo.mime_type || '').trim(),
+    sizeBytes: Number(photo.sizeBytes || photo.size_bytes || 0),
+    width: Number(photo.width || 0),
+    height: Number(photo.height || 0),
   }
 }
 

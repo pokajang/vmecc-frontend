@@ -14,6 +14,11 @@ vi.mock('src/services/api/aiHelperApi', () => ({
 import InspectionFormBodySections from '../form/components/InspectionFormBodySections'
 import { INSPECTION_REPORT_EVIDENCE_COPY } from '../inspectionReportEvidenceCopy'
 import { HseEditSection } from '../types/hse/section'
+import {
+  CONTINUATION_LABELS,
+  CONTINUATION_SCAN_LABEL,
+  PARTIAL_STATE_PROMPTS,
+} from '../inspectionFormUiTokens'
 
 const setMobileViewport = () => {
   Object.defineProperty(window, 'matchMedia', {
@@ -143,7 +148,7 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
       },
     })
 
-    expect(screen.queryByRole('button', { name: 'Review Inspections' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Continue to Review' })).toBeNull()
   })
 
   it('hides General Inspection body sections until zone, main area, and location are selected', () => {
@@ -214,10 +219,10 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
     )
 
     expect(screen.queryByText('Findings')).toBeNull()
-    expect(screen.getByText('Choose a location to continue inspection.')).toBeTruthy()
+    expect(screen.getByText(PARTIAL_STATE_PROMPTS.locationFlow)).toBeTruthy()
   })
 
-  it('hides Review Inspections while waiting for required location details', () => {
+  it('hides Continue to Review while waiting for required location details', () => {
     const onRequestReview = vi.fn()
 
     renderBodySections({
@@ -236,7 +241,7 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
     })
 
     expect(screen.queryByText('Findings')).toBeNull()
-    expect(screen.queryByRole('button', { name: 'Review Inspections' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Continue to Review' })).toBeNull()
     expect(onRequestReview).not.toHaveBeenCalled()
   })
 
@@ -264,7 +269,7 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
     })
 
     expect(screen.queryByText('Fire extinguisher rows mounted')).toBeNull()
-    expect(screen.getByText('Choose a location to load fire extinguishers.')).toBeTruthy()
+    expect(screen.getByText(PARTIAL_STATE_PROMPTS.fireExtinguisherFlow)).toBeTruthy()
 
     rerender(
       <InspectionFormBodySections
@@ -336,9 +341,7 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
 
     fireEvent.click(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel))
 
-    expect(
-      screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.helperText),
-    ).toBeTruthy()
+    expect(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.helperText)).toBeTruthy()
   })
 
   it('shows next location shortcuts and refreshes before opening more location options', async () => {
@@ -424,11 +427,11 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
       zone: '1',
     })
 
-    expect(screen.getByText('Next location')).toBeTruthy()
+    expect(screen.getByText(CONTINUATION_LABELS.location)).toBeTruthy()
     const mountedRows = screen.getByText('Fire extinguisher rows mounted')
     const addPhotos = screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel)
-    const nextLocation = screen.getByText('Next location')
-    const saveReview = screen.getAllByText('Review Inspections')[0]
+    const nextLocation = screen.getByText(CONTINUATION_LABELS.location)
+    const saveReview = screen.getAllByText('Continue to Review')[0]
     expect(mountedRows.compareDocumentPosition(addPhotos)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
     expect(addPhotos.compareDocumentPosition(nextLocation)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
     expect(nextLocation.compareDocumentPosition(saveReview)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
@@ -452,7 +455,83 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
     expect(onBeforeOpen).toHaveBeenCalledTimes(1)
     expect(screen.getByText('Continue in Manjung Hub')).toBeTruthy()
     expect(screen.getByText('Reception')).toBeTruthy()
-    expect(screen.getByText('Completed')).toBeTruthy()
+    expect(screen.queryByText('Completed')).toBeNull()
+  })
+
+  it('shows scan-another FE in scan mode instead of shared continuation', () => {
+    setMobileViewport()
+    const onOpenScanner = vi.fn()
+    const onSelectNextFireExtinguisherLocation = vi.fn()
+
+    renderBodySections({
+      currentStructuredSummary: {
+        totalCount: 2,
+        completedCount: 2,
+        visibleChecks: [{ id: 'fe:1' }, { id: 'fe:2' }],
+      },
+      form: {
+        inspectionType: 'Fire Extinguisher Inspection',
+        zone: '1',
+        mainLocation: 'Manjung Hub',
+        subLocation: 'Infront Auditorium',
+        selectedLocation: 'Zone 1 > Manjung Hub > Infront Auditorium',
+        fireExtinguisherEntryMode: 'scan',
+        fireExtinguisherFocusedAssetKey: 'FE-1000',
+        photos: [],
+      },
+      isFireExtinguisherCatalogInspectionForm: true,
+      isStructuredInspectionForm: true,
+      location: {
+        selectedMainLocationTitle: 'Manjung Hub',
+        subLocationOptions: [{ value: 'Infront Auditorium', title: 'Infront Auditorium' }],
+      },
+      mainLocation: 'Manjung Hub',
+      fireExtinguisherScan: {
+        onOpenScanner,
+      },
+      selectedType: 'Fire Extinguisher Inspection',
+      structuredSectionHandlers: {
+        onSelectNextFireExtinguisherLocation,
+        fireExtinguisherLocationContinuation: {
+          mainLocation: 'Manjung Hub',
+          value: 'Infront Auditorium',
+          currentValue: 'Infront Auditorium',
+          locationOptions: [
+            {
+              value: 'Infront Auditorium',
+              title: 'Infront Auditorium',
+            },
+            {
+              value: 'Reception',
+              title: 'Reception',
+              metaLabel: 'Completed',
+              metaIconKey: 'check',
+              metaTone: 'success',
+            },
+          ],
+        },
+      },
+      zone: '1',
+      selectedTypeDefinition: {
+        key: 'fire-extinguisher-inspection',
+        supportsFireExtinguisherCatalog: true,
+      },
+      StructuredEditSection: () => <div>Fire extinguisher rows mounted</div>,
+    })
+
+    expect(screen.getAllByText(CONTINUATION_SCAN_LABEL).length).toBeGreaterThan(0)
+    expect(screen.queryByText(CONTINUATION_LABELS.location)).toBeNull()
+    expect(screen.getAllByText("What's Next").length).toBeGreaterThan(0)
+
+    const scanCards = screen
+      .getAllByText(CONTINUATION_SCAN_LABEL)
+      .map((node) => node.closest('.inspection-next-location-card'))
+      .filter(Boolean)
+    expect(scanCards).toHaveLength(0)
+
+    fireEvent.click(screen.getAllByRole('button', { name: CONTINUATION_SCAN_LABEL })[0])
+    expect(onOpenScanner).toHaveBeenCalledTimes(1)
+    expect(onSelectNextFireExtinguisherLocation).not.toHaveBeenCalled()
   })
 
   it('shows shared continuation for a completed FRT compartment', () => {
@@ -499,13 +578,15 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
       },
     })
 
-    expect(screen.getByText('Next compartment')).toBeTruthy()
+    expect(screen.getByText(CONTINUATION_LABELS.compartment)).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'LOCKER 02' }))
     expect(onSelectNextScope).toHaveBeenCalledWith({
       value: 'LOCKER 02',
       title: 'LOCKER 02',
       progress: { isDone: false, inspectedCount: 0, totalCount: 2 },
-      metaLabel: '0/2 checks',
+      metaLabel: '2 checks',
+      metaIconKey: '',
+      metaTone: 'muted',
     })
   })
 
@@ -542,7 +623,7 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
       },
     })
 
-    expect(screen.queryByText('Next compartment')).toBeNull()
+    expect(screen.queryByText(CONTINUATION_LABELS.compartment)).toBeNull()
   })
 
   it('shows shared continuation for completed main-location equipment inspections', () => {
@@ -583,13 +664,15 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
       },
     })
 
-    expect(screen.getByText('Next location')).toBeTruthy()
+    expect(screen.getByText(CONTINUATION_LABELS.location)).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Office' }))
     expect(onSelectNextScope).toHaveBeenCalledWith({
       value: 'Office',
       title: 'Office',
       progress: { isDone: false, inspectedCount: 0, totalCount: 2 },
-      metaLabel: '0/2 checks',
+      metaLabel: '2 checks',
+      metaIconKey: '',
+      metaTone: 'muted',
     })
   })
 
@@ -629,7 +712,7 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
       },
     })
 
-    expect(screen.getByText('Next kit')).toBeTruthy()
+    expect(screen.getByText(CONTINUATION_LABELS.kit)).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Response Kit #2' })).toBeTruthy()
   })
 

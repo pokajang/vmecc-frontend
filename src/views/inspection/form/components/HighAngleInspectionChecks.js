@@ -20,6 +20,7 @@ import {
 } from './InspectionDisplayShared'
 import HighAngleInspectionRowCard, {
   HighAngleInspectionRowDetails,
+  getHighAngleWorkflowState,
 } from './HighAngleInspectionRowCard'
 import HighAngleCustomRecordModal from './HighAngleCustomRecordModal'
 import InspectionResetConfirmDrawer from './InspectionResetConfirmDrawer'
@@ -51,9 +52,7 @@ const buildHighAngleDraftPatch = (row = {}) => ({
 
 const DEFAULT_ROW_CLOSED_KEY = '__default_row_closed__'
 
-const isHighAngleRowIncomplete = (row = {}) =>
-  !text(row.condition) ||
-  (text(row.condition) === 'Not Good' && !text(row.conditionRemarks || row.remarks))
+const isHighAngleRowIncomplete = (row = {}) => !getHighAngleWorkflowState(row).isComplete
 
 const withGroupMeta = (row, group) => ({
   ...row,
@@ -67,6 +66,8 @@ export const HighAngleInspectionChecks = ({
   onUpdateCheck,
   onSaveRowDraft,
   onResetCheck,
+  onMarkRowOk,
+  onMarkAllOk,
   onAddCompartment,
   onUpdateCompartment,
   onDeleteCompartment,
@@ -353,7 +354,7 @@ export const HighAngleInspectionChecks = ({
                       <div key={group.key} className="col-12 col-md-6">
                         <button
                           type="button"
-                          className={`inspection-location-option-card w-100 rounded-3 border bg-white p-3 text-start${
+                          className={`inspection-location-option-card w-100 rounded-3 border bg-body p-3 text-start${
                             isSelected ? ' border-primary shadow-sm' : ''
                           }`}
                           aria-pressed={isSelected}
@@ -410,6 +411,13 @@ export const HighAngleInspectionChecks = ({
             onChange={(event) => setSearch(event.target.value)}
           />
           <div className="inspection-check-toolbar__actions">
+            {typeof onMarkAllOk === 'function' ? (
+              <CreateActionButton
+                label="Mark all Good"
+                className="inspection-compact-action-btn d-none d-md-inline-flex"
+                onClick={onMarkAllOk}
+              />
+            ) : null}
             {search ? (
               <CButton
                 type="button"
@@ -466,6 +474,7 @@ export const HighAngleInspectionChecks = ({
                   remarksError={remarksError}
                   setPhotoViewer={setPhotoViewer}
                   onUpdateCheck={onUpdateCheck}
+                  onMarkRowOk={onMarkRowOk}
                   onResetCheck={requestResetCheck}
                   onRequestPhotoUpload={(nextRow, photosKey = 'additionalPhotos') =>
                     onRequestIssuePhotoUpload?.(nextRow, { photosKey })
@@ -589,6 +598,7 @@ export const HighAngleInspectionChecks = ({
                 onRemovePhoto={mobileDraftHandlers.onRemovePhoto}
                 onChangePhotoDescription={mobileDraftHandlers.onChangePhotoDescription}
                 onApplyPhotoCaption={mobileDraftHandlers.onApplyPhotoCaption}
+                onMarkRowOk={() => patchMobileDraftRow({ condition: 'Good' })}
               />
             </div>
             {!readOnly ? (

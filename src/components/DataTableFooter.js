@@ -1,5 +1,5 @@
-import React from 'react'
-import { CFormSelect } from '@coreui/react'
+import React, { useId } from 'react'
+import { CFormLabel, CFormSelect } from '@coreui/react'
 
 const ALL_ROWS_VALUE = 'all'
 
@@ -24,6 +24,7 @@ const DataTableFooter = ({
   onPageChange = null,
   className = '',
 }) => {
+  const rowsSelectId = useId()
   if (!filteredCount) return null
 
   const isShowingAll = rowsToShow === ALL_ROWS_VALUE || rowsToShow >= filteredCount
@@ -40,9 +41,13 @@ const DataTableFooter = ({
     <div
       className={`d-flex flex-wrap justify-content-end align-items-center gap-2 text-muted small mt-2 ${className}`.trim()}
     >
-      <span>Show</span>
+      <CFormLabel htmlFor={rowsSelectId} className="mb-0">
+        Rows per page
+      </CFormLabel>
       <CFormSelect
+        id={rowsSelectId}
         size="sm"
+        className="data-table-footer__page-size"
         value={
           rowsToShow === ALL_ROWS_VALUE || rowsToShow >= filteredCount ? ALL_ROWS_VALUE : rowsToShow
         }
@@ -50,7 +55,6 @@ const DataTableFooter = ({
           const raw = e.target.value
           onRowsToShowChange(raw === ALL_ROWS_VALUE ? ALL_ROWS_VALUE : Number(raw))
         }}
-        style={{ width: 90 }}
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>
@@ -63,7 +67,11 @@ const DataTableFooter = ({
         {showFiltered ? <span className="ms-1">(filtered from {totalCount})</span> : null}
       </span>
       {showPagination ? (
-        <>
+        <div
+          className="d-inline-flex flex-wrap align-items-center justify-content-end gap-2"
+          role="group"
+          aria-label="Table pagination"
+        >
           <button
             type="button"
             className="btn btn-sm btn-outline-secondary"
@@ -83,7 +91,7 @@ const DataTableFooter = ({
           >
             Next
           </button>
-        </>
+        </div>
       ) : null}
     </div>
   )

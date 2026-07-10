@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { buildCameraDiagnostics, inspectCameraEnvironment } from 'src/utils/cameraDiagnostics'
-import { deleteLeaveAttachmentBlob, putLeaveAttachmentBlob } from '../leavePersistence'
+import { classifyReportPhotoFailure } from 'src/services/api/reportMediaApi'
 import {
-  compressImageAttachment,
-  formatFileSize,
-  isImageAttachment,
-  isPdfAttachment,
-  isSupportedAttachment,
-} from '../utils'
+  clearPendingCameraOperation,
+  getInterruptedCameraFallback,
+  isLikelyEmbeddedBrowser,
+  markPendingCameraOperation,
+  markPendingCameraUploadStarted,
+  subscribeToCameraReturn,
+} from 'src/utils/cameraRecovery'
+import { deleteLeaveAttachmentBlob, putLeaveAttachmentBlob } from '../leavePersistence'
+import { formatFileSize, isImageAttachment, isPdfAttachment, isSupportedAttachment } from '../utils'
 import {
   IMAGE_COMPRESSION_TRIGGER_BYTES,
   MAX_ATTACHMENT_BYTES,
@@ -27,6 +30,8 @@ const CAMERA_FALLBACK_MESSAGES = {
     'Camera captured file is too large for in-browser processing. Upload a smaller photo manually or try again.',
   compression_failed: 'Camera photo compression failed. Upload the photo manually.',
   unexpected_error: 'Camera upload failed unexpectedly. Upload the photo manually.',
+  scan_timeout_or_decode_failure: 'Camera decode timed out. Upload the photo manually.',
+  operation_timeout: 'Camera upload timed out. Upload the photo manually.',
 }
 
 const CAMERA_RETRYABLE_CODES = new Set([
@@ -38,6 +43,8 @@ const CAMERA_RETRYABLE_CODES = new Set([
   'read_failed',
   'compression_failed',
   'unexpected_error',
+  'scan_timeout_or_decode_failure',
+  'operation_timeout',
 ])
 
 const withFileName = (message, fileName = '') => {
@@ -46,21 +53,12 @@ const withFileName = (message, fileName = '') => {
   return asText(message).replace(/\{\{file\}\}/g, `"${targetFile}"`)
 }
 
-const isLikelyLowMemory = (error = {}) => {
-  const name = asText(error?.name).toLowerCase()
-  const message = asText(error?.message).toLowerCase()
-  return (
-    name === 'quotaexceedederror' ||
-    /out of memory|low memory|not enough memory|memory allocation|allocation failed|quota/.test(
-      message,
-    )
-  )
-}
-
 const toCameraFailureCode = (error = {}) => {
+  const namedCode = classifyReportPhotoFailure(error)
+  if (namedCode) return namedCode
+
   const name = asText(error?.name).toLowerCase()
   const message = asText(error?.message).toLowerCase()
-  if (isLikelyLowMemory(error)) return 'low_memory'
   if (
     name === 'notfounderror' ||
     name === 'unsupportedformaterror' ||
@@ -98,12 +96,19 @@ export default function useAttachment({
   const [attachmentId, setAttachmentId] = useState(null)
   const [attachmentMeta, setAttachmentMeta] = useState(null)
   const [attachmentStatus, setAttachmentStatus] = useState(null)
-  const [cameraUploadFallback, setCameraUploadFallback] = useState(null)
+  const [cameraUploadFallback, setCameraUploadFallback] = useState(() =>
+    getInterruptedCameraFallback('leave'),
+  )
   const [isAttachmentProcessing, setIsAttachmentProcessing] = useState(false)
 
   useEffect(() => {
     originalAttachmentIdRef.current = originalAttachmentId ? String(originalAttachmentId) : null
   }, [originalAttachmentId])
+
+  useEffect(
+    () => subscribeToCameraReturn('leave', (fallback) => setCameraUploadFallback(fallback)),
+    [],
+  )
 
   const isOriginalAttachment = (id) => {
     if (!id) return false
@@ -213,13 +218,33 @@ export default function useAttachment({
 
   const requestUploadFromCameraFallback = () => openFileInput(uploadInputRef)
 
-  const openCameraCapture = () => openFileInput(cameraInputRef)
+  const openCameraCapture = () => {
+    if (navigator.onLine === false) {
+      setCameraUploadFallback({
+        message: 'Connect to the internet before taking or uploading a photo.',
+        errorCode: 'offline',
+        phase: 'camera_startup',
+      })
+      return
+    }
+    if (isLikelyEmbeddedBrowser()) {
+      setCameraUploadFallback({
+        message: 'Open this page in Safari, Chrome, Edge, or Samsung Internet to use the camera.',
+        errorCode: 'unsupported_browser',
+        phase: 'camera_startup',
+      })
+      return
+    }
+    markPendingCameraOperation({ module: 'leave', targetKind: 'attachment' })
+    openFileInput(cameraInputRef)
+  }
 
   const handleAttachmentChange = async (event, opts = {}) => {
     const { userId: uid = userId, push = pushToast, source = null } = opts
     const selectedFile = event?.target?.files?.[0]
     const isCameraUpload =
       source === 'camera' || event?.currentTarget === cameraInputRef?.current || false
+    if (selectedFile && isCameraUpload) markPendingCameraUploadStarted('leave')
     const fileName = asText(selectedFile?.name)
 
     clearInput(event)
@@ -300,6 +325,7 @@ export default function useAttachment({
           name: selectedFile.name,
           type: selectedFile.type || 'application/pdf',
           size: selectedFile.size,
+          source: isCameraUpload ? 'camera' : 'upload',
         })
         if (putResult?.attachmentId) {
           releaseCurrentAttachmentBlob(attachmentId)
@@ -382,6 +408,7 @@ export default function useAttachment({
           name: selectedFile.name,
           type: selectedFile.type || 'image/jpeg',
           size: selectedFile.size,
+          source: isCameraUpload ? 'camera' : 'upload',
         })
         if (putResult?.attachmentId) {
           releaseCurrentAttachmentBlob(attachmentId)
@@ -429,6 +456,7 @@ export default function useAttachment({
             color: 'info',
           })
         if (!isCameraUpload) clearInput(event)
+        if (putResult?.attachmentId) clearPendingCameraOperation()
         return
       }
 
@@ -445,15 +473,20 @@ export default function useAttachment({
         )
 
       try {
-        const result = await compressImageAttachment(selectedFile, { isCameraUpload })
-        const finalFile = result.file
-        const putResult = await putLeaveAttachmentBlob(uid, finalFile, {
-          name: finalFile.name,
-          type: finalFile.type || selectedFile.type || 'image/jpeg',
-          size: finalFile.size,
+        const putResult = await putLeaveAttachmentBlob(uid, selectedFile, {
+          name: selectedFile.name,
+          type: selectedFile.type || 'image/jpeg',
+          size: selectedFile.size,
           originalSize: selectedFile.size,
-          wasCompressed: result.wasCompressed,
+          source: isCameraUpload ? 'camera' : 'upload',
         })
+        const serverAttachment = putResult?.attachment || {}
+        const finalFile = {
+          name: serverAttachment.original_name || selectedFile.name,
+          type: serverAttachment.mime_type || 'image/jpeg',
+          size: Number(serverAttachment.size || selectedFile.size),
+        }
+        const result = { wasCompressed: Boolean(serverAttachment.was_compressed) }
         if (putResult?.attachmentId) {
           releaseCurrentAttachmentBlob(attachmentId)
           setAttachmentId(putResult.attachmentId)
@@ -522,6 +555,8 @@ export default function useAttachment({
           }
         } else if (!putResult?.attachmentId) {
           setCameraFailure('processing_failed', fileName)
+        } else {
+          clearPendingCameraOperation()
         }
       } catch (error) {
         if (!isCameraUpload) {
@@ -529,6 +564,7 @@ export default function useAttachment({
             name: selectedFile.name,
             type: selectedFile.type || 'image/jpeg',
             size: selectedFile.size,
+            source: isCameraUpload ? 'camera' : 'upload',
           })
           if (putResult?.attachmentId) {
             releaseCurrentAttachmentBlob(attachmentId)

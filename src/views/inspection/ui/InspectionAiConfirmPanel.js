@@ -4,6 +4,7 @@ import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import CreateActionButton from 'src/components/CreateActionButton'
 import IconOptionGrid from 'src/components/IconOptionGrid'
 import TypeManagerModal from 'src/components/report-workflow/TypeManagerModal'
+import { ReportPhotoImage } from 'src/components/report-workflow/ReportViewComponents'
 import { recordTypeUsage } from './typeUsageStorage'
 import { ACTIVE_CARD_STYLE, TOGGLE_CARD_PROPS } from './typeOptionUtils'
 import useIncidentTypeManager, { INCIDENT_TYPE_TOGGLE_VALUE } from './useIncidentTypeManager'
@@ -168,7 +169,7 @@ const InspectionAiConfirmPanel = ({
           if (incident.addTypeError) incident.setAddTypeError('')
         }}
         namePlaceholder="e.g. SCBA"
-        descriptionLabel="Short Description (Optional)"
+        descriptionLabel="Short description (optional)"
         descriptionValue={incident.newTypeDescription}
         onChangeDescription={incident.setNewTypeDescription}
         descriptionPlaceholder="One-line subtext for this card."
@@ -200,15 +201,15 @@ const InspectionAiConfirmPanel = ({
         {/* Photo preview */}
         <div className="d-grid gap-1">
           <div className="fw-semibold text-muted">{uploadedPhotoLabel}</div>
-          <img
-            src={photo.url}
+          <ReportPhotoImage
+            photo={photo}
             alt={photo.fileName}
             style={{ maxHeight: 200, maxWidth: '100%', borderRadius: 8, objectFit: 'cover' }}
           />
           <div className="text-body-secondary small mt-1">{photo.fileName}</div>
         </div>
 
-        <div className="rounded-3 border bg-white p-3 d-grid gap-2">
+        <div className="rounded-3 border bg-body p-3 d-grid gap-2">
           <div className="d-flex flex-wrap justify-content-between align-items-start gap-2">
             <div>
               <div className="fw-semibold text-muted">Editable AI Summary</div>
@@ -266,7 +267,7 @@ const InspectionAiConfirmPanel = ({
               return isSelected ? { style: ACTIVE_CARD_STYLE } : {}
             }}
           />
-          <details className="rounded-3 border bg-white p-3">
+          <details className="rounded-3 border bg-body p-3">
             <summary className="fw-semibold text-muted">Custom type management</summary>
             <div className="small text-body-secondary mt-2">
               Add or edit inspection templates without interrupting the primary review path.

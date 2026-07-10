@@ -50,9 +50,9 @@ test.describe('inspection report-level evidence', () => {
     await expect(
       reportDrawer.getByText(INSPECTION_REPORT_EVIDENCE_COPY.helperText, { exact: true }),
     ).toBeVisible()
-    await expect(
-      reportDrawer.getByLabel(INSPECTION_REPORT_EVIDENCE_COPY.remarksLabel),
-    ).toHaveValue(REPORT_REMARKS_VALUE)
+    await expect(reportDrawer.getByLabel(INSPECTION_REPORT_EVIDENCE_COPY.remarksLabel)).toHaveValue(
+      REPORT_REMARKS_VALUE,
+    )
     await expect(reportDrawer.getByRole('button', { name: 'Take photo' })).toBeVisible()
     await expect(reportDrawer.getByRole('button', { name: 'Upload photo' })).toBeVisible()
     await reportDrawer.screenshot({

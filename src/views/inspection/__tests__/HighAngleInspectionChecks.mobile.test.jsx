@@ -159,6 +159,88 @@ describe('HighAngleInspectionChecks mobile detail drawer', () => {
     expect(screen.getByText('Row 1 - Qty 2 | Locker A - Top shelf')).toBeTruthy()
   })
 
+  it('keeps Not Good rows unchecked until issue evidence is complete', () => {
+    const row = {
+      id: 'high-angle:issue',
+      mainLocation: 'High Angle Rescue Kit',
+      rowNumber: '2',
+      equipment: 'Rescue Pulley',
+      location: 'Locker A',
+      quantity: '1',
+      condition: 'Not Good',
+      conditionRemarks: 'Bearing is rough.',
+    }
+
+    render(
+      <HighAngleInspectionChecks
+        mainLocation="High Angle Rescue Kit"
+        mainLocationLabel="High Angle Rescue Kit"
+        summary={{
+          visibleGroups: [
+            {
+              key: 'locker-a',
+              title: 'Locker A',
+              checkedCount: 0,
+              issueCount: 1,
+              rows: [row],
+            },
+          ],
+          checkedCount: 0,
+          totalCount: 1,
+          issueCount: 1,
+        }}
+      />,
+    )
+
+    fireEvent.click(screen.getByText('Locker A'))
+
+    expect(screen.getByText('Not checked')).toBeTruthy()
+    expect(screen.getByText('Needs evidence')).toBeTruthy()
+  })
+
+  it('uses the supplied High Angle quick-mark handlers', () => {
+    const onMarkRowOk = vi.fn()
+    const onMarkAllOk = vi.fn()
+    const row = {
+      id: 'high-angle:quick-mark',
+      mainLocation: 'High Angle Rescue Kit',
+      rowNumber: '3',
+      equipment: 'Edge Protector',
+      location: 'Locker A',
+      quantity: '1',
+    }
+
+    render(
+      <HighAngleInspectionChecks
+        mainLocation="High Angle Rescue Kit"
+        mainLocationLabel="High Angle Rescue Kit"
+        onMarkRowOk={onMarkRowOk}
+        onMarkAllOk={onMarkAllOk}
+        summary={{
+          visibleGroups: [
+            {
+              key: 'locker-a',
+              title: 'Locker A',
+              checkedCount: 0,
+              issueCount: 0,
+              rows: [row],
+            },
+          ],
+          checkedCount: 0,
+          totalCount: 1,
+          issueCount: 0,
+        }}
+      />,
+    )
+
+    fireEvent.click(screen.getByText('Locker A'))
+    fireEvent.click(screen.getByRole('button', { name: 'Mark all Good' }))
+    fireEvent.click(screen.getByRole('button', { name: 'All Good' }))
+
+    expect(onMarkAllOk).toHaveBeenCalledTimes(1)
+    expect(onMarkRowOk).toHaveBeenCalledWith(expect.objectContaining({ id: row.id }))
+  })
+
   it('adds a compartment from the compartment selector', () => {
     setMobileViewport()
     const onAddCompartment = vi.fn()

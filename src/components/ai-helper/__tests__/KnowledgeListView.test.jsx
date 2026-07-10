@@ -153,6 +153,12 @@ describe('KnowledgeListView', () => {
       />,
     )
 
+    const confirmation = screen.getByRole('group', {
+      name: 'Delete Inspection guide confirmation',
+    })
+
+    expect(confirmation.closest('.ai-helper-knowledge__item')).toBeTruthy()
+
     expect(scrollIntoView).toHaveBeenCalledWith({
       behavior: 'smooth',
       block: 'start',

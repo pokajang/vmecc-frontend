@@ -17,7 +17,6 @@ import {
   CModalHeader,
   CModalTitle,
   CRow,
-  CSpinner,
   CTable,
   CTableBody,
   CTableDataCell,
@@ -28,6 +27,8 @@ import {
 import { useSelector } from 'react-redux'
 
 import ModulePageHeader from 'src/components/ModulePageHeader'
+import PageState from 'src/components/PageState'
+import TableLoader from 'src/components/TableLoader'
 import {
   fetchAiHelperReport,
   fetchAiHelperReports,
@@ -194,10 +195,7 @@ const AiHelperReports = () => {
           {detailError && !selected ? <CAlert color="danger">{detailError}</CAlert> : null}
 
           {loading ? (
-            <div className="text-center text-muted py-5">
-              <CSpinner size="sm" className="me-2" />
-              Loading Ask AI reports...
-            </div>
+            <TableLoader message="Loading Ask AI reports..." />
           ) : reports.length ? (
             <CTable align="middle" responsive hover>
               <CTableHead color="light">
@@ -208,7 +206,7 @@ const AiHelperReports = () => {
                   <CTableHeaderCell>Reported</CTableHeaderCell>
                   <CTableHeaderCell>Status</CTableHeaderCell>
                   <CTableHeaderCell className="table-sticky-action-cell text-end">
-                    Action
+                    Actions
                   </CTableHeaderCell>
                 </CTableRow>
               </CTableHead>
@@ -241,7 +239,7 @@ const AiHelperReports = () => {
               </CTableBody>
             </CTable>
           ) : (
-            <div className="text-center text-muted py-5">No Ask AI reports found.</div>
+            <PageState variant="empty" message="No Ask AI reports found." />
           )}
         </CCardBody>
       </CCard>
@@ -257,10 +255,7 @@ const AiHelperReports = () => {
         </CModalHeader>
         <CModalBody>
           {detailLoading ? (
-            <div className="text-center text-muted py-5">
-              <CSpinner size="sm" className="me-2" />
-              Loading report...
-            </div>
+            <TableLoader message="Loading report..." />
           ) : selected ? (
             <>
               {detailError ? <CAlert color="danger">{detailError}</CAlert> : null}
@@ -326,8 +321,9 @@ const AiHelperReports = () => {
 
               <CRow className="g-3">
                 <CCol md={4}>
-                  <CFormLabel>Status</CFormLabel>
+                  <CFormLabel htmlFor="ai-report-status">Status</CFormLabel>
                   <CFormSelect
+                    id="ai-report-status"
                     value={formStatus}
                     onChange={(event) => setFormStatus(event.target.value)}
                   >
@@ -339,8 +335,9 @@ const AiHelperReports = () => {
                   </CFormSelect>
                 </CCol>
                 <CCol md={8}>
-                  <CFormLabel>Admin note</CFormLabel>
+                  <CFormLabel htmlFor="ai-report-admin-note">Admin note</CFormLabel>
                   <CFormTextarea
+                    id="ai-report-admin-note"
                     value={adminNote}
                     onChange={(event) => setAdminNote(event.target.value)}
                     rows={3}

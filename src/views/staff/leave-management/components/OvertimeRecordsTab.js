@@ -1,6 +1,5 @@
 import React from 'react'
 import {
-  CButton,
   CCard,
   CCardBody,
   CCardHeader,
@@ -201,8 +200,6 @@ const OvertimeRecordsTab = (props) => {
   })
 
   const groupedMonthRows = React.useMemo(() => buildOvertimeMonthUserGroups(rows), [rows])
-  const canGoPrev = Number(currentPage) > 1
-  const canGoNext = Number(currentPage) < Number(lastPage)
 
   const buildRowActionItems = React.useCallback(
     (row) => {
@@ -393,7 +390,7 @@ const OvertimeRecordsTab = (props) => {
               />
             ) : null}
             <MobileRecordList sections={mobileRecordSections} variant="list-group" />
-            <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
+            <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-body">
               <CTable align="middle" className="mb-0" hover responsive>
                 <CTableHead color="light">
                   <CTableRow>
@@ -407,7 +404,7 @@ const OvertimeRecordsTab = (props) => {
                     <CTableHeaderCell>Duration</CTableHeaderCell>
                     <CTableHeaderCell>Status</CTableHeaderCell>
                     <CTableHeaderCell>Submitted On</CTableHeaderCell>
-                    <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
+                    <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
@@ -545,6 +542,10 @@ const OvertimeRecordsTab = (props) => {
               onRowsToShowChange={setRowsToShow}
               filteredCount={Number(filteredCount || 0)}
               totalCount={Number(totalCount || 0)}
+              visibleCount={rows.length}
+              currentPage={Number(currentPage || 1)}
+              lastPage={Number(lastPage || 1)}
+              onPageChange={typeof setPage === 'function' ? setPage : null}
             />
             <BulkWorkflowActionModal
               visible={bulkActionState.visible}
@@ -565,29 +566,6 @@ const OvertimeRecordsTab = (props) => {
               onClearRejectError={() => setBulkRejectError('')}
               onClearDeclarationError={() => setBulkDeclarationError('')}
             />
-            <div className="d-flex justify-content-end align-items-center gap-2 text-muted small mt-2">
-              <span>
-                Page {currentPage} of {lastPage}
-              </span>
-              <CButton
-                size="sm"
-                color="secondary"
-                variant="outline"
-                disabled={!canGoPrev}
-                onClick={() => setPage?.(Math.max(1, Number(currentPage || 1) - 1))}
-              >
-                Previous
-              </CButton>
-              <CButton
-                size="sm"
-                color="secondary"
-                variant="outline"
-                disabled={!canGoNext}
-                onClick={() => setPage?.(Number(currentPage || 1) + 1)}
-              >
-                Next
-              </CButton>
-            </div>
           </>
         )}
       </CCardBody>

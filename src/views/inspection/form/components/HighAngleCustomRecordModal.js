@@ -68,8 +68,14 @@ const HighAngleCustomRecordModal = ({
       {isItem ? (
         <>
           <div>
-            <CFormLabel className="small fw-semibold text-muted">Equipment Name</CFormLabel>
+            <CFormLabel
+              htmlFor="high-angle-equipment-name"
+              className="small fw-semibold text-muted"
+            >
+              Equipment name
+            </CFormLabel>
             <CFormInput
+              id="high-angle-equipment-name"
               value={draft.equipment}
               placeholder="e.g. Rescue Pulley"
               onChange={(event) => {
@@ -79,8 +85,14 @@ const HighAngleCustomRecordModal = ({
             />
           </div>
           <div>
-            <CFormLabel className="small fw-semibold text-muted">Quantity</CFormLabel>
+            <CFormLabel
+              htmlFor="high-angle-equipment-quantity"
+              className="small fw-semibold text-muted"
+            >
+              Quantity
+            </CFormLabel>
             <CFormInput
+              id="high-angle-equipment-quantity"
               value={draft.quantity}
               placeholder="e.g. 1"
               onChange={(event) =>
@@ -92,8 +104,11 @@ const HighAngleCustomRecordModal = ({
       ) : (
         <>
           <div>
-            <CFormLabel className="small fw-semibold text-muted">Organizer / Area</CFormLabel>
+            <CFormLabel htmlFor="high-angle-area" className="small fw-semibold text-muted">
+              Organizer / area
+            </CFormLabel>
             <CFormInput
+              id="high-angle-area"
               value={draft.location}
               placeholder="e.g. Heavy Duty Organizer Bag"
               onChange={(event) => {
@@ -103,8 +118,11 @@ const HighAngleCustomRecordModal = ({
             />
           </div>
           <div>
-            <CFormLabel className="small fw-semibold text-muted">Compartment</CFormLabel>
+            <CFormLabel htmlFor="high-angle-compartment" className="small fw-semibold text-muted">
+              Compartment
+            </CFormLabel>
             <CFormInput
+              id="high-angle-compartment"
               value={draft.subLocation}
               placeholder="e.g. Main Compartment"
               onChange={(event) => {

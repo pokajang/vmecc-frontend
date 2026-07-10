@@ -200,6 +200,7 @@ const StaffProfile = () => {
 
   return (
     <CContainer fluid data-testid="staff-directory-module">
+      <h1 className="visually-hidden">Staff profile: {user.name || user.email || user.id}</h1>
       <div className="mb-3 d-flex justify-content-between align-items-center">
         <BackButton onClick={() => navigate('/staff/details')} />
         <div className="d-flex align-items-center gap-2">

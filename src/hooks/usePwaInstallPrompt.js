@@ -1,5 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
+import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
+import useMediaQuery from 'src/hooks/useMediaQuery'
 
 export const PWA_INSTALL_DISMISSED_KEY = 'vmecc-pwa-install-dismissed'
 
@@ -167,6 +169,7 @@ export const PwaInstallProvider = ({ children }) => {
   const closeInstallExperience = useCallback(() => {
     setInstallModalVisible(false)
   }, [])
+  const useMobileDrawer = useMediaQuery('(max-width: 575.98px)')
 
   const installModalCopy = INSTALL_MODAL_COPY[platformVariant] || INSTALL_MODAL_COPY.desktop
 
@@ -196,30 +199,54 @@ export const PwaInstallProvider = ({ children }) => {
   return (
     <PwaInstallContext.Provider value={value}>
       {children}
-      <CModal
-        alignment="center"
-        visible={installModalVisible}
-        onClose={closeInstallExperience}
-        aria-labelledby="pwa-install-modal-title"
-      >
-        <CModalHeader onClose={closeInstallExperience}>
-          <CModalTitle id="pwa-install-modal-title">Install VMECC</CModalTitle>
-        </CModalHeader>
-        <CModalBody>
-          <p className="mb-3">{installModalCopy.intro}</p>
-          <ol className="mb-3 ps-3">
-            {installModalCopy.steps.map((step) => (
-              <li key={step}>{step}</li>
-            ))}
-          </ol>
-          <p className="mb-0 text-body-secondary small">{installModalCopy.footnote}</p>
-        </CModalBody>
-        <CModalFooter>
-          <CButton color="secondary" variant="outline" onClick={closeInstallExperience}>
-            Close
-          </CButton>
-        </CModalFooter>
-      </CModal>
+      {useMobileDrawer ? (
+        <MobileBottomDrawer
+          visible={installModalVisible}
+          onClose={closeInstallExperience}
+          title="Install VMECC"
+          className="mobile-bottom-drawer--confirm"
+        >
+          <div className="inspection-mobile-detail-drawer-body inspection-equipment-detail-drawer-body d-grid">
+            <p className="mb-3">{installModalCopy.intro}</p>
+            <ol className="mb-3 ps-3">
+              {installModalCopy.steps.map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ol>
+            <p className="mb-0 text-body-secondary small">{installModalCopy.footnote}</p>
+          </div>
+          <div className="mobile-bottom-drawer__footer d-flex align-items-center justify-content-end gap-2">
+            <CButton color="secondary" variant="outline" onClick={closeInstallExperience}>
+              Close
+            </CButton>
+          </div>
+        </MobileBottomDrawer>
+      ) : (
+        <CModal
+          alignment="center"
+          visible={installModalVisible}
+          onClose={closeInstallExperience}
+          aria-labelledby="pwa-install-modal-title"
+        >
+          <CModalHeader onClose={closeInstallExperience}>
+            <CModalTitle id="pwa-install-modal-title">Install VMECC</CModalTitle>
+          </CModalHeader>
+          <CModalBody>
+            <p className="mb-3">{installModalCopy.intro}</p>
+            <ol className="mb-3 ps-3">
+              {installModalCopy.steps.map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ol>
+            <p className="mb-0 text-body-secondary small">{installModalCopy.footnote}</p>
+          </CModalBody>
+          <CModalFooter>
+            <CButton color="secondary" variant="outline" onClick={closeInstallExperience}>
+              Close
+            </CButton>
+          </CModalFooter>
+        </CModal>
+      )}
     </PwaInstallContext.Provider>
   )
 }

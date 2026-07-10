@@ -95,7 +95,7 @@ const CreateTeamModal = ({ visible, onClose, onSaved, existingTeams = [] }) => {
   return (
     <CModal visible={visible} onClose={handleClose} alignment="center">
       <CModalHeader>
-        <CModalTitle>Add Teams</CModalTitle>
+        <CModalTitle>Add team</CModalTitle>
       </CModalHeader>
       <CModalBody className="d-grid gap-3" data-testid="team-directory-create-modal">
         {error && (
@@ -134,6 +134,7 @@ const CreateTeamModal = ({ visible, onClose, onSaved, existingTeams = [] }) => {
           <div className="text-body-secondary small mb-2">Custom teams</div>
           <div className="d-flex gap-2 mb-2">
             <CFormInput
+              aria-label="Custom team name"
               size="sm"
               placeholder="Team name"
               value={customInput}
@@ -143,7 +144,13 @@ const CreateTeamModal = ({ visible, onClose, onSaved, existingTeams = [] }) => {
               }}
               onKeyDown={(e) => e.key === 'Enter' && addCustom()}
             />
-            <CButton size="sm" color="secondary" variant="outline" onClick={addCustom}>
+            <CButton
+              aria-label="Add custom team"
+              size="sm"
+              color="secondary"
+              variant="outline"
+              onClick={addCustom}
+            >
               <Plus size={14} />
             </CButton>
           </div>

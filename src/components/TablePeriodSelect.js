@@ -34,6 +34,9 @@ const TablePeriodSelect = ({
   size = 'sm',
   disabled = false,
   className = '',
+  id,
+  ariaLabel,
+  ariaDescribedBy,
 }) => {
   const finalOptions =
     options ||
@@ -51,6 +54,9 @@ const TablePeriodSelect = ({
       onChange={(e) => onChange(e.target.value)}
       disabled={disabled}
       className={className}
+      id={id}
+      aria-label={ariaLabel}
+      aria-describedby={ariaDescribedBy}
     >
       {finalOptions.map((opt) => (
         <option key={opt.value} value={opt.value}>

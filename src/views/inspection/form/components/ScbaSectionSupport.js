@@ -106,6 +106,7 @@ export const ScbaAdditionalInfo = ({
             </div>
             <CFormTextarea
               rows={2}
+              aria-label="General equipment remarks"
               value={String(row.remarks || '')}
               placeholder="General equipment remarks"
               onChange={(event) =>

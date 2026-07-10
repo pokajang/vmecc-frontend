@@ -12,9 +12,10 @@ import {
   CModalHeader,
   CModalTitle,
 } from '@coreui/react'
-import { BookCheck, Download, FileEdit, Pencil, Printer } from 'lucide-react'
+import { Download, Pencil, Printer } from 'lucide-react'
 import TableLoader from 'src/components/TableLoader'
 import ButtonLoader from 'src/components/ButtonLoader'
+import RecordStateBadge from 'src/components/RecordStateBadge'
 import { useSelector } from 'react-redux'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import RosterStat from './RosterStat'
@@ -47,26 +48,7 @@ const ghostBtn = 'text-primary px-2 py-1 border-0 bg-transparent shadow-none'
 
 const PublishBadge = ({ status }) => {
   if (!status) return null
-  if (status === 'published') {
-    return (
-      <span
-        className="d-inline-flex align-items-center gap-1 rounded-pill px-2 py-1 fw-semibold"
-        style={{ background: '#d1fae5', color: '#065f46', fontSize: '0.78rem' }}
-      >
-        <BookCheck size={11} />
-        Published
-      </span>
-    )
-  }
-  return (
-    <span
-      className="d-inline-flex align-items-center gap-1 rounded-pill px-2 py-1 fw-semibold"
-      style={{ background: '#fef3c7', color: '#92400e', fontSize: '0.78rem' }}
-    >
-      <FileEdit size={11} />
-      Draft
-    </span>
-  )
+  return <RecordStateBadge state={status === 'published' ? 'published' : 'draft'} />
 }
 
 // Overview tab

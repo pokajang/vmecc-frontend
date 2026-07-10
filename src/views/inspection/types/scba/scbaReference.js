@@ -25,7 +25,7 @@ const buildSeedRows = (sectionKey, rows) =>
   })
 
 const SCBA_REFERENCE = {
-  sourceWorkbook: 'report-reference/VMM SCBA Inspection Checklist.xlsx',
+  sourceWorkbook: 'report-reference/inspection/VMM SCBA Inspection Checklist.xlsx',
   mainLocations: ['FRT', 'FRT (Spare)', 'Store'],
   sections: [
     {

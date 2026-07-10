@@ -498,7 +498,7 @@ const waitForAppReady = async (page, expectedPath = null) => {
   await page.waitForFunction(() => {
     const text = String(document.body?.innerText || '').trim()
     const spinnerVisible = Boolean(document.querySelector('.spinner-border, .spinner-grow'))
-    return text.length > 0 && !spinnerVisible
+    return text.length > 0 && !spinnerVisible && !/restoring session/i.test(text)
   })
 }
 

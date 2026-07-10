@@ -1,7 +1,7 @@
 import { LOCATION_TOGGLE_VALUE } from 'src/views/inspection/useLocationTypeManager'
 import { getFireExtinguisherRowWorkflowState } from '../types/fire-extinguisher/helpers'
 import { getFireExtinguisherCanonicalAssetKey } from '../types/fire-extinguisher/identity'
-import { LOADING_COUNT_LABEL, getUnitCountLabel } from './inspectionCountLabels'
+import { LOADING_COUNT_LABEL, getContextCountLabel } from './inspectionCountLabels'
 
 const normalizeCountKey = (value) =>
   String(value || '')
@@ -29,6 +29,14 @@ const getLocationProgressLabel = ({ inspectedCount, totalCount, isLoading = fals
   if (!totalCount) return ''
   return `${inspectedCount}/${totalCount} FEs`
 }
+
+const getLocationCountLabel = ({ totalCount, isLoading = false }) =>
+  getContextCountLabel({
+    count: totalCount,
+    singular: 'FE',
+    plural: 'FEs',
+    isLoading,
+  })
 
 const getLocationProgressMeta = ({ inspectedCount = 0, totalCount = 0, isLoading = false }) => {
   const metaLabel = getLocationProgressLabel({ inspectedCount, totalCount, isLoading })
@@ -176,9 +184,11 @@ export const applyFireExtinguisherAreaCompletionProgress = ({
   extinguisherRows = [],
   locationProgress = [],
   sessionResults = [],
+  showActiveProgress = false,
   zone = '',
 }) => {
   if (!Array.isArray(options) || options.length === 0) return options
+  if (!showActiveProgress) return options
   const progressCounts = buildAreaLocationProgressCounts({
     completedLocations,
     extinguisherRows,
@@ -212,8 +222,10 @@ export const applyFireExtinguisherZoneCompletionProgress = ({
   completedLocations = [],
   locationProgress = [],
   options = [],
+  showActiveProgress = false,
 }) => {
   if (!Array.isArray(options) || options.length === 0) return options
+  if (!showActiveProgress) return options
   const areaGroups = new Map()
   getProgressRows({ completedLocations, locationProgress }).forEach((row) => {
     const status = normalizeCountKey(row?.status)
@@ -383,6 +395,7 @@ export const applyFireExtinguisherLocationProgress = ({
   locationProgress = [],
   level,
   sessionResults = [],
+  showActiveProgress = false,
   zone = '',
   mainLocation = '',
 }) => {
@@ -409,6 +422,19 @@ export const applyFireExtinguisherLocationProgress = ({
         ? normalizeZoneCountKey(option?.value || option?.title)
         : normalizeCountKey(option?.value || option?.title)
     const progress = progressCounts.get(optionKey) || { totalCount: 0, inspectedCount: 0 }
+    const showLoading =
+      isLoading && (!hasReliableRows || (!hasSessionProgress && progress.inspectedCount === 0))
+    if (!showActiveProgress) {
+      return {
+        ...option,
+        metaLabel:
+          option.metaLabel ||
+          getLocationCountLabel({
+            totalCount: progress.totalCount,
+            isLoading: showLoading,
+          }),
+      }
+    }
     if (progress.forceCompleted) {
       return {
         ...option,
@@ -426,8 +452,6 @@ export const applyFireExtinguisherLocationProgress = ({
         },
       }
     }
-    const showLoading =
-      isLoading && (!hasReliableRows || (!hasSessionProgress && progress.inspectedCount === 0))
     const progressMeta = getLocationProgressMeta({
       inspectedCount: progress.inspectedCount,
       totalCount: progress.totalCount,
@@ -438,10 +462,22 @@ export const applyFireExtinguisherLocationProgress = ({
       metaLabel:
         progressMeta.metaLabel ||
         option.metaLabel ||
-        getUnitCountLabel(progress.totalCount, showLoading),
+        getLocationCountLabel({
+          totalCount: progress.totalCount,
+          isLoading: showLoading,
+        }),
       metaTone: progressMeta.metaTone || option.metaTone,
       metaIconKey: progressMeta.metaIconKey || option.metaIconKey,
       progress: progressMeta.progress,
     }
   })
 }
+
+export const applyFireExtinguisherLocationInventoryCounts = (options = {}) =>
+  applyFireExtinguisherLocationProgress({
+    ...options,
+    completedLocations: [],
+    locationProgress: [],
+    sessionResults: [],
+    showActiveProgress: false,
+  })

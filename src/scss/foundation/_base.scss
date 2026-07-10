@@ -1,5 +1,5 @@
 body {
-  background-color: #ffffff;
+  background-color: var(--cui-body-bg);
 }
 
 html {
@@ -30,7 +30,14 @@ html {
 
 :root {
   --vmecc-focus-ring: 0 0 0 0.16rem rgba(0, 126, 122, 0.28);
+  --vmecc-radius-control: 0.375rem;
   --vmecc-radius-card: 0.5rem;
+  --vmecc-radius-overlay: 0.875rem;
+  --vmecc-radius-pill: 999px;
+  --vmecc-shadow-card: 0 0.25rem 0.9rem rgba(15, 23, 42, 0.06);
+  --vmecc-shadow-overlay: 0 0.75rem 2rem rgba(15, 23, 42, 0.18);
+  --vmecc-touch-target: 2.75rem;
+  --vmecc-primary-soft: rgba(0, 126, 122, 0.1);
   --ai-helper-width: clamp(360px, 30vw, 420px);
   --vmecc-status-draft-bg: #fef3c7;
   --vmecc-status-draft-text: #92400e;
@@ -74,12 +81,73 @@ html {
 .form-check-input:focus-visible,
 [role='button']:focus-visible,
 [role='radio']:focus-visible,
+.cursor-pointer:focus-visible,
 .mobile-nav-sheet-row:focus-visible,
 .mobile-overlay-list-row:focus-within,
 .mobile-overlay-shell-icon-btn:focus-visible,
 .app-bottom-nav-item:focus-visible {
   outline: 0;
   box-shadow: var(--vmecc-focus-ring);
+}
+
+.cursor-pointer:focus-visible,
+[role='button']:focus-visible {
+  border-radius: var(--vmecc-radius-control, var(--cui-border-radius));
+}
+
+.record-state-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  max-width: 100%;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid transparent;
+  border-radius: var(--vmecc-radius-pill);
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.record-state-badge--draft {
+  color: var(--vmecc-status-draft-text);
+  background: var(--vmecc-status-draft-bg);
+  border-color: color-mix(in srgb, var(--vmecc-status-draft-text) 22%, transparent);
+}
+
+.record-state-badge--success {
+  color: var(--vmecc-status-success-text);
+  background: var(--vmecc-status-success-bg);
+  border-color: color-mix(in srgb, var(--vmecc-status-success-text) 22%, transparent);
+}
+
+.record-state-badge--muted {
+  color: var(--vmecc-status-muted-text);
+  background: var(--vmecc-status-muted-bg);
+  border-color: var(--cui-border-color);
+}
+
+.back-button {
+  background-color: var(--vmecc-primary-soft);
+}
+
+.module-nav-link {
+  cursor: pointer;
+}
+
+.module-nav-link.disabled,
+.module-nav-link[aria-disabled='true'] {
+  cursor: not-allowed;
+}
+
+.data-table-footer__page-size {
+  width: 6.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon-spin {
+    animation-duration: 1.8s;
+    animation-timing-function: steps(8, end);
+  }
 }
 
 .workflow-status-summary {

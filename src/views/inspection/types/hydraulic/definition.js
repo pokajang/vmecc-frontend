@@ -13,7 +13,7 @@ import {
   normalizeHydraulicEquipmentRows,
 } from './helpers'
 import { createLocationDetailContextFields } from '../detailConfigHelpers'
-import { buildMainLocationContinuationOptions } from '../continuationHelpers'
+import { buildMainLocationContinuationOptions, CONTINUATION_TOKENS } from '../continuationHelpers'
 import { HydraulicEditSection, HydraulicReadOnlySection } from './section'
 import { INSPECTION_REPORT_EVIDENCE_COPY } from '../../inspectionReportEvidenceCopy'
 
@@ -48,7 +48,7 @@ const hydraulicInspectionDefinition = {
       context,
       getSummary: getHydraulicCheckSummary,
       getMissingFields: getHydraulicMissingFields,
-      label: 'location',
+      label: CONTINUATION_TOKENS.location,
     }),
   buildChecklist: buildHydraulicChecklist,
   buildDescription: buildHydraulicDescription,

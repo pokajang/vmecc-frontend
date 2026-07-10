@@ -57,6 +57,7 @@ export const DescriptionStep = ({
       </div>
       <CFormTextarea
         rows={3}
+        aria-label="Describe the inspection finding"
         placeholder="or describe what you see"
         value={textareaValue}
         onChange={(e) => {
@@ -151,6 +152,7 @@ export const SecondarySuggestionCard = ({
       </div>
       <CFormTextarea
         rows={3}
+        aria-label="Describe the additional inspection finding"
         placeholder="or describe the additional finding"
         value={textareaValue}
         disabled={action === 'dismiss'}

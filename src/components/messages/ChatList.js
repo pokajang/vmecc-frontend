@@ -15,6 +15,7 @@ import TableLoader from 'src/components/TableLoader'
 import { formatChatTime, getDraftPreview, getInitials, getPreview } from './messageUtils'
 import { getPrimaryRoleLabel } from 'src/utils/authz'
 import { ROLE_ABBREVIATIONS } from 'src/constants/roles'
+import { activateOnEnterOrSpace } from 'src/utils/uiAccessibility'
 
 const ChatList = ({
   threads,
@@ -61,17 +62,18 @@ const ChatList = ({
       style={{
         width: '100%',
         maxWidth: isMobile ? '100%' : 380,
-        background: '#ffffff',
+        background: 'var(--cui-body-bg)',
         minHeight: 0,
       }}
       data-testid="messages-list-panel"
     >
       <div
         className="p-3 border-bottom"
-        style={{ background: '#ffffff' }}
+        style={{ background: 'var(--cui-body-bg)' }}
         data-testid="messages-list-filters"
       >
         <CFormInput
+          aria-label="Search conversations"
           size="sm"
           placeholder="Search chats"
           value={query}
@@ -120,9 +122,12 @@ const ChatList = ({
               <div
                 key={thread.user?.id || idx}
                 role="button"
+                tabIndex={0}
+                aria-label={`Open conversation with ${thread.user?.name || thread.user?.email || 'unknown user'}`}
                 onClick={() => onSelectThread(thread)}
+                onKeyDown={(event) => activateOnEnterOrSpace(event, () => onSelectThread(thread))}
                 className={`px-3 py-3 d-flex gap-3 align-items-center cursor-pointer chat-thread-row ${
-                  isActive ? 'bg-body-secondary' : 'bg-white'
+                  isActive ? 'bg-body-secondary' : 'bg-body'
                 } ${idx === filteredThreads.length - 1 ? '' : 'border-bottom'}`}
               >
                 <div

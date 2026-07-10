@@ -1,0 +1,6739 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'ER Aux Equipment Inspection' ['desktop'] > /desktop/er-aux-equipment-inspection/complete-with-next-location 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      ER Aux Equipment Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="card inspection-general-evidence-card"
+  >
+    <div
+      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+    >
+      <div
+        class="fw-semibold"
+      >
+        Additional report evidence
+      </div>
+      <div
+        class="d-flex align-items-center gap-2"
+      >
+        <button
+          aria-label="Take photo"
+          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-camera me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
+            />
+            <circle
+              cx="12"
+              cy="13"
+              r="3"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Take photo
+          </span>
+        </button>
+        <button
+          aria-label="Upload photo"
+          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-upload me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 3v12"
+            />
+            <path
+              d="m17 8-5-5-5 5"
+            />
+            <path
+              d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Upload photo
+          </span>
+        </button>
+      </div>
+    </div>
+    <div
+      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+    >
+      <div
+        class="small text-body-secondary"
+      >
+        Optional. Use this only for photos or remarks that apply to the whole inspection/location, not a specific finding or equipment item.
+      </div>
+      <div
+        class="d-grid gap-1"
+      >
+        <label
+          class="form-label small fw-semibold text-muted mb-0"
+        >
+          Additional report remarks
+        </label>
+        <textarea
+          aria-label="Additional report remarks"
+          class="form-control"
+          maxlength="2000"
+          placeholder="Optional remarks for the whole inspection/location."
+          rows="3"
+        />
+      </div>
+      <div
+        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.75rem;"
+      >
+        <div
+          class="rounded-3 border border-light-subtle p-2 d-grid gap-2"
+        >
+          <div
+            class="workflow-photo-preview"
+          >
+            <img
+              alt="Inspection photo"
+              class="workflow-photo-preview__image"
+              decoding="async"
+              loading="lazy"
+              src="data:image/png;base64,AA=="
+            />
+          </div>
+          <div
+            class="small text-truncate"
+          >
+            Photo
+          </div>
+          <div
+            class="d-grid gap-2"
+          >
+            <input
+              aria-label="Photo description"
+              class="form-control form-control-sm"
+              placeholder="Describe this photo"
+              type="text"
+              value=""
+            />
+          </div>
+          <button
+            class="btn btn-outline-danger btn-sm d-inline-flex align-items-center justify-content-center gap-1"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-trash2 lucide-trash-2"
+              fill="none"
+              height="14"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="14"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M10 11v6"
+              />
+              <path
+                d="M14 11v6"
+              />
+              <path
+                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"
+              />
+              <path
+                d="M3 6h18"
+              />
+              <path
+                d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+              />
+            </svg>
+            Remove
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
+  >
+    <div
+      class="small fw-semibold text-body-secondary"
+    >
+      Next 
+      location
+    </div>
+    <div
+      class="inspection-next-location-options d-flex flex-wrap gap-2"
+    >
+      <button
+        class="btn btn-outline-primary inspection-next-location-btn"
+        type="button"
+      >
+        Office
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        1 item need attention before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+      <button
+        class="btn btn-primary disabled"
+        disabled=""
+        title="1 item need attention before review."
+        type="button"
+      >
+        Continue to Review
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-status text-body-secondary"
+        title="1 item need attention before review."
+      >
+        1 item need attention before review.
+      </div>
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+        <button
+          class="btn btn-primary inspection-form-sticky-review-btn disabled"
+          disabled=""
+          title="1 item need attention before review."
+          type="button"
+        >
+          Continue to Review
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'ER Aux Equipment Inspection' ['mobile'] > /mobile/er-aux-equipment-inspection/complete-with-next-location 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      ER Aux Equipment Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="inspection-general-evidence-mobile-compact d-grid gap-2"
+  >
+    <button
+      aria-label="Add report evidence (1)"
+      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      type="button"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-plus me-1 align-text-bottom"
+        fill="none"
+        height="13"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="13"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M5 12h14"
+        />
+        <path
+          d="M12 5v14"
+        />
+      </svg>
+      Add report evidence (1)
+    </button>
+    <div />
+  </div>
+  <div
+    class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
+  >
+    <div
+      class="small fw-semibold text-body-secondary"
+    >
+      Next 
+      location
+    </div>
+    <div
+      class="inspection-next-location-options d-flex flex-wrap gap-2"
+    >
+      <button
+        class="btn btn-outline-primary inspection-next-location-btn"
+        type="button"
+      >
+        Office
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        1 item need attention before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+      <button
+        class="btn btn-primary disabled"
+        disabled=""
+        title="1 item need attention before review."
+        type="button"
+      >
+        Continue to Review
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-status text-body-secondary"
+        title="1 item need attention before review."
+      >
+        1 item need attention before review.
+      </div>
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+        <button
+          class="btn btn-primary inspection-form-sticky-review-btn disabled"
+          disabled=""
+          title="1 item need attention before review."
+          type="button"
+        >
+          Continue to Review
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'Fire Extinguisher Inspection' ['desktop'] > /desktop/fire-extinguisher-inspection/complete-with-next-location 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      Fire Extinguisher Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="card inspection-general-evidence-card"
+  >
+    <div
+      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+    >
+      <div
+        class="fw-semibold"
+      >
+        Additional report evidence
+      </div>
+      <div
+        class="d-flex align-items-center gap-2"
+      >
+        <button
+          aria-label="Take photo"
+          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-camera me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
+            />
+            <circle
+              cx="12"
+              cy="13"
+              r="3"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Take photo
+          </span>
+        </button>
+        <button
+          aria-label="Upload photo"
+          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-upload me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 3v12"
+            />
+            <path
+              d="m17 8-5-5-5 5"
+            />
+            <path
+              d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Upload photo
+          </span>
+        </button>
+      </div>
+    </div>
+    <div
+      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+    >
+      <div
+        class="small text-body-secondary"
+      >
+        Optional. Use this only for photos or remarks that apply to the whole inspection/location, not a specific finding or equipment item.
+      </div>
+      <div
+        class="d-grid gap-1"
+      >
+        <label
+          class="form-label small fw-semibold text-muted mb-0"
+        >
+          Additional report remarks
+        </label>
+        <textarea
+          aria-label="Additional report remarks"
+          class="form-control"
+          maxlength="2000"
+          placeholder="Optional remarks for the whole inspection/location."
+          rows="3"
+        />
+      </div>
+      <div
+        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.75rem;"
+      >
+        <div
+          class="rounded-3 border border-light-subtle p-2 d-grid gap-2"
+        >
+          <div
+            class="workflow-photo-preview"
+          >
+            <img
+              alt="Inspection photo"
+              class="workflow-photo-preview__image"
+              decoding="async"
+              loading="lazy"
+              src="data:image/png;base64,AA=="
+            />
+          </div>
+          <div
+            class="small text-truncate"
+          >
+            Photo
+          </div>
+          <div
+            class="d-grid gap-2"
+          >
+            <input
+              aria-label="Photo description"
+              class="form-control form-control-sm"
+              placeholder="Describe this photo"
+              type="text"
+              value=""
+            />
+          </div>
+          <button
+            class="btn btn-outline-danger btn-sm d-inline-flex align-items-center justify-content-center gap-1"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-trash2 lucide-trash-2"
+              fill="none"
+              height="14"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="14"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M10 11v6"
+              />
+              <path
+                d="M14 11v6"
+              />
+              <path
+                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"
+              />
+              <path
+                d="M3 6h18"
+              />
+              <path
+                d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+              />
+            </svg>
+            Remove
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
+  >
+    <div
+      class="small fw-semibold text-body-secondary"
+    >
+      Next 
+      location
+    </div>
+    <div
+      class="inspection-next-location-options d-flex flex-wrap gap-2"
+    >
+      <button
+        class="btn btn-outline-primary inspection-next-location-btn"
+        type="button"
+      >
+        Cafeteria
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'Fire Extinguisher Inspection' ['mobile'] > /mobile/fire-extinguisher-inspection/complete-with-next-location 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      Fire Extinguisher Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="inspection-general-evidence-mobile-compact d-grid gap-2"
+  >
+    <button
+      aria-label="Add report evidence (1)"
+      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      type="button"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-plus me-1 align-text-bottom"
+        fill="none"
+        height="13"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="13"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M5 12h14"
+        />
+        <path
+          d="M12 5v14"
+        />
+      </svg>
+      Add report evidence (1)
+    </button>
+    <div />
+  </div>
+  <div
+    class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
+  >
+    <div
+      class="small fw-semibold text-body-secondary"
+    >
+      Next 
+      location
+    </div>
+    <div
+      class="inspection-next-location-options d-flex flex-wrap gap-2"
+    >
+      <button
+        class="btn btn-outline-primary inspection-next-location-btn"
+        type="button"
+      >
+        Cafeteria
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'Fire Truck Daily Readiness' ['desktop'] > /desktop/frt-daily-inspection/complete-with-next-location 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      Fire Truck Daily Readiness
+       section
+    </div>
+  </div>
+  <div
+    class="inspection-form-section d-grid gap-1"
+  >
+    <label
+      class="form-label small fw-semibold text-muted mb-1"
+      for="fire-truck-readiness-remarks"
+    >
+      Remarks
+    </label>
+    <textarea
+      class="form-control"
+      id="fire-truck-readiness-remarks"
+      placeholder="Optional general fire truck readiness remarks"
+      rows="3"
+    />
+  </div>
+  <div
+    class="card inspection-general-evidence-card"
+  >
+    <div
+      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+    >
+      <div
+        class="fw-semibold"
+      >
+        Additional report evidence
+      </div>
+      <div
+        class="d-flex align-items-center gap-2"
+      >
+        <button
+          aria-label="Take photo"
+          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-camera me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
+            />
+            <circle
+              cx="12"
+              cy="13"
+              r="3"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Take photo
+          </span>
+        </button>
+        <button
+          aria-label="Upload photo"
+          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-upload me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 3v12"
+            />
+            <path
+              d="m17 8-5-5-5 5"
+            />
+            <path
+              d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Upload photo
+          </span>
+        </button>
+      </div>
+    </div>
+    <div
+      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+    >
+      <div
+        class="small text-body-secondary"
+      >
+        Optional. Use this only for photos or remarks that apply to the whole inspection/location, not a specific finding or equipment item.
+      </div>
+      <div
+        class="d-grid gap-1"
+      >
+        <label
+          class="form-label small fw-semibold text-muted mb-0"
+        >
+          Additional report remarks
+        </label>
+        <textarea
+          aria-label="Additional report remarks"
+          class="form-control"
+          maxlength="2000"
+          placeholder="Optional remarks for the whole inspection/location."
+          rows="3"
+        />
+      </div>
+      <div
+        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.75rem;"
+      >
+        <div
+          class="rounded-3 border border-light-subtle p-2 d-grid gap-2"
+        >
+          <div
+            class="workflow-photo-preview"
+          >
+            <img
+              alt="Inspection photo"
+              class="workflow-photo-preview__image"
+              decoding="async"
+              loading="lazy"
+              src="data:image/png;base64,AA=="
+            />
+          </div>
+          <div
+            class="small text-truncate"
+          >
+            Photo
+          </div>
+          <div
+            class="d-grid gap-2"
+          >
+            <input
+              aria-label="Photo description"
+              class="form-control form-control-sm"
+              placeholder="Describe this photo"
+              type="text"
+              value=""
+            />
+          </div>
+          <button
+            class="btn btn-outline-danger btn-sm d-inline-flex align-items-center justify-content-center gap-1"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-trash2 lucide-trash-2"
+              fill="none"
+              height="14"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="14"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M10 11v6"
+              />
+              <path
+                d="M14 11v6"
+              />
+              <path
+                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"
+              />
+              <path
+                d="M3 6h18"
+              />
+              <path
+                d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+              />
+            </svg>
+            Remove
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
+  >
+    <div
+      class="small fw-semibold text-body-secondary"
+    >
+      Next 
+      compartment
+    </div>
+    <div
+      class="inspection-next-location-options d-flex flex-wrap gap-2"
+    >
+      <button
+        class="btn btn-outline-primary inspection-next-location-btn"
+        type="button"
+      >
+        LOCKER 02
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'Fire Truck Daily Readiness' ['mobile'] > /mobile/frt-daily-inspection/complete-with-next-location 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      Fire Truck Daily Readiness
+       section
+    </div>
+  </div>
+  <div
+    class="inspection-general-evidence-mobile-compact d-grid gap-2"
+  >
+    <button
+      aria-label="Add optional remarks"
+      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      type="button"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-plus me-1 align-text-bottom"
+        fill="none"
+        height="13"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="13"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M5 12h14"
+        />
+        <path
+          d="M12 5v14"
+        />
+      </svg>
+      Add optional remarks
+    </button>
+  </div>
+  <div
+    class="inspection-general-evidence-mobile-compact d-grid gap-2"
+  >
+    <button
+      aria-label="Add report evidence (1)"
+      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      type="button"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-plus me-1 align-text-bottom"
+        fill="none"
+        height="13"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="13"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M5 12h14"
+        />
+        <path
+          d="M12 5v14"
+        />
+      </svg>
+      Add report evidence (1)
+    </button>
+    <div />
+  </div>
+  <div
+    class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
+  >
+    <div
+      class="small fw-semibold text-body-secondary"
+    >
+      Next 
+      compartment
+    </div>
+    <div
+      class="inspection-next-location-options d-flex flex-wrap gap-2"
+    >
+      <button
+        class="btn btn-outline-primary inspection-next-location-btn"
+        type="button"
+      >
+        LOCKER 02
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'General Inspection' ['desktop'] > /desktop/general-inspection/complete-with-next-location 1`] = `
+<div>
+  <div
+    class="inspection-form-section d-grid gap-3"
+  >
+    <div
+      class="d-flex flex-wrap align-items-center justify-content-between gap-2"
+    >
+      <div>
+        <div
+          class="d-flex flex-wrap align-items-center gap-2"
+        >
+          <label
+            class="form-label fw-semibold text-muted mb-0"
+          >
+            Findings
+          </label>
+        </div>
+        <div
+          class="small text-body-secondary"
+        >
+          Record one finding at a time. Add photos if needed.
+        </div>
+      </div>
+      <button
+        aria-label="Add finding"
+        class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
+        type="button"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-plus me-1 align-text-bottom"
+          fill="none"
+          height="13"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="13"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M5 12h14"
+          />
+          <path
+            d="M12 5v14"
+          />
+        </svg>
+        Add finding
+      </button>
+    </div>
+    <div
+      class="rounded-3 border bg-light-subtle p-3 text-body-secondary"
+    >
+      No findings added.
+    </div>
+  </div>
+  <div
+    class="card inspection-general-evidence-card"
+  >
+    <div
+      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+    >
+      <div
+        class="fw-semibold"
+      >
+        Additional report evidence
+      </div>
+      <div
+        class="d-flex align-items-center gap-2"
+      >
+        <button
+          aria-label="Take photo"
+          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-camera me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
+            />
+            <circle
+              cx="12"
+              cy="13"
+              r="3"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Take photo
+          </span>
+        </button>
+        <button
+          aria-label="Upload photo"
+          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-upload me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 3v12"
+            />
+            <path
+              d="m17 8-5-5-5 5"
+            />
+            <path
+              d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Upload photo
+          </span>
+        </button>
+      </div>
+    </div>
+    <div
+      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+    >
+      <div
+        class="small text-body-secondary"
+      >
+        Optional. Use this only for photos or remarks that apply to the whole inspection/location, not a specific finding or equipment item.
+      </div>
+      <div
+        class="d-grid gap-1"
+      >
+        <label
+          class="form-label small fw-semibold text-muted mb-0"
+        >
+          Additional report remarks
+        </label>
+        <textarea
+          aria-label="Additional report remarks"
+          class="form-control"
+          maxlength="2000"
+          placeholder="Optional remarks for the whole inspection/location."
+          rows="3"
+        />
+      </div>
+      <div
+        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.75rem;"
+      >
+        <div
+          class="rounded-3 border border-light-subtle p-2 d-grid gap-2"
+        >
+          <div
+            class="workflow-photo-preview"
+          >
+            <img
+              alt="Inspection photo"
+              class="workflow-photo-preview__image"
+              decoding="async"
+              loading="lazy"
+              src="data:image/png;base64,AA=="
+            />
+          </div>
+          <div
+            class="small text-truncate"
+          >
+            Photo
+          </div>
+          <div
+            class="d-grid gap-2"
+          >
+            <input
+              aria-label="Photo description"
+              class="form-control form-control-sm"
+              placeholder="Describe this photo"
+              type="text"
+              value=""
+            />
+          </div>
+          <button
+            class="btn btn-outline-danger btn-sm d-inline-flex align-items-center justify-content-center gap-1"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-trash2 lucide-trash-2"
+              fill="none"
+              height="14"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="14"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M10 11v6"
+              />
+              <path
+                d="M14 11v6"
+              />
+              <path
+                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"
+              />
+              <path
+                d="M3 6h18"
+              />
+              <path
+                d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+              />
+            </svg>
+            Remove
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'General Inspection' ['mobile'] > /mobile/general-inspection/complete-with-next-location 1`] = `
+<div>
+  <div
+    class="inspection-form-section d-grid gap-3"
+  >
+    <div
+      class="d-flex flex-wrap align-items-center justify-content-between gap-2"
+    >
+      <div>
+        <div
+          class="d-flex flex-wrap align-items-center gap-2"
+        >
+          <label
+            class="form-label fw-semibold text-muted mb-0"
+          >
+            Findings
+          </label>
+        </div>
+        <div
+          class="small text-body-secondary"
+        >
+          Record one finding at a time. Add photos if needed.
+        </div>
+      </div>
+      <button
+        aria-label="Add finding"
+        class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
+        type="button"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-plus me-1 align-text-bottom"
+          fill="none"
+          height="13"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="13"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M5 12h14"
+          />
+          <path
+            d="M12 5v14"
+          />
+        </svg>
+        Add finding
+      </button>
+    </div>
+    <div
+      class="rounded-3 border bg-light-subtle p-3 text-body-secondary"
+    >
+      No findings added.
+    </div>
+  </div>
+  <div
+    class="inspection-general-evidence-mobile-compact d-grid gap-2"
+  >
+    <button
+      aria-label="Add report evidence (1)"
+      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      type="button"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-plus me-1 align-text-bottom"
+        fill="none"
+        height="13"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="13"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M5 12h14"
+        />
+        <path
+          d="M12 5v14"
+        />
+      </svg>
+      Add report evidence (1)
+    </button>
+    <div />
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'Health Safety Environment Inspection' ['desktop'] > /desktop/health-safety-environment-inspection/complete-with-next-location 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      Health Safety Environment Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="inspection-form-section d-grid gap-3"
+  >
+    <div
+      class="d-flex flex-wrap align-items-center justify-content-between gap-2"
+    >
+      <div>
+        <div
+          class="d-flex flex-wrap align-items-center gap-2"
+        >
+          <label
+            class="form-label fw-semibold text-muted mb-0"
+          >
+            Findings
+          </label>
+        </div>
+        <div
+          class="small text-body-secondary"
+        >
+          Record one finding at a time. Add photos if needed.
+        </div>
+      </div>
+      <button
+        aria-label="Add finding"
+        class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
+        type="button"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-plus me-1 align-text-bottom"
+          fill="none"
+          height="13"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="13"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M5 12h14"
+          />
+          <path
+            d="M12 5v14"
+          />
+        </svg>
+        Add finding
+      </button>
+    </div>
+    <div
+      class="rounded-3 border bg-light-subtle p-3 text-body-secondary"
+    >
+      No findings added.
+    </div>
+  </div>
+  <div
+    class="card inspection-general-evidence-card"
+  >
+    <div
+      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+    >
+      <div
+        class="fw-semibold"
+      >
+        Additional report evidence
+      </div>
+      <div
+        class="d-flex align-items-center gap-2"
+      >
+        <button
+          aria-label="Take photo"
+          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-camera me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
+            />
+            <circle
+              cx="12"
+              cy="13"
+              r="3"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Take photo
+          </span>
+        </button>
+        <button
+          aria-label="Upload photo"
+          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-upload me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 3v12"
+            />
+            <path
+              d="m17 8-5-5-5 5"
+            />
+            <path
+              d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Upload photo
+          </span>
+        </button>
+      </div>
+    </div>
+    <div
+      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+    >
+      <div
+        class="small text-body-secondary"
+      >
+        Optional. Use this only for photos or remarks that apply to the whole inspection/location, not a specific finding or equipment item.
+      </div>
+      <div
+        class="d-grid gap-1"
+      >
+        <label
+          class="form-label small fw-semibold text-muted mb-0"
+        >
+          Additional report remarks
+        </label>
+        <textarea
+          aria-label="Additional report remarks"
+          class="form-control"
+          maxlength="2000"
+          placeholder="Optional remarks for the whole inspection/location."
+          rows="3"
+        />
+      </div>
+      <div
+        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.75rem;"
+      >
+        <div
+          class="rounded-3 border border-light-subtle p-2 d-grid gap-2"
+        >
+          <div
+            class="workflow-photo-preview"
+          >
+            <img
+              alt="Inspection photo"
+              class="workflow-photo-preview__image"
+              decoding="async"
+              loading="lazy"
+              src="data:image/png;base64,AA=="
+            />
+          </div>
+          <div
+            class="small text-truncate"
+          >
+            Photo
+          </div>
+          <div
+            class="d-grid gap-2"
+          >
+            <input
+              aria-label="Photo description"
+              class="form-control form-control-sm"
+              placeholder="Describe this photo"
+              type="text"
+              value=""
+            />
+          </div>
+          <button
+            class="btn btn-outline-danger btn-sm d-inline-flex align-items-center justify-content-center gap-1"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-trash2 lucide-trash-2"
+              fill="none"
+              height="14"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="14"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M10 11v6"
+              />
+              <path
+                d="M14 11v6"
+              />
+              <path
+                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"
+              />
+              <path
+                d="M3 6h18"
+              />
+              <path
+                d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+              />
+            </svg>
+            Remove
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'Health Safety Environment Inspection' ['mobile'] > /mobile/health-safety-environment-inspection/complete-with-next-location 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      Health Safety Environment Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="inspection-form-section d-grid gap-3"
+  >
+    <div
+      class="d-flex flex-wrap align-items-center justify-content-between gap-2"
+    >
+      <div>
+        <div
+          class="d-flex flex-wrap align-items-center gap-2"
+        >
+          <label
+            class="form-label fw-semibold text-muted mb-0"
+          >
+            Findings
+          </label>
+        </div>
+        <div
+          class="small text-body-secondary"
+        >
+          Record one finding at a time. Add photos if needed.
+        </div>
+      </div>
+      <button
+        aria-label="Add finding"
+        class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
+        type="button"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-plus me-1 align-text-bottom"
+          fill="none"
+          height="13"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="13"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M5 12h14"
+          />
+          <path
+            d="M12 5v14"
+          />
+        </svg>
+        Add finding
+      </button>
+    </div>
+    <div
+      class="rounded-3 border bg-light-subtle p-3 text-body-secondary"
+    >
+      No findings added.
+    </div>
+  </div>
+  <div
+    class="inspection-general-evidence-mobile-compact d-grid gap-2"
+  >
+    <button
+      aria-label="Add report evidence (1)"
+      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      type="button"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-plus me-1 align-text-bottom"
+        fill="none"
+        height="13"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="13"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M5 12h14"
+        />
+        <path
+          d="M12 5v14"
+        />
+      </svg>
+      Add report evidence (1)
+    </button>
+    <div />
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'High Angle Rescue Equipment Inspection' ['desktop'] > /desktop/high-angle-rescue-equipment-inspection/complete-with-next-location 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      High Angle Rescue Equipment Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="card inspection-general-evidence-card"
+  >
+    <div
+      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+    >
+      <div
+        class="fw-semibold"
+      >
+        Additional report evidence
+      </div>
+      <div
+        class="d-flex align-items-center gap-2"
+      >
+        <button
+          aria-label="Take photo"
+          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-camera me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
+            />
+            <circle
+              cx="12"
+              cy="13"
+              r="3"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Take photo
+          </span>
+        </button>
+        <button
+          aria-label="Upload photo"
+          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-upload me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 3v12"
+            />
+            <path
+              d="m17 8-5-5-5 5"
+            />
+            <path
+              d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Upload photo
+          </span>
+        </button>
+      </div>
+    </div>
+    <div
+      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+    >
+      <div
+        class="small text-body-secondary"
+      >
+        Optional. Use this only for photos or remarks that apply to the whole inspection/location, not a specific finding or equipment item.
+      </div>
+      <div
+        class="d-grid gap-1"
+      >
+        <label
+          class="form-label small fw-semibold text-muted mb-0"
+        >
+          Additional report remarks
+        </label>
+        <textarea
+          aria-label="Additional report remarks"
+          class="form-control"
+          maxlength="2000"
+          placeholder="Optional remarks for the whole inspection/location."
+          rows="3"
+        />
+      </div>
+      <div
+        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.75rem;"
+      >
+        <div
+          class="rounded-3 border border-light-subtle p-2 d-grid gap-2"
+        >
+          <div
+            class="workflow-photo-preview"
+          >
+            <img
+              alt="Inspection photo"
+              class="workflow-photo-preview__image"
+              decoding="async"
+              loading="lazy"
+              src="data:image/png;base64,AA=="
+            />
+          </div>
+          <div
+            class="small text-truncate"
+          >
+            Photo
+          </div>
+          <div
+            class="d-grid gap-2"
+          >
+            <input
+              aria-label="Photo description"
+              class="form-control form-control-sm"
+              placeholder="Describe this photo"
+              type="text"
+              value=""
+            />
+          </div>
+          <button
+            class="btn btn-outline-danger btn-sm d-inline-flex align-items-center justify-content-center gap-1"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-trash2 lucide-trash-2"
+              fill="none"
+              height="14"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="14"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M10 11v6"
+              />
+              <path
+                d="M14 11v6"
+              />
+              <path
+                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"
+              />
+              <path
+                d="M3 6h18"
+              />
+              <path
+                d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+              />
+            </svg>
+            Remove
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
+  >
+    <div
+      class="small fw-semibold text-body-secondary"
+    >
+      Next 
+      kit
+    </div>
+    <div
+      class="inspection-next-location-options d-flex flex-wrap gap-2"
+    >
+      <button
+        class="btn btn-outline-primary inspection-next-location-btn"
+        type="button"
+      >
+        Response Kit #2
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'High Angle Rescue Equipment Inspection' ['mobile'] > /mobile/high-angle-rescue-equipment-inspection/complete-with-next-location 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      High Angle Rescue Equipment Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="inspection-general-evidence-mobile-compact d-grid gap-2"
+  >
+    <button
+      aria-label="Add report evidence (1)"
+      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      type="button"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-plus me-1 align-text-bottom"
+        fill="none"
+        height="13"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="13"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M5 12h14"
+        />
+        <path
+          d="M12 5v14"
+        />
+      </svg>
+      Add report evidence (1)
+    </button>
+    <div />
+  </div>
+  <div
+    class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
+  >
+    <div
+      class="small fw-semibold text-body-secondary"
+    >
+      Next 
+      kit
+    </div>
+    <div
+      class="inspection-next-location-options d-flex flex-wrap gap-2"
+    >
+      <button
+        class="btn btn-outline-primary inspection-next-location-btn"
+        type="button"
+      >
+        Response Kit #2
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'Hydraulic Rescue Tools Inspection' ['desktop'] > /desktop/hydraulic-rescue-tools-inspection/complete-with-next-location 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      Hydraulic Rescue Tools Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="card inspection-general-evidence-card"
+  >
+    <div
+      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+    >
+      <div
+        class="fw-semibold"
+      >
+        Additional report evidence
+      </div>
+      <div
+        class="d-flex align-items-center gap-2"
+      >
+        <button
+          aria-label="Take photo"
+          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-camera me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
+            />
+            <circle
+              cx="12"
+              cy="13"
+              r="3"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Take photo
+          </span>
+        </button>
+        <button
+          aria-label="Upload photo"
+          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-upload me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 3v12"
+            />
+            <path
+              d="m17 8-5-5-5 5"
+            />
+            <path
+              d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Upload photo
+          </span>
+        </button>
+      </div>
+    </div>
+    <div
+      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+    >
+      <div
+        class="small text-body-secondary"
+      >
+        Optional. Use this only for photos or remarks that apply to the whole inspection/location, not a specific finding or equipment item.
+      </div>
+      <div
+        class="d-grid gap-1"
+      >
+        <label
+          class="form-label small fw-semibold text-muted mb-0"
+        >
+          Additional report remarks
+        </label>
+        <textarea
+          aria-label="Additional report remarks"
+          class="form-control"
+          maxlength="2000"
+          placeholder="Optional remarks for the whole inspection/location."
+          rows="3"
+        />
+      </div>
+      <div
+        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.75rem;"
+      >
+        <div
+          class="rounded-3 border border-light-subtle p-2 d-grid gap-2"
+        >
+          <div
+            class="workflow-photo-preview"
+          >
+            <img
+              alt="Inspection photo"
+              class="workflow-photo-preview__image"
+              decoding="async"
+              loading="lazy"
+              src="data:image/png;base64,AA=="
+            />
+          </div>
+          <div
+            class="small text-truncate"
+          >
+            Photo
+          </div>
+          <div
+            class="d-grid gap-2"
+          >
+            <input
+              aria-label="Photo description"
+              class="form-control form-control-sm"
+              placeholder="Describe this photo"
+              type="text"
+              value=""
+            />
+          </div>
+          <button
+            class="btn btn-outline-danger btn-sm d-inline-flex align-items-center justify-content-center gap-1"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-trash2 lucide-trash-2"
+              fill="none"
+              height="14"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="14"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M10 11v6"
+              />
+              <path
+                d="M14 11v6"
+              />
+              <path
+                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"
+              />
+              <path
+                d="M3 6h18"
+              />
+              <path
+                d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+              />
+            </svg>
+            Remove
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
+  >
+    <div
+      class="small fw-semibold text-body-secondary"
+    >
+      Next 
+      location
+    </div>
+    <div
+      class="inspection-next-location-options d-flex flex-wrap gap-2"
+    >
+      <button
+        class="btn btn-outline-primary inspection-next-location-btn"
+        type="button"
+      >
+        Pump House
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'Hydraulic Rescue Tools Inspection' ['mobile'] > /mobile/hydraulic-rescue-tools-inspection/complete-with-next-location 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      Hydraulic Rescue Tools Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="inspection-general-evidence-mobile-compact d-grid gap-2"
+  >
+    <button
+      aria-label="Add report evidence (1)"
+      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      type="button"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-plus me-1 align-text-bottom"
+        fill="none"
+        height="13"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="13"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M5 12h14"
+        />
+        <path
+          d="M12 5v14"
+        />
+      </svg>
+      Add report evidence (1)
+    </button>
+    <div />
+  </div>
+  <div
+    class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
+  >
+    <div
+      class="small fw-semibold text-body-secondary"
+    >
+      Next 
+      location
+    </div>
+    <div
+      class="inspection-next-location-options d-flex flex-wrap gap-2"
+    >
+      <button
+        class="btn btn-outline-primary inspection-next-location-btn"
+        type="button"
+      >
+        Pump House
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'SCBA Inspection' ['desktop'] > /desktop/scba-inspection/complete-with-next-location 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      SCBA Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="card inspection-general-evidence-card"
+  >
+    <div
+      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+    >
+      <div
+        class="fw-semibold"
+      >
+        Additional report evidence
+      </div>
+      <div
+        class="d-flex align-items-center gap-2"
+      >
+        <button
+          aria-label="Take photo"
+          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-camera me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
+            />
+            <circle
+              cx="12"
+              cy="13"
+              r="3"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Take photo
+          </span>
+        </button>
+        <button
+          aria-label="Upload photo"
+          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-upload me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 3v12"
+            />
+            <path
+              d="m17 8-5-5-5 5"
+            />
+            <path
+              d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Upload photo
+          </span>
+        </button>
+      </div>
+    </div>
+    <div
+      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+    >
+      <div
+        class="small text-body-secondary"
+      >
+        Optional. Use this only for photos or remarks that apply to the whole inspection/location, not a specific finding or equipment item.
+      </div>
+      <div
+        class="d-grid gap-1"
+      >
+        <label
+          class="form-label small fw-semibold text-muted mb-0"
+        >
+          Additional report remarks
+        </label>
+        <textarea
+          aria-label="Additional report remarks"
+          class="form-control"
+          maxlength="2000"
+          placeholder="Optional remarks for the whole inspection/location."
+          rows="3"
+        />
+      </div>
+      <div
+        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.75rem;"
+      >
+        <div
+          class="rounded-3 border border-light-subtle p-2 d-grid gap-2"
+        >
+          <div
+            class="workflow-photo-preview"
+          >
+            <img
+              alt="Inspection photo"
+              class="workflow-photo-preview__image"
+              decoding="async"
+              loading="lazy"
+              src="data:image/png;base64,AA=="
+            />
+          </div>
+          <div
+            class="small text-truncate"
+          >
+            Photo
+          </div>
+          <div
+            class="d-grid gap-2"
+          >
+            <input
+              aria-label="Photo description"
+              class="form-control form-control-sm"
+              placeholder="Describe this photo"
+              type="text"
+              value=""
+            />
+          </div>
+          <button
+            class="btn btn-outline-danger btn-sm d-inline-flex align-items-center justify-content-center gap-1"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="lucide lucide-trash2 lucide-trash-2"
+              fill="none"
+              height="14"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              viewBox="0 0 24 24"
+              width="14"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M10 11v6"
+              />
+              <path
+                d="M14 11v6"
+              />
+              <path
+                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"
+              />
+              <path
+                d="M3 6h18"
+              />
+              <path
+                d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+              />
+            </svg>
+            Remove
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
+  >
+    <div
+      class="small fw-semibold text-body-secondary"
+    >
+      Next 
+      location
+    </div>
+    <div
+      class="inspection-next-location-options d-flex flex-wrap gap-2"
+    >
+      <button
+        class="btn btn-outline-primary inspection-next-location-btn"
+        type="button"
+      >
+        Breathing Air Room
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'SCBA Inspection' ['mobile'] > /mobile/scba-inspection/complete-with-next-location 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      SCBA Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="inspection-general-evidence-mobile-compact d-grid gap-2"
+  >
+    <button
+      aria-label="Add report evidence (1)"
+      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      type="button"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-plus me-1 align-text-bottom"
+        fill="none"
+        height="13"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="13"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M5 12h14"
+        />
+        <path
+          d="M12 5v14"
+        />
+      </svg>
+      Add report evidence (1)
+    </button>
+    <div />
+  </div>
+  <div
+    class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
+  >
+    <div
+      class="small fw-semibold text-body-secondary"
+    >
+      Next 
+      location
+    </div>
+    <div
+      class="inspection-next-location-options d-flex flex-wrap gap-2"
+    >
+      <button
+        class="btn btn-outline-primary inspection-next-location-btn"
+        type="button"
+      >
+        Breathing Air Room
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'empty' state visual baseline for 'ER Aux Equipment Inspection' ['desktop'] > /desktop/er-aux-equipment-inspection/empty 1`] = `<div />`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'empty' state visual baseline for 'ER Aux Equipment Inspection' ['mobile'] > /mobile/er-aux-equipment-inspection/empty 1`] = `<div />`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'empty' state visual baseline for 'Fire Extinguisher Inspection' ['desktop'] > /desktop/fire-extinguisher-inspection/empty 1`] = `<div />`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'empty' state visual baseline for 'Fire Extinguisher Inspection' ['mobile'] > /mobile/fire-extinguisher-inspection/empty 1`] = `<div />`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'empty' state visual baseline for 'Fire Truck Daily Readiness' ['desktop'] > /desktop/frt-daily-inspection/empty 1`] = `<div />`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'empty' state visual baseline for 'Fire Truck Daily Readiness' ['mobile'] > /mobile/frt-daily-inspection/empty 1`] = `<div />`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'empty' state visual baseline for 'General Inspection' ['desktop'] > /desktop/general-inspection/empty 1`] = `<div />`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'empty' state visual baseline for 'General Inspection' ['mobile'] > /mobile/general-inspection/empty 1`] = `<div />`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'empty' state visual baseline for 'Health Safety Environment Inspection' ['desktop'] > /desktop/health-safety-environment-inspection/empty 1`] = `<div />`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'empty' state visual baseline for 'Health Safety Environment Inspection' ['mobile'] > /mobile/health-safety-environment-inspection/empty 1`] = `<div />`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'empty' state visual baseline for 'High Angle Rescue Equipment Inspection' ['desktop'] > /desktop/high-angle-rescue-equipment-inspection/empty 1`] = `<div />`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'empty' state visual baseline for 'High Angle Rescue Equipment Inspection' ['mobile'] > /mobile/high-angle-rescue-equipment-inspection/empty 1`] = `<div />`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'empty' state visual baseline for 'Hydraulic Rescue Tools Inspection' ['desktop'] > /desktop/hydraulic-rescue-tools-inspection/empty 1`] = `<div />`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'empty' state visual baseline for 'Hydraulic Rescue Tools Inspection' ['mobile'] > /mobile/hydraulic-rescue-tools-inspection/empty 1`] = `<div />`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'empty' state visual baseline for 'SCBA Inspection' ['desktop'] > /desktop/scba-inspection/empty 1`] = `<div />`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'empty' state visual baseline for 'SCBA Inspection' ['mobile'] > /mobile/scba-inspection/empty 1`] = `<div />`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'ER Aux Equipment Inspection' ['desktop'] > /desktop/er-aux-equipment-inspection/missing-required 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      ER Aux Equipment Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="card inspection-general-evidence-card"
+  >
+    <div
+      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+    >
+      <div
+        class="fw-semibold"
+      >
+        Additional report evidence
+      </div>
+      <div
+        class="d-flex align-items-center gap-2"
+      >
+        <button
+          aria-label="Take photo"
+          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-camera me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
+            />
+            <circle
+              cx="12"
+              cy="13"
+              r="3"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Take photo
+          </span>
+        </button>
+        <button
+          aria-label="Upload photo"
+          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-upload me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 3v12"
+            />
+            <path
+              d="m17 8-5-5-5 5"
+            />
+            <path
+              d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Upload photo
+          </span>
+        </button>
+      </div>
+    </div>
+    <div
+      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+    >
+      <div
+        class="small text-body-secondary"
+      >
+        Optional. Use this only for photos or remarks that apply to the whole inspection/location, not a specific finding or equipment item.
+      </div>
+      <div
+        class="d-grid gap-1"
+      >
+        <label
+          class="form-label small fw-semibold text-muted mb-0"
+        >
+          Additional report remarks
+        </label>
+        <textarea
+          aria-label="Additional report remarks"
+          class="form-control"
+          maxlength="2000"
+          placeholder="Optional remarks for the whole inspection/location."
+          rows="3"
+        />
+      </div>
+      <div
+        class="text-body-secondary"
+      >
+        No additional report photos added.
+      </div>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        1 item need attention before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+      <button
+        class="btn btn-primary disabled"
+        disabled=""
+        title="1 item need attention before review."
+        type="button"
+      >
+        Continue to Review
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-status text-body-secondary"
+        title="1 item need attention before review."
+      >
+        1 item need attention before review.
+      </div>
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+        <button
+          class="btn btn-primary inspection-form-sticky-review-btn disabled"
+          disabled=""
+          title="1 item need attention before review."
+          type="button"
+        >
+          Continue to Review
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'ER Aux Equipment Inspection' ['mobile'] > /mobile/er-aux-equipment-inspection/missing-required 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      ER Aux Equipment Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="inspection-general-evidence-mobile-compact d-grid gap-2"
+  >
+    <button
+      aria-label="Add report evidence"
+      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      type="button"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-plus me-1 align-text-bottom"
+        fill="none"
+        height="13"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="13"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M5 12h14"
+        />
+        <path
+          d="M12 5v14"
+        />
+      </svg>
+      Add report evidence
+    </button>
+    <div />
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        1 item need attention before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+      <button
+        class="btn btn-primary disabled"
+        disabled=""
+        title="1 item need attention before review."
+        type="button"
+      >
+        Continue to Review
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-status text-body-secondary"
+        title="1 item need attention before review."
+      >
+        1 item need attention before review.
+      </div>
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+        <button
+          class="btn btn-primary inspection-form-sticky-review-btn disabled"
+          disabled=""
+          title="1 item need attention before review."
+          type="button"
+        >
+          Continue to Review
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'Fire Extinguisher Inspection' ['desktop'] > /desktop/fire-extinguisher-inspection/missing-required 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      Fire Extinguisher Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="card inspection-general-evidence-card"
+  >
+    <div
+      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+    >
+      <div
+        class="fw-semibold"
+      >
+        Additional report evidence
+      </div>
+      <div
+        class="d-flex align-items-center gap-2"
+      >
+        <button
+          aria-label="Take photo"
+          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-camera me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
+            />
+            <circle
+              cx="12"
+              cy="13"
+              r="3"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Take photo
+          </span>
+        </button>
+        <button
+          aria-label="Upload photo"
+          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-upload me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 3v12"
+            />
+            <path
+              d="m17 8-5-5-5 5"
+            />
+            <path
+              d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Upload photo
+          </span>
+        </button>
+      </div>
+    </div>
+    <div
+      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+    >
+      <div
+        class="small text-body-secondary"
+      >
+        Optional. Use this only for photos or remarks that apply to the whole inspection/location, not a specific finding or equipment item.
+      </div>
+      <div
+        class="d-grid gap-1"
+      >
+        <label
+          class="form-label small fw-semibold text-muted mb-0"
+        >
+          Additional report remarks
+        </label>
+        <textarea
+          aria-label="Additional report remarks"
+          class="form-control"
+          maxlength="2000"
+          placeholder="Optional remarks for the whole inspection/location."
+          rows="3"
+        />
+      </div>
+      <div
+        class="text-body-secondary"
+      >
+        No additional report photos added.
+      </div>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'Fire Extinguisher Inspection' ['mobile'] > /mobile/fire-extinguisher-inspection/missing-required 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      Fire Extinguisher Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="inspection-general-evidence-mobile-compact d-grid gap-2"
+  >
+    <button
+      aria-label="Add report evidence"
+      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      type="button"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-plus me-1 align-text-bottom"
+        fill="none"
+        height="13"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="13"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M5 12h14"
+        />
+        <path
+          d="M12 5v14"
+        />
+      </svg>
+      Add report evidence
+    </button>
+    <div />
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'Fire Truck Daily Readiness' ['desktop'] > /desktop/frt-daily-inspection/missing-required 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      Fire Truck Daily Readiness
+       section
+    </div>
+  </div>
+  <div
+    class="inspection-form-section d-grid gap-1"
+  >
+    <label
+      class="form-label small fw-semibold text-muted mb-1"
+      for="fire-truck-readiness-remarks"
+    >
+      Remarks
+    </label>
+    <textarea
+      class="form-control"
+      id="fire-truck-readiness-remarks"
+      placeholder="Optional general fire truck readiness remarks"
+      rows="3"
+    />
+  </div>
+  <div
+    class="card inspection-general-evidence-card"
+  >
+    <div
+      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+    >
+      <div
+        class="fw-semibold"
+      >
+        Additional report evidence
+      </div>
+      <div
+        class="d-flex align-items-center gap-2"
+      >
+        <button
+          aria-label="Take photo"
+          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-camera me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
+            />
+            <circle
+              cx="12"
+              cy="13"
+              r="3"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Take photo
+          </span>
+        </button>
+        <button
+          aria-label="Upload photo"
+          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-upload me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 3v12"
+            />
+            <path
+              d="m17 8-5-5-5 5"
+            />
+            <path
+              d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Upload photo
+          </span>
+        </button>
+      </div>
+    </div>
+    <div
+      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+    >
+      <div
+        class="small text-body-secondary"
+      >
+        Optional. Use this only for photos or remarks that apply to the whole inspection/location, not a specific finding or equipment item.
+      </div>
+      <div
+        class="d-grid gap-1"
+      >
+        <label
+          class="form-label small fw-semibold text-muted mb-0"
+        >
+          Additional report remarks
+        </label>
+        <textarea
+          aria-label="Additional report remarks"
+          class="form-control"
+          maxlength="2000"
+          placeholder="Optional remarks for the whole inspection/location."
+          rows="3"
+        />
+      </div>
+      <div
+        class="text-body-secondary"
+      >
+        No additional report photos added.
+      </div>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'Fire Truck Daily Readiness' ['mobile'] > /mobile/frt-daily-inspection/missing-required 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      Fire Truck Daily Readiness
+       section
+    </div>
+  </div>
+  <div
+    class="inspection-general-evidence-mobile-compact d-grid gap-2"
+  >
+    <button
+      aria-label="Add optional remarks"
+      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      type="button"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-plus me-1 align-text-bottom"
+        fill="none"
+        height="13"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="13"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M5 12h14"
+        />
+        <path
+          d="M12 5v14"
+        />
+      </svg>
+      Add optional remarks
+    </button>
+  </div>
+  <div
+    class="inspection-general-evidence-mobile-compact d-grid gap-2"
+  >
+    <button
+      aria-label="Add report evidence"
+      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      type="button"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-plus me-1 align-text-bottom"
+        fill="none"
+        height="13"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="13"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M5 12h14"
+        />
+        <path
+          d="M12 5v14"
+        />
+      </svg>
+      Add report evidence
+    </button>
+    <div />
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'General Inspection' ['desktop'] > /desktop/general-inspection/missing-required 1`] = `
+<div>
+  <div
+    class="inspection-form-section d-grid gap-3"
+  >
+    <div
+      class="d-flex flex-wrap align-items-center justify-content-between gap-2"
+    >
+      <div>
+        <div
+          class="d-flex flex-wrap align-items-center gap-2"
+        >
+          <label
+            class="form-label fw-semibold text-muted mb-0"
+          >
+            Findings
+          </label>
+        </div>
+        <div
+          class="small text-body-secondary"
+        >
+          Record one finding at a time. Add photos if needed.
+        </div>
+      </div>
+      <button
+        aria-label="Add finding"
+        class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
+        type="button"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-plus me-1 align-text-bottom"
+          fill="none"
+          height="13"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="13"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M5 12h14"
+          />
+          <path
+            d="M12 5v14"
+          />
+        </svg>
+        Add finding
+      </button>
+    </div>
+    <div
+      class="rounded-3 border bg-light-subtle p-3 text-body-secondary"
+    >
+      No findings added.
+    </div>
+  </div>
+  <div
+    class="card inspection-general-evidence-card"
+  >
+    <div
+      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+    >
+      <div
+        class="fw-semibold"
+      >
+        Additional report evidence
+      </div>
+      <div
+        class="d-flex align-items-center gap-2"
+      >
+        <button
+          aria-label="Take photo"
+          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-camera me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
+            />
+            <circle
+              cx="12"
+              cy="13"
+              r="3"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Take photo
+          </span>
+        </button>
+        <button
+          aria-label="Upload photo"
+          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-upload me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 3v12"
+            />
+            <path
+              d="m17 8-5-5-5 5"
+            />
+            <path
+              d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Upload photo
+          </span>
+        </button>
+      </div>
+    </div>
+    <div
+      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+    >
+      <div
+        class="small text-body-secondary"
+      >
+        Optional. Use this only for photos or remarks that apply to the whole inspection/location, not a specific finding or equipment item.
+      </div>
+      <div
+        class="d-grid gap-1"
+      >
+        <label
+          class="form-label small fw-semibold text-muted mb-0"
+        >
+          Additional report remarks
+        </label>
+        <textarea
+          aria-label="Additional report remarks"
+          class="form-control"
+          maxlength="2000"
+          placeholder="Optional remarks for the whole inspection/location."
+          rows="3"
+        />
+      </div>
+      <div
+        class="text-body-secondary"
+      >
+        No additional report photos added.
+      </div>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'General Inspection' ['mobile'] > /mobile/general-inspection/missing-required 1`] = `
+<div>
+  <div
+    class="inspection-form-section d-grid gap-3"
+  >
+    <div
+      class="d-flex flex-wrap align-items-center justify-content-between gap-2"
+    >
+      <div>
+        <div
+          class="d-flex flex-wrap align-items-center gap-2"
+        >
+          <label
+            class="form-label fw-semibold text-muted mb-0"
+          >
+            Findings
+          </label>
+        </div>
+        <div
+          class="small text-body-secondary"
+        >
+          Record one finding at a time. Add photos if needed.
+        </div>
+      </div>
+      <button
+        aria-label="Add finding"
+        class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
+        type="button"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-plus me-1 align-text-bottom"
+          fill="none"
+          height="13"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="13"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M5 12h14"
+          />
+          <path
+            d="M12 5v14"
+          />
+        </svg>
+        Add finding
+      </button>
+    </div>
+    <div
+      class="rounded-3 border bg-light-subtle p-3 text-body-secondary"
+    >
+      No findings added.
+    </div>
+  </div>
+  <div
+    class="inspection-general-evidence-mobile-compact d-grid gap-2"
+  >
+    <button
+      aria-label="Add report evidence"
+      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      type="button"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-plus me-1 align-text-bottom"
+        fill="none"
+        height="13"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="13"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M5 12h14"
+        />
+        <path
+          d="M12 5v14"
+        />
+      </svg>
+      Add report evidence
+    </button>
+    <div />
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'Health Safety Environment Inspection' ['desktop'] > /desktop/health-safety-environment-inspection/missing-required 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      Health Safety Environment Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="inspection-form-section d-grid gap-3"
+  >
+    <div
+      class="d-flex flex-wrap align-items-center justify-content-between gap-2"
+    >
+      <div>
+        <div
+          class="d-flex flex-wrap align-items-center gap-2"
+        >
+          <label
+            class="form-label fw-semibold text-muted mb-0"
+          >
+            Findings
+          </label>
+        </div>
+        <div
+          class="small text-body-secondary"
+        >
+          Record one finding at a time. Add photos if needed.
+        </div>
+      </div>
+      <button
+        aria-label="Add finding"
+        class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
+        type="button"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-plus me-1 align-text-bottom"
+          fill="none"
+          height="13"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="13"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M5 12h14"
+          />
+          <path
+            d="M12 5v14"
+          />
+        </svg>
+        Add finding
+      </button>
+    </div>
+    <div
+      class="rounded-3 border bg-light-subtle p-3 text-body-secondary"
+    >
+      No findings added.
+    </div>
+  </div>
+  <div
+    class="card inspection-general-evidence-card"
+  >
+    <div
+      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+    >
+      <div
+        class="fw-semibold"
+      >
+        Additional report evidence
+      </div>
+      <div
+        class="d-flex align-items-center gap-2"
+      >
+        <button
+          aria-label="Take photo"
+          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-camera me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
+            />
+            <circle
+              cx="12"
+              cy="13"
+              r="3"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Take photo
+          </span>
+        </button>
+        <button
+          aria-label="Upload photo"
+          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-upload me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 3v12"
+            />
+            <path
+              d="m17 8-5-5-5 5"
+            />
+            <path
+              d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Upload photo
+          </span>
+        </button>
+      </div>
+    </div>
+    <div
+      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+    >
+      <div
+        class="small text-body-secondary"
+      >
+        Optional. Use this only for photos or remarks that apply to the whole inspection/location, not a specific finding or equipment item.
+      </div>
+      <div
+        class="d-grid gap-1"
+      >
+        <label
+          class="form-label small fw-semibold text-muted mb-0"
+        >
+          Additional report remarks
+        </label>
+        <textarea
+          aria-label="Additional report remarks"
+          class="form-control"
+          maxlength="2000"
+          placeholder="Optional remarks for the whole inspection/location."
+          rows="3"
+        />
+      </div>
+      <div
+        class="text-body-secondary"
+      >
+        No additional report photos added.
+      </div>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'Health Safety Environment Inspection' ['mobile'] > /mobile/health-safety-environment-inspection/missing-required 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      Health Safety Environment Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="inspection-form-section d-grid gap-3"
+  >
+    <div
+      class="d-flex flex-wrap align-items-center justify-content-between gap-2"
+    >
+      <div>
+        <div
+          class="d-flex flex-wrap align-items-center gap-2"
+        >
+          <label
+            class="form-label fw-semibold text-muted mb-0"
+          >
+            Findings
+          </label>
+        </div>
+        <div
+          class="small text-body-secondary"
+        >
+          Record one finding at a time. Add photos if needed.
+        </div>
+      </div>
+      <button
+        aria-label="Add finding"
+        class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
+        type="button"
+      >
+        <svg
+          aria-hidden="true"
+          class="lucide lucide-plus me-1 align-text-bottom"
+          fill="none"
+          height="13"
+          stroke="currentColor"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="13"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M5 12h14"
+          />
+          <path
+            d="M12 5v14"
+          />
+        </svg>
+        Add finding
+      </button>
+    </div>
+    <div
+      class="rounded-3 border bg-light-subtle p-3 text-body-secondary"
+    >
+      No findings added.
+    </div>
+  </div>
+  <div
+    class="inspection-general-evidence-mobile-compact d-grid gap-2"
+  >
+    <button
+      aria-label="Add report evidence"
+      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      type="button"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-plus me-1 align-text-bottom"
+        fill="none"
+        height="13"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="13"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M5 12h14"
+        />
+        <path
+          d="M12 5v14"
+        />
+      </svg>
+      Add report evidence
+    </button>
+    <div />
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'High Angle Rescue Equipment Inspection' ['desktop'] > /desktop/high-angle-rescue-equipment-inspection/missing-required 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      High Angle Rescue Equipment Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="card inspection-general-evidence-card"
+  >
+    <div
+      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+    >
+      <div
+        class="fw-semibold"
+      >
+        Additional report evidence
+      </div>
+      <div
+        class="d-flex align-items-center gap-2"
+      >
+        <button
+          aria-label="Take photo"
+          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-camera me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
+            />
+            <circle
+              cx="12"
+              cy="13"
+              r="3"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Take photo
+          </span>
+        </button>
+        <button
+          aria-label="Upload photo"
+          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-upload me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 3v12"
+            />
+            <path
+              d="m17 8-5-5-5 5"
+            />
+            <path
+              d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Upload photo
+          </span>
+        </button>
+      </div>
+    </div>
+    <div
+      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+    >
+      <div
+        class="small text-body-secondary"
+      >
+        Optional. Use this only for photos or remarks that apply to the whole inspection/location, not a specific finding or equipment item.
+      </div>
+      <div
+        class="d-grid gap-1"
+      >
+        <label
+          class="form-label small fw-semibold text-muted mb-0"
+        >
+          Additional report remarks
+        </label>
+        <textarea
+          aria-label="Additional report remarks"
+          class="form-control"
+          maxlength="2000"
+          placeholder="Optional remarks for the whole inspection/location."
+          rows="3"
+        />
+      </div>
+      <div
+        class="text-body-secondary"
+      >
+        No additional report photos added.
+      </div>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'High Angle Rescue Equipment Inspection' ['mobile'] > /mobile/high-angle-rescue-equipment-inspection/missing-required 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      High Angle Rescue Equipment Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="inspection-general-evidence-mobile-compact d-grid gap-2"
+  >
+    <button
+      aria-label="Add report evidence"
+      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      type="button"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-plus me-1 align-text-bottom"
+        fill="none"
+        height="13"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="13"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M5 12h14"
+        />
+        <path
+          d="M12 5v14"
+        />
+      </svg>
+      Add report evidence
+    </button>
+    <div />
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'Hydraulic Rescue Tools Inspection' ['desktop'] > /desktop/hydraulic-rescue-tools-inspection/missing-required 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      Hydraulic Rescue Tools Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="card inspection-general-evidence-card"
+  >
+    <div
+      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+    >
+      <div
+        class="fw-semibold"
+      >
+        Additional report evidence
+      </div>
+      <div
+        class="d-flex align-items-center gap-2"
+      >
+        <button
+          aria-label="Take photo"
+          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-camera me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
+            />
+            <circle
+              cx="12"
+              cy="13"
+              r="3"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Take photo
+          </span>
+        </button>
+        <button
+          aria-label="Upload photo"
+          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-upload me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 3v12"
+            />
+            <path
+              d="m17 8-5-5-5 5"
+            />
+            <path
+              d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Upload photo
+          </span>
+        </button>
+      </div>
+    </div>
+    <div
+      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+    >
+      <div
+        class="small text-body-secondary"
+      >
+        Optional. Use this only for photos or remarks that apply to the whole inspection/location, not a specific finding or equipment item.
+      </div>
+      <div
+        class="d-grid gap-1"
+      >
+        <label
+          class="form-label small fw-semibold text-muted mb-0"
+        >
+          Additional report remarks
+        </label>
+        <textarea
+          aria-label="Additional report remarks"
+          class="form-control"
+          maxlength="2000"
+          placeholder="Optional remarks for the whole inspection/location."
+          rows="3"
+        />
+      </div>
+      <div
+        class="text-body-secondary"
+      >
+        No additional report photos added.
+      </div>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'Hydraulic Rescue Tools Inspection' ['mobile'] > /mobile/hydraulic-rescue-tools-inspection/missing-required 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      Hydraulic Rescue Tools Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="inspection-general-evidence-mobile-compact d-grid gap-2"
+  >
+    <button
+      aria-label="Add report evidence"
+      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      type="button"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-plus me-1 align-text-bottom"
+        fill="none"
+        height="13"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="13"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M5 12h14"
+        />
+        <path
+          d="M12 5v14"
+        />
+      </svg>
+      Add report evidence
+    </button>
+    <div />
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'SCBA Inspection' ['desktop'] > /desktop/scba-inspection/missing-required 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      SCBA Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="card inspection-general-evidence-card"
+  >
+    <div
+      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+    >
+      <div
+        class="fw-semibold"
+      >
+        Additional report evidence
+      </div>
+      <div
+        class="d-flex align-items-center gap-2"
+      >
+        <button
+          aria-label="Take photo"
+          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-camera me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
+            />
+            <circle
+              cx="12"
+              cy="13"
+              r="3"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Take photo
+          </span>
+        </button>
+        <button
+          aria-label="Upload photo"
+          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-upload me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 3v12"
+            />
+            <path
+              d="m17 8-5-5-5 5"
+            />
+            <path
+              d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Upload photo
+          </span>
+        </button>
+      </div>
+    </div>
+    <div
+      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+    >
+      <div
+        class="small text-body-secondary"
+      >
+        Optional. Use this only for photos or remarks that apply to the whole inspection/location, not a specific finding or equipment item.
+      </div>
+      <div
+        class="d-grid gap-1"
+      >
+        <label
+          class="form-label small fw-semibold text-muted mb-0"
+        >
+          Additional report remarks
+        </label>
+        <textarea
+          aria-label="Additional report remarks"
+          class="form-control"
+          maxlength="2000"
+          placeholder="Optional remarks for the whole inspection/location."
+          rows="3"
+        />
+      </div>
+      <div
+        class="text-body-secondary"
+      >
+        No additional report photos added.
+      </div>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'SCBA Inspection' ['mobile'] > /mobile/scba-inspection/missing-required 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      SCBA Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="inspection-general-evidence-mobile-compact d-grid gap-2"
+  >
+    <button
+      aria-label="Add report evidence"
+      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      type="button"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-plus me-1 align-text-bottom"
+        fill="none"
+        height="13"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="13"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M5 12h14"
+        />
+        <path
+          d="M12 5v14"
+        />
+      </svg>
+      Add report evidence
+    </button>
+    <div />
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partial' state visual baseline for 'ER Aux Equipment Inspection' ['desktop'] > /desktop/er-aux-equipment-inspection/partial 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      ER Aux Equipment Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="card inspection-general-evidence-card"
+  >
+    <div
+      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+    >
+      <div
+        class="fw-semibold"
+      >
+        Additional report evidence
+      </div>
+      <div
+        class="d-flex align-items-center gap-2"
+      >
+        <button
+          aria-label="Take photo"
+          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-camera me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
+            />
+            <circle
+              cx="12"
+              cy="13"
+              r="3"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Take photo
+          </span>
+        </button>
+        <button
+          aria-label="Upload photo"
+          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-upload me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 3v12"
+            />
+            <path
+              d="m17 8-5-5-5 5"
+            />
+            <path
+              d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Upload photo
+          </span>
+        </button>
+      </div>
+    </div>
+    <div
+      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+    >
+      <div
+        class="small text-body-secondary"
+      >
+        Optional. Use this only for photos or remarks that apply to the whole inspection/location, not a specific finding or equipment item.
+      </div>
+      <div
+        class="d-grid gap-1"
+      >
+        <label
+          class="form-label small fw-semibold text-muted mb-0"
+        >
+          Additional report remarks
+        </label>
+        <textarea
+          aria-label="Additional report remarks"
+          class="form-control"
+          maxlength="2000"
+          placeholder="Optional remarks for the whole inspection/location."
+          rows="3"
+        />
+      </div>
+      <div
+        class="text-body-secondary"
+      >
+        No additional report photos added.
+      </div>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        1 item need attention before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+      <button
+        class="btn btn-primary disabled"
+        disabled=""
+        title="1 item need attention before review."
+        type="button"
+      >
+        Continue to Review
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-status text-body-secondary"
+        title="1 item need attention before review."
+      >
+        1 item need attention before review.
+      </div>
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+        <button
+          class="btn btn-primary inspection-form-sticky-review-btn disabled"
+          disabled=""
+          title="1 item need attention before review."
+          type="button"
+        >
+          Continue to Review
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partial' state visual baseline for 'ER Aux Equipment Inspection' ['mobile'] > /mobile/er-aux-equipment-inspection/partial 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      ER Aux Equipment Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="inspection-general-evidence-mobile-compact d-grid gap-2"
+  >
+    <button
+      aria-label="Add report evidence"
+      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      type="button"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-plus me-1 align-text-bottom"
+        fill="none"
+        height="13"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="13"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M5 12h14"
+        />
+        <path
+          d="M12 5v14"
+        />
+      </svg>
+      Add report evidence
+    </button>
+    <div />
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        1 item need attention before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+      <button
+        class="btn btn-primary disabled"
+        disabled=""
+        title="1 item need attention before review."
+        type="button"
+      >
+        Continue to Review
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-status text-body-secondary"
+        title="1 item need attention before review."
+      >
+        1 item need attention before review.
+      </div>
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+        <button
+          class="btn btn-primary inspection-form-sticky-review-btn disabled"
+          disabled=""
+          title="1 item need attention before review."
+          type="button"
+        >
+          Continue to Review
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partial' state visual baseline for 'Fire Extinguisher Inspection' ['desktop'] > /desktop/fire-extinguisher-inspection/partial 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start"
+  >
+    <div
+      class="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 text-body-secondary"
+    >
+      Choose a location to load fire extinguishers.
+    </div>
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partial' state visual baseline for 'Fire Extinguisher Inspection' ['mobile'] > /mobile/fire-extinguisher-inspection/partial 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start"
+  >
+    <div
+      class="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 text-body-secondary"
+    >
+      Choose a location to load fire extinguishers.
+    </div>
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partial' state visual baseline for 'Fire Truck Daily Readiness' ['desktop'] > /desktop/frt-daily-inspection/partial 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start"
+  >
+    <div
+      class="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 text-body-secondary"
+    >
+      Choose a compartment to load fire truck readiness items.
+    </div>
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partial' state visual baseline for 'Fire Truck Daily Readiness' ['mobile'] > /mobile/frt-daily-inspection/partial 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start"
+  >
+    <div
+      class="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 text-body-secondary"
+    >
+      Choose a compartment to load fire truck readiness items.
+    </div>
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partial' state visual baseline for 'General Inspection' ['desktop'] > /desktop/general-inspection/partial 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start"
+  >
+    <div
+      class="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 text-body-secondary"
+    >
+      Choose a location to continue inspection.
+    </div>
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partial' state visual baseline for 'General Inspection' ['mobile'] > /mobile/general-inspection/partial 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start"
+  >
+    <div
+      class="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 text-body-secondary"
+    >
+      Choose a location to continue inspection.
+    </div>
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partial' state visual baseline for 'Health Safety Environment Inspection' ['desktop'] > /desktop/health-safety-environment-inspection/partial 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start"
+  >
+    <div
+      class="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 text-body-secondary"
+    >
+      Choose a location to continue inspection.
+    </div>
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partial' state visual baseline for 'Health Safety Environment Inspection' ['mobile'] > /mobile/health-safety-environment-inspection/partial 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start"
+  >
+    <div
+      class="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 text-body-secondary"
+    >
+      Choose a location to continue inspection.
+    </div>
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partial' state visual baseline for 'High Angle Rescue Equipment Inspection' ['desktop'] > /desktop/high-angle-rescue-equipment-inspection/partial 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      High Angle Rescue Equipment Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="card inspection-general-evidence-card"
+  >
+    <div
+      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+    >
+      <div
+        class="fw-semibold"
+      >
+        Additional report evidence
+      </div>
+      <div
+        class="d-flex align-items-center gap-2"
+      >
+        <button
+          aria-label="Take photo"
+          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-camera me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
+            />
+            <circle
+              cx="12"
+              cy="13"
+              r="3"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Take photo
+          </span>
+        </button>
+        <button
+          aria-label="Upload photo"
+          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-upload me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 3v12"
+            />
+            <path
+              d="m17 8-5-5-5 5"
+            />
+            <path
+              d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Upload photo
+          </span>
+        </button>
+      </div>
+    </div>
+    <div
+      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+    >
+      <div
+        class="small text-body-secondary"
+      >
+        Optional. Use this only for photos or remarks that apply to the whole inspection/location, not a specific finding or equipment item.
+      </div>
+      <div
+        class="d-grid gap-1"
+      >
+        <label
+          class="form-label small fw-semibold text-muted mb-0"
+        >
+          Additional report remarks
+        </label>
+        <textarea
+          aria-label="Additional report remarks"
+          class="form-control"
+          maxlength="2000"
+          placeholder="Optional remarks for the whole inspection/location."
+          rows="3"
+        />
+      </div>
+      <div
+        class="text-body-secondary"
+      >
+        No additional report photos added.
+      </div>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partial' state visual baseline for 'High Angle Rescue Equipment Inspection' ['mobile'] > /mobile/high-angle-rescue-equipment-inspection/partial 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      High Angle Rescue Equipment Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="inspection-general-evidence-mobile-compact d-grid gap-2"
+  >
+    <button
+      aria-label="Add report evidence"
+      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      type="button"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-plus me-1 align-text-bottom"
+        fill="none"
+        height="13"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="13"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M5 12h14"
+        />
+        <path
+          d="M12 5v14"
+        />
+      </svg>
+      Add report evidence
+    </button>
+    <div />
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partial' state visual baseline for 'Hydraulic Rescue Tools Inspection' ['desktop'] > /desktop/hydraulic-rescue-tools-inspection/partial 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      Hydraulic Rescue Tools Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="card inspection-general-evidence-card"
+  >
+    <div
+      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+    >
+      <div
+        class="fw-semibold"
+      >
+        Additional report evidence
+      </div>
+      <div
+        class="d-flex align-items-center gap-2"
+      >
+        <button
+          aria-label="Take photo"
+          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-camera me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
+            />
+            <circle
+              cx="12"
+              cy="13"
+              r="3"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Take photo
+          </span>
+        </button>
+        <button
+          aria-label="Upload photo"
+          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-upload me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 3v12"
+            />
+            <path
+              d="m17 8-5-5-5 5"
+            />
+            <path
+              d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Upload photo
+          </span>
+        </button>
+      </div>
+    </div>
+    <div
+      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+    >
+      <div
+        class="small text-body-secondary"
+      >
+        Optional. Use this only for photos or remarks that apply to the whole inspection/location, not a specific finding or equipment item.
+      </div>
+      <div
+        class="d-grid gap-1"
+      >
+        <label
+          class="form-label small fw-semibold text-muted mb-0"
+        >
+          Additional report remarks
+        </label>
+        <textarea
+          aria-label="Additional report remarks"
+          class="form-control"
+          maxlength="2000"
+          placeholder="Optional remarks for the whole inspection/location."
+          rows="3"
+        />
+      </div>
+      <div
+        class="text-body-secondary"
+      >
+        No additional report photos added.
+      </div>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partial' state visual baseline for 'Hydraulic Rescue Tools Inspection' ['mobile'] > /mobile/hydraulic-rescue-tools-inspection/partial 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      Hydraulic Rescue Tools Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="inspection-general-evidence-mobile-compact d-grid gap-2"
+  >
+    <button
+      aria-label="Add report evidence"
+      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      type="button"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-plus me-1 align-text-bottom"
+        fill="none"
+        height="13"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="13"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M5 12h14"
+        />
+        <path
+          d="M12 5v14"
+        />
+      </svg>
+      Add report evidence
+    </button>
+    <div />
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partial' state visual baseline for 'SCBA Inspection' ['desktop'] > /desktop/scba-inspection/partial 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      SCBA Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="card inspection-general-evidence-card"
+  >
+    <div
+      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+    >
+      <div
+        class="fw-semibold"
+      >
+        Additional report evidence
+      </div>
+      <div
+        class="d-flex align-items-center gap-2"
+      >
+        <button
+          aria-label="Take photo"
+          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-camera me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
+            />
+            <circle
+              cx="12"
+              cy="13"
+              r="3"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Take photo
+          </span>
+        </button>
+        <button
+          aria-label="Upload photo"
+          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="lucide lucide-upload me-0 me-sm-1 align-text-bottom"
+            fill="none"
+            height="13"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="13"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M12 3v12"
+            />
+            <path
+              d="m17 8-5-5-5 5"
+            />
+            <path
+              d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+            />
+          </svg>
+          <span
+            class="d-none d-sm-inline"
+          >
+            Upload photo
+          </span>
+        </button>
+      </div>
+    </div>
+    <div
+      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+    >
+      <div
+        class="small text-body-secondary"
+      >
+        Optional. Use this only for photos or remarks that apply to the whole inspection/location, not a specific finding or equipment item.
+      </div>
+      <div
+        class="d-grid gap-1"
+      >
+        <label
+          class="form-label small fw-semibold text-muted mb-0"
+        >
+          Additional report remarks
+        </label>
+        <textarea
+          aria-label="Additional report remarks"
+          class="form-control"
+          maxlength="2000"
+          placeholder="Optional remarks for the whole inspection/location."
+          rows="3"
+        />
+      </div>
+      <div
+        class="text-body-secondary"
+      >
+        No additional report photos added.
+      </div>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;
+
+exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partial' state visual baseline for 'SCBA Inspection' ['mobile'] > /mobile/scba-inspection/partial 1`] = `
+<div>
+  <div
+    class="inspection-form-section inspection-form-body-start d-grid gap-3"
+  >
+    <div
+      data-testid="structured-section"
+    >
+      SCBA Inspection
+       section
+    </div>
+  </div>
+  <div
+    class="inspection-general-evidence-mobile-compact d-grid gap-2"
+  >
+    <button
+      aria-label="Add report evidence"
+      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      type="button"
+    >
+      <svg
+        aria-hidden="true"
+        class="lucide lucide-plus me-1 align-text-bottom"
+        fill="none"
+        height="13"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="13"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M5 12h14"
+        />
+        <path
+          d="M12 5v14"
+        />
+      </svg>
+      Add report evidence
+    </button>
+    <div />
+  </div>
+  <div
+    class="d-grid gap-2 d-none d-md-grid"
+  >
+    <div
+      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+    >
+      <div
+        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+      >
+        Complete required inspection items before review.
+      </div>
+      <button
+        class="btn btn-outline-secondary"
+        type="button"
+      >
+        Save Draft
+      </button>
+    </div>
+  </div>
+  <div
+    class="d-grid gap-2 d-md-none"
+  >
+    <div
+      aria-label="Form actions"
+      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
+      role="group"
+    >
+      <div
+        class="action-row-thumb-actions"
+      >
+        <button
+          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          type="button"
+        >
+          Save Draft
+        </button>
+      </div>
+    </div>
+    <div
+      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
+    />
+  </div>
+</div>
+`;

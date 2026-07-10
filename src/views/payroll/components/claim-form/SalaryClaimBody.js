@@ -133,7 +133,7 @@ const SalaryClaimBody = ({
         </CCardBody>
       </CCard>
 
-      <details className="rounded-3 border bg-white">
+      <details className="rounded-3 border bg-body">
         <summary className="d-flex align-items-center justify-content-between gap-2 px-3 py-3 fw-semibold">
           Salary baseline and adjustment details
           <span className="small text-body-secondary fw-normal">Expand</span>
@@ -178,7 +178,7 @@ const SalaryClaimBody = ({
         />
       )}
 
-      <details className="rounded-3 border bg-white">
+      <details className="rounded-3 border bg-body">
         <summary className="d-flex align-items-center justify-content-between gap-2 px-3 py-3 fw-semibold">
           Overtime payout details
           <span className="small text-body-secondary fw-normal">Expand</span>

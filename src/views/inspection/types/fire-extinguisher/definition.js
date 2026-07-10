@@ -9,6 +9,7 @@ import {
   isFireExtinguisherInspectionType,
   normalizeFireExtinguisherChecks,
 } from './helpers'
+import { buildSubLocationContinuationOptions, CONTINUATION_TOKENS } from '../continuationHelpers'
 import { createZoneLocationDetailContextFields } from '../detailConfigHelpers'
 import {
   buildFireExtinguisherDetailFindingItems,
@@ -17,6 +18,8 @@ import {
   renderFireExtinguisherDetailFindingContent,
 } from './section'
 import { INSPECTION_REPORT_EVIDENCE_COPY } from '../../inspectionReportEvidenceCopy'
+
+const text = (value) => String(value || '').trim()
 
 const fireExtinguisherInspectionDefinition = {
   key: 'fire-extinguisher-inspection',
@@ -54,6 +57,19 @@ const fireExtinguisherInspectionDefinition = {
   getSummary: getFireExtinguisherCheckSummary,
   getVisibleChecks: getFireExtinguisherVisibleChecks,
   getMissingFields: getFireExtinguisherMissingFields,
+  buildContinuationOptions: (form, _summary, context = {}) =>
+    buildSubLocationContinuationOptions({
+      form: {
+        ...form,
+        subLocation:
+          form.subLocation || form.currentSubLocation || form.location || form.sub_location || '',
+      },
+      getOptions: () => context?.subLocationOptions || context?.location?.subLocationOptions || [],
+      getSummary: getFireExtinguisherCheckSummary,
+      getMissingFields: getFireExtinguisherMissingFields,
+      label: CONTINUATION_TOKENS.location,
+      parentLabel: text(form.mainLocation),
+    }),
   buildChecklist: buildFireExtinguisherChecklist,
   buildDescription: buildFireExtinguisherDescription,
   normalizeChecks: normalizeFireExtinguisherChecks,

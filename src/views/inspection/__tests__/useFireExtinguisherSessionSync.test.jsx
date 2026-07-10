@@ -152,4 +152,49 @@ describe('useFireExtinguisherSessionSync', () => {
       countFireExtinguisherSessionRetryQueue({ userId: 'user-1', sessionUid: 'session-a' }),
     ).toBe(1)
   })
+
+  it("keeps another inspector's completed extinguisher interactive while preserving attribution", async () => {
+    sessionApiMock.fetchInspectionSessionResults.mockResolvedValue({
+      rows: [
+        {
+          id: 'session-result-1',
+          canonicalAssetKey: 'catalog:fe-1',
+          status: 'completed',
+          checkedBy: 'Inspector A',
+          checkedByUserId: 'user-1',
+          checkedAt: '2026-07-10T21:56:00+08:00',
+          version: 3,
+          checkPayload: completeRow,
+        },
+      ],
+      meta: null,
+    })
+
+    const { result } = renderHook(() =>
+      useFireExtinguisherSessionSync({
+        enabled: true,
+        inspectionType: 'Fire Extinguisher Inspection',
+        zone: 'Zone 1',
+        mainLocation: 'Manjung Hub',
+        subLocation: 'Reception',
+        currentUserId: 'user-2',
+      }),
+    )
+
+    await waitFor(() => expect(result.current.results).toHaveLength(1))
+
+    const [merged] = result.current.mergeSessionStatus([
+      {
+        id: 'fe-1',
+        canonicalAssetKey: 'catalog:fe-1',
+        idLocNo: 'FE-001',
+      },
+    ])
+
+    expect(merged).toMatchObject({
+      physicalCondition: 'Good',
+      sessionCheckedBy: 'Inspector A',
+      sessionStatus: 'completed',
+    })
+  })
 })

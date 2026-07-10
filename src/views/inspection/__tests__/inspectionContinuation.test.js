@@ -90,6 +90,7 @@ describe('inspectionContinuation', () => {
       inspectionType: 'Hydraulic Rescue Tools Inspection',
       inspectedAt: '',
       description: '',
+      reportRemarks: '',
       photos: [],
       checklist: [],
       hydraulicChecks: [],

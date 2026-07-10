@@ -1,5 +1,5 @@
 import React from 'react'
-import { CButton, CFormTextarea } from '@coreui/react'
+import { CButton, CFormFeedback, CFormLabel, CFormTextarea } from '@coreui/react'
 import { ClipboardCheck, Sparkles } from 'lucide-react'
 
 const AI_BUTTON_STYLE = {
@@ -11,6 +11,7 @@ const AI_BUTTON_STYLE = {
 const IncidentSummaryTextarea = ({
   value,
   invalid,
+  error = '',
   onChange,
   onGenerate,
   onReview,
@@ -23,9 +24,13 @@ const IncidentSummaryTextarea = ({
   return (
     <div className="d-grid gap-2">
       <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
-        <div className="fw-semibold text-muted" style={{ minWidth: 0 }}>
+        <CFormLabel
+          htmlFor="erco-incident-summary"
+          className="fw-semibold text-muted mb-0"
+          style={{ minWidth: 0 }}
+        >
           Summary of Emergency / Incident
-        </div>
+        </CFormLabel>
         <div className="d-flex flex-wrap gap-2">
           <CButton
             type="button"
@@ -59,12 +64,13 @@ const IncidentSummaryTextarea = ({
         </div>
       </div>
       <CFormTextarea
+        id="erco-incident-summary"
         rows={4}
         value={value}
         invalid={invalid}
         onChange={onChange}
-        aria-label="Summary of Emergency / Incident"
       />
+      <CFormFeedback invalid>{error}</CFormFeedback>
     </div>
   )
 }

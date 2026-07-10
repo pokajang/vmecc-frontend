@@ -1,12 +1,13 @@
 import React, { Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import { CAlert, CContainer, CSpinner } from '@coreui/react'
+import { CAlert, CContainer } from '@coreui/react'
 
 // routes config
 import routes from '../routes'
 import ErrorBoundary from './ErrorBoundary'
 import { getModuleDisabledReason, isModuleEnabled } from 'src/utils/modules'
+import PageState from './PageState'
 
 const ModuleDisabled = ({ moduleKey, moduleActivation }) => {
   const state = getModuleDisabledReason(moduleActivation, moduleKey)
@@ -29,7 +30,7 @@ const AppContent = () => {
       className="px-3 px-md-4 px-xl-5 py-3 py-md-4 d-flex flex-column flex-grow-1"
       style={{ minHeight: 0 }}
     >
-      <Suspense fallback={<CSpinner color="primary" />}>
+      <Suspense fallback={<PageState message="Loading page…" minHeight={240} />}>
         <Routes>
           {routes.map((route, idx) => {
             const routeModule = route.module || null

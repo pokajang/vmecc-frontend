@@ -149,13 +149,16 @@ const ApprovalRulesEditor = ({
       ) : null}
 
       <div className="border rounded-3 p-3 d-grid gap-2">
-        <div className="fw-semibold">Fallback Rule</div>
+        <div className="fw-semibold">Fallback rule</div>
         <div className="small text-muted">Used when no active role rule matches.</div>
         <div className="row g-2">
           {stageFields.map((stage) => (
             <div className="col-12 col-md-4" key={stage.key}>
-              <CFormLabel className="small mb-1">{stage.label}</CFormLabel>
+              <CFormLabel htmlFor={`fallback-rule-${stage.key}`} className="small mb-1">
+                {stage.label}
+              </CFormLabel>
               <CFormSelect
+                id={`fallback-rule-${stage.key}`}
                 size="sm"
                 value={policy?.fallback?.[stage.key] || ''}
                 onChange={(event) => setFallbackField?.(stage.key, event.target.value)}
@@ -199,7 +202,7 @@ const ApprovalRulesEditor = ({
                   ))}
                   <CTableHeaderCell className="text-center">Active</CTableHeaderCell>
                   <CTableHeaderCell className="table-sticky-action-cell text-center">
-                    Action
+                    Actions
                   </CTableHeaderCell>
                 </CTableRow>
               </CTableHead>
@@ -208,6 +211,7 @@ const ApprovalRulesEditor = ({
                   <CTableRow key={rule.id}>
                     <CTableDataCell>
                       <CFormSelect
+                        aria-label={`Applicant role for rule ${rule.id}`}
                         size="sm"
                         value={rule.applicantRole}
                         onChange={(event) =>
@@ -226,6 +230,7 @@ const ApprovalRulesEditor = ({
                     {stageFields.map((stage) => (
                       <CTableDataCell key={`${rule.id}-${stage.key}`}>
                         <CFormSelect
+                          aria-label={`${stage.label} role for rule ${rule.id}`}
                           size="sm"
                           value={rule[stage.key] || ''}
                           onChange={(event) =>

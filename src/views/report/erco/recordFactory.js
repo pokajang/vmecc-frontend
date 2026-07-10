@@ -60,9 +60,16 @@ export const buildErcoRecord = ({
       improvementOpportunities: normalizeAnalysisRows(analysis?.improvementOpportunities),
       photos: (Array.isArray(analysis?.photos) ? analysis.photos : [])
         .map((photo) => ({
+          ...photo,
           id: String(photo?.id || '').trim(),
+          mediaId: String(photo?.mediaId || photo?.media_id || '').trim(),
           fileName: String(photo?.fileName || '').trim(),
           url: String(photo?.url || '').trim(),
+          thumbnailUrl: String(photo?.thumbnailUrl || photo?.thumbnail_url || '').trim(),
+          mimeType: String(photo?.mimeType || photo?.mime_type || '').trim(),
+          sizeBytes: Number(photo?.sizeBytes || photo?.size_bytes || 0),
+          width: Number(photo?.width || 0),
+          height: Number(photo?.height || 0),
           description: String(photo?.description || '').trim(),
         }))
         .filter((photo) => photo.url),

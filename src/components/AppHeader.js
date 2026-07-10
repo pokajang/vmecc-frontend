@@ -120,6 +120,15 @@ const AppHeader = () => {
 
   const closeMobileOverlay = useCallback(() => setMobileOverlay(null), [])
 
+  const closeAiHelper = useCallback(() => {
+    if (!aiHelperOpen) return
+    dispatch({
+      type: 'set',
+      aiHelperOpen: false,
+      ...(isDesktop ? { sidebarShow: true } : {}),
+    })
+  }, [aiHelperOpen, dispatch, isDesktop])
+
   const pushToast = useCallback((message, { title = '', color = 'light' } = {}) => {
     addToast(
       <CToast autohide delay={4000} color={color}>
@@ -136,6 +145,7 @@ const AppHeader = () => {
   const handleSheetNavigate = useCallback(
     (item) => {
       if (!item) return
+      closeAiHelper()
       if (item.action === PWA_INSTALL_ACTION) {
         void openInstallExperience()
         setMobileOverlay(null)
@@ -149,11 +159,12 @@ const AppHeader = () => {
       if (item.to) guardedNavigate(item.to)
       setMobileOverlay(null)
     },
-    [guardedNavigate, openInstallExperience],
+    [closeAiHelper, guardedNavigate, openInstallExperience],
   )
 
   const handleMobileLogout = useCallback(async () => {
     if (isLoggingOut) return
+    closeAiHelper()
     setIsLoggingOut(true)
     try {
       await logoutRequest()
@@ -177,7 +188,7 @@ const AppHeader = () => {
       navigate('/login', { replace: true })
       setIsLoggingOut(false)
     }
-  }, [dispatch, isLoggingOut, navigate])
+  }, [closeAiHelper, dispatch, isLoggingOut, navigate])
 
   const openNotifDrawer = useCallback((e) => {
     e.preventDefault()
@@ -197,14 +208,18 @@ const AppHeader = () => {
     setFeedbackError('')
   }, [isSubmittingFeedback])
 
-  const openFeedbackReportModal = useCallback((event) => {
-    event?.preventDefault?.()
-    returnFocusRef.current = event?.currentTarget || null
-    event?.currentTarget?.blur?.()
-    setMobileOverlay(null)
-    setFeedbackError('')
-    setFeedbackModalVisible(true)
-  }, [])
+  const openFeedbackReportModal = useCallback(
+    (event) => {
+      event?.preventDefault?.()
+      returnFocusRef.current = event?.currentTarget || null
+      event?.currentTarget?.blur?.()
+      closeAiHelper()
+      setMobileOverlay(null)
+      setFeedbackError('')
+      setFeedbackModalVisible(true)
+    },
+    [closeAiHelper],
+  )
 
   const handleFeedbackSubmit = useCallback(async () => {
     const trimmedMessage = feedbackMessage.trim()

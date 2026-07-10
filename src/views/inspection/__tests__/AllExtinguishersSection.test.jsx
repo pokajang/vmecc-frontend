@@ -40,7 +40,7 @@ describe('AllExtinguishersSection', () => {
     expect(screen.getByText('Last Inspected Date')).toBeTruthy()
     expect(screen.getByText('Remarks')).toBeTruthy()
     expect(screen.getByText('Operational')).toBeTruthy()
-    expect(screen.getByText('Action').className).toContain(
+    expect(screen.getByRole('columnheader', { name: 'Actions' }).className).toContain(
       'all-extinguishers-table__sticky-action-cell',
     )
 

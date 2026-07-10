@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useId, useRef } from 'react'
 import { ChevronLeft, X } from 'lucide-react'
 
 import useFocusTrap from 'src/hooks/useFocusTrap'
+import useMediaQuery from 'src/hooks/useMediaQuery'
+import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 
 const MobileOverlayShell = ({
   open,
@@ -22,16 +24,17 @@ const MobileOverlayShell = ({
   const closeButtonRef = useRef(null)
   const titleId = useId()
   const hasBackButton = Boolean(onBack)
+  const isMobileOverlay = useMediaQuery('(max-width: 767.98px)')
 
   useEffect(() => {
-    if (!open) return undefined
+    if (!open || isMobileOverlay) return undefined
 
     const originalOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => {
       document.body.style.overflow = originalOverflow
     }
-  }, [open])
+  }, [isMobileOverlay, open])
 
   const handleEscape = useCallback(() => {
     if (onEscape) {
@@ -53,7 +56,50 @@ const MobileOverlayShell = ({
     onEscape: handleEscape,
   })
 
+  const handleMobileClose = useCallback(() => {
+    onClose?.()
+  }, [onClose])
+
   if (!open) return null
+
+  if (isMobileOverlay) {
+    return (
+      <MobileBottomDrawer
+        visible={open}
+        onClose={handleMobileClose}
+        aria-label={ariaLabel || title}
+        closeLabel="Close"
+        title={
+          <>
+            <span className="mobile-overlay-shell-title">
+              <span className="mobile-overlay-shell-title-text">{title}</span>
+              {count > 0 && <span className="mobile-overlay-shell-count">{count}</span>}
+            </span>
+          </>
+        }
+        titleAction={
+          hasBackButton ? (
+            <button
+              type="button"
+              className="mobile-nav-sheet-icon-btn mobile-overlay-shell-icon-btn"
+              onClick={onBack}
+              aria-label="Back"
+            >
+              <ChevronLeft size={18} />
+            </button>
+          ) : null
+        }
+        headerAction={<div className="mobile-overlay-shell-actions">{headerActions}</div>}
+        className={`mobile-overlay-shell ${className}`.trim()}
+        bodyClassName={`mobile-nav-sheet-body mobile-overlay-shell-body ${bodyClassName}`.trim()}
+        panelRef={(element) => {
+          panelRef.current = element
+        }}
+      >
+        {children}
+      </MobileBottomDrawer>
+    )
+  }
 
   return (
     <>
@@ -112,7 +158,9 @@ const MobileOverlayShell = ({
         </div>
 
         <div
-          className={`mobile-nav-sheet-body mobile-overlay-shell-body${bodyClassName ? ` ${bodyClassName}` : ''}`}
+          className={`mobile-nav-sheet-body mobile-overlay-shell-body${
+            bodyClassName ? ` ${bodyClassName}` : ''
+          }`}
         >
           {children}
         </div>

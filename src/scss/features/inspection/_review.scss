@@ -366,6 +366,57 @@
   white-space: nowrap;
 }
 
+.all-extinguishers-summary-strip {
+  row-gap: 0.7rem;
+  column-gap: 0.75rem;
+}
+
+.all-extinguishers-summary-item {
+  --bg: #f8f9fa;
+  --border: var(--cui-border-color);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.42rem 0.95rem;
+  font-size: 0.9rem;
+  line-height: 1.25;
+  background: var(--bg);
+}
+
+.all-extinguishers-summary-item__label,
+.all-extinguishers-summary-label {
+  color: var(--cui-secondary-color);
+  white-space: nowrap;
+}
+
+.all-extinguishers-summary-value {
+  font-weight: 700;
+}
+
+.all-extinguishers-summary-item--clickable {
+  border: 1px solid rgba(13, 110, 253, 0.25);
+  background: rgba(13, 110, 253, 0.06);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.all-extinguishers-summary-item--clickable:hover {
+  border-color: rgba(13, 110, 253, 0.45);
+}
+
+.all-extinguishers-summary-item--active {
+  border-color: rgba(13, 110, 253, 0.55);
+  background: rgba(13, 110, 253, 0.14);
+}
+
+.all-extinguishers-summary-item--clickable:focus-visible {
+  outline: 0;
+  box-shadow: inset 0 0 0 0.14rem rgba(13, 110, 253, 0.25);
+}
+
 .all-extinguishers-table {
   width: 100%;
   min-width: 100%;
@@ -403,7 +454,7 @@
   position: sticky;
   right: 0;
   z-index: 2;
-  background: #ffffff;
+  background: var(--cui-body-bg);
   box-shadow: -1px 0 0 var(--cui-border-color);
 }
 
@@ -472,7 +523,7 @@
   max-width: 100vw;
   flex-direction: column;
   border-left: 1px solid var(--cui-border-color);
-  background: #ffffff;
+  background: var(--cui-body-bg);
   box-shadow: -14px 0 32px rgba(15, 23, 42, 0.18);
 }
 

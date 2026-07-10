@@ -8,6 +8,7 @@ import {
   CModalBody,
   CModalFooter,
   CModalHeader,
+  CModalTitle,
 } from '@coreui/react'
 import BulkSelectionSummaryPreview from './BulkSelectionSummaryPreview'
 
@@ -28,22 +29,30 @@ const SalaryClaimPaymentModal = ({
   const isMarkMode = mode === 'mark'
   const title = isMarkMode
     ? scope === 'bulk'
-      ? 'Bulk Mark Paid'
-      : 'Mark Paid'
+      ? 'Bulk mark paid'
+      : 'Mark paid'
     : scope === 'bulk'
-      ? 'Bulk Unmark Paid'
-      : 'Unmark Paid'
+      ? 'Bulk unmark paid'
+      : 'Unmark paid'
   const actionLabel = isMarkMode
     ? scope === 'bulk'
       ? 'Mark selected paid'
-      : 'Mark Paid'
+      : 'Mark paid'
     : scope === 'bulk'
       ? 'Unmark selected'
-      : 'Unmark Paid'
+      : 'Unmark paid'
 
   return (
-    <CModal visible={visible} alignment="center" onClose={onClose}>
-      <CModalHeader>{title}</CModalHeader>
+    <CModal
+      visible={visible}
+      alignment="center"
+      onClose={() => {
+        if (!isSubmitting) onClose()
+      }}
+    >
+      <CModalHeader>
+        <CModalTitle>{title}</CModalTitle>
+      </CModalHeader>
       <CModalBody className="d-grid gap-3">
         {scope === 'bulk' ? (
           <BulkSelectionSummaryPreview
@@ -60,20 +69,24 @@ const SalaryClaimPaymentModal = ({
         {isMarkMode ? (
           <>
             <div>
-              <CFormLabel htmlFor="salary-mark-paid-date">Payment Date</CFormLabel>
+              <CFormLabel htmlFor="salary-mark-paid-date">Payment date</CFormLabel>
               <CFormInput
                 id="salary-mark-paid-date"
                 type="date"
+                invalid={Boolean(errors.paymentDate)}
+                aria-describedby={errors.paymentDate ? 'salary-mark-paid-date-error' : undefined}
                 value={values.paymentDate || ''}
                 onChange={(event) => onChange('paymentDate', event.target.value)}
               />
               {errors.paymentDate ? (
-                <div className="text-danger small mt-1">{errors.paymentDate}</div>
+                <div id="salary-mark-paid-date-error" className="text-danger small mt-1">
+                  {errors.paymentDate}
+                </div>
               ) : null}
             </div>
             <div>
               <CFormLabel htmlFor="salary-mark-paid-reference">
-                Payment Reference (optional)
+                Payment reference (optional)
               </CFormLabel>
               <CFormInput
                 id="salary-mark-paid-reference"
@@ -83,7 +96,7 @@ const SalaryClaimPaymentModal = ({
               />
             </div>
             <div>
-              <CFormLabel htmlFor="salary-mark-paid-note">Payment Note (optional)</CFormLabel>
+              <CFormLabel htmlFor="salary-mark-paid-note">Payment note (optional)</CFormLabel>
               <CFormTextarea
                 id="salary-mark-paid-note"
                 rows={3}
@@ -98,15 +111,21 @@ const SalaryClaimPaymentModal = ({
             <CFormTextarea
               id="salary-unmark-paid-reason"
               rows={4}
+              invalid={Boolean(errors.reason)}
+              aria-describedby={errors.reason ? 'salary-unmark-paid-reason-error' : undefined}
               value={values.reason || ''}
               onChange={(event) => onChange('reason', event.target.value)}
             />
-            {errors.reason ? <div className="text-danger small mt-1">{errors.reason}</div> : null}
+            {errors.reason ? (
+              <div id="salary-unmark-paid-reason-error" className="text-danger small mt-1">
+                {errors.reason}
+              </div>
+            ) : null}
           </div>
         )}
       </CModalBody>
       <CModalFooter>
-        <CButton color="light" onClick={onClose} disabled={isSubmitting}>
+        <CButton color="secondary" variant="outline" onClick={onClose} disabled={isSubmitting}>
           Cancel
         </CButton>
         <CButton

@@ -6,6 +6,7 @@
  * Async functions return { ok, data/rows, ... } to match the old localStorage shape.
  */
 import { apiRequest, buildApiUrl } from 'src/services/apiClient'
+import { uploadLeaveAttachmentFile } from 'src/services/api/reportMediaApi'
 import { normalizeApiLeaveRecord, normalizeApiAssignmentRow } from './leaveApiNormalizer'
 
 // ── Leave Records ─────────────────────────────────────────────────────────────
@@ -120,22 +121,19 @@ export const clearLeaveDraft = async (_userId) => {
  * Upload attachment (POST /leave/attachments via multipart).
  * Returns { ok, attachmentId } where attachmentId is the integer DB id.
  */
-export const putLeaveAttachmentBlob = async (_userId, file, _meta = {}) => {
+export const putLeaveAttachmentBlob = async (_userId, file, meta = {}) => {
   if (!file) return { ok: false, error: new Error('No file provided.') }
 
   try {
-    const formData = new FormData()
-    formData.append('file', file)
-
-    const result = await apiRequest('/leave/attachments', {
-      method: 'POST',
-      body: formData,
-      // Let browser set Content-Type (multipart/form-data with boundary)
-      headers: { Accept: 'application/json' },
+    const attachment = await uploadLeaveAttachmentFile({
+      file,
+      source: meta.source === 'camera' ? 'camera' : 'upload',
+      signal: meta.signal,
+      onProgress: meta.onProgress,
+      onRetry: meta.onRetry,
     })
-
-    const attachmentId = result?.data?.id ?? null
-    return { ok: true, attachmentId }
+    const attachmentId = attachment?.id ?? null
+    return { ok: true, attachmentId, attachment }
   } catch (error) {
     return { ok: false, error }
   }

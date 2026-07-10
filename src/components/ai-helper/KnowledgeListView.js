@@ -50,29 +50,6 @@ const KnowledgeListView = ({
           )}
         </button>
       </div>
-      {knowledgeDeleteTarget ? (
-        <div ref={confirmationRef} className="ai-helper-history-confirm">
-          <div>
-            Delete <span>{`"${knowledgeEntryName(knowledgeDeleteTarget)}"?`}</span>
-          </div>
-          <div className="ai-helper-history-confirm__actions">
-            <button
-              type="button"
-              onClick={() => onKnowledgeDeleteTargetChange(null)}
-              disabled={Boolean(knowledgeUpdatingId)}
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={onConfirmDeleteKnowledge}
-              disabled={Boolean(knowledgeUpdatingId)}
-            >
-              {knowledgeUpdatingId ? 'Deleting...' : 'Delete'}
-            </button>
-          </div>
-        </div>
-      ) : null}
 
       {knowledgeInitialLoading ? (
         <div className="ai-helper-knowledge__list" aria-label="Loading knowledge list">
@@ -108,65 +85,116 @@ const KnowledgeListView = ({
             {knowledgeEntries.map((entry) => {
               const canDeleteKnowledge =
                 canManageKnowledge || Number(entry.uploaded_by) === Number(authUser?.id)
+              const isDeleteTarget =
+                String(knowledgeDeleteTarget?.id ?? '') === String(entry.id ?? '')
 
               return (
-                <div key={entry.id} className="ai-helper-knowledge__item">
-                  <button
-                    type="button"
-                    className="ai-helper-knowledge__open"
-                    onClick={() => onOpenKnowledge(entry.id)}
-                    aria-label={`Open ${knowledgeEntryName(entry)}`}
-                  >
-                    <div className="ai-helper-knowledge__item-main">
-                      <CTooltip content={knowledgeEntryName(entry)} placement="top">
-                        <div className="ai-helper-knowledge__title">
-                          {knowledgeEntryName(entry)}
-                        </div>
-                      </CTooltip>
-                      {entry.summary ? (
-                        <div className="ai-helper-knowledge__summary">{entry.summary}</div>
-                      ) : null}
-                      <div className="ai-helper-knowledge__meta">
-                        <span>Scope</span> {knowledgeScopeLabel(entry)} - {knowledgeUseLabel(entry)}
+                <div
+                  key={entry.id}
+                  className={`ai-helper-knowledge__item${
+                    isDeleteTarget ? ' ai-helper-knowledge__item--delete-confirmation' : ''
+                  }`}
+                >
+                  {isDeleteTarget ? (
+                    <div
+                      ref={confirmationRef}
+                      className="ai-helper-knowledge__delete-confirmation"
+                      role="group"
+                      aria-label={`Delete ${knowledgeEntryName(entry)} confirmation`}
+                    >
+                      <div className="ai-helper-knowledge__delete-confirmation-prompt">
+                        Delete <span>{`"${knowledgeEntryName(entry)}"?`}</span>
                       </div>
-                      <div className="ai-helper-knowledge__meta">
-                        <span>Uploaded by</span> {entry.uploader_name || 'Unknown user'}
-                        {entry.created_at ? ` - ${formatKnowledgeDate(entry.created_at)}` : ''}
-                        {entry.source_size ? ` - ${formatFileSize(entry.source_size)}` : ''}
+                      <div className="ai-helper-history-confirm__actions">
+                        <button
+                          type="button"
+                          onClick={() => onKnowledgeDeleteTargetChange(null)}
+                          disabled={Boolean(knowledgeUpdatingId)}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={onConfirmDeleteKnowledge}
+                          disabled={Boolean(knowledgeUpdatingId)}
+                        >
+                          {knowledgeUpdatingId ? 'Deleting...' : 'Delete'}
+                        </button>
                       </div>
-                      {entry.review_note ? (
-                        <div className="ai-helper-knowledge__meta">
-                          <span>Review note</span> {entry.review_note}
-                        </div>
-                      ) : null}
-                      {Array.isArray(entry.processing_warnings) &&
-                      entry.processing_warnings.length ? (
-                        <div className="ai-helper-knowledge__warning">
-                          {entry.processing_warnings[0]}
-                        </div>
-                      ) : null}
-                      {entry.error ? (
-                        <div className="ai-helper-knowledge__error">{entry.error}</div>
-                      ) : null}
                     </div>
-                  </button>
-                  {canDeleteKnowledge ? (
-                    <div className="ai-helper-knowledge__actions">
+                  ) : (
+                    <>
                       <button
                         type="button"
-                        className="ai-helper-knowledge__delete"
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          onKnowledgeDeleteTargetChange(entry)
-                        }}
-                        disabled={knowledgeUpdatingId === entry.id}
-                        aria-label={`Delete ${knowledgeEntryName(entry)}`}
-                        title="Delete knowledge"
+                        className="ai-helper-knowledge__open"
+                        onClick={() => onOpenKnowledge(entry.id)}
+                        aria-label={`Open ${knowledgeEntryName(entry)}`}
                       >
-                        <Trash2 size={15} />
+                        <div className="ai-helper-knowledge__item-main">
+                          <CTooltip content={knowledgeEntryName(entry)} placement="top">
+                            <div className="ai-helper-knowledge__title">
+                              {knowledgeEntryName(entry)}
+                            </div>
+                          </CTooltip>
+                          {entry.summary ? (
+                            <div className="ai-helper-knowledge__summary">{entry.summary}</div>
+                          ) : null}
+                          <div className="ai-helper-knowledge__meta">
+                            <span>Scope</span> {knowledgeScopeLabel(entry)} -{' '}
+                            {knowledgeUseLabel(entry)}
+                          </div>
+                          <div className="ai-helper-knowledge__meta">
+                            <span>Uploaded by</span> {entry.uploader_name || 'Unknown user'}
+                            {entry.created_at ? ` - ${formatKnowledgeDate(entry.created_at)}` : ''}
+                            {entry.source_size ? ` - ${formatFileSize(entry.source_size)}` : ''}
+                          </div>
+                          <div className="ai-helper-knowledge__meta">
+                            <span>Ingestion</span>{' '}
+                            {entry.extraction_complete
+                              ? `Complete${entry.extraction_mode ? ` (${entry.extraction_mode})` : ''}`
+                              : entry.status === 'processing'
+                                ? 'Preparing complete document index'
+                                : 'Not ready'}
+                            {entry.pdf_page_count ? ` - ${entry.pdf_page_count} pages` : ''}
+                            {entry.extracted_characters
+                              ? ` - ${entry.extracted_characters} characters`
+                              : ''}
+                          </div>
+                          {entry.review_note ? (
+                            <div className="ai-helper-knowledge__meta">
+                              <span>Review note</span> {entry.review_note}
+                            </div>
+                          ) : null}
+                          {Array.isArray(entry.processing_warnings) &&
+                          entry.processing_warnings.length ? (
+                            <div className="ai-helper-knowledge__warning">
+                              {entry.processing_warnings[0]}
+                            </div>
+                          ) : null}
+                          {entry.error ? (
+                            <div className="ai-helper-knowledge__error">{entry.error}</div>
+                          ) : null}
+                        </div>
                       </button>
-                    </div>
-                  ) : null}
+                      {canDeleteKnowledge ? (
+                        <div className="ai-helper-knowledge__actions">
+                          <button
+                            type="button"
+                            className="ai-helper-knowledge__delete"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              onKnowledgeDeleteTargetChange(entry)
+                            }}
+                            disabled={knowledgeUpdatingId === entry.id}
+                            aria-label={`Delete ${knowledgeEntryName(entry)}`}
+                            title="Delete knowledge"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      ) : null}
+                    </>
+                  )}
                 </div>
               )
             })}

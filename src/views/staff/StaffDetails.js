@@ -29,6 +29,8 @@ import useStaffActions from 'src/hooks/useStaffActions'
 import StaffActionModals from 'src/components/staff/StaffActionModals'
 import { roles as allRoles } from 'src/views/users/CreateStaffForm'
 import { getPrimaryRoleLabel, hasAnyPermission, hasPermission } from 'src/utils/authz'
+import { activateOnEnterOrSpace } from 'src/utils/uiAccessibility'
+import SortableTableHeader from 'src/components/SortableTableHeader'
 
 const StaffDetails = () => {
   const authUser = useSelector((state) => state.authUser)
@@ -349,39 +351,31 @@ const StaffDetails = () => {
                       mobileVariant="list-group"
                       renderDesktop={() => (
                         <div className="d-none d-md-block">
-                          <div className="rounded-3 shadow-sm overflow-hidden bg-white">
+                          <div className="rounded-3 shadow-sm overflow-hidden bg-body">
                             <CTable align="middle" className="mb-0" hover responsive>
                               <CTableHead color="light">
                                 <CTableRow>
                                   <CTableHeaderCell className="text-center">#</CTableHeaderCell>
-                                  <CTableHeaderCell
-                                    role="button"
-                                    onClick={() => toggleSort('name')}
-                                  >
+                                  <SortableTableHeader field="name" sort={sort} onSort={toggleSort}>
                                     Name
-                                  </CTableHeaderCell>
-                                  <CTableHeaderCell
-                                    role="button"
-                                    onClick={() => toggleSort('role')}
-                                  >
+                                  </SortableTableHeader>
+                                  <SortableTableHeader field="role" sort={sort} onSort={toggleSort}>
                                     Role
-                                  </CTableHeaderCell>
+                                  </SortableTableHeader>
                                   <CTableHeaderCell>Mobile</CTableHeaderCell>
                                   <CTableHeaderCell>Emergency contact</CTableHeaderCell>
-                                  <CTableHeaderCell
-                                    role="button"
-                                    onClick={() => toggleSort('team')}
-                                  >
+                                  <SortableTableHeader field="team" sort={sort} onSort={toggleSort}>
                                     Team
-                                  </CTableHeaderCell>
-                                  <CTableHeaderCell
-                                    role="button"
-                                    onClick={() => toggleSort('status')}
+                                  </SortableTableHeader>
+                                  <SortableTableHeader
+                                    field="status"
+                                    sort={sort}
+                                    onSort={toggleSort}
                                   >
                                     Status
-                                  </CTableHeaderCell>
+                                  </SortableTableHeader>
                                   <CTableHeaderCell className="text-center">
-                                    Action
+                                    Actions
                                   </CTableHeaderCell>
                                 </CTableRow>
                               </CTableHead>
@@ -390,8 +384,13 @@ const StaffDetails = () => {
                                   <CTableRow
                                     key={user.id}
                                     role="button"
+                                    tabIndex={0}
+                                    aria-label={`Open staff profile for ${user.name || user.id}`}
                                     className="cursor-pointer"
                                     onClick={() => goProfile(user.id)}
+                                    onKeyDown={(event) =>
+                                      activateOnEnterOrSpace(event, () => goProfile(user.id))
+                                    }
                                   >
                                     <CTableDataCell className="text-center">
                                       {index + 1}

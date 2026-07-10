@@ -50,7 +50,11 @@ import {
   saveScbaSectionToInspection,
   upsertScbaCatalogSections,
 } from './inspectionScbaCatalogActions'
-import { buildScbaCheckRow, buildScbaFillBlankGoodPatch } from './inspectionCheckBuilders'
+import {
+  buildScbaAllGoodPatch,
+  buildScbaCheckRow,
+  buildScbaFillBlankGoodPatch,
+} from './inspectionCheckBuilders'
 import { buildScbaResetPatch } from './inspectionResetActions'
 import {
   customFieldKeyFromLabel,
@@ -207,16 +211,10 @@ const useInspectionScbaRuntime = ({
   }
 
   const markScbaRowOk = (sectionKey, row) => {
-    const currentForm = getLatestForm()
-    const existing = getScbaExistingCheck(currentForm, sectionKey, String(row?.id || ''))
     updateScbaGroupedCheck(
       sectionKey,
       row,
-      buildScbaFillBlankGoodPatch(
-        scbaSectionFieldMap[sectionKey] || [],
-        { ...row, ...(existing || {}) },
-        SCBA_STATUS_OPTIONS[0].value,
-      ),
+      buildScbaAllGoodPatch(scbaSectionFieldMap[sectionKey] || [], SCBA_STATUS_OPTIONS[0].value),
     )
   }
 
@@ -485,6 +483,29 @@ const useInspectionScbaRuntime = ({
     )
   }
 
+  const markScbaGroupOk = (sectionKey) => {
+    const normalizedSectionKey = String(sectionKey || '').trim()
+    if (!normalizedSectionKey) return
+    const currentForm = getLatestForm()
+    const visibleSections = getScbaCheckSummary(currentForm).visibleSections || []
+    const section = visibleSections.find((candidate) => candidate.key === normalizedSectionKey)
+    if (!section) return
+
+    updateForm(
+      buildScbaFormAfterMarkAll({
+        currentForm,
+        visibleSections: [section],
+        getScbaChecksField,
+        updateScbaCustomSectionRows,
+        composeScbaCheckRow,
+        buildScbaFillBlankGoodPatch: (fields, _check, goodStatus) =>
+          buildScbaAllGoodPatch(fields, goodStatus),
+        scbaSectionFieldMap,
+        scbaGoodStatus: SCBA_STATUS_OPTIONS[0].value,
+      }),
+    )
+  }
+
   return {
     archiveScbaCatalogTarget,
     closeScbaItemModal,
@@ -492,6 +513,7 @@ const useInspectionScbaRuntime = ({
     getScbaExistingCheck,
     isSavingScbaCatalog,
     markAllScbaOk,
+    markScbaGroupOk,
     markScbaRowOk,
     openAddScbaItemModal,
     openAddScbaSectionModal,

@@ -2,6 +2,19 @@ const text = (value) => String(value || '').trim()
 
 export const normalizeContinuationKey = (value) => text(value).toLowerCase()
 
+export const CONTINUATION_TOKENS = Object.freeze({
+  location: 'location',
+  compartment: 'compartment',
+  kit: 'kit',
+})
+
+export const normalizeContinuationLabel = (label = CONTINUATION_TOKENS.location) => {
+  const normalized = normalizeContinuationKey(label)
+  return Object.prototype.hasOwnProperty.call(CONTINUATION_TOKENS, normalized)
+    ? normalized
+    : CONTINUATION_TOKENS.location
+}
+
 const normalizeOption = (option = {}) => {
   const value = text(option?.value || option?.title || option?.name)
   if (!value) return null
@@ -31,6 +44,36 @@ export const isSummaryComplete = ({ summary = {}, missingFields = {} } = {}) => 
   return totalCount > 0 && checkedCount >= totalCount && isMissingFieldsClear(missingFields)
 }
 
+const normalizeCompletionMetaLabel = (label = '') => {
+  const trimmedLabel = String(label || '').trim()
+  const progressMatch = trimmedLabel.match(/^\s*(\d+)\s*\/\s*(\d+)\s+(.+)$/)
+  if (progressMatch) return `${progressMatch[2]} ${progressMatch[3]}`
+  if (/^(completed|in progress)$/i.test(trimmedLabel)) return ''
+  return trimmedLabel
+}
+
+const isCompletionPresentation = (option = {}) => {
+  const label = String(option?.metaLabel || '').trim()
+  return (
+    /\d+\s*\/\s*\d+\s+/.test(label) ||
+    /^(completed|in progress)$/i.test(label) ||
+    option?.metaIconKey === 'check' ||
+    option?.progress?.isDone === true
+  )
+}
+
+export const neutralizeCompletionPresentation = (option = {}) => {
+  if (!isCompletionPresentation(option)) return option
+
+  const normalizedMetaLabel = normalizeCompletionMetaLabel(option?.metaLabel)
+  return {
+    ...option,
+    metaLabel: normalizedMetaLabel,
+    metaIconKey: '',
+    metaTone: 'muted',
+  }
+}
+
 const buildProgressLabel = (summary = {}, isDone = false) => {
   const totalCount = Number(summary?.totalCount || 0)
   const checkedCount = Number(summary?.checkedCount ?? summary?.completedCount ?? 0)
@@ -44,7 +87,7 @@ export const buildMainLocationContinuationOptions = ({
   form = {},
   getMissingFields,
   getSummary,
-  label = 'location',
+  label = CONTINUATION_TOKENS.location,
   options = null,
   parentLabel = '',
 }) => {
@@ -56,7 +99,7 @@ export const buildMainLocationContinuationOptions = ({
 
   return {
     scope: 'mainLocation',
-    label,
+    label: normalizeContinuationLabel(label),
     parentLabel,
     currentValue,
     options: normalizedOptions.map((option) => {
@@ -72,19 +115,21 @@ export const buildMainLocationContinuationOptions = ({
         typeof getMissingFields === 'function' ? getMissingFields(scopedForm) : {}
       const isDone = isSummaryComplete({ summary, missingFields })
       const metaLabel = buildProgressLabel(summary, isDone)
+      const metaTone = isDone ? 'success' : metaLabel ? 'muted' : option.metaTone
+      const progress = {
+        checkedCount: Number(summary?.checkedCount ?? summary?.completedCount ?? 0),
+        inspectedCount: Number(summary?.checkedCount ?? summary?.completedCount ?? 0),
+        totalCount: Number(summary?.totalCount || 0),
+        isDone,
+      }
 
-      return {
+      return neutralizeCompletionPresentation({
         ...option,
         metaLabel,
-        metaTone: isDone ? 'success' : metaLabel ? 'muted' : option.metaTone,
+        metaTone,
         metaIconKey: isDone ? 'check' : option.metaIconKey || '',
-        progress: {
-          checkedCount: Number(summary?.checkedCount ?? summary?.completedCount ?? 0),
-          inspectedCount: Number(summary?.checkedCount ?? summary?.completedCount ?? 0),
-          totalCount: Number(summary?.totalCount || 0),
-          isDone,
-        },
-      }
+        progress,
+      })
     }),
   }
 }
@@ -92,7 +137,7 @@ export const buildMainLocationContinuationOptions = ({
 export const buildSubLocationContinuationOptions = ({
   form = {},
   getOptions,
-  label = 'location',
+  label = CONTINUATION_TOKENS.location,
   parentLabel = '',
 }) => {
   const currentValue = text(form.subLocation || form.sub_location)
@@ -100,7 +145,7 @@ export const buildSubLocationContinuationOptions = ({
   if (!currentValue || options.length < 2) return null
   return {
     scope: 'subLocation',
-    label,
+    label: normalizeContinuationLabel(label),
     parentLabel,
     currentValue,
     options,

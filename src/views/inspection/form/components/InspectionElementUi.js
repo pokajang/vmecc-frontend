@@ -1,5 +1,5 @@
 import React from 'react'
-import { CButton, CCard, CCardBody, CCardHeader } from '@coreui/react'
+import { CBadge, CButton, CCard, CCardBody, CCardHeader } from '@coreui/react'
 import RowActions from 'src/components/RowActions'
 
 export const buildInspectionElementActions = ({
@@ -56,6 +56,7 @@ export const InspectionElementCard = ({
   title,
   meta = null,
   mobileMeta,
+  helperLines = [],
   status = null,
   badges = null,
   actions = [],
@@ -74,6 +75,9 @@ export const InspectionElementCard = ({
 }) => {
   const canToggle = !readOnly && typeof onToggle === 'function'
   const hasSeparateMobileMeta = mobileMeta !== undefined
+  const visibleHelperLines = (Array.isArray(helperLines) ? helperLines : [helperLines]).filter(
+    Boolean,
+  )
 
   return (
     <CCard
@@ -127,6 +131,14 @@ export const InspectionElementCard = ({
               {mobileMeta}
             </div>
           ) : null}
+          {visibleHelperLines.map((line, index) => (
+            <div
+              key={typeof line === 'string' ? line : index}
+              className="small text-body-secondary text-break inspection-fire-extinguisher-card-mobile-line"
+            >
+              {line}
+            </div>
+          ))}
         </div>
         {!readOnly ? (
           <div
@@ -166,6 +178,21 @@ export const InspectionElementCard = ({
     </CCard>
   )
 }
+
+export const InspectionElementValidationBadges = ({ missingCount = 0, needsEvidence = false }) => (
+  <>
+    {missingCount > 0 ? (
+      <CBadge color="warning" className="d-none d-md-inline-flex">
+        {missingCount} missing
+      </CBadge>
+    ) : null}
+    {needsEvidence ? (
+      <span className="badge rounded-pill text-bg-danger d-none d-md-inline-flex align-items-center">
+        Needs evidence
+      </span>
+    ) : null}
+  </>
+)
 
 export const InspectionElementDrawerFooter = ({
   statusText = '',

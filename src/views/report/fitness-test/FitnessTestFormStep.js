@@ -1,5 +1,5 @@
 import React from 'react'
-import { CButton, CFormLabel, CFormTextarea } from '@coreui/react'
+import { CButton, CFormFeedback, CFormLabel, CFormTextarea } from '@coreui/react'
 import {
   ReportBasicPathSummary,
   ReportChronologySection,
@@ -48,22 +48,30 @@ const FitnessTestFormStep = ({
           </CButton>
         </div>
         <div>
-          <CFormLabel className="fw-semibold text-muted">Test Details</CFormLabel>
+          <CFormLabel htmlFor="fitness-test-details" className="fw-semibold text-muted">
+            Test details
+          </CFormLabel>
           <CFormTextarea
+            id="fitness-test-details"
             rows={3}
             value={form.details}
             invalid={Boolean(fieldErrors.details)}
             onChange={(e) => setForm((p) => ({ ...p, details: e.target.value }))}
           />
+          <CFormFeedback invalid>{fieldErrors.details}</CFormFeedback>
         </div>
         <div>
-          <CFormLabel className="fw-semibold text-muted">Test Summary</CFormLabel>
+          <CFormLabel htmlFor="fitness-test-summary" className="fw-semibold text-muted">
+            Test summary
+          </CFormLabel>
           <CFormTextarea
+            id="fitness-test-summary"
             rows={4}
             value={form.summary}
             invalid={Boolean(fieldErrors.summary)}
             onChange={(e) => setForm((p) => ({ ...p, summary: e.target.value }))}
           />
+          <CFormFeedback invalid>{fieldErrors.summary}</CFormFeedback>
         </div>
       </div>
 

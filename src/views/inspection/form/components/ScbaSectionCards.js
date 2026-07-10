@@ -1,13 +1,5 @@
 import React, { useState } from 'react'
-import {
-  CButton,
-  CCard,
-  CCardBody,
-  CCardHeader,
-  CFormInput,
-  CFormLabel,
-  CFormTextarea,
-} from '@coreui/react'
+import { CButton, CFormInput, CFormLabel, CFormTextarea } from '@coreui/react'
 import { Camera, CheckCircle2, Circle, TriangleAlert } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
@@ -29,6 +21,7 @@ import {
   buildInspectionElementActions,
   InspectionElementCard,
   InspectionElementDrawerFooter,
+  InspectionElementValidationBadges,
 } from './InspectionElementUi'
 import ScbaStatusSegment from './ScbaStatusSegment'
 import {
@@ -38,6 +31,7 @@ import {
 } from './ScbaSectionSupport'
 import InspectionResetConfirmDrawer from './InspectionResetConfirmDrawer'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
+import { buildScbaAllGoodPatch } from '../inspectionCheckBuilders'
 
 const getScbaRowId = (row = {}) => {
   const source = row || {}
@@ -61,14 +55,42 @@ const getScbaWorkflowState = (row = {}, fields = []) => {
   const issueCount = visibleFields.filter(
     (field) => field.kind === 'status' && String(row[field.key] || '') === 'Not Good',
   ).length
-  const isComplete = visibleFields.every((field) => String(row[field.key] || '').trim())
+  const missingValueCount = visibleFields.filter(
+    (field) => !String(row[field.key] || '').trim(),
+  ).length
+  const missingEvidenceCount = visibleFields.reduce((count, field) => {
+    if (field.kind !== 'status' || String(row[field.key] || '') !== 'Not Good') return count
+    const { remarksKey, photosKey } = getScbaFieldEvidenceKeys(field)
+    const hasRemarks = String(row[remarksKey] || '').trim() !== ''
+    const photos = Array.isArray(row[photosKey]) ? row[photosKey] : []
+    return count + (hasRemarks ? 0 : 1) + (photos.length > 0 ? 0 : 1)
+  }, 0)
+  const missingCount = missingValueCount + missingEvidenceCount
 
   return {
     hasIssue: issueCount > 0,
-    isComplete,
+    isComplete: missingCount === 0,
     issueCount,
+    missingCount,
+    needsEvidence: missingEvidenceCount > 0,
   }
 }
+
+const isScbaRowAllGood = (row = {}, fields = [], goodStatus = 'Good') => {
+  const statusFields = (Array.isArray(fields) ? fields : []).filter(
+    (field) => field.kind === 'status',
+  )
+  return (
+    statusFields.length > 0 &&
+    statusFields.every((field) => String(row?.[field.key] || '') === goodStatus)
+  )
+}
+
+const getScbaTextFields = (fields = []) =>
+  (Array.isArray(fields) ? fields : []).filter((field) => field.kind !== 'status')
+
+const getScbaStatusFields = (fields = []) =>
+  (Array.isArray(fields) ? fields : []).filter((field) => field.kind === 'status')
 
 const ScbaInspectionStatusInline = ({ workflowState }) => {
   const completionLabel = workflowState?.isComplete ? 'Checked' : 'Not checked'
@@ -142,6 +164,7 @@ const ScbaSectionCards = ({
   const [showDiscardChanges, setShowDiscardChanges] = useState(false)
   const [resetTarget, setResetTarget] = useState(null)
   const useMobileDrawer = useMediaQuery('(max-width: 575.98px)')
+  const scbaGoodStatus = (Array.isArray(statusOptions) ? statusOptions : [])[0]?.value || 'Good'
   const mobileDetailSection = mobileDetailTarget
     ? filteredSections.find((section) => section.key === mobileDetailTarget.sectionKey) || null
     : null
@@ -153,6 +176,11 @@ const ScbaSectionCards = ({
   const mobileDraftDirty =
     Boolean(mobileDraftRow) &&
     getRowSignature(mobileDraftRow) !== getRowSignature(mobileDraftBaseRow)
+  const mobileDetailFields = mobileDetailSection
+    ? mobileDetailSection.fields || getScbaSectionFields(mobileDetailSection.key, form)
+    : []
+  const mobileDisplayRow = mobileDraftRow || mobileDetailRow || {}
+  const mobileAllGoodActive = isScbaRowAllGood(mobileDisplayRow, mobileDetailFields, scbaGoodStatus)
 
   const patchMobileDraftRow = (patch = {}) => {
     setMobileDraftRow((current) => (current ? { ...current, ...patch } : current))
@@ -403,7 +431,13 @@ const ScbaSectionCards = ({
     )
   }
 
-  const renderScbaRowDetails = (section, row, retainedEvidenceFields, handlers = {}) => {
+  const renderScbaRowDetails = (
+    section,
+    row,
+    retainedEvidenceFields,
+    handlers = {},
+    options = {},
+  ) => {
     const activeOnUpdateGroupedCheck = handlers.onUpdateGroupedCheck || onUpdateGroupedCheck
     const activeOnRequestPhotoUpload = handlers.onRequestPhotoUpload || onRequestPhotoUpload
     const activeOnRequestIssuePhotoUpload =
@@ -413,42 +447,66 @@ const ScbaSectionCards = ({
       handlers.onChangePhotoDescription || onChangePhotoDescription
     const activeOnApplyPhotoCaption = handlers.onApplyPhotoCaption || onApplyPhotoCaption
     const sectionFields = section.fields || getScbaSectionFields(section.key, form)
+    const textFields = getScbaTextFields(sectionFields)
+    const statusFields = getScbaStatusFields(sectionFields)
+    const afterTextFields = options.afterTextFields || null
+    const rowControlPrefix = `scba-${section.key}-${getScbaRowId(row)}`.replace(
+      /[^A-Za-z0-9_-]/g,
+      '-',
+    )
 
     return (
       <>
-        {sectionFields.map((field) => {
-          const isStatusField = field.kind === 'status'
-          const isIssue = isStatusField && String(row[field.key] || '') === 'Not Good'
+        {textFields.length > 0 ? (
+          <div className="row g-2">
+            {textFields.map((field) =>
+              readOnly ? (
+                <div key={field.key} className="col-6">
+                  <div className="small text-body-secondary">{field.label}</div>
+                  <div className="fw-semibold">{String(row[field.key] || '--')}</div>
+                </div>
+              ) : (
+                <div key={field.key} className="col-6">
+                  <CFormLabel
+                    htmlFor={`${rowControlPrefix}-${field.key}`}
+                    className="small fw-semibold text-muted mb-1"
+                  >
+                    {field.label}
+                  </CFormLabel>
+                  <CFormInput
+                    id={`${rowControlPrefix}-${field.key}`}
+                    value={String(row[field.key] || '')}
+                    inputMode="numeric"
+                    placeholder={field.label}
+                    onChange={(event) =>
+                      activeOnUpdateGroupedCheck?.(section.key, row, {
+                        [field.key]: event.target.value,
+                      })
+                    }
+                  />
+                </div>
+              ),
+            )}
+          </div>
+        ) : null}
+        {afterTextFields}
+
+        {statusFields.map((field) => {
+          const isIssue = String(row[field.key] || '') === 'Not Good'
           const hasFieldRetainedEvidence = retainedEvidenceFields.some(
             (retainedField) => retainedField.key === field.key,
           )
 
-          if (readOnly) {
-            return (
-              <div
-                key={field.key}
-                className="inspection-hydraulic-check-with-evidence d-grid gap-2"
-              >
+          return (
+            <div key={field.key} className="inspection-hydraulic-check-with-evidence d-grid gap-2">
+              {readOnly ? (
                 <div className="row g-3">
                   <div className="col-12">
                     <div className="small text-body-secondary">{field.label}</div>
                     <div className="fw-semibold">{String(row[field.key] || '--')}</div>
                   </div>
                 </div>
-                {isIssue ? renderScbaIssueEvidence(section.key, row, field, handlers) : null}
-                {hasFieldRetainedEvidence
-                  ? renderScbaRetainedEvidence(section.key, row, field, handlers)
-                  : null}
-              </div>
-            )
-          }
-
-          if (isStatusField) {
-            return (
-              <div
-                key={field.key}
-                className="inspection-hydraulic-check-with-evidence d-grid gap-2"
-              >
+              ) : (
                 <ScbaStatusSegment
                   label={field.label}
                   value={row[field.key]}
@@ -459,27 +517,11 @@ const ScbaSectionCards = ({
                   }
                   statusOptions={statusOptions}
                 />
-                {isIssue ? renderScbaIssueEvidence(section.key, row, field, handlers) : null}
-                {hasFieldRetainedEvidence
-                  ? renderScbaRetainedEvidence(section.key, row, field, handlers)
-                  : null}
-              </div>
-            )
-          }
-
-          return (
-            <div key={field.key} className="col-12 col-md-6">
-              <CFormLabel className="small fw-semibold text-muted mb-1">{field.label}</CFormLabel>
-              <CFormInput
-                value={String(row[field.key] || '')}
-                inputMode="numeric"
-                placeholder={field.label}
-                onChange={(event) =>
-                  activeOnUpdateGroupedCheck?.(section.key, row, {
-                    [field.key]: event.target.value,
-                  })
-                }
-              />
+              )}
+              {isIssue ? renderScbaIssueEvidence(section.key, row, field, handlers) : null}
+              {hasFieldRetainedEvidence
+                ? renderScbaRetainedEvidence(section.key, row, field, handlers)
+                : null}
             </div>
           )
         })}
@@ -510,12 +552,12 @@ const ScbaSectionCards = ({
             : defaultExpandedSectionKeys.has(section.key))
 
         return (
-          <CCard
+          <div
             key={section.key}
-            className="inspection-hydraulic-card inspection-check-card"
+            className="d-grid gap-2"
             data-inspection-scba-section-id={section.key}
           >
-            <CCardHeader className="inspection-hydraulic-card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div className="inspection-hydraulic-section-heading d-flex flex-wrap align-items-center justify-content-between gap-2">
               <div className="d-flex flex-wrap align-items-center gap-2">
                 <div className="fw-semibold text-muted">
                   {section.title || getScbaSectionTitle(section.key)}
@@ -590,10 +632,9 @@ const ScbaSectionCards = ({
                   </CButton>
                 </div>
               ) : null}
-            </CCardHeader>
-
+            </div>
             {isExpanded ? (
-              <CCardBody className="inspection-hydraulic-card-body">
+              <>
                 {rows.length === 0 ? (
                   <div className="inspection-check-card__collapsed-summary">
                     No items in this section yet. Add an item to inspect{' '}
@@ -607,11 +648,34 @@ const ScbaSectionCards = ({
                   {rows.map((row) => {
                     const sectionFields = section.fields || getScbaSectionFields(section.key, form)
                     const workflowState = getScbaWorkflowState(row, sectionFields)
+                    const rowAllGoodActive = isScbaRowAllGood(row, sectionFields, scbaGoodStatus)
                     const retainedEvidenceFields = getScbaRowRetainedEvidenceFields(
                       row,
                       section.fields,
                     )
                     const hasRetainedEvidence = retainedEvidenceFields.length > 0
+                    const hasTextFields = getScbaTextFields(sectionFields).length > 0
+                    const isCylinderWithTextFields = section.key === 'cylinder' && hasTextFields
+                    const hasTextAndStatusFields = sectionFields.length > 1
+                    const shouldRenderTopAllGood =
+                      !readOnly && hasTextAndStatusFields && !isCylinderWithTextFields
+                    const shouldRenderBottomAllGood =
+                      !readOnly && hasTextAndStatusFields && isCylinderWithTextFields
+                    const allGoodButton = (
+                      <div className="d-flex justify-content-end">
+                        <CButton
+                          type="button"
+                          color={rowAllGoodActive ? 'primary' : 'secondary'}
+                          variant={rowAllGoodActive ? undefined : 'outline'}
+                          size="sm"
+                          className="inspection-compact-action-btn"
+                          aria-pressed={rowAllGoodActive}
+                          onClick={() => onMarkRowOk?.(section.key, row)}
+                        >
+                          All Good
+                        </CButton>
+                      </div>
+                    )
                     const rowId = getScbaRowId(row)
                     const canReset =
                       typeof onResetGroupedCheck === 'function' &&
@@ -646,11 +710,22 @@ const ScbaSectionCards = ({
                         title={getScbaDisplayLabel(row)}
                         status={<ScbaInspectionStatusInline workflowState={workflowState} />}
                         badges={
-                          hasRetainedEvidence ? (
-                            <span className="badge text-bg-warning-subtle text-warning-emphasis border border-warning-subtle">
-                              Retained evidence
-                            </span>
-                          ) : null
+                          <>
+                            {hasRetainedEvidence ? (
+                              <span className="badge text-bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+                                Retained evidence
+                              </span>
+                            ) : null}
+                            <InspectionElementValidationBadges
+                              missingCount={workflowState.missingCount}
+                              needsEvidence={workflowState.needsEvidence}
+                            />
+                          </>
+                        }
+                        helperLines={
+                          hasRetainedEvidence
+                            ? 'Evidence from an earlier status is retained for audit context.'
+                            : null
                         }
                         actions={itemActions}
                         actionLabel={`Item actions for ${getScbaDisplayLabel(row)}`}
@@ -664,26 +739,19 @@ const ScbaSectionCards = ({
                         }
                         showBody={!useMobileDrawer || readOnly}
                       >
-                        {!readOnly && Array.isArray(section.fields) && section.fields.length > 1 ? (
-                          <div className="d-flex justify-content-end">
-                            <CButton
-                              type="button"
-                              color="secondary"
-                              variant="outline"
-                              size="sm"
-                              className="inspection-compact-action-btn"
-                              onClick={() => onMarkRowOk?.(section.key, row)}
-                            >
-                              All Good
-                            </CButton>
-                          </div>
-                        ) : null}
-                        {renderScbaRowDetails(section, row, retainedEvidenceFields)}
+                        {shouldRenderTopAllGood ? allGoodButton : null}
+                        {renderScbaRowDetails(
+                          section,
+                          row,
+                          retainedEvidenceFields,
+                          {},
+                          { afterTextFields: shouldRenderBottomAllGood ? allGoodButton : null },
+                        )}
                       </InspectionElementCard>
                     )
                   })}
                 </div>
-              </CCardBody>
+              </>
             ) : (
               <div className="inspection-check-card__collapsed-summary">
                 {rows.length} item{rows.length === 1 ? '' : 's'} in this section
@@ -694,7 +762,7 @@ const ScbaSectionCards = ({
                   : ''}
               </div>
             )}
-          </CCard>
+          </div>
         )
       })}
 
@@ -771,17 +839,21 @@ const ScbaSectionCards = ({
               {mobileDetailSection.title || getScbaSectionTitle(mobileDetailSection.key)}
             </div>
             {!readOnly &&
+            mobileDetailSection.key !== 'cylinder' &&
             Array.isArray(mobileDetailSection.fields) &&
-            mobileDetailSection.fields.length > 1 ? (
+            mobileDetailSection.fields.length > 1 &&
+            !getScbaTextFields(mobileDetailSection.fields).length ? (
               <div className="d-flex justify-content-end">
                 <CButton
                   type="button"
-                  color="secondary"
-                  variant="outline"
+                  color={mobileAllGoodActive ? 'primary' : 'secondary'}
+                  variant={mobileAllGoodActive ? undefined : 'outline'}
                   size="sm"
                   className="inspection-compact-action-btn"
-                  disabled={mobileDraftDirty}
-                  onClick={() => onMarkRowOk?.(mobileDetailSection.key, mobileDetailRow)}
+                  aria-pressed={mobileAllGoodActive}
+                  onClick={() =>
+                    patchMobileDraftRow(buildScbaAllGoodPatch(mobileDetailFields, scbaGoodStatus))
+                  }
                 >
                   All Good
                 </CButton>
@@ -795,6 +867,32 @@ const ScbaSectionCards = ({
                 mobileDetailSection.fields,
               ),
               mobileDraftHandlers,
+              {
+                afterTextFields:
+                  !readOnly &&
+                  mobileDetailSection.key === 'cylinder' &&
+                  Array.isArray(mobileDetailSection.fields) &&
+                  mobileDetailSection.fields.length > 1 &&
+                  getScbaTextFields(mobileDetailSection.fields).length > 0 ? (
+                    <div className="d-flex justify-content-end">
+                      <CButton
+                        type="button"
+                        color={mobileAllGoodActive ? 'primary' : 'secondary'}
+                        variant={mobileAllGoodActive ? undefined : 'outline'}
+                        size="sm"
+                        className="inspection-compact-action-btn"
+                        aria-pressed={mobileAllGoodActive}
+                        onClick={() =>
+                          patchMobileDraftRow(
+                            buildScbaAllGoodPatch(mobileDetailFields, scbaGoodStatus),
+                          )
+                        }
+                      >
+                        All Good
+                      </CButton>
+                    </div>
+                  ) : null,
+              },
             )}
           </div>
           {!readOnly ? (

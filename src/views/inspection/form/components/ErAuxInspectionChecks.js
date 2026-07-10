@@ -19,6 +19,7 @@ import {
   buildInspectionElementActions,
   InspectionElementCard,
   InspectionElementDrawerFooter,
+  InspectionElementValidationBadges,
 } from './InspectionElementUi'
 import InspectionResetConfirmDrawer from './InspectionResetConfirmDrawer'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
@@ -73,6 +74,7 @@ const ErAuxQuantityRow = ({ value, onChange, readOnly = false }) => (
       <CFormInput
         value={value}
         inputMode="numeric"
+        aria-label="Equipment quantity"
         placeholder="Quantity"
         style={{ width: '5.5rem' }}
         onChange={(event) => onChange?.(event.target.value)}
@@ -85,10 +87,18 @@ const getErAuxWorkflowState = (row = {}) => {
   const condition = String(row.condition || '').trim()
   const quantity = String(row.quantity ?? row.defaultQuantity ?? '').trim()
   const isIssue = ['Defect', 'Missing', 'N/A'].includes(condition)
+  const isDefect = condition === 'Defect'
+  const hasDefectRemarks = String(row.defectRemarks || '').trim() !== ''
+  const defectPhotos = Array.isArray(row.defectPhotos) ? row.defectPhotos : []
+  const missingEvidenceCount =
+    (isDefect && !hasDefectRemarks ? 1 : 0) + (isDefect && defectPhotos.length === 0 ? 1 : 0)
+  const missingCount = (condition ? 0 : 1) + (quantity ? 0 : 1) + missingEvidenceCount
 
   return {
     hasIssue: isIssue,
-    isComplete: Boolean(condition && quantity),
+    isComplete: missingCount === 0,
+    missingCount,
+    needsEvidence: missingEvidenceCount > 0,
   }
 }
 
@@ -273,6 +283,7 @@ const ErAuxEquipmentCheckDetails = ({
           <CFormTextarea
             data-inspection-er-aux-detail-key="defectRemarks"
             rows={2}
+            aria-label="Defect and corrective action"
             value={row.defectRemarks || ''}
             placeholder="Describe the defect and the corrective action."
             onChange={(event) => onUpdateCheck?.(row, { defectRemarks: event.target.value })}
@@ -366,6 +377,7 @@ const ErAuxEquipmentCheckDetails = ({
             </div>
             <CFormTextarea
               rows={2}
+              aria-label="General equipment remarks"
               value={row.additionalNotes || ''}
               placeholder="General equipment remarks"
               onChange={(event) => onUpdateCheck?.(row, { additionalNotes: event.target.value })}
@@ -574,6 +586,12 @@ export const ErAuxEquipmentChecks = ({
         ) : null}
       </div>
 
+      {isLoadingRows && hasReliableRows ? (
+        <div className="small text-body-secondary" aria-live="polite">
+          Refreshing equipment...
+        </div>
+      ) : null}
+
       {!readOnly && visibleChecks.length > 0 ? (
         <div className="inspection-check-toolbar">
           <CFormInput
@@ -640,9 +658,15 @@ export const ErAuxEquipmentChecks = ({
                 meta={row.equipmentDescription}
                 status={<ErAuxInspectionStatusInline workflowState={workflowState} />}
                 badges={
-                  row.isCustomEquipment || row.equipmentSource === 'custom' ? (
-                    <span className="badge text-bg-light border text-body-secondary">Custom</span>
-                  ) : null
+                  <>
+                    {row.isCustomEquipment || row.equipmentSource === 'custom' ? (
+                      <span className="badge text-bg-light border text-body-secondary">Custom</span>
+                    ) : null}
+                    <InspectionElementValidationBadges
+                      missingCount={workflowState.missingCount}
+                      needsEvidence={workflowState.needsEvidence}
+                    />
+                  </>
                 }
                 actions={actionItems}
                 actionLabel={`Equipment actions for ${row.equipment}`}

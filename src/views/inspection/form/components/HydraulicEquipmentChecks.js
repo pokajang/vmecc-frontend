@@ -234,6 +234,12 @@ export const HydraulicEquipmentChecks = ({
         ) : null}
       </div>
 
+      {isLoadingRows && hasReliableRows ? (
+        <div className="small text-body-secondary" aria-live="polite">
+          Refreshing equipment...
+        </div>
+      ) : null}
+
       {!readOnly ? (
         <div className="inspection-check-toolbar">
           <CFormInput

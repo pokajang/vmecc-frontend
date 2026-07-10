@@ -8,9 +8,8 @@ import {
   CTableRow,
   CTooltip,
 } from '@coreui/react'
-import { FilePenLine } from 'lucide-react'
-
 import ButtonLoader from 'src/components/ButtonLoader'
+import RecordStateBadge from 'src/components/RecordStateBadge'
 import RowActionCell from 'src/components/RowActionCell'
 import RowActions from 'src/components/RowActions'
 import WorkflowStatusSummary from 'src/components/WorkflowStatusSummary'
@@ -27,25 +26,10 @@ import {
 
 const DraftStatus = ({ direction = 'vertical' }) => {
   const isHorizontal = direction === 'horizontal'
-  return (
-    <div
-      className={`d-flex ${isHorizontal ? 'flex-row flex-wrap' : 'flex-column'}`}
-      style={{ gap: isHorizontal ? '12px' : '3px' }}
-    >
-      <div className="d-flex align-items-center" style={{ gap: '4px' }}>
-        <FilePenLine size={11} color="#f9b115" strokeWidth={3} />
-        <span style={{ fontSize: '0.78rem', color: '#f9b115', lineHeight: 1 }}>Draft</span>
-      </div>
-    </div>
-  )
+  return <RecordStateBadge state="draft" className={isHorizontal ? 'flex-shrink-0' : ''} />
 }
 
-const QueuedStatus = () => (
-  <div className="d-flex align-items-center" style={{ gap: '4px' }}>
-    <FilePenLine size={11} color="#6b7280" strokeWidth={3} />
-    <span style={{ fontSize: '0.78rem', color: '#6b7280', lineHeight: 1 }}>Queued</span>
-  </div>
-)
+const QueuedStatus = () => <RecordStateBadge state="queued" />
 
 const InspectionRecordsTable = ({
   visibleRows,
@@ -55,7 +39,7 @@ const InspectionRecordsTable = ({
   onEditRecord,
   onViewRecord,
 }) => (
-  <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
+  <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-body">
     <CTable align="middle" className="mb-0" hover responsive>
       <CTableHead color="light">
         <CTableRow>
@@ -68,7 +52,7 @@ const InspectionRecordsTable = ({
           <CTableHeaderCell>Reported By</CTableHeaderCell>
           <CTableHeaderCell>Reported At</CTableHeaderCell>
           <CTableHeaderCell>Status</CTableHeaderCell>
-          <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
+          <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
         </CTableRow>
       </CTableHead>
       <CTableBody>

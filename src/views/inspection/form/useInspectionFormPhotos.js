@@ -1,4 +1,13 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { deleteReportMedia } from 'src/services/api/reportMediaApi'
+import {
+  clearPendingCameraOperation,
+  getInterruptedCameraFallback,
+  isLikelyEmbeddedBrowser,
+  markPendingCameraOperation,
+  markPendingCameraUploadStarted,
+  subscribeToCameraReturn,
+} from 'src/utils/cameraRecovery'
 import { buildCameraDiagnostics, inspectCameraEnvironment } from 'src/utils/cameraDiagnostics'
 import {
   applyPhotoCaptionById,
@@ -17,6 +26,7 @@ const useInspectionFormPhotos = ({
   defaultHighAnglePhotosKey,
   form,
   getLatestForm,
+  onBeforeCameraOpen,
   getScbaExistingCheck,
   getScbaFieldEvidenceKeys,
   pushToast,
@@ -33,7 +43,18 @@ const useInspectionFormPhotos = ({
   const photoUploadTargetRef = useRef({ kind: 'root' })
   const activePhotoInputRef = useRef('upload')
   const photoSelectionSequenceRef = useRef(0)
-  const [cameraUploadFallback, setCameraUploadFallback] = useState(null)
+  const photoUploadAbortRef = useRef(null)
+  const [cameraUploadFallback, setCameraUploadFallback] = useState(() =>
+    getInterruptedCameraFallback('inspection'),
+  )
+  const [isPhotoProcessing, setIsPhotoProcessing] = useState(false)
+  const [photoUploadProgress, setPhotoUploadProgress] = useState(null)
+
+  useEffect(() => () => photoUploadAbortRef.current?.abort(), [])
+  useEffect(
+    () => subscribeToCameraReturn('inspection', (fallback) => setCameraUploadFallback(fallback)),
+    [],
+  )
   const CAMERA_FALLBACK_ERROR_TITLES = {
     low_memory:
       'Camera processing failed due to low memory. Upload the photo manually to continue.',
@@ -91,18 +112,51 @@ const useInspectionFormPhotos = ({
     photoUploadTargetRef.current = target || { kind: 'root' }
     clearCameraUploadFallback()
     activePhotoInputRef.current = inputRef === cameraInputRef ? 'camera' : 'upload'
+    if (inputRef === cameraInputRef) {
+      if (navigator.onLine === false) {
+        setCameraUploadFallback({
+          message: 'Connect to the internet before taking or uploading a photo.',
+          errorCode: 'offline',
+          phase: 'camera_startup',
+        })
+        return
+      }
+      if (isLikelyEmbeddedBrowser()) {
+        setCameraUploadFallback({
+          message: 'Open this page in Safari, Chrome, Edge, or Samsung Internet to use the camera.',
+          errorCode: 'unsupported_browser',
+          phase: 'camera_startup',
+        })
+        return
+      }
+      markPendingCameraOperation({
+        module: 'inspection',
+        targetKind: target?.kind || 'root',
+        targetId: target?.row?.id || target?.issueId || '',
+        photosKey: target?.photosKey || 'photos',
+      })
+      try {
+        Promise.resolve(onBeforeCameraOpen?.(target)).catch(() => {})
+      } catch {
+        // Draft persistence is best-effort and must not block the native camera.
+      }
+    }
     if (inputRef.current) inputRef.current.value = ''
     inputRef.current?.click()
   }
 
   const handlePhotoSelect = async (event) => {
     const selectionSequence = ++photoSelectionSequenceRef.current
+    photoUploadAbortRef.current?.abort()
+    const abortController = new AbortController()
+    photoUploadAbortRef.current = abortController
     const files = Array.from(event.target.files || [])
     event.target.value = ''
     if (files.length === 0) return
 
     const uploadTarget = photoUploadTargetRef.current || { kind: 'root' }
     const source = activePhotoInputRef.current
+    if (source === 'camera') markPendingCameraUploadStarted('inspection')
     const currentForm = typeof getLatestForm === 'function' ? getLatestForm() : form
     const currentFormForUpload = Array.isArray(uploadTarget?.rootPhotos)
       ? { ...currentForm, photos: uploadTarget.rootPhotos }
@@ -111,6 +165,8 @@ const useInspectionFormPhotos = ({
     let lastFailure = null
     let lastRetryableFailure = null
     let hadRetryableFailure = false
+    setIsPhotoProcessing(true)
+    setPhotoUploadProgress({ percent: 0, index: 0, count: files.length, retrying: false })
 
     try {
       const nextResult = await prepareInspectionPhotoUploads({
@@ -128,8 +184,14 @@ const useInspectionFormPhotos = ({
             lastRetryableFailure = failure
           }
         },
+        signal: abortController.signal,
+        onProgress: (progress) => setPhotoUploadProgress({ ...progress, retrying: false }),
+        onRetry: (progress) => setPhotoUploadProgress({ ...progress, percent: 0, retrying: true }),
       })
-      if (selectionSequence !== photoSelectionSequenceRef.current) return
+      if (selectionSequence !== photoSelectionSequenceRef.current) {
+        await Promise.all((nextResult || []).map((photo) => deleteReportMedia(photo.mediaId)))
+        return
+      }
       nextPhotos = nextResult || []
     } catch (error) {
       if (selectionSequence !== photoSelectionSequenceRef.current) return
@@ -138,6 +200,8 @@ const useInspectionFormPhotos = ({
         message: String(error?.message || '').trim() || 'Camera capture failed.',
       }
       hadRetryableFailure = true
+    } finally {
+      if (selectionSequence === photoSelectionSequenceRef.current) setIsPhotoProcessing(false)
     }
 
     if (selectionSequence !== photoSelectionSequenceRef.current) return
@@ -146,14 +210,18 @@ const useInspectionFormPhotos = ({
       if (source === 'camera' && hadRetryableFailure) {
         const fallbackFailure = lastRetryableFailure || lastFailure
         const nextFallback = await buildCameraUploadFallback(fallbackFailure)
+        if (selectionSequence !== photoSelectionSequenceRef.current) return
         if (nextFallback) setCameraUploadFallback(nextFallback)
       }
       return
     }
 
+    clearPendingCameraOperation()
+
     if (source === 'camera' && hadRetryableFailure) {
       const fallbackFailure = lastRetryableFailure || lastFailure
       const nextFallback = await buildCameraUploadFallback(fallbackFailure)
+      if (selectionSequence !== photoSelectionSequenceRef.current) return
       if (nextFallback) {
         setCameraUploadFallback(nextFallback)
       } else {
@@ -163,17 +231,18 @@ const useInspectionFormPhotos = ({
       setCameraUploadFallback(null)
     }
 
+    const committedForm = typeof getLatestForm === 'function' ? getLatestForm() : currentForm
     if (uploadTarget?.kind === 'inspectionIssue') {
       if (typeof uploadTarget.onAddPhotos === 'function') {
         uploadTarget.onAddPhotos(nextPhotos)
         return
       }
       const issueId = String(uploadTarget.issueId || '').trim()
-      const currentIssues = Array.isArray(currentForm.inspectionIssues)
-        ? currentForm.inspectionIssues
+      const currentIssues = Array.isArray(committedForm.inspectionIssues)
+        ? committedForm.inspectionIssues
         : []
       updateForm({
-        ...currentForm,
+        ...committedForm,
         inspectionIssues: currentIssues.map((issue) =>
           String(issue?.id || '').trim() === issueId
             ? {
@@ -342,8 +411,8 @@ const useInspectionFormPhotos = ({
     }
 
     updateForm({
-      ...currentForm,
-      photos: [...(Array.isArray(currentForm.photos) ? currentForm.photos : []), ...nextPhotos],
+      ...committedForm,
+      photos: [...(Array.isArray(committedForm.photos) ? committedForm.photos : []), ...nextPhotos],
     })
   }
 
@@ -547,6 +616,8 @@ const useInspectionFormPhotos = ({
     requestScbaIssuePhotoUpload,
     requestScbaPhotoUpload,
     cameraUploadFallback,
+    isPhotoProcessing,
+    photoUploadProgress,
     clearCameraUploadFallback,
     requestUploadFromCameraFallback,
     updateErAuxPhotoDescription: (...args) => erAuxPhotoHandlers.updatePhotoDescription(...args),

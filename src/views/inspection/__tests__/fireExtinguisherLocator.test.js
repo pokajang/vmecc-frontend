@@ -3,7 +3,11 @@ import {
   FIRE_EXTINGUISHER_CHECK_FIELDS,
   getFireExtinguisherVisibleChecks,
 } from '../types/fire-extinguisher/helpers'
-import { extractFireExtinguisherLocator } from '../types/fire-extinguisher/locator'
+import {
+  extractFireExtinguisherLocator,
+  extractFireExtinguisherSerial,
+  isValidFireExtinguisherSerial,
+} from '../types/fire-extinguisher/locator'
 
 const buildRow = (overrides = {}) => ({
   id: 'fe:1',
@@ -38,6 +42,27 @@ describe('fire extinguisher locator helpers', () => {
     expect(extractFireExtinguisherLocator('/inspection/new?mode=scan&code=SR102014Z060198')).toBe(
       'SR102014Z060198',
     )
+  })
+
+  it('extracts strict FE serials from scanner QR payloads', () => {
+    const payload =
+      'FF112021Y901894;2027-01-30 09:42:32;COMMON AREA (4)-NO.5-2 JLN SERI PUTRA 1/5, BDR SERI PUTRA, 43000 KAJANG, SELANGOR'
+
+    expect(extractFireExtinguisherLocator(payload)).toBe('FF112021Y901894')
+    expect(extractFireExtinguisherSerial(payload)).toBe('FF112021Y901894')
+    expect(extractFireExtinguisherSerial('SR102014Z060198')).toBe('SR102014Z060198')
+    expect(extractFireExtinguisherSerial('S/N: SR102014Z060198')).toBe('SR102014Z060198')
+    expect(
+      extractFireExtinguisherSerial('https://efeis.bomba.gov.my/check?serial=SR102014Z060198'),
+    ).toBe('SR102014Z060198')
+  })
+
+  it('rejects scanner false positives and malformed FE serials', () => {
+    expect(extractFireExtinguisherSerial('1234567890')).toBe('')
+    expect(extractFireExtinguisherSerial('FF112021;2027-01-30')).toBe('')
+    expect(extractFireExtinguisherSerial('FF112021Y90189')).toBe('')
+    expect(isValidFireExtinguisherSerial('FF112021Y901894')).toBe(true)
+    expect(isValidFireExtinguisherSerial('1234567890')).toBe(false)
   })
 
   it('filters fire extinguisher visible checks to the focused scanned asset', () => {

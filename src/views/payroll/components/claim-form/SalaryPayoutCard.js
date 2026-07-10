@@ -61,7 +61,7 @@ const SalaryPayoutCard = ({
         </div>
       ) : (
         <>
-          <div className="rounded-3 shadow-sm overflow-hidden bg-white">
+          <div className="rounded-3 shadow-sm overflow-hidden bg-body">
             <CTable align="middle" className="mb-0" responsive>
               <CTableHead color="light">
                 <CTableRow>
@@ -135,9 +135,10 @@ const SalaryPayoutCard = ({
                           {item.attachmentName && (
                             <CTooltip content={item.attachmentName} placement="top">
                               <CBadge
+                                as="button"
+                                type="button"
                                 color="light"
                                 className="text-body-secondary flex-shrink-0"
-                                role="button"
                                 style={{ cursor: 'pointer' }}
                                 aria-label={`Preview ${item.attachmentName}`}
                                 onClick={() => onPreviewAttachment(item)}
@@ -244,9 +245,10 @@ const SalaryPayoutCard = ({
                           {item.attachmentName && (
                             <CTooltip content={item.attachmentName} placement="top">
                               <CBadge
+                                as="button"
+                                type="button"
                                 color="light"
                                 className="text-body-secondary flex-shrink-0"
-                                role="button"
                                 style={{ cursor: 'pointer' }}
                                 aria-label={`Preview ${item.attachmentName}`}
                                 onClick={() => onPreviewAttachment(item)}

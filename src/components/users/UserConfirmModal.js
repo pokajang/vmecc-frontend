@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
+import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
+import useMediaQuery from 'src/hooks/useMediaQuery'
 
 const UserConfirmModal = ({
   visible = false,
@@ -19,6 +21,10 @@ const UserConfirmModal = ({
   testId,
   bodyTestId,
 }) => {
+  const handleClose = () => {
+    if (cancelDisabled) return
+    onClose()
+  }
   const hasCustomModalStyle = zIndex != null || style != null
   const mergedStyle = hasCustomModalStyle
     ? {
@@ -31,9 +37,11 @@ const UserConfirmModal = ({
         display: 'block',
       }
     : undefined
+  const useMobileDrawer = useMediaQuery('(max-width: 575.98px)')
 
   useEffect(() => {
     if (zIndex == null || !visible) return
+    if (useMobileDrawer) return
     document.body.classList.add('modal-open')
     document.body.style.overflow = 'hidden'
     document.body.style.paddingRight = '0px'
@@ -43,7 +51,39 @@ const UserConfirmModal = ({
       document.body.style.removeProperty('overflow')
       document.body.style.removeProperty('padding-right')
     }
-  }, [visible, zIndex])
+  }, [visible, zIndex, useMobileDrawer])
+  const actions = (
+    <>
+      <CButton color="secondary" variant="outline" onClick={handleClose} disabled={cancelDisabled}>
+        {cancelLabel}
+      </CButton>
+      <CButton color={confirmColor} onClick={onConfirm} disabled={confirmDisabled}>
+        {confirmLabel}
+      </CButton>
+    </>
+  )
+
+  if (useMobileDrawer) {
+    return (
+      <MobileBottomDrawer
+        visible={visible}
+        title={title}
+        onClose={handleClose}
+        closeDisabled={cancelDisabled}
+        className={className}
+      >
+        <div
+          className="inspection-mobile-detail-drawer-body inspection-equipment-detail-drawer-body d-grid"
+          data-testid={visible ? bodyTestId : undefined}
+        >
+          {message}
+        </div>
+        <div className="mobile-bottom-drawer__footer d-flex align-items-center justify-content-end gap-2">
+          {actions}
+        </div>
+      </MobileBottomDrawer>
+    )
+  }
 
   return (
     <>
@@ -57,7 +97,7 @@ const UserConfirmModal = ({
 
       <CModal
         visible={visible}
-        onClose={onClose}
+        onClose={handleClose}
         alignment="center"
         backdrop={zIndex != null ? false : true}
         className={className}
@@ -67,14 +107,7 @@ const UserConfirmModal = ({
           <CModalTitle>{title}</CModalTitle>
         </CModalHeader>
         <CModalBody data-testid={visible ? bodyTestId : undefined}>{message}</CModalBody>
-        <CModalFooter>
-          <CButton color="secondary" variant="outline" onClick={onClose} disabled={cancelDisabled}>
-            {cancelLabel}
-          </CButton>
-          <CButton color={confirmColor} onClick={onConfirm} disabled={confirmDisabled}>
-            {confirmLabel}
-          </CButton>
-        </CModalFooter>
+        <CModalFooter>{actions}</CModalFooter>
       </CModal>
     </>
   )

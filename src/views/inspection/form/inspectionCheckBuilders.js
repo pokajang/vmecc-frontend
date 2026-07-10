@@ -18,6 +18,12 @@ export const buildScbaFillBlankGoodPatch = (sectionFields = [], check = {}, good
     return patch
   }, {})
 
+export const buildScbaAllGoodPatch = (sectionFields = [], goodStatus = 'Good') =>
+  (Array.isArray(sectionFields) ? sectionFields : []).reduce((patch, field) => {
+    if (field.kind === 'status') patch[field.key] = goodStatus
+    return patch
+  }, {})
+
 export const buildErAuxCheckRow = (row, existing = {}, patch = {}) => ({
   id: String(row?.id || existing?.id || '').trim(),
   location: String(row?.location || existing?.location || '').trim(),

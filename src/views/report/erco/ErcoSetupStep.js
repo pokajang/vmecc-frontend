@@ -344,7 +344,7 @@ const ErcoSetupStep = ({
           if (incident.addTypeError) incident.setAddTypeError('')
         }}
         namePlaceholder="e.g. Flood Response"
-        descriptionLabel="Emergency / Incident Details (Optional)"
+        descriptionLabel="Emergency / incident details (optional)"
         descriptionValue={incident.newTypeDescription}
         onChangeDescription={incident.setNewTypeDescription}
         descriptionPlaceholder="One-line subtext for this card."
@@ -378,7 +378,7 @@ const ErcoSetupStep = ({
           if (weather.addWeatherError) weather.setAddWeatherError('')
         }}
         namePlaceholder="e.g. Heavy Haze"
-        descriptionLabel="Weather Details (Optional)"
+        descriptionLabel="Weather details (optional)"
         descriptionValue={weather.newWeatherDescription}
         onChangeDescription={weather.setNewWeatherDescription}
         descriptionPlaceholder="One-line subtext for this card."
@@ -412,7 +412,7 @@ const ErcoSetupStep = ({
           if (location.addLocationError) location.setAddLocationError('')
         }}
         namePlaceholder="e.g. Zone E"
-        descriptionLabel="Detailed Area (Optional)"
+        descriptionLabel="Detailed area (optional)"
         descriptionValue={location.newLocationDescription}
         onChangeDescription={location.setNewLocationDescription}
         descriptionPlaceholder="Subtext shown below area name."
@@ -475,7 +475,7 @@ const ErcoSetupStep = ({
                         borderStyle: 'dashed',
                       },
                       className: 'text-primary',
-                      iconContainerClassName: 'bg-white text-primary',
+                      iconContainerClassName: 'bg-body text-primary',
                       titleClassName: 'fw-semibold text-primary',
                       descriptionClassName: 'mb-0 mt-1 text-body-secondary',
                     }
@@ -540,7 +540,7 @@ const ErcoSetupStep = ({
                         borderStyle: 'dashed',
                       },
                       className: 'text-primary',
-                      iconContainerClassName: 'bg-white text-primary',
+                      iconContainerClassName: 'bg-body text-primary',
                       titleClassName: 'fw-semibold text-primary',
                       descriptionClassName: 'mb-0 mt-1 text-body-secondary',
                     }
@@ -620,7 +620,7 @@ const ErcoSetupStep = ({
                         borderStyle: 'dashed',
                       },
                       className: 'text-primary',
-                      iconContainerClassName: 'bg-white text-primary',
+                      iconContainerClassName: 'bg-body text-primary',
                       titleClassName: 'fw-semibold text-primary',
                       descriptionClassName: 'mb-0 mt-1 text-body-secondary',
                     }
@@ -699,9 +699,12 @@ const ErcoSetupStep = ({
                     >
                       <div className="small text-body-secondary">Custom date</div>
                       <CFormInput
+                        id="erco-incident-date"
                         type="date"
                         value={form.incidentDate}
-                        aria-label="Choose Incident Date"
+                        aria-describedby={
+                          setupFieldErrors.incidentDate ? 'erco-incident-date-error' : undefined
+                        }
                         invalid={Boolean(setupFieldErrors.incidentDate)}
                         onChange={(event) => updateSetupField('incidentDate', event.target.value)}
                       />
@@ -709,7 +712,9 @@ const ErcoSetupStep = ({
                   </CCol>
                 </CRow>
                 {setupFieldErrors.incidentDate ? (
-                  <div className="text-danger small mb-0">{setupFieldErrors.incidentDate}</div>
+                  <div id="erco-incident-date-error" className="invalid-feedback d-block">
+                    {setupFieldErrors.incidentDate}
+                  </div>
                 ) : null}
               </div>
               <CRow className="g-2">
@@ -721,12 +726,21 @@ const ErcoSetupStep = ({
                     </div>
                   </div>
                   <CFormInput
+                    id="erco-incident-time"
                     type="time"
                     aria-label="Choose Incident Time"
+                    aria-describedby={
+                      setupFieldErrors.incidentTime ? 'erco-incident-time-error' : undefined
+                    }
                     value={form.incidentTime}
                     invalid={Boolean(setupFieldErrors.incidentTime)}
                     onChange={(event) => updateSetupField('incidentTime', event.target.value)}
                   />
+                  {setupFieldErrors.incidentTime ? (
+                    <div id="erco-incident-time-error" className="invalid-feedback d-block">
+                      {setupFieldErrors.incidentTime}
+                    </div>
+                  ) : null}
                   {completion.datetime ? (
                     <div className="d-flex justify-content-end mt-2">
                       <CButton

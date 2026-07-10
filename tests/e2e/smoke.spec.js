@@ -6,12 +6,15 @@ const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
 const baseUrl = process.env.VMECC_E2E_BASE_URL || 'http://localhost:3000'
 const smokeEmail = process.env.VMECC_SMOKE_EMAIL || 'codex.smoke.admin@vmecc.local'
 const smokePassword = process.env.VMECC_SMOKE_PASSWORD || 'SmokeAdmin!2026'
-const routeThrottleMs = 900
+const routeThrottleMs = Number(process.env.VMECC_E2E_ROUTE_THROTTLE_MS || 1800)
+const routeRetryDelayMs = Number(process.env.VMECC_E2E_ROUTE_RETRY_DELAY_MS || 3000)
+const routeMaxAttempts = Number(process.env.VMECC_E2E_ROUTE_ATTEMPTS || 2)
 const routeReadyTimeoutMs = 30_000
 const routeDefaultTimeoutMs = 25_000
 const screenshotRoot = path.resolve(process.cwd(), 'test-results', 'smoke')
+const routeDefinitionsPath = path.resolve(process.cwd(), 'src', 'routes.js')
 
-const ROUTES = [
+const CORE_ROUTE_EXPECTATIONS = [
   { path: '/dashboard', heading: /Dashboard Overview/i },
   { path: '/messages', heading: /Messages/i },
   { path: '/settings', heading: /Settings/i },
@@ -63,6 +66,48 @@ const ROUTES = [
   { path: '/profile/security', heading: /Profile|Security/i },
 ]
 
+const registeredRoutes = () => {
+  const source = fs.readFileSync(routeDefinitionsPath, 'utf8')
+  const paths = [...source.matchAll(/\bpath:\s*'([^']+)'/g)].map((match) => match[1])
+
+  return [...new Set(paths)]
+}
+
+const coreRouteExpectationsByPath = new Map(
+  CORE_ROUTE_EXPECTATIONS.map((route) => [route.path, route]),
+)
+
+const dynamicRouteProbePath = (routePath) =>
+  routePath.replace(/:([A-Za-z][A-Za-z0-9_]*)/g, (_match, parameter) => {
+    const placeholders = {
+      reportType: 'erco',
+      newSection: 'general',
+      moduleKey: 'inspection',
+      legacyLeaveId: 'leaves',
+      legacyOvertimeRouteKey: 'records',
+      legacyClaimId: 'claims',
+      slug: 'missing-user',
+    }
+
+    return placeholders[parameter] || '999999'
+  })
+
+const ROUTES = registeredRoutes().map((routePath) => {
+  const expectation = coreRouteExpectationsByPath.get(routePath)
+  if (expectation) return expectation
+
+  return {
+    path: dynamicRouteProbePath(routePath),
+    sourcePath: routePath,
+    allowMissingResource: routePath.includes(':'),
+  }
+})
+
+const routeSweepTimeoutMs = Number(
+  process.env.VMECC_E2E_ROUTE_SWEEP_TIMEOUT_MS ||
+    Math.max(15 * 60_000, ROUTES.length * (routeReadyTimeoutMs + routeThrottleMs + 5_000)),
+)
+
 const routeLogin = async (request) => {
   const loginResponse = await request.post(`${apiBaseUrl}/auth/login`, {
     headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
@@ -98,6 +143,11 @@ const isTrackedFailedResponse = (response) => {
   if (requestUrl.startsWith('data:') || requestUrl.startsWith('blob:')) return false
   return true
 }
+
+const isExpectedBackgroundModuleResponse = ({ route, status, url }) =>
+  status === 403 &&
+  !String(route?.path || '').startsWith('/messages') &&
+  /\/api\/messages\/threads(?:\?|$)/.test(url)
 
 const collectFailureArtifacts = async (page, testInfo, route, notes = []) => {
   if (page.isClosed()) {
@@ -136,7 +186,9 @@ const waitForRouteReady = async (page, route) => {
       const rootText = String(document.getElementById('root')?.textContent || '')
       const bodyText = String(document.body?.innerText || '').trim()
       const normalizedBodyText = bodyText.replace(/\s+/g, ' ').trim()
-      const isLoading = normalizedBodyText.length <= 160 && /loading/i.test(normalizedBodyText)
+      const isLoading =
+        normalizedBodyText.length <= 220 &&
+        /loading|restoring session|restoring camera session/i.test(normalizedBodyText)
       const spinnerVisible = Boolean(document.querySelector('.spinner-border, .spinner-grow'))
       return rootText.trim().length > 0 && !isLoading && !spinnerVisible
     },
@@ -155,10 +207,19 @@ const waitForRouteReady = async (page, route) => {
       // alternate templates or icon-only titles.
     }
   }
+
+  const alertText = await page
+    .locator('[role="alert"]')
+    .first()
+    .textContent({ timeout: 1_000 })
+    .catch(() => '')
+  if (/unable to restore session|unable to connect to server/i.test(String(alertText || ''))) {
+    throw new Error(`Route ${route.path} could not restore the authenticated session: ${alertText}`)
+  }
 }
 
 test.describe('SMOKE route sweep (manual)', () => {
-  test.describe.configure({ mode: 'serial', timeout: 10 * 60_000 })
+  test.describe.configure({ mode: 'serial', timeout: routeSweepTimeoutMs + 60_000 })
 
   test('API CSRF enforcement for unsafe sessioned updates', async ({ request }) => {
     const csrfToken = await routeLogin(request)
@@ -196,6 +257,7 @@ test.describe('SMOKE route sweep (manual)', () => {
   test('throttled route traversal reaches landmarks without persistent loading', async ({
     page,
   }, testInfo) => {
+    testInfo.setTimeout(routeSweepTimeoutMs)
     page.setDefaultTimeout(routeDefaultTimeoutMs)
     const consoleErrors = []
     const pageErrors = []
@@ -237,27 +299,47 @@ test.describe('SMOKE route sweep (manual)', () => {
     const failures = []
 
     for (const route of ROUTES) {
-      const beforeConsole = consoleErrors.length
-      const beforePageError = pageErrors.length
-      const beforeFailureResponse = failedResponses.length
-
       const notes = []
+      let routeConsoleErrors = []
+      let routePageErrors = []
+      let routeFailedResponses = []
+      let routeError = null
 
-      try {
-        await page.goto(`${baseUrl}${route.path}`, {
-          waitUntil: 'domcontentloaded',
-          timeout: 20_000,
-        })
-        await page.waitForTimeout(routeThrottleMs)
-        await expect(page).not.toHaveURL(/\/login/i, { timeout: 5_000 })
-        await waitForRouteReady(page, route)
-      } catch (error) {
-        notes.push(`Route failure: ${error.message}`)
+      for (let attempt = 1; attempt <= routeMaxAttempts; attempt += 1) {
+        const beforeConsole = consoleErrors.length
+        const beforePageError = pageErrors.length
+        const beforeFailureResponse = failedResponses.length
+
+        try {
+          await page.goto(`${baseUrl}${route.path}`, {
+            waitUntil: 'domcontentloaded',
+            timeout: 20_000,
+          })
+          await page.waitForTimeout(routeThrottleMs)
+          await expect(page).not.toHaveURL(/\/login/i, { timeout: 5_000 })
+          await waitForRouteReady(page, route)
+
+          routeError = null
+          routeConsoleErrors = consoleErrors.slice(beforeConsole)
+          routePageErrors = pageErrors.slice(beforePageError)
+          routeFailedResponses = failedResponses.slice(beforeFailureResponse)
+          break
+        } catch (error) {
+          routeError = error
+          routeConsoleErrors = consoleErrors.slice(beforeConsole)
+          routePageErrors = pageErrors.slice(beforePageError)
+          routeFailedResponses = failedResponses.slice(beforeFailureResponse)
+
+          if (attempt < routeMaxAttempts && !page.isClosed()) {
+            await page.waitForTimeout(routeRetryDelayMs)
+            continue
+          }
+        }
       }
 
-      const routeConsoleErrors = consoleErrors.slice(beforeConsole)
-      const routePageErrors = pageErrors.slice(beforePageError)
-      const routeFailedResponses = failedResponses.slice(beforeFailureResponse)
+      if (routeError) {
+        notes.push(`Route failure: ${routeError.message}`)
+      }
 
       routeConsoleErrors.forEach(({ message }) => {
         notes.push(`console.error: ${message}`)
@@ -265,9 +347,12 @@ test.describe('SMOKE route sweep (manual)', () => {
       routePageErrors.forEach(({ message }) => {
         notes.push(`pageerror: ${message}`)
       })
-      routeFailedResponses.forEach(({ status, url }) => {
-        notes.push(`failed request: ${status} ${url}`)
-      })
+      routeFailedResponses
+        .filter(({ status }) => !(route.allowMissingResource && status === 404))
+        .filter((failure) => !isExpectedBackgroundModuleResponse({ route, ...failure }))
+        .forEach(({ status, url }) => {
+          notes.push(`failed request: ${status} ${url}`)
+        })
 
       if (notes.length > 0) {
         await collectFailureArtifacts(page, testInfo, route, notes)

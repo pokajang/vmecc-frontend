@@ -103,6 +103,8 @@ const MobileNavSheet = ({
   const secondaryRoles = (user?.roles || []).filter((role) => role !== primaryRole)
   const canQuickActions = canClaim || canLeave || canOvertime
   const canMyRecords = canClaim || canLeave || canOvertime
+  const actionGridClassName = 'mobile-nav-sheet-action-grid mobile-nav-sheet-action-grid-menu'
+  const sectionClassName = 'mobile-nav-sheet-section-grid'
 
   useEffect(() => {
     if (!open || mode !== 'menu' || !hasInspectionRoute(menuData)) return
@@ -119,7 +121,7 @@ const MobileNavSheet = ({
 
     return (
       <>
-        <div className="mobile-nav-sheet-action-grid mobile-nav-sheet-action-grid-menu">
+        <div className={actionGridClassName}>
           {rows.map((row) => {
             if (row.type === 'section') {
               return (
@@ -185,9 +187,11 @@ const MobileNavSheet = ({
         )}
       </div>
 
-      {canQuickActions && <MobileOverlaySection>Quick Actions</MobileOverlaySection>}
       {canQuickActions && (
-        <div className="mobile-nav-sheet-action-grid">
+        <MobileOverlaySection className={sectionClassName}>Quick Actions</MobileOverlaySection>
+      )}
+      {canQuickActions && (
+        <div className={actionGridClassName}>
           {canClaim && (
             <MobileOverlayItem
               onClick={() => onNavigate({ to: '/payroll/claims/new' })}
@@ -212,35 +216,37 @@ const MobileNavSheet = ({
         </div>
       )}
 
-      {canMyRecords && <MobileOverlaySection>My Records</MobileOverlaySection>}
       {canMyRecords && (
-        <div className="mobile-nav-sheet-action-grid">
+        <MobileOverlaySection className={sectionClassName}>My Records</MobileOverlaySection>
+      )}
+      {canMyRecords && (
+        <div className={actionGridClassName}>
           {canClaim && (
             <MobileOverlayItem
               onClick={() => onNavigate({ to: '/payroll' })}
               icon={<ReceiptText size={16} />}
-              label="Payroll records"
+              label="Payroll Records"
             />
           )}
           {canLeave && (
             <MobileOverlayItem
               onClick={() => onNavigate({ to: '/leave' })}
               icon={<CalendarCheck size={16} />}
-              label="Leave records"
+              label="Leave Records"
             />
           )}
           {canOvertime && (
             <MobileOverlayItem
               onClick={() => onNavigate({ to: '/overtime' })}
               icon={<History size={16} />}
-              label="Overtime records"
+              label="Overtime Records"
             />
           )}
         </div>
       )}
 
-      <MobileOverlaySection>Account</MobileOverlaySection>
-      <div className="mobile-nav-sheet-action-grid">
+      <MobileOverlaySection className={sectionClassName}>Account</MobileOverlaySection>
+      <div className={actionGridClassName}>
         <MobileOverlayItem
           onClick={() => onNavigate({ to: '/profile' })}
           icon={<User size={16} />}
@@ -251,10 +257,10 @@ const MobileNavSheet = ({
           icon={<Settings size={16} />}
           label="Settings"
         />
-        <MobileOverlayItem onClick={onReportIssue} icon={<Flag size={16} />} label="Report issue" />
+        <MobileOverlayItem onClick={onReportIssue} icon={<Flag size={16} />} label="Report Issue" />
       </div>
 
-      <MobileOverlaySection>Session</MobileOverlaySection>
+      <MobileOverlaySection className={sectionClassName}>Session</MobileOverlaySection>
       <div className="mobile-nav-sheet-inline-actions">
         <MobileOverlayItem
           onClick={onLogout}

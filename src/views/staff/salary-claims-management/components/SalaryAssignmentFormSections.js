@@ -57,7 +57,7 @@ const formatPatchAmount = (formatCurrency, value) =>
 const PayChangeRow = ({ change, formatCurrency }) => {
   const isRemark = change.type === 'remarks'
   return (
-    <div className="border rounded-3 bg-white p-3">
+    <div className="border rounded-3 bg-body p-3">
       <div className="d-flex justify-content-between align-items-start gap-3">
         <div>
           <div className="fw-semibold">{change.label}</div>
@@ -93,7 +93,7 @@ const PayChangeRow = ({ change, formatCurrency }) => {
 const UnchangedPayRows = ({ formatCurrency, rows = [] }) => {
   if (!rows.length) return null
   return (
-    <details className="border rounded-3 bg-white p-3 mt-3">
+    <details className="border rounded-3 bg-body p-3 mt-3">
       <summary className="fw-semibold">Show unchanged pay components</summary>
       <div className="d-grid gap-2 mt-3">
         {rows.map((row) => (
@@ -149,7 +149,7 @@ export const SalaryAssignmentStaffFields = ({
           />
         </CCol>
         <CCol md={4}>
-          <CFormLabel htmlFor="assignment-effective">Effective Month</CFormLabel>
+          <CFormLabel htmlFor="assignment-effective">Effective month</CFormLabel>
           <CFormInput
             id="assignment-effective"
             type="month"
@@ -165,7 +165,7 @@ export const SalaryAssignmentStaffFields = ({
         <div className="rounded-3 border border-primary bg-primary bg-opacity-10 p-3">
           <div className="d-flex align-items-start gap-3">
             <div
-              className="d-inline-flex align-items-center justify-content-center rounded-circle border bg-white text-body-secondary fw-semibold"
+              className="d-inline-flex align-items-center justify-content-center rounded-circle border bg-body text-body-secondary fw-semibold"
               style={{ flex: '0 0 auto', width: 56, height: 56, lineHeight: 1 }}
             >
               {draft?.avatarUrl ? (
@@ -228,12 +228,13 @@ export const SalaryAssignmentPayComponentsCard = ({
     <CCardBody>
       <div className="d-md-none d-grid gap-2">
         {componentRows.map((row) => (
-          <div key={row.id} className="border rounded-3 bg-white p-3">
+          <div key={row.id} className="border rounded-3 bg-body p-3">
             <div className="d-flex justify-content-between align-items-start gap-3">
               <div className="fw-semibold">{row.label}</div>
               {row.deletable && !isReadOnly ? (
                 <CButton
-                  color="light"
+                  color="secondary"
+                  variant="outline"
                   size="sm"
                   onClick={() => handleDeleteAllowanceRow('allowance', row.id)}
                   title="Delete row"
@@ -249,6 +250,7 @@ export const SalaryAssignmentPayComponentsCard = ({
                   <div className="col-12">
                     <CFormLabel htmlFor={`assignment-${row.id}-name`}>Component</CFormLabel>
                     <CFormInput
+                      aria-label={`Allowance name for ${row.label || row.id}`}
                       id={`assignment-${row.id}-name`}
                       value={row.name}
                       onChange={(event) =>
@@ -288,7 +290,7 @@ export const SalaryAssignmentPayComponentsCard = ({
         ))}
       </div>
 
-      <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
+      <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-body">
         <CTable align="middle" className="mb-0" responsive>
           <CTableHead color="light">
             <CTableRow>
@@ -299,7 +301,7 @@ export const SalaryAssignmentPayComponentsCard = ({
               <CTableHeaderCell className="text-end">Amount</CTableHeaderCell>
               {!isReadOnly && (
                 <CTableHeaderCell className="text-end" style={{ width: 120 }}>
-                  Action
+                  Actions
                 </CTableHeaderCell>
               )}
             </CTableRow>
@@ -316,6 +318,7 @@ export const SalaryAssignmentPayComponentsCard = ({
                 <CTableDataCell>
                   {!isReadOnly && row.rowType === 'allowance' ? (
                     <CFormInput
+                      aria-label={`Allowance name row ${index + 1}`}
                       value={row.name}
                       onChange={(event) =>
                         handlePayComponentUpdate('allowance', row.id, 'name', event.target.value)
@@ -331,6 +334,7 @@ export const SalaryAssignmentPayComponentsCard = ({
                     <div className="d-flex justify-content-end">
                       <div style={{ width: 160 }}>
                         <CFormInput
+                          aria-label={`${row.label || row.name || 'Pay component'} amount`}
                           type="number"
                           min="0"
                           step="0.01"
@@ -421,7 +425,7 @@ export const SalaryAssignmentReviewCard = ({ formatCurrency, formatMonth, review
     <CCardBody>
       <div className="row g-3">
         <div className="col-md-6">
-          <div className="border rounded-3 bg-white p-3 h-100">
+          <div className="border rounded-3 bg-body p-3 h-100">
             <div className="fw-semibold mb-2">Assignment</div>
             <SummaryField label="Staff" value={reviewSummary.staffName} />
             <SummaryField label="Team" value={reviewSummary.team} />
@@ -432,7 +436,7 @@ export const SalaryAssignmentReviewCard = ({ formatCurrency, formatMonth, review
           </div>
         </div>
         <div className="col-md-6">
-          <div className="border rounded-3 bg-white p-3 h-100">
+          <div className="border rounded-3 bg-body p-3 h-100">
             <div className="fw-semibold mb-2">Pay Summary</div>
             <SummaryField label="Basic salary" value={formatCurrency(reviewSummary.basicSalary)} />
             <SummaryField label="Gross salary" value={formatCurrency(reviewSummary.grossSalary)} />
@@ -444,7 +448,7 @@ export const SalaryAssignmentReviewCard = ({ formatCurrency, formatMonth, review
           </div>
         </div>
       </div>
-      <div className="border rounded-3 bg-white p-3 mt-3">
+      <div className="border rounded-3 bg-body p-3 mt-3">
         <div className="fw-semibold mb-2">Changed Items</div>
         {reviewSummary.changedRows?.length > 0 ? (
           <div className="d-grid gap-2">
@@ -457,7 +461,7 @@ export const SalaryAssignmentReviewCard = ({ formatCurrency, formatMonth, review
         )}
       </div>
       <UnchangedPayRows formatCurrency={formatCurrency} rows={reviewSummary.unchangedRows || []} />
-      <div className="border rounded-3 bg-white p-3 mt-3">
+      <div className="border rounded-3 bg-body p-3 mt-3">
         <div className="fw-semibold mb-2">Remarks</div>
         {reviewSummary.remarks.length > 0 ? (
           <div className="d-grid gap-2">

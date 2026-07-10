@@ -79,7 +79,7 @@ const CreateStaffForm = ({
 
       <div className="mb-4">
         <div className="d-flex justify-content-between align-items-center mb-2">
-          <CFormLabel className="mb-0">Role Assignments</CFormLabel>
+          <div className="form-label mb-0">Role assignments</div>
           <CButton
             type="button"
             size="sm"
@@ -124,8 +124,11 @@ const CreateStaffForm = ({
                   </CButton>
                 </CCol>
                 <CCol md={6}>
-                  <CFormLabel className="small">Role</CFormLabel>
+                  <CFormLabel htmlFor={`staff-assignment-${index}-role`} className="small">
+                    Role
+                  </CFormLabel>
                   <CFormSelect
+                    id={`staff-assignment-${index}-role`}
                     value={assignment.role}
                     onChange={(e) => onChangeAssignment(index, 'role', e.target.value)}
                     disabled={submitStatus.loading}
@@ -138,15 +141,23 @@ const CreateStaffForm = ({
                   </CFormSelect>
                 </CCol>
                 <CCol md={6}>
-                  <CFormLabel className="small">Scope</CFormLabel>
-                  <CFormInput value={scopeLabel} disabled readOnly />
+                  <CFormLabel htmlFor={`staff-assignment-${index}-scope`} className="small">
+                    Scope
+                  </CFormLabel>
+                  <CFormInput
+                    id={`staff-assignment-${index}-scope`}
+                    value={scopeLabel}
+                    disabled
+                    readOnly
+                  />
                 </CCol>
                 {needsTeam && (
                   <CCol md={6}>
-                    <CFormLabel className="small">
+                    <CFormLabel htmlFor={`staff-assignment-${index}-team`} className="small">
                       Team <span className="text-muted fw-normal">(optional — assign later)</span>
                     </CFormLabel>
                     <CFormSelect
+                      id={`staff-assignment-${index}-team`}
                       value={assignment.team_id || ''}
                       onChange={(e) => onChangeAssignment(index, 'team_id', e.target.value || null)}
                       disabled={submitStatus.loading}
@@ -161,8 +172,11 @@ const CreateStaffForm = ({
                   </CCol>
                 )}
                 <CCol md={needsTeam ? 6 : 12}>
-                  <CFormLabel className="small">Start date</CFormLabel>
+                  <CFormLabel htmlFor={`staff-assignment-${index}-start`} className="small">
+                    Start date
+                  </CFormLabel>
                   <CFormInput
+                    id={`staff-assignment-${index}-start`}
                     type="date"
                     value={assignment.start_date || ''}
                     onChange={(e) => onChangeAssignment(index, 'start_date', e.target.value)}
@@ -170,7 +184,7 @@ const CreateStaffForm = ({
                   />
                 </CCol>
                 <CCol md={6}>
-                  <CFormLabel className="small d-block">Primary</CFormLabel>
+                  <div className="form-label small d-block">Primary role</div>
                   <CFormCheck
                     id={`primary-assignment-${index}`}
                     label="Use as primary role"
@@ -191,7 +205,7 @@ const CreateStaffForm = ({
 
       <div className="d-flex gap-2">
         <CButton type="submit" color="primary" size="sm" disabled={submitStatus.loading}>
-          {submitStatus.loading ? <ButtonLoader label="Creating..." /> : 'Create User'}
+          {submitStatus.loading ? <ButtonLoader label="Creating..." /> : 'Create user'}
         </CButton>
         <CButton
           type="button"

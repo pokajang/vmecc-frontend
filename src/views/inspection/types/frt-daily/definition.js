@@ -13,7 +13,7 @@ import {
   normalizeFrtTruckReference,
 } from './helpers'
 import { createTruckDetailContextFields } from '../detailConfigHelpers'
-import { buildSubLocationContinuationOptions } from '../continuationHelpers'
+import { buildSubLocationContinuationOptions, CONTINUATION_TOKENS } from '../continuationHelpers'
 import { FrtDailyEditSection, FrtDailyReadOnlySection } from './section'
 import { INSPECTION_REPORT_EVIDENCE_COPY } from '../../inspectionReportEvidenceCopy'
 
@@ -70,7 +70,7 @@ const frtDailyInspectionDefinition = {
     buildSubLocationContinuationOptions({
       form,
       getOptions: getFrtCompartmentOptions,
-      label: 'compartment',
+      label: CONTINUATION_TOKENS.compartment,
       parentLabel:
         context.selectedFireTruckPlate || form.frtTruckPlateNo || form.mainLocation || 'Fire truck',
     }),

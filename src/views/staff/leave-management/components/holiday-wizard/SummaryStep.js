@@ -26,11 +26,8 @@ const SummaryStep = ({ wizardState }) => (
           </CTableRow>
         </CTableHead>
         <CTableBody>
-          <CTableRow style={{ backgroundColor: '#f0f4f8' }}>
-            <CTableDataCell
-              colSpan={4}
-              style={{ lineHeight: 'inherit', fontWeight: 'normal', color: '#6c757d' }}
-            >
+          <CTableRow className="bg-body-tertiary">
+            <CTableDataCell colSpan={4} className="fw-normal text-body-secondary">
               National Holidays
             </CTableDataCell>
           </CTableRow>
@@ -44,11 +41,8 @@ const SummaryStep = ({ wizardState }) => (
                 <CTableDataCell className="text-center">All States</CTableDataCell>
               </CTableRow>
             ))}
-          <CTableRow style={{ backgroundColor: '#f0f4f8' }}>
-            <CTableDataCell
-              colSpan={4}
-              style={{ lineHeight: 'inherit', fontWeight: 'normal', color: '#6c757d' }}
-            >
+          <CTableRow className="bg-body-tertiary">
+            <CTableDataCell colSpan={4} className="fw-normal text-body-secondary">
               Additional Holidays
             </CTableDataCell>
           </CTableRow>

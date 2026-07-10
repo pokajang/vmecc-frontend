@@ -179,7 +179,7 @@ const InspectionRecordsSection = ({
           />
         )}
         {isLoading ? (
-          <div className="border rounded-3 bg-white">
+          <div className="border rounded-3 bg-body">
             <TableLoader message="Loading records..." minHeight={144} />
           </div>
         ) : filteredRecords.length > 0 ? (

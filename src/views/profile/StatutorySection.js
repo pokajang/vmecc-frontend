@@ -97,6 +97,7 @@ const StatutorySection = ({ statutory }) => {
           'EPF number',
           editMode ? (
             <CFormInput
+              aria-label="EPF number"
               size="sm"
               name="epfNo"
               value={form.epfNo}
@@ -112,6 +113,7 @@ const StatutorySection = ({ statutory }) => {
           'PERKESO number',
           editMode ? (
             <CFormInput
+              aria-label="PERKESO number"
               size="sm"
               name="perkesoNo"
               value={form.perkesoNo}
@@ -127,6 +129,7 @@ const StatutorySection = ({ statutory }) => {
           'Income tax number',
           editMode ? (
             <CFormInput
+              aria-label="Income tax number"
               size="sm"
               name="incomeTaxNo"
               value={form.incomeTaxNo}

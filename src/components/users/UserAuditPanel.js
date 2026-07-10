@@ -150,7 +150,7 @@ const UserAuditPanel = ({ userId }) => {
             mobileSections={mobileAuditSections}
             mobileVariant="list-group"
             renderDesktop={() => (
-              <div className="rounded-3 shadow-sm overflow-hidden bg-white d-none d-md-block">
+              <div className="rounded-3 shadow-sm overflow-hidden bg-body d-none d-md-block">
                 <CTable align="middle" className="mb-0" hover responsive>
                   <CTableHead color="light">
                     <CTableRow>
@@ -158,7 +158,7 @@ const UserAuditPanel = ({ userId }) => {
                         #
                       </CTableHeaderCell>
                       <CTableHeaderCell style={{ width: '19%' }}>Time</CTableHeaderCell>
-                      <CTableHeaderCell style={{ width: '19%' }}>Action</CTableHeaderCell>
+                      <CTableHeaderCell style={{ width: '19%' }}>Actions</CTableHeaderCell>
                       <CTableHeaderCell style={{ width: '19%' }}>Actor</CTableHeaderCell>
                       <CTableHeaderCell style={{ width: '19%' }}>IP</CTableHeaderCell>
                       <CTableHeaderCell style={{ width: '19%' }}>Details</CTableHeaderCell>

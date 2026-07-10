@@ -177,13 +177,14 @@ const ScbaCatalogModals = ({
   setScbaSectionModal,
 }) => {
   const useMobileDrawer = useMediaQuery('(max-width: 575.98px)')
-  const sectionTitle = scbaSectionModal.mode === 'edit' ? 'Edit SCBA Section' : 'Add SCBA Section'
-  const itemTitle = scbaItemModal.mode === 'edit' ? 'Edit SCBA Item' : 'Add SCBA Item'
+  const sectionTitle = scbaSectionModal.mode === 'edit' ? 'Edit SCBA section' : 'Add SCBA section'
+  const itemTitle = scbaItemModal.mode === 'edit' ? 'Edit SCBA item' : 'Add SCBA item'
   const sectionBody = (
     <div className="d-grid gap-3">
       <div>
-        <CFormLabel>Section title</CFormLabel>
+        <CFormLabel htmlFor="scba-section-title">Section title</CFormLabel>
         <CFormInput
+          id="scba-section-title"
           value={scbaSectionModal.title}
           placeholder="e.g. Regulator"
           onChange={(event) =>
@@ -196,8 +197,9 @@ const ScbaCatalogModals = ({
         />
       </div>
       <div>
-        <CFormLabel>Short label</CFormLabel>
+        <CFormLabel htmlFor="scba-section-short-label">Short label</CFormLabel>
         <CFormInput
+          id="scba-section-short-label"
           value={scbaSectionModal.shortLabel}
           placeholder="Optional"
           onChange={(event) =>
@@ -210,8 +212,9 @@ const ScbaCatalogModals = ({
         />
       </div>
       <div>
-        <CFormLabel>Inspection checks for each item</CFormLabel>
+        <CFormLabel htmlFor="scba-section-checks">Inspection checks for each item</CFormLabel>
         <CFormTextarea
+          id="scba-section-checks"
           rows={4}
           value={scbaSectionModal.checksText}
           placeholder={'One check per line\ne.g. Physical Condition\nLeak Test'}
@@ -247,8 +250,9 @@ const ScbaCatalogModals = ({
   const itemBody = (
     <div className="d-grid gap-3">
       <div>
-        <CFormLabel>Brand</CFormLabel>
+        <CFormLabel htmlFor="scba-item-brand">Brand</CFormLabel>
         <CFormInput
+          id="scba-item-brand"
           value={scbaItemModal.brand}
           placeholder="e.g. MSA"
           onChange={(event) =>
@@ -261,8 +265,9 @@ const ScbaCatalogModals = ({
         />
       </div>
       <div>
-        <CFormLabel>Serial No.</CFormLabel>
+        <CFormLabel htmlFor="scba-item-serial">Serial no.</CFormLabel>
         <CFormInput
+          id="scba-item-serial"
           value={scbaItemModal.serialNo}
           placeholder="e.g. MSA 04"
           onChange={(event) =>
@@ -277,8 +282,9 @@ const ScbaCatalogModals = ({
       {scbaItemModal.sectionKey === 'cylinder' ? (
         <div className="row g-3">
           <div className="col-12 col-sm-6">
-            <CFormLabel>Size</CFormLabel>
+            <CFormLabel htmlFor="scba-item-size">Size</CFormLabel>
             <CFormInput
+              id="scba-item-size"
               value={scbaItemModal.size}
               placeholder="e.g. 6.8"
               onChange={(event) =>
@@ -291,8 +297,9 @@ const ScbaCatalogModals = ({
             />
           </div>
           <div className="col-12 col-sm-6">
-            <CFormLabel>Cylinder Type</CFormLabel>
+            <CFormLabel htmlFor="scba-item-cylinder-type">Cylinder type</CFormLabel>
             <CFormInput
+              id="scba-item-cylinder-type"
               value={scbaItemModal.cylinderType}
               placeholder="e.g. Composite"
               onChange={(event) =>
@@ -307,8 +314,9 @@ const ScbaCatalogModals = ({
         </div>
       ) : null}
       <div>
-        <CFormLabel>Details</CFormLabel>
+        <CFormLabel htmlFor="scba-item-details">Details</CFormLabel>
         <CFormTextarea
+          id="scba-item-details"
           rows={2}
           value={scbaItemModal.equipmentDescription}
           placeholder="Optional"

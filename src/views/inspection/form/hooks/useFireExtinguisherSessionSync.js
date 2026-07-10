@@ -61,6 +61,7 @@ const buildSessionCheckPatch = (checkPayload = {}) => {
 const useFireExtinguisherSessionSync = ({
   enabled = true,
   inspectionType = FIRE_EXTINGUISHER_INSPECTION_TYPE,
+  formInspectionSessionUid = '',
   zone = '',
   mainLocation = '',
   subLocation = '',
@@ -74,16 +75,26 @@ const useFireExtinguisherSessionSync = ({
   const [error, setError] = useState(null)
   const [isHydrating, setIsHydrating] = useState(false)
   const [pendingRetryCount, setPendingRetryCount] = useState(0)
+  const [pendingRetryAssetKeys, setPendingRetryAssetKeys] = useState([])
+  const [sessionRefreshKey, setSessionRefreshKey] = useState(0)
   const syncingKeysRef = useRef(new Set())
   const autoCompletedKeysRef = useRef(new Set())
+  const forceNewSessionRef = useRef(false)
+  const previousFormSessionUidRef = useRef(text(formInspectionSessionUid))
   const sessionEnabled =
     enabled &&
     featureFlags.inspectionSessionFireExtinguisherEnabled &&
     isFireExtinguisherInspectionType(inspectionType)
   const resultByKey = useMemo(() => mapSessionResults(results), [results])
+  const pendingRetryKeySet = useMemo(
+    () =>
+      new Set((Array.isArray(pendingRetryAssetKeys) ? pendingRetryAssetKeys : []).filter(Boolean)),
+    [pendingRetryAssetKeys],
+  )
   const hasVisibleScope = text(zone) !== '' || text(mainLocation) !== ''
   const currentUserIdKey = text(currentUserId)
-  const isCompletedByAnotherUser = useCallback(
+  const normalizedFormInspectionSessionUid = text(formInspectionSessionUid)
+  const shouldPreferSessionResult = useCallback(
     (sessionResult = {}) => {
       if (sessionResult?.status !== 'completed') return false
       const checkedByUserId = text(
@@ -94,17 +105,34 @@ const useFireExtinguisherSessionSync = ({
     [currentUserIdKey],
   )
 
+  const clearSessionState = useCallback(() => {
+    syncingKeysRef.current.clear()
+    autoCompletedKeysRef.current.clear()
+    setSession(null)
+    setResults([])
+    setMeta(null)
+    setError(null)
+    setIsHydrating(false)
+    setPendingRetryCount(0)
+    setPendingRetryAssetKeys([])
+  }, [])
+
   const refreshPendingRetryCount = useCallback(() => {
     if (!session?.sessionUid) {
       setPendingRetryCount(0)
+      setPendingRetryAssetKeys([])
       return 0
     }
-    const count = loadFireExtinguisherSessionRetryQueue({
+    const queuedRows = loadFireExtinguisherSessionRetryQueue({
       userId: currentUserIdKey,
       sessionUid: session.sessionUid,
-    }).length
-    setPendingRetryCount(count)
-    return count
+    })
+    const assetKeys = Array.from(
+      new Set(queuedRows.map((item) => text(item?.assetKey)).filter(Boolean)),
+    )
+    setPendingRetryCount(queuedRows.length)
+    setPendingRetryAssetKeys(assetKeys)
+    return queuedRows.length
   }, [currentUserIdKey, session?.sessionUid])
 
   const mergeSessionStatus = useCallback(
@@ -112,21 +140,29 @@ const useFireExtinguisherSessionSync = ({
       (Array.isArray(rows) ? rows : []).map((row) => {
         const assetKey = getFireExtinguisherAssetKey(row)
         const sessionResult = assetKey ? resultByKey.get(assetKey) : null
+        const isSyncPending = assetKey ? pendingRetryKeySet.has(assetKey) : false
         const checkPayload =
           sessionResult?.checkPayload && typeof sessionResult.checkPayload === 'object'
             ? sessionResult.checkPayload
             : {}
-        if (!sessionResult) return row
+        if (!sessionResult && !isSyncPending) return row
 
         const sessionDecorations = {
-          sessionResult,
-          sessionStatus: sessionResult.status,
-          sessionCheckedBy: sessionResult.checkedBy,
-          sessionCheckedAt: sessionResult.checkedAt,
-          sessionResultVersion: sessionResult.version,
-          sessionLocked: isCompletedByAnotherUser(sessionResult),
+          sessionResult: sessionResult || row?.sessionResult || null,
+          sessionStatus:
+            sessionResult?.status || (isSyncPending ? 'sync_pending' : row?.sessionStatus),
+          sessionCheckedBy: sessionResult?.checkedBy || row?.sessionCheckedBy || '',
+          sessionCheckedAt: sessionResult?.checkedAt || row?.sessionCheckedAt || null,
+          sessionResultVersion: sessionResult?.version ?? row?.sessionResultVersion,
+          sessionSyncPending: isSyncPending,
         }
-        return sessionDecorations.sessionLocked
+        if (!sessionResult) {
+          return {
+            ...row,
+            ...sessionDecorations,
+          }
+        }
+        return shouldPreferSessionResult(sessionResult)
           ? {
               ...row,
               ...buildSessionCheckPatch(checkPayload),
@@ -138,12 +174,13 @@ const useFireExtinguisherSessionSync = ({
               ...sessionDecorations,
             }
       }),
-    [isCompletedByAnotherUser, resultByKey],
+    [pendingRetryKeySet, resultByKey, shouldPreferSessionResult],
   )
 
   const refreshResults = useCallback(async () => {
     if (!sessionEnabled || !session?.sessionUid || !hasVisibleScope) {
       setResults([])
+      if (!hasVisibleScope) setMeta(null)
       return null
     }
     try {
@@ -176,22 +213,25 @@ const useFireExtinguisherSessionSync = ({
   }, [session?.sessionUid, sessionEnabled])
 
   useEffect(() => {
-    let cancelled = false
     if (!sessionEnabled) {
-      setSession(null)
+      clearSessionState()
+      return undefined
+    }
+    if (!hasVisibleScope) {
       setResults([])
       setMeta(null)
       setIsHydrating(false)
-      return () => {
-        cancelled = true
-      }
+      return undefined
     }
+    let cancelled = false
     setIsHydrating(true)
     createOrResumeInspectionSession({
       inspectionType: FIRE_EXTINGUISHER_INSPECTION_TYPE,
+      forceNew: forceNewSessionRef.current,
     })
       .then((nextSession) => {
         if (cancelled) return
+        forceNewSessionRef.current = false
         setResults(Array.isArray(nextSession?.results) ? nextSession.results : [])
         setMeta(nextSession?.progress || null)
         setSession(nextSession)
@@ -208,7 +248,17 @@ const useFireExtinguisherSessionSync = ({
     return () => {
       cancelled = true
     }
-  }, [sessionEnabled])
+  }, [clearSessionState, hasVisibleScope, sessionEnabled, sessionRefreshKey])
+
+  useEffect(() => {
+    const previousFormInspectionSessionUid = previousFormSessionUidRef.current
+    if (previousFormInspectionSessionUid && !normalizedFormInspectionSessionUid) {
+      forceNewSessionRef.current = true
+      clearSessionState()
+      setSessionRefreshKey((current) => current + 1)
+    }
+    previousFormSessionUidRef.current = normalizedFormInspectionSessionUid
+  }, [clearSessionState, normalizedFormInspectionSessionUid])
 
   useEffect(() => {
     refreshResults()
@@ -395,10 +445,9 @@ const useFireExtinguisherSessionSync = ({
             return Array.from(byId.values())
           })
           pushToast?.(
-            `${text(row?.idLocNo || row?.barcodeNo || 'This extinguisher')} was already inspected by ${
-              text(conflictResult.checkedBy) || 'another user'
-            } and cannot be reset by you.`,
-            { title: 'Reset blocked', color: 'warning' },
+            nextError?.message ||
+              `${text(row?.idLocNo || row?.barcodeNo || 'This extinguisher')} changed before the reset could be applied.`,
+            { title: 'Reset conflict', color: 'warning' },
           )
         } else {
           setError(nextError)

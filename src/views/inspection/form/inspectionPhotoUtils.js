@@ -6,18 +6,17 @@ import {
   normalizeScbaCustomSections,
   SCBA_SECTION_DEFINITIONS,
 } from './inspectionFormHelpers'
+import {
+  deleteReportMedia,
+  getReportPhotoBytes,
+  reportPhotoFailureMessage,
+  uploadReportPhotosSequentially,
+} from 'src/services/api/reportMediaApi'
 
 const MAX_PHOTO_BYTES = 1.5 * 1024 * 1024
-const TARGET_PHOTO_BYTES = 1.0 * 1024 * 1024
-const CAMERA_TARGET_PHOTO_BYTES = 750 * 1024
 const MAX_PHOTO_COUNT = 10
 const MAX_TOTAL_PHOTO_BYTES = 12 * 1024 * 1024
 const MAX_CAMERA_FILE_BYTES = 12 * 1024 * 1024
-const IMAGE_OPERATION_TIMEOUT_MS = 12000
-const COMPRESS_DIMENSION_CANDIDATES = [2048, 1920, 1600, 1365, 1280, 1024, 900, 768, 640, 512]
-const CAMERA_COMPRESS_DIMENSION_CANDIDATES = [1280, 1024]
-const COMPRESS_QUALITY_CANDIDATES = [0.88, 0.8, 0.72, 0.64, 0.56, 0.48, 0.4, 0.32, 0.25]
-const CAMERA_COMPRESS_QUALITY_CANDIDATES = [0.72, 0.58, 0.45]
 
 const FAILURE_TITLES = {
   invalid_file: 'Invalid photo',
@@ -71,56 +70,6 @@ const DEFAULT_FAILURE_MESSAGES = {
 const asString = (value, fallback = '') => String(value || fallback)
 
 const normalizeErrorMessage = (error) => asString(error?.message).replace(/\s+/g, ' ').trim()
-
-const withTimeout = (
-  promise,
-  timeoutMs = IMAGE_OPERATION_TIMEOUT_MS,
-  timeoutMessage = 'Operation timed out.',
-) =>
-  new Promise((resolve, reject) => {
-    const timer = setTimeout(() => {
-      const timeoutError = new Error(timeoutMessage)
-      timeoutError.name = 'TimeoutError'
-      reject(timeoutError)
-    }, timeoutMs)
-    Promise.resolve(promise)
-      .then((value) => {
-        clearTimeout(timer)
-        resolve(value)
-      })
-      .catch((error) => {
-        clearTimeout(timer)
-        reject(error)
-      })
-  })
-
-const isLowMemoryError = (error) => {
-  const name = asString(error?.name).toLowerCase()
-  const message = normalizeErrorMessage(error).toLowerCase()
-  return (
-    name === 'quotaexceedederror' ||
-    /out of memory|low memory|not enough memory|memory allocation|allocation failed|quota/.test(
-      message,
-    )
-  )
-}
-
-const isOperationTimeoutError = (error) => {
-  const name = asString(error?.name).toLowerCase()
-  const message = normalizeErrorMessage(error).toLowerCase()
-  return name === 'timeouterror' || /timed out|timeout/i.test(message)
-}
-
-const isUnsupportedFileTypeError = (error) => {
-  const message = normalizeErrorMessage(error).toLowerCase()
-  const name = asString(error?.name).toLowerCase()
-  return (
-    name === 'notfounderror' ||
-    /not supported|unsupported format|unsupported image format|unsupported file|decode|unsupported/i.test(
-      message,
-    )
-  )
-}
 
 export const collectInspectionPhotos = (form = {}) => [
   ...(Array.isArray(form.photos) ? form.photos : []),
@@ -247,13 +196,6 @@ const classifyValidationFailure = (file = {}, isCameraUpload = false) => {
     )
   }
 
-  if (isKnownUnsupportedImageFormat(file)) {
-    return buildPhotoFailure(
-      'unsupported_file_type',
-      `The selected file "${fileName}" is in a format that cannot be processed from this camera flow.`,
-    )
-  }
-
   if (!isImageFile(file)) {
     return buildPhotoFailure('unsupported_file_type', `"${fileName}" is not an image file.`)
   }
@@ -268,12 +210,8 @@ const classifyValidationFailure = (file = {}, isCameraUpload = false) => {
   return null
 }
 
-const classifyPhotoError = (error, defaultCode = 'processing_failed') => {
-  if (isLowMemoryError(error)) return 'low_memory'
-  if (isOperationTimeoutError(error)) return 'scan_timeout_or_decode_failure'
-  if (isUnsupportedFileTypeError(error)) return 'unsupported_file_type'
-  return defaultCode
-}
+const classifyPhotoError = (error, defaultCode = 'processing_failed') =>
+  String(error?.code || defaultCode)
 
 const getFailureToastOptions = (failure) => {
   const { code, message } = failure
@@ -309,120 +247,6 @@ const estimateDataUrlBytes = (value = '') => {
   return Math.max(0, Math.floor((base64.length * 3) / 4) - padding)
 }
 
-const replaceFileExtension = (name, extension) => {
-  const base =
-    String(name || '')
-      .replace(/\.[^.]+$/, '')
-      .trim() || 'photo'
-  return `${base}.${extension}`
-}
-
-const loadImageElement = async (file) => {
-  const image = await withTimeout(
-    new Promise((resolve, reject) => {
-      const loadedImage = new Image()
-      const objectUrl = URL.createObjectURL(file)
-      loadedImage.onload = () => {
-        URL.revokeObjectURL(objectUrl)
-        resolve(loadedImage)
-      }
-      loadedImage.onerror = () => {
-        URL.revokeObjectURL(objectUrl)
-        reject(new Error('Unable to decode selected image.'))
-      }
-      loadedImage.src = objectUrl
-    }),
-    IMAGE_OPERATION_TIMEOUT_MS,
-    'Image decode timed out.',
-  )
-  return image
-}
-
-const canvasToBlob = (canvas, mimeType, quality) =>
-  new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) {
-          reject(new Error('Unable to compress selected image.'))
-          return
-        }
-        resolve(blob)
-      },
-      mimeType,
-      quality,
-    )
-  })
-
-const compressInspectionPhoto = async (file, targetBytes, options = {}) => {
-  const { isCameraUpload = false } = options
-
-  if (
-    !file ||
-    !String(file.type || '')
-      .toLowerCase()
-      .startsWith('image/')
-  ) {
-    return file
-  }
-  if (Number(file.size || 0) <= targetBytes) return file
-
-  const image = await loadImageElement(file)
-  const targetMime = 'image/jpeg'
-  let bestBlob = null
-  const dimensions = isCameraUpload
-    ? CAMERA_COMPRESS_DIMENSION_CANDIDATES
-    : COMPRESS_DIMENSION_CANDIDATES
-  const qualities = isCameraUpload
-    ? CAMERA_COMPRESS_QUALITY_CANDIDATES
-    : COMPRESS_QUALITY_CANDIDATES
-  const canvas = document.createElement('canvas')
-  const context = canvas.getContext('2d')
-  if (!context) throw new Error('Unable to process selected image.')
-
-  for (const maxDimension of dimensions) {
-    const ratio = Math.min(1, maxDimension / Math.max(image.width || 1, image.height || 1))
-    const nextWidth = Math.max(1, Math.round((image.width || 1) * ratio))
-    const nextHeight = Math.max(1, Math.round((image.height || 1) * ratio))
-    canvas.width = nextWidth
-    canvas.height = nextHeight
-
-    context.fillStyle = '#ffffff'
-    context.fillRect(0, 0, nextWidth, nextHeight)
-    context.drawImage(image, 0, 0, nextWidth, nextHeight)
-
-    for (const quality of qualities) {
-      const candidate = await canvasToBlob(canvas, targetMime, quality)
-      if (!bestBlob || candidate.size < bestBlob.size) bestBlob = candidate
-      if (candidate.size <= targetBytes) break
-    }
-
-    if (bestBlob?.size <= targetBytes) break
-  }
-
-  if (!bestBlob) return file
-
-  const compressedFile = new File([bestBlob], replaceFileExtension(file.name, 'jpg'), {
-    type: bestBlob.type || 'image/jpeg',
-    lastModified: Date.now(),
-  })
-
-  return compressedFile.size < file.size ? compressedFile : file
-}
-
-const readFileAsDataUrl = async (file) => {
-  const url = await withTimeout(
-    new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = () => resolve(String(reader.result || ''))
-      reader.onerror = () => reject(reader.error || new Error('Unable to read file'))
-      reader.readAsDataURL(file)
-    }),
-    IMAGE_OPERATION_TIMEOUT_MS,
-    'Image read timed out.',
-  )
-  return url
-}
-
 export const prepareInspectionPhotoUploads = async ({
   files = [],
   form,
@@ -432,6 +256,9 @@ export const prepareInspectionPhotoUploads = async ({
   onFailure,
   isCameraUpload = false,
   suppressToasts = false,
+  signal,
+  onProgress,
+  onRetry,
 }) => {
   const photoFiles = Array.from(files || [])
   if (photoFiles.length === 0) return []
@@ -455,108 +282,54 @@ export const prepareInspectionPhotoUploads = async ({
   }
 
   const existingTotalBytes = allCurrentPhotos.reduce(
-    (sum, photo) => sum + estimateDataUrlBytes(photo?.url),
+    (sum, photo) => sum + getReportPhotoBytes(photo),
     0,
   )
   let remainingTotalBytes = Math.max(0, MAX_TOTAL_PHOTO_BYTES - existingTotalBytes)
-  const processedFiles = []
-  let exceededTotalSize = false
-
-  for (const file of photoFiles) {
-    if (processedFiles.length >= remainingPhotoSlots) {
-      notifyFailureOnce(
-        buildPhotoFailure('max_photo_count', `You can upload up to ${MAX_PHOTO_COUNT} photos.`),
-      )
-      break
-    }
-
-    const fileValidationFailure = classifyValidationFailure(file, isCameraUpload)
-    if (fileValidationFailure) {
-      notifyFailureOnce(fileValidationFailure)
-      continue
-    }
-
-    let nextFile = file
-    try {
-      nextFile = await compressInspectionPhoto(
-        file,
-        isCameraUpload ? CAMERA_TARGET_PHOTO_BYTES : TARGET_PHOTO_BYTES,
-        { isCameraUpload },
-      )
-    } catch (error) {
-      const failureCode = classifyPhotoError(error, 'processing_failed')
-      notifyFailureOnce(
-        buildPhotoFailure(
-          failureCode,
-          normalizeErrorMessage(error) ||
-            (failureCode === 'low_memory'
-              ? DEFAULT_FAILURE_MESSAGES.low_memory
-              : `Unable to process "${file.name}".`),
-        ),
-      )
-      continue
-    }
-
-    if (Number(nextFile.size || 0) <= 0) {
-      notifyFailureOnce(buildPhotoFailure('invalid_file', `Unable to process "${file.name}".`))
-      continue
-    }
-
-    if (Number(nextFile.size || 0) > MAX_PHOTO_BYTES) {
-      notifyFailureOnce(
-        buildPhotoFailure(
-          'compressed_too_large',
-          `"${file.name}" is over 1.5 MB even after compression.`,
-        ),
-      )
-      continue
-    }
-
-    if (Number(nextFile.size || 0) > remainingTotalBytes) {
-      exceededTotalSize = true
-      notifyFailureOnce(
-        buildPhotoFailure('total_size_exceeded', `Total photo size must be 12 MB or smaller.`),
-      )
-      continue
-    }
-
-    processedFiles.push(nextFile)
-    remainingTotalBytes -= Number(nextFile.size || 0)
-  }
-
-  if (exceededTotalSize && processedFiles.length === 0) {
-    return null
-  }
-
   const normalizedDefaultDescription = String(defaultDescription || '').trim()
-  if (processedFiles.length === 0) return null
   const nextPhotos = []
-  const readFailures = []
-
-  for (const file of processedFiles) {
-    try {
-      const url = await readFileAsDataUrl(file)
-      nextPhotos.push({
-        id: createPhotoId(),
-        fileName: file.name,
-        ...(normalizedDefaultDescription ? { description: normalizedDefaultDescription } : {}),
-        url,
-      })
-    } catch (error) {
-      const failureCode = classifyPhotoError(error, 'read_failed')
-      readFailures.push(file)
+  const selectedFiles = photoFiles.slice(0, remainingPhotoSlots).filter((file) => {
+    const failure = classifyValidationFailure(file, isCameraUpload)
+    if (failure) notifyFailureOnce(failure)
+    return !failure
+  })
+  if (photoFiles.length > remainingPhotoSlots)
+    notifyFailureOnce(
+      buildPhotoFailure('max_photo_count', `You can upload up to ${MAX_PHOTO_COUNT} photos.`),
+    )
+  const uploaded = await uploadReportPhotosSequentially({
+    files: selectedFiles,
+    module: 'inspection',
+    source: isCameraUpload ? 'camera' : 'upload',
+    signal,
+    onProgress,
+    onRetry,
+    onFailure: (failure) =>
       notifyFailureOnce(
         buildPhotoFailure(
-          failureCode,
-          normalizeErrorMessage(error) || `Unable to read "${file.name}".`,
+          failure.code,
+          failure.message || reportPhotoFailureMessage(failure.code, failure.fileName),
+        ),
+      ),
+  })
+  for (const photo of uploaded) {
+    if (photo.sizeBytes > MAX_PHOTO_BYTES || photo.sizeBytes > remainingTotalBytes) {
+      await deleteReportMedia(photo.mediaId)
+      notifyFailureOnce(
+        buildPhotoFailure(
+          photo.sizeBytes > MAX_PHOTO_BYTES ? 'compressed_too_large' : 'total_size_exceeded',
         ),
       )
+      continue
     }
+    remainingTotalBytes -= photo.sizeBytes
+    nextPhotos.push({
+      id: createPhotoId(),
+      ...photo,
+      ...(normalizedDefaultDescription ? { description: normalizedDefaultDescription } : {}),
+    })
   }
-
-  if (nextPhotos.length === 0) return null
-  if (readFailures.length > 0) return nextPhotos
-  return nextPhotos
+  return nextPhotos.length ? nextPhotos : null
 }
 
 export const getRowPhotoList = (checks = [], row, photosKey = 'photos') => {

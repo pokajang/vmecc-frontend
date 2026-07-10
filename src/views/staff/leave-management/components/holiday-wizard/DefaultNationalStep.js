@@ -36,7 +36,7 @@ const DefaultNationalStep = ({ rows, dispatch }) => (
           />
         </CCol>
         <CCol md={7}>
-          <CFormInput value={row.name} readOnly />
+          <CFormInput aria-label="Holiday name" value={row.name} readOnly />
         </CCol>
         <CCol md={4}>
           <CFormInput

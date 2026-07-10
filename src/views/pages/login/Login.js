@@ -9,6 +9,7 @@ import {
   CForm,
   CFormCheck,
   CFormInput,
+  CFormLabel,
   CInputGroup,
   CInputGroupText,
   CRow,
@@ -194,11 +195,15 @@ const Login = () => {
                   </CAlert>
                 )}
                 <CForm onSubmit={handleSubmit}>
+                  <CFormLabel htmlFor="login-email" className="visually-hidden">
+                    Email address
+                  </CFormLabel>
                   <CInputGroup className="mb-3">
                     <CInputGroupText>
                       <CIcon icon={cilUser} />
                     </CInputGroupText>
                     <CFormInput
+                      id="login-email"
                       type="email"
                       name="email"
                       placeholder="Email"
@@ -209,11 +214,15 @@ const Login = () => {
                       required
                     />
                   </CInputGroup>
+                  <CFormLabel htmlFor="login-password" className="visually-hidden">
+                    Password
+                  </CFormLabel>
                   <CInputGroup className="mb-3">
                     <CInputGroupText>
                       <CIcon icon={cilLockLocked} />
                     </CInputGroupText>
                     <CFormInput
+                      id="login-password"
                       type={showPassword ? 'text' : 'password'}
                       name="password"
                       placeholder="Password"
@@ -223,15 +232,18 @@ const Login = () => {
                       disabled={isSubmitting || isCompletingGoogleSignIn}
                       required
                     />
-                    <CInputGroupText
+                    <CButton
+                      type="button"
+                      color="secondary"
+                      variant="outline"
                       className="border-start-0"
-                      role="button"
                       aria-label={showPassword ? 'Hide password' : 'Show password'}
-                      style={{ cursor: 'pointer' }}
-                      onClick={isCompletingGoogleSignIn ? undefined : togglePassword}
+                      aria-pressed={showPassword}
+                      disabled={isSubmitting || isCompletingGoogleSignIn}
+                      onClick={togglePassword}
                     >
                       <CIcon icon={showPassword ? cilShieldAlt : cilLowVision} />
-                    </CInputGroupText>
+                    </CButton>
                   </CInputGroup>
                   <div className="d-flex align-items-center justify-content-between gap-2 mb-3">
                     <CFormCheck

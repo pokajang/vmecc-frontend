@@ -4,10 +4,12 @@ import {
   CButton,
   CFormCheck,
   CFormInput,
+  CFormLabel,
   CModal,
   CModalBody,
   CModalFooter,
   CModalHeader,
+  CModalTitle,
 } from '@coreui/react'
 
 const LeaveWorkflowActionModal = ({
@@ -38,7 +40,9 @@ const LeaveWorkflowActionModal = ({
 
   return (
     <CModal visible={visible} onClose={onClose} alignment="center" scrollable>
-      <CModalHeader>{actionLabel} Leave Request</CModalHeader>
+      <CModalHeader>
+        <CModalTitle>{actionLabel} leave request</CModalTitle>
+      </CModalHeader>
       <CModalBody className="d-grid gap-3">
         {!record ? (
           <div className="text-body-secondary small">No leave request details available.</div>
@@ -76,18 +80,26 @@ const LeaveWorkflowActionModal = ({
             </div>
 
             <div>
-              <div className="small text-body-secondary mb-1">
+              <CFormLabel
+                htmlFor="leave-workflow-remarks"
+                className="small text-body-secondary mb-1"
+              >
                 {actionType === 'reject' ? 'Remarks (required)' : 'Remarks (optional)'}
-              </div>
+              </CFormLabel>
               <CFormInput
+                id="leave-workflow-remarks"
                 type="text"
                 value={remarks}
                 onChange={(event) => onRemarksChange(event.target.value)}
                 placeholder="Add your remarks"
                 invalid={Boolean(rejectError)}
+                aria-required={actionType === 'reject'}
+                aria-describedby={rejectError ? 'leave-workflow-remarks-error' : undefined}
               />
               {rejectError ? (
-                <div className="invalid-feedback d-block">{rejectError}</div>
+                <div id="leave-workflow-remarks-error" className="invalid-feedback d-block">
+                  {rejectError}
+                </div>
               ) : (
                 showRemarksHelper && (
                   <div className="small text-body-secondary mt-1">
@@ -122,7 +134,7 @@ const LeaveWorkflowActionModal = ({
         )}
       </CModalBody>
       <CModalFooter>
-        <CButton color="light" onClick={onClose}>
+        <CButton color="secondary" variant="outline" onClick={onClose}>
           Cancel
         </CButton>
         <CButton

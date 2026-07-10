@@ -109,7 +109,7 @@ const LeaveApplySection = ({
             </div>
           </CCol>
           <CCol xs={12} md={7} lg={8}>
-            <div className="rounded-3 border bg-white p-3 h-100" data-testid="leave-balance">
+            <div className="rounded-3 border bg-body p-3 h-100" data-testid="leave-balance">
               <div className="fw-semibold mb-2">Leave Balance</div>
               <CRow className="g-2 g-lg-3">
                 {balanceStats.map((item) => (
@@ -141,7 +141,7 @@ const LeaveApplySection = ({
             </div>
           </CCol>
         </CRow>
-        <div className="rounded-3 border p-3 bg-white">
+        <div className="rounded-3 border p-3 bg-body">
           <CRow className="g-3">
             {guidanceMessage ? (
               <CCol xs={12}>
@@ -151,7 +151,7 @@ const LeaveApplySection = ({
               </CCol>
             ) : null}
             <CCol md={4}>
-              <CFormLabel htmlFor="leave-work-shift">Work Shift</CFormLabel>
+              <CFormLabel htmlFor="leave-work-shift">Work shift</CFormLabel>
               <CFormSelect id="leave-work-shift" value={workShift} onChange={handleShiftChange}>
                 {shiftOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -164,7 +164,7 @@ const LeaveApplySection = ({
               )}
             </CCol>
             <CCol xs={6} md={2}>
-              <CFormLabel htmlFor="leave-start-date">Start Date</CFormLabel>
+              <CFormLabel htmlFor="leave-start-date">Start date</CFormLabel>
               <CFormInput
                 id="leave-start-date"
                 type="date"
@@ -175,7 +175,7 @@ const LeaveApplySection = ({
               <CFormFeedback invalid>{fieldErrors.startDate}</CFormFeedback>
             </CCol>
             <CCol xs={6} md={2}>
-              <CFormLabel htmlFor="leave-start-time">Start Time</CFormLabel>
+              <CFormLabel htmlFor="leave-start-time">Start time</CFormLabel>
               <CFormSelect
                 id="leave-start-time"
                 value={startTimeSlot}
@@ -190,7 +190,7 @@ const LeaveApplySection = ({
               </CFormSelect>
             </CCol>
             <CCol xs={6} md={2}>
-              <CFormLabel htmlFor="leave-end-date">End Date</CFormLabel>
+              <CFormLabel htmlFor="leave-end-date">End date</CFormLabel>
               <CFormInput
                 id="leave-end-date"
                 type="date"
@@ -202,7 +202,7 @@ const LeaveApplySection = ({
               <CFormFeedback invalid>{fieldErrors.endDate}</CFormFeedback>
             </CCol>
             <CCol xs={6} md={2}>
-              <CFormLabel htmlFor="leave-end-time">End Time</CFormLabel>
+              <CFormLabel htmlFor="leave-end-time">End time</CFormLabel>
               <CFormSelect
                 id="leave-end-time"
                 value={endTimeSlot}
@@ -226,7 +226,7 @@ const LeaveApplySection = ({
                 {activeFieldRule.showCoverage && (
                   <CCol md={6}>
                     <CFormLabel htmlFor="leave-cover-by">
-                      Coverage By ({activeFieldRule.coverageRequired ? 'Required' : 'Optional'})
+                      Coverage by ({activeFieldRule.coverageRequired ? 'required' : 'optional'})
                     </CFormLabel>
                     <CFormInput
                       id="leave-cover-by"
@@ -242,7 +242,7 @@ const LeaveApplySection = ({
                   <CCol md={6} data-testid="leave-attachments">
                     <CFormLabel htmlFor="leave-attachment">
                       Supporting Attachment (
-                      {activeFieldRule.attachmentRequired ? 'Required' : 'Optional'})
+                      {activeFieldRule.attachmentRequired ? 'required' : 'optional'})
                     </CFormLabel>
                     {cameraUploadFallback ? (
                       <CAlert
@@ -323,6 +323,7 @@ const LeaveApplySection = ({
                     </CFormFeedback>
                     <CFormInput
                       type="file"
+                      aria-label="Take leave attachment photo"
                       accept="image/*"
                       capture="environment"
                       className="d-none"
@@ -331,7 +332,7 @@ const LeaveApplySection = ({
                     />
                     <input
                       type="file"
-                      accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
+                      accept=".jpg,.jpeg,.png,.webp,.heic,.heif,.pdf,image/jpeg,image/png,image/webp,image/heic,image/heif,application/pdf"
                       className="d-none"
                       ref={uploadInputRef}
                       onChange={handleAttachmentChange}

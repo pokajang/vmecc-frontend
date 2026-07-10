@@ -17,7 +17,6 @@ import {
   CModalHeader,
   CModalTitle,
   CRow,
-  CSpinner,
   CTable,
   CTableBody,
   CTableDataCell,
@@ -28,6 +27,8 @@ import {
 import { useSelector } from 'react-redux'
 
 import ModulePageHeader from 'src/components/ModulePageHeader'
+import PageState from 'src/components/PageState'
+import TableLoader from 'src/components/TableLoader'
 import {
   fetchFeedbackReport,
   fetchFeedbackReports,
@@ -194,10 +195,7 @@ const FeedbackReports = () => {
           {detailError && !selected ? <CAlert color="danger">{detailError}</CAlert> : null}
 
           {loading ? (
-            <div className="text-center text-muted py-5">
-              <CSpinner size="sm" className="me-2" />
-              Loading feedback reports...
-            </div>
+            <TableLoader message="Loading feedback reports..." />
           ) : reports.length ? (
             <CTable align="middle" responsive hover>
               <CTableHead color="light">
@@ -208,7 +206,7 @@ const FeedbackReports = () => {
                   <CTableHeaderCell>Reported</CTableHeaderCell>
                   <CTableHeaderCell>Status</CTableHeaderCell>
                   <CTableHeaderCell className="table-sticky-action-cell text-end">
-                    Action
+                    Actions
                   </CTableHeaderCell>
                 </CTableRow>
               </CTableHead>
@@ -241,7 +239,7 @@ const FeedbackReports = () => {
               </CTableBody>
             </CTable>
           ) : (
-            <div className="text-center text-muted py-5">No feedback reports found.</div>
+            <PageState variant="empty" message="No feedback reports found." />
           )}
         </CCardBody>
       </CCard>
@@ -257,10 +255,7 @@ const FeedbackReports = () => {
         </CModalHeader>
         <CModalBody>
           {detailLoading ? (
-            <div className="text-center text-muted py-5">
-              <CSpinner size="sm" className="me-2" />
-              Loading report...
-            </div>
+            <TableLoader message="Loading report..." />
           ) : selected ? (
             <>
               {detailError ? <CAlert color="danger">{detailError}</CAlert> : null}

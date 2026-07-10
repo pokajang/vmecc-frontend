@@ -76,14 +76,18 @@ const SecuritySection = () => {
                 required
                 autoComplete="current-password"
               />
-              <CInputGroupText
-                role="button"
+              <CButton
+                type="button"
+                color="secondary"
+                variant="outline"
+                className="border-start-0"
                 aria-label={showCurrent ? 'Hide password' : 'Show password'}
-                style={{ cursor: 'pointer' }}
+                aria-pressed={showCurrent}
+                disabled={pwStatus.loading}
                 onClick={() => setShowCurrent((prev) => !prev)}
               >
                 {showCurrent ? <EyeOff size={16} /> : <Eye size={16} />}
-              </CInputGroupText>
+              </CButton>
             </CInputGroup>
           </div>
           <div>
@@ -104,14 +108,18 @@ const SecuritySection = () => {
                 required
                 autoComplete="new-password"
               />
-              <CInputGroupText
-                role="button"
+              <CButton
+                type="button"
+                color="secondary"
+                variant="outline"
+                className="border-start-0"
                 aria-label={showNew ? 'Hide password' : 'Show password'}
-                style={{ cursor: 'pointer' }}
+                aria-pressed={showNew}
+                disabled={pwStatus.loading}
                 onClick={() => setShowNew((prev) => !prev)}
               >
                 {showNew ? <EyeOff size={16} /> : <Eye size={16} />}
-              </CInputGroupText>
+              </CButton>
             </CInputGroup>
           </div>
           <div>
@@ -137,14 +145,18 @@ const SecuritySection = () => {
                 required
                 autoComplete="new-password"
               />
-              <CInputGroupText
-                role="button"
+              <CButton
+                type="button"
+                color="secondary"
+                variant="outline"
+                className="border-start-0"
                 aria-label={showConfirm ? 'Hide password' : 'Show password'}
-                style={{ cursor: 'pointer' }}
+                aria-pressed={showConfirm}
+                disabled={pwStatus.loading}
                 onClick={() => setShowConfirm((prev) => !prev)}
               >
                 {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
-              </CInputGroupText>
+              </CButton>
             </CInputGroup>
           </div>
           <div className="d-flex flex-column flex-md-row align-items-start gap-2">

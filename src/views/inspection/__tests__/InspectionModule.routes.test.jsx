@@ -187,7 +187,7 @@ vi.mock('../InspectionForm', () => ({
           })
         }
       >
-        Review Inspections
+        Continue to Review
       </button>
     </section>
   ),
@@ -654,7 +654,7 @@ describe('InspectionModule route family', () => {
     )
     expect(screen.getByText('Inspection form shell')).toBeTruthy()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Review Inspections' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Continue to Review' }))
     await waitFor(() =>
       expect(screen.getByTestId('location-path').textContent).toBe('/inspection/review'),
     )
@@ -682,7 +682,7 @@ describe('InspectionModule route family', () => {
     expect(screen.getByText('Inspection form shell')).toBeTruthy()
     expect(screen.getByTestId('form-type').textContent).toBe('General Inspection')
 
-    fireEvent.click(screen.getByRole('button', { name: 'Review Inspections' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Continue to Review' }))
     await waitFor(() =>
       expect(screen.getByTestId('location-path').textContent).toBe('/inspection/review'),
     )
@@ -696,7 +696,7 @@ describe('InspectionModule route family', () => {
   it('updates an existing inspection record from the edit review flow', async () => {
     renderModule('/inspection/inspection-1/edit')
 
-    fireEvent.click(screen.getByRole('button', { name: 'Review Inspections' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Continue to Review' }))
     await waitFor(() =>
       expect(screen.getByTestId('location-path').textContent).toBe('/inspection/review'),
     )
@@ -723,7 +723,7 @@ describe('InspectionModule route family', () => {
   it('submits a reviewed inspection and returns to the records route', async () => {
     renderModule('/inspection/new')
 
-    fireEvent.click(screen.getByRole('button', { name: 'Review Inspections' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Continue to Review' }))
     await waitFor(() =>
       expect(screen.getByTestId('location-path').textContent).toBe('/inspection/review'),
     )

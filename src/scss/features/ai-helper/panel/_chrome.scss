@@ -37,7 +37,7 @@
   flex-direction: column;
   width: var(--ai-helper-width);
   max-width: var(--ai-helper-width);
-  background: #ffffff;
+  background: var(--cui-body-bg);
   border-left: 1px solid var(--cui-border-color);
   box-shadow: none;
 
@@ -54,7 +54,7 @@
   min-height: 3.9rem;
   padding: 0.8rem 0.95rem;
   border-bottom: 1px solid var(--cui-border-color);
-  background: #ffffff;
+  background: var(--cui-body-bg);
   flex-shrink: 0;
 }
 

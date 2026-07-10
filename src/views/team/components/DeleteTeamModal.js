@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import {
+  CAlert,
   CButton,
   CFormCheck,
   CModal,
@@ -50,16 +51,13 @@ const DeleteTeamModalContent = ({ visible, team, onClose, onDeleted }) => {
 
       <CModalBody data-testid="team-directory-delete-modal">
         {activeCount > 0 && (
-          <div
-            className="rounded-2 px-3 py-2 mb-3"
-            style={{ background: '#fef3c7', color: '#92400e', border: '1px solid #fcd34d' }}
-          >
+          <CAlert color="warning" className="mb-3">
             This team has{' '}
             <strong>
               {activeCount} active {activeCount === 1 ? 'member' : 'members'}
             </strong>{' '}
             who will be notified.
-          </div>
+          </CAlert>
         )}
 
         <p className="text-body-secondary mb-3">
@@ -91,11 +89,15 @@ const DeleteTeamModalContent = ({ visible, team, onClose, onDeleted }) => {
           />
         </div>
 
-        {error && <div className="mt-3 text-danger">{error}</div>}
+        {error && (
+          <CAlert color="danger" className="mt-3 mb-0" role="alert">
+            {error}
+          </CAlert>
+        )}
       </CModalBody>
 
       <CModalFooter>
-        <CButton color="light" disabled={deleting} onClick={handleClose}>
+        <CButton color="secondary" variant="outline" disabled={deleting} onClick={handleClose}>
           Cancel
         </CButton>
         <CButton color="danger" disabled={!allChecked || deleting} onClick={handleDelete}>

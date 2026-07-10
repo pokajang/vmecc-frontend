@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import { CAlert, CButton, CFormLabel, CListGroup, CListGroupItem } from '@coreui/react'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
+import { ReportPhotoImage } from 'src/components/report-workflow/ReportViewComponents'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import { buildInspectionReviewDashboardItems } from './inspectionReviewDashboardAdapter'
 
@@ -119,9 +120,9 @@ const InspectionReviewInlinePhotoGroups = ({ groups = [] }) => {
             {group.photos.map((photo, index) => (
               <div className="inspection-review-photo-card" key={photo.key || index}>
                 {photo.url ? (
-                  <img
+                  <ReportPhotoImage
+                    photo={photo}
                     className="inspection-review-photo-card__image"
-                    src={photo.url}
                     alt={photo.description || photo.fileName || 'Inspection photo'}
                   />
                 ) : null}

@@ -94,7 +94,7 @@ describe('OvertimeApplySection', () => {
 
     expect(screen.queryByText('Choose Overtime Type')).toBeNull()
     expect(screen.queryByRole('button', { name: 'Continue' })).toBeNull()
-    expect(screen.getByLabelText('Reason / Work Done')).toBeTruthy()
+    expect(screen.getByLabelText('Reason / work done')).toBeTruthy()
     expect(screen.getByText('Weekday Overtime')).toBeTruthy()
     expect(screen.getByText('Weekend Overtime')).toBeTruthy()
     expect(screen.getByText('Public Holiday Overtime')).toBeTruthy()

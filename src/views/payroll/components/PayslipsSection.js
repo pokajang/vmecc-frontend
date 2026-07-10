@@ -293,18 +293,18 @@ const PayslipsSection = ({
         </p>
         <div className="d-md-none d-grid gap-3">
           {isLoading ? (
-            <div className="border rounded-3 bg-white p-3">
+            <div className="border rounded-3 bg-body p-3">
               <TableLoader />
             </div>
           ) : rows.length === 0 ? (
-            <div className="border rounded-3 bg-white p-4 text-center text-body-secondary">
+            <div className="border rounded-3 bg-body p-4 text-center text-body-secondary">
               No payslips available yet.
             </div>
           ) : (
             <MobileRecordList sections={mobilePayslipSections} variant="list-group" />
           )}
         </div>
-        <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
+        <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-body">
           <CTable align="middle" className="mb-0" hover responsive>
             <CTableHead color="light">
               <CTableRow>
@@ -318,7 +318,7 @@ const PayslipsSection = ({
                 <CTableHeaderCell>OT Payout</CTableHeaderCell>
                 <CTableHeaderCell>Net Payable</CTableHeaderCell>
                 <CTableHeaderCell>Status</CTableHeaderCell>
-                <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
+                <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
               </CTableRow>
             </CTableHead>
             <CTableBody>
@@ -344,8 +344,14 @@ const PayslipsSection = ({
                   return (
                     <Fragment key={rowId}>
                       <CTableRow
-                        role="button"
+                        role={detailAvailable ? 'button' : undefined}
                         tabIndex={detailAvailable ? 0 : -1}
+                        aria-label={
+                          detailAvailable
+                            ? `${detailVisible ? 'Collapse' : 'Expand'} payslip details for ${row.month}`
+                            : undefined
+                        }
+                        aria-expanded={detailAvailable ? detailVisible : undefined}
                         className={detailAvailable ? 'cursor-pointer' : ''}
                         style={detailAvailable ? { cursor: 'pointer' } : undefined}
                         onClick={() => {
@@ -421,10 +427,10 @@ const PayslipsSection = ({
                       {detailVisible && (
                         <CTableRow>
                           <CTableDataCell colSpan={9} className="bg-body-tertiary p-3">
-                            <div className="rounded-3 shadow-sm overflow-hidden bg-white border">
+                            <div className="rounded-3 shadow-sm overflow-hidden bg-body border">
                               <div className="row g-3 p-3">
                                 <div className="col-12 col-lg-6">
-                                  <div className="rounded-3 shadow-sm overflow-hidden bg-white border h-100">
+                                  <div className="rounded-3 shadow-sm overflow-hidden bg-body border h-100">
                                     <CTable align="middle" className="mb-0" responsive>
                                       <CTableBody>
                                         <CTableRow
@@ -481,7 +487,7 @@ const PayslipsSection = ({
                                 </div>
 
                                 <div className="col-12 col-lg-6">
-                                  <div className="rounded-3 shadow-sm overflow-hidden bg-white border h-100">
+                                  <div className="rounded-3 shadow-sm overflow-hidden bg-body border h-100">
                                     <CTable align="middle" className="mb-0" responsive>
                                       <CTableBody>
                                         <CTableRow
@@ -562,7 +568,7 @@ const PayslipsSection = ({
                                   Show full breakdown
                                 </summary>
                                 <div className="pt-2">
-                                  <div className="rounded-3 shadow-sm overflow-hidden bg-white border">
+                                  <div className="rounded-3 shadow-sm overflow-hidden bg-body border">
                                     <CTable align="middle" className="mb-0" responsive>
                                       <CTableBody>
                                         <CTableRow

@@ -59,7 +59,7 @@ const ErcoAiReviewModal = ({ visible, stage, items, errorMessage, onClose, onRun
               {items.map((item, index) => (
                 <div
                   key={`${item.status}-${index}-${item.message}`}
-                  className="rounded-3 border bg-white p-3 d-grid gap-2"
+                  className="rounded-3 border bg-body p-3 d-grid gap-2"
                 >
                   <div>
                     <CBadge color={statusColor(item.status)}>

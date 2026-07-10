@@ -46,7 +46,7 @@ const ClaimPeriodSection = ({
                   className={`rounded-3 border h-100 d-flex align-items-center gap-2 px-3 py-3 ${
                     isActive
                       ? 'border-primary bg-primary bg-opacity-10'
-                      : 'border-light-subtle bg-white'
+                      : 'border-light-subtle bg-body'
                   } ${!shouldShowSingle && isDisabled ? 'opacity-75' : ''}`}
                   style={{
                     cursor: shouldShowSingle ? 'default' : isDisabled ? 'not-allowed' : 'pointer',

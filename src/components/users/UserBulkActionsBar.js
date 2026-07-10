@@ -16,6 +16,7 @@ const UserBulkActionsBar = ({
     </CCol>
     <CCol xs={12} md={4}>
       <CFormSelect
+        aria-label="Bulk action"
         size="sm"
         value={selectedAction}
         onChange={(e) => onActionChange?.(e.target.value)}

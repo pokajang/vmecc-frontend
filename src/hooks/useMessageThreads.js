@@ -93,6 +93,10 @@ const ensureLifecycleListener = () => {
 const isUnloadFetchFailure = (err) =>
   isPageUnloading && !err?.status && (err instanceof TypeError || err?.message === 'Network Error')
 
+const isModuleDisabledError = (err) =>
+  err?.status === 403 &&
+  /module is disabled/i.test(String(err?.payload?.message || err?.message || ''))
+
 const stopPolling = () => {
   if (timerId) {
     clearTimeout(timerId)
@@ -127,6 +131,12 @@ const fetchThreads = async ({ silent = false } = {}) => {
     })
     .catch((err) => {
       if (isUnloadFetchFailure(err)) return
+      if (isModuleDisabledError(err)) {
+        backoffMs = MAX_BACKOFF
+        setState({ data: [], loading: false, error: null })
+        broadcastThreads([])
+        return
+      }
       if (shouldBackoff(err)) {
         backoffMs = Math.min(backoffMs ? backoffMs * 2 : 15000, MAX_BACKOFF)
       }

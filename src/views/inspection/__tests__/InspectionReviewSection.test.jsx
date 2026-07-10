@@ -178,7 +178,9 @@ describe('InspectionReviewSection', () => {
     expect(screen.getAllByText('Findings').length).toBeGreaterThan(0)
     expect(screen.getAllByText('1. Blocked access near Zone A.').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Clear stored items.').length).toBeGreaterThan(0)
-    expect(screen.getAllByText(INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle).length).toBeGreaterThan(0)
+    expect(
+      screen.getAllByText(INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle).length,
+    ).toBeGreaterThan(0)
     expect(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.remarksLabel)).toBeTruthy()
     expect(screen.getByText('Whole area was accessible except the west stairwell.')).toBeTruthy()
     expect(screen.getAllByText('General evidence photo').length).toBeGreaterThan(0)

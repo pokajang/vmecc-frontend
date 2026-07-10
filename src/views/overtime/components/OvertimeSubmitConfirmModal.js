@@ -1,5 +1,5 @@
 import React from 'react'
-import { CButton, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import ButtonLoader from 'src/components/ButtonLoader'
 import { formatDate, formatDuration, formatTime, getOvertimeTypeLabel } from '../utils'
 
@@ -10,15 +10,37 @@ const OvertimeSubmitConfirmModal = ({
   onConfirm,
   isSubmitting = false,
 }) => (
-  <CModal visible={visible} onClose={onClose} alignment="center">
-    <CModalHeader>
-      {submitPreview?.isResubmission ? 'Confirm Overtime Resubmission' : 'Confirm Overtime Claim'}
-    </CModalHeader>
-    <CModalBody>
+  <OvertimeSubmitConfirmModalContent
+    visible={visible}
+    submitPreview={submitPreview}
+    onClose={onClose}
+    onConfirm={onConfirm}
+    isSubmitting={isSubmitting}
+  />
+)
+
+const OvertimeSubmitConfirmModalContent = ({
+  visible,
+  submitPreview,
+  onClose,
+  onConfirm,
+  isSubmitting = false,
+}) => {
+  const confirmLabel = isSubmitting ? (
+    <ButtonLoader
+      label={submitPreview?.isResubmission ? 'Resubmitting claim...' : 'Submitting claim...'}
+    />
+  ) : submitPreview?.isResubmission ? (
+    'Confirm resubmission'
+  ) : (
+    'Confirm submission'
+  )
+  const body = (
+    <div className="d-grid gap-2">
       {!submitPreview ? (
         <div className="text-body-secondary small">No overtime claim details available.</div>
       ) : (
-        <div className="d-grid gap-2">
+        <>
           <div>
             <span className="text-body-secondary small d-block">Overtime Type</span>
             <span>{getOvertimeTypeLabel(submitPreview.overtimeType)}</span>
@@ -42,26 +64,25 @@ const OvertimeSubmitConfirmModal = ({
             <span className="text-body-secondary small d-block">Reason</span>
             <span>{submitPreview.reason || '-'}</span>
           </div>
-        </div>
+        </>
       )}
-    </CModalBody>
-    <CModalFooter>
-      <CButton color="light" onClick={onClose} disabled={isSubmitting}>
-        Cancel
-      </CButton>
-      <CButton color="primary" onClick={onConfirm} disabled={!submitPreview || isSubmitting}>
-        {isSubmitting ? (
-          <ButtonLoader
-            label={submitPreview?.isResubmission ? 'Resubmitting claim...' : 'Submitting claim...'}
-          />
-        ) : submitPreview?.isResubmission ? (
-          'Confirm resubmission'
-        ) : (
-          'Confirm submission'
-        )}
-      </CButton>
-    </CModalFooter>
-  </CModal>
-)
+    </div>
+  )
+
+  return (
+    <ActionConfirmModal
+      visible={visible}
+      title={
+        submitPreview?.isResubmission ? 'Confirm overtime resubmission' : 'Confirm overtime claim'
+      }
+      message={body}
+      confirmLabel={confirmLabel}
+      confirmDisabled={!submitPreview || isSubmitting}
+      cancelDisabled={isSubmitting}
+      onClose={onClose}
+      onConfirm={onConfirm}
+    />
+  )
+}
 
 export default OvertimeSubmitConfirmModal

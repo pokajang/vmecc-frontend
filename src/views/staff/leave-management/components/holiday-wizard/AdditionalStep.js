@@ -44,7 +44,7 @@ const AdditionalStep = ({
             <CTableHeaderCell className="text-center">Scope</CTableHeaderCell>
             <CTableHeaderCell className="text-center">State</CTableHeaderCell>
             <CTableHeaderCell className="table-sticky-action-cell text-center">
-              Action
+              Actions
             </CTableHeaderCell>
           </CTableRow>
         </CTableHead>
@@ -100,7 +100,7 @@ const AdditionalStep = ({
       <>
         <CRow className="g-3 mt-1">
           <CCol md={8}>
-            <CFormLabel htmlFor="holiday-name">Holiday Name</CFormLabel>
+            <CFormLabel htmlFor="holiday-name">Holiday name</CFormLabel>
             <CFormInput
               id="holiday-name"
               value={wizardState.additionalDraft.name || ''}

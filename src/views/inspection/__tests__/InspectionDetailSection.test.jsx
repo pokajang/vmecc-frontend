@@ -309,7 +309,7 @@ describe('InspectionDetailSection', () => {
       .getByRole('button', { name: /ADO-001/ })
       .querySelector('.inspection-detail-finding-accordion-title-row')
     expect(extinguisherHeader?.textContent || '').toContain('ADO-001')
-    expect(extinguisherHeader?.textContent || '').toContain('Completed by Inspector Fire')
+    expect(extinguisherHeader?.textContent || '').toContain('Checked by Inspector Fire')
     expect(
       within(screen.getByRole('button', { name: /ADO-001/ })).queryByText('Checked'),
     ).toBeNull()

@@ -58,11 +58,7 @@ describe('InspectionGeneralEvidenceCard', () => {
         .querySelector('.mobile-bottom-drawer__actions')
         ?.querySelector('[aria-label="Take photo"]'),
     ).toBeNull()
-    expect(
-      screen.getByText(
-        INSPECTION_REPORT_EVIDENCE_COPY.helperText,
-      ),
-    ).toBeTruthy()
+    expect(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.helperText)).toBeTruthy()
     expect(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.emptyPhotosMessage)).toBeTruthy()
   })
 
@@ -161,7 +157,9 @@ describe('InspectionGeneralEvidenceCard', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save photos' }))
 
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
-    expect(screen.getByText(`${INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel} (1)`)).toBeTruthy()
+    expect(
+      screen.getByText(`${INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel} (1)`),
+    ).toBeTruthy()
   })
 
   it('confirms before discarding staged compact mobile drawer photos when closed without saving', async () => {

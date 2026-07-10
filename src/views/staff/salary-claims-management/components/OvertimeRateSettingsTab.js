@@ -435,6 +435,7 @@ const OvertimeRateSettingsTab = ({ vm, handlers }) => {
                           </div>
                           <div className="d-inline-flex align-items-center gap-2">
                             <CFormInput
+                              aria-label={`Normal hours per day for ${role}`}
                               type="number"
                               min="0.1"
                               step="0.1"
@@ -563,7 +564,7 @@ const OvertimeRateSettingsTab = ({ vm, handlers }) => {
         <CCardHeader>Sample Calculation</CCardHeader>
         <CCardBody className="d-grid gap-2">
           {sampleOvertimeBreakdown.available ? (
-            <div className="rounded-3 shadow-sm overflow-hidden bg-white">
+            <div className="rounded-3 shadow-sm overflow-hidden bg-body">
               <CTable align="middle" className="mb-0" responsive>
                 <CTableHead color="light">
                   <CTableRow>

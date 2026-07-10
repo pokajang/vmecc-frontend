@@ -64,8 +64,15 @@ const ErcoPostAnalysisStep = ({
 
       <PostIncidentAnalysisSection
         value={form.postIncidentAnalysis}
-        onChange={(next) => setForm((prev) => ({ ...prev, postIncidentAnalysis: next }))}
+        onChange={(next) =>
+          setForm((prev) => ({
+            ...prev,
+            postIncidentAnalysis:
+              typeof next === 'function' ? next(prev.postIncidentAnalysis) : next,
+          }))
+        }
         pushToast={pushToast}
+        onBeforeCameraOpen={onSaveDraft}
       />
 
       {showActions ? (

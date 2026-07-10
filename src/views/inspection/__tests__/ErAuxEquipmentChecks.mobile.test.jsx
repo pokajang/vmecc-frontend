@@ -28,6 +28,29 @@ afterEach(() => {
 })
 
 describe('ErAuxEquipmentChecks mobile detail drawer', () => {
+  it('announces a refresh without hiding visible equipment rows', () => {
+    render(
+      <ErAuxEquipmentChecks
+        mainLocation="Office"
+        checks={[]}
+        isLoadingRows
+        summary={{
+          visibleChecks: [
+            {
+              id: 'er-aux:refresh',
+              equipment: 'Radio Tetra',
+              defaultQuantity: '7',
+            },
+          ],
+          totalCount: 1,
+        }}
+      />,
+    )
+
+    expect(screen.getByText('Refreshing equipment...')).toBeTruthy()
+    expect(screen.getByText('Radio Tetra')).toBeTruthy()
+  })
+
   it('opens ER Aux equipment checks in a mobile drawer', () => {
     setMobileViewport()
     const onUpdateCheck = vi.fn()

@@ -299,6 +299,8 @@ const normalizeCoverageRow = (row = {}) => {
     issueCount: Number(row.issueCount ?? row.issue_count ?? 0) || 0,
     evidenceCount: Number(row.evidenceCount ?? row.evidence_count ?? 0) || 0,
     reportCount,
+    locatorDuplicateCount:
+      Number(row.locatorDuplicateCount ?? row.locator_duplicate_count ?? 0) || 0,
     repeatCount: Number(row.repeatCount ?? row.repeat_count ?? Math.max(0, reportCount - 1)) || 0,
     duplicateCount: reportCount,
     latestReportId: String(row.latestReportId || row.latest_report_id || ''),

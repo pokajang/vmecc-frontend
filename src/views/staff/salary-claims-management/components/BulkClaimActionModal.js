@@ -8,6 +8,7 @@ import {
   CModalBody,
   CModalFooter,
   CModalHeader,
+  CModalTitle,
 } from '@coreui/react'
 import BulkActionButton from 'src/views/staff/components/BulkActionButton'
 import BulkSelectionSummaryPreview from './BulkSelectionSummaryPreview'
@@ -36,7 +37,9 @@ const BulkClaimActionModal = ({ vm, handlers }) => {
   return (
     <CModal visible={visible} alignment="center" onClose={onClose}>
       <CModalHeader>
-        {action === 'reject' ? 'Bulk Reject Claims' : 'Bulk Approve Claims'}
+        <CModalTitle>
+          {action === 'reject' ? 'Bulk reject claims' : 'Bulk approve claims'}
+        </CModalTitle>
       </CModalHeader>
       <CModalBody className="d-grid gap-3">
         <BulkSelectionSummaryPreview
@@ -76,7 +79,7 @@ const BulkClaimActionModal = ({ vm, handlers }) => {
         )}
       </CModalBody>
       <CModalFooter>
-        <CButton color="light" onClick={onClose}>
+        <CButton color="secondary" variant="outline" onClick={onClose}>
           Cancel
         </CButton>
         <BulkActionButton

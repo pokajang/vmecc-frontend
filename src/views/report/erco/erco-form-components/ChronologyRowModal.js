@@ -24,20 +24,22 @@ const ChronologyRowModal = ({ visible, draft, onClose, onChangeDraft, onSave, on
   return (
     <CModal visible={visible} alignment="center" onClose={onClose} fullscreen="sm" scrollable>
       <CModalHeader>
-        <CModalTitle>{isEditing ? 'Edit Event' : 'Add Event'}</CModalTitle>
+        <CModalTitle>{isEditing ? 'Edit event' : 'Add event'}</CModalTitle>
       </CModalHeader>
       <CModalBody className="d-grid gap-3">
         <div>
-          <CFormLabel>Time</CFormLabel>
+          <CFormLabel htmlFor="chronology-event-time">Time</CFormLabel>
           <CFormInput
+            id="chronology-event-time"
             type="time"
             value={draft?.time || ''}
             onChange={(e) => onChangeDraft({ time: e.target.value })}
           />
         </div>
         <div>
-          <CFormLabel>Event / Action</CFormLabel>
+          <CFormLabel htmlFor="chronology-event-action">Event / action</CFormLabel>
           <CFormInput
+            id="chronology-event-action"
             ref={actionRef}
             value={draft?.action || ''}
             placeholder="Describe the event or action..."
@@ -52,12 +54,12 @@ const ChronologyRowModal = ({ visible, draft, onClose, onChangeDraft, onSave, on
         </div>
       </CModalBody>
       <CModalFooter>
-        <CButton color="light" onClick={onClose}>
+        <CButton color="secondary" variant="outline" onClick={onClose}>
           Cancel
         </CButton>
         {!isEditing ? (
-          <CButton color="light" onClick={onSaveAndNext}>
-            Save &amp; Add Next
+          <CButton color="secondary" variant="outline" onClick={onSaveAndNext}>
+            Save &amp; add next
           </CButton>
         ) : null}
         <CButton color="primary" onClick={onSave}>

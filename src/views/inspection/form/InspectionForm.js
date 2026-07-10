@@ -42,6 +42,7 @@ import {
 import { getFireExtinguisherCanonicalAssetKey } from '../types/fire-extinguisher/identity'
 import { extractFireExtinguisherLocator } from '../types/fire-extinguisher/locator'
 import { getFireExtinguisherRowValidation } from '../types/fire-extinguisher/helpers'
+import { neutralizeCompletionPresentation } from '../types/continuationHelpers'
 import {
   defaultFrtTruckOption,
   normalizeFrtTruckOption,
@@ -58,6 +59,7 @@ import useInspectionStructuredHandlers from './useInspectionStructuredHandlers'
 import { buildEquipmentManagerOptions } from './inspectionEquipmentManagerOptions'
 import useFireExtinguisherInspectionRuntime from './hooks/useFireExtinguisherInspectionRuntime'
 import { buildFireExtinguisherResetPatch } from './inspectionResetActions'
+import { CONTINUATION_SCAN_LABEL } from '../inspectionFormUiTokens'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 
 const INSPECTION_TIMESTAMP_FIELDS = [
@@ -101,99 +103,9 @@ const normalizeLocationOptionKey = (value) =>
 const getLocationOptionId = (option = {}) =>
   String(option?.id || option?.locationId || option?.location_id || '').trim()
 
-const incrementMapCount = (map, key, increment = 1) => {
-  if (!key) return
-  map.set(key, (map.get(key) || 0) + increment)
-}
-
-const completedFireExtinguisherLocationKeys = ({
-  areaRows,
-  completedLocations = [],
-  currentLocation,
-  currentSummary,
-  sessionResults,
-}) => {
-  const expectedByLocation = new Map()
-  const completedByLocation = new Map()
-  const seenCompletedAssets = new Set()
-
-  ;(Array.isArray(areaRows) ? areaRows : []).forEach((row) => {
-    const locationKey = normalizeLocationOptionKey(row?.subLocation || row?.sub_location)
-    if (!locationKey) return
-    incrementMapCount(expectedByLocation, locationKey)
-  })
-  ;(Array.isArray(completedLocations) ? completedLocations : []).forEach((row) => {
-    if (
-      String(row?.status || '')
-        .trim()
-        .toLowerCase() !== 'completed'
-    ) {
-      return
-    }
-    const locationKey = normalizeLocationOptionKey(row?.subLocation || row?.sub_location)
-    if (locationKey) {
-      expectedByLocation.set(locationKey, Math.max(expectedByLocation.get(locationKey) || 0, 1))
-      completedByLocation.set(locationKey, Number.MAX_SAFE_INTEGER)
-    }
-  })
-  ;(Array.isArray(sessionResults) ? sessionResults : []).forEach((row) => {
-    if (
-      String(row?.status || '')
-        .trim()
-        .toLowerCase() !== 'completed'
-    ) {
-      return
-    }
-    const locationKey = normalizeLocationOptionKey(row?.subLocation || row?.sub_location)
-    if (!locationKey) return
-    const assetKey = String(
-      row?.canonicalAssetKey ||
-        row?.canonical_asset_key ||
-        (row?.catalogId || row?.fireExtinguisherId
-          ? `catalog:${row.catalogId || row.fireExtinguisherId}`
-          : ''),
-    ).trim()
-    const uniqueKey = `${locationKey}:${assetKey || row?.id || completedByLocation.size}`
-    if (seenCompletedAssets.has(uniqueKey)) return
-    seenCompletedAssets.add(uniqueKey)
-    expectedByLocation.set(locationKey, Math.max(expectedByLocation.get(locationKey) || 0, 1))
-    incrementMapCount(completedByLocation, locationKey)
-  })
-
-  const currentLocationKey = normalizeLocationOptionKey(currentLocation)
-  const currentTotal = Number(currentSummary?.totalCount || 0)
-  if (
-    currentLocationKey &&
-    currentTotal > 0 &&
-    Number(currentSummary?.completedCount || 0) >= currentTotal
-  ) {
-    expectedByLocation.set(
-      currentLocationKey,
-      Math.max(expectedByLocation.get(currentLocationKey) || 0, currentTotal),
-    )
-    completedByLocation.set(
-      currentLocationKey,
-      Math.max(completedByLocation.get(currentLocationKey) || 0, currentTotal),
-    )
-  }
-
-  const completedKeys = new Set()
-  expectedByLocation.forEach((expectedCount, locationKey) => {
-    if (expectedCount > 0 && (completedByLocation.get(locationKey) || 0) >= expectedCount) {
-      completedKeys.add(locationKey)
-    }
-  })
-
-  return completedKeys
-}
-
 const getFireExtinguisherLocationContinuation = ({
-  areaRows = [],
-  completedLocations = [],
   enabled,
   mainLocation,
-  currentSummary = null,
-  sessionResults = [],
   subLocation,
   subLocationOptions,
 }) => {
@@ -213,33 +125,17 @@ const getFireExtinguisherLocationContinuation = ({
       : null
   const nextLocation = String(nextOption?.value || nextOption?.title || '').trim()
   const nextLocationLabel = String(nextOption?.title || nextLocation).trim()
-  const completedLocationKeys = completedFireExtinguisherLocationKeys({
-    areaRows,
-    completedLocations,
-    currentLocation: subLocation,
-    currentSummary,
-    sessionResults,
-  })
-
   return {
     currentLocation: subLocation,
     locationOptions: options
       .map((option) => {
         const value = String(option?.value || option?.title || '').trim()
         if (!value) return null
-        const completed = completedLocationKeys.has(normalizeLocationOptionKey(value))
         return {
-          ...option,
+          ...neutralizeCompletionPresentation(option),
           value,
           title: String(option?.title || value).trim(),
           subLocationId: getLocationOptionId(option),
-          ...(completed
-            ? {
-                metaIconKey: 'check',
-                metaLabel: 'Completed',
-                metaTone: 'success',
-              }
-            : {}),
         }
       })
       .filter(Boolean),
@@ -1307,12 +1203,8 @@ const InspectionForm = ({
 
   const fireExtinguisherLocationContinuation = useMemo(() => {
     const continuation = getFireExtinguisherLocationContinuation({
-      areaRows: fireExtinguisherAreaRows,
       enabled: isFireExtinguisherCatalogInspectionForm && isStructuredInspectionForm,
       mainLocation,
-      currentSummary: currentStructuredSummary,
-      completedLocations: fireExtinguisherSessionSync.meta?.completedLocations,
-      sessionResults: fireExtinguisherSessionSync.results,
       subLocation,
       subLocationOptions: location.subLocationOptions,
     })
@@ -1330,11 +1222,7 @@ const InspectionForm = ({
         }
       : continuation
   }, [
-    currentStructuredSummary,
-    fireExtinguisherAreaRows,
-    fireExtinguisherSessionSync.meta?.completedLocations,
     fireExtinguisherSessionSync.refreshResults,
-    fireExtinguisherSessionSync.results,
     isStructuredInspectionForm,
     isFireExtinguisherCatalogInspectionForm,
     location.subLocationOptions,
@@ -1343,10 +1231,6 @@ const InspectionForm = ({
   ])
   const typeScopeContinuation = useMemo(() => {
     const typeDefinition = selectedTypeDefinition || {}
-    const typeKey = String(typeDefinition.key || '').trim()
-    const isExcluded =
-      typeKey === 'general-inspection' || typeKey === 'health-safety-environment-inspection'
-    if (!isStructuredInspectionForm || isExcluded) return null
 
     const context = {
       location,
@@ -1387,7 +1271,6 @@ const InspectionForm = ({
   }, [
     currentStructuredSummary,
     form,
-    isStructuredInspectionForm,
     location,
     mainLocation,
     selectedFireTruckPlate,
@@ -1821,6 +1704,7 @@ const InspectionForm = ({
     defaultHighAnglePhotosKey: HIGH_ANGLE_CONDITION_FIELD.photosKey,
     form,
     getLatestForm,
+    onBeforeCameraOpen: () => onSaveDraft?.(getLatestForm()),
     getScbaExistingCheck: scbaRuntime.getScbaExistingCheck,
     getScbaFieldEvidenceKeys,
     pushToast,
@@ -1900,12 +1784,6 @@ const InspectionForm = ({
         draftStatus={draftStatus}
         fieldErrors={fieldErrors}
         fireExtinguisherAreaRows={fireExtinguisherAreaRows}
-        fireExtinguisherSessionProgress={{
-          completedLocations: fireExtinguisherSessionSync.meta?.completedLocations || [],
-          locationProgress: fireExtinguisherSessionSync.meta?.locationProgress || [],
-          isLoading: fireExtinguisherSessionSync.isHydrating,
-          results: fireExtinguisherSessionSync.results || [],
-        }}
         isLoadingEquipmentRows={isLoadingEquipmentRows}
         isLoadingFireExtinguisherAreaRows={
           isLoadingFireExtinguisherAreaRows || fireExtinguisherSessionSync.isHydrating
@@ -1996,9 +1874,9 @@ const InspectionForm = ({
       />
       <ActionConfirmModal
         visible={confirmScanAnotherFireExtinguisher}
-        title="Scan Another FE"
-        message="Current FE is not complete. Scan another FE anyway?"
-        confirmLabel="Scan another FE"
+        title={CONTINUATION_SCAN_LABEL}
+        message={`Current FE is not complete. ${CONTINUATION_SCAN_LABEL} anyway?`}
+        confirmLabel={CONTINUATION_SCAN_LABEL}
         confirmColor="primary"
         cancelLabel="Stay here"
         mobileDrawer

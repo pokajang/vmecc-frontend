@@ -17,6 +17,7 @@ import useMediaQuery from 'src/hooks/useMediaQuery'
 import { dedupePhotos } from 'src/views/inspection/inspectionSharedUtils'
 import { FormFieldError } from 'src/views/inspection/form/components/InspectionFormDisplaySections'
 import { normalizeInspectionIssues } from 'src/views/inspection/types/inspectionIssues'
+import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import {
   HSE_DETAIL_FIELDS,
   HSE_FINDING_SELECTIONS,
@@ -58,6 +59,13 @@ const getEditableHseFormFields = (form, normalized) =>
     }),
     { ...normalized },
   )
+
+const getHseDraftSignature = (fields = {}, photos = []) =>
+  JSON.stringify({
+    ...fields,
+    hseSelections: [...(Array.isArray(fields.hseSelections) ? fields.hseSelections : [])].sort(),
+    photos: getPhotoSignature(photos),
+  })
 
 const DetailBlock = ({ label, value }) => {
   if (!text(value)) return null
@@ -173,6 +181,7 @@ const HseEditContent = ({
     {areaSatisfactory ? (
       <div className="d-grid gap-2" data-hse-field="hseAreaConditionRemarks">
         <CFormTextarea
+          aria-label="Area condition remarks"
           label="Area Condition Remarks"
           rows={4}
           placeholder="Record the current safe/satisfactory condition of this area."
@@ -217,6 +226,7 @@ const HseEditContent = ({
           return (
             <div key={selection} className="d-grid gap-2" data-hse-field={field.key}>
               <CFormTextarea
+                aria-label={field.label}
                 label={field.label}
                 rows={4}
                 placeholder={field.placeholder}
@@ -243,7 +253,8 @@ const HseEditContent = ({
         <CRow className="g-3">
           <CCol xs={12} md={6}>
             <CFormTextarea
-              label="Immediate Action (Optional)"
+              aria-label="Immediate action (optional)"
+              label="Immediate action (optional)"
               rows={3}
               value={values.hseImmediateAction}
               placeholder="Immediate control or action taken at site."
@@ -254,7 +265,8 @@ const HseEditContent = ({
           </CCol>
           <CCol xs={12} md={6}>
             <CFormTextarea
-              label="Corrective Action (Optional)"
+              aria-label="Corrective action (optional)"
+              label="Corrective action (optional)"
               rows={3}
               value={values.hseCorrectiveAction}
               placeholder="Recommended follow-up action."
@@ -265,7 +277,8 @@ const HseEditContent = ({
           </CCol>
           <CCol xs={12} md={6}>
             <CFormInput
-              label="Responsible Person (Optional)"
+              aria-label="Responsible person (optional)"
+              label="Responsible person (optional)"
               value={values.hseResponsiblePerson}
               onChange={(event) =>
                 handlers.onUpdateHseField?.('hseResponsiblePerson', event.target.value)
@@ -274,8 +287,9 @@ const HseEditContent = ({
           </CCol>
           <CCol xs={12} md={6}>
             <CFormInput
+              aria-label="Target date (optional)"
               type="date"
-              label="Target Date (Optional)"
+              label="Target date (optional)"
               value={values.hseTargetDate}
               onChange={(event) => handlers.onUpdateHseField?.('hseTargetDate', event.target.value)}
             />
@@ -285,7 +299,8 @@ const HseEditContent = ({
     ) : null}
 
     <CFormTextarea
-      label="General HSE Remarks (Optional)"
+      aria-label="General HSE remarks (optional)"
+      label="General HSE remarks (optional)"
       rows={3}
       value={values.hseRemarks}
       onChange={(event) => handlers.onUpdateHseField?.('hseRemarks', event.target.value)}
@@ -308,6 +323,7 @@ export const HseEditSection = ({
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [mobileDraftFields, setMobileDraftFields] = useState(null)
   const [mobileDraftPhotos, setMobileDraftPhotos] = useState([])
+  const [showDiscardChanges, setShowDiscardChanges] = useState(false)
   const useMobileDrawer = useMediaQuery('(max-width: 575.98px)')
   const normalized = normalizeHseFormFields(form)
   const editableForm = getEditableHseFormFields(form, normalized)
@@ -321,6 +337,10 @@ export const HseEditSection = ({
   const hasSelection = normalized.hseSelections.length > 0
   const outcomeLabel = getHseSelectedOutcomeLabel(normalized)
   const mobilePhotoDirty = getPhotoSignature(mobileDraftPhotos) !== getPhotoSignature(savedPhotos)
+  const mobileDraftDirty =
+    drawerOpen &&
+    getHseDraftSignature(mobileDraftFields || {}, mobileDraftPhotos) !==
+      getHseDraftSignature(editableForm, savedPhotos)
   const mobileDraftPhotoCount = dedupePhotos(mobileDraftPhotos).length
   const savedPhotoCount = dedupePhotos(savedPhotos).length
   const openMobileDrawer = () => {
@@ -332,6 +352,13 @@ export const HseEditSection = ({
     setDrawerOpen(false)
     setMobileDraftFields(null)
     setMobileDraftPhotos([])
+  }
+  const requestCloseMobileDrawer = () => {
+    if (mobileDraftDirty) {
+      setShowDiscardChanges(true)
+      return
+    }
+    closeMobileDrawer()
   }
   const patchMobileDraftField = (field, value) => {
     setMobileDraftFields((current) =>
@@ -414,7 +441,7 @@ export const HseEditSection = ({
           visible={drawerOpen}
           title="HSE Observation"
           bodyClassName="inspection-equipment-detail-drawer-shell"
-          onClose={closeMobileDrawer}
+          onClose={requestCloseMobileDrawer}
         >
           {drawerOpen ? (
             <div className="inspection-mobile-detail-drawer-body inspection-equipment-detail-drawer-body d-grid">
@@ -437,8 +464,10 @@ export const HseEditSection = ({
               />
               <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
                 <div className="small text-body-secondary" aria-live="polite">
-                  {mobilePhotoDirty
-                    ? `${mobileDraftPhotoCount} HSE photo${mobileDraftPhotoCount === 1 ? '' : 's'} ready to save`
+                  {mobileDraftDirty
+                    ? mobilePhotoDirty
+                      ? `${mobileDraftPhotoCount} HSE photo${mobileDraftPhotoCount === 1 ? '' : 's'} ready to save`
+                      : 'Unsaved changes'
                     : `${savedPhotoCount} HSE photo${savedPhotoCount === 1 ? '' : 's'} attached`}
                 </div>
                 <div className="d-flex justify-content-end gap-2">
@@ -446,7 +475,7 @@ export const HseEditSection = ({
                     type="button"
                     color="secondary"
                     variant="outline"
-                    onClick={closeMobileDrawer}
+                    onClick={requestCloseMobileDrawer}
                   >
                     Cancel
                   </CButton>
@@ -458,6 +487,20 @@ export const HseEditSection = ({
             </div>
           ) : null}
         </MobileBottomDrawer>
+        <ActionConfirmModal
+          visible={showDiscardChanges}
+          title="Discard changes?"
+          message="Your HSE observation changes have not been saved."
+          confirmLabel="Discard"
+          confirmColor="danger"
+          cancelLabel="Keep editing"
+          mobileDrawer
+          onClose={() => setShowDiscardChanges(false)}
+          onConfirm={() => {
+            setShowDiscardChanges(false)
+            closeMobileDrawer()
+          }}
+        />
       </div>
     )
   }

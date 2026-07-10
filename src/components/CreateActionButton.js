@@ -2,7 +2,7 @@ import React from 'react'
 import { CButton } from '@coreui/react'
 import { Plus } from 'lucide-react'
 
-const DISABLED_STYLE = { cursor: 'not-allowed', pointerEvents: 'none' }
+const DISABLED_STYLE = { cursor: 'not-allowed' }
 
 const CreateActionButton = ({
   label,

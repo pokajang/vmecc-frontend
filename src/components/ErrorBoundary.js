@@ -1,6 +1,7 @@
 import React from 'react'
-import { CAlert, CButton } from '@coreui/react'
+import { CButton } from '@coreui/react'
 import { logError } from 'src/services/logger'
+import PageState from './PageState'
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -25,17 +26,17 @@ class ErrorBoundary extends React.Component {
       const { fallback } = this.props
       if (fallback) return fallback(this.state.error, this.handleReset)
       return (
-        <div className="p-4">
-          <CAlert color="danger">
-            <strong>Something went wrong.</strong> Please try refreshing the page.
-            {this.state.error?.message && (
-              <div className="mt-1 small text-muted">{this.state.error.message}</div>
-            )}
-          </CAlert>
-          <CButton color="secondary" size="sm" onClick={this.handleReset}>
-            Try again
-          </CButton>
-        </div>
+        <PageState
+          variant="error"
+          className="my-4"
+          title="Something went wrong"
+          message="This page could not be displayed. Try again or refresh the page."
+          action={
+            <CButton color="secondary" variant="outline" size="sm" onClick={this.handleReset}>
+              Try again
+            </CButton>
+          }
+        />
       )
     }
     return this.props.children

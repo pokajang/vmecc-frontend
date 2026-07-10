@@ -1,10 +1,4 @@
 import {
-  IMAGE_COMPRESSION_MAX_DIMENSION,
-  IMAGE_COMPRESSION_MIN_QUALITY,
-  IMAGE_COMPRESSION_TARGET_BYTES,
-  IMAGE_CAMERA_COMPRESSION_MAX_DIMENSION,
-  IMAGE_CAMERA_COMPRESSION_MIN_QUALITY,
-  IMAGE_CAMERA_COMPRESSION_TARGET_BYTES,
   LEAVE_TYPE_ID_MARKERS,
   MOCK_LEAVE_RECORD_IDS,
   SUPPORTED_DOCUMENT_MIME_TYPES,
@@ -45,98 +39,6 @@ export const isPdfAttachment = (file) => {
 }
 
 export const isSupportedAttachment = (file) => isImageAttachment(file) || isPdfAttachment(file)
-
-const loadImageElement = (file) =>
-  new Promise((resolve, reject) => {
-    const image = new Image()
-    const objectUrl = URL.createObjectURL(file)
-    image.onload = () => {
-      URL.revokeObjectURL(objectUrl)
-      resolve(image)
-    }
-    image.onerror = () => {
-      URL.revokeObjectURL(objectUrl)
-      reject(new Error('Unable to read selected image.'))
-    }
-    image.src = objectUrl
-  })
-
-const canvasToBlob = (canvas, mimeType, quality) =>
-  new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) {
-          reject(new Error('Unable to compress selected image.'))
-          return
-        }
-        resolve(blob)
-      },
-      mimeType,
-      quality,
-    )
-  })
-
-export const compressImageAttachment = async (file, options = {}) => {
-  const { isCameraUpload = false } = options
-  const image = await loadImageElement(file)
-  const mimeType = SUPPORTED_IMAGE_MIME_TYPES.has(String(file.type || '').toLowerCase())
-    ? file.type
-    : 'image/jpeg'
-  const targetBytes = isCameraUpload
-    ? IMAGE_CAMERA_COMPRESSION_TARGET_BYTES
-    : IMAGE_COMPRESSION_TARGET_BYTES
-  const dimensionCandidates = isCameraUpload
-    ? [IMAGE_CAMERA_COMPRESSION_MAX_DIMENSION, 1024]
-    : [IMAGE_COMPRESSION_MAX_DIMENSION, 1600, 1280]
-  const qualityCandidates = isCameraUpload
-    ? [0.72, 0.58, IMAGE_CAMERA_COMPRESSION_MIN_QUALITY]
-    : [0.86, 0.78, 0.7, 0.62, IMAGE_COMPRESSION_MIN_QUALITY]
-  let bestBlob = null
-  const canvas = document.createElement('canvas')
-  const context = canvas.getContext('2d')
-  if (!context) {
-    throw new Error('Unable to process selected image.')
-  }
-
-  for (const maxDimension of dimensionCandidates) {
-    const ratio = Math.min(1, maxDimension / Math.max(image.width || 1, image.height || 1))
-    const nextWidth = Math.max(1, Math.round((image.width || 1) * ratio))
-    const nextHeight = Math.max(1, Math.round((image.height || 1) * ratio))
-
-    canvas.width = nextWidth
-    canvas.height = nextHeight
-
-    context.drawImage(image, 0, 0, nextWidth, nextHeight)
-
-    for (const quality of qualityCandidates) {
-      const nextBlob = await canvasToBlob(canvas, mimeType, quality)
-      if (!bestBlob || nextBlob.size < bestBlob.size) {
-        bestBlob = nextBlob
-      }
-      if (nextBlob.size <= targetBytes) {
-        break
-      }
-    }
-
-    if (bestBlob?.size <= targetBytes) {
-      break
-    }
-  }
-
-  if (!bestBlob) {
-    throw new Error('Unable to compress selected image.')
-  }
-
-  const compressedFile = new File([bestBlob], file.name, {
-    type: bestBlob.type || file.type || 'image/jpeg',
-    lastModified: Date.now(),
-  })
-
-  return {
-    file: compressedFile,
-    wasCompressed: compressedFile.size < file.size,
-  }
-}
 
 export const formatDayCount = (value) => {
   if (!Number.isFinite(value)) return '0'

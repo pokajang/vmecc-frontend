@@ -6,6 +6,7 @@ import AuditHistoryPanel from 'src/components/AuditHistoryPanel'
 import BackButton from 'src/components/BackButton'
 import CreateActionButton from 'src/components/CreateActionButton'
 import SalaryClaimReadonlyView from '../../../payroll/components/SalaryClaimReadonlyView'
+import { activateOnEnterOrSpace } from 'src/utils/uiAccessibility'
 
 const CLAIM_GATES = [
   { action: 'Checked', label: 'Checked' },
@@ -65,7 +66,7 @@ const ClaimDetailView = ({ vm, handlers }) => {
         <>
           <CRow className="g-3">
             <CCol xs={6} md={4} lg={3}>
-              <div className="h-100 rounded-3 border d-flex align-items-center gap-2 px-3 py-3 bg-white">
+              <div className="h-100 rounded-3 border d-flex align-items-center gap-2 px-3 py-3 bg-body">
                 {(() => {
                   const Icon = selectedClaimTypeMeta.icon
                   return (
@@ -83,7 +84,7 @@ const ClaimDetailView = ({ vm, handlers }) => {
               </div>
             </CCol>
             <CCol xs={6} md={4} lg={3}>
-              <div className="h-100 rounded-3 border d-flex align-items-center gap-2 px-3 py-3 bg-white">
+              <div className="h-100 rounded-3 border d-flex align-items-center gap-2 px-3 py-3 bg-body">
                 <div
                   className="rounded-circle d-inline-flex align-items-center justify-content-center bg-light text-primary"
                   style={{ width: 28, height: 28, flex: '0 0 28px' }}
@@ -127,8 +128,13 @@ const ClaimDetailView = ({ vm, handlers }) => {
                             selectedClaimItem?.id === item.id ? 'bg-light rounded px-2 pt-2' : ''
                           }`}
                           role="button"
+                          tabIndex={0}
+                          aria-label={`Open claim item ${item.title || item.id}`}
                           style={{ cursor: 'pointer' }}
                           onClick={() => onSelectClaimItem(item.id)}
+                          onKeyDown={(event) =>
+                            activateOnEnterOrSpace(event, () => onSelectClaimItem(item.id))
+                          }
                         >
                           <div className="flex-grow-1">
                             <div className="d-flex align-items-center flex-wrap gap-2">

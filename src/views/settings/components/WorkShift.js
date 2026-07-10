@@ -130,16 +130,22 @@ const BuiltinShifts = () => {
           <div className="d-grid gap-3">
             <div className="fw-semibold">{label}</div>
             <div className="d-grid gap-2">
-              <CFormLabel className="text-muted mb-0">Start</CFormLabel>
+              <CFormLabel htmlFor={`mobile-${key}-shift-start`} className="text-muted mb-0">
+                Start
+              </CFormLabel>
               <CFormInput
+                id={`mobile-${key}-shift-start`}
                 type="time"
                 size="sm"
                 value={times[startKey]}
                 onChange={(e) => setTimes((prev) => ({ ...prev, [startKey]: e.target.value }))}
                 disabled={!editMode || loading}
               />
-              <CFormLabel className="text-muted mb-0">End</CFormLabel>
+              <CFormLabel htmlFor={`mobile-${key}-shift-end`} className="text-muted mb-0">
+                End
+              </CFormLabel>
               <CFormInput
+                id={`mobile-${key}-shift-end`}
                 type="time"
                 size="sm"
                 value={times[endKey]}
@@ -156,7 +162,7 @@ const BuiltinShifts = () => {
   return (
     <CCard className="mb-4" data-testid="shift-settings-built-in">
       <CCardHeader className="d-flex justify-content-between align-items-center">
-        <span>Work Shift Windows</span>
+        <span>Work shift windows</span>
         <EditControls
           editMode={editMode}
           loading={loading}
@@ -178,10 +184,15 @@ const BuiltinShifts = () => {
               style={{ gridTemplateColumns: '1fr' }}
             >
               <div style={{ minWidth: 60, fontWeight: 500 }}>{label}</div>
-              <CFormLabel className="text-muted mb-0" style={{ minWidth: 50 }}>
+              <CFormLabel
+                htmlFor={`desktop-${key}-shift-start`}
+                className="text-muted mb-0"
+                style={{ minWidth: 50 }}
+              >
                 Start
               </CFormLabel>
               <CFormInput
+                id={`desktop-${key}-shift-start`}
                 type="time"
                 size="sm"
                 value={times[startKey]}
@@ -189,10 +200,15 @@ const BuiltinShifts = () => {
                 disabled={!editMode || loading}
                 style={{ maxWidth: 160, minWidth: 0 }}
               />
-              <CFormLabel className="text-muted mb-0" style={{ minWidth: 40 }}>
+              <CFormLabel
+                htmlFor={`desktop-${key}-shift-end`}
+                className="text-muted mb-0"
+                style={{ minWidth: 40 }}
+              >
                 End
               </CFormLabel>
               <CFormInput
+                id={`desktop-${key}-shift-end`}
                 type="time"
                 size="sm"
                 value={times[endKey]}
@@ -360,7 +376,7 @@ const CustomShifts = () => {
           )}
           {!loading && shifts.length > 0 && (
             <>
-              <div className="rounded-3 shadow-sm overflow-hidden bg-white d-none d-md-block">
+              <div className="rounded-3 shadow-sm overflow-hidden bg-body d-none d-md-block">
                 <CTable align="middle" className="mb-0" hover responsive>
                   <CTableHead color="light">
                     <CTableRow>
@@ -423,14 +439,15 @@ const CustomShifts = () => {
       {/* Add / Edit modal */}
       <CModal visible={modalOpen} onClose={closeModal} alignment="center">
         <CModalHeader>
-          <CModalTitle>{editing ? 'Edit Shift' : 'Add Custom Shift'}</CModalTitle>
+          <CModalTitle>{editing ? 'Edit shift' : 'Add custom shift'}</CModalTitle>
         </CModalHeader>
         <CModalBody>
           {formError && <div className="text-danger small mb-3">{formError}</div>}
           <div className="d-grid gap-3">
             <div>
-              <CFormLabel>Shift Name</CFormLabel>
+              <CFormLabel htmlFor="custom-shift-name">Shift name</CFormLabel>
               <CFormInput
+                id="custom-shift-name"
                 placeholder="e.g. Evening, Split, Flexi"
                 value={form.name}
                 onChange={(e) => handleFormChange('name', e.target.value)}
@@ -439,8 +456,9 @@ const CustomShifts = () => {
             </div>
             <div className="d-flex flex-wrap gap-3">
               <div className="flex-fill">
-                <CFormLabel>Start Time</CFormLabel>
+                <CFormLabel htmlFor="custom-shift-start">Start time</CFormLabel>
                 <CFormInput
+                  id="custom-shift-start"
                   type="time"
                   value={form.start}
                   onChange={(e) => handleFormChange('start', e.target.value)}
@@ -448,8 +466,9 @@ const CustomShifts = () => {
                 />
               </div>
               <div className="flex-fill">
-                <CFormLabel>End Time</CFormLabel>
+                <CFormLabel htmlFor="custom-shift-end">End time</CFormLabel>
                 <CFormInput
+                  id="custom-shift-end"
                   type="time"
                   value={form.end}
                   onChange={(e) => handleFormChange('end', e.target.value)}
@@ -460,7 +479,7 @@ const CustomShifts = () => {
           </div>
         </CModalBody>
         <CModalFooter>
-          <CButton color="secondary" onClick={closeModal} disabled={saving}>
+          <CButton color="secondary" variant="outline" onClick={closeModal} disabled={saving}>
             Cancel
           </CButton>
           <CButton color="primary" onClick={handleSave} disabled={saving}>

@@ -13,7 +13,7 @@ import {
   SCBA_INSPECTION_TYPE,
 } from './helpers'
 import { createLocationDetailContextFields } from '../detailConfigHelpers'
-import { buildMainLocationContinuationOptions } from '../continuationHelpers'
+import { buildMainLocationContinuationOptions, CONTINUATION_TOKENS } from '../continuationHelpers'
 import { ScbaEditSection, ScbaReadOnlySection } from './section'
 import { INSPECTION_REPORT_EVIDENCE_COPY } from '../../inspectionReportEvidenceCopy'
 
@@ -49,7 +49,7 @@ const scbaInspectionDefinition = {
       context,
       getSummary: getScbaCheckSummary,
       getMissingFields: getScbaMissingFields,
-      label: 'location',
+      label: CONTINUATION_TOKENS.location,
     }),
   buildChecklist: buildScbaChecklist,
   buildDescription: buildScbaDescription,

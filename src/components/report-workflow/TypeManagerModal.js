@@ -150,20 +150,33 @@ const TypeManagerModal = ({
             </div>
           ) : null}
           <div>
-            <CFormLabel className="text-muted">{nameLabel}</CFormLabel>
+            <CFormLabel htmlFor="type-manager-name" className="text-muted">
+              {nameLabel}
+            </CFormLabel>
             <CFormInput
+              id="type-manager-name"
               maxLength={40}
               value={nameValue}
               invalid={Boolean(error)}
+              aria-describedby={
+                error ? 'type-manager-name-error' : nameHint ? 'type-manager-name-hint' : undefined
+              }
               placeholder={namePlaceholder}
               onChange={(event) => onChangeName(event.target.value)}
             />
-            {nameHint ? <div className="small text-muted mt-1">{nameHint}</div> : null}
+            {nameHint ? (
+              <div id="type-manager-name-hint" className="small text-muted mt-1">
+                {nameHint}
+              </div>
+            ) : null}
           </div>
           {showDescriptionField ? (
             <div>
-              <CFormLabel className="text-muted">{descriptionLabel}</CFormLabel>
+              <CFormLabel htmlFor="type-manager-description" className="text-muted">
+                {descriptionLabel}
+              </CFormLabel>
               <CFormTextarea
+                id="type-manager-description"
                 rows={2}
                 maxLength={90}
                 value={descriptionValue}
@@ -172,10 +185,14 @@ const TypeManagerModal = ({
               />
             </div>
           ) : null}
-          {error ? <div className="small text-danger">{error}</div> : null}
+          {error ? (
+            <div id="type-manager-name-error" className="invalid-feedback d-block">
+              {error}
+            </div>
+          ) : null}
           {hasIconPicker ? (
-            <div>
-              <CFormLabel className="text-muted">Choose Icon</CFormLabel>
+            <fieldset className="border-0 p-0 m-0">
+              <legend className="form-label text-muted">Choose icon</legend>
               {iconOptions.length > 0 ? (
                 <div className="type-manager-modal__icon-grid">
                   {iconOptions.map((option) => {
@@ -201,7 +218,7 @@ const TypeManagerModal = ({
               ) : (
                 <div className="small text-muted">No unused icons available.</div>
               )}
-            </div>
+            </fieldset>
           ) : null}
           {editingKey ? (
             <div className="small text-primary">
@@ -222,10 +239,15 @@ const TypeManagerModal = ({
 
   const footer = editMode ? (
     <>
-      <CButton type="button" color="light" onClick={() => onSetEditMode(false)}>
+      <CButton
+        type="button"
+        color="secondary"
+        variant="outline"
+        onClick={() => onSetEditMode(false)}
+      >
         Back
       </CButton>
-      <CButton type="button" color="light" onClick={onClose}>
+      <CButton type="button" color="secondary" variant="outline" onClick={onClose}>
         Close
       </CButton>
     </>

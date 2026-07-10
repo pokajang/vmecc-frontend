@@ -117,6 +117,7 @@ const EmergencySection = ({ contact }) => {
           'Name',
           editMode ? (
             <CFormInput
+              aria-label="Emergency contact name"
               size="sm"
               name="name"
               value={form.name}
@@ -131,6 +132,7 @@ const EmergencySection = ({ contact }) => {
           'Relationship',
           editMode ? (
             <CFormSelect
+              aria-label="Relationship"
               size="sm"
               name="relationship"
               value={form.relationship}
@@ -152,6 +154,7 @@ const EmergencySection = ({ contact }) => {
           'Mobile number',
           editMode ? (
             <CFormInput
+              aria-label="Emergency contact mobile number"
               size="sm"
               name="phone"
               value={form.phone}
@@ -169,6 +172,7 @@ const EmergencySection = ({ contact }) => {
           'Email',
           editMode ? (
             <CFormInput
+              aria-label="Emergency contact email"
               size="sm"
               name="email"
               type="email"
@@ -181,9 +185,10 @@ const EmergencySection = ({ contact }) => {
           ),
         )}
         {renderRow(
-          'Home Address',
+          'Home address',
           editMode ? (
             <CFormTextarea
+              aria-label="Emergency contact home address"
               rows={2}
               name="address"
               value={form.address}

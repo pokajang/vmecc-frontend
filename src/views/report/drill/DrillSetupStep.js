@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { CButton, CCol, CFormInput, CFormLabel, CRow } from '@coreui/react'
+import { CButton, CCol, CFormFeedback, CFormInput, CFormLabel, CRow } from '@coreui/react'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import CreateActionButton from 'src/components/CreateActionButton'
 import IconOptionGrid from 'src/components/IconOptionGrid'
@@ -18,7 +18,7 @@ const TOGGLE_CARD_PROPS = {
     borderStyle: 'dashed',
   },
   className: 'report-option-card text-primary',
-  iconContainerClassName: 'bg-white text-primary',
+  iconContainerClassName: 'bg-body text-primary',
   titleClassName: 'fw-semibold text-primary',
 }
 
@@ -131,7 +131,7 @@ const DrillSetupStep = ({
           if (drillType.addTypeError) drillType.setAddTypeError('')
         }}
         namePlaceholder="e.g. Confined Space Drill"
-        descriptionLabel="Drill Type Details (Optional)"
+        descriptionLabel="Drill type details (optional)"
         descriptionValue={drillType.newTypeDescription}
         onChangeDescription={drillType.setNewTypeDescription}
         descriptionPlaceholder="Subtext shown below type name."
@@ -165,7 +165,7 @@ const DrillSetupStep = ({
           if (drillLocation.addLocationError) drillLocation.setAddLocationError('')
         }}
         namePlaceholder="e.g. Crusher bay"
-        descriptionLabel="Drill Location Details (Optional)"
+        descriptionLabel="Drill location details (optional)"
         descriptionValue={drillLocation.newLocationDescription}
         onChangeDescription={drillLocation.setNewLocationDescription}
         descriptionPlaceholder="Subtext shown below location name."
@@ -327,13 +327,15 @@ const DrillSetupStep = ({
           />
           <CRow className="g-2">
             <CCol xs={12} md={4}>
-              <CFormLabel>Custom Drill Date</CFormLabel>
+              <CFormLabel htmlFor="drill-report-date">Custom drill date</CFormLabel>
               <CFormInput
+                id="drill-report-date"
                 type="date"
                 value={form.reportDate}
                 invalid={Boolean(setupFieldErrors.reportDate)}
                 onChange={(event) => updateSetupField('reportDate', event.target.value)}
               />
+              <CFormFeedback invalid>{setupFieldErrors.reportDate}</CFormFeedback>
             </CCol>
           </CRow>
           <SelectionCards
@@ -345,13 +347,15 @@ const DrillSetupStep = ({
           />
           <CRow className="g-2">
             <CCol xs={12} md={4}>
-              <CFormLabel>Custom Start Time</CFormLabel>
+              <CFormLabel htmlFor="drill-report-time">Custom start time</CFormLabel>
               <CFormInput
+                id="drill-report-time"
                 type="time"
                 value={form.reportTime}
                 invalid={Boolean(setupFieldErrors.reportTime)}
                 onChange={(event) => updateSetupField('reportTime', event.target.value)}
               />
+              <CFormFeedback invalid>{setupFieldErrors.reportTime}</CFormFeedback>
             </CCol>
           </CRow>
           {form.reportDate && form.reportTime ? (

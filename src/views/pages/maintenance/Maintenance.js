@@ -26,7 +26,7 @@ const Maintenance = () => {
           <CCol md={7}>
             <div className="clearfix">
               <h1 className="float-start display-3 me-4">503</h1>
-              <h4 className="pt-3">System under maintenance.</h4>
+              <h2 className="h4 pt-3">System under maintenance.</h2>
               <p className="text-body-secondary float-start mb-3">
                 Some features are temporarily unavailable while maintenance is in progress.
               </p>

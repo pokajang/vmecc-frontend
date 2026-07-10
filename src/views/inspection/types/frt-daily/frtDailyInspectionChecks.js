@@ -142,8 +142,11 @@ export const FrtDailyInspectionChecks = ({
   const addItemBody = (
     <div className="row g-3 align-items-end">
       <div className="col-12 col-md-3">
-        <CFormLabel className="small text-body-secondary">Checklist</CFormLabel>
+        <CFormLabel htmlFor="frt-new-item-checklist" className="small text-body-secondary">
+          Checklist
+        </CFormLabel>
         <CFormSelect
+          id="frt-new-item-checklist"
           size="sm"
           value={newItem.checklistKind}
           onChange={(event) =>
@@ -158,8 +161,11 @@ export const FrtDailyInspectionChecks = ({
         </CFormSelect>
       </div>
       <div className="col-12 col-md-5">
-        <CFormLabel className="small text-body-secondary">Item</CFormLabel>
+        <CFormLabel htmlFor="frt-new-item-name" className="small text-body-secondary">
+          Item
+        </CFormLabel>
         <CFormInput
+          id="frt-new-item-name"
           size="sm"
           value={newItem.equipment}
           placeholder="e.g. SPARE NOZZLE"
@@ -172,8 +178,11 @@ export const FrtDailyInspectionChecks = ({
         />
       </div>
       <div className="col-12 col-md-2">
-        <CFormLabel className="small text-body-secondary">Qty</CFormLabel>
+        <CFormLabel htmlFor="frt-new-item-quantity" className="small text-body-secondary">
+          Qty
+        </CFormLabel>
         <CFormInput
+          id="frt-new-item-quantity"
           size="sm"
           value={newItem.quantity}
           disabled={newItem.checklistKind === 'oneOff'}

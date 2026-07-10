@@ -320,7 +320,8 @@ export const isScbaInspectionType = (inspectionType) =>
   normalizeKey(inspectionType) === normalizeKey(SCBA_INSPECTION_TYPE)
 
 const isScbaRowComplete = (row = {}, fields = []) =>
-  fields.every((field) => toText(row?.[field.key]))
+  fields.every((field) => toText(row?.[field.key])) &&
+  getScbaIncompleteIssueEvidenceCount(row, fields) === 0
 
 const getScbaRowIssueFields = (row = {}, fields = []) =>
   fields.filter(

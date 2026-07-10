@@ -24,7 +24,7 @@
   width: 440px;
   max-width: min(92vw, 440px);
   height: 100dvh;
-  background: #ffffff;
+  background: var(--cui-body-bg);
   display: flex;
   flex-direction: column;
   border-radius: 0;

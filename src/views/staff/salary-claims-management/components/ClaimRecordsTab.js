@@ -24,6 +24,7 @@ import RowActions from 'src/components/RowActions'
 import TableFilters from 'src/components/TableFilters'
 import WorkflowStatusSummary from 'src/components/WorkflowStatusSummary'
 import BulkActionButton from 'src/views/staff/components/BulkActionButton'
+import { activateOnEnterOrSpace } from 'src/utils/uiAccessibility'
 
 const CLAIM_GATES = [
   { action: 'Checked', label: 'Checked' },
@@ -173,7 +174,7 @@ const ClaimRecordsTab = ({ vm, handlers }) => {
     ) : null
 
   const renderDesktopTable = () => (
-    <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
+    <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-body">
       <CTable align="middle" className="mb-0" hover responsive>
         <CTableHead color="light">
           <CTableRow>
@@ -188,7 +189,7 @@ const ClaimRecordsTab = ({ vm, handlers }) => {
             <CTableHeaderCell>Amount</CTableHeaderCell>
             <CTableHeaderCell>Status</CTableHeaderCell>
             <CTableHeaderCell>Submitted On</CTableHeaderCell>
-            <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
+            <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
           </CTableRow>
         </CTableHead>
         <CTableBody>
@@ -252,7 +253,13 @@ const ClaimRecordsTab = ({ vm, handlers }) => {
                       key={`${row.id}-${row.ownerId || 'owner'}`}
                       className="cursor-pointer"
                       style={{ cursor: 'pointer' }}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Open claim ${row.id || rowIndex}`}
                       onClick={() => openClaimDetail(row, 'claimRecords')}
+                      onKeyDown={(event) =>
+                        activateOnEnterOrSpace(event, () => openClaimDetail(row, 'claimRecords'))
+                      }
                     >
                       <CTableDataCell className="text-center text-body-secondary">
                         {rowIndex}

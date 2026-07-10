@@ -11,6 +11,34 @@ const typeManagerModalMock = vi.hoisted(() => ({
   props: [],
 }))
 
+const reportMediaApiMock = vi.hoisted(() => ({
+  deleteReportMedia: vi.fn(async () => true),
+  getReportPhotoBytes: vi.fn((photo = {}) => Number(photo.sizeBytes || photo.size || 1)),
+  reportPhotoFailureMessage: vi.fn(
+    (code, fileName = '') => `${fileName || 'Selected photo'} could not be processed (${code}).`,
+  ),
+  uploadReportPhotosSequentially: vi.fn(async ({ files = [] } = {}) =>
+    (Array.isArray(files) ? files : []).map((file, index) => ({
+      id: `uploaded-photo-${index + 1}`,
+      mediaId: `media-${index + 1}`,
+      url: `https://example.test/report-media/media-${index + 1}`,
+      thumbnailUrl: `https://example.test/report-media/media-${index + 1}/thumbnail`,
+      fileName: file?.name || `photo-${index + 1}.png`,
+      mimeType: file?.type || 'image/png',
+      sizeBytes: Number(file?.size || 1),
+      width: 1,
+      height: 1,
+    })),
+  ),
+}))
+
+vi.mock('src/services/api/reportMediaApi', () => ({
+  deleteReportMedia: reportMediaApiMock.deleteReportMedia,
+  getReportPhotoBytes: reportMediaApiMock.getReportPhotoBytes,
+  reportPhotoFailureMessage: reportMediaApiMock.reportPhotoFailureMessage,
+  uploadReportPhotosSequentially: reportMediaApiMock.uploadReportPhotosSequentially,
+}))
+
 const fireTruckApiMock = vi.hoisted(() => {
   const normalizeRows = (rows = []) =>
     (Array.isArray(rows) ? rows : [])
@@ -439,6 +467,15 @@ const makeCompletedFrtLockerOneRows = () => ({
   })),
 })
 
+const openScbaGroup = async (groupName) => {
+  const groupLabel = await screen.findByText(groupName)
+  const groupButton = groupLabel.closest('button')
+  if (!groupButton) {
+    throw new Error(`Unable to find SCBA group button for ${groupName}`)
+  }
+  fireEvent.click(groupButton)
+}
+
 describe('InspectionForm workflow', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -523,7 +560,7 @@ describe('InspectionForm workflow', () => {
     expect(
       container.querySelector('[data-testid="selected-inspection-type-icon"] svg'),
     ).toBeTruthy()
-    fireEvent.click(screen.getAllByText('Review Inspections')[0])
+    fireEvent.click(screen.getAllByText('Continue to Review')[0])
 
     expect(onRequestReview).toHaveBeenCalledTimes(1)
     expect(onRequestReview).toHaveBeenCalledWith(
@@ -534,7 +571,7 @@ describe('InspectionForm workflow', () => {
     )
   })
 
-  it('hides Review Inspections when the current form has no completed items', () => {
+  it('hides Continue to Review when the current form has no completed items', () => {
     const onRequestReview = vi.fn()
     const pushToast = vi.fn()
     render(
@@ -551,7 +588,7 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    expect(screen.queryByRole('button', { name: 'Review Inspections' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Continue to Review' })).toBeNull()
     expect(onRequestReview).not.toHaveBeenCalled()
     expect(pushToast).not.toHaveBeenCalled()
   })
@@ -571,7 +608,7 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    expect(screen.queryByRole('button', { name: 'Review Inspections' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Continue to Review' })).toBeNull()
     expect(onRequestReview).not.toHaveBeenCalled()
     expect(screen.queryByText('Choose a zone and main area.')).toBeNull()
     expect(screen.queryByText('Describe the inspection before review.')).toBeNull()
@@ -598,7 +635,7 @@ describe('InspectionForm workflow', () => {
     expect(screen.queryByText('Checks')).toBeNull()
     expect(screen.queryByText('Housekeeping checked')).toBeNull()
     expect(screen.queryByText('Follow-up required')).toBeNull()
-    expect(screen.getAllByText('Review Inspections').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Continue to Review').length).toBeGreaterThan(0)
   })
 
   it('does not expose General Inspection checklist chips', () => {
@@ -881,20 +918,61 @@ describe('InspectionForm workflow', () => {
 
     expect(await screen.findByText('ADO-001')).toBeTruthy()
 
-    fireEvent.click(screen.getByLabelText('Scan another FE'))
+    fireEvent.click(screen.getByLabelText('Inspect More FE'))
 
     expect(browserConfirm).not.toHaveBeenCalled()
     expect(
-      await screen.findByText('Current FE is not complete. Scan another FE anyway?'),
+      await screen.findByText('Current FE is not complete. Inspect More FE anyway?'),
     ).toBeTruthy()
-    expect(screen.getAllByRole('button', { name: 'Scan another FE' }).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('button', { name: 'Inspect More FE' }).length).toBeGreaterThan(0)
 
     fireEvent.click(screen.getByRole('button', { name: 'Stay here' }))
     await waitFor(() => {
-      expect(screen.queryByText('Current FE is not complete. Scan another FE anyway?')).toBeNull()
+      expect(screen.queryByText('Current FE is not complete. Inspect More FE anyway?')).toBeNull()
     })
 
     browserConfirm.mockRestore()
+  })
+
+  it('reopens the FE serial search scanner when Inspect More FE is confirmed', async () => {
+    render(
+      <InspectionForm
+        {...baseProps}
+        value={{
+          zone: '1',
+          mainLocation: 'Manjung Hub',
+          subLocation: 'Reception',
+          selectedLocation: 'Zone 1 > Manjung Hub > Reception',
+          inspectionType: 'Fire Extinguisher Inspection',
+          photos: [],
+          fireExtinguisherEntryMode: 'scan',
+          fireExtinguisherScannedLocator: 'EE042021Y544896',
+          fireExtinguisherFocusedAssetKey: 'barcode:ee042021y544896',
+          fireExtinguisherChecks: [
+            {
+              key: 'fe:barcode:ee042021y544896',
+              canonicalAssetKey: 'barcode:ee042021y544896',
+              identityKey: 'barcode:ee042021y544896',
+              idLocNo: 'ADO-001',
+              barcodeNo: 'EE042021Y544896',
+              location: 'Reception',
+              mainLocation: 'Manjung Hub',
+              subLocation: 'Reception',
+              zone: '1',
+            },
+          ],
+        }}
+      />,
+    )
+
+    fireEvent.click(screen.getByLabelText('Inspect More FE'))
+    expect(
+      await screen.findByText('Current FE is not complete. Inspect More FE anyway?'),
+    ).toBeTruthy()
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Inspect More FE' }).at(-1))
+
+    expect(await screen.findByText('Search FE by Serial Number')).toBeTruthy()
   })
 
   it('keeps saved fire extinguisher rows visible when the catalog result is partial', () => {
@@ -1188,7 +1266,7 @@ describe('InspectionForm workflow', () => {
     expect(screen.getByRole('button', { name: 'Delete' })).toBeTruthy()
   })
 
-  it('sends Fire Extinguisher defect rows to the Review Inspections flow', async () => {
+  it('sends Fire Extinguisher defect rows to the Continue to Review flow', async () => {
     const onRequestReview = vi.fn()
     const { rerender } = render(
       <InspectionForm
@@ -1223,7 +1301,7 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    expect(screen.queryByRole('button', { name: 'Review Inspections' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Continue to Review' })).toBeNull()
     expect(onRequestReview).not.toHaveBeenCalled()
     onRequestReview.mockClear()
 
@@ -1268,7 +1346,7 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    fireEvent.click(screen.getAllByText('Review Inspections')[0])
+    fireEvent.click(screen.getAllByText('Continue to Review')[0])
 
     expect(onRequestReview).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -1395,7 +1473,7 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    fireEvent.click(screen.getAllByText('Review Inspections')[0])
+    fireEvent.click(screen.getAllByText('Continue to Review')[0])
 
     expect(onRequestReview).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -1434,7 +1512,7 @@ describe('InspectionForm workflow', () => {
     expect(screen.queryByText('Actual field coming soon')).toBeNull()
     expect(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle)).toBeTruthy()
 
-    fireEvent.click(screen.getAllByText('Review Inspections')[0])
+    fireEvent.click(screen.getAllByText('Continue to Review')[0])
 
     expect(onRequestReview).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -1447,7 +1525,7 @@ describe('InspectionForm workflow', () => {
     )
   })
 
-  it('hides Review Inspections for incomplete HSE observations', () => {
+  it('hides Continue to Review for incomplete HSE observations', () => {
     const onRequestReview = vi.fn()
     render(
       <InspectionForm
@@ -1466,7 +1544,7 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    expect(screen.queryByRole('button', { name: 'Review Inspections' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Continue to Review' })).toBeNull()
     expect(onRequestReview).not.toHaveBeenCalled()
     expect(screen.getAllByText('Take HSE photo').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Upload HSE photo').length).toBeGreaterThan(0)
@@ -1551,12 +1629,12 @@ describe('InspectionForm workflow', () => {
     ).toBe('3')
     expect(screen.queryByText('Actual field coming soon')).toBeNull()
     expect(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle)).toBeTruthy()
-    expect(screen.getAllByRole('button', { name: 'Review Inspections' })[0].disabled).toBe(true)
+    expect(screen.getAllByRole('button', { name: 'Continue to Review' })[0].disabled).toBe(true)
     expect(screen.getAllByText(/items? need attention before review\./).length).toBeGreaterThan(0)
     expect(screen.getAllByText('Save Draft').length).toBeGreaterThan(0)
   })
 
-  it('sends completed ER Aux subset rows to the Review Inspections flow', () => {
+  it('sends completed ER Aux subset rows to the Continue to Review flow', () => {
     const onRequestReview = vi.fn()
     render(
       <InspectionForm
@@ -1583,7 +1661,7 @@ describe('InspectionForm workflow', () => {
     )
 
     const reviewButton = screen
-      .getAllByRole('button', { name: 'Review Inspections' })
+      .getAllByRole('button', { name: 'Continue to Review' })
       .find((button) => !button.disabled)
 
     expect(reviewButton).toBeTruthy()
@@ -1591,7 +1669,7 @@ describe('InspectionForm workflow', () => {
     expect(onRequestReview).toHaveBeenCalledTimes(1)
   })
 
-  it('uses Review Updates for completed ER Aux subset rows in edit mode', () => {
+  it('uses Continue to Review Updates for completed ER Aux subset rows in edit mode', () => {
     const onRequestReview = vi.fn()
     render(
       <InspectionForm
@@ -1616,10 +1694,10 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    expect(screen.queryByRole('button', { name: 'Review Inspections' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Continue to Review' })).toBeNull()
 
     const reviewButton = screen
-      .getAllByRole('button', { name: 'Review Updates' })
+      .getAllByRole('button', { name: 'Continue to Review Updates' })
       .find((button) => !button.disabled)
 
     expect(reviewButton).toBeTruthy()
@@ -1667,7 +1745,7 @@ describe('InspectionForm workflow', () => {
     expect(screen.getByText('LOCKER 01')).toBeTruthy()
     expect(screen.getAllByText('LOCKER 01').length).toBeGreaterThan(0)
     expect(screen.queryByText('Actual field coming soon')).toBeNull()
-    expect(screen.queryByRole('button', { name: 'Review Inspections' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Continue to Review' })).toBeNull()
     expect(screen.getAllByText('Save Draft').length).toBeGreaterThan(0)
   })
 
@@ -2011,7 +2089,7 @@ describe('InspectionForm workflow', () => {
     expect(screen.queryByText('Hydraulic Pump Motor 2')).toBeNull()
     expect(screen.getAllByText('FRT').length).toBeGreaterThan(0)
     expect(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle)).toBeTruthy()
-    expect(screen.queryByRole('button', { name: 'Review Inspections' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Continue to Review' })).toBeNull()
     expect(screen.getAllByText('Save Draft').length).toBeGreaterThan(0)
   })
 
@@ -2067,12 +2145,13 @@ describe('InspectionForm workflow', () => {
     expect(screen.getByText('Hydraulic Cylinder Ramp 1')).toBeTruthy()
   })
 
-  it('shows SCBA section cards for the selected FRT location', () => {
+  it('shows SCBA section cards for the selected FRT location', async () => {
     render(
       <InspectionForm
         {...baseProps}
         value={{
           mainLocation: 'FRT',
+          selectedLocation: 'FRT',
           inspectionType: 'SCBA Inspection',
           photos: [],
           scbaInspectedBy: '',
@@ -2086,14 +2165,19 @@ describe('InspectionForm workflow', () => {
 
     expect(screen.getByText('Date and time of inspection')).toBeTruthy()
     expect(screen.queryByText('Inspection Session')).toBeNull()
-    expect(screen.getByText('SCBA Items')).toBeTruthy()
-    expect(screen.getByText('Back Plate')).toBeTruthy()
+    expect(screen.getByText('Choose Group')).toBeTruthy()
+    expect(await screen.findByText('Back Plate')).toBeTruthy()
     expect(screen.getByText('Cylinder')).toBeTruthy()
     expect(screen.getByText('Face Mask')).toBeTruthy()
+
+    await openScbaGroup('Back Plate')
+    expect(screen.getByText('Back Plate Items')).toBeTruthy()
     expect(screen.getByText('MSA 06')).toBeTruthy()
+
+    await openScbaGroup('Face Mask')
     expect(screen.getByText('Drager 02')).toBeTruthy()
     expect(screen.queryByText('Actual field coming soon')).toBeNull()
-    expect(screen.queryByRole('button', { name: 'Review Inspections' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Continue to Review' })).toBeNull()
     expect(screen.getAllByText('Save Draft').length).toBeGreaterThan(0)
   })
 
@@ -2101,6 +2185,7 @@ describe('InspectionForm workflow', () => {
     const Harness = () => {
       const [value, setValue] = React.useState({
         mainLocation: 'FRT',
+        selectedLocation: 'FRT',
         inspectionType: 'SCBA Inspection',
         photos: [],
         scbaInspectedBy: '',
@@ -2125,6 +2210,7 @@ describe('InspectionForm workflow', () => {
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Add section' }))
 
     expect(await screen.findByText('Regulator')).toBeTruthy()
+    await openScbaGroup('Regulator')
     expect(await screen.findByText('Checks: Purge Valve, Leak Test')).toBeTruthy()
     expect(screen.getByText(/No items in this section yet/)).toBeTruthy()
 
@@ -2142,6 +2228,7 @@ describe('InspectionForm workflow', () => {
         {...baseProps}
         value={{
           mainLocation: 'FRT',
+          selectedLocation: 'FRT',
           inspectionType: 'SCBA Inspection',
           photos: [],
           scbaInspectedBy: '',
@@ -2172,17 +2259,19 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
+    await openScbaGroup('Regulator')
     fireEvent.click(screen.getByLabelText('Item actions for MSA R-01'))
     expect((await screen.findAllByRole('button', { name: 'Edit' })).length).toBeGreaterThan(0)
     expect(await screen.findByRole('button', { name: 'Delete' })).toBeTruthy()
   })
 
-  it('collapses and expands SCBA sections from the search toolbar', () => {
+  it('collapses and expands SCBA sections from the search toolbar', async () => {
     render(
       <InspectionForm
         {...baseProps}
         value={{
           mainLocation: 'FRT',
+          selectedLocation: 'FRT',
           inspectionType: 'SCBA Inspection',
           photos: [],
           scbaInspectedBy: '',
@@ -2194,6 +2283,7 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
+    await openScbaGroup('Back Plate')
     expect(screen.getByText('MSA 06')).toBeTruthy()
 
     fireEvent.click(screen.getByRole('button', { name: 'Collapse all' }))
@@ -2418,7 +2508,7 @@ describe('InspectionForm workflow', () => {
     )
   })
 
-  it('updates SCBA grouped checks from segmented controls', () => {
+  it('updates SCBA grouped checks from segmented controls', async () => {
     const onChange = vi.fn()
     render(
       <InspectionForm
@@ -2426,6 +2516,7 @@ describe('InspectionForm workflow', () => {
         onChange={onChange}
         value={{
           mainLocation: 'FRT',
+          selectedLocation: 'FRT',
           inspectionType: 'SCBA Inspection',
           photos: [],
           scbaInspectedBy: '',
@@ -2437,6 +2528,7 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
+    await openScbaGroup('Back Plate')
     fireEvent.click(screen.getAllByRole('button', { name: 'Not Good' })[0])
 
     return waitFor(() =>
@@ -2455,12 +2547,13 @@ describe('InspectionForm workflow', () => {
     )
   })
 
-  it('keeps SCBA field evidence scoped to the selected issue field', () => {
+  it('keeps SCBA field evidence scoped to the selected issue field', async () => {
     render(
       <InspectionForm
         {...baseProps}
         value={{
           mainLocation: 'FRT',
+          selectedLocation: 'FRT',
           inspectionType: 'SCBA Inspection',
           photos: [],
           scbaInspectedBy: '',
@@ -2491,6 +2584,7 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
+    await openScbaGroup('Back Plate')
     expect(screen.getByDisplayValue('Scoped hose note')).toBeTruthy()
     expect(
       screen.queryByText('Back Plate & Harness retained evidence from earlier status'),
@@ -3102,7 +3196,7 @@ describe('InspectionForm workflow', () => {
     )
   })
 
-  it('shows disabled Review Inspections for incomplete ER Aux rows', () => {
+  it('shows disabled Continue to Review for incomplete ER Aux rows', () => {
     const onRequestReview = vi.fn()
     render(
       <InspectionForm
@@ -3134,12 +3228,12 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    expect(screen.getAllByRole('button', { name: 'Review Inspections' })[0].disabled).toBe(true)
+    expect(screen.getAllByRole('button', { name: 'Continue to Review' })[0].disabled).toBe(true)
     expect(screen.getAllByText(/items? need attention before review\./).length).toBeGreaterThan(0)
     expect(onRequestReview).not.toHaveBeenCalled()
   })
 
-  it('shows disabled Review Updates for incomplete ER Aux rows in edit mode', () => {
+  it('shows disabled Continue to Review Updates for incomplete ER Aux rows in edit mode', () => {
     const onRequestReview = vi.fn()
     render(
       <InspectionForm
@@ -3172,8 +3266,10 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    expect(screen.queryByRole('button', { name: 'Review Inspections' })).toBeNull()
-    expect(screen.getAllByRole('button', { name: 'Review Updates' })[0].disabled).toBe(true)
+    expect(screen.queryByRole('button', { name: 'Continue to Review' })).toBeNull()
+    expect(screen.getAllByRole('button', { name: 'Continue to Review Updates' })[0].disabled).toBe(
+      true,
+    )
     expect(screen.getAllByText(/items? need attention before review\./).length).toBeGreaterThan(0)
     expect(screen.getAllByText('Save Update Draft').length).toBeGreaterThan(0)
     expect(onRequestReview).not.toHaveBeenCalled()
@@ -3425,7 +3521,7 @@ describe('InspectionForm workflow', () => {
     })
   })
 
-  it('sends hydraulic N/A rows to the Review Inspections flow', () => {
+  it('sends hydraulic N/A rows to the Continue to Review flow', () => {
     const onRequestReview = vi.fn()
     const pushToast = vi.fn()
     const { rerender } = render(
@@ -3448,7 +3544,7 @@ describe('InspectionForm workflow', () => {
     )
 
     expect(screen.getByPlaceholderText('Function Test N/A reason')).toBeTruthy()
-    expect(screen.queryByRole('button', { name: 'Review Inspections' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Continue to Review' })).toBeNull()
     expect(onRequestReview).not.toHaveBeenCalled()
     onRequestReview.mockClear()
 
@@ -3471,7 +3567,7 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    fireEvent.click(screen.getAllByText('Review Inspections')[0])
+    fireEvent.click(screen.getAllByText('Continue to Review')[0])
     expect(onRequestReview).toHaveBeenCalledWith(
       expect.objectContaining({
         hydraulicChecks: expect.arrayContaining([
@@ -3536,7 +3632,7 @@ describe('InspectionForm workflow', () => {
     )
   })
 
-  it('opens per-defect evidence blocks and sends hydraulic defects to Review Inspections', () => {
+  it('opens per-defect evidence blocks and sends hydraulic defects to Continue to Review', () => {
     const onRequestReview = vi.fn()
     const pushToast = vi.fn()
     const { rerender } = render(
@@ -3561,7 +3657,7 @@ describe('InspectionForm workflow', () => {
     expect(screen.getByPlaceholderText('Physical Condition defect remarks')).toBeTruthy()
     expect(screen.getByPlaceholderText('No Leakage defect remarks')).toBeTruthy()
     expect(screen.getAllByText('Add defect photo').length).toBeGreaterThanOrEqual(2)
-    expect(screen.queryByRole('button', { name: 'Review Inspections' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Continue to Review' })).toBeNull()
     expect(onRequestReview).not.toHaveBeenCalled()
     onRequestReview.mockClear()
     expect(screen.queryByText('Upload at least one inspection photo.')).toBeNull()
@@ -3593,7 +3689,7 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    fireEvent.click(screen.getAllByText('Review Inspections')[0])
+    fireEvent.click(screen.getAllByText('Continue to Review')[0])
     expect(onRequestReview).toHaveBeenCalledWith(
       expect.objectContaining({
         inspectionType: 'Hydraulic Rescue Tools Inspection',
@@ -3659,7 +3755,7 @@ describe('InspectionForm workflow', () => {
 
     expect(screen.queryByText('HSE Observation')).toBeNull()
     expect(screen.queryByText('Checks')).toBeNull()
-    expect(screen.queryByRole('button', { name: 'Review Inspections' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Continue to Review' })).toBeNull()
   })
 
   it('keeps the environment camera input available for take photo', () => {

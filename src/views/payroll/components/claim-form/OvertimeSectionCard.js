@@ -73,7 +73,7 @@ const OvertimeSectionCard = ({
               No overtime records found for this payroll month.
             </div>
           ) : (
-            <div className="rounded-3 shadow-sm overflow-hidden bg-white">
+            <div className="rounded-3 shadow-sm overflow-hidden bg-body">
               <CTable align="middle" className="mb-0" responsive>
                 <CTableHead color="light">
                   <CTableRow>

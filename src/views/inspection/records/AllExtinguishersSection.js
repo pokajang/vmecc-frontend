@@ -319,12 +319,27 @@ const StatusBadge = ({ value, label }) => {
   )
 }
 
-const SummaryItem = ({ label, value, tone = 'body' }) => (
-  <div className="d-inline-flex align-items-center gap-2">
-    <span className="text-body-secondary">{label}</span>
-    <span className={`fw-semibold text-${tone}`}>{value}</span>
-  </div>
-)
+const SummaryItem = ({ label, value, tone = 'body', onClick, isActive = false }) => {
+  const itemClass = `all-extinguishers-summary-item${
+    onClick ? ' all-extinguishers-summary-item--clickable' : ''
+  }${isActive ? ' all-extinguishers-summary-item--active' : ''}`
+
+  if (!onClick) {
+    return (
+      <span className={itemClass}>
+        <span className="all-extinguishers-summary-label">{label}</span>
+        <span className={`all-extinguishers-summary-value text-${tone}`}>{value}</span>
+      </span>
+    )
+  }
+
+  return (
+    <button type="button" className={itemClass} onClick={onClick} aria-pressed={isActive}>
+      <span className="all-extinguishers-summary-label">{label}</span>
+      <span className={`all-extinguishers-summary-value text-${tone}`}>{value}</span>
+    </button>
+  )
+}
 
 const buildOptions = (rows, key, allLabel) => [
   { value: ALL_ROWS_VALUE, label: allLabel },
@@ -350,6 +365,7 @@ const filterRows = ({
   statusFilter,
   issueFilter,
   certificationFilter,
+  duplicateScope,
 }) => {
   const query = text(search).toLowerCase()
 
@@ -375,9 +391,15 @@ const filterRows = ({
     if (locationFilter !== ALL_ROWS_VALUE && row.location !== locationFilter) return false
     if (inspectedByFilter !== ALL_ROWS_VALUE && row.inspectedBy !== inspectedByFilter) return false
     if (statusFilter !== ALL_ROWS_VALUE && inspectionStatus !== statusFilter) return false
+    if ((duplicateScope === 'report' || duplicateScope === 'reports') && getReportCount(row) <= 1) {
+      return false
+    }
     if (issueFilter === 'with-issues' && Number(row.issueCount || 0) <= 0) return false
     if (issueFilter === 'no-issues' && Number(row.issueCount || 0) > 0) return false
     if (certificationFilter !== ALL_ROWS_VALUE && certificationStatus !== certificationFilter) {
+      return false
+    }
+    if (duplicateScope === 'locator' && Number(row.locatorDuplicateCount || 0) <= 1) {
       return false
     }
     return true
@@ -398,6 +420,11 @@ const sortRows = (rows, sort) => {
   if (sort === 'duplicates') {
     return next.sort((a, b) => getReportCount(b) - getReportCount(a))
   }
+  if (sort === 'locator-duplicates') {
+    return next.sort(
+      (a, b) => Number(b.locatorDuplicateCount || 0) - Number(a.locatorDuplicateCount || 0),
+    )
+  }
   return next.sort((a, b) => {
     const zoneDiff = getZoneSortValue(a.zone) - getZoneSortValue(b.zone)
     if (zoneDiff !== 0) return zoneDiff
@@ -415,6 +442,7 @@ const getSummary = (rows) => ({
   notInspected: rows.filter((row) => !row.latestInspectionAt).length,
   issues: rows.filter((row) => Number(row.issueCount || 0) > 0).length,
   duplicates: rows.filter((row) => getReportCount(row) > 1).length,
+  locatorDuplicates: rows.filter((row) => Number(row.locatorDuplicateCount || 0) > 1).length,
   expired: rows.filter((row) => getCertificationStatus(row) === 'expired').length,
 })
 
@@ -425,7 +453,7 @@ const indexColumnStyle = { width: '56px', minWidth: '56px' }
 const actionColumnStyle = { width: '72px', minWidth: '72px' }
 
 const AllExtinguishersTable = ({ visibleRows, onViewDetails }) => (
-  <div className="all-extinguishers-table-frame d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
+  <div className="all-extinguishers-table-frame d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-body">
     <CTable align="middle" className="all-extinguishers-table mb-0" hover responsive>
       <CTableHead color="light">
         <CTableRow>
@@ -454,7 +482,7 @@ const AllExtinguishersTable = ({ visibleRows, onViewDetails }) => (
             className="all-extinguishers-table__sticky-action-cell text-center"
             style={actionColumnStyle}
           >
-            Action
+            Actions
           </CTableHeaderCell>
         </CTableRow>
       </CTableHead>
@@ -1484,6 +1512,7 @@ const AllExtinguishersSection = ({ rows = null, isLoading = false, onViewDetails
   const [periodFrom, setPeriodFrom] = useState(getTodayDateInputValue)
   const [periodTo, setPeriodTo] = useState(getTodayDateInputValue)
   const [sort, setSort] = useState('zone-location')
+  const [duplicateScope, setDuplicateScope] = useState('all')
   const [zoneFilter, setZoneFilter] = useState(ALL_ROWS_VALUE)
   const [locationFilter, setLocationFilter] = useState(ALL_ROWS_VALUE)
   const [inspectedByFilter, setInspectedByFilter] = useState(ALL_ROWS_VALUE)
@@ -1529,6 +1558,7 @@ const AllExtinguishersSection = ({ rows = null, isLoading = false, onViewDetails
         location: locationFilter === ALL_ROWS_VALUE ? '' : locationFilter,
         page: currentPage,
         perPage: rowsToShow,
+        duplicateScope,
       })
       setRemoteRows(response.data)
       setRemoteMeta(response.meta)
@@ -1557,6 +1587,7 @@ const AllExtinguishersSection = ({ rows = null, isLoading = false, onViewDetails
     statusFilter,
     useProvidedRows,
     zoneFilter,
+    duplicateScope,
   ])
 
   useEffect(() => {
@@ -1677,6 +1708,7 @@ const AllExtinguishersSection = ({ rows = null, isLoading = false, onViewDetails
         statusFilter,
         issueFilter,
         certificationFilter,
+        duplicateScope,
       }),
       sort,
     )
@@ -1688,6 +1720,7 @@ const AllExtinguishersSection = ({ rows = null, isLoading = false, onViewDetails
     locationFilter,
     search,
     sort,
+    duplicateScope,
     statusFilter,
     useProvidedRows,
     zoneFilter,
@@ -1708,6 +1741,7 @@ const AllExtinguishersSection = ({ rows = null, isLoading = false, onViewDetails
     setZoneFilter(ALL_ROWS_VALUE)
     setLocationFilter(ALL_ROWS_VALUE)
     setInspectedByFilter(ALL_ROWS_VALUE)
+    setDuplicateScope('all')
     setStatusFilter(ALL_ROWS_VALUE)
     setIssueFilter(ALL_ROWS_VALUE)
     setCertificationFilter(ALL_ROWS_VALUE)
@@ -1794,6 +1828,7 @@ const AllExtinguishersSection = ({ rows = null, isLoading = false, onViewDetails
               { value: 'days-left', label: 'Days left' },
               { value: 'issues', label: 'Issues first' },
               { value: 'duplicates', label: 'Reports first' },
+              { value: 'locator-duplicates', label: 'Duplicate S/N first' },
             ],
           },
           {
@@ -1866,29 +1901,42 @@ const AllExtinguishersSection = ({ rows = null, isLoading = false, onViewDetails
       {isCustomPeriod ? (
         <CRow className="g-2 mb-3 align-items-end">
           <CCol xs={12} md={2}>
-            <CFormLabel className="text-muted mb-1">From</CFormLabel>
+            <CFormLabel htmlFor="extinguisher-period-from" className="text-muted mb-1">
+              From
+            </CFormLabel>
             <CFormInput
+              id="extinguisher-period-from"
+              aria-label="Custom period from date"
               size="sm"
               type="date"
               value={periodFrom}
               onChange={(event) => updatePeriodFrom(event.target.value)}
               invalid={!isCustomPeriodReady}
-              aria-label="Custom period from date"
+              aria-describedby={!isCustomPeriodReady ? 'extinguisher-period-error' : undefined}
             />
           </CCol>
           <CCol xs={12} md={2}>
-            <CFormLabel className="text-muted mb-1">To</CFormLabel>
+            <CFormLabel htmlFor="extinguisher-period-to" className="text-muted mb-1">
+              To
+            </CFormLabel>
             <CFormInput
+              id="extinguisher-period-to"
+              aria-label="Custom period to date"
               size="sm"
               type="date"
               value={periodTo}
               onChange={(event) => updatePeriodTo(event.target.value)}
               invalid={!isCustomPeriodReady}
-              aria-label="Custom period to date"
+              aria-describedby={!isCustomPeriodReady ? 'extinguisher-period-error' : undefined}
             />
           </CCol>
           {!isCustomPeriodReady ? (
-            <CCol xs={12} md="auto" className="text-danger small">
+            <CCol
+              id="extinguisher-period-error"
+              xs={12}
+              md="auto"
+              className="invalid-feedback d-block"
+            >
               Select a valid date range.
             </CCol>
           ) : null}
@@ -1898,13 +1946,113 @@ const AllExtinguishersSection = ({ rows = null, isLoading = false, onViewDetails
   )
 
   const renderSummaryStrip = (testId) => (
-    <div className="d-flex flex-wrap align-items-center gap-3 mb-3 small" data-testid={testId}>
-      <SummaryItem label="Total" value={summary.total} />
-      <SummaryItem label="Inspected" value={summary.inspected} tone="success" />
-      <SummaryItem label="Not inspected" value={summary.notInspected} tone="secondary" />
-      <SummaryItem label="Issues" value={summary.issues} tone="danger" />
-      <SummaryItem label="Repeat checks" value={summary.duplicates} tone="warning" />
-      <SummaryItem label="Expired" value={summary.expired} tone="danger" />
+    <div
+      className="all-extinguishers-summary-strip d-flex flex-wrap align-items-center gap-2 mb-3"
+      data-testid={testId}
+    >
+      <SummaryItem
+        label="Total"
+        value={summary.total}
+        onClick={() => {
+          resetToFirstPage()
+          setStatusFilter(ALL_ROWS_VALUE)
+          setIssueFilter(ALL_ROWS_VALUE)
+          setCertificationFilter(ALL_ROWS_VALUE)
+          setDuplicateScope('all')
+          setSort('zone-location')
+        }}
+      />
+      <SummaryItem
+        label="Inspected"
+        value={summary.inspected}
+        tone="success"
+        onClick={() => {
+          resetToFirstPage()
+          const nextStatus = statusFilter === 'inspected' ? ALL_ROWS_VALUE : 'inspected'
+          setStatusFilter(nextStatus)
+          setIssueFilter(ALL_ROWS_VALUE)
+          setDuplicateScope('all')
+          if (nextStatus === 'inspected') {
+            setSort('latest')
+          }
+        }}
+        isActive={statusFilter === 'inspected'}
+      />
+      <SummaryItem
+        label="Not inspected"
+        value={summary.notInspected}
+        tone="secondary"
+        onClick={() => {
+          resetToFirstPage()
+          const nextStatus = statusFilter === 'not-inspected' ? ALL_ROWS_VALUE : 'not-inspected'
+          setStatusFilter(nextStatus)
+          setIssueFilter(ALL_ROWS_VALUE)
+          setDuplicateScope('all')
+          if (nextStatus === 'not-inspected') {
+            setSort('zone-location')
+          }
+        }}
+        isActive={statusFilter === 'not-inspected'}
+      />
+      <SummaryItem
+        label="Issues"
+        value={summary.issues}
+        tone="danger"
+        onClick={() => {
+          resetToFirstPage()
+          const nextIssueFilter = issueFilter === 'with-issues' ? ALL_ROWS_VALUE : 'with-issues'
+          setIssueFilter(nextIssueFilter)
+          setStatusFilter(ALL_ROWS_VALUE)
+          setDuplicateScope('all')
+          if (nextIssueFilter === 'with-issues') {
+            setSort('issues')
+          }
+        }}
+        isActive={issueFilter === 'with-issues'}
+      />
+      <SummaryItem
+        label="Repeat checks"
+        value={summary.duplicates}
+        tone="warning"
+        onClick={() => {
+          resetToFirstPage()
+          const nextScope = duplicateScope === 'report' ? 'all' : 'report'
+          setDuplicateScope(nextScope)
+          if (nextScope === 'report') {
+            setSort('duplicates')
+          }
+        }}
+        isActive={duplicateScope === 'report'}
+      />
+      <SummaryItem
+        label="Duplicate S/N"
+        value={summary.locatorDuplicates}
+        tone="warning"
+        onClick={() => {
+          const nextScope = duplicateScope === 'locator' ? 'all' : 'locator'
+          resetToFirstPage()
+          setDuplicateScope(nextScope)
+          if (nextScope === 'locator') {
+            setSort('locator-duplicates')
+          }
+        }}
+        isActive={duplicateScope === 'locator'}
+      />
+      <SummaryItem
+        label="Expired"
+        value={summary.expired}
+        tone="danger"
+        onClick={() => {
+          resetToFirstPage()
+          const nextCertification = certificationFilter === 'expired' ? ALL_ROWS_VALUE : 'expired'
+          setCertificationFilter(nextCertification)
+          setDuplicateScope('all')
+          if (nextCertification === 'expired') {
+            setSort('days-left')
+          }
+        }}
+        isActive={certificationFilter === 'expired'}
+      />
     </div>
   )
 

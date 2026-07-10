@@ -93,7 +93,7 @@
 .notification-drawer-inline-confirm__btn {
   border: 1px solid rgba(15, 23, 42, 0.18);
   border-radius: 0.35rem;
-  background: #ffffff;
+  background: var(--cui-body-bg);
   color: #334155;
   font-size: 0.82rem;
   font-weight: 600;
@@ -351,7 +351,7 @@
       min-height: 2rem;
       border: 1px solid var(--cui-border-color);
       border-radius: 0.55rem;
-      background: #ffffff;
+      background: var(--cui-body-bg);
       color: var(--cui-primary);
       font-size: 0.84rem;
       font-weight: 700;
@@ -369,7 +369,7 @@
     .notification-drawer-empty {
       border: 1px solid var(--cui-border-color);
       border-radius: var(--mobile-overlay-item-radius);
-      background: #ffffff;
+      background: var(--cui-body-bg);
       color: var(--cui-secondary-color);
       padding: 0.8rem;
       font-size: 0.88rem;
@@ -380,6 +380,10 @@
       margin-top: var(--mobile-overlay-section-gap);
       margin-bottom: var(--mobile-overlay-section-bottom-gap);
       padding: 0.2rem 0.55rem;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: #475569;
       border-bottom: 0;
       background: transparent;
     }
@@ -390,11 +394,15 @@
       border-bottom: 0;
     }
 
+    .notification-drawer-group .notification-item:last-child {
+      border-bottom: 1px solid var(--cui-border-color);
+    }
+
     .notification-item {
       overflow: hidden;
       border: 1px solid var(--cui-border-color);
       border-radius: var(--mobile-overlay-item-radius);
-      background: #ffffff;
+      background: var(--cui-body-bg);
       min-height: var(--mobile-overlay-row-min-height);
     }
 
@@ -444,7 +452,7 @@
     }
 
     .notification-item-meta {
-      font-size: 0.82rem;
+      font-size: 0.84rem;
       line-height: 1.35;
     }
 

@@ -1,10 +1,17 @@
 import React from 'react'
-import { CButton, CFormInput } from '@coreui/react'
+import { CAlert, CButton, CFormInput } from '@coreui/react'
 import { Camera, ChevronDown, ChevronUp, ClipboardCheck, Trash2 } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
 import IconOptionGrid from 'src/components/IconOptionGrid'
 import TypeManagerModal from 'src/components/report-workflow/TypeManagerModal'
+import { ReportPhotoImage } from 'src/components/report-workflow/ReportViewComponents'
 import { uid } from '../../utils'
+import {
+  deleteReportMedia,
+  getReportPhotoBytes,
+  reportPhotoFailureMessage,
+  uploadReportPhotosSequentially,
+} from 'src/services/api/reportMediaApi'
 import {
   ACTIVE_CARD_BG,
   ACTIVE_CARD_BORDER,
@@ -17,8 +24,15 @@ import {
   normalizeKey,
   normalizeSection,
 } from './postIncidentAnalysisConstants'
-import { compressPhotoFile, isLikelyImageFile, readFileAsDataUrl } from './postIncidentImageUtils'
 import useIsMobile from './useIsMobile'
+import {
+  clearPendingCameraOperation,
+  getInterruptedCameraFallback,
+  isLikelyEmbeddedBrowser,
+  markPendingCameraOperation,
+  markPendingCameraUploadStarted,
+  subscribeToCameraReturn,
+} from 'src/utils/cameraRecovery'
 
 const MOBILE_SECTION_ORDER = [
   'strengths',
@@ -33,10 +47,26 @@ const MOBILE_SECTION_LABELS = {
   photos: 'Photos',
 }
 
-const PostIncidentAnalysisSection = ({ value, onChange, pushToast }) => {
+const PostIncidentAnalysisSection = ({ value, onChange, pushToast, onBeforeCameraOpen }) => {
   const section = React.useMemo(() => normalizeSection(value), [value])
   const isMobile = useIsMobile()
-  const photoInputRef = React.useRef(null)
+  const cameraPhotoInputRef = React.useRef(null)
+  const uploadPhotoInputRef = React.useRef(null)
+  const photoOperationRef = React.useRef(0)
+  const photoAbortRef = React.useRef(null)
+  const [isPhotoProcessing, setIsPhotoProcessing] = React.useState(false)
+  const [cameraPhotoFallback, setCameraPhotoFallback] = React.useState(
+    () => getInterruptedCameraFallback('erco')?.message || '',
+  )
+  const [photoUploadProgress, setPhotoUploadProgress] = React.useState(null)
+  React.useEffect(() => () => photoAbortRef.current?.abort(), [])
+  React.useEffect(
+    () =>
+      subscribeToCameraReturn('erco', (fallback) =>
+        setCameraPhotoFallback(fallback?.message || ''),
+      ),
+    [],
+  )
   const [showAllBySection, setShowAllBySection] = React.useState({
     strengths: false,
     resourcesMobilised: false,
@@ -52,9 +82,10 @@ const PostIncidentAnalysisSection = ({ value, onChange, pushToast }) => {
 
   const updateSection = (patch) => {
     if (typeof onChange !== 'function') return
-    onChange({
-      ...section,
-      ...patch,
+    onChange((currentValue) => {
+      const current = normalizeSection(currentValue)
+      const resolvedPatch = typeof patch === 'function' ? patch(current) : patch
+      return { ...current, ...resolvedPatch }
     })
   }
 
@@ -286,101 +317,78 @@ const PostIncidentAnalysisSection = ({ value, onChange, pushToast }) => {
     }
   }
 
-  const handleUploadPhotos = async (event) => {
-    const MAX_BYTES = 1.5 * 1024 * 1024
-    const TARGET_BYTES = 900 * 1024
+  const handleUploadPhotos = async (event, source = 'upload') => {
     const files = Array.from(event.target.files || [])
+    event.target.value = ''
     if (files.length === 0) return
+    if (source === 'camera') markPendingCameraUploadStarted('erco')
+    const operation = ++photoOperationRef.current
+    photoAbortRef.current?.abort()
+    const controller = new AbortController()
+    photoAbortRef.current = controller
+    setIsPhotoProcessing(true)
+    setCameraPhotoFallback('')
+    const existing = Array.isArray(section.photos) ? section.photos : []
+    const remaining = Math.max(0, 10 - existing.length)
+    if (!remaining) {
+      pushToast?.('Maximum 10 photos are allowed.', {
+        title: 'Photo limit reached',
+        color: 'warning',
+      })
+      setIsPhotoProcessing(false)
+      return
+    }
     try {
-      const processed = await Promise.all(
-        files.map(async (file) => {
-          if (!isLikelyImageFile(file)) {
-            return { kind: 'skipped', reason: 'not-image', file }
-          }
-
-          let finalFile = file
-          let wasCompressed = false
-          if (file.size > TARGET_BYTES) {
-            finalFile = await compressPhotoFile(file, TARGET_BYTES)
-            wasCompressed = finalFile.size < file.size
-          }
-
-          if (finalFile.size > MAX_BYTES) {
-            return { kind: 'skipped', reason: 'too-large', file: finalFile }
-          }
-
-          return { kind: 'ok', file: finalFile, wasCompressed }
-        }),
-      )
-
-      const accepted = processed.filter((row) => row.kind === 'ok')
-      const skippedTooLarge = processed.filter(
-        (row) => row.kind === 'skipped' && row.reason === 'too-large',
-      ).length
-      const skippedNotImage = processed.filter(
-        (row) => row.kind === 'skipped' && row.reason === 'not-image',
-      ).length
-      const compressedCount = accepted.filter((row) => row.wasCompressed).length
-
-      if (accepted.length === 0) {
-        if (skippedTooLarge > 0) {
-          pushToast?.(
-            `${skippedTooLarge} photo${skippedTooLarge > 1 ? 's were' : ' was'} still above 1.5 MB after compression.`,
-            { title: 'Photo too large', color: 'warning' },
-          )
-        }
-        if (skippedNotImage > 0) {
-          pushToast?.(
-            `${skippedNotImage} file${skippedNotImage > 1 ? 's are' : ' is'} not a valid image.`,
-            { title: 'Invalid file', color: 'warning' },
-          )
-        }
+      const failures = []
+      const uploaded = await uploadReportPhotosSequentially({
+        files: files.slice(0, remaining),
+        module: 'erco',
+        source,
+        signal: controller.signal,
+        onFailure: (failure) => failures.push(failure),
+        onProgress: (progress) => setPhotoUploadProgress({ ...progress, retrying: false }),
+        onRetry: (progress) => setPhotoUploadProgress({ ...progress, percent: 0, retrying: true }),
+      })
+      if (operation !== photoOperationRef.current) {
+        await Promise.all(uploaded.map((photo) => deleteReportMedia(photo.mediaId)))
         return
       }
-
-      const nextPhotos = await Promise.all(
-        accepted.map(async (row) => ({
-          id: uid(),
-          fileName: String(row?.file?.name || 'photo'),
-          url: await readFileAsDataUrl(row.file),
-          description: '',
-        })),
+      let total = existing.reduce((sum, photo) => sum + getReportPhotoBytes(photo), 0)
+      const accepted = []
+      for (const photo of uploaded) {
+        if (total + photo.sizeBytes > 12 * 1024 * 1024) {
+          await deleteReportMedia(photo.mediaId)
+          failures.push({ code: 'total_size_exceeded', fileName: photo.fileName })
+        } else {
+          total += photo.sizeBytes
+          accepted.push({ id: uid(), ...photo, description: '' })
+        }
+      }
+      if (accepted.length) {
+        updateSection((current) => ({
+          photos: [...(Array.isArray(current.photos) ? current.photos : []), ...accepted],
+        }))
+        pushToast?.(
+          `${accepted.length} photo${accepted.length > 1 ? 's' : ''} added to post-incident analysis.`,
+          { title: 'Photos updated', color: 'success' },
+        )
+        clearPendingCameraOperation()
+      }
+      failures.forEach((failure) =>
+        pushToast?.(
+          failure.code === 'total_size_exceeded'
+            ? 'Total photo size must be 12 MB or smaller.'
+            : reportPhotoFailureMessage(failure.code, failure.fileName),
+          { title: 'Upload warning', color: 'warning' },
+        ),
       )
-      updateSection({
-        photos: [...(Array.isArray(section.photos) ? section.photos : []), ...nextPhotos],
-      })
-
-      const baseMessage = `${accepted.length} photo${accepted.length > 1 ? 's' : ''} added to post-incident analysis.`
-      if (compressedCount > 0) {
-        pushToast?.(`${baseMessage} ${compressedCount} auto-compressed.`, {
-          title: 'Photos updated',
-          color: 'success',
-        })
-      } else {
-        pushToast?.(baseMessage, {
-          title: 'Photos updated',
-          color: 'success',
-        })
-      }
-      if (skippedTooLarge > 0) {
-        pushToast?.(
-          `${skippedTooLarge} photo${skippedTooLarge > 1 ? 's were' : ' was'} skipped because it remained above 1.5 MB after compression.`,
-          { title: 'Photo too large', color: 'warning' },
-        )
-      }
-      if (skippedNotImage > 0) {
-        pushToast?.(
-          `${skippedNotImage} file${skippedNotImage > 1 ? 's were' : ' was'} skipped because only images are supported.`,
-          { title: 'Invalid file', color: 'warning' },
-        )
-      }
-    } catch {
-      pushToast?.('Unable to process one or more photos.', {
-        title: 'Upload failed',
-        color: 'danger',
-      })
+      if (source === 'camera' && failures.length)
+        setCameraPhotoFallback(reportPhotoFailureMessage(failures[0].code, failures[0].fileName))
+    } catch (error) {
+      if (error?.name !== 'AbortError')
+        setCameraPhotoFallback(source === 'camera' ? reportPhotoFailureMessage(error?.code) : '')
     } finally {
-      event.target.value = ''
+      if (operation === photoOperationRef.current) setIsPhotoProcessing(false)
     }
   }
 
@@ -433,7 +441,7 @@ const PostIncidentAnalysisSection = ({ value, onChange, pushToast }) => {
                   borderStyle: 'dashed',
                 },
                 className: 'text-primary',
-                iconContainerClassName: 'bg-white text-primary',
+                iconContainerClassName: 'bg-body text-primary',
                 titleClassName: 'fw-semibold text-primary',
                 descriptionClassName: 'mb-0 mt-1 text-body-secondary',
               }
@@ -551,18 +559,83 @@ const PostIncidentAnalysisSection = ({ value, onChange, pushToast }) => {
         <CreateActionButton
           label="Add photo"
           icon={<Camera size={13} className="me-1 align-text-bottom" />}
-          onClick={() => photoInputRef.current?.click()}
+          onClick={() => {
+            if (navigator.onLine === false) {
+              setCameraPhotoFallback('Connect to the internet before taking or uploading a photo.')
+              return
+            }
+            if (isLikelyEmbeddedBrowser()) {
+              setCameraPhotoFallback(
+                'Open this page in Safari, Chrome, Edge, or Samsung Internet to use the camera.',
+              )
+              return
+            }
+            markPendingCameraOperation({
+              module: 'erco',
+              targetKind: 'postIncidentAnalysis',
+              photosKey: 'photos',
+            })
+            try {
+              Promise.resolve(onBeforeCameraOpen?.()).catch(() => {})
+            } catch {
+              // Draft persistence is best-effort and must not block the native camera.
+            }
+            cameraPhotoInputRef.current?.click()
+          }}
+          disabled={isPhotoProcessing}
         />
+        <CButton
+          type="button"
+          color="secondary"
+          variant="outline"
+          size="sm"
+          disabled={isPhotoProcessing}
+          onClick={() => uploadPhotoInputRef.current?.click()}
+        >
+          Upload photos
+        </CButton>
       </div>
       <CFormInput
-        ref={photoInputRef}
+        ref={cameraPhotoInputRef}
         id="post-analysis-photo-upload"
         type="file"
+        aria-label="Take post-incident photo"
         accept="image/*"
-        multiple
-        onChange={handleUploadPhotos}
+        capture="environment"
+        onChange={(event) => handleUploadPhotos(event, 'camera')}
         className="d-none"
+        disabled={isPhotoProcessing}
       />
+      <CFormInput
+        ref={uploadPhotoInputRef}
+        type="file"
+        aria-label="Upload post-incident photos"
+        accept=".jpg,.jpeg,.png,.webp,.heic,.heif,image/jpeg,image/png,image/webp,image/heic,image/heif"
+        multiple
+        onChange={(event) => handleUploadPhotos(event, 'upload')}
+        className="d-none"
+        disabled={isPhotoProcessing}
+      />
+      {cameraPhotoFallback ? (
+        <CAlert color="warning" className="mb-0">
+          {cameraPhotoFallback}{' '}
+          <CButton
+            type="button"
+            color="warning"
+            size="sm"
+            className="ms-2"
+            onClick={() => uploadPhotoInputRef.current?.click()}
+          >
+            Upload photo
+          </CButton>
+        </CAlert>
+      ) : null}
+      {isPhotoProcessing ? (
+        <div className="small text-body-secondary" role="status">
+          {photoUploadProgress?.retrying ? 'Retrying photo upload' : 'Uploading photo'}{' '}
+          {Number(photoUploadProgress?.percent || 0)}%
+        </div>
+      ) : null}
       {Array.isArray(section.photos) && section.photos.length > 0 ? (
         <div
           style={{
@@ -576,8 +649,8 @@ const PostIncidentAnalysisSection = ({ value, onChange, pushToast }) => {
               key={photo.id || `${photo.fileName || 'photo'}-${index}`}
               className="rounded-3 border border-light-subtle p-2 d-grid gap-2"
             >
-              <img
-                src={photo.url}
+              <ReportPhotoImage
+                photo={photo}
                 alt={photo.fileName || 'Incident photo'}
                 style={{
                   width: '100%',
@@ -589,6 +662,7 @@ const PostIncidentAnalysisSection = ({ value, onChange, pushToast }) => {
               <div className="small text-truncate">{photo.fileName || 'Photo'}</div>
               <CFormInput
                 size="sm"
+                aria-label={`Description for ${photo.fileName || 'photo'}`}
                 value={String(photo?.description || '')}
                 placeholder="Add image description"
                 onChange={(event) => updatePhotoDescription(photo.id, event.target.value)}

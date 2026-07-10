@@ -1,20 +1,11 @@
 import React, { useCallback, useRef, useState } from 'react'
-import {
-  CAlert,
-  CContainer,
-  CNav,
-  CNavItem,
-  CNavLink,
-  CToast,
-  CToastBody,
-  CToastHeader,
-  CToaster,
-} from '@coreui/react'
+import { CAlert, CContainer, CToast, CToastBody, CToastHeader, CToaster } from '@coreui/react'
 import { useSelector } from 'react-redux'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
 import ModulePageHeader from 'src/components/ModulePageHeader'
+import ModuleNavTabs from 'src/components/ModuleNavTabs'
 import { isHolidayGuidanceLeaveEnabledForUser } from 'src/config/featureFlags'
 import { hasPermission } from 'src/utils/authz'
 import useTableRows from 'src/hooks/useTableRows'
@@ -412,38 +403,22 @@ const Leave = () => {
         onClose={closeDeleteConfirmModal}
         onConfirm={confirmDeleteLeave}
       />
-      <CNav variant="underline" className="mb-3 flex-nowrap overflow-auto">
-        <CNavItem>
-          <CNavLink
-            active={activeSection === 'leave-records' || activeSection === 'leave-detail'}
-            aria-current={
-              activeSection === 'leave-records' || activeSection === 'leave-detail'
-                ? 'page'
-                : undefined
-            }
-            onClick={() => runWithDiscardGuard(() => navigate('/leave'))}
-            style={{ cursor: 'pointer' }}
-            className={
-              activeSection === 'leave-records' || activeSection === 'leave-detail'
-                ? 'text-primary'
-                : ''
-            }
-          >
-            Leave Records
-          </CNavLink>
-        </CNavItem>
-        <CNavItem>
-          <CNavLink
-            active={activeSection === 'new-leave'}
-            aria-current={activeSection === 'new-leave' ? 'page' : undefined}
-            onClick={() => runWithDiscardGuard(startNewLeave)}
-            style={{ cursor: 'pointer' }}
-            className={activeSection === 'new-leave' ? 'text-primary' : ''}
-          >
-            Apply Leave
-          </CNavLink>
-        </CNavItem>
-      </CNav>
+      <ModuleNavTabs
+        items={[
+          {
+            key: 'records',
+            label: 'Leave records',
+            active: activeSection === 'leave-records' || activeSection === 'leave-detail',
+            onClick: () => runWithDiscardGuard(() => navigate('/leave')),
+          },
+          {
+            key: 'apply',
+            label: 'Apply leave',
+            active: activeSection === 'new-leave',
+            onClick: () => runWithDiscardGuard(startNewLeave),
+          },
+        ]}
+      />
 
       {activeSection === 'leave-records' && (
         <div data-testid="leave-records">

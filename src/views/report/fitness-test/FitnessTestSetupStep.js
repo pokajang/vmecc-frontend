@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { CButton, CCol, CFormInput, CFormLabel, CRow } from '@coreui/react'
+import { CButton, CCol, CFormFeedback, CFormInput, CFormLabel, CRow } from '@coreui/react'
 import IconOptionGrid from 'src/components/IconOptionGrid'
 import {
   FITNESS_TEST_CONDITION_OPTIONS,
@@ -170,13 +170,15 @@ const FitnessTestSetupStep = ({
           />
           <CRow className="g-2">
             <CCol xs={12} md={4}>
-              <CFormLabel>Custom Test Date</CFormLabel>
+              <CFormLabel htmlFor="fitness-test-date">Custom test date</CFormLabel>
               <CFormInput
+                id="fitness-test-date"
                 type="date"
                 value={form.reportDate}
                 invalid={Boolean(setupFieldErrors.reportDate)}
                 onChange={(event) => updateSetupField('reportDate', event.target.value)}
               />
+              <CFormFeedback invalid>{setupFieldErrors.reportDate}</CFormFeedback>
             </CCol>
           </CRow>
           <SelectionCards
@@ -188,13 +190,15 @@ const FitnessTestSetupStep = ({
           />
           <CRow className="g-2">
             <CCol xs={12} md={4}>
-              <CFormLabel>Custom Start Time</CFormLabel>
+              <CFormLabel htmlFor="fitness-test-time">Custom start time</CFormLabel>
               <CFormInput
+                id="fitness-test-time"
                 type="time"
                 value={form.reportTime}
                 invalid={Boolean(setupFieldErrors.reportTime)}
                 onChange={(event) => updateSetupField('reportTime', event.target.value)}
               />
+              <CFormFeedback invalid>{setupFieldErrors.reportTime}</CFormFeedback>
             </CCol>
           </CRow>
           {form.reportDate && form.reportTime ? (

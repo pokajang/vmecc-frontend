@@ -3,9 +3,6 @@ import {
   CAlert,
   CBadge,
   CContainer,
-  CNav,
-  CNavItem,
-  CNavLink,
   CToast,
   CToastBody,
   CToastHeader,
@@ -16,6 +13,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
 import ModulePageHeader from 'src/components/ModulePageHeader'
+import ModuleNavTabs from 'src/components/ModuleNavTabs'
 import { useNavigationGuard } from 'src/contexts/NavigationGuardContext'
 import { isHolidayGuidanceOvertimeEnabledForUser } from 'src/config/featureFlags'
 import { hasPermission, isSystemAdministrator } from 'src/utils/authz'
@@ -624,38 +622,22 @@ const Overtime = () => {
         onClose={closeDeleteConfirmModal}
         onConfirm={confirmDeleteOvertime}
       />
-      <CNav variant="underline" className="mb-3 flex-nowrap overflow-auto">
-        <CNavItem>
-          <CNavLink
-            active={activeSection === 'overtime-records' || activeSection === 'overtime-detail'}
-            aria-current={
-              activeSection === 'overtime-records' || activeSection === 'overtime-detail'
-                ? 'page'
-                : undefined
-            }
-            onClick={() => runWithDiscardGuard(() => navigate('/overtime'))}
-            style={{ cursor: 'pointer' }}
-            className={
-              activeSection === 'overtime-records' || activeSection === 'overtime-detail'
-                ? 'text-primary'
-                : ''
-            }
-          >
-            Overtime Records
-          </CNavLink>
-        </CNavItem>
-        <CNavItem>
-          <CNavLink
-            active={activeSection === 'new-overtime'}
-            aria-current={activeSection === 'new-overtime' ? 'page' : undefined}
-            onClick={() => runWithDiscardGuard(startNewOvertime)}
-            style={{ cursor: 'pointer' }}
-            className={activeSection === 'new-overtime' ? 'text-primary' : ''}
-          >
-            Apply Overtime
-          </CNavLink>
-        </CNavItem>
-      </CNav>
+      <ModuleNavTabs
+        items={[
+          {
+            key: 'records',
+            label: 'Overtime records',
+            active: activeSection === 'overtime-records' || activeSection === 'overtime-detail',
+            onClick: () => runWithDiscardGuard(() => navigate('/overtime')),
+          },
+          {
+            key: 'apply',
+            label: 'Apply overtime',
+            active: activeSection === 'new-overtime',
+            onClick: () => runWithDiscardGuard(startNewOvertime),
+          },
+        ]}
+      />
 
       {activeSection === 'overtime-records' ? (
         <div data-testid="overtime-records">

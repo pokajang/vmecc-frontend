@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, waitFor } from '@testing-library/react'
+import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import { Provider } from 'react-redux'
 import { legacy_createStore as createStore } from 'redux'
 
@@ -98,5 +98,17 @@ describe('App session recheck', () => {
     await waitFor(() => expect(fetchSession).toHaveBeenCalledTimes(2))
     await waitFor(() => expect(store.getState().authStatus).toBe('authenticated'))
     expect(store.getState().authUser).toEqual({ id: 1, email: 'user@example.test' })
+  })
+
+  it('shows a retryable error when session bootstrap is temporarily unavailable', async () => {
+    fetchSession.mockRejectedValueOnce(
+      Object.assign(new Error('Server unavailable'), { status: 503 }),
+    )
+
+    const store = renderApp()
+
+    await waitFor(() => expect(store.getState().authStatus).toBe('temporarily_unavailable'))
+    expect(screen.getByRole('alert').textContent).toContain('Unable to restore session')
+    expect(screen.getByRole('button', { name: /retry session check/i })).toBeTruthy()
   })
 })

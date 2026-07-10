@@ -1,6 +1,7 @@
 const text = (value) => String(value || '').trim()
 
 const QUERY_KEYS = ['locator', 'code', 'barcode', 'serial', 'sn']
+const FIRE_EXTINGUISHER_SERIAL_PATTERN = /^[A-Z]{2}\d{6}[A-Z]\d{6}$/
 
 const normalizeLocator = (value) =>
   text(value)
@@ -30,6 +31,40 @@ const parseUrlLocator = (value) => {
   }
 }
 
+const normalizeSerialCandidate = (value) => {
+  const normalized = normalizeLocator(value).split(';')[0]?.trim() || ''
+  return normalized.toUpperCase()
+}
+
+export const isValidFireExtinguisherSerial = (value) =>
+  FIRE_EXTINGUISHER_SERIAL_PATTERN.test(normalizeSerialCandidate(value))
+
+export const extractFireExtinguisherSerial = (rawValue) => {
+  const raw = text(rawValue)
+  if (!raw) return ''
+
+  const candidates = []
+  const urlLocator = /^(https?:|\/)/i.test(raw) ? parseUrlLocator(raw) : ''
+  if (urlLocator) candidates.push(urlLocator)
+
+  const labelledMatch = raw.match(
+    /\b(?:s\s*\/?\s*n|serial(?:\s*(?:number|no\.?))?|barcode)\s*[:#-]?\s*([A-Z0-9][A-Z0-9/_-]*)/i,
+  )
+  if (labelledMatch?.[1]) candidates.push(labelledMatch[1])
+
+  candidates.push(raw.split(';')[0], raw)
+
+  const embeddedSerial = raw.match(/[A-Z]{2}\d{6}[A-Z]\d{6}/i)
+  if (embeddedSerial?.[0]) candidates.push(embeddedSerial[0])
+
+  for (const candidate of candidates) {
+    const serial = normalizeSerialCandidate(candidate)
+    if (isValidFireExtinguisherSerial(serial)) return serial
+  }
+
+  return ''
+}
+
 export const extractFireExtinguisherLocator = (rawValue) => {
   const raw = text(rawValue)
   if (!raw) return ''
@@ -41,6 +76,11 @@ export const extractFireExtinguisherLocator = (rawValue) => {
     /\b(?:s\s*\/?\s*n|serial(?:\s*(?:number|no\.?))?|barcode)\s*[:#-]?\s*([A-Z0-9][A-Z0-9/_-]*)/i,
   )
   if (labelledMatch?.[1]) return normalizeLocator(labelledMatch[1])
+
+  if (raw.includes(';')) {
+    const semicolonLocator = normalizeLocator(raw.split(';')[0])
+    if (semicolonLocator) return semicolonLocator
+  }
 
   return normalizeLocator(raw)
 }

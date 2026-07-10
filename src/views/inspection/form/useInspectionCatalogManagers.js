@@ -9,12 +9,15 @@ import {
   createFireExtinguisherOption,
   deleteFireExtinguisherOption,
   saveCachedFireExtinguisherCatalog,
+  lookupFireExtinguisherByLocator,
+  normalizeFireExtinguisherCatalogRows,
   updateFireExtinguisherOption,
 } from 'src/views/inspection/inspectionFireExtinguisherApi'
 import {
   normalizeErAuxEquipmentRows,
   normalizeHydraulicEquipmentRows,
 } from './inspectionFormHelpers'
+import { extractFireExtinguisherLocator } from '../types/fire-extinguisher/locator'
 import { sameFireExtinguisherAsset } from '../types/fire-extinguisher/identity'
 import useInspectionFireTruckManager from './useInspectionFireTruckManager'
 
@@ -154,6 +157,7 @@ const useInspectionCatalogManagers = ({
       if (!saved) throw new Error('Fire extinguisher was not saved.')
       persistFireExtinguisherRows([...fireExtinguisherRows, saved])
       pushToast('Fire extinguisher added.', { title: 'Catalog saved', color: 'success' })
+      return saved
     } catch (error) {
       pushToast(
         error?.response?.data?.message || error?.message || 'Unable to save extinguisher.',
@@ -162,12 +166,13 @@ const useInspectionCatalogManagers = ({
           color: 'danger',
         },
       )
+      return false
     }
   }
 
   const updateFireExtinguisher = async (row, payload) => {
     const catalogId = String(row?.catalogId || row?.id || '').trim()
-    if (!catalogId) return
+    if (!catalogId) return false
     try {
       const saved = await updateFireExtinguisherOption(catalogId, {
         ...payload,
@@ -187,6 +192,7 @@ const useInspectionCatalogManagers = ({
           : 'Fire extinguisher updated.',
         { title: 'Catalog saved', color: 'success' },
       )
+      return saved
     } catch (error) {
       pushToast(
         error?.response?.data?.message || error?.message || 'Unable to update extinguisher.',
@@ -195,6 +201,31 @@ const useInspectionCatalogManagers = ({
           color: 'danger',
         },
       )
+      return false
+    }
+  }
+
+  const filterFireExtinguisherLocatorConflicts = async ({ locator = '', catalogId = '' } = {}) => {
+    const normalizedLocator = extractFireExtinguisherLocator(locator)
+    if (!normalizedLocator) return []
+    const targetCatalogId = String(catalogId || '').trim()
+
+    try {
+      const lookup = await lookupFireExtinguisherByLocator(normalizedLocator)
+      const row = lookup?.data || null
+      if (!row) return []
+      return String(row.catalogId || row.id || '').trim() === targetCatalogId ? [] : [row]
+    } catch (error) {
+      if (Number(error?.status || 0) === 404) return []
+      if (Number(error?.status || 0) === 409) {
+        const rows = Array.isArray(error?.payload?.data) ? error.payload.data : []
+        const normalized = normalizeFireExtinguisherCatalogRows(rows)
+        return normalized.filter(
+          (candidate) =>
+            String(candidate?.catalogId || candidate?.id || '').trim() !== targetCatalogId,
+        )
+      }
+      throw error
     }
   }
 
@@ -454,6 +485,7 @@ const useInspectionCatalogManagers = ({
     setEditingEquipmentMode: setEquipmentEditMode,
     setEquipmentDeleteTarget,
     setEquipmentError,
+    filterFireExtinguisherLocatorConflicts,
     setFireExtinguisherDeleteTarget,
     setFireTruckDeleteTarget: fireTruck.setFireTruckDeleteTarget,
     setFireTruckError: fireTruck.setFireTruckError,

@@ -1,5 +1,6 @@
 import { dedupePhotos } from 'src/views/inspection/inspectionSharedUtils'
 import { getScopedProgressLabel } from 'src/views/inspection/form/inspectionCountLabels'
+import { neutralizeCompletionPresentation } from '../continuationHelpers'
 import { FRT_REFERENCE, FRT_TRUCK_REFERENCE } from './reference'
 import {
   defaultFrtTruckOption,
@@ -433,7 +434,7 @@ export const getFrtCompartmentOptions = (form = {}) => {
     ).length
     const totalCount = rows.length || option.dailyRowCount + option.oneOffRowCount
     const isDone = totalCount > 0 && inspectedCount === totalCount
-    return {
+    return neutralizeCompletionPresentation({
       ...option,
       metaLabel: getScopedProgressLabel({
         completedCount: inspectedCount,
@@ -448,7 +449,7 @@ export const getFrtCompartmentOptions = (form = {}) => {
         totalCount,
         isDone,
       },
-    }
+    })
   })
 }
 

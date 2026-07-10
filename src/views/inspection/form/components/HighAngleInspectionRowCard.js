@@ -4,7 +4,11 @@ import { Camera, CheckCircle2, Circle, TriangleAlert } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
 import { hasHighAngleInspectionData } from '../inspectionResetActions'
 import InspectionItemAdditionalInfo from './InspectionItemAdditionalInfo'
-import { buildInspectionElementActions, InspectionElementCard } from './InspectionElementUi'
+import {
+  buildInspectionElementActions,
+  InspectionElementCard,
+  InspectionElementValidationBadges,
+} from './InspectionElementUi'
 import {
   HIGH_ANGLE_CONDITION_FIELD,
   HIGH_ANGLE_STATUS_OPTIONS,
@@ -28,6 +32,23 @@ const stripHighAngleDisplayMeta = (row = {}) => {
 
 const formatHighAngleRowMeta = (row = {}) =>
   `Row ${row.rowNumber || '--'} - Qty ${row.quantity || '--'}`
+
+export const getHighAngleWorkflowState = (row = {}) => {
+  const condition = text(row.condition)
+  const hasIssue = condition === 'Not Good'
+  const hasRemarks = text(row.conditionRemarks || row.remarks) !== ''
+  const photos = Array.isArray(row.conditionPhotos) ? row.conditionPhotos : []
+  const missingEvidenceCount =
+    (hasIssue && !hasRemarks ? 1 : 0) + (hasIssue && photos.length === 0 ? 1 : 0)
+  const missingCount = (condition ? 0 : 1) + missingEvidenceCount
+
+  return {
+    hasIssue,
+    isComplete: missingCount === 0,
+    missingCount,
+    needsEvidence: missingEvidenceCount > 0,
+  }
+}
 
 const HighAngleStatusSegment = ({ value, onChange, readOnly = false }) => (
   <div className="inspection-hydraulic-status-group d-flex flex-nowrap justify-content-start gap-2 overflow-auto pb-1">
@@ -59,8 +80,8 @@ const HighAngleStatusSegment = ({ value, onChange, readOnly = false }) => (
   </div>
 )
 
-const HighAngleStatusInline = ({ row, hasIssue = false, hasRetainedEvidence = false }) => {
-  const isComplete = text(row.condition) !== ''
+const HighAngleStatusInline = ({ workflowState, hasRetainedEvidence = false }) => {
+  const isComplete = workflowState?.isComplete
   const completionLabel = isComplete ? 'Checked' : 'Not checked'
 
   return (
@@ -79,7 +100,7 @@ const HighAngleStatusInline = ({ row, hasIssue = false, hasRetainedEvidence = fa
         )}
         <span className="fw-normal">{completionLabel}</span>
       </span>
-      {hasIssue ? (
+      {workflowState?.hasIssue ? (
         <span
           className="d-inline-flex align-items-center gap-1 text-danger"
           aria-label="Issue"
@@ -105,6 +126,7 @@ const HighAngleStatusInline = ({ row, hasIssue = false, hasRetainedEvidence = fa
 
 export const HighAngleInspectionRowDetails = ({
   row,
+  bodyId,
   readOnly = false,
   remarksError = false,
   setPhotoViewer,
@@ -114,6 +136,7 @@ export const HighAngleInspectionRowDetails = ({
   onRemovePhoto,
   onChangePhotoDescription,
   onApplyPhotoCaption,
+  onMarkRowOk,
 }) => {
   const hasIssue = text(row.condition) === 'Not Good'
   const conditionRemarks = String(row.conditionRemarks || row.remarks || '')
@@ -178,6 +201,21 @@ export const HighAngleInspectionRowDetails = ({
     </>
   ) : (
     <>
+      {onMarkRowOk ? (
+        <div className="d-flex justify-content-end">
+          <CButton
+            type="button"
+            color={text(row.condition) === 'Good' ? 'primary' : 'secondary'}
+            variant={text(row.condition) === 'Good' ? undefined : 'outline'}
+            size="sm"
+            className="inspection-compact-action-btn"
+            aria-pressed={text(row.condition) === 'Good'}
+            onClick={() => onMarkRowOk(sourceRow)}
+          >
+            All Good
+          </CButton>
+        </div>
+      ) : null}
       <div className="inspection-hydraulic-check-row inspection-hydraulic-check-row--stacked d-grid gap-2">
         <CFormLabel className="inspection-hydraulic-check-label small fw-semibold text-muted mb-0">
           Condition
@@ -193,8 +231,14 @@ export const HighAngleInspectionRowDetails = ({
       </div>
       {hasIssue ? (
         <div className="inspection-hydraulic-defect-evidence rounded-3 border bg-light-subtle p-2 d-grid gap-2">
-          <CFormLabel className="small fw-semibold text-muted mb-1">Issue evidence</CFormLabel>
+          <CFormLabel
+            htmlFor={`${bodyId}-issue-remarks`}
+            className="small fw-semibold text-muted mb-1"
+          >
+            Issue evidence
+          </CFormLabel>
           <CFormTextarea
+            id={`${bodyId}-issue-remarks`}
             rows={2}
             value={conditionRemarks}
             placeholder="Issue remarks"
@@ -327,6 +371,7 @@ const HighAngleInspectionRowCard = ({
   onRemovePhoto,
   onChangePhotoDescription,
   onApplyPhotoCaption,
+  onMarkRowOk,
   onEditItem,
   onDeleteItem,
   active = false,
@@ -335,6 +380,7 @@ const HighAngleInspectionRowCard = ({
 }) => {
   const hasIssue = text(row.condition) === 'Not Good'
   const hasRetainedEvidence = getHighAngleRetainedEvidenceRows([row]).length > 0
+  const workflowState = getHighAngleWorkflowState(row)
   const rowId = getHighAngleRowId(row)
   const bodyId = `high-angle-checks-${rowId.replace(/[^A-Za-z0-9_-]/g, '-')}`
   const canToggle = !readOnly && typeof onToggleExpanded === 'function'
@@ -359,10 +405,27 @@ const HighAngleInspectionRowCard = ({
       meta={formatHighAngleRowMeta(row)}
       status={
         <HighAngleStatusInline
-          row={row}
-          hasIssue={hasIssue}
+          workflowState={workflowState}
           hasRetainedEvidence={hasRetainedEvidence}
         />
+      }
+      badges={
+        <>
+          {hasRetainedEvidence ? (
+            <span className="badge text-bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+              Retained evidence
+            </span>
+          ) : null}
+          <InspectionElementValidationBadges
+            missingCount={workflowState.missingCount}
+            needsEvidence={workflowState.needsEvidence}
+          />
+        </>
+      }
+      helperLines={
+        hasRetainedEvidence
+          ? 'Evidence from an earlier status is retained for audit context.'
+          : null
       }
       actions={actionItems}
       actionLabel={`High angle actions for ${row.equipment || 'Equipment'}`}
@@ -377,6 +440,7 @@ const HighAngleInspectionRowCard = ({
     >
       <HighAngleInspectionRowDetails
         row={row}
+        bodyId={bodyId}
         readOnly={readOnly}
         remarksError={remarksError}
         setPhotoViewer={setPhotoViewer}
@@ -386,6 +450,7 @@ const HighAngleInspectionRowCard = ({
         onRemovePhoto={onRemovePhoto}
         onChangePhotoDescription={onChangePhotoDescription}
         onApplyPhotoCaption={onApplyPhotoCaption}
+        onMarkRowOk={onMarkRowOk}
       />
     </InspectionElementCard>
   )

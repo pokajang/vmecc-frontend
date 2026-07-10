@@ -1,4 +1,5 @@
 import React from 'react'
+import { getStatusColor, PAYROLL_STATUS_COLOR } from 'src/constants/statusPresentation'
 import {
   CBadge,
   CTable,
@@ -107,17 +108,6 @@ const PAYROLL_GATES = [
 ]
 
 const TERMINAL_STATUSES = ['Approved', 'Paid', 'Rejected', 'Cancelled']
-const STATUS_COLORS = {
-  Approved: 'success',
-  Paid: 'success',
-  Rejected: 'danger',
-  Cancelled: 'secondary',
-  Pending: 'warning',
-  Checked: 'info',
-  Reviewed: 'info',
-  Draft: 'secondary',
-}
-
 const resolveStatusLabel = (claim = {}) => {
   if (claim?.isDraft) return claim?.localOnly ? 'Draft (Syncing)' : 'Draft'
   return String(claim?.status || '').trim() || '-'
@@ -139,7 +129,7 @@ const resolveNextState = (claim = {}) => {
 
 const renderStatusBadge = (claim = {}) => {
   const status = resolveStatusLabel(claim)
-  return <CBadge color={STATUS_COLORS[status] || 'secondary'}>{status}</CBadge>
+  return <CBadge color={getStatusColor(status, PAYROLL_STATUS_COLOR)}>{status}</CBadge>
 }
 
 const ClaimListTable = ({
@@ -298,7 +288,7 @@ const ClaimListTable = ({
   return (
     <>
       <MobileRecordList sections={mobileRecordSections} variant="list-group" />
-      <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
+      <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-body">
         <CTable align="middle" className="mb-0" hover responsive>
           <CTableHead color="light">
             <CTableRow>
@@ -311,7 +301,7 @@ const ClaimListTable = ({
               <CTableHeaderCell>Submitted</CTableHeaderCell>
               <CTableHeaderCell className="text-end">Amount</CTableHeaderCell>
               <CTableHeaderCell>Status</CTableHeaderCell>
-              <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
+              <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
             </CTableRow>
           </CTableHead>
           <CTableBody>

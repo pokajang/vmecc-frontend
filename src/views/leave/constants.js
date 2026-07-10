@@ -12,13 +12,7 @@ export const leaveSortOptions = [
   { value: 'days:asc', label: 'Least days' },
 ]
 
-export const statusColorMap = {
-  Draft: 'secondary',
-  Pending: 'warning',
-  Approved: 'success',
-  Rejected: 'danger',
-  Cancelled: 'dark',
-}
+export { WORKFLOW_STATUS_COLOR as statusColorMap } from 'src/constants/statusPresentation'
 
 export const LEAVE_TYPE_ID_MARKERS = {
   'Annual Leave': 'AL',

@@ -202,6 +202,7 @@ const ChronologySection = ({
                 <div className="flex-grow-1" style={{ maxWidth: '200px' }}>
                   <CFormInput
                     type="time"
+                    aria-label="Response start time"
                     className="form-control form-control-sm"
                     value={responseStartTime}
                     onChange={(event) => setResponseStartTime(event.target.value)}

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { CButton, CCard, CFormLabel, CFormTextarea } from '@coreui/react'
-import { QrCode, Sparkles } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
 import FormActionGroup from 'src/components/FormActionGroup'
 import CreateActionButton from 'src/components/CreateActionButton'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
@@ -22,7 +22,13 @@ import {
   getFireExtinguisherRowValidation,
   isFireExtinguisherSessionCompletedRow,
 } from '../../types/fire-extinguisher/helpers'
+import { neutralizeCompletionPresentation } from '../../types/continuationHelpers'
 import { INSPECTION_REPORT_EVIDENCE_COPY } from '../../inspectionReportEvidenceCopy'
+import {
+  CONTINUATION_SCAN_LABEL,
+  PARTIAL_STATE_PROMPTS,
+  getContinuationLabel,
+} from '../../inspectionFormUiTokens'
 import { FormFieldError, InspectionGeneralEvidenceCard } from './InspectionFormDisplaySections'
 import InspectionLocationOptionPicker from './InspectionLocationOptionPicker'
 
@@ -31,6 +37,9 @@ const AI_BUTTON_STYLE = {
   borderColor: 'rgba(0, 126, 122, 0.32)',
   color: 'rgba(0, 126, 122, 0.95)',
 }
+
+const REVIEW_ACTION_LABEL = 'Continue to Review'
+const REVIEW_UPDATE_ACTION_LABEL = 'Continue to Review Updates'
 
 const AI_TRANSLATE_FIELDS = ['description', 'actionRequired']
 
@@ -83,11 +92,7 @@ const toContinuationLabel = (value = 'location') =>
 const toTitleLabel = (value = 'location') =>
   toContinuationLabel(value).replace(/\b\w/g, (character) => character.toUpperCase())
 
-const isCompletedContinuationOption = (option = {}) =>
-  option?.progress?.isDone === true ||
-  String(option?.metaLabel || '')
-    .trim()
-    .toLowerCase() === 'completed'
+const isCompletedContinuationOption = (option = {}) => option?.progress?.isDone === true
 
 const getRecommendedContinuationOptions = (options = [], currentLocation = '', limit = 2) => {
   const normalizedOptions = (Array.isArray(options) ? options : []).filter((option) =>
@@ -125,26 +130,53 @@ const getIncompleteContinuationOptionCount = (options = [], currentLocation = ''
   }).length
 }
 
+const InspectionInlineActionGroup = ({ children, className = '', statusMessage = '' }) => (
+  <div
+    className={`inspection-form-inline-actions inspection-form-inline-actions--left d-grid gap-2 ${className}`.trim()}
+  >
+    <div
+      className="inspection-form-inline-actions-row d-flex flex-wrap justify-content-start gap-2"
+      role="group"
+      aria-label="Form actions"
+    >
+      {children}
+    </div>
+    {statusMessage ? (
+      <div
+        className="inspection-form-inline-actions-row-status text-body-secondary"
+        title={statusMessage}
+      >
+        {statusMessage}
+      </div>
+    ) : null}
+    <div className="inspection-form-inline-actions-spacer d-md-none" />
+  </div>
+)
+
 const InspectionFormActions = ({
+  alignLeft = false,
   className = '',
   draftStatus,
   draftSyncState,
+  leadingAction = null,
   isMobileSticky = false,
   isUpdateMode = false,
   onRequestReview,
   onRetryDraftSync,
+  sectionLabel = '',
   validationStatusMessage,
+  wrapperClassName = '',
 }) => {
   const syncStatus = String(draftSyncState?.status || '').trim()
   const syncFailed = syncStatus === 'failed'
-  const reviewLabel = isUpdateMode ? 'Review Updates' : 'Review Inspections'
+  const reviewLabel = isUpdateMode ? REVIEW_UPDATE_ACTION_LABEL : REVIEW_ACTION_LABEL
+  const statusClassName = `inspection-draft-status small ${
+    validationStatusMessage ? 'text-warning-emphasis' : 'text-body-secondary'
+  } ${alignLeft ? '' : 'me-sm-auto'} align-self-sm-center`.trim()
   if (isMobileSticky) {
-    return (
-      <FormActionGroup
-        className={className}
-        mobileVariant="compact-sticky"
-        spacerClassName="inspection-form-inline-actions-spacer d-md-none"
-      >
+    const mobileActionButtons = (
+      <>
+        {leadingAction}
         {syncFailed ? (
           <CButton
             color="warning"
@@ -162,31 +194,64 @@ const InspectionFormActions = ({
         >
           {reviewLabel}
         </CButton>
-      </FormActionGroup>
+      </>
+    )
+
+    return (
+      <div className={`d-grid gap-2 ${wrapperClassName}`.trim()}>
+        {sectionLabel ? (
+          <div className="small fw-semibold text-body-secondary">{sectionLabel}</div>
+        ) : null}
+        {alignLeft ? (
+          <InspectionInlineActionGroup className={className}>
+            {mobileActionButtons}
+          </InspectionInlineActionGroup>
+        ) : (
+          <FormActionGroup
+            actionsAlign="end"
+            className={className}
+            mobileVariant="compact-sticky"
+            spacerClassName="inspection-form-inline-actions-spacer d-md-none"
+          >
+            {mobileActionButtons}
+          </FormActionGroup>
+        )}
+      </div>
     )
   }
 
   return (
-    <div
-      className={`inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2 ${className}`.trim()}
-    >
-      {validationStatusMessage ? (
-        <div className="inspection-draft-status small text-warning-emphasis me-sm-auto align-self-sm-center">
-          {validationStatusMessage}
-        </div>
-      ) : draftStatus ? (
-        <div className="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center">
-          {draftStatus}
-        </div>
+    <div className={`d-grid gap-2 ${wrapperClassName}`.trim()}>
+      {sectionLabel ? (
+        <div className="small fw-semibold text-body-secondary">{sectionLabel}</div>
       ) : null}
-      {syncFailed ? (
-        <CButton color="warning" variant="outline" onClick={() => onRetryDraftSync?.()}>
-          Retry Sync
+      <div
+        className={[
+          'inspection-form-actions',
+          alignLeft ? 'inspection-form-actions--left' : '',
+          'd-flex flex-column flex-sm-row',
+          alignLeft ? 'justify-content-start' : 'justify-content-end',
+          'gap-2',
+          className,
+        ]
+          .filter(Boolean)
+          .join(' ')}
+      >
+        {validationStatusMessage ? (
+          <div className={statusClassName}>{validationStatusMessage}</div>
+        ) : draftStatus ? (
+          <div className={statusClassName}>{draftStatus}</div>
+        ) : null}
+        {leadingAction}
+        {syncFailed ? (
+          <CButton color="warning" variant="outline" onClick={() => onRetryDraftSync?.()}>
+            Retry Sync
+          </CButton>
+        ) : null}
+        <CButton color="primary" onClick={onRequestReview}>
+          {reviewLabel}
         </CButton>
-      ) : null}
-      <CButton color="primary" onClick={onRequestReview}>
-        {reviewLabel}
-      </CButton>
+      </div>
     </div>
   )
 }
@@ -198,6 +263,11 @@ const InspectionNextLocationCard = ({ continueAction = null, onContinueToLocatio
   const currentLocation = String(continueAction?.currentValue || continueAction?.value || '').trim()
   const label = toContinuationLabel(continueAction?.label || 'location')
   const labelTitle = toTitleLabel(label)
+  const continuationLabel = getContinuationLabel(label)
+  const continuationSuffix = continuationLabel
+    .replace(/^next\s+/i, '')
+    .replace(/^Next\s+/i, '')
+    .trim()
   const parentLabel = String(
     continueAction?.parentLabel || continueAction?.mainLocation || '',
   ).trim()
@@ -237,7 +307,7 @@ const InspectionNextLocationCard = ({ continueAction = null, onContinueToLocatio
 
   return (
     <div className="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2">
-      <div className="small fw-semibold text-body-secondary">Next {label}</div>
+      <div className="small fw-semibold text-body-secondary">Next {continuationSuffix}</div>
       <div className="inspection-next-location-options d-flex flex-wrap gap-2">
         {recommendedOptions.map((option) => {
           const value = getContinuationOptionValue(option)
@@ -298,108 +368,136 @@ const InspectionNextLocationCard = ({ continueAction = null, onContinueToLocatio
 }
 
 const InspectionFormDraftOnlyActions = ({
+  alignLeft = false,
   className = '',
   disabledReviewMessage = '',
   draftStatus,
   draftSyncState,
   getLatestForm,
+  leadingAction = null,
   isMobileSticky = false,
   isUpdateMode = false,
   onRetryDraftSync,
   onSaveDraft,
+  sectionLabel = '',
   statusMessage = '',
+  wrapperClassName = '',
 }) => {
   const syncFailed = String(draftSyncState?.status || '').trim() === 'failed'
   const saveLabel = isUpdateMode ? 'Save Update Draft' : 'Save Draft'
-  const reviewLabel = isUpdateMode ? 'Review Updates' : 'Review Inspections'
+  const reviewLabel = isUpdateMode ? REVIEW_UPDATE_ACTION_LABEL : REVIEW_ACTION_LABEL
   const showDisabledReview = Boolean(disabledReviewMessage)
+  const statusClassName = `inspection-draft-status small text-body-secondary ${
+    alignLeft ? '' : 'me-sm-auto'
+  } align-self-sm-center`.trim()
   if (isMobileSticky) {
-    return (
+    const mobileActionButtons = (
       <>
-        <FormActionGroup
-          className={className}
-          mobileVariant="compact-sticky"
-          spacerClassName="inspection-form-inline-actions-spacer d-md-none"
-          statusMessage={disabledReviewMessage}
+        {leadingAction}
+        <CButton
+          color="secondary"
+          variant="outline"
+          className="inspection-form-sticky-draft-btn"
+          onClick={() => onSaveDraft?.(getLatestForm())}
         >
+          {saveLabel}
+        </CButton>
+        {showDisabledReview ? (
           <CButton
-            color="secondary"
+            color="primary"
+            className="inspection-form-sticky-review-btn"
+            disabled
+            title={disabledReviewMessage}
+          >
+            {reviewLabel}
+          </CButton>
+        ) : null}
+        {syncFailed ? (
+          <CButton
+            color="warning"
             variant="outline"
             className="inspection-form-sticky-draft-btn"
-            onClick={() => onSaveDraft?.(getLatestForm())}
+            onClick={() => onRetryDraftSync?.()}
           >
-            {saveLabel}
+            Retry Sync
           </CButton>
-          {showDisabledReview ? (
-            <CButton
-              color="primary"
-              className="inspection-form-sticky-review-btn"
-              disabled
-              title={disabledReviewMessage}
-            >
-              {reviewLabel}
-            </CButton>
-          ) : null}
-          {syncFailed ? (
-            <CButton
-              color="warning"
-              variant="outline"
-              className="inspection-form-sticky-draft-btn"
-              onClick={() => onRetryDraftSync?.()}
-            >
-              Retry Sync
-            </CButton>
-          ) : null}
-        </FormActionGroup>
+        ) : null}
       </>
+    )
+
+    return (
+      <div className={`d-grid gap-2 ${wrapperClassName}`.trim()}>
+        {sectionLabel ? (
+          <div className="small fw-semibold text-body-secondary">{sectionLabel}</div>
+        ) : null}
+        {alignLeft ? (
+          <InspectionInlineActionGroup className={className} statusMessage={disabledReviewMessage}>
+            {mobileActionButtons}
+          </InspectionInlineActionGroup>
+        ) : (
+          <FormActionGroup
+            actionsAlign="end"
+            className={className}
+            mobileVariant="compact-sticky"
+            spacerClassName="inspection-form-inline-actions-spacer d-md-none"
+            statusMessage={disabledReviewMessage}
+          >
+            {mobileActionButtons}
+          </FormActionGroup>
+        )}
+      </div>
     )
   }
 
   return (
-    <div
-      className={`inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2 ${className}`.trim()}
-    >
-      <div className="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center">
-        {disabledReviewMessage ||
-          statusMessage ||
-          draftStatus ||
-          'This inspection type can be saved as draft only.'}
+    <div className={`d-grid gap-2 ${wrapperClassName}`.trim()}>
+      {sectionLabel ? (
+        <div className="small fw-semibold text-body-secondary">{sectionLabel}</div>
+      ) : null}
+      <div
+        className={[
+          'inspection-form-actions',
+          alignLeft ? 'inspection-form-actions--left' : '',
+          'd-flex flex-column flex-sm-row',
+          alignLeft ? 'justify-content-start' : 'justify-content-end',
+          'gap-2',
+          className,
+        ]
+          .filter(Boolean)
+          .join(' ')}
+      >
+        <div className={statusClassName}>
+          {disabledReviewMessage ||
+            statusMessage ||
+            draftStatus ||
+            'This inspection type can be saved as draft only.'}
+        </div>
+        {leadingAction}
+        <CButton color="secondary" variant="outline" onClick={() => onSaveDraft?.(getLatestForm())}>
+          {saveLabel}
+        </CButton>
+        {showDisabledReview ? (
+          <CButton color="primary" disabled title={disabledReviewMessage}>
+            {reviewLabel}
+          </CButton>
+        ) : null}
+        {syncFailed ? (
+          <CButton color="warning" variant="outline" onClick={() => onRetryDraftSync?.()}>
+            Retry Sync
+          </CButton>
+        ) : null}
       </div>
-      <CButton color="secondary" variant="outline" onClick={() => onSaveDraft?.(getLatestForm())}>
-        {saveLabel}
-      </CButton>
-      {showDisabledReview ? (
-        <CButton color="primary" disabled title={disabledReviewMessage}>
-          {reviewLabel}
-        </CButton>
-      ) : null}
-      {syncFailed ? (
-        <CButton color="warning" variant="outline" onClick={() => onRetryDraftSync?.()}>
-          Retry Sync
-        </CButton>
-      ) : null}
     </div>
   )
 }
 
-const InspectionScanAnotherFireExtinguisherCard = ({ onScanAnother }) => {
+const InspectionScanAnotherFireExtinguisherAction = ({ onScanAnother }) => {
   if (typeof onScanAnother !== 'function') return null
 
   return (
-    <div className="inspection-next-location-card rounded-3 border bg-light-subtle p-3">
-      <div>
-        <CButton
-          type="button"
-          color="primary"
-          variant="outline"
-          className="inspection-next-location-btn d-inline-flex align-items-center gap-2"
-          onClick={onScanAnother}
-        >
-          <QrCode size={16} />
-          Scan another FE
-        </CButton>
-      </div>
-    </div>
+    <CButton type="button" color="primary" variant="outline" onClick={onScanAnother}>
+      {CONTINUATION_SCAN_LABEL}
+    </CButton>
   )
 }
 
@@ -1135,6 +1233,7 @@ const FrtGeneralRemarksField = ({ form, updateForm, useMobileDrawer }) => {
             <CFormTextarea
               rows={5}
               label="Remarks"
+              aria-label="Fire truck readiness remarks"
               value={remarks}
               placeholder="Optional general fire truck readiness remarks"
               onChange={(event) => updateRemarks(event.target.value)}
@@ -1156,8 +1255,14 @@ const FrtGeneralRemarksField = ({ form, updateForm, useMobileDrawer }) => {
 
   return (
     <div className="inspection-form-section d-grid gap-1">
-      <CFormLabel className="small fw-semibold text-muted mb-1">Remarks</CFormLabel>
+      <CFormLabel
+        htmlFor="fire-truck-readiness-remarks"
+        className="small fw-semibold text-muted mb-1"
+      >
+        Remarks
+      </CFormLabel>
       <CFormTextarea
+        id="fire-truck-readiness-remarks"
         rows={3}
         value={remarks}
         placeholder="Optional general fire truck readiness remarks"
@@ -1259,22 +1364,20 @@ const InspectionFormBodySections = ({
     structuredSectionHandlers?.locationContinuation ||
     structuredSectionHandlers?.fireExtinguisherLocationContinuation ||
     null
-  const locationContinueOptions = Array.isArray(scopeContinuation?.options)
-    ? scopeContinuation.options
-    : Array.isArray(scopeContinuation?.locationOptions)
-      ? scopeContinuation.locationOptions
-      : subLocationOptions
+  const locationContinueOptions = (
+    Array.isArray(scopeContinuation?.options)
+      ? scopeContinuation.options
+      : Array.isArray(scopeContinuation?.locationOptions)
+        ? scopeContinuation.locationOptions
+        : subLocationOptions
+  ).map(neutralizeCompletionPresentation)
   const currentScopeValue = String(
     scopeContinuation?.currentValue ||
       scopeContinuation?.value ||
       (scopeContinuation?.scope === 'mainLocation' ? mainLocation : form.subLocation) ||
       '',
   ).trim()
-  const isContinuationOptionComplete = (option) =>
-    option?.progress?.isDone === true ||
-    String(option?.metaLabel || '')
-      .trim()
-      .toLowerCase() === 'completed'
+  const isContinuationOptionComplete = (option) => option?.progress?.isDone === true
   const isCurrentFireExtinguisherLocationComplete =
     isFireExtinguisherLocationComplete(currentStructuredSummary)
   const isCurrentLocationComplete = isFireExtinguisherCatalogInspectionForm
@@ -1289,7 +1392,7 @@ const InspectionFormBodySections = ({
         return Boolean(currentOption && isContinuationOptionComplete(currentOption))
       })()
   const canContinueNextLocation =
-    isStructuredInspectionForm &&
+    (isStructuredInspectionForm || isFullInspectionForm) &&
     locationContinueOptions.length > 1 &&
     currentScopeValue &&
     isCurrentLocationComplete &&
@@ -1314,18 +1417,20 @@ const InspectionFormBodySections = ({
     selectedTypeDefinition?.key === 'er-aux-equipment-inspection' ||
     selectedTypeDefinition?.inspectionType === 'ER Aux Equipment Inspection'
 
-  const renderActions = (className = '', isMobileSticky = false) => (
+  const renderActions = (className = '', isMobileSticky = false, wrapperClassName = '') => (
     <InspectionFormActions
+      alignLeft={Boolean(nextStepAction)}
       className={className}
       draftStatus={draftStatus}
       draftSyncState={draftSyncState}
-      getLatestForm={getLatestForm}
+      leadingAction={nextStepAction}
       isMobileSticky={isMobileSticky}
       isUpdateMode={isUpdateMode}
       onRequestReview={onRequestReview}
       onRetryDraftSync={onRetryDraftSync}
-      onSaveDraft={onSaveDraft}
+      sectionLabel={nextStepAction ? "What's Next" : ''}
       validationStatusMessage={validationStatusMessage}
+      wrapperClassName={wrapperClassName}
     />
   )
 
@@ -1341,9 +1446,9 @@ const InspectionFormBodySections = ({
       />
     ) : null
 
-  const renderScanAnotherFireExtinguisherCard = () =>
+  const renderScanAnotherFireExtinguisherAction = () =>
     canScanAnotherFireExtinguisher ? (
-      <InspectionScanAnotherFireExtinguisherCard
+      <InspectionScanAnotherFireExtinguisherAction
         onScanAnother={fireExtinguisherScan?.onOpenScanner}
       />
     ) : null
@@ -1353,18 +1458,23 @@ const InspectionFormBodySections = ({
     isMobileSticky = false,
     statusMessage = '',
     disabledReviewMessage = '',
+    wrapperClassName = '',
   ) => (
     <InspectionFormDraftOnlyActions
+      alignLeft={Boolean(nextStepAction)}
       className={className}
       disabledReviewMessage={disabledReviewMessage}
       draftStatus={draftStatus}
       draftSyncState={draftSyncState}
       getLatestForm={getLatestForm}
+      leadingAction={nextStepAction}
       isMobileSticky={isMobileSticky}
       isUpdateMode={isUpdateMode}
       onRetryDraftSync={onRetryDraftSync}
       onSaveDraft={onSaveDraft}
+      sectionLabel={nextStepAction ? "What's Next" : ''}
       statusMessage={statusMessage}
+      wrapperClassName={wrapperClassName}
     />
   )
   const hasPrimaryActions =
@@ -1388,21 +1498,23 @@ const InspectionFormBodySections = ({
           } need attention before review.`
         : 'Complete required inspection items before review.'
       : ''
+  const nextStepAction = renderScanAnotherFireExtinguisherAction()
   const renderReviewOrDraftActions = (desktopClassName, mobileClassName) =>
     reviewReadiness.canReview ? (
       <>
-        {renderActions(desktopClassName)}
-        {renderActions(mobileClassName, true)}
+        {renderActions('', false, desktopClassName)}
+        {renderActions(mobileClassName, true, 'd-md-none')}
       </>
     ) : (
       <>
         {renderDraftOnlyActions(
-          desktopClassName,
+          '',
           false,
           'Complete required inspection items before review.',
           blockedReviewMessage,
+          desktopClassName,
         )}
-        {renderDraftOnlyActions(mobileClassName, true, '', blockedReviewMessage)}
+        {renderDraftOnlyActions(mobileClassName, true, '', blockedReviewMessage, 'd-md-none')}
       </>
     )
 
@@ -1453,11 +1565,9 @@ const InspectionFormBodySections = ({
           {renderFindings()}
 
           {renderPhotoEvidence()}
+          {renderNextLocationCard()}
 
-          {renderReviewOrDraftActions(
-            'd-none d-md-flex',
-            'inspection-form-inline-actions d-md-none',
-          )}
+          {renderReviewOrDraftActions('d-none d-md-grid', 'inspection-form-inline-actions')}
         </>
       ) : null}
 
@@ -1508,19 +1618,15 @@ const InspectionFormBodySections = ({
           {renderPhotoEvidence()}
 
           {renderNextLocationCard()}
-          {renderScanAnotherFireExtinguisherCard()}
 
-          {renderReviewOrDraftActions(
-            'd-none d-md-flex',
-            'inspection-form-inline-actions d-md-none',
-          )}
+          {renderReviewOrDraftActions('d-none d-md-grid', 'inspection-form-inline-actions')}
         </>
       ) : null}
 
       {shouldPromptForZoneLocationCompletion ? (
         <div className="inspection-form-section inspection-form-body-start">
           <div className="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 text-body-secondary">
-            Choose a location to continue inspection.
+            {PARTIAL_STATE_PROMPTS.locationFlow}
           </div>
         </div>
       ) : null}
@@ -1528,7 +1634,7 @@ const InspectionFormBodySections = ({
       {shouldPromptForFireTruckCompartment ? (
         <div className="inspection-form-section inspection-form-body-start">
           <div className="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 text-body-secondary">
-            Choose a compartment to load fire truck readiness items.
+            {PARTIAL_STATE_PROMPTS.fireTruckFlow}
           </div>
         </div>
       ) : null}
@@ -1536,7 +1642,7 @@ const InspectionFormBodySections = ({
       {shouldPromptForFireExtinguisherLocation ? (
         <div className="inspection-form-section inspection-form-body-start">
           <div className="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 text-body-secondary">
-            Choose a location to load fire extinguishers.
+            {PARTIAL_STATE_PROMPTS.fireExtinguisherFlow}
           </div>
         </div>
       ) : null}
@@ -1546,8 +1652,8 @@ const InspectionFormBodySections = ({
           <div className="rounded-3 border bg-light-subtle p-3 text-body-secondary">
             Actual field coming soon
           </div>
-          {renderDraftOnlyActions('d-none d-md-flex')}
-          {renderDraftOnlyActions('inspection-form-inline-actions d-md-none', true)}
+          {renderDraftOnlyActions('', false, '', '', 'd-none d-md-grid')}
+          {renderDraftOnlyActions('inspection-form-inline-actions', true, '', '', 'd-md-none')}
         </>
       ) : null}
     </>

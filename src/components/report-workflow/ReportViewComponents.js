@@ -14,6 +14,29 @@ export const SectionHeading = ({ children }) => (
   <div className="fw-semibold text-muted border-bottom pb-2 mb-1">{children}</div>
 )
 
+export const ReportPhotoImage = ({ photo, onFinalError, onLoad, ...props }) => {
+  const fullUrl = String(photo?.url || '')
+  const previewUrl = String(photo?.thumbnailUrl || photo?.thumbnail_url || fullUrl)
+  const [failedPreviewUrl, setFailedPreviewUrl] = useState('')
+  const source = previewUrl && failedPreviewUrl !== previewUrl ? previewUrl : fullUrl
+
+  if (!source) return null
+
+  return (
+    <img
+      {...props}
+      src={source}
+      loading="lazy"
+      decoding="async"
+      onLoad={onLoad}
+      onError={() => {
+        if (source !== fullUrl && fullUrl) setFailedPreviewUrl(previewUrl)
+        else onFinalError?.()
+      }}
+    />
+  )
+}
+
 export const PhotoPreview = ({ photo, alt = 'Inspection photo', className = '' }) => {
   const [hasError, setHasError] = useState(!photo?.url)
 
@@ -24,15 +47,15 @@ export const PhotoPreview = ({ photo, alt = 'Inspection photo', className = '' }
       } ${className}`.trim()}
     >
       {!hasError ? (
-        <img
-          src={photo.url}
+        <ReportPhotoImage
+          photo={photo}
           alt={photo.fileName || alt}
           className="workflow-photo-preview__image"
           onLoad={(event) => {
             const image = event.currentTarget
             if (image.naturalWidth <= 2 && image.naturalHeight <= 2) setHasError(true)
           }}
-          onError={() => setHasError(true)}
+          onFinalError={() => setHasError(true)}
         />
       ) : (
         <div className="workflow-photo-preview__fallback">Preview unavailable</div>

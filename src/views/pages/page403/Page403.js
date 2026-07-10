@@ -10,7 +10,7 @@ const Page403 = () => {
           <CCol md={6}>
             <div className="clearfix">
               <h1 className="float-start display-3 me-4">403</h1>
-              <h4 className="pt-3">Access denied.</h4>
+              <h2 className="h4 pt-3">Access denied.</h2>
               <p className="text-body-secondary float-start">
                 You do not have permission to view this page.
               </p>

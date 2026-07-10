@@ -6,7 +6,7 @@
   right: 0;
   z-index: 1030;
   height: var(--mobile-overlay-nav-height);
-  background-color: #ffffff;
+  background-color: var(--cui-body-bg);
   border-top: 1px solid var(--cui-border-color);
   display: flex;
   align-items: stretch;

@@ -59,12 +59,12 @@ it('renders quick actions before my records in the mobile account sheet', () => 
 
   expect(screen.getByRole('button', { name: /New Claim/ })).toBeTruthy()
   expect(screen.getByRole('button', { name: /Apply Leave/ })).toBeTruthy()
-  expect(screen.getByRole('button', { name: /Payroll records/ })).toBeTruthy()
-  expect(screen.getByRole('button', { name: /Leave records/ })).toBeTruthy()
-  expect(screen.queryByRole('button', { name: /Overtime records/ })).toBeNull()
+  expect(screen.getByRole('button', { name: /Payroll Records/ })).toBeTruthy()
+  expect(screen.getByRole('button', { name: /Leave Records/ })).toBeTruthy()
+  expect(screen.queryByRole('button', { name: /Overtime Records/ })).toBeNull()
   expect(screen.queryByRole('button', { name: /Messages/ })).toBeNull()
 
-  fireEvent.click(screen.getByRole('button', { name: /Payroll records/ }))
+  fireEvent.click(screen.getByRole('button', { name: /Payroll Records/ }))
   expect(handleNavigate).toHaveBeenCalledWith({ to: '/payroll' })
 })
 
@@ -72,7 +72,7 @@ it('renders report issue action in the mobile account sheet', () => {
   const onReportIssue = vi.fn()
   render(<MobileNavSheet {...baseProps} mode="account" onReportIssue={onReportIssue} />)
 
-  fireEvent.click(screen.getByRole('button', { name: /Report issue/ }))
+  fireEvent.click(screen.getByRole('button', { name: /Report Issue/ }))
   expect(onReportIssue).toHaveBeenCalledTimes(1)
 })
 

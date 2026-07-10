@@ -131,7 +131,8 @@ const waitForAppReady = async (page, expectedPath = null) => {
         .trim()
       const spinnerVisible = Boolean(document.querySelector('.spinner-border, .spinner-grow'))
       const loadingOnly = bodyText.length <= 160 && /loading/i.test(bodyText)
-      return bodyText.length > 0 && !spinnerVisible && !loadingOnly
+      const sessionRestoring = /restoring session/i.test(bodyText)
+      return bodyText.length > 0 && !spinnerVisible && !loadingOnly && !sessionRestoring
     },
     null,
     { timeout: routeTimeoutMs },

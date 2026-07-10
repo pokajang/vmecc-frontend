@@ -482,6 +482,7 @@ const UserProfile = () => {
 
   return (
     <CContainer fluid data-testid="users-module">
+      <h1 className="visually-hidden">User profile: {user.name || user.email || user.id}</h1>
       <div data-testid="users-profile-entry">
         <div className="mb-3 d-flex justify-content-between align-items-center">
           <BackButton to="/admin/users" />

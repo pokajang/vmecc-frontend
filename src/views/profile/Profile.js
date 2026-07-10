@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { CAlert, CContainer, CNav, CNavItem, CNavLink } from '@coreui/react'
+import { CAlert, CContainer } from '@coreui/react'
 import { useSelector } from 'react-redux'
 import { useLocation, useNavigate } from 'react-router-dom'
 import AccountSection from './AccountSection'
@@ -8,6 +8,8 @@ import EmergencySection from './EmergencySection'
 import BankingSection from './BankingSection'
 import StatutorySection from './StatutorySection'
 import MedicalSection from './MedicalSection'
+import ModulePageHeader from 'src/components/ModulePageHeader'
+import RouteNavTabs from 'src/components/RouteNavTabs'
 
 const Profile = () => {
   const location = useLocation()
@@ -27,28 +29,19 @@ const Profile = () => {
 
   return (
     <CContainer fluid data-testid="profile-module">
-      <CNav variant="underline" role="tablist" className="mb-3" data-testid="profile-nav">
-        <CNavItem role="presentation">
-          <CNavLink
-            active={activeSection === 'profile'}
-            onClick={() => navigate('/profile')}
-            style={{ cursor: 'pointer' }}
-            className={activeSection === 'profile' ? 'text-primary' : ''}
-          >
-            Profile
-          </CNavLink>
-        </CNavItem>
-        <CNavItem role="presentation">
-          <CNavLink
-            active={activeSection === 'security'}
-            onClick={() => navigate('/profile/security')}
-            style={{ cursor: 'pointer' }}
-            className={activeSection === 'security' ? 'text-primary' : ''}
-          >
-            Security
-          </CNavLink>
-        </CNavItem>
-      </CNav>
+      <ModulePageHeader
+        title="Profile"
+        subtitle="Manage your personal, employment, and account security information."
+      />
+      <div data-testid="profile-nav">
+        <RouteNavTabs
+          navigate={navigate}
+          items={[
+            { key: 'profile', label: 'Profile', to: '/profile' },
+            { key: 'security', label: 'Security', to: '/profile/security' },
+          ]}
+        />
+      </div>
 
       {activeSection === 'security' ? (
         <div data-testid="profile-security">

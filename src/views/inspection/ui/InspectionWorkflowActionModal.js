@@ -4,10 +4,12 @@ import {
   CButton,
   CFormCheck,
   CFormInput,
+  CFormLabel,
   CModal,
   CModalBody,
   CModalFooter,
   CModalHeader,
+  CModalTitle,
 } from '@coreui/react'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import useMediaQuery from 'src/hooks/useMediaQuery'
@@ -83,16 +85,23 @@ const InspectionWorkflowActionModal = ({
           </div>
 
           <div>
-            <div className="small text-muted mb-1">{action.remarksLabel}</div>
+            <CFormLabel htmlFor="inspection-workflow-remarks" className="small text-muted mb-1">
+              {action.remarksLabel}
+            </CFormLabel>
             <CFormInput
+              id="inspection-workflow-remarks"
               type="text"
               value={remarks}
               onChange={(event) => onRemarksChange?.(event.target.value)}
               placeholder="Add your remarks"
               invalid={Boolean(rejectError)}
+              aria-required={isReject}
+              aria-describedby={rejectError ? 'inspection-workflow-remarks-error' : undefined}
             />
             {rejectError ? (
-              <div className="invalid-feedback d-block">{rejectError}</div>
+              <div id="inspection-workflow-remarks-error" className="invalid-feedback d-block">
+                {rejectError}
+              </div>
             ) : (
               showRemarksHelper && (
                 <div className="small text-muted mt-1">
@@ -125,7 +134,7 @@ const InspectionWorkflowActionModal = ({
   )
   const footer = (
     <>
-      <CButton color="light" onClick={onClose}>
+      <CButton color="secondary" variant="outline" onClick={onClose}>
         Cancel
       </CButton>
       <CButton color={action.color} onClick={onSubmit} disabled={isSubmitDisabled}>
@@ -160,7 +169,9 @@ const InspectionWorkflowActionModal = ({
       scrollable
       className="inspection-workflow-modal"
     >
-      <CModalHeader>{title}</CModalHeader>
+      <CModalHeader>
+        <CModalTitle>{title}</CModalTitle>
+      </CModalHeader>
       <CModalBody className="inspection-workflow-modal__body d-grid gap-3">{body}</CModalBody>
       <CModalFooter>{footer}</CModalFooter>
     </CModal>

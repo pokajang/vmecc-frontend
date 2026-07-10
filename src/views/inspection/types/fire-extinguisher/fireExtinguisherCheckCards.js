@@ -20,8 +20,10 @@ import {
   FIRE_EXTINGUISHER_CHECK_FIELDS,
   formatFireExtinguisherDaysLeft,
   formatFireExtinguisherLastInspection,
+  getFireExtinguisherCurrentCheckLabel,
   getFireExtinguisherRowWorkflowState,
   isFireExtinguisherDefectStatus,
+  shouldShowFireExtinguisherLastInspection,
 } from './helpers'
 export { AddFireExtinguisherForm } from './fireExtinguisherEditForm'
 
@@ -34,29 +36,13 @@ const getFireExtinguisherDefectCount = (row = {}) =>
   FIRE_EXTINGUISHER_CHECK_FIELDS.filter((field) => isFireExtinguisherDefectStatus(row[field.key]))
     .length
 
-const formatSessionCheckedAt = (value) => {
-  const raw = text(value)
-  if (!raw) return ''
-  const parsed = new Date(raw)
-  if (Number.isNaN(parsed.getTime())) return ''
-  return parsed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-}
-
-const FireExtinguisherInspectionStatusInline = ({
-  defectCount = 0,
-  workflowState,
-  sessionResult = null,
-}) => {
+const FireExtinguisherInspectionStatusInline = ({ row, defectCount = 0, workflowState }) => {
   const hasDefect = workflowState?.hasDefect === true
-  const sessionCompleted = sessionResult?.status === 'completed'
-  const isComplete = workflowState?.isComplete === true || sessionCompleted
-  const sessionActor = text(sessionResult?.checkedBy)
-  const sessionTime = formatSessionCheckedAt(sessionResult?.checkedAt)
-  const completionLabel = sessionCompleted
-    ? `Completed${sessionActor ? ` by ${sessionActor}` : ''}${sessionTime ? ` at ${sessionTime}` : ''}`
-    : isComplete
-      ? 'Checked'
-      : 'Not checked'
+  const sessionCompleted =
+    text(row?.sessionResult?.status || row?.sessionStatus).toLowerCase() === 'completed'
+  const isComplete =
+    workflowState?.isComplete === true || sessionCompleted || row?.sessionSyncPending === true
+  const completionLabel = getFireExtinguisherCurrentCheckLabel(row)
 
   return (
     <span
@@ -348,6 +334,7 @@ const FireExtinguisherAdditionalInfo = ({ row, readOnly = false, handlers = {}, 
             </div>
             <CFormTextarea
               rows={2}
+              aria-label="General extinguisher remarks"
               placeholder="General extinguisher remarks"
               value={rawRemarks}
               onChange={(event) => handlers.onUpdateCheck?.(row, { remarks: event.target.value })}
@@ -575,8 +562,8 @@ export const FireExtinguisherRowCard = ({
               {title}
             </div>
             <FireExtinguisherInspectionStatusInline
+              row={row}
               defectCount={defectCount}
-              sessionResult={row.sessionResult}
               workflowState={workflowState}
             />
             <FireExtinguisherLegacyStatusBadges
@@ -599,9 +586,17 @@ export const FireExtinguisherRowCard = ({
           <div className="small text-body-secondary d-none d-md-block">
             {formatFireExtinguisherCertification(row)}
           </div>
-          <div className="small text-body-secondary text-break">
-            {formatFireExtinguisherLastInspection(row.lastInspection)}
-          </div>
+          {shouldShowFireExtinguisherLastInspection(row) ? (
+            <div className="small text-body-secondary text-break">
+              {formatFireExtinguisherLastInspection(row.lastInspection)}
+            </div>
+          ) : !readOnly ? (
+            <div className="small text-body-secondary text-break">
+              {row?.sessionSyncPending === true
+                ? 'Current check saved on this device and still syncing.'
+                : 'Current check not submitted yet.'}
+            </div>
+          ) : null}
         </div>
         <div className="d-flex flex-wrap align-items-center justify-content-end gap-1 flex-shrink-0 inspection-fire-extinguisher-card-actions">
           {!readOnly ? (

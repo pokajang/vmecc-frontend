@@ -1,4 +1,5 @@
 import { BadgeDollarSign, ReceiptText, ShieldCheck } from 'lucide-react'
+export { PAYROLL_STATUS_COLOR as CLAIM_STATUS_COLOR } from 'src/constants/statusPresentation'
 
 export const claimSortOptions = [
   { value: 'submittedAt:desc', label: 'Latest submitted' },
@@ -17,16 +18,6 @@ export const CLAIM_TYPE_META = {
   salary: { label: 'Salary Claim', icon: BadgeDollarSign },
   expense: { label: 'Expense Claim', icon: ReceiptText },
   other: { label: 'Exceptional Claim', icon: ShieldCheck },
-}
-
-export const CLAIM_STATUS_COLOR = {
-  Pending: 'warning',
-  'Pending Review': 'warning',
-  'Pending Approval': 'warning',
-  Approved: 'success',
-  Paid: 'info',
-  Rejected: 'danger',
-  Cancelled: 'dark',
 }
 
 export const TERMINAL_CLAIM_STATUSES = ['Approved', 'Paid', 'Rejected', 'Cancelled']

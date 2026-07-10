@@ -69,4 +69,32 @@ describe('MessageBubble', () => {
     expect(orderedList.getAttribute('start')).toBe('3')
     expect(Array.from(orderedList.children)).toHaveLength(2)
   })
+
+  it('renders direct, page-aware links for server-provided sources', () => {
+    const { getByRole } = render(
+      <MessageBubble
+        {...baseProps}
+        message={{
+          id: 'assistant-3',
+          role: 'assistant',
+          status: 'completed',
+          content: 'Refer to the procedure.',
+          sources: [
+            {
+              knowledge_id: 79,
+              title: 'Emergency Response Plan',
+              page_start: 12,
+              page_end: 13,
+            },
+          ],
+        }}
+      />,
+    )
+
+    const link = getByRole('link', { name: 'Open source Emergency Response Plan - pages 12-13' })
+    expect(link.getAttribute('href')).toBe(
+      'http://localhost:8000/api/ai-helper/knowledge/79/file#page=12',
+    )
+    expect(link.getAttribute('target')).toBe('_blank')
+  })
 })

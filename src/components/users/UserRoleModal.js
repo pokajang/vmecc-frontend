@@ -30,7 +30,7 @@ const UserRoleModal = ({
   return (
     <CModal visible={visible} onClose={onClose} alignment="center" size="lg">
       <CModalHeader>
-        <CModalTitle>Manage Role Assignments</CModalTitle>
+        <CModalTitle>Manage role assignments</CModalTitle>
       </CModalHeader>
       <CModalBody>
         <div className="d-flex justify-content-end mb-2">
@@ -42,7 +42,7 @@ const UserRoleModal = ({
             onClick={onAddAssignment}
           >
             <Plus size={14} className="me-1" />
-            Add Assignment
+            Add assignment
           </CButton>
         </div>
 
@@ -56,8 +56,11 @@ const UserRoleModal = ({
                 className="g-2 align-items-end border rounded p-2 mx-0"
               >
                 <CCol md={3}>
-                  <CFormLabel className="small">Role</CFormLabel>
+                  <CFormLabel htmlFor={`user-role-${index}-role`} className="small">
+                    Role
+                  </CFormLabel>
                   <CFormSelect
+                    id={`user-role-${index}-role`}
                     value={assignment.role || ''}
                     onChange={(e) => onChangeAssignment(index, 'role', e.target.value)}
                     disabled={loading}
@@ -70,12 +73,17 @@ const UserRoleModal = ({
                   </CFormSelect>
                 </CCol>
                 <CCol md={2}>
-                  <CFormLabel className="small">Scope</CFormLabel>
-                  <CFormInput value={scopeType} disabled readOnly />
+                  <CFormLabel htmlFor={`user-role-${index}-scope`} className="small">
+                    Scope
+                  </CFormLabel>
+                  <CFormInput id={`user-role-${index}-scope`} value={scopeType} disabled readOnly />
                 </CCol>
                 <CCol md={3}>
-                  <CFormLabel className="small">Team</CFormLabel>
+                  <CFormLabel htmlFor={`user-role-${index}-team`} className="small">
+                    Team
+                  </CFormLabel>
                   <CFormSelect
+                    id={`user-role-${index}-team`}
                     value={assignment.team_id || ''}
                     onChange={(e) => onChangeAssignment(index, 'team_id', e.target.value || null)}
                     disabled={loading || !needsTeam}
@@ -90,8 +98,11 @@ const UserRoleModal = ({
                   </CFormSelect>
                 </CCol>
                 <CCol md={2}>
-                  <CFormLabel className="small">Start</CFormLabel>
+                  <CFormLabel htmlFor={`user-role-${index}-start`} className="small">
+                    Start
+                  </CFormLabel>
                   <CFormInput
+                    id={`user-role-${index}-start`}
                     type="date"
                     value={assignment.start_date || ''}
                     onChange={(e) => onChangeAssignment(index, 'start_date', e.target.value)}
@@ -99,8 +110,11 @@ const UserRoleModal = ({
                   />
                 </CCol>
                 <CCol md={2}>
-                  <CFormLabel className="small">End</CFormLabel>
+                  <CFormLabel htmlFor={`user-role-${index}-end`} className="small">
+                    End
+                  </CFormLabel>
                   <CFormInput
+                    id={`user-role-${index}-end`}
                     type="date"
                     value={assignment.end_date || ''}
                     onChange={(e) => onChangeAssignment(index, 'end_date', e.target.value || null)}
@@ -116,7 +130,7 @@ const UserRoleModal = ({
                     onClick={() => onChangeAssignment(index, 'is_primary', true)}
                     disabled={loading}
                   >
-                    {assignment.is_primary ? 'Primary' : 'Set Primary'}
+                    {assignment.is_primary ? 'Primary' : 'Set primary'}
                   </CButton>
                   <CButton
                     type="button"

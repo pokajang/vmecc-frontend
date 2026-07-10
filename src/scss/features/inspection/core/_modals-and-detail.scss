@@ -312,7 +312,7 @@
     padding: 0.65rem;
     border: 1px solid rgba(148, 163, 184, 0.24);
     border-radius: 0.5rem;
-    background: #ffffff;
+    background: var(--cui-body-bg);
     box-shadow: 0 -0.75rem 2rem rgba(15, 23, 42, 0.14);
   }
 
@@ -360,6 +360,44 @@
     min-width: 0;
     max-width: 100%;
     margin-left: auto;
+  }
+
+  .inspection-form-inline-actions.inspection-form-inline-actions--left {
+    justify-items: start;
+  }
+
+  .inspection-form-inline-actions.inspection-form-inline-actions--left.action-row-thumb--compact-sticky
+    .action-row-thumb-actions {
+    justify-content: start;
+    margin-left: 0;
+  }
+
+  .inspection-form-inline-actions.inspection-form-inline-actions--left.action-row-thumb {
+    justify-items: start !important;
+  }
+
+  .inspection-form-inline-actions.inspection-form-inline-actions--left .action-row-thumb-actions {
+    justify-content: start !important;
+    margin-left: 0 !important;
+    margin-right: auto;
+  }
+
+  .inspection-form-inline-actions-row {
+    width: 100%;
+  }
+
+  .inspection-form-inline-actions-row-status {
+    width: 100%;
+    overflow: hidden;
+    font-size: 0.84rem;
+    line-height: 1.2;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .inspection-form-actions--left {
+    justify-content: flex-start !important;
   }
 
   .inspection-form-inline-actions .action-row-thumb-status {

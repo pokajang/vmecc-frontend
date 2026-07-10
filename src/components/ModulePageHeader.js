@@ -5,7 +5,7 @@ const ModulePageHeader = ({ title, subtitle, actions = null, className = '' }) =
     className={`module-page-header d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3 ${className}`.trim()}
   >
     <div className="module-page-header__title" style={{ minWidth: 0 }}>
-      <h4 className="mb-1 fw-semibold">{title}</h4>
+      <h1 className="h4 mb-1 fw-semibold">{title}</h1>
       {subtitle ? <div className="text-body-secondary">{subtitle}</div> : null}
     </div>
     {actions ? (

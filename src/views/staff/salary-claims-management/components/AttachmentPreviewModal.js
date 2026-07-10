@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { CButton, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
+import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
+import useMediaQuery from 'src/hooks/useMediaQuery'
 import {
   downloadAttachmentPayload,
   downloadWorkflowAttachmentToBrowser,
@@ -99,56 +101,80 @@ const AttachmentPreviewModal = ({ visible, attachment, onClose }) => {
     downloadAttachmentPayload(payload, payload.attachmentName || 'attachment')
   }, [attachmentId, payload])
 
+  const isMobileDrawer = useMediaQuery('(max-width: 575.98px)')
+
+  const body = (
+    <>
+      <div>
+        <div className="small text-body-secondary">File</div>
+        <div className="fw-semibold">{payload?.attachmentName || '-'}</div>
+      </div>
+
+      <div className="small text-body-secondary d-grid gap-1">
+        <div>Type: {resolvedMimeType || '-'}</div>
+        <div>Size: {formatBytes(payload?.attachmentSizeBytes)}</div>
+      </div>
+
+      {isPreviewPending ? (
+        <div className="text-body-secondary small">Loading attachment preview...</div>
+      ) : (
+        <>
+          {canPreview && canPreviewImage && (
+            <img
+              src={resolvedPreviewUrl}
+              alt={payload?.attachmentName || 'Attachment'}
+              style={{ maxWidth: '100%', maxHeight: 480, objectFit: 'contain' }}
+            />
+          )}
+
+          {canPreview && !canPreviewImage && canPreviewPdf && (
+            <iframe
+              title={payload?.attachmentName || 'Attachment PDF'}
+              src={resolvedPreviewUrl}
+              style={{ width: '100%', height: 560, border: '1px solid var(--cui-border-color)' }}
+            />
+          )}
+
+          {!canPreview && (
+            <div className="text-body-secondary small">
+              Preview is unavailable for this attachment type. Use Download to open the file.
+            </div>
+          )}
+        </>
+      )}
+    </>
+  )
+  const actions = (
+    <>
+      <CButton color="light" onClick={onClose}>
+        Close
+      </CButton>
+      <CButton color="primary" onClick={handleDownload} disabled={!canDownload}>
+        Download
+      </CButton>
+    </>
+  )
+
+  if (isMobileDrawer) {
+    return (
+      <MobileBottomDrawer visible={visible} title="Attachment Preview" onClose={onClose}>
+        <div className="inspection-mobile-detail-drawer-body inspection-equipment-detail-drawer-body d-grid gap-3">
+          {body}
+        </div>
+        <div className="mobile-bottom-drawer__footer d-flex align-items-center justify-content-end gap-2">
+          {actions}
+        </div>
+      </MobileBottomDrawer>
+    )
+  }
+
   return (
     <CModal size="lg" visible={visible} alignment="center" onClose={onClose}>
-      <CModalHeader>Attachment Preview</CModalHeader>
-      <CModalBody className="d-grid gap-3">
-        <div>
-          <div className="small text-body-secondary">File</div>
-          <div className="fw-semibold">{payload?.attachmentName || '-'}</div>
-        </div>
-
-        <div className="small text-body-secondary d-grid gap-1">
-          <div>Type: {resolvedMimeType || '-'}</div>
-          <div>Size: {formatBytes(payload?.attachmentSizeBytes)}</div>
-        </div>
-
-        {isPreviewPending ? (
-          <div className="text-body-secondary small">Loading attachment preview...</div>
-        ) : (
-          <>
-            {canPreview && canPreviewImage && (
-              <img
-                src={resolvedPreviewUrl}
-                alt={payload?.attachmentName || 'Attachment'}
-                style={{ maxWidth: '100%', maxHeight: 480, objectFit: 'contain' }}
-              />
-            )}
-
-            {canPreview && !canPreviewImage && canPreviewPdf && (
-              <iframe
-                title={payload?.attachmentName || 'Attachment PDF'}
-                src={resolvedPreviewUrl}
-                style={{ width: '100%', height: 560, border: '1px solid var(--cui-border-color)' }}
-              />
-            )}
-
-            {!canPreview && (
-              <div className="text-body-secondary small">
-                Preview is unavailable for this attachment type. Use Download to open the file.
-              </div>
-            )}
-          </>
-        )}
-      </CModalBody>
-      <CModalFooter>
-        <CButton color="light" onClick={onClose}>
-          Close
-        </CButton>
-        <CButton color="primary" onClick={handleDownload} disabled={!canDownload}>
-          Download
-        </CButton>
-      </CModalFooter>
+      <CModalHeader>
+        <CModalTitle>Attachment preview</CModalTitle>
+      </CModalHeader>
+      <CModalBody className="d-grid gap-3">{body}</CModalBody>
+      <CModalFooter>{actions}</CModalFooter>
     </CModal>
   )
 }

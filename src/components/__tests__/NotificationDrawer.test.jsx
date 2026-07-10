@@ -98,16 +98,14 @@ describe('NotificationDrawer focus behavior', () => {
         .classList.contains('mobile-overlay-shell'),
     ).toBe(true)
     expect(screen.getByText('3').classList.contains('mobile-overlay-shell-count')).toBe(true)
-    expect(document.querySelector('.mobile-overlay-backdrop')?.getAttribute('tabindex')).toBe('-1')
-    expect(document.querySelector('.mobile-overlay-backdrop')?.getAttribute('aria-hidden')).toBe(
-      'true',
-    )
+    expect(document.querySelector('.offcanvas-backdrop')?.getAttribute('tabindex')).toBe('-1')
+    expect(document.querySelector('.offcanvas-backdrop')?.getAttribute('aria-hidden')).toBe('true')
 
     await waitFor(() =>
       expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Close' })),
     )
 
-    fireEvent.click(document.querySelector('.mobile-overlay-backdrop'))
+    fireEvent.click(document.querySelector('.offcanvas-backdrop'))
     expect(handleClose).toHaveBeenCalledTimes(1)
   })
 })

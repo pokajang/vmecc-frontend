@@ -54,7 +54,7 @@ describe('structured inspection loading counts', () => {
       ],
     })
 
-    expect(options.find((option) => option.value === 'CUSTOM BAY')?.metaLabel).toBe('2/2 checks')
+    expect(options.find((option) => option.value === 'CUSTOM BAY')?.metaLabel).toBe('2 checks')
   })
 
   it('renders hydraulic equipment rows without header progress chips', () => {
@@ -168,8 +168,8 @@ describe('structured inspection loading counts', () => {
       />,
     )
 
-    expect(screen.getByText('SCBA Items')).toBeTruthy()
-    expect(screen.queryByText('Loading items...')).toBeNull()
+    expect(screen.getByText('Choose Group')).toBeTruthy()
+    expect(screen.getByText('Refreshing SCBA equipment...')).toBeTruthy()
     expect(screen.queryByText('0 of 0 checked')).toBeNull()
     expect(screen.queryByText('0/0 SCBA items')).toBeNull()
   })

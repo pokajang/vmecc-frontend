@@ -1,17 +1,23 @@
 import React from 'react'
-import { CButton, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import { formatDayCount, formatFileSize, formatSubmitPreviewPeriod } from '../utils'
 
 const LeaveSubmitConfirmModal = ({ visible, submitPreview, onClose, onConfirm }) => (
-  <CModal visible={visible} onClose={onClose} alignment="center">
-    <CModalHeader>
-      {submitPreview?.editingRecordId ? 'Confirm Leave Update' : 'Confirm Leave Request'}
-    </CModalHeader>
-    <CModalBody>
+  <LeaveSubmitConfirmModalContent
+    visible={visible}
+    submitPreview={submitPreview}
+    onClose={onClose}
+    onConfirm={onConfirm}
+  />
+)
+
+const LeaveSubmitConfirmModalContent = ({ visible, submitPreview, onClose, onConfirm }) => {
+  const body = (
+    <div className="d-grid gap-2">
       {!submitPreview ? (
         <div className="text-body-secondary small">No leave request details available.</div>
       ) : (
-        <div className="d-grid gap-2">
+        <>
           <div>
             <span className="text-body-secondary small d-block">Leave Type</span>
             <span className="fw-semibold">{submitPreview.leaveType}</span>
@@ -59,18 +65,22 @@ const LeaveSubmitConfirmModal = ({ visible, submitPreview, onClose, onConfirm })
             <span className="text-body-secondary small d-block">Reason</span>
             <span>{submitPreview.reason || '-'}</span>
           </div>
-        </div>
+        </>
       )}
-    </CModalBody>
-    <CModalFooter>
-      <CButton color="light" onClick={onClose}>
-        Cancel
-      </CButton>
-      <CButton color="primary" onClick={onConfirm} disabled={!submitPreview}>
-        {submitPreview?.editingRecordId ? 'Confirm update' : 'Confirm submission'}
-      </CButton>
-    </CModalFooter>
-  </CModal>
-)
+    </div>
+  )
+
+  return (
+    <ActionConfirmModal
+      visible={visible}
+      title={submitPreview?.editingRecordId ? 'Confirm leave update' : 'Confirm leave request'}
+      message={body}
+      confirmLabel={submitPreview?.editingRecordId ? 'Confirm update' : 'Confirm submission'}
+      confirmDisabled={!submitPreview}
+      onClose={onClose}
+      onConfirm={onConfirm}
+    />
+  )
+}
 
 export default LeaveSubmitConfirmModal

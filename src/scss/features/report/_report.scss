@@ -19,7 +19,7 @@
 
 .erco-team-accordion__item {
   overflow: hidden;
-  background: #ffffff;
+  background: var(--cui-body-bg);
 }
 
 .erco-team-accordion__header {
@@ -113,7 +113,7 @@
   padding: 0.55rem 0.55rem 0.55rem 0.65rem;
   border: 1px solid var(--cui-border-color);
   border-radius: 0.45rem;
-  background: #ffffff;
+  background: var(--cui-body-bg);
 }
 
 .erco-chronology-mobile-row__main {
@@ -343,7 +343,7 @@
   padding: 0.55rem 0.55rem 0.55rem 0.65rem;
   border: 1px solid var(--cui-border-color);
   border-radius: 0.45rem;
-  background: #ffffff;
+  background: var(--cui-body-bg);
 }
 
 .report-chronology-mobile-row__main {

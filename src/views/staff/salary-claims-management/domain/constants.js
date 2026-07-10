@@ -59,16 +59,4 @@ export const assignmentSortOptions = [
   { value: 'effectiveFrom:asc', label: 'Oldest effective' },
 ]
 
-export const statusColorMap = {
-  Draft: 'secondary',
-  Active: 'success',
-  Scheduled: 'info',
-  Superseded: 'dark',
-  Pending: 'warning',
-  'Pending Review': 'warning',
-  'Pending Approval': 'warning',
-  Approved: 'success',
-  Paid: 'info',
-  Rejected: 'danger',
-  Cancelled: 'dark',
-}
+export { PAYROLL_STATUS_COLOR as statusColorMap } from 'src/constants/statusPresentation'

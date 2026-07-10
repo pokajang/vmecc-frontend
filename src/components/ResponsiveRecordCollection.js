@@ -1,5 +1,6 @@
 import React from 'react'
 import MobileRecordList from './MobileRecordList'
+import PageState from './PageState'
 import TableLoader from './TableLoader'
 
 const ResponsiveRecordCollection = ({
@@ -13,7 +14,10 @@ const ResponsiveRecordCollection = ({
   children = null,
 }) => {
   if (isLoading) return <TableLoader />
-  if (isEmpty) return emptyMessage
+  if (isEmpty) {
+    if (React.isValidElement(emptyMessage)) return emptyMessage
+    return <PageState variant="empty" message={emptyMessage || 'No records found.'} />
+  }
 
   return (
     <>

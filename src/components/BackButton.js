@@ -30,8 +30,8 @@ const BackButton = ({
   return (
     <CButton
       size={size}
-      className={`text-primary px-2 py-1 border-0 shadow-none ${className}`.trim()}
-      style={{ backgroundColor: 'rgba(0, 126, 122, 0.1)', ...style }}
+      className={`back-button text-primary px-2 py-1 border-0 shadow-none ${className}`.trim()}
+      style={style}
       onClick={handleClick}
       {...buttonProps}
     >

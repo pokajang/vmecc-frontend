@@ -1,5 +1,5 @@
 import React from 'react'
-import { CButton, CFormLabel, CFormTextarea } from '@coreui/react'
+import { CButton, CFormFeedback, CFormLabel, CFormTextarea } from '@coreui/react'
 import {
   ReportBasicPathSummary,
   ReportChronologySection,
@@ -43,22 +43,30 @@ const DrillFormStep = ({
 
       <div className="mb-3 d-grid gap-3">
         <div>
-          <CFormLabel className="fw-semibold text-muted">Describe Drill Scenario</CFormLabel>
+          <CFormLabel htmlFor="drill-details" className="fw-semibold text-muted">
+            Describe drill scenario
+          </CFormLabel>
           <CFormTextarea
+            id="drill-details"
             rows={3}
             value={form.details}
             invalid={Boolean(fieldErrors.details)}
             onChange={(e) => setForm((p) => ({ ...p, details: e.target.value }))}
           />
+          <CFormFeedback invalid>{fieldErrors.details}</CFormFeedback>
         </div>
         <div>
-          <CFormLabel className="fw-semibold text-muted">Outcome Summary</CFormLabel>
+          <CFormLabel htmlFor="drill-summary" className="fw-semibold text-muted">
+            Outcome summary
+          </CFormLabel>
           <CFormTextarea
+            id="drill-summary"
             rows={4}
             value={form.summary}
             invalid={Boolean(fieldErrors.summary)}
             onChange={(e) => setForm((p) => ({ ...p, summary: e.target.value }))}
           />
+          <CFormFeedback invalid>{fieldErrors.summary}</CFormFeedback>
         </div>
       </div>
 

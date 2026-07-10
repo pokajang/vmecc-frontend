@@ -161,6 +161,7 @@ export const getHseCheckSummary = (form = {}) => {
   const findingSelections = selections.filter((selection) =>
     HSE_FINDING_SELECTIONS.includes(selection),
   )
+  const totalCount = findingSelections.length || selections.length
   const photoCount = (Array.isArray(form.photos) ? form.photos : []).filter(Boolean).length
   const visibleChecks = selections.map((selection) => {
     const option = HSE_SELECTION_OPTIONS.find((candidate) => candidate.value === selection)
@@ -171,6 +172,8 @@ export const getHseCheckSummary = (form = {}) => {
     }
   })
   return {
+    totalCount,
+    checkedCount: totalCount,
     selections,
     visibleChecks,
     findingSelections,

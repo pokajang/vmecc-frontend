@@ -37,6 +37,7 @@ describe('fireExtinguisherProgressSelectors', () => {
       ],
       extinguisherRows: [completeRow, incompleteRow],
       level: 'subLocation',
+      showActiveProgress: true,
       zone: 'Zone 1',
       mainLocation: 'Manjung Hub',
     })
@@ -74,6 +75,7 @@ describe('fireExtinguisherProgressSelectors', () => {
         },
       ],
       level: 'subLocation',
+      showActiveProgress: true,
       zone: 'Zone 1',
       mainLocation: 'Manjung Hub',
     })
@@ -108,11 +110,13 @@ describe('fireExtinguisherProgressSelectors', () => {
     const areaOptions = applyFireExtinguisherAreaCompletionProgress({
       options: [{ value: 'Manjung Hub', title: 'Manjung Hub', metaLabel: '2 locations' }],
       locationProgress,
+      showActiveProgress: true,
       zone: 'Zone 1',
     })
     const zoneOptions = applyFireExtinguisherZoneCompletionProgress({
       options: [{ value: '1', title: 'Zone 1', metaLabel: '1 area' }],
       locationProgress,
+      showActiveProgress: true,
     })
 
     expect(areaOptions[0]).toMatchObject({

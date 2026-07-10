@@ -22,10 +22,12 @@ import { getActionCountLabel } from '../../form/inspectionCountLabels'
 import {
   FIRE_EXTINGUISHER_CHECK_FIELDS,
   filterFireExtinguisherRows,
-  getFirstIncompleteFireExtinguisherRow,
-  getFireExtinguisherRowWorkflowState,
   formatFireExtinguisherLastInspection,
+  getFirstIncompleteFireExtinguisherRow,
+  getFireExtinguisherCurrentCheckLabel,
+  getFireExtinguisherRowWorkflowState,
   isFireExtinguisherDefectStatus,
+  shouldShowFireExtinguisherLastInspection,
 } from './helpers'
 import {
   AddFireExtinguisherForm,
@@ -60,34 +62,27 @@ const getFireExtinguisherDefectCount = (row = {}) =>
   FIRE_EXTINGUISHER_CHECK_FIELDS.filter((field) => isFireExtinguisherDefectStatus(row[field.key]))
     .length
 
-const formatSessionCheckedAt = (value) => {
-  const raw = text(value)
-  if (!raw) return ''
-  const parsed = new Date(raw)
-  if (Number.isNaN(parsed.getTime())) return ''
-  return parsed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-}
-
 const getFireExtinguisherDetailSummaryLines = (row = {}) => {
-  const workflowState = getFireExtinguisherRowWorkflowState(row)
-  const sessionCompleted = row?.sessionResult?.status === 'completed'
-  const sessionActor = text(row?.sessionResult?.checkedBy)
-  const sessionTime = formatSessionCheckedAt(row?.sessionResult?.checkedAt)
-  const completionLabel = sessionCompleted
-    ? `Completed${sessionActor ? ` by ${sessionActor}` : ''}${sessionTime ? ` at ${sessionTime}` : ''}`
-    : workflowState.isComplete
-      ? 'Checked'
-      : 'Not checked'
   const metadataLabel = [formatFireExtinguisherMeta(row), formatFireExtinguisherCertification(row)]
     .filter(Boolean)
     .join(' | ')
-  return [completionLabel, metadataLabel, formatFireExtinguisherLastInspection(row.lastInspection)]
+  return [
+    getFireExtinguisherCurrentCheckLabel(row),
+    metadataLabel,
+    shouldShowFireExtinguisherLastInspection(row)
+      ? formatFireExtinguisherLastInspection(row.lastInspection)
+      : '',
+  ].filter(Boolean)
 }
 
 const getFireExtinguisherDetailBadges = (row = {}) => {
   const workflowState = getFireExtinguisherRowWorkflowState(row)
   const badges = []
-  if (workflowState.isComplete) {
+  if (
+    workflowState.isComplete ||
+    row?.sessionSyncPending === true ||
+    row?.sessionResult?.status === 'completed'
+  ) {
     badges.push({ key: 'checked', label: 'Checked', color: 'success' })
   }
   if (workflowState.hasDefect) {
@@ -98,7 +93,12 @@ const getFireExtinguisherDetailBadges = (row = {}) => {
       color: 'danger',
     })
   }
-  if (!workflowState.isComplete && !workflowState.hasDefect) {
+  if (
+    !workflowState.isComplete &&
+    row?.sessionSyncPending !== true &&
+    row?.sessionResult?.status !== 'completed' &&
+    !workflowState.hasDefect
+  ) {
     badges.push({ key: 'pending', label: 'Pending', color: 'secondary' })
   }
   return badges
@@ -140,7 +140,7 @@ const FireExtinguisherListView = ({
   const mobileDetailRow = mobileDetailRowId
     ? allRows.find((row) => text(row.id) === mobileDetailRowId) || null
     : null
-  const mobileDetailReadOnly = readOnly || mobileDetailRow?.sessionLocked === true
+  const mobileDetailReadOnly = readOnly
   const mobileDraftDirty =
     mobileDetailMode === 'inspect' &&
     Boolean(mobileDraftRow) &&
@@ -305,6 +305,22 @@ const FireExtinguisherListView = ({
     closeMobileDetailDrawer()
   }, [closeMobileDetailDrawer, pendingDiscardAction])
 
+  const persistFireExtinguisherEntry = useCallback(
+    async (payload, sourceRow) => {
+      try {
+        if (sourceRow) {
+          const result = await handlers.onUpdateExtinguisher?.(sourceRow, payload)
+          return result === undefined || result !== false
+        }
+        const result = await handlers.onAddExtinguisher?.(payload)
+        return result === undefined || result !== false
+      } catch {
+        return false
+      }
+    },
+    [handlers],
+  )
+
   const patchMobileDraftRow = useCallback((patch) => {
     setMobileDraftRow((current) => (current ? { ...current, ...patch } : current))
     setMobileSaveStatus('Unsaved changes')
@@ -462,18 +478,17 @@ const FireExtinguisherListView = ({
               subLocation={subLocation}
               initialValue={editingRow || { zone, mainLocation }}
               presentation="drawer"
+              onCheckLocatorConflict={handlers.onCheckLocatorConflict}
               onCancel={() => {
                 setShowAdd(false)
                 setEditingRow(null)
               }}
-              onSave={(payload) => {
-                if (editingRow) {
-                  handlers.onUpdateExtinguisher?.(editingRow, payload)
-                } else {
-                  handlers.onAddExtinguisher?.(payload)
+              onSave={async (payload) => {
+                const saved = await persistFireExtinguisherEntry(payload, editingRow)
+                if (saved) {
+                  setShowAdd(false)
+                  setEditingRow(null)
                 }
-                setShowAdd(false)
-                setEditingRow(null)
               }}
             />
           </MobileBottomDrawer>
@@ -482,18 +497,17 @@ const FireExtinguisherListView = ({
             mainLocation={mainLocation}
             subLocation={subLocation}
             initialValue={editingRow || { zone, mainLocation }}
+            onCheckLocatorConflict={handlers.onCheckLocatorConflict}
             onCancel={() => {
               setShowAdd(false)
               setEditingRow(null)
             }}
-            onSave={(payload) => {
-              if (editingRow) {
-                handlers.onUpdateExtinguisher?.(editingRow, payload)
-              } else {
-                handlers.onAddExtinguisher?.(payload)
+            onSave={async (payload) => {
+              const saved = await persistFireExtinguisherEntry(payload, editingRow)
+              if (saved) {
+                setShowAdd(false)
+                setEditingRow(null)
               }
-              setShowAdd(false)
-              setEditingRow(null)
             }}
           />
         )
@@ -552,10 +566,13 @@ const FireExtinguisherListView = ({
               subLocation={subLocation}
               initialValue={mobileDetailRow}
               presentation="drawer"
+              onCheckLocatorConflict={handlers.onCheckLocatorConflict}
               onCancel={() => setMobileDetailMode('inspect')}
-              onSave={(payload) => {
-                handlers.onUpdateExtinguisher?.(mobileDetailRow, payload)
-                setMobileDetailMode('inspect')
+              onSave={async (payload) => {
+                const saved = await persistFireExtinguisherEntry(payload, mobileDetailRow)
+                if (saved) {
+                  setMobileDetailMode('inspect')
+                }
               }}
             />
           ) : (
@@ -656,7 +673,7 @@ const FireExtinguisherListView = ({
         <div className="inspection-hydraulic-card-grid inspection-check-card-grid--managed inspection-fire-extinguisher-card-stack">
           {rows.map((row) => {
             const rowId = text(row.id)
-            const rowReadOnly = readOnly || row.sessionLocked === true
+            const rowReadOnly = readOnly
             const expanded =
               rowReadOnly ||
               (!useMobileDrawer &&

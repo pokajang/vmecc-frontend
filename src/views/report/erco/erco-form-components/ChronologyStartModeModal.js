@@ -1,16 +1,18 @@
 import React from 'react'
 import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
+import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
+import useMediaQuery from 'src/hooks/useMediaQuery'
 
-const ChronologyStartModeModal = ({ visible, responseStartTime, onClose, onManual, onPremob }) => (
-  <CModal alignment="center" visible={visible} onClose={onClose} fullscreen="sm" scrollable>
-    <CModalHeader>
-      <CModalTitle>Initialize Chronology</CModalTitle>
-    </CModalHeader>
-    <CModalBody>
+const ChronologyStartModeModal = ({ visible, responseStartTime, onClose, onManual, onPremob }) => {
+  const isMobileDrawer = useMediaQuery('(max-width: 575.98px)')
+  const body = (
+    <>
       Response start time is set to <strong>{responseStartTime}</strong>. Choose how to begin
       chronology.
-    </CModalBody>
-    <CModalFooter>
+    </>
+  )
+  const actions = (
+    <>
       <CButton type="button" color="light" onClick={onClose}>
         Cancel
       </CButton>
@@ -20,8 +22,31 @@ const ChronologyStartModeModal = ({ visible, responseStartTime, onClose, onManua
       <CButton type="button" color="primary" onClick={onPremob}>
         Add PreMob Template
       </CButton>
-    </CModalFooter>
-  </CModal>
-)
+    </>
+  )
+
+  if (isMobileDrawer) {
+    return (
+      <MobileBottomDrawer visible={visible} title="Initialize Chronology" onClose={onClose}>
+        <div className="inspection-mobile-detail-drawer-body inspection-equipment-detail-drawer-body">
+          {body}
+        </div>
+        <div className="mobile-bottom-drawer__footer d-flex align-items-center justify-content-end gap-2">
+          {actions}
+        </div>
+      </MobileBottomDrawer>
+    )
+  }
+
+  return (
+    <CModal alignment="center" visible={visible} onClose={onClose} fullscreen="sm" scrollable>
+      <CModalHeader>
+        <CModalTitle>Initialize Chronology</CModalTitle>
+      </CModalHeader>
+      <CModalBody>{body}</CModalBody>
+      <CModalFooter>{actions}</CModalFooter>
+    </CModal>
+  )
+}
 
 export default ChronologyStartModeModal

@@ -2,8 +2,38 @@ import React, { useState } from 'react'
 import { CButton, CCard, CCardBody, CFormInput, CFormLabel } from '@coreui/react'
 import { FormFieldError } from '../../form/components/InspectionFormDisplaySections'
 import { formatFireExtinguisherDaysLeft } from './helpers'
+import { extractFireExtinguisherLocator } from './locator'
 
 const text = (value) => String(value || '').trim()
+
+const DuplicateLocatorCard = ({ duplicateRows = [] }) => {
+  if (!duplicateRows.length) return null
+
+  return (
+    <div className="d-grid gap-2 border border-danger-subtle bg-danger-subtle rounded-3 p-2 small text-body-secondary">
+      {duplicateRows.map((row) => {
+        const parts = [text(row.zone), text(row.mainLocation), text(row.subLocation)].filter(
+          Boolean,
+        )
+        return (
+          <div
+            key={String(row.id || row.catalogId || row.barcodeNo || '')}
+            className="d-grid gap-1"
+          >
+            <div className="fw-semibold text-body">
+              {text(row.idLocNo) || text(row.barcodeNo) || text(row.feType) || 'Fire extinguisher'}
+            </div>
+            <div>{parts.join(' > ') || 'Location unavailable'}</div>
+            <div>
+              {[text(row.feType), text(row.certificationValidity)].filter(Boolean).join(' | ') ||
+                'Catalog details unavailable'}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
 
 export const AddFireExtinguisherForm = ({
   mainLocation,
@@ -11,6 +41,7 @@ export const AddFireExtinguisherForm = ({
   onSave,
   onCancel,
   initialValue = {},
+  onCheckLocatorConflict,
   presentation = 'card',
 }) => {
   const [draft, setDraft] = useState({
@@ -23,9 +54,19 @@ export const AddFireExtinguisherForm = ({
     certificationValidity: text(initialValue.certificationValidity),
   })
   const [error, setError] = useState('')
+  const [duplicateRows, setDuplicateRows] = useState([])
+  const [isCheckingDuplicate, setIsCheckingDuplicate] = useState(false)
+
   const setField = (field, value) => setDraft((current) => ({ ...current, [field]: value }))
 
-  const save = () => {
+  const save = async () => {
+    const duplicateLookupLocators = Array.from(
+      new Set(
+        [draft.barcodeNo, draft.idLocNo]
+          .map((value) => extractFireExtinguisherLocator(value))
+          .filter(Boolean),
+      ),
+    )
     if (!text(draft.mainLocation)) {
       setError('Main location is required.')
       return
@@ -34,6 +75,33 @@ export const AddFireExtinguisherForm = ({
       setError('Enter ID Loc. No. or barcode.')
       return
     }
+
+    if (duplicateLookupLocators.length > 0 && typeof onCheckLocatorConflict === 'function') {
+      setIsCheckingDuplicate(true)
+      setError('')
+      setDuplicateRows([])
+      try {
+        for (const locator of duplicateLookupLocators) {
+          const conflicts = await onCheckLocatorConflict({
+            locator,
+            catalogId: text(initialValue.catalogId || initialValue.id),
+          })
+          if (Array.isArray(conflicts) && conflicts.length > 0) {
+            setDuplicateRows(conflicts)
+            setError(
+              'Duplicate locator found. Edit the existing unit or use a different locator for this extinguisher.',
+            )
+            return
+          }
+        }
+      } catch (checkError) {
+        setError(checkError?.message || 'Unable to verify locator uniqueness.')
+        return
+      } finally {
+        setIsCheckingDuplicate(false)
+      }
+    }
+
     onSave?.(draft)
   }
 
@@ -95,6 +163,7 @@ export const AddFireExtinguisherForm = ({
               value={draft[field]}
               onChange={(event) => {
                 setError('')
+                setDuplicateRows([])
                 setField(field, event.target.value)
               }}
             />
@@ -109,13 +178,18 @@ export const AddFireExtinguisherForm = ({
           </div>
         ) : null}
       </div>
+      <DuplicateLocatorCard duplicateRows={duplicateRows} />
       <FormFieldError>{error}</FormFieldError>
       <div className="d-flex gap-2 justify-content-end">
         <CButton color="secondary" variant="outline" size="sm" onClick={onCancel}>
           Cancel
         </CButton>
-        <CButton color="primary" size="sm" onClick={save}>
-          {initialValue?.equipmentSource === 'seed' ? 'Save global change' : 'Save extinguisher'}
+        <CButton color="primary" size="sm" disabled={isCheckingDuplicate} onClick={save}>
+          {isCheckingDuplicate
+            ? 'Checking locator...'
+            : initialValue?.equipmentSource === 'seed'
+              ? 'Save global change'
+              : 'Save extinguisher'}
         </CButton>
       </div>
     </>

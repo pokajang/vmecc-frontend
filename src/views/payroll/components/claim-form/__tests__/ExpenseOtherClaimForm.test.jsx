@@ -108,7 +108,7 @@ describe('ExpenseOtherClaimForm', () => {
     expect(screen.getByLabelText('From')).toBeTruthy()
     expect(screen.getByLabelText('To')).toBeTruthy()
     expect(screen.getByLabelText('Distance (KM)')).toBeTruthy()
-    expect(screen.getByLabelText('Rate / KM')).toBeTruthy()
+    expect(screen.getByLabelText('Rate / km')).toBeTruthy()
     expect(screen.getByLabelText('Amount (MYR)').hasAttribute('disabled')).toBe(true)
   })
 
@@ -122,7 +122,7 @@ describe('ExpenseOtherClaimForm', () => {
     expect(screen.getByText('1 linked attachment on saved item.')).toBeTruthy()
     fireEvent.click(screen.getByText('receipt.pdf'))
 
-    expect(screen.getByText('Attachment Preview')).toBeTruthy()
+    expect(screen.getByText('Attachment preview')).toBeTruthy()
     expect(
       screen.getAllByText('Preview is unavailable for this attachment in current draft state.')
         .length,
@@ -182,7 +182,7 @@ describe('ExpenseOtherClaimForm', () => {
 
     await waitFor(() => {
       expect(submitSpy).toHaveBeenCalled()
-      expect(screen.getByText('Claim Submitted')).toBeTruthy()
+      expect(screen.getByText('Claim submitted')).toBeTruthy()
     })
     expect(screen.getByText('Claim CLM-POST-001 was saved successfully.')).toBeTruthy()
   })

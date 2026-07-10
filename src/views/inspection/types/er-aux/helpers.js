@@ -363,8 +363,14 @@ export const getErAuxSubmissionCandidateRows = (form = {}) => {
 const isIssueCondition = (value) => ['Defect', 'Missing', 'N/A'].includes(normalizeCondition(value))
 const isDefectCondition = (value) => normalizeCondition(value) === 'Defect'
 
-const isErAuxRowComplete = (check = {}) =>
-  String(check.quantity ?? '').trim() && String(check.condition || '').trim()
+const isErAuxRowComplete = (check = {}) => {
+  const hasInspectionValues =
+    String(check.quantity ?? '').trim() && String(check.condition || '').trim()
+  if (!hasInspectionValues || !isDefectCondition(check.condition))
+    return Boolean(hasInspectionValues)
+
+  return String(check.defectRemarks || '').trim() && normalizePhotos(check.defectPhotos).length > 0
+}
 
 const getErAuxMissingCheckLabels = (check = {}) => [
   ...(!String(check.quantity ?? '').trim() ? ['quantity'] : []),

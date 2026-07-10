@@ -54,12 +54,15 @@ const InspectionFormManagerModals = ({
   startEditEquipment,
 }) => {
   const useMobileDrawer = useMediaQuery('(max-width: 575.98px)')
-  const fireTruckTitle = editingFireTruckId ? 'Edit Truck' : 'Add Truck'
+  const fireTruckTitle = editingFireTruckId ? 'Edit truck' : 'Add truck'
   const fireTruckBody = (
     <div className="inspection-fire-truck-form-grid">
       <div className="inspection-fire-truck-form-field">
-        <CFormLabel className="small fw-semibold text-muted">Plate Number</CFormLabel>
+        <CFormLabel htmlFor="fire-truck-plate" className="small fw-semibold text-muted">
+          Plate number
+        </CFormLabel>
         <CFormInput
+          id="fire-truck-plate"
           value={newTruckPlateNo}
           placeholder="e.g. AJG9555"
           onChange={(event) => {
@@ -69,32 +72,44 @@ const InspectionFormManagerModals = ({
         />
       </div>
       <div className="inspection-fire-truck-form-field">
-        <CFormLabel className="small fw-semibold text-muted">Truck Name</CFormLabel>
+        <CFormLabel htmlFor="fire-truck-name" className="small fw-semibold text-muted">
+          Truck name
+        </CFormLabel>
         <CFormInput
+          id="fire-truck-name"
           value={newTruckName}
           placeholder="e.g. Fire Truck"
           onChange={(event) => setNewTruckName(event.target.value)}
         />
       </div>
       <div className="inspection-fire-truck-form-field">
-        <CFormLabel className="small fw-semibold text-muted">Road Tax Expiry</CFormLabel>
+        <CFormLabel htmlFor="fire-truck-road-tax-expiry" className="small fw-semibold text-muted">
+          Road tax expiry
+        </CFormLabel>
         <CFormInput
+          id="fire-truck-road-tax-expiry"
           type="date"
           value={newTruckRoadTaxExpiry}
           onChange={(event) => setNewTruckRoadTaxExpiry(event.target.value)}
         />
       </div>
       <div className="inspection-fire-truck-form-field">
-        <CFormLabel className="small fw-semibold text-muted">Insurance Expiry</CFormLabel>
+        <CFormLabel htmlFor="fire-truck-insurance-expiry" className="small fw-semibold text-muted">
+          Insurance expiry
+        </CFormLabel>
         <CFormInput
+          id="fire-truck-insurance-expiry"
           type="date"
           value={newTruckInsuranceExpiry}
           onChange={(event) => setNewTruckInsuranceExpiry(event.target.value)}
         />
       </div>
       <div className="inspection-fire-truck-form-field">
-        <CFormLabel className="small fw-semibold text-muted">Puspakom Expiry</CFormLabel>
+        <CFormLabel htmlFor="fire-truck-puspakom-expiry" className="small fw-semibold text-muted">
+          Puspakom expiry
+        </CFormLabel>
         <CFormInput
+          id="fire-truck-puspakom-expiry"
           type="date"
           value={newTruckPuspakomExpiry}
           onChange={(event) => setNewTruckPuspakomExpiry(event.target.value)}
@@ -109,7 +124,7 @@ const InspectionFormManagerModals = ({
         Cancel
       </CButton>
       <CButton color="primary" onClick={saveFireTruck}>
-        {editingFireTruckId ? 'Update Truck' : 'Save Truck'}
+        {editingFireTruckId ? 'Update truck' : 'Save truck'}
       </CButton>
     </>
   )
@@ -152,7 +167,7 @@ const InspectionFormManagerModals = ({
                 ? 'e.g. Reception'
                 : 'e.g. Manjung Hub'
         }
-        descriptionLabel={`${locationEntityLabel} Details (Optional)`}
+        descriptionLabel={`${locationEntityLabel} details (optional)`}
         descriptionValue={location.newLocationDescription}
         onChangeDescription={location.setNewLocationDescription}
         descriptionPlaceholder="Subtext shown below location name."
@@ -197,7 +212,7 @@ const InspectionFormManagerModals = ({
           if (incident.addTypeError) incident.setAddTypeError('')
         }}
         namePlaceholder="e.g. Pump House"
-        descriptionLabel="Inspection Type Details (Optional)"
+        descriptionLabel="Inspection type details (optional)"
         descriptionValue={incident.newTypeDescription}
         onChangeDescription={incident.setNewTypeDescription}
         descriptionPlaceholder="Subtext shown below type name."
@@ -237,7 +252,7 @@ const InspectionFormManagerModals = ({
           if (equipmentError) setEquipmentError('')
         }}
         namePlaceholder="e.g. Hydraulic Ram Extension"
-        descriptionLabel="Equipment Details (Optional)"
+        descriptionLabel="Equipment details (optional)"
         descriptionValue={newEquipmentDescription}
         onChangeDescription={setNewEquipmentDescription}
         descriptionPlaceholder="Subtext shown below equipment name."

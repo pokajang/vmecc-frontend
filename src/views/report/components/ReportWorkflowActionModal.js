@@ -4,10 +4,12 @@ import {
   CButton,
   CFormCheck,
   CFormInput,
+  CFormLabel,
   CModal,
   CModalBody,
   CModalFooter,
   CModalHeader,
+  CModalTitle,
 } from '@coreui/react'
 
 const ACTION_META = {
@@ -48,7 +50,9 @@ const ReportWorkflowActionModal = ({
 
   return (
     <CModal visible={visible} onClose={onClose} alignment="center" fullscreen="sm" scrollable>
-      <CModalHeader>{action.label} Report</CModalHeader>
+      <CModalHeader>
+        <CModalTitle>{action.label} report</CModalTitle>
+      </CModalHeader>
       <CModalBody className="d-grid gap-3">
         {!record ? (
           <div className="text-body-secondary small">No report details available.</div>
@@ -81,16 +85,26 @@ const ReportWorkflowActionModal = ({
             </div>
 
             <div>
-              <div className="small text-body-secondary mb-1">{action.remarksLabel}</div>
+              <CFormLabel
+                htmlFor="report-workflow-remarks"
+                className="small text-body-secondary mb-1"
+              >
+                {action.remarksLabel}
+              </CFormLabel>
               <CFormInput
+                id="report-workflow-remarks"
                 type="text"
                 value={remarks}
                 onChange={(event) => onRemarksChange?.(event.target.value)}
                 placeholder="Add your remarks"
                 invalid={Boolean(rejectError)}
+                aria-required={isReject}
+                aria-describedby={rejectError ? 'report-workflow-remarks-error' : undefined}
               />
               {rejectError ? (
-                <div className="invalid-feedback d-block">{rejectError}</div>
+                <div id="report-workflow-remarks-error" className="invalid-feedback d-block">
+                  {rejectError}
+                </div>
               ) : (
                 showRemarksHelper && (
                   <div className="small text-body-secondary mt-1">
@@ -121,7 +135,7 @@ const ReportWorkflowActionModal = ({
         )}
       </CModalBody>
       <CModalFooter>
-        <CButton color="light" onClick={onClose}>
+        <CButton color="secondary" variant="outline" onClick={onClose}>
           Cancel
         </CButton>
         <CButton color={action.color} onClick={onSubmit} disabled={isSubmitDisabled}>

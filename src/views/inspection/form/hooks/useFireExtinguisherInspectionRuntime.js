@@ -60,6 +60,7 @@ const useFireExtinguisherInspectionRuntime = ({
   const sessionSync = useFireExtinguisherSessionSync({
     enabled: isFireExtinguisherCatalogInspectionForm,
     inspectionType: selectedType,
+    formInspectionSessionUid: form.inspectionSessionUid,
     zone,
     mainLocation,
     subLocation,

@@ -24,6 +24,7 @@ import TableFilters from 'src/components/TableFilters'
 import TableLoader from 'src/components/TableLoader'
 import { formatLocalDate, parseLocalDateValue } from 'src/utils/localDate'
 import HolidayCreateModal from './HolidayCreateModal'
+import { activateOnEnterOrSpace } from 'src/utils/uiAccessibility'
 
 const formatDate = (value) => formatLocalDate(value)
 
@@ -294,7 +295,7 @@ const HolidaysTab = ({
         />
         <CModal visible={Boolean(detailHoliday)} alignment="center" onClose={closeHolidayDetail}>
           <CModalHeader onClose={closeHolidayDetail}>
-            <CModalTitle>Holiday Details</CModalTitle>
+            <CModalTitle>Holiday details</CModalTitle>
           </CModalHeader>
           <CModalBody>
             {detailHoliday ? (
@@ -372,7 +373,7 @@ const HolidaysTab = ({
         ) : (
           <>
             <MobileRecordList sections={mobileHolidaySections} variant="list-group" />
-            <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
+            <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-body">
               <CTable align="middle" className="mb-0" hover responsive>
                 <CTableHead color="light">
                   <CTableRow>
@@ -383,7 +384,7 @@ const HolidaysTab = ({
                     <CTableHeaderCell className="text-start">Holiday</CTableHeaderCell>
                     <CTableHeaderCell className="text-center">Scope</CTableHeaderCell>
                     <CTableHeaderCell className="text-center">State</CTableHeaderCell>
-                    <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
+                    <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
@@ -400,7 +401,12 @@ const HolidaysTab = ({
                       <CTableRow
                         key={row.id}
                         className="cursor-pointer"
+                        tabIndex={0}
+                        aria-label={`Open holiday ${row.name || formatDate(row.date)}`}
                         onClick={() => openHolidayDetail(row)}
+                        onKeyDown={(event) =>
+                          activateOnEnterOrSpace(event, () => openHolidayDetail(row))
+                        }
                       >
                         <CTableDataCell className="text-center text-muted">
                           {displayIndex}

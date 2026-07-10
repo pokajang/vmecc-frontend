@@ -222,7 +222,7 @@ export const ReportMobileContextPanel = ({ title = 'Context', items = [] }) => {
   if (!isMobile) return null
 
   return (
-    <div className="report-mobile-context d-md-none rounded-3 border bg-white">
+    <div className="report-mobile-context d-md-none rounded-3 border bg-body">
       <div className="report-mobile-context__title fw-semibold">{title}</div>
       <div className="report-mobile-context__grid">
         {items.map((item) => (
@@ -237,7 +237,7 @@ export const ReportMobileContextPanel = ({ title = 'Context', items = [] }) => {
 }
 
 export const ReportBasicPathSummary = ({ title, description, mobileSummary, items = [] }) => (
-  <div className="report-basic-path-card rounded-3 border bg-white p-3 d-grid gap-2">
+  <div className="report-basic-path-card rounded-3 border bg-body p-3 d-grid gap-2">
     <div className="fw-semibold">{title}</div>
     <div className="small text-body-secondary d-md-none">{mobileSummary || '-'}</div>
     <div className="small text-body-secondary d-none d-md-block">{description}</div>
@@ -373,16 +373,18 @@ export const ReportChronologySection = ({
           {rows.map((row, idx) => (
             <CRow key={row.id} className="g-2 mb-2 align-items-end">
               <CCol xs={12} md={2}>
-                <CFormLabel>Time</CFormLabel>
+                <CFormLabel htmlFor={`report-row-${row.id}-time`}>Time</CFormLabel>
                 <CFormInput
+                  id={`report-row-${row.id}-time`}
                   type="time"
                   value={row.time}
                   onChange={(event) => onUpdateRow?.(row.id, { time: event.target.value })}
                 />
               </CCol>
               <CCol xs={12} md={9}>
-                <CFormLabel>{actionLabel}</CFormLabel>
+                <CFormLabel htmlFor={`report-row-${row.id}-action`}>{actionLabel}</CFormLabel>
                 <CFormInput
+                  id={`report-row-${row.id}-action`}
                   value={row.action}
                   onChange={(event) => onUpdateRow?.(row.id, { action: event.target.value })}
                 />
@@ -394,7 +396,7 @@ export const ReportChronologySection = ({
                   disabled={rows.length <= 1}
                   onClick={() => onRemoveRow?.(row.id)}
                 >
-                  {idx === 0 ? 'Keep' : 'Del'}
+                  {idx === 0 ? 'Keep' : 'Delete'}
                 </CButton>
               </CCol>
             </CRow>
@@ -405,28 +407,30 @@ export const ReportChronologySection = ({
       <CModal visible={rowModal.visible} fullscreen="sm" onClose={closeRowModal}>
         <CModalHeader closeButton>
           <CModalTitle>
-            {rowModal.mode === 'add' ? 'Add Chronology Row' : 'Edit Chronology Row'}
+            {rowModal.mode === 'add' ? 'Add chronology row' : 'Edit chronology row'}
           </CModalTitle>
         </CModalHeader>
         <CModalBody className="d-grid gap-3">
           <div>
-            <CFormLabel>Time</CFormLabel>
+            <CFormLabel htmlFor="report-row-modal-time">Time</CFormLabel>
             <CFormInput
+              id="report-row-modal-time"
               type="time"
               value={rowModal.draft?.time || ''}
               onChange={(event) => updateDraft({ time: event.target.value })}
             />
           </div>
           <div>
-            <CFormLabel>{actionLabel}</CFormLabel>
+            <CFormLabel htmlFor="report-row-modal-action">{actionLabel}</CFormLabel>
             <CFormInput
+              id="report-row-modal-action"
               value={rowModal.draft?.action || ''}
               onChange={(event) => updateDraft({ action: event.target.value })}
             />
           </div>
         </CModalBody>
         <CModalFooter>
-          <CButton type="button" color="light" onClick={closeRowModal}>
+          <CButton type="button" color="secondary" variant="outline" onClick={closeRowModal}>
             Cancel
           </CButton>
           <CButton type="button" color="primary" onClick={saveRowModal}>

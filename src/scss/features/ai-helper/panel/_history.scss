@@ -65,7 +65,7 @@
   padding: 0.55rem 0.55rem 0.55rem 0.6rem;
   border: 1px solid transparent;
   border-radius: 0.45rem;
-  background: #ffffff;
+  background: var(--cui-body-bg);
   color: var(--cui-body-color);
   margin-bottom: 0.45rem;
 
@@ -74,6 +74,22 @@
     background: rgba(0, 126, 122, 0.1);
     border-color: rgba(0, 126, 122, 0.18);
   }
+}
+
+.ai-helper-history__item--delete-confirmation {
+  display: block;
+  padding: 0.7rem;
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #7f1d1d;
+}
+
+.ai-helper-history__delete-confirmation {
+  width: 100%;
+}
+
+.ai-helper-history__delete-confirmation span {
+  font-weight: 700;
 }
 
 .ai-helper-history__open {
@@ -113,19 +129,6 @@
   }
 }
 
-.ai-helper-history-confirm {
-  margin: 0 0.65rem 0.65rem;
-  padding: 0.7rem;
-  border: 1px solid #fecaca;
-  border-radius: 0.5rem;
-  background: #fef2f2;
-  color: #7f1d1d;
-}
-
-.ai-helper-history-confirm span {
-  font-weight: 700;
-}
-
 .ai-helper-history-confirm__actions {
   display: flex;
   justify-content: flex-end;
@@ -137,7 +140,7 @@
   border: 1px solid transparent;
   border-radius: 0.4rem;
   padding: 0.35rem 0.6rem;
-  background: #ffffff;
+  background: var(--cui-body-bg);
   color: var(--cui-body-color);
   cursor: pointer;
 

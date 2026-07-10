@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { CButton, CCard, CCardBody, CCardHeader, CFormInput } from '@coreui/react'
 import { MoreVertical, Plus } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
@@ -9,12 +9,11 @@ import { LOCATION_TOGGLE_VALUE } from 'src/views/inspection/useLocationTypeManag
 import InspectionLocationOptionPicker from './InspectionLocationOptionPicker'
 import { FormFieldError, InspectionSelectedTypeCard } from './InspectionFormDisplaySections'
 import { isCompactInspectionViewport } from './InspectionDisplayShared'
-import {
-  applyFireExtinguisherAreaCompletionProgress,
-  applyFireExtinguisherLocationProgress,
-  applyFireExtinguisherZoneCompletionProgress,
-} from '../fireExtinguisherProgressSelectors'
+import { applyFireExtinguisherLocationInventoryCounts } from '../fireExtinguisherProgressSelectors'
 import FireExtinguisherScanner from '../../types/fire-extinguisher/FireExtinguisherScanner'
+import { CONTINUATION_SCAN_LABEL } from '../../inspectionFormUiTokens'
+import { extractFireExtinguisherSerial } from '../../types/fire-extinguisher/locator'
+import { neutralizeCompletionPresentation } from '../../types/continuationHelpers'
 import {
   InspectionMobileCollapsedSelectorRow,
   InspectionMobileSetupDrawer,
@@ -33,7 +32,7 @@ const MOBILE_SETUP_DRAWERS = {
 
 const FIRE_EXTINGUISHER_ENTRY_MODES = [
   { value: 'area', title: 'By Area' },
-  { value: 'scan', title: 'Scan QR / Barcode' },
+  { value: 'scan', title: 'Serial Number' },
 ]
 
 const DESKTOP_SETUP_OPTION_COLUMNS = { xs: 6, md: 4, xl: 3 }
@@ -46,6 +45,31 @@ const locationCardProps = (option, isSelected) => {
     bodyClassName: 'gap-0',
     paddingClassName: 'p-3',
     style: isSelected ? ACTIVE_CARD_STYLE : undefined,
+  }
+}
+
+const withoutCompletionDecoration = (options = []) =>
+  (Array.isArray(options) ? options : []).map(neutralizeCompletionPresentation)
+
+const buildFireExtinguisherSerialOption = (row = {}) => {
+  const serial = extractFireExtinguisherSerial(
+    row?.barcodeNo || row?.locator || row?.serial || row?.idLocNo || row?.value || row?.label || '',
+  )
+  if (!serial) return null
+
+  const fallbackLabel = [row?.idLocNo, row?.mainLocation, row?.subLocation, row?.zone]
+    .filter(Boolean)
+    .join(' | ')
+
+  return {
+    value: serial,
+    barcodeNo: serial,
+    idLocNo: String(row?.idLocNo || ''),
+    feType: String(row?.feType || row?.fe_type || ''),
+    mainLocation: String(row?.mainLocation || ''),
+    subLocation: String(row?.subLocation || ''),
+    zone: String(row?.zone || ''),
+    label: fallbackLabel || serial,
   }
 }
 
@@ -249,6 +273,7 @@ const FireExtinguisherScanRegistrationCard = ({
                 size="sm"
                 type={type}
                 label={label}
+                aria-label={label}
                 value={String(draft?.[field] || '')}
                 onChange={(event) => updateDraft?.(field, event.target.value)}
               />
@@ -389,6 +414,7 @@ const FireExtinguisherDuplicateEditCard = ({
                 size="sm"
                 type={type}
                 label={label}
+                aria-label={label}
                 value={String(draft?.[field] || '')}
                 onChange={(event) => updateDraft?.(field, event.target.value)}
               />
@@ -419,7 +445,6 @@ const InspectionFormSetupSections = ({
   fieldErrors,
   fireExtinguisherAreaRows = [],
   fireExtinguisherScan = null,
-  fireExtinguisherSessionProgress = null,
   fireTruckOptions,
   form,
   incident,
@@ -579,6 +604,19 @@ const InspectionFormSetupSections = ({
   ]
     .filter(Boolean)
     .join(' > ')
+  const fireExtinguisherSerialOptions = useMemo(() => {
+    const rows = Array.isArray(fireExtinguisherAreaRows) ? fireExtinguisherAreaRows : []
+    const seen = new Set()
+    const options = []
+    rows.forEach((row) => {
+      const option = buildFireExtinguisherSerialOption(row)
+      if (!option) return
+      if (seen.has(option.value)) return
+      seen.add(option.value)
+      options.push(option)
+    })
+    return options
+  }, [fireExtinguisherAreaRows])
   const hasSelectedPrimaryLocation = String(selectedPrimaryLocationLabel || '').trim() !== ''
   const primaryCollapsedLabel = isFireTruckCatalogInspectionForm
     ? 'Truck'
@@ -624,22 +662,14 @@ const InspectionFormSetupSections = ({
   const primaryLocationOptions = isFireTruckCatalogInspectionForm
     ? fireTruckOptions
     : isFireExtinguisherCatalogInspectionForm
-      ? applyFireExtinguisherZoneCompletionProgress({
-          options: location.zoneOptions,
-          completedLocations: fireExtinguisherSessionProgress?.completedLocations,
-          locationProgress: fireExtinguisherSessionProgress?.locationProgress,
-        })
+      ? withoutCompletionDecoration(location.zoneOptions)
       : hasZoneLocationFlow
         ? location.zoneOptions
         : location.mainLocationOptions
   const visiblePrimaryLocationOptions = isFireTruckCatalogInspectionForm
     ? fireTruckOptions
     : isFireExtinguisherCatalogInspectionForm
-      ? applyFireExtinguisherZoneCompletionProgress({
-          options: location.visibleZoneOptions,
-          completedLocations: fireExtinguisherSessionProgress?.completedLocations,
-          locationProgress: fireExtinguisherSessionProgress?.locationProgress,
-        })
+      ? withoutCompletionDecoration(location.visibleZoneOptions)
       : hasZoneLocationFlow
         ? location.visibleZoneOptions
         : location.visibleMainLocationOptions
@@ -684,47 +714,28 @@ const InspectionFormSetupSections = ({
     : hasZoneLocationFlow
       ? 'Clear location search'
       : 'Clear sub-location search'
-  const areaOptionsWithProgress = isFireExtinguisherCatalogInspectionForm
-    ? applyFireExtinguisherAreaCompletionProgress({
-        options: location.areaOptions,
-        completedLocations: fireExtinguisherSessionProgress?.completedLocations,
-        extinguisherRows: fireExtinguisherAreaRows,
-        locationProgress: fireExtinguisherSessionProgress?.locationProgress,
-        sessionResults: fireExtinguisherSessionProgress?.results,
-        zone,
-      })
+  const areaOptionsWithCounts = isFireExtinguisherCatalogInspectionForm
+    ? withoutCompletionDecoration(location.areaOptions)
     : location.areaOptions
-  const visibleAreaOptionsWithProgress = isFireExtinguisherCatalogInspectionForm
-    ? applyFireExtinguisherAreaCompletionProgress({
-        options: location.visibleAreaOptions,
-        completedLocations: fireExtinguisherSessionProgress?.completedLocations,
-        extinguisherRows: fireExtinguisherAreaRows,
-        locationProgress: fireExtinguisherSessionProgress?.locationProgress,
-        sessionResults: fireExtinguisherSessionProgress?.results,
-        zone,
-      })
+  const visibleAreaOptionsWithCounts = isFireExtinguisherCatalogInspectionForm
+    ? withoutCompletionDecoration(location.visibleAreaOptions)
     : location.visibleAreaOptions
-  const selectedMainAreaProgressOption = isFireExtinguisherCatalogInspectionForm
-    ? areaOptionsWithProgress.find(
+  const selectedMainAreaCountOption = isFireExtinguisherCatalogInspectionForm
+    ? areaOptionsWithCounts.find(
         (option) =>
           normalizeCountKey(option?.value || option?.title) === normalizeCountKey(mainLocation),
       )
     : null
-  const selectedMainAreaProgressLabel = String(
-    selectedMainAreaProgressOption?.metaLabel || '',
-  ).trim()
-  const shouldShowFireExtinguisherAreaProgress = !hasLoadedFireExtinguisherScanTarget
+  const selectedMainAreaCountLabel = String(selectedMainAreaCountOption?.metaLabel || '').trim()
+  const shouldShowFireExtinguisherContextCount = !hasLoadedFireExtinguisherScanTarget
   const subLocationOptionsWithCounts = isFireTruckCompartmentFlow
     ? fireTruckCompartmentOptions
     : isFireExtinguisherCatalogInspectionForm
-      ? applyFireExtinguisherLocationProgress({
-          options: location.subLocationOptions,
-          completedLocations: fireExtinguisherSessionProgress?.completedLocations,
+      ? applyFireExtinguisherLocationInventoryCounts({
+          options: withoutCompletionDecoration(location.subLocationOptions),
           extinguisherRows: fireExtinguisherAreaRows,
           isLoading: isLoadingFireExtinguisherAreaRows,
-          locationProgress: fireExtinguisherSessionProgress?.locationProgress,
           level: 'subLocation',
-          sessionResults: fireExtinguisherSessionProgress?.results,
           zone,
           mainLocation,
         })
@@ -732,34 +743,31 @@ const InspectionFormSetupSections = ({
   const visibleSubLocationOptionsWithCounts = isFireTruckCompartmentFlow
     ? fireTruckCompartmentOptions
     : isFireExtinguisherCatalogInspectionForm
-      ? applyFireExtinguisherLocationProgress({
-          options: location.visibleSubLocationOptions,
-          completedLocations: fireExtinguisherSessionProgress?.completedLocations,
+      ? applyFireExtinguisherLocationInventoryCounts({
+          options: withoutCompletionDecoration(location.visibleSubLocationOptions),
           extinguisherRows: fireExtinguisherAreaRows,
           isLoading: isLoadingFireExtinguisherAreaRows,
-          locationProgress: fireExtinguisherSessionProgress?.locationProgress,
           level: 'subLocation',
-          sessionResults: fireExtinguisherSessionProgress?.results,
           zone,
           mainLocation,
         })
       : location.visibleSubLocationOptions
-  const selectedSubLocationProgressOption = isFireExtinguisherCatalogInspectionForm
+  const selectedSubLocationCountOption = isFireExtinguisherCatalogInspectionForm
     ? subLocationOptionsWithCounts.find(
         (option) =>
           normalizeCountKey(option?.value || option?.title) === normalizeCountKey(subLocation),
       )
     : null
-  const selectedSubLocationProgressLabel = String(
-    selectedSubLocationProgressOption?.metaLabel || '',
+  const selectedSubLocationCountLabel = String(
+    selectedSubLocationCountOption?.metaLabel || '',
   ).trim()
   const desktopTypeOptions = isCompactViewport ? incident.visibleTypeOptions : incident.typeOptions
   const desktopPrimaryLocationVisibleOptions = isCompactViewport
     ? visiblePrimaryLocationOptions
     : primaryLocationOptions
   const desktopMainAreaVisibleOptions = isCompactViewport
-    ? visibleAreaOptionsWithProgress
-    : areaOptionsWithProgress
+    ? visibleAreaOptionsWithCounts
+    : areaOptionsWithCounts
   const desktopSubLocationVisibleOptions = isCompactViewport
     ? visibleSubLocationOptionsWithCounts
     : subLocationOptionsWithCounts
@@ -1200,8 +1208,8 @@ const InspectionFormSetupSections = ({
                         variant="ghost"
                         size="sm"
                         className="inspection-mobile-selector-chip__reset p-1 border-0 shadow-none"
-                        aria-label="Scan another FE"
-                        title="Scan another FE"
+                        aria-label={CONTINUATION_SCAN_LABEL}
+                        title={CONTINUATION_SCAN_LABEL}
                         onClick={fireExtinguisherScan.onOpenScanner}
                       >
                         <Plus size={18} />
@@ -1353,7 +1361,7 @@ const InspectionFormSetupSections = ({
                   <div className="fw-semibold text-muted">Choose Main Area</div>
                   {supportsCustomLocations ? (
                     <CreateActionButton
-                      label={`Add main area (${areaOptionsWithProgress.length})`}
+                      label={`Add main area (${areaOptionsWithCounts.length})`}
                       className="inspection-compact-action-btn"
                       onClick={location.openAddMainLocationModal}
                     />
@@ -1361,22 +1369,22 @@ const InspectionFormSetupSections = ({
                 </div>
               ) : null}
               <InspectionLocationOptionPicker
-                options={areaOptionsWithProgress}
+                options={areaOptionsWithCounts}
                 visibleOptions={desktopMainAreaVisibleOptions}
                 value={mainLocation}
                 sectionLabel={mainAreaCollapsedLabel}
                 selectedLabel={selectedMainAreaLabel}
                 selectedMetaIconKey={
-                  shouldShowFireExtinguisherAreaProgress
-                    ? selectedMainAreaProgressOption?.metaIconKey
+                  shouldShowFireExtinguisherContextCount
+                    ? selectedMainAreaCountOption?.metaIconKey
                     : ''
                 }
                 selectedMetaLabel={
-                  shouldShowFireExtinguisherAreaProgress ? selectedMainAreaProgressLabel : ''
+                  shouldShowFireExtinguisherContextCount ? selectedMainAreaCountLabel : ''
                 }
                 selectedMetaTone={
-                  shouldShowFireExtinguisherAreaProgress
-                    ? selectedMainAreaProgressOption?.metaTone
+                  shouldShowFireExtinguisherContextCount
+                    ? selectedMainAreaCountOption?.metaTone
                     : ''
                 }
                 isCompactViewport={isCompactViewport}
@@ -1439,16 +1447,16 @@ const InspectionFormSetupSections = ({
                   sectionLabel={subLocationCollapsedLabel}
                   selectedLabel={selectedSubLocationLabel}
                   selectedMetaIconKey={
-                    shouldShowFireExtinguisherAreaProgress
-                      ? selectedSubLocationProgressOption?.metaIconKey
+                    shouldShowFireExtinguisherContextCount
+                      ? selectedSubLocationCountOption?.metaIconKey
                       : ''
                   }
                   selectedMetaLabel={
-                    shouldShowFireExtinguisherAreaProgress ? selectedSubLocationProgressLabel : ''
+                    shouldShowFireExtinguisherContextCount ? selectedSubLocationCountLabel : ''
                   }
                   selectedMetaTone={
-                    shouldShowFireExtinguisherAreaProgress
-                      ? selectedSubLocationProgressOption?.metaTone
+                    shouldShowFireExtinguisherContextCount
+                      ? selectedSubLocationCountOption?.metaTone
                       : ''
                   }
                   isCompactViewport={isCompactViewport}
@@ -1604,7 +1612,7 @@ const InspectionFormSetupSections = ({
             headerAction={
               supportsCustomLocations
                 ? renderDrawerHeaderAction(
-                    `Add main area (${areaOptionsWithProgress.length})`,
+                    `Add main area (${areaOptionsWithCounts.length})`,
                     location.openAddMainLocationModal,
                     MOBILE_SETUP_DRAWERS.mainArea,
                   )
@@ -1614,8 +1622,8 @@ const InspectionFormSetupSections = ({
           >
             <div className="d-grid gap-3">
               <InspectionLocationOptionPicker
-                options={areaOptionsWithProgress}
-                visibleOptions={areaOptionsWithProgress}
+                options={areaOptionsWithCounts}
+                visibleOptions={areaOptionsWithCounts}
                 value={mainLocation}
                 sectionLabel={mainAreaCollapsedLabel}
                 selectedLabel={selectedMainAreaLabel}
@@ -1741,6 +1749,12 @@ const InspectionFormSetupSections = ({
         visible={Boolean(fireExtinguisherScan?.isScannerOpen)}
         onClose={fireExtinguisherScan?.onCloseScanner}
         onScan={fireExtinguisherScan?.onScan}
+        fireExtinguisherSerialOptions={fireExtinguisherSerialOptions}
+        fireExtinguisherSerialSearchScope={{
+          zone: String(zone || ''),
+          mainLocation: String(mainLocation || ''),
+          subLocation: String(subLocation || ''),
+        }}
       />
     </>
   )

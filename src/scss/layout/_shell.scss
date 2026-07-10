@@ -104,8 +104,8 @@
 
 .footer {
   min-height: calc(3rem + 1px); // stylelint-disable-line function-disallowed-list
-  background-color: #ffffff;
-  --cui-footer-bg: #ffffff;
+  background-color: var(--cui-body-bg);
+  --cui-footer-bg: var(--cui-body-bg);
 }
 
 .app-footer {
@@ -122,17 +122,6 @@
 .app-footer span {
   display: inline-block;
   padding-block: 0.125rem;
-}
-
-@include color-mode(dark) {
-  body {
-    background-color: #ffffff;
-  }
-
-  .footer {
-    background-color: #ffffff;
-    --cui-footer-bg: #ffffff;
-  }
 }
 
 /* Header navbar active styles: match sidebar active background */

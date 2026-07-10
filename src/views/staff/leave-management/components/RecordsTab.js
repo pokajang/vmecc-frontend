@@ -96,7 +96,7 @@ const RecordsTab = ({
           <div className="text-body-secondary">No leave records match the current filters.</div>
         ) : (
           <>
-            <div className="rounded-3 shadow-sm overflow-hidden bg-white">
+            <div className="rounded-3 shadow-sm overflow-hidden bg-body">
               <CTable align="middle" className="mb-0" hover responsive>
                 <CTableHead color="light">
                   <CTableRow>
@@ -109,7 +109,7 @@ const RecordsTab = ({
                     <CTableHeaderCell>Status</CTableHeaderCell>
                     <CTableHeaderCell>Applied On</CTableHeaderCell>
                     <CTableHeaderCell className="table-sticky-action-cell text-end">
-                      Action
+                      Actions
                     </CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>

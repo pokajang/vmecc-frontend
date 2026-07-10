@@ -11,7 +11,7 @@ const InspectionChecklistSummaryPanel = ({
   setChecklistFilter,
   setHasChecklistFilter,
 }) => (
-  <div className="border rounded-3 p-3 mb-3 bg-white">
+  <div className="border rounded-3 p-3 mb-3 bg-body">
     <div className="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
       <div>
         <div className="fw-semibold">Checklist Summary</div>

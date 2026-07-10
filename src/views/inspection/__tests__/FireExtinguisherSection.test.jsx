@@ -193,7 +193,7 @@ describe('FireExtinguisherEditSection', () => {
       row,
       expect.objectContaining({ idLocNo: 'CAN-002' }),
     )
-    expect(screen.getByText('FE Physical Condition')).toBeTruthy()
+    expect(screen.queryByText('FE Physical Condition')).toBeNull()
   })
 
   it('shows a neutral right-side status label for incomplete extinguisher rows', () => {
@@ -228,12 +228,13 @@ describe('FireExtinguisherEditSection', () => {
     })
 
     expect(screen.getByTestId('fire-extinguisher-status-inspected')).toBeTruthy()
-    expect(screen.getByLabelText('Checked')).toBeTruthy()
+    expect(screen.getByLabelText('Checked in current report')).toBeTruthy()
     expect(screen.queryByTestId('fire-extinguisher-status-defect')).toBeNull()
   })
 
   it('shows the latest submitted inspection context on each extinguisher row', () => {
     const row = buildCompleteOkRow({
+      physicalCondition: '',
       lastInspection: {
         inspectedAt: '2026-06-05T10:30:00+08:00',
         inspectedBy: 'Jang',
@@ -243,22 +244,22 @@ describe('FireExtinguisherEditSection', () => {
     renderSection({
       summary: {
         visibleChecks: [row],
-        completedCount: 1,
+        completedCount: 0,
         totalCount: 1,
         defectCount: 0,
       },
     })
 
-    expect(screen.getByText(/Last inspected: .* by Jang/)).toBeTruthy()
+    expect(screen.getByText(/Last submitted inspection: .* by Jang/)).toBeTruthy()
   })
 
   it('shows when an extinguisher has no previous submitted inspection', () => {
-    const row = buildCompleteOkRow()
+    const row = buildCompleteOkRow({ physicalCondition: '' })
 
     renderSection({
       summary: {
         visibleChecks: [row],
-        completedCount: 1,
+        completedCount: 0,
         totalCount: 1,
         defectCount: 0,
       },
@@ -285,9 +286,46 @@ describe('FireExtinguisherEditSection', () => {
 
     expect(screen.getByTestId('fire-extinguisher-status-inspected')).toBeTruthy()
     expect(screen.getByTestId('fire-extinguisher-status-defect')).toBeTruthy()
-    expect(screen.getByLabelText('Checked')).toBeTruthy()
+    expect(screen.getByLabelText('Checked in current report')).toBeTruthy()
     expect(screen.getByLabelText('Defect (1)')).toBeTruthy()
     expect(screen.getByText('Defect (1)')).toBeTruthy()
+  })
+
+  it("opens and resets another inspector's checked card through the standard mobile flow", () => {
+    setMobileViewport()
+    const onResetCheck = vi.fn()
+    const row = buildCompleteOkRow({
+      sessionStatus: 'completed',
+      sessionCheckedBy: 'Inspector A',
+      sessionCheckedAt: '2026-07-10T21:56:00+08:00',
+      sessionResult: {
+        status: 'completed',
+        checkedBy: 'Inspector A',
+        checkedAt: '2026-07-10T21:56:00+08:00',
+      },
+    })
+
+    renderSection({
+      summary: {
+        visibleChecks: [row],
+        completedCount: 1,
+        totalCount: 1,
+        defectCount: 0,
+      },
+      handlers: { onResetCheck },
+    })
+
+    expect(screen.queryByText('FE Physical Condition')).toBeNull()
+    fireEvent.click(screen.getByText('ADO-001'))
+
+    expect(screen.getByText('FE Physical Condition')).toBeTruthy()
+    expect(screen.getByText(/Checked by Inspector A/)).toBeTruthy()
+    fireEvent.click(screen.getAllByLabelText('Extinguisher actions for ADO-001').at(-1))
+    fireEvent.click(screen.getAllByText('Reset check').at(-1))
+    expect(screen.getAllByText('Reset check').length).toBeGreaterThan(0)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
+    expect(onResetCheck).toHaveBeenCalledWith(expect.objectContaining({ id: 'fe:ok' }))
   })
 
   it('keeps incomplete rows marked not checked while still showing defect count', () => {

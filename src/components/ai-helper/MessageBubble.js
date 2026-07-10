@@ -3,6 +3,7 @@ import { CTooltip } from '@coreui/react'
 import { Check, Copy, Flag, RotateCcw } from 'lucide-react'
 
 import { MESSAGE_STATUS_SLOW, getMessageActions } from './constants'
+import { buildAiHelperKnowledgeFileUrl } from 'src/services/apiClient'
 
 const renderAssistantContent = (content) => {
   const lines = String(content || '').split(/\r?\n/)
@@ -155,6 +156,8 @@ const MessageBubble = ({ message, copied, onCopy, onReport, onRetry, retryDisabl
   const { canCopy, canReport, canRetry, hasContent, isStreamingOrSlow } = getMessageActions(message)
   const canAct = canCopy || canReport || canRetry
   const status = message?.status
+  const sources = Array.isArray(message?.sources) ? message.sources : []
+  const showSources = !isUser && status === 'completed' && sources.length > 0
 
   return (
     <div className={`ai-helper-message ${isUser ? 'ai-helper-message--user' : ''}`}>
@@ -181,6 +184,43 @@ const MessageBubble = ({ message, copied, onCopy, onReport, onRetry, retryDisabl
         ) : (
           <span className="ai-helper-muted">No response.</span>
         )}
+        {showSources ? (
+          <div className="ai-helper-message__sources" aria-label="Sources">
+            <div className="ai-helper-message__sources-label">Retrieved sources</div>
+            <div className="ai-helper-message__sources-list">
+              {sources.map((source, index) => {
+                const knowledgeId = Number(source?.knowledge_id)
+                if (!Number.isInteger(knowledgeId) || knowledgeId < 1) return null
+
+                const startPage = Number(source?.page_start)
+                const endPage = Number(source?.page_end)
+                const pageLabel =
+                  Number.isInteger(startPage) && startPage > 0
+                    ? endPage > startPage
+                      ? ` - pages ${startPage}-${endPage}`
+                      : ` - page ${startPage}`
+                    : ''
+                const href = `${buildAiHelperKnowledgeFileUrl(knowledgeId)}${
+                  Number.isInteger(startPage) && startPage > 0 ? `#page=${startPage}` : ''
+                }`
+
+                return (
+                  <a
+                    key={`${knowledgeId}-${startPage || 'document'}-${index}`}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ai-helper-message__source-link"
+                    aria-label={`Open source ${source?.title || 'knowledge document'}${pageLabel}`}
+                  >
+                    {source?.title || 'Knowledge document'}
+                    {pageLabel}
+                  </a>
+                )
+              })}
+            </div>
+          </div>
+        ) : null}
         {canAct ? (
           <div className="ai-helper-message__actions">
             {canRetry ? (

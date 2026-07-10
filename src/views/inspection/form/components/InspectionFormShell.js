@@ -25,7 +25,6 @@ const InspectionFormShell = ({
   onRetryDraftSync,
   fieldErrors,
   fireExtinguisherAreaRows,
-  fireExtinguisherSessionProgress,
   isLoadingEquipmentRows,
   isLoadingFireExtinguisherAreaRows,
   isLoadingFireExtinguisherRows,
@@ -55,6 +54,8 @@ const InspectionFormShell = ({
 }) => {
   const {
     cameraInputRef,
+    isPhotoProcessing,
+    photoUploadProgress,
     handlePhotoSelect,
     cameraUploadFallback,
     clearCameraUploadFallback,
@@ -78,6 +79,12 @@ const InspectionFormShell = ({
         setIncidentDeleteTarget={setIncidentDeleteTarget}
         setLocationDeleteTarget={setLocationDeleteTarget}
       />
+      {isPhotoProcessing ? (
+        <div className="small text-body-secondary mb-2" role="status">
+          {photoUploadProgress?.retrying ? 'Retrying photo upload' : 'Uploading photo'}{' '}
+          {Number(photoUploadProgress?.percent || 0)}%
+        </div>
+      ) : null}
 
       <InspectionFormManagerModals
         {...catalogManagers}
@@ -134,6 +141,7 @@ const InspectionFormShell = ({
         multiple
         className="d-none"
         onChange={handlePhotoSelect}
+        disabled={isPhotoProcessing}
       />
       <input
         ref={cameraInputRef}
@@ -142,13 +150,13 @@ const InspectionFormShell = ({
         capture="environment"
         className="d-none"
         onChange={handlePhotoSelect}
+        disabled={isPhotoProcessing}
       />
       <div className="inspection-form-sections inspection-form-edit-sections d-grid">
         <div className="inspection-form-setup-sections d-grid gap-4">
           <InspectionFormSetupSections
             fieldErrors={fieldErrors}
             fireExtinguisherAreaRows={fireExtinguisherAreaRows}
-            fireExtinguisherSessionProgress={fireExtinguisherSessionProgress}
             fireTruckOptions={fireTruckOptions}
             form={form}
             incident={incident}

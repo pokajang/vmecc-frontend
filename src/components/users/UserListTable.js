@@ -10,11 +10,14 @@ import {
 import UserRowActions from 'src/components/users/UserRowActions'
 import RowActionCell from 'src/components/RowActionCell'
 import { EMPTY, formatLastLogin, formatRoles } from 'src/utils/users'
+import { activateOnEnterOrSpace } from 'src/utils/uiAccessibility'
+import SortableTableHeader from 'src/components/SortableTableHeader'
 
 const UserListTable = ({
   users,
   onRowClick,
   onToggleSort,
+  sort = {},
   selectedIds = [],
   onToggleSelect,
   onToggleSelectAll,
@@ -30,12 +33,13 @@ const UserListTable = ({
   onLockUser,
   onUnlockUser,
 }) => (
-  <div className="rounded-3 shadow-sm overflow-hidden bg-white">
+  <div className="rounded-3 shadow-sm overflow-hidden bg-body">
     <CTable align="middle" className="mb-0" hover responsive>
       <CTableHead color="light">
         <CTableRow>
           <CTableHeaderCell className="text-center" style={{ width: '44px' }}>
             <CFormCheck
+              aria-label="Select all visible users"
               checked={users.length > 0 && users.every((u) => selectedIds.includes(u.id))}
               onChange={(e) => onToggleSelectAll?.(e.target.checked)}
               onClick={(e) => e.stopPropagation()}
@@ -48,10 +52,10 @@ const UserListTable = ({
           <CTableHeaderCell>Email</CTableHeaderCell>
           <CTableHeaderCell>Roles</CTableHeaderCell>
           <CTableHeaderCell>Status</CTableHeaderCell>
-          <CTableHeaderCell role="button" onClick={() => onToggleSort('last_login_at')}>
+          <SortableTableHeader field="last_login_at" sort={sort} onSort={onToggleSort}>
             Last login
-          </CTableHeaderCell>
-          <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
+          </SortableTableHeader>
+          <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
         </CTableRow>
       </CTableHead>
       <CTableBody>
@@ -59,11 +63,15 @@ const UserListTable = ({
           <CTableRow
             key={user.id}
             role="button"
+            tabIndex={0}
+            aria-label={`Open user profile for ${user.name || user.email || user.id} from table`}
             className="cursor-pointer"
             onClick={() => onRowClick(user)}
+            onKeyDown={(event) => activateOnEnterOrSpace(event, () => onRowClick(user))}
           >
             <CTableDataCell className="text-center">
               <CFormCheck
+                aria-label={`Select ${user.name || user.email || user.id}`}
                 checked={selectedIds.includes(user.id)}
                 onChange={() => onToggleSelect?.(user)}
                 onClick={(e) => e.stopPropagation()}

@@ -223,6 +223,7 @@ const UserSessionsPanel = ({ userId, actionsDisabled = false, actionsDisabledRea
           </CCol>
           <CCol md={5} className="d-none d-md-block">
             <CFormInput
+              aria-label="Search sessions"
               size="sm"
               placeholder="Search IP, device"
               value={search}
@@ -231,6 +232,7 @@ const UserSessionsPanel = ({ userId, actionsDisabled = false, actionsDisabledRea
           </CCol>
           <CCol md={2} className="d-none d-md-block">
             <CFormSelect
+              aria-label="Session status"
               size="sm"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -243,6 +245,7 @@ const UserSessionsPanel = ({ userId, actionsDisabled = false, actionsDisabledRea
           </CCol>
           <CCol md={2} className="d-none d-md-block">
             <TablePeriodSelect
+              ariaLabel="Session period"
               value={range}
               onChange={setRange}
               include24Hours={false}
@@ -272,6 +275,7 @@ const UserSessionsPanel = ({ userId, actionsDisabled = false, actionsDisabledRea
           <CRow className="g-2 mt-1">
             <CCol xs={12}>
               <CFormInput
+                aria-label="Search sessions"
                 size="sm"
                 placeholder="Search IP, device"
                 value={search}
@@ -280,6 +284,7 @@ const UserSessionsPanel = ({ userId, actionsDisabled = false, actionsDisabledRea
             </CCol>
             <CCol xs={4}>
               <CFormSelect
+                aria-label="Session status"
                 size="sm"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
@@ -292,6 +297,7 @@ const UserSessionsPanel = ({ userId, actionsDisabled = false, actionsDisabledRea
             </CCol>
             <CCol xs={4}>
               <TablePeriodSelect
+                ariaLabel="Session period"
                 value={range}
                 onChange={setRange}
                 include24Hours={false}
@@ -327,7 +333,7 @@ const UserSessionsPanel = ({ userId, actionsDisabled = false, actionsDisabledRea
             mobileSections={mobileSessionSections}
             mobileVariant="list-group"
             renderDesktop={() => (
-              <div className="rounded-3 shadow-sm overflow-hidden bg-white d-none d-md-block">
+              <div className="rounded-3 shadow-sm overflow-hidden bg-body d-none d-md-block">
                 <CTable align="middle" className="mb-0" responsive>
                   <CTableHead color="light">
                     <CTableRow>
@@ -340,7 +346,7 @@ const UserSessionsPanel = ({ userId, actionsDisabled = false, actionsDisabledRea
                       <CTableHeaderCell>Created</CTableHeaderCell>
                       <CTableHeaderCell>Last seen</CTableHeaderCell>
                       <CTableHeaderCell>Expires</CTableHeaderCell>
-                      <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
+                      <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
                     </CTableRow>
                   </CTableHead>
                   <CTableBody>

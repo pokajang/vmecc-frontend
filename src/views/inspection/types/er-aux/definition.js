@@ -11,7 +11,7 @@ import {
   normalizeErAuxEquipmentRows,
 } from './helpers'
 import { createLocationDetailContextFields } from '../detailConfigHelpers'
-import { buildMainLocationContinuationOptions } from '../continuationHelpers'
+import { buildMainLocationContinuationOptions, CONTINUATION_TOKENS } from '../continuationHelpers'
 import { ErAuxEditSection, ErAuxReadOnlySection } from './section'
 import { INSPECTION_REPORT_EVIDENCE_COPY } from '../../inspectionReportEvidenceCopy'
 
@@ -48,7 +48,7 @@ const erAuxInspectionDefinition = {
       context,
       getSummary: getErAuxCheckSummary,
       getMissingFields: getErAuxMissingFields,
-      label: 'location',
+      label: CONTINUATION_TOKENS.location,
     }),
   buildChecklist: buildErAuxChecklist,
   buildDescription: buildErAuxDescription,

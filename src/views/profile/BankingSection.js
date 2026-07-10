@@ -130,6 +130,7 @@ const BankingSection = ({ banking }) => {
           editMode ? (
             <Select
               inputId="bankName"
+              aria-label="Bank"
               name="bankName"
               classNamePrefix="bank-select"
               placeholder="Search or select bank"
@@ -158,6 +159,7 @@ const BankingSection = ({ banking }) => {
           'Account name',
           editMode ? (
             <CFormInput
+              aria-label="Account name"
               size="sm"
               name="accountName"
               value={form.accountName}
@@ -172,6 +174,7 @@ const BankingSection = ({ banking }) => {
           'Account number',
           editMode ? (
             <CFormInput
+              aria-label="Account number"
               size="sm"
               name="accountNumber"
               value={form.accountNumber}

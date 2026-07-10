@@ -177,6 +177,7 @@ const UserManagementTableSection = ({
                 users={visibleUsers}
                 onRowClick={goProfile}
                 onToggleSort={toggleSort}
+                sort={sort}
                 selectedIds={selectedIds}
                 onToggleSelect={toggleSelect}
                 onToggleSelectAll={toggleSelectAll}

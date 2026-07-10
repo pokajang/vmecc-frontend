@@ -71,6 +71,7 @@ export const PhotoGallery = ({
                 <div className="d-grid gap-2">
                   <CFormInput
                     size="sm"
+                    aria-label="Photo description"
                     value={String(photo?.description || '')}
                     placeholder="Describe this photo"
                     onChange={(event) => onChangeDescription?.(photo.id, event.target.value)}
@@ -291,9 +292,9 @@ export const ManagedCheckToolbar = ({
       <CFormInput
         size="sm"
         className="inspection-search-input"
+        aria-label={searchPlaceholder || 'Search inspection checks'}
         value={search}
         placeholder={searchPlaceholder}
-        aria-label={searchPlaceholder}
         onChange={(event) => onSearch?.(event.target.value)}
       />
       <div className="inspection-check-toolbar__actions">

@@ -39,6 +39,7 @@ export const buildStructuredSectionHandlers = ({
   markAllHighAngleGood,
   markAllHydraulicOk,
   markAllScbaOk,
+  markScbaGroupOk,
   markErAuxEquipmentOk,
   markFrtRowOk,
   markHighAngleRowOk,
@@ -69,6 +70,7 @@ export const buildStructuredSectionHandlers = ({
   requestRemoveScbaSection,
   requestRootPhotoUpload,
   saveFireExtinguisherRowDraft,
+  filterFireExtinguisherLocatorConflicts,
   saveFrtRowDraft,
   saveHseObservationDraft,
   saveInspectionFindingDraft,
@@ -218,6 +220,7 @@ export const buildStructuredSectionHandlers = ({
             : fieldRefKey === 'scbaChecks'
               ? markAllScbaOk
               : undefined,
+  onMarkGroupOk: fieldRefKey === 'scbaChecks' ? markScbaGroupOk : undefined,
   onRequestPhotoUpload:
     checksField === 'erAuxChecks'
       ? requestErAuxPhotoUpload
@@ -286,6 +289,7 @@ export const buildStructuredSectionHandlers = ({
                 : undefined,
   onAddExtinguisher: addFireExtinguisher,
   onUpdateExtinguisher: updateFireExtinguisher,
+  onCheckLocatorConflict: filterFireExtinguisherLocatorConflicts,
   onSaveFireExtinguisherRowDraft:
     checksField === 'fireExtinguisherChecks' ? saveFireExtinguisherRowDraft : undefined,
   onSelectNextScope: selectNextScope || selectNextLocation,

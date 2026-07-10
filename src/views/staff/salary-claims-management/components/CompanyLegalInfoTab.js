@@ -175,6 +175,7 @@ const CompanyLegalInfoTab = () => {
                 'Legal name',
                 editMode ? (
                   <CFormInput
+                    aria-label="Legal name"
                     size="sm"
                     name="legalName"
                     value={form.legalName}
@@ -189,6 +190,7 @@ const CompanyLegalInfoTab = () => {
                 'Registration number',
                 editMode ? (
                   <CFormInput
+                    aria-label="Registration number"
                     size="sm"
                     name="registrationNumber"
                     value={form.registrationNumber}
@@ -203,6 +205,7 @@ const CompanyLegalInfoTab = () => {
                 'MYTax number',
                 editMode ? (
                   <CFormInput
+                    aria-label="MYTax number"
                     size="sm"
                     name="myTaxNumber"
                     value={form.myTaxNumber}
@@ -217,6 +220,7 @@ const CompanyLegalInfoTab = () => {
                 'Address',
                 editMode ? (
                   <CFormTextarea
+                    aria-label="Address"
                     rows={2}
                     name="address"
                     value={form.address}
@@ -231,6 +235,7 @@ const CompanyLegalInfoTab = () => {
                 'Email',
                 editMode ? (
                   <CFormInput
+                    aria-label="Email"
                     size="sm"
                     type="email"
                     name="email"
@@ -246,6 +251,7 @@ const CompanyLegalInfoTab = () => {
                 'Phone',
                 editMode ? (
                   <CFormInput
+                    aria-label="Phone"
                     size="sm"
                     name="phone"
                     value={form.phone}
@@ -260,6 +266,7 @@ const CompanyLegalInfoTab = () => {
                 'Finance contact name',
                 editMode ? (
                   <CFormInput
+                    aria-label="Finance contact name"
                     size="sm"
                     name="financeContactName"
                     value={form.financeContactName}
@@ -274,6 +281,7 @@ const CompanyLegalInfoTab = () => {
                 'Finance contact email',
                 editMode ? (
                   <CFormInput
+                    aria-label="Finance contact email"
                     size="sm"
                     type="email"
                     name="financeContactEmail"
@@ -289,6 +297,7 @@ const CompanyLegalInfoTab = () => {
                 'Finance contact phone',
                 editMode ? (
                   <CFormInput
+                    aria-label="Finance contact phone"
                     size="sm"
                     name="financeContactPhone"
                     value={form.financeContactPhone}
@@ -301,7 +310,12 @@ const CompanyLegalInfoTab = () => {
               )}
               {editMode && (
                 <FormActionGroup mobileThumb={false} className="mt-2">
-                  <CButton color="light" onClick={handleCancel} disabled={status.loading}>
+                  <CButton
+                    color="secondary"
+                    variant="outline"
+                    onClick={handleCancel}
+                    disabled={status.loading}
+                  >
                     Cancel
                   </CButton>
                   <CButton color="primary" onClick={handleSave} disabled={status.loading}>

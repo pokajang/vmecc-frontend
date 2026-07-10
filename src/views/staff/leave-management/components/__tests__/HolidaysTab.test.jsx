@@ -78,13 +78,13 @@ describe('HolidaysTab', () => {
     })
 
     // Add an additional holiday
-    expect(screen.queryByLabelText('Holiday Name')).toBeNull()
+    expect(screen.queryByLabelText('Holiday name')).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Add holiday' }))
-    fireEvent.change(screen.getByLabelText('Holiday Name'), { target: { value: 'Wesak Day' } })
+    fireEvent.change(screen.getByLabelText('Holiday name'), { target: { value: 'Wesak Day' } })
     fireEvent.change(screen.getByLabelText('Date'), { target: { value: '2026-05-22' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save holiday' }))
     expect(screen.getByText('Wesak Day')).toBeTruthy()
-    expect(screen.queryByLabelText('Holiday Name')).toBeNull()
+    expect(screen.queryByLabelText('Holiday name')).toBeNull()
 
     // Step 2 → summary
     fireEvent.click(screen.getByRole('button', { name: 'Review & confirm' }))
@@ -116,7 +116,7 @@ describe('HolidaysTab', () => {
     })
 
     fireEvent.click(screen.getByRole('button', { name: 'Add holiday' }))
-    fireEvent.change(screen.getByLabelText('Holiday Name'), { target: { value: 'Partial Entry' } })
+    fireEvent.change(screen.getByLabelText('Holiday name'), { target: { value: 'Partial Entry' } })
 
     // Try to proceed with unsaved form data
     fireEvent.click(screen.getByRole('button', { name: 'Review & confirm' }))
@@ -144,7 +144,7 @@ describe('HolidaysTab', () => {
     render(<HolidaysTab {...props} />)
 
     fireEvent.click(screen.getByRole('row', { name: /National Day/ }))
-    expect(screen.getByText('Holiday Details')).toBeTruthy()
+    expect(screen.getByText('Holiday details')).toBeTruthy()
     expect(screen.getAllByText('National Day').length).toBeGreaterThan(1)
   })
 
@@ -165,7 +165,7 @@ describe('HolidaysTab', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Row actions' }))
     fireEvent.click(screen.getByText('Edit'))
-    expect(screen.getByText('Edit Holiday')).toBeTruthy()
+    expect(screen.getByText('Edit holiday')).toBeTruthy()
   })
 
   it('calls onDeleteHoliday when delete button is clicked', async () => {

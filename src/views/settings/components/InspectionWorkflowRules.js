@@ -222,8 +222,11 @@ const InspectionWorkflowRules = () => {
             <CRow className="g-3">
               {FIELD_LABELS.map((field) => (
                 <CCol xs={12} md={4} key={field.key}>
-                  <label className="form-label">{field.label}</label>
+                  <label htmlFor={`inspection-workflow-role-${field.key}`} className="form-label">
+                    {field.label}
+                  </label>
                   <CFormSelect
+                    id={`inspection-workflow-role-${field.key}`}
                     value={draftPolicy.fallback[field.key]}
                     disabled={!editMode || saving}
                     onChange={(event) => setFallbackField(field.key, event.target.value)}

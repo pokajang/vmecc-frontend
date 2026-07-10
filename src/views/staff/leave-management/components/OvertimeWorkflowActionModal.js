@@ -4,10 +4,12 @@ import {
   CButton,
   CFormCheck,
   CFormInput,
+  CFormLabel,
   CModal,
   CModalBody,
   CModalFooter,
   CModalHeader,
+  CModalTitle,
 } from '@coreui/react'
 import { formatDuration } from 'src/views/overtime/utils'
 
@@ -39,7 +41,9 @@ const OvertimeWorkflowActionModal = ({
 
   return (
     <CModal visible={visible} onClose={onClose} alignment="center" scrollable>
-      <CModalHeader>{actionLabel} Overtime Claim</CModalHeader>
+      <CModalHeader>
+        <CModalTitle>{actionLabel} overtime claim</CModalTitle>
+      </CModalHeader>
       <CModalBody className="d-grid gap-3">
         {!record ? (
           <div className="text-body-secondary small">No overtime claim details available.</div>
@@ -75,18 +79,26 @@ const OvertimeWorkflowActionModal = ({
             </div>
 
             <div>
-              <div className="small text-body-secondary mb-1">
+              <CFormLabel
+                htmlFor="overtime-workflow-remarks"
+                className="small text-body-secondary mb-1"
+              >
                 {actionType === 'reject' ? 'Remarks (required)' : 'Remarks (optional)'}
-              </div>
+              </CFormLabel>
               <CFormInput
+                id="overtime-workflow-remarks"
                 type="text"
                 value={remarks}
                 onChange={(event) => onRemarksChange(event.target.value)}
                 placeholder="Add your remarks"
                 invalid={Boolean(rejectError)}
+                aria-required={actionType === 'reject'}
+                aria-describedby={rejectError ? 'overtime-workflow-remarks-error' : undefined}
               />
               {rejectError ? (
-                <div className="invalid-feedback d-block">{rejectError}</div>
+                <div id="overtime-workflow-remarks-error" className="invalid-feedback d-block">
+                  {rejectError}
+                </div>
               ) : (
                 showRemarksHelper && (
                   <div className="small text-body-secondary mt-1">
@@ -117,7 +129,7 @@ const OvertimeWorkflowActionModal = ({
         )}
       </CModalBody>
       <CModalFooter>
-        <CButton color="light" onClick={onClose}>
+        <CButton color="secondary" variant="outline" onClick={onClose}>
           Cancel
         </CButton>
         <CButton

@@ -592,53 +592,35 @@ describe('InspectionFormSetupSections', () => {
     expect(screen.getByText('2 locations')).toBeTruthy()
   })
 
-  it('shows fire extinguisher zone progress from preloaded context before zone selection', () => {
+  it('strips completion decoration from fire extinguisher zone counts', () => {
     mockCompactViewport(true)
     const location = {
       ...baseProps.location,
       zoneOptions: [
-        { value: '1', title: 'Zone 1', metaLabel: '2 areas' },
-        { value: '2', title: 'Zone 2', metaLabel: '1 area' },
+        {
+          value: '1',
+          title: 'Zone 1',
+          metaLabel: '1/2 areas',
+          metaIconKey: 'check',
+          metaTone: 'success',
+        },
+        {
+          value: '2',
+          title: 'Zone 2',
+          metaLabel: '1/1 area',
+          metaIconKey: 'check',
+          metaTone: 'success',
+        },
       ],
       visibleZoneOptions: [
-        { value: '1', title: 'Zone 1', metaLabel: '2 areas' },
-        { value: '2', title: 'Zone 2', metaLabel: '1 area' },
+        { value: '1', title: 'Zone 1', metaLabel: '1/2 areas', metaIconKey: 'check' },
+        { value: '2', title: 'Zone 2', metaLabel: '1/1 area', metaIconKey: 'check' },
       ],
     }
 
-    render(
+    const { container } = render(
       <InspectionFormSetupSections
         {...baseProps}
-        fireExtinguisherSessionProgress={{
-          completedLocations: [],
-          locationProgress: [
-            {
-              zone: '1',
-              mainLocation: 'Manjung Hub',
-              subLocation: 'Reception',
-              status: 'completed',
-              expectedCount: 1,
-              completedCount: 1,
-            },
-            {
-              zone: '1',
-              mainLocation: 'Canteen',
-              subLocation: 'Dry Store',
-              status: 'in_progress',
-              expectedCount: 1,
-              completedCount: 0,
-            },
-            {
-              zone: '2',
-              mainLocation: 'Generator House',
-              subLocation: 'Pump Room',
-              status: 'completed',
-              expectedCount: 1,
-              completedCount: 1,
-            },
-          ],
-          results: [],
-        }}
         isEditingType={false}
         isFireExtinguisherCatalogInspectionForm
         selectedType="Fire Extinguisher Inspection"
@@ -654,11 +636,13 @@ describe('InspectionFormSetupSections', () => {
       />,
     )
 
-    expect(screen.getByText('1/2 areas')).toBeTruthy()
-    expect(screen.getByText('1/1 area')).toBeTruthy()
+    expect(screen.getByText('2 areas')).toBeTruthy()
+    expect(screen.getByText('1 area')).toBeTruthy()
+    expect(screen.queryByText('1/2 areas')).toBeNull()
+    expect(container.querySelector('.lucide-circle-check')).toBeNull()
   })
 
-  it('shows fire extinguisher main-area done-location progress under the selected zone', () => {
+  it('keeps neutral main-area location counts under the selected zone', () => {
     mockCompactViewport(true)
     const location = {
       ...baseProps.location,
@@ -705,12 +689,13 @@ describe('InspectionFormSetupSections', () => {
     )
 
     expect(screen.getByText('Choose Main Area')).toBeTruthy()
-    expect(screen.getByText('1/2 locations')).toBeTruthy()
-    expect(screen.getByText('1/1 location')).toBeTruthy()
+    expect(screen.getByText('2 locations')).toBeTruthy()
+    expect(screen.getByText('1 location')).toBeTruthy()
+    expect(screen.queryByText('1/2 locations')).toBeNull()
     expect(screen.queryByText('Done')).toBeNull()
   })
 
-  it('shows the selected fire extinguisher main-area progress inside the collapsed main-area card', () => {
+  it('shows the selected fire extinguisher neutral area count in the collapsed card', () => {
     mockCompactViewport(true)
     const location = {
       ...baseProps.location,
@@ -761,11 +746,11 @@ describe('InspectionFormSetupSections', () => {
 
     expect(screen.getByText('Choose Location')).toBeTruthy()
     expect(
-      within(screen.getByRole('group', { name: 'Main Area' })).getByText('1/2 locations'),
+      within(screen.getByRole('group', { name: 'Main Area' })).getByText('2 locations'),
     ).toBeTruthy()
   })
 
-  it('shows the selected fire extinguisher unit progress inside the collapsed location card', () => {
+  it('shows the selected fire extinguisher neutral unit count in the collapsed location card', () => {
     mockCompactViewport(true)
     const location = {
       ...baseProps.location,
@@ -816,12 +801,10 @@ describe('InspectionFormSetupSections', () => {
       />,
     )
 
-    expect(
-      within(screen.getByRole('group', { name: 'Location' })).getByText('1/1 FEs'),
-    ).toBeTruthy()
+    expect(within(screen.getByRole('group', { name: 'Location' })).getByText('1 FE')).toBeTruthy()
   })
 
-  it('keeps other fire extinguisher main-area progress visible when one area is selected', async () => {
+  it('keeps neutral main-area counts visible when one area is selected', async () => {
     mockCompactViewport(true)
     const location = {
       ...baseProps.location,
@@ -844,36 +827,6 @@ describe('InspectionFormSetupSections', () => {
     render(
       <InspectionFormSetupSections
         {...baseProps}
-        fireExtinguisherSessionProgress={{
-          completedLocations: [],
-          locationProgress: [
-            {
-              zone: '1',
-              mainLocation: 'Manjung Hub',
-              subLocation: 'Reception',
-              status: 'completed',
-              expectedCount: 1,
-              completedCount: 1,
-            },
-            {
-              zone: '1',
-              mainLocation: 'Canteen',
-              subLocation: 'Dry Store',
-              status: 'completed',
-              expectedCount: 1,
-              completedCount: 1,
-            },
-            {
-              zone: '1',
-              mainLocation: 'Canteen',
-              subLocation: 'Serving Area',
-              status: 'completed',
-              expectedCount: 1,
-              completedCount: 1,
-            },
-          ],
-          results: [],
-        }}
         isEditingType={false}
         isFireExtinguisherCatalogInspectionForm
         selectedType="Fire Extinguisher Inspection"
@@ -891,11 +844,12 @@ describe('InspectionFormSetupSections', () => {
     fireEvent.click(screen.getByLabelText('Edit Main Area'))
 
     await waitFor(() => expect(screen.getByText('Change Main Area')).toBeTruthy())
-    expect(screen.getByText('1/13 locations')).toBeTruthy()
-    expect(screen.getAllByText('2/2 locations').length).toBeGreaterThan(0)
+    expect(screen.getByText('13 locations')).toBeTruthy()
+    expect(screen.getAllByText('2 locations').length).toBeGreaterThan(0)
+    expect(screen.queryByText('1/13 locations')).toBeNull()
   })
 
-  it('keeps numeric done-location counts when every fire extinguisher area location is done', () => {
+  it('does not turn neutral area counts into completion progress', () => {
     mockCompactViewport(true)
     const location = {
       ...baseProps.location,
@@ -933,7 +887,8 @@ describe('InspectionFormSetupSections', () => {
       />,
     )
 
-    expect(screen.getByText('2/2 locations')).toBeTruthy()
+    expect(screen.getByText('2 locations')).toBeTruthy()
+    expect(screen.queryByText('2/2 locations')).toBeNull()
     expect(screen.queryByText('All')).toBeNull()
     expect(screen.queryByText('Completed')).toBeNull()
   })
@@ -983,11 +938,11 @@ describe('InspectionFormSetupSections', () => {
     )
 
     expect(screen.getByText('Choose Location')).toBeTruthy()
-    expect(screen.getByText('0/2 FEs')).toBeTruthy()
-    expect(screen.getByText('0/1 FEs')).toBeTruthy()
+    expect(screen.getByText('2 FEs')).toBeTruthy()
+    expect(screen.getByText('1 FE')).toBeTruthy()
   })
 
-  it('shows done on fire extinguisher location cards when every child unit is checked', () => {
+  it('keeps neutral location counts when child units are checked', () => {
     mockCompactViewport(true)
     const location = {
       ...baseProps.location,
@@ -1032,11 +987,12 @@ describe('InspectionFormSetupSections', () => {
     )
 
     expect(screen.getByText('Choose Location')).toBeTruthy()
-    expect(screen.getByText('2/2 FEs')).toBeTruthy()
-    expect(screen.getByText('0/1 FEs')).toBeTruthy()
+    expect(screen.getByText('2 FEs')).toBeTruthy()
+    expect(screen.getByText('1 FE')).toBeTruthy()
+    expect(screen.queryByText('2/2 FEs')).toBeNull()
   })
 
-  it('shows server-completed fire extinguisher status on location selection cards', () => {
+  it('keeps location inventory counts neutral for incomplete rows', () => {
     mockCompactViewport(true)
     const location = {
       ...baseProps.location,
@@ -1065,19 +1021,6 @@ describe('InspectionFormSetupSections', () => {
           buildFireExtinguisherRow({ id: 'fe-1', subLocation: 'Reception' }, false),
           buildFireExtinguisherRow({ id: 'fe-2', subLocation: 'Operation LAB' }, false),
         ]}
-        fireExtinguisherSessionProgress={{
-          completedLocations: [
-            {
-              zone: '1',
-              mainLocation: 'Manjung Hub',
-              subLocation: 'Reception',
-              status: 'completed',
-              expectedCount: 1,
-              completedCount: 1,
-            },
-          ],
-          results: [],
-        }}
         isEditingType={false}
         isFireExtinguisherCatalogInspectionForm
         selectedType="Fire Extinguisher Inspection"
@@ -1093,8 +1036,8 @@ describe('InspectionFormSetupSections', () => {
     )
 
     expect(screen.getByText('Choose Location')).toBeTruthy()
-    expect(screen.getByText('1/1 FEs')).toBeTruthy()
-    expect(screen.getByText('0/1 FEs')).toBeTruthy()
+    expect(screen.getAllByText('1 FE')).toHaveLength(2)
+    expect(screen.queryByText('1/1 FEs')).toBeNull()
   })
 
   it('shows loading instead of false zero unit counts while fire extinguisher location rows load', () => {
@@ -1450,7 +1393,7 @@ describe('InspectionFormSetupSections', () => {
     expect(screen.queryByText('Choose Zone')).toBeNull()
 
     const byAreaButton = screen.getByRole('button', { name: /by area/i })
-    const scanButton = screen.getByRole('button', { name: /scan qr \/ barcode/i })
+    const scanButton = screen.getByRole('button', { name: /serial number/i })
     expect(byAreaButton.parentElement?.className || '').toContain('col-6')
     expect(scanButton.parentElement?.className || '').toContain('col-6')
 

@@ -9,6 +9,8 @@ const ModuleNavTabs = ({ items = [], className = '' }) => (
       return (
         <CNavItem key={item.key || item.label}>
           <CNavLink
+            as="button"
+            type="button"
             active={isActive}
             disabled={isDisabled}
             aria-disabled={isDisabled || undefined}
@@ -16,8 +18,7 @@ const ModuleNavTabs = ({ items = [], className = '' }) => (
             onClick={item.onClick}
             title={item.title}
             data-testid={item.dataTestId}
-            style={{ cursor: isDisabled ? 'not-allowed' : 'pointer' }}
-            className={`${isActive ? 'text-primary' : ''} text-nowrap`.trim()}
+            className={`module-nav-link ${isActive ? 'text-primary' : ''} text-nowrap`.trim()}
           >
             {item.label}
           </CNavLink>

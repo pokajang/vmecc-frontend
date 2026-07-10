@@ -109,8 +109,10 @@ const AssignmentTableRow = memo(
     return (
       <>
         <CTableRow
+          role="button"
           tabIndex={0}
-          style={{ cursor: 'pointer' }}
+          className="cursor-pointer"
+          aria-label={`Open salary assignment ${row.id || row.name || 'details'}`}
           onClick={() => onRowClick(row, isDraft)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') {
@@ -569,7 +571,7 @@ const SalarySettingsTab = ({ vm, handlers }) => {
           ) : (
             <>
               <MobileRecordList sections={mobileAssignmentSections} variant="list-group" />
-              <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
+              <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-body">
                 <CTable align="middle" className="mb-0" hover responsive>
                   <CTableHead color="light">
                     <CTableRow>
@@ -583,7 +585,7 @@ const SalarySettingsTab = ({ vm, handlers }) => {
                       <CTableHeaderCell>Allowance</CTableHeaderCell>
                       <CTableHeaderCell>Total Deductions</CTableHeaderCell>
                       <CTableHeaderCell>Net Payable</CTableHeaderCell>
-                      <CTableHeaderCell className="text-end">Action</CTableHeaderCell>
+                      <CTableHeaderCell className="text-end">Actions</CTableHeaderCell>
                     </CTableRow>
                   </CTableHead>
                   <CTableBody>{tableRows}</CTableBody>

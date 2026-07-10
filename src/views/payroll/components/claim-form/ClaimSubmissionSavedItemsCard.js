@@ -68,9 +68,10 @@ const ClaimSubmissionSavedItemsCard = ({
                   {item.attachmentName && (
                     <CTooltip content={item.attachmentName} placement="top">
                       <CBadge
+                        as="button"
+                        type="button"
                         color="light"
                         className="text-body-secondary"
-                        role="button"
                         style={{ cursor: 'pointer' }}
                         aria-label={`Preview ${item.attachmentName}`}
                         onClick={() => onPreviewAttachment(item)}

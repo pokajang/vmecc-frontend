@@ -478,7 +478,7 @@ const AssignmentsTab = ({
                 </CButton>
               </CButtonGroup>
             </div>
-            <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
+            <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-body">
               {tableView === 'matrix' ? (
                 <CTable align="middle" className="mb-0" hover responsive>
                   <CTableHead color="light">
@@ -499,7 +499,7 @@ const AssignmentsTab = ({
                         </CTableHeaderCell>
                       ))}
                       <CTableHeaderCell rowSpan={2} className="text-center align-middle">
-                        Action
+                        Actions
                       </CTableHeaderCell>
                     </CTableRow>
                     <CTableRow>
@@ -588,7 +588,7 @@ const AssignmentsTab = ({
                       <CTableHeaderCell className="text-center">Used</CTableHeaderCell>
                       <CTableHeaderCell className="text-center">Pending</CTableHeaderCell>
                       <CTableHeaderCell className="text-center">Available</CTableHeaderCell>
-                      <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
+                      <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
                     </CTableRow>
                   </CTableHead>
                   <CTableBody>

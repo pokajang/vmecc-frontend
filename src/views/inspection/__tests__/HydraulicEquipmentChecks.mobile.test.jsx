@@ -28,6 +28,28 @@ afterEach(() => {
 })
 
 describe('HydraulicEquipmentChecks mobile detail drawer', () => {
+  it('announces a refresh without hiding visible equipment rows', () => {
+    render(
+      <HydraulicEquipmentChecks
+        mainLocation="FRT"
+        checks={[]}
+        isLoadingRows
+        summary={{
+          visibleChecks: [
+            {
+              id: 'hydraulic:refresh',
+              equipment: 'Hydraulic Pump Motor 1',
+            },
+          ],
+          totalCount: 1,
+        }}
+      />,
+    )
+
+    expect(screen.getByText('Refreshing equipment...')).toBeTruthy()
+    expect(screen.getByText('Hydraulic Pump Motor 1')).toBeTruthy()
+  })
+
   it('opens hydraulic equipment checks in a mobile drawer', () => {
     setMobileViewport()
     const onUpdateCheck = vi.fn()

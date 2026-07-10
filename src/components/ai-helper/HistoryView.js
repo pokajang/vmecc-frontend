@@ -46,21 +46,6 @@ const HistoryView = ({
       </button>
     </div>
     {error ? <div className="ai-helper-history__error">{error}</div> : null}
-    {deleteTarget ? (
-      <div className="ai-helper-history-confirm">
-        <div>
-          Delete "<span>{deleteTarget.title || 'this chat'}</span>"?
-        </div>
-        <div className="ai-helper-history-confirm__actions">
-          <button type="button" onClick={onCancelDelete} disabled={deletingThread}>
-            Cancel
-          </button>
-          <button type="button" onClick={onConfirmDelete} disabled={deletingThread}>
-            {deletingThread ? 'Deleting...' : 'Delete'}
-          </button>
-        </div>
-      </div>
-    ) : null}
     {initialLoading ? (
       <div className="ai-helper-history__empty">Loading history...</div>
     ) : threads.length ? (
@@ -76,35 +61,65 @@ const HistoryView = ({
             loading ? ' ai-helper-history__list--refreshing' : ''
           }`}
         >
-          {threads.map((item) => (
-            <div
-              key={item.id}
-              className={`ai-helper-history__item${activeThreadId === item.id ? ' active' : ''}`}
-            >
-              <button
-                type="button"
-                className="ai-helper-history__open"
-                onClick={() => onOpenThread(item.id)}
+          {threads.map((item) => {
+            const isDeleteTarget = String(deleteTarget?.id ?? '') === String(item.id ?? '')
+
+            return (
+              <div
+                key={item.id}
+                className={`ai-helper-history__item${
+                  activeThreadId === item.id ? ' active' : ''
+                }${isDeleteTarget ? ' ai-helper-history__item--delete-confirmation' : ''}`}
               >
-                <span className="ai-helper-history__title">{item.title || 'Ask AI chat'}</span>
-                <span className="ai-helper-history__meta">
-                  {formatHistoryTime(item.updated_at)}
-                  {item.last_message ? ` - ${item.last_message}` : ''}
-                </span>
-              </button>
-              <CTooltip content="Delete chat" placement="left">
-                <button
-                  type="button"
-                  className="ai-helper-history__delete"
-                  aria-label={`Delete ${item.title || 'chat'}`}
-                  onClick={() => onDeleteTarget(item)}
-                  disabled={deletingThread}
-                >
-                  <Trash2 size={15} />
-                </button>
-              </CTooltip>
-            </div>
-          ))}
+                {isDeleteTarget ? (
+                  <div
+                    className="ai-helper-history__delete-confirmation"
+                    role="group"
+                    aria-label={`Delete ${item.title || 'this chat'} confirmation`}
+                  >
+                    <div>
+                      Delete "<span>{item.title || 'this chat'}</span>"?
+                    </div>
+                    <div className="ai-helper-history-confirm__actions">
+                      <button type="button" onClick={onCancelDelete} disabled={deletingThread}>
+                        Cancel
+                      </button>
+                      <button type="button" onClick={onConfirmDelete} disabled={deletingThread}>
+                        {deletingThread ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="ai-helper-history__open"
+                      onClick={() => onOpenThread(item.id)}
+                    >
+                      <span className="ai-helper-history__title">
+                        {item.title || 'Ask AI chat'}
+                      </span>
+                      <span className="ai-helper-history__meta">
+                        {formatHistoryTime(item.updated_at)}
+                        {item.last_message ? ` - ${item.last_message}` : ''}
+                      </span>
+                    </button>
+                    <CTooltip content="Delete chat" placement="left">
+                      <button
+                        type="button"
+                        className="ai-helper-history__delete"
+                        aria-label={`Delete ${item.title || 'chat'}`}
+                        onClick={() => onDeleteTarget(item)}
+                        disabled={deletingThread}
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </CTooltip>
+                  </>
+                )}
+              </div>
+            )
+          })}
         </div>
       </>
     ) : (

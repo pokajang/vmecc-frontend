@@ -45,6 +45,7 @@ export const RolePermissionToolbar = ({
   <div className="d-flex flex-wrap align-items-center gap-2 mb-4">
     {viewMode === VIEW_MODE_ROLE ? (
       <CFormSelect
+        aria-label="Focused role"
         size="sm"
         value={activeFocusedRole}
         onChange={(e) => setFocusedRole(e.target.value)}
@@ -58,6 +59,7 @@ export const RolePermissionToolbar = ({
       </CFormSelect>
     ) : (
       <CFormSelect
+        aria-label="Filter by role"
         size="sm"
         value={roleFilter}
         onChange={(e) => setRoleFilter(e.target.value)}
@@ -72,6 +74,7 @@ export const RolePermissionToolbar = ({
       </CFormSelect>
     )}
     <CFormSelect
+      aria-label="Filter by permission group"
       size="sm"
       value={groupFilter}
       onChange={(e) => setGroupFilter(e.target.value)}
@@ -85,6 +88,7 @@ export const RolePermissionToolbar = ({
       ))}
     </CFormSelect>
     <CFormInput
+      aria-label="Search permissions"
       size="sm"
       placeholder="Search permissions..."
       value={permSearch}
@@ -146,7 +150,7 @@ export const RolePermissionMatrixTable = ({
   togglePermission,
   visibleRoles,
 }) => (
-  <div className="rounded-3 shadow-sm overflow-hidden bg-white mt-2 matrix-table-shell">
+  <div className="rounded-3 shadow-sm overflow-hidden bg-body mt-2 matrix-table-shell">
     <div className="rpm-scroll matrix-table-scroll">
       <CTable align="middle" className="mb-0" hover responsive>
         <CTableHead color="light">

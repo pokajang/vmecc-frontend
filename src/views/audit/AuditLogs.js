@@ -299,8 +299,11 @@ const AuditLogs = () => {
           {range === 'custom' && (
             <CRow className="g-2 mb-3 align-items-end">
               <CCol xs={12} md={3}>
-                <CFormLabel className="small mb-1">From</CFormLabel>
+                <CFormLabel htmlFor="audit-date-from" className="small mb-1">
+                  From
+                </CFormLabel>
                 <CFormInput
+                  id="audit-date-from"
                   type="date"
                   size="sm"
                   value={fromDate}
@@ -308,8 +311,11 @@ const AuditLogs = () => {
                 />
               </CCol>
               <CCol xs={12} md={3}>
-                <CFormLabel className="small mb-1">To</CFormLabel>
+                <CFormLabel htmlFor="audit-date-to" className="small mb-1">
+                  To
+                </CFormLabel>
                 <CFormInput
+                  id="audit-date-to"
                   type="date"
                   size="sm"
                   value={toDate}
@@ -342,7 +348,7 @@ const AuditLogs = () => {
                 mobileSections={mobileAuditSections}
                 mobileVariant="list-group"
                 renderDesktop={() => (
-                  <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
+                  <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-body">
                     <CTable align="middle" className="mb-0" hover responsive>
                       <CTableHead color="light">
                         <CTableRow>
@@ -350,7 +356,7 @@ const AuditLogs = () => {
                             #
                           </CTableHeaderCell>
                           <CTableHeaderCell style={{ width: '18%' }}>Time</CTableHeaderCell>
-                          <CTableHeaderCell style={{ width: '16%' }}>Action</CTableHeaderCell>
+                          <CTableHeaderCell style={{ width: '16%' }}>Actions</CTableHeaderCell>
                           <CTableHeaderCell style={{ width: '16%' }}>Actor</CTableHeaderCell>
                           <CTableHeaderCell style={{ width: '20%' }}>Target</CTableHeaderCell>
                           <CTableHeaderCell style={{ width: '12%' }}>IP</CTableHeaderCell>

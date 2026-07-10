@@ -154,6 +154,7 @@ const MedicalSection = ({ medical = {} }) => {
           'Blood type',
           editMode ? (
             <CFormInput
+              aria-label="Blood type"
               size="sm"
               name="bloodType"
               value={form.bloodType}
@@ -175,6 +176,7 @@ const MedicalSection = ({ medical = {} }) => {
           'Allergies',
           editMode ? (
             <CFormInput
+              aria-label="Allergies"
               size="sm"
               name="allergies"
               value={form.allergies}
@@ -196,6 +198,7 @@ const MedicalSection = ({ medical = {} }) => {
           'Conditions',
           editMode ? (
             <CFormInput
+              aria-label="Conditions"
               size="sm"
               name="conditions"
               value={form.conditions}
@@ -217,6 +220,7 @@ const MedicalSection = ({ medical = {} }) => {
           'Medications',
           editMode ? (
             <CFormInput
+              aria-label="Medications"
               size="sm"
               name="medications"
               value={form.medications}
@@ -238,6 +242,7 @@ const MedicalSection = ({ medical = {} }) => {
           <span className="text-muted d-block mb-1">Notes</span>
           {editMode ? (
             <CFormTextarea
+              aria-label="Medical notes"
               rows={3}
               name="notes"
               value={form.notes}

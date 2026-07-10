@@ -8,6 +8,7 @@ import {
   CModalBody,
   CModalFooter,
   CModalHeader,
+  CModalTitle,
 } from '@coreui/react'
 import BulkActionButton from 'src/views/staff/components/BulkActionButton'
 
@@ -39,12 +40,22 @@ const BulkWorkflowActionModal = ({
   const singularLabel = String(entityLabel || 'record').trim() || 'record'
   const pluralLabel = toPluralLabel(singularLabel)
   const title =
-    action === 'reject' ? `Bulk Reject ${pluralLabel}` : `Bulk ${actionLabel} ${pluralLabel}`
+    action === 'reject'
+      ? `Bulk reject ${pluralLabel}`
+      : `Bulk ${String(actionLabel).toLowerCase()} ${pluralLabel}`
   const submitLabel = action === 'reject' ? 'Reject selected' : `${actionLabel} selected`
 
   return (
-    <CModal visible={visible} alignment="center" onClose={onClose}>
-      <CModalHeader>{title}</CModalHeader>
+    <CModal
+      visible={visible}
+      alignment="center"
+      onClose={() => {
+        if (!isSubmitting) onClose?.()
+      }}
+    >
+      <CModalHeader>
+        <CModalTitle>{title}</CModalTitle>
+      </CModalHeader>
       <CModalBody className="d-grid gap-3">
         <div className="text-body-secondary">
           {selectedCount} {selectedCount === 1 ? singularLabel : pluralLabel} selected.
@@ -83,7 +94,7 @@ const BulkWorkflowActionModal = ({
         )}
       </CModalBody>
       <CModalFooter>
-        <CButton color="light" onClick={onClose} disabled={isSubmitting}>
+        <CButton color="secondary" variant="outline" onClick={onClose} disabled={isSubmitting}>
           Cancel
         </CButton>
         <BulkActionButton

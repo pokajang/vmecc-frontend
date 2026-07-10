@@ -19,7 +19,7 @@ const AttachmentImage = ({ attachmentId, originalName, localPreview, style, onCl
     return (
       <div
         className="d-flex align-items-center justify-content-center text-muted small"
-        style={{ ...style, minHeight: 60, background: '#f0f0f0' }}
+        style={{ ...style, minHeight: 60, background: 'var(--cui-secondary-bg)' }}
       >
         Image unavailable
       </div>
@@ -28,7 +28,7 @@ const AttachmentImage = ({ attachmentId, originalName, localPreview, style, onCl
     return (
       <div
         className="d-flex align-items-center justify-content-center"
-        style={{ ...style, minHeight: 120, background: '#f0f0f0' }}
+        style={{ ...style, minHeight: 120, background: 'var(--cui-secondary-bg)' }}
       >
         <Loader size={20} className="icon-spin text-muted" />
       </div>
@@ -140,7 +140,7 @@ const ChatThread = ({
           {/* Thread header */}
           <div
             className="border-bottom px-3 px-lg-4 py-3 d-flex align-items-center justify-content-between"
-            style={{ background: '#ffffff' }}
+            style={{ background: 'var(--cui-body-bg)' }}
           >
             <div className="d-flex align-items-center gap-2 gap-lg-3">
               <div
@@ -169,7 +169,7 @@ const ChatThread = ({
             <div
               ref={scrollRef}
               className="h-100 overflow-auto px-4 py-3"
-              style={{ background: '#f7f9fc' }}
+              style={{ background: 'var(--cui-tertiary-bg)' }}
             >
               {threadLoading ? (
                 <TableLoader />
@@ -212,8 +212,8 @@ const ChatThread = ({
                           className="rounded-3 chat-message-bubble overflow-hidden"
                           style={{
                             maxWidth: '70%',
-                            background: isMine ? 'rgba(13, 110, 253, 0.12)' : '#ffffff',
-                            boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
+                            background: isMine ? 'var(--vmecc-primary-soft)' : 'var(--cui-body-bg)',
+                            boxShadow: 'var(--vmecc-shadow-card)',
                           }}
                         >
                           {/* Image attachment */}
@@ -270,7 +270,7 @@ const ChatThread = ({
 
           {/* Composer */}
           <div
-            className="border-top p-3 bg-white mt-auto"
+            className="border-top p-3 bg-body mt-auto"
             style={isMobile ? { position: 'sticky', bottom: 0, zIndex: 1 } : undefined}
             data-testid="messages-composer"
           >
@@ -315,6 +315,7 @@ const ChatThread = ({
                 type="button"
                 className="btn btn-light d-flex align-items-center justify-content-center flex-shrink-0"
                 title="Attach image"
+                aria-label="Attach image"
                 disabled={!activeThread?.user?.id || sending || !!imageFile}
                 onClick={() => fileInputRef.current?.click()}
                 style={{ height: 40, width: 40, paddingInline: 0 }}
@@ -322,6 +323,7 @@ const ChatThread = ({
                 <Image size={18} />
               </button>
               <CFormTextarea
+                aria-label={imageFile ? 'Image description' : 'Message'}
                 placeholder={imageFile ? 'Describe the image (optional)' : 'Type a message'}
                 value={compose}
                 onChange={(e) => onComposeChange(e.target.value)}
@@ -335,6 +337,7 @@ const ChatThread = ({
               <button
                 type="button"
                 className="btn btn-primary d-flex align-items-center justify-content-center"
+                aria-label={sending ? 'Sending message' : 'Send message'}
                 disabled={!canSend}
                 onClick={onSend}
                 style={{ height: 40, minWidth: 40, paddingInline: 0 }}

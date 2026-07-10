@@ -225,6 +225,7 @@ const LoginRecordsPanel = ({ records, lastLoginAt }) => {
           </CCol>
           <CCol md={5} className="d-none d-md-block">
             <CFormInput
+              aria-label="Search login records"
               size="sm"
               placeholder="Search IP, device, reason"
               value={loginSearch}
@@ -232,7 +233,12 @@ const LoginRecordsPanel = ({ records, lastLoginAt }) => {
             />
           </CCol>
           <CCol md={2} className="d-none d-md-block">
-            <CFormSelect size="sm" value={loginStatus} onChange={handleLoginStatusChange}>
+            <CFormSelect
+              aria-label="Login status"
+              size="sm"
+              value={loginStatus}
+              onChange={handleLoginStatusChange}
+            >
               <option value="All">All status</option>
               <option value="Success">Success</option>
               <option value="Failed">Failed</option>
@@ -240,6 +246,7 @@ const LoginRecordsPanel = ({ records, lastLoginAt }) => {
           </CCol>
           <CCol md={2} className="d-none d-md-block">
             <TablePeriodSelect
+              ariaLabel="Login period"
               value={loginRange}
               onChange={handleLoginRangeChange}
               include24Hours={false}
@@ -265,6 +272,7 @@ const LoginRecordsPanel = ({ records, lastLoginAt }) => {
           <CRow className="g-2 mt-1">
             <CCol xs={12}>
               <CFormInput
+                aria-label="Search login records"
                 size="sm"
                 placeholder="Search IP, device, reason"
                 value={loginSearch}
@@ -272,7 +280,12 @@ const LoginRecordsPanel = ({ records, lastLoginAt }) => {
               />
             </CCol>
             <CCol xs={4}>
-              <CFormSelect size="sm" value={loginStatus} onChange={handleLoginStatusChange}>
+              <CFormSelect
+                aria-label="Login status"
+                size="sm"
+                value={loginStatus}
+                onChange={handleLoginStatusChange}
+              >
                 <option value="All">All status</option>
                 <option value="Success">Success</option>
                 <option value="Failed">Failed</option>
@@ -280,6 +293,7 @@ const LoginRecordsPanel = ({ records, lastLoginAt }) => {
             </CCol>
             <CCol xs={4}>
               <TablePeriodSelect
+                ariaLabel="Login period"
                 value={loginRange}
                 onChange={handleLoginRangeChange}
                 include24Hours={false}
@@ -306,7 +320,7 @@ const LoginRecordsPanel = ({ records, lastLoginAt }) => {
           {filteredRecords.length === 0 ? (
             <span className="text-muted small">No login records yet.</span>
           ) : (
-            <div className="rounded-3 shadow-sm overflow-hidden bg-white">
+            <div className="rounded-3 shadow-sm overflow-hidden bg-body">
               <CTable small responsive>
                 <CTableHead color="light">
                   <CTableRow>

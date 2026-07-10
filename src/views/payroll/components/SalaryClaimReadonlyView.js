@@ -93,9 +93,10 @@ const SalaryClaimReadonlyView = ({ claim, formatCurrency, formatDate }) => {
               <div className="d-flex align-items-center gap-2">
                 {item.attachmentName ? (
                   <CBadge
+                    as="button"
+                    type="button"
                     color="light"
                     className="text-body-secondary"
-                    role="button"
                     style={{ cursor: 'pointer' }}
                     title="Preview attachment"
                     onClick={() => openAttachmentPreview(item, source)}
@@ -245,7 +246,7 @@ const SalaryClaimReadonlyView = ({ claim, formatCurrency, formatDate }) => {
 
           {renderMobileBreakdown()}
 
-          <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
+          <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-body">
             <CTable align="middle" className="mb-0" responsive>
               <CTableHead color="light">
                 <CTableRow>
@@ -297,9 +298,10 @@ const SalaryClaimReadonlyView = ({ claim, formatCurrency, formatDate }) => {
                         )}
                         {item.attachmentName && (
                           <CBadge
+                            as="button"
+                            type="button"
                             color="light"
                             className="text-body-secondary flex-shrink-0"
-                            role="button"
                             style={{ cursor: 'pointer' }}
                             title="Preview attachment"
                             onClick={() => openAttachmentPreview(item, 'salary-readonly-addition')}
@@ -375,9 +377,10 @@ const SalaryClaimReadonlyView = ({ claim, formatCurrency, formatDate }) => {
                         )}
                         {item.attachmentName && (
                           <CBadge
+                            as="button"
+                            type="button"
                             color="light"
                             className="text-body-secondary flex-shrink-0"
-                            role="button"
                             style={{ cursor: 'pointer' }}
                             title="Preview attachment"
                             onClick={() => openAttachmentPreview(item, 'salary-readonly-deduction')}
@@ -469,7 +472,7 @@ const SalaryClaimReadonlyView = ({ claim, formatCurrency, formatDate }) => {
               {overtime.hourlyBaseModeNote ? (
                 <div className="small text-info">{overtime.hourlyBaseModeNote}</div>
               ) : null}
-              <div className="rounded-3 shadow-sm overflow-hidden bg-white">
+              <div className="rounded-3 shadow-sm overflow-hidden bg-body">
                 <CTable align="middle" className="mb-0" responsive>
                   <CTableHead color="light">
                     <CTableRow>

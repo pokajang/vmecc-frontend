@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react'
+import React, { useCallback, useId, useRef, useState } from 'react'
 import { CBadge, CButton, CCol, CFormInput, CRow } from '@coreui/react'
 import { Filter } from 'lucide-react'
 import useFocusTrap from 'src/hooks/useFocusTrap'
@@ -18,6 +18,7 @@ const TableFilters = ({
   searchValue = '',
   onSearchChange = () => {},
   searchPlaceholder = 'Search',
+  searchLabel = 'Search records',
   filters = [],
   periodValue = 'all',
   onPeriodChange = () => {},
@@ -37,6 +38,7 @@ const TableFilters = ({
   showActiveSummary = true,
 }) => {
   const mobileFilterTriggerSize = 'calc(1.5em + 0.75rem + 2px)'
+  const searchId = useId()
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const mobileFilterTriggerRef = useRef(null)
   const mobileFilterDrawerRef = useRef(null)
@@ -118,6 +120,8 @@ const TableFilters = ({
           className={`${mobileSearchColProps.className || ''} d-md-none`.trim()}
         >
           <CFormInput
+            id={`table-search-mobile-${searchId}`}
+            aria-label={searchLabel}
             className="table-filter-mobile-search"
             placeholder={searchPlaceholder}
             value={localSearch}
@@ -159,6 +163,8 @@ const TableFilters = ({
           className={`${searchColProps.className || ''} d-none d-md-block`.trim()}
         >
           <CFormInput
+            id={`table-search-desktop-${searchId}`}
+            aria-label={searchLabel}
             size="sm"
             placeholder={searchPlaceholder}
             value={localSearch}

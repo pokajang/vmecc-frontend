@@ -2,7 +2,7 @@ import React, { Suspense, useCallback, useEffect, useRef } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 
-import { CSpinner, useColorModes } from '@coreui/react'
+import { CButton, useColorModes } from '@coreui/react'
 import './scss/style.scss'
 import { NavigationGuardProvider } from './contexts/NavigationGuardContext'
 
@@ -10,6 +10,8 @@ import { fetchModuleActivation, fetchSession, SYSTEM_MAINTENANCE_EVENT } from '.
 import { isSystemAdministrator } from './utils/authz'
 import { normalizeModuleActivationPayload } from './utils/modules'
 import { shouldShowMaintenancePage } from './utils/systemMaintenance'
+import PageState from './components/PageState'
+import { getPendingCameraOperation } from './utils/cameraRecovery'
 import {
   loadSystemMaintenanceSetting,
   normalizeSystemMaintenanceSetting,
@@ -74,16 +76,18 @@ const App = () => {
   const storedTheme = useSelector((state) => state.theme)
   const authStatus = useSelector((state) => state.authStatus)
   const authUser = useSelector((state) => state.authUser)
+  const authError = useSelector((state) => state.authError)
   const systemMaintenance = useSelector((state) => state.systemMaintenance)
   const systemMaintenanceRef = useRef(systemMaintenance)
   const sessionCheckInFlightRef = useRef(false)
+  const sessionRetryTimersRef = useRef(new Set())
 
   useEffect(() => {
     systemMaintenanceRef.current = systemMaintenance
   }, [systemMaintenance])
 
   const loadSession = useCallback(
-    async ({ silent = false, isActive = () => true, signal = null } = {}) => {
+    async ({ silent = false, isActive = () => true, signal = null, retryCount = 0 } = {}) => {
       if (sessionCheckInFlightRef.current) return false
       sessionCheckInFlightRef.current = true
       const { controller, cleanup: cleanupAbortLink } = createLinkedAbortController(signal)
@@ -128,11 +132,15 @@ const App = () => {
 
         return true
       } catch (error) {
+        const isTransient =
+          !error?.status ||
+          error?.status >= 500 ||
+          String(error?.message || '').includes('timed out')
         if (isActive() && !silent) {
           dispatch({
             type: 'set',
-            authStatus: 'anonymous',
-            authUser: null,
+            authStatus: isTransient ? 'temporarily_unavailable' : 'anonymous',
+            ...(isTransient ? {} : { authUser: null }),
             authError:
               error?.status === 401
                 ? null
@@ -142,6 +150,14 @@ const App = () => {
                   : error?.message || 'Unable to initialize session.',
           })
         }
+        if (isTransient && retryCount < 1 && !signal?.aborted) {
+          const retryTimer = setTimeout(() => {
+            sessionRetryTimersRef.current.delete(retryTimer)
+            if (signal?.aborted) return
+            void loadSession({ silent, isActive, signal, retryCount: retryCount + 1 })
+          }, 750)
+          sessionRetryTimersRef.current.add(retryTimer)
+        }
         return false
       } finally {
         cleanupAbortLink()
@@ -149,6 +165,14 @@ const App = () => {
       }
     },
     [dispatch],
+  )
+
+  useEffect(
+    () => () => {
+      sessionRetryTimersRef.current.forEach((timer) => clearTimeout(timer))
+      sessionRetryTimersRef.current.clear()
+    },
+    [],
   )
 
   const applySystemMaintenance = useCallback(
@@ -306,10 +330,24 @@ const App = () => {
     }
   }, [applySystemMaintenance])
 
-  const renderLoadingState = () => (
-    <div className="pt-5 text-center">
-      <CSpinner color="primary" variant="grow" />
-    </div>
+  const retrySessionBootstrap = useCallback(() => {
+    void loadSession()
+  }, [loadSession])
+
+  const renderLoadingState = () => <PageState message="Loading application…" minHeight="100dvh" />
+
+  const renderSessionUnavailableState = () => (
+    <PageState
+      variant="error"
+      title="Unable to restore session"
+      message={authError || 'Unable to connect to server.'}
+      minHeight="100dvh"
+      action={
+        <CButton type="button" color="danger" variant="outline" onClick={retrySessionBootstrap}>
+          Retry session check
+        </CButton>
+      }
+    />
   )
 
   const renderPrivateRoute = (element) => {
@@ -325,29 +363,40 @@ const App = () => {
       }
       return element
     }
+    if (authStatus === 'temporarily_unavailable') {
+      return renderSessionUnavailableState()
+    }
     if (authStatus === 'checking' || authStatus === 'unknown') {
-      return renderLoadingState()
+      return (
+        <PageState
+          message={
+            getPendingCameraOperation()
+              ? 'Restoring camera session and saved form...'
+              : 'Restoring session...'
+          }
+          minHeight="100dvh"
+        />
+      )
     }
     return <Navigate to="/login" replace />
   }
 
   const renderPublicRoute = (element) => {
     if (authStatus === 'authenticated') {
-      return <Navigate to="/" replace />
+      const pendingCameraOperation = getPendingCameraOperation()
+      const pendingRoute = String(pendingCameraOperation?.route || '').trim()
+
+      return <Navigate to={pendingRoute.startsWith('/') ? pendingRoute : '/'} replace />
     }
+    if (authStatus === 'temporarily_unavailable') return renderSessionUnavailableState()
+    if (authStatus === 'checking' || authStatus === 'unknown') return renderLoadingState()
     return element
   }
 
   return (
     <BrowserRouter>
       <NavigationGuardProvider>
-        <Suspense
-          fallback={
-            <div className="pt-3 text-center">
-              <CSpinner color="primary" variant="grow" />
-            </div>
-          }
-        >
+        <Suspense fallback={<PageState message="Loading application…" minHeight="100dvh" />}>
           <Routes>
             <Route exact path="/login" name="Login Page" element={renderPublicRoute(<Login />)} />
             <Route exact path="/register" element={<Navigate to="/login" replace />} />

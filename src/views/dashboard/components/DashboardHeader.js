@@ -81,7 +81,7 @@ const DashboardHeader = ({ period, onPeriodChange, userName }) => {
     >
       <CRow className="align-items-center gy-3">
         <CCol xs={12} md>
-          <h4 className="mb-1 fw-semibold">Dashboard Overview</h4>
+          <h1 className="h4 mb-1 fw-semibold">Dashboard overview</h1>
           <div className="text-body-secondary small">
             {userName ? `Welcome back, ${userName} · ` : ''}
             Operations overview &middot; <span className="fw-medium text-body">{periodLabel}</span>

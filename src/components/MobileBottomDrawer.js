@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import {
   CButton,
   COffcanvas,
@@ -37,8 +37,21 @@ const MobileBottomDrawer = ({
   onClose,
   className = '',
   bodyClassName = '',
+  panelRef,
+  closeDisabled = false,
+  closeLabel,
+  ...offcanvasProps
 }) => {
   const [shouldRender, setShouldRender] = useState(Boolean(visible))
+
+  const handlePanelRef = useCallback(
+    (element) => {
+      if (typeof panelRef === 'function') {
+        panelRef(element)
+      }
+    },
+    [panelRef],
+  )
 
   useEffect(() => {
     if (visible) {
@@ -56,6 +69,18 @@ const MobileBottomDrawer = ({
     return () => window.clearTimeout(timer)
   }, [visible])
 
+  useEffect(() => {
+    if (!visible || typeof document === 'undefined') return undefined
+
+    const backdrops = document.querySelectorAll('.offcanvas-backdrop')
+    const backdrop = backdrops[backdrops.length - 1]
+    if (!backdrop) return undefined
+
+    backdrop.setAttribute('tabindex', '-1')
+    backdrop.setAttribute('aria-hidden', 'true')
+    return undefined
+  }, [visible])
+
   useEffect(
     () => () => {
       window.setTimeout(releaseBodyScrollIfIdle, 0)
@@ -66,14 +91,17 @@ const MobileBottomDrawer = ({
   if (!shouldRender) return null
 
   const handleCoreUiHide = () => {
-    if (visible) onClose?.()
+    if (visible && !closeDisabled) onClose?.()
   }
 
   return (
     <COffcanvas
+      {...offcanvasProps}
       visible={visible}
       onHide={handleCoreUiHide}
       placement="bottom"
+      aria-label={offcanvasProps['aria-label'] || (typeof title === 'string' ? title : undefined)}
+      ref={handlePanelRef}
       className={buildClassName('mobile-bottom-drawer inspection-mobile-setup-drawer', className)}
     >
       <COffcanvasHeader className="mobile-bottom-drawer__header inspection-mobile-setup-drawer__header">
@@ -90,7 +118,8 @@ const MobileBottomDrawer = ({
             color="link"
             className="mobile-bottom-drawer__close inspection-mobile-setup-drawer__close p-1 text-body-secondary"
             onClick={onClose}
-            aria-label={`Close ${title}`}
+            disabled={closeDisabled}
+            aria-label={closeLabel || (typeof title === 'string' ? `Close ${title}` : 'Close')}
           >
             <X size={18} />
           </CButton>

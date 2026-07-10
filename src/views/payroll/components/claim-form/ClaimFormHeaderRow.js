@@ -18,7 +18,7 @@ const ClaimFormHeaderRow = ({
 }) => (
   <div className="d-flex flex-wrap align-items-start gap-3">
     <div
-      className="rounded-3 border d-flex align-items-center gap-2 px-3 py-3 bg-white"
+      className="rounded-3 border d-flex align-items-center gap-2 px-3 py-3 bg-body"
       style={{ minWidth: 240 }}
     >
       {(() => {
@@ -52,7 +52,7 @@ const ClaimFormHeaderRow = ({
     </div>
     {periodConfirmed ? (
       <div
-        className="rounded-3 border d-flex align-items-center gap-2 px-3 py-3 bg-white"
+        className="rounded-3 border d-flex align-items-center gap-2 px-3 py-3 bg-body"
         style={{ minWidth: 240 }}
       >
         <div

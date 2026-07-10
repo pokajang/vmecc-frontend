@@ -4,6 +4,7 @@ import { Trash2 } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
 import IconOptionGrid from 'src/components/IconOptionGrid'
 import MobileRecordList from 'src/components/MobileRecordList'
+import PageState from 'src/components/PageState'
 import RecordScopeSegmentedControl from 'src/components/report-workflow/RecordScopeSegmentedControl'
 import TableLoader from 'src/components/TableLoader'
 import { INCIDENT_TYPE_TOGGLE_VALUE } from 'src/views/inspection/useIncidentTypeManager'
@@ -101,7 +102,7 @@ const InspectionMobileHome = ({
       {draftRow ? (
         <div className="inspection-mobile-home__draft-list list-group list-group-flush overflow-hidden border rounded-3">
           <article
-            className="inspection-draft-card list-group-item p-3 bg-white cursor-pointer"
+            className="inspection-draft-card list-group-item p-3 bg-body cursor-pointer"
             role="button"
             tabIndex={0}
             aria-label="Continue inspection draft"
@@ -207,7 +208,7 @@ const InspectionMobileHome = ({
       </div>
 
       {isRecordsLoading ? (
-        <div className="border rounded-3 bg-white">
+        <div className="border rounded-3 bg-body">
           <TableLoader message="Loading records..." minHeight={112} />
         </div>
       ) : recentRecords.length > 0 ? (
@@ -217,7 +218,12 @@ const InspectionMobileHome = ({
           ]}
         />
       ) : (
-        <div className="border rounded-3 bg-white p-3 text-body-secondary">No records yet.</div>
+        <PageState
+          variant="empty"
+          message="No records yet."
+          minHeight={96}
+          className="border rounded-3"
+        />
       )}
     </div>
   )

@@ -25,6 +25,7 @@ import TableFilters from 'src/components/TableFilters'
 import WorkflowStatusSummary from 'src/components/WorkflowStatusSummary'
 import { buildBulkSelectionSummary } from '../helpers/bulkSelectionSummary'
 import SalaryBulkModeBar from './SalaryBulkModeBar'
+import { activateOnEnterOrSpace } from 'src/utils/uiAccessibility'
 
 const SALARY_GATES = [
   { action: 'Checked', label: 'Checked' },
@@ -233,7 +234,7 @@ const SalaryRecordsTab = ({ vm, handlers }) => {
   )
 
   const renderDesktopTable = () => (
-    <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
+    <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-body">
       <CTable align="middle" className="mb-0" hover responsive>
         <CTableHead color="light">
           <CTableRow>
@@ -248,7 +249,7 @@ const SalaryRecordsTab = ({ vm, handlers }) => {
             <CTableHeaderCell>Final Payable</CTableHeaderCell>
             <CTableHeaderCell>Status</CTableHeaderCell>
             <CTableHeaderCell>Submitted On</CTableHeaderCell>
-            <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
+            <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
           </CTableRow>
         </CTableHead>
         <CTableBody>
@@ -366,7 +367,13 @@ const SalaryRecordsTab = ({ vm, handlers }) => {
                       key={`${row.id}-${row.ownerId || 'owner'}`}
                       className="cursor-pointer"
                       style={{ cursor: 'pointer' }}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Open salary record ${row.id || rowIndex}`}
                       onClick={() => openClaimDetail(row, 'salaryRecords')}
+                      onKeyDown={(event) =>
+                        activateOnEnterOrSpace(event, () => openClaimDetail(row, 'salaryRecords'))
+                      }
                     >
                       <CTableDataCell className="text-center text-body-secondary">
                         {rowIndex}

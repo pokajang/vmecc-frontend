@@ -203,6 +203,7 @@ const AccountSection = ({ user, roles }) => {
           'Name',
           editMode ? (
             <CFormInput
+              aria-label="Name"
               size="sm"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -217,6 +218,7 @@ const AccountSection = ({ user, roles }) => {
           'IC number',
           editMode ? (
             <CFormInput
+              aria-label="IC number"
               size="sm"
               value={icNumber}
               onChange={(e) => setIcNumber(e.target.value)}
@@ -231,6 +233,7 @@ const AccountSection = ({ user, roles }) => {
           'Mobile number',
           editMode ? (
             <CFormInput
+              aria-label="Mobile number"
               size="sm"
               value={phone}
               onChange={(e) => setPhone(formatMobile(e.target.value))}
@@ -243,9 +246,10 @@ const AccountSection = ({ user, roles }) => {
           ),
         )}
         {renderRow(
-          'Home Address',
+          'Home address',
           editMode ? (
             <CFormTextarea
+              aria-label="Home address"
               rows={2}
               value={address}
               onChange={(e) => setAddress(e.target.value)}
@@ -259,6 +263,7 @@ const AccountSection = ({ user, roles }) => {
           'State',
           editMode ? (
             <CFormSelect
+              aria-label="State"
               size="sm"
               value={state}
               onChange={(e) => setState(e.target.value)}

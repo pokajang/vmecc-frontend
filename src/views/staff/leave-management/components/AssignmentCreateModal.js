@@ -11,6 +11,7 @@ import {
   CModalBody,
   CModalFooter,
   CModalHeader,
+  CModalTitle,
   CRow,
   CTable,
   CTableBody,
@@ -63,7 +64,9 @@ const AssignmentCreateModal = ({
 
   return (
     <CModal visible={visible} onClose={onClose} alignment="center">
-      <CModalHeader>Assign Entitlement</CModalHeader>
+      <CModalHeader>
+        <CModalTitle>Assign entitlement</CModalTitle>
+      </CModalHeader>
       <CModalBody data-testid={visible ? 'leave-management-assignment-form' : undefined}>
         <CRow className="g-3">
           <CCol md={6}>
@@ -98,7 +101,7 @@ const AssignmentCreateModal = ({
         </CRow>
 
         {selectedStaff ? (
-          <div className="rounded-3 shadow-sm overflow-hidden bg-white mt-3">
+          <div className="rounded-3 shadow-sm overflow-hidden bg-body mt-3">
             <CTable align="middle" className="mb-0" responsive>
               <CTableHead color="light">
                 <CTableRow>
@@ -118,6 +121,7 @@ const AssignmentCreateModal = ({
                       <CTableDataCell>
                         <CFormInput
                           type="number"
+                          aria-label={`${leaveType} entitlement`}
                           min={0}
                           value={row.entitlement}
                           onChange={(event) =>

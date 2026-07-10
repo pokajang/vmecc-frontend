@@ -80,10 +80,4 @@ export const buildDefaultFixedNationalDraft = (year = new Date().getFullYear()) 
     state: 'All States',
   }))
 
-export const statusColorMap = {
-  Draft: 'secondary',
-  Pending: 'warning',
-  Approved: 'success',
-  Rejected: 'danger',
-  Cancelled: 'dark',
-}
+export { WORKFLOW_STATUS_COLOR as statusColorMap } from 'src/constants/statusPresentation'

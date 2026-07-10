@@ -70,11 +70,21 @@ const SummaryGenerationModal = ({
             </div>
             <div className="d-grid gap-2">
               <div className="fw-semibold">Current Summary</div>
-              <CFormTextarea rows={4} value={currentSummary} readOnly />
+              <CFormTextarea
+                rows={4}
+                aria-label="Current summary"
+                value={currentSummary}
+                readOnly
+              />
             </div>
             <div className="d-grid gap-2">
               <div className="fw-semibold">Generated Summary Draft</div>
-              <CFormTextarea rows={6} value={generatedSummary} readOnly />
+              <CFormTextarea
+                rows={6}
+                aria-label="Generated summary draft"
+                value={generatedSummary}
+                readOnly
+              />
             </div>
           </>
         ) : null}

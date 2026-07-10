@@ -8,6 +8,7 @@ import {
   CContainer,
   CForm,
   CFormInput,
+  CFormLabel,
   CInputGroup,
   CInputGroupText,
   CRow,
@@ -110,13 +111,14 @@ const ResetPassword = () => {
           style={{ minHeight: 'calc(100dvh - 3rem)' }}
         >
           <CCol xs={12} sm={10} md={8} lg={5} className="px-1 px-sm-2" style={{ maxWidth: 460 }}>
-            <div
-              className="text-center mb-3 mb-sm-4"
-              role="button"
+            <button
+              type="button"
+              className="auth-logo-button d-block mx-auto mb-3 mb-sm-4 p-0 border-0 bg-transparent"
+              aria-label="Back to sign in"
               onClick={() => navigate('/login')}
             >
               <img src={logoSvg} alt="VMECC" style={logoStyle} />
-            </div>
+            </button>
             <CCard className="border-0 shadow-sm">
               <CCardBody className="p-3 p-sm-4">
                 <p className="text-center text-muted mb-3">
@@ -139,11 +141,15 @@ const ResetPassword = () => {
                   </CAlert>
                 )}
                 <CForm onSubmit={handleSubmit}>
+                  <CFormLabel htmlFor="reset-password-email" className="visually-hidden">
+                    Email address
+                  </CFormLabel>
                   <CInputGroup className="mb-3">
                     <CInputGroupText>
                       <CIcon icon={cilEnvelopeClosed} />
                     </CInputGroupText>
                     <CFormInput
+                      id="reset-password-email"
                       type="email"
                       name="email"
                       placeholder="Email"
@@ -153,11 +159,15 @@ const ResetPassword = () => {
                       disabled
                     />
                   </CInputGroup>
+                  <CFormLabel htmlFor="reset-password-new" className="visually-hidden">
+                    New password
+                  </CFormLabel>
                   <CInputGroup className="mb-3">
                     <CInputGroupText>
                       <CIcon icon={cilLockLocked} />
                     </CInputGroupText>
                     <CFormInput
+                      id="reset-password-new"
                       type={showNewPassword ? 'text' : 'password'}
                       name="password"
                       placeholder="New password"
@@ -167,21 +177,28 @@ const ResetPassword = () => {
                       disabled={isSubmitting || isTokenMissing}
                       required
                     />
-                    <CInputGroupText
+                    <CButton
+                      type="button"
+                      color="secondary"
+                      variant="outline"
                       className="border-start-0"
-                      role="button"
                       aria-label={showNewPassword ? 'Hide password' : 'Show password'}
-                      style={{ cursor: 'pointer' }}
+                      aria-pressed={showNewPassword}
+                      disabled={isSubmitting || isTokenMissing}
                       onClick={toggleNewPassword}
                     >
                       <CIcon icon={showNewPassword ? cilShieldAlt : cilLowVision} />
-                    </CInputGroupText>
+                    </CButton>
                   </CInputGroup>
+                  <CFormLabel htmlFor="reset-password-confirm" className="visually-hidden">
+                    Confirm new password
+                  </CFormLabel>
                   <CInputGroup className="mb-4">
                     <CInputGroupText>
                       <CIcon icon={cilLockLocked} />
                     </CInputGroupText>
                     <CFormInput
+                      id="reset-password-confirm"
                       type={showConfirmPassword ? 'text' : 'password'}
                       name="passwordConfirmation"
                       placeholder="Confirm new password"
@@ -191,15 +208,18 @@ const ResetPassword = () => {
                       disabled={isSubmitting || isTokenMissing}
                       required
                     />
-                    <CInputGroupText
+                    <CButton
+                      type="button"
+                      color="secondary"
+                      variant="outline"
                       className="border-start-0"
-                      role="button"
                       aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
-                      style={{ cursor: 'pointer' }}
+                      aria-pressed={showConfirmPassword}
+                      disabled={isSubmitting || isTokenMissing}
                       onClick={toggleConfirmPassword}
                     >
                       <CIcon icon={showConfirmPassword ? cilShieldAlt : cilLowVision} />
-                    </CInputGroupText>
+                    </CButton>
                   </CInputGroup>
                   <div className="d-flex align-items-center justify-content-between gap-3 mb-3 w-100">
                     <CButton

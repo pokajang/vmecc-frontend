@@ -8,6 +8,7 @@ import {
   CContainer,
   CForm,
   CFormInput,
+  CFormLabel,
   CInputGroup,
   CInputGroupText,
   CRow,
@@ -52,13 +53,18 @@ const ForgotPassword = () => {
       <CContainer className="py-5">
         <CRow className="justify-content-center">
           <CCol xs={12} sm={10} md={8} lg={5}>
-            <div className="text-center mb-5" role="button" onClick={() => navigate('/login')}>
+            <button
+              type="button"
+              className="auth-logo-button d-block mx-auto mb-5 p-0 border-0 bg-transparent"
+              aria-label="Back to sign in"
+              onClick={() => navigate('/login')}
+            >
               <img
                 src={logoSvg}
                 alt="VMECC"
                 style={{ width: '33%', height: 'auto', maxWidth: 240 }}
               />
-            </div>
+            </button>
             <CCard className="border-0 shadow-sm">
               <CCardBody className="p-4">
                 <p className="text-center text-muted mb-4">
@@ -76,11 +82,15 @@ const ForgotPassword = () => {
                   </CAlert>
                 )}
                 <CForm onSubmit={handleSubmit}>
+                  <CFormLabel htmlFor="forgot-password-email" className="visually-hidden">
+                    Email address
+                  </CFormLabel>
                   <CInputGroup className="mb-4">
                     <CInputGroupText>
                       <CIcon icon={cilEnvelopeClosed} />
                     </CInputGroupText>
                     <CFormInput
+                      id="forgot-password-email"
                       type="email"
                       name="email"
                       placeholder="Email"

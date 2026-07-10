@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import CreateActionButton from 'src/components/CreateActionButton'
 import {
   getScbaFieldEvidenceKeys,
@@ -15,6 +15,7 @@ import {
   rowContainsSearch,
 } from './InspectionDisplayShared'
 import ScbaSectionCards from './ScbaSectionCards'
+import { InspectionMobileCollapsedSelectorRow } from './InspectionSetupSelectorControls'
 
 export const ScbaInspectionChecks = ({
   mainLocation,
@@ -24,7 +25,7 @@ export const ScbaInspectionChecks = ({
   onSaveGroupedRowDraft,
   onResetGroupedCheck,
   onMarkRowOk,
-  onMarkAllOk,
+  onMarkGroupOk,
   onAddSection,
   onEditSection,
   onDeleteSection,
@@ -42,6 +43,7 @@ export const ScbaInspectionChecks = ({
   onApplyPhotoCaption,
   fieldError = false,
   remarksError = false,
+  isLoadingRows = false,
   readOnly = false,
 }) => {
   const visibleSections =
@@ -54,6 +56,7 @@ export const ScbaInspectionChecks = ({
       incompleteRemarksCount: 0,
     }))
   const [search, setSearch] = useState('')
+  const [selectedSectionKey, setSelectedSectionKey] = useState('')
   const [expandedSectionKeys, setExpandedSectionKeys] = useState(() => new Set())
   const [hasManualSectionExpansion, setHasManualSectionExpansion] = useState(false)
   const [photoViewer, setPhotoViewer] = useState(null)
@@ -100,6 +103,37 @@ export const ScbaInspectionChecks = ({
       ? filteredSections.slice(0, 1).map((section) => section.key)
       : filteredSections.map((section) => section.key),
   )
+  const selectedSection = useMemo(
+    () => visibleSections.find((section) => section.key === selectedSectionKey) || null,
+    [selectedSectionKey, visibleSections],
+  )
+  const selectedFilteredSection = useMemo(() => {
+    if (!selectedSection) return null
+    return (
+      filteredSections.find((section) => section.key === selectedSection.key) || {
+        ...selectedSection,
+        visibleRows: [],
+      }
+    )
+  }, [filteredSections, selectedSection])
+  const displaySections = readOnly
+    ? filteredSections
+    : selectedFilteredSection
+      ? [selectedFilteredSection]
+      : []
+
+  const getNextIncompleteSection = () => {
+    const sectionsForSearch = filteredSections
+    if (readOnly || !selectedSection) return sectionsForSearch
+
+    const currentIndex = sectionsForSearch.findIndex(
+      (section) => section.key === selectedSection.key,
+    )
+    if (currentIndex === -1) return sectionsForSearch
+    return sectionsForSearch.slice(currentIndex)
+  }
+
+  const isCompactViewport = isCompactInspectionViewport()
 
   const isScbaRowIncomplete = (section, row = {}) => {
     const fields = section.fields || getScbaSectionFields(section.key, form)
@@ -133,87 +167,197 @@ export const ScbaInspectionChecks = ({
     }, 50)
   }
 
+  const selectSection = (sectionKey) => {
+    setSelectedSectionKey(sectionKey)
+    setSearch('')
+    const normalizedSectionKey = String(sectionKey || '').trim()
+    if (!normalizedSectionKey) {
+      setHasManualSectionExpansion(false)
+      setExpandedSectionKeys(new Set())
+      return
+    }
+
+    setHasManualSectionExpansion(true)
+    setExpandedSectionKeys(new Set([normalizedSectionKey]))
+  }
+
+  const resetSelectedSection = () => {
+    setSelectedSectionKey('')
+    setSearch('')
+    setHasManualSectionExpansion(false)
+    setExpandedSectionKeys(new Set())
+  }
+
+  const renderSectionSelector = () => {
+    if (readOnly) return null
+
+    if (selectedSection && isCompactViewport) {
+      return (
+        <InspectionMobileCollapsedSelectorRow
+          label="Group"
+          value={selectedSection.title}
+          resetLabel="Reset group"
+          editLabel="Change group"
+          onReset={resetSelectedSection}
+          onEdit={resetSelectedSection}
+        />
+      )
+    }
+
+    return (
+      <div className="d-grid gap-3">
+        <div className="inspection-hydraulic-section-heading d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div className="fw-semibold text-muted">
+            {selectedSection ? 'Groups' : 'Choose Group'}
+          </div>
+          <CreateActionButton
+            label="Add section"
+            className="inspection-compact-action-btn"
+            onClick={onAddSection}
+          />
+        </div>
+        {visibleSections.length > 0 ? (
+          <div className="row g-3">
+            {visibleSections.map((section) => {
+              const isSelected = selectedSectionKey === section.key
+              const rowCount = (section.visibleRows || []).length
+              return (
+                <div key={section.key} className="col-12 col-md-6 col-xl-4">
+                  <button
+                    type="button"
+                    className={`inspection-location-option-card w-100 rounded-3 border bg-body p-3 text-start${
+                      isSelected ? ' border-primary shadow-sm' : ''
+                    }`}
+                    aria-pressed={isSelected}
+                    onClick={() => selectSection(section.key)}
+                  >
+                    <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                      <div className="fw-semibold text-break">{section.title}</div>
+                      <span className="small text-body-secondary">
+                        {rowCount} item{rowCount === 1 ? '' : 's'}
+                      </span>
+                    </div>
+                    <div className="small text-body-secondary mt-1">
+                      {section.checkedCount || 0}/{rowCount} checked
+                      {section.issueCount ? ` | ${section.issueCount} issue(s)` : ''}
+                    </div>
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <div className="rounded-3 border bg-light-subtle p-3 text-body-secondary">
+            No SCBA groups have items for this main location.
+          </div>
+        )}
+      </div>
+    )
+  }
+
   if (!mainLocation && visibleSections.every((section) => section.visibleRows.length === 0)) {
     return null
   }
 
   return (
     <div className="d-grid gap-3">
-      <div className="inspection-hydraulic-section-heading d-flex flex-wrap align-items-center justify-content-between gap-2">
-        <div className="d-flex flex-wrap align-items-center gap-2">
-          <div className="fw-semibold text-muted">SCBA Items</div>
-        </div>
-        {!readOnly ? (
-          <div className="d-flex flex-wrap align-items-center justify-content-end gap-2">
-            <CreateActionButton
-              label="Mark all Good"
-              className="inspection-compact-action-btn d-none d-md-inline-flex"
-              onClick={onMarkAllOk}
-            />
-            <CreateActionButton
-              label="Add section"
-              className="inspection-compact-action-btn"
-              onClick={onAddSection}
-            />
+      {renderSectionSelector()}
+
+      {readOnly || selectedSection ? (
+        <div className="inspection-hydraulic-section-heading d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div className="d-flex flex-wrap align-items-center gap-2">
+            <div className="fw-semibold text-muted">
+              {selectedSection ? `${selectedSection.title} Items` : 'SCBA Items'}
+            </div>
           </div>
-        ) : null}
-      </div>
+          {!readOnly && selectedSection ? (
+            <div className="d-flex flex-wrap align-items-center justify-content-end gap-2">
+              <CreateActionButton
+                label="Mark group Good"
+                className="inspection-compact-action-btn d-none d-md-inline-flex"
+                onClick={() => onMarkGroupOk?.(selectedSection.key)}
+              />
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
-      <ManagedCheckToolbar
-        search={search}
-        onSearch={setSearch}
-        searchPlaceholder="Search SCBA items..."
-        resultCount={filteredRowCount}
-        totalCount={totalRowCount}
-        readOnly={readOnly}
-        onNextIncomplete={() => {
-          const section = filteredSections.find((candidate) =>
-            (candidate.visibleRows || []).some((row) => isScbaRowIncomplete(candidate, row)),
-          )
-          if (section) expandScbaSection(section.key)
-        }}
-        onExpandAll={() => {
-          setHasManualSectionExpansion(true)
-          setExpandedSectionKeys(new Set(filteredSections.map((section) => section.key)))
-        }}
-        onCollapseAll={() => {
-          setHasManualSectionExpansion(true)
-          setExpandedSectionKeys(new Set())
-        }}
-      />
+      {readOnly || selectedSection ? (
+        <ManagedCheckToolbar
+          search={search}
+          onSearch={setSearch}
+          searchPlaceholder="Search SCBA items..."
+          resultCount={displaySections.reduce(
+            (count, section) => count + section.visibleRows.length,
+            0,
+          )}
+          totalCount={selectedSection ? (selectedSection.visibleRows || []).length : totalRowCount}
+          readOnly={readOnly}
+          onNextIncomplete={() => {
+            const sectionSearchPath = getNextIncompleteSection()
+            const section = sectionSearchPath.find((candidate) =>
+              (candidate.visibleRows || []).some((row) => isScbaRowIncomplete(candidate, row)),
+            )
+            if (!section) return
 
-      <ScbaSectionCards
-        filteredSections={filteredSections}
-        removedCustomSections={removedCustomSections}
-        readOnly={readOnly}
-        form={form}
-        remarksError={remarksError}
-        expandedSectionKeys={expandedSectionKeys}
-        hasManualSectionExpansion={hasManualSectionExpansion}
-        defaultExpandedSectionKeys={defaultExpandedSectionKeys}
-        setExpandedSectionKeys={setExpandedSectionKeys}
-        setHasManualSectionExpansion={setHasManualSectionExpansion}
-        setPhotoViewer={setPhotoViewer}
-        statusOptions={SCBA_STATUS_OPTIONS}
-        onUpdateGroupedCheck={onUpdateGroupedCheck}
-        onSaveGroupedRowDraft={onSaveGroupedRowDraft}
-        onResetGroupedCheck={onResetGroupedCheck}
-        onMarkRowOk={onMarkRowOk}
-        onEditSection={onEditSection}
-        onDeleteSection={onDeleteSection}
-        onArchiveSection={onArchiveSection}
-        onAddItem={onAddItem}
-        onEditItem={onEditItem}
-        onDeleteItem={onDeleteItem}
-        onArchiveItem={onArchiveItem}
-        onRequestPhotoUpload={onRequestPhotoUpload}
-        onRequestIssuePhotoUpload={onRequestIssuePhotoUpload}
-        onRemovePhoto={onRemovePhoto}
-        onChangePhotoDescription={onChangePhotoDescription}
-        onApplyPhotoCaption={onApplyPhotoCaption}
-        onRestoreSection={onRestoreSection}
-        onRestoreItem={onRestoreItem}
-      />
+            if (section.key !== selectedSectionKey) {
+              selectSection(section.key)
+            }
+            expandScbaSection(section.key)
+          }}
+          onExpandAll={() => {
+            setHasManualSectionExpansion(true)
+            setExpandedSectionKeys(new Set(displaySections.map((section) => section.key)))
+          }}
+          onCollapseAll={() => {
+            setHasManualSectionExpansion(true)
+            setExpandedSectionKeys(new Set())
+          }}
+        />
+      ) : null}
+
+      {isLoadingRows ? (
+        <div className="small text-body-secondary" aria-live="polite">
+          Refreshing SCBA equipment...
+        </div>
+      ) : null}
+
+      {readOnly || selectedSection ? (
+        <>
+          <ScbaSectionCards
+            filteredSections={displaySections}
+            removedCustomSections={removedCustomSections}
+            readOnly={readOnly}
+            form={form}
+            remarksError={remarksError}
+            expandedSectionKeys={expandedSectionKeys}
+            hasManualSectionExpansion={hasManualSectionExpansion}
+            defaultExpandedSectionKeys={defaultExpandedSectionKeys}
+            setExpandedSectionKeys={setExpandedSectionKeys}
+            setHasManualSectionExpansion={setHasManualSectionExpansion}
+            setPhotoViewer={setPhotoViewer}
+            statusOptions={SCBA_STATUS_OPTIONS}
+            onUpdateGroupedCheck={onUpdateGroupedCheck}
+            onSaveGroupedRowDraft={onSaveGroupedRowDraft}
+            onResetGroupedCheck={onResetGroupedCheck}
+            onMarkRowOk={onMarkRowOk}
+            onEditSection={onEditSection}
+            onDeleteSection={onDeleteSection}
+            onArchiveSection={onArchiveSection}
+            onAddItem={onAddItem}
+            onEditItem={onEditItem}
+            onDeleteItem={onDeleteItem}
+            onArchiveItem={onArchiveItem}
+            onRequestPhotoUpload={onRequestPhotoUpload}
+            onRequestIssuePhotoUpload={onRequestIssuePhotoUpload}
+            onRemovePhoto={onRemovePhoto}
+            onChangePhotoDescription={onChangePhotoDescription}
+            onApplyPhotoCaption={onApplyPhotoCaption}
+            onRestoreSection={onRestoreSection}
+            onRestoreItem={onRestoreItem}
+          />
+        </>
+      ) : null}
 
       {!readOnly ? (
         <>

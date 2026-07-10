@@ -28,7 +28,7 @@ describe('fire extinguisher date utilities', () => {
         },
         TODAY,
       ),
-    ).toMatch(/^Last inspected: today at .+ by Jang$/)
+    ).toMatch(/^Last submitted inspection: today at .+ by Jang$/)
 
     expect(
       formatFireExtinguisherLastInspection(
@@ -38,7 +38,7 @@ describe('fire extinguisher date utilities', () => {
         },
         TODAY,
       ),
-    ).toBe('Last inspected: 3 days ago by Jang')
+    ).toBe('Last submitted inspection: 3 days ago by Jang')
 
     expect(formatFireExtinguisherLastInspection(null, TODAY)).toBe(
       'No previous submitted inspection',

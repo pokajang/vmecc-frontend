@@ -47,7 +47,7 @@ const ClaimSubmissionEditorCard = ({
                 ? 'Exceptional Claim Form'
                 : 'Claim Item Form'}
           </span>
-          {editingIndex !== null && <CBadge color="info">Edit Mode</CBadge>}
+          {editingIndex !== null && <CBadge color="info">Edit mode</CBadge>}
         </div>
         {editingIndex !== null && (
           <CButton color="light" size="sm" onClick={onResetDraft}>
@@ -153,7 +153,7 @@ const ClaimSubmissionEditorCard = ({
                 />
               </CCol>
               <CCol md={3}>
-                <CFormLabel htmlFor="draft-rate">Rate / KM</CFormLabel>
+                <CFormLabel htmlFor="draft-rate">Rate / km</CFormLabel>
                 <CFormInput
                   id="draft-rate"
                   type="number"
@@ -177,7 +177,7 @@ const ClaimSubmissionEditorCard = ({
                 />
               </CCol>
               <CCol md={4}>
-                <CFormLabel htmlFor="draft-trip-from">Trip From</CFormLabel>
+                <CFormLabel htmlFor="draft-trip-from">Trip from</CFormLabel>
                 <CFormInput
                   id="draft-trip-from"
                   type="date"
@@ -186,7 +186,7 @@ const ClaimSubmissionEditorCard = ({
                 />
               </CCol>
               <CCol md={4}>
-                <CFormLabel htmlFor="draft-trip-to">Trip To</CFormLabel>
+                <CFormLabel htmlFor="draft-trip-to">Trip to</CFormLabel>
                 <CFormInput
                   id="draft-trip-to"
                   type="date"
@@ -199,7 +199,7 @@ const ClaimSubmissionEditorCard = ({
 
           {hasSection('billing') && (
             <CCol md={4}>
-              <CFormLabel htmlFor="draft-billed-period">Billing Period</CFormLabel>
+              <CFormLabel htmlFor="draft-billed-period">Billing period</CFormLabel>
               <CFormInput
                 id="draft-billed-period"
                 placeholder="e.g. Mar 2026"
@@ -227,7 +227,7 @@ const ClaimSubmissionEditorCard = ({
 
           {hasSection('exceptional') && (
             <CCol xs={12}>
-              <CFormLabel htmlFor="draft-approval-note">Approval Note</CFormLabel>
+              <CFormLabel htmlFor="draft-approval-note">Approval note</CFormLabel>
               <CFormInput
                 id="draft-approval-note"
                 placeholder="Reference approval memo, approver name, and approval date"
@@ -246,7 +246,7 @@ const ClaimSubmissionEditorCard = ({
           </CCol>
           <CCol md={12} data-testid="payroll-claim-attachments">
             <CFormLabel htmlFor="draft-attachment">
-              {isExceptionalClaim ? 'Attachment (Required)' : 'Attachment'}
+              {isExceptionalClaim ? 'Attachment (required)' : 'Attachment'}
             </CFormLabel>
             <CFormInput
               id="draft-attachment"

@@ -93,7 +93,7 @@ const useBulkUserActions = ({
       }
     }
     return {
-      title: 'Confirm Bulk Action',
+      title: 'Confirm bulk action',
       message: 'Are you sure you want to continue?',
       confirmLabel: 'Confirm',
       confirmColor: 'primary',

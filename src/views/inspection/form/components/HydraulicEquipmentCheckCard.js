@@ -3,7 +3,11 @@ import { CButton, CFormLabel, CFormTextarea } from '@coreui/react'
 import { Camera, CheckCircle2, Circle, MessageSquare, Trash2, TriangleAlert } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
 import { hasHydraulicInspectionData } from '../inspectionResetActions'
-import { buildInspectionElementActions, InspectionElementCard } from './InspectionElementUi'
+import {
+  buildInspectionElementActions,
+  InspectionElementCard,
+  InspectionElementValidationBadges,
+} from './InspectionElementUi'
 import {
   HYDRAULIC_CHECK_FIELDS,
   HYDRAULIC_CHECK_STATUS_OPTIONS,
@@ -55,12 +59,26 @@ const HydraulicStatusSegment = ({ field, value, onChange, readOnly = false }) =>
 
 const getHydraulicWorkflowState = (row = {}) => {
   const defectCount = HYDRAULIC_CHECK_FIELDS.filter((field) => row[field.key] === 'Defect').length
-  const isComplete = HYDRAULIC_CHECK_FIELDS.every((field) => String(row[field.key] || '').trim())
+  const missingStatusCount = HYDRAULIC_CHECK_FIELDS.filter(
+    (field) => !String(row[field.key] || '').trim(),
+  ).length
+  const missingEvidenceCount = HYDRAULIC_CHECK_FIELDS.reduce((count, field) => {
+    const status = String(row[field.key] || '').trim()
+    const remarks = String(row[field.remarksKey] || '').trim()
+    const photos = Array.isArray(row[field.photosKey]) ? row[field.photosKey] : []
+
+    if (status === 'Defect') return count + (remarks ? 0 : 1) + (photos.length > 0 ? 0 : 1)
+    if (status === 'N/A') return count + (remarks ? 0 : 1)
+    return count
+  }, 0)
+  const missingCount = missingStatusCount + missingEvidenceCount
 
   return {
     defectCount,
     hasDefect: defectCount > 0,
-    isComplete,
+    isComplete: missingCount === 0,
+    missingCount,
+    needsEvidence: missingEvidenceCount > 0,
   }
 }
 
@@ -357,6 +375,7 @@ export const HydraulicEquipmentCheckDetails = ({
               </div>
               <CFormTextarea
                 rows={2}
+                aria-label="General equipment remarks"
                 value={current.remarks || ''}
                 placeholder="General equipment remarks"
                 onChange={(event) => onUpdateCheck(row, { remarks: event.target.value })}
@@ -438,7 +457,16 @@ const HydraulicEquipmentCheckCard = ({
               Retained evidence
             </span>
           ) : null}
+          <InspectionElementValidationBadges
+            missingCount={workflowState.missingCount}
+            needsEvidence={workflowState.needsEvidence}
+          />
         </>
+      }
+      helperLines={
+        hasRetainedEvidence
+          ? 'Evidence from an earlier status is retained for audit context.'
+          : null
       }
       actions={actionItems}
       actionLabel={`Equipment actions for ${row.equipment}`}

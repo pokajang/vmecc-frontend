@@ -165,7 +165,7 @@ const OvertimeApplySection = ({
         </CCol>
       </CRow>
 
-      <div className="rounded-3 border p-3 bg-white">
+      <div className="rounded-3 border p-3 bg-body">
         <CRow className="g-3">
           {guidanceMessage ? (
             <CCol xs={12}>
@@ -186,7 +186,7 @@ const OvertimeApplySection = ({
             <CFormFeedback invalid>{fieldErrors.claimDate}</CFormFeedback>
           </CCol>
           <CCol md={4}>
-            <CFormLabel htmlFor="overtime-start-time">Start Time</CFormLabel>
+            <CFormLabel htmlFor="overtime-start-time">Start time</CFormLabel>
             <CFormInput
               id="overtime-start-time"
               type="time"
@@ -201,7 +201,7 @@ const OvertimeApplySection = ({
             ) : null}
           </CCol>
           <CCol md={4}>
-            <CFormLabel htmlFor="overtime-end-time">End Time</CFormLabel>
+            <CFormLabel htmlFor="overtime-end-time">End time</CFormLabel>
             <CFormInput
               id="overtime-end-time"
               type="time"
@@ -228,7 +228,7 @@ const OvertimeApplySection = ({
             ) : null}
           </CCol>
           <CCol xs={12}>
-            <CFormLabel htmlFor="overtime-reason">Reason / Work Done</CFormLabel>
+            <CFormLabel htmlFor="overtime-reason">Reason / work done</CFormLabel>
             <CFormTextarea
               id="overtime-reason"
               rows={5}

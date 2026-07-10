@@ -15,6 +15,9 @@ const Leave = React.lazy(() => import('./views/leave/Leave'))
 const Overtime = React.lazy(() => import('./views/overtime/Overtime'))
 const Reports = React.lazy(() => import('./views/report/Reports'))
 const Inspection = React.lazy(preloadInspectionRoute)
+const InspectionUxMatrixPage = React.lazy(
+  () => import('./views/inspection/visual/InspectionUxMatrixPage'),
+)
 const ReportingWorkflowSettings = React.lazy(
   () => import('./views/settings/ReportingWorkflowSettings'),
 )
@@ -278,6 +281,7 @@ const routes = [
   { path: '/overtime/new', name: 'New Overtime', element: Overtime },
   { path: '/overtime/:overtimeId', name: 'Overtime Detail', element: Overtime },
   { path: '/inspection', name: 'Inspection', element: Inspection },
+  { path: '/inspection/ux-matrix', name: 'Inspection UX Matrix', element: InspectionUxMatrixPage },
   { path: '/inspection/new', name: 'New Inspection', element: Inspection },
   { path: '/inspection/new/:newSection', name: 'New Inspection Section', element: Inspection },
   { path: '/inspection/review', name: 'Inspection Review', element: Inspection },

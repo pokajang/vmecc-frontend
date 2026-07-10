@@ -1,19 +1,21 @@
 import React from 'react'
-import { CButton, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 
 const LeaveDiscardConfirmModal = ({ visible, onClose, onConfirm }) => (
-  <CModal visible={visible} onClose={onClose} alignment="center">
-    <CModalHeader>Discard unsaved changes?</CModalHeader>
-    <CModalBody>Your current leave form changes are not saved.</CModalBody>
-    <CModalFooter>
-      <CButton color="light" onClick={onClose}>
-        Stay
-      </CButton>
-      <CButton color="danger" onClick={onConfirm}>
-        Discard
-      </CButton>
-    </CModalFooter>
-  </CModal>
+  <LeaveDiscardConfirmModalContent visible={visible} onClose={onClose} onConfirm={onConfirm} />
+)
+
+const LeaveDiscardConfirmModalContent = ({ visible, onClose, onConfirm }) => (
+  <ActionConfirmModal
+    visible={visible}
+    title="Discard unsaved changes?"
+    message="Your current leave form changes are not saved."
+    cancelLabel="Stay"
+    confirmLabel="Discard"
+    confirmColor="danger"
+    onClose={onClose}
+    onConfirm={onConfirm}
+  />
 )
 
 export default LeaveDiscardConfirmModal

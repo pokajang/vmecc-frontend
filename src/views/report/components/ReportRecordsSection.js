@@ -22,8 +22,9 @@ import TableLoader from 'src/components/TableLoader'
 import TableFilters from 'src/components/TableFilters'
 import WorkflowStatusSummary from 'src/components/WorkflowStatusSummary'
 import RecordScopeSegmentedControl from 'src/components/report-workflow/RecordScopeSegmentedControl'
-import { FilePenLine } from 'lucide-react'
 import { formatMobileReportDate } from '../reportUiUtils'
+import RecordStateBadge from 'src/components/RecordStateBadge'
+import { activateOnEnterOrSpace } from 'src/utils/uiAccessibility'
 
 const REPORT_GATES = [
   { action: 'Submitted', label: 'Submitted' },
@@ -39,17 +40,7 @@ const formatDisplayId = (row) => {
 
 const DraftStatus = ({ direction = 'vertical' }) => {
   const isHorizontal = direction === 'horizontal'
-  return (
-    <div
-      className={`d-flex ${isHorizontal ? 'flex-row flex-wrap' : 'flex-column'}`}
-      style={{ gap: isHorizontal ? '12px' : '3px' }}
-    >
-      <div className="d-flex align-items-center" style={{ gap: '4px' }}>
-        <FilePenLine size={11} color="#f9b115" strokeWidth={3} />
-        <span style={{ fontSize: '0.78rem', color: '#f9b115', lineHeight: 1 }}>Draft</span>
-      </div>
-    </div>
-  )
+  return <RecordStateBadge state="draft" className={isHorizontal ? 'flex-shrink-0' : ''} />
 }
 
 const formatRowDateTime = (row, formatDateTime) => {
@@ -396,7 +387,7 @@ const ReportRecordsSection = ({
           </div>
         )}
         {isLoading ? (
-          <div className="border rounded-3 bg-white">
+          <div className="border rounded-3 bg-body">
             <TableLoader message="Loading records..." minHeight={144} />
           </div>
         ) : filteredRecords.length > 0 ? (
@@ -441,7 +432,7 @@ const ReportRecordsSection = ({
                       <CTableHeaderCell>Reported By</CTableHeaderCell>
                       <CTableHeaderCell>Reported At</CTableHeaderCell>
                       <CTableHeaderCell>Status</CTableHeaderCell>
-                      <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
+                      <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
                     </CTableRow>
                   </CTableHead>
                   <CTableBody>
@@ -454,8 +445,16 @@ const ReportRecordsSection = ({
                           key={row.recordKey || row.id}
                           className="cursor-pointer"
                           style={{ cursor: 'pointer' }}
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`Open report ${formatDisplayId(row, index)}`}
                           onClick={() =>
                             row.recordKind === 'draft' ? onEditRecord(row) : onViewRecord(row.id)
+                          }
+                          onKeyDown={(event) =>
+                            activateOnEnterOrSpace(event, () =>
+                              row.recordKind === 'draft' ? onEditRecord(row) : onViewRecord(row.id),
+                            )
                           }
                         >
                           <CTableDataCell className="text-center text-body-secondary">

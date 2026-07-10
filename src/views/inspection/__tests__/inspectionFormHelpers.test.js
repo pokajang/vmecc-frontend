@@ -31,6 +31,7 @@ import {
   toggleInspectionChecklistItem,
 } from '../inspectionFormHelpers'
 import { normalizeReportRecord } from '../inspectionSharedUtils'
+import { normalizePhotos } from '../form/core/inspectionFormShared'
 import {
   FRT_DAILY_SECTION_DEFINITIONS,
   FRT_ONE_OFF_SECTION_DEFINITIONS,
@@ -48,7 +49,7 @@ import {
   HIGH_ANGLE_KIT_DEFINITIONS,
   getHighAngleVisibleChecks,
 } from '../types/high-angle/helpers'
-import { getHydraulicVisibleChecks } from '../types/hydraulic/helpers'
+import { HYDRAULIC_CHECK_FIELDS, getHydraulicVisibleChecks } from '../types/hydraulic/helpers'
 import { getScbaVisibleSections, SCBA_SECTION_DEFINITIONS } from '../types/scba/helpers'
 
 const basePhotos = [
@@ -75,7 +76,27 @@ const baseForm = {
   photos: basePhotos,
 }
 
+const expectNormalizedPhotos = (photos) =>
+  photos.map((photo) =>
+    expect.objectContaining({
+      id: photo.id,
+      fileName: photo.fileName,
+      description: photo.description,
+      url: photo.url,
+      mediaId: '',
+      thumbnailUrl: '',
+      mimeType: '',
+      sizeBytes: 0,
+      width: 0,
+      height: 0,
+    }),
+  )
+
 describe('inspectionFormHelpers', () => {
+  it('normalizes optional managed-media fields without changing evidence identity', () => {
+    expect(normalizePhotos(basePhotos)).toEqual(expectNormalizedPhotos(basePhotos))
+  })
+
   it('normalizes persisted records into the single-summary form shape', () => {
     const form = recordToInspectionForm({
       selectedLocation: 'Zone 2',
@@ -97,7 +118,7 @@ describe('inspectionFormHelpers', () => {
       inspectedAt: '',
       description: 'Equipment quantity and condition recorded.',
       reportRemarks: 'Overall report note.',
-      photos: basePhotos,
+      photos: expectNormalizedPhotos(basePhotos),
       checklist: [],
       inspectionActor: null,
       submittedByRole: '',
@@ -557,7 +578,7 @@ describe('inspectionFormHelpers', () => {
     expect(payload.locationPath).toEqual([baseForm.selectedLocation])
     expect(payload.description).toBe(baseForm.description)
     expect(payload.reportRemarks).toBe(baseForm.reportRemarks)
-    expect(payload.photos).toEqual(basePhotos)
+    expect(payload.photos).toEqual(expectNormalizedPhotos(basePhotos))
     expect(payload.checklist).toEqual([])
     expect(payload.hydraulicChecks).toEqual([])
     expect(payload.findings).toHaveLength(1)
@@ -603,7 +624,7 @@ describe('inspectionFormHelpers', () => {
     expect(reviewRecord.id).toBe('report-ins-001')
     expect(reviewRecord.displayId).toBe('INS-01-29042026')
     expect(reviewRecord.reportRemarks).toBe(baseForm.reportRemarks)
-    expect(reviewRecord.photos).toEqual(basePhotos)
+    expect(reviewRecord.photos).toEqual(expectNormalizedPhotos(basePhotos))
     expect(reviewRecord.findings).toHaveLength(1)
     expect(reviewRecord.status).toBe('Draft')
     expect(reviewRecord.submittedAt).toBe('')
@@ -2043,7 +2064,7 @@ describe('inspectionFormHelpers', () => {
     const payload = buildInspectionPayloadSnapshot(form)
 
     expect(summary.totalCount).toBe(23)
-    expect(summary.checkedCount).toBe(3)
+    expect(summary.checkedCount).toBe(1)
     expect(summary.issueCount).toBe(2)
     expect(summary.visibleSections.map((section) => section.title)).toEqual([
       'Back Plate',
@@ -2163,7 +2184,7 @@ describe('inspectionFormHelpers', () => {
 
     expect(SCBA_SECTION_DEFINITIONS[0]).toMatchObject({
       sourceTitle: 'Back Plate',
-      sourceWorkbook: 'report-reference/VMM SCBA Inspection Checklist.xlsx',
+      sourceWorkbook: 'report-reference/inspection/VMM SCBA Inspection Checklist.xlsx',
       supportedMainLocations: ['FRT', 'FRT (Spare)', 'Store'],
     })
     expect(SCBA_SECTION_DEFINITIONS[0].fields[0]).toMatchObject({
@@ -3521,6 +3542,7 @@ describe('inspectionFormHelpers', () => {
     })
 
     expect(getInspectionFormMissingFields(form).highAngleRemarks).toBe(true)
+    expect(getHighAngleCheckSummary(form).checkedCount).toBe(0)
 
     const withPhoto = normalizeInspectionForm({
       ...form,
@@ -3533,6 +3555,7 @@ describe('inspectionFormHelpers', () => {
     })
     expect(getInspectionFormMissingFields(withPhoto).highAngleRemarks).toBe(false)
     expect(getHighAngleCheckSummary(withPhoto).incompletePhotoCount).toBe(0)
+    expect(getHighAngleCheckSummary(withPhoto).checkedCount).toBe(1)
 
     const retained = normalizeInspectionForm({
       ...withPhoto,
@@ -3593,6 +3616,10 @@ describe('inspectionFormHelpers', () => {
 
     expect(getInspectionFormMissingFields(form).scbaRemarks).toBe(true)
     expect(getScbaCheckSummary(form).incompletePhotoCount).toBe(1)
+    expect(
+      getScbaCheckSummary(form).visibleSections.find((section) => section.key === 'backPlate')
+        .checkedCount,
+    ).toBe(0)
 
     const withPhoto = normalizeInspectionForm({
       ...form,
@@ -3605,6 +3632,10 @@ describe('inspectionFormHelpers', () => {
     })
     expect(getInspectionFormMissingFields(withPhoto).scbaRemarks).toBe(false)
     expect(getScbaCheckSummary(withPhoto).incompletePhotoCount).toBe(0)
+    expect(
+      getScbaCheckSummary(withPhoto).visibleSections.find((section) => section.key === 'backPlate')
+        .checkedCount,
+    ).toBe(1)
 
     const payload = buildInspectionPayloadSnapshot(withPhoto)
     expect(payload.scbaBackPlateChecks[0]).toMatchObject({
@@ -3617,6 +3648,19 @@ describe('inspectionFormHelpers', () => {
     expect(payload.description).toContain('High Pressure Hose: Hose coupling worn.')
     expect(payload.description).not.toContain('General SCBA row note.')
 
+    const allGood = normalizeInspectionForm({
+      ...withPhoto,
+      scbaBackPlateChecks: [
+        {
+          ...withPhoto.scbaBackPlateChecks[0],
+          highPressureHose: 'Good',
+        },
+      ],
+    })
+    expect(getInspectionFormMissingFields(allGood).scbaRemarks).toBe(false)
+    expect(getScbaCheckSummary(allGood).issueCount).toBe(0)
+    expect(buildInspectionPayloadSnapshot(allGood).description).not.toContain('Issue field(s):')
+
     const withoutAdditionalPhoto = normalizeInspectionForm({
       ...withPhoto,
       scbaBackPlateChecks: [{ ...withPhoto.scbaBackPlateChecks[0], photos: [] }],
@@ -3624,6 +3668,56 @@ describe('inspectionFormHelpers', () => {
     expect(createInspectionFormSignature(withPhoto)).not.toBe(
       createInspectionFormSignature(withoutAdditionalPhoto),
     )
+  })
+
+  it('keeps ER Aux and hydraulic checked counts aligned with required issue evidence', () => {
+    const erAuxIssue = {
+      id: 'er-aux:issue',
+      equipment: 'Fire Jacket',
+      quantity: '1',
+      condition: 'Defect',
+      defectRemarks: '',
+      defectPhotos: [],
+    }
+
+    expect(getErAuxCheckSummary({}, { checks: [erAuxIssue] }).checkedCount).toBe(0)
+    expect(
+      getErAuxCheckSummary(
+        {},
+        {
+          checks: [
+            {
+              ...erAuxIssue,
+              defectRemarks: 'Torn sleeve.',
+              defectPhotos: [basePhotos[0]],
+            },
+          ],
+        },
+      ).checkedCount,
+    ).toBe(1)
+
+    const hydraulicIssue = {
+      ...Object.fromEntries(HYDRAULIC_CHECK_FIELDS.map((field) => [field.key, 'OK'])),
+      physicalCondition: 'Defect',
+      physicalConditionRemarks: '',
+      physicalConditionPhotos: [],
+    }
+
+    expect(getHydraulicCheckSummary({}, { checks: [hydraulicIssue] }).checkedCount).toBe(0)
+    expect(
+      getHydraulicCheckSummary(
+        {},
+        {
+          checks: [
+            {
+              ...hydraulicIssue,
+              physicalConditionRemarks: 'Bent guard.',
+              physicalConditionPhotos: [basePhotos[0]],
+            },
+          ],
+        },
+      ).checkedCount,
+    ).toBe(1)
   })
 
   it('retains completed Fire Extinguisher rows from multiple locations in review payload', () => {

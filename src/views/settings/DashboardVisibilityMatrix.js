@@ -316,7 +316,7 @@ const DashboardVisibilityMatrix = () => {
             </div>
 
             {editMode && changedItems.length > 0 ? (
-              <div className="border rounded-3 bg-white p-3 mb-3">
+              <div className="border rounded-3 bg-body p-3 mb-3">
                 <div className="fw-semibold mb-2">Changed Items</div>
                 <div className="d-grid gap-2">
                   {(viewMode === VIEW_MODE_ROLE ? focusedRoleChangedItems : changedItems).map(
@@ -353,7 +353,7 @@ const DashboardVisibilityMatrix = () => {
                   return (
                     <div
                       key={`${activeFocusedRole}-${row.permission}`}
-                      className="border rounded-3 bg-white p-3"
+                      className="border rounded-3 bg-body p-3"
                       style={{
                         background: changed
                           ? checked
@@ -383,7 +383,7 @@ const DashboardVisibilityMatrix = () => {
                 })}
               </div>
             ) : (
-              <div className="rounded-3 shadow-sm overflow-hidden bg-white mt-2 matrix-table-shell">
+              <div className="rounded-3 shadow-sm overflow-hidden bg-body mt-2 matrix-table-shell">
                 <div className="matrix-table-scroll">
                   <CTable align="middle" className="mb-0" hover responsive>
                     <CTableHead color="light">

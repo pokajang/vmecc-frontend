@@ -132,7 +132,7 @@ const InspectionModuleModalStack = ({
         if (homeIncident.addTypeError) homeIncident.setAddTypeError('')
       }}
       namePlaceholder="e.g. Pump House"
-      descriptionLabel="Inspection Type Details (Optional)"
+      descriptionLabel="Inspection type details (optional)"
       descriptionValue={homeIncident.newTypeDescription}
       onChangeDescription={homeIncident.setNewTypeDescription}
       descriptionPlaceholder="Subtext shown below type name."

@@ -22,7 +22,7 @@ const baseProps = {
   nameValue: '',
   onChangeName: vi.fn(),
   namePlaceholder: 'Name',
-  descriptionLabel: 'Drill Type Details (Optional)',
+  descriptionLabel: 'Drill type details (optional)',
   descriptionValue: '',
   onChangeDescription: vi.fn(),
   descriptionPlaceholder: 'Details',

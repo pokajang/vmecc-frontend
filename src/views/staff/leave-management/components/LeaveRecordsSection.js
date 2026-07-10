@@ -446,7 +446,7 @@ const LeaveRecordsSection = ({
               />
             ) : null}
             <MobileRecordList sections={mobileRecordSections} variant="list-group" />
-            <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-white">
+            <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-body">
               <CTable align="middle" className="mb-0" hover responsive>
                 <CTableHead color="light">
                   <CTableRow>
@@ -461,7 +461,7 @@ const LeaveRecordsSection = ({
                     <CTableHeaderCell>Days</CTableHeaderCell>
                     <CTableHeaderCell>Status</CTableHeaderCell>
                     <CTableHeaderCell>Applied On</CTableHeaderCell>
-                    <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
+                    <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>

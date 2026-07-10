@@ -9,6 +9,8 @@ import React, {
 } from 'react'
 import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
+import useMediaQuery from 'src/hooks/useMediaQuery'
 
 const NavigationGuardContext = createContext(null)
 
@@ -96,6 +98,7 @@ export const NavigationGuardProvider = ({ children }) => {
   const stayOnPage = useCallback(() => {
     setPendingAction(null)
   }, [])
+  const useMobileDrawer = useMediaQuery('(max-width: 575.98px)')
 
   useEffect(() => {
     currentPathRef.current = `${location.pathname}${location.search}${location.hash}`
@@ -174,20 +177,41 @@ export const NavigationGuardProvider = ({ children }) => {
   return (
     <NavigationGuardContext.Provider value={value}>
       {children}
-      <CModal visible={Boolean(pendingAction)} alignment="center" onClose={stayOnPage}>
-        <CModalHeader onClose={stayOnPage}>
-          <CModalTitle>Discard unsaved changes?</CModalTitle>
-        </CModalHeader>
-        <CModalBody>{promptMessage}</CModalBody>
-        <CModalFooter>
-          <CButton color="light" onClick={stayOnPage}>
-            Stay
-          </CButton>
-          <CButton color="danger" onClick={confirmDiscard}>
-            Discard and leave
-          </CButton>
-        </CModalFooter>
-      </CModal>
+      {useMobileDrawer ? (
+        <MobileBottomDrawer
+          visible={Boolean(pendingAction)}
+          title="Discard unsaved changes?"
+          onClose={stayOnPage}
+          className="mobile-bottom-drawer--confirm"
+        >
+          <div className="inspection-mobile-detail-drawer-body inspection-equipment-detail-drawer-body d-grid">
+            {promptMessage}
+          </div>
+          <div className="mobile-bottom-drawer__footer d-flex align-items-center justify-content-end gap-2">
+            <CButton color="light" onClick={stayOnPage}>
+              Stay
+            </CButton>
+            <CButton color="danger" onClick={confirmDiscard}>
+              Discard and leave
+            </CButton>
+          </div>
+        </MobileBottomDrawer>
+      ) : (
+        <CModal visible={Boolean(pendingAction)} alignment="center" onClose={stayOnPage}>
+          <CModalHeader onClose={stayOnPage}>
+            <CModalTitle>Discard unsaved changes?</CModalTitle>
+          </CModalHeader>
+          <CModalBody>{promptMessage}</CModalBody>
+          <CModalFooter>
+            <CButton color="light" onClick={stayOnPage}>
+              Stay
+            </CButton>
+            <CButton color="danger" onClick={confirmDiscard}>
+              Discard and leave
+            </CButton>
+          </CModalFooter>
+        </CModal>
+      )}
     </NavigationGuardContext.Provider>
   )
 }

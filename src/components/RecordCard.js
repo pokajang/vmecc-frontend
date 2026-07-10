@@ -55,8 +55,8 @@ const RecordCard = ({ item = {}, className = '', variant = 'card' }) => {
       <article
         className={
           isListGroup
-            ? `record-card record-card--compact list-group-item p-3 bg-white ${className}`.trim()
-            : `record-card record-card--compact border rounded-3 p-3 bg-white shadow-sm ${className}`.trim()
+            ? `record-card record-card--compact list-group-item p-3 bg-body ${className}`.trim()
+            : `record-card record-card--compact border rounded-3 p-3 bg-body shadow-sm ${className}`.trim()
         }
       >
         <div
@@ -102,7 +102,7 @@ const RecordCard = ({ item = {}, className = '', variant = 'card' }) => {
     const hasHeader = item.title || item.subtitle || item.eyebrow || item.status
 
     return (
-      <article className={`list-group-item p-3 bg-white ${className}`.trim()}>
+      <article className={`list-group-item p-3 bg-body ${className}`.trim()}>
         {item.content ? (
           <div {...interactiveProps} className={interactiveProps.className}>
             {item.content}
@@ -150,7 +150,7 @@ const RecordCard = ({ item = {}, className = '', variant = 'card' }) => {
 
   if (item.content) {
     return (
-      <article className={`border rounded-3 p-3 bg-white shadow-sm ${className}`.trim()}>
+      <article className={`border rounded-3 p-3 bg-body shadow-sm ${className}`.trim()}>
         <div {...interactiveProps} className={interactiveProps.className}>
           {item.content}
         </div>
@@ -163,7 +163,7 @@ const RecordCard = ({ item = {}, className = '', variant = 'card' }) => {
   }
 
   return (
-    <article className={`border rounded-3 p-3 bg-white shadow-sm ${className}`.trim()}>
+    <article className={`border rounded-3 p-3 bg-body shadow-sm ${className}`.trim()}>
       <div {...interactiveProps}>
         <div className="d-flex align-items-start justify-content-between gap-3">
           <div className="min-w-0">

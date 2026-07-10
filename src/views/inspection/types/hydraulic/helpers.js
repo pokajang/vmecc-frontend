@@ -347,7 +347,9 @@ export const getHydraulicVisibleChecks = (form = {}) => {
 }
 
 const isHydraulicCheckComplete = (check = {}) =>
-  HYDRAULIC_CHECK_FIELDS.every((field) => String(check?.[field.key] || '').trim())
+  HYDRAULIC_CHECK_FIELDS.every((field) => String(check?.[field.key] || '').trim()) &&
+  getHydraulicIncompleteDefectEvidenceCount(check) === 0 &&
+  getHydraulicIncompleteNaReasonCount(check) === 0
 
 const hasHydraulicMeaningfulInput = (check = {}) =>
   HYDRAULIC_CHECK_FIELDS.some(

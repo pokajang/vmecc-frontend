@@ -177,48 +177,55 @@ const FrtIssueEvidence = ({
   onRemovePhoto,
   onChangePhotoDescription,
   onApplyPhotoCaption,
-}) => (
-  <div
-    className="inspection-hydraulic-defect-evidence rounded-3 border bg-light-subtle p-2 d-grid gap-2"
-    data-inspection-frt-detail-key="remarks"
-  >
-    <CFormLabel className="small fw-semibold text-muted mb-1">Issue evidence</CFormLabel>
-    <CFormTextarea
-      rows={2}
-      value={row.remarks || ''}
-      placeholder="Issue remarks"
-      onChange={(event) => onUpdateCheck?.(row, { remarks: event.target.value })}
-    />
-    {missingRemarks ? <FormFieldError>{emptyRemarkMessage}</FormFieldError> : null}
-    <div data-inspection-frt-detail-key="photos">
-      <div className="d-flex flex-wrap justify-content-end gap-2">
-        <CreateActionButton
-          label="Add issue photo"
-          className="inspection-compact-action-btn"
-          icon={<Camera size={13} className="me-1 align-text-bottom" />}
-          onClick={() => onRequestIssuePhotoUpload?.(row)}
-        />
-      </div>
-      {missingPhotos ? <FormFieldError>Issue photo is required.</FormFieldError> : null}
-    </div>
-    {photos.length > 0 ? (
-      <InspectionPhotoEvidenceSummary
-        photos={photos}
-        label="View photos"
-        onView={() =>
-          setPhotoViewer({
-            title: `${row.equipment} - issue photos`,
-            photos,
-            onRemove: (photoId) => onRemovePhoto?.(row, photoId),
-            onChangeDescription: (photoId, description) =>
-              onChangePhotoDescription?.(row, photoId, description),
-            onApplyCaption: (photoId, caption) => onApplyPhotoCaption?.(row, photoId, caption),
-          })
-        }
+}) => {
+  const remarksId = `frt-${getFrtRowId(row).replace(/[^A-Za-z0-9_-]/g, '-')}-issue-remarks`
+
+  return (
+    <div
+      className="inspection-hydraulic-defect-evidence rounded-3 border bg-light-subtle p-2 d-grid gap-2"
+      data-inspection-frt-detail-key="remarks"
+    >
+      <CFormLabel htmlFor={remarksId} className="small fw-semibold text-muted mb-1">
+        Issue evidence
+      </CFormLabel>
+      <CFormTextarea
+        id={remarksId}
+        rows={2}
+        value={row.remarks || ''}
+        placeholder="Issue remarks"
+        onChange={(event) => onUpdateCheck?.(row, { remarks: event.target.value })}
       />
-    ) : null}
-  </div>
-)
+      {missingRemarks ? <FormFieldError>{emptyRemarkMessage}</FormFieldError> : null}
+      <div data-inspection-frt-detail-key="photos">
+        <div className="d-flex flex-wrap justify-content-end gap-2">
+          <CreateActionButton
+            label="Add issue photo"
+            className="inspection-compact-action-btn"
+            icon={<Camera size={13} className="me-1 align-text-bottom" />}
+            onClick={() => onRequestIssuePhotoUpload?.(row)}
+          />
+        </div>
+        {missingPhotos ? <FormFieldError>Issue photo is required.</FormFieldError> : null}
+      </div>
+      {photos.length > 0 ? (
+        <InspectionPhotoEvidenceSummary
+          photos={photos}
+          label="View photos"
+          onView={() =>
+            setPhotoViewer({
+              title: `${row.equipment} - issue photos`,
+              photos,
+              onRemove: (photoId) => onRemovePhoto?.(row, photoId),
+              onChangeDescription: (photoId, description) =>
+                onChangePhotoDescription?.(row, photoId, description),
+              onApplyCaption: (photoId, caption) => onApplyPhotoCaption?.(row, photoId, caption),
+            })
+          }
+        />
+      ) : null}
+    </div>
+  )
+}
 
 const FrtReadOnlyIssueEvidence = ({ row, photos, setPhotoViewer }) => (
   <>
@@ -265,6 +272,7 @@ export const FrtDailyRowDetails = ({
   const missingStatus = missingStatusKeys.includes('status')
   const missingRemarks = missingRemarkKeys.includes('remarks')
   const missingPhotos = missingPhotoKeys.includes('photos')
+  const readingId = `frt-${getFrtRowId(row).replace(/[^A-Za-z0-9_-]/g, '-')}-reading`
 
   if (readOnly) {
     return (
@@ -307,8 +315,11 @@ export const FrtDailyRowDetails = ({
     return (
       <>
         <div className="d-grid gap-1" data-inspection-frt-detail-key="readingValue">
-          <CFormLabel className="small fw-semibold text-muted mb-1">Reading</CFormLabel>
+          <CFormLabel htmlFor={readingId} className="small fw-semibold text-muted mb-1">
+            Reading
+          </CFormLabel>
           <CFormInput
+            id={readingId}
             value={row.readingValue || ''}
             inputMode="numeric"
             placeholder={row.equipment === 'FUEL LEVEL (%)' ? 'Fuel level %' : 'Enter reading'}

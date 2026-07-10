@@ -1,6 +1,8 @@
 import React from 'react'
-import { CButton, CModal, CModalBody, CModalFooter, CModalHeader } from '@coreui/react'
+import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
 import { getAttachmentKind } from './utils/claimFormUtils'
+import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
+import useMediaQuery from 'src/hooks/useMediaQuery'
 
 const AttachmentPreviewModal = ({
   visible,
@@ -12,10 +14,16 @@ const AttachmentPreviewModal = ({
   attachmentPreviewZoom,
   isImageAttachmentPreview,
   onZoomChange,
-}) => (
-  <CModal visible={visible} onClose={onClose} alignment="center" size="lg">
-    <CModalHeader>Attachment Preview</CModalHeader>
-    <CModalBody>
+}) => {
+  const isMobileDrawer = useMediaQuery('(max-width: 575.98px)')
+  const isImage =
+    getAttachmentKind({
+      attachmentName: attachmentPreviewItem?.attachmentName || '',
+      attachmentMimeType: attachmentPreviewMimeType,
+    }) === 'image'
+
+  const body = (
+    <>
       {attachmentPreviewItem?.attachmentName && (
         <div className="small text-body-secondary mb-2">{attachmentPreviewItem.attachmentName}</div>
       )}
@@ -51,10 +59,7 @@ const AttachmentPreviewModal = ({
         <div className="text-body-secondary">
           Preview is unavailable for this attachment in current draft state.
         </div>
-      ) : getAttachmentKind({
-          attachmentName: attachmentPreviewItem?.attachmentName || '',
-          attachmentMimeType: attachmentPreviewMimeType,
-        }) === 'image' ? (
+      ) : isImage ? (
         <div style={{ maxHeight: '70vh', overflow: 'auto' }}>
           <img
             src={attachmentPreviewUrl}
@@ -74,8 +79,10 @@ const AttachmentPreviewModal = ({
           style={{ width: '100%', height: '70vh', border: 0 }}
         />
       )}
-    </CModalBody>
-    <CModalFooter>
+    </>
+  )
+  const footer = (
+    <>
       {attachmentPreviewUrl && (
         <a
           href={attachmentPreviewUrl}
@@ -89,8 +96,31 @@ const AttachmentPreviewModal = ({
       <CButton color="primary" onClick={onClose}>
         Close
       </CButton>
-    </CModalFooter>
-  </CModal>
-)
+    </>
+  )
+
+  if (isMobileDrawer) {
+    return (
+      <MobileBottomDrawer visible={visible} title="Attachment Preview" onClose={onClose}>
+        <div className="inspection-mobile-detail-drawer-body inspection-equipment-detail-drawer-body d-grid gap-2">
+          {body}
+        </div>
+        <div className="mobile-bottom-drawer__footer d-flex align-items-center justify-content-end gap-2">
+          {footer}
+        </div>
+      </MobileBottomDrawer>
+    )
+  }
+
+  return (
+    <CModal visible={visible} onClose={onClose} alignment="center" size="lg">
+      <CModalHeader>
+        <CModalTitle>Attachment preview</CModalTitle>
+      </CModalHeader>
+      <CModalBody>{body}</CModalBody>
+      <CModalFooter>{footer}</CModalFooter>
+    </CModal>
+  )
+}
 
 export default AttachmentPreviewModal

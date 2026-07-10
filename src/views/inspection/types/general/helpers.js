@@ -20,9 +20,11 @@ export const isGeneralInspectionType = (inspectionType) =>
 export const getGeneralCheckSummary = (form = {}) => {
   const findings = normalizeInspectionIssues(form.inspectionIssues || form.issues)
   const description = buildGeneralDescription(form)
+  const findingsCount = findings.length
 
   return {
-    totalCount: findings.length,
+    totalCount: findingsCount,
+    checkedCount: findingsCount,
     visibleChecks: [],
     hasDescription: false,
     hasContent: findings.length > 0,

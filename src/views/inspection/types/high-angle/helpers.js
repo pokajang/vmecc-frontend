@@ -399,6 +399,17 @@ export const getHighAngleCompartmentsForKit = (form = {}, kit = '') => {
   return groups
 }
 
+const isHighAngleRowComplete = (row = {}) => {
+  const condition = String(row.condition || '').trim()
+  if (!condition) return false
+  if (condition !== 'Not Good') return true
+
+  return (
+    String(row.conditionRemarks || row.remarks || '').trim() &&
+    normalizePhotos(row.conditionPhotos || row.photos).length > 0
+  )
+}
+
 const buildVisibleGroups = (rows = [], compartmentRows = []) => {
   const groups = []
   const byKey = new Map()
@@ -438,7 +449,7 @@ const buildVisibleGroups = (rows = [], compartmentRows = []) => {
 
   return groups.map((group) => {
     const issueCount = group.rows.filter((row) => row.condition === 'Not Good').length
-    const checkedCount = group.rows.filter((row) => row.condition).length
+    const checkedCount = group.rows.filter(isHighAngleRowComplete).length
     return {
       ...group,
       issueCount,
@@ -452,7 +463,7 @@ export const getHighAngleCheckSummary = (form = {}, options = {}) => {
   const visibleChecks = Array.isArray(options.checks)
     ? options.checks
     : getHighAngleVisibleChecks(form)
-  const checkedCount = visibleChecks.filter((row) => row.condition).length
+  const checkedCount = visibleChecks.filter(isHighAngleRowComplete).length
   const issueRows = visibleChecks.filter((row) => row.condition === 'Not Good')
   const incompleteRemarksCount = issueRows.filter(
     (row) => !String(row.conditionRemarks || row.remarks || '').trim(),
@@ -503,7 +514,7 @@ export const getHighAngleRetainedEvidenceRows = (rows = []) =>
 export const getHighAngleMissingFields = (form = {}) => {
   const visibleChecks = getHighAngleVisibleChecks(form)
   const hasVisibleRows = visibleChecks.length > 0
-  const hasIncompleteChecks = visibleChecks.some((row) => !String(row.condition || '').trim())
+  const hasIncompleteChecks = visibleChecks.some((row) => !isHighAngleRowComplete(row))
   const hasMissingRemarks = visibleChecks.some(
     (row) =>
       row.condition === 'Not Good' &&

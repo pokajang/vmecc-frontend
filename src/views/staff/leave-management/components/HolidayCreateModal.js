@@ -10,6 +10,7 @@ import {
   CModalBody,
   CModalFooter,
   CModalHeader,
+  CModalTitle,
   CRow,
 } from '@coreui/react'
 import { MALAYSIA_STATE_OPTIONS } from './holidayWizardHelpers'
@@ -58,11 +59,16 @@ const HolidayCreateModal = ({
   const isStateScoped = scope === 'State'
   const holidayDate = String(draft?.date || '')
   const derivedYear = holidayDate ? String(new Date(holidayDate).getFullYear() || '') : ''
+  const handleClose = () => {
+    if (!isSaving) onClose?.()
+  }
 
   return (
-    <CModal visible={visible} onClose={onClose} alignment="center">
+    <CModal visible={visible} onClose={handleClose} alignment="center">
       <CModalHeader>
-        {isWizardMode ? 'Configure Holidays' : isEditing ? 'Edit Holiday' : 'Set Holiday'}
+        <CModalTitle>
+          {isWizardMode ? 'Configure holidays' : isEditing ? 'Edit holiday' : 'Set holiday'}
+        </CModalTitle>
       </CModalHeader>
       <CModalBody>
         {isWizardMode ? (
@@ -88,7 +94,7 @@ const HolidayCreateModal = ({
         ) : (
           <CRow className="g-3">
             <CCol md={8}>
-              <CFormLabel htmlFor="holiday-name">Holiday Name</CFormLabel>
+              <CFormLabel htmlFor="holiday-name">Holiday name</CFormLabel>
               <CFormInput
                 id="holiday-name"
                 value={draft?.name || ''}
@@ -148,7 +154,7 @@ const HolidayCreateModal = ({
           <WizardFooter
             step={wizardState.step}
             isSaving={isSaving}
-            onClose={onClose}
+            onClose={handleClose}
             onBackDefault={() => dispatch({ type: 'BACK_STEP' })}
             onBackAdditional={() => dispatch({ type: 'BACK_TO_ADDITIONAL' })}
             onNext={handleWizardProceed}
@@ -157,7 +163,7 @@ const HolidayCreateModal = ({
           />
         ) : (
           <>
-            <CButton color="light" onClick={onClose} disabled={isSaving}>
+            <CButton color="secondary" variant="outline" onClick={handleClose} disabled={isSaving}>
               Cancel
             </CButton>
             <CButton

@@ -62,7 +62,7 @@ const RecordDetailCard = ({
         ) : (
           <CRow className="g-4">
             <CCol md={7}>
-              <div className="rounded-3 shadow-sm overflow-hidden bg-white h-100">
+              <div className="rounded-3 shadow-sm overflow-hidden bg-body h-100">
                 <CTable align="middle" className="mb-0">
                   <CTableBody>
                     <CTableRow>

@@ -185,6 +185,8 @@ export const formatFileSize = (value) => {
 
 export const statusLabel = (status) => {
   if (status === 'processing') return 'Processing'
+  if (status === 'deleting') return 'Deleting'
+  if (status === 'deleted') return 'Deleted'
   if (status === 'disabled') return 'Disabled'
   if (status === 'failed') return 'Failed'
   return 'Active'
@@ -192,6 +194,7 @@ export const statusLabel = (status) => {
 
 export const knowledgeUseLabel = (entry = {}) => {
   if (entry.status === 'processing') return 'Processing'
+  if (entry.status === 'deleting') return 'Deleting'
   if (entry.status === 'failed') return 'Failed'
   if (entry.review_status === 'rejected') return 'Rejected'
   if (entry.visibility === 'shared' && entry.review_status === 'pending') return 'Pending review'
@@ -225,6 +228,10 @@ export const safeAiHelperError = (
 
   if (code === 'AI_HELPER_UNAVAILABLE' || status === 503) {
     return 'Ask AI is not ready yet. Please contact an administrator.'
+  }
+
+  if (code === 'AI_HELPER_KNOWLEDGE_NOT_READY' || status === 409) {
+    return 'Ask AI is preparing the uploaded knowledge corpus. Wait for processing to finish or resolve failed documents.'
   }
 
   if (status === 429) {

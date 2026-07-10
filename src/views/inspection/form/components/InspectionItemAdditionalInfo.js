@@ -92,6 +92,7 @@ const InspectionItemAdditionalInfo = ({
             </div>
             <CFormTextarea
               rows={2}
+              aria-label={remarksPlaceholder || 'Additional remarks'}
               value={remarks}
               placeholder={remarksPlaceholder}
               onChange={(event) => onUpdateCheck?.(row, { [remarksKey]: event.target.value })}

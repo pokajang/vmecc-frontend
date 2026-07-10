@@ -115,7 +115,7 @@ export const formatFireExtinguisherLastInspection = (
   }
 
   const actor = text(lastInspection?.inspectedBy || lastInspection?.submittedBy)
-  return `Last inspected: ${when}${actor ? ` by ${actor}` : ''}`
+  return `Last submitted inspection: ${when}${actor ? ` by ${actor}` : ''}`
 }
 
 const fireRowIdentity = (row = {}) =>
@@ -380,6 +380,44 @@ export const getFireExtinguisherRowWorkflowState = (row = {}) => {
     hasDefectEvidence,
     canMarkAllGood: !validation.hasDefect && !hasDefectEvidence,
   }
+}
+
+export const getFireExtinguisherCurrentCheckLabel = (row = {}) => {
+  const workflowState = getFireExtinguisherRowWorkflowState(row)
+  const sessionStatus = text(row?.sessionResult?.status || row?.sessionStatus).toLowerCase()
+  const sessionActor = text(row?.sessionCheckedBy || row?.sessionResult?.checkedBy)
+  const rawSessionTime = text(row?.sessionCheckedAt || row?.sessionResult?.checkedAt)
+  const sessionTime = rawSessionTime
+    ? (() => {
+        const parsed = new Date(rawSessionTime)
+        if (Number.isNaN(parsed.getTime())) return ''
+        return parsed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      })()
+    : ''
+
+  if (row?.sessionSyncPending === true && workflowState.isComplete) {
+    return 'Checked on this device · sync pending'
+  }
+
+  if (sessionStatus === 'completed') {
+    const sessionParts = [sessionActor ? `by ${sessionActor}` : '', sessionTime].filter(Boolean)
+    return sessionParts.length > 0
+      ? `Checked ${sessionParts.join(' · ')}`
+      : 'Checked in current report'
+  }
+
+  if (workflowState.isComplete) return 'Checked in current report'
+  return 'Not checked'
+}
+
+export const shouldShowFireExtinguisherLastInspection = (row = {}) => {
+  const workflowState = getFireExtinguisherRowWorkflowState(row)
+  const sessionStatus = text(row?.sessionResult?.status || row?.sessionStatus).toLowerCase()
+  return !(
+    row?.sessionSyncPending === true ||
+    sessionStatus === 'completed' ||
+    workflowState.isComplete
+  )
 }
 
 export const getFirstIncompleteFireExtinguisherRow = (rows = []) =>

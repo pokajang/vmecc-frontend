@@ -99,7 +99,7 @@ describe('HseEditSection mobile drawer', () => {
     ).toBe('area clean ')
   })
 
-  it('keeps HSE mobile edits local until Save', () => {
+  it('keeps HSE mobile edits local until Save and confirms before discarding changes', () => {
     setMobileViewport()
     const onSaveHseObservationDraft = vi.fn(() => ({ saved: true, local: true, pending: true }))
 
@@ -116,6 +116,16 @@ describe('HseEditSection mobile drawer', () => {
     expect(onSaveHseObservationDraft).not.toHaveBeenCalled()
 
     fireEvent.click(screen.getByText('Cancel'))
+    expect(screen.getByText('Discard changes?')).toBeTruthy()
+    expect(screen.getByText('Your HSE observation changes have not been saved.')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }))
+    expect(
+      screen.getByPlaceholderText('Record the current safe/satisfactory condition of this area.'),
+    ).toBeTruthy()
+
+    fireEvent.click(screen.getByText('Cancel'))
+    fireEvent.click(screen.getByRole('button', { name: 'Discard' }))
     fireEvent.click(screen.getByLabelText('Edit HSE observation'))
 
     expect(

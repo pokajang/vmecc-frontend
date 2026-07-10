@@ -446,7 +446,7 @@ const EditTeamModalContent = ({
 
             {/* Image picker */}
             <CCol xs={12} data-testid="team-directory-image-picker">
-              <CFormLabel>Team Photo</CFormLabel>
+              <div className="form-label">Team photo</div>
               <ImagePicker
                 key={`${team?.id ?? 'none'}-${team?.image_url || 'no-image'}`}
                 currentImageUrl={team?.image_url || null}

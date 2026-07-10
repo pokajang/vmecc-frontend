@@ -27,6 +27,7 @@ import RowActions from 'src/components/RowActions'
 import TableFilters from 'src/components/TableFilters'
 import { knowledgeEntryName } from 'src/components/ai-helper/constants'
 import useTableRows from 'src/hooks/useTableRows'
+import { activateOnEnterOrSpace } from 'src/utils/uiAccessibility'
 import {
   buildAiHelperKnowledgeFileUrl,
   deleteAiHelperKnowledgeReview,
@@ -383,7 +384,8 @@ const AiHelperKnowledge = () => {
                   filters={[
                     {
                       key: 'status',
-                      label: 'Review',
+                      label: 'Review status',
+                      ariaLabel: 'Review status filter',
                       defaultValue: 'all',
                       value: statusFilter,
                       onChange: setStatusFilter,
@@ -425,7 +427,7 @@ const AiHelperKnowledge = () => {
                   mobileVariant="list-group"
                   renderDesktop={() => (
                     <div className="d-none d-md-block">
-                      <div className="rounded-3 shadow-sm overflow-hidden bg-white">
+                      <div className="rounded-3 shadow-sm overflow-hidden bg-body">
                         <CTable align="middle" className="mb-0" hover responsive>
                           <CTableHead color="light">
                             <CTableRow>
@@ -435,7 +437,7 @@ const AiHelperKnowledge = () => {
                               <CTableHeaderCell>Scope</CTableHeaderCell>
                               <CTableHeaderCell>Uploaded</CTableHeaderCell>
                               <CTableHeaderCell>Status</CTableHeaderCell>
-                              <CTableHeaderCell className="text-center">Action</CTableHeaderCell>
+                              <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
                             </CTableRow>
                           </CTableHead>
                           <CTableBody>
@@ -443,8 +445,13 @@ const AiHelperKnowledge = () => {
                               <CTableRow
                                 key={entry.id}
                                 role="button"
+                                tabIndex={0}
+                                aria-label={`Open knowledge entry ${entry.title || knowledgeEntryName(entry)}`}
                                 className="cursor-pointer"
                                 onClick={() => openDetail(entry.id)}
+                                onKeyDown={(event) =>
+                                  activateOnEnterOrSpace(event, () => openDetail(entry.id))
+                                }
                               >
                                 <CTableDataCell className="text-center">{index + 1}</CTableDataCell>
                                 <CTableDataCell className="text-break">
