@@ -11,7 +11,7 @@ describe('inspection photo utilities', () => {
         {
           name: 'large-camera-photo.jpg',
           type: 'image/jpeg',
-          size: 13 * 1024 * 1024,
+          size: 31 * 1024 * 1024,
         },
       ],
       form: { photos: [] },
@@ -25,7 +25,7 @@ describe('inspection photo utilities', () => {
     expect(onFailure).toHaveBeenCalledWith(
       expect.objectContaining({
         code: 'file_too_large',
-        message: expect.stringContaining('over 12 MB'),
+        message: expect.stringContaining('over 30 MB'),
       }),
     )
     expect(onFailure).not.toHaveBeenCalledWith(

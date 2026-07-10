@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { deleteReportMedia } from 'src/services/api/reportMediaApi'
 import {
   clearPendingCameraOperation,
+  consumeInterruptedCameraFallback,
   getInterruptedCameraFallback,
   isLikelyEmbeddedBrowser,
   markPendingCameraOperation,
@@ -9,6 +10,7 @@ import {
   subscribeToCameraReturn,
 } from 'src/utils/cameraRecovery'
 import { buildCameraDiagnostics, inspectCameraEnvironment } from 'src/utils/cameraDiagnostics'
+import { supportsInAppInspectionCamera } from './inspectionCameraCaptureUtils'
 import {
   applyPhotoCaptionById,
   getRowPhotoList,
@@ -44,15 +46,24 @@ const useInspectionFormPhotos = ({
   const activePhotoInputRef = useRef('upload')
   const photoSelectionSequenceRef = useRef(0)
   const photoUploadAbortRef = useRef(null)
-  const [cameraUploadFallback, setCameraUploadFallback] = useState(() =>
-    getInterruptedCameraFallback('inspection'),
+  const interruptedCameraFallbackRef = useRef(getInterruptedCameraFallback('inspection'))
+  const [cameraUploadFallback, setCameraUploadFallback] = useState(
+    () => interruptedCameraFallbackRef.current,
   )
   const [isPhotoProcessing, setIsPhotoProcessing] = useState(false)
   const [photoUploadProgress, setPhotoUploadProgress] = useState(null)
+  const [cameraCaptureVisible, setCameraCaptureVisible] = useState(false)
 
   useEffect(() => () => photoUploadAbortRef.current?.abort(), [])
+  useEffect(() => {
+    if (interruptedCameraFallbackRef.current) clearPendingCameraOperation()
+  }, [])
   useEffect(
-    () => subscribeToCameraReturn('inspection', (fallback) => setCameraUploadFallback(fallback)),
+    () =>
+      subscribeToCameraReturn('inspection', () => {
+        const fallback = consumeInterruptedCameraFallback('inspection')
+        if (fallback) setCameraUploadFallback(fallback)
+      }),
     [],
   )
   const CAMERA_FALLBACK_ERROR_TITLES = {
@@ -121,14 +132,6 @@ const useInspectionFormPhotos = ({
         })
         return
       }
-      if (isLikelyEmbeddedBrowser()) {
-        setCameraUploadFallback({
-          message: 'Open this page in Safari, Chrome, Edge, or Samsung Internet to use the camera.',
-          errorCode: 'unsupported_browser',
-          phase: 'camera_startup',
-        })
-        return
-      }
       markPendingCameraOperation({
         module: 'inspection',
         targetKind: target?.kind || 'root',
@@ -139,6 +142,10 @@ const useInspectionFormPhotos = ({
         Promise.resolve(onBeforeCameraOpen?.(target)).catch(() => {})
       } catch {
         // Draft persistence is best-effort and must not block the native camera.
+      }
+      if (!isLikelyEmbeddedBrowser() && supportsInAppInspectionCamera()) {
+        setCameraCaptureVisible(true)
+        return
       }
     }
     if (inputRef.current) inputRef.current.value = ''
@@ -152,7 +159,13 @@ const useInspectionFormPhotos = ({
     photoUploadAbortRef.current = abortController
     const files = Array.from(event.target.files || [])
     event.target.value = ''
-    if (files.length === 0) return
+    if (files.length === 0) {
+      if (activePhotoInputRef.current === 'camera') {
+        const fallback = consumeInterruptedCameraFallback('inspection')
+        if (fallback) setCameraUploadFallback(fallback)
+      }
+      return
+    }
 
     const uploadTarget = photoUploadTargetRef.current || { kind: 'root' }
     const source = activePhotoInputRef.current
@@ -195,6 +208,7 @@ const useInspectionFormPhotos = ({
       nextPhotos = nextResult || []
     } catch (error) {
       if (selectionSequence !== photoSelectionSequenceRef.current) return
+      if (error?.name === 'AbortError' || abortController.signal.aborted) return
       lastFailure = {
         code: 'unexpected_error',
         message: String(error?.message || '').trim() || 'Camera capture failed.',
@@ -213,6 +227,7 @@ const useInspectionFormPhotos = ({
         if (selectionSequence !== photoSelectionSequenceRef.current) return
         if (nextFallback) setCameraUploadFallback(nextFallback)
       }
+      if (source === 'camera') clearPendingCameraOperation()
       return
     }
 
@@ -416,6 +431,24 @@ const useInspectionFormPhotos = ({
     })
   }
 
+  const handleInAppCameraCapture = (file) => {
+    setCameraCaptureVisible(false)
+    activePhotoInputRef.current = 'camera'
+    return handlePhotoSelect({ target: { files: file ? [file] : [], value: '' } })
+  }
+
+  const closeInAppCamera = () => {
+    setCameraCaptureVisible(false)
+    clearPendingCameraOperation()
+  }
+
+  const useNativeCameraFallback = () => {
+    setCameraCaptureVisible(false)
+    activePhotoInputRef.current = 'camera'
+    if (cameraInputRef.current) cameraInputRef.current.value = ''
+    cameraInputRef.current?.click()
+  }
+
   const requestUploadFromCameraFallback = () =>
     openPhotoInput(photoUploadTargetRef.current || { kind: 'root' }, uploadInputRef)
 
@@ -615,6 +648,10 @@ const useInspectionFormPhotos = ({
     requestRootPhotoUpload,
     requestScbaIssuePhotoUpload,
     requestScbaPhotoUpload,
+    cameraCaptureVisible,
+    closeInAppCamera,
+    handleInAppCameraCapture,
+    useNativeCameraFallback,
     cameraUploadFallback,
     isPhotoProcessing,
     photoUploadProgress,

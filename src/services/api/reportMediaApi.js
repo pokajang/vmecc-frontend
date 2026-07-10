@@ -9,18 +9,20 @@ import {
 export const REPORT_PHOTO_MAX_COUNT = 10
 export const REPORT_PHOTO_MAX_BYTES = 1.5 * 1024 * 1024
 export const REPORT_PHOTO_MAX_TOTAL_BYTES = 12 * 1024 * 1024
-export const CAMERA_SOURCE_MAX_BYTES = 12 * 1024 * 1024
-export const UPLOAD_SOURCE_MAX_BYTES = 15 * 1024 * 1024
+export const CAMERA_SOURCE_MAX_BYTES = 30 * 1024 * 1024
+export const UPLOAD_SOURCE_MAX_BYTES = 30 * 1024 * 1024
 
-const UNSUPPORTED_TYPES = new Set([
-  'image/svg+xml',
-  'image/gif',
-  'image/bmp',
-  'image/tiff',
-  'image/avif',
-])
-const UNSUPPORTED_EXTENSIONS = /\.(svg|gif|bmp|tiff?|avif)$/i
+const UNSUPPORTED_TYPES = new Set(['image/svg+xml', 'image/gif', 'image/bmp', 'image/tiff'])
+const UNSUPPORTED_EXTENSIONS = /\.(svg|gif|bmp|tiff?)$/i
 const RETRYABLE_STATUSES = new Set([0, 502, 503, 504])
+const HTTP_FAILURE_CODES = new Map([
+  [401, 'session_expired'],
+  [413, 'file_too_large'],
+  [419, 'csrf_expired'],
+  [422, 'invalid_file'],
+  [429, 'rate_limited'],
+  [507, 'storage_unavailable'],
+])
 const createUploadId = () => {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID()
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (token) => {
@@ -51,7 +53,7 @@ const parsePayload = (xhr) => {
   }
 }
 
-const sendMultipart = ({ endpoint, file, fields, signal, onProgress, timeoutMs = 75000 }) =>
+const sendMultipart = ({ endpoint, file, fields, signal, onProgress, timeoutMs = 180000 }) =>
   new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest()
     xhr.open('POST', buildApiUrl(endpoint), true)
@@ -74,7 +76,9 @@ const sendMultipart = ({ endpoint, file, fields, signal, onProgress, timeoutMs =
       error.name = name
       error.status = status
       error.payload = payload
-      error.code = payload?.code || (status === 0 ? 'network_error' : 'processing_failed')
+      error.code =
+        payload?.code ||
+        (status === 0 ? 'network_error' : HTTP_FAILURE_CODES.get(status) || 'processing_failed')
       reject(error)
     }
     xhr.onload = () => {
@@ -114,9 +118,13 @@ const uploadWithRetry = async (options, attempt = 0, csrfRetried = false) => {
   }
 }
 
-export const classifyReportPhotoFailure = (error) =>
-  String(error?.code || error?.payload?.code || '').trim() ||
-  (error?.name === 'AbortError' ? 'aborted' : error?.status ? 'processing_failed' : 'network_error')
+export const classifyReportPhotoFailure = (error) => {
+  const explicitCode = String(error?.code || error?.payload?.code || '').trim()
+  if (explicitCode) return explicitCode
+  if (error?.name === 'AbortError') return 'aborted'
+  const status = Number(error?.status || 0)
+  return status ? HTTP_FAILURE_CODES.get(status) || 'processing_failed' : 'network_error'
+}
 
 export const reportPhotoFailureMessage = (code, fileName = '') => {
   const label = fileName ? `"${fileName}"` : 'Selected photo'
@@ -133,6 +141,8 @@ export const reportPhotoFailureMessage = (code, fileName = '') => {
     upload_busy: 'Another photo is still being processed. Wait briefly and retry.',
     thumbnail_failed: 'The server could not create a safe photo preview. Retry the upload.',
     network_error: 'Photo upload failed because the server could not be reached.',
+    session_expired: 'Your session expired before the photo could be uploaded. Sign in and retry.',
+    csrf_expired: 'The secure upload token could not be refreshed. Reload the form and retry.',
     aborted: 'Photo upload was cancelled.',
   }
   return messages[code] || `${label} could not be processed.`

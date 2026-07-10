@@ -33,6 +33,7 @@ const reportMediaApiMock = vi.hoisted(() => ({
 }))
 
 vi.mock('src/services/api/reportMediaApi', () => ({
+  CAMERA_SOURCE_MAX_BYTES: 30 * 1024 * 1024,
   deleteReportMedia: reportMediaApiMock.deleteReportMedia,
   getReportPhotoBytes: reportMediaApiMock.getReportPhotoBytes,
   reportPhotoFailureMessage: reportMediaApiMock.reportPhotoFailureMessage,

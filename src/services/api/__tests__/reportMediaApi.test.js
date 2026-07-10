@@ -9,7 +9,12 @@ vi.mock('../httpClient', () => ({
   refreshCsrfToken: vi.fn(async () => 'csrf-token'),
 }))
 
-import { uploadReportPhotosSequentially, validateReportPhotoFile } from '../reportMediaApi'
+import {
+  classifyReportPhotoFailure,
+  reportPhotoFailureMessage,
+  uploadReportPhotosSequentially,
+  validateReportPhotoFile,
+} from '../reportMediaApi'
 
 let activeUploads = 0
 let peakUploads = 0
@@ -97,5 +102,28 @@ describe('report media API', () => {
     expect(
       validateReportPhotoFile(new File(['a'], 'capture.heic', { type: 'image/heic' }), 'camera'),
     ).toBe('')
+    expect(
+      validateReportPhotoFile(new File(['a'], 'capture.avif', { type: 'image/avif' }), 'camera'),
+    ).toBe('')
+    expect(
+      validateReportPhotoFile(
+        { name: 'large-camera.jpg', type: 'image/jpeg', size: 24 * 1024 * 1024 },
+        'camera',
+      ),
+    ).toBe('')
+    expect(
+      validateReportPhotoFile(
+        { name: 'oversized-camera.jpg', type: 'image/jpeg', size: 31 * 1024 * 1024 },
+        'camera',
+      ),
+    ).toBe('file_too_large')
+  })
+
+  it('classifies proxy and authentication failures without relying on a JSON response body', () => {
+    expect(classifyReportPhotoFailure({ status: 401 })).toBe('session_expired')
+    expect(classifyReportPhotoFailure({ status: 413 })).toBe('file_too_large')
+    expect(classifyReportPhotoFailure({ status: 419 })).toBe('csrf_expired')
+    expect(classifyReportPhotoFailure({ status: 429 })).toBe('rate_limited')
+    expect(reportPhotoFailureMessage('session_expired')).toContain('session expired')
   })
 })

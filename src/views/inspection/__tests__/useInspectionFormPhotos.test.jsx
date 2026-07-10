@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import { act, renderHook } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import useInspectionFormPhotos from '../form/useInspectionFormPhotos'
 import { isCameraFailureToRetry } from '../form/inspectionPhotoUtils'
+import { getPendingCameraOperation } from 'src/utils/cameraRecovery'
 
 const noop = vi.fn()
 
@@ -35,6 +36,10 @@ vi.mock('../form/inspectionPhotoUtils', async () => {
     ...actual,
     prepareInspectionPhotoUploads: vi.fn(),
   }
+})
+
+beforeEach(() => {
+  sessionStorage.clear()
 })
 
 afterEach(() => {
@@ -103,6 +108,7 @@ describe('useInspectionFormPhotos', () => {
     })
     expect(result.current.cameraUploadFallback).toBeTruthy()
     expect(isCameraFailureToRetry('low_memory')).toBe(true)
+    expect(getPendingCameraOperation()).toBeNull()
   })
 
   it('does not promote max-photo-count errors to camera manual fallback', async () => {
@@ -128,6 +134,169 @@ describe('useInspectionFormPhotos', () => {
 
     expect(result.current.cameraUploadFallback).toBeNull()
     expect(isCameraFailureToRetry('max_photo_count')).toBe(false)
+    expect(getPendingCameraOperation()).toBeNull()
+  })
+
+  it('shows an actionable toast instead of manual fallback when the session expired', async () => {
+    const prepare = await import('../form/inspectionPhotoUtils')
+    const pushToast = vi.fn()
+    const { result } = renderHook(() =>
+      useInspectionFormPhotos({
+        appendInspectionText: noop,
+        createPhotoId: () => 'photo-id',
+        defaultHighAnglePhotosKey: 'photos',
+        form: { photos: [] },
+        getLatestForm: () => ({ photos: [] }),
+        getScbaExistingCheck: () => null,
+        getScbaFieldEvidenceKeys: () => ({ photosKey: 'photos' }),
+        pushToast,
+        updateErAuxCheck: noop,
+        updateFireExtinguisherCheck: noop,
+        updateForm: noop,
+        updateFrtCheck: noop,
+        updateHighAngleCheck: noop,
+        updateHydraulicCheck: noop,
+        updateScbaGroupedCheck: noop,
+      }),
+    )
+
+    prepare.prepareInspectionPhotoUploads.mockImplementationOnce(
+      async ({ onFailure, pushToast: notify }) => {
+        const failure = {
+          code: 'session_expired',
+          message: 'Your session expired before the photo could be uploaded.',
+        }
+        onFailure(failure)
+        notify(failure.message, { title: 'Session expired', color: 'warning' })
+        return null
+      },
+    )
+
+    const file = new File(['photo'], 'camera.jpg', { type: 'image/jpeg' })
+    act(() => result.current.requestFireExtinguisherPhotoUpload({ id: 'row-session' }, {}))
+    await act(async () => {
+      await result.current.handlePhotoSelect({ target: { files: [file], value: '' } })
+    })
+
+    expect(pushToast).toHaveBeenCalledWith(
+      expect.stringContaining('session expired'),
+      expect.objectContaining({ title: 'Session expired' }),
+    )
+    expect(result.current.cameraUploadFallback).toBeNull()
+    expect(getPendingCameraOperation()).toBeNull()
+  })
+
+  it('consumes the camera marker when the native picker returns without a photo', async () => {
+    const { result } = createTestHook()
+
+    act(() => result.current.requestFireExtinguisherPhotoUpload({ id: 'row-cancelled' }, {}))
+    expect(getPendingCameraOperation()).toBeTruthy()
+
+    await act(async () => {
+      await result.current.handlePhotoSelect({ target: { files: [], value: '' } })
+    })
+
+    expect(result.current.cameraUploadFallback).toMatchObject({
+      errorCode: 'camera_interrupted',
+      phase: 'picker',
+    })
+    expect(getPendingCameraOperation()).toBeNull()
+  })
+
+  it('retains the camera marker when an actual page unload aborts the upload', async () => {
+    const prepare = await import('../form/inspectionPhotoUtils')
+    prepare.prepareInspectionPhotoUploads.mockImplementationOnce(
+      ({ signal }) =>
+        new Promise((_, reject) => {
+          signal.addEventListener(
+            'abort',
+            () => reject(new DOMException('Upload cancelled', 'AbortError')),
+            { once: true },
+          )
+        }),
+    )
+    const { result, unmount } = createTestHook()
+    const file = new File(['photo'], 'camera.jpg', { type: 'image/jpeg' })
+
+    act(() => result.current.requestFireExtinguisherPhotoUpload({ id: 'row-unload' }, {}))
+    let uploadPromise
+    act(() => {
+      uploadPromise = result.current.handlePhotoSelect({
+        target: { files: [file], value: '' },
+      })
+    })
+    unmount()
+    await uploadPromise
+
+    expect(getPendingCameraOperation()).toMatchObject({
+      module: 'inspection',
+      phase: 'uploading',
+      targetId: 'row-unload',
+    })
+  })
+
+  it('uses the bounded in-app camera path and routes its file to the selected inspection row', async () => {
+    const prepare = await import('../form/inspectionPhotoUtils')
+    const mediaDevicesDescriptor = Object.getOwnPropertyDescriptor(navigator, 'mediaDevices')
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: { getUserMedia: vi.fn() },
+    })
+    const updateFireExtinguisherCheck = vi.fn()
+    const photo = {
+      id: 'managed-photo',
+      mediaId: 'rpm-camera',
+      fileName: 'inspection-camera.jpg',
+      url: '/report-media/rpm-camera',
+    }
+    prepare.prepareInspectionPhotoUploads.mockResolvedValueOnce([photo])
+
+    try {
+      const { result } = renderHook(() =>
+        useInspectionFormPhotos({
+          appendInspectionText: noop,
+          createPhotoId: () => 'photo-id',
+          defaultHighAnglePhotosKey: 'photos',
+          form: { photos: [], fireExtinguisherChecks: [] },
+          getLatestForm: () => ({ photos: [], fireExtinguisherChecks: [] }),
+          getScbaExistingCheck: () => null,
+          getScbaFieldEvidenceKeys: () => ({ photosKey: 'photos' }),
+          pushToast: noop,
+          updateErAuxCheck: noop,
+          updateFireExtinguisherCheck,
+          updateForm: noop,
+          updateFrtCheck: noop,
+          updateHighAngleCheck: noop,
+          updateHydraulicCheck: noop,
+          updateScbaGroupedCheck: noop,
+        }),
+      )
+
+      const row = { id: 'FE-IN-APP', photos: [] }
+      act(() => result.current.requestFireExtinguisherPhotoUpload(row, {}))
+      expect(result.current.cameraCaptureVisible).toBe(true)
+
+      await act(async () => {
+        await result.current.handleInAppCameraCapture(
+          new File(['bounded-photo'], 'inspection-camera.jpg', { type: 'image/jpeg' }),
+        )
+      })
+
+      expect(prepare.prepareInspectionPhotoUploads).toHaveBeenCalledWith(
+        expect.objectContaining({ isCameraUpload: true }),
+      )
+      expect(updateFireExtinguisherCheck).toHaveBeenCalledWith(row, {
+        photos: [photo],
+      })
+      expect(result.current.cameraCaptureVisible).toBe(false)
+      expect(getPendingCameraOperation()).toBeNull()
+    } finally {
+      if (mediaDevicesDescriptor) {
+        Object.defineProperty(navigator, 'mediaDevices', mediaDevicesDescriptor)
+      } else {
+        delete navigator.mediaDevices
+      }
+    }
   })
 
   it('adds any successful photos and shows fallback when some camera photos fail', async () => {
@@ -172,7 +341,7 @@ describe('useInspectionFormPhotos', () => {
       ]
     })
 
-    const fileOne = new File(['photo-one'], 'unsupported.avif', { type: 'image/avif' })
+    const fileOne = new File(['photo-one'], 'unsupported.gif', { type: 'image/gif' })
     const fileTwo = new File(['photo-two'], 'accepted-camera.jpg', { type: 'image/jpeg' })
 
     act(() => {

@@ -7,6 +7,7 @@ import {
   SCBA_SECTION_DEFINITIONS,
 } from './inspectionFormHelpers'
 import {
+  CAMERA_SOURCE_MAX_BYTES,
   deleteReportMedia,
   getReportPhotoBytes,
   reportPhotoFailureMessage,
@@ -16,7 +17,6 @@ import {
 const MAX_PHOTO_BYTES = 1.5 * 1024 * 1024
 const MAX_PHOTO_COUNT = 10
 const MAX_TOTAL_PHOTO_BYTES = 12 * 1024 * 1024
-const MAX_CAMERA_FILE_BYTES = 12 * 1024 * 1024
 
 const FAILURE_TITLES = {
   invalid_file: 'Invalid photo',
@@ -31,6 +31,12 @@ const FAILURE_TITLES = {
   unsupported_file_type: 'Unsupported file type',
   operation_timeout: 'Upload timeout',
   scan_timeout_or_decode_failure: 'Scan decode timeout',
+  session_expired: 'Session expired',
+  csrf_expired: 'Secure upload expired',
+  rate_limited: 'Upload limit reached',
+  upload_busy: 'Upload already in progress',
+  storage_unavailable: 'Photo storage unavailable',
+  storage_quota_exceeded: 'Temporary photo storage full',
 }
 
 const FAILURE_COLORS = {
@@ -46,6 +52,12 @@ const FAILURE_COLORS = {
   unsupported_file_type: 'warning',
   operation_timeout: 'warning',
   scan_timeout_or_decode_failure: 'warning',
+  session_expired: 'warning',
+  csrf_expired: 'warning',
+  rate_limited: 'warning',
+  upload_busy: 'warning',
+  storage_unavailable: 'danger',
+  storage_quota_exceeded: 'warning',
 }
 
 const DEFAULT_FAILURE_MESSAGES = {
@@ -61,11 +73,29 @@ const DEFAULT_FAILURE_MESSAGES = {
   low_memory:
     'Camera processing failed due to low device memory. You can upload the photo manually to continue.',
   unsupported_file_type:
-    'This photo format is not supported for camera upload. Please upload a jpg, png, or webp file.',
+    'This photo format is not supported. Use JPEG, PNG, WebP, HEIC, HEIF, or AVIF.',
   operation_timeout: 'Photo processing timed out. You can retry or upload manually.',
   scan_timeout_or_decode_failure:
     'Camera capture decode timed out. You can retry or upload the photo manually.',
+  session_expired: 'Your session expired before the photo could be uploaded. Sign in and retry.',
+  csrf_expired: 'The secure upload token could not be refreshed. Reload the form and retry.',
+  rate_limited: 'Too many photo uploads. Wait briefly and retry.',
+  upload_busy: 'Another photo is still being processed. Wait briefly and retry.',
+  storage_unavailable: 'Photo storage is temporarily unavailable. Try again later.',
+  storage_quota_exceeded:
+    'Temporary photo storage is full. Remove unused attachments or try again after cleanup.',
 }
+
+const CAMERA_MANUAL_FALLBACK_EXCLUDED_CODES = new Set([
+  'max_photo_count',
+  'total_size_exceeded',
+  'session_expired',
+  'csrf_expired',
+  'rate_limited',
+  'upload_busy',
+  'storage_unavailable',
+  'storage_quota_exceeded',
+])
 
 const asString = (value, fallback = '') => String(value || fallback)
 
@@ -159,21 +189,7 @@ export const buildPhotoFailure = (code, message = '') => ({
 })
 
 const isCameraFailureToRetry = (code) =>
-  code !== 'max_photo_count' && code !== 'total_size_exceeded'
-
-const isKnownUnsupportedImageFormat = (file = {}) => {
-  const type = asString(file?.type).toLowerCase()
-  const name = asString(file?.name).toLowerCase()
-  const extension = name.includes('.') ? name.split('.').pop() : ''
-  const unsupportedExtensionSet = new Set(['heic', 'heif', 'heics', 'heifc'])
-  if (unsupportedExtensionSet.has(extension)) return true
-  return (
-    type === 'image/heic' ||
-    type === 'image/heif' ||
-    type === 'image/heics' ||
-    type === 'image/heifc'
-  )
-}
+  !CAMERA_MANUAL_FALLBACK_EXCLUDED_CODES.has(String(code || '').trim())
 
 const isImageFile = (file = {}) => {
   const type = asString(file?.type).toLowerCase()
@@ -200,10 +216,10 @@ const classifyValidationFailure = (file = {}, isCameraUpload = false) => {
     return buildPhotoFailure('unsupported_file_type', `"${fileName}" is not an image file.`)
   }
 
-  if (isCameraUpload && normalizedSize > MAX_CAMERA_FILE_BYTES) {
+  if (isCameraUpload && normalizedSize > CAMERA_SOURCE_MAX_BYTES) {
     return buildPhotoFailure(
       'file_too_large',
-      `"${fileName}" is over 12 MB. Upload a smaller photo manually or retake the photo at a lower resolution.`,
+      `"${fileName}" is over 30 MB. Retake it with the in-app camera or choose a smaller photo.`,
     )
   }
 

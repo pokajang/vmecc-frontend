@@ -23,13 +23,16 @@ const readGitSha = () => {
 
 const createBuildMetadata = () => {
   const version = String(packageJson.version || '').trim() || '0.0.0'
-  const buildId = String(process.env.VITE_BUILD_ID || '').trim() || readGitSha() || version
+  const builtAt = new Date().toISOString()
+  const revision = readGitSha() || version
+  const generatedBuildId = `${revision}-${builtAt.replace(/\D/g, '').slice(0, 14)}`
+  const buildId = String(process.env.VITE_BUILD_ID || '').trim() || generatedBuildId
 
   return {
     app: 'vmecc-frontend',
     version,
     buildId,
-    builtAt: new Date().toISOString(),
+    builtAt,
   }
 }
 

@@ -132,25 +132,30 @@ const App = () => {
 
         return true
       } catch (error) {
+        const status = Number(error?.status || 0)
         const isTransient =
-          !error?.status ||
-          error?.status >= 500 ||
-          String(error?.message || '').includes('timed out')
+          !status || status >= 500 || String(error?.message || '').includes('timed out')
+        const shouldRetryCameraSession =
+          status === 401 && Boolean(getPendingCameraOperation()) && retryCount < 1
         if (isActive() && !silent) {
-          dispatch({
-            type: 'set',
-            authStatus: isTransient ? 'temporarily_unavailable' : 'anonymous',
-            ...(isTransient ? {} : { authUser: null }),
-            authError:
-              error?.status === 401
-                ? null
-                : error?.status >= 500 ||
-                    String(error?.message || '').includes('Session bootstrap timed out.')
-                  ? 'Unable to connect to server.'
-                  : error?.message || 'Unable to initialize session.',
-          })
+          if (shouldRetryCameraSession) {
+            dispatch({ type: 'set', authStatus: 'checking', authError: null })
+          } else {
+            dispatch({
+              type: 'set',
+              authStatus: isTransient ? 'temporarily_unavailable' : 'anonymous',
+              ...(isTransient ? {} : { authUser: null }),
+              authError:
+                status === 401
+                  ? null
+                  : status >= 500 ||
+                      String(error?.message || '').includes('Session bootstrap timed out.')
+                    ? 'Unable to connect to server.'
+                    : error?.message || 'Unable to initialize session.',
+            })
+          }
         }
-        if (isTransient && retryCount < 1 && !signal?.aborted) {
+        if ((isTransient || shouldRetryCameraSession) && retryCount < 1 && !signal?.aborted) {
           const retryTimer = setTimeout(() => {
             sessionRetryTimersRef.current.delete(retryTimer)
             if (signal?.aborted) return
@@ -211,10 +216,12 @@ const App = () => {
     const controller = new AbortController()
     const currentPath = window.location?.pathname || '/'
     const currentSearch = window.location?.search || ''
+    const hasPendingCameraOperation = Boolean(getPendingCameraOperation())
 
     if (
       PUBLIC_AUTH_BOOTSTRAP_PATHS.has(currentPath) &&
-      !isGoogleAuthSuccessCallback(currentPath, currentSearch)
+      !isGoogleAuthSuccessCallback(currentPath, currentSearch) &&
+      !hasPendingCameraOperation
     ) {
       dispatch({ type: 'set', authStatus: 'anonymous', authUser: null, authError: null })
       return () => {

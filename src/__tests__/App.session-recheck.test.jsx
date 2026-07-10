@@ -7,6 +7,7 @@ import { legacy_createStore as createStore } from 'redux'
 
 import App from '../App'
 import { fetchModuleActivation, fetchSession } from '../services/apiClient'
+import { markPendingCameraOperation } from '../utils/cameraRecovery'
 
 vi.mock('../services/apiClient', () => ({
   fetchModuleActivation: vi.fn(),
@@ -45,6 +46,7 @@ const renderApp = () => {
 
 beforeEach(() => {
   window.history.pushState({}, '', '/')
+  sessionStorage.clear()
   fetchModuleActivation.mockResolvedValue(null)
   vi.stubGlobal('localStorage', {
     getItem: vi.fn(() => null),
@@ -96,6 +98,34 @@ describe('App session recheck', () => {
     window.dispatchEvent(new Event('focus'))
 
     await waitFor(() => expect(fetchSession).toHaveBeenCalledTimes(2))
+    await waitFor(() => expect(store.getState().authStatus).toBe('authenticated'))
+    expect(store.getState().authUser).toEqual({ id: 1, email: 'user@example.test' })
+  })
+
+  it('restores a camera session from the login route before rendering login', async () => {
+    window.history.pushState({}, '', '/inspection/new')
+    markPendingCameraOperation({ module: 'inspection', targetKind: 'fireExtinguisher' })
+    window.history.pushState({}, '', '/login')
+    fetchSession.mockResolvedValueOnce({ user: { id: 1, email: 'user@example.test' } })
+
+    const store = renderApp()
+
+    await waitFor(() => expect(fetchSession).toHaveBeenCalledTimes(1))
+    await waitFor(() => expect(store.getState().authStatus).toBe('authenticated'))
+    await waitFor(() => expect(window.location.pathname).toBe('/inspection/new'))
+    expect(screen.getByText('Authenticated shell')).toBeTruthy()
+    expect(screen.queryByText(/sign in/i)).toBeNull()
+  })
+
+  it('retries one camera-session 401 before showing the login page', async () => {
+    markPendingCameraOperation({ module: 'inspection', targetKind: 'fireExtinguisherDefect' })
+    fetchSession
+      .mockRejectedValueOnce(Object.assign(new Error('Unauthenticated'), { status: 401 }))
+      .mockResolvedValueOnce({ user: { id: 1, email: 'user@example.test' } })
+
+    const store = renderApp()
+
+    await waitFor(() => expect(fetchSession).toHaveBeenCalledTimes(2), { timeout: 2000 })
     await waitFor(() => expect(store.getState().authStatus).toBe('authenticated'))
     expect(store.getState().authUser).toEqual({ id: 1, email: 'user@example.test' })
   })

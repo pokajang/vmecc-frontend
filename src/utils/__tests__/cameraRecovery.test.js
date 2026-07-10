@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import {
   clearPendingCameraOperation,
+  consumeInterruptedCameraFallback,
   getPendingCameraOperation,
   getInterruptedCameraFallback,
   markPendingCameraOperation,
@@ -30,5 +31,20 @@ describe('camera recovery marker', () => {
     expect(getPendingCameraOperation()?.phase).toBe('uploading')
     clearPendingCameraOperation()
     expect(getPendingCameraOperation()).toBeNull()
+  })
+
+  it('consumes an interrupted operation after the form has recovered it', () => {
+    markPendingCameraOperation({
+      module: 'inspection',
+      targetKind: 'fireExtinguisherDefect',
+      targetId: 'FE-2',
+    })
+
+    expect(consumeInterruptedCameraFallback('inspection')).toMatchObject({
+      errorCode: 'camera_interrupted',
+      phase: 'picker',
+    })
+    expect(getPendingCameraOperation()).toBeNull()
+    expect(consumeInterruptedCameraFallback('inspection')).toBeNull()
   })
 })

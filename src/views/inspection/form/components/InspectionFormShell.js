@@ -3,6 +3,7 @@ import { CAlert, CButton } from '@coreui/react'
 import { Upload } from 'lucide-react'
 import { formatCameraDiagnosticsLines } from 'src/utils/cameraDiagnostics'
 import InspectionFormBodySections from './InspectionFormBodySections'
+import InspectionCameraCapture from './InspectionCameraCapture'
 import InspectionFormManagerModals from './InspectionFormManagerModals'
 import InspectionFormModals from './InspectionFormModals'
 import InspectionFormSetupSections from './InspectionFormSetupSections'
@@ -54,12 +55,16 @@ const InspectionFormShell = ({
 }) => {
   const {
     cameraInputRef,
+    cameraCaptureVisible,
+    closeInAppCamera,
+    handleInAppCameraCapture,
     isPhotoProcessing,
     photoUploadProgress,
     handlePhotoSelect,
     cameraUploadFallback,
     clearCameraUploadFallback,
     requestUploadFromCameraFallback,
+    useNativeCameraFallback,
     removePhoto,
     requestInspectionIssuePhotoUpload,
     requestRootPhotoUpload,
@@ -78,6 +83,12 @@ const InspectionFormShell = ({
         locationDeleteTarget={locationDeleteTarget}
         setIncidentDeleteTarget={setIncidentDeleteTarget}
         setLocationDeleteTarget={setLocationDeleteTarget}
+      />
+      <InspectionCameraCapture
+        visible={cameraCaptureVisible}
+        onCapture={handleInAppCameraCapture}
+        onClose={closeInAppCamera}
+        onUseNativeCamera={useNativeCameraFallback}
       />
       {isPhotoProcessing ? (
         <div className="small text-body-secondary mb-2" role="status">

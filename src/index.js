@@ -5,6 +5,7 @@ import 'core-js'
 
 import App from './App'
 import store from './store'
+import { registerAppServiceWorker } from './services/serviceWorkerRegistration'
 
 createRoot(document.getElementById('root')).render(
   <Provider store={store}>
@@ -14,35 +15,7 @@ createRoot(document.getElementById('root')).render(
 
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
-    let hasReloadedForUpdate = false
-    const hadServiceWorkerController = Boolean(navigator.serviceWorker.controller)
-
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (!hadServiceWorkerController || hasReloadedForUpdate) return
-      hasReloadedForUpdate = true
-      window.location.reload()
-    })
-
-    navigator.serviceWorker
-      .register('/service-worker.js')
-      .then((registration) => {
-        registration.update?.()
-        registration.addEventListener('updatefound', () => {
-          const installingWorker = registration.installing
-          installingWorker?.addEventListener('statechange', () => {
-            if (
-              installingWorker.state === 'activated' &&
-              hadServiceWorkerController &&
-              navigator.serviceWorker.controller &&
-              !hasReloadedForUpdate
-            ) {
-              hasReloadedForUpdate = true
-              window.location.reload()
-            }
-          })
-        })
-      })
-      .catch(() => {})
+    void registerAppServiceWorker()
   })
 }
 

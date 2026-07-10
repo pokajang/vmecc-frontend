@@ -100,3 +100,36 @@
 .inspection-field-error {
   line-height: 1.35;
 }
+
+.inspection-camera-capture {
+  position: relative;
+  display: grid;
+  width: 100%;
+  min-height: min(68dvh, 28rem);
+  place-items: center;
+}
+
+.inspection-camera-capture__video {
+  display: block;
+  width: 100%;
+  height: min(68dvh, 28rem);
+  object-fit: contain;
+}
+
+.inspection-camera-capture__status {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: rgba(15, 23, 42, 0.7);
+}
+
+@media (max-width: 575.98px) {
+  .inspection-camera-capture,
+  .inspection-camera-capture__video {
+    height: min(62dvh, 32rem);
+    min-height: 18rem;
+  }
+}

@@ -41,6 +41,12 @@ export const getInterruptedCameraFallback = (module) => {
   }
 }
 
+export const consumeInterruptedCameraFallback = (module) => {
+  const fallback = getInterruptedCameraFallback(module)
+  if (fallback) clearPendingCameraOperation()
+  return fallback
+}
+
 export const subscribeToCameraReturn = (module, onInterrupted, graceMs = 1200) => {
   if (!globalThis.document?.addEventListener) return () => {}
   let leftPage = false
