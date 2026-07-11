@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef, useState } from 'react'
 import TableLoader from 'src/components/TableLoader'
 import InspectionRecordsSection from 'src/views/inspection/InspectionRecordsSection'
 import InspectionDetailSection from 'src/views/inspection/InspectionDetailSection'
@@ -227,6 +227,8 @@ export const InspectionReviewView = ({
   backFromReview,
   buildPendingReviewRecord,
   clearInspectionTypeDraft,
+  retryDraftSync,
+  retryFireExtinguisherSessionSync,
   saveDraft,
   sessionReviewForm,
   reviewWorkspace,
@@ -238,15 +240,42 @@ export const InspectionReviewView = ({
   isUpdatingExistingRecord = false,
   renderStatusBadge,
 }) => {
+  const [isRetryingSync, setIsRetryingSync] = useState(false)
+  const retrySyncInFlightRef = useRef(false)
   const items = Array.isArray(pendingSubmissionSummary?.items) ? pendingSubmissionSummary.items : []
-  const retryDraftSync = () => saveDraft?.(sessionReviewForm, reviewWorkspace)
+  const retrySync = async (item, blocker = {}) => {
+    if (retrySyncInFlightRef.current) return null
+    retrySyncInFlightRef.current = true
+    setIsRetryingSync(true)
+    try {
+      const blockers = Array.isArray(item?.blockers) ? item.blockers : [blocker]
+      const retrySession = blockers.some(
+        (candidate) => candidate?.key === 'fire-extinguisher-session-sync',
+      )
+      const retryDraft = blockers.some((candidate) => candidate?.key === 'draft-sync-failed')
+      const results = {}
+      if (retrySession) {
+        results.session = await retryFireExtinguisherSessionSync?.()
+      }
+      if (retryDraft || !retrySession) {
+        results.draft = retryDraftSync
+          ? await retryDraftSync()
+          : (await saveDraft?.(sessionReviewForm, reviewWorkspace)) || null
+      }
+      return results
+    } finally {
+      retrySyncInFlightRef.current = false
+      setIsRetryingSync(false)
+    }
+  }
 
   if (items.length > 0) {
     return (
       <InspectionReviewDashboard
         items={items}
         isUpdateMode={isUpdatingExistingRecord}
-        onRetrySync={retryDraftSync}
+        isRetryingSync={isRetryingSync}
+        onRetrySync={retrySync}
         onSubmit={(item) => {
           const selectedReviewRecord = buildPendingReviewRecord?.(item)
           if (!selectedReviewRecord) return null
@@ -302,6 +331,7 @@ export const InspectionFormView = ({
   setDraftStatus,
   setFormState,
   commitDraftSnapshot,
+  resolveDraftConflict,
   retryDraftSync,
   saveDraft,
   requestReview,
@@ -320,6 +350,7 @@ export const InspectionFormView = ({
       }}
       onCommitDraftSnapshot={commitDraftSnapshot}
       onClearInspectionTypeDraft={clearInspectionTypeDraft}
+      onResolveDraftConflict={resolveDraftConflict}
       onRetryDraftSync={retryDraftSync}
       onSaveDraft={saveDraft}
       onRequestReview={requestReview}

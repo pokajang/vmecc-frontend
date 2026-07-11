@@ -60,6 +60,21 @@ export const loadLeaveAssignmentsForUser = async (userId, _fallbackRows = []) =>
   }
 }
 
+export const loadLeaveRosterImpact = async (payload = {}) => {
+  const query = new URLSearchParams()
+  ;['start_date', 'end_date', 'work_shift', 'start_time_slot', 'end_time_slot'].forEach((key) => {
+    if (payload[key]) query.set(key, payload[key])
+  })
+  if (!query.get('start_date') || !query.get('end_date')) return { ok: true, data: null }
+
+  try {
+    const result = await apiRequest(`/leave/roster-impact?${query.toString()}`)
+    return { ok: true, data: result?.data || null }
+  } catch (error) {
+    return { ok: false, data: null, error }
+  }
+}
+
 /**
  * No-op: server manages assignment state.
  */

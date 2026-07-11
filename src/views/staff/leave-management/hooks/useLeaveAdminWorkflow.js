@@ -72,16 +72,27 @@ const useLeaveAdminWorkflow = ({
   const getReviewActionConfig = useCallback(
     (row) => {
       const requiredRole = normalizeRoleValue(row?.nextActionRole)
+      const primaryAction =
+        row?.workflowStage === 'review'
+          ? 'review'
+          : row?.workflowStage === 'recommend'
+            ? 'recommend'
+            : 'approve'
       const canAct = canActorPerformWorkflowAction({
         status: row?.status,
         nextActionRole: requiredRole,
         actorRoles,
         isSystemAdmin: isSystemAdministrator,
       })
+      const usesServerPermissions = row?.hasServerPermittedActions === true
+      const permittedActions = Array.isArray(row?.permittedActions) ? row.permittedActions : []
+      const canRun = (action) =>
+        usesServerPermissions ? permittedActions.includes(action) : canAct
       return {
         approveLabel: getReviewWorkflowApproveActionLabel(row?.workflowStage || 'approve'),
-        approveDisabled: !canAct,
-        rejectDisabled: !canAct,
+        approveDisabled: !canRun(primaryAction),
+        rejectDisabled: !canRun('reject'),
+        correctionDisabled: !canRun('request_correction'),
         requiredRole,
         workflowState: {
           workflowStage: row?.workflowStage,
@@ -135,9 +146,12 @@ const useLeaveAdminWorkflow = ({
       if (!row?.id) return
       const actionConfig = getReviewActionConfig(row)
       const isRejectAttempt = sourceAction === 'reject'
+      const isCorrectionAttempt = sourceAction === 'request_correction'
       const isDisabled = isRejectAttempt
         ? actionConfig?.rejectDisabled
-        : actionConfig?.approveDisabled
+        : isCorrectionAttempt
+          ? actionConfig?.correctionDisabled
+          : actionConfig?.approveDisabled
       if (isDisabled) {
         const blockedReason = getWorkflowActionBlockedReason({
           status: row?.status,
@@ -166,6 +180,7 @@ const useLeaveAdminWorkflow = ({
     return getReviewActionConfig(workflowModalState.record)
   }, [getReviewActionConfig, workflowModalState.record])
   const isRejectWorkflowModal = workflowModalState.sourceAction === 'reject'
+  const isCorrectionWorkflowModal = workflowModalState.sourceAction === 'request_correction'
 
   const runLeaveWorkflowAction = useCallback(
     async (
@@ -174,10 +189,15 @@ const useLeaveAdminWorkflow = ({
       { refreshAfter = true, showSuccessToast = true, showFailureToast = true } = {},
     ) => {
       if (!row?.id) return false
-      const normalizedDecision = decision === 'reject' ? 'reject' : 'approve'
+      const normalizedDecision =
+        decision === 'reject'
+          ? 'reject'
+          : decision === 'request_correction'
+            ? 'request_correction'
+            : 'approve'
       const normalizedRemarks = String(remarks || '').trim()
-      if (normalizedDecision === 'reject' && !normalizedRemarks) {
-        pushToast('Please provide remarks when rejecting.', {
+      if (['reject', 'request_correction'].includes(normalizedDecision) && !normalizedRemarks) {
+        pushToast('Please provide remarks for this action.', {
           title: 'Remarks required',
           color: 'warning',
         })
@@ -188,13 +208,15 @@ const useLeaveAdminWorkflow = ({
       const targetId = row._id || row.id
       const workflowStage = String(row?.workflowStage || 'approve')
       const actionVerb =
-        normalizedDecision === 'reject'
-          ? 'reject'
-          : workflowStage === 'review'
-            ? 'review'
-            : workflowStage === 'recommend'
-              ? 'recommend'
-              : 'approve'
+        normalizedDecision === 'request_correction'
+          ? 'request-correction'
+          : normalizedDecision === 'reject'
+            ? 'reject'
+            : workflowStage === 'review'
+              ? 'review'
+              : workflowStage === 'recommend'
+                ? 'recommend'
+                : 'approve'
 
       const requiredRole = normalizeRoleValue(row?.nextActionRole)
       const canAct = canActorPerformWorkflowAction({
@@ -203,7 +225,11 @@ const useLeaveAdminWorkflow = ({
         actorRoles,
         isSystemAdmin: isSystemAdministrator,
       })
-      if (!canAct) {
+      const serverAllows =
+        row?.hasServerPermittedActions === true
+          ? row?.permittedActions?.includes(actionVerb.replace('-', '_'))
+          : canAct
+      if (!serverAllows) {
         pushToast(
           requiredRole
             ? `This stage requires ${requiredRole} role.`
@@ -219,6 +245,7 @@ const useLeaveAdminWorkflow = ({
           body: JSON.stringify({
             remarks: normalizedRemarks,
             declaration_checked: declarationChecked,
+            expected_version: row?.version,
           }),
         })
 
@@ -233,17 +260,27 @@ const useLeaveAdminWorkflow = ({
               ? 'Recommended'
               : actionVerb === 'approve'
                 ? 'Approved'
-                : 'Rejected'
+                : actionVerb === 'request-correction'
+                  ? 'Correction requested'
+                  : 'Rejected'
         const finalized = actionVerb === 'approve' || actionVerb === 'reject'
         const displayLeaveId = getDisplayLeaveId(row)
         const toastTitle =
-          normalizedDecision === 'reject'
-            ? 'Leave rejected'
-            : finalized
-              ? 'Leave approved'
-              : historyActionLabel
+          normalizedDecision === 'request_correction'
+            ? 'Correction requested'
+            : normalizedDecision === 'reject'
+              ? 'Leave rejected'
+              : finalized
+                ? 'Leave approved'
+                : historyActionLabel
         const toastColor =
-          normalizedDecision === 'reject' ? 'warning' : finalized ? 'success' : 'info'
+          normalizedDecision === 'request_correction'
+            ? 'warning'
+            : normalizedDecision === 'reject'
+              ? 'warning'
+              : finalized
+                ? 'success'
+                : 'info'
         if (showSuccessToast) {
           pushToast(`${historyActionLabel} for ${displayLeaveId}.`, {
             title: toastTitle,
@@ -253,7 +290,13 @@ const useLeaveAdminWorkflow = ({
         return true
       } catch (error) {
         const parsed = parseWorkflowTransitionError(error, 'Unable to process leave action.')
-        if (normalizedDecision === 'reject' && parsed.fieldErrors?.remarks) {
+        if (error?.code === 'LEAVE_VERSION_CONFLICT') {
+          await refreshAllLeaveRecords({ showWarningToast: false })
+        }
+        if (
+          ['reject', 'request_correction'].includes(normalizedDecision) &&
+          parsed.fieldErrors?.remarks
+        ) {
           setWorkflowRejectError(parsed.fieldErrors.remarks)
         }
         if (showFailureToast) {
@@ -278,6 +321,13 @@ const useLeaveAdminWorkflow = ({
   const rejectLeave = useCallback(
     (row) => {
       openActionModal(row, 'reject')
+    },
+    [openActionModal],
+  )
+
+  const requestCorrectionLeave = useCallback(
+    (row) => {
+      openActionModal(row, 'request_correction')
     },
     [openActionModal],
   )
@@ -358,6 +408,32 @@ const useLeaveAdminWorkflow = ({
     isSubmitting,
     runLeaveWorkflowAction,
     workflowDeclarationChecked,
+    workflowModalState.record,
+    workflowRemarks,
+  ])
+
+  const submitWorkflowCorrection = useCallback(async () => {
+    if (isSubmitting) return
+    if (!String(workflowRemarks || '').trim()) {
+      setWorkflowRejectError('Please provide correction remarks.')
+      return
+    }
+    const targetRecord = workflowModalState.record
+    if (!targetRecord) return
+    setIsSubmitting(true)
+    try {
+      const succeeded = await runLeaveWorkflowAction(targetRecord, {
+        decision: 'request_correction',
+        remarks: workflowRemarks,
+      })
+      if (succeeded) closeWorkflowModal()
+    } finally {
+      setIsSubmitting(false)
+    }
+  }, [
+    closeWorkflowModal,
+    isSubmitting,
+    runLeaveWorkflowAction,
     workflowModalState.record,
     workflowRemarks,
   ])
@@ -653,12 +729,16 @@ const useLeaveAdminWorkflow = ({
     runOvertimeWorkflowAction,
   ])
 
-  const workflowModalActionLabel = isRejectWorkflowModal
-    ? 'Reject'
-    : workflowModalActionConfig?.approveLabel || 'Approve'
-  const workflowModalActionDisabled = isRejectWorkflowModal
-    ? Boolean(workflowModalActionConfig?.rejectDisabled)
-    : Boolean(workflowModalActionConfig?.approveDisabled) || !workflowDeclarationChecked
+  const workflowModalActionLabel = isCorrectionWorkflowModal
+    ? 'Request correction'
+    : isRejectWorkflowModal
+      ? 'Reject'
+      : workflowModalActionConfig?.approveLabel || 'Approve'
+  const workflowModalActionDisabled = isCorrectionWorkflowModal
+    ? Boolean(workflowModalActionConfig?.correctionDisabled)
+    : isRejectWorkflowModal
+      ? Boolean(workflowModalActionConfig?.rejectDisabled)
+      : Boolean(workflowModalActionConfig?.approveDisabled) || !workflowDeclarationChecked
 
   const overtimeWorkflowModalActionLabel = isRejectOvertimeWorkflowModal
     ? 'Reject'
@@ -675,6 +755,7 @@ const useLeaveAdminWorkflow = ({
     getOvertimeReviewActionConfig,
     approveLeave,
     rejectLeave,
+    requestCorrectionLeave,
     runLeaveWorkflowAction,
     approveOvertime,
     rejectOvertime,
@@ -682,6 +763,7 @@ const useLeaveAdminWorkflow = ({
     workflowModalState,
     workflowModalActionLabel,
     isRejectWorkflowModal,
+    isCorrectionWorkflowModal,
     workflowModalActionDisabled,
     workflowRemarks,
     workflowDeclarationChecked,
@@ -692,6 +774,7 @@ const useLeaveAdminWorkflow = ({
     closeWorkflowModal,
     submitWorkflowApprove,
     submitWorkflowReject,
+    submitWorkflowCorrection,
     overtimeWorkflowModalState,
     overtimeWorkflowModalActionLabel,
     isRejectOvertimeWorkflowModal,

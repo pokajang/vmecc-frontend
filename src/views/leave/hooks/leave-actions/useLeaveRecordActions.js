@@ -63,8 +63,8 @@ export default function useLeaveRecordActions({
   const openLeaveForEdit = useCallback(
     (row) => {
       if (!row?.id) return
-      if (!['Pending', 'Draft'].includes(row.status)) {
-        pushToast('Only Pending or Draft leave requests can be edited.', {
+      if (!['Pending', 'Draft', 'Needs Correction'].includes(row.status)) {
+        pushToast('Only pre-review, Draft, or correction-requested leave requests can be edited.', {
           title: 'Edit unavailable',
           color: 'warning',
         })
@@ -162,7 +162,10 @@ export default function useLeaveRecordActions({
     const displayId = getDisplayLeaveId(cancelPreviewRecord)
     const displayLeaveId = String(cancelPreviewRecord.id)
     try {
-      await apiRequest(`/leave/${targetId}/cancel`, { method: 'POST' })
+      await apiRequest(`/leave/${targetId}/cancel`, {
+        method: 'POST',
+        body: JSON.stringify({ expected_version: cancelPreviewRecord.version }),
+      })
       const [recordsResult, assignmentsResult] = await Promise.all([
         loadLeaveRecords(user?.id),
         loadLeaveAssignmentsForUser(user?.id),
@@ -173,6 +176,14 @@ export default function useLeaveRecordActions({
       if (leaveId && String(leaveId) === displayLeaveId) navigate('/leave')
       pushToast(`Leave request ${displayId} cancelled.`, { title: 'Cancelled', color: 'warning' })
     } catch (error) {
+      if (error?.code === 'LEAVE_VERSION_CONFLICT') {
+        const [recordsResult, assignmentsResult] = await Promise.all([
+          loadLeaveRecords(user?.id),
+          loadLeaveAssignmentsForUser(user?.id),
+        ])
+        if (Array.isArray(recordsResult?.data)) setLeaveRecords(recordsResult.data)
+        if (Array.isArray(assignmentsResult?.rows)) setAssignmentRows(assignmentsResult.rows)
+      }
       pushToast(error?.message || 'Unable to cancel leave request. Please retry.', {
         title: 'Cancel failed',
         color: 'danger',
@@ -219,7 +230,10 @@ export default function useLeaveRecordActions({
     const targetId = deletePreviewRecord._id || deletePreviewRecord.id
     const displayId = getDisplayLeaveId(deletePreviewRecord)
     try {
-      await apiRequest(`/leave/${targetId}`, { method: 'DELETE' })
+      await apiRequest(`/leave/${targetId}`, {
+        method: 'DELETE',
+        body: JSON.stringify({ expected_version: deletePreviewRecord.version }),
+      })
       setLeaveRecords((prev) => prev.filter((record) => record.id !== deletePreviewRecord.id))
       if (deletePreviewRecord.attachmentId) {
         deleteAttachmentBlobSafe(deletePreviewRecord.attachmentId)
@@ -228,6 +242,10 @@ export default function useLeaveRecordActions({
       pushToast(`Leave request ${displayId} deleted.`, { title: 'Deleted', color: 'danger' })
       closeDeleteConfirmModal()
     } catch (error) {
+      if (error?.code === 'LEAVE_VERSION_CONFLICT') {
+        const result = await loadLeaveRecords(user?.id)
+        if (Array.isArray(result?.data)) setLeaveRecords(result.data)
+      }
       pushToast(error?.message || 'Unable to delete leave request. Please retry.', {
         title: 'Delete failed',
         color: 'danger',
@@ -242,6 +260,7 @@ export default function useLeaveRecordActions({
     navigate,
     pushToast,
     setLeaveRecords,
+    user?.id,
   ])
 
   return {

@@ -48,6 +48,10 @@ export const featureFlags = {
     import.meta.env.VITE_INSPECTION_SESSION_FIRE_EXTINGUISHER_ENABLED,
     true,
   ),
+  inspectionSessionScopeV2Enabled: asBool(
+    import.meta.env.VITE_INSPECTION_SESSION_SCOPE_V2_ENABLED,
+    true,
+  ),
   holidayGuidanceCohortUserIds: asCsvList(import.meta.env.VITE_HOLIDAY_GUIDANCE_COHORT_USER_IDS),
   holidayGuidanceCohortEmails: asCsvList(import.meta.env.VITE_HOLIDAY_GUIDANCE_COHORT_EMAILS),
 }

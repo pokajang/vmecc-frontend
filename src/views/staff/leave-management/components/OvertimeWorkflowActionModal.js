@@ -37,7 +37,8 @@ const OvertimeWorkflowActionModal = ({
   onSubmit,
 }) => {
   const showRemarksHelper =
-    actionType !== 'reject' && String(actionLabel || '').toLowerCase() !== 'review'
+    !['reject', 'request_correction'].includes(actionType) &&
+    String(actionLabel || '').toLowerCase() !== 'review'
 
   return (
     <CModal visible={visible} onClose={onClose} alignment="center" scrollable>
@@ -83,7 +84,9 @@ const OvertimeWorkflowActionModal = ({
                 htmlFor="overtime-workflow-remarks"
                 className="small text-body-secondary mb-1"
               >
-                {actionType === 'reject' ? 'Remarks (required)' : 'Remarks (optional)'}
+                {['reject', 'request_correction'].includes(actionType)
+                  ? 'Remarks (required)'
+                  : 'Remarks (optional)'}
               </CFormLabel>
               <CFormInput
                 id="overtime-workflow-remarks"
@@ -92,7 +95,7 @@ const OvertimeWorkflowActionModal = ({
                 onChange={(event) => onRemarksChange(event.target.value)}
                 placeholder="Add your remarks"
                 invalid={Boolean(rejectError)}
-                aria-required={actionType === 'reject'}
+                aria-required={['reject', 'request_correction'].includes(actionType)}
                 aria-describedby={rejectError ? 'overtime-workflow-remarks-error' : undefined}
               />
               {rejectError ? (

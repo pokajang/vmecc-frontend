@@ -59,14 +59,17 @@ const DrillMobileHome = ({
   const draftRow = draftRows[0] || null
   const draftSyncStatus = String(draftRow?.syncStatus || draftRow?.__offlineSyncStatus || '').trim()
   const draftSummary = draftRow
-    ? [draftRow.incidentType || 'Drill', draftRow.location || 'No location']
+    ? [
+        draftRow.exerciseTitle || draftRow.incidentType || 'Drill',
+        draftRow.location || 'No location',
+      ]
         .filter(Boolean)
         .join(' - ')
     : ''
   const recentRecordItems = recentRecords.slice(0, MOBILE_HOME_RECENT_RECORD_LIMIT).map((row) => ({
     key: row.recordKey || row.id,
     layout: 'compact',
-    title: row.incidentType || 'Record',
+    title: row.exerciseTitle || row.incidentType || 'Record',
     subtitle: row.location || 'No location',
     status: (
       <>
@@ -74,7 +77,7 @@ const DrillMobileHome = ({
         <div className="small text-body-secondary text-nowrap">{formatMobileReportDate(row)}</div>
       </>
     ),
-    ariaLabel: `Open drill record ${row.incidentType || 'Record'} ${
+    ariaLabel: `Open drill record ${row.exerciseTitle || row.incidentType || 'Record'} ${
       row.location || 'No location'
     } summary`,
     onOpen: () => onOpenRecord?.(row),

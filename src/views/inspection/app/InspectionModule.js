@@ -43,6 +43,7 @@ import {
   getPendingSubmissionTypeKey,
 } from '../form/pendingSubmissionSummary'
 import { countFireExtinguisherSessionRetryQueue } from '../form/hooks/fireExtinguisherSessionRetryQueue'
+import { runInspectionSyncCoordinator } from '../domain/sync/inspectionSyncCoordinator'
 import useInspectionModuleFormRuntime from './useInspectionModuleFormRuntime'
 import useInspectionModuleRecordActions from './useInspectionModuleRecordActions'
 
@@ -67,6 +68,7 @@ const InspectionModule = () => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [downloadingId, setDownloadingId] = useState(null)
+  const [, setFireExtinguisherSessionRetryRevision] = useState(0)
 
   const reportBasePath = '/inspection'
   const reportTypeLabel = 'Inspection'
@@ -215,6 +217,7 @@ const InspectionModule = () => {
     prepareContinuationPrompt,
     recoverLocalDraft,
     requestReview,
+    resolveDraftConflict,
     retryDraftSync,
     saveDraft,
     commitDraftSnapshot,
@@ -308,6 +311,24 @@ const InspectionModule = () => {
   const fireExtinguisherSessionUid = String(
     fireExtinguisherDraft.inspectionSessionUid || sessionReviewForm?.inspectionSessionUid || '',
   ).trim()
+  const retryFireExtinguisherSessionSync = useCallback(async () => {
+    const cycle = await runInspectionSyncCoordinator({
+      userId: user?.id,
+      force: true,
+    })
+    const results = (cycle.feResults || []).filter(
+      (result) => !fireExtinguisherSessionUid || result.sessionUid === fireExtinguisherSessionUid,
+    )
+    setFireExtinguisherSessionRetryRevision((current) => current + 1)
+    const failedCount = results.filter((result) => result?.synced !== true).length
+    if (failedCount > 0) {
+      pushToast(
+        `${failedCount} fire extinguisher session update${failedCount === 1 ? '' : 's'} still could not sync.`,
+        { title: 'Sync incomplete', color: 'warning' },
+      )
+    }
+    return results
+  }, [fireExtinguisherSessionUid, pushToast, user?.id])
   const pendingSubmissionSummary = buildPendingSubmissionSummary({
     form: sessionReviewForm,
     draftSyncState,
@@ -458,6 +479,7 @@ const InspectionModule = () => {
         isFormReady,
         pushToast,
         requestReview,
+        resolveDraftConflict,
         retryDraftSync,
         saveDraft,
         commitDraftSnapshot,
@@ -591,6 +613,8 @@ const InspectionModule = () => {
         reviewMayQueue,
         reviewRecord,
         reviewWorkspace,
+        retryDraftSync,
+        retryFireExtinguisherSessionSync,
         saveDraft,
         sessionReviewForm,
         submit,

@@ -1,7 +1,7 @@
 import React from 'react'
 import { CAlert, CBadge, CButton, CRow } from '@coreui/react'
 import FormActionGroup from 'src/components/FormActionGroup'
-import { DetailField, SectionHeading } from 'src/components/report-workflow/ReportViewComponents'
+import { DetailField, ReportPhotoImage } from 'src/components/report-workflow/ReportViewComponents'
 
 const text = (value) => String(value || '').trim()
 
@@ -14,21 +14,28 @@ const getStatusBadge = (status, renderStatusBadge) => {
   return <CBadge color={color}>{label}</CBadge>
 }
 
-const ReviewSectionBlock = ({ title, children }) => (
+const ReviewSectionBlock = ({ title, children, onEdit }) => (
   <section className="inspection-review-section d-grid gap-3">
-    <div className="inspection-review-section__title">{title}</div>
+    <div className="d-flex justify-content-between align-items-center gap-2">
+      <div className="inspection-review-section__title">{title}</div>
+      {typeof onEdit === 'function' ? (
+        <CButton type="button" color="link" size="sm" className="p-0" onClick={onEdit}>
+          Edit
+        </CButton>
+      ) : null}
+    </div>
     {children}
   </section>
 )
 
-const ChronologyRows = ({ chronology }) => {
+const ChronologyRows = ({ chronology, onEdit }) => {
   const rows = (Array.isArray(chronology) ? chronology : []).filter((row) =>
     text(row?.time || row?.action),
   )
   if (rows.length === 0) return null
 
   return (
-    <ReviewSectionBlock title="Chronology">
+    <ReviewSectionBlock title="Chronology" onEdit={onEdit}>
       <div className="rounded-3 border overflow-hidden">
         {rows.map((row, index) => (
           <div
@@ -46,12 +53,15 @@ const ChronologyRows = ({ chronology }) => {
   )
 }
 
-const RespondingTeamRows = ({ respondingTeam }) => {
+const RespondingTeamRows = ({ respondingTeam, isDrill = false, onEdit }) => {
   if (!respondingTeam) return null
   const attendance = Array.isArray(respondingTeam.attendance) ? respondingTeam.attendance : []
+  if (!text(respondingTeam.name) && !text(respondingTeam.shift) && attendance.length === 0) {
+    return null
+  }
 
   return (
-    <ReviewSectionBlock title="Responding Team">
+    <ReviewSectionBlock title={isDrill ? 'Exercise Personnel' : 'Responding Team'} onEdit={onEdit}>
       <CRow className="g-3">
         <DetailField label="Team">{respondingTeam.name || '--'}</DetailField>
         {respondingTeam.shift ? (
@@ -68,6 +78,7 @@ const RespondingTeamRows = ({ respondingTeam }) => {
             >
               {member.name}
               {member.role ? ` - ${member.role}` : ''}
+              {member.exerciseRole ? ` (${member.exerciseRole})` : ''}
             </CBadge>
           ))}
         </div>
@@ -76,7 +87,7 @@ const RespondingTeamRows = ({ respondingTeam }) => {
   )
 }
 
-const AnalysisRows = ({ analysis, photos = [] }) => {
+const AnalysisRows = ({ analysis, photos = [], isDrill = false, onEdit }) => {
   if (!analysis && photos.length === 0) return null
   const strengths = (Array.isArray(analysis?.strengths) ? analysis.strengths : []).filter(Boolean)
   const resources = (
@@ -94,7 +105,10 @@ const AnalysisRows = ({ analysis, photos = [] }) => {
   }
 
   return (
-    <ReviewSectionBlock title="Post-Incident Analysis">
+    <ReviewSectionBlock
+      title={isDrill ? 'Post-Exercise Analysis' : 'Post-Incident Analysis'}
+      onEdit={onEdit}
+    >
       {strengths.length > 0 ? (
         <div>
           <div className="small text-body-secondary mb-1">Strengths</div>
@@ -143,9 +157,9 @@ const AnalysisRows = ({ analysis, photos = [] }) => {
           >
             {photoRows.map((photo, index) => (
               <div key={photo.id || index} className="rounded-3 border overflow-hidden">
-                <img
-                  src={photo.url}
-                  alt={photo.fileName || 'Report photo'}
+                <ReportPhotoImage
+                  photo={photo}
+                  alt={photo.description || photo.fileName || 'Report photo'}
                   style={{ width: '100%', height: 120, objectFit: 'cover' }}
                 />
                 {photo.description ? (
@@ -171,6 +185,7 @@ const ReportReviewSection = ({
   conditionLabel = 'Weather',
   detailsLabel = 'Incident Title',
   summaryLabel = 'Summary',
+  reportKind = '',
 }) => {
   if (!selectedRecord) {
     return (
@@ -179,7 +194,9 @@ const ReportReviewSection = ({
   }
 
   const r = selectedRecord
-  const reportTitle = text(r.incidentType) || text(r.displayId) || 'Report'
+  const isDrill = reportKind === 'drill' || text(r.reportType).toLowerCase() === 'drill'
+  const reportTitle =
+    (isDrill ? text(r.exerciseTitle) : '') || text(r.incidentType) || text(r.displayId) || 'Report'
   const statusBadge = getStatusBadge('Ready to submit', renderStatusBadge)
   const dateTime =
     typeof formatDateTime === 'function'
@@ -191,12 +208,35 @@ const ReportReviewSection = ({
   const isUpdateMode = /update/i.test(submitLabel)
   const mobileSubmitLabel =
     submitLabel.length > 18 ? (isUpdateMode ? 'Update' : 'Submit') : submitLabel
+  const activeSubmitLabel = isSubmittingReview
+    ? isUpdateMode
+      ? 'Updating...'
+      : 'Submitting...'
+    : submitLabel
+  const activeMobileSubmitLabel = isSubmittingReview
+    ? isUpdateMode
+      ? 'Updating...'
+      : 'Submitting...'
+    : mobileSubmitLabel
 
   const editButton = (
     <CButton color="light" onClick={() => reviewActions?.onBackToEdit?.()}>
       Edit
     </CButton>
   )
+  const editSection = (section) => reviewActions?.onBackToEdit?.(section)
+  const exerciseCategories = (Array.isArray(r.exerciseCategories) ? r.exerciseCategories : [])
+    .map(text)
+    .filter(Boolean)
+  const objectives = (Array.isArray(r.exerciseObjectives) ? r.exerciseObjectives : [])
+    .map((row) => (typeof row === 'string' ? text(row) : text(row?.text)))
+    .filter(Boolean)
+  const erpReferences = (Array.isArray(r.erpReferences) ? r.erpReferences : []).filter(
+    (row) => text(row?.annexNumber) || text(row?.title),
+  )
+  const timeline = Array.isArray(r.timeline) ? r.timeline : []
+  const reviewed = [...timeline].reverse().find((row) => /review/i.test(text(row?.action)))
+  const approved = [...timeline].reverse().find((row) => /approv/i.test(text(row?.action)))
 
   const renderReviewActions = (className = '', isMobileSticky = false) => {
     if (isMobileSticky) {
@@ -215,7 +255,7 @@ const ReportReviewSection = ({
             disabled={isSubmittingReview}
             onClick={() => reviewActions?.onConfirm?.()}
           >
-            {mobileSubmitLabel}
+            {activeMobileSubmitLabel}
           </CButton>
         </FormActionGroup>
       )
@@ -234,7 +274,7 @@ const ReportReviewSection = ({
           disabled={isSubmittingReview}
           onClick={() => reviewActions?.onConfirm?.()}
         >
-          {submitLabel}
+          {activeSubmitLabel}
         </CButton>
       </div>
     )
@@ -252,7 +292,10 @@ const ReportReviewSection = ({
         <div className="inspection-review-hero__status">{statusBadge}</div>
       </div>
 
-      <ReviewSectionBlock title="Report Details">
+      <ReviewSectionBlock
+        title="Report Details"
+        onEdit={isDrill ? () => editSection('setup') : null}
+      >
         <CRow className="g-3">
           <DetailField label={typeLabel} xs={12} md={6}>
             {r.incidentType || '--'}
@@ -268,11 +311,30 @@ const ReportReviewSection = ({
           <DetailField label="Location" xs={12} md={6}>
             {r.location || '--'}
           </DetailField>
+          {isDrill && exerciseCategories.length ? (
+            <DetailField label="Exercise Categories" xs={12} md={6}>
+              {exerciseCategories.join(', ')}
+            </DetailField>
+          ) : null}
+          {isDrill && r.reportIssuanceDate ? (
+            <DetailField label="Report Issuance Date" xs={12} md={6}>
+              {r.reportIssuanceDate}
+            </DetailField>
+          ) : null}
         </CRow>
       </ReviewSectionBlock>
 
       {detailsText || summaryText ? (
-        <ReviewSectionBlock title="Summary">
+        <ReviewSectionBlock
+          title={isDrill ? 'Exercise Details' : 'Summary'}
+          onEdit={isDrill ? () => editSection('details') : null}
+        >
+          {isDrill && r.exerciseTitle ? (
+            <div>
+              <div className="small text-body-secondary">Exercise Title</div>
+              <div className="fw-semibold">{r.exerciseTitle}</div>
+            </div>
+          ) : null}
           {detailsText ? (
             <div>
               <div className="small text-body-secondary">{detailsLabel}</div>
@@ -283,6 +345,28 @@ const ReportReviewSection = ({
             <div>
               <div className="small text-body-secondary">{summaryLabel}</div>
               <div style={{ whiteSpace: 'pre-wrap' }}>{summaryText}</div>
+            </div>
+          ) : null}
+          {objectives.length ? (
+            <div>
+              <div className="small text-body-secondary">Exercise Objectives</div>
+              <ul className="mb-0 ps-4">
+                {objectives.map((objective, index) => (
+                  <li key={`${objective}-${index}`}>{objective}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {erpReferences.length ? (
+            <div>
+              <div className="small text-body-secondary">ERP / Annex References</div>
+              <ul className="mb-0 ps-4">
+                {erpReferences.map((reference, index) => (
+                  <li key={`${reference.annexNumber || 'reference'}-${index}`}>
+                    {[reference.annexNumber, reference.title].filter(Boolean).join(' - ')}
+                  </li>
+                ))}
+              </ul>
             </div>
           ) : null}
         </ReviewSectionBlock>
@@ -309,12 +393,37 @@ const ReportReviewSection = ({
         </ReviewSectionBlock>
       ) : null}
 
-      <RespondingTeamRows respondingTeam={r.respondingTeam} />
-      <ChronologyRows chronology={r.chronology} />
+      <RespondingTeamRows
+        respondingTeam={r.respondingTeam}
+        isDrill={isDrill}
+        onEdit={isDrill ? () => editSection('personnel') : null}
+      />
+      <ChronologyRows
+        chronology={r.chronology}
+        onEdit={isDrill ? () => editSection('chronology') : null}
+      />
       <AnalysisRows
         analysis={r.postIncidentAnalysis}
         photos={Array.isArray(r.photos) ? r.photos : []}
+        isDrill={isDrill}
+        onEdit={isDrill ? () => editSection('analysis') : null}
       />
+
+      {isDrill ? (
+        <ReviewSectionBlock title="Workflow Sign-Off">
+          <CRow className="g-3">
+            <DetailField label="Prepared By" xs={12} md={4}>
+              {r.submittedBy || '--'}
+            </DetailField>
+            <DetailField label="Station Commander Review" xs={12} md={4}>
+              {reviewed?.by || 'Pending'}
+            </DetailField>
+            <DetailField label="VMM Review" xs={12} md={4}>
+              {approved?.by || 'Pending'}
+            </DetailField>
+          </CRow>
+        </ReviewSectionBlock>
+      ) : null}
 
       {renderReviewActions('justify-content-end d-none d-md-flex')}
       {renderReviewActions('inspection-review-inline-actions d-md-none', true)}

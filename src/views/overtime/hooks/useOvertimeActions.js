@@ -5,25 +5,15 @@ import {
   deleteMyOvertimeApiFirst,
   saveMyOvertimeDraftApiFirst,
   submitMyOvertimeApiFirst,
+  uploadMyOvertimeAttachmentApiFirst,
 } from 'src/services/overtimeApi'
-import {
-  createApprovalHistoryEntry,
-  formatDuration,
-  getDisplayOvertimeId,
-  normalizeOvertimeType,
-} from '../utils'
+import { formatDuration, getDisplayOvertimeId, normalizeOvertimeType } from '../utils'
 import { normalizeOvertimeDraftPayload, buildFormSnapshot } from '../domain/overtimeFormDomain'
-import {
-  normalizeRoleList,
-  OT_INELIGIBLE_MESSAGE,
-  resolveWorkflowMetadataForSubmit,
-} from '../domain/overtimeWorkflowDomain'
+import { OT_INELIGIBLE_MESSAGE } from '../domain/overtimeWorkflowDomain'
+import { validateOvertimeSubmission } from '../domain/overtimeValidation'
 
 const useOvertimeActions = ({
   userId,
-  userRoles,
-  actorName,
-  overtimePolicy,
   overtimeRecords,
   setOvertimeRecords,
   setOvertimeDraft,
@@ -54,8 +44,52 @@ const useOvertimeActions = ({
   const [isDraftSaving, setIsDraftSaving] = useState(false)
   const [isFormClearing, setIsFormClearing] = useState(false)
   const [isSubmittingClaim, setIsSubmittingClaim] = useState(false)
+  const [isAttachmentUploading, setIsAttachmentUploading] = useState(false)
   const isFormActionBusy =
-    isDraftSaving || isFormClearing || isSubmittingClaim || isOvertimeTypeDeriving
+    isDraftSaving ||
+    isFormClearing ||
+    isSubmittingClaim ||
+    isAttachmentUploading ||
+    isOvertimeTypeDeriving
+
+  const handleAttachmentUpload = async (file) => {
+    if (!file || isFormActionBusy) return
+    const allowed =
+      /^(application\/pdf|image\/(jpeg|png)|application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.document|application\/msword)$/.test(
+        file.type,
+      )
+    if (!allowed || file.size > 10 * 1024 * 1024) {
+      form.setFieldErrors((prev) => ({
+        ...prev,
+        attachment: 'Attach a PDF, JPG, PNG, DOC, or DOCX file up to 10 MB.',
+      }))
+      return
+    }
+    setIsAttachmentUploading(true)
+    try {
+      const result = await uploadMyOvertimeAttachmentApiFirst(file)
+      if (!result?.ok || !result?.data) {
+        pushToast('Unable to upload overtime evidence. Please retry.', {
+          title: 'Upload failed',
+          color: 'danger',
+        })
+        return
+      }
+      form.setAttachment({
+        id: result.data.id,
+        originalName: result.data.original_name || result.data.originalName || file.name,
+        mimeType: result.data.mime_type || result.data.mimeType || file.type,
+        size: result.data.size || file.size,
+      })
+      form.setFieldErrors((prev) => {
+        const next = { ...prev }
+        delete next.attachment
+        return next
+      })
+    } finally {
+      setIsAttachmentUploading(false)
+    }
+  }
 
   const cancelPreviewRecord = useMemo(
     () =>
@@ -90,56 +124,19 @@ const useOvertimeActions = ({
   }
 
   const validateSubmission = () => {
-    const nextErrors = {}
-
-    if (
-      (!isResumeEditMode && !overtimeTypeDerivedMode && !form.overtimeTypeConfirmed) ||
-      !form.overtimeType
-    ) {
-      nextErrors.overtimeType = 'Overtime type is required.'
-      form.setFieldErrors(nextErrors)
-      pushToast('Choose overtime type before submitting.', {
-        title: 'Validation error',
-        color: 'danger',
-      })
-      return false
-    }
-
-    if (!form.claimDate || !form.startTime || !form.endTime || !form.reason.trim()) {
-      if (!form.claimDate) nextErrors.claimDate = 'Date is required.'
-      if (!form.startTime) nextErrors.startTime = 'Start time is required.'
-      if (!form.endTime) nextErrors.endTime = 'End time is required.'
-      if (!form.reason.trim()) nextErrors.reason = 'Reason is required.'
-      form.setFieldErrors(nextErrors)
-      pushToast('Date, start time, end time, and reason are required before submitting.', {
-        title: 'Validation error',
-        color: 'danger',
-      })
-      return false
-    }
-
-    if (form.durationMinutes <= 0) {
-      nextErrors.window = 'Overtime duration must be more than 0 minutes.'
-      form.setFieldErrors(nextErrors)
-      pushToast('Overtime duration must be more than 0 minutes.', {
-        title: 'Validation error',
-        color: 'danger',
-      })
-      return false
-    }
-
-    if (form.reason.trim().length < 10) {
-      nextErrors.reason = 'Provide at least 10 characters for reason/work done.'
-      form.setFieldErrors(nextErrors)
-      pushToast('Reason must be at least 10 characters for audit clarity.', {
-        title: 'Validation error',
-        color: 'danger',
-      })
-      return false
-    }
-
-    form.setFieldErrors({})
-    return true
+    const existing = hasPersistedEditTarget
+      ? overtimeRecords.find((record) => String(record.id) === String(editingRecordId))
+      : null
+    const { errors } = validateOvertimeSubmission({
+      form,
+      records: overtimeRecords,
+      excludeServerId: existing?.serverId,
+      requireTypeConfirmation: !isResumeEditMode && !overtimeTypeDerivedMode,
+    })
+    form.setFieldErrors(errors)
+    if (Object.keys(errors).length === 0) return true
+    pushToast(Object.values(errors)[0], { title: 'Validation error', color: 'danger' })
+    return false
   }
 
   const buildSubmitPreview = () => ({
@@ -167,30 +164,9 @@ const useOvertimeActions = ({
 
     setIsSubmittingClaim(true)
     try {
-      const now = new Date()
       const existingRecord = submitPreview.editingRecordId
         ? overtimeRecords.find((record) => record.id === submitPreview.editingRecordId)
         : null
-      const appliedAt = existingRecord?.appliedAt || now.toISOString()
-      const applicantRoles = normalizeRoleList(
-        existingRecord?.applicantRoles?.length > 0 ? existingRecord.applicantRoles : userRoles,
-      )
-      const workflowMetadata = resolveWorkflowMetadataForSubmit(
-        existingRecord,
-        applicantRoles,
-        overtimePolicy,
-      )
-      const submitHistoryEntry = createApprovalHistoryEntry(
-        existingRecord ? 'Resubmitted' : 'Submitted',
-        actorName,
-        existingRecord ? 'Overtime claim resubmitted.' : 'Overtime claim submitted.',
-        now,
-        { byUserId: String(userId || '').trim() },
-      )
-      const baseApprovalHistory = Array.isArray(existingRecord?.approvalHistory)
-        ? existingRecord.approvalHistory
-        : []
-
       const nextRecord = {
         ...(existingRecord || {}),
         id: existingRecord?.id || '',
@@ -203,13 +179,8 @@ const useOvertimeActions = ({
         durationLabel: formatDuration(submitPreview.durationMinutes),
         reason: submitPreview.reason,
         status: 'Pending',
-        appliedAt,
-        submittedBy: existingRecord?.submittedBy || actorName,
-        workflowSnapshot: workflowMetadata.workflowSnapshot,
-        workflowStage: workflowMetadata.workflowStage,
-        nextActionRole: workflowMetadata.nextActionRole,
-        applicantRoles: workflowMetadata.applicantRoles,
-        approvalHistory: [...baseApprovalHistory, submitHistoryEntry].slice(-20),
+        attachmentId: form.attachmentId || null,
+        version: existingRecord?.version || null,
       }
 
       let persistedRecord = nextRecord
@@ -229,6 +200,16 @@ const useOvertimeActions = ({
       } else if (!submitResult?.ok) {
         if (submitResult?.isIneligible) {
           pushToast(OT_INELIGIBLE_MESSAGE, { title: 'Overtime not applicable', color: 'warning' })
+        } else if (submitResult?.code === 'OT_VERSION_CONFLICT') {
+          pushToast('This overtime claim changed. Return to records and open the latest version.', {
+            title: 'Claim changed',
+            color: 'warning',
+          })
+        } else if (submitResult?.code === 'OT_WINDOW_CONFLICT') {
+          pushToast(submitResult.message || 'This overtime window overlaps an active claim.', {
+            title: 'Time conflict',
+            color: 'warning',
+          })
         } else {
           pushToast('Unable to submit overtime. API request failed.', {
             title: 'Submit failed',
@@ -285,6 +266,14 @@ const useOvertimeActions = ({
         endTime: form.endTime,
         reason: form.reason,
         sourceRecordId: hasPersistedEditTarget ? String(editingRecordId || '').trim() : '',
+        sourceRecordServerId: hasPersistedEditTarget
+          ? String(
+              overtimeRecords.find((record) => String(record.id) === String(editingRecordId))
+                ?.serverId || '',
+            ).trim()
+          : '',
+        attachmentId: form.attachmentId || null,
+        attachment: form.attachment || null,
         savedAt: new Date().toISOString(),
       }
       const result = await saveMyOvertimeDraftApiFirst(userId, draftPayload)
@@ -312,6 +301,7 @@ const useOvertimeActions = ({
           startTime: form.startTime,
           endTime: form.endTime,
           reason: form.reason,
+          attachmentId: form.attachmentId,
         }),
       )
       navigate('/overtime')
@@ -426,12 +416,20 @@ const useOvertimeActions = ({
       })
       return
     }
-    const apiResult = await cancelMyOvertimeApiFirst(cancelPreviewRecord.serverId)
+    const apiResult = await cancelMyOvertimeApiFirst(
+      cancelPreviewRecord.serverId,
+      cancelPreviewRecord.version,
+    )
     if (!apiResult?.ok || !apiResult?.data) {
-      pushToast('Unable to cancel overtime. API request failed.', {
-        title: 'Cancel failed',
-        color: 'danger',
-      })
+      pushToast(
+        apiResult?.code === 'OT_VERSION_CONFLICT'
+          ? 'This overtime claim changed. Refresh records before cancelling it.'
+          : 'Unable to cancel overtime. API request failed.',
+        {
+          title: 'Cancel failed',
+          color: 'danger',
+        },
+      )
       return
     }
     const apiRow = { ...cancelPreviewRecord, ...apiResult.data }
@@ -496,12 +494,20 @@ const useOvertimeActions = ({
       })
       return
     }
-    const apiResult = await deleteMyOvertimeApiFirst(deletePreviewRecord.serverId)
+    const apiResult = await deleteMyOvertimeApiFirst(
+      deletePreviewRecord.serverId,
+      deletePreviewRecord.version,
+    )
     if (!apiResult?.ok) {
-      pushToast('Unable to delete overtime. API request failed.', {
-        title: 'Delete failed',
-        color: 'danger',
-      })
+      pushToast(
+        apiResult?.code === 'OT_VERSION_CONFLICT'
+          ? 'This overtime claim changed. Refresh records before deleting it.'
+          : 'Unable to delete overtime. API request failed.',
+        {
+          title: 'Delete failed',
+          color: 'danger',
+        },
+      )
       return
     }
     setOvertimeRecords((prev) => prev.filter((record) => record.id !== deletePreviewRecord.id))
@@ -530,6 +536,8 @@ const useOvertimeActions = ({
     isDraftSaving,
     isFormClearing,
     isSubmittingClaim,
+    isAttachmentUploading,
+    handleAttachmentUpload,
     cancelOvertime,
     confirmCancelOvertime,
     deleteOvertime,

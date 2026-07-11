@@ -2,6 +2,8 @@ import { defineConfig, devices } from '@playwright/test'
 
 export default defineConfig({
   testDir: './tests/e2e',
+  // Keep trace artifacts outside the Vite root so they cannot trigger HMR during browser tests.
+  outputDir: '../.playwright-output',
   timeout: 60_000,
   expect: {
     timeout: 10_000,

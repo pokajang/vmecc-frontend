@@ -1,84 +1,55 @@
-import { getFireExtinguisherAssetKey } from '../../domain/api/inspectionSessionApi'
-
-const STORAGE_KEY_PREFIX = 'inspection_fe_session_complete_retry_v1_'
+import {
+  completeInspectionSessionExtinguisher,
+  getFireExtinguisherAssetKey,
+  resetInspectionSessionExtinguisher,
+} from '../../domain/api/inspectionSessionApi'
+import { normalizeInspectionApiError } from '../../domain/api/inspectionApiError'
+import {
+  renewInspectionPayloadMediaLeases,
+  shouldRenewInspectionMediaLeases,
+} from '../../domain/media/inspectionMediaLease'
+import {
+  acknowledgeFireExtinguisherOperation,
+  createFireExtinguisherOperationId,
+  enqueueFireExtinguisherOperation,
+  enqueueFireExtinguisherOperationDurably,
+  getFireExtinguisherOperationRetryDelayMs,
+  listFireExtinguisherOperationSessionUids,
+  loadFireExtinguisherOperations,
+  rebaseFollowingFireExtinguisherOperations,
+  updateFireExtinguisherOperation,
+} from './fireExtinguisherOperationStore'
 
 const text = (value) => String(value || '').trim()
-
-const storageKey = ({ userId = '', sessionUid = '' } = {}) =>
-  `${STORAGE_KEY_PREFIX}${text(userId) || 'unknown'}_${text(sessionUid) || 'unknown'}`
-
-const storageKeyForUserPrefix = (userId = '') =>
-  `${STORAGE_KEY_PREFIX}${text(userId) || 'unknown'}_`
-
-const readRows = (key) => {
-  try {
-    const parsed = JSON.parse(globalThis.localStorage?.getItem(key) || '[]')
-    return Array.isArray(parsed) ? parsed : []
-  } catch {
-    return []
-  }
+const renewOperationMediaLeases = async (operation) => {
+  if (!shouldRenewInspectionMediaLeases(operation.leaseRenewedAt)) return
+  const renewed = await renewInspectionPayloadMediaLeases(operation.row, operation.operationId)
+  if (renewed > 0) operation.leaseRenewedAt = new Date().toISOString()
 }
 
-const writeRows = (key, rows) => {
-  try {
-    globalThis.localStorage?.setItem(key, JSON.stringify(Array.isArray(rows) ? rows : []))
-    return true
-  } catch {
-    return false
-  }
-}
+// Retained for compatibility with older callers. New saves use a unique operation ID.
+export const getFireExtinguisherSessionClientResultId = (sessionUid, assetKey) =>
+  `fe-session:${text(sessionUid).slice(-36)}:${text(assetKey).slice(0, 120)}`
 
-const normalizeQueueItem = (item = {}) => {
-  const row = item?.row && typeof item.row === 'object' ? item.row : null
-  const assetKey = text(item.assetKey || getFireExtinguisherAssetKey(row))
-  if (!row || !assetKey) return null
+export const createFireExtinguisherSessionOperationId = () => createFireExtinguisherOperationId()
 
-  return {
-    assetKey,
-    row,
-    options: item.options && typeof item.options === 'object' ? item.options : {},
-    attempts: Math.max(0, Number(item.attempts || 0) || 0),
-    lastError: text(item.lastError),
-    lastAttemptAt: text(item.lastAttemptAt),
-    createdAt: text(item.createdAt || new Date().toISOString()),
-    updatedAt: text(item.updatedAt || new Date().toISOString()),
-  }
-}
-
-export const isFireExtinguisherSessionRetryableError = (error) => {
-  const status = Number(error?.status || 0)
-  if (!status) return true
-  if ([400, 401, 403, 404, 409, 413, 419, 422].includes(status)) return false
-  return status >= 500
-}
+export const isFireExtinguisherSessionRetryableError = (error) =>
+  normalizeInspectionApiError(error).retryable
 
 export const loadFireExtinguisherSessionRetryQueue = ({ userId = '', sessionUid = '' } = {}) =>
-  readRows(storageKey({ userId, sessionUid })).map(normalizeQueueItem).filter(Boolean)
+  loadFireExtinguisherOperations({ userId, sessionUid })
 
 export const countFireExtinguisherSessionRetryQueue = ({ userId = '', sessionUid = '' } = {}) => {
   const normalizedSessionUid = text(sessionUid)
   if (normalizedSessionUid) {
-    return loadFireExtinguisherSessionRetryQueue({
-      userId,
-      sessionUid: normalizedSessionUid,
-    }).length
+    return loadFireExtinguisherOperations({ userId, sessionUid: normalizedSessionUid }).length
   }
 
-  const prefix = storageKeyForUserPrefix(userId)
-  const storage = globalThis.localStorage
-  if (!storage) return 0
-
-  let count = 0
-  try {
-    for (let index = 0; index < storage.length; index += 1) {
-      const key = storage.key(index)
-      if (!key || !key.startsWith(prefix)) continue
-      count += readRows(key).map(normalizeQueueItem).filter(Boolean).length
-    }
-  } catch {
-    return 0
-  }
-  return count
+  return listFireExtinguisherOperationSessionUids(userId).reduce(
+    (count, targetSessionUid) =>
+      count + loadFireExtinguisherOperations({ userId, sessionUid: targetSessionUid }).length,
+    0,
+  )
 }
 
 export const enqueueFireExtinguisherSessionRetry = ({
@@ -87,42 +58,183 @@ export const enqueueFireExtinguisherSessionRetry = ({
   row,
   options = {},
   error = null,
-} = {}) => {
-  const key = storageKey({ userId, sessionUid })
-  const assetKey = text(getFireExtinguisherAssetKey(row))
-  if (!assetKey) return null
-
-  const nowIso = new Date().toISOString()
-  const existing = loadFireExtinguisherSessionRetryQueue({ userId, sessionUid })
-  const previous = existing.find((item) => item.assetKey === assetKey)
-  const nextItem = normalizeQueueItem({
-    assetKey,
+} = {}) =>
+  enqueueFireExtinguisherOperation({
+    userId,
+    sessionUid,
+    operationId: options.operationId,
+    type: options.operationType === 'reset' ? 'reset' : 'complete',
     row,
-    options,
-    attempts: Number(previous?.attempts || 0) + 1,
-    lastError: text(error?.message || 'Session sync failed.'),
-    lastAttemptAt: nowIso,
-    createdAt: previous?.createdAt || nowIso,
-    updatedAt: nowIso,
+    baseVersion: options.baseVersion,
+    forceRecheck: options.forceRecheck === true,
+    state: options.state,
+    error,
   })
-  if (!nextItem) return null
 
-  const nextRows = [nextItem, ...existing.filter((item) => item.assetKey !== assetKey)]
-  return writeRows(key, nextRows) ? nextItem : null
-}
+export const persistFireExtinguisherSessionOperation = ({
+  userId = '',
+  sessionUid = '',
+  row,
+  options = {},
+} = {}) =>
+  enqueueFireExtinguisherOperationDurably({
+    userId,
+    sessionUid,
+    operationId: options.operationId,
+    type: options.operationType === 'reset' ? 'reset' : 'complete',
+    row,
+    baseVersion: options.baseVersion,
+    forceRecheck: options.forceRecheck === true,
+    state: options.state,
+  })
 
 export const removeFireExtinguisherSessionRetry = ({
   userId = '',
   sessionUid = '',
+  operationId = '',
   assetKey = '',
 } = {}) => {
-  const key = storageKey({ userId, sessionUid })
-  const normalizedAssetKey = text(assetKey)
-  if (!normalizedAssetKey) return false
-  return writeRows(
-    key,
-    loadFireExtinguisherSessionRetryQueue({ userId, sessionUid }).filter(
-      (item) => item.assetKey !== normalizedAssetKey,
-    ),
-  )
+  const normalizedOperationId = text(operationId)
+  if (normalizedOperationId) {
+    return acknowledgeFireExtinguisherOperation({
+      userId,
+      sessionUid,
+      operationId: normalizedOperationId,
+    })
+  }
+
+  // Compatibility path for legacy callers; remove only the oldest matching operation.
+  const oldest = loadFireExtinguisherOperations({ userId, sessionUid })
+    .filter((operation) => operation.assetKey === text(assetKey))
+    .sort((left, right) => String(left.createdAt).localeCompare(String(right.createdAt)))[0]
+  return oldest
+    ? acknowledgeFireExtinguisherOperation({ userId, sessionUid, operationId: oldest.operationId })
+    : false
 }
+
+const syncOperation = async (operation) => {
+  const request = {
+    sessionUid: operation.sessionUid,
+    row: operation.row,
+    operationId: operation.operationId,
+    baseVersion: operation.baseVersion,
+  }
+  return operation.type === 'reset'
+    ? resetInspectionSessionExtinguisher(request)
+    : completeInspectionSessionExtinguisher({
+        ...request,
+        clientResultId: operation.operationId,
+        forceRecheck: operation.forceRecheck,
+      })
+}
+
+export const retryFireExtinguisherSessionQueue = async ({
+  userId = '',
+  sessionUid = '',
+  force = false,
+} = {}) => {
+  if (!text(userId)) return []
+  const sessionUids = text(sessionUid)
+    ? [text(sessionUid)]
+    : listFireExtinguisherOperationSessionUids(userId)
+  const results = []
+
+  for (const targetSessionUid of sessionUids) {
+    const blockedAssetKeys = new Set()
+    const queue = loadFireExtinguisherOperations({ userId, sessionUid: targetSessionUid }).sort(
+      (left, right) => String(left.createdAt).localeCompare(String(right.createdAt)),
+    )
+    for (const operation of queue) {
+      if (blockedAssetKeys.has(operation.assetKey)) continue
+      if (
+        !force &&
+        operation.nextRetryAt &&
+        new Date(operation.nextRetryAt).getTime() > Date.now()
+      ) {
+        continue
+      }
+      if (operation.state === 'conflict') {
+        blockedAssetKeys.add(operation.assetKey)
+        results.push({
+          assetKey: operation.assetKey,
+          operationId: operation.operationId,
+          sessionUid: targetSessionUid,
+          synced: false,
+          conflict: true,
+        })
+        continue
+      }
+
+      try {
+        await renewOperationMediaLeases(operation)
+        if (operation.leaseRenewedAt) {
+          updateFireExtinguisherOperation({
+            userId,
+            sessionUid: targetSessionUid,
+            operationId: operation.operationId,
+            patch: { leaseRenewedAt: operation.leaseRenewedAt },
+          })
+        }
+        const response = await syncOperation(operation)
+        if (operation.type === 'complete' && !response?.row) {
+          throw new Error('Fire extinguisher session sync returned no result.')
+        }
+        rebaseFollowingFireExtinguisherOperations({
+          userId,
+          sessionUid: targetSessionUid,
+          operationId: operation.operationId,
+          resultVersion: response?.row?.version,
+        })
+        acknowledgeFireExtinguisherOperation({
+          userId,
+          sessionUid: targetSessionUid,
+          operationId: operation.operationId,
+        })
+        results.push({
+          assetKey: operation.assetKey,
+          operationId: operation.operationId,
+          operationType: operation.type,
+          sessionUid: targetSessionUid,
+          synced: true,
+          replayed: response?.operation?.replayed === true,
+          row: response?.row || null,
+        })
+      } catch (error) {
+        const normalized = normalizeInspectionApiError(error)
+        const attempts = operation.attempts + 1
+        updateFireExtinguisherOperation({
+          userId,
+          sessionUid: targetSessionUid,
+          operationId: operation.operationId,
+          patch: {
+            state: normalized.retryable ? 'retryable' : 'conflict',
+            attempts,
+            nextRetryAt: normalized.retryable
+              ? new Date(
+                  Date.now() + getFireExtinguisherOperationRetryDelayMs(attempts),
+                ).toISOString()
+              : '',
+            lastAttemptAt: new Date().toISOString(),
+            lastError: normalized.message,
+            lastErrorCode: normalized.code,
+          },
+        })
+        results.push({
+          assetKey: operation.assetKey,
+          operationId: operation.operationId,
+          operationType: operation.type,
+          sessionUid: targetSessionUid,
+          synced: false,
+          conflict: normalized.conflict,
+          error,
+        })
+        // Later operations for the same asset depend on this operation's resulting version.
+        blockedAssetKeys.add(operation.assetKey)
+      }
+    }
+  }
+
+  return results
+}
+
+export { rebaseFollowingFireExtinguisherOperations }

@@ -764,6 +764,32 @@ describe('inspectionFormHelpers', () => {
     expect(submittedRecord.checklistVersion).toBe('inspection-checklist-v1')
   })
 
+  it('preserves authoritative FE session identity and submit permission through review', () => {
+    const reviewRecord = buildInspectionReviewRecord({
+      form: {
+        ...baseForm,
+        inspectionType: 'Fire Extinguisher Inspection',
+        inspectionSessionUid: 'inspection-session-v2-1',
+        inspectionSessionVersion: 4,
+        inspectionSessionStartedByUserId: 'starter-1',
+        inspectionSessionScopeVersion: 'v2',
+        inspectionSessionCanSubmit: false,
+        fireExtinguisherChecks: [],
+      },
+      user: { id: 'teammate-1', name: 'Teammate' },
+    })
+
+    expect(reviewRecord).toEqual(
+      expect.objectContaining({
+        inspectionSessionUid: 'inspection-session-v2-1',
+        inspectionSessionVersion: 4,
+        inspectionSessionStartedByUserId: 'starter-1',
+        inspectionSessionScopeVersion: 'v2',
+        inspectionSessionCanSubmit: false,
+      }),
+    )
+  })
+
   it('removes transient per-type draft maps from submitted inspection records', () => {
     const submittedRecord = buildInspectionSubmittedRecord(
       {

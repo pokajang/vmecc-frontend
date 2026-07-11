@@ -7,7 +7,7 @@ import useMediaQuery from 'src/hooks/useMediaQuery'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import { formatHighAngleGroupLabel } from 'src/views/inspection/types/high-angle/helpers'
 import { appendInspectionText } from '../inspectionFormHelpers'
-import { hasHighAngleInspectionData } from '../inspectionResetActions'
+import { buildStagedPhotoUploadOptions } from '../inspectionPhotoFlow'
 import {
   applyPhotoCaptionById,
   removePhotoById,
@@ -215,17 +215,21 @@ export const HighAngleInspectionChecks = ({
   const buildMobileDraftHandlers = useCallback(
     () => ({
       onUpdateCheck: (_row, patch) => patchMobileDraftRow(patch),
-      onRequestIssuePhotoUpload: (row) =>
-        onRequestIssuePhotoUpload?.(row, {
-          onAddPhotos: (_targetRow, photosKey, photos) =>
+      onRequestIssuePhotoUpload: (row, options = {}) =>
+        onRequestIssuePhotoUpload?.(
+          row,
+          buildStagedPhotoUploadOptions(options, (_targetRow, photosKey, photos) =>
             patchMobileDraftRow({ [photosKey]: photos }),
-        }),
-      onRequestPhotoUpload: (row, photosKey = 'additionalPhotos') =>
-        onRequestIssuePhotoUpload?.(row, {
-          photosKey,
-          onAddPhotos: (_targetRow, nextPhotosKey, photos) =>
-            patchMobileDraftRow({ [nextPhotosKey]: photos }),
-        }),
+          ),
+        ),
+      onRequestPhotoUpload: (row, photosKey = 'additionalPhotos', options = {}) =>
+        onRequestIssuePhotoUpload?.(
+          row,
+          buildStagedPhotoUploadOptions(
+            { ...options, photosKey },
+            (_targetRow, nextPhotosKey, photos) => patchMobileDraftRow({ [nextPhotosKey]: photos }),
+          ),
+        ),
       onRemovePhoto: (row, photoId, photosKey) => {
         const currentPhotos = Array.isArray(row?.[photosKey]) ? row[photosKey] : []
         patchMobileDraftRow({ [photosKey]: removePhotoById(currentPhotos, photoId) })
@@ -533,7 +537,7 @@ export const HighAngleInspectionChecks = ({
                 hitArea={32}
                 toggleAriaLabel={`High angle actions for ${mobileDetailRow.equipment || 'Equipment'}`}
                 items={[
-                  typeof onResetCheck === 'function' && hasHighAngleInspectionData(mobileDetailRow)
+                  typeof onResetCheck === 'function'
                     ? {
                         key: 'reset',
                         label: 'Reset check',

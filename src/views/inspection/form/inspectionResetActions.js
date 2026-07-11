@@ -38,6 +38,12 @@ export const getInspectionRowLabel = (row = {}, fallback = 'this row') => {
 export const buildFireExtinguisherResetPatch = (fields = []) => ({
   remarks: '',
   photos: [],
+  sessionResult: null,
+  sessionStatus: '',
+  sessionCheckedBy: '',
+  sessionCheckedAt: null,
+  sessionResultVersion: null,
+  sessionSyncPending: false,
   ...buildFieldResetPatch(fields),
 })
 

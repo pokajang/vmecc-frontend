@@ -145,6 +145,7 @@ export const buildReviewWorkflowActionItems = ({
   rejectLabel = 'Reject',
   onApprove,
   onReject,
+  onRequestCorrection,
   disableWhenHandlerMissing = false,
 }) => {
   const disabledReason = actionConfig?.requiredRole
@@ -171,6 +172,17 @@ export const buildReviewWorkflowActionItems = ({
         (disableWhenHandlerMissing && typeof onReject !== 'function'),
       disabledReason,
     },
+    ...(typeof onRequestCorrection === 'function'
+      ? [
+          {
+            key: `${actionKeyPrefix}-request-correction`,
+            label: 'Request correction',
+            onClick: () => onRequestCorrection(row),
+            disabled: Boolean(actionConfig?.correctionDisabled),
+            disabledReason,
+          },
+        ]
+      : []),
   ]
 }
 

@@ -1,6 +1,8 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { getInspectionFormValidationState, isInspectionFormValid } from './inspectionFormHelpers'
 import { focusFirstMissingInspectionField } from './inspectionFormFocus'
+import { buildInspectionValidationStatusMessage } from './inspectionValidationFeedback'
+import { buildInspectionReadiness } from './inspectionReadiness'
 
 const useInspectionReviewRequest = ({
   descriptionRef,
@@ -13,6 +15,12 @@ const useInspectionReviewRequest = ({
   hydraulicChecksRef,
   inspectedAtRef,
   inspectionTypeRef,
+  isPhotoProcessing = false,
+  draftSyncState = null,
+  pendingOperationCount = 0,
+  sessionState = 'active',
+  permanentFailureCount = 0,
+  prepareCurrentForm,
   onRequestReview,
   photosRef,
   pushToast,
@@ -23,6 +31,7 @@ const useInspectionReviewRequest = ({
   validateCurrentForm = true,
   validationState,
 }) => {
+  const reviewRequestLockRef = useRef(false)
   const focusFieldRefs = useMemo(
     () => ({
       inspectionType: inspectionTypeRef,
@@ -70,42 +79,77 @@ const useInspectionReviewRequest = ({
     ],
   )
 
-  const requestReview = () => {
-    const currentForm = getLatestForm()
-    if (!validateCurrentForm) {
+  const requestReview = async () => {
+    if (reviewRequestLockRef.current) return
+    reviewRequestLockRef.current = true
+    try {
+      const initialForm = getLatestForm()
+      const currentForm =
+        typeof prepareCurrentForm === 'function'
+          ? await prepareCurrentForm(initialForm)
+          : initialForm
+      if (!currentForm) throw new Error('Unable to refresh the inspection session before review.')
+      if (!validateCurrentForm) {
+        setValidationState(null)
+        setFieldErrors({})
+        onRequestReview?.(currentForm)
+        return
+      }
+      const nextValidationState = getInspectionFormValidationState(currentForm)
+      const readiness = buildInspectionReadiness({
+        localValidationErrors: nextValidationState.missing,
+        mediaProcessingCount: isPhotoProcessing ? 1 : 0,
+        versionConflicts: draftSyncState?.status === 'conflict' ? 1 : 0,
+        sessionState,
+        permanentFailureCount,
+      })
+      if (!isInspectionFormValid(currentForm) || !readiness.isReadyToReview) {
+        setValidationState(nextValidationState)
+        setFieldErrors(nextValidationState.missing)
+        if (!isInspectionFormValid(currentForm)) {
+          focusFirstMissingInspectionField({
+            currentForm,
+            validation: nextValidationState,
+            fieldRefs: focusFieldRefs,
+          })
+        }
+        pushToast(readiness.blockers[0]?.message || 'Complete the inspection form before review.', {
+          title: 'Review blocked',
+          color: 'warning',
+        })
+        return
+      }
       setValidationState(null)
       setFieldErrors({})
       onRequestReview?.(currentForm)
-      return
-    }
-    const nextValidationState = getInspectionFormValidationState(currentForm)
-    if (!isInspectionFormValid(currentForm)) {
-      setValidationState(nextValidationState)
-      setFieldErrors(nextValidationState.missing)
-      focusFirstMissingInspectionField({
-        currentForm,
-        validation: nextValidationState,
-        fieldRefs: focusFieldRefs,
-      })
-      pushToast('Complete the inspection form before review.', {
-        title: 'Incomplete form',
+    } catch (error) {
+      pushToast(error?.message || 'Unable to refresh the inspection session before review.', {
+        title: 'Review blocked',
         color: 'warning',
       })
-      return
+    } finally {
+      reviewRequestLockRef.current = false
     }
-    setValidationState(null)
-    setFieldErrors({})
-    onRequestReview?.(currentForm)
   }
 
-  const validationStatusMessage =
-    validationState?.errorCount > 0
-      ? `${validationState.errorCount} item${
-          validationState.errorCount === 1 ? '' : 's'
-        } need attention before review.`
-      : ''
+  const readiness = buildInspectionReadiness({
+    localValidationErrors: validationState?.missing || {},
+    mediaProcessingCount: isPhotoProcessing ? 1 : 0,
+    pendingOperationCount,
+    retryableFailureCount: draftSyncState?.status === 'failed' ? 1 : 0,
+    versionConflicts: draftSyncState?.status === 'conflict' ? 1 : 0,
+    sessionState,
+    permanentFailureCount,
+  })
+
+  const validationStatusMessage = isPhotoProcessing
+    ? 'Wait for the current photo to finish before review.'
+    : draftSyncState?.status === 'conflict'
+      ? 'Resolve the saved draft conflict before review.'
+      : buildInspectionValidationStatusMessage(validationState)
 
   return {
+    readiness,
     requestReview,
     validationStatusMessage,
   }

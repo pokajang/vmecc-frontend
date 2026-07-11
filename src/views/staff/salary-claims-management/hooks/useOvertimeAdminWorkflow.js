@@ -68,6 +68,7 @@ const useOvertimeAdminWorkflow = ({
         resolveOvertimeApprovalRule,
       )
       const requiredRole = normalizeRoleValue(workflowState.nextActionRole)
+      const serverActions = row?.permittedActions
       const canAct = canActorPerformWorkflowAction({
         status: row?.status,
         nextActionRole: requiredRole,
@@ -76,8 +77,11 @@ const useOvertimeAdminWorkflow = ({
       })
       return {
         approveLabel: getOvertimeApproveActionLabelForStage(workflowState.workflowStage),
-        approveDisabled: !canAct,
-        rejectDisabled: !canAct,
+        approveDisabled: serverActions
+          ? !(serverActions.review || serverActions.recommend || serverActions.approve)
+          : !canAct,
+        rejectDisabled: serverActions ? !serverActions.reject : !canAct,
+        correctionDisabled: serverActions ? !serverActions.request_correction : !canAct,
         requiredRole,
         workflowState,
         applicantRoles,
@@ -99,9 +103,12 @@ const useOvertimeAdminWorkflow = ({
       if (!row?.id) return
       const actionConfig = getOvertimeReviewActionConfig(row)
       const isRejectAttempt = sourceAction === 'reject'
+      const isCorrectionAttempt = sourceAction === 'request_correction'
       const isDisabled = isRejectAttempt
         ? actionConfig?.rejectDisabled
-        : actionConfig?.approveDisabled
+        : isCorrectionAttempt
+          ? actionConfig?.correctionDisabled
+          : actionConfig?.approveDisabled
       if (isDisabled) {
         const blockedReason = getWorkflowActionBlockedReason({
           status: row?.status,
@@ -130,6 +137,8 @@ const useOvertimeAdminWorkflow = ({
     return getOvertimeReviewActionConfig(overtimeWorkflowModalState.record)
   }, [getOvertimeReviewActionConfig, overtimeWorkflowModalState.record])
   const isRejectOvertimeWorkflowModal = overtimeWorkflowModalState.sourceAction === 'reject'
+  const isCorrectionOvertimeWorkflowModal =
+    overtimeWorkflowModalState.sourceAction === 'request_correction'
 
   const runOvertimeWorkflowAction = useCallback(
     async (
@@ -138,10 +147,11 @@ const useOvertimeAdminWorkflow = ({
       { refreshAfter = true, showSuccessToast = true, showFailureToast = true } = {},
     ) => {
       if (!row?.id) return false
-      const normalizedDecision = decision === 'reject' ? 'reject' : 'approve'
+      const normalizedDecision =
+        decision === 'reject' || decision === 'request_correction' ? decision : 'approve'
       const normalizedRemarks = String(remarks || '').trim()
-      if (normalizedDecision === 'reject' && !normalizedRemarks) {
-        pushToast('Please provide remarks when rejecting.', {
+      if (['reject', 'request_correction'].includes(normalizedDecision) && !normalizedRemarks) {
+        pushToast('Please provide remarks for this action.', {
           title: 'Remarks required',
           color: 'warning',
         })
@@ -169,13 +179,21 @@ const useOvertimeAdminWorkflow = ({
       }
 
       const requiredRole = normalizeRoleValue(workflowState.nextActionRole)
+      const serverActions = row?.permittedActions
       const canAct = canActorPerformWorkflowAction({
         status: row?.status,
         nextActionRole: requiredRole,
         actorRoles: normalizedUserRoles,
         isSystemAdmin: isSystemAdmin,
       })
-      if (!canAct) {
+      const serverPermitsAction =
+        !serverActions ||
+        (normalizedDecision === 'reject'
+          ? serverActions.reject
+          : normalizedDecision === 'request_correction'
+            ? serverActions.request_correction
+            : serverActions.review || serverActions.recommend || serverActions.approve)
+      if (!canAct || !serverPermitsAction) {
         pushToast(
           requiredRole
             ? `This stage requires ${requiredRole} role.`
@@ -194,7 +212,10 @@ const useOvertimeAdminWorkflow = ({
       let historyAction = ''
       let defaultHistoryRemarks = ''
 
-      if (normalizedDecision === 'reject') {
+      if (normalizedDecision === 'request_correction') {
+        historyAction = 'Correction requested'
+        defaultHistoryRemarks = 'Applicant correction requested.'
+      } else if (normalizedDecision === 'reject') {
         nextStatus = 'Rejected'
         nextWorkflowStage = 'done'
         nextActionRole = null
@@ -234,8 +255,8 @@ const useOvertimeAdminWorkflow = ({
       }
 
       const apiDecision =
-        normalizedDecision === 'reject'
-          ? 'reject'
+        normalizedDecision === 'reject' || normalizedDecision === 'request_correction'
+          ? normalizedDecision
           : workflowState.workflowStage === 'review'
             ? 'review'
             : workflowState.workflowStage === 'recommend'
@@ -254,6 +275,9 @@ const useOvertimeAdminWorkflow = ({
         historyRemarks,
       )
       if (!apiResult?.ok || !apiResult?.data) {
+        if (apiResult?.code === 'OT_VERSION_CONFLICT') {
+          await hydrateOvertime()
+        }
         const parsed = parseWorkflowTransitionError(
           apiResult?.error,
           'Unable to process overtime workflow action.',
@@ -264,7 +288,10 @@ const useOvertimeAdminWorkflow = ({
             color: 'danger',
           })
         }
-        if (normalizedDecision === 'reject' && parsed.fieldErrors?.remarks) {
+        if (
+          ['reject', 'request_correction'].includes(normalizedDecision) &&
+          parsed.fieldErrors?.remarks
+        ) {
           setOvertimeWorkflowRejectError(parsed.fieldErrors.remarks)
         }
         return false
@@ -276,13 +303,19 @@ const useOvertimeAdminWorkflow = ({
       const toastTitle =
         normalizedDecision === 'reject'
           ? 'Overtime rejected'
-          : apiDecision === 'approve'
-            ? 'Overtime approved'
-            : apiDecision === 'recommend'
-              ? 'Overtime recommended'
-              : 'Overtime reviewed'
+          : normalizedDecision === 'request_correction'
+            ? 'Correction requested'
+            : apiDecision === 'approve'
+              ? 'Overtime approved'
+              : apiDecision === 'recommend'
+                ? 'Overtime recommended'
+                : 'Overtime reviewed'
       const toastColor =
-        normalizedDecision === 'reject' ? 'warning' : apiDecision === 'approve' ? 'success' : 'info'
+        normalizedDecision === 'reject' || normalizedDecision === 'request_correction'
+          ? 'warning'
+          : apiDecision === 'approve'
+            ? 'success'
+            : 'info'
       if (showSuccessToast) {
         pushToast(`${historyAction} for ${displayOvertimeId}.`, {
           title: toastTitle,
@@ -311,6 +344,13 @@ const useOvertimeAdminWorkflow = ({
   const rejectOvertime = useCallback(
     (row) => {
       openOvertimeActionModal(row, 'reject')
+    },
+    [openOvertimeActionModal],
+  )
+
+  const requestOvertimeCorrection = useCallback(
+    (row) => {
+      openOvertimeActionModal(row, 'request_correction')
     },
     [openOvertimeActionModal],
   )
@@ -380,9 +420,7 @@ const useOvertimeAdminWorkflow = ({
         remarks: overtimeWorkflowRemarks,
         declarationChecked: overtimeWorkflowDeclarationChecked,
       })
-      if (succeeded) {
-        closeOvertimeWorkflowModal()
-      }
+      if (succeeded) closeOvertimeWorkflowModal()
     } finally {
       setIsSubmitting(false)
     }
@@ -395,13 +433,43 @@ const useOvertimeAdminWorkflow = ({
     runOvertimeWorkflowAction,
   ])
 
+  const submitOvertimeWorkflowCorrection = useCallback(async () => {
+    if (isSubmitting) return
+    if (!String(overtimeWorkflowRemarks || '').trim()) {
+      setOvertimeWorkflowRejectError('Please provide remarks for the applicant.')
+      return
+    }
+    const targetRecord = overtimeWorkflowModalState.record
+    if (!targetRecord) return
+    setIsSubmitting(true)
+    try {
+      const succeeded = await runOvertimeWorkflowAction(targetRecord, {
+        decision: 'request_correction',
+        remarks: overtimeWorkflowRemarks,
+      })
+      if (succeeded) closeOvertimeWorkflowModal()
+    } finally {
+      setIsSubmitting(false)
+    }
+  }, [
+    closeOvertimeWorkflowModal,
+    isSubmitting,
+    overtimeWorkflowModalState.record,
+    overtimeWorkflowRemarks,
+    runOvertimeWorkflowAction,
+  ])
+
   const overtimeWorkflowModalActionLabel = isRejectOvertimeWorkflowModal
     ? 'Reject'
-    : overtimeWorkflowModalActionConfig?.approveLabel || 'Approve'
+    : isCorrectionOvertimeWorkflowModal
+      ? 'Request correction'
+      : overtimeWorkflowModalActionConfig?.approveLabel || 'Approve'
   const overtimeWorkflowModalActionDisabled = isRejectOvertimeWorkflowModal
     ? Boolean(overtimeWorkflowModalActionConfig?.rejectDisabled)
-    : Boolean(overtimeWorkflowModalActionConfig?.approveDisabled) ||
-      !overtimeWorkflowDeclarationChecked
+    : isCorrectionOvertimeWorkflowModal
+      ? Boolean(overtimeWorkflowModalActionConfig?.correctionDisabled)
+      : Boolean(overtimeWorkflowModalActionConfig?.approveDisabled) ||
+        !overtimeWorkflowDeclarationChecked
 
   return {
     isSubmitting,
@@ -409,6 +477,7 @@ const useOvertimeAdminWorkflow = ({
     overtimeWorkflowModalState,
     overtimeWorkflowModalActionLabel,
     isRejectOvertimeWorkflowModal,
+    isCorrectionOvertimeWorkflowModal,
     overtimeWorkflowModalActionDisabled,
     overtimeWorkflowRemarks,
     overtimeWorkflowDeclarationChecked,
@@ -419,8 +488,10 @@ const useOvertimeAdminWorkflow = ({
     closeOvertimeWorkflowModal,
     submitOvertimeWorkflowApprove,
     submitOvertimeWorkflowReject,
+    submitOvertimeWorkflowCorrection,
     approveOvertime,
     rejectOvertime,
+    requestOvertimeCorrection,
     runOvertimeWorkflowAction,
   }
 }

@@ -3,6 +3,7 @@ import { CBadge, CButton, CCard, CCardBody, CCardHeader, CCol, CRow } from '@cor
 import ApprovalGates from 'src/components/ApprovalGates'
 import AuditHistoryPanel from 'src/components/AuditHistoryPanel'
 import BackButton from 'src/components/BackButton'
+import { buildApiUrl } from 'src/services/apiClient'
 
 const resolveLeaveGates = (record) => {
   const requireRecommendation = record?.workflowSnapshot?.requireRecommendation !== false
@@ -11,6 +12,14 @@ const resolveLeaveGates = (record) => {
     ...(requireRecommendation ? [{ action: 'Recommended', label: 'Recommended' }] : []),
     { action: 'Approved', label: 'Approved' },
   ]
+}
+
+const formatRosterImpact = (record) => {
+  const items = record?.rosterImpactSnapshot?.items
+  if (!Array.isArray(items) || items.length === 0) return '-'
+  return items
+    .map((item) => `${item.shift_label || item.shift} shift, ${item.team_name}, ${item.date}`)
+    .join('; ')
 }
 
 const LeaveDetailSection = ({
@@ -69,6 +78,21 @@ const LeaveDetailSection = ({
                 },
                 { label: 'Applied On', value: formatDate(selectedRecord.appliedAt) },
                 { label: 'Coverage By', value: selectedRecord.coverBy || '-' },
+                { label: 'Roster Impact', value: formatRosterImpact(selectedRecord) },
+                {
+                  label: 'Evidence',
+                  value: selectedRecord.attachmentAvailable ? (
+                    <a
+                      href={buildApiUrl(`/leave/attachments/${selectedRecord.attachmentId}`)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {selectedRecord.attachmentName || 'View attachment'}
+                    </a>
+                  ) : (
+                    '-'
+                  ),
+                },
                 { label: 'Reason', value: selectedRecord.reason || '-' },
               ].map((item) => (
                 <div

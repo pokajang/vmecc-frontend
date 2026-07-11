@@ -36,6 +36,8 @@ const OvertimeApplySection = ({
   onReasonChange,
   durationMinutes,
   isOvernight,
+  isOvernightConfirmed = false,
+  onOvernightConfirmationChange,
   onClearForm,
   clearButtonLabel = 'Clear form',
   clearingButtonLabel = 'Clearing...',
@@ -48,6 +50,9 @@ const OvertimeApplySection = ({
   isFormClearing = false,
   isSubmittingClaim = false,
   guidanceMessage = '',
+  attachment = null,
+  onAttachmentChange,
+  isAttachmentUploading = false,
 }) => {
   const selectedOvertimeTypeOption =
     overtimeTypeOptions.find((option) => option.value === overtimeType) || overtimeTypeOptions[0]
@@ -223,6 +228,17 @@ const OvertimeApplySection = ({
                 <span className="ms-2 text-warning">Ends on the next day (+1 day).</span>
               ) : null}
             </div>
+            {isOvernight ? (
+              <div className="mt-2">
+                <CFormCheck
+                  id="overtime-overnight-confirmation"
+                  checked={isOvernightConfirmed}
+                  onChange={(event) => onOvernightConfirmationChange?.(event.target.checked)}
+                  label="I confirm this overtime ends on the next day."
+                  invalid={Boolean(fieldErrors.window)}
+                />
+              </div>
+            ) : null}
             {fieldErrors.window ? (
               <div className="small text-danger mt-1">{fieldErrors.window}</div>
             ) : null}
@@ -238,6 +254,23 @@ const OvertimeApplySection = ({
               invalid={Boolean(fieldErrors.reason)}
             />
             <CFormFeedback invalid>{fieldErrors.reason}</CFormFeedback>
+          </CCol>
+          <CCol xs={12}>
+            <CFormLabel htmlFor="overtime-attachment">Evidence attachment (optional)</CFormLabel>
+            <CFormInput
+              id="overtime-attachment"
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+              onChange={(event) => onAttachmentChange?.(event.target.files?.[0] || null)}
+              disabled={isActionBusy || isAttachmentUploading}
+              invalid={Boolean(fieldErrors.attachment)}
+            />
+            <CFormFeedback invalid>{fieldErrors.attachment}</CFormFeedback>
+            {attachment?.originalName ? (
+              <div className="small text-body-secondary mt-1">
+                Attached: {attachment.originalName}
+              </div>
+            ) : null}
           </CCol>
         </CRow>
       </div>

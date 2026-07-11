@@ -7,7 +7,10 @@ import RowActions from 'src/components/RowActions'
 import useMediaQuery from 'src/hooks/useMediaQuery'
 import { ER_AUX_CONDITION_OPTIONS } from 'src/views/inspection/inspectionErAuxHelpers'
 import { getActionCountLabel } from '../inspectionCountLabels'
-import { hasErAuxInspectionData } from '../inspectionResetActions'
+import {
+  buildPhotoViewerUploadOptions,
+  buildStagedPhotoUploadOptions,
+} from '../inspectionPhotoFlow'
 import {
   EvidenceBlock,
   FormFieldError,
@@ -190,10 +193,11 @@ const ErAuxEquipmentCheckDetails = ({
       title: `${row.equipment} - defect photos`,
       photos: nextPhotos,
       showCaptionChips: false,
-      onAddMorePhoto: () =>
-        onRequestDefectPhotoUpload?.(row, {
-          onAfterAddPhotos: ({ photos: addedPhotos }) => openDefectPhotoViewer(addedPhotos),
-        }),
+      onAddMorePhoto: (currentPhotos) =>
+        onRequestDefectPhotoUpload?.(
+          row,
+          buildPhotoViewerUploadOptions(openDefectPhotoViewer, { currentPhotos }),
+        ),
       onSave: (savedPhotos) =>
         onUpdateCheck?.(row, { defectPhotos: Array.isArray(savedPhotos) ? savedPhotos : [] }),
       onRemove: (photoId) => onRemovePhoto?.(row, photoId, 'defectPhotos'),
@@ -203,9 +207,10 @@ const ErAuxEquipmentCheckDetails = ({
         onApplyPhotoCaption?.(row, photoId, caption, 'defectPhotos'),
     })
   const requestDefectPhoto = () =>
-    onRequestDefectPhotoUpload?.(row, {
-      onAfterAddPhotos: ({ photos: nextPhotos }) => openDefectPhotoViewer(nextPhotos),
-    })
+    onRequestDefectPhotoUpload?.(
+      row,
+      buildPhotoViewerUploadOptions(openDefectPhotoViewer, { currentPhotos: defectPhotos }),
+    )
 
   if (readOnly) {
     return (
@@ -494,16 +499,23 @@ export const ErAuxEquipmentChecks = ({
 
   const mobileDraftHandlers = {
     onUpdateCheck: (_row, patch) => patchMobileDraftRow(patch),
-    onRequestPhotoUpload: (row) =>
-      onRequestPhotoUpload?.(row, {
-        onAddPhotos: (_targetRow, photosKey, photos) =>
+    onRequestPhotoUpload: (row, photosKeyOrOptions = {}, options = {}) =>
+      onRequestPhotoUpload?.(
+        row,
+        buildStagedPhotoUploadOptions(
+          photosKeyOrOptions && typeof photosKeyOrOptions === 'object'
+            ? photosKeyOrOptions
+            : options,
+          (_targetRow, photosKey, photos) => patchMobileDraftRow({ [photosKey]: photos }),
+        ),
+      ),
+    onRequestDefectPhotoUpload: (row, options = {}) =>
+      onRequestDefectPhotoUpload?.(
+        row,
+        buildStagedPhotoUploadOptions(options, (_targetRow, photosKey, photos) =>
           patchMobileDraftRow({ [photosKey]: photos }),
-      }),
-    onRequestDefectPhotoUpload: (row) =>
-      onRequestDefectPhotoUpload?.(row, {
-        onAddPhotos: (_targetRow, photosKey, photos) =>
-          patchMobileDraftRow({ [photosKey]: photos }),
-      }),
+        ),
+      ),
     onRemovePhoto: (row, photoId, photosKey = 'photos') => {
       const photos = Array.isArray(row?.[photosKey]) ? row[photosKey] : []
       patchMobileDraftRow({
@@ -637,7 +649,7 @@ export const ErAuxEquipmentChecks = ({
             const workflowState = getErAuxWorkflowState(row)
             const rowId = String(row.id || row.equipment || '')
             const actionItems = buildInspectionElementActions({
-              canReset: typeof onResetCheck === 'function' && hasErAuxInspectionData(row),
+              canReset: !readOnly && typeof onResetCheck === 'function',
               onReset: () => requestResetCheck(row),
               canEdit: row.canEdit && (row.equipmentId || row.isLocalSeedEquipment),
               onEdit: () => onEditEquipment?.(row),
@@ -708,7 +720,7 @@ export const ErAuxEquipmentChecks = ({
                 hitArea={32}
                 toggleAriaLabel={`Equipment actions for ${mobileDetailRow.equipment || 'Equipment'}`}
                 items={[
-                  typeof onResetCheck === 'function' && hasErAuxInspectionData(mobileDetailRow)
+                  typeof onResetCheck === 'function'
                     ? {
                         key: 'reset',
                         label: 'Reset check',

@@ -3,6 +3,7 @@ import { CButton, CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/reac
 import ApprovalGates from 'src/components/ApprovalGates'
 import AuditHistoryPanel from 'src/components/AuditHistoryPanel'
 import BackButton from 'src/components/BackButton'
+import { downloadWorkflowAttachment } from 'src/services/apiClient'
 import { formatDuration, getOvertimeTypeLabel, resolveOvertimeGates } from '../utils'
 
 const OvertimeDetailSection = ({
@@ -48,6 +49,20 @@ const OvertimeDetailSection = ({
                 { label: 'Next Action', value: selectedRecordPendingActionHint || '-' },
                 { label: 'Applied On', value: formatDate(selectedRecord.appliedAt) },
                 { label: 'Reason', value: selectedRecord.reason || '-' },
+                {
+                  label: 'Evidence',
+                  value: selectedRecord.attachment?.originalName ? (
+                    <CButton
+                      color="link"
+                      className="p-0 text-end"
+                      onClick={() => downloadWorkflowAttachment(selectedRecord.attachment.id)}
+                    >
+                      {selectedRecord.attachment.originalName}
+                    </CButton>
+                  ) : (
+                    '-'
+                  ),
+                },
               ].map((item) => (
                 <div
                   key={item.label}

@@ -26,6 +26,12 @@ describe('inspection reset actions', () => {
       operationalConditionPhotos: [{ id: 'photo-1' }],
       remarks: 'Near generator',
       photos: [{ id: 'photo-2' }],
+      sessionResult: { status: 'completed' },
+      sessionStatus: 'completed',
+      sessionCheckedBy: 'Jang',
+      sessionCheckedAt: '2026-07-11T00:00:00+08:00',
+      sessionResultVersion: 3,
+      sessionSyncPending: true,
     }
 
     expect(hasFireExtinguisherInspectionData(row, FIRE_EXTINGUISHER_CHECK_FIELDS)).toBe(true)
@@ -39,6 +45,12 @@ describe('inspection reset actions', () => {
         operationalConditionPhotos: [],
         remarks: '',
         photos: [],
+        sessionResult: null,
+        sessionStatus: '',
+        sessionCheckedBy: '',
+        sessionCheckedAt: null,
+        sessionResultVersion: null,
+        sessionSyncPending: false,
       }),
     )
   })

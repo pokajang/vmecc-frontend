@@ -33,6 +33,7 @@ import useLeaveDerivedState from './hooks/useLeaveDerivedState'
 import useLeaveBootEffects from './hooks/useLeaveBootEffects'
 import useLeaveFormUiEffects from './hooks/useLeaveFormUiEffects'
 import useLeaveGuidanceMessage from './hooks/useLeaveGuidanceMessage'
+import useLeaveRosterImpact from './hooks/useLeaveRosterImpact'
 import useLeaveRecords from './hooks/useLeaveRecords'
 import useLeaveActions from './hooks/useLeaveActions'
 import useLeaveFilters from './hooks/useLeaveFilters'
@@ -251,6 +252,13 @@ const Leave = () => {
     endTimeSlot,
     requestedDays,
     formatDayCount,
+  })
+  const rosterImpact = useLeaveRosterImpact({
+    startDate,
+    endDate,
+    workShift,
+    startTimeSlot,
+    endTimeSlot,
   })
 
   const {
@@ -476,7 +484,9 @@ const Leave = () => {
             getStatusBadge={getStatusBadge}
             formatDate={formatDate}
             formatDateTime={formatDateTime}
-            canEdit={['Pending', 'Draft'].includes(String(selectedRecord?.status || ''))}
+            canEdit={['Pending', 'Draft', 'Needs Correction'].includes(
+              String(selectedRecord?.status || ''),
+            )}
             canCancel={canCancelLeave(selectedRecord)}
             canDelete={String(selectedRecord?.status || '') === 'Draft'}
             onEdit={openLeaveForEdit}
@@ -536,6 +546,7 @@ const Leave = () => {
             isSubmitBlockedByBalance={isSubmitBlockedByBalance}
             editingRecordId={editingRecordId}
             guidanceMessage={shouldShowLeaveGuidanceMessage ? leaveGuidanceMessage : ''}
+            rosterImpact={rosterImpact}
           />
         </div>
       )}

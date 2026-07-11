@@ -265,7 +265,8 @@ const ReportRecordsSection = ({
     const isGeneratingDownload = downloadingId === row.id
     const reportedBy = row.timeline?.[0]?.by || row.submittedBy || '--'
     const reportedAt = formatRowDateTime(row, formatDateTime)
-    const mobileTitle = row.incidentType || (row.recordKind === 'draft' ? 'Draft' : 'Record')
+    const mobileTitle =
+      row.exerciseTitle || row.incidentType || (row.recordKind === 'draft' ? 'Draft' : 'Record')
     const mobileSubtitle = row.location || 'No location'
 
     return {
@@ -274,7 +275,15 @@ const ReportRecordsSection = ({
       eyebrow: displayId,
       title: mobileTitle,
       subtitle: mobileSubtitle,
-      searchText: [displayId, row.incidentType, row.location, reportedBy, reportedAt, row.status]
+      searchText: [
+        displayId,
+        row.exerciseTitle,
+        row.incidentType,
+        row.location,
+        reportedBy,
+        reportedAt,
+        row.status,
+      ]
         .filter(Boolean)
         .join(' '),
       status: (

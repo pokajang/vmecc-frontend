@@ -11,22 +11,46 @@ const getAvatarColors = (name) => {
   return AVATAR_COLORS[key] || { bg: '#f1f5f9', text: '#475569' }
 }
 
-const TeamBadge = ({ team }) => {
+const TeamBadge = ({ team, leaveMarker }) => {
   if (!team) return null
   const { bg, text } = getAvatarColors(team)
+  const requested = Number(leaveMarker?.requested_count || 0)
+  const approved = Number(leaveMarker?.approved_count || 0)
+  const people = Array.isArray(leaveMarker?.people) ? leaveMarker.people : []
+  const markerLabel = [
+    requested ? `${requested} leave request${requested === 1 ? '' : 's'}` : '',
+    approved ? `${approved} on leave` : '',
+  ]
+    .filter(Boolean)
+    .join(', ')
   return (
-    <span
-      className="d-inline-block rounded-pill px-2 fw-semibold"
-      style={{
-        background: bg,
-        color: text,
-        fontSize: '0.875rem',
-        lineHeight: '1.6',
-        whiteSpace: 'nowrap',
-      }}
-    >
-      {team}
-    </span>
+    <div className="d-inline-flex flex-column align-items-center gap-1">
+      <span
+        className="d-inline-block rounded-pill px-2 fw-semibold"
+        style={{
+          background: bg,
+          color: text,
+          fontSize: '0.875rem',
+          lineHeight: '1.6',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {team}
+      </span>
+      {markerLabel ? (
+        <span
+          className="small text-warning-emphasis"
+          title={people
+            .map(
+              (person) =>
+                `${person.name}: ${person.state === 'approved' ? 'on leave' : 'leave requested'}`,
+            )
+            .join('\n')}
+        >
+          {markerLabel}
+        </span>
+      ) : null}
+    </div>
   )
 }
 
@@ -240,7 +264,7 @@ const RosterCard = ({ monthBlock, editMode = false, teams = [], allShifts = [], 
                             onChange={(teamId) => onAssign(row.date, shiftDef.slug, teamId)}
                           />
                         ) : (
-                          <TeamBadge team={shiftObj?.team} />
+                          <TeamBadge team={shiftObj?.team} leaveMarker={shiftObj?.leave_marker} />
                         )}
                       </td>
                     )

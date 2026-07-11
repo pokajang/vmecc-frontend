@@ -22,6 +22,7 @@ const useOvertimeData = ({
   const [overtimeRecords, setOvertimeRecords] = useState([])
   const [overtimeDraft, setOvertimeDraft] = useState(null)
   const [isOvertimeLoading, setIsOvertimeLoading] = useState(true)
+  const [isApiUnavailable, setIsApiUnavailable] = useState(false)
 
   useEffect(() => {
     if (!userId) return
@@ -31,6 +32,7 @@ const useOvertimeData = ({
       if (canUseOvertimeModule && overtimeEligibilityResolved && !isOvertimeEligibleEffective) {
         setOvertimeRecords([])
         setOvertimeDraft(null)
+        setIsApiUnavailable(false)
         setIsOvertimeLoading(false)
         return
       }
@@ -45,14 +47,14 @@ const useOvertimeData = ({
       ])
       if (!active) return
 
-      const normalizedPolicy = normalizeOvertimeApprovalRules(
-        loadedPolicy?.data || DEFAULT_OVERTIME_APPROVAL_RULES,
+      setOvertimePolicy(
+        normalizeOvertimeApprovalRules(loadedPolicy?.data || DEFAULT_OVERTIME_APPROVAL_RULES),
       )
-      setOvertimePolicy(normalizedPolicy)
 
       const loadedRows = Array.isArray(loadedRecords?.data) ? loadedRecords.data : []
       setOvertimeRecords(loadedRows.map((row) => ({ ...row })))
       setOvertimeDraft(normalizeOvertimeDraftPayload(loadedDraft?.data))
+      setIsApiUnavailable(!loadedRecords?.ok || !loadedDraft?.ok)
       setIsOvertimeLoading(false)
 
       if (!loadedRecords?.ok) {
@@ -61,6 +63,7 @@ const useOvertimeData = ({
           color: 'danger',
         })
       }
+
       if (!loadedPolicy?.ok) {
         pushToast?.('Unable to load overtime policy. Using default policy.', {
           title: 'Policy fallback',
@@ -92,6 +95,7 @@ const useOvertimeData = ({
     setOvertimeDraft,
     isOvertimeLoading,
     setIsOvertimeLoading,
+    isApiUnavailable,
   }
 }
 

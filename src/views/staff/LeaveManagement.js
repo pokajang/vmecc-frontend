@@ -47,6 +47,10 @@ const LeaveManagement = () => {
     () => hasAnyPermission(user, LEAVE_MANAGEMENT_ALLOWED_PERMISSIONS),
     [user],
   )
+  const canManageLeaveWorkflowRules = useMemo(
+    () => hasAnyPermission(user, ['settings.manage']),
+    [user],
+  )
   const actorName = user?.name || user?.full_name || user?.email || 'System user'
 
   const toaster = useRef()
@@ -191,10 +195,12 @@ const LeaveManagement = () => {
     getReviewActionConfig,
     approveLeave,
     rejectLeave,
+    requestCorrectionLeave,
     runLeaveWorkflowAction,
     workflowModalState,
     workflowModalActionLabel,
     isRejectWorkflowModal,
+    isCorrectionWorkflowModal,
     workflowModalActionDisabled,
     workflowRemarks,
     workflowDeclarationChecked,
@@ -205,6 +211,7 @@ const LeaveManagement = () => {
     closeWorkflowModal,
     submitWorkflowApprove,
     submitWorkflowReject,
+    submitWorkflowCorrection,
   } = useLeaveAdminWorkflow({
     actorRoles,
     isSystemAdministrator,
@@ -218,6 +225,19 @@ const LeaveManagement = () => {
       if (isBulkLeaveSubmitting) return { processed: 0, succeeded: 0, failed: 0 }
       const selectedRows = Array.isArray(rows) ? rows.filter((row) => row?.id) : []
       if (selectedRows.length === 0) return { processed: 0, succeeded: 0, failed: 0 }
+      const workflowStages = new Set(
+        selectedRows.map((row) => `${row?.workflowStage || ''}:${row?.nextActionRole || ''}`),
+      )
+      if (workflowStages.size !== 1) {
+        pushToast(
+          'Bulk actions require records in the same workflow stage and action-owner role.',
+          {
+            title: 'Mixed workflow selection',
+            color: 'warning',
+          },
+        )
+        return { processed: 0, succeeded: 0, failed: selectedRows.length }
+      }
 
       setIsBulkLeaveSubmitting(true)
       try {
@@ -292,12 +312,18 @@ const LeaveManagement = () => {
         visible={workflowModalState.visible}
         record={workflowModalState.record}
         actionLabel={workflowModalActionLabel}
-        actionType={isRejectWorkflowModal ? 'reject' : 'approve'}
+        actionType={
+          isCorrectionWorkflowModal
+            ? 'request_correction'
+            : isRejectWorkflowModal
+              ? 'reject'
+              : 'approve'
+        }
         actionDisabled={workflowModalActionDisabled}
         remarks={workflowRemarks}
         onRemarksChange={handleWorkflowRemarksChange}
-        showDeclaration={!isRejectWorkflowModal}
-        declarationRequired={!isRejectWorkflowModal}
+        showDeclaration={!isRejectWorkflowModal && !isCorrectionWorkflowModal}
+        declarationRequired={!isRejectWorkflowModal && !isCorrectionWorkflowModal}
         declarationChecked={workflowDeclarationChecked}
         onDeclarationChange={handleWorkflowDeclarationChange}
         declarationLabel={LEAVE_WORKFLOW_DECLARATION_LABEL}
@@ -309,7 +335,13 @@ const LeaveManagement = () => {
         getStartDateTimeLabel={getStartDateTimeLabel}
         getEndDateTimeLabel={getEndDateTimeLabel}
         onClose={closeWorkflowModal}
-        onSubmit={isRejectWorkflowModal ? submitWorkflowReject : submitWorkflowApprove}
+        onSubmit={
+          isCorrectionWorkflowModal
+            ? submitWorkflowCorrection
+            : isRejectWorkflowModal
+              ? submitWorkflowReject
+              : submitWorkflowApprove
+        }
       />
 
       {!isDetailSection && (
@@ -338,6 +370,7 @@ const LeaveManagement = () => {
           openRecord={openRecord}
           approveLeave={approveLeave}
           rejectLeave={rejectLeave}
+          requestCorrectionLeave={requestCorrectionLeave}
           onBulkLeaveAction={runBulkLeaveWorkflowAction}
           isBulkLeaveSubmitting={isBulkLeaveSubmitting}
           bulkDeclarationLabel={LEAVE_WORKFLOW_DECLARATION_LABEL}
@@ -387,6 +420,7 @@ const LeaveManagement = () => {
           onDeleteHoliday={onDeleteHoliday}
           onWizardSavedSummary={onWizardSavedSummary}
           isHolidaysLoading={isHolidaysLoading}
+          canManageLeaveWorkflowRules={canManageLeaveWorkflowRules}
         />
       )}
 

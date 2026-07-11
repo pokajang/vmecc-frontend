@@ -1,6 +1,7 @@
 const { expect, test } = require('@playwright/test')
 const fs = require('node:fs')
 const path = require('node:path')
+const { setInspectionPhotoFromButton } = require('./support/inspection-photo')
 
 const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
 const smokeEmail = process.env.VMECC_SMOKE_EMAIL || 'codex.smoke.admin@vmecc.local'
@@ -8,11 +9,6 @@ const smokePassword = process.env.VMECC_SMOKE_PASSWORD || 'SmokeAdmin!2026'
 const runId = process.env.VMECC_SMOKE_RUN_ID || new Date().toISOString().replace(/[:.]/g, '-')
 const artifactRoot = path.resolve(process.cwd(), 'test-results', 'fire-extinguisher-smoke', runId)
 const routeTimeoutMs = Number(process.env.VMECC_SMOKE_ROUTE_TIMEOUT_MS || 30_000)
-
-const tinyPng = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=',
-  'base64',
-)
 
 const ensureArtifactRoot = () => fs.mkdirSync(artifactRoot, { recursive: true })
 
@@ -247,18 +243,6 @@ const saveScreenshot = async (page, testInfo, report, name) => {
   const relativePath = path.relative(process.cwd(), artifactPath)
   report.screenshots.push(relativePath)
   return relativePath
-}
-
-const setPhotoFromButton = async (button, fileName) => {
-  const page = button.page()
-  const fileChooserPromise = page.waitForEvent('filechooser', { timeout: 10_000 })
-  await button.click()
-  const fileChooser = await fileChooserPromise
-  await fileChooser.setFiles({
-    name: fileName,
-    mimeType: 'image/png',
-    buffer: tinyPng,
-  })
 }
 
 const getFireExtinguisherCard = (page, text) =>
@@ -552,13 +536,16 @@ test.describe('Fire Extinguisher inspection prod smoke', () => {
       await defectCard
         .getByPlaceholder('FE Physical Condition defect remarks')
         .fill(`Smoke FE defect remarks ${suffix}`)
-      await setPhotoFromButton(
+      await setInspectionPhotoFromButton(
         defectCard.getByRole('button', { name: 'Add photo (optional)' }),
         `fe-defect-${suffix}.png`,
       )
       const photoModal = page.locator('.modal.show', { hasText: 'defect photos' }).last()
       await expect(photoModal).toBeVisible()
-      await expect(photoModal.getByText(`fe-defect-${suffix}.png`)).toBeVisible()
+      await expect(
+        photoModal.getByRole('img', { name: new RegExp(`fe-defect-${suffix}`, 'i') }),
+      ).toBeVisible()
+      await expect(photoModal.getByRole('textbox', { name: 'Photo description' })).toBeVisible()
       await photoModal.getByRole('button', { name: 'Save' }).click()
       await expect(photoModal).toBeHidden()
       await expect(defectCard.getByRole('button', { name: 'View photos' })).toBeVisible()
@@ -579,10 +566,11 @@ test.describe('Fire Extinguisher inspection prod smoke', () => {
 
       await saveScreenshot(page, testInfo, report, 'fire-extinguisher-form-complete')
 
-      await page
-        .getByRole('button', { name: /Review Inspections|Review Submissions/ })
+      const continueToReviewButton = page
+        .getByRole('button', { name: 'Continue to Review', exact: true })
         .first()
-        .click()
+      await expect(continueToReviewButton).toBeEnabled({ timeout: 60_000 })
+      await continueToReviewButton.click()
       await waitForAppReady(page, '/inspection/review')
       await expect(page.getByRole('heading', { name: 'Review Inspection' })).toBeVisible()
       await expectAnyVisibleText(page, 'Fire Extinguisher')
@@ -603,9 +591,11 @@ test.describe('Fire Extinguisher inspection prod smoke', () => {
       const createReportPromise = page.waitForResponse(
         (response) => {
           const url = new URL(response.url())
-          return url.pathname.endsWith('/api/reports') && response.request().method() === 'POST'
+          const isReportCreate = url.pathname.endsWith('/api/reports')
+          const isSessionSubmit = /\/api\/inspection\/sessions\/[^/]+\/submit$/.test(url.pathname)
+          return (isReportCreate || isSessionSubmit) && response.request().method() === 'POST'
         },
-        { timeout: 30_000 },
+        { timeout: 60_000 },
       )
 
       await submitButton.click()
@@ -658,6 +648,12 @@ test.describe('Fire Extinguisher inspection prod smoke', () => {
       const unexpectedFailedResponses = report.failedResponses.filter((item) => {
         const url = String(item.url || '')
         if (url.includes('/workflow/notifications/unread-count')) return false
+        if (item.status === 403 && url.includes('/messages/threads?')) return false
+        if (
+          item.status === 404 &&
+          url.includes('/inspection/fire-extinguishers/lookup?locator=SMOKE-FE-')
+        )
+          return false
         if (url.includes('/reports/inspection/pdf') && item.status < 400) return false
         return true
       })

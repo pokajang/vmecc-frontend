@@ -5,7 +5,10 @@ import CreateActionButton from 'src/components/CreateActionButton'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import RowActions from 'src/components/RowActions'
 import useMediaQuery from 'src/hooks/useMediaQuery'
-import { hasScbaInspectionData } from '../inspectionResetActions'
+import {
+  buildPhotoViewerUploadOptions,
+  buildStagedPhotoUploadOptions,
+} from '../inspectionPhotoFlow'
 import {
   getScbaFieldEvidenceKeys,
   getScbaRowRetainedEvidenceFields,
@@ -223,16 +226,23 @@ const ScbaSectionCards = ({
 
   const mobileDraftHandlers = {
     onUpdateGroupedCheck: (_sectionKey, _row, patch) => patchMobileDraftRow(patch),
-    onRequestPhotoUpload: (sectionKey, row) =>
-      onRequestPhotoUpload?.(sectionKey, row, {
-        onAddPhotos: (_targetSectionKey, _targetRow, photosKey, photos) =>
+    onRequestPhotoUpload: (sectionKey, row, options = {}) =>
+      onRequestPhotoUpload?.(
+        sectionKey,
+        row,
+        buildStagedPhotoUploadOptions(options, (_targetSectionKey, _targetRow, photosKey, photos) =>
           patchMobileDraftRow({ [photosKey]: photos }),
-      }),
-    onRequestIssuePhotoUpload: (sectionKey, row, field) =>
-      onRequestIssuePhotoUpload?.(sectionKey, row, field, {
-        onAddPhotos: (_targetSectionKey, _targetRow, photosKey, photos) =>
+        ),
+      ),
+    onRequestIssuePhotoUpload: (sectionKey, row, field, options = {}) =>
+      onRequestIssuePhotoUpload?.(
+        sectionKey,
+        row,
+        field,
+        buildStagedPhotoUploadOptions(options, (_targetSectionKey, _targetRow, photosKey, photos) =>
           patchMobileDraftRow({ [photosKey]: photos }),
-      }),
+        ),
+      ),
     onRemovePhoto: (_sectionKey, row, photoId, photosKey = 'photos') => {
       const photos = Array.isArray(row?.[photosKey]) ? row[photosKey] : []
       patchMobileDraftRow({
@@ -288,10 +298,13 @@ const ScbaSectionCards = ({
         title: `${getScbaDisplayLabel(row)} - ${field.label} issue photos`,
         photos: nextPhotos,
         showCaptionChips: false,
-        onAddMorePhoto: () =>
-          activeOnRequestIssuePhotoUpload?.(sectionKey, row, field, {
-            onAfterAddPhotos: ({ photos: addedPhotos }) => openIssuePhotoViewer(addedPhotos),
-          }),
+        onAddMorePhoto: (currentPhotos) =>
+          activeOnRequestIssuePhotoUpload?.(
+            sectionKey,
+            row,
+            field,
+            buildPhotoViewerUploadOptions(openIssuePhotoViewer, { currentPhotos }),
+          ),
         onSave: (savedPhotos) =>
           activeOnUpdateGroupedCheck?.(sectionKey, row, {
             [photosKey]: Array.isArray(savedPhotos) ? savedPhotos : [],
@@ -303,9 +316,12 @@ const ScbaSectionCards = ({
           activeOnApplyPhotoCaption?.(sectionKey, row, photoId, caption, photosKey),
       })
     const requestIssuePhoto = () =>
-      activeOnRequestIssuePhotoUpload?.(sectionKey, row, field, {
-        onAfterAddPhotos: ({ photos: nextPhotos }) => openIssuePhotoViewer(nextPhotos),
-      })
+      activeOnRequestIssuePhotoUpload?.(
+        sectionKey,
+        row,
+        field,
+        buildPhotoViewerUploadOptions(openIssuePhotoViewer, { currentPhotos: photos }),
+      )
 
     if (readOnly) {
       return (
@@ -666,9 +682,7 @@ const ScbaSectionCards = ({
                       </div>
                     )
                     const rowId = getScbaRowId(row)
-                    const canReset =
-                      typeof onResetGroupedCheck === 'function' &&
-                      hasScbaInspectionData(row, sectionFields)
+                    const canReset = !readOnly && typeof onResetGroupedCheck === 'function'
                     const itemActions = buildInspectionElementActions({
                       canReset,
                       onReset: () => requestResetGroupedCheck(section.key, row),
@@ -767,8 +781,7 @@ const ScbaSectionCards = ({
                 hitArea={32}
                 toggleAriaLabel={`Item actions for ${getScbaDisplayLabel(mobileDetailRow)}`}
                 items={[
-                  typeof onResetGroupedCheck === 'function' &&
-                  hasScbaInspectionData(mobileDetailRow, mobileDetailSection.fields)
+                  typeof onResetGroupedCheck === 'function'
                     ? {
                         key: 'reset',
                         label: 'Reset check',

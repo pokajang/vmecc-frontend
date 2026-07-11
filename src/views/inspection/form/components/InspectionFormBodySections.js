@@ -18,6 +18,7 @@ import {
   parseTranslatedFindingField,
 } from '../inspectionFindingAiAssist'
 import { getInspectionReviewReadiness } from '../inspectionReviewReadiness'
+import { buildInspectionValidationStatusMessage } from '../inspectionValidationFeedback'
 import {
   getFireExtinguisherRowValidation,
   isFireExtinguisherSessionCompletedRow,
@@ -158,6 +159,7 @@ const InspectionFormActions = ({
   className = '',
   draftStatus,
   draftSyncState,
+  readiness = null,
   leadingAction = null,
   isMobileSticky = false,
   isUpdateMode = false,
@@ -190,6 +192,8 @@ const InspectionFormActions = ({
         <CButton
           color="primary"
           className="inspection-form-sticky-review-btn"
+          disabled={readiness?.isReadyToReview === false}
+          title={readiness?.blockers?.[0]?.message || undefined}
           onClick={onRequestReview}
         >
           {reviewLabel}
@@ -203,7 +207,10 @@ const InspectionFormActions = ({
           <div className="small fw-semibold text-body-secondary">{sectionLabel}</div>
         ) : null}
         {alignLeft ? (
-          <InspectionInlineActionGroup className={className}>
+          <InspectionInlineActionGroup
+            className={className}
+            statusMessage={validationStatusMessage}
+          >
             {mobileActionButtons}
           </InspectionInlineActionGroup>
         ) : (
@@ -212,6 +219,7 @@ const InspectionFormActions = ({
             className={className}
             mobileVariant="compact-sticky"
             spacerClassName="inspection-form-inline-actions-spacer d-md-none"
+            statusMessage={validationStatusMessage}
           >
             {mobileActionButtons}
           </FormActionGroup>
@@ -238,9 +246,13 @@ const InspectionFormActions = ({
           .join(' ')}
       >
         {validationStatusMessage ? (
-          <div className={statusClassName}>{validationStatusMessage}</div>
+          <div className={statusClassName} role="alert">
+            {validationStatusMessage}
+          </div>
         ) : draftStatus ? (
-          <div className={statusClassName}>{draftStatus}</div>
+          <div className={statusClassName} aria-live="polite">
+            {draftStatus}
+          </div>
         ) : null}
         {leadingAction}
         {syncFailed ? (
@@ -248,7 +260,12 @@ const InspectionFormActions = ({
             Retry Sync
           </CButton>
         ) : null}
-        <CButton color="primary" onClick={onRequestReview}>
+        <CButton
+          color="primary"
+          disabled={readiness?.isReadyToReview === false}
+          title={readiness?.blockers?.[0]?.message || undefined}
+          onClick={onRequestReview}
+        >
           {reviewLabel}
         </CButton>
       </div>
@@ -431,7 +448,10 @@ const InspectionFormDraftOnlyActions = ({
           <div className="small fw-semibold text-body-secondary">{sectionLabel}</div>
         ) : null}
         {alignLeft ? (
-          <InspectionInlineActionGroup className={className} statusMessage={disabledReviewMessage}>
+          <InspectionInlineActionGroup
+            className={className}
+            statusMessage={disabledReviewMessage || statusMessage}
+          >
             {mobileActionButtons}
           </InspectionInlineActionGroup>
         ) : (
@@ -440,7 +460,7 @@ const InspectionFormDraftOnlyActions = ({
             className={className}
             mobileVariant="compact-sticky"
             spacerClassName="inspection-form-inline-actions-spacer d-md-none"
-            statusMessage={disabledReviewMessage}
+            statusMessage={disabledReviewMessage || statusMessage}
           >
             {mobileActionButtons}
           </FormActionGroup>
@@ -466,7 +486,7 @@ const InspectionFormDraftOnlyActions = ({
           .filter(Boolean)
           .join(' ')}
       >
-        <div className={statusClassName}>
+        <div className={statusClassName} aria-live="polite">
           {disabledReviewMessage ||
             statusMessage ||
             draftStatus ||
@@ -1278,6 +1298,7 @@ const InspectionFormBodySections = ({
   currentStructuredSummary,
   draftStatus,
   draftSyncState,
+  readiness = null,
   fieldErrors,
   fireExtinguisherScan = null,
   form,
@@ -1418,13 +1439,13 @@ const InspectionFormBodySections = ({
   const showBlockedReviewAction =
     selectedTypeDefinition?.key === 'er-aux-equipment-inspection' ||
     selectedTypeDefinition?.inspectionType === 'ER Aux Equipment Inspection'
-
   const renderActions = (className = '', isMobileSticky = false, wrapperClassName = '') => (
     <InspectionFormActions
       alignLeft={Boolean(nextStepAction)}
       className={className}
       draftStatus={draftStatus}
       draftSyncState={draftSyncState}
+      readiness={readiness}
       leadingAction={nextStepAction}
       isMobileSticky={isMobileSticky}
       isUpdateMode={isUpdateMode}
@@ -1492,14 +1513,10 @@ const InspectionFormBodySections = ({
     selectedTypeDefinition,
     showComingSoonNotice,
   })
-  const blockedReviewMessage =
-    showBlockedReviewAction && !reviewReadiness.canReview
-      ? reviewReadiness.validationState?.errorCount > 0
-        ? `${reviewReadiness.validationState.errorCount} item${
-            reviewReadiness.validationState.errorCount === 1 ? '' : 's'
-          } need attention before review.`
-        : 'Complete required inspection items before review.'
-      : ''
+  const blockedReviewMessage = !reviewReadiness.canReview
+    ? buildInspectionValidationStatusMessage(reviewReadiness.validationState) ||
+      'Cannot continue to review: complete the required inspection items.'
+    : ''
   const nextStepAction = renderScanAnotherFireExtinguisherAction()
   const renderReviewOrDraftActions = (desktopClassName, mobileClassName) =>
     reviewReadiness.canReview ? (
@@ -1512,11 +1529,17 @@ const InspectionFormBodySections = ({
         {renderDraftOnlyActions(
           '',
           false,
-          'Complete required inspection items before review.',
           blockedReviewMessage,
+          showBlockedReviewAction ? blockedReviewMessage : '',
           desktopClassName,
         )}
-        {renderDraftOnlyActions(mobileClassName, true, '', blockedReviewMessage, 'd-md-none')}
+        {renderDraftOnlyActions(
+          mobileClassName,
+          true,
+          blockedReviewMessage,
+          showBlockedReviewAction ? blockedReviewMessage : '',
+          'd-md-none',
+        )}
       </>
     )
 

@@ -4,6 +4,7 @@ import { normalizeOvertimeType } from '../utils'
 
 const useOvertimeDraftHydration = ({
   activeSection,
+  attachment,
   claimDate,
   defaultOvertimeType,
   draftHydratedRef,
@@ -16,6 +17,7 @@ const useOvertimeDraftHydration = ({
   pushToast,
   reason,
   setClaimDate,
+  setAttachment,
   setEndTime,
   setFormBaseline,
   setOvertimeType,
@@ -42,6 +44,7 @@ const useOvertimeDraftHydration = ({
           startTime,
           endTime,
           reason,
+          attachmentId: attachment?.id,
         }),
       )
       return
@@ -56,6 +59,7 @@ const useOvertimeDraftHydration = ({
           startTime,
           endTime,
           reason,
+          attachmentId: attachment?.id,
         }),
       )
       return
@@ -65,6 +69,7 @@ const useOvertimeDraftHydration = ({
     setStartTime(overtimeDraft.startTime || '')
     setEndTime(overtimeDraft.endTime || '')
     setReason(overtimeDraft.reason || '')
+    setAttachment(overtimeDraft.attachment || null)
     setOvertimeType(normalizeOvertimeType(overtimeDraft.overtimeType || defaultOvertimeType))
     setOvertimeTypeConfirmed(
       overtimeTypeDerivedMode ? true : Boolean(overtimeDraft.overtimeTypeConfirmed),
@@ -80,6 +85,7 @@ const useOvertimeDraftHydration = ({
         startTime: overtimeDraft.startTime || '',
         endTime: overtimeDraft.endTime || '',
         reason: overtimeDraft.reason || '',
+        attachmentId: overtimeDraft.attachmentId,
       }),
     )
     setTimeout(() => {
@@ -87,6 +93,7 @@ const useOvertimeDraftHydration = ({
     }, 0)
   }, [
     activeSection,
+    attachment,
     claimDate,
     defaultOvertimeType,
     draftHydratedRef,
@@ -99,6 +106,7 @@ const useOvertimeDraftHydration = ({
     pushToast,
     reason,
     setClaimDate,
+    setAttachment,
     setEndTime,
     setFormBaseline,
     setOvertimeType,

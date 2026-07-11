@@ -6,7 +6,7 @@ import RowActions from 'src/components/RowActions'
 import useMediaQuery from 'src/hooks/useMediaQuery'
 import { HYDRAULIC_CHECK_FIELDS } from 'src/views/inspection/types/hydraulic/helpers'
 import { getActionCountLabel } from '../inspectionCountLabels'
-import { hasHydraulicInspectionData } from '../inspectionResetActions'
+import { buildStagedPhotoUploadOptions } from '../inspectionPhotoFlow'
 import {
   FormFieldError,
   InspectionPhotoViewerModal,
@@ -136,16 +136,24 @@ export const HydraulicEquipmentChecks = ({
 
   const mobileDraftHandlers = {
     onUpdateCheck: (_row, patch) => patchMobileDraftRow(patch),
-    onRequestPhotoUpload: (row) =>
-      onRequestPhotoUpload?.(row, {
-        onAddPhotos: (_targetRow, photosKey, photos) =>
+    onRequestPhotoUpload: (row, photosKeyOrOptions = {}, options = {}) =>
+      onRequestPhotoUpload?.(
+        row,
+        buildStagedPhotoUploadOptions(
+          photosKeyOrOptions && typeof photosKeyOrOptions === 'object'
+            ? photosKeyOrOptions
+            : options,
+          (_targetRow, photosKey, photos) => patchMobileDraftRow({ [photosKey]: photos }),
+        ),
+      ),
+    onRequestDefectPhotoUpload: (row, field, options = {}) =>
+      onRequestDefectPhotoUpload?.(
+        row,
+        field,
+        buildStagedPhotoUploadOptions(options, (_targetRow, photosKey, photos) =>
           patchMobileDraftRow({ [photosKey]: photos }),
-      }),
-    onRequestDefectPhotoUpload: (row, field) =>
-      onRequestDefectPhotoUpload?.(row, field, {
-        onAddPhotos: (_targetRow, photosKey, photos) =>
-          patchMobileDraftRow({ [photosKey]: photos }),
-      }),
+        ),
+      ),
     onRemovePhoto: (row, photoId, photosKey = 'photos') => {
       const photos = Array.isArray(row?.[photosKey]) ? row[photosKey] : []
       patchMobileDraftRow({
@@ -330,8 +338,7 @@ export const HydraulicEquipmentChecks = ({
                 hitArea={32}
                 toggleAriaLabel={`Equipment actions for ${mobileDetailRow.equipment || 'Equipment'}`}
                 items={[
-                  typeof onResetCheck === 'function' &&
-                  hasHydraulicInspectionData(mobileDetailCurrent, HYDRAULIC_CHECK_FIELDS)
+                  typeof onResetCheck === 'function'
                     ? {
                         key: 'reset',
                         label: 'Reset check',

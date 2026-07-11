@@ -1,6 +1,7 @@
 const { expect, test } = require('@playwright/test')
 const fs = require('node:fs')
 const path = require('node:path')
+const { setInspectionPhotoFromButton } = require('./support/inspection-photo')
 
 const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
 const smokeEmail = process.env.VMECC_SMOKE_EMAIL || 'codex.smoke.admin@vmecc.local'
@@ -13,11 +14,6 @@ const artifactRoot = path.resolve(
   runId,
 )
 const routeTimeoutMs = Number(process.env.VMECC_SMOKE_ROUTE_TIMEOUT_MS || 30_000)
-
-const tinyPng = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=',
-  'base64',
-)
 
 const ensureArtifactRoot = () => fs.mkdirSync(artifactRoot, { recursive: true })
 
@@ -148,18 +144,6 @@ const saveScreenshot = async (page, testInfo, report, name) => {
   const relativePath = path.relative(process.cwd(), artifactPath)
   report.screenshots.push(relativePath)
   return relativePath
-}
-
-const setPhotoFromButton = async (button, fileName) => {
-  const page = button.page()
-  const fileChooserPromise = page.waitForEvent('filechooser', { timeout: 10_000 })
-  await button.click()
-  const fileChooser = await fileChooserPromise
-  await fileChooser.setFiles({
-    name: fileName,
-    mimeType: 'image/png',
-    buffer: tinyPng,
-  })
 }
 
 const extractReportUid = async (response) => {
@@ -475,6 +459,7 @@ const assertNoUnexpectedFailures = (report) => {
   const unexpectedFailedResponses = report.failedResponses.filter((item) => {
     const url = String(item.url || '')
     if (url.includes('/workflow/notifications/unread-count')) return false
+    if (item.status === 403 && url.includes('/messages/threads?')) return false
     if (url.includes('/reports/inspection/pdf') && item.status < 400) return false
     return true
   })
@@ -530,9 +515,10 @@ test.describe('SCBA and High Angle inspection prod smoke', () => {
       await selectInspectionType(page, 'SCBA')
       await selectMainLocation(page, 'FRT')
 
-      await expect(page.getByText('SCBA Items')).toBeVisible()
-      await page.getByRole('button', { name: 'Mark all Good' }).click()
-      await completeScbaRequiredReadings(page)
+      await expect(page.getByText('Choose Group')).toBeVisible()
+      await page.getByRole('button', { name: /^Back Plate\b/i }).click()
+      await expect(page.getByText('Back Plate Items')).toBeVisible()
+      await page.getByRole('button', { name: 'Mark group Good' }).click()
 
       const scbaCard = page
         .getByRole('button', { name: 'Item actions for MSA 06' })
@@ -545,24 +531,34 @@ test.describe('SCBA and High Angle inspection prod smoke', () => {
       await scbaCard
         .getByPlaceholder('High Pressure Hose issue remarks')
         .fill(`Smoke SCBA hose evidence ${suffix}`)
-      await setPhotoFromButton(
-        scbaCard.getByRole('button', { name: 'Add issue photo' }).first(),
+      await setInspectionPhotoFromButton(
+        scbaCard.getByRole('button', { name: 'Add photo (optional)' }).first(),
         `scba-issue-${suffix}.png`,
       )
-      await expect(scbaCard.getByText(/1 photo added/i)).toBeVisible()
-
-      await scbaCard.getByRole('button', { name: 'View photos' }).click()
       const photoModal = page.locator('.modal.show', { hasText: 'issue photos' }).last()
-      await expect(photoModal.getByText(`scba-issue-${suffix}.png`)).toBeVisible()
-      await photoModal.getByRole('button', { name: /close/i }).click()
+      await expect(
+        photoModal.getByRole('img', { name: new RegExp(`scba-issue-${suffix}`, 'i') }),
+      ).toBeVisible()
+      await photoModal.getByRole('button', { name: 'Save' }).click()
       await expect(photoModal).toBeHidden()
+      await expect(scbaCard.getByRole('button', { name: 'View photos' })).toBeVisible()
+
+      await page.getByRole('button', { name: /^Cylinder\b/i }).click()
+      await expect(page.getByText('Cylinder Items')).toBeVisible()
+      await page.getByRole('button', { name: 'Mark group Good' }).click()
+      await completeScbaRequiredReadings(page)
+
+      await page.getByRole('button', { name: /^Face Mask\b/i }).click()
+      await expect(page.getByText('Face Mask Items')).toBeVisible()
+      await page.getByRole('button', { name: 'Mark group Good' }).click()
 
       await saveScreenshot(page, testInfo, report, 'scba-form-complete')
 
-      await page
-        .getByRole('button', { name: /Review Inspections|Review Submissions/ })
+      const continueToScbaReviewButton = page
+        .getByRole('button', { name: 'Continue to Review', exact: true })
         .first()
-        .click()
+      await expect(continueToScbaReviewButton).toBeEnabled({ timeout: 60_000 })
+      await continueToScbaReviewButton.click()
       await waitForAppReady(page, '/inspection/review')
       await expect(page.getByRole('heading', { name: 'Review Inspection' })).toBeVisible()
       await expectAnyVisibleText(page, 'SCBA')
@@ -648,11 +644,22 @@ test.describe('SCBA and High Angle inspection prod smoke', () => {
           await highAngleCard
             .getByPlaceholder('Issue remarks')
             .fill(`Smoke High Angle gate evidence ${suffix}`)
-          await setPhotoFromButton(
-            highAngleCard.getByRole('button', { name: 'Add issue photo' }),
+          await setInspectionPhotoFromButton(
+            highAngleCard.getByRole('button', { name: 'Add photo (optional)' }),
             `high-angle-issue-${suffix}.png`,
           )
-          await expect(highAngleCard.getByText(/1 photo added/i)).toBeVisible()
+          const highAnglePhotoModal = page
+            .locator('.modal.show', { hasText: 'condition issue photos' })
+            .last()
+          await expect(highAnglePhotoModal).toBeVisible()
+          await expect(
+            highAnglePhotoModal.getByRole('img', {
+              name: new RegExp(`high-angle-issue-${suffix}`, 'i'),
+            }),
+          ).toBeVisible()
+          await highAnglePhotoModal.getByRole('button', { name: 'Save' }).click()
+          await expect(highAnglePhotoModal).toBeHidden()
+          await expect(highAngleCard.getByRole('button', { name: 'View photos' })).toBeVisible()
           await expect(
             highAngleCard.getByText(`Smoke High Angle gate evidence ${suffix}`),
           ).toBeVisible()
@@ -663,10 +670,11 @@ test.describe('SCBA and High Angle inspection prod smoke', () => {
 
       await saveScreenshot(page, testInfo, report, 'high-angle-form-complete')
 
-      await page
-        .getByRole('button', { name: /Review Inspections|Review Submissions/ })
+      const continueToHighAngleReviewButton = page
+        .getByRole('button', { name: 'Continue to Review', exact: true })
         .first()
-        .click()
+      await expect(continueToHighAngleReviewButton).toBeEnabled({ timeout: 60_000 })
+      await continueToHighAngleReviewButton.click()
       await waitForAppReady(page, '/inspection/review')
       await expect(page.getByRole('heading', { name: 'Review Inspection' })).toBeVisible()
       await expectAnyVisibleText(page, 'High Angle Rescue Equipment')

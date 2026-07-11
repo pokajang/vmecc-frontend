@@ -8,6 +8,7 @@ export const DRAFT_STATUS_LABELS = {
   syncing: 'Saved locally. Syncing...',
   synced: 'Draft synced',
   failed: 'Draft sync failed. Retry required',
+  conflict: 'Draft changed elsewhere. Local work is preserved',
 }
 
 export const getDraftRestoreStatus = (draftPayload = {}) => {
@@ -16,9 +17,11 @@ export const getDraftRestoreStatus = (draftPayload = {}) => {
     ? DRAFT_STATUS_LABELS.synced
     : syncStatus === 'failed'
       ? DRAFT_STATUS_LABELS.failed
-      : syncStatus === 'waiting'
-        ? DRAFT_STATUS_LABELS.syncing
-        : DRAFT_STATUS_LABELS.localSaved
+      : syncStatus === 'conflict'
+        ? DRAFT_STATUS_LABELS.conflict
+        : syncStatus === 'waiting'
+          ? DRAFT_STATUS_LABELS.syncing
+          : DRAFT_STATUS_LABELS.localSaved
 }
 
 export const initializeInspectionRouteState = ({

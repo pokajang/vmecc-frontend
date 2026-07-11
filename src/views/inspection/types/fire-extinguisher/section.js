@@ -7,7 +7,6 @@ import RowActions from 'src/components/RowActions'
 import useMediaQuery from 'src/hooks/useMediaQuery'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import { appendInspectionText } from '../../form/inspectionFormHelpers'
-import { hasFireExtinguisherInspectionData } from '../../form/inspectionResetActions'
 import {
   FormFieldError,
   InspectionPhotoViewerModal,
@@ -19,6 +18,7 @@ import {
   updatePhotoDescriptionById,
 } from '../../form/inspectionPhotoUtils'
 import { getActionCountLabel } from '../../form/inspectionCountLabels'
+import { buildStagedPhotoUploadOptions } from '../../form/inspectionPhotoFlow'
 import {
   FIRE_EXTINGUISHER_CHECK_FIELDS,
   filterFireExtinguisherRows,
@@ -330,16 +330,21 @@ const FireExtinguisherListView = ({
     () => ({
       ...handlers,
       onUpdateCheck: (_row, patch) => patchMobileDraftRow(patch),
-      onRequestPhotoUpload: (row) =>
-        handlers.onRequestPhotoUpload?.(row, {
-          onAddPhotos: (_targetRow, photosKey, photos) =>
+      onRequestPhotoUpload: (row, options = {}) =>
+        handlers.onRequestPhotoUpload?.(
+          row,
+          buildStagedPhotoUploadOptions(options, (_targetRow, photosKey, photos) =>
             patchMobileDraftRow({ [photosKey]: photos }),
-        }),
-      onRequestDefectPhotoUpload: (row, field) =>
-        handlers.onRequestDefectPhotoUpload?.(row, field, {
-          onAddPhotos: (_targetRow, photosKey, photos) =>
+          ),
+        ),
+      onRequestDefectPhotoUpload: (row, field, options = {}) =>
+        handlers.onRequestDefectPhotoUpload?.(
+          row,
+          field,
+          buildStagedPhotoUploadOptions(options, (_targetRow, photosKey, photos) =>
             patchMobileDraftRow({ [photosKey]: photos }),
-        }),
+          ),
+        ),
       onRemovePhoto: (row, photoId, photosKey = 'photos') => {
         const currentPhotos = Array.isArray(row?.[photosKey]) ? row[photosKey] : []
         patchMobileDraftRow({ [photosKey]: removePhotoById(currentPhotos, photoId) })
@@ -532,12 +537,7 @@ const FireExtinguisherListView = ({
           }
           bodyClassName="inspection-fire-extinguisher-detail-drawer-shell"
           headerAction={
-            !mobileDetailReadOnly &&
-            typeof handlers.onResetCheck === 'function' &&
-            hasFireExtinguisherInspectionData(
-              mobileDraftRow || mobileDetailRow,
-              FIRE_EXTINGUISHER_CHECK_FIELDS,
-            ) ? (
+            !mobileDetailReadOnly && typeof handlers.onResetCheck === 'function' ? (
               <RowActions
                 iconSize={16}
                 hitArea={32}

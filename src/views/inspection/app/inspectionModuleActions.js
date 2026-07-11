@@ -1,5 +1,7 @@
 import { DRAFT_STATUS_LABELS } from './inspectionModuleFlow'
 import { isFrtDailyInspectionType } from 'src/views/inspection/types/frt-daily/helpers'
+import { getInspectionApiErrorMessage } from '../domain/api/inspectionApiError'
+import { countFireExtinguisherSessionRetryQueue } from '../form/hooks/fireExtinguisherSessionRetryQueue'
 
 const text = (value) => String(value || '').trim()
 const isSeededChecklistError = (error) => {
@@ -20,7 +22,7 @@ const getFriendlySubmitMessage = (error = {}, record = {}) => {
     return 'Please complete inspection on all compartment before submission.'
   }
   return (
-    text(error?.message || error?.payload?.message || '') ||
+    getInspectionApiErrorMessage(error, 'Unable to save this report. Please try again.') ||
     'Unable to save this report. Please try again.'
   )
 }
@@ -96,7 +98,7 @@ export const saveInspectionDraftAction = async ({
     result = await saveInspectionDraft(userId, payload)
   } catch (error) {
     setDraftStatus('Draft save failed')
-    pushToast(error?.message || 'Unable to save draft. Please try again.', {
+    pushToast(getInspectionApiErrorMessage(error, 'Unable to save draft. Please try again.'), {
       title: 'Draft save failed',
       color: 'danger',
     })
@@ -187,6 +189,16 @@ export const submitInspectionRecordAction = async ({
   const inspectionSessionUid = text(record?.inspectionSessionUid || record?.inspection_session_uid)
   const isUpdate = Number(record?.version || 0) > 0
   try {
+    if (
+      inspectionSessionUid &&
+      countFireExtinguisherSessionRetryQueue({ userId, sessionUid: inspectionSessionUid }) > 0
+    ) {
+      const pendingError = new Error(
+        'Inspection changes are still syncing. Retry sync before submitting.',
+      )
+      pendingError.code = 'inspection_session_operations_pending'
+      throw pendingError
+    }
     const saved = inspectionSessionUid
       ? await submitInspectionSessionReport?.({
           sessionUid: inspectionSessionUid,
@@ -194,6 +206,7 @@ export const submitInspectionRecordAction = async ({
           submissionKey,
           inspectedAt: record.inspectedAt,
           submittedAt: record.submittedAt,
+          sessionVersion: record.inspectionSessionVersion,
         })
       : await persistInspectionRecord(userId, record, { submissionKey })
     if (!saved) throw new Error('Unable to save this report in database/API. Please try again.')

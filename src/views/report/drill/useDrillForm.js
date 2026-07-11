@@ -1,18 +1,22 @@
 import { useState } from 'react'
 import { uid } from '../utils'
+import { DRILL_FIELD_LIMITS } from './constants'
 import { defaultDrillForm } from './utils'
 
 const useDrillForm = () => {
   const [form, setForm] = useState(defaultDrillForm)
   const [fieldErrors, setFieldErrors] = useState({})
   const [setupFieldErrors, setSetupFieldErrors] = useState({})
-  const [setupConfirmed, setSetupConfirmed] = useState(false)
 
   const addChronology = (patch = {}) =>
-    setForm((prev) => ({
-      ...prev,
-      chronology: [...prev.chronology, { id: uid(), time: '', action: '', ...patch }],
-    }))
+    setForm((prev) =>
+      prev.chronology.length >= DRILL_FIELD_LIMITS.chronology
+        ? prev
+        : {
+            ...prev,
+            chronology: [...prev.chronology, { id: uid(), time: '', action: '', ...patch }],
+          },
+    )
 
   const updateChronology = (rowId, patch) =>
     setForm((prev) => ({
@@ -29,6 +33,17 @@ const useDrillForm = () => {
           : prev.chronology.filter((row) => row.id !== rowId),
     }))
 
+  const moveChronology = (rowId, direction) =>
+    setForm((prev) => {
+      const rows = [...prev.chronology]
+      const index = rows.findIndex((row) => row.id === rowId)
+      const target = index + Number(direction || 0)
+      if (index < 0 || target < 0 || target >= rows.length) return prev
+      const [row] = rows.splice(index, 1)
+      rows.splice(target, 0, row)
+      return { ...prev, chronology: rows }
+    })
+
   return {
     form,
     setForm,
@@ -36,11 +51,10 @@ const useDrillForm = () => {
     setFieldErrors,
     setupFieldErrors,
     setSetupFieldErrors,
-    setupConfirmed,
-    setSetupConfirmed,
     addChronology,
     updateChronology,
     removeChronology,
+    moveChronology,
   }
 }
 

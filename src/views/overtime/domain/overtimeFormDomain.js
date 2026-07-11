@@ -9,6 +9,7 @@ import {
 export const normalizeOvertimeDraftPayload = (draft = null) => {
   if (!draft || typeof draft !== 'object' || Array.isArray(draft)) return null
   const sourceRecordId = String(draft.sourceRecordId || '').trim()
+  const sourceRecordServerId = String(draft.sourceRecordServerId || '').trim()
   return {
     overtimeType: normalizeOvertimeType(draft.overtimeType || 'weekday'),
     overtimeTypeConfirmed: Boolean(draft.overtimeTypeConfirmed),
@@ -18,6 +19,10 @@ export const normalizeOvertimeDraftPayload = (draft = null) => {
     reason: String(draft.reason || ''),
     savedAt: String(draft.savedAt || new Date().toISOString()),
     sourceRecordId,
+    sourceRecordServerId,
+    attachmentId: Number(draft.attachmentId || 0) || null,
+    attachment:
+      draft.attachment && typeof draft.attachment === 'object' ? { ...draft.attachment } : null,
   }
 }
 
@@ -64,6 +69,8 @@ export const getFormValuesFromRecord = (row = null, defaultOvertimeType = 'weekd
   startTime: normalizeOvertimeClockTime(row?.startTime),
   endTime: normalizeOvertimeClockTime(row?.endTime),
   reason: String(row?.reason || ''),
+  attachmentId: Number(row?.attachmentId || 0) || null,
+  attachment: row?.attachment || null,
 })
 
 export const buildFormSnapshot = ({
@@ -74,6 +81,7 @@ export const buildFormSnapshot = ({
   startTime = '',
   endTime = '',
   reason = '',
+  attachmentId = null,
 } = {}) => ({
   editingRecordId: String(editingRecordId || ''),
   overtimeType: normalizeOvertimeType(overtimeType || 'weekday'),
@@ -82,6 +90,7 @@ export const buildFormSnapshot = ({
   startTime: String(startTime || ''),
   endTime: String(endTime || ''),
   reason: String(reason || ''),
+  attachmentId: Number(attachmentId || 0) || null,
 })
 
 export const isSameFormSnapshot = (left, right) =>
@@ -94,5 +103,6 @@ export const isSameFormSnapshot = (left, right) =>
       left.claimDate === right.claimDate &&
       left.startTime === right.startTime &&
       left.endTime === right.endTime &&
-      left.reason === right.reason,
+      left.reason === right.reason &&
+      left.attachmentId === right.attachmentId,
   )

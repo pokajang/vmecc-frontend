@@ -331,6 +331,26 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
       : null
 
   useEffect(() => {
+    if (!isDrillReport || activeSection !== 'review' || reviewRecord) return
+    navigate(`${reportBasePath}/new/analysis${location.search || ''}`, {
+      replace: true,
+      state: {
+        ...(location.state || {}),
+        reviewRecoveryMessage:
+          'Review data was unavailable after refresh. Your saved draft was reopened for verification.',
+      },
+    })
+  }, [
+    activeSection,
+    isDrillReport,
+    location.search,
+    location.state,
+    navigate,
+    reportBasePath,
+    reviewRecord,
+  ])
+
+  useEffect(() => {
     const routeReportId = String(reportId || '').trim()
     if (activeSection !== 'detail' || !routeReportId) {
       return undefined
@@ -387,7 +407,11 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
     [reviewRecord, saveReviewDraft, selectedEditingRecord],
   )
   const handleBackFromReview = useCallback(
-    () => backFromReview({ reviewBackSection, reviewRecord }),
+    (requestedSection = '') =>
+      backFromReview({
+        reviewBackSection: requestedSection || reviewBackSection,
+        reviewRecord,
+      }),
     [backFromReview, reviewBackSection, reviewRecord],
   )
   const handleConfirmReviewSubmit = useCallback(
@@ -678,7 +702,11 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
           setWorkflowDeclarationChecked(Boolean(checked))
           if (checked && workflowDeclarationError) setWorkflowDeclarationError('')
         }}
-        declarationLabel={REPORT_WORKFLOW_DECLARATION_LABEL}
+        declarationLabel={
+          isDrillReport
+            ? 'I confirm this report workflow action is accurate and aligned with the submitted drill details.'
+            : REPORT_WORKFLOW_DECLARATION_LABEL
+        }
         declarationError={workflowDeclarationError}
         rejectError={workflowRejectError}
         actionDisabled={isActionBusy}
@@ -902,6 +930,7 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
             summaryLabel={
               isFitnessTestReport ? 'Test Summary' : isDrillReport ? 'Outcome Summary' : 'Summary'
             }
+            reportKind={activeFormSlug}
           />
         </div>
       ) : null}

@@ -17,6 +17,7 @@ import {
   SCBA_CYLINDER_FIELDS,
   SCBA_FACE_MASK_FIELDS,
 } from '../types/scba/helpers'
+import { buildInspectionReadinessFromBlockers } from './inspectionReadiness'
 
 const text = (value) => String(value || '').trim()
 
@@ -414,9 +415,19 @@ const buildBlockers = ({ definition, form, metrics, draftSyncState, sessionRetry
   if (sessionRetryCount > 0) {
     blockers.push({
       key: 'fire-extinguisher-session-sync',
+      retryCount: sessionRetryCount,
       message: `${sessionRetryCount} fire extinguisher session update${
         sessionRetryCount === 1 ? '' : 's'
       } could not sync. Retry to continue.`,
+    })
+  }
+  if (
+    definition?.key === 'fire-extinguisher-inspection' &&
+    form?.inspectionSessionCanSubmit === false
+  ) {
+    blockers.push({
+      key: 'inspection-session-submit-forbidden',
+      message: 'Only the session starter or a supervisor can submit this inspection.',
     })
   }
   if (draftSyncState?.status === 'local_saved' || draftSyncState?.status === 'syncing') {
@@ -428,8 +439,17 @@ const buildBlockers = ({ definition, form, metrics, draftSyncState, sessionRetry
   if (draftSyncState?.status === 'failed') {
     blockers.push({
       key: 'draft-sync-failed',
+      retryCount: 1,
       message: draftSyncState.lastError || 'Draft sync failed. Retry is available.',
       nonBlocking: true,
+    })
+  }
+  if (draftSyncState?.status === 'conflict') {
+    blockers.push({
+      key: 'draft-version-conflict',
+      message:
+        draftSyncState.lastError ||
+        'This draft changed in another tab or device. Resolve the local and server copies before submitting.',
     })
   }
   return blockers
@@ -565,7 +585,7 @@ export const buildPendingSubmissionSummary = ({
   const drafts = getPendingSubmissionDrafts(form)
   const syncTypeKey = getPendingSubmissionTypeKey(draftSyncState?.pendingType)
   const syncStatus = text(draftSyncState?.status)
-  const syncIsBlocking = ['failed', 'local_saved', 'syncing'].includes(syncStatus)
+  const syncIsBlocking = ['failed', 'conflict', 'local_saved', 'syncing'].includes(syncStatus)
   const syncAppliesToAll =
     syncIsBlocking &&
     (text(draftSyncState?.scope || draftSyncState?.pendingScope).toLowerCase() === 'all' ||
@@ -600,18 +620,22 @@ export const buildPendingSubmissionSummary = ({
         definition,
         form: normalizedDraft,
         metrics,
-        draftSyncState: ['failed', 'local_saved', 'syncing'].includes(typeSyncState?.status)
+        draftSyncState: ['failed', 'conflict', 'local_saved', 'syncing'].includes(
+          typeSyncState?.status,
+        )
           ? typeSyncState
           : null,
         sessionRetryCount,
       })
-      const blockingBlockers = blockers.filter((blocker) => blocker?.nonBlocking !== true)
+      const readiness = buildInspectionReadinessFromBlockers(blockers)
       const status =
-        typeSyncState?.status === 'syncing' || typeSyncState?.status === 'local_saved'
-          ? 'syncing'
-          : blockingBlockers.length > 0
-            ? 'needs_attention'
-            : 'ready'
+        typeSyncState?.status === 'conflict'
+          ? 'blocked'
+          : typeSyncState?.status === 'syncing' || typeSyncState?.status === 'local_saved'
+            ? 'syncing'
+            : !readiness.isReadyToSubmit
+              ? 'needs_attention'
+              : 'ready'
 
       return {
         key: definition.key,
@@ -620,6 +644,7 @@ export const buildPendingSubmissionSummary = ({
         title: definition.title,
         status,
         blockers,
+        readiness,
         metrics,
         form: pendingForm,
         groups: buildGroups(definition, normalizedDraft, summary),

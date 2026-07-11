@@ -65,6 +65,7 @@ const LeaveApplySection = ({
   isSubmitBlockedByBalance,
   editingRecordId,
   guidanceMessage = '',
+  rosterImpact = null,
 }) => (
   <>
     {!leaveTypeConfirmed ? (
@@ -148,6 +149,17 @@ const LeaveApplySection = ({
                 <div className="small text-info-emphasis bg-info bg-opacity-10 border border-info-subtle rounded-3 p-2">
                   {guidanceMessage}
                 </div>
+              </CCol>
+            ) : null}
+            {rosterImpact?.summary?.duty_count ? (
+              <CCol xs={12}>
+                <CAlert color="warning" className="mb-0 py-2" data-testid="leave-roster-impact">
+                  <span className="fw-semibold">Roster duty detected:</span>{' '}
+                  {rosterImpact.items
+                    .map((item) => `${item.shift_label} shift, ${item.team_name}, ${item.date}`)
+                    .join('; ')}
+                  . Your leave request can still be submitted.
+                </CAlert>
               </CCol>
             ) : null}
             <CCol md={4}>

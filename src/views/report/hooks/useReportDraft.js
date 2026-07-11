@@ -21,10 +21,21 @@ const useReportDraft = ({
     draftLoadedRef.current = true
     let cancelled = false
     const run = async () => {
-      const draft =
-        typeof loadDraft === 'function'
-          ? await loadDraft({ userId, reportTypeSlug })
-          : await loadReportDraft(userId, reportTypeSlug)
+      let draft = null
+      try {
+        draft =
+          typeof loadDraft === 'function'
+            ? await loadDraft({ userId, reportTypeSlug })
+            : await loadReportDraft(userId, reportTypeSlug)
+      } catch {
+        if (!cancelled) {
+          pushToast?.(
+            'The saved draft could not be loaded from the server. Start again or retry after reconnecting.',
+            { title: 'Draft unavailable', color: 'warning' },
+          )
+        }
+        return
+      }
       if (!draft || cancelled) return
       const restoredSetupConfirmed = Boolean(draft?.setupConfirmed)
       const restoredRespondingTeamConfirmed = Boolean(draft?.respondingTeamConfirmed)

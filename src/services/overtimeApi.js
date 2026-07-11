@@ -16,6 +16,8 @@ import {
   approveStaffOvertimeRecord,
   rejectStaffOvertimeRecord,
   cancelStaffOvertimeRecord,
+  requestCorrectionStaffOvertimeRecord,
+  uploadWorkflowAttachment,
 } from './apiClient'
 import featureFlags from 'src/config/featureFlags'
 
@@ -99,6 +101,21 @@ export const mapOvertimeApiRowToUi = (row = {}, ownerUserId = '') => ({
     : Array.isArray(row.approvalHistory)
       ? row.approvalHistory
       : [],
+  version: Number(row.version || 1) || 1,
+  attachmentId: row.attachment?.id ?? row.attachment_id ?? row.attachmentId ?? null,
+  attachment:
+    row.attachment && typeof row.attachment === 'object'
+      ? {
+          id: Number(row.attachment.id) || null,
+          originalName: String(row.attachment.original_name || row.attachment.originalName || ''),
+          mimeType: String(row.attachment.mime_type || row.attachment.mimeType || ''),
+          size: Number(row.attachment.size || 0) || 0,
+        }
+      : null,
+  permittedActions:
+    row.permitted_actions && typeof row.permitted_actions === 'object'
+      ? { ...row.permitted_actions }
+      : null,
   guidance_meta:
     row.guidance_meta && typeof row.guidance_meta === 'object'
       ? { ...row.guidance_meta }
@@ -116,6 +133,7 @@ const toApiPayload = (row = {}) => ({
   duration_minutes: Number(row.durationMinutes || 0) || 0,
   reason: row.reason || '',
   attachment_id: row.attachmentId || null,
+  expected_version: row.version || undefined,
 })
 
 export const loadMyOvertimePolicyApiFirst = async () => {
@@ -218,29 +236,32 @@ export const submitMyOvertimeApiFirst = async (userId, row, existingServerId = n
   }
 }
 
-export const cancelMyOvertimeApiFirst = async (serverId) => {
+export const cancelMyOvertimeApiFirst = async (serverId, version = null) => {
   if (!featureFlags.apiOtPayrollWritesPrimary) {
     return { ok: false, error: new Error('API writes disabled by feature flag'), source: 'api' }
   }
   if (!serverId) return { ok: false, source: 'api' }
   try {
-    const result = await cancelOvertimeRecord(serverId)
+    const result = await cancelOvertimeRecord(
+      serverId,
+      version ? { expected_version: version } : {},
+    )
     return { ok: true, data: result?.data || null, source: 'api' }
   } catch (error) {
-    return { ok: false, error, source: 'api' }
+    return { ok: false, error, source: 'api', ...mapApiErrorMeta(error) }
   }
 }
 
-export const deleteMyOvertimeApiFirst = async (serverId) => {
+export const deleteMyOvertimeApiFirst = async (serverId, version = null) => {
   if (!featureFlags.apiOtPayrollWritesPrimary) {
     return { ok: false, error: new Error('API writes disabled by feature flag'), source: 'api' }
   }
   if (!serverId) return { ok: false, source: 'api' }
   try {
-    await deleteOvertimeRecordApi(serverId)
+    await deleteOvertimeRecordApi(serverId, version ? { expected_version: version } : {})
     return { ok: true, source: 'api' }
   } catch (error) {
-    return { ok: false, error, source: 'api' }
+    return { ok: false, error, source: 'api', ...mapApiErrorMeta(error) }
   }
 }
 
@@ -286,6 +307,18 @@ export const clearMyOvertimeDraftApiFirst = async (_userId) => {
   }
 }
 
+export const uploadMyOvertimeAttachmentApiFirst = async (file) => {
+  if (!featureFlags.apiOtPayrollWritesPrimary) {
+    return { ok: false, error: new Error('API writes disabled by feature flag'), source: 'api' }
+  }
+  try {
+    const result = await uploadWorkflowAttachment(file)
+    return { ok: true, data: result?.data || null, source: 'api' }
+  } catch (error) {
+    return { ok: false, error, source: 'api', ...mapApiErrorMeta(error) }
+  }
+}
+
 export const loadStaffOvertimeRecordsApiFirst = async (params = {}) => {
   if (!featureFlags.apiOtPayrollReadsPrimary) {
     return {
@@ -324,7 +357,10 @@ export const runStaffOvertimeWorkflowApi = async (row, decision, remarks = '') =
   const recordId = Number(row?.serverId || 0)
   if (!ownerId || !recordId) return { ok: false, source: 'api' }
 
-  const payload = remarks ? { remarks } : {}
+  const payload = {
+    ...(remarks ? { remarks } : {}),
+    ...(row?.version ? { expected_version: row.version } : {}),
+  }
 
   try {
     const action = String(decision || '').toLowerCase()
@@ -338,10 +374,12 @@ export const runStaffOvertimeWorkflowApi = async (row, decision, remarks = '') =
       result = await rejectStaffOvertimeRecord(ownerId, recordId, payload)
     else if (action === 'cancel')
       result = await cancelStaffOvertimeRecord(ownerId, recordId, payload)
+    else if (action === 'request_correction')
+      result = await requestCorrectionStaffOvertimeRecord(ownerId, recordId, payload)
     else return { ok: false, source: 'api' }
 
     return { ok: true, data: mapOvertimeApiRowToUi(result?.data || {}, ownerId), source: 'api' }
   } catch (error) {
-    return { ok: false, error, source: 'api' }
+    return { ok: false, error, source: 'api', ...mapApiErrorMeta(error) }
   }
 }

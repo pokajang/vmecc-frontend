@@ -128,6 +128,19 @@ export const normalizeInspectionForm = (form = {}) => {
   const hseFields = normalizeHseFormFields(source)
   const inspectedAt = deriveInspectedAt(source)
   const inspectionDate = getInspectionDateFromDateTime(inspectedAt)
+  const inspectionSessionUid = String(
+    source.inspectionSessionUid || source.inspection_session_uid || '',
+  ).trim()
+  const inspectionSessionVersion = Math.max(
+    0,
+    Number(source.inspectionSessionVersion || source.inspection_session_version || 0) || 0,
+  )
+  const inspectionSessionStartedByUserId = String(
+    source.inspectionSessionStartedByUserId || source.inspection_session_started_by_user_id || '',
+  ).trim()
+  const inspectionSessionScopeVersion = String(
+    source.inspectionSessionScopeVersion || source.inspection_session_scope_version || '',
+  ).trim()
   const normalizedHseFields = {
     ...hseFields,
     hseInspectionDate: inspectionDate || hseFields.hseInspectionDate,
@@ -164,6 +177,15 @@ export const normalizeInspectionForm = (form = {}) => {
             ).trim(),
           }
         : null,
+    ...(inspectionSessionUid ? { inspectionSessionUid } : {}),
+    ...(inspectionSessionVersion > 0 ? { inspectionSessionVersion } : {}),
+    ...(inspectionSessionStartedByUserId ? { inspectionSessionStartedByUserId } : {}),
+    ...(inspectionSessionScopeVersion ? { inspectionSessionScopeVersion } : {}),
+    ...(typeof source.inspectionSessionCanSubmit === 'boolean'
+      ? { inspectionSessionCanSubmit: source.inspectionSessionCanSubmit }
+      : typeof source.inspection_session_can_submit === 'boolean'
+        ? { inspectionSessionCanSubmit: source.inspection_session_can_submit }
+        : {}),
     submittedByRole: String(source.submittedByRole || source.submitted_by_role || '').trim(),
     submittedByRoleCode: String(
       source.submittedByRoleCode || source.submitted_by_role_code || '',

@@ -86,6 +86,7 @@ const LeaveRecordsSection = ({
   deleteLeave,
   approveLeave,
   rejectLeave,
+  requestCorrectionLeave,
   onBulkWorkflowAction,
   isBulkSubmitting = false,
   bulkDeclarationLabel = '',
@@ -189,6 +190,7 @@ const LeaveRecordsSection = ({
         actionConfig: reviewActionConfig,
         onApprove: approveLeave,
         onReject: rejectLeave,
+        onRequestCorrection: requestCorrectionLeave,
       })
     }
 

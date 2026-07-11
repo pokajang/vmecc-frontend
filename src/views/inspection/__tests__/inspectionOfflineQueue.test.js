@@ -211,6 +211,33 @@ describe('inspectionOfflineQueue', () => {
     expect(getInspectionQueueNextRetryAt(loadInspectionQueue(userId)[0])).toBeTruthy()
   })
 
+  it('pauses permanent validation failures until an explicit retry', async () => {
+    const error = new Error('Remarks are required.')
+    error.status = 422
+    error.payload = { errors: { remarks: ['Remarks are required.'] } }
+    persistInspectionRecord.mockRejectedValue(error)
+    const item = enqueueInspectionSubmission({
+      userId,
+      record,
+      submissionKey: 'inspection-submit-key-blocked',
+    })
+
+    const first = await syncInspectionQueue({ userId })
+    expect(first[0]).toMatchObject({ synced: false, blocked: true })
+    expect(loadInspectionQueue(userId)[0]).toMatchObject({
+      status: 'blocked',
+      lastError: 'Remarks are required.',
+      nextRetryAt: '',
+    })
+
+    await syncInspectionQueue({ userId })
+    expect(persistInspectionRecord).toHaveBeenCalledTimes(1)
+    await syncInspectionQueue({ userId, force: true })
+    expect(persistInspectionRecord).toHaveBeenCalledTimes(2)
+    expect(loadInspectionQueue(userId)[0].status).toBe('blocked')
+    expect(item.queueId).toBeTruthy()
+  })
+
   it('marks version conflicts for operator resolution', async () => {
     const error = new Error('Version conflict. Reload the latest report before updating.')
     error.status = 409

@@ -1,4 +1,5 @@
 import {
+  apiRequest,
   buildApiUrl,
   getClientId,
   getClientMode,
@@ -25,11 +26,18 @@ const HTTP_FAILURE_CODES = new Map([
 ])
 const createUploadId = () => {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID()
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (token) => {
-    const random = Math.floor(Math.random() * 16)
-    const value = token === 'x' ? random : (random & 0x3) | 0x8
-    return value.toString(16)
-  })
+  if (!globalThis.crypto?.getRandomValues) {
+    throw new Error('Secure upload identifiers are unavailable in this browser.')
+  }
+  const bytes = new Uint8Array(16)
+  globalThis.crypto.getRandomValues(bytes)
+  bytes[6] = (bytes[6] & 0x0f) | 0x40
+  bytes[8] = (bytes[8] & 0x3f) | 0x80
+  const hex = [...bytes].map((value) => value.toString(16).padStart(2, '0')).join('')
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(
+    16,
+    20,
+  )}-${hex.slice(20)}`
 }
 
 const waitForRetry = (milliseconds, signal) =>
@@ -169,6 +177,7 @@ export const uploadReportPhoto = async ({
   signal,
   onProgress,
   onRetry,
+  contextKey = '',
   uploadId = createUploadId(),
 } = {}) => {
   const validationCode = validateReportPhotoFile(file, source)
@@ -181,7 +190,7 @@ export const uploadReportPhoto = async ({
     const response = await uploadWithRetry({
       endpoint: '/report-media',
       file,
-      fields: { module, source, upload_id: uploadId },
+      fields: { module, source, upload_id: uploadId, context_key: contextKey },
       signal,
       onProgress,
       onRetry,
@@ -200,11 +209,32 @@ export const uploadReportPhoto = async ({
       thumbnailWidth: Number(row.thumbnail_width || 0),
       thumbnailHeight: Number(row.thumbnail_height || 0),
       checksumSha256: String(row.checksum_sha256 || ''),
+      leaseId: String(row.lease_id || ''),
+      leaseExpiresAt: String(row.lease_expires_at || ''),
+      leaseAbsoluteExpiresAt: String(row.lease_absolute_expires_at || ''),
       uploadId,
     }
   } catch (error) {
     error.code = classifyReportPhotoFailure(error)
     throw error
+  }
+}
+
+export const renewReportMediaLease = async (photo = {}, contextKey = '') => {
+  const mediaId = String(photo?.mediaId || photo?.media_id || '').trim()
+  const leaseId = String(photo?.leaseId || photo?.lease_id || '').trim()
+  if (!mediaId || !leaseId) return { renewed: false, linked: false }
+  const response = await apiRequest(`/report-media/${encodeURIComponent(mediaId)}/lease/renew`, {
+    method: 'POST',
+    body: JSON.stringify({ lease_id: leaseId, context_key: String(contextKey || '') }),
+  })
+  const row = response?.data || {}
+  return {
+    renewed: Boolean(row.lease_id),
+    linked: row.linked === true,
+    leaseId: String(row.lease_id || ''),
+    leaseExpiresAt: String(row.lease_expires_at || ''),
+    leaseAbsoluteExpiresAt: String(row.lease_absolute_expires_at || ''),
   }
 }
 

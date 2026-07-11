@@ -7,7 +7,6 @@ const DEFAULT_ELIGIBILITY = {
   applicableRoles: [],
   userRoles: [],
 }
-
 let eligibilityCache = null
 let eligibilityPromise = null
 

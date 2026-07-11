@@ -116,7 +116,9 @@ const useReportRecords = ({ user = null, userId, reportTypeSlug, reportId, draft
 
     if (term) {
       next = next.filter((x) =>
-        `${x.displayId} ${x.incidentType} ${x.location} ${x.status}`.toLowerCase().includes(term),
+        `${x.displayId} ${x.exerciseTitle || ''} ${x.incidentType} ${x.location} ${x.status}`
+          .toLowerCase()
+          .includes(term),
       )
     }
 

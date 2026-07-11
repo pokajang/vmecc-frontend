@@ -1,10 +1,19 @@
 import React, { useState } from 'react'
-import { CButton, CCol, CFormFeedback, CFormInput, CFormLabel, CRow } from '@coreui/react'
+import {
+  CButton,
+  CAlert,
+  CCol,
+  CFormCheck,
+  CFormFeedback,
+  CFormInput,
+  CFormLabel,
+  CRow,
+} from '@coreui/react'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import CreateActionButton from 'src/components/CreateActionButton'
 import IconOptionGrid from 'src/components/IconOptionGrid'
 import TypeManagerModal from 'src/components/report-workflow/TypeManagerModal'
-import { DRILL_ENVIRONMENT_OPTIONS } from './constants'
+import { DRILL_ENVIRONMENT_OPTIONS, DRILL_EXERCISE_CATEGORY_OPTIONS } from './constants'
 import SelectionCards from '../components/SelectionCards'
 import { ReportSetupActions, ReportSetupSummaryRow } from '../components/ReportWorkflowUi'
 import useDrillTypeManager, { DRILL_TYPE_TOGGLE_VALUE } from './useDrillTypeManager'
@@ -35,10 +44,15 @@ const DrillSetupStep = ({
   onContinue,
   saveLabel = 'Save Draft',
   draftStatus = '',
+  blockerMessage = '',
+  onReset,
 }) => {
   const [isEditingType, setIsEditingType] = useState(() => !String(form.incidentType || '').trim())
   const [isEditingEnvironment, setIsEditingEnvironment] = useState(
     () => !String(form.weather || '').trim(),
+  )
+  const [isEditingCategories, setIsEditingCategories] = useState(
+    () => !Array.isArray(form.exerciseCategories) || form.exerciseCategories.length === 0,
   )
   const [isEditingLocation, setIsEditingLocation] = useState(
     () => !String(form.location || '').trim(),
@@ -61,7 +75,9 @@ const DrillSetupStep = ({
     isEditingDateTime ||
     !String(form.reportDate || '').trim() ||
     !String(form.reportTime || '').trim()
-  const dateTimeLabel = [form.reportDate, form.reportTime].filter(Boolean).join(' ')
+  const dateTimeLabel = `${[form.reportDate, form.reportTime].filter(Boolean).join(' ')}${
+    form.reportIssuanceDate ? ` | Issued ${form.reportIssuanceDate}` : ''
+  }`
 
   const drillType = useDrillTypeManager({
     userId: user?.id,
@@ -238,6 +254,70 @@ const DrillSetupStep = ({
             </>
           )}
         </div>
+        {Array.isArray(form.exerciseCategories) &&
+        form.exerciseCategories.length > 0 &&
+        !isEditingCategories ? (
+          <ReportSetupSummaryRow
+            label="Exercise Categories"
+            value={form.exerciseCategories.join(', ')}
+            showDesktop
+            onEdit={() => setIsEditingCategories(true)}
+            onReset={() => {
+              updateSetupField('exerciseCategories', [])
+              setIsEditingCategories(true)
+            }}
+          />
+        ) : (
+          <fieldset className="d-grid gap-2">
+            <legend className="fs-6 fw-semibold text-muted mb-0">
+              Exercise Categories (optional)
+            </legend>
+            <div className="d-flex flex-wrap gap-3">
+              {DRILL_EXERCISE_CATEGORY_OPTIONS.map((option) => {
+                const selected = Array.isArray(form.exerciseCategories)
+                  ? form.exerciseCategories.includes(option.value)
+                  : false
+                return (
+                  <CFormCheck
+                    key={option.value}
+                    id={`drill-category-${option.value.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`}
+                    label={option.label}
+                    checked={selected}
+                    onChange={() =>
+                      setForm((prev) => {
+                        const current = Array.isArray(prev.exerciseCategories)
+                          ? prev.exerciseCategories
+                          : []
+                        return {
+                          ...prev,
+                          exerciseCategories: selected
+                            ? current.filter((value) => value !== option.value)
+                            : [...current, option.value],
+                        }
+                      })
+                    }
+                  />
+                )
+              })}
+            </div>
+            <div className="small text-body-secondary">
+              Select every emergency response category exercised by this drill.
+            </div>
+            {Array.isArray(form.exerciseCategories) && form.exerciseCategories.length > 0 ? (
+              <div className="report-setup-confirm-row">
+                <CButton
+                  type="button"
+                  color="secondary"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditingCategories(false)}
+                >
+                  Confirm Categories
+                </CButton>
+              </div>
+            ) : null}
+          </fieldset>
+        )}
         {form.weather && !showEnvironmentPicker ? (
           <ReportSetupSummaryRow
             label="Environment"
@@ -338,6 +418,19 @@ const DrillSetupStep = ({
               <CFormFeedback invalid>{setupFieldErrors.reportDate}</CFormFeedback>
             </CCol>
           </CRow>
+          <CRow className="g-2">
+            <CCol xs={12} md={4}>
+              <CFormLabel htmlFor="drill-report-issuance-date">
+                Report issuance date (optional)
+              </CFormLabel>
+              <CFormInput
+                id="drill-report-issuance-date"
+                type="date"
+                value={form.reportIssuanceDate || ''}
+                onChange={(event) => updateSetupField('reportIssuanceDate', event.target.value)}
+              />
+            </CCol>
+          </CRow>
           <SelectionCards
             label="Choose Start Time"
             options={timePresetOptions}
@@ -371,6 +464,16 @@ const DrillSetupStep = ({
               </CButton>
             </div>
           ) : null}
+        </div>
+        {blockerMessage ? (
+          <CAlert color="danger" className="mb-0" role="alert">
+            {blockerMessage}
+          </CAlert>
+        ) : null}
+        <div className="d-flex justify-content-end">
+          <CButton type="button" color="light" size="sm" onClick={onReset}>
+            Reset
+          </CButton>
         </div>
         <ReportSetupActions
           onSaveDraft={onSaveDraft}

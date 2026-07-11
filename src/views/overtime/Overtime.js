@@ -115,6 +115,10 @@ const Overtime = () => {
     handleBackToOvertimeType,
     durationMinutes,
     isOvernight,
+    isOvernightConfirmed,
+    setIsOvernightConfirmed,
+    attachment,
+    setAttachment,
     isFormDirty,
   } = useOvertimeForm({ overtimeTypeDerivedMode, editingRecordId })
 
@@ -138,6 +142,7 @@ const Overtime = () => {
     overtimeDraft,
     setOvertimeDraft,
     isOvertimeLoading,
+    isApiUnavailable,
   } = useOvertimeData({
     userId: user?.id,
     canUseOvertimeModule,
@@ -176,6 +181,7 @@ const Overtime = () => {
 
   useOvertimeDraftHydration({
     activeSection,
+    attachment,
     claimDate,
     defaultOvertimeType,
     draftHydratedRef,
@@ -188,6 +194,7 @@ const Overtime = () => {
     pushToast,
     reason,
     setClaimDate,
+    setAttachment,
     setEndTime,
     setFormBaseline,
     setOvertimeType,
@@ -235,12 +242,14 @@ const Overtime = () => {
   )
   const hasPersistedEditTarget = Boolean(editingPersistedRecord?.id)
   const isResubmittingClaim =
-    hasPersistedEditTarget && String(editingPersistedRecord?.status || '') === 'Pending'
+    hasPersistedEditTarget &&
+    ['Pending', 'Needs Correction'].includes(String(editingPersistedRecord?.status || ''))
   const isResumeEditMode = Boolean(editingRecordId)
   const isLinkedDraftForEditing =
     hasPersistedEditTarget &&
     linkedDraftRecordId !== '' &&
-    linkedDraftRecordId === String(editingRecordId || '').trim()
+    (linkedDraftRecordId === String(editingPersistedRecord?.serverId || '').trim() ||
+      linkedDraftRecordId === String(editingRecordId || '').trim())
   const submitButtonLabel = isResubmittingClaim ? 'Update request' : 'Submit request'
   const submittingButtonLabel = isResubmittingClaim
     ? 'Updating request...'
@@ -310,6 +319,8 @@ const Overtime = () => {
     setClaimDate('')
     setStartTime('')
     setEndTime('')
+    setIsOvernightConfirmed(false)
+    setAttachment(null)
     setReason('')
     setFormBaseline(
       buildFormSnapshot({
@@ -320,6 +331,7 @@ const Overtime = () => {
         startTime: '',
         endTime: '',
         reason: '',
+        attachmentId: null,
       }),
     )
     setFieldErrors({})
@@ -353,6 +365,8 @@ const Overtime = () => {
     setClaimDate('')
     setStartTime('')
     setEndTime('')
+    setIsOvernightConfirmed(false)
+    setAttachment(null)
     setReason('')
     setFormBaseline(
       buildFormSnapshot({
@@ -363,6 +377,7 @@ const Overtime = () => {
         startTime: '',
         endTime: '',
         reason: '',
+        attachmentId: null,
       }),
     )
     setFieldErrors({})
@@ -378,6 +393,8 @@ const Overtime = () => {
     setStartTime(submittedValues.startTime)
     setEndTime(submittedValues.endTime)
     setReason(submittedValues.reason)
+    setAttachment(submittedValues.attachment)
+    setIsOvernightConfirmed(Boolean(editingPersistedRecord.isOvernight))
     setFormBaseline(
       buildFormSnapshot({
         editingRecordId: editingPersistedRecord.id,
@@ -387,6 +404,7 @@ const Overtime = () => {
         startTime: submittedValues.startTime,
         endTime: submittedValues.endTime,
         reason: submittedValues.reason,
+        attachmentId: submittedValues.attachmentId,
       }),
     )
     setFieldErrors({})
@@ -404,7 +422,9 @@ const Overtime = () => {
     }
     const linkedDraft =
       overtimeDraft &&
-      String(overtimeDraft?.sourceRecordId || '').trim() === String(row.id || '').trim()
+      (String(overtimeDraft?.sourceRecordServerId || '').trim() ===
+        String(row.serverId || '').trim() ||
+        String(overtimeDraft?.sourceRecordId || '').trim() === String(row.id || '').trim())
         ? overtimeDraft
         : null
     const mergedSource = linkedDraft ? { ...row, ...linkedDraft } : row
@@ -417,6 +437,8 @@ const Overtime = () => {
     setStartTime(nextFormValues.startTime)
     setEndTime(nextFormValues.endTime)
     setReason(nextFormValues.reason)
+    setAttachment(nextFormValues.attachment)
+    setIsOvernightConfirmed(Boolean(row.isOvernight))
     setFormBaseline(
       buildFormSnapshot({
         editingRecordId: row.id,
@@ -426,6 +448,7 @@ const Overtime = () => {
         startTime: nextFormValues.startTime,
         endTime: nextFormValues.endTime,
         reason: nextFormValues.reason,
+        attachmentId: nextFormValues.attachmentId,
       }),
     )
     if (linkedDraft) {
@@ -467,6 +490,8 @@ const Overtime = () => {
     isDraftSaving,
     isFormClearing,
     isSubmittingClaim,
+    isAttachmentUploading,
+    handleAttachmentUpload,
     cancelOvertime,
     confirmCancelOvertime,
     deleteOvertime,
@@ -506,6 +531,10 @@ const Overtime = () => {
       reason,
       durationMinutes,
       isOvernight,
+      isOvernightConfirmed,
+      attachmentId: attachment?.id || null,
+      attachment,
+      setAttachment,
       setFieldErrors,
       setFormBaseline,
     },
@@ -544,6 +573,14 @@ const Overtime = () => {
         <div className="small">
           Your active roles: {(overtimeEligibility?.userRoles || []).join(', ') || '-'}
         </div>
+      </CAlert>
+    )
+  }
+
+  if (isApiUnavailable) {
+    return (
+      <CAlert color="danger" className="m-4">
+        Overtime records are temporarily unavailable. Please retry after the service is restored.
       </CAlert>
     )
   }
@@ -727,6 +764,11 @@ const Overtime = () => {
             onReasonChange={handleReasonChange}
             durationMinutes={durationMinutes}
             isOvernight={isOvernight}
+            isOvernightConfirmed={isOvernightConfirmed}
+            onOvernightConfirmationChange={setIsOvernightConfirmed}
+            attachment={attachment}
+            onAttachmentChange={handleAttachmentUpload}
+            isAttachmentUploading={isAttachmentUploading}
             onClearForm={handleClearForm}
             clearButtonLabel={clearButtonLabel}
             clearingButtonLabel={clearingButtonLabel}

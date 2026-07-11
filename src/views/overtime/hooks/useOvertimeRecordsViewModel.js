@@ -34,7 +34,7 @@ const useOvertimeRecordsViewModel = ({
     [defaultOvertimeType, overtimeDraft, userId],
   )
   const linkedDraftRecordId = useMemo(
-    () => String(overtimeDraft?.sourceRecordId || '').trim(),
+    () => String(overtimeDraft?.sourceRecordServerId || overtimeDraft?.sourceRecordId || '').trim(),
     [overtimeDraft],
   )
   const overtimeRecordsWithDraftState = useMemo(
@@ -42,7 +42,9 @@ const useOvertimeRecordsViewModel = ({
       overtimeRecords.map((row) => ({
         ...row,
         hasDraftChanges:
-          linkedDraftRecordId !== '' && String(row?.id || '').trim() === linkedDraftRecordId,
+          linkedDraftRecordId !== '' &&
+          (String(row?.serverId || '').trim() === linkedDraftRecordId ||
+            String(row?.id || '').trim() === linkedDraftRecordId),
       })),
     [linkedDraftRecordId, overtimeRecords],
   )

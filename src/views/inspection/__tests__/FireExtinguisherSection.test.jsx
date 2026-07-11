@@ -349,6 +349,36 @@ describe('FireExtinguisherEditSection', () => {
     expect(screen.getByLabelText('Defect (1)')).toBeTruthy()
   })
 
+  it('keeps Reset check available when an extinguisher row is already empty', () => {
+    const onResetCheck = vi.fn()
+    const row = buildCompleteOkRow({
+      ...FIRE_EXTINGUISHER_CHECK_FIELDS.reduce((patch, field) => {
+        patch[field.key] = ''
+        patch[field.remarksKey] = ''
+        patch[field.photosKey] = []
+        return patch
+      }, {}),
+      remarks: '',
+      photos: [],
+    })
+
+    renderSection({
+      summary: {
+        visibleChecks: [row],
+        completedCount: 0,
+        totalCount: 1,
+        defectCount: 0,
+      },
+      handlers: { onResetCheck },
+    })
+
+    fireEvent.click(screen.getByLabelText('Extinguisher actions for ADO-001'))
+    fireEvent.click(screen.getByText('Reset check'))
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
+
+    expect(onResetCheck).toHaveBeenCalledWith(expect.objectContaining({ id: 'fe:ok' }))
+  })
+
   it('preserves trailing spaces in defect remarks while typing', () => {
     render(<FireExtinguisherStatefulHarness />)
 
@@ -397,6 +427,39 @@ describe('FireExtinguisherEditSection', () => {
         }),
       )
     })
+  })
+
+  it('preserves the photo-viewer callback through the mobile draft upload handler', () => {
+    setMobileViewport()
+    const onRequestDefectPhotoUpload = vi.fn()
+    const row = buildCompleteOkRow({
+      id: 'fe:mobile-photo',
+      physicalCondition: 'Not Good',
+      physicalConditionRemarks: 'Damaged body',
+      physicalConditionPhotos: [],
+    })
+
+    renderSection({
+      summary: {
+        visibleChecks: [row],
+        completedCount: 1,
+        totalCount: 1,
+        defectCount: 1,
+      },
+      handlers: { onRequestDefectPhotoUpload },
+    })
+
+    fireEvent.click(screen.getByText('ADO-001'))
+    fireEvent.click(screen.getByRole('button', { name: 'Add photo (optional)' }))
+
+    expect(onRequestDefectPhotoUpload).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'fe:mobile-photo' }),
+      expect.objectContaining({ key: 'physicalCondition' }),
+      expect.objectContaining({
+        onAddPhotos: expect.any(Function),
+        onAfterAddPhotos: expect.any(Function),
+      }),
+    )
   })
 
   it('discards unsaved mobile drawer edits when Cancel is selected', () => {

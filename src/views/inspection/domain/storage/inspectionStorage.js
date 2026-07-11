@@ -66,7 +66,12 @@ export const saveInspectionRecords = (userId, rows) => {
 const normalizeDraft = (row) => {
   if (!row || typeof row !== 'object') return null
   const payload = row?.payload && typeof row.payload === 'object' ? row.payload : {}
-  return payload
+  return {
+    ...payload,
+    __serverDraftId: String(row.draft_id || '').trim(),
+    __serverDraftVersion: Math.max(0, Number(row.version || 0) || 0),
+    __serverDraftSavedAt: String(row.saved_at || '').trim(),
+  }
 }
 
 const stripOfflineDraftMeta = (draft = {}) => {
@@ -74,29 +79,53 @@ const stripOfflineDraftMeta = (draft = {}) => {
   delete payload.__offlineSyncStatus
   delete payload.__offlineSavedAt
   delete payload.__offlineSyncError
+  delete payload.__offlineDraftConflict
+  delete payload.__serverDraftId
+  delete payload.__serverDraftVersion
+  delete payload.__serverDraftSavedAt
   return payload
 }
+
+const saveDraftToServer = async (draft = {}) => {
+  const draftId = String(draft?.__serverDraftId || '').trim()
+  const baseVersion = Math.max(0, Number(draft?.__serverDraftVersion || 0) || 0)
+  const payload = stripOfflineDraftMeta(draft)
+  if (draftId) {
+    return apiRequest(`/reports/drafts/${encodeURIComponent(draftId)}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        payload,
+        ...(baseVersion > 0 ? { base_version: baseVersion } : {}),
+      }),
+    })
+  }
+  return apiRequest('/reports/drafts', {
+    method: 'POST',
+    body: JSON.stringify({
+      report_type: INSPECTION_TYPE,
+      payload,
+      create_new: true,
+    }),
+  })
+}
+
+const withSyncedDraftMeta = (draft, row) => ({
+  ...stripOfflineDraftMeta(draft),
+  ...normalizeDraft(row),
+  __offlineSyncStatus: 'synced',
+  __offlineSavedAt: new Date().toISOString(),
+})
 
 export const loadInspectionDraft = async (userId) => {
   if (!userId) return null
   const localDraft = loadOfflineDraftSync(userId)
   const localSyncStatus = String(localDraft?.__offlineSyncStatus || '').trim()
+  if (localDraft && localSyncStatus === 'conflict') return localDraft
   if (localDraft && ['waiting', 'failed'].includes(localSyncStatus)) {
     try {
-      const payload = stripOfflineDraftMeta(localDraft)
-      const response = await apiRequest('/reports/draft', {
-        method: 'POST',
-        body: JSON.stringify({
-          report_type: INSPECTION_TYPE,
-          payload,
-        }),
-      })
+      const response = await saveDraftToServer(localDraft)
       if (response?.data) {
-        const syncedDraft = {
-          ...payload,
-          __offlineSyncStatus: 'synced',
-          __offlineSavedAt: new Date().toISOString(),
-        }
+        const syncedDraft = withSyncedDraftMeta(localDraft, response.data)
         await saveOfflineDraft(userId, syncedDraft)
         return syncedDraft
       }
@@ -118,7 +147,19 @@ export const loadInspectionDraft = async (userId) => {
 
 export const saveInspectionDraft = async (userId, draft) => {
   if (!userId) return false
-  const payload = draft && typeof draft === 'object' ? draft : {}
+  const incoming = draft && typeof draft === 'object' ? draft : {}
+  const currentLocal = loadOfflineDraftSync(userId) || {}
+  const payload = {
+    ...incoming,
+    __serverDraftId: String(incoming.__serverDraftId || currentLocal.__serverDraftId || '').trim(),
+    __serverDraftVersion: Math.max(
+      0,
+      Number(incoming.__serverDraftVersion || currentLocal.__serverDraftVersion || 0) || 0,
+    ),
+    __serverDraftSavedAt: String(
+      incoming.__serverDraftSavedAt || currentLocal.__serverDraftSavedAt || '',
+    ).trim(),
+  }
   await saveOfflineDraft(userId, {
     ...payload,
     __offlineSyncStatus:
@@ -126,29 +167,34 @@ export const saveInspectionDraft = async (userId, draft) => {
     __offlineSavedAt: new Date().toISOString(),
   })
   try {
-    const response = await apiRequest('/reports/draft', {
-      method: 'POST',
-      body: JSON.stringify({
-        report_type: INSPECTION_TYPE,
-        payload,
-      }),
-    })
+    const response = await saveDraftToServer(payload)
     if (response?.data) {
-      await saveOfflineDraft(userId, {
-        ...payload,
-        __offlineSyncStatus: 'synced',
-        __offlineSavedAt: new Date().toISOString(),
-      })
+      await saveOfflineDraft(userId, withSyncedDraftMeta(payload, response.data))
     }
-    return { saved: Boolean(response?.data), synced: Boolean(response?.data) }
+    return {
+      saved: Boolean(response?.data),
+      synced: Boolean(response?.data),
+      draft: response?.data ? normalizeDraft(response.data) : null,
+    }
   } catch (error) {
+    const conflict =
+      Number(error?.status || 0) === 409 &&
+      String(error?.payload?.code || '') === 'report_draft_version_conflict'
     await saveOfflineDraft(userId, {
       ...payload,
-      __offlineSyncStatus: 'failed',
+      __offlineSyncStatus: conflict ? 'conflict' : 'failed',
       __offlineSavedAt: new Date().toISOString(),
       __offlineSyncError: error?.message || 'Draft sync failed.',
+      ...(conflict
+        ? {
+            __offlineDraftConflict: {
+              detectedAt: new Date().toISOString(),
+              serverDraft: error?.payload?.currentDraft || null,
+            },
+          }
+        : {}),
     })
-    return { saved: true, synced: false, error }
+    return { saved: true, synced: false, conflict, error }
   }
 }
 
@@ -163,6 +209,46 @@ export const clearInspectionDraft = async (userId) => {
     // Local draft is cleared even if the server is unavailable.
   }
   return true
+}
+
+export const getInspectionDraftConflict = (userId) => {
+  const draft = loadOfflineDraftSync(userId)
+  return draft?.__offlineSyncStatus === 'conflict' ? draft.__offlineDraftConflict || null : null
+}
+
+export const resolveInspectionDraftConflict = async (userId, strategy) => {
+  const localDraft = loadOfflineDraftSync(userId)
+  const conflict = localDraft?.__offlineDraftConflict
+  if (!localDraft || !conflict) return { resolved: false }
+
+  if (strategy === 'keep-server') {
+    const serverDraft = normalizeDraft(conflict.serverDraft)
+    if (!serverDraft) return { resolved: false }
+    await saveOfflineDraft(userId, {
+      ...serverDraft,
+      __offlineSyncStatus: 'synced',
+      __offlineSavedAt: new Date().toISOString(),
+    })
+    return { resolved: true, strategy, draft: serverDraft }
+  }
+
+  if (strategy === 'keep-local-as-new') {
+    const localCopy = {
+      ...stripOfflineDraftMeta(localDraft),
+      __offlineSyncStatus: 'waiting',
+      __offlineSavedAt: new Date().toISOString(),
+    }
+    await saveOfflineDraft(userId, localCopy)
+    const result = await saveInspectionDraft(userId, localCopy)
+    return {
+      ...result,
+      resolved: result?.synced === true,
+      strategy,
+      draft: localCopy,
+    }
+  }
+
+  return { resolved: false }
 }
 
 export const normalizeInspectionDraftType = (value) => normalizeInspectionTypeSlug(value)

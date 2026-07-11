@@ -1,7 +1,7 @@
 import React from 'react'
 import { CButton, CFormLabel, CFormTextarea } from '@coreui/react'
 import { CheckCircle2, Circle, TriangleAlert } from 'lucide-react'
-import { hasHighAngleInspectionData } from '../inspectionResetActions'
+import { buildPhotoViewerUploadOptions } from '../inspectionPhotoFlow'
 import InspectionItemAdditionalInfo from './InspectionItemAdditionalInfo'
 import {
   buildInspectionElementActions,
@@ -143,10 +143,11 @@ export const HighAngleInspectionRowDetails = ({
       title: `${row.equipment} - condition issue photos`,
       photos,
       showCaptionChips: false,
-      onAddMorePhoto: () =>
-        onRequestIssuePhotoUpload?.(sourceRow, {
-          onAfterAddPhotos: ({ photos: nextPhotos }) => openConditionPhotoViewer(nextPhotos),
-        }),
+      onAddMorePhoto: (currentPhotos) =>
+        onRequestIssuePhotoUpload?.(
+          sourceRow,
+          buildPhotoViewerUploadOptions(openConditionPhotoViewer, { currentPhotos }),
+        ),
       onSave: (nextPhotos) =>
         onUpdateCheck?.(sourceRow, {
           [HIGH_ANGLE_CONDITION_FIELD.photosKey]: Array.isArray(nextPhotos) ? nextPhotos : [],
@@ -164,9 +165,12 @@ export const HighAngleInspectionRowDetails = ({
         onApplyPhotoCaption?.(sourceRow, photoId, caption, HIGH_ANGLE_CONDITION_FIELD.photosKey),
     })
   const requestConditionPhoto = () =>
-    onRequestIssuePhotoUpload?.(sourceRow, {
-      onAfterAddPhotos: ({ photos: nextPhotos }) => openConditionPhotoViewer(nextPhotos),
-    })
+    onRequestIssuePhotoUpload?.(
+      sourceRow,
+      buildPhotoViewerUploadOptions(openConditionPhotoViewer, {
+        currentPhotos: conditionPhotos,
+      }),
+    )
 
   return readOnly ? (
     <>
@@ -373,7 +377,7 @@ const HighAngleInspectionRowCard = ({
   const bodyId = `high-angle-checks-${rowId.replace(/[^A-Za-z0-9_-]/g, '-')}`
   const canToggle = !readOnly && typeof onToggleExpanded === 'function'
   const sourceRow = stripHighAngleDisplayMeta(row)
-  const canReset = typeof onResetCheck === 'function' && hasHighAngleInspectionData(row)
+  const canReset = !readOnly && typeof onResetCheck === 'function'
   const canManageItem =
     !readOnly &&
     (row.isExtensionRow === true || row.equipmentSource === 'custom') &&

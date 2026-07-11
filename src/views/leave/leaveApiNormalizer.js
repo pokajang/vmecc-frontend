@@ -34,7 +34,11 @@ export const normalizeApiLeaveRecord = (record) => {
     nextActionRole: record.next_action_role ?? null,
     applicantRoles: Array.isArray(record.applicant_roles) ? record.applicant_roles : [],
     approvalHistory: Array.isArray(record.approval_history) ? record.approval_history : [],
+    rosterImpactSnapshot: record.roster_impact_snapshot ?? null,
     submittedBy: record.submitted_by ?? '',
+    version: Number(record.version) || 1,
+    hasServerPermittedActions: Array.isArray(record.permitted_actions),
+    permittedActions: Array.isArray(record.permitted_actions) ? record.permitted_actions : [],
     // Attachment fields (flattened for compatibility with existing components)
     attachmentId: attachment?.id ?? null,
     attachmentName: attachment?.original_name ?? '',

@@ -17,7 +17,7 @@ import {
   CModalTitle,
   CRow,
 } from '@coreui/react'
-import { MoreHorizontal, Pencil, Plus, RotateCcw, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, MoreHorizontal, Pencil, Plus, RotateCcw, Trash2 } from 'lucide-react'
 
 const MOBILE_BREAKPOINT = 767.98
 const MOBILE_QUERY = `(max-width: ${MOBILE_BREAKPOINT}px)`
@@ -262,8 +262,13 @@ export const ReportChronologySection = ({
   onAddRow,
   onUpdateRow,
   onRemoveRow,
+  onMoveRow,
+  maxRows,
+  actionMaxLength,
 }) => {
   const isMobile = useReportIsMobile()
+  const hasRowLimit = Number.isFinite(Number(maxRows)) && Number(maxRows) > 0
+  const rowLimitReached = hasRowLimit && rows.length >= Number(maxRows)
   const [rowModal, setRowModal] = React.useState({ visible: false, mode: 'edit', draft: null })
   const closeRowModal = () => setRowModal({ visible: false, mode: 'edit', draft: null })
   const openEditRowModal = (row) =>
@@ -288,13 +293,21 @@ export const ReportChronologySection = ({
   return (
     <div className="mb-3 d-grid gap-3">
       <div className="d-flex justify-content-between align-items-center gap-2">
-        <div className="fw-semibold text-muted">{title}</div>
+        <div>
+          <div className="fw-semibold text-muted">{title}</div>
+          {hasRowLimit ? (
+            <div className="small text-body-secondary">
+              {rows.length}/{Number(maxRows)} rows
+            </div>
+          ) : null}
+        </div>
         {isMobile ? (
           <CButton
             type="button"
             color="light"
             size="sm"
             className="inspection-compact-action-btn d-inline-flex align-items-center gap-2"
+            disabled={rowLimitReached}
             onClick={openAddRowModal}
           >
             <Plus size={14} />
@@ -306,6 +319,7 @@ export const ReportChronologySection = ({
             color="light"
             size="sm"
             className="inspection-compact-action-btn d-inline-flex align-items-center gap-2"
+            disabled={rowLimitReached}
             onClick={() => onAddRow?.()}
           >
             <Plus size={14} />
@@ -351,6 +365,23 @@ export const ReportChronologySection = ({
                         <Pencil size={14} /> Edit
                       </span>
                     </CDropdownItem>
+                    {typeof onMoveRow === 'function' ? (
+                      <>
+                        <CDropdownItem disabled={idx === 0} onClick={() => onMoveRow(row.id, -1)}>
+                          <span className="d-inline-flex align-items-center gap-2">
+                            <ArrowUp size={14} /> Move up
+                          </span>
+                        </CDropdownItem>
+                        <CDropdownItem
+                          disabled={idx === rows.length - 1}
+                          onClick={() => onMoveRow(row.id, 1)}
+                        >
+                          <span className="d-inline-flex align-items-center gap-2">
+                            <ArrowDown size={14} /> Move down
+                          </span>
+                        </CDropdownItem>
+                      </>
+                    ) : null}
                     <CDropdownItem
                       disabled={isOnly}
                       className="text-danger"
@@ -381,22 +412,49 @@ export const ReportChronologySection = ({
                   onChange={(event) => onUpdateRow?.(row.id, { time: event.target.value })}
                 />
               </CCol>
-              <CCol xs={12} md={9}>
+              <CCol xs={12} md={8}>
                 <CFormLabel htmlFor={`report-row-${row.id}-action`}>{actionLabel}</CFormLabel>
                 <CFormInput
                   id={`report-row-${row.id}-action`}
                   value={row.action}
+                  maxLength={actionMaxLength}
                   onChange={(event) => onUpdateRow?.(row.id, { action: event.target.value })}
                 />
               </CCol>
-              <CCol xs={12} md={1} className="d-grid">
+              <CCol xs={12} md={2} className="d-flex gap-1">
+                {typeof onMoveRow === 'function' ? (
+                  <>
+                    <CButton
+                      type="button"
+                      color="light"
+                      className="px-2"
+                      disabled={idx === 0}
+                      aria-label={`Move chronology row ${idx + 1} up`}
+                      onClick={() => onMoveRow(row.id, -1)}
+                    >
+                      <ArrowUp size={14} />
+                    </CButton>
+                    <CButton
+                      type="button"
+                      color="light"
+                      className="px-2"
+                      disabled={idx === rows.length - 1}
+                      aria-label={`Move chronology row ${idx + 1} down`}
+                      onClick={() => onMoveRow(row.id, 1)}
+                    >
+                      <ArrowDown size={14} />
+                    </CButton>
+                  </>
+                ) : null}
                 <CButton
                   type="button"
                   color="light"
+                  className="px-2"
+                  aria-label={`Delete chronology row ${idx + 1}`}
                   disabled={rows.length <= 1}
                   onClick={() => onRemoveRow?.(row.id)}
                 >
-                  {idx === 0 ? 'Keep' : 'Delete'}
+                  <Trash2 size={14} />
                 </CButton>
               </CCol>
             </CRow>
@@ -425,6 +483,7 @@ export const ReportChronologySection = ({
             <CFormInput
               id="report-row-modal-action"
               value={rowModal.draft?.action || ''}
+              maxLength={actionMaxLength}
               onChange={(event) => updateDraft({ action: event.target.value })}
             />
           </div>
@@ -433,7 +492,12 @@ export const ReportChronologySection = ({
           <CButton type="button" color="secondary" variant="outline" onClick={closeRowModal}>
             Cancel
           </CButton>
-          <CButton type="button" color="primary" onClick={saveRowModal}>
+          <CButton
+            type="button"
+            color="primary"
+            disabled={rowModal.mode === 'add' && rowLimitReached}
+            onClick={saveRowModal}
+          >
             Save
           </CButton>
         </CModalFooter>

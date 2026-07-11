@@ -37,6 +37,7 @@ const LeaveManagementTabsContent = ({
   openRecord,
   approveLeave,
   rejectLeave,
+  requestCorrectionLeave,
   onBulkLeaveAction,
   isBulkLeaveSubmitting = false,
   bulkDeclarationLabel = '',
@@ -86,6 +87,7 @@ const LeaveManagementTabsContent = ({
   onDeleteHoliday,
   onWizardSavedSummary,
   isHolidaysLoading,
+  canManageLeaveWorkflowRules = false,
 }) => (
   <>
     <div data-testid="leave-management-nav">
@@ -111,12 +113,16 @@ const LeaveManagementTabsContent = ({
             to: 'holidays',
             match: 'holidays',
           },
-          {
-            key: 'rules',
-            label: 'Leave Workflow',
-            to: 'rules',
-            match: 'rules',
-          },
+          ...(canManageLeaveWorkflowRules
+            ? [
+                {
+                  key: 'rules',
+                  label: 'Leave Workflow',
+                  to: 'rules',
+                  match: 'rules',
+                },
+              ]
+            : []),
         ]}
       />
     </div>
@@ -151,6 +157,7 @@ const LeaveManagementTabsContent = ({
         openRecord={openRecord}
         approveLeave={approveLeave}
         rejectLeave={rejectLeave}
+        requestCorrectionLeave={requestCorrectionLeave}
         onBulkWorkflowAction={onBulkLeaveAction}
         isBulkSubmitting={isBulkLeaveSubmitting}
         bulkDeclarationLabel={bulkDeclarationLabel}
@@ -226,7 +233,7 @@ const LeaveManagementTabsContent = ({
       />
     )}
 
-    {resolvedManagementTab === 'rules' && <LeaveApprovalRules />}
+    {resolvedManagementTab === 'rules' && canManageLeaveWorkflowRules && <LeaveApprovalRules />}
   </>
 )
 

@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { CAlert, CBadge, CButton, CRow } from '@coreui/react'
 import FormActionGroup from 'src/components/FormActionGroup'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
-import { DetailField } from 'src/components/report-workflow/ReportViewComponents'
+import { DetailField, ReportPhotoImage } from 'src/components/report-workflow/ReportViewComponents'
 
 const ChronologyRows = ({ chronology }) => {
   const rows = (Array.isArray(chronology) ? chronology : []).filter((r) => r.time || r.action)
@@ -30,12 +30,15 @@ const ChronologyRows = ({ chronology }) => {
   )
 }
 
-const RespondingTeamRows = ({ respondingTeam }) => {
+const RespondingTeamRows = ({ respondingTeam, isDrill = false }) => {
   if (!respondingTeam) return null
   const attendance = Array.isArray(respondingTeam.attendance) ? respondingTeam.attendance : []
+  if (!respondingTeam.name && !respondingTeam.shift && attendance.length === 0) return null
   return (
     <section className="inspection-form-section d-grid gap-3">
-      <div className="fw-semibold text-muted">Responding Team</div>
+      <div className="fw-semibold text-muted">
+        {isDrill ? 'Exercise Personnel' : 'Responding Team'}
+      </div>
       <CRow className="g-3">
         <DetailField label="Team">{respondingTeam.name || '--'}</DetailField>
         {respondingTeam.shift ? (
@@ -54,6 +57,7 @@ const RespondingTeamRows = ({ respondingTeam }) => {
               >
                 {member.name}
                 {member.role ? ` - ${member.role}` : ''}
+                {member.exerciseRole ? ` (${member.exerciseRole})` : ''}
               </CBadge>
             ))}
           </div>
@@ -63,7 +67,7 @@ const RespondingTeamRows = ({ respondingTeam }) => {
   )
 }
 
-const PostAnalysisRows = ({ analysis, fallbackPhotos = [] }) => {
+const PostAnalysisRows = ({ analysis, fallbackPhotos = [], isDrill = false }) => {
   if (!analysis) return null
   const strengths = (Array.isArray(analysis.strengths) ? analysis.strengths : []).filter(Boolean)
   const resources = (
@@ -80,7 +84,9 @@ const PostAnalysisRows = ({ analysis, fallbackPhotos = [] }) => {
 
   return (
     <section className="inspection-form-section d-grid gap-3">
-      <div className="fw-semibold text-muted">Post-Incident Analysis</div>
+      <div className="fw-semibold text-muted">
+        {isDrill ? 'Post-Exercise Analysis' : 'Post-Incident Analysis'}
+      </div>
       {strengths.length > 0 ? (
         <div>
           <div className="small text-body-secondary mb-1">Strengths</div>
@@ -128,9 +134,9 @@ const PostAnalysisRows = ({ analysis, fallbackPhotos = [] }) => {
                 key={photo.id || i}
                 className="rounded-3 border border-light-subtle overflow-hidden"
               >
-                <img
-                  src={photo.url}
-                  alt={photo.fileName || 'Incident photo'}
+                <ReportPhotoImage
+                  photo={photo}
+                  alt={photo.description || photo.fileName || 'Report photo'}
                   style={{ width: '100%', height: '120px', objectFit: 'cover' }}
                 />
                 {photo.description ? (
@@ -187,8 +193,9 @@ const ReportDetailSection = ({
   const isReviewMode = mode === 'review'
   const reportType = String(r.reportType || '').toLowerCase()
   const isErco = reportType === 'erco'
+  const isDrill = reportType === 'drill'
 
-  const hasRespondingTeam = isErco && r.respondingTeam
+  const hasRespondingTeam = (isErco || isDrill) && r.respondingTeam
   const hasChronology =
     Array.isArray(r.chronology) && r.chronology.some((row) => row.time || row.action)
   const detailsText = String(r.details || r.description || '').trim()
@@ -446,6 +453,16 @@ const ReportDetailSection = ({
           <DetailField label="Location" xs={12} md={r.weather ? 4 : 8}>
             {r.location || '--'}
           </DetailField>
+          {isDrill && Array.isArray(r.exerciseCategories) && r.exerciseCategories.length ? (
+            <DetailField label="Exercise Categories" xs={12} md={4}>
+              {r.exerciseCategories.join(', ')}
+            </DetailField>
+          ) : null}
+          {isDrill && r.reportIssuanceDate ? (
+            <DetailField label="Report Issuance Date" xs={12} md={4}>
+              {r.reportIssuanceDate}
+            </DetailField>
+          ) : null}
           {r.teamInCharge || r.respondingTeamName ? (
             <DetailField label="Team In Charge" xs={12} md={4}>
               {r.teamInCharge || r.respondingTeamName}
@@ -462,6 +479,12 @@ const ReportDetailSection = ({
       {detailsText || summaryText ? (
         <section className="inspection-form-section d-grid gap-3">
           <div className="fw-semibold text-muted">Report Details</div>
+          {isDrill && r.exerciseTitle ? (
+            <div>
+              <div className="small text-body-secondary">Exercise Title</div>
+              <div className="fw-semibold">{r.exerciseTitle}</div>
+            </div>
+          ) : null}
           {detailsText ? (
             <div>
               <div className="small text-body-secondary">{detailsLabel}</div>
@@ -474,6 +497,28 @@ const ReportDetailSection = ({
               <div style={{ whiteSpace: 'pre-wrap' }}>{summaryText}</div>
             </div>
           ) : null}
+          {isDrill && Array.isArray(r.exerciseObjectives) && r.exerciseObjectives.length ? (
+            <div>
+              <div className="small text-body-secondary">Exercise Objectives</div>
+              <ul className="mb-0 ps-4">
+                {r.exerciseObjectives.map((row, index) => (
+                  <li key={`${row?.text || row}-${index}`}>{row?.text || row}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {isDrill && Array.isArray(r.erpReferences) && r.erpReferences.length ? (
+            <div>
+              <div className="small text-body-secondary">ERP / Annex References</div>
+              <ul className="mb-0 ps-4">
+                {r.erpReferences.map((row, index) => (
+                  <li key={`${row?.annexNumber || 'reference'}-${index}`}>
+                    {[row?.annexNumber, row?.title].filter(Boolean).join(' - ')}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </section>
       ) : null}
 
@@ -482,17 +527,21 @@ const ReportDetailSection = ({
           <div className="fw-semibold text-muted">Workflow Activity</div>
           <CRow className="g-3">
             {submittedEntry ? (
-              <DetailField label="Submitted By" xs={12} md={4}>
+              <DetailField label={isDrill ? 'Prepared By' : 'Submitted By'} xs={12} md={4}>
                 {renderWorkflowActor(submittedEntry)}
               </DetailField>
             ) : null}
             {reviewedEntry ? (
-              <DetailField label="Reviewed By" xs={12} md={4}>
+              <DetailField
+                label={isDrill ? 'Station Commander Review' : 'Reviewed By'}
+                xs={12}
+                md={4}
+              >
                 {renderWorkflowActor(reviewedEntry)}
               </DetailField>
             ) : null}
             {approvedEntry ? (
-              <DetailField label="Approved By" xs={12} md={4}>
+              <DetailField label={isDrill ? 'VMM Review' : 'Approved By'} xs={12} md={4}>
                 {renderWorkflowActor(approvedEntry)}
               </DetailField>
             ) : null}
@@ -531,13 +580,17 @@ const ReportDetailSection = ({
         </section>
       ) : null}
 
-      {hasRespondingTeam ? <RespondingTeamRows respondingTeam={r.respondingTeam} /> : null}
+      {hasRespondingTeam ? (
+        <RespondingTeamRows respondingTeam={r.respondingTeam} isDrill={isDrill} />
+      ) : null}
       {hasChronology ? <ChronologyRows chronology={r.chronology} /> : null}
 
-      {isErco && (r.postIncidentAnalysis || (Array.isArray(r.photos) && r.photos.length > 0)) ? (
+      {(isErco || isDrill) &&
+      (r.postIncidentAnalysis || (Array.isArray(r.photos) && r.photos.length > 0)) ? (
         <PostAnalysisRows
           analysis={r.postIncidentAnalysis || {}}
           fallbackPhotos={Array.isArray(r.photos) ? r.photos : []}
+          isDrill={isDrill}
         />
       ) : null}
     </div>

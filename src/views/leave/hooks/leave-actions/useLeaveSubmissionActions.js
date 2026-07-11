@@ -3,6 +3,7 @@ import { apiRequest } from 'src/services/apiClient'
 import {
   clearLeaveDraft,
   loadLeaveAssignmentsForUser,
+  loadLeaveRecords,
   saveLeaveDraft,
 } from '../../leavePersistence'
 import { normalizeApiLeaveRecord } from '../../leaveApiNormalizer'
@@ -280,6 +281,7 @@ export default function useLeaveSubmissionActions({
       cover_by: submitPreview.coverBy,
       attachment_id:
         submitPreview.attachmentId || submitPreview.attachmentMeta?.attachmentId || null,
+      ...(existingRecord?.version ? { expected_version: existingRecord.version } : {}),
     }
     try {
       let result
@@ -327,6 +329,14 @@ export default function useLeaveSubmissionActions({
       setEditingRecordId(null)
       navigate('/leave')
     } catch (error) {
+      if (error?.code === 'LEAVE_VERSION_CONFLICT') {
+        const [recordsResult, assignmentsResult] = await Promise.all([
+          loadLeaveRecords(user?.id),
+          loadLeaveAssignmentsForUser(user?.id),
+        ])
+        if (Array.isArray(recordsResult?.data)) setLeaveRecords(recordsResult.data)
+        if (Array.isArray(assignmentsResult?.rows)) setAssignmentRows(assignmentsResult.rows)
+      }
       pushToast(error?.message || 'Unable to submit leave request. Please retry.', {
         title: 'Submit failed',
         color: 'danger',

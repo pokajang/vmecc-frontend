@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, within } from '@testing-library/react'
 import {
   InspectionPhotoViewerModal,
   isCompactInspectionViewport,
@@ -51,6 +51,28 @@ describe('InspectionDisplayShared', () => {
     expect(within(drawer).getByText('Pump Panel photos')).toBeTruthy()
     expect(within(drawer).getByText('1 photo')).toBeTruthy()
     expect(within(drawer).getByText('pump-panel.jpg')).toBeTruthy()
+  })
+
+  it('passes the current drawer photos to Add more photo', () => {
+    setMobileViewport()
+    const onAddMorePhoto = vi.fn()
+    const photos = [{ id: 'photo-1', fileName: 'pump-panel.jpg', url: 'data:image/png;base64,a' }]
+
+    render(
+      <InspectionPhotoViewerModal
+        viewer={{
+          title: 'Pump Panel photos',
+          photos,
+          onAddMorePhoto,
+        }}
+        onClose={vi.fn()}
+      />,
+    )
+
+    const drawer = document.querySelector('.offcanvas')
+    fireEvent.click(within(drawer).getByRole('button', { name: 'Add more photo' }))
+
+    expect(onAddMorePhoto).toHaveBeenCalledWith(photos)
   })
 
   it('detects compact inspection viewport by the 575.98px media rule', () => {

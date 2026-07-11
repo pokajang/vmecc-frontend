@@ -173,6 +173,20 @@ export const collectInspectionPhotos = (form = {}) => [
   ),
 ]
 
+const mergeCurrentPhotos = (formPhotos, additionalPhotos) => {
+  const mergedPhotos = []
+  const seen = new Set()
+
+  for (const photo of [...formPhotos, ...additionalPhotos]) {
+    const identity = String(photo?.id || photo?.mediaId || photo?.url || '').trim()
+    if (identity && seen.has(identity)) continue
+    if (identity) seen.add(identity)
+    mergedPhotos.push(photo)
+  }
+
+  return mergedPhotos
+}
+
 export const normalizePhotoFailure = (failure = {}, fileName = '') => {
   const code = asString(failure?.code, 'processing_failed').trim()
   const rawMessage = asString(failure?.message).trim()
@@ -275,6 +289,7 @@ export const prepareInspectionPhotoUploads = async ({
   signal,
   onProgress,
   onRetry,
+  additionalCurrentPhotos = [],
 }) => {
   const photoFiles = Array.from(files || [])
   if (photoFiles.length === 0) return []
@@ -288,7 +303,10 @@ export const prepareInspectionPhotoUploads = async ({
     notifyFailure(normalized)
   }
 
-  const allCurrentPhotos = collectInspectionPhotos(form)
+  const allCurrentPhotos = mergeCurrentPhotos(
+    collectInspectionPhotos(form),
+    Array.isArray(additionalCurrentPhotos) ? additionalCurrentPhotos : [],
+  )
   const remainingPhotoSlots = Math.max(0, MAX_PHOTO_COUNT - allCurrentPhotos.length)
   if (remainingPhotoSlots === 0) {
     notifyFailureOnce(

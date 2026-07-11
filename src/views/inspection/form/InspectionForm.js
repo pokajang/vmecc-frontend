@@ -420,6 +420,7 @@ const InspectionForm = ({
   pushToast,
   onChange,
   onCommitDraftSnapshot,
+  onResolveDraftConflict,
   onRetryDraftSync,
   onSaveDraft,
   onRequestReview,
@@ -439,6 +440,7 @@ const InspectionForm = ({
     )
   }, [value])
   const latestFormRef = useRef(form)
+  const liveInspectionSessionRef = useRef(null)
   const inspectionTypeRef = useRef(null)
   const inspectedAtRef = useRef(null)
   const selectedLocationRef = useRef(null)
@@ -538,7 +540,14 @@ const InspectionForm = ({
     onChange?.(normalized)
   }
 
-  const getLatestForm = () => applySessionInspector(latestFormRef.current || effectiveForm, user)
+  const getLatestForm = () =>
+    applySessionInspector(
+      {
+        ...(latestFormRef.current || effectiveForm),
+        ...(liveInspectionSessionRef.current || {}),
+      },
+      user,
+    )
 
   const {
     equipmentRows,
@@ -916,6 +925,7 @@ const InspectionForm = ({
     equipmentRowsField,
     fireExtinguisherRows,
     form,
+    inspectedAt: form.inspectedAt,
     isFireExtinguisherCatalogInspectionForm,
     mainLocation,
     currentUserId: user?.id,
@@ -927,6 +937,27 @@ const InspectionForm = ({
   })
   const effectiveForm = fireExtinguisherRuntime.displayForm
   const fireExtinguisherSessionSync = fireExtinguisherRuntime.sessionSync
+  liveInspectionSessionRef.current = isFireExtinguisherCatalogInspectionForm
+    ? {
+        inspectionSessionUid: String(fireExtinguisherSessionSync.session?.sessionUid || '').trim(),
+        inspectionSessionVersion: Math.max(
+          0,
+          Number(
+            fireExtinguisherSessionSync.meta?.sessionVersion ||
+              fireExtinguisherSessionSync.session?.version ||
+              0,
+          ) || 0,
+        ),
+        inspectionSessionStartedByUserId: String(
+          fireExtinguisherSessionSync.session?.startedByUserId || '',
+        ).trim(),
+        inspectionSessionScopeVersion: String(
+          fireExtinguisherSessionSync.session?.scopeVersion || 'legacy',
+        ).trim(),
+        inspectionSessionCanSubmit:
+          fireExtinguisherSessionSync.session?.permissions?.canSubmit !== false,
+      }
+    : null
   const currentStructuredSummary = fireExtinguisherRuntime.summary
   const structuredDisplayForm = useMemo(() => applySessionInspector(form, user), [form, user])
   const isFireExtinguisherScanLookupLoading = /looking up/i.test(fireExtinguisherScanStatus)
@@ -980,13 +1011,7 @@ const InspectionForm = ({
         })
     latestFormRef.current = {
       ...nextLatestForm,
-      ...(isFireExtinguisherCatalogInspectionForm
-        ? {
-            inspectionSessionUid: String(
-              fireExtinguisherSessionSync.session?.sessionUid || '',
-            ).trim(),
-          }
-        : {}),
+      ...(liveInspectionSessionRef.current || {}),
     }
   }, [
     catalogRowsField,
@@ -994,7 +1019,12 @@ const InspectionForm = ({
     equipmentRowsField,
     fireExtinguisherRuntime.displayForm,
     fireExtinguisherRows,
+    fireExtinguisherSessionSync.meta?.sessionVersion,
+    fireExtinguisherSessionSync.session?.permissions?.canSubmit,
+    fireExtinguisherSessionSync.session?.scopeVersion,
     fireExtinguisherSessionSync.session?.sessionUid,
+    fireExtinguisherSessionSync.session?.startedByUserId,
+    fireExtinguisherSessionSync.session?.version,
     form,
     isFireExtinguisherCatalogInspectionForm,
   ])
@@ -1647,19 +1677,24 @@ const InspectionForm = ({
       FIRE_EXTINGUISHER_CHECK_FIELDS,
       { zone, mainLocation },
     )
-    const resetResult = fireExtinguisherSessionSync.enabled
-      ? await fireExtinguisherSessionSync.resetRow(resetCheck)
-      : { localOnly: true }
-    if (!resetResult) return false
 
-    updateForm({
+    const nextForm = {
       ...currentForm,
       fireExtinguisherChecks: [
         resetCheck,
         ...currentChecks.filter((check) => String(check.id || '') !== rowId),
       ],
+    }
+    updateForm(nextForm)
+    onCommitDraftSnapshot?.(nextForm, {
+      source: 'fire-extinguisher-row',
+      reason: 'fire-extinguisher-row-reset',
     })
-    return true
+
+    const resetResult = fireExtinguisherSessionSync.enabled
+      ? await fireExtinguisherSessionSync.resetRow(resetCheck)
+      : { localOnly: true }
+    return resetResult || { localOnly: true, syncPending: true }
   }
 
   const saveFrtRowDraft = (row) => {
@@ -1728,6 +1763,34 @@ const InspectionForm = ({
     hydraulicChecksRef,
     inspectedAtRef,
     inspectionTypeRef,
+    isPhotoProcessing: photoRuntime.isPhotoProcessing,
+    draftSyncState,
+    pendingOperationCount:
+      fireExtinguisherSessionSync.pendingRetryCount + fireExtinguisherSessionSync.activeSyncCount,
+    permanentFailureCount:
+      fireExtinguisherSessionSync.error && fireExtinguisherSessionSync.pendingRetryCount === 0
+        ? 1
+        : 0,
+    prepareCurrentForm: isFireExtinguisherCatalogInspectionForm
+      ? async (currentForm) => {
+          const progress = await fireExtinguisherSessionSync.refreshProgressContext()
+          if (!progress) return null
+          return {
+            ...currentForm,
+            inspectionSessionVersion: Math.max(
+              0,
+              Number(progress.sessionVersion || currentForm.inspectionSessionVersion || 0) || 0,
+            ),
+          }
+        }
+      : null,
+    sessionState: isFireExtinguisherCatalogInspectionForm
+      ? fireExtinguisherSessionSync.sessionError
+        ? 'unavailable'
+        : fireExtinguisherSessionSync.isHydrating
+          ? 'initializing'
+          : fireExtinguisherSessionSync.session?.status || 'unavailable'
+      : 'active',
     onRequestReview,
     photosRef,
     pushToast,
@@ -1803,6 +1866,7 @@ const InspectionForm = ({
         locationDeleteTarget={locationDeleteTarget}
         onSaveDraft={onSaveDraft}
         isUpdateMode={isUpdateMode}
+        onResolveDraftConflict={onResolveDraftConflict}
         onRetryDraftSync={onRetryDraftSync}
         photoRuntime={photoRuntime}
         refs={{
@@ -1869,6 +1933,13 @@ const InspectionForm = ({
           checklistChips,
           ...structuredRuntime,
           draftSyncState,
+          readiness: reviewRequest.readiness,
+          sessionError: fireExtinguisherSessionSync.sessionError,
+          operationError:
+            fireExtinguisherSessionSync.error && !fireExtinguisherSessionSync.sessionError
+              ? fireExtinguisherSessionSync.error
+              : null,
+          retrySession: fireExtinguisherSessionSync.retrySession,
         }}
         validationState={validationState}
       />

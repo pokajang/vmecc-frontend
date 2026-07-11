@@ -2,7 +2,7 @@ import React from 'react'
 import { CButton, CFormLabel, CFormTextarea } from '@coreui/react'
 import { Camera, CheckCircle2, Circle, MessageSquare, Trash2, TriangleAlert } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
-import { hasHydraulicInspectionData } from '../inspectionResetActions'
+import { buildPhotoViewerUploadOptions } from '../inspectionPhotoFlow'
 import {
   buildInspectionElementActions,
   InspectionElementCard,
@@ -153,10 +153,12 @@ export const HydraulicEquipmentCheckDetails = ({
             title: `${row.equipment} - ${field.label} defect photos`,
             photos,
             showCaptionChips: false,
-            onAddMorePhoto: () =>
-              onRequestDefectPhotoUpload?.(row, field, {
-                onAfterAddPhotos: ({ photos: nextPhotos }) => openDefectPhotoViewer(nextPhotos),
-              }),
+            onAddMorePhoto: (currentPhotos) =>
+              onRequestDefectPhotoUpload?.(
+                row,
+                field,
+                buildPhotoViewerUploadOptions(openDefectPhotoViewer, { currentPhotos }),
+              ),
             onSave: (nextPhotos) => updateHydraulicPhotoList(nextPhotos),
             onRemove: (photoId) => onRemovePhoto?.(row, photoId, field.photosKey),
             onChangeDescription: (photoId, description) =>
@@ -167,9 +169,11 @@ export const HydraulicEquipmentCheckDetails = ({
         const updateHydraulicPhotoList = (photos) =>
           onUpdateCheck(row, { [field.photosKey]: Array.isArray(photos) ? photos : [] })
         const requestDefectPhoto = () =>
-          onRequestDefectPhotoUpload?.(row, field, {
-            onAfterAddPhotos: ({ photos: nextPhotos }) => openDefectPhotoViewer(nextPhotos),
-          })
+          onRequestDefectPhotoUpload?.(
+            row,
+            field,
+            buildPhotoViewerUploadOptions(openDefectPhotoViewer, { currentPhotos: defectPhotos }),
+          )
 
         return (
           <div key={field.key} className="inspection-hydraulic-check-with-evidence d-grid gap-2">
@@ -427,9 +431,7 @@ const HydraulicEquipmentCheckCard = ({
   const workflowState = getHydraulicWorkflowState(current)
   const retainedEvidenceFields = getHydraulicRetainedEvidenceFields(current)
   const hasRetainedEvidence = retainedEvidenceFields.length > 0
-  const canReset =
-    typeof onResetCheck === 'function' &&
-    hasHydraulicInspectionData(current, HYDRAULIC_CHECK_FIELDS)
+  const canReset = !readOnly && typeof onResetCheck === 'function'
   const actionItems = buildInspectionElementActions({
     canReset,
     onReset: () => onResetCheck(row),

@@ -23,22 +23,33 @@ const getShiftDefs = (allShifts) =>
         { slug: 'night', name: 'Night' },
       ]
 
-const TeamBadge = ({ team }) => {
+const TeamBadge = ({ team, leaveMarker }) => {
   if (!team) return <span className="text-body-secondary small">Unassigned</span>
   const { bg, text } = getAvatarColors(team)
+  const requested = Number(leaveMarker?.requested_count || 0)
+  const approved = Number(leaveMarker?.approved_count || 0)
+  const markerLabel = [
+    requested ? `${requested} leave request${requested === 1 ? '' : 's'}` : '',
+    approved ? `${approved} on leave` : '',
+  ]
+    .filter(Boolean)
+    .join(', ')
   return (
-    <span
-      className="d-inline-flex rounded-pill px-2 fw-semibold"
-      style={{
-        background: bg,
-        color: text,
-        fontSize: '0.8125rem',
-        lineHeight: '1.6',
-        maxWidth: '100%',
-        whiteSpace: 'normal',
-      }}
-    >
-      {team}
+    <span className="d-inline-flex flex-column align-items-start gap-1">
+      <span
+        className="d-inline-flex rounded-pill px-2 fw-semibold"
+        style={{
+          background: bg,
+          color: text,
+          fontSize: '0.8125rem',
+          lineHeight: '1.6',
+          maxWidth: '100%',
+          whiteSpace: 'normal',
+        }}
+      >
+        {team}
+      </span>
+      {markerLabel ? <span className="small text-warning-emphasis">{markerLabel}</span> : null}
     </span>
   )
 }
@@ -122,7 +133,7 @@ const RosterMobileDayList = ({
                       </div>
                       {editMode ? (
                         <div className="d-flex align-items-center justify-content-between gap-2">
-                          <TeamBadge team={shiftObj?.team} />
+                          <TeamBadge team={shiftObj?.team} leaveMarker={shiftObj?.leave_marker} />
                           <CButton
                             size="sm"
                             color="primary"
@@ -133,7 +144,7 @@ const RosterMobileDayList = ({
                           </CButton>
                         </div>
                       ) : (
-                        <TeamBadge team={shiftObj?.team} />
+                        <TeamBadge team={shiftObj?.team} leaveMarker={shiftObj?.leave_marker} />
                       )}
                     </div>
                   )

@@ -363,6 +363,11 @@ const OvertimeManagement = () => {
       } catch {
         if (!mounted) return
         setSelectedRecordFallback(null)
+        pushToast('This overtime record is unavailable or you no longer have access to it.', {
+          title: 'Record unavailable',
+          color: 'warning',
+        })
+        navigate(`/staff/overtime-management/${resolvedTabPath}`, { replace: true })
       }
     }
 
@@ -370,7 +375,7 @@ const OvertimeManagement = () => {
     return () => {
       mounted = false
     }
-  }, [decodedOvertimeRouteKey, isDetailRoute])
+  }, [decodedOvertimeRouteKey, isDetailRoute, navigate, pushToast, resolvedTabPath])
 
   const selectedRecord = useMemo(() => {
     if (!decodedOvertimeRouteKey) return null
@@ -440,6 +445,7 @@ const OvertimeManagement = () => {
     overtimeWorkflowModalState,
     overtimeWorkflowModalActionLabel,
     isRejectOvertimeWorkflowModal,
+    isCorrectionOvertimeWorkflowModal,
     overtimeWorkflowModalActionDisabled,
     overtimeWorkflowRemarks,
     overtimeWorkflowDeclarationChecked,
@@ -450,8 +456,10 @@ const OvertimeManagement = () => {
     closeOvertimeWorkflowModal,
     submitOvertimeWorkflowApprove,
     submitOvertimeWorkflowReject,
+    submitOvertimeWorkflowCorrection,
     approveOvertime,
     rejectOvertime,
+    requestOvertimeCorrection,
     runOvertimeWorkflowAction,
   } = useOvertimeAdminWorkflow({
     normalizedUserRoles,
@@ -466,12 +474,38 @@ const OvertimeManagement = () => {
       if (isBulkOvertimeSubmitting) return { processed: 0, succeeded: 0, failed: 0 }
       const selectedRows = Array.isArray(rows) ? rows.filter((row) => row?.id) : []
       if (selectedRows.length === 0) return { processed: 0, succeeded: 0, failed: 0 }
+      const eligibleRows = selectedRows.filter((row) => {
+        const config = getOvertimeReviewActionConfig(row)
+        return action === 'reject' ? !config.rejectDisabled : !config.approveDisabled
+      })
+      if (eligibleRows.length !== selectedRows.length) {
+        pushToast(
+          'Some selected overtime claims are no longer eligible. Refresh and select again.',
+          {
+            title: 'Bulk action blocked',
+            color: 'warning',
+          },
+        )
+        return { processed: selectedRows.length, succeeded: 0, failed: selectedRows.length }
+      }
+      if (action !== 'reject') {
+        const actionLabels = new Set(
+          eligibleRows.map((row) => getOvertimeReviewActionConfig(row).approveLabel),
+        )
+        if (actionLabels.size !== 1) {
+          pushToast('Select claims at the same workflow stage before processing them together.', {
+            title: 'Mixed workflow stages',
+            color: 'warning',
+          })
+          return { processed: selectedRows.length, succeeded: 0, failed: selectedRows.length }
+        }
+      }
 
       setIsBulkOvertimeSubmitting(true)
       try {
         let succeeded = 0
         let failed = 0
-        for (const row of selectedRows) {
+        for (const row of eligibleRows) {
           const ok = await runOvertimeWorkflowAction(
             row,
             {
@@ -507,12 +541,18 @@ const OvertimeManagement = () => {
           color: failed > 0 ? (succeeded > 0 ? 'warning' : 'danger') : 'success',
         })
 
-        return { processed: selectedRows.length, succeeded, failed }
+        return { processed: eligibleRows.length, succeeded, failed }
       } finally {
         setIsBulkOvertimeSubmitting(false)
       }
     },
-    [hydrateOvertime, isBulkOvertimeSubmitting, pushToast, runOvertimeWorkflowAction],
+    [
+      getOvertimeReviewActionConfig,
+      hydrateOvertime,
+      isBulkOvertimeSubmitting,
+      pushToast,
+      runOvertimeWorkflowAction,
+    ],
   )
 
   const applySearch = useCallback((value) => {
@@ -606,12 +646,18 @@ const OvertimeManagement = () => {
         visible={overtimeWorkflowModalState.visible}
         record={overtimeWorkflowModalState.record}
         actionLabel={overtimeWorkflowModalActionLabel}
-        actionType={isRejectOvertimeWorkflowModal ? 'reject' : 'approve'}
+        actionType={
+          isRejectOvertimeWorkflowModal
+            ? 'reject'
+            : isCorrectionOvertimeWorkflowModal
+              ? 'request_correction'
+              : 'approve'
+        }
         actionDisabled={overtimeWorkflowModalActionDisabled}
         remarks={overtimeWorkflowRemarks}
         onRemarksChange={handleOvertimeWorkflowRemarksChange}
-        showDeclaration={!isRejectOvertimeWorkflowModal}
-        declarationRequired={!isRejectOvertimeWorkflowModal}
+        showDeclaration={!isRejectOvertimeWorkflowModal && !isCorrectionOvertimeWorkflowModal}
+        declarationRequired={!isRejectOvertimeWorkflowModal && !isCorrectionOvertimeWorkflowModal}
         declarationChecked={overtimeWorkflowDeclarationChecked}
         onDeclarationChange={handleOvertimeWorkflowDeclarationChange}
         declarationLabel={OVERTIME_WORKFLOW_DECLARATION_LABEL}
@@ -626,7 +672,9 @@ const OvertimeManagement = () => {
         onSubmit={
           isRejectOvertimeWorkflowModal
             ? submitOvertimeWorkflowReject
-            : submitOvertimeWorkflowApprove
+            : isCorrectionOvertimeWorkflowModal
+              ? submitOvertimeWorkflowCorrection
+              : submitOvertimeWorkflowApprove
         }
       />
 
@@ -701,6 +749,7 @@ const OvertimeManagement = () => {
                 setPage,
                 approveOvertime,
                 rejectOvertime,
+                requestOvertimeCorrection,
                 openOvertimeDetail,
                 onBulkWorkflowAction: runBulkOvertimeWorkflowAction,
                 isBulkSubmitting: isBulkOvertimeSubmitting,

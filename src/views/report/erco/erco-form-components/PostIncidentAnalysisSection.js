@@ -1,17 +1,11 @@
 import React from 'react'
-import { CAlert, CButton, CFormInput } from '@coreui/react'
-import { Camera, ChevronDown, ChevronUp, ClipboardCheck, Trash2 } from 'lucide-react'
+import { CButton, CFormInput } from '@coreui/react'
+import { ChevronDown, ChevronUp, ClipboardCheck } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
 import IconOptionGrid from 'src/components/IconOptionGrid'
 import TypeManagerModal from 'src/components/report-workflow/TypeManagerModal'
-import { ReportPhotoImage } from 'src/components/report-workflow/ReportViewComponents'
 import { uid } from '../../utils'
-import {
-  deleteReportMedia,
-  getReportPhotoBytes,
-  reportPhotoFailureMessage,
-  uploadReportPhotosSequentially,
-} from 'src/services/api/reportMediaApi'
+import ReportPhotoSection from '../../shared/emergency-report/ReportPhotoSection'
 import {
   ACTIVE_CARD_BG,
   ACTIVE_CARD_BORDER,
@@ -25,14 +19,6 @@ import {
   normalizeSection,
 } from './postIncidentAnalysisConstants'
 import useIsMobile from './useIsMobile'
-import {
-  clearPendingCameraOperation,
-  getInterruptedCameraFallback,
-  isLikelyEmbeddedBrowser,
-  markPendingCameraOperation,
-  markPendingCameraUploadStarted,
-  subscribeToCameraReturn,
-} from 'src/utils/cameraRecovery'
 
 const MOBILE_SECTION_ORDER = [
   'strengths',
@@ -50,23 +36,6 @@ const MOBILE_SECTION_LABELS = {
 const PostIncidentAnalysisSection = ({ value, onChange, pushToast, onBeforeCameraOpen }) => {
   const section = React.useMemo(() => normalizeSection(value), [value])
   const isMobile = useIsMobile()
-  const cameraPhotoInputRef = React.useRef(null)
-  const uploadPhotoInputRef = React.useRef(null)
-  const photoOperationRef = React.useRef(0)
-  const photoAbortRef = React.useRef(null)
-  const [isPhotoProcessing, setIsPhotoProcessing] = React.useState(false)
-  const [cameraPhotoFallback, setCameraPhotoFallback] = React.useState(
-    () => getInterruptedCameraFallback('erco')?.message || '',
-  )
-  const [photoUploadProgress, setPhotoUploadProgress] = React.useState(null)
-  React.useEffect(() => () => photoAbortRef.current?.abort(), [])
-  React.useEffect(
-    () =>
-      subscribeToCameraReturn('erco', (fallback) =>
-        setCameraPhotoFallback(fallback?.message || ''),
-      ),
-    [],
-  )
   const [showAllBySection, setShowAllBySection] = React.useState({
     strengths: false,
     resourcesMobilised: false,
@@ -317,99 +286,6 @@ const PostIncidentAnalysisSection = ({ value, onChange, pushToast, onBeforeCamer
     }
   }
 
-  const handleUploadPhotos = async (event, source = 'upload') => {
-    const files = Array.from(event.target.files || [])
-    event.target.value = ''
-    if (files.length === 0) return
-    if (source === 'camera') markPendingCameraUploadStarted('erco')
-    const operation = ++photoOperationRef.current
-    photoAbortRef.current?.abort()
-    const controller = new AbortController()
-    photoAbortRef.current = controller
-    setIsPhotoProcessing(true)
-    setCameraPhotoFallback('')
-    const existing = Array.isArray(section.photos) ? section.photos : []
-    const remaining = Math.max(0, 10 - existing.length)
-    if (!remaining) {
-      pushToast?.('Maximum 10 photos are allowed.', {
-        title: 'Photo limit reached',
-        color: 'warning',
-      })
-      setIsPhotoProcessing(false)
-      return
-    }
-    try {
-      const failures = []
-      const uploaded = await uploadReportPhotosSequentially({
-        files: files.slice(0, remaining),
-        module: 'erco',
-        source,
-        signal: controller.signal,
-        onFailure: (failure) => failures.push(failure),
-        onProgress: (progress) => setPhotoUploadProgress({ ...progress, retrying: false }),
-        onRetry: (progress) => setPhotoUploadProgress({ ...progress, percent: 0, retrying: true }),
-      })
-      if (operation !== photoOperationRef.current) {
-        await Promise.all(uploaded.map((photo) => deleteReportMedia(photo.mediaId)))
-        return
-      }
-      let total = existing.reduce((sum, photo) => sum + getReportPhotoBytes(photo), 0)
-      const accepted = []
-      for (const photo of uploaded) {
-        if (total + photo.sizeBytes > 12 * 1024 * 1024) {
-          await deleteReportMedia(photo.mediaId)
-          failures.push({ code: 'total_size_exceeded', fileName: photo.fileName })
-        } else {
-          total += photo.sizeBytes
-          accepted.push({ id: uid(), ...photo, description: '' })
-        }
-      }
-      if (accepted.length) {
-        updateSection((current) => ({
-          photos: [...(Array.isArray(current.photos) ? current.photos : []), ...accepted],
-        }))
-        pushToast?.(
-          `${accepted.length} photo${accepted.length > 1 ? 's' : ''} added to post-incident analysis.`,
-          { title: 'Photos updated', color: 'success' },
-        )
-        clearPendingCameraOperation()
-      }
-      failures.forEach((failure) =>
-        pushToast?.(
-          failure.code === 'total_size_exceeded'
-            ? 'Total photo size must be 12 MB or smaller.'
-            : reportPhotoFailureMessage(failure.code, failure.fileName),
-          { title: 'Upload warning', color: 'warning' },
-        ),
-      )
-      if (source === 'camera' && failures.length)
-        setCameraPhotoFallback(reportPhotoFailureMessage(failures[0].code, failures[0].fileName))
-    } catch (error) {
-      if (error?.name !== 'AbortError')
-        setCameraPhotoFallback(source === 'camera' ? reportPhotoFailureMessage(error?.code) : '')
-    } finally {
-      if (operation === photoOperationRef.current) setIsPhotoProcessing(false)
-    }
-  }
-
-  const removePhoto = (photoId) => {
-    const nextPhotos = (Array.isArray(section.photos) ? section.photos : []).filter(
-      (photo) => String(photo?.id || '') !== String(photoId || ''),
-    )
-    updateSection({ photos: nextPhotos })
-  }
-
-  const updatePhotoDescription = (photoId, description) => {
-    const nextPhotos = (Array.isArray(section.photos) ? section.photos : []).map((photo) => {
-      if (String(photo?.id || '') !== String(photoId || '')) return photo
-      return {
-        ...photo,
-        description: String(description || ''),
-      }
-    })
-    updateSection({ photos: nextPhotos })
-  }
-
   const renderCardSection = (key) => {
     const meta = SECTION_META[key]
     const selectedRows = Array.isArray(section[key]) ? section[key] : []
@@ -553,140 +429,16 @@ const PostIncidentAnalysisSection = ({ value, onChange, pushToast, onBeforeCamer
   }
 
   const renderPhotosSection = () => (
-    <div className="d-grid gap-2">
-      <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <div className="fw-semibold">Photographs</div>
-        <CreateActionButton
-          label="Add photo"
-          icon={<Camera size={13} className="me-1 align-text-bottom" />}
-          onClick={() => {
-            if (navigator.onLine === false) {
-              setCameraPhotoFallback('Connect to the internet before taking or uploading a photo.')
-              return
-            }
-            if (isLikelyEmbeddedBrowser()) {
-              setCameraPhotoFallback(
-                'Open this page in Safari, Chrome, Edge, or Samsung Internet to use the camera.',
-              )
-              return
-            }
-            markPendingCameraOperation({
-              module: 'erco',
-              targetKind: 'postIncidentAnalysis',
-              photosKey: 'photos',
-            })
-            try {
-              Promise.resolve(onBeforeCameraOpen?.()).catch(() => {})
-            } catch {
-              // Draft persistence is best-effort and must not block the native camera.
-            }
-            cameraPhotoInputRef.current?.click()
-          }}
-          disabled={isPhotoProcessing}
-        />
-        <CButton
-          type="button"
-          color="secondary"
-          variant="outline"
-          size="sm"
-          disabled={isPhotoProcessing}
-          onClick={() => uploadPhotoInputRef.current?.click()}
-        >
-          Upload photos
-        </CButton>
-      </div>
-      <CFormInput
-        ref={cameraPhotoInputRef}
-        id="post-analysis-photo-upload"
-        type="file"
-        aria-label="Take post-incident photo"
-        accept="image/*"
-        capture="environment"
-        onChange={(event) => handleUploadPhotos(event, 'camera')}
-        className="d-none"
-        disabled={isPhotoProcessing}
-      />
-      <CFormInput
-        ref={uploadPhotoInputRef}
-        type="file"
-        aria-label="Upload post-incident photos"
-        accept=".jpg,.jpeg,.png,.webp,.heic,.heif,image/jpeg,image/png,image/webp,image/heic,image/heif"
-        multiple
-        onChange={(event) => handleUploadPhotos(event, 'upload')}
-        className="d-none"
-        disabled={isPhotoProcessing}
-      />
-      {cameraPhotoFallback ? (
-        <CAlert color="warning" className="mb-0">
-          {cameraPhotoFallback}{' '}
-          <CButton
-            type="button"
-            color="warning"
-            size="sm"
-            className="ms-2"
-            onClick={() => uploadPhotoInputRef.current?.click()}
-          >
-            Upload photo
-          </CButton>
-        </CAlert>
-      ) : null}
-      {isPhotoProcessing ? (
-        <div className="small text-body-secondary" role="status">
-          {photoUploadProgress?.retrying ? 'Retrying photo upload' : 'Uploading photo'}{' '}
-          {Number(photoUploadProgress?.percent || 0)}%
-        </div>
-      ) : null}
-      {Array.isArray(section.photos) && section.photos.length > 0 ? (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-            gap: '0.75rem',
-          }}
-        >
-          {section.photos.map((photo, index) => (
-            <div
-              key={photo.id || `${photo.fileName || 'photo'}-${index}`}
-              className="rounded-3 border border-light-subtle p-2 d-grid gap-2"
-            >
-              <ReportPhotoImage
-                photo={photo}
-                alt={photo.fileName || 'Incident photo'}
-                style={{
-                  width: '100%',
-                  height: '140px',
-                  objectFit: 'cover',
-                  borderRadius: '4px',
-                }}
-              />
-              <div className="small text-truncate">{photo.fileName || 'Photo'}</div>
-              <CFormInput
-                size="sm"
-                aria-label={`Description for ${photo.fileName || 'photo'}`}
-                value={String(photo?.description || '')}
-                placeholder="Add image description"
-                onChange={(event) => updatePhotoDescription(photo.id, event.target.value)}
-              />
-              <CButton
-                type="button"
-                color="danger"
-                variant="outline"
-                size="sm"
-                className="d-inline-flex align-items-center justify-content-center gap-1"
-                onClick={() => removePhoto(photo.id)}
-              >
-                <Trash2 size={14} />
-                Remove
-              </CButton>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="rounded-3 border border-light-subtle bg-light-subtle p-3 text-body-secondary">
-          No photos yet. Upload photos to continue.
-        </div>
-      )}
-    </div>
+    <ReportPhotoSection
+      moduleKey="erco"
+      photos={section.photos}
+      onChange={(photos) => updateSection({ photos })}
+      pushToast={pushToast}
+      onBeforeCameraOpen={onBeforeCameraOpen}
+      captureLabel="Add photo"
+      uploadLabel="Upload photos"
+      emptyMessage="No photos yet. Upload photos to continue."
+    />
   )
 
   const renderMobileSectionBody = (key) => {

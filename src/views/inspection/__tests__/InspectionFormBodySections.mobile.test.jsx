@@ -129,6 +129,36 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
     expect(screen.queryByText('Describe')).toBeNull()
   })
 
+  it('shows the exact blocked-save reason in the mobile action area', () => {
+    setMobileViewport()
+
+    renderBodySections({
+      form: {
+        inspectionType: 'General Inspection',
+        inspectedAt: '2026-07-11T08:30',
+        zone: '1',
+        mainLocation: 'Office',
+        subLocation: 'Reception',
+        inspectionIssues: [],
+        photos: [],
+      },
+      isFullInspectionForm: true,
+      location: {
+        selectedMainLocationTitle: 'Office',
+        subLocationOptions: [{ value: 'Reception', title: 'Reception' }],
+      },
+      mainLocation: 'Office',
+      selectedTypeDefinition: { usesZoneLocationFlow: true },
+      selectedType: 'General Inspection',
+      zone: '1',
+    })
+
+    expect(
+      screen.getAllByText('Cannot continue to review: add and complete at least one finding.')
+        .length,
+    ).toBeGreaterThan(0)
+  })
+
   it('hides fallback actions for fire extinguisher before a mode is usable', () => {
     setMobileViewport()
 

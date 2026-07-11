@@ -518,8 +518,9 @@ describe('InspectionReviewView pending submissions', () => {
     ])
   })
 
-  it('blocks submit for a type with blockers', () => {
+  it('routes draft retries through the serialized snapshot sync', async () => {
     const saveDraft = vi.fn()
+    const retryDraftSync = vi.fn().mockResolvedValue({ saved: true, synced: true })
     const sessionReviewForm = { inspectionType: 'Fire Extinguisher Inspection' }
     const reviewWorkspace = { mode: 'new' }
     render(
@@ -546,6 +547,7 @@ describe('InspectionReviewView pending submissions', () => {
         reviewMayQueue={false}
         reviewRecord={null}
         reviewWorkspace={reviewWorkspace}
+        retryDraftSync={retryDraftSync}
         saveDraft={saveDraft}
         sessionReviewForm={sessionReviewForm}
         submit={vi.fn()}
@@ -553,14 +555,116 @@ describe('InspectionReviewView pending submissions', () => {
       />,
     )
 
-    fireEvent.click(screen.getAllByRole('button', { name: 'Retry Sync' })[0])
-    expect(saveDraft).toHaveBeenCalledWith(sessionReviewForm, reviewWorkspace)
+    await act(async () => {
+      fireEvent.click(screen.getAllByRole('button', { name: 'Retry Sync' })[0])
+    })
+    expect(retryDraftSync).toHaveBeenCalledTimes(1)
+    expect(saveDraft).not.toHaveBeenCalled()
 
     expect(screen.queryByText('Sync failed. Retry required.')).toBeNull()
     expect(screen.getAllByRole('button', { name: 'Submit' })[0].disabled).toBe(true)
 
-    fireEvent.click(screen.getAllByRole('button', { name: 'Retry Sync' })[0])
-    expect(saveDraft).toHaveBeenCalledTimes(2)
+    await act(async () => {
+      fireEvent.click(screen.getAllByRole('button', { name: 'Retry Sync' })[0])
+    })
+    expect(retryDraftSync).toHaveBeenCalledTimes(2)
+  })
+
+  it('does not start a direct draft save when serialized sync is already in flight', async () => {
+    const retryDraftSync = vi.fn().mockResolvedValue(null)
+    const saveDraft = vi.fn()
+
+    render(
+      <InspectionReviewView
+        backFromReview={vi.fn()}
+        buildPendingReviewRecord={vi.fn()}
+        clearInspectionTypeDraft={vi.fn()}
+        isSubmitting={false}
+        pendingSubmissionSummary={{
+          items: [
+            buildItem({
+              status: 'failed',
+              blockers: [{ key: 'draft-sync-failed', message: 'Sync failed. Retry required.' }],
+            }),
+          ],
+        }}
+        renderStatusBadge={(status) => <span>{status}</span>}
+        reviewMayQueue={false}
+        reviewRecord={null}
+        reviewWorkspace={{ mode: 'new' }}
+        retryDraftSync={retryDraftSync}
+        saveDraft={saveDraft}
+        sessionReviewForm={{ inspectionType: 'Fire Extinguisher Inspection' }}
+        submit={vi.fn()}
+        user={{ name: 'Inspector' }}
+      />,
+    )
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Retry Sync' }))
+    })
+
+    expect(retryDraftSync).toHaveBeenCalledTimes(1)
+    expect(saveDraft).not.toHaveBeenCalled()
+  })
+
+  it('routes fire extinguisher Retry Sync to the session queue and prevents duplicate clicks', async () => {
+    let resolveRetry
+    const retryFireExtinguisherSessionSync = vi.fn(
+      () =>
+        new Promise((resolve) => {
+          resolveRetry = resolve
+        }),
+    )
+    const retryDraftSync = vi.fn()
+    const saveDraft = vi.fn()
+
+    render(
+      <InspectionReviewView
+        backFromReview={vi.fn()}
+        buildPendingReviewRecord={vi.fn()}
+        clearInspectionTypeDraft={vi.fn()}
+        isSubmitting={false}
+        pendingSubmissionSummary={{
+          items: [
+            buildItem({
+              status: 'needs_attention',
+              blockers: [
+                {
+                  key: 'fire-extinguisher-session-sync',
+                  message: '1 fire extinguisher session update could not sync.',
+                },
+              ],
+            }),
+          ],
+        }}
+        renderStatusBadge={(status) => <span>{status}</span>}
+        reviewMayQueue={false}
+        reviewRecord={null}
+        reviewWorkspace={{ mode: 'new' }}
+        retryDraftSync={retryDraftSync}
+        retryFireExtinguisherSessionSync={retryFireExtinguisherSessionSync}
+        saveDraft={saveDraft}
+        sessionReviewForm={{}}
+        submit={vi.fn()}
+        user={{ name: 'Inspector' }}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Retry Sync' }))
+
+    expect(retryFireExtinguisherSessionSync).toHaveBeenCalledTimes(1)
+    expect(retryDraftSync).not.toHaveBeenCalled()
+    expect(saveDraft).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: 'Syncing...' }).disabled).toBe(true)
+    expect(screen.getByRole('button', { name: 'Submit' }).disabled).toBe(true)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Syncing...' }))
+    expect(retryFireExtinguisherSessionSync).toHaveBeenCalledTimes(1)
+
+    await act(async () => {
+      resolveRetry([{ synced: true }])
+    })
   })
 
   it('allows a ready type to submit when another pending type is blocked', async () => {

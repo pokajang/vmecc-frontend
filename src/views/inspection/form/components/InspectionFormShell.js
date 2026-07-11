@@ -23,6 +23,7 @@ const InspectionFormShell = ({
   catalogManagers,
   checkActions,
   draftStatus,
+  onResolveDraftConflict,
   onRetryDraftSync,
   fieldErrors,
   fireExtinguisherAreaRows,
@@ -144,6 +145,68 @@ const InspectionFormShell = ({
         </CAlert>
       ) : null}
 
+      {structured.sessionError ? (
+        <CAlert color="danger" className="mx-3 mx-md-4 mt-3" role="alert">
+          <div className="fw-semibold">Inspection session unavailable</div>
+          <div className="small">
+            {structured.sessionError?.message ||
+              'This inspection session could not be opened. Check your team assignment and retry.'}
+          </div>
+          <CButton
+            type="button"
+            color="danger"
+            variant="outline"
+            size="sm"
+            className="mt-2"
+            onClick={() => structured.retrySession?.()}
+          >
+            Retry session
+          </CButton>
+        </CAlert>
+      ) : null}
+
+      {structured.operationError ? (
+        <CAlert color="warning" className="mx-3 mx-md-4 mt-3" role="alert">
+          <div className="fw-semibold">Inspection changes need attention</div>
+          <div className="small">
+            {structured.operationError?.message ||
+              'A saved inspection change could not be synchronized.'}
+          </div>
+        </CAlert>
+      ) : null}
+
+      {structured.draftSyncState?.status === 'conflict' ? (
+        <CAlert color="warning" className="mx-3 mx-md-4 mt-3" role="alert">
+          <div className="d-grid gap-2">
+            <div className="fw-semibold">This draft changed in another browser or device.</div>
+            <div className="small">
+              Choose which copy to continue with. Your local work will not be overwritten unless you
+              select the server copy.
+            </div>
+            {structured.draftSyncState?.lastError ? (
+              <div className="small text-body-secondary">{structured.draftSyncState.lastError}</div>
+            ) : null}
+            <div className="d-flex flex-column flex-sm-row gap-2">
+              <CButton
+                type="button"
+                color="warning"
+                onClick={() => onResolveDraftConflict?.('keep-local-as-new')}
+              >
+                Save my work as a new draft
+              </CButton>
+              <CButton
+                type="button"
+                color="secondary"
+                variant="outline"
+                onClick={() => onResolveDraftConflict?.('keep-server')}
+              >
+                Use server draft
+              </CButton>
+            </div>
+          </div>
+        </CAlert>
+      ) : null}
+
       <input
         ref={uploadInputRef}
         type="file"
@@ -208,6 +271,7 @@ const InspectionFormShell = ({
             descriptionRef={refs.descriptionRef}
             draftStatus={draftStatus}
             draftSyncState={structured.draftSyncState}
+            readiness={structured.readiness}
             fieldErrors={fieldErrors}
             fireExtinguisherScan={setup.fireExtinguisherScan}
             form={form}

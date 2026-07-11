@@ -110,6 +110,7 @@ const OvertimeRecordsTab = (props) => {
         setPage: props.setPage,
         approveOvertime: props.approveOvertime,
         rejectOvertime: props.rejectOvertime,
+        requestOvertimeCorrection: props.requestOvertimeCorrection,
         openOvertimeDetail: props.openOvertimeDetail,
         onBulkWorkflowAction: props.onBulkWorkflowAction,
         isBulkSubmitting: props.isBulkSubmitting || false,
@@ -154,6 +155,7 @@ const OvertimeRecordsTab = (props) => {
     setPage,
     approveOvertime,
     rejectOvertime,
+    requestOvertimeCorrection,
     openOvertimeDetail,
     onBulkWorkflowAction,
     isBulkSubmitting = false,
@@ -208,7 +210,7 @@ const OvertimeRecordsTab = (props) => {
         approveDisabled: row.status !== 'Pending',
         rejectDisabled: row.status !== 'Pending',
       }
-      return buildReviewWorkflowActionItems({
+      const items = buildReviewWorkflowActionItems({
         row,
         actionKeyPrefix: 'overtime',
         actionConfig: reviewActionConfig,
@@ -216,8 +218,17 @@ const OvertimeRecordsTab = (props) => {
         onReject: rejectOvertime,
         disableWhenHandlerMissing: true,
       })
+      if (typeof requestOvertimeCorrection === 'function') {
+        items.push({
+          key: `overtime-correction-${row.recordKey || row.id}`,
+          label: 'Request correction',
+          disabled: Boolean(reviewActionConfig.correctionDisabled),
+          onClick: () => requestOvertimeCorrection(row),
+        })
+      }
+      return items
     },
-    [approveOvertime, getReviewActionConfig, rejectOvertime],
+    [approveOvertime, getReviewActionConfig, rejectOvertime, requestOvertimeCorrection],
   )
 
   const renderMobileGroupSelect = ({ id, ariaLabel, eligibleKeys = [], allSelected = false }) => (

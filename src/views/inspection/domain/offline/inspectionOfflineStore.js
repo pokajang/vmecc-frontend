@@ -81,6 +81,8 @@ export const offlineStoreKeys = {
   workspace: (userId) => `workspace:${String(userId || 'unknown')}`,
   draft: (userId) => `draft:${String(userId || 'unknown')}`,
   queue: (userId) => `queue:${String(userId || 'unknown')}`,
+  feOperations: (userId, sessionUid) =>
+    `fe-operations:${String(userId || 'unknown')}:${String(sessionUid || 'unknown')}`,
 }
 
 export const loadOfflineValueSync = (key, fallback = null) => readMirror(key, fallback)
@@ -91,13 +93,20 @@ export const saveOfflineValue = async (key, value) => {
     value,
     updatedAt: new Date().toISOString(),
   }
-  writeMirror(record.key, record)
+  const mirrorSaved = writeMirror(record.key, record)
+  let indexedDbSaved = false
   try {
-    await withStore('readwrite', (store) => store.put(record))
+    const result = await withStore('readwrite', (store) => store.put(record))
+    indexedDbSaved = result !== null
   } catch {
     // The mirror keeps the module usable if IndexedDB is unavailable or blocked.
   }
-  return record
+  return {
+    ...record,
+    persisted: mirrorSaved || indexedDbSaved,
+    mirrorSaved,
+    indexedDbSaved,
+  }
 }
 
 export const loadOfflineValue = async (key, fallback = null) => {

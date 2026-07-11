@@ -1,5 +1,5 @@
 export const LEAVE_MANAGEMENT_ALLOWED_PERMISSIONS = ['staff.leave.manage']
-export const OVERTIME_MANAGEMENT_ALLOWED_PERMISSIONS = ['staff.overtime.manage']
+export const OVERTIME_MANAGEMENT_ALLOWED_PERMISSIONS = ['staff.overtime.manage', 'system.admin']
 export const SALARY_CLAIMS_ALLOWED_PERMISSIONS = ['staff.salary.manage']
 
 export const staffLeaveRows = []

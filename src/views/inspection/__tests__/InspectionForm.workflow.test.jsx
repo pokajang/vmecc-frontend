@@ -32,6 +32,43 @@ const reportMediaApiMock = vi.hoisted(() => ({
   ),
 }))
 
+const inspectionSessionApiMock = vi.hoisted(() => ({
+  createOrResumeInspectionSession: vi.fn(async () => ({
+    sessionUid: 'workflow-session-1',
+    status: 'active',
+    version: 1,
+    results: [],
+    progress: { sessionUid: 'workflow-session-1', sessionVersion: 1 },
+  })),
+  fetchInspectionSession: vi.fn(async () => null),
+  fetchInspectionSessionProgress: vi.fn(async () => ({
+    sessionUid: 'workflow-session-1',
+    sessionVersion: 1,
+  })),
+  fetchInspectionSessionResults: vi.fn(async () => ({ rows: [], meta: null })),
+  completeInspectionSessionExtinguisher: vi.fn(async ({ row }) => ({ row, meta: null })),
+  resetInspectionSessionExtinguisher: vi.fn(async () => ({ row: null, meta: null })),
+  getFireExtinguisherAssetKey: vi.fn((row = {}) =>
+    String(row.canonicalAssetKey || row.catalogId || row.id || ''),
+  ),
+}))
+
+const createStorageMock = () => {
+  const rows = new Map()
+  return {
+    get length() {
+      return rows.size
+    },
+    key: (index) => [...rows.keys()][index] || null,
+    getItem: (key) => (rows.has(key) ? rows.get(key) : null),
+    setItem: (key, value) => rows.set(key, String(value)),
+    removeItem: (key) => rows.delete(key),
+    clear: () => rows.clear(),
+  }
+}
+
+vi.mock('../domain/api/inspectionSessionApi', () => inspectionSessionApiMock)
+
 vi.mock('src/services/api/reportMediaApi', () => ({
   CAMERA_SOURCE_MAX_BYTES: 30 * 1024 * 1024,
   deleteReportMedia: reportMediaApiMock.deleteReportMedia,
@@ -480,6 +517,10 @@ const openScbaGroup = async (groupName) => {
 describe('InspectionForm workflow', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      value: createStorageMock(),
+    })
     typeManagerModalMock.props.length = 0
     window.localStorage?.clear?.()
     window.sessionStorage?.clear?.()
@@ -1347,30 +1388,34 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    fireEvent.click(screen.getAllByText('Continue to Review')[0])
+    const reviewButton = screen.getAllByText('Continue to Review')[0].closest('button')
+    await waitFor(() => expect(reviewButton.disabled).toBe(false))
+    fireEvent.click(reviewButton)
 
-    expect(onRequestReview).toHaveBeenCalledWith(
-      expect.objectContaining({
-        fireExtinguisherInspectedBy: 'Inspector',
-        fireExtinguisherInspectionDate: '2026-06-29',
-        fireExtinguisherChecks: expect.arrayContaining([
-          expect.objectContaining({
-            id: 'fe:1',
-            physicalCondition: 'Not Good',
-            physicalConditionRemarks: 'Cylinder body dented.',
-            physicalConditionPhotos: [
-              expect.objectContaining({
-                id: 'fe-photo-1',
-                description: 'Cylinder defect',
-              }),
-            ],
-          }),
-        ]),
-      }),
+    await waitFor(() =>
+      expect(onRequestReview).toHaveBeenCalledWith(
+        expect.objectContaining({
+          fireExtinguisherInspectedBy: 'Inspector',
+          fireExtinguisherInspectionDate: '2026-06-29',
+          fireExtinguisherChecks: expect.arrayContaining([
+            expect.objectContaining({
+              id: 'fe:1',
+              physicalCondition: 'Not Good',
+              physicalConditionRemarks: 'Cylinder body dented.',
+              physicalConditionPhotos: [
+                expect.objectContaining({
+                  id: 'fe-photo-1',
+                  description: 'Cylinder defect',
+                }),
+              ],
+            }),
+          ]),
+        }),
+      ),
     )
   })
 
-  it('allows Fire Extinguisher review for completed subset rows without requiring untouched catalog rows', () => {
+  it('allows Fire Extinguisher review for completed subset rows without requiring untouched catalog rows', async () => {
     const onRequestReview = vi.fn()
     render(
       <InspectionForm
@@ -1474,15 +1519,19 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    fireEvent.click(screen.getAllByText('Continue to Review')[0])
+    const reviewButton = screen.getAllByText('Continue to Review')[0].closest('button')
+    await waitFor(() => expect(reviewButton.disabled).toBe(false))
+    fireEvent.click(reviewButton)
 
-    expect(onRequestReview).toHaveBeenCalledWith(
-      expect.objectContaining({
-        fireExtinguisherChecks: [
-          expect.objectContaining({ idLocNo: 'CAN-001' }),
-          expect.objectContaining({ idLocNo: 'CAN-002' }),
-        ],
-      }),
+    await waitFor(() =>
+      expect(onRequestReview).toHaveBeenCalledWith(
+        expect.objectContaining({
+          fireExtinguisherChecks: [
+            expect.objectContaining({ idLocNo: 'CAN-001' }),
+            expect.objectContaining({ idLocNo: 'CAN-002' }),
+          ],
+        }),
+      ),
     )
     expect(
       onRequestReview.mock.calls[0][0].fireExtinguisherChecks.some(
@@ -1631,7 +1680,7 @@ describe('InspectionForm workflow', () => {
     expect(screen.queryByText('Actual field coming soon')).toBeNull()
     expect(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle)).toBeTruthy()
     expect(screen.getAllByRole('button', { name: 'Continue to Review' })[0].disabled).toBe(true)
-    expect(screen.getAllByText(/items? need attention before review\./).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Cannot continue to review:.*ER Aux/i).length).toBeGreaterThan(0)
     expect(screen.getAllByText('Save Draft').length).toBeGreaterThan(0)
   })
 
@@ -3216,7 +3265,7 @@ describe('InspectionForm workflow', () => {
     )
 
     expect(screen.getAllByRole('button', { name: 'Continue to Review' })[0].disabled).toBe(true)
-    expect(screen.getAllByText(/items? need attention before review\./).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Cannot continue to review:.*ER Aux/i).length).toBeGreaterThan(0)
     expect(onRequestReview).not.toHaveBeenCalled()
   })
 
@@ -3257,7 +3306,7 @@ describe('InspectionForm workflow', () => {
     expect(screen.getAllByRole('button', { name: 'Continue to Review Updates' })[0].disabled).toBe(
       true,
     )
-    expect(screen.getAllByText(/items? need attention before review\./).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Cannot continue to review:.*ER Aux/i).length).toBeGreaterThan(0)
     expect(screen.getAllByText('Save Update Draft').length).toBeGreaterThan(0)
     expect(onRequestReview).not.toHaveBeenCalled()
   })

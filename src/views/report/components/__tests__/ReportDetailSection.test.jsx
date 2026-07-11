@@ -67,4 +67,40 @@ describe('ReportDetailSection work-first mobile detail', () => {
     expect(within(moreDrawer).getByText('Delete')).toBeTruthy()
     expect(within(moreDrawer).getByTestId('erco-report-download-action')).toBeTruthy()
   })
+
+  it('renders Drill V2 content and Drill workflow labels', () => {
+    const drill = {
+      ...record,
+      id: 'drill-001',
+      displayId: 'DRILL-001',
+      reportType: 'drill',
+      incidentType: 'Fire Drill',
+      exerciseTitle: 'Major fire exercise',
+      exerciseCategories: ['Fire', 'Rescue'],
+      reportIssuanceDate: '2026-07-08',
+      exerciseObjectives: [{ text: 'Test evacuation' }],
+      erpReferences: [{ annexNumber: 'ERP-01', title: 'Major Fire' }],
+      respondingTeam: {
+        name: 'A Team',
+        attendance: [{ memberId: '1', name: 'Alex', role: 'Responder', exerciseRole: 'SC' }],
+      },
+      postIncidentAnalysis: { strengths: ['Clear command'], photos: [] },
+      timeline: [
+        { action: 'Submitted', by: 'Reporter', at: '2026-07-07T16:55:00.000Z' },
+        { action: 'Reviewed', by: 'Commander', at: '2026-07-07T17:00:00.000Z' },
+        { action: 'Approved', by: 'Manager', at: '2026-07-07T17:05:00.000Z' },
+      ],
+    }
+    render(<ReportDetailSection {...buildProps({ selectedRecord: drill })} />)
+
+    expect(screen.getByText('Fire, Rescue')).toBeTruthy()
+    expect(screen.getByText('Test evacuation')).toBeTruthy()
+    expect(screen.getByText('ERP-01 - Major Fire')).toBeTruthy()
+    expect(screen.getByText('Exercise Personnel')).toBeTruthy()
+    expect(screen.getByText('Alex - Responder (SC)')).toBeTruthy()
+    expect(screen.getByText('Post-Exercise Analysis')).toBeTruthy()
+    expect(screen.getByText('Prepared By')).toBeTruthy()
+    expect(screen.getByText('Station Commander Review')).toBeTruthy()
+    expect(screen.getByText('VMM Review')).toBeTruthy()
+  })
 })

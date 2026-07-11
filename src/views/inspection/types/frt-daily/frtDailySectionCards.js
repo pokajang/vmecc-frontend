@@ -6,7 +6,10 @@ import RowActions from 'src/components/RowActions'
 import useMediaQuery from 'src/hooks/useMediaQuery'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import InspectionItemAdditionalInfo from 'src/views/inspection/form/components/InspectionItemAdditionalInfo'
-import { hasFrtInspectionData } from 'src/views/inspection/form/inspectionResetActions'
+import {
+  buildPhotoViewerUploadOptions,
+  buildStagedPhotoUploadOptions,
+} from 'src/views/inspection/form/inspectionPhotoFlow'
 import InspectionResetConfirmDrawer from 'src/views/inspection/form/components/InspectionResetConfirmDrawer'
 import {
   buildInspectionElementActions,
@@ -177,10 +180,11 @@ const FrtIssueEvidence = ({
       title: `${row.equipment} - issue photos`,
       photos: nextPhotos,
       showCaptionChips: false,
-      onAddMorePhoto: () =>
-        onRequestIssuePhotoUpload?.(row, {
-          onAfterAddPhotos: ({ photos: addedPhotos }) => openIssuePhotoViewer(addedPhotos),
-        }),
+      onAddMorePhoto: (currentPhotos) =>
+        onRequestIssuePhotoUpload?.(
+          row,
+          buildPhotoViewerUploadOptions(openIssuePhotoViewer, { currentPhotos }),
+        ),
       onSave: (savedPhotos) =>
         onUpdateCheck?.(row, { photos: Array.isArray(savedPhotos) ? savedPhotos : [] }),
       onRemove: (photoId) => onRemovePhoto?.(row, photoId),
@@ -189,9 +193,10 @@ const FrtIssueEvidence = ({
       onApplyCaption: (photoId, caption) => onApplyPhotoCaption?.(row, photoId, caption),
     })
   const requestIssuePhoto = () =>
-    onRequestIssuePhotoUpload?.(row, {
-      onAfterAddPhotos: ({ photos: nextPhotos }) => openIssuePhotoViewer(nextPhotos),
-    })
+    onRequestIssuePhotoUpload?.(
+      row,
+      buildPhotoViewerUploadOptions(openIssuePhotoViewer, { currentPhotos: photos }),
+    )
 
   return (
     <div
@@ -512,7 +517,7 @@ const FrtRowCard = ({
   const isDaily = kind === 'daily'
   const bodyId = `frt-checks-${getFrtRowId(row).replace(/[^A-Za-z0-9_-]/g, '-')}`
   const toggleExpanded = () => onToggleExpanded?.(row)
-  const canReset = typeof onResetCheck === 'function' && hasFrtInspectionData(row)
+  const canReset = !readOnly && typeof onResetCheck === 'function'
   const actionItems = buildFrtRowActionItems({
     row,
     canReset,
@@ -735,17 +740,21 @@ const FrtSectionCards = ({
 
   const buildMobileDraftHandlers = () => ({
     onUpdateCheck: (_row, patch) => patchMobileDraftRow(patch),
-    onRequestIssuePhotoUpload: (row) =>
-      onRequestIssuePhotoUpload?.(row, {
-        onAddPhotos: (_targetRow, photosKey, photos) =>
+    onRequestIssuePhotoUpload: (row, options = {}) =>
+      onRequestIssuePhotoUpload?.(
+        row,
+        buildStagedPhotoUploadOptions(options, (_targetRow, photosKey, photos) =>
           patchMobileDraftRow({ [photosKey]: photos }),
-      }),
-    onRequestPhotoUpload: (row, photosKey = 'additionalPhotos') =>
-      onRequestIssuePhotoUpload?.(row, {
-        photosKey,
-        onAddPhotos: (_targetRow, nextPhotosKey, photos) =>
-          patchMobileDraftRow({ [nextPhotosKey]: photos }),
-      }),
+        ),
+      ),
+    onRequestPhotoUpload: (row, photosKey = 'additionalPhotos', options = {}) =>
+      onRequestIssuePhotoUpload?.(
+        row,
+        buildStagedPhotoUploadOptions(
+          { ...options, photosKey },
+          (_targetRow, nextPhotosKey, photos) => patchMobileDraftRow({ [nextPhotosKey]: photos }),
+        ),
+      ),
     onRemovePhoto: (row, photoId, photosKey = 'photos') => {
       const photos = Array.isArray(row?.[photosKey]) ? row[photosKey] : []
       patchMobileDraftRow({
@@ -865,9 +874,7 @@ const FrtSectionCards = ({
                 }`}
                 items={buildFrtRowActionItems({
                   row: mobileDetail.row,
-                  canReset:
-                    typeof onResetCheck === 'function' &&
-                    hasFrtInspectionData(mobileDraftRow || mobileDetail.row),
+                  canReset: typeof onResetCheck === 'function',
                   onReset: () =>
                     requestResetCheck(mobileDraftRow || mobileDetail.row, {
                       onAfterConfirm: closeMobileDetailDrawer,

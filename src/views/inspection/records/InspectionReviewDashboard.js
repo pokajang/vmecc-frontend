@@ -48,6 +48,7 @@ const getSubmitTitle = (item = {}, isUpdateMode = false) => {
 const InspectionReviewTypeCard = ({
   item,
   selected,
+  isRetryingSync,
   isSubmitting,
   isUpdateMode = false,
   onViewDetails,
@@ -55,10 +56,17 @@ const InspectionReviewTypeCard = ({
   onRetrySync,
 }) => {
   const blockers = Array.isArray(item.blockers) ? item.blockers : []
-  const canSubmit = getBlockingBlockers(blockers).length === 0 && !isSubmitting
+  const canSubmit =
+    (item.readiness?.isReadyToSubmit ?? getBlockingBlockers(blockers).length === 0) &&
+    !isSubmitting &&
+    !isRetryingSync
   const retryableSyncBlocker = getRetryableSyncBlocker(blockers)
   const backgroundSyncBlocker = getBackgroundSyncBlocker(blockers)
   const visibleWarningBlocker = getVisibleWarningBlocker(blockers)
+  const retryCount = blockers.reduce(
+    (total, blocker) => total + Math.max(0, Number(blocker?.retryCount || 0) || 0),
+    0,
+  )
 
   return (
     <div
@@ -79,13 +87,25 @@ const InspectionReviewTypeCard = ({
             {item.issueSummary}
           </div>
           {visibleWarningBlocker?.message ? (
-            <div className="text-warning-emphasis mt-2">{visibleWarningBlocker.message}</div>
+            <div className="text-warning-emphasis mt-2" role="alert">
+              {visibleWarningBlocker.message}
+            </div>
           ) : null}
         </div>
         <div className="inspection-review-type-card__actions">
           {retryableSyncBlocker ? (
-            <CButton size="sm" color="warning" variant="outline" onClick={() => onRetrySync(item)}>
-              Retry Sync
+            <CButton
+              size="sm"
+              color="warning"
+              variant="outline"
+              disabled={isRetryingSync}
+              onClick={() => onRetrySync(item, retryableSyncBlocker)}
+            >
+              {isRetryingSync
+                ? retryCount > 0
+                  ? `Syncing 1 of ${retryCount}`
+                  : 'Syncing...'
+                : `Retry Sync${retryCount > 1 ? ` (${retryCount})` : ''}`}
             </CButton>
           ) : null}
           <CButton size="sm" color="primary" disabled={!canSubmit} onClick={() => onSubmit(item)}>
@@ -329,6 +349,7 @@ const InspectionReviewSubmitDrawer = ({
 const InspectionReviewDashboard = ({
   items,
   isSubmitting = false,
+  isRetryingSync = false,
   isUpdateMode = false,
   onRetrySync,
   onSubmit,
@@ -379,6 +400,7 @@ const InspectionReviewDashboard = ({
               item={item}
               selected={detailTargetKey === item.key}
               isSubmitting={isSubmitting}
+              isRetryingSync={isRetryingSync}
               isUpdateMode={isUpdateMode}
               onViewDetails={openDetails}
               onSubmit={requestSubmit}

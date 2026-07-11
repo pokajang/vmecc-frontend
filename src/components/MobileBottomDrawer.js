@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import {
   CButton,
   COffcanvas,
@@ -43,6 +43,7 @@ const MobileBottomDrawer = ({
   ...offcanvasProps
 }) => {
   const [shouldRender, setShouldRender] = useState(Boolean(visible))
+  const restoreFocusRef = useRef(null)
 
   const handlePanelRef = useCallback(
     (element) => {
@@ -55,6 +56,9 @@ const MobileBottomDrawer = ({
 
   useEffect(() => {
     if (visible) {
+      if (typeof document !== 'undefined' && !restoreFocusRef.current) {
+        restoreFocusRef.current = document.activeElement
+      }
       // Keep CoreUI mounted across open/close transitions so its scroll-lock cleanup runs.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setShouldRender(true)
@@ -64,6 +68,11 @@ const MobileBottomDrawer = ({
     const timer = window.setTimeout(() => {
       setShouldRender(false)
       releaseBodyScrollIfIdle()
+      const restoreTarget = restoreFocusRef.current
+      restoreFocusRef.current = null
+      if (restoreTarget?.isConnected && typeof restoreTarget.focus === 'function') {
+        restoreTarget.focus({ preventScroll: true })
+      }
     }, DRAWER_EXIT_MS)
 
     return () => window.clearTimeout(timer)
@@ -84,6 +93,11 @@ const MobileBottomDrawer = ({
   useEffect(
     () => () => {
       window.setTimeout(releaseBodyScrollIfIdle, 0)
+      const restoreTarget = restoreFocusRef.current
+      restoreFocusRef.current = null
+      if (restoreTarget?.isConnected && typeof restoreTarget.focus === 'function') {
+        restoreTarget.focus({ preventScroll: true })
+      }
     },
     [],
   )

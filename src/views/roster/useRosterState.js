@@ -399,7 +399,15 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
     return base
   }, [roster, shiftWindows, stats, allShifts])
 
-  const refreshRoster = async (teamList = teamsRef.current, statusFilter = null) => {
+  const refreshRoster = async (
+    teamList = teamsRef.current,
+    statusFilter = null,
+    options = { force: false },
+  ) => {
+    if (!options?.force && flowStateRef.current.editMode && flowStateRef.current.isDirty) {
+      return
+    }
+
     setLoading(true)
     setError(null)
     try {
@@ -629,7 +637,7 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
       setTimeout(() => setStatusMessage(null), 3500)
       setEditMode(false)
       setIsDirty(false)
-      await refreshRoster()
+      await refreshRoster(undefined, null, { force: true })
     } catch (err) {
       setError(err.payload?.message || 'Unable to save draft.')
     } finally {
@@ -652,7 +660,7 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
       setTimeout(() => setStatusMessage(null), 5000)
       setEditMode(false)
       setIsDirty(false)
-      await refreshRoster()
+      await refreshRoster(undefined, null, { force: true })
     } catch (err) {
       setError(err.payload?.message || 'Unable to publish roster.')
     } finally {

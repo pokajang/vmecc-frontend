@@ -82,3 +82,45 @@ export const DRILL_LOCATION_OPTIONS = [
     icon: MapPinned,
   },
 ]
+
+export const DRILL_NEW_SECTIONS = ['setup', 'personnel', 'details', 'chronology', 'analysis']
+
+export const DRILL_SECTION_LABELS = {
+  setup: 'Exercise Setup',
+  personnel: 'Exercise Personnel',
+  details: 'Exercise Details',
+  chronology: 'Chronology',
+  analysis: 'Post-Exercise Analysis',
+}
+
+export const DRILL_EXERCISE_CATEGORY_OPTIONS = [
+  { value: 'Fire', label: 'Fire' },
+  { value: 'Rescue', label: 'Rescue' },
+  { value: 'Hazmat / Oil Spill', label: 'Hazmat / Oil Spill' },
+  { value: 'Special Assistance', label: 'Special Assistance' },
+]
+
+export const DRILL_EXERCISE_ROLE_OPTIONS = [
+  'SC',
+  'ASC',
+  'TRT1',
+  'TRT2',
+  'TRT3',
+  'TRT4',
+  'Observer',
+  'Participant',
+]
+
+export const DRILL_FIELD_LIMITS = Object.freeze({
+  shortText: 190,
+  erpTitle: 500,
+  listItem: 2000,
+  chronologyAction: 4000,
+  narrative: 20000,
+  objectives: 25,
+  erpReferences: 25,
+  personnel: 100,
+  chronology: 250,
+  analysisRows: 50,
+  photos: 10,
+})

@@ -1,5 +1,6 @@
 const fs = require('node:fs')
 const path = require('node:path')
+const { createSmokePng } = require('./support/smoke-image')
 const { spawnSync } = require('node:child_process')
 const zlib = require('node:zlib')
 
@@ -59,10 +60,7 @@ const QAQC_BUCKET = {
   BLOCKED: 'Blocked/inconclusive',
 }
 
-const tinyPng = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=',
-  'base64',
-)
+const tinyPng = createSmokePng('inspection-live-smoke')
 
 const text = (value) => String(value || '').trim()
 

@@ -1,4 +1,5 @@
 import { uid } from './utils'
+import { normalizeDrillRecordToForm } from './drill/drillFormDomain'
 
 const statusToneMap = {
   draft: 'warning',
@@ -87,6 +88,14 @@ const buildErcoPostIncidentAnalysisDraft = (record) => {
 }
 
 const recordToDraft = (record, reportTypeSlug) => {
+  if (reportTypeSlug === 'drill') {
+    return {
+      ...record,
+      ...normalizeDrillRecordToForm(record),
+      setupConfirmed: true,
+      savedAt: new Date().toISOString(),
+    }
+  }
   const location =
     reportTypeSlug === 'erco' ? splitLocation(record?.location) : String(record?.location || '')
 
@@ -139,7 +148,7 @@ const buildDraftRow = ({ draft, reportTypeSlug, reportTypeLabel, actorName }) =>
     recordKind: 'draft',
     status: 'Draft',
     incidentType: payload.incidentType || '',
-    description: payload.description || payload.details || '',
+    description: payload.exerciseTitle || payload.description || payload.details || '',
     incidentDate: payload.incidentDate || payload.reportDate || '',
     incidentTime: payload.incidentTime || payload.reportTime || '',
     reportDate: payload.reportDate || payload.incidentDate || '',
@@ -197,8 +206,47 @@ const buildChangeSummary = (original, next) => {
   const originalStrengths =
     countAnalysisRows(original, 'strengths') || countLegacyFindings(original)
   const nextStrengths = countAnalysisRows(next, 'strengths') || countLegacyFindings(next)
+  const isDrill =
+    String(next?.reportType || original?.reportType || '')
+      .trim()
+      .toLowerCase() === 'drill'
+  const countRows = (record, key) =>
+    (Array.isArray(record?.[key]) ? record[key] : []).filter((row) => {
+      if (typeof row === 'string') return toText(row)
+      return Object.values(row || {}).some((value) => toText(value))
+    }).length
+  const categoryText = (record) =>
+    (Array.isArray(record?.exerciseCategories) ? record.exerciseCategories : [])
+      .map(toText)
+      .filter(Boolean)
+      .join(', ')
   const pairs = [
-    ['Incident Type', toText(original.incidentType), toText(next.incidentType)],
+    [
+      isDrill ? 'Drill Type' : 'Incident Type',
+      toText(original.incidentType),
+      toText(next.incidentType),
+    ],
+    ...(isDrill
+      ? [
+          ['Exercise Categories', categoryText(original), categoryText(next)],
+          ['Exercise Title', toText(original.exerciseTitle), toText(next.exerciseTitle)],
+          [
+            'Report Issuance Date',
+            toText(original.reportIssuanceDate),
+            toText(next.reportIssuanceDate),
+          ],
+          [
+            'Exercise Objectives',
+            String(countRows(original, 'exerciseObjectives')),
+            String(countRows(next, 'exerciseObjectives')),
+          ],
+          [
+            'ERP References',
+            String(countRows(original, 'erpReferences')),
+            String(countRows(next, 'erpReferences')),
+          ],
+        ]
+      : []),
     [
       'Date',
       toText(original.incidentDate || original.reportDate),

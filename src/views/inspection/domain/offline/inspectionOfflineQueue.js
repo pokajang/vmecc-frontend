@@ -1,9 +1,15 @@
 import { persistInspectionRecord } from '../../inspectionApi'
 import { loadOfflineQueueSync, saveOfflineQueue } from './inspectionOfflineStore'
 import { normalizeInspectionTypeSlug } from '../utils/inspectionSharedUtils'
+import {
+  renewInspectionPayloadMediaLeases,
+  shouldRenewInspectionMediaLeases,
+} from '../media/inspectionMediaLease'
+import { notifyInspectionSyncStateChanged } from '../sync/inspectionSyncEvents'
+import { normalizeInspectionApiError } from '../api/inspectionApiError'
 
 const QUEUE_KEY_PREFIX = 'inspection_offline_queue_v1_'
-const QUEUEABLE_STATUSES = new Set(['queued', 'syncing', 'failed', 'synced', 'conflict'])
+const QUEUEABLE_STATUSES = new Set(['queued', 'syncing', 'failed', 'blocked', 'synced', 'conflict'])
 const BASE_RETRY_DELAY_MS = 60 * 1000
 const MAX_RETRY_DELAY_MS = 30 * 60 * 1000
 
@@ -18,6 +24,8 @@ const getRetryDelayMs = (attempts) =>
 export const getInspectionQueueRetryDelayMs = (attempts) => getRetryDelayMs(attempts)
 
 export const getInspectionQueueNextRetryAt = (item = {}) => {
+  const persisted = String(item.nextRetryAt || '').trim()
+  if (persisted) return persisted
   const lastAttempt = new Date(String(item.lastAttemptAt || '').trim()).getTime()
   if (!lastAttempt || Number.isNaN(lastAttempt)) return ''
   const nextMs = lastAttempt + getRetryDelayMs(item.attempts)
@@ -25,7 +33,8 @@ export const getInspectionQueueNextRetryAt = (item = {}) => {
 }
 
 const isRetryDue = (item = {}, nowMs = Date.now()) => {
-  if (item.status === 'conflict' || item.status === 'syncing') return false
+  if (item.status === 'conflict' || item.status === 'blocked' || item.status === 'syncing')
+    return false
   if (!item.lastAttemptAt) return true
   const nextRetryAt = new Date(getInspectionQueueNextRetryAt(item)).getTime()
   return Number.isNaN(nextRetryAt) || nextRetryAt <= nowMs
@@ -114,6 +123,8 @@ const normalizeQueueItem = (item = {}, userId = '', { preserveSyncing = false } 
     createdAt: String(item.createdAt || nowIso).trim(),
     updatedAt: String(item.updatedAt || nowIso).trim(),
     lastAttemptAt: String(item.lastAttemptAt || '').trim(),
+    nextRetryAt: String(item.nextRetryAt || '').trim(),
+    leaseRenewedAt: String(item.leaseRenewedAt || '').trim(),
   }
 }
 
@@ -122,6 +133,7 @@ const writeQueue = (userId, rows) => {
     const safeRows = rows.filter(Boolean)
     globalThis.localStorage?.setItem(getQueueKey(userId), JSON.stringify(safeRows))
     saveOfflineQueue(userId, safeRows)
+    notifyInspectionSyncStateChanged({ userId: String(userId || ''), source: 'general-queue' })
     return true
   } catch {
     return false
@@ -276,9 +288,11 @@ export const toQueuedInspectionRecord = (item = {}) => {
     status:
       item.status === 'conflict'
         ? 'Queued - Conflict'
-        : item.status === 'failed'
-          ? 'Queued - Failed sync'
-          : 'Queued',
+        : item.status === 'blocked'
+          ? 'Queued - Action required'
+          : item.status === 'failed'
+            ? 'Queued - Failed sync'
+            : 'Queued',
     displayId: record.displayId || 'Queued',
     submittedAt: record.submittedAt || item.createdAt,
     queuedAt: item.createdAt,
@@ -301,15 +315,18 @@ export const getInspectionQueueSummary = (queueRows = []) => {
   const rows = Array.isArray(queueRows) ? queueRows : []
   const activeRows = rows.filter((row) => row.status !== 'synced')
   const failedRows = activeRows.filter((row) => row.status === 'failed')
+  const blockedRows = activeRows.filter((row) => row.status === 'blocked')
   const conflictRows = activeRows.filter((row) => row.status === 'conflict')
   const syncingRows = activeRows.filter((row) => row.status === 'syncing')
   return {
     count: activeRows.length,
     failedCount: failedRows.length,
+    blockedCount: blockedRows.length,
     conflictCount: conflictRows.length,
     syncingCount: syncingRows.length,
     lastError:
       conflictRows[0]?.lastError ||
+      blockedRows[0]?.lastError ||
       failedRows[0]?.lastError ||
       activeRows.find((row) => row.lastError)?.lastError ||
       '',
@@ -351,6 +368,7 @@ export const syncInspectionQueue = async ({
       attempts: item.attempts + 1,
       lastAttemptAt: attemptAt,
       lastError: '',
+      nextRetryAt: '',
       historyEvent: {
         action: 'sync_started',
         at: attemptAt,
@@ -360,6 +378,14 @@ export const syncInspectionQueue = async ({
       },
     })
     try {
+      if (shouldRenewInspectionMediaLeases(item.leaseRenewedAt)) {
+        const renewedLeaseCount = await renewInspectionPayloadMediaLeases(item.record, item.queueId)
+        if (renewedLeaseCount > 0) {
+          markInspectionQueueItem(userId, item.queueId, {
+            leaseRenewedAt: new Date().toISOString(),
+          })
+        }
+      }
       const syncOptions = { submissionKey: item.submissionKey }
       if (item.operation === 'update') syncOptions.expectedVersion = item.baseVersion
       const saved = await persistInspectionRecord(userId, item.record, syncOptions)
@@ -397,9 +423,29 @@ export const syncInspectionQueue = async ({
         results.push({ queueId: item.queueId, synced: false, conflict: true, error })
         continue
       }
+      const normalizedError = normalizeInspectionApiError(error)
+      if (!normalizedError.retryable) {
+        markInspectionQueueItem(userId, item.queueId, {
+          status: 'blocked',
+          lastError: normalizedError.message,
+          nextRetryAt: '',
+          historyEvent: {
+            action: 'sync_blocked',
+            message: normalizedError.message,
+            status: 'blocked',
+            attempts: item.attempts + 1,
+          },
+        })
+        results.push({ queueId: item.queueId, synced: false, blocked: true, error })
+        continue
+      }
+      const nextRetryAt = new Date(
+        Date.now() + Math.round(getRetryDelayMs(item.attempts + 1) * (1 + Math.random() * 0.2)),
+      ).toISOString()
       markInspectionQueueItem(userId, item.queueId, {
         status: 'failed',
-        lastError: error?.message || 'Unable to sync queued inspection.',
+        lastError: normalizedError.message || 'Unable to sync queued inspection.',
+        nextRetryAt,
         historyEvent: {
           action: 'sync_failed',
           message: error?.message || 'Unable to sync queued inspection.',

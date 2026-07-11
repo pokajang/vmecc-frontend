@@ -158,6 +158,9 @@ const LeaveApprovalRules = () => {
     setError(null)
     try {
       const result = await saveLeaveApprovalRules(draftPolicy)
+      if (!result?.ok) {
+        throw result?.error || new Error('Unable to save leave approval rules.')
+      }
       const normalized = normalizeLeaveApprovalRules(result?.data)
       setSavedPolicy(normalized)
       setDraftPolicy(normalized)

@@ -15,7 +15,8 @@ export const createOvertimeRecord = (payload) =>
   apiRequest('/overtime', { method: 'POST', body: JSON.stringify(payload || {}) })
 export const updateOvertimeRecord = (id, payload) =>
   apiRequest(`/overtime/${id}`, { method: 'PUT', body: JSON.stringify(payload || {}) })
-export const deleteOvertimeRecordApi = (id) => apiRequest(`/overtime/${id}`, { method: 'DELETE' })
+export const deleteOvertimeRecordApi = (id, payload = {}) =>
+  apiRequest(`/overtime/${id}`, { method: 'DELETE', body: JSON.stringify(payload) })
 export const cancelOvertimeRecord = (id, payload = {}) =>
   apiRequest(`/overtime/${id}/cancel`, { method: 'POST', body: JSON.stringify(payload) })
 
@@ -64,6 +65,11 @@ export const rejectStaffOvertimeRecord = (ownerId, recordId, payload = {}) =>
   })
 export const cancelStaffOvertimeRecord = (ownerId, recordId, payload = {}) =>
   apiRequest(`/staff/overtime/records/${ownerId}/${recordId}/cancel`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+export const requestCorrectionStaffOvertimeRecord = (ownerId, recordId, payload = {}) =>
+  apiRequest(`/staff/overtime/records/${ownerId}/${recordId}/request-correction`, {
     method: 'POST',
     body: JSON.stringify(payload),
   })

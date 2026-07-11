@@ -4,7 +4,6 @@ import {
   loadInspectionQueue,
   markInspectionQueueItem,
   removeInspectionQueueItem,
-  syncInspectionQueue,
   toQueuedInspectionRecord,
 } from 'src/views/inspection/inspectionOfflineQueue'
 import { saveInspectionDraft } from 'src/views/inspection/inspectionStorage'
@@ -12,6 +11,14 @@ import {
   buildInspectionDraftPayload,
   recordToInspectionForm,
 } from 'src/views/inspection/inspectionFormHelpers'
+import {
+  getNextInspectionSyncAt,
+  runInspectionSyncCoordinator,
+} from '../domain/sync/inspectionSyncCoordinator'
+import {
+  INSPECTION_SYNC_CHANNEL,
+  INSPECTION_SYNC_STATE_EVENT,
+} from '../domain/sync/inspectionSyncEvents'
 
 const useInspectionQueueController = ({
   userId,
@@ -52,7 +59,8 @@ const useInspectionQueueController = ({
       queueSyncLockRef.current = true
       setIsQueueSyncing(true)
       try {
-        const results = await syncInspectionQueue({ userId, force, queueId })
+        const cycle = await runInspectionSyncCoordinator({ userId, force, queueId })
+        const results = cycle.generalResults || []
         const syncedCount = results.filter((row) => row.synced).length
         const failedCount = results.filter((row) => !row.synced).length
         const conflictCount = results.filter((row) => row.conflict).length
@@ -88,15 +96,50 @@ const useInspectionQueueController = ({
 
   useEffect(() => {
     if (!userId) return undefined
-    syncQueuedSubmissions({ silent: true })
-    const handleOnline = () => syncQueuedSubmissions({ silent: false })
+    let timerId = null
+    let cancelled = false
+    let channel = null
+    const schedule = () => {
+      if (cancelled) return
+      if (timerId) window.clearTimeout(timerId)
+      const nextAt = getNextInspectionSyncAt(userId)
+      if (nextAt === null) return
+      const delay = Math.max(250, Math.min(30 * 60 * 1000, nextAt - Date.now()))
+      timerId = window.setTimeout(async () => {
+        await syncQueuedSubmissions({ silent: true })
+        schedule()
+      }, delay)
+    }
+    const runNow = async ({ force = false, silent = true } = {}) => {
+      await syncQueuedSubmissions({ silent, force })
+      schedule()
+    }
+    const handleOnline = () => runNow({ force: true, silent: false })
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') runNow({ silent: true })
+    }
+    const handleStateChange = (event) => {
+      if (event?.detail?.userId && String(event.detail.userId) !== String(userId)) return
+      schedule()
+    }
+    runNow({ silent: true })
     window.addEventListener('online', handleOnline)
-    return () => window.removeEventListener('online', handleOnline)
-  }, [syncQueuedSubmissions, userId])
-
-  useEffect(() => {
-    if (!userId || isLoading || queueSummary.count === 0) return
-    syncQueuedSubmissions({ silent: true })
+    window.addEventListener(INSPECTION_SYNC_STATE_EVENT, handleStateChange)
+    document.addEventListener('visibilitychange', handleVisibility)
+    try {
+      channel = globalThis.BroadcastChannel ? new BroadcastChannel(INSPECTION_SYNC_CHANNEL) : null
+      channel?.addEventListener?.('message', schedule)
+    } catch {
+      channel = null
+    }
+    return () => {
+      cancelled = true
+      if (timerId) window.clearTimeout(timerId)
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener(INSPECTION_SYNC_STATE_EVENT, handleStateChange)
+      document.removeEventListener('visibilitychange', handleVisibility)
+      channel?.close?.()
+    }
   }, [isLoading, queueSummary.count, syncQueuedSubmissions, userId])
 
   const deleteQueuedSubmission = useCallback(

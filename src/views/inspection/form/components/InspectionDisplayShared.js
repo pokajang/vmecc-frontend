@@ -227,7 +227,7 @@ const InspectionPhotoViewerModalContent = ({ viewer, onClose }) => {
   }
 
   const handleAddMorePhoto = () => {
-    viewer?.onAddMorePhoto?.()
+    viewer?.onAddMorePhoto?.(visiblePhotos)
   }
 
   const handleSave = () => {

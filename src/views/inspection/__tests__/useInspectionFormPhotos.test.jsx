@@ -245,6 +245,7 @@ describe('useInspectionFormPhotos', () => {
       value: { getUserMedia: vi.fn() },
     })
     const updateFireExtinguisherCheck = vi.fn()
+    const onAfterAddPhotos = vi.fn()
     const photo = {
       id: 'managed-photo',
       mediaId: 'rpm-camera',
@@ -275,7 +276,11 @@ describe('useInspectionFormPhotos', () => {
       )
 
       const row = { id: 'FE-IN-APP', photos: [] }
-      act(() => result.current.requestFireExtinguisherPhotoUpload(row, {}))
+      act(() =>
+        result.current.requestFireExtinguisherPhotoUpload(row, {
+          onAfterAddPhotos,
+        }),
+      )
       expect(result.current.cameraCaptureVisible).toBe(true)
 
       await act(async () => {
@@ -290,6 +295,17 @@ describe('useInspectionFormPhotos', () => {
       expect(updateFireExtinguisherCheck).toHaveBeenCalledWith(row, {
         photos: [photo],
       })
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 0))
+      })
+      expect(onAfterAddPhotos).toHaveBeenCalledWith(
+        expect.objectContaining({
+          photosKey: 'photos',
+          photos: [photo],
+          addedPhotos: [photo],
+          row,
+        }),
+      )
       expect(result.current.cameraCaptureVisible).toBe(false)
       expect(getPendingCameraOperation()).toBeNull()
     } finally {
@@ -299,6 +315,39 @@ describe('useInspectionFormPhotos', () => {
         delete navigator.mediaDevices
       }
     }
+  })
+
+  it('appends Add more captures to the current drawer photos when the row prop is stale', async () => {
+    const prepare = await import('../form/inspectionPhotoUtils')
+    const existingPhoto = {
+      id: 'existing-photo',
+      fileName: 'existing.jpg',
+      url: '/report-media/existing',
+    }
+    const addedPhoto = {
+      id: 'added-photo',
+      fileName: 'added.jpg',
+      url: '/report-media/added',
+    }
+    const onAddPhotos = vi.fn()
+    prepare.prepareInspectionPhotoUploads.mockResolvedValueOnce([addedPhoto])
+
+    const { result } = createTestHook()
+    const staleRow = { id: 'FE-ADD-MORE', photos: [] }
+
+    act(() =>
+      result.current.requestFireExtinguisherPhotoUpload(staleRow, {
+        currentPhotos: [existingPhoto],
+        onAddPhotos,
+      }),
+    )
+    await act(async () => {
+      await result.current.handleInAppCameraCapture(
+        new File(['next-photo'], 'added.jpg', { type: 'image/jpeg' }),
+      )
+    })
+
+    expect(onAddPhotos).toHaveBeenCalledWith(staleRow, 'photos', [existingPhoto, addedPhoto])
   })
 
   it('adds any successful photos and shows fallback when some camera photos fail', async () => {

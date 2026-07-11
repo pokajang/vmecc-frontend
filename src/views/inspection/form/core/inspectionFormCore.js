@@ -225,6 +225,18 @@ const buildBaseInspectionRecord = ({
     checklist: payloadSnapshot.checklist,
     inspectionActor: payloadSnapshot.inspectionActor,
     inspectionSessionUid: String(payloadSnapshot.inspectionSessionUid || '').trim(),
+    ...(Number(payloadSnapshot.inspectionSessionVersion || 0) > 0
+      ? { inspectionSessionVersion: Number(payloadSnapshot.inspectionSessionVersion) }
+      : {}),
+    inspectionSessionStartedByUserId: String(
+      payloadSnapshot.inspectionSessionStartedByUserId || '',
+    ).trim(),
+    inspectionSessionScopeVersion: String(
+      payloadSnapshot.inspectionSessionScopeVersion || '',
+    ).trim(),
+    ...(typeof payloadSnapshot.inspectionSessionCanSubmit === 'boolean'
+      ? { inspectionSessionCanSubmit: payloadSnapshot.inspectionSessionCanSubmit }
+      : {}),
     submittedByRole: payloadSnapshot.submittedByRole,
     submittedByRoleCode: payloadSnapshot.submittedByRoleCode,
     erAuxInspectedBy: payloadSnapshot.erAuxInspectedBy,

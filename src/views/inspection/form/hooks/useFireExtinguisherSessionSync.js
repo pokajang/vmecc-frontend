@@ -3,6 +3,7 @@ import featureFlags from 'src/config/featureFlags'
 import {
   completeInspectionSessionExtinguisher,
   createOrResumeInspectionSession,
+  fetchInspectionSession,
   fetchInspectionSessionProgress,
   fetchInspectionSessionResults,
   getFireExtinguisherAssetKey,
@@ -15,11 +16,20 @@ import {
   isFireExtinguisherInspectionType,
 } from '../../types/fire-extinguisher/helpers'
 import {
+  createFireExtinguisherSessionOperationId,
   enqueueFireExtinguisherSessionRetry,
   isFireExtinguisherSessionRetryableError,
   loadFireExtinguisherSessionRetryQueue,
+  persistFireExtinguisherSessionOperation,
+  rebaseFollowingFireExtinguisherOperations,
   removeFireExtinguisherSessionRetry,
 } from './fireExtinguisherSessionRetryQueue'
+import { normalizeInspectionApiError } from '../../domain/api/inspectionApiError'
+import {
+  getNextInspectionSyncAt,
+  runInspectionSyncCoordinator,
+} from '../../domain/sync/inspectionSyncCoordinator'
+import { INSPECTION_SYNC_STATE_EVENT } from '../../domain/sync/inspectionSyncEvents'
 
 const text = (value) => String(value || '').trim()
 
@@ -36,9 +46,6 @@ const mapSessionResults = (rows = []) => {
   })
   return byKey
 }
-
-const clientResultIdFor = (sessionUid, assetKey) =>
-  `fe-session:${text(sessionUid).slice(-36)}:${text(assetKey).slice(0, 120)}`
 
 const buildSessionCheckPatch = (checkPayload = {}) => {
   if (!checkPayload || typeof checkPayload !== 'object') return {}
@@ -62,6 +69,7 @@ const useFireExtinguisherSessionSync = ({
   enabled = true,
   inspectionType = FIRE_EXTINGUISHER_INSPECTION_TYPE,
   formInspectionSessionUid = '',
+  inspectedAt = '',
   zone = '',
   mainLocation = '',
   subLocation = '',
@@ -73,12 +81,16 @@ const useFireExtinguisherSessionSync = ({
   const [results, setResults] = useState([])
   const [meta, setMeta] = useState(null)
   const [error, setError] = useState(null)
+  const [sessionError, setSessionError] = useState(null)
   const [isHydrating, setIsHydrating] = useState(false)
   const [pendingRetryCount, setPendingRetryCount] = useState(0)
   const [pendingRetryAssetKeys, setPendingRetryAssetKeys] = useState([])
+  const [activeSyncCount, setActiveSyncCount] = useState(0)
   const [sessionRefreshKey, setSessionRefreshKey] = useState(0)
   const syncingKeysRef = useRef(new Set())
   const autoCompletedKeysRef = useRef(new Set())
+  const locallyResetAssetKeysRef = useRef(new Set())
+  const retryingQueueRef = useRef(false)
   const forceNewSessionRef = useRef(false)
   const previousFormSessionUidRef = useRef(text(formInspectionSessionUid))
   const sessionEnabled =
@@ -94,6 +106,7 @@ const useFireExtinguisherSessionSync = ({
   const hasVisibleScope = text(zone) !== '' || text(mainLocation) !== ''
   const currentUserIdKey = text(currentUserId)
   const normalizedFormInspectionSessionUid = text(formInspectionSessionUid)
+  const inspectionDate = text(inspectedAt).slice(0, 10)
   const shouldPreferSessionResult = useCallback(
     (sessionResult = {}) => {
       if (sessionResult?.status !== 'completed') return false
@@ -105,16 +118,34 @@ const useFireExtinguisherSessionSync = ({
     [currentUserIdKey],
   )
 
+  const applySessionMeta = useCallback((nextMeta) => {
+    if (!nextMeta) return
+    setMeta((currentMeta) => {
+      const currentVersion = Math.max(0, Number(currentMeta?.sessionVersion || 0) || 0)
+      const nextVersion = Math.max(0, Number(nextMeta?.sessionVersion || 0) || 0)
+      return currentVersion > nextVersion ? currentMeta : nextMeta
+    })
+  }, [])
+
   const clearSessionState = useCallback(() => {
     syncingKeysRef.current.clear()
+    setActiveSyncCount(0)
     autoCompletedKeysRef.current.clear()
+    locallyResetAssetKeysRef.current.clear()
     setSession(null)
     setResults([])
     setMeta(null)
     setError(null)
+    setSessionError(null)
     setIsHydrating(false)
     setPendingRetryCount(0)
     setPendingRetryAssetKeys([])
+  }, [])
+
+  const retrySession = useCallback(() => {
+    setError(null)
+    setSessionError(null)
+    setSessionRefreshKey((current) => current + 1)
   }, [])
 
   const refreshPendingRetryCount = useCallback(() => {
@@ -141,6 +172,18 @@ const useFireExtinguisherSessionSync = ({
         const assetKey = getFireExtinguisherAssetKey(row)
         const sessionResult = assetKey ? resultByKey.get(assetKey) : null
         const isSyncPending = assetKey ? pendingRetryKeySet.has(assetKey) : false
+        if (assetKey && locallyResetAssetKeysRef.current.has(assetKey)) {
+          return {
+            ...row,
+            ...buildSessionCheckPatch({}),
+            sessionResult: null,
+            sessionStatus: '',
+            sessionCheckedBy: '',
+            sessionCheckedAt: null,
+            sessionResultVersion: null,
+            sessionSyncPending: false,
+          }
+        }
         const checkPayload =
           sessionResult?.checkPayload && typeof sessionResult.checkPayload === 'object'
             ? sessionResult.checkPayload
@@ -190,27 +233,27 @@ const useFireExtinguisherSessionSync = ({
         mainLocation,
       })
       setResults(response.rows)
-      setMeta(response.meta)
+      applySessionMeta(response.meta)
       setError(null)
       return response
     } catch (nextError) {
       setError(nextError)
       return null
     }
-  }, [hasVisibleScope, mainLocation, session?.sessionUid, sessionEnabled, zone])
+  }, [applySessionMeta, hasVisibleScope, mainLocation, session?.sessionUid, sessionEnabled, zone])
 
   const refreshProgressContext = useCallback(async () => {
     if (!sessionEnabled || !session?.sessionUid) return null
     try {
       const progress = await fetchInspectionSessionProgress({ sessionUid: session.sessionUid })
-      if (progress) setMeta(progress)
+      applySessionMeta(progress)
       setError(null)
       return progress
     } catch (nextError) {
       setError(nextError)
       return null
     }
-  }, [session?.sessionUid, sessionEnabled])
+  }, [applySessionMeta, session?.sessionUid, sessionEnabled])
 
   useEffect(() => {
     if (!sessionEnabled) {
@@ -225,10 +268,19 @@ const useFireExtinguisherSessionSync = ({
     }
     let cancelled = false
     setIsHydrating(true)
-    createOrResumeInspectionSession({
-      inspectionType: FIRE_EXTINGUISHER_INSPECTION_TYPE,
-      forceNew: forceNewSessionRef.current,
-    })
+    const shouldResumeFormSession =
+      normalizedFormInspectionSessionUid && !forceNewSessionRef.current
+    const sessionRequest = shouldResumeFormSession
+      ? fetchInspectionSession({ sessionUid: normalizedFormInspectionSessionUid })
+      : createOrResumeInspectionSession({
+          inspectionType: FIRE_EXTINGUISHER_INSPECTION_TYPE,
+          forceNew: forceNewSessionRef.current,
+          scope:
+            featureFlags.inspectionSessionScopeV2Enabled && inspectionDate
+              ? { scopeVersion: 'v2', inspectionDate }
+              : null,
+        })
+    sessionRequest
       .then((nextSession) => {
         if (cancelled) return
         forceNewSessionRef.current = false
@@ -236,10 +288,13 @@ const useFireExtinguisherSessionSync = ({
         setMeta(nextSession?.progress || null)
         setSession(nextSession)
         setError(null)
+        setSessionError(null)
       })
       .catch((nextError) => {
         if (cancelled) return
-        setError(nextError)
+        const normalizedError = normalizeInspectionApiError(nextError)
+        setError(normalizedError)
+        setSessionError(normalizedError)
       })
       .finally(() => {
         if (cancelled) return
@@ -248,7 +303,14 @@ const useFireExtinguisherSessionSync = ({
     return () => {
       cancelled = true
     }
-  }, [clearSessionState, hasVisibleScope, sessionEnabled, sessionRefreshKey])
+  }, [
+    clearSessionState,
+    hasVisibleScope,
+    inspectionDate,
+    normalizedFormInspectionSessionUid,
+    sessionEnabled,
+    sessionRefreshKey,
+  ])
 
   useEffect(() => {
     const previousFormInspectionSessionUid = previousFormSessionUidRef.current
@@ -268,26 +330,56 @@ const useFireExtinguisherSessionSync = ({
     async (row, options = {}) => {
       const assetKey = getFireExtinguisherAssetKey(row)
       if (!sessionEnabled || !session?.sessionUid || !assetKey) return null
+      locallyResetAssetKeysRef.current.delete(assetKey)
       const existing = resultByKey.get(assetKey)
       if (existing?.status === 'completed' && options.allowCompletedUpdate !== true) {
         return existing
       }
       if (syncingKeysRef.current.has(assetKey)) return null
 
+      const operationId = text(options.operationId) || createFireExtinguisherSessionOperationId()
+      const baseVersion = Math.max(0, Number(options.baseVersion ?? existing?.version ?? 0) || 0)
+      try {
+        await persistFireExtinguisherSessionOperation({
+          userId: currentUserIdKey,
+          sessionUid: session.sessionUid,
+          row,
+          options: {
+            operationId,
+            operationType: 'complete',
+            baseVersion,
+            forceRecheck: options.forceRecheck === true,
+          },
+        })
+      } catch (storageError) {
+        setError(storageError)
+        pushToast?.(storageError.message, { title: 'Cannot save safely', color: 'danger' })
+        return { __failed: true, assetKey, operationId, error: storageError }
+      }
+      refreshPendingRetryCount()
       syncingKeysRef.current.add(assetKey)
+      setActiveSyncCount(syncingKeysRef.current.size)
       try {
         const response = await completeInspectionSessionExtinguisher({
           sessionUid: session.sessionUid,
           row,
-          clientResultId: clientResultIdFor(session.sessionUid, assetKey),
-          baseVersion: Number(existing?.version || 0) || 0,
+          clientResultId: operationId,
+          operationId,
+          baseVersion,
+          forceRecheck: options.forceRecheck === true,
         })
         const saved = response?.row || null
         if (saved) {
+          rebaseFollowingFireExtinguisherOperations({
+            userId: currentUserIdKey,
+            sessionUid: session.sessionUid,
+            operationId,
+            resultVersion: saved.version,
+          })
           removeFireExtinguisherSessionRetry({
             userId: currentUserIdKey,
             sessionUid: session.sessionUid,
-            assetKey,
+            operationId,
           })
           refreshPendingRetryCount()
           setResults((current) => {
@@ -297,34 +389,44 @@ const useFireExtinguisherSessionSync = ({
             byId.set(saved.id, saved)
             return Array.from(byId.values())
           })
-          if (response?.meta) setMeta(response.meta)
+          applySessionMeta(response?.meta)
         }
         refreshProgressContext()
         return saved
       } catch (nextError) {
+        const normalizedError = normalizeInspectionApiError(nextError)
         const conflictResult = nextError?.payload?.data
-        if (nextError?.status === 409 && conflictResult) {
-          setResults((current) => {
-            const byId = new Map(
-              (Array.isArray(current) ? current : []).map((item) => [item.id, item]),
-            )
-            byId.set(conflictResult.id, conflictResult)
-            return Array.from(byId.values())
-          })
-          removeFireExtinguisherSessionRetry({
+        if (normalizedError.conflict) {
+          enqueueFireExtinguisherSessionRetry({
             userId: currentUserIdKey,
             sessionUid: session.sessionUid,
-            assetKey,
+            row,
+            options: {
+              operationId,
+              operationType: 'complete',
+              baseVersion,
+              forceRecheck: options.forceRecheck === true,
+              state: 'conflict',
+            },
+            error: nextError,
           })
           refreshPendingRetryCount()
+          if (conflictResult) {
+            setResults((current) => {
+              const byId = new Map(
+                (Array.isArray(current) ? current : []).map((item) => [item.id, item]),
+              )
+              byId.set(conflictResult.id, conflictResult)
+              return Array.from(byId.values())
+            })
+          }
           pushToast?.(
-            `${text(row?.idLocNo || row?.barcodeNo || 'This extinguisher')} was already inspected by ${
-              text(conflictResult.checkedBy) || 'another user'
-            }.`,
-            { title: 'Already inspected', color: 'warning' },
+            normalizedError.message ||
+              `${text(row?.idLocNo || row?.barcodeNo || 'This extinguisher')} could not be synced because the server result changed.`,
+            { title: 'Sync conflict', color: 'warning' },
           )
           refreshProgressContext()
-          return { ...conflictResult, __conflict: true }
+          return { ...(conflictResult || {}), __conflict: true, operationId }
         } else {
           setError(nextError)
           if (isFireExtinguisherSessionRetryableError(nextError)) {
@@ -332,7 +434,12 @@ const useFireExtinguisherSessionSync = ({
               userId: currentUserIdKey,
               sessionUid: session.sessionUid,
               row,
-              options,
+              options: {
+                operationId,
+                operationType: 'complete',
+                baseVersion,
+                forceRecheck: options.forceRecheck === true,
+              },
               error: nextError,
             })
             if (queued) {
@@ -347,13 +454,21 @@ const useFireExtinguisherSessionSync = ({
                 )
               }
               refreshProgressContext()
-              return { __queued: true, assetKey }
+              return { __queued: true, assetKey, operationId }
             }
-          } else if (options.fromRetryQueue === true) {
-            removeFireExtinguisherSessionRetry({
+          } else {
+            enqueueFireExtinguisherSessionRetry({
               userId: currentUserIdKey,
               sessionUid: session.sessionUid,
-              assetKey,
+              row,
+              options: {
+                operationId,
+                operationType: 'complete',
+                baseVersion,
+                forceRecheck: options.forceRecheck === true,
+                state: 'conflict',
+              },
+              error: nextError,
             })
             refreshPendingRetryCount()
           }
@@ -366,15 +481,17 @@ const useFireExtinguisherSessionSync = ({
             },
           )
           refreshProgressContext()
-          return { __failed: true, assetKey, error: nextError }
+          return { __failed: true, assetKey, operationId, error: nextError }
         }
         refreshProgressContext()
         return null
       } finally {
         syncingKeysRef.current.delete(assetKey)
+        setActiveSyncCount(syncingKeysRef.current.size)
       }
     },
     [
+      applySessionMeta,
       currentUserIdKey,
       pushToast,
       refreshPendingRetryCount,
@@ -390,10 +507,32 @@ const useFireExtinguisherSessionSync = ({
       const assetKey = getFireExtinguisherAssetKey(row)
       if (!sessionEnabled || !session?.sessionUid || !assetKey) return null
       const existing = resultByKey.get(assetKey)
-      if (!existing) return { localOnly: true }
-      if (syncingKeysRef.current.has(assetKey)) return null
+      const operationId = createFireExtinguisherSessionOperationId()
+      const baseVersion = Math.max(0, Number(existing?.version || 0) || 0)
+      locallyResetAssetKeysRef.current.add(assetKey)
+      try {
+        await persistFireExtinguisherSessionOperation({
+          userId: currentUserIdKey,
+          sessionUid: session.sessionUid,
+          row,
+          options: {
+            operationId,
+            operationType: 'reset',
+            baseVersion,
+          },
+        })
+      } catch (storageError) {
+        setError(storageError)
+        pushToast?.(storageError.message, { title: 'Cannot reset safely', color: 'danger' })
+        return { __failed: true, assetKey, operationId, error: storageError }
+      }
+      refreshPendingRetryCount()
+      if (syncingKeysRef.current.has(assetKey)) {
+        return { localOnly: true, syncPending: true, operationId }
+      }
 
       syncingKeysRef.current.add(assetKey)
+      setActiveSyncCount(syncingKeysRef.current.size)
       setResults((current) =>
         (Array.isArray(current) ? current : []).map((item) =>
           getFireExtinguisherAssetKey(item) === assetKey ||
@@ -416,8 +555,22 @@ const useFireExtinguisherSessionSync = ({
         const response = await resetInspectionSessionExtinguisher({
           sessionUid: session.sessionUid,
           row,
+          operationId,
+          baseVersion,
         })
         const saved = response?.row || null
+        rebaseFollowingFireExtinguisherOperations({
+          userId: currentUserIdKey,
+          sessionUid: session.sessionUid,
+          operationId,
+          resultVersion: saved?.version,
+        })
+        removeFireExtinguisherSessionRetry({
+          userId: currentUserIdKey,
+          sessionUid: session.sessionUid,
+          operationId,
+        })
+        refreshPendingRetryCount()
         if (saved) {
           setResults((current) =>
             (Array.isArray(current) ? current : []).map((item) =>
@@ -429,14 +582,29 @@ const useFireExtinguisherSessionSync = ({
             ),
           )
         }
-        if (response?.meta) setMeta(response.meta)
+        applySessionMeta(response?.meta)
         setError(null)
         autoCompletedKeysRef.current.delete(assetKey)
+        locallyResetAssetKeysRef.current.delete(assetKey)
         refreshProgressContext()
         return saved
       } catch (nextError) {
+        const normalizedError = normalizeInspectionApiError(nextError)
         const conflictResult = nextError?.payload?.data
-        if (nextError?.status === 409 && conflictResult) {
+        enqueueFireExtinguisherSessionRetry({
+          userId: currentUserIdKey,
+          sessionUid: session.sessionUid,
+          row,
+          options: {
+            operationId,
+            operationType: 'reset',
+            baseVersion,
+            state: normalizedError.retryable ? 'retryable' : 'conflict',
+          },
+          error: nextError,
+        })
+        refreshPendingRetryCount()
+        if (normalizedError.conflict && conflictResult) {
           setResults((current) => {
             const byId = new Map(
               (Array.isArray(current) ? current : []).map((item) => [item.id, item]),
@@ -445,24 +613,39 @@ const useFireExtinguisherSessionSync = ({
             return Array.from(byId.values())
           })
           pushToast?.(
-            nextError?.message ||
+            normalizedError.message ||
               `${text(row?.idLocNo || row?.barcodeNo || 'This extinguisher')} changed before the reset could be applied.`,
             { title: 'Reset conflict', color: 'warning' },
           )
         } else {
           setError(nextError)
-          refreshResults()
+          pushToast?.(
+            normalizedError.retryable
+              ? 'Reset saved on this device and will retry when the connection recovers.'
+              : normalizedError.message,
+            {
+              title: normalizedError.retryable ? 'Reset pending' : 'Reset failed',
+              color: normalizedError.retryable ? 'warning' : 'danger',
+            },
+          )
         }
         refreshProgressContext()
-        return null
+        return {
+          __queued: normalizedError.retryable,
+          __conflict: normalizedError.conflict,
+          operationId,
+        }
       } finally {
         syncingKeysRef.current.delete(assetKey)
+        setActiveSyncCount(syncingKeysRef.current.size)
       }
     },
     [
+      applySessionMeta,
       pushToast,
+      currentUserIdKey,
+      refreshPendingRetryCount,
       refreshProgressContext,
-      refreshResults,
       resultByKey,
       session?.sessionUid,
       sessionEnabled,
@@ -490,39 +673,91 @@ const useFireExtinguisherSessionSync = ({
   useEffect(() => {
     if (!sessionEnabled || !session?.sessionUid) return undefined
     let cancelled = false
-    const retryQueuedRows = () => {
-      if (cancelled) return
-      const queuedRows = loadFireExtinguisherSessionRetryQueue({
-        userId: currentUserIdKey,
-        sessionUid: session.sessionUid,
-      })
-      queuedRows.forEach((item) => {
-        if (cancelled || syncingKeysRef.current.has(item.assetKey)) return
-        completeRow(item.row, {
-          ...item.options,
-          allowCompletedUpdate: true,
-          fromRetryQueue: true,
+    let timerId = null
+    const retryQueuedRows = async ({ force = false } = {}) => {
+      if (cancelled || retryingQueueRef.current) return
+      retryingQueueRef.current = true
+      try {
+        const cycle = await runInspectionSyncCoordinator({
+          userId: currentUserIdKey,
+          force,
         })
-      })
-      setPendingRetryCount(queuedRows.length)
+        if (cancelled) return
+        const syncResults = (cycle.feResults || []).filter(
+          (result) => result.sessionUid === session.sessionUid,
+        )
+        const savedRows = syncResults.map((result) => result.row).filter(Boolean)
+        if (savedRows.length > 0) {
+          setResults((current) => {
+            const byId = new Map(
+              (Array.isArray(current) ? current : []).map((item) => [item.id, item]),
+            )
+            savedRows.forEach((row) => byId.set(row.id, row))
+            return Array.from(byId.values())
+          })
+        }
+        syncResults
+          .filter((result) => result.synced && result.operationType === 'reset')
+          .forEach((result) => locallyResetAssetKeysRef.current.delete(result.assetKey))
+        await refreshProgressContext()
+        refreshPendingRetryCount()
+      } finally {
+        retryingQueueRef.current = false
+      }
     }
-
-    const timerId = window.setTimeout(retryQueuedRows, 500)
-    const intervalId = window.setInterval(retryQueuedRows, 60 * 1000)
-    window.addEventListener?.('online', retryQueuedRows)
+    const schedule = () => {
+      if (cancelled) return
+      if (timerId) window.clearTimeout(timerId)
+      const nextAt = getNextInspectionSyncAt(currentUserIdKey)
+      if (nextAt === null) return
+      timerId = window.setTimeout(
+        async () => {
+          await retryQueuedRows()
+          schedule()
+        },
+        Math.max(250, Math.min(30 * 60 * 1000, nextAt - Date.now())),
+      )
+    }
+    const handleOnline = async () => {
+      await retryQueuedRows({ force: true })
+      schedule()
+    }
+    const handleVisibility = async () => {
+      if (document.visibilityState !== 'visible') return
+      await retryQueuedRows()
+      schedule()
+    }
+    const handleStateChange = (event) => {
+      if (event?.detail?.userId && String(event.detail.userId) !== currentUserIdKey) return
+      schedule()
+    }
+    schedule()
+    window.addEventListener?.('online', handleOnline)
+    window.addEventListener?.(INSPECTION_SYNC_STATE_EVENT, handleStateChange)
+    document.addEventListener?.('visibilitychange', handleVisibility)
 
     return () => {
       cancelled = true
-      window.clearTimeout(timerId)
-      window.clearInterval(intervalId)
-      window.removeEventListener?.('online', retryQueuedRows)
+      if (timerId) window.clearTimeout(timerId)
+      window.removeEventListener?.('online', handleOnline)
+      window.removeEventListener?.(INSPECTION_SYNC_STATE_EVENT, handleStateChange)
+      document.removeEventListener?.('visibilitychange', handleVisibility)
     }
-  }, [completeRow, currentUserIdKey, session?.sessionUid, sessionEnabled])
+  }, [
+    currentUserIdKey,
+    refreshPendingRetryCount,
+    refreshProgressContext,
+    retrySession,
+    session?.sessionUid,
+    sessionEnabled,
+  ])
 
   return {
     enabled: sessionEnabled,
     error,
+    sessionError,
     isHydrating,
+    activeSyncCount,
     pendingRetryCount,
     meta,
     session,

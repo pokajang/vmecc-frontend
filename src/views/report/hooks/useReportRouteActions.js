@@ -602,7 +602,7 @@ const useReportRouteActions = ({
         )
         const { saved, trimmed } = await persistRecords(next)
         if (!saved) {
-          pushToast('Unable to save this report in browser storage. Please try again.', {
+          pushToast('Unable to save this report to the server. Please try again.', {
             title: 'Save failed',
             color: 'danger',
           })
@@ -687,7 +687,7 @@ const useReportRouteActions = ({
         saved = ok ? { draftId: '' } : null
       }
       if (!saved) {
-        pushToast('Unable to save draft in browser storage. Please try again.', {
+        pushToast('Unable to save the draft to the server. Please try again.', {
           title: 'Draft save failed',
           color: 'danger',
         })

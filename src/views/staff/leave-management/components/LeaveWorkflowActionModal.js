@@ -35,8 +35,8 @@ const LeaveWorkflowActionModal = ({
   onClose,
   onSubmit,
 }) => {
-  const showRemarksHelper =
-    actionType !== 'reject' && String(actionLabel || '').toLowerCase() !== 'review'
+  const remarksRequired = actionType === 'reject' || actionType === 'request_correction'
+  const showRemarksHelper = !remarksRequired && String(actionLabel || '').toLowerCase() !== 'review'
 
   return (
     <CModal visible={visible} onClose={onClose} alignment="center" scrollable>
@@ -84,7 +84,7 @@ const LeaveWorkflowActionModal = ({
                 htmlFor="leave-workflow-remarks"
                 className="small text-body-secondary mb-1"
               >
-                {actionType === 'reject' ? 'Remarks (required)' : 'Remarks (optional)'}
+                {remarksRequired ? 'Remarks (required)' : 'Remarks (optional)'}
               </CFormLabel>
               <CFormInput
                 id="leave-workflow-remarks"
@@ -93,7 +93,7 @@ const LeaveWorkflowActionModal = ({
                 onChange={(event) => onRemarksChange(event.target.value)}
                 placeholder="Add your remarks"
                 invalid={Boolean(rejectError)}
-                aria-required={actionType === 'reject'}
+                aria-required={remarksRequired}
                 aria-describedby={rejectError ? 'leave-workflow-remarks-error' : undefined}
               />
               {rejectError ? (
@@ -138,7 +138,13 @@ const LeaveWorkflowActionModal = ({
           Cancel
         </CButton>
         <CButton
-          color={actionType === 'reject' ? 'danger' : 'primary'}
+          color={
+            actionType === 'reject'
+              ? 'danger'
+              : actionType === 'request_correction'
+                ? 'warning'
+                : 'primary'
+          }
           onClick={onSubmit}
           disabled={!record || actionDisabled}
         >

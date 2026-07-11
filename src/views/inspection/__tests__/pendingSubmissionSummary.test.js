@@ -183,6 +183,47 @@ describe('pending submission summary', () => {
     )
   })
 
+  it('blocks submission when the exact server draft has a version conflict', () => {
+    const summary = buildPendingSubmissionSummary({
+      form: {
+        inspectionType: 'General Inspection',
+        inspectionIssues: [{ id: 'issue-1', description: 'Blocked access.' }],
+      },
+      draftSyncState: {
+        status: 'conflict',
+        pendingType: 'General Inspection',
+        lastError: 'This draft changed since it was loaded.',
+      },
+    })
+
+    expect(summary.items[0].status).toBe('blocked')
+    expect(summary.items[0].blockers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          key: 'draft-version-conflict',
+          message: 'This draft changed since it was loaded.',
+        }),
+      ]),
+    )
+  })
+
+  it('blocks FE submission for a teammate who is not the starter or supervisor', () => {
+    const summary = buildPendingSubmissionSummary({
+      form: {
+        inspectionType: 'Fire Extinguisher Inspection',
+        inspectionSessionCanSubmit: false,
+        fireExtinguisherChecks: [completeFireExtinguisherRow],
+      },
+    })
+
+    expect(summary.items[0].readiness.isReadyToSubmit).toBe(false)
+    expect(summary.items[0].blockers).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ key: 'inspection-session-submit-forbidden' }),
+      ]),
+    )
+  })
+
   it('blocks only the type with pending backend draft sync', () => {
     const summary = buildPendingSubmissionSummary({
       form: {

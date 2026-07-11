@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { loadOfflineDraftSync } from 'src/views/inspection/inspectionOfflineStore'
-import { clearInspectionDraft, saveInspectionDraft } from 'src/views/inspection/inspectionStorage'
+import {
+  clearInspectionDraft,
+  resolveInspectionDraftConflict,
+  saveInspectionDraft,
+} from 'src/views/inspection/inspectionStorage'
 import {
   buildDraftRow,
   clearWorkspace,
@@ -395,15 +399,18 @@ const useInspectionModuleFormRuntime = ({
       }).then((result) => {
         const synced = result?.synced === true
         if (synced) pendingDraftSnapshotRef.current = null
+        const conflicted = result?.conflict === true
         setDraftSyncState({
-          status: synced ? 'synced' : result?.saved ? 'failed' : 'failed',
+          status: synced ? 'synced' : conflicted ? 'conflict' : 'failed',
           lastSyncedAt: synced ? new Date().toISOString() : '',
           lastError: synced ? '' : result?.error?.message || 'Draft sync failed.',
           pendingReason: synced ? '' : 'manual',
           pendingType: synced ? '' : String(normalizedForm.inspectionType || '').trim(),
           scope: synced ? 'type' : 'all',
         })
-        if (!synced && result?.saved) setDraftStatus(DRAFT_STATUS_LABELS.failed)
+        if (!synced && result?.saved) {
+          setDraftStatus(conflicted ? DRAFT_STATUS_LABELS.conflict : DRAFT_STATUS_LABELS.failed)
+        }
         return result
       })
     },
@@ -452,9 +459,10 @@ const useInspectionModuleFormRuntime = ({
           return result
         }
 
-        setDraftStatus(DRAFT_STATUS_LABELS.failed)
+        const conflicted = result?.conflict === true
+        setDraftStatus(conflicted ? DRAFT_STATUS_LABELS.conflict : DRAFT_STATUS_LABELS.failed)
         setDraftSyncState({
-          status: 'failed',
+          status: conflicted ? 'conflict' : 'failed',
           lastSyncedAt: '',
           lastError: result?.error?.message || 'Draft sync failed.',
           pendingReason: snapshot.reason,
@@ -642,6 +650,59 @@ const useInspectionModuleFormRuntime = ({
     [commitDraftSnapshot, navigate, reportBasePath, routeMode, routeRecordId, user],
   )
 
+  const resolveDraftConflict = useCallback(
+    async (strategy) => {
+      if (!user?.id || draftSyncState.status !== 'conflict') return { resolved: false }
+
+      const result = await resolveInspectionDraftConflict(user.id, strategy)
+      if (!result?.resolved) {
+        const message =
+          result?.error?.message || 'The draft conflict could not be resolved. Please try again.'
+        setDraftStatus(DRAFT_STATUS_LABELS.conflict)
+        setDraftSyncState((current) => ({ ...current, lastError: message }))
+        pushToast(message, { title: 'Draft conflict', color: 'danger' })
+        return result
+      }
+
+      pendingDraftSnapshotRef.current = null
+      const nextForm = normalizeInspectionForm(result.draft || formState)
+      setFormState(nextForm)
+      saveWorkspace(user.id, {
+        mode: routeMode,
+        recordId: routeRecordId,
+        form: nextForm,
+      })
+      lastPersistedSignatureRef.current = createInspectionFormSignature(nextForm)
+      setIsFormDirty(false)
+      setDraftVersion((previous) => previous + 1)
+      setDraftStatus(DRAFT_STATUS_LABELS.synced)
+      setDraftSyncState({
+        status: 'synced',
+        lastSyncedAt: new Date().toISOString(),
+        lastError: '',
+        pendingReason: '',
+        pendingType: '',
+        scope: 'type',
+      })
+      pushToast(
+        strategy === 'keep-server'
+          ? 'The server draft was restored.'
+          : 'Your local work was saved as a separate draft.',
+        { title: 'Draft conflict resolved', color: 'success' },
+      )
+      return result
+    },
+    [
+      draftSyncState.status,
+      formState,
+      pushToast,
+      routeMode,
+      routeRecordId,
+      setDraftVersion,
+      user?.id,
+    ],
+  )
+
   return {
     clearContinuationState,
     clearWorkingState,
@@ -656,6 +717,7 @@ const useInspectionModuleFormRuntime = ({
     prepareContinuationPrompt: prepareContinuationPromptForRecord,
     recoverLocalDraft,
     requestReview: requestReviewForForm,
+    resolveDraftConflict,
     retryDraftSync: runDraftSnapshotSync,
     saveDraft: saveDraftForForm,
     commitDraftSnapshot,

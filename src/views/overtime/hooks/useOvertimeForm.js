@@ -15,6 +15,8 @@ const useOvertimeForm = ({ overtimeTypeDerivedMode = false, editingRecordId = nu
   const [overtimeGuidanceMessage, setOvertimeGuidanceMessage] = useState('')
   const [startTime, setStartTime] = useState('')
   const [endTime, setEndTime] = useState('')
+  const [isOvernightConfirmed, setIsOvernightConfirmed] = useState(false)
+  const [attachment, setAttachment] = useState(null)
   const [reason, setReason] = useState('')
   const [fieldErrors, setFieldErrors] = useState({})
   const [formBaseline, setFormBaseline] = useState(() => buildFormSnapshot())
@@ -41,6 +43,7 @@ const useOvertimeForm = ({ overtimeTypeDerivedMode = false, editingRecordId = nu
   const handleStartTimeChange = useCallback(
     (value) => {
       setStartTime(normalizeOvertimeClockTime(value))
+      setIsOvernightConfirmed(false)
       clearFieldError('startTime')
       clearFieldError('window')
     },
@@ -50,6 +53,7 @@ const useOvertimeForm = ({ overtimeTypeDerivedMode = false, editingRecordId = nu
   const handleEndTimeChange = useCallback(
     (value) => {
       setEndTime(normalizeOvertimeClockTime(value))
+      setIsOvernightConfirmed(false)
       clearFieldError('endTime')
       clearFieldError('window')
     },
@@ -113,8 +117,18 @@ const useOvertimeForm = ({ overtimeTypeDerivedMode = false, editingRecordId = nu
         startTime,
         endTime,
         reason,
+        attachmentId: attachment?.id,
       }),
-    [claimDate, editingRecordId, endTime, overtimeType, overtimeTypeConfirmed, reason, startTime],
+    [
+      attachment,
+      claimDate,
+      editingRecordId,
+      endTime,
+      overtimeType,
+      overtimeTypeConfirmed,
+      reason,
+      startTime,
+    ],
   )
 
   const isFormDirty = useMemo(
@@ -154,6 +168,10 @@ const useOvertimeForm = ({ overtimeTypeDerivedMode = false, editingRecordId = nu
     handleBackToOvertimeType,
     durationMinutes,
     isOvernight,
+    isOvernightConfirmed,
+    setIsOvernightConfirmed,
+    attachment,
+    setAttachment,
     currentFormSnapshot,
     isFormDirty,
   }

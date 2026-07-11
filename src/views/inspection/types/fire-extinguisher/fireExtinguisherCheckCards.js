@@ -11,7 +11,7 @@ import {
 import { Camera, CheckCircle2, Circle, MessageSquare, Trash2, TriangleAlert } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
 import RowActions from 'src/components/RowActions'
-import { hasFireExtinguisherInspectionData } from '../../form/inspectionResetActions'
+import { buildPhotoViewerUploadOptions } from '../../form/inspectionPhotoFlow'
 import {
   FormFieldError,
   InspectionPhotoActionRow,
@@ -395,16 +395,20 @@ export const FireExtinguisherRowDetails = ({
               photosKey: field.photosKey,
               readOnly,
               handlers,
-              onAddMorePhoto: () =>
-                handlers.onRequestDefectPhotoUpload?.(row, field, {
-                  onAfterAddPhotos: ({ photos: nextPhotos }) => openDefectPhotoViewer(nextPhotos),
-                }),
+              onAddMorePhoto: (currentPhotos) =>
+                handlers.onRequestDefectPhotoUpload?.(
+                  row,
+                  field,
+                  buildPhotoViewerUploadOptions(openDefectPhotoViewer, { currentPhotos }),
+                ),
             }),
           )
         const requestDefectPhoto = () =>
-          handlers.onRequestDefectPhotoUpload?.(row, field, {
-            onAfterAddPhotos: ({ photos: nextPhotos }) => openDefectPhotoViewer(nextPhotos),
-          })
+          handlers.onRequestDefectPhotoUpload?.(
+            row,
+            field,
+            buildPhotoViewerUploadOptions(openDefectPhotoViewer, { currentPhotos: defectPhotos }),
+          )
 
         return (
           <div
@@ -495,9 +499,7 @@ export const FireExtinguisherRowCard = ({
   const missingCount = missingStatusKeys.length + missingRemarkKeys.length
   const bodyId = `fire-extinguisher-checks-${String(row.id || '').replace(/[^A-Za-z0-9_-]/g, '-')}`
   const toggleExpanded = () => onToggleExpanded?.(row)
-  const canReset =
-    typeof handlers.onResetCheck === 'function' &&
-    hasFireExtinguisherInspectionData(row, FIRE_EXTINGUISHER_CHECK_FIELDS)
+  const canReset = !readOnly && typeof handlers.onResetCheck === 'function'
   const actionItems = [
     canReset
       ? {

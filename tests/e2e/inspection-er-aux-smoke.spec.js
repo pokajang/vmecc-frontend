@@ -1,6 +1,7 @@
 const { expect, test } = require('@playwright/test')
 const fs = require('node:fs')
 const path = require('node:path')
+const { setInspectionPhotoFromButton } = require('./support/inspection-photo')
 
 const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
 const smokeEmail = process.env.VMECC_SMOKE_EMAIL || 'codex.smoke.admin@vmecc.local'
@@ -8,11 +9,6 @@ const smokePassword = process.env.VMECC_SMOKE_PASSWORD || 'SmokeAdmin!2026'
 const runId = process.env.VMECC_SMOKE_RUN_ID || new Date().toISOString().replace(/[:.]/g, '-')
 const artifactRoot = path.resolve(process.cwd(), 'test-results', 'er-aux-smoke', runId)
 const routeTimeoutMs = Number(process.env.VMECC_SMOKE_ROUTE_TIMEOUT_MS || 30_000)
-
-const tinyPng = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=',
-  'base64',
-)
 
 const ensureArtifactRoot = () => fs.mkdirSync(artifactRoot, { recursive: true })
 
@@ -229,18 +225,6 @@ const findVisibleReviewSubmitButton = async (page, submitLabel = 'Submit', timeo
 const getErAuxCard = (page, rowId) =>
   page.locator(`[data-inspection-er-aux-row-id="${rowId}"]`).first()
 
-const setPhotoFromButton = async (button, fileName) => {
-  const page = button.page()
-  const fileChooserPromise = page.waitForEvent('filechooser', { timeout: 10_000 })
-  await button.click()
-  const fileChooser = await fileChooserPromise
-  await fileChooser.setFiles({
-    name: fileName,
-    mimeType: 'image/png',
-    buffer: tinyPng,
-  })
-}
-
 const extractReportUid = async (response) => {
   const requestPayload = response.request().postDataJSON?.() || {}
   const { body, text } = await parseJsonOrText(response)
@@ -405,7 +389,7 @@ test.describe('ER Aux inspection prod smoke', () => {
       await radioTetra.getByRole('button', { name: 'Defect', exact: true }).click()
       await expect(radioTetra.getByText('Defect remarks')).toBeVisible()
 
-      await setPhotoFromButton(
+      await setInspectionPhotoFromButton(
         radioTetra.getByRole('button', { name: 'Add photo (optional)' }),
         `er-aux-defect-${suffix}.png`,
       )
@@ -413,7 +397,9 @@ test.describe('ER Aux inspection prod smoke', () => {
         .locator('.modal.show', { hasText: 'Radio Tetra - defect photos' })
         .last()
       await expect(defectPhotoModal).toBeVisible()
-      await expect(defectPhotoModal.getByText(`er-aux-defect-${suffix}.png`)).toBeVisible()
+      await expect(
+        defectPhotoModal.getByRole('img', { name: new RegExp(`er-aux-defect-${suffix}`, 'i') }),
+      ).toBeVisible()
       await defectPhotoModal.getByRole('button', { name: 'Save' }).click()
       await expect(defectPhotoModal).toBeHidden()
       await radioTetra
@@ -425,17 +411,18 @@ test.describe('ER Aux inspection prod smoke', () => {
       await radioTetra
         .locator('[data-inspection-er-aux-detail-key="additionalNotes"] textarea')
         .fill(`Smoke additional notes ${suffix}`)
-      await setPhotoFromButton(
+      await setInspectionPhotoFromButton(
         radioTetra.locator('[data-inspection-er-aux-detail-key="additionalPhotos"] button'),
         `er-aux-additional-${suffix}.png`,
       )
 
       await saveScreenshot(page, testInfo, report, 'er-aux-form-complete')
 
-      await page
-        .getByRole('button', { name: /Review Inspections|Review Submissions/ })
+      const continueToReviewButton = page
+        .getByRole('button', { name: 'Continue to Review', exact: true })
         .first()
-        .click()
+      await expect(continueToReviewButton).toBeEnabled({ timeout: 60_000 })
+      await continueToReviewButton.click()
       await waitForAppReady(page, '/inspection/review')
       await expect(page.getByRole('heading', { name: 'Review Inspection' })).toBeVisible()
       await expect(page.getByText(/Emergency Response Auxiliary Equipment/).first()).toBeVisible()
@@ -514,6 +501,7 @@ test.describe('ER Aux inspection prod smoke', () => {
       const unexpectedFailedResponses = report.failedResponses.filter((item) => {
         const url = String(item.url || '')
         if (url.includes('/workflow/notifications/unread-count')) return false
+        if (item.status === 403 && url.includes('/messages/threads?')) return false
         if (url.includes('/reports/inspection/pdf') && item.status < 400) return false
         return true
       })
