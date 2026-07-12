@@ -1,5 +1,9 @@
 import { apiRequest } from 'src/services/apiClient'
 import { getFireExtinguisherCanonicalAssetKey } from '../../types/fire-extinguisher/identity'
+import {
+  dutyConfirmationHeaders,
+  resolveInspectionDutyConfirmation,
+} from './inspectionDutyContextApi'
 
 const text = (value) => String(value || '').trim()
 
@@ -77,6 +81,7 @@ export const completeInspectionSessionExtinguisher = async ({
   operationId = '',
   baseVersion = 0,
   forceRecheck = false,
+  dutyConfirmationToken = '',
 } = {}) => {
   const uid = text(sessionUid)
   const assetRouteId = text(
@@ -87,12 +92,21 @@ export const completeInspectionSessionExtinguisher = async ({
       getFireExtinguisherAssetKey(row),
   )
   if (!uid || !assetRouteId) return null
+  const confirmationToken =
+    dutyConfirmationToken ||
+    (await resolveInspectionDutyConfirmation({
+      operation: 'session-write',
+      formId: 'fire-extinguisher-inspection',
+      recordId: uid,
+      idempotencyKey: text(operationId || clientResultId),
+    }))
   const response = await apiRequest(
     `/inspection/sessions/${encodeURIComponent(uid)}/extinguishers/${encodeURIComponent(
       assetRouteId,
     )}/complete`,
     {
       method: 'POST',
+      headers: dutyConfirmationHeaders(confirmationToken),
       body: JSON.stringify({
         checkPayload: row || {},
         clientResultId,
@@ -114,6 +128,7 @@ export const resetInspectionSessionExtinguisher = async ({
   row,
   operationId = '',
   baseVersion = 0,
+  dutyConfirmationToken = '',
 } = {}) => {
   const uid = text(sessionUid)
   const assetRouteId = text(
@@ -124,12 +139,21 @@ export const resetInspectionSessionExtinguisher = async ({
       getFireExtinguisherAssetKey(row),
   )
   if (!uid || !assetRouteId) return null
+  const confirmationToken =
+    dutyConfirmationToken ||
+    (await resolveInspectionDutyConfirmation({
+      operation: 'session-write',
+      formId: 'fire-extinguisher-inspection',
+      recordId: uid,
+      idempotencyKey: text(operationId),
+    }))
   const response = await apiRequest(
     `/inspection/sessions/${encodeURIComponent(uid)}/extinguishers/${encodeURIComponent(
       assetRouteId,
     )}/reset`,
     {
       method: 'POST',
+      headers: dutyConfirmationHeaders(confirmationToken),
       body: JSON.stringify({
         checkPayload: row || {},
         operationId,
@@ -152,11 +176,21 @@ export const submitInspectionSessionReport = async ({
   inspectedAt = '',
   submittedAt = '',
   sessionVersion = 0,
+  dutyConfirmationToken = '',
 } = {}) => {
   const uid = text(sessionUid)
   if (!uid) return null
+  const confirmationToken =
+    dutyConfirmationToken ||
+    (await resolveInspectionDutyConfirmation({
+      operation: 'session-submit',
+      formId: 'fire-extinguisher-inspection',
+      recordId: uid,
+      idempotencyKey: text(submissionKey),
+    }))
   const response = await apiRequest(`/inspection/sessions/${encodeURIComponent(uid)}/submit`, {
     method: 'POST',
+    headers: dutyConfirmationHeaders(confirmationToken),
     body: JSON.stringify({
       display_id: displayId,
       submission_key: submissionKey,

@@ -265,6 +265,10 @@ export const markInspectionQueueItem = (userId, queueId, updates = {}) => {
 }
 
 export const isInspectionQueueableError = (error) => {
+  const code = String(error?.code || error?.payload?.code || '')
+    .trim()
+    .toLowerCase()
+  if (code.startsWith('duty_') || code.startsWith('inspection_policy_')) return false
   const status = Number(error?.status || 0)
   if (!status) return true
   if ([400, 401, 403, 404, 409, 413, 419, 422].includes(status)) return false

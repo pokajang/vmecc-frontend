@@ -309,5 +309,7 @@ describe('inspectionOfflineQueue', () => {
     expect(isInspectionQueueableError({ status: 422 })).toBe(false)
     expect(isInspectionQueueableError({ status: 403 })).toBe(false)
     expect(isInspectionQueueableError({ status: 409 })).toBe(false)
+    expect(isInspectionQueueableError({ code: 'duty_context_ambiguous' })).toBe(false)
+    expect(isInspectionQueueableError({ payload: { code: 'duty_context_unmatched' } })).toBe(false)
   })
 })

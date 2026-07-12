@@ -7,6 +7,10 @@ import {
 } from '../storage/inspectionStorage'
 import { normalizeInspectionTypeSlug, normalizeReportRecords } from '../utils/inspectionSharedUtils'
 import { WORKFLOW_SESSION_KEY } from '../storage/workflowSession'
+import {
+  dutyConfirmationHeaders,
+  resolveInspectionDutyConfirmation,
+} from './inspectionDutyContextApi'
 
 const INSPECTION_TYPE = 'inspection'
 const REPORT_API_ENABLED_TYPES_RAW = String(import.meta.env.VITE_REPORT_API_TYPES || '*')
@@ -123,7 +127,10 @@ export const loadInspectionRecordsForScope = ({ userId, scope = 'mine' }) => {
   return loadInspectionRecords(userId)
 }
 
-const upsertInspectionRecordToApi = async (row, { submissionKey = '', expectedVersion } = {}) => {
+const upsertInspectionRecordToApi = async (
+  row,
+  { submissionKey = '', expectedVersion, dutyConfirmationToken = '' } = {},
+) => {
   if (
     !row ||
     row?.recordKind === 'draft' ||
@@ -147,10 +154,19 @@ const upsertInspectionRecordToApi = async (row, { submissionKey = '', expectedVe
       ? { submission_key: String(submissionKey || row?.submissionKey || '').trim() }
       : {}),
   }
+  const confirmationToken =
+    dutyConfirmationToken ||
+    (await resolveInspectionDutyConfirmation({
+      operation: 'submit',
+      formId: normalizeInspectionTypeSlug(row?.incidentType),
+      recordId: reportUid,
+      idempotencyKey: String(submissionKey || row?.submissionKey || '').trim(),
+    }))
 
   if (!latest) {
     await apiRequest('/reports', {
       method: 'POST',
+      headers: dutyConfirmationHeaders(confirmationToken),
       body: JSON.stringify({
         ...body,
         report_uid: reportUid,
@@ -161,6 +177,7 @@ const upsertInspectionRecordToApi = async (row, { submissionKey = '', expectedVe
 
   await apiRequest(`/reports/${encodeURIComponent(reportUid)}`, {
     method: 'PUT',
+    headers: dutyConfirmationHeaders(confirmationToken),
     body: JSON.stringify({
       ...body,
       version: Number(expectedVersion || latest?.version || row?.version || 1),
@@ -211,7 +228,11 @@ export const persistInspectionRecord = async (userId, row, options = {}) => {
   return true
 }
 
-export const deleteInspectionRecord = async (userId, reportUid) => {
+export const deleteInspectionRecord = async (
+  userId,
+  reportUid,
+  { dutyConfirmationToken = '' } = {},
+) => {
   if (!userId) return false
   const id = String(reportUid || '').trim()
   if (!id) return false
@@ -222,14 +243,31 @@ export const deleteInspectionRecord = async (userId, reportUid) => {
       loadInspectionRecords(userId).filter((row) => String(row?.id || '') !== id),
     )
   }
-  await apiRequest(`/reports/${encodeURIComponent(id)}`, { method: 'DELETE' })
+  const confirmationToken =
+    dutyConfirmationToken ||
+    (await resolveInspectionDutyConfirmation({ operation: 'delete', recordId: id }))
+  await apiRequest(`/reports/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: dutyConfirmationHeaders(confirmationToken),
+  })
   return true
 }
 
-const transitionInspection = async ({ reportUid, action, version, remarks }) => {
-  const path = `/reports/${encodeURIComponent(String(reportUid || '').trim())}/${action}`
+const transitionInspection = async ({
+  reportUid,
+  action,
+  version,
+  remarks,
+  dutyConfirmationToken,
+}) => {
+  const recordId = String(reportUid || '').trim()
+  const path = `/reports/${encodeURIComponent(recordId)}/${action}`
+  const confirmationToken =
+    dutyConfirmationToken ||
+    (await resolveInspectionDutyConfirmation({ operation: action, recordId }))
   const response = await apiRequest(path, {
     method: 'POST',
+    headers: dutyConfirmationHeaders(confirmationToken),
     body: JSON.stringify({
       version: Number(version || 0) || 1,
       remarks: String(remarks || ''),
@@ -238,14 +276,27 @@ const transitionInspection = async ({ reportUid, action, version, remarks }) => 
   return response?.data || null
 }
 
-export const reviewInspectionRecord = async ({ reportUid, version, remarks = '' }) =>
-  transitionInspection({ reportUid, action: 'review', version, remarks })
+export const reviewInspectionRecord = async ({
+  reportUid,
+  version,
+  remarks = '',
+  dutyConfirmationToken = '',
+}) => transitionInspection({ reportUid, action: 'review', version, remarks, dutyConfirmationToken })
 
-export const approveInspectionRecord = async ({ reportUid, version, remarks = '' }) =>
-  transitionInspection({ reportUid, action: 'approve', version, remarks })
+export const approveInspectionRecord = async ({
+  reportUid,
+  version,
+  remarks = '',
+  dutyConfirmationToken = '',
+}) =>
+  transitionInspection({ reportUid, action: 'approve', version, remarks, dutyConfirmationToken })
 
-export const rejectInspectionRecord = async ({ reportUid, version, remarks }) =>
-  transitionInspection({ reportUid, action: 'reject', version, remarks })
+export const rejectInspectionRecord = async ({
+  reportUid,
+  version,
+  remarks,
+  dutyConfirmationToken = '',
+}) => transitionInspection({ reportUid, action: 'reject', version, remarks, dutyConfirmationToken })
 
 export const loadInspectionRecordsFromLocal = (userId) => loadInspectionRecords(userId)
 
