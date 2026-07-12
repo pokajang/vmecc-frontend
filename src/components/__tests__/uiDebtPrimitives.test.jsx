@@ -8,6 +8,7 @@ import FormActionGroup from 'src/components/FormActionGroup'
 import GroupedTableHeaderRow, { GroupTotalBadge } from 'src/components/GroupedTableHeader'
 import MobileRecordList from 'src/components/MobileRecordList'
 import ModuleNavTabs from 'src/components/ModuleNavTabs'
+import ModulePageHeader from 'src/components/ModulePageHeader'
 import BulkSelectionActionBar from 'src/components/BulkSelectionActionBar'
 import RecordCard from 'src/components/RecordCard'
 import ResponsiveRecordCollection from 'src/components/ResponsiveRecordCollection'
@@ -23,16 +24,39 @@ afterEach(() => {
 })
 
 describe('UI debt shared primitives', () => {
-  it('keeps create actions inline by default and supports page-level primary actions', () => {
+  it('supports inline, section, and page action hierarchy with legacy primary compatibility', () => {
     render(
       <>
         <CreateActionButton label="Inline add" onClick={vi.fn()} />
+        <CreateActionButton label="Section add" importance="section-primary" onClick={vi.fn()} />
         <CreateActionButton label="Primary add" importance="primary" onClick={vi.fn()} />
       </>,
     )
 
     expect(screen.getByRole('button', { name: 'Inline add' }).className).toContain('bg-transparent')
+    expect(screen.getByRole('button', { name: 'Inline add' }).className).toContain(
+      'create-action-button--inline',
+    )
+    expect(screen.getByRole('button', { name: 'Section add' }).className).toContain(
+      'btn-outline-primary',
+    )
     expect(screen.getByRole('button', { name: 'Primary add' }).className).toContain('btn-primary')
+  })
+
+  it('keeps full header context on desktop and concise context on mobile', () => {
+    render(
+      <ModulePageHeader
+        title="Payroll Records"
+        subtitle="Review salary and claim records across payroll periods."
+        mobileSubtitle="Salary and claim records."
+      />,
+    )
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Payroll Records' })).toBeTruthy()
+    expect(screen.getByText('Salary and claim records.').className).toContain('d-md-none')
+    expect(
+      screen.getByText('Review salary and claim records across payroll periods.').className,
+    ).toContain('d-none')
   })
 
   it('renders mobile record cards with keyboard activation and action slots', () => {
@@ -263,11 +287,25 @@ describe('UI debt shared primitives', () => {
 
     const group = screen.getByRole('group', { name: 'Form actions' })
     expect(group.className).toContain('action-row-thumb--split')
+    expect(group.className).toContain('action-row-thumb--in-flow')
+    expect(document.querySelector('.action-row-thumb-spacer')).toBeNull()
     expect(
       within(group)
         .getAllByRole('button')
         .map((button) => button.textContent),
     ).toEqual(['Back', 'Save'])
+  })
+
+  it('renders sticky mobile form actions only when explicitly requested', () => {
+    render(
+      <FormActionGroup mobileBehavior="sticky">
+        <button type="button">Approve</button>
+      </FormActionGroup>,
+    )
+
+    const group = screen.getByRole('group', { name: 'Form actions' })
+    expect(group.className).toContain('action-row-thumb--sticky')
+    expect(document.querySelector('.action-row-thumb-spacer')).toBeTruthy()
   })
 
   it('renders compact sticky form actions with a mobile status message', () => {
@@ -438,6 +476,33 @@ describe('UI debt shared primitives', () => {
 
     fireEvent.click(screen.getByText('New Record'))
     expect(handleNew).toHaveBeenCalledTimes(1)
+  })
+
+  it('renders a labeled mobile section selector for long navigation sets', () => {
+    const handleGeneral = vi.fn()
+    const handleRoles = vi.fn()
+    render(
+      <ModuleNavTabs
+        mobileVariant="select"
+        mobileLabel="Settings section"
+        items={[
+          { key: 'general', label: 'General', active: true, onClick: handleGeneral },
+          {
+            key: 'roles',
+            label: <span>Role Permissions</span>,
+            mobileLabel: 'Role Permissions',
+            onClick: handleRoles,
+          },
+        ]}
+      />,
+    )
+
+    const selector = screen.getByLabelText('Settings section')
+    expect(selector.value).toBe('general')
+    expect(within(selector).getByRole('option', { name: 'Role Permissions' })).toBeTruthy()
+
+    fireEvent.change(selector, { target: { value: 'roles' } })
+    expect(handleRoles).toHaveBeenCalledTimes(1)
   })
 
   it('matches route nav items and blocks navigation when a guard returns false', async () => {

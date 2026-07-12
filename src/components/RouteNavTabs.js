@@ -29,7 +29,15 @@ export const isRouteNavItemActive = (item = {}, currentPath = '') => {
   return path === target
 }
 
-const RouteNavTabs = ({ items = [], currentPath, navigate, replace = false, className = '' }) => {
+const RouteNavTabs = ({
+  items = [],
+  currentPath,
+  navigate,
+  replace = false,
+  className = '',
+  mobileVariant = 'scroll',
+  mobileLabel = 'Section',
+}) => {
   const location = useLocation()
   const routerNavigate = useNavigate()
   const activePath = currentPath || location.pathname
@@ -56,7 +64,14 @@ const RouteNavTabs = ({ items = [], currentPath, navigate, replace = false, clas
     }
   })
 
-  return <ModuleNavTabs items={navItems} className={className} />
+  return (
+    <ModuleNavTabs
+      items={navItems}
+      className={className}
+      mobileVariant={mobileVariant}
+      mobileLabel={mobileLabel}
+    />
+  )
 }
 
 export default RouteNavTabs

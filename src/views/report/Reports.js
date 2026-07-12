@@ -602,7 +602,7 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
             {isCreateSection ? null : (
               <CreateActionButton
                 label={`New ${reportTypeLabel} Report`}
-                importance="primary"
+                importance="page-primary"
                 className={isWorkFirstReport ? 'd-none d-md-inline-flex' : ''}
                 onClick={() => runGuardedAction(startNew)}
               />

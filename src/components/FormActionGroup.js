@@ -6,6 +6,7 @@ const FormActionGroup = ({
   leading = null,
   className = '',
   mobileThumb = true,
+  mobileBehavior,
   mobileVariant = 'default',
   statusMessage = '',
   showSpacer = true,
@@ -14,13 +15,22 @@ const FormActionGroup = ({
 }) => {
   const hasLeading = Boolean(leading)
   const hasActions = Boolean(children)
-  const isCompactSticky = mobileVariant === 'compact-sticky'
+  const resolvedMobileBehavior =
+    mobileBehavior ||
+    (mobileVariant === 'compact-sticky'
+      ? 'compact-sticky'
+      : mobileThumb
+        ? 'in-flow'
+        : 'legacy-in-flow')
+  const isSticky = resolvedMobileBehavior === 'sticky'
+  const isCompactSticky = resolvedMobileBehavior === 'compact-sticky'
+  const usesMobileActionLayout = resolvedMobileBehavior !== 'legacy-in-flow'
   const alignStart = actionsAlign === 'start'
-  const containerClassName = mobileThumb
+  const containerClassName = usesMobileActionLayout
     ? [
         'action-row-thumb',
+        `action-row-thumb--${resolvedMobileBehavior}`,
         hasLeading ? 'action-row-thumb--split' : '',
-        isCompactSticky ? 'action-row-thumb--compact-sticky' : '',
         isCompactSticky && hasLeading ? 'action-row-thumb--has-leading' : '',
       ]
         .filter(Boolean)
@@ -33,7 +43,7 @@ const FormActionGroup = ({
             : 'justify-content-end'
       }`
   const containerStyle =
-    mobileThumb && alignStart
+    usesMobileActionLayout && alignStart
       ? {
           justifyItems: 'start',
         }
@@ -75,7 +85,7 @@ const FormActionGroup = ({
           </div>
         ) : null}
       </div>
-      {mobileThumb && showSpacer ? <div className={spacerClasses} /> : null}
+      {(isSticky || isCompactSticky) && showSpacer ? <div className={spacerClasses} /> : null}
     </>
   )
 }

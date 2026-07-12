@@ -198,6 +198,7 @@ const OvertimeRecordsSection = ({
         {showPrimaryAction ? (
           <CreateActionButton
             label="Apply Overtime"
+            importance="section-primary"
             onClick={startNewOvertime}
             icon={<Plus size={13} className="me-1 align-text-bottom" />}
           />
@@ -208,7 +209,8 @@ const OvertimeRecordsSection = ({
           <TableFilters
             searchValue={search}
             onSearchChange={setSearch}
-            searchPlaceholder="Search overtime ID, status, or reason"
+            searchLabel="Search overtime by ID, status, or reason"
+            searchPlaceholder="Search overtime"
             periodValue={period}
             onPeriodChange={setPeriod}
             filters={[

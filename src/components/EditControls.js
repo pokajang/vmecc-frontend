@@ -20,7 +20,7 @@ const EditControls = ({
         <>
           <CButton
             size="sm"
-            className="text-primary px-2 py-1 border-0 bg-transparent shadow-none"
+            className="edit-controls__action text-primary px-2 py-1 border-0 bg-transparent shadow-none"
             onClick={onSave}
             disabled={loading}
           >
@@ -28,7 +28,7 @@ const EditControls = ({
           </CButton>
           <CButton
             size="sm"
-            className="text-primary px-2 py-1 border-0 bg-transparent shadow-none"
+            className="edit-controls__action text-primary px-2 py-1 border-0 bg-transparent shadow-none"
             onClick={onCancel}
             disabled={loading}
           >
@@ -38,7 +38,7 @@ const EditControls = ({
       ) : (
         <CButton
           size="sm"
-          className="text-primary px-2 py-1 border-0 bg-transparent shadow-none"
+          className="edit-controls__action text-primary px-2 py-1 border-0 bg-transparent shadow-none"
           onClick={onEdit}
         >
           <Pencil size={13} className="me-1 align-text-bottom" />

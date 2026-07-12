@@ -150,7 +150,7 @@ const CompanyLegalInfoTab = () => {
     <>
       <CCard>
         <CCardHeader className="d-flex justify-content-between align-items-center gap-2">
-          <span>Company Legal Information</span>
+          <span>Company Information</span>
           {!editMode && (
             <EditControls
               editMode={false}

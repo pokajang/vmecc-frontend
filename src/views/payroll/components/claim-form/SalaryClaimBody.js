@@ -216,7 +216,10 @@ const SalaryClaimBody = ({
       )}
       <div className="px-1 small text-body-secondary">{draftSyncSummary}</div>
 
-      <FormActionGroup leading={<BackButton onClick={onBack} label="Back to claims" />}>
+      <FormActionGroup
+        leading={<BackButton onClick={onBack} label="Back to claims" />}
+        mobileBehavior="in-flow"
+      >
         <CButton color="secondary" variant="outline" onClick={clearForm}>
           Clear form
         </CButton>

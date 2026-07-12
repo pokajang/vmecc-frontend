@@ -94,6 +94,8 @@ const LeaveManagementTabsContent = ({
       <RouteNavTabs
         currentPath={resolvedManagementTab}
         navigate={(tab) => switchManagementTab(tab)}
+        mobileVariant="select"
+        mobileLabel="Leave management section"
         items={[
           {
             key: 'records',
@@ -103,13 +105,13 @@ const LeaveManagementTabsContent = ({
           },
           {
             key: 'assignments',
-            label: 'Set Leaves',
+            label: 'Leave Entitlements',
             to: 'assignments',
             match: 'assignments',
           },
           {
             key: 'holidays',
-            label: 'Set Holidays',
+            label: 'Holidays',
             to: 'holidays',
             match: 'holidays',
           },
@@ -147,7 +149,8 @@ const LeaveManagementTabsContent = ({
         typeOptions={typeOptions}
         statusOptions={statusOptions}
         leaveSortOptions={leaveSortOptions}
-        searchPlaceholder="Search leave ID, leave type, status, employee, or team"
+        searchLabel="Search leave records by ID, leave type, status, employee, or team"
+        searchPlaceholder="Search leave records"
         filteredRecords={filteredRecords}
         visibleRows={visibleRows}
         rowsToShow={rowsToShow}

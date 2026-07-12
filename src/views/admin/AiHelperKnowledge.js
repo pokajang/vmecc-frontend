@@ -376,7 +376,8 @@ const AiHelperKnowledge = () => {
                 <TableFilters
                   searchValue={search}
                   onSearchChange={setSearch}
-                  searchPlaceholder="Search title, file, or uploader"
+                  searchLabel="Search knowledge by title, file, or uploader"
+                  searchPlaceholder="Search knowledge"
                   showPeriod={false}
                   searchColMd={4}
                   filterColMd={2}

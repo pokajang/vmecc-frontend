@@ -85,7 +85,7 @@ it('uses route-backed nav tabs without tab roles and marks the active route curr
   expect(container.querySelector('[role="tablist"]')).toBeNull()
   expect(container.querySelector('[role="presentation"]')).toBeNull()
   const setRosterNav = screen
-    .getAllByText('Set Roster')
+    .getAllByText('Roster Schedule')
     .find((element) => element.getAttribute('aria-current') === 'page')
   expect(setRosterNav).toBeTruthy()
   expect(screen.getByText('Overview').getAttribute('aria-current')).toBeNull()

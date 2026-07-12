@@ -32,11 +32,39 @@
 }
 
 @include media-breakpoint-down(md) {
-  .action-row-thumb {
+  .action-row-thumb--in-flow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .action-row-thumb--in-flow .action-row-thumb-leading,
+  .action-row-thumb--in-flow .action-row-thumb-actions {
+    width: 100%;
+  }
+
+  .action-row-thumb--in-flow .action-row-thumb-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .action-row-thumb--in-flow .action-row-thumb-actions > *,
+  .action-row-thumb--in-flow .action-row-thumb-actions .btn {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .action-row-thumb--in-flow .action-row-thumb-actions > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+
+  .action-row-thumb--sticky,
+  .action-row-thumb--compact-sticky {
     position: fixed;
     left: calc(var(--cui-sidebar-occupy-start, 0px) + 0.75rem);
     right: calc(var(--cui-sidebar-occupy-end, 0px) + 0.75rem);
-    bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 0.75rem);
+    bottom: calc(
+      var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 0.75rem
+    );
     z-index: 1020;
     max-height: min(40dvh, 12rem);
     overflow-y: auto;
@@ -46,27 +74,34 @@
     box-shadow: none !important;
   }
 
-  .action-row-thumb,
+  .action-row-thumb--sticky,
+  .action-row-thumb--compact-sticky,
   .action-row-thumb-leading,
   .action-row-thumb-actions {
     align-items: stretch;
   }
 
-  .action-row-thumb--split {
+  .action-row-thumb--sticky.action-row-thumb--split,
+  .action-row-thumb--compact-sticky.action-row-thumb--split {
     flex-direction: column;
   }
 
-  .action-row-thumb-leading,
-  .action-row-thumb-actions {
+  .action-row-thumb--sticky .action-row-thumb-leading,
+  .action-row-thumb--sticky .action-row-thumb-actions,
+  .action-row-thumb--compact-sticky .action-row-thumb-leading,
+  .action-row-thumb--compact-sticky .action-row-thumb-actions {
     width: 100%;
   }
 
-  .action-row-thumb .btn {
+  .action-row-thumb--sticky .btn,
+  .action-row-thumb--compact-sticky .btn {
     flex: 1 1 0;
   }
 
   .action-row-thumb-spacer {
-    height: calc(64px + env(safe-area-inset-bottom, 0px) + 9rem);
+    height: calc(
+      var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 9rem
+    );
   }
 
   .action-row-thumb--compact-sticky {
@@ -118,18 +153,24 @@
   }
 
   .action-row-thumb-spacer--compact {
-    height: calc(64px + env(safe-area-inset-bottom, 0px) + 6rem);
+    height: calc(
+      var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 6rem
+    );
   }
 
   .action-row-thumb-spacer--compact-with-leading {
-    height: calc(64px + env(safe-area-inset-bottom, 0px) + 8rem);
+    height: calc(
+      var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 8rem
+    );
   }
 
   .salary-bulk-mode-bar {
     position: fixed;
     left: calc(var(--cui-sidebar-occupy-start, 0px) + 0.75rem);
     right: calc(var(--cui-sidebar-occupy-end, 0px) + 0.75rem);
-    bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 0.75rem);
+    bottom: calc(
+      var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 0.75rem
+    );
     z-index: 1020;
     max-height: min(42dvh, 15rem);
     overflow-y: auto;
@@ -138,6 +179,8 @@
 
   .salary-bulk-mode-spacer {
     display: block;
-    height: calc(64px + env(safe-area-inset-bottom, 0px) + 12rem);
+    height: calc(
+      var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 12rem
+    );
   }
 }

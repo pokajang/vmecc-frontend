@@ -103,7 +103,7 @@ const ReportingWorkflowSettings = () => {
     >
       <div className="reporting-workflow-settings__shell">
         <ModulePageHeader
-          title="Reporting Settings"
+          title="Reporting Workflow"
           subtitle="Configure reporting workflow policies across inspection and other report modules."
         />
 

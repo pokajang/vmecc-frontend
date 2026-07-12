@@ -166,10 +166,10 @@ const SalaryAssignmentFormPage = ({ vm, handlers }) => {
           )}
 
           {isReadOnly ? (
-            <FormActionGroup leading={<BackButton onClick={handleBackClick} label="Back" />}>
-              <CButton color="light" onClick={handleBackClick}>
-                Back
-              </CButton>
+            <FormActionGroup
+              leading={<BackButton onClick={handleBackClick} label="Back" />}
+              mobileBehavior="in-flow"
+            >
               <CButton
                 color="primary"
                 data-testid="salary-claims-management-assignment-edit-action"
@@ -179,7 +179,7 @@ const SalaryAssignmentFormPage = ({ vm, handlers }) => {
               </CButton>
             </FormActionGroup>
           ) : (
-            <FormActionGroup leading={<BackButton onClick={handleBackClick} label="Back" />}>
+            <FormActionGroup mobileBehavior="in-flow">
               <CButton color="light" onClick={handleBackClick}>
                 Cancel
               </CButton>
@@ -202,7 +202,7 @@ const SalaryAssignmentFormPage = ({ vm, handlers }) => {
                   onClick={() => setSubmitConfirmVisible(true)}
                   disabled={isSubmitting || isAutosaving || !stepState.review.complete}
                 >
-                  {isEditing ? 'Update Salary' : 'Set Salary'}
+                  {isEditing ? 'Update Salary' : 'Assign Salary'}
                 </CButton>
               )}
             </FormActionGroup>
@@ -215,7 +215,9 @@ const SalaryAssignmentFormPage = ({ vm, handlers }) => {
         onClose={() => setSubmitConfirmVisible(false)}
       >
         <CModalHeader onClose={() => setSubmitConfirmVisible(false)}>
-          <CModalTitle>{isEditing ? 'Confirm Salary Update' : 'Confirm Set Salary'}</CModalTitle>
+          <CModalTitle>
+            {isEditing ? 'Confirm Salary Update' : 'Confirm Salary Assignment'}
+          </CModalTitle>
         </CModalHeader>
         <CModalBody>
           {isEditing

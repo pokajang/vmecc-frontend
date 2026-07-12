@@ -327,7 +327,8 @@ const OvertimeRecordsTab = (props) => {
           <TableFilters
             searchValue={search}
             onSearchChange={setSearch}
-            searchPlaceholder="Search overtime ID, employee, status, team, type, or reason"
+            searchLabel="Search overtime by ID, employee, status, team, type, or reason"
+            searchPlaceholder="Search overtime records"
             periodValue={period}
             onPeriodChange={setPeriod}
             filters={[

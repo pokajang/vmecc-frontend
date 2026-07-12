@@ -17,6 +17,7 @@ const UserManagementHeader = ({
     <div data-testid="users-create-action" className="d-flex flex-wrap align-items-center gap-2">
       <CreateActionButton
         label={showForm ? 'Close' : 'Create User'}
+        importance={showForm ? 'inline' : 'page-primary'}
         disabled={submitStatus.loading}
         onClick={onToggleForm}
         icon={
@@ -26,7 +27,6 @@ const UserManagementHeader = ({
             <Plus size={13} className="me-1 align-text-bottom" />
           )
         }
-        importance="primary"
       />
       <CDropdown alignment="end">
         <CDropdownToggle size="sm" color="secondary" variant="outline">

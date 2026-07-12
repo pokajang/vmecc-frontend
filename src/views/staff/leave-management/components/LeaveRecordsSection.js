@@ -53,7 +53,8 @@ const LeaveRecordsSection = ({
   showPrimaryAction = true,
   primaryActionLabel = 'Apply Leave',
   primaryActionIcon,
-  searchPlaceholder = 'Search leave ID, leave type, or status',
+  searchLabel = 'Search leave records by ID, employee, leave type, status, or team',
+  searchPlaceholder = 'Search leave records',
   unknownGroupLabel = 'Unknown month',
   actionMode = 'self',
   enableMonthGrouping = false,
@@ -370,6 +371,7 @@ const LeaveRecordsSection = ({
           {showPrimaryAction ? (
             <CreateActionButton
               label={primaryActionLabel}
+              importance="section-primary"
               onClick={startNewLeave}
               icon={primaryActionIcon || <Plus size={13} className="me-1 align-text-bottom" />}
             />
@@ -381,6 +383,7 @@ const LeaveRecordsSection = ({
           <TableFilters
             searchValue={search}
             onSearchChange={setSearch}
+            searchLabel={searchLabel}
             searchPlaceholder={searchPlaceholder}
             periodValue={period}
             onPeriodChange={setPeriod}

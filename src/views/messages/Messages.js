@@ -28,11 +28,23 @@ import {
 import useNewChatActions from './hooks/useNewChatActions'
 import useMessagesResponsiveState from './hooks/useMessagesResponsiveState'
 import useMessageDraftPersistence from './hooks/useMessageDraftPersistence'
+import { isModuleActivationHydrated } from 'src/utils/modules'
+import { canLoadMessageThreads } from 'src/utils/messageAccess'
 
 const Messages = () => {
   const authUser = useSelector((state) => state.authUser)
+  const moduleActivation = useSelector((state) => state.moduleActivation)
   const canMessage = useMemo(() => hasPermission(authUser, 'self.messages'), [authUser])
-  const { threads, loading, error: threadsError, refresh, updateThreads } = useMessageThreads()
+  const canLoadMessages = canLoadMessageThreads(authUser, moduleActivation)
+  const {
+    threads,
+    loading,
+    error: threadsError,
+    refresh,
+    updateThreads,
+  } = useMessageThreads({
+    enabled: canLoadMessages,
+  })
   const [threadMessages, setThreadMessages] = useState([])
   const [activeThread, setActiveThread] = useState(null)
   const [query, setQuery] = useState('')
@@ -622,8 +634,13 @@ const Messages = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contactQuery, showNewChat])
 
-  if (loading || !canMessage) {
-    return <MessagesAccessState loading={loading} canMessage={canMessage} />
+  if (!isModuleActivationHydrated(moduleActivation) || loading || !canMessage) {
+    return (
+      <MessagesAccessState
+        loading={!isModuleActivationHydrated(moduleActivation) || loading}
+        canMessage={canMessage}
+      />
+    )
   }
 
   return (

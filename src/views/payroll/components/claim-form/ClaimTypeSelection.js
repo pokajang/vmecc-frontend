@@ -2,6 +2,7 @@ import React from 'react'
 import { CButton } from '@coreui/react'
 import { BadgeDollarSign, Calendar, ReceiptText, ShieldCheck } from 'lucide-react'
 import { buildClaimPeriodOptions } from './claimPeriodOptions'
+import FormActionGroup from 'src/components/FormActionGroup'
 import IconOptionGrid from 'src/components/IconOptionGrid'
 
 const CLAIM_TYPE_OPTIONS = [
@@ -101,7 +102,7 @@ const ClaimTypeSelection = ({
         </div>
       )}
 
-      <div className="action-row-thumb">
+      <FormActionGroup mobileBehavior="sticky" ariaLabel="Claim type actions">
         <CButton color="light" onClick={onBack}>
           {backLabel}
         </CButton>
@@ -118,8 +119,7 @@ const ClaimTypeSelection = ({
         >
           {continueLabel}
         </CButton>
-      </div>
-      <div className="action-row-thumb-spacer d-md-none" />
+      </FormActionGroup>
     </div>
   )
 }

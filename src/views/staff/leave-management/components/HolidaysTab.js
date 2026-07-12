@@ -274,9 +274,13 @@ const HolidaysTab = ({
 
   return (
     <CCard data-testid="leave-management-holidays">
-      <CCardHeader className="d-flex justify-content-between align-items-center gap-2">
-        <span>Set Holidays</span>
-        <CreateActionButton label="Configure holidays" onClick={openCreateModal} />
+      <CCardHeader className="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span>Holidays</span>
+        <CreateActionButton
+          label="Configure holidays"
+          importance="section-primary"
+          onClick={openCreateModal}
+        />
       </CCardHeader>
       <CCardBody>
         <HolidayCreateModal
@@ -331,7 +335,8 @@ const HolidaysTab = ({
         <TableFilters
           searchValue={holidaySearch}
           onSearchChange={setHolidaySearch}
-          searchPlaceholder="Search holiday name, date, scope, or state"
+          searchLabel="Search holidays by name, date, scope, or state"
+          searchPlaceholder="Search holidays"
           showPeriod={false}
           filters={[
             {

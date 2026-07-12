@@ -22,22 +22,10 @@ describe('PayrollNav', () => {
     expect(container.querySelector('[role="presentation"]')).toBeNull()
     expect(screen.getByText('Claim Records').getAttribute('aria-current')).toBe('page')
     expect(screen.getByText('Payslips').getAttribute('aria-current')).toBeNull()
-    expect(screen.getByText('Apply Claim').getAttribute('aria-current')).toBeNull()
+    expect(screen.queryByText('Apply Claim')).toBeNull()
 
     fireEvent.click(screen.getByText('Payslips'))
-    fireEvent.click(screen.getByText('Apply Claim'))
 
-    expect(onNavigate).toHaveBeenNthCalledWith(1, '/payroll/payslips')
-    expect(onNavigate).toHaveBeenNthCalledWith(2, '/payroll/claims/new')
-  })
-
-  it('marks new claim routes as current', () => {
-    render(
-      <MemoryRouter>
-        <PayrollNav activeSection="new-claim-salary" onNavigate={vi.fn()} />
-      </MemoryRouter>,
-    )
-
-    expect(screen.getByText('Apply Claim').getAttribute('aria-current')).toBe('page')
+    expect(onNavigate).toHaveBeenCalledWith('/payroll/payslips')
   })
 })

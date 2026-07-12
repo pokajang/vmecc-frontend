@@ -496,17 +496,22 @@ const SalarySettingsTab = ({ vm, handlers }) => {
   return (
     <>
       <CCard data-testid="salary-claims-management-assignment-list">
-        <CCardHeader className="d-flex justify-content-between align-items-center gap-2">
+        <CCardHeader className="d-flex flex-wrap justify-content-between align-items-center gap-2">
           <span>Salary Assignments</span>
           <div data-testid="salary-claims-management-assignment-create-action">
-            <CreateActionButton label="Assign Salary" onClick={openCreateAssignment} />
+            <CreateActionButton
+              label="Assign Salary"
+              importance="section-primary"
+              onClick={openCreateAssignment}
+            />
           </div>
         </CCardHeader>
         <CCardBody className="d-grid gap-3">
           <TableFilters
             searchValue={assignmentSearch}
             onSearchChange={setAssignmentSearch}
-            searchPlaceholder="Search assignment ID, employee, team, or month"
+            searchLabel="Search salary assignments by ID, employee, team, or month"
+            searchPlaceholder="Search assignments"
             showPeriod={false}
             filters={[
               {

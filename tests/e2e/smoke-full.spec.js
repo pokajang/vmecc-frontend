@@ -493,6 +493,7 @@ test.describe('FULL SMOKE repo-wide RBAC and notification harness', () => {
     const consoleErrors = []
     const pageErrors = []
     const failedResponses = []
+    const deniedResponses = []
 
     page.on('console', (msg) => {
       if (msg.type() === 'error') consoleErrors.push({ url: page.url(), message: msg.text() })
@@ -500,6 +501,14 @@ test.describe('FULL SMOKE repo-wide RBAC and notification harness', () => {
     page.on('pageerror', (error) => pageErrors.push({ url: page.url(), message: error.message }))
     page.on('response', (response) => {
       const url = response.url()
+      if ([401, 403].includes(response.status()) && url.startsWith(apiBaseUrl)) {
+        deniedResponses.push({
+          url,
+          method: response.request().method(),
+          status: response.status(),
+          page: page.url(),
+        })
+      }
       if (response.status() >= 500 && !/\.(css|js|png|jpg|jpeg|svg|woff2?)($|\?)/i.test(url)) {
         failedResponses.push({ url, status: response.status(), page: page.url() })
       }
@@ -511,6 +520,7 @@ test.describe('FULL SMOKE repo-wide RBAC and notification harness', () => {
         const beforeConsole = consoleErrors.length
         const beforeErrors = pageErrors.length
         const beforeResponses = failedResponses.length
+        const beforeDeniedResponses = deniedResponses.length
         const result = { role: persona.role, route, passed: true, notes: [] }
 
         try {
@@ -543,6 +553,10 @@ test.describe('FULL SMOKE repo-wide RBAC and notification harness', () => {
         failedResponses.slice(beforeResponses).forEach((item) => {
           result.passed = false
           result.notes.push(`failed response: ${item.status} ${item.url}`)
+        })
+        deniedResponses.slice(beforeDeniedResponses).forEach((item) => {
+          result.passed = false
+          result.notes.push(`unexpected denied response: ${item.status} ${item.method} ${item.url}`)
         })
 
         results.push(result)

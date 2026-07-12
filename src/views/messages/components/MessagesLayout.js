@@ -73,7 +73,7 @@ const MessagesLayout = ({
         data-testid="messages-header"
       >
         <div className="d-flex align-items-center gap-2">
-          <span>Messages</span>
+          <h1 className="h6 mb-0">Messages</h1>
           {unreadTotal > 0 && (
             <CBadge color="light" className="sidebar-message-badge">
               {`${unreadTotal} Unread`}

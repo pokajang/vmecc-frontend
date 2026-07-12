@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { Provider } from 'react-redux'
 import { legacy_createStore as createStore } from 'redux'
+import { MemoryRouter } from 'react-router-dom'
 
 import TrtProfileCompletionOnboarding from '../TrtProfileCompletionOnboarding'
 import { updateOnboardingState, updateProfile } from 'src/services/apiClient'
@@ -66,7 +67,7 @@ const incompleteUser = {
   medical_info: null,
 }
 
-const renderWithStore = (authUser) => {
+const renderWithStore = (authUser, route = '/dashboard') => {
   const reducer = (state = { authUser }, action) => {
     if (action.type !== 'set') return state
     const { type, ...rest } = action
@@ -74,9 +75,11 @@ const renderWithStore = (authUser) => {
   }
   const store = createStore(reducer)
   render(
-    <Provider store={store}>
-      <TrtProfileCompletionOnboarding />
-    </Provider>,
+    <MemoryRouter initialEntries={[route]}>
+      <Provider store={store}>
+        <TrtProfileCompletionOnboarding />
+      </Provider>
+    </MemoryRouter>,
   )
   return store
 }
@@ -121,6 +124,13 @@ describe('TrtProfileCompletionOnboarding', () => {
     await waitFor(() => expect(screen.queryByText('Complete your operational profile')).toBeNull())
   })
 
+  it('does not interrupt an incomplete user on a task route', async () => {
+    renderWithStore(incompleteUser, '/leave/apply')
+
+    await new Promise((resolve) => setTimeout(resolve, 2100))
+    expect(screen.queryByText('Welcome, Azam')).toBeNull()
+  })
+
   it('uses local fallback suppression when backend state exists but is not suppressing', async () => {
     localStorage.setItem(
       getTrtProfileOnboardingStorageKey(incompleteUser.id),
@@ -160,31 +170,17 @@ describe('TrtProfileCompletionOnboarding', () => {
     expect(localStorage.getItem(getTrtProfileOnboardingStorageKey(incompleteUser.id))).toBeNull()
   })
 
-  it('dismisses the prompt when skipped', async () => {
-    renderWithStore(incompleteUser)
-
-    fireEvent.click(await findDelayedPromptButton(/skip for now/i))
-
-    await waitFor(() =>
-      expect(updateOnboardingState).toHaveBeenCalledWith(TRT_PROFILE_ONBOARDING_KEY, {
-        version: TRT_PROFILE_ONBOARDING_VERSION,
-        event: 'dismissed',
-      }),
-    )
-    expect(localStorage.getItem(getTrtProfileOnboardingStorageKey(incompleteUser.id))).toBeNull()
-  })
-
   it('falls back to local storage when profile onboarding persistence fails', async () => {
     updateOnboardingState.mockRejectedValueOnce(new Error('offline'))
     renderWithStore(incompleteUser)
 
-    fireEvent.click(await findDelayedPromptButton(/skip for now/i))
+    fireEvent.click(await findDelayedPromptButton(/remind me later/i))
 
     await waitFor(() =>
       expect(
         JSON.parse(localStorage.getItem(getTrtProfileOnboardingStorageKey(incompleteUser.id)))
-          .dismissed,
-      ).toBe(true),
+          .snoozedUntil,
+      ).toBeTruthy(),
     )
   })
 
@@ -208,7 +204,7 @@ describe('TrtProfileCompletionOnboarding', () => {
 
     const store = renderWithStore(incompleteUser)
 
-    fireEvent.click(await findDelayedPromptButton(/complete now/i))
+    fireEvent.click(await findDelayedPromptButton(/complete profile/i))
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: completeUser.name } })
     fireEvent.change(screen.getByLabelText('IC number'), {
       target: { value: completeUser.ic_number },
@@ -281,7 +277,7 @@ describe('TrtProfileCompletionOnboarding', () => {
 
     renderWithStore(medicalComplete)
 
-    fireEvent.click(await findDelayedPromptButton(/complete now/i))
+    fireEvent.click(await findDelayedPromptButton(/complete profile/i))
     await screen.findByLabelText('No known critical medical info')
     fireEvent.click(screen.getByLabelText('No known critical medical info'))
     fireEvent.click(screen.getByRole('button', { name: /save and continue/i }))

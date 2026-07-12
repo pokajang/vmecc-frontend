@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
+import { useLocation } from 'react-router-dom'
 import {
   CAlert,
   CButton,
@@ -31,6 +32,7 @@ import {
 } from 'src/onboarding/trtProfileCompletion'
 
 const WELCOME_PROMPT_DELAY_MS = 2000
+const PROMPT_ROUTES = new Set(['/dashboard', '/profile', '/profile/security'])
 
 const relationshipOptions = [
   'Spouse',
@@ -252,6 +254,7 @@ const SelectField = ({ id, label, children, ...props }) => (
 
 const TrtProfileCompletionOnboarding = () => {
   const dispatch = useDispatch()
+  const location = useLocation()
   const authUser = useSelector((state) => state.authUser)
   const completeness = useMemo(() => getTrtOperationalProfileCompleteness(authUser), [authUser])
   const storageKey = useMemo(() => getTrtProfileOnboardingStorageKey(authUser?.id), [authUser?.id])
@@ -265,9 +268,10 @@ const TrtProfileCompletionOnboarding = () => {
   const [medicalForm, setMedicalForm] = useState(() => normalizeMedicalForm(authUser))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const isPromptRoute = PROMPT_ROUTES.has(location.pathname)
 
   useEffect(() => {
-    if (!authUser?.id || !completeness.applies) {
+    if (!authUser?.id || !completeness.applies || (!isPromptRoute && mode === 'prompt')) {
       setVisible(false)
       setMode('prompt')
       return
@@ -298,6 +302,7 @@ const TrtProfileCompletionOnboarding = () => {
     authUser?.id,
     completeness.applies,
     completeness.complete,
+    isPromptRoute,
     mode,
     serverOnboardingRecord,
     storageKey,
@@ -359,17 +364,6 @@ const TrtProfileCompletionOnboarding = () => {
     })
   }
 
-  const handleSkip = async () => {
-    setVisible(false)
-    await persistProfileOnboardingEvent({
-      event: 'dismissed',
-      fallbackRecord: {
-        dismissed: true,
-        dismissedAt: new Date().toISOString(),
-      },
-    })
-  }
-
   const handleExploreMyself = () => {
     setVisible(false)
   }
@@ -425,7 +419,7 @@ const TrtProfileCompletionOnboarding = () => {
     <CModal
       alignment="center"
       visible={visible}
-      onClose={saving ? undefined : () => setVisible(false)}
+      onClose={saving ? undefined : mode === 'complete' ? handleExploreMyself : handleRemindLater}
       scrollable
       fullscreen="sm"
       size="lg"
@@ -700,19 +694,14 @@ const TrtProfileCompletionOnboarding = () => {
           </div>
         )}
       </CModalBody>
-      <CModalFooter className="d-flex flex-wrap justify-content-between gap-2">
+      <CModalFooter className="d-flex flex-wrap justify-content-end gap-2">
         {mode === 'prompt' && (
           <>
-            <div className="d-flex flex-wrap gap-2">
-              <CButton color="primary" onClick={handleStart}>
-                Complete now
-              </CButton>
-              <CButton color="secondary" variant="outline" onClick={handleRemindLater}>
-                Remind me later
-              </CButton>
-            </div>
-            <CButton color="secondary" variant="ghost" onClick={handleSkip}>
-              Skip for now
+            <CButton color="secondary" variant="outline" onClick={handleRemindLater}>
+              Remind me later
+            </CButton>
+            <CButton color="primary" onClick={handleStart}>
+              Complete profile
             </CButton>
           </>
         )}

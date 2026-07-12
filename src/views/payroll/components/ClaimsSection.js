@@ -47,6 +47,7 @@ const ClaimsSection = ({
       {showPrimaryAction ? (
         <CreateActionButton
           label="Apply Claim"
+          importance="section-primary"
           onClick={onCreateClaim}
           icon={<Plus size={13} className="me-1 align-text-bottom" />}
         />
@@ -68,7 +69,8 @@ const ClaimsSection = ({
         <TableFilters
           searchValue={search}
           onSearchChange={onSearchChange}
-          searchPlaceholder="Search claim ID, period, type, detail, or status"
+          searchLabel="Search claims by ID, period, type, detail, or status"
+          searchPlaceholder="Search claims"
           periodValue={period}
           onPeriodChange={onPeriodChange}
           filters={[

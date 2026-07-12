@@ -95,22 +95,19 @@ const OvertimeApplySection = ({
         ) : null}
         {renderTypeCards({ showDescriptions: true })}
         {overtimeTypeOptions.length > 0 ? (
-          <>
-            <div className="action-row-thumb">
-              <CButton color="light" onClick={onBack}>
-                Back
-              </CButton>
-              <CButton
-                color="primary"
-                data-testid="overtime-type-continue"
-                disabled={!overtimeType}
-                onClick={() => onContinueOvertimeType(overtimeType)}
-              >
-                Continue
-              </CButton>
-            </div>
-            <div className="action-row-thumb-spacer d-md-none" />
-          </>
+          <FormActionGroup mobileBehavior="sticky" ariaLabel="Overtime type actions">
+            <CButton color="light" onClick={onBack}>
+              Back
+            </CButton>
+            <CButton
+              color="primary"
+              data-testid="overtime-type-continue"
+              disabled={!overtimeType}
+              onClick={() => onContinueOvertimeType(overtimeType)}
+            >
+              Continue
+            </CButton>
+          </FormActionGroup>
         ) : null}
       </div>
     )
@@ -275,7 +272,7 @@ const OvertimeApplySection = ({
         </CRow>
       </div>
 
-      <FormActionGroup className="mt-4" data-testid="overtime-draft-panel">
+      <FormActionGroup className="mt-4" data-testid="overtime-draft-panel" mobileBehavior="in-flow">
         <CButton
           color="secondary"
           variant="outline"

@@ -340,10 +340,11 @@ const AssignmentsTab = ({
 
   return (
     <CCard data-testid="leave-management-assignments">
-      <CCardHeader className="d-flex justify-content-between align-items-center gap-2">
-        <span>Set Leaves</span>
+      <CCardHeader className="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <span>Leave Entitlements</span>
         <CreateActionButton
           label="Assign entitlement"
+          importance="section-primary"
           onClick={openAssignmentForm}
           data-testid="leave-management-assignment-create-action"
         />
@@ -425,7 +426,8 @@ const AssignmentsTab = ({
         <TableFilters
           searchValue={assignmentSearch}
           onSearchChange={setAssignmentSearch}
-          searchPlaceholder="Search assignment ID, employee, leave type, or team"
+          searchLabel="Search assignments by ID, employee, leave type, or team"
+          searchPlaceholder="Search assignments"
           showPeriod={false}
           filters={[
             {

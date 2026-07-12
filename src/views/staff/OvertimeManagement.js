@@ -683,6 +683,7 @@ const OvertimeManagement = () => {
           <ModulePageHeader
             title="Staff Overtime Management"
             subtitle="Review overtime records, process workflow decisions, and maintain overtime rules."
+            mobileSubtitle="Review overtime and maintain rules."
           />
 
           <div data-testid="overtime-management-nav">
@@ -698,7 +699,7 @@ const OvertimeManagement = () => {
                 },
                 {
                   key: 'otRules',
-                  label: 'Set OT Rules',
+                  label: 'Overtime Rules',
                   to: 'otRules',
                   match: 'otRules',
                 },

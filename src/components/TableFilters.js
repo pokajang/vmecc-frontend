@@ -138,8 +138,6 @@ const TableFilters = ({
               style={{
                 width: mobileFilterTriggerSize,
                 height: mobileFilterTriggerSize,
-                minWidth: mobileFilterTriggerSize,
-                minHeight: mobileFilterTriggerSize,
               }}
               onClick={() => setMobileFiltersOpen(true)}
               aria-label="Open filters"

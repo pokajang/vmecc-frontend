@@ -155,7 +155,11 @@ const TeamView = () => {
             </div>
           </CCol>
         </CRow>
-        <FormActionGroup className="mt-3" leading={<BackButton onClick={() => navigate(-1)} />} />
+        <FormActionGroup
+          className="mt-3"
+          leading={<BackButton onClick={() => navigate(-1)} />}
+          mobileBehavior="in-flow"
+        />
       </CContainer>
     )
   }
@@ -407,7 +411,11 @@ const TeamView = () => {
         </CCol>
       </CRow>
 
-      <FormActionGroup className="mt-3" leading={<BackButton onClick={() => navigate(-1)} />} />
+      <FormActionGroup
+        className="mt-3"
+        leading={<BackButton onClick={() => navigate(-1)} />}
+        mobileBehavior="in-flow"
+      />
 
       {canManageTeams && team && (
         <EditTeamModal

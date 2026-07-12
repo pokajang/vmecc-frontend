@@ -306,6 +306,7 @@ const LeaveManagement = () => {
         <ModulePageHeader
           title="Staff Leave Management"
           subtitle="Review leave records, assign leave entitlements, manage holidays, and maintain leave workflow rules."
+          mobileSubtitle="Review leave, entitlements, and holidays."
         />
       ) : null}
       <LeaveWorkflowActionModal

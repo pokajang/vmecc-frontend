@@ -269,7 +269,8 @@ const AuditLogs = () => {
             <TableFilters
               searchValue={search}
               onSearchChange={setSearch}
-              searchPlaceholder="Search action, actor, target, IP"
+              searchLabel="Search audit logs by action, actor, target, or IP address"
+              searchPlaceholder="Search audit logs"
               filterColMd={3}
               clearColMd={2}
               periodValue={range}

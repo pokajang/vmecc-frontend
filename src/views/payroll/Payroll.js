@@ -263,12 +263,13 @@ const Payroll = () => {
       <ModulePageHeader
         title="Payroll"
         subtitle="Review claim records, payslips, and submit new salary or expense claims."
+        mobileSubtitle="Claims, payslips, and new submissions."
         actions={
           activeSection.startsWith('new-claim') ? null : (
             <div data-testid={activeSection === 'claims' ? 'payroll-new-claim-action' : undefined}>
               <CreateActionButton
                 label="Apply Claim"
-                importance="primary"
+                importance="page-primary"
                 onClick={() => navigate('/payroll/claims/new')}
                 icon={<Plus size={15} className="me-1 align-text-bottom" />}
               />
@@ -276,13 +277,15 @@ const Payroll = () => {
           )
         }
       />
-      <div
-        data-testid={
-          activeSection === 'claims' || activeSection === 'payslips' ? 'payroll-nav' : undefined
-        }
-      >
-        <PayrollNav activeSection={activeSection} onNavigate={navigate} />
-      </div>
+      {!activeSection.startsWith('new-claim') ? (
+        <div
+          data-testid={
+            activeSection === 'claims' || activeSection === 'payslips' ? 'payroll-nav' : undefined
+          }
+        >
+          <PayrollNav activeSection={activeSection} onNavigate={navigate} />
+        </div>
+      ) : null}
       <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
       <ClaimActionModals
         cancelModalVisible={cancelModalVisible}

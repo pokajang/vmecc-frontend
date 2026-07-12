@@ -430,7 +430,8 @@ const SalaryRecordsTab = ({ vm, handlers }) => {
           <TableFilters
             searchValue={salarySearch}
             onSearchChange={setSalarySearch}
-            searchPlaceholder="Search claim ID, employee, payroll month, status"
+            searchLabel="Search salary records by claim ID, employee, payroll month, or status"
+            searchPlaceholder="Search salary records"
             periodValue={salaryPeriod}
             onPeriodChange={setSalaryPeriod}
             filters={[

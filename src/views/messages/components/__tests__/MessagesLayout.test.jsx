@@ -73,4 +73,10 @@ describe('MessagesLayout responsive shell', () => {
     expect(container.querySelector('.flex-md-row')).toBeTruthy()
     expect(container.querySelector('.flex-lg-row')).toBeNull()
   })
+
+  it('exposes Messages as the page heading', () => {
+    const { container } = render(<MessagesLayout {...baseProps} />)
+
+    expect(container.querySelector('h1')?.textContent).toBe('Messages')
+  })
 })

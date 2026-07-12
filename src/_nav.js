@@ -1,21 +1,25 @@
 import React from 'react'
 import { CNavItem, CNavTitle } from '@coreui/react'
 import {
+  BadgeDollarSign,
+  Bot,
+  BookOpen,
   CalendarDays,
   Clock3,
   ClipboardList,
   Download,
   Dumbbell,
-  Flag,
+  MessageSquareWarning,
   LayoutDashboard,
   LayoutGrid,
   MessageSquareText,
   Settings,
+  SlidersHorizontal,
   TriangleAlert,
   UserRound,
   Users,
   UsersRound,
-  Wallet,
+  WalletCards,
   Wrench,
 } from 'lucide-react'
 import { PWA_INSTALL_ACTION } from 'src/constants/pwa'
@@ -38,14 +42,8 @@ const _nav = [
     icon: <MessageSquareText className="nav-icon" size={20} />,
   },
   {
-    component: CNavItem,
-    name: 'Install VMECC',
-    action: PWA_INSTALL_ACTION,
-    icon: <Download className="nav-icon" size={20} />,
-  },
-  {
     component: CNavTitle,
-    name: 'Reports and Inspection',
+    name: 'Reporting',
   },
   {
     component: CNavItem,
@@ -78,14 +76,14 @@ const _nav = [
   },
   {
     component: CNavItem,
-    name: 'Reporting Settings',
+    name: 'Reporting Workflow',
     to: '/reporting-settings/inspection',
     matchPrefix: ['/reporting-settings'],
-    icon: <Settings className="nav-icon" size={20} />,
+    icon: <SlidersHorizontal className="nav-icon" size={20} />,
   },
   {
     component: CNavTitle,
-    name: 'Operations',
+    name: 'People and Operations',
   },
   {
     component: CNavItem,
@@ -106,8 +104,12 @@ const _nav = [
     icon: <Clock3 className="nav-icon" size={20} />,
   },
   {
+    component: CNavTitle,
+    name: 'Payroll',
+  },
+  {
     component: CNavItem,
-    name: 'Salary & Claims',
+    name: 'Payroll Records',
     to: '/staff/salary-claims/salary',
     matchPrefix: [
       '/staff/salary-claims/claims',
@@ -115,18 +117,18 @@ const _nav = [
       '/staff/salary-claims/claim',
       '/staff/salary-claims/overtime',
     ],
-    icon: <Wallet className="nav-icon" size={20} />,
+    icon: <WalletCards className="nav-icon" size={20} />,
   },
   {
     component: CNavItem,
-    name: 'Salary Settings',
+    name: 'Payroll Configuration',
     to: '/staff/set-salary/set-salary',
     matchPrefix: ['/staff/set-salary'],
-    icon: <Settings className="nav-icon" size={20} />,
+    icon: <BadgeDollarSign className="nav-icon" size={20} />,
   },
   {
     component: CNavTitle,
-    name: 'Teams and Roster',
+    name: 'Teams and Scheduling',
   },
   {
     component: CNavItem,
@@ -148,7 +150,7 @@ const _nav = [
   },
   {
     component: CNavTitle,
-    name: 'Admin',
+    name: 'Administration',
   },
   {
     component: CNavItem,
@@ -160,31 +162,41 @@ const _nav = [
     component: CNavItem,
     name: 'Audit',
     to: '/admin/audit',
-    icon: <ClipboardList className="nav-icon" size={20} />,
+    icon: <BookOpen className="nav-icon" size={20} />,
   },
   {
     component: CNavItem,
     name: 'Ask AI Reports',
     to: '/admin/ai-helper-reports',
-    icon: <Flag className="nav-icon" size={20} />,
+    icon: <Bot className="nav-icon" size={20} />,
   },
   {
     component: CNavItem,
     name: 'Feedback Reports',
     to: '/admin/feedback-reports',
-    icon: <Flag className="nav-icon" size={20} />,
+    icon: <MessageSquareWarning className="nav-icon" size={20} />,
   },
   {
     component: CNavItem,
     name: 'Ask AI Knowledge',
     to: '/admin/ai-helper-knowledge',
-    icon: <ClipboardList className="nav-icon" size={20} />,
+    icon: <BookOpen className="nav-icon" size={20} />,
   },
   {
     component: CNavItem,
     name: 'Settings',
     to: '/settings',
     icon: <Settings className="nav-icon" size={20} />,
+  },
+  {
+    component: CNavTitle,
+    name: 'App',
+  },
+  {
+    component: CNavItem,
+    name: 'Install VMECC',
+    action: PWA_INSTALL_ACTION,
+    icon: <Download className="nav-icon" size={20} />,
   },
 ]
 

@@ -167,12 +167,15 @@ const Settings = () => {
       <ModulePageHeader
         title="Settings"
         subtitle="Maintain system controls, role permissions, and dashboard visibility rules."
+        mobileSubtitle="System access, modules, and visibility."
       />
 
       <div data-testid="settings-nav">
         <RouteNavTabs
           currentPath={activeTab}
           navigate={(tabPath) => navigate(tabPath)}
+          mobileVariant="select"
+          mobileLabel="Settings section"
           items={[
             {
               key: TAB_GENERAL,

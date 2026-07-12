@@ -25,7 +25,7 @@ const InspectionModuleHeaderActions = ({
     {!isCreateSection ? (
       <CreateActionButton
         label="New"
-        importance="primary"
+        importance="page-primary"
         className="d-none d-md-inline-flex"
         onClick={onStartNew}
         data-testid="inspection-new"

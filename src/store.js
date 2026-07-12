@@ -18,6 +18,7 @@ const initialState = {
   authUser: null,
   authError: null,
   moduleActivation: {
+    hydrated: false,
     registry: [],
     configured: {},
     effective: {},

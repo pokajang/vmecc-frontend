@@ -317,7 +317,7 @@ export const InspectionGeneralEvidenceCard = ({
         label={<span className="d-none d-sm-inline">Take photo</span>}
         ariaLabel="Take photo"
         icon={<Camera size={13} className="me-0 me-sm-1 align-text-bottom" />}
-        importance="primary"
+        importance="section-primary"
         className="inspection-take-photo-btn px-2 px-sm-2"
         onClick={onTakePhoto}
       />

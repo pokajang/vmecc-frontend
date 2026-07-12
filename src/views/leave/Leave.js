@@ -5,7 +5,6 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
 import ModulePageHeader from 'src/components/ModulePageHeader'
-import ModuleNavTabs from 'src/components/ModuleNavTabs'
 import { isHolidayGuidanceLeaveEnabledForUser } from 'src/config/featureFlags'
 import { hasPermission } from 'src/utils/authz'
 import useTableRows from 'src/hooks/useTableRows'
@@ -362,12 +361,13 @@ const Leave = () => {
       <ModulePageHeader
         title="Leave"
         subtitle="Track leave balances, review requests, and submit new leave applications."
+        mobileSubtitle="Balances, requests, and new applications."
         actions={
           activeSection === 'new-leave' ? null : (
             <div data-testid="leave-new-action">
               <CreateActionButton
                 label="Apply Leave"
-                importance="primary"
+                importance="page-primary"
                 onClick={() => runWithDiscardGuard(startNewLeave)}
                 icon={<Plus size={15} className="me-1 align-text-bottom" />}
               />
@@ -411,23 +411,6 @@ const Leave = () => {
         onClose={closeDeleteConfirmModal}
         onConfirm={confirmDeleteLeave}
       />
-      <ModuleNavTabs
-        items={[
-          {
-            key: 'records',
-            label: 'Leave records',
-            active: activeSection === 'leave-records' || activeSection === 'leave-detail',
-            onClick: () => runWithDiscardGuard(() => navigate('/leave')),
-          },
-          {
-            key: 'apply',
-            label: 'Apply leave',
-            active: activeSection === 'new-leave',
-            onClick: () => runWithDiscardGuard(startNewLeave),
-          },
-        ]}
-      />
-
       {activeSection === 'leave-records' && (
         <div data-testid="leave-records">
           <LeaveRecordsSection

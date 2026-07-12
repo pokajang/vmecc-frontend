@@ -465,7 +465,10 @@ const ExpenseOtherClaimForm = ({
           )}
 
           <div className="px-1 small text-body-secondary">{draftSyncSummary}</div>
-          <FormActionGroup leading={<BackButton onClick={handleBack} label="Back to claims" />}>
+          <FormActionGroup
+            leading={<BackButton onClick={handleBack} label="Back to claims" />}
+            mobileBehavior="in-flow"
+          >
             <CButton color="secondary" variant="outline" onClick={resetDraft}>
               Clear form
             </CButton>

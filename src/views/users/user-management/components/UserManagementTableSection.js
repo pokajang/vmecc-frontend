@@ -112,7 +112,8 @@ const UserManagementTableSection = ({
         <TableFilters
           searchValue={search}
           onSearchChange={onSearchChange}
-          searchPlaceholder="Search name or email"
+          searchLabel="Search users by name or email"
+          searchPlaceholder="Search users"
           rowClassName="flex-md-nowrap align-items-md-end"
           searchColMd={3}
           periodColMd={2}

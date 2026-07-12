@@ -30,4 +30,18 @@ describe('SalaryClaimsTabsNav', () => {
     fireEvent.click(screen.getByText('Claim Records'))
     expect(onSwitch).toHaveBeenCalledWith('claimRecords')
   })
+
+  it('exposes long salary settings through a labeled mobile selector', () => {
+    const onSwitch = vi.fn()
+    render(
+      <MemoryRouter>
+        <SalaryClaimsTabsNav activeTab="assignment" onSwitch={onSwitch} group="settings" />
+      </MemoryRouter>,
+    )
+
+    const selector = screen.getByLabelText('Payroll configuration section')
+    expect(selector.value).toBe('assignment')
+    fireEvent.change(selector, { target: { value: 'companyLegal' } })
+    expect(onSwitch).toHaveBeenCalledWith('companyLegal')
+  })
 })

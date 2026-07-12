@@ -55,7 +55,7 @@ export const PERMISSION_LABELS = {
   'staff.view': 'View Staff',
   'staff.manage': 'Manage Staff',
   'staff.leave.manage': 'Leave Management',
-  'staff.salary.manage': 'Salary & Claims',
+  'staff.salary.manage': 'Payroll Records',
   'staff.salary.pay': 'Salary Payment Actions',
   'staff.overtime.manage': 'Overtime Management',
   'reports.manage': 'Reports Management',

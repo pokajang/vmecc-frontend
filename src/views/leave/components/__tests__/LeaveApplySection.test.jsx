@@ -81,7 +81,7 @@ const baseProps = {
 }
 
 describe('LeaveApplySection', () => {
-  it('renders top Back and thumb action group in consistent order', () => {
+  it('renders top Back and in-flow action group in consistent order', () => {
     render(
       <MemoryRouter>
         <LeaveApplySection {...baseProps} />
@@ -91,7 +91,8 @@ describe('LeaveApplySection', () => {
     expect(screen.getByRole('button', { name: 'Back' })).toBeTruthy()
     const actionBar = document.querySelector('.action-row-thumb')
     expect(actionBar).toBeTruthy()
-    expect(document.querySelector('.action-row-thumb-spacer.d-md-none')).toBeTruthy()
+    expect(actionBar.className).toContain('action-row-thumb--in-flow')
+    expect(document.querySelector('.action-row-thumb-spacer')).toBeNull()
 
     const actionButtons = within(actionBar).getAllByRole('button')
     expect(actionButtons.map((button) => button.textContent)).toEqual([

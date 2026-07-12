@@ -1,6 +1,7 @@
 import React from 'react'
 import { CButton } from '@coreui/react'
 import { Bell, CalendarDays, Clock, FileText, Heart, User, Users, WalletCards } from 'lucide-react'
+import FormActionGroup from 'src/components/FormActionGroup'
 import IconOptionGrid from 'src/components/IconOptionGrid'
 
 export const LEAVE_TYPE_OPTIONS = [
@@ -72,7 +73,7 @@ const LeaveTypeSelection = ({ selectedType, onSelect, onContinue, onBack = () =>
         testIdPrefix="leave-type"
       />
 
-      <div className="action-row-thumb">
+      <FormActionGroup mobileBehavior="sticky" ariaLabel="Leave type actions">
         <CButton color="light" onClick={onBack}>
           Back
         </CButton>
@@ -84,8 +85,7 @@ const LeaveTypeSelection = ({ selectedType, onSelect, onContinue, onBack = () =>
         >
           Continue
         </CButton>
-      </div>
-      <div className="action-row-thumb-spacer d-md-none" />
+      </FormActionGroup>
     </div>
   )
 }

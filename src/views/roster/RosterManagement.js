@@ -181,7 +181,7 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
   return (
     <>
       <ModulePageHeader
-        title="Set Roster"
+        title="Roster Schedule"
         subtitle={
           scopeLabel
             ? `Manage team assignments for ${scopeLabel}.`
@@ -429,6 +429,7 @@ const RosterManagement = () => {
       <ModulePageHeader
         title="Roster Management"
         subtitle="Review published coverage and manage roster assignments by shift."
+        mobileSubtitle="Coverage and roster assignments."
       />
       <div data-testid="roster-management-nav">
         <RouteNavTabs
@@ -443,7 +444,7 @@ const RosterManagement = () => {
             },
             {
               key: 'schedule',
-              label: 'Set Roster',
+              label: 'Roster Schedule',
               to: 'schedule',
               match: 'schedule',
             },

@@ -32,6 +32,7 @@ import { createFeedbackReport, logoutRequest } from 'src/services/apiClient'
 import { getVisibleNavigationWithOptions } from 'src/utils/navigation'
 import { hasAnyPermission, hasPermission, isSystemAdministrator } from 'src/utils/authz'
 import { isModuleEnabled } from 'src/utils/modules'
+import { canLoadMessageThreads } from 'src/utils/messageAccess'
 import navigation from 'src/_nav'
 import { useGuardedNavigate } from 'src/contexts/NavigationGuardContext'
 import useHeaderVisibilityOptions from 'src/hooks/useHeaderVisibilityOptions'
@@ -55,7 +56,6 @@ const AppHeader = () => {
   const aiHelperOpen = useSelector((state) => state.aiHelperOpen)
   const authUser = useSelector((state) => state.authUser)
   const moduleActivation = useSelector((state) => state.moduleActivation)
-  const messagesEnabled = isModuleEnabled(moduleActivation, 'messages')
   const payrollEnabled = isModuleEnabled(moduleActivation, 'payroll.self_service')
   const overtimeEnabled = isModuleEnabled(moduleActivation, 'overtime.self_service')
   const rosterEnabled = isModuleEnabled(moduleActivation, 'roster')
@@ -63,7 +63,8 @@ const AppHeader = () => {
   const isDesktop = useMediaQuery('(min-width: 768px)')
   const { showNavInstallItem, openInstallExperience } = usePwaInstallPrompt()
 
-  const unreadCount = useMessageUnreadCount({ enabled: messagesEnabled })
+  const canLoadMessages = canLoadMessageThreads(authUser, moduleActivation)
+  const unreadCount = useMessageUnreadCount({ enabled: canLoadMessages })
   const onDuty = useOnDutyTeam({ enabled: rosterEnabled && canReadRosterStatus })
   const notifUnread = useWorkflowNotificationCounts()
 
@@ -178,6 +179,7 @@ const AppHeader = () => {
         authUser: null,
         authError: null,
         moduleActivation: {
+          hydrated: false,
           registry: [],
           configured: {},
           effective: {},
@@ -336,7 +338,7 @@ const AppHeader = () => {
         </CTooltip>
       </CNavItem>
 
-      {messagesEnabled && (
+      {canLoadMessages && (
         <CNavItem>
           <CTooltip content="Messages" placement="bottom" trigger={HEADER_TOOLTIP_TRIGGER}>
             <CNavLink as={NavLink} to="/messages" className="px-2 position-relative">

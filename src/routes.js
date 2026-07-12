@@ -294,7 +294,7 @@ const routes = [
   },
   {
     path: '/reporting-settings/:moduleKey',
-    name: 'Reporting Settings',
+    name: 'Reporting Workflow',
     element: ReportingWorkflowSettings,
   },
   {
@@ -331,10 +331,14 @@ const routes = [
     element: StaffLeaveManagementRedirect,
   },
   { path: '/staff/leave-management/leaves', name: 'All Leaves', element: LeaveManagement },
-  { path: '/staff/leave-management/set-leaves', name: 'Set Leaves', element: LeaveManagement },
+  {
+    path: '/staff/leave-management/set-leaves',
+    name: 'Leave Entitlements',
+    element: LeaveManagement,
+  },
   {
     path: '/staff/leave-management/set-holidays',
-    name: 'Set Holidays',
+    name: 'Holidays',
     element: LeaveManagement,
   },
   { path: '/staff/leave-management/overtime', name: 'Overtime Records', element: LeaveManagement },
@@ -359,7 +363,11 @@ const routes = [
     name: 'Overtime Records',
     element: OvertimeManagement,
   },
-  { path: '/staff/overtime-management/rules', name: 'Set OT Rules', element: OvertimeManagement },
+  {
+    path: '/staff/overtime-management/rules',
+    name: 'Overtime Rules',
+    element: OvertimeManagement,
+  },
   {
     path: '/staff/overtime-management/record/:overtimeRouteKey',
     name: 'Overtime Record Detail',
@@ -434,7 +442,7 @@ const routes = [
     element: LegacySalaryAssignmentViewRedirect,
     module: 'payroll.salary_settings',
   },
-  // Salary Settings — standalone module at /staff/set-salary
+  // Payroll Configuration — standalone module at the legacy /staff/set-salary path.
   {
     path: '/staff/set-salary',
     element: () => <Navigate to="/staff/set-salary/set-salary" replace />,
@@ -442,13 +450,13 @@ const routes = [
   },
   {
     path: '/staff/set-salary/set-salary',
-    name: 'Set Salary',
+    name: 'Salary Assignments',
     element: SalaryClaimsManagement,
     module: 'payroll.salary_settings',
   },
   {
     path: '/staff/set-salary/set-ot-rate',
-    name: 'Set OT Rate',
+    name: 'Overtime Rates',
     element: SalaryClaimsManagement,
     module: 'payroll.salary_settings',
   },
@@ -460,7 +468,7 @@ const routes = [
   },
   {
     path: '/staff/set-salary/company-legal',
-    name: 'Company Legal Information',
+    name: 'Company Information',
     element: SalaryClaimsManagement,
     module: 'payroll.company_profile',
   },
@@ -519,7 +527,7 @@ const routes = [
   { path: '/settings/modules', name: 'Module Activation', element: Settings },
   {
     path: '/settings/inspection-workflow',
-    name: 'Reporting Settings',
+    name: 'Reporting Workflow',
     element: () => <Navigate to="/reporting-settings/inspection" replace />,
   },
   {

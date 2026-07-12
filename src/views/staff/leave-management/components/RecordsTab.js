@@ -59,7 +59,8 @@ const RecordsTab = ({
         <TableFilters
           searchValue={search}
           onSearchChange={setSearch}
-          searchPlaceholder="Search leave ID, employee, leave type, status, or team"
+          searchLabel="Search leave records by ID, employee, leave type, status, or team"
+          searchPlaceholder="Search leave records"
           periodValue={period}
           onPeriodChange={setPeriod}
           filters={[

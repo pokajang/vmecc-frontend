@@ -255,6 +255,7 @@ const UserManagement = () => {
       <ModulePageHeader
         title="User Management"
         subtitle="Manage user accounts, access status, roles, sessions, and exports."
+        mobileSubtitle="Accounts, roles, access, and exports."
         actions={
           <UserManagementHeader
             actionsOnly

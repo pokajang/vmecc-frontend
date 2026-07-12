@@ -302,7 +302,8 @@ const ClaimRecordsTab = ({ vm, handlers }) => {
           <TableFilters
             searchValue={search}
             onSearchChange={setSearch}
-            searchPlaceholder="Search claim ID, employee, claim type, status, period"
+            searchLabel="Search claims by ID, employee, type, status, or period"
+            searchPlaceholder="Search claim records"
             periodValue={period}
             onPeriodChange={setPeriod}
             filters={[

@@ -25,7 +25,7 @@ const InspectionWorkflowSettings = () => {
   return (
     <CContainer fluid>
       <ModulePageHeader
-        title="Reporting Settings"
+        title="Reporting Workflow"
         subtitle="Configure inspection workflow routing and approval policy."
       />
       <InspectionWorkflowRules />

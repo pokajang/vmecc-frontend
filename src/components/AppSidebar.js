@@ -10,7 +10,7 @@ import logoSvg from 'src/assets/brand/logo.svg'
 import useMessageUnreadCount from 'src/hooks/useMessageUnreadCount'
 import usePwaInstallPrompt from 'src/hooks/usePwaInstallPrompt'
 import { getVisibleNavigationWithOptions } from 'src/utils/navigation'
-import { isModuleEnabled } from 'src/utils/modules'
+import { canLoadMessageThreads } from 'src/utils/messageAccess'
 import { PWA_INSTALL_ACTION } from 'src/constants/pwa'
 
 // sidebar nav config
@@ -22,8 +22,8 @@ const AppSidebar = () => {
   const aiHelperOpen = useSelector((state) => state.aiHelperOpen)
   const authUser = useSelector((state) => state.authUser)
   const moduleActivation = useSelector((state) => state.moduleActivation)
-  const messagesEnabled = isModuleEnabled(moduleActivation, 'messages')
-  const unreadCount = useMessageUnreadCount({ enabled: messagesEnabled })
+  const canLoadMessages = canLoadMessageThreads(authUser, moduleActivation)
+  const unreadCount = useMessageUnreadCount({ enabled: canLoadMessages })
   const { showNavInstallItem, openInstallExperience } = usePwaInstallPrompt()
 
   const navigationWithBadge = useMemo(

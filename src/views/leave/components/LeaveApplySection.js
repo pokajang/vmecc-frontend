@@ -407,15 +407,13 @@ const LeaveApplySection = ({
             </CCol>
           </CRow>
         </div>
-        <FormActionGroup className="mt-4" data-testid="leave-draft-panel">
+        <FormActionGroup className="mt-4" data-testid="leave-draft-panel" mobileBehavior="in-flow">
           <CButton color="secondary" variant="outline" type="button" onClick={onClearForm}>
             Clear form
           </CButton>
-          <span data-testid="leave-draft-action">
-            <CButton color="light" type="button" onClick={onDraft}>
-              Save draft
-            </CButton>
-          </span>
+          <CButton color="light" type="button" onClick={onDraft} data-testid="leave-draft-action">
+            Save draft
+          </CButton>
           <CButton
             color="primary"
             type="submit"

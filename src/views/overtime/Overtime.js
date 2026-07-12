@@ -13,7 +13,6 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
 import ModulePageHeader from 'src/components/ModulePageHeader'
-import ModuleNavTabs from 'src/components/ModuleNavTabs'
 import { useNavigationGuard } from 'src/contexts/NavigationGuardContext'
 import { isHolidayGuidanceOvertimeEnabledForUser } from 'src/config/featureFlags'
 import { hasPermission, isSystemAdministrator } from 'src/utils/authz'
@@ -590,12 +589,13 @@ const Overtime = () => {
       <ModulePageHeader
         title="Overtime"
         subtitle="Review overtime records, resume drafts, and submit new overtime requests."
+        mobileSubtitle="Records, drafts, and new requests."
         actions={
           activeSection === 'new-overtime' ? null : (
             <div data-testid="overtime-new-action">
               <CreateActionButton
                 label="Apply Overtime"
-                importance="primary"
+                importance="page-primary"
                 onClick={() => runWithDiscardGuard(startNewOvertime)}
                 icon={<Plus size={15} className="me-1 align-text-bottom" />}
               />
@@ -659,23 +659,6 @@ const Overtime = () => {
         onClose={closeDeleteConfirmModal}
         onConfirm={confirmDeleteOvertime}
       />
-      <ModuleNavTabs
-        items={[
-          {
-            key: 'records',
-            label: 'Overtime records',
-            active: activeSection === 'overtime-records' || activeSection === 'overtime-detail',
-            onClick: () => runWithDiscardGuard(() => navigate('/overtime')),
-          },
-          {
-            key: 'apply',
-            label: 'Apply overtime',
-            active: activeSection === 'new-overtime',
-            onClick: () => runWithDiscardGuard(startNewOvertime),
-          },
-        ]}
-      />
-
       {activeSection === 'overtime-records' ? (
         <div data-testid="overtime-records">
           <OvertimeRecordsSection

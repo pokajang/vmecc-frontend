@@ -28,7 +28,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       >
         <button
           aria-label="Take photo"
-          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -61,7 +61,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -295,7 +295,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
   >
     <button
       aria-label="Add report evidence (1)"
-      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <svg
@@ -438,7 +438,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       >
         <button
           aria-label="Take photo"
-          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -471,7 +471,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -689,7 +689,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
   >
     <button
       aria-label="Add report evidence (1)"
-      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <svg
@@ -832,7 +832,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       >
         <button
           aria-label="Take photo"
-          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -865,7 +865,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -1083,7 +1083,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
   >
     <button
       aria-label="Add optional remarks"
-      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <svg
@@ -1114,7 +1114,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
   >
     <button
       aria-label="Add report evidence (1)"
-      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <svg
@@ -1239,7 +1239,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       </div>
       <button
         aria-label="Add finding"
-        class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
+        class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
         type="button"
       >
         <svg
@@ -1287,7 +1287,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       >
         <button
           aria-label="Take photo"
-          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -1320,7 +1320,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -1527,7 +1527,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       </div>
       <button
         aria-label="Add finding"
-        class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
+        class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
         type="button"
       >
         <svg
@@ -1564,7 +1564,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
   >
     <button
       aria-label="Add report evidence (1)"
-      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <svg
@@ -1679,7 +1679,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       </div>
       <button
         aria-label="Add finding"
-        class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
+        class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
         type="button"
       >
         <svg
@@ -1727,7 +1727,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       >
         <button
           aria-label="Take photo"
-          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -1760,7 +1760,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -1977,7 +1977,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       </div>
       <button
         aria-label="Add finding"
-        class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
+        class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
         type="button"
       >
         <svg
@@ -2014,7 +2014,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
   >
     <button
       aria-label="Add report evidence (1)"
-      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <svg
@@ -2121,7 +2121,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       >
         <button
           aria-label="Take photo"
-          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -2154,7 +2154,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -2372,7 +2372,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
   >
     <button
       aria-label="Add report evidence (1)"
-      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <svg
@@ -2499,7 +2499,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       >
         <button
           aria-label="Take photo"
-          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -2532,7 +2532,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -2750,7 +2750,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
   >
     <button
       aria-label="Add report evidence (1)"
-      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <svg
@@ -2877,7 +2877,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       >
         <button
           aria-label="Take photo"
-          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -2910,7 +2910,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -3128,7 +3128,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
   >
     <button
       aria-label="Add report evidence (1)"
-      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <svg
@@ -3287,7 +3287,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       >
         <button
           aria-label="Take photo"
-          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -3320,7 +3320,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -3470,7 +3470,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
   >
     <button
       aria-label="Add report evidence"
-      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <svg
@@ -3593,7 +3593,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       >
         <button
           aria-label="Take photo"
-          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -3626,7 +3626,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -3760,7 +3760,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
   >
     <button
       aria-label="Add report evidence"
-      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <svg
@@ -3883,7 +3883,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       >
         <button
           aria-label="Take photo"
-          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -3916,7 +3916,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -4050,7 +4050,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
   >
     <button
       aria-label="Add optional remarks"
-      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <svg
@@ -4081,7 +4081,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
   >
     <button
       aria-label="Add report evidence"
-      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <svg
@@ -4186,7 +4186,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       </div>
       <button
         aria-label="Add finding"
-        class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
+        class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
         type="button"
       >
         <svg
@@ -4234,7 +4234,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       >
         <button
           aria-label="Take photo"
-          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -4267,7 +4267,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -4410,7 +4410,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       </div>
       <button
         aria-label="Add finding"
-        class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
+        class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
         type="button"
       >
         <svg
@@ -4447,7 +4447,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
   >
     <button
       aria-label="Add report evidence"
-      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <svg
@@ -4562,7 +4562,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       </div>
       <button
         aria-label="Add finding"
-        class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
+        class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
         type="button"
       >
         <svg
@@ -4610,7 +4610,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       >
         <button
           aria-label="Take photo"
-          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -4643,7 +4643,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -4796,7 +4796,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       </div>
       <button
         aria-label="Add finding"
-        class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
+        class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
         type="button"
       >
         <svg
@@ -4833,7 +4833,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
   >
     <button
       aria-label="Add report evidence"
-      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <svg
@@ -4940,7 +4940,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       >
         <button
           aria-label="Take photo"
-          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -4973,7 +4973,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -5107,7 +5107,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
   >
     <button
       aria-label="Add report evidence"
-      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <svg
@@ -5214,7 +5214,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       >
         <button
           aria-label="Take photo"
-          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -5247,7 +5247,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -5381,7 +5381,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
   >
     <button
       aria-label="Add report evidence"
-      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <svg
@@ -5488,7 +5488,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       >
         <button
           aria-label="Take photo"
-          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -5521,7 +5521,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -5655,7 +5655,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
   >
     <button
       aria-label="Add report evidence"
-      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <svg
@@ -5762,7 +5762,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
       >
         <button
           aria-label="Take photo"
-          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -5795,7 +5795,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -5945,7 +5945,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
   >
     <button
       aria-label="Add report evidence"
-      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <svg
@@ -6180,7 +6180,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
       >
         <button
           aria-label="Take photo"
-          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -6213,7 +6213,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -6347,7 +6347,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
   >
     <button
       aria-label="Add report evidence"
-      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <svg
@@ -6454,7 +6454,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
       >
         <button
           aria-label="Take photo"
-          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -6487,7 +6487,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -6621,7 +6621,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
   >
     <button
       aria-label="Add report evidence"
-      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <svg
@@ -6728,7 +6728,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
       >
         <button
           aria-label="Take photo"
-          class="btn btn-primary btn-sm d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -6761,7 +6761,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
           type="button"
         >
           <svg
@@ -6895,7 +6895,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
   >
     <button
       aria-label="Add report evidence"
-      class="btn btn-sm text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <svg

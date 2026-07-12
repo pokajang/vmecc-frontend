@@ -18,12 +18,6 @@ const PayrollNav = ({ activeSection, onNavigate }) => (
         to: '/payroll/payslips',
         match: 'payslips',
       },
-      {
-        key: 'new-claim',
-        label: 'Apply Claim',
-        to: '/payroll/claims/new',
-        match: (section) => section.startsWith('new-claim'),
-      },
     ]}
   />
 )

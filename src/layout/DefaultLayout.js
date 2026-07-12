@@ -5,7 +5,6 @@ import AiHelperPanel from 'src/components/ai-helper/AiHelperPanel'
 import AppUpdateBanner from 'src/components/AppUpdateBanner'
 import MaintenanceGraceBanner from 'src/components/MaintenanceGraceBanner'
 import TrtProfileCompletionOnboarding from 'src/components/onboarding/TrtProfileCompletionOnboarding'
-import PwaInstallBanner from 'src/components/PwaInstallBanner'
 import { PwaInstallProvider } from 'src/hooks/usePwaInstallPrompt'
 
 const DefaultLayout = () => {
@@ -21,7 +20,6 @@ const DefaultLayout = () => {
           <AppHeader />
           <TrtProfileCompletionOnboarding />
           <MaintenanceGraceBanner />
-          <PwaInstallBanner />
           <AppUpdateBanner />
           <div className="body flex-grow-1 d-flex flex-column" style={{ minHeight: 0 }}>
             <AppContent />

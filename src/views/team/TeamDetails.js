@@ -109,11 +109,12 @@ const TeamDetails = () => {
       <ModulePageHeader
         title="Team Directory"
         subtitle="Review operational teams, members, and current roster coverage."
+        mobileSubtitle="Teams, members, and roster coverage."
         actions={
           canManageTeams ? (
             <CreateActionButton
               label="Add Team"
-              importance="primary"
+              importance="page-primary"
               onClick={() => setShowCreate(true)}
               data-testid="team-directory-create-action"
             />
