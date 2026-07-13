@@ -85,6 +85,8 @@ export const createTruckDetailContextFields =
       text(form.mainLocation || record.mainLocation || record.location)
     const compartment = text(form.subLocation || record.subLocation || record.sub_location)
     const shift = text(form.frtShift || record.frtShift || record.frt_shift)
+    const truckReference =
+      form.frtTruckReference || record.frtTruckReference || record.frt_truck_reference || {}
 
     appendField(
       fields,
@@ -94,5 +96,9 @@ export const createTruckDetailContextFields =
     )
     appendField(fields, 'compartment', compartmentLabel, compartment)
     appendField(fields, 'shift', 'Shift', shift)
+    appendField(fields, 'plate-number', 'Plate No.', truckReference.plateNo || truck)
+    appendField(fields, 'road-tax-expiry', 'Road Tax Expiry', truckReference.roadTaxExpiry)
+    appendField(fields, 'insurance-expiry', 'Insurance Expiry', truckReference.insuranceExpiry)
+    appendField(fields, 'puspakom-expiry', 'Puspakom Expiry', truckReference.puspakomExpiry)
     return fields
   }

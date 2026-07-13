@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { apiRequest } from 'src/services/apiClient'
 import {
   deleteReportRecord,
+  persistReportRecord,
   persistReportRecords,
   runReportApiBackfillMigration,
 } from '../reportApi'
@@ -84,6 +85,82 @@ describe('reportApi sync hardening', () => {
     expect(apiRequest).toHaveBeenCalledWith('/reports/report-erco-260429-fbac5462a3', {
       method: 'DELETE',
     })
+  })
+
+  it('creates one ERCO report without fetching, updating, or deleting siblings', async () => {
+    apiRequest.mockResolvedValue({
+      data: {
+        id: 'erco-new',
+        displayId: 'ERCO-NEW',
+        reportType: 'erco',
+        status: 'Submitted',
+        version: 1,
+      },
+    })
+
+    const saved = await persistReportRecord(
+      'u-1',
+      {
+        id: 'erco-new',
+        displayId: 'ERCO-NEW',
+        reportType: 'erco',
+        status: 'Submitted',
+        submissionKey: 'erco-submit-stable',
+        incidentType: 'Fire',
+        location: 'Zone 1',
+        timeline: [{ action: 'Submitted' }],
+        workflowStage: 'review',
+      },
+      { reportTypeSlug: 'erco', submissionKey: 'erco-submit-stable' },
+    )
+
+    expect(saved).toEqual(expect.objectContaining({ id: 'erco-new', version: 1 }))
+    expect(apiRequest).toHaveBeenCalledTimes(1)
+    expect(apiRequest).toHaveBeenCalledWith('/reports', {
+      method: 'POST',
+      body: expect.any(String),
+    })
+    const body = JSON.parse(apiRequest.mock.calls[0][1].body)
+    expect(body.submission_key).toBe('erco-submit-stable')
+    expect(body.payload).toEqual(
+      expect.objectContaining({ incidentType: 'Fire', location: 'Zone 1' }),
+    )
+    expect(body.payload).not.toHaveProperty('timeline')
+    expect(body.payload).not.toHaveProperty('workflowStage')
+    expect(body.payload).not.toHaveProperty('submissionKey')
+  })
+
+  it('updates only the requested ERCO report with its expected server version', async () => {
+    apiRequest.mockResolvedValue({
+      data: {
+        id: 'erco-1',
+        displayId: 'ERCO-001',
+        reportType: 'erco',
+        status: 'Submitted',
+        version: 4,
+      },
+    })
+
+    await persistReportRecord(
+      'u-1',
+      {
+        id: 'erco-1',
+        displayId: 'ERCO-001',
+        reportType: 'erco',
+        status: 'Submitted',
+        summary: 'Updated summary',
+      },
+      { reportTypeSlug: 'erco', isUpdate: true, expectedVersion: 3 },
+    )
+
+    expect(apiRequest).toHaveBeenCalledTimes(1)
+    expect(apiRequest).toHaveBeenCalledWith('/reports/erco-1', {
+      method: 'PUT',
+      body: expect.any(String),
+    })
+    expect(JSON.parse(apiRequest.mock.calls[0][1].body)).toEqual(
+      expect.objectContaining({ version: 3 }),
+    )
   })
 
   it('scopes active report persistence away from unrelated local fallback rows', async () => {

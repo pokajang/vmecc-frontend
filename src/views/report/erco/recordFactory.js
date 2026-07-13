@@ -29,6 +29,8 @@ export const buildErcoRecord = ({
     id,
     displayId,
     reportType: reportTypeSlug || 'erco',
+    schemaVersion: 1,
+    submissionKey: String(form?.submissionKey || '').trim(),
     status: 'Submitted',
     ownerUserId: String(user?.id || '').trim(),
     submittedAt: nowIso,

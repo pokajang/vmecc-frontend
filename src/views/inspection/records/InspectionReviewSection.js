@@ -3,7 +3,10 @@ import { CAlert, CBadge, CButton, CRow } from '@coreui/react'
 import FormActionGroup from 'src/components/FormActionGroup'
 import { DetailField } from 'src/components/report-workflow/ReportViewComponents'
 import { getInspectionTypeDefinition } from '../app/inspectionTypeRegistry'
-import { formatTimestamp } from '../domain/utils/inspectionSharedUtils'
+import {
+  collectNestedInspectionPhotoGroups,
+  formatTimestamp,
+} from '../domain/utils/inspectionSharedUtils'
 import { stripInspectionContext } from '../domain/utils/typeOptionUtils'
 import {
   InspectionGeneralEvidenceCard,
@@ -194,6 +197,11 @@ const InspectionReviewSection = ({
   const mobileSubmitLabel =
     submitLabel.length > 18 ? (isUpdateMode ? 'Update' : 'Submit') : submitLabel
   const isSubmissionReview = Boolean(reviewActions?.onConfirm)
+  const nestedEvidenceGroups = collectNestedInspectionPhotoGroups(form)
+  const nestedEvidencePhotoCount = nestedEvidenceGroups.reduce(
+    (count, group) => count + group.photos.length,
+    0,
+  )
   const detailFieldWidth = isSubmissionReview ? 6 : 3
 
   const editButton = (
@@ -352,16 +360,36 @@ const InspectionReviewSection = ({
         </ReviewSectionBlock>
       ) : null}
 
-      <ReviewSectionBlock title={INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle}>
-        <InspectionGeneralEvidenceCard
-          readOnly
-          title={INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle}
-          photos={form.photos}
-          remarks={form.reportRemarks}
-          emptyMessage={INSPECTION_REPORT_EVIDENCE_COPY.emptyPhotosMessage}
-          remarksLabel={INSPECTION_REPORT_EVIDENCE_COPY.remarksLabel}
-        />
-      </ReviewSectionBlock>
+      {(Array.isArray(form.photos) && form.photos.length > 0) || text(form.reportRemarks) ? (
+        <ReviewSectionBlock title={INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle}>
+          <InspectionGeneralEvidenceCard
+            readOnly
+            title={INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle}
+            photos={form.photos}
+            remarks={form.reportRemarks}
+            emptyMessage={INSPECTION_REPORT_EVIDENCE_COPY.emptyPhotosMessage}
+            remarksLabel={INSPECTION_REPORT_EVIDENCE_COPY.remarksLabel}
+          />
+        </ReviewSectionBlock>
+      ) : null}
+
+      {nestedEvidencePhotoCount > 0 ? (
+        <ReviewSectionBlock title={`Inspection Evidence (${nestedEvidencePhotoCount})`}>
+          <div className="d-grid gap-3">
+            {nestedEvidenceGroups.map((group) => (
+              <InspectionGeneralEvidenceCard
+                key={group.key}
+                readOnly
+                title={group.title}
+                photos={group.photos}
+                remarks=""
+                emptyMessage="No item evidence photos were attached."
+                remarksLabel={INSPECTION_REPORT_EVIDENCE_COPY.remarksLabel}
+              />
+            ))}
+          </div>
+        </ReviewSectionBlock>
+      ) : null}
 
       {renderReviewActions('justify-content-end d-none d-md-flex')}
       {renderReviewActions('inspection-review-inline-actions d-md-none', true)}

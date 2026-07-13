@@ -1,7 +1,9 @@
-import { uid } from '../utils'
+import { createReportSubmissionKey, uid } from '../utils'
 import { getLocalDateInputValue } from 'src/utils/localDate'
 
 export const defaultFitnessTestForm = () => ({
+  schemaVersion: 1,
+  submissionKey: createReportSubmissionKey('fitness-test'),
   reportDate: getLocalDateInputValue(),
   reportTime: '',
   weather: 'Routine',

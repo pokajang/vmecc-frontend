@@ -1,4 +1,4 @@
-import { uid } from '../utils'
+import { createReportSubmissionKey, uid } from '../utils'
 
 const getCurrentTimeValue = () => {
   const now = new Date()
@@ -10,6 +10,8 @@ const getCurrentTimeValue = () => {
 export const defaultErcoForm = () => {
   const currentTime = getCurrentTimeValue()
   return {
+    schemaVersion: 1,
+    submissionKey: createReportSubmissionKey('erco'),
     initialIncidentTime: currentTime,
     incidentDate: '',
     incidentTime: currentTime,

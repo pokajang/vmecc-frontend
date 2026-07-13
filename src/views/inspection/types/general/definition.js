@@ -10,6 +10,7 @@ import {
 import { createZoneLocationDetailContextFields } from '../detailConfigHelpers'
 import { GeneralReadOnlySection } from './section'
 import { INSPECTION_REPORT_EVIDENCE_COPY } from '../../inspectionReportEvidenceCopy'
+import { buildGeneralDetailFindingItems, renderGeneralDetailFindingContent } from './detail'
 
 const generalInspectionDefinition = {
   key: 'general-inspection',
@@ -38,8 +39,10 @@ const generalInspectionDefinition = {
     typeLabel: 'General Inspection',
     inspectionType: GENERAL_INSPECTION_TYPE,
   }),
-  detailFindingsMode: 'block',
+  detailFindingsMode: 'itemized',
   detailFindingsTitle: 'Findings',
+  buildDetailFindingItems: buildGeneralDetailFindingItems,
+  renderDetailFindingContent: renderGeneralDetailFindingContent,
 }
 
 export default generalInspectionDefinition

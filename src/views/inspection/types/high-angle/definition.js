@@ -14,6 +14,7 @@ import { createLocationDetailContextFields } from '../detailConfigHelpers'
 import { buildMainLocationContinuationOptions, CONTINUATION_TOKENS } from '../continuationHelpers'
 import { HighAngleEditSection, HighAngleReadOnlySection } from './section'
 import { INSPECTION_REPORT_EVIDENCE_COPY } from '../../inspectionReportEvidenceCopy'
+import { buildHighAngleDetailFindingItems, renderHighAngleDetailFindingContent } from './detail'
 
 const highAngleInspectionDefinition = {
   key: 'high-angle-rescue-equipment-inspection',
@@ -63,8 +64,10 @@ const highAngleInspectionDefinition = {
     primaryLabel: 'Main Location',
     secondaryLabel: 'Compartment',
   }),
-  detailFindingsMode: 'block',
+  detailFindingsMode: 'itemized',
   detailFindingsTitle: 'Equipment',
+  buildDetailFindingItems: buildHighAngleDetailFindingItems,
+  renderDetailFindingContent: renderHighAngleDetailFindingContent,
 }
 
 export default highAngleInspectionDefinition

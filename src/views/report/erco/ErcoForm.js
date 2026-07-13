@@ -73,6 +73,7 @@ const ErcoForm = ({
   const originalSeedRef = useRef(null)
   const draftSeedRef = useRef(null)
   const activeDraftIdRef = useRef(String(activeDraftId || '').trim())
+  const activeDraftVersionRef = useRef(0)
   const shouldShowEditBanner =
     Boolean(editingRecord) &&
     showEditSourceBanner &&
@@ -146,7 +147,10 @@ const ErcoForm = ({
     loadDraft: ({ userId }) => {
       const id = String(activeDraftId || '').trim()
       if (reportTypeSlug === 'erco' && id) {
-        return loadErcoDraft(userId, id).then((row) => row?.payload || null)
+        return loadErcoDraft(userId, id).then((row) => {
+          activeDraftVersionRef.current = Number(row?.version || 0) || 0
+          return row?.payload || null
+        })
       }
       return loadReportDraft(userId, reportTypeSlug)
     },
@@ -340,19 +344,12 @@ const ErcoForm = ({
       if (reportTypeSlug === 'erco') {
         const title = `${form?.incidentType || 'ERCO'} draft`
         if (activeDraftIdRef.current) {
-          try {
-            saved = await updateErcoDraft(user?.id, activeDraftIdRef.current, draftPayload, {
-              title,
-              originMode: editingRecord ? 'edit' : 'new',
-              sourceReportUid: editingRecord?.id || '',
-            })
-          } catch {
-            saved = await createErcoDraft(user?.id, draftPayload, {
-              title,
-              originMode: editingRecord ? 'edit' : 'new',
-              sourceReportUid: editingRecord?.id || '',
-            })
-          }
+          saved = await updateErcoDraft(user?.id, activeDraftIdRef.current, draftPayload, {
+            title,
+            originMode: editingRecord ? 'edit' : 'new',
+            sourceReportUid: editingRecord?.id || '',
+            baseVersion: activeDraftVersionRef.current,
+          })
         } else {
           saved = await createErcoDraft(user?.id, draftPayload, {
             title,
@@ -363,6 +360,7 @@ const ErcoForm = ({
 
         if (saved?.draftId) {
           activeDraftIdRef.current = saved.draftId
+          activeDraftVersionRef.current = Number(saved?.version || 0) || 0
           const query = new URLSearchParams(location.search)
           query.set('draft', saved.draftId)
           if (editingRecord?.id) query.set('edit', String(editingRecord.id))
@@ -379,7 +377,7 @@ const ErcoForm = ({
     if (!saved) {
       setDraftDirtyStatus('')
       setDraftStatus('Draft save failed. Retry required.')
-      pushToast('Unable to save draft in browser storage. Please try again.', {
+      pushToast('Unable to save the draft to the server. Please retry after reconnecting.', {
         title: 'Draft save failed',
         color: 'danger',
       })

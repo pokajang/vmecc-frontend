@@ -1,5 +1,5 @@
 import { getLocalDateInputValue } from 'src/utils/localDate'
-import { uid } from '../utils'
+import { createReportSubmissionKey, uid } from '../utils'
 
 export const DRILL_FORM_SCHEMA_VERSION = 2
 
@@ -117,6 +117,7 @@ const normalizeChronology = (rows) => {
 
 export const createDefaultDrillForm = () => ({
   schemaVersion: DRILL_FORM_SCHEMA_VERSION,
+  submissionKey: createReportSubmissionKey('drill'),
   reportDate: getLocalDateInputValue(),
   reportTime: '',
   reportIssuanceDate: '',
@@ -166,6 +167,7 @@ export const normalizeDrillForm = (input = {}) => {
 
   return {
     schemaVersion: DRILL_FORM_SCHEMA_VERSION,
+    submissionKey: text(source.submissionKey) || defaults.submissionKey,
     reportDate: String(source.reportDate ?? source.incidentDate ?? defaults.reportDate),
     reportTime: String(source.reportTime ?? source.incidentTime ?? ''),
     reportIssuanceDate: String(source.reportIssuanceDate ?? source.report_issuance_date ?? ''),

@@ -143,6 +143,7 @@ const buildDraftRow = ({ draft, reportTypeSlug, reportTypeLabel, actorName }) =>
     ...payload,
     id: `draft-${draftId || uid()}`,
     draftId,
+    version: Number(draft.version || 0) || 0,
     displayId: title,
     reportType: reportTypeSlug,
     recordKind: 'draft',

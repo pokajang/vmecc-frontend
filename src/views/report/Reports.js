@@ -137,6 +137,7 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
     setRowsToShow,
     visibleRows,
     clearFilters,
+    persistRecord,
     persistRecords,
     reloadRecords,
   } = useReportRecords({
@@ -229,9 +230,11 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
   } = useReportRouteActions({
     activeFormSlug,
     activeSection,
+    activeDraftRows,
     isFormDirty,
     location,
     navigate,
+    persistRecord,
     persistRecords,
     pushToast,
     queryDraftId,

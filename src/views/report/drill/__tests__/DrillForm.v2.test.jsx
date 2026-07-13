@@ -18,6 +18,10 @@ vi.mock('../../reportStorage', async () => {
     saveReportDraft: storageMocks.save,
     clearReportDraft: storageMocks.clear,
     loadReportDraft: storageMocks.load,
+    loadReportDraftRow: vi.fn(async () => {
+      const payload = await storageMocks.load()
+      return payload ? { draftId: 'drf_drill_test', version: 1, payload } : null
+    }),
   }
 })
 

@@ -14,6 +14,159 @@ export const dedupePhotos = (photos) => {
   })
 }
 
+const text = (value) => String(value || '').trim()
+
+const normalizeLocationRows = (rows = []) => {
+  const seen = new Set()
+  return (Array.isArray(rows) ? rows : [])
+    .map((row) => ({
+      zone: text(row?.zone),
+      mainLocation: text(row?.mainLocation || row?.main_location || row?.location),
+      subLocation: text(row?.subLocation || row?.sub_location),
+    }))
+    .filter((row) => row.zone || row.mainLocation || row.subLocation)
+    .filter((row) => {
+      const key = [row.zone, row.mainLocation, row.subLocation]
+        .map((value) => value.toLowerCase())
+        .join('\u0000')
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+    .sort((left, right) =>
+      [left.zone, left.mainLocation, left.subLocation]
+        .join('|')
+        .localeCompare([right.zone, right.mainLocation, right.subLocation].join('|'), undefined, {
+          numeric: true,
+          sensitivity: 'base',
+        }),
+    )
+}
+
+const zoneLabel = (zone) => {
+  const value = text(zone)
+  if (!value || /^zone\b/i.test(value)) return value
+  return `Zone ${value}`
+}
+
+export const summarizeInspectionLocations = (rows = []) => {
+  const locations = normalizeLocationRows(rows)
+  if (locations.length === 0) return ''
+  if (locations.length === 1) {
+    return [zoneLabel(locations[0].zone), locations[0].mainLocation, locations[0].subLocation]
+      .filter(Boolean)
+      .join(' > ')
+  }
+  const zones = [...new Set(locations.map((row) => row.zone.toLowerCase()).filter(Boolean))]
+  const areas = [...new Set(locations.map((row) => row.mainLocation.toLowerCase()).filter(Boolean))]
+  const allHaveZones = locations.every((row) => Boolean(row.zone))
+  const allHaveAreas = locations.every((row) => Boolean(row.mainLocation))
+  if (allHaveAreas && areas.length === 1) {
+    return (
+      [
+        allHaveZones && zones.length === 1 ? zoneLabel(locations[0].zone) : '',
+        locations[0].mainLocation,
+      ]
+        .filter(Boolean)
+        .join(' > ') + ` · ${locations.length} locations`
+    )
+  }
+  if (!allHaveAreas) return `${locations.length} inspection locations`
+  return `${locations.length} locations across ${areas.length} areas`
+}
+
+export const deriveInspectionLocations = (source = {}) => {
+  const persisted = source.inspectionLocations || source.inspection_locations
+  if (Array.isArray(persisted) && persisted.length > 0) return normalizeLocationRows(persisted)
+  return normalizeLocationRows(
+    source.fireExtinguisherChecks || source.fire_extinguisher_checks || [],
+  )
+}
+
+const photoIdentity = (photo = {}) =>
+  text(photo.mediaId || photo.media_id || photo.id || photo.photoId || photo.url || photo.fileName)
+
+const evidenceSourceLabel = (row = {}) =>
+  text(
+    row.idLocNo ||
+      row.id_loc_no ||
+      row.equipment ||
+      row.label ||
+      row.description ||
+      row.name ||
+      row.serialNo ||
+      row.serial_no,
+  )
+
+const evidenceFieldLabel = (key = '') => {
+  const label = text(key)
+    .replace(/_/g, ' ')
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/\s*photos?$/i, '')
+    .trim()
+  if (!label) return 'Additional evidence'
+  return label.replace(/\b\w/g, (letter) => letter.toUpperCase())
+}
+
+export const collectNestedInspectionPhotoGroups = (source = {}) => {
+  const groups = []
+  const seen = new Set()
+  const walk = (node, key = '', context = {}) => {
+    if (!node || typeof node !== 'object') return
+    if (Array.isArray(node)) {
+      if (/(^photos$|photos$|_photos$)/i.test(key)) {
+        const photos = dedupePhotos(node).filter((photo) => {
+          const identity = photoIdentity(photo)
+          if (!identity || seen.has(identity)) return false
+          seen.add(identity)
+          return true
+        })
+        if (photos.length > 0) {
+          const location = [
+            zoneLabel(context.zone),
+            text(context.mainLocation || context.main_location || context.location),
+            text(context.subLocation || context.sub_location),
+          ]
+            .filter(Boolean)
+            .join(' > ')
+          groups.push({
+            key: `${location}:${evidenceSourceLabel(context)}:${key}:${groups.length}`,
+            title: [location, evidenceSourceLabel(context), evidenceFieldLabel(key)]
+              .filter(Boolean)
+              .join(' · '),
+            photos,
+          })
+        }
+        return
+      }
+      node.forEach((child) => walk(child, '', child && typeof child === 'object' ? child : context))
+      return
+    }
+    Object.entries(node).forEach(([childKey, child]) => {
+      if (childKey === 'photos' && node === source) return
+      walk(child, childKey, node)
+    })
+  }
+  walk(source)
+  return groups
+}
+
+export const collectNestedInspectionPhotos = (source = {}) =>
+  collectNestedInspectionPhotoGroups(source).flatMap((group) => group.photos)
+
+export const countInspectionEvidencePhotos = (source = {}) => {
+  const seen = new Set()
+  return [
+    ...(Array.isArray(source.photos) ? source.photos : []),
+    ...collectNestedInspectionPhotos(source),
+  ].filter((photo) => {
+    const identity = photoIdentity(photo)
+    if (!identity || seen.has(identity)) return false
+    seen.add(identity)
+    return true
+  }).length
+}
+
 export const normalizeInspectionTypeSlug = (value) =>
   String(value || '')
     .trim()
@@ -164,12 +317,14 @@ export const normalizeReportRecord = (row) => {
     : Array.isArray(merged.location_ids)
       ? merged.location_ids
       : [mainLocationId, subLocationId].filter(Boolean)
+  const inspectionLocations = deriveInspectionLocations(merged)
   const location =
     rawLocation ||
     [mainLocation, subLocation]
       .map((item) => String(item || '').trim())
       .filter(Boolean)
-      .join(' > ')
+      .join(' > ') ||
+    summarizeInspectionLocations(inspectionLocations)
   const hydraulicChecks = Array.isArray(merged.hydraulicChecks)
     ? merged.hydraulicChecks
     : Array.isArray(merged.hydraulic_checks)
@@ -197,6 +352,10 @@ export const normalizeReportRecord = (row) => {
     subLocationId,
     locationPath,
     locationIds,
+    inspectionLocations,
+    evidencePhotoCount:
+      Number(merged.evidencePhotoCount || merged.evidence_photo_count || 0) ||
+      countInspectionEvidencePhotos(merged),
     chronology: Array.isArray(merged.chronology) ? merged.chronology : [],
     timeline: Array.isArray(merged.timeline) ? merged.timeline : [],
     photos: Array.isArray(merged.photos) ? merged.photos : [],

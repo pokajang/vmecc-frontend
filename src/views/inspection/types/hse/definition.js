@@ -12,6 +12,7 @@ import {
 import { createZoneLocationDetailContextFields } from '../detailConfigHelpers'
 import { HseEditSection, HseReadOnlySection } from './section'
 import { INSPECTION_REPORT_EVIDENCE_COPY } from '../../inspectionReportEvidenceCopy'
+import { buildHseDetailFindingItems, renderHseDetailFindingContent } from './detail'
 
 const hseInspectionDefinition = {
   key: 'health-safety-environment-inspection',
@@ -44,8 +45,10 @@ const hseInspectionDefinition = {
     typeLabel: 'Health Safety Environment',
     inspectionType: HSE_INSPECTION_TYPE,
   }),
-  detailFindingsMode: 'block',
+  detailFindingsMode: 'itemized',
   detailFindingsTitle: 'HSE Observation',
+  buildDetailFindingItems: buildHseDetailFindingItems,
+  renderDetailFindingContent: renderHseDetailFindingContent,
 }
 
 export default hseInspectionDefinition

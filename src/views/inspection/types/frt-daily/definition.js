@@ -16,6 +16,7 @@ import { createTruckDetailContextFields } from '../detailConfigHelpers'
 import { buildSubLocationContinuationOptions, CONTINUATION_TOKENS } from '../continuationHelpers'
 import { FrtDailyEditSection, FrtDailyReadOnlySection } from './section'
 import { INSPECTION_REPORT_EVIDENCE_COPY } from '../../inspectionReportEvidenceCopy'
+import { buildFrtDetailFindingItems, renderFrtDetailFindingContent } from './detail'
 
 const frtDailyInspectionDefinition = {
   key: 'frt-daily-inspection',
@@ -85,8 +86,10 @@ const frtDailyInspectionDefinition = {
     typeLabel: 'Fire Truck Daily Readiness',
     inspectionType: FRT_DAILY_INSPECTION_TYPE,
   }),
-  detailFindingsMode: 'block',
+  detailFindingsMode: 'itemized',
   detailFindingsTitle: 'Truck Readiness',
+  buildDetailFindingItems: buildFrtDetailFindingItems,
+  renderDetailFindingContent: renderFrtDetailFindingContent,
 }
 
 export default frtDailyInspectionDefinition

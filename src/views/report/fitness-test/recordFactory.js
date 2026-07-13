@@ -14,6 +14,8 @@ export const buildFitnessTestRecord = ({
     id,
     displayId,
     reportType: reportTypeSlug || 'fitness-test',
+    schemaVersion: 1,
+    submissionKey: String(form?.submissionKey || '').trim(),
     status: 'Submitted',
     ownerUserId: String(user?.id || '').trim(),
     submittedAt: nowIso,

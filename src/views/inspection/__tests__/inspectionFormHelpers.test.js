@@ -342,6 +342,38 @@ describe('inspectionFormHelpers', () => {
     )
   })
 
+  it('derives historical fire-extinguisher location and evidence metadata from check rows', () => {
+    const record = normalizeReportRecord({
+      id: 'report-fe-session-legacy',
+      displayId: 'INS-FE-LEGACY',
+      report_type: 'inspection',
+      payload: {
+        incidentType: 'Fire Extinguisher Inspection',
+        location: '',
+        photos: [{ id: 'general-photo', url: '/api/report-media/rpm-general-photo' }],
+        fireExtinguisherChecks: [
+          {
+            id: 'fe-1',
+            zone: '1',
+            mainLocation: 'Manjung Hub',
+            subLocation: 'Reception',
+            physicalConditionPhotos: [{ id: 'photo-1', url: '/api/report-media/rpm-photo-1' }],
+          },
+          {
+            id: 'fe-2',
+            zone: '1',
+            mainLocation: 'Manjung Hub',
+            subLocation: 'Workshop',
+          },
+        ],
+      },
+    })
+
+    expect(record.location).toBe('Zone 1 > Manjung Hub · 2 locations')
+    expect(record.inspectionLocations).toHaveLength(2)
+    expect(record.evidencePhotoCount).toBe(2)
+  })
+
   it('preserves in-progress spaces in hydraulic remarks while normalizing form edits', () => {
     const form = normalizeInspectionForm({
       inspectionType: 'Hydraulic Rescue Tools Inspection',

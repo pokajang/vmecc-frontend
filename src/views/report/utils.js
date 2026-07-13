@@ -20,6 +20,11 @@ const randomHexToken = (length = 10) => {
   return `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`.slice(-length)
 }
 
+export const createReportSubmissionKey = (reportType = 'report') => {
+  const prefix = normalizeReportTypeSlug(reportType).replace(/[^a-z0-9-]+/g, '-') || 'report'
+  return `${prefix}-submit-${randomHexToken(32)}`
+}
+
 export const formatReportDisplayId = (idPrefix, sequence, nowIso = new Date().toISOString()) => {
   const prefix =
     String(idPrefix || 'RPT')

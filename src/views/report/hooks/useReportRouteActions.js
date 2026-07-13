@@ -50,9 +50,11 @@ const isOwnReport = (row = {}, user = {}) => {
 const useReportRouteActions = ({
   activeFormSlug,
   activeSection,
+  activeDraftRows = [],
   isFormDirty,
   location,
   navigate,
+  persistRecord,
   persistRecords,
   pushToast,
   queryDraftId,
@@ -107,6 +109,12 @@ const useReportRouteActions = ({
   const removeDraft = useCallback(
     async (draftId = '') => {
       const trimmedDraftId = String(draftId || '').trim()
+      if (activeFormSlug === 'erco' && !trimmedDraftId) return true
+      const removed =
+        activeFormSlug === 'erco' && trimmedDraftId
+          ? await deleteErcoDraft(user?.id, trimmedDraftId)
+          : await clearReportDraft(user?.id, activeFormSlug)
+      if (!removed) return false
       setActiveDraftRows((prev) => {
         if (!Array.isArray(prev) || prev.length === 0) return prev
         if (activeFormSlug === 'erco' && trimmedDraftId) {
@@ -114,10 +122,6 @@ const useReportRouteActions = ({
         }
         return []
       })
-      const removed =
-        activeFormSlug === 'erco' && trimmedDraftId
-          ? await deleteErcoDraft(user?.id, trimmedDraftId)
-          : await clearReportDraft(user?.id, activeFormSlug)
       setDraftVersion((prev) => prev + 1)
       return removed
     },
@@ -571,36 +575,50 @@ const useReportRouteActions = ({
         const isUpdate = Boolean(existingRecord)
         const nowIso = new Date().toISOString()
         const actor = user?.name || user?.email || 'Requester'
-        const nextRecord = isUpdate
-          ? {
-              ...record,
-              ownerUserId: record.ownerUserId || existingRecord.ownerUserId || '',
-              submittedAt: record.submittedAt || existingRecord.submittedAt || '',
-              submittedBy: record.submittedBy || existingRecord.submittedBy || '',
-              updatedAt: nowIso,
-              updatedBy: actor,
-              version: Number(existingRecord.version || record.version || 0) + 1,
-              revision: Number(existingRecord.revision || record.revision || 0) + 1,
-              timeline: [
-                ...(Array.isArray(record.timeline)
-                  ? record.timeline
-                  : Array.isArray(existingRecord.timeline)
-                    ? existingRecord.timeline
-                    : []),
-                {
-                  id: `t-${uid()}`,
-                  action: 'Updated',
-                  by: actor,
-                  at: nowIso,
-                  remarks: 'Report updated.',
-                },
-              ],
-            }
-          : record
-        const next = [nextRecord, ...sameTypeRecords.filter((row) => row.id !== record.id)].sort(
-          (a, b) => toDateTime(b) - toDateTime(a),
+        const usesSingleRecordPersistence = ['erco', 'drill', 'fitness-test'].includes(
+          activeFormSlug,
         )
-        const { saved, trimmed } = await persistRecords(next)
+        const nextRecord =
+          isUpdate && !usesSingleRecordPersistence
+            ? {
+                ...record,
+                ownerUserId: record.ownerUserId || existingRecord.ownerUserId || '',
+                submittedAt: record.submittedAt || existingRecord.submittedAt || '',
+                submittedBy: record.submittedBy || existingRecord.submittedBy || '',
+                updatedAt: nowIso,
+                updatedBy: actor,
+                version: Number(existingRecord.version || record.version || 0) + 1,
+                revision: Number(existingRecord.revision || record.revision || 0) + 1,
+                timeline: [
+                  ...(Array.isArray(record.timeline)
+                    ? record.timeline
+                    : Array.isArray(existingRecord.timeline)
+                      ? existingRecord.timeline
+                      : []),
+                  {
+                    id: `t-${uid()}`,
+                    action: 'Updated',
+                    by: actor,
+                    at: nowIso,
+                    remarks: 'Report updated.',
+                  },
+                ],
+              }
+            : record
+        const persistenceResult = usesSingleRecordPersistence
+          ? await persistRecord(nextRecord, {
+              isUpdate,
+              expectedVersion: isUpdate
+                ? Number(existingRecord?.version || record?.version || 0)
+                : 0,
+              submissionKey: isUpdate ? '' : String(record?.submissionKey || '').trim(),
+            })
+          : await persistRecords(
+              [nextRecord, ...sameTypeRecords.filter((row) => row.id !== record.id)].sort(
+                (a, b) => toDateTime(b) - toDateTime(a),
+              ),
+            )
+        const { saved, trimmed } = persistenceResult || {}
         if (!saved) {
           pushToast('Unable to save this report to the server. Please try again.', {
             title: 'Save failed',
@@ -615,7 +633,12 @@ const useReportRouteActions = ({
             delay: 8000,
           })
         }
-        await removeDraft(queryDraftId)
+        let draftRemoved = true
+        try {
+          draftRemoved = await removeDraft(queryDraftId)
+        } catch {
+          draftRemoved = false
+        }
         setIsFormDirty(false)
         setFormSessionKey((prev) => prev + 1)
         pushToast(
@@ -625,12 +648,32 @@ const useReportRouteActions = ({
             color: 'success',
           },
         )
+        if (!draftRemoved) {
+          pushToast(
+            'Report saved, but the old draft could not be removed. You can delete it later.',
+            {
+              title: 'Draft cleanup pending',
+              color: 'warning',
+              delay: 8000,
+            },
+          )
+        }
         navigate(reportBasePath)
-      } catch {
-        pushToast('Unable to save this report. Please try again.', {
-          title: 'Save failed',
-          color: 'danger',
-        })
+      } catch (error) {
+        const code = String(error?.payload?.code || error?.code || '').trim()
+        if (error?.status === 409 || code === 'REPORT_VERSION_CONFLICT') {
+          pushToast('This report changed on the server. Reload it before applying your update.', {
+            title: 'Update conflict',
+            color: 'warning',
+            delay: 8000,
+          })
+          await reloadRecords()
+        } else {
+          pushToast(error?.message || 'Unable to save this report. Please try again.', {
+            title: 'Save failed',
+            color: 'danger',
+          })
+        }
       } finally {
         submitLockRef.current = false
         setIsSubmitting(false)
@@ -639,10 +682,12 @@ const useReportRouteActions = ({
     [
       activeFormSlug,
       navigate,
+      persistRecord,
       persistRecords,
       pushToast,
       queryDraftId,
       records,
+      reloadRecords,
       removeDraft,
       reportBasePath,
       reportTypeLabel,
@@ -666,11 +711,15 @@ const useReportRouteActions = ({
       let saved = null
       if (activeFormSlug === 'erco') {
         const title = `${reviewRecord?.incidentType || reportTypeLabel} draft`
+        const activeDraft = activeDraftRows.find(
+          (row) => String(row?.draftId || '').trim() === String(queryDraftId || '').trim(),
+        )
         saved = queryDraftId
           ? await updateErcoDraft(user?.id, queryDraftId, payload, {
               title,
               originMode: selectedEditingRecord ? 'edit' : 'new',
               sourceReportUid: selectedEditingRecord?.id || '',
+              baseVersion: Number(activeDraft?.version || 0) || 0,
             })
           : await createErcoDraft(user?.id, payload, {
               title,
@@ -683,7 +732,11 @@ const useReportRouteActions = ({
           navigate(`${location.pathname}?${query.toString()}`, { replace: true })
         }
       } else {
-        const ok = await saveReportDraft(user?.id, payload, activeFormSlug)
+        const activeDraft = activeDraftRows[0] || null
+        const ok = await saveReportDraft(user?.id, payload, activeFormSlug, {
+          draftId: activeDraft?.draftId || '',
+          baseVersion: Number(activeDraft?.version || 0) || 0,
+        })
         saved = ok ? { draftId: '' } : null
       }
       if (!saved) {
@@ -699,6 +752,7 @@ const useReportRouteActions = ({
     },
     [
       activeFormSlug,
+      activeDraftRows,
       location.pathname,
       location.search,
       navigate,

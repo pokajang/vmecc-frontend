@@ -175,6 +175,8 @@ describe('inspection duty token propagation', () => {
     await submitInspectionSessionReport({
       sessionUid: 'session-duty-1',
       submissionKey: 'session-submit-1',
+      reportRemarks: 'General evidence remarks',
+      photos: [{ id: 'photo-1', url: '/api/report-media/rpm-photo-1' }],
       dutyConfirmationToken: 'submit-token',
     })
 
@@ -182,5 +184,11 @@ describe('inspection duty token propagation', () => {
     expect(completeCall[1].headers).toEqual({ 'X-Duty-Confirmation': 'write-token' })
     expect(resetCall[1].headers).toEqual({ 'X-Duty-Confirmation': 'reset-token' })
     expect(submitCall[1].headers).toEqual({ 'X-Duty-Confirmation': 'submit-token' })
+    expect(JSON.parse(submitCall[1].body)).toEqual(
+      expect.objectContaining({
+        report_remarks: 'General evidence remarks',
+        photos: [{ id: 'photo-1', url: '/api/report-media/rpm-photo-1' }],
+      }),
+    )
   })
 })

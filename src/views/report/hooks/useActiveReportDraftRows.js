@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { listErcoDrafts, loadReportDraft } from '../reportStorage'
+import { listErcoDrafts, loadReportDraftRow } from '../reportStorage'
 import { buildDraftRow } from '../reportDraftDomain'
 
 const useActiveReportDraftRows = ({ activeFormSlug, draftVersion, reportTypeLabel, user }) => {
@@ -28,10 +28,10 @@ const useActiveReportDraftRows = ({ activeFormSlug, draftVersion, reportTypeLabe
         setActiveDraftRows(rows)
         return
       }
-      const draft = await loadReportDraft(user.id, activeFormSlug)
+      const draft = await loadReportDraftRow(user.id, activeFormSlug)
       if (cancelled) return
       const row = buildDraftRow({
-        draft: draft ? { payload: draft, savedAt: draft.savedAt || '', draftId: '' } : null,
+        draft,
         reportTypeSlug: activeFormSlug,
         reportTypeLabel,
         actorName: user?.name || user?.email || user?.id || '',

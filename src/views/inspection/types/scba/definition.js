@@ -16,6 +16,7 @@ import { createLocationDetailContextFields } from '../detailConfigHelpers'
 import { buildMainLocationContinuationOptions, CONTINUATION_TOKENS } from '../continuationHelpers'
 import { ScbaEditSection, ScbaReadOnlySection } from './section'
 import { INSPECTION_REPORT_EVIDENCE_COPY } from '../../inspectionReportEvidenceCopy'
+import { buildScbaDetailFindingItems, renderScbaDetailFindingContent } from './detail'
 
 const scbaInspectionDefinition = {
   key: 'scba-inspection',
@@ -64,8 +65,10 @@ const scbaInspectionDefinition = {
     inspectionType: SCBA_INSPECTION_TYPE,
     primaryLabel: 'Location',
   }),
-  detailFindingsMode: 'block',
+  detailFindingsMode: 'itemized',
   detailFindingsTitle: 'SCBA Items',
+  buildDetailFindingItems: buildScbaDetailFindingItems,
+  renderDetailFindingContent: renderScbaDetailFindingContent,
 }
 
 export default scbaInspectionDefinition

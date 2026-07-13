@@ -9,6 +9,17 @@ afterEach(() => {
   cleanup()
 })
 
+const expectItemizedReadOnlyFindings = () => {
+  const section = screen.getByText('Inspection Findings').closest('section')
+  expect(
+    section?.querySelectorAll('.inspection-detail-finding-accordion-item').length || 0,
+  ).toBeGreaterThan(0)
+  expect(section?.querySelector('input, textarea, select')).toBeNull()
+  ;['Save', 'Reset', 'Add equipment', 'Mark all OK', 'Search'].forEach((label) => {
+    expect(within(section).queryByRole('button', { name: label })).toBeNull()
+  })
+}
+
 describe('InspectionDetailSection', () => {
   it('renders General Inspection findings and optional evidence in read-only detail mode', () => {
     const { container } = render(
@@ -73,6 +84,7 @@ describe('InspectionDetailSection', () => {
     expect(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.remarksLabel)).toBeTruthy()
     expect(screen.getByText('Whole area was accessible except the west stairwell.')).toBeTruthy()
     expect(screen.getByText('General evidence photo')).toBeTruthy()
+    expectItemizedReadOnlyFindings()
   })
 
   it('renders HSE read-only detail fields and selected outcomes', () => {
@@ -87,7 +99,7 @@ describe('InspectionDetailSection', () => {
           location: 'Zone A',
           selectedLocation: 'Zone A',
           mainLocation: 'Zone A',
-          incidentType: 'Health Safety Environment Inspection',
+          incidentType: 'Health Safety Environment',
           hseInspectedBy: 'Inspector HSE',
           hseInspectionDate: '2026-06-29',
           hseSelections: ['unsafeAct', 'environmental'],
@@ -123,14 +135,15 @@ describe('InspectionDetailSection', () => {
     expect(screen.getAllByText('HSE Observation').length).toBeGreaterThan(0)
     expect(screen.getByText('Unsafe Act')).toBeTruthy()
     expect(screen.getByText('Environmental')).toBeTruthy()
-    expect(screen.getByText('High')).toBeTruthy()
+    expect(screen.getAllByText('High').length).toBeGreaterThan(0)
     expect(screen.getByText('Observed unsafe lifting posture.')).toBeTruthy()
     expect(screen.getByText('Oil spill near the loading bay.')).toBeTruthy()
     expect(screen.getByText('Area cordoned off.')).toBeTruthy()
     expect(screen.getByText('Spill kit deployed.')).toBeTruthy()
-    expect(screen.getByText('Shift supervisor')).toBeTruthy()
-    expect(screen.getByText('2026-06-30')).toBeTruthy()
+    expect(screen.getAllByText('Shift supervisor').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('2026-06-30').length).toBeGreaterThan(0)
     expect(screen.getByText('Follow-up inspection required.')).toBeTruthy()
+    expectItemizedReadOnlyFindings()
   })
 
   it('renders ER Aux read-only equipment cards in detail mode', () => {
@@ -187,6 +200,41 @@ describe('InspectionDetailSection', () => {
     expect(screen.queryByText('Animal catcher net')).toBeNull()
     expect(screen.getAllByText('15').length).toBeGreaterThan(0)
     expect(screen.getByText('Sent for replacement.')).toBeTruthy()
+    expectItemizedReadOnlyFindings()
+  })
+
+  it('resolves persisted ER Aux title aliases through structured detail fallback', () => {
+    render(
+      <InspectionDetailSection
+        selectedRecord={{
+          id: 'inspection-eraux-alias-1',
+          displayId: 'INSP-ERAUX-ALIAS-001',
+          status: 'Submitted',
+          submittedAt: '2026-07-13T00:56:00.000Z',
+          submittedBy: 'Inspector Aux',
+          mainLocation: 'Office',
+          incidentType: 'Emergency Response Auxiliary Equipment',
+          erAuxChecks: [
+            {
+              id: 'office:smoke-radio',
+              mainLocation: 'Office',
+              equipment: 'Smoke Radio',
+              quantity: '1',
+              condition: 'Defect',
+              defectRemarks: 'Antenna damaged.',
+            },
+          ],
+        }}
+        onBack={vi.fn()}
+        formatDateTime={() => ''}
+        renderStatusBadge={(status) => <span>{status}</span>}
+        canEditRecord={() => false}
+      />,
+    )
+
+    expect(screen.getByText('Smoke Radio')).toBeTruthy()
+    expect(screen.getByText('Antenna damaged.')).toBeTruthy()
+    expectItemizedReadOnlyFindings()
   })
 
   it('renders Hydraulic read-only equipment cards in detail mode', () => {
@@ -242,6 +290,7 @@ describe('InspectionDetailSection', () => {
     expect(screen.getByText('Minor hose leak found.')).toBeTruthy()
     expect(screen.getByText('Leak evidence')).toBeTruthy()
     expect(screen.getByText('Requires seal replacement.')).toBeTruthy()
+    expectItemizedReadOnlyFindings()
   })
 
   it('renders Fire Extinguisher read-only rows in detail mode', () => {
@@ -319,6 +368,7 @@ describe('InspectionDetailSection', () => {
     expect(screen.getByText('Cylinder body dented.')).toBeTruthy()
     expect(screen.getByText('Cylinder defect')).toBeTruthy()
     expect(screen.getByText('Needs replacement.')).toBeTruthy()
+    expectItemizedReadOnlyFindings()
   })
 
   it('keeps historical fire extinguisher rows readable when the live catalog row is gone', () => {
@@ -468,6 +518,8 @@ describe('InspectionDetailSection', () => {
     const detailText = container.textContent || ''
     expect(detailText.indexOf('Back Plate')).toBeLessThan(detailText.indexOf('Cylinder'))
     expect(detailText.indexOf('Cylinder')).toBeLessThan(detailText.indexOf('Face Mask'))
+    expect(container.querySelectorAll('.inspection-detail-finding-accordion-item')).toHaveLength(3)
+    expectItemizedReadOnlyFindings()
   })
 
   it('renders High Angle structured cards in read-only detail mode', () => {
@@ -530,6 +582,7 @@ describe('InspectionDetailSection', () => {
     expect(screen.getAllByText('Main Compartment').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Locking Carabiner - CT - Steel - S').length).toBeGreaterThan(0)
     expect(container.textContent || '').toContain('Gate spring is sticking.')
+    expectItemizedReadOnlyFindings()
   })
 
   it('renders Fire Truck Daily Readiness structured cards in read-only detail mode', () => {
@@ -629,6 +682,8 @@ describe('InspectionDetailSection', () => {
     expect(detailText.indexOf('Truck Readiness')).toBeLessThan(
       detailText.indexOf('One-Off Readiness Checklist'),
     )
+    expect(container.querySelectorAll('.inspection-detail-finding-accordion-item')).toHaveLength(4)
+    expectItemizedReadOnlyFindings()
   })
 
   it('renders workflow history inside report metadata without a detached workflow section', () => {

@@ -46,7 +46,12 @@ const buildDraftActionHarness = ({ saveResult, saveError } = {}) => {
   }
 }
 
-const buildSubmitActionHarness = ({ record, persistError, inspectSessionError } = {}) => {
+const buildSubmitActionHarness = ({
+  record,
+  editingRecord = null,
+  persistError,
+  inspectSessionError,
+} = {}) => {
   const draftRecord = {
     id: 'inspection-record-1',
     displayId: 'INS-1',
@@ -90,7 +95,7 @@ const buildSubmitActionHarness = ({ record, persistError, inspectSessionError } 
     setContinuationPrompt: vi.fn(),
     isInspectionQueueableError: vi.fn((error) => Number(error?.status || 0) >= 500),
     enqueueInspectionSubmission,
-    editingRecord: null,
+    editingRecord,
     refreshQueueRows,
     onSubmitted: vi.fn(),
   }
@@ -177,6 +182,8 @@ describe('submitInspectionRecordAction', () => {
           inspectionSessionUid: 'inspection-session-123',
           inspectedAt: '2026-07-08T21:07',
           submittedAt: '2026-07-08T13:07:00.000Z',
+          reportRemarks: 'General evidence retained.',
+          photos: [{ id: 'general-photo', url: '/api/report-media/rpm-general' }],
         },
       })
 
@@ -187,9 +194,49 @@ describe('submitInspectionRecordAction', () => {
       sessionUid: 'inspection-session-123',
       displayId: 'INS-1',
       submissionKey: 'inspection-submission-key',
+      reportRemarks: 'General evidence retained.',
+      photos: [{ id: 'general-photo', url: '/api/report-media/rpm-general' }],
       inspectedAt: '2026-07-08T21:07',
       submittedAt: '2026-07-08T13:07:00.000Z',
     })
+  })
+
+  it('updates an existing session-derived report through the report API', async () => {
+    const { args, submitInspectionSessionReport, persistInspectionRecord, draftRecord } =
+      buildSubmitActionHarness({
+        record: {
+          inspectionSessionUid: 'inspection-session-123',
+          version: 2,
+        },
+      })
+
+    await submitInspectionRecordAction(args)
+
+    expect(submitInspectionSessionReport).not.toHaveBeenCalled()
+    expect(persistInspectionRecord).toHaveBeenCalledWith(7, draftRecord, {
+      submissionKey: 'inspection-submission-key',
+    })
+  })
+
+  it('submits a restored session draft through the active session endpoint', async () => {
+    const { args, submitInspectionSessionReport, persistInspectionRecord } =
+      buildSubmitActionHarness({
+        record: {
+          inspectionSessionUid: 'inspection-session-draft',
+          version: 0,
+        },
+        editingRecord: {
+          id: 'inspection-draft-1',
+          recordKind: 'draft',
+        },
+      })
+
+    await submitInspectionRecordAction(args)
+
+    expect(persistInspectionRecord).not.toHaveBeenCalled()
+    expect(submitInspectionSessionReport).toHaveBeenCalledWith(
+      expect.objectContaining({ sessionUid: 'inspection-session-draft' }),
+    )
   })
 
   it('replaces FRT seeded-row validation errors with user-friendly submission copy', async () => {

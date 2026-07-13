@@ -20,6 +20,7 @@ export const buildDrillRecord = ({
     id,
     displayId,
     reportType: reportTypeSlug || 'drill',
+    submissionKey: value.submissionKey,
     status: 'Submitted',
     ownerUserId: String(user?.id || '').trim(),
     submittedAt: nowIso,

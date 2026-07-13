@@ -3,6 +3,7 @@ import useTableRows from 'src/hooks/useTableRows'
 import {
   fetchReportRecords,
   isReportApiEnabled,
+  persistReportRecord,
   persistReportRecords,
   runReportApiBackfillMigration,
 } from '../reportApi'
@@ -92,6 +93,16 @@ const useReportRecords = ({ user = null, userId, reportTypeSlug, reportId, draft
     if (!saved) return { saved: false, trimmed: false }
     await reloadRecords()
     return { saved: true, trimmed: false }
+  }
+
+  const persistRecord = async (row, options = {}) => {
+    const savedRecord = await persistReportRecord(userId, row, {
+      ...options,
+      reportTypeSlug,
+    })
+    if (!savedRecord) return { saved: false, record: null }
+    await reloadRecords()
+    return { saved: true, record: savedRecord }
   }
 
   const recordsInScope = useMemo(() => {
@@ -226,6 +237,7 @@ const useReportRecords = ({ user = null, userId, reportTypeSlug, reportId, draft
     visibleRows,
     clearFilters,
     persistRecords,
+    persistRecord,
     setRecords,
     reloadRecords,
   }

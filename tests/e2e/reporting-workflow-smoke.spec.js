@@ -257,16 +257,57 @@ const assertNoUnreadCount500 = (failedResponses) => {
   ).toEqual([])
 }
 
+const validPayloadForModule = (module) => {
+  const shared = {
+    location: `Smoke ${module.label} Location`,
+    details: `Reporting workflow browser smoke for ${module.label}.`,
+    summary: `Reporting workflow browser smoke completed for ${module.label}.`,
+    chronology: [{ time: '09:00', action: `${module.label} smoke started.` }],
+  }
+  if (module.key === 'erco') {
+    return {
+      ...shared,
+      schemaVersion: 1,
+      incidentDate: '2026-07-13',
+      incidentTime: '09:00',
+      reportDate: '2026-07-13',
+      reportTime: '09:00',
+      weather: 'Clear',
+      incidentType: module.incidentType,
+      respondingTeam: {
+        name: 'Smoke Team',
+        attendance: [{ memberId: 'smoke-1', name: 'Smoke Responder', role: 'TRT' }],
+      },
+      postIncidentAnalysis: { strengths: ['Prompt mobilisation'], photos: [] },
+    }
+  }
+  if (module.key === 'drill') {
+    return {
+      ...shared,
+      schemaVersion: 2,
+      reportDate: '2026-07-13',
+      reportTime: '09:00',
+      weather: 'Clear',
+      incidentType: module.incidentType,
+      postIncidentAnalysis: { photos: [] },
+    }
+  }
+  return {
+    ...shared,
+    schemaVersion: 1,
+    reportDate: '2026-07-13',
+    reportTime: '09:00',
+    weather: 'Routine',
+    incidentType: module.incidentType,
+  }
+}
+
 const createReport = async ({ request, csrfToken, module, displayId, status = 'Submitted' }) => {
   const { response, body, text } = await apiJson(request, 'post', '/reports', csrfToken, {
     display_id: displayId,
     report_type: module.key,
     status,
-    payload: {
-      incidentType: module.incidentType,
-      location: `Smoke ${module.label} Location`,
-      description: `Reporting workflow browser smoke for ${module.label}.`,
-    },
+    payload: validPayloadForModule(module),
   })
 
   expect(response.status(), `Create ${module.label} report failed: ${text}`).toBe(201)

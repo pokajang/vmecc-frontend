@@ -3,7 +3,7 @@ import { CAlert, CButton } from '@coreui/react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import { clearPendingCameraOperation } from 'src/utils/cameraRecovery'
-import { clearReportDraft, saveReportDraft } from '../reportStorage'
+import { clearReportDraft, loadReportDraftRow, saveReportDraft } from '../reportStorage'
 import useReportDraft from '../hooks/useReportDraft'
 import { scrollToFirstError } from '../utils'
 import { DRILL_NEW_SECTIONS } from './constants'
@@ -78,6 +78,8 @@ const DrillForm = ({
   const saveLockRef = useRef(false)
   const originalSeedRef = useRef(null)
   const draftSeedRef = useRef(null)
+  const draftIdRef = useRef('')
+  const draftVersionRef = useRef(0)
   const [showReset, setShowReset] = useState(false)
   const [lastSavedSignature, setLastSavedSignature] = useState(() =>
     editingDraftSeed ? signature(normalizeDrillForm(editingDraftSeed)) : null,
@@ -133,6 +135,12 @@ const DrillForm = ({
     pushToast,
     skipDraftLoad,
     normalizeDraft: normalizeDrillForm,
+    loadDraft: async ({ userId }) => {
+      const row = await loadReportDraftRow(userId, reportTypeSlug)
+      draftIdRef.current = String(row?.draftId || '').trim()
+      draftVersionRef.current = Number(row?.version || 0) || 0
+      return row?.payload || null
+    },
     onDraftLoaded: (draftForm) => {
       const normalized = normalizeDrillForm(draftForm)
       setLastSavedSignature(signature(normalized))
@@ -191,7 +199,15 @@ const DrillForm = ({
     }
     let saved = false
     try {
-      saved = Boolean(await saveReportDraft(user?.id, payload, reportTypeSlug))
+      const savedDraft = await saveReportDraft(user?.id, payload, reportTypeSlug, {
+        draftId: draftIdRef.current,
+        baseVersion: draftVersionRef.current,
+      })
+      saved = Boolean(savedDraft)
+      if (savedDraft && typeof savedDraft === 'object') {
+        draftIdRef.current = String(savedDraft?.draftId || draftIdRef.current).trim()
+        draftVersionRef.current = Number(savedDraft?.version || 0) || draftVersionRef.current
+      }
     } catch {
       saved = false
     }
@@ -238,6 +254,8 @@ const DrillForm = ({
     setFieldErrors({})
     setSetupFieldErrors({})
     setLastSavedSignature(null)
+    draftIdRef.current = ''
+    draftVersionRef.current = 0
     draftSeedRef.current = null
     setHasDraftSeed(false)
     setSaveState('idle')

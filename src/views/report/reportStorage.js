@@ -39,9 +39,19 @@ export const loadReportDraft = (userId, reportTypeSlug) => {
   )
 }
 
-export const saveReportDraft = (userId, draft, reportTypeSlug) => {
+export const loadReportDraftRow = (userId, reportTypeSlug) => {
+  if (!userId) return Promise.resolve(null)
+  return fetchReportDraft({ reportTypeSlug })
+}
+
+export const saveReportDraft = (userId, draft, reportTypeSlug, meta = {}) => {
   if (!userId) return Promise.resolve(false)
-  return saveReportDraftApi({ reportTypeSlug, payload: draft }).then((row) => Boolean(row))
+  return saveReportDraftApi({
+    reportTypeSlug,
+    payload: draft,
+    draftId: meta?.draftId || '',
+    baseVersion: meta?.baseVersion || 0,
+  })
 }
 
 export const clearReportDraft = (userId, reportTypeSlug) => {
@@ -78,6 +88,7 @@ export const updateErcoDraft = (userId, draftId, payload, meta = {}) => {
     title: meta?.title || '',
     originMode: meta?.originMode || 'new',
     sourceReportUid: meta?.sourceReportUid || '',
+    baseVersion: meta?.baseVersion || 0,
   })
 }
 

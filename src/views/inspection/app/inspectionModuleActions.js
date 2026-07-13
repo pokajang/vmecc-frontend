@@ -187,10 +187,14 @@ export const submitInspectionRecordAction = async ({
   setIsSubmitting(true)
   const submissionKey = makeInspectionSubmissionKey(userId, record)
   const inspectionSessionUid = text(record?.inspectionSessionUid || record?.inspection_session_uid)
-  const isUpdate = Number(record?.version || 0) > 0
+  const editingRecordKind = text(editingRecord?.recordKind).toLowerCase()
+  const hasPersistedEditingRecord =
+    Boolean(text(editingRecord?.id)) && !['draft', 'queued'].includes(editingRecordKind)
+  const isUpdate = Number(record?.version || 0) > 0 || hasPersistedEditingRecord
+  const useSessionSubmit = Boolean(inspectionSessionUid) && !isUpdate
   try {
     if (
-      inspectionSessionUid &&
+      useSessionSubmit &&
       countFireExtinguisherSessionRetryQueue({ userId, sessionUid: inspectionSessionUid }) > 0
     ) {
       const pendingError = new Error(
@@ -199,11 +203,13 @@ export const submitInspectionRecordAction = async ({
       pendingError.code = 'inspection_session_operations_pending'
       throw pendingError
     }
-    const saved = inspectionSessionUid
+    const saved = useSessionSubmit
       ? await submitInspectionSessionReport?.({
           sessionUid: inspectionSessionUid,
           displayId: record.displayId,
           submissionKey,
+          reportRemarks: record.reportRemarks,
+          photos: record.photos,
           inspectedAt: record.inspectedAt,
           submittedAt: record.submittedAt,
           sessionVersion: record.inspectionSessionVersion,
@@ -228,13 +234,13 @@ export const submitInspectionRecordAction = async ({
     if (navigateOnSuccess) navigate(reportBasePath)
     if (nextContinuationPrompt) setContinuationPrompt(nextContinuationPrompt)
   } catch (error) {
-    if (!inspectionSessionUid && isInspectionQueueableError(error)) {
+    if (!useSessionSubmit && isInspectionQueueableError(error)) {
       const queued = enqueueInspectionSubmission({
         userId,
         record: { ...record, submissionKey },
         submissionKey,
-        operation: Number(record?.version || 0) > 0 ? 'update' : 'create',
-        baseServerSnapshot: Number(record?.version || 0) > 0 ? editingRecord : null,
+        operation: isUpdate ? 'update' : 'create',
+        baseServerSnapshot: isUpdate ? editingRecord : null,
       })
       if (queued) {
         refreshQueueRows()

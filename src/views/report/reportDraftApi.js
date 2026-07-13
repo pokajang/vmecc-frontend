@@ -11,13 +11,20 @@ export const fetchReportDraft = async ({ reportTypeSlug }) => {
   if (!row || typeof row !== 'object') return null
   return {
     id: row.id,
+    draftId: String(row.draft_id || '').trim(),
     reportType,
+    version: Number(row.version || 0) || 0,
     savedAt: row.saved_at || row.payload?.savedAt || '',
     payload: row.payload || {},
   }
 }
 
-export const saveReportDraftApi = async ({ reportTypeSlug, payload }) => {
+export const saveReportDraftApi = async ({
+  reportTypeSlug,
+  payload,
+  draftId = '',
+  baseVersion = 0,
+}) => {
   const reportType = normalizeType(reportTypeSlug)
   if (!reportType) return null
   const response = await apiRequest('/reports/draft', {
@@ -25,13 +32,17 @@ export const saveReportDraftApi = async ({ reportTypeSlug, payload }) => {
     body: JSON.stringify({
       report_type: reportType,
       payload: payload && typeof payload === 'object' ? payload : {},
+      ...(String(draftId || '').trim() ? { draft_id: String(draftId).trim() } : {}),
+      ...(Number(baseVersion || 0) > 0 ? { base_version: Number(baseVersion) } : {}),
     }),
   })
   const row = response?.data
   if (!row || typeof row !== 'object') return null
   return {
     id: row.id,
+    draftId: String(row.draft_id || '').trim(),
     reportType,
+    version: Number(row.version || 0) || 0,
     savedAt: row.saved_at || row.payload?.savedAt || '',
     payload: row.payload || {},
   }
@@ -60,6 +71,7 @@ const mapDraftRow = (row) => {
         ? 'edit'
         : 'new',
     sourceReportUid: String(row.source_report_uid || '').trim(),
+    version: Number(row.version || 0) || 0,
     savedAt: row.saved_at || row.payload?.savedAt || '',
     payload: row.payload || {},
   }
@@ -115,6 +127,7 @@ export const updateReportDraftApi = async ({
   title = '',
   originMode = 'new',
   sourceReportUid = '',
+  baseVersion = 0,
 }) => {
   const id = String(draftId || '').trim()
   if (!id) return null
@@ -130,6 +143,7 @@ export const updateReportDraftApi = async ({
           ? 'edit'
           : 'new',
       source_report_uid: String(sourceReportUid || '').trim(),
+      ...(Number(baseVersion || 0) > 0 ? { base_version: Number(baseVersion) } : {}),
     }),
   })
   return mapDraftRow(response?.data)

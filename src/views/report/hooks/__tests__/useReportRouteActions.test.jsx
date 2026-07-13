@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { act, renderHook, waitFor } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import useReportRouteActions from '../useReportRouteActions'
+import { clearReportDraft, deleteErcoDraft } from '../../reportStorage'
 
 vi.mock('../../reportStorage', () => ({
   clearReportDraft: vi.fn(async () => true),
@@ -44,9 +45,11 @@ vi.mock('../useReportWorkflowActions', () => ({
 const baseProps = (overrides = {}) => ({
   activeFormSlug: 'fitness-test',
   activeSection: 'records',
+  activeDraftRows: [],
   isFormDirty: false,
   location: { pathname: '/report/fitness-test', search: '', state: null },
   navigate: vi.fn(),
+  persistRecord: vi.fn(async (row) => ({ saved: true, record: { ...row, version: 1 } })),
   persistRecords: vi.fn(async () => ({ saved: true, trimmed: false })),
   pushToast: vi.fn(),
   queryDraftId: '',
@@ -64,6 +67,152 @@ const baseProps = (overrides = {}) => ({
 })
 
 describe('useReportRouteActions', () => {
+  beforeEach(() => vi.clearAllMocks())
+
+  it('submits one ERCO record without passing sibling reports to bulk persistence', async () => {
+    const sibling = {
+      id: 'erco-reviewed',
+      displayId: 'ERCO-REVIEWED',
+      reportType: 'erco',
+      status: 'Reviewed',
+      version: 7,
+    }
+    const persistRecord = vi.fn(async (row) => ({ saved: true, record: { ...row, version: 1 } }))
+    const persistRecords = vi.fn()
+    const { result } = renderHook(() =>
+      useReportRouteActions(
+        baseProps({
+          activeFormSlug: 'erco',
+          reportBasePath: '/report/erco',
+          reportTypeLabel: 'ERCO',
+          persistRecord,
+          persistRecords,
+          records: [sibling],
+          user: { id: 'user-1', name: 'Alex Tan', permissions: ['reports.erco.view'] },
+        }),
+      ),
+    )
+
+    await act(async () => {
+      result.current.confirmReviewSubmit({
+        id: 'erco-new',
+        displayId: 'ERCO-NEW',
+        reportType: 'erco',
+        status: 'Submitted',
+        submissionKey: 'erco-submit-stable',
+      })
+    })
+
+    await waitFor(() => expect(persistRecord).toHaveBeenCalledTimes(1))
+    expect(persistRecord.mock.calls[0][0].id).toBe('erco-new')
+    expect(persistRecord.mock.calls[0][1]).toEqual(
+      expect.objectContaining({ isUpdate: false, submissionKey: 'erco-submit-stable' }),
+    )
+    expect(persistRecords).not.toHaveBeenCalled()
+    expect(sibling).toEqual(expect.objectContaining({ status: 'Reviewed', version: 7 }))
+  })
+
+  it('submits one Drill record without rewriting an approved Drill sibling', async () => {
+    const persistRecord = vi.fn(async (row) => ({ saved: true, record: { ...row, version: 1 } }))
+    const persistRecords = vi.fn()
+    const sibling = {
+      id: 'drill-approved',
+      reportType: 'drill',
+      status: 'Approved',
+      version: 9,
+    }
+    const { result } = renderHook(() =>
+      useReportRouteActions(
+        baseProps({
+          activeFormSlug: 'drill',
+          reportBasePath: '/report/drill',
+          reportTypeLabel: 'Drill',
+          persistRecord,
+          persistRecords,
+          records: [sibling],
+          user: { id: 'user-1', name: 'Alex Tan', permissions: ['reports.drill.view'] },
+        }),
+      ),
+    )
+
+    await act(async () => {
+      result.current.confirmReviewSubmit({
+        id: 'drill-new',
+        displayId: 'DRILL-NEW',
+        reportType: 'drill',
+        status: 'Submitted',
+        submissionKey: 'drill-submit-stable',
+      })
+    })
+
+    await waitFor(() => expect(persistRecord).toHaveBeenCalledTimes(1))
+    expect(persistRecords).not.toHaveBeenCalled()
+    expect(sibling).toEqual(expect.objectContaining({ status: 'Approved', version: 9 }))
+  })
+
+  it('keeps a successful ERCO submission successful when exact draft cleanup fails', async () => {
+    deleteErcoDraft.mockRejectedValueOnce(new Error('Network unavailable'))
+    const navigate = vi.fn()
+    const pushToast = vi.fn()
+    const persistRecord = vi.fn(async (row) => ({ saved: true, record: { ...row, version: 1 } }))
+    const { result } = renderHook(() =>
+      useReportRouteActions(
+        baseProps({
+          activeFormSlug: 'erco',
+          reportBasePath: '/report/erco',
+          reportTypeLabel: 'ERCO',
+          queryDraftId: 'drf_erco_1',
+          navigate,
+          pushToast,
+          persistRecord,
+          user: { id: 'user-1', name: 'Alex Tan', permissions: ['reports.erco.view'] },
+        }),
+      ),
+    )
+
+    await act(async () => {
+      result.current.confirmReviewSubmit({
+        id: 'erco-new',
+        displayId: 'ERCO-NEW',
+        reportType: 'erco',
+        status: 'Submitted',
+        submissionKey: 'erco-submit-stable',
+      })
+    })
+
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('/report/erco'))
+    expect(pushToast).toHaveBeenCalledWith(
+      'Report saved, but the old draft could not be removed. You can delete it later.',
+      expect.objectContaining({ title: 'Draft cleanup pending', color: 'warning' }),
+    )
+  })
+
+  it('does not clear unrelated ERCO drafts when the submitted report has no source draft', async () => {
+    const { result } = renderHook(() =>
+      useReportRouteActions(
+        baseProps({
+          activeFormSlug: 'erco',
+          reportBasePath: '/report/erco',
+          reportTypeLabel: 'ERCO',
+          queryDraftId: '',
+          user: { id: 'user-1', name: 'Alex Tan', permissions: ['reports.erco.view'] },
+        }),
+      ),
+    )
+
+    await act(async () => {
+      result.current.confirmReviewSubmit({
+        id: 'erco-new',
+        displayId: 'ERCO-NEW',
+        reportType: 'erco',
+        status: 'Submitted',
+        submissionKey: 'erco-submit-stable',
+      })
+    })
+
+    expect(clearReportDraft).not.toHaveBeenCalled()
+  })
+
   it('limits edit/delete to admins, explicit permissions, or own report rows', () => {
     const ownRow = {
       id: 'fit-1',
@@ -93,7 +242,7 @@ describe('useReportRouteActions', () => {
     expect(result.current.canDeleteRecord(otherRow)).toBe(true)
   })
 
-  it('stores update metadata and uses update feedback when submitting an existing report', async () => {
+  it('updates one Fitness report using the current server version without client-side revision edits', async () => {
     const existing = {
       id: 'fit-1',
       displayId: 'FIT-001',
@@ -105,12 +254,17 @@ describe('useReportRouteActions', () => {
       revision: 4,
       timeline: [{ id: 't-submitted', action: 'Submitted', by: 'Alex Tan' }],
     }
-    const persistRecords = vi.fn(async () => ({ saved: true, trimmed: false }))
+    const persistRecord = vi.fn(async (row) => ({
+      saved: true,
+      record: { ...row, version: 3, revision: 5 },
+    }))
+    const persistRecords = vi.fn()
     const pushToast = vi.fn()
     const { result } = renderHook(() =>
       useReportRouteActions(
         baseProps({
           persistRecords,
+          persistRecord,
           pushToast,
           records: [existing],
         }),
@@ -125,20 +279,22 @@ describe('useReportRouteActions', () => {
       })
     })
 
-    await waitFor(() => expect(persistRecords).toHaveBeenCalled())
-    const savedRows = persistRecords.mock.calls[0][0]
-    expect(savedRows[0]).toEqual(
+    await waitFor(() => expect(persistRecord).toHaveBeenCalled())
+    const savedRow = persistRecord.mock.calls[0][0]
+    expect(savedRow).toEqual(
       expect.objectContaining({
         id: 'fit-1',
         ownerUserId: 'user-1',
         submittedAt: '2026-07-01T01:00:00.000Z',
         submittedBy: 'Alex Tan',
-        updatedBy: 'Alex Tan',
-        version: 3,
-        revision: 5,
+        version: 2,
+        revision: 4,
       }),
     )
-    expect(savedRows[0].timeline.map((entry) => entry.action)).toContain('Updated')
+    expect(persistRecord.mock.calls[0][1]).toEqual(
+      expect.objectContaining({ isUpdate: true, expectedVersion: 2 }),
+    )
+    expect(persistRecords).not.toHaveBeenCalled()
     expect(pushToast).toHaveBeenCalledWith(
       'Fitness Test report FIT-001 updated.',
       expect.objectContaining({ title: 'Updated', color: 'success' }),

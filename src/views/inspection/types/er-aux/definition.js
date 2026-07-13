@@ -14,6 +14,7 @@ import { createLocationDetailContextFields } from '../detailConfigHelpers'
 import { buildMainLocationContinuationOptions, CONTINUATION_TOKENS } from '../continuationHelpers'
 import { ErAuxEditSection, ErAuxReadOnlySection } from './section'
 import { INSPECTION_REPORT_EVIDENCE_COPY } from '../../inspectionReportEvidenceCopy'
+import { buildErAuxDetailFindingItems, renderErAuxDetailFindingContent } from './detail'
 
 const erAuxInspectionDefinition = {
   key: 'er-aux-equipment-inspection',
@@ -59,8 +60,10 @@ const erAuxInspectionDefinition = {
     inspectionType: ER_AUX_EQUIPMENT_INSPECTION_TYPE,
     primaryLabel: 'Location',
   }),
-  detailFindingsMode: 'block',
+  detailFindingsMode: 'itemized',
   detailFindingsTitle: 'Equipment',
+  buildDetailFindingItems: buildErAuxDetailFindingItems,
+  renderDetailFindingContent: renderErAuxDetailFindingContent,
 }
 
 export default erAuxInspectionDefinition

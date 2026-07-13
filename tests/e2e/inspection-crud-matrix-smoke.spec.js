@@ -212,9 +212,14 @@ const loginInBrowser = async (page) => {
   const emailInput = page.getByRole('textbox', { name: 'Email' })
   const passwordInput = page.getByRole('textbox', { name: 'Password' })
   const signInButton = page.getByRole('button', { name: 'Sign in' })
+  const authenticatedUrl = /\/dashboard(?:[/?#]|$)|\/inspection(?:[/?#]|$)/
 
+  await Promise.race([
+    signInButton.waitFor({ state: 'visible', timeout: routeTimeoutMs }),
+    page.waitForURL(authenticatedUrl, { timeout: routeTimeoutMs }),
+  ]).catch(() => {})
   if (!(await signInButton.isVisible().catch(() => false))) {
-    await page.waitForURL(/\/dashboard(?:[/?#]|$)|\/inspection(?:[/?#]|$)/, {
+    await page.waitForURL(authenticatedUrl, {
       timeout: routeTimeoutMs,
     })
     return
@@ -224,7 +229,7 @@ const loginInBrowser = async (page) => {
   await passwordInput.fill(smokePassword, { timeout: routeTimeoutMs })
   await signInButton.click()
 
-  await page.waitForURL(/\/dashboard(?:[/?#]|$)|\/inspection(?:[/?#]|$)/, {
+  await page.waitForURL(authenticatedUrl, {
     timeout: routeTimeoutMs,
   })
   await waitForAppReady(page)
@@ -1060,8 +1065,11 @@ test.describe.serial('inspection CRUD endpoint matrix smoke', () => {
         expected: [200],
         note: 'clear stale inspection drafts before report matrix',
       })
+      await loginInBrowser(page)
+      csrfToken = await safeLogin(api, report)
 
       for (const inspectionType of implementedInspectionTypes) {
+        csrfToken = await safeLogin(api, report)
         const typeSlug = slug(inspectionType)
         const reportUid = `smoke-${runId}-${typeSlug}-${suffix}`.slice(0, 180)
         const displayId = `SMOKE-${typeSlug.toUpperCase()}-${suffix}`.slice(0, 180)
@@ -1190,6 +1198,34 @@ test.describe.serial('inspection CRUD endpoint matrix smoke', () => {
             status: 'Submitted',
           },
         })
+
+        await page.goto('/inspection', { waitUntil: 'domcontentloaded' })
+        await waitForAppReady(page, '/inspection')
+        await page.getByRole('textbox', { name: 'Search records' }).fill(displayId)
+        const persistedRow = page.locator('tbody tr').filter({ hasText: displayId }).first()
+        await expect(
+          persistedRow,
+          `${inspectionType} persisted report is missing from records`,
+        ).toBeVisible({ timeout: routeTimeoutMs })
+        await persistedRow.focus()
+        await page.keyboard.press('Enter')
+        await page.waitForURL(
+          new RegExp(
+            `/inspection/${encodeURIComponent(reportUid).replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}(?:[/?#]|$)`,
+          ),
+          { timeout: routeTimeoutMs },
+        )
+        const findingsSection = page.getByText('Inspection Findings', { exact: true }).locator('..')
+        await expect(findingsSection).toBeVisible()
+        const findingItems = findingsSection.locator('.inspection-detail-finding-accordion-item')
+        expect(
+          await findingItems.count(),
+          `${inspectionType} submitted detail has no itemized findings`,
+        ).toBeGreaterThan(0)
+        await expect(findingsSection.locator('input, textarea, select')).toHaveCount(0)
+        await findingItems.first().locator('.accordion-button').click()
+        await expect(findingItems.first().locator('.accordion-collapse')).toHaveClass(/show/)
+        csrfToken = await safeLogin(api, report)
 
         await downloadPdf(api, report, csrfToken, reportUid, updated.version, [200], {
           minImageCount: expectedPdfImageCounts[inspectionType] || 0,
@@ -1472,14 +1508,18 @@ test.describe.serial('inspection CRUD endpoint matrix smoke', () => {
             },
           })
         } else {
-          expect(['INSPECTION_WORKFLOW_FORBIDDEN', 'REPORTING_WORKFLOW_FORBIDDEN']).toContain(
-            approve.body?.code,
-          )
+          expect([
+            'INSPECTION_WORKFLOW_FORBIDDEN',
+            'INSPECTION_APPROVE_FORBIDDEN',
+            'REPORTING_WORKFLOW_FORBIDDEN',
+          ]).toContain(String(approve.body?.code || '').toUpperCase())
         }
       } else {
-        expect(['INSPECTION_WORKFLOW_FORBIDDEN', 'REPORTING_WORKFLOW_FORBIDDEN']).toContain(
-          review.body?.code,
-        )
+        expect([
+          'INSPECTION_WORKFLOW_FORBIDDEN',
+          'INSPECTION_REVIEW_FORBIDDEN',
+          'REPORTING_WORKFLOW_FORBIDDEN',
+        ]).toContain(String(review.body?.code || '').toUpperCase())
         await apiRequest(api, report, 'post', `/reports/${encodeURIComponent(reportUid)}/approve`, {
           csrfToken,
           expected: [409],

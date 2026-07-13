@@ -410,6 +410,8 @@ describe('InspectionReviewSection', () => {
       screen.getAllByText((_, node) => node?.textContent?.includes('DP 6KG') || false).length,
     ).toBeGreaterThan(0)
     expect(screen.getAllByText('Cylinder body dented.').length).toBeGreaterThan(0)
+    expect(screen.getByText('Inspection Evidence (1)')).toBeTruthy()
+    expect(screen.getByText('Manjung Hub > Reception · ADO-001 · Physical Condition')).toBeTruthy()
     fireEvent.click(screen.getAllByRole('button', { name: 'View photos' })[0])
     expect(screen.getAllByText('Cylinder defect').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Needs replacement.').length).toBeGreaterThan(0)

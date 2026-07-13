@@ -2,7 +2,7 @@ import { apiRequest, buildApiUrl, fetchWithCsrfRetry } from 'src/services/apiCli
 import featureFlags from 'src/config/featureFlags'
 import { REPORT_TYPE_CONFIG } from './constants'
 import { loadReportRecords, saveReportRecords } from './reportStorage'
-import { normalizeReportRecords } from './utils'
+import { normalizeReportRecord, normalizeReportRecords } from './utils'
 
 const REPORT_API_ENABLED_TYPES_RAW = String(import.meta.env.VITE_REPORT_API_TYPES || '*')
   .split(',')
@@ -30,15 +30,40 @@ const toApiStatus = (status) => {
   return 'Submitted'
 }
 
+const REPORT_SERVER_FIELDS = [
+  'id',
+  'version',
+  'revision',
+  'createdAt',
+  'updatedAt',
+  'updatedBy',
+  'recordKind',
+  'reportType',
+  'displayId',
+  'ownerUserId',
+  'submissionKey',
+  'submittedAt',
+  'submittedBy',
+  'status',
+  'actionOwner',
+  'nextAction',
+  'timeline',
+  'approvalHistory',
+  'workflowStage',
+  'workflowSnapshot',
+  'nextActionRole',
+  'scopeTeamId',
+  'canReview',
+  'canApprove',
+  'canReject',
+  'reviewedAt',
+  'approvedAt',
+  'rejectedAt',
+]
+
 const toPayload = (row) => {
   const safe = row && typeof row === 'object' ? { ...row } : {}
-  delete safe.id
-  delete safe.version
-  delete safe.revision
-  delete safe.createdAt
-  delete safe.updatedAt
-  delete safe.recordKind
-  delete safe.reportType
+  REPORT_SERVER_FIELDS.forEach((key) => delete safe[key])
   return safe
 }
 
@@ -73,6 +98,55 @@ export const deleteReportRecord = async (reportUid) => {
   if (!id) return false
   await apiRequest(`/reports/${encodeURIComponent(id)}`, { method: 'DELETE' })
   return true
+}
+
+export const persistReportRecord = async (userId, row, options = {}) => {
+  if (!userId || !row || row?.recordKind === 'draft') return null
+
+  const reportType = normalizeType(options?.reportTypeSlug || row?.reportType)
+  const reportUid = String(row?.id || '').trim()
+  if (!reportType || !reportUid) return null
+
+  if (!isReportApiEnabled(reportType)) {
+    if (!featureFlags.reportLocalFallbackEnabled) return null
+    const current = loadReportRecords(userId)
+    const next = normalizeReportRecord(row)
+    if (!next) return null
+    const saved = saveReportRecords(userId, [
+      next,
+      ...current.filter((item) => String(item?.id || '').trim() !== reportUid),
+    ])
+    return saved ? next : null
+  }
+
+  const expectedVersion = Number(options?.expectedVersion || 0)
+  const isUpdate = options?.isUpdate === true || expectedVersion > 0
+  const body = {
+    display_id: String(row?.displayId || row?.id || '').trim(),
+    report_type: reportType,
+    payload: toPayload(row),
+    status: toApiStatus(row?.status),
+  }
+
+  const submissionKey = String(options?.submissionKey || row?.submissionKey || '').trim()
+  const response = isUpdate
+    ? await apiRequest(`/reports/${encodeURIComponent(reportUid)}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          ...body,
+          version: expectedVersion || Number(row?.version || 1),
+        }),
+      })
+    : await apiRequest('/reports', {
+        method: 'POST',
+        body: JSON.stringify({
+          ...body,
+          report_uid: reportUid,
+          ...(submissionKey ? { submission_key: submissionKey } : {}),
+        }),
+      })
+
+  return normalizeReportRecord(response?.data)
 }
 
 export const persistReportRecords = async (userId, rows, options = {}) => {

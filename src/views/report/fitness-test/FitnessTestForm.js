@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { CAlert, CButton } from '@coreui/react'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
-import { clearReportDraft, saveReportDraft } from '../reportStorage'
+import { clearReportDraft, loadReportDraftRow, saveReportDraft } from '../reportStorage'
 import { scrollToFirstError } from '../utils'
 import useReportDraft from '../hooks/useReportDraft'
 import { buildFitnessTestRecord } from './recordFactory'
@@ -44,6 +44,8 @@ const FitnessTestForm = ({
   const [draftDirtyStatus, setDraftDirtyStatus] = useState('')
   const originalSeedRef = useRef(null)
   const draftSeedRef = useRef(null)
+  const draftIdRef = useRef('')
+  const draftVersionRef = useRef(0)
 
   const {
     form,
@@ -67,6 +69,12 @@ const FitnessTestForm = ({
     setSetupConfirmed,
     pushToast,
     skipDraftLoad,
+    loadDraft: async ({ userId }) => {
+      const row = await loadReportDraftRow(userId, reportTypeSlug)
+      draftIdRef.current = String(row?.draftId || '').trim()
+      draftVersionRef.current = Number(row?.version || 0) || 0
+      return row?.payload || null
+    },
     onDraftLoaded: (draftForm) => {
       lastSavedDraftSignatureRef.current = createDraftSignature(draftForm)
       if (editingRecord) {
@@ -165,11 +173,23 @@ const FitnessTestForm = ({
         ? { __draftMode: 'edit', __editReportId: String(editingRecord.id || '') }
         : { __draftMode: 'new', __editReportId: '' }),
     }
-    const saved = await saveReportDraft(user?.id, draftPayload, reportTypeSlug)
+    let saved = null
+    try {
+      saved = await saveReportDraft(user?.id, draftPayload, reportTypeSlug, {
+        draftId: draftIdRef.current,
+        baseVersion: draftVersionRef.current,
+      })
+      if (saved && typeof saved === 'object') {
+        draftIdRef.current = String(saved?.draftId || draftIdRef.current).trim()
+        draftVersionRef.current = Number(saved?.version || 0) || draftVersionRef.current
+      }
+    } catch {
+      saved = null
+    }
     if (!saved) {
       setDraftDirtyStatus('')
       setDraftStatus('Draft save failed. Retry required.')
-      pushToast('Unable to save draft in browser storage. Please try again.', {
+      pushToast('Unable to save the draft to the server. Please retry after reconnecting.', {
         title: 'Draft save failed',
         color: 'danger',
       })
@@ -193,6 +213,8 @@ const FitnessTestForm = ({
       await clearReportDraft(user?.id, reportTypeSlug)
       if (typeof onDraftSaved === 'function') onDraftSaved()
       lastSavedDraftSignatureRef.current = null
+      draftIdRef.current = ''
+      draftVersionRef.current = 0
       setForm(defaultFitnessTestForm())
       setSetupConfirmed(false)
       setDraftDirtyStatus('')

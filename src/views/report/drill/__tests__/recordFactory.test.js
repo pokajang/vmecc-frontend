@@ -62,6 +62,7 @@ describe('buildDrillRecord', () => {
     })
 
     expect(record.exerciseCategories).toEqual(['Fire', 'Rescue'])
+    expect(record.submissionKey).toBe(form.submissionKey)
     expect(record.exerciseObjectives).toEqual([{ text: 'Test evacuation' }])
     expect(record.erpReferences).toEqual([{ annexNumber: 'ERP-01', title: 'Major Fire' }])
     expect(record.respondingTeam.attendance).toEqual([

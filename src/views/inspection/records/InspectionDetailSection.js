@@ -1,7 +1,10 @@
 import React from 'react'
 import { CAlert, CBadge, CRow } from '@coreui/react'
 import { DetailField } from 'src/components/report-workflow/ReportViewComponents'
-import { getInspectionTypeDefinition } from '../app/inspectionTypeRegistry'
+import {
+  getInspectionTypeDefinition,
+  INSPECTION_TYPE_DEFINITIONS,
+} from '../app/inspectionTypeRegistry'
 import { formatTimestamp } from '../domain/utils/inspectionSharedUtils'
 import { formatInspectionRole, recordToInspectionForm } from '../form/inspectionFormHelpers'
 import {
@@ -97,6 +100,7 @@ const getInspectionTypeDefinitionForDetail = (inspectionType, form = {}, record 
     ['highAngleChecks', 'high-angle-rescue-equipment-inspection'],
     ['hydraulicChecks', 'hydraulic-rescue-tools-inspection'],
     ['erAuxChecks', 'er-aux-equipment-inspection'],
+    ['hseSelections', 'health-safety-environment-inspection'],
     ['scbaBackPlateChecks', 'scba-inspection'],
     ['scbaCylinderChecks', 'scba-inspection'],
     ['scbaFaceMaskChecks', 'scba-inspection'],

@@ -16,6 +16,7 @@ import { createLocationDetailContextFields } from '../detailConfigHelpers'
 import { buildMainLocationContinuationOptions, CONTINUATION_TOKENS } from '../continuationHelpers'
 import { HydraulicEditSection, HydraulicReadOnlySection } from './section'
 import { INSPECTION_REPORT_EVIDENCE_COPY } from '../../inspectionReportEvidenceCopy'
+import { buildHydraulicDetailFindingItems, renderHydraulicDetailFindingContent } from './detail'
 
 const hydraulicInspectionDefinition = {
   key: 'hydraulic-rescue-tools-inspection',
@@ -61,8 +62,10 @@ const hydraulicInspectionDefinition = {
     inspectionType: HYDRAULIC_RESCUE_TOOLS_INSPECTION_TYPE,
     primaryLabel: 'Location',
   }),
-  detailFindingsMode: 'block',
+  detailFindingsMode: 'itemized',
   detailFindingsTitle: 'Equipment',
+  buildDetailFindingItems: buildHydraulicDetailFindingItems,
+  renderDetailFindingContent: renderHydraulicDetailFindingContent,
 }
 
 export default hydraulicInspectionDefinition
