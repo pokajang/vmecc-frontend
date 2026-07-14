@@ -92,7 +92,7 @@ const useInspectionReviewRequest = ({
       if (!validateCurrentForm) {
         setValidationState(null)
         setFieldErrors({})
-        onRequestReview?.(currentForm)
+        await onRequestReview?.(currentForm)
         return
       }
       const nextValidationState = getInspectionFormValidationState(currentForm)
@@ -121,7 +121,7 @@ const useInspectionReviewRequest = ({
       }
       setValidationState(null)
       setFieldErrors({})
-      onRequestReview?.(currentForm)
+      await onRequestReview?.(currentForm)
     } catch (error) {
       pushToast(error?.message || 'Unable to refresh the inspection session before review.', {
         title: 'Review blocked',

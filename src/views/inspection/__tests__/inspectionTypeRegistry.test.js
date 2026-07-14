@@ -3,6 +3,7 @@ import {
   getInspectionTypeDefinition,
   getInspectionTypeInitialFormState,
   getInspectionTypeOptions,
+  usesDirectInspectionSubmission,
 } from '../app/inspectionTypeRegistry'
 
 describe('inspectionTypeRegistry', () => {
@@ -81,5 +82,21 @@ describe('inspectionTypeRegistry', () => {
       scbaCylinderChecks: [],
       scbaFaceMaskChecks: [],
     })
+  })
+
+  it('enables direct submission only for the current HSE payload contract', () => {
+    expect(
+      usesDirectInspectionSubmission({
+        inspectionType: 'Health Safety Environment Inspection',
+        hsePayloadVersion: 2,
+      }),
+    ).toBe(true)
+    expect(
+      usesDirectInspectionSubmission({
+        inspectionType: 'Health Safety Environment Inspection',
+        hsePayloadVersion: 0,
+      }),
+    ).toBe(false)
+    expect(usesDirectInspectionSubmission({ inspectionType: 'General Inspection' })).toBe(false)
   })
 })

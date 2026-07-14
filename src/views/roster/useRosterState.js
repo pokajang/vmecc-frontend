@@ -17,7 +17,13 @@ const FALLBACK_SHIFTS = [
   { slug: 'night', name: 'Night', builtin: true },
 ]
 
-const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType = 'month') => {
+const useRosterState = (
+  enabled = true,
+  publishedOnly = false,
+  defaultRangeType = 'month',
+  initialStatusFilter = null,
+  initialAttentionFilter = null,
+) => {
   const today = new Date()
 
   const getMonday = (d) => {
@@ -413,6 +419,7 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
     try {
       const params = {}
       if (statusFilter) params.status = statusFilter
+      if (initialAttentionFilter) params.attention = initialAttentionFilter
       if (rangeType === 'day') {
         params.date = dateFilter
       } else if (rangeType === 'week') {
@@ -479,7 +486,7 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
         teamsRef.current = teamList
         if (shiftResp?.data) setShiftWindows(shiftResp.data)
         if (allShiftsResp?.data?.length) setAllShifts(allShiftsResp.data)
-        await refreshRoster(teamList, publishedOnly ? 'published' : null)
+        await refreshRoster(teamList, publishedOnly ? 'published' : initialStatusFilter)
       } catch (err) {
         setError(err.payload?.message || 'Unable to load roster.')
         setLoading(false)
@@ -509,9 +516,19 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
 
   useEffect(() => {
     if (!enabled || !initialized) return
-    refreshRoster(teamsRef.current, publishedOnly ? 'published' : null)
+    refreshRoster(teamsRef.current, publishedOnly ? 'published' : initialStatusFilter)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, initialized, rangeType, dateFilter, startDate, endDate, selectedMonths])
+  }, [
+    enabled,
+    initialized,
+    initialStatusFilter,
+    initialAttentionFilter,
+    rangeType,
+    dateFilter,
+    startDate,
+    endDate,
+    selectedMonths,
+  ])
 
   // ── Navigation helpers ──────────────────────────────────────────────────────
 
@@ -637,7 +654,7 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
       setTimeout(() => setStatusMessage(null), 3500)
       setEditMode(false)
       setIsDirty(false)
-      await refreshRoster(undefined, null, { force: true })
+      await refreshRoster(undefined, initialStatusFilter, { force: true })
     } catch (err) {
       setError(err.payload?.message || 'Unable to save draft.')
     } finally {
@@ -660,7 +677,7 @@ const useRosterState = (enabled = true, publishedOnly = false, defaultRangeType 
       setTimeout(() => setStatusMessage(null), 5000)
       setEditMode(false)
       setIsDirty(false)
-      await refreshRoster(undefined, null, { force: true })
+      await refreshRoster(undefined, initialStatusFilter, { force: true })
     } catch (err) {
       setError(err.payload?.message || 'Unable to publish roster.')
     } finally {

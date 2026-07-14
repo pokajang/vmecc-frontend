@@ -82,6 +82,7 @@ export const defaultInspectionForm = {
   scbaCylinderChecks: [],
   scbaFaceMaskChecks: [],
   scbaCustomSections: [],
+  hsePayloadVersion: 0,
   hseInspectedBy: '',
   hseInspectionDate: '',
   hseSelections: [],
@@ -298,12 +299,32 @@ export const formatInspectionLocation = ({
 }
 
 export const normalizeInspectionLocation = (source = {}) => {
-  const directZone = normalizeZoneLabel(source?.zone || source?.zone_name || '')
-  const zoneId = String(source?.zoneId || source?.zone_id || '').trim()
+  const path = Array.isArray(source?.locationPath)
+    ? source.locationPath
+    : Array.isArray(source?.location_path)
+      ? source.location_path
+      : []
+  const pathIds = Array.isArray(source?.locationIds)
+    ? source.locationIds
+    : Array.isArray(source?.location_ids)
+      ? source.location_ids
+      : []
+  const pathFirst = String(path[0] || '').trim()
+  const pathHasZone = looksLikeFireExtinguisherZoneLabel(pathFirst) && path.length >= 2
+  const directZone = normalizeZoneLabel(
+    source?.zone || source?.zone_name || (pathHasZone ? pathFirst : ''),
+  )
+  const zoneId = String(
+    source?.zoneId || source?.zone_id || (pathHasZone ? pathIds[0] : '') || '',
+  ).trim()
   const directMain = String(source?.mainLocation || source?.main_location || '').trim()
   const directSub = String(source?.subLocation || source?.sub_location || '').trim()
-  const mainLocationId = String(source?.mainLocationId || source?.main_location_id || '').trim()
-  const subLocationId = String(source?.subLocationId || source?.sub_location_id || '').trim()
+  const mainLocationId = String(
+    source?.mainLocationId || source?.main_location_id || pathIds[pathHasZone ? 1 : 0] || '',
+  ).trim()
+  const subLocationId = String(
+    source?.subLocationId || source?.sub_location_id || pathIds[pathHasZone ? 2 : 1] || '',
+  ).trim()
   if (directMain || directSub) {
     const location = formatInspectionLocation({
       zone: directZone,
@@ -339,13 +360,6 @@ export const normalizeInspectionLocation = (source = {}) => {
     }
   }
 
-  const path = Array.isArray(source?.locationPath)
-    ? source.locationPath
-    : Array.isArray(source?.location_path)
-      ? source.location_path
-      : []
-  const pathFirst = String(path[0] || '').trim()
-  const pathHasZone = looksLikeFireExtinguisherZoneLabel(pathFirst) && path.length >= 2
   const pathZone = pathHasZone ? normalizeZoneLabel(pathFirst) : directZone
   const pathMain = String(path[pathHasZone ? 1 : 0] || '').trim()
   const pathSub = String(path[pathHasZone ? 2 : 1] || '').trim()

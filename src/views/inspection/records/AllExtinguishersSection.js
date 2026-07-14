@@ -19,6 +19,7 @@ import {
 import { ArrowLeft, Camera, MessageSquare, X } from 'lucide-react'
 
 import DataTableFooter from 'src/components/DataTableFooter'
+import CreateActionButton from 'src/components/CreateActionButton'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import ResponsiveRecordCollection from 'src/components/ResponsiveRecordCollection'
 import RowActionCell from 'src/components/RowActionCell'
@@ -31,6 +32,7 @@ import {
   fetchFireExtinguisherCoverage,
   fetchFireExtinguisherCoverageDetail,
 } from 'src/views/inspection/inspectionFireExtinguisherApi'
+import FireExtinguisherCreateDrawer from './FireExtinguisherCreateDrawer'
 
 const ALL_ROWS_VALUE = 'all'
 
@@ -450,7 +452,6 @@ const nowrapCellClass = 'all-extinguishers-table__nowrap'
 const textCellClass = 'all-extinguishers-table__text-cell'
 const centeredCellClass = `text-center ${nowrapCellClass}`
 const indexColumnStyle = { width: '56px', minWidth: '56px' }
-const actionColumnStyle = { width: '72px', minWidth: '72px' }
 
 const AllExtinguishersTable = ({ visibleRows, onViewDetails }) => (
   <div className="all-extinguishers-table-frame d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-body">
@@ -480,10 +481,8 @@ const AllExtinguishersTable = ({ visibleRows, onViewDetails }) => (
           <CTableHeaderCell className="text-center">Reports</CTableHeaderCell>
           <CTableHeaderCell
             className="all-extinguishers-table__sticky-action-cell text-center"
-            style={actionColumnStyle}
-          >
-            Actions
-          </CTableHeaderCell>
+            aria-label="Actions"
+          />
         </CTableRow>
       </CTableHead>
       <CTableBody>
@@ -565,10 +564,7 @@ const AllExtinguishersTable = ({ visibleRows, onViewDetails }) => (
                   label={`${getReportCount(row)} report${getReportCount(row) === 1 ? '' : 's'}`}
                 />
               </CTableDataCell>
-              <RowActionCell
-                className="all-extinguishers-table__action-cell all-extinguishers-table__sticky-action-cell text-center align-top"
-                style={actionColumnStyle}
-              >
+              <RowActionCell className="all-extinguishers-table__action-cell all-extinguishers-table__sticky-action-cell text-center align-top">
                 <RowActions
                   hitArea={36}
                   items={[
@@ -1494,8 +1490,18 @@ const CoverageDetailDialog = ({
   )
 }
 
-const AllExtinguishersSection = ({ rows = null, isLoading = false, onViewDetails = null }) => {
+const AllExtinguishersSection = ({
+  rows = null,
+  isLoading = false,
+  onViewDetails = null,
+  isCreateOpen = false,
+  onRequestCreate = null,
+  onRequestCloseCreate = null,
+  initialViewState = null,
+  initialSuccessMessage = '',
+}) => {
   const useProvidedRows = Array.isArray(rows)
+  const savedView = initialViewState || {}
   const [remoteRows, setRemoteRows] = useState([])
   const [remoteMeta, setRemoteMeta] = useState(null)
   const [isFetchingRows, setIsFetchingRows] = useState(!useProvidedRows)
@@ -1507,20 +1513,25 @@ const AllExtinguishersSection = ({ rows = null, isLoading = false, onViewDetails
   const [isFetchingDetail, setIsFetchingDetail] = useState(false)
   const [detailError, setDetailError] = useState('')
   const [photoViewer, setPhotoViewer] = useState(null)
-  const [search, setSearch] = useState('')
-  const [period, setPeriod] = useState('all')
-  const [periodFrom, setPeriodFrom] = useState(getTodayDateInputValue)
-  const [periodTo, setPeriodTo] = useState(getTodayDateInputValue)
-  const [sort, setSort] = useState('zone-location')
-  const [duplicateScope, setDuplicateScope] = useState('all')
-  const [zoneFilter, setZoneFilter] = useState(ALL_ROWS_VALUE)
-  const [locationFilter, setLocationFilter] = useState(ALL_ROWS_VALUE)
-  const [inspectedByFilter, setInspectedByFilter] = useState(ALL_ROWS_VALUE)
-  const [statusFilter, setStatusFilter] = useState(ALL_ROWS_VALUE)
-  const [issueFilter, setIssueFilter] = useState(ALL_ROWS_VALUE)
-  const [certificationFilter, setCertificationFilter] = useState(ALL_ROWS_VALUE)
-  const [rowsToShow, setRowsToShow] = useState(10)
-  const [currentPage, setCurrentPage] = useState(1)
+  const [search, setSearch] = useState(savedView.search || '')
+  const [period, setPeriod] = useState(savedView.period || 'all')
+  const [periodFrom, setPeriodFrom] = useState(savedView.periodFrom || getTodayDateInputValue)
+  const [periodTo, setPeriodTo] = useState(savedView.periodTo || getTodayDateInputValue)
+  const [sort, setSort] = useState(savedView.sort || 'zone-location')
+  const [duplicateScope, setDuplicateScope] = useState(savedView.duplicateScope || 'all')
+  const [zoneFilter, setZoneFilter] = useState(savedView.zoneFilter || ALL_ROWS_VALUE)
+  const [locationFilter, setLocationFilter] = useState(savedView.locationFilter || ALL_ROWS_VALUE)
+  const [inspectedByFilter, setInspectedByFilter] = useState(
+    savedView.inspectedByFilter || ALL_ROWS_VALUE,
+  )
+  const [statusFilter, setStatusFilter] = useState(savedView.statusFilter || ALL_ROWS_VALUE)
+  const [issueFilter, setIssueFilter] = useState(savedView.issueFilter || ALL_ROWS_VALUE)
+  const [certificationFilter, setCertificationFilter] = useState(
+    savedView.certificationFilter || ALL_ROWS_VALUE,
+  )
+  const [rowsToShow, setRowsToShow] = useState(savedView.rowsToShow ?? 10)
+  const [currentPage, setCurrentPage] = useState(savedView.currentPage ?? 1)
+  const [createSuccessMessage, setCreateSuccessMessage] = useState(initialSuccessMessage)
   const isCustomPeriod = period === 'custom'
   const isCustomPeriodReady =
     !isCustomPeriod || (periodFrom !== '' && periodTo !== '' && periodFrom <= periodTo)
@@ -1597,6 +1608,65 @@ const AllExtinguishersSection = ({ rows = null, isLoading = false, onViewDetails
   const resetToFirstPage = useCallback(() => {
     setCurrentPage(1)
   }, [])
+
+  const viewState = useMemo(
+    () => ({
+      search,
+      period,
+      periodFrom,
+      periodTo,
+      sort,
+      duplicateScope,
+      zoneFilter,
+      locationFilter,
+      inspectedByFilter,
+      statusFilter,
+      issueFilter,
+      certificationFilter,
+      rowsToShow,
+      currentPage,
+    }),
+    [
+      certificationFilter,
+      currentPage,
+      duplicateScope,
+      inspectedByFilter,
+      issueFilter,
+      locationFilter,
+      period,
+      periodFrom,
+      periodTo,
+      rowsToShow,
+      search,
+      sort,
+      statusFilter,
+      zoneFilter,
+    ],
+  )
+
+  const requestCreate = useCallback(() => {
+    setCreateSuccessMessage('')
+    onRequestCreate?.(viewState)
+  }, [onRequestCreate, viewState])
+
+  const handleCreated = useCallback(
+    (createdRows = []) => {
+      const rows = Array.isArray(createdRows) ? createdRows : [createdRows].filter(Boolean)
+      const locator = text(rows[0]?.idLocNo || rows[0]?.barcodeNo)
+      const successMessage =
+        rows.length === 1 && locator
+          ? `Fire extinguisher ${locator} was added to the catalogue.`
+          : `${rows.length} fire extinguishers were added to the catalogue.`
+      setCreateSuccessMessage(successMessage)
+      if (currentPage === 1) {
+        loadCoverageRows()
+      } else {
+        setCurrentPage(1)
+      }
+      return successMessage
+    },
+    [currentPage, loadCoverageRows],
+  )
 
   const updateSearch = useCallback(
     (value) => {
@@ -2075,6 +2145,25 @@ const AllExtinguishersSection = ({ rows = null, isLoading = false, onViewDetails
     />
   )
   const detailPeriodLabel = getPeriodLabel(period, periodFrom, periodTo)
+  const createAction = onRequestCreate ? (
+    <div className="d-flex justify-content-end mb-3" data-testid="all-extinguishers-create-toolbar">
+      <CreateActionButton
+        label="Add Extinguisher"
+        importance="section-primary"
+        onClick={requestCreate}
+      />
+    </div>
+  ) : null
+  const createSuccess = createSuccessMessage ? (
+    <CAlert
+      color="success"
+      dismissible
+      onClose={() => setCreateSuccessMessage('')}
+      className="mb-3"
+    >
+      {createSuccessMessage}
+    </CAlert>
+  ) : null
 
   return (
     <>
@@ -2082,6 +2171,8 @@ const AllExtinguishersSection = ({ rows = null, isLoading = false, onViewDetails
         className="inspection-mobile-section d-md-none"
         data-testid="all-extinguishers-section-mobile"
       >
+        {createAction}
+        {createSuccess}
         {renderSummaryStrip('all-extinguishers-summary-mobile')}
         {filters}
         <ResponsiveRecordCollection
@@ -2096,6 +2187,8 @@ const AllExtinguishersSection = ({ rows = null, isLoading = false, onViewDetails
 
       <CCard className="d-none d-md-block" data-testid="all-extinguishers-section">
         <CCardBody>
+          {createAction}
+          {createSuccess}
           {renderSummaryStrip('all-extinguishers-summary')}
           {filters}
           <ResponsiveRecordCollection
@@ -2138,6 +2231,13 @@ const AllExtinguishersSection = ({ rows = null, isLoading = false, onViewDetails
         }}
       />
       <InspectionPhotoViewerModal viewer={photoViewer} onClose={() => setPhotoViewer(null)} />
+      {isCreateOpen ? (
+        <FireExtinguisherCreateDrawer
+          visible
+          onClose={(options = {}) => onRequestCloseCreate?.({ ...options, viewState })}
+          onCreated={handleCreated}
+        />
+      ) : null}
     </>
   )
 }

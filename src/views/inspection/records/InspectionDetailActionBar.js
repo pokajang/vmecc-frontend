@@ -65,7 +65,7 @@ const createActionDescriptors = ({
       label: downloadingId === record.id ? 'Generating...' : 'Download',
       color: 'secondary',
       variant: 'outline',
-      disabled: Boolean(downloadingId),
+      disabled: Boolean(downloadingId) || record.canDownloadPdf !== true,
       onClick: () => onDownloadRecord(record.id),
     })
   }

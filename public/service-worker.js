@@ -1,11 +1,11 @@
-const CACHE_NAME = 'vmecc-app-shell-v6'
+const CACHE_NAME = 'vmecc-app-shell-v7'
 const APP_SHELL = [
   '/',
   '/index.html',
   '/inspection',
-  '/manifest.json',
-  '/favicon.svg',
-  '/favicon.ico',
+  '/manifest.json?v=20260714',
+  '/favicon.svg?v=20260714',
+  '/favicon.ico?v=20260714',
 ]
 const NEVER_CACHE_PATHS = ['/api/', '/sanctum/', '/version.json']
 

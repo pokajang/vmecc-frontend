@@ -286,6 +286,11 @@ const routes = [
   { path: '/inspection/new/:newSection', name: 'New Inspection Section', element: Inspection },
   { path: '/inspection/review', name: 'Inspection Review', element: Inspection },
   { path: '/inspection/all-extinguishers', name: 'All Extinguishers', element: Inspection },
+  {
+    path: '/inspection/all-extinguishers/new',
+    name: 'Add Fire Extinguisher',
+    element: Inspection,
+  },
   { path: '/inspection/:reportId/edit', name: 'Inspection Edit', element: Inspection },
   { path: '/inspection/:reportId', name: 'Inspection Detail', element: Inspection },
   {

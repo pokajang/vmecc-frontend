@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { fetchDashboardModuleStats, fetchDashboardModulesStats } from '../api/dashboardApi'
+import {
+  fetchDashboardActionQueue,
+  fetchDashboardModuleStats,
+  fetchDashboardModulesStats,
+} from '../api/dashboardApi'
 
 const { apiRequest } = vi.hoisted(() => ({
   apiRequest: vi.fn(),
@@ -28,5 +32,11 @@ describe('dashboardApi', () => {
       '/stats?period=3m&modules=payroll%2Cleave',
       expect.any(Object),
     )
+  })
+
+  it('fetches the personalized action queue independently from dashboard stats', async () => {
+    await fetchDashboardActionQueue()
+
+    expect(apiRequest).toHaveBeenCalledWith('/dashboard/action-queue', expect.any(Object))
   })
 })

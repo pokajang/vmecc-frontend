@@ -32,6 +32,8 @@ afterEach(() => {
 const submittedRow = {
   id: 'RPT-001',
   displayId: 'ERCO-2026-001',
+  reportType: 'erco',
+  canDownloadPdf: true,
   incidentType: 'Medical Emergency',
   incidentTypeDescription: 'Crew member required medical assistance.',
   location: 'Engine Room',
@@ -186,6 +188,21 @@ describe('ReportRecordsSection', () => {
     })[0]
 
     expect(reviewAction.getAttribute('title')).toBe('Review is not available for this status.')
+  })
+
+  it('disables PDF download when the server capability is false', () => {
+    const unavailableRow = { ...submittedRow, canDownloadPdf: false }
+    render(
+      <ReportRecordsSection
+        {...buildProps({ filteredRecords: [unavailableRow], visibleRows: [unavailableRow] })}
+      />,
+    )
+
+    const downloadActions = screen.getAllByRole('button', {
+      name: 'Download. PDF download is not available for this report.',
+    })
+    expect(downloadActions.length).toBeGreaterThan(0)
+    downloadActions.forEach((action) => expect(action.disabled).toBe(true))
   })
 
   it('renders the configured report type label in the desktop table', () => {

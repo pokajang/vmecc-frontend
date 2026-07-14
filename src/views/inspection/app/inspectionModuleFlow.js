@@ -1,5 +1,19 @@
 export const MOBILE_HOME_RECENT_RECORD_LIMIT = 3
 
+export const trackInspectionDraftSyncTask = (taskRef, task) => {
+  const trackedTask = Promise.resolve(task)
+  taskRef.current = trackedTask
+  return trackedTask
+}
+
+export const waitForInspectionDraftSyncTasks = async (taskRef, inFlightRef) => {
+  let settledTask = null
+  do {
+    settledTask = taskRef.current
+    if (settledTask) await settledTask
+  } while (taskRef.current !== settledTask || inFlightRef.current)
+}
+
 export const buildInspectionRouteKey = (routeMode, routeRecordId = '') =>
   `${routeMode}:${routeRecordId || 'new'}`
 

@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useState } from 'react'
 
-export default function useLeaveViewControls({ pathname, navigate }) {
+export default function useLeaveViewControls({ pathname, navigate, initialStatusFilter = 'All' }) {
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('All')
+  const [statusFilter, setStatusFilter] = useState(initialStatusFilter)
   const [typeFilter, setTypeFilter] = useState('All')
   const [period, setPeriod] = useState('all')
   const [sort, setSort] = useState('appliedAt:desc')

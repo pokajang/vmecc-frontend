@@ -125,7 +125,7 @@ export const normalizeInspectionForm = (form = {}) => {
     normalizeInspectionLocation(source),
     inspectionType,
   )
-  const hseFields = normalizeHseFormFields(source)
+  const hseFields = normalizeHseFormFields(source, { preserveWhitespace: true })
   const inspectedAt = deriveInspectedAt(source)
   const inspectionDate = getInspectionDateFromDateTime(inspectedAt)
   const inspectionSessionUid = String(
@@ -360,6 +360,7 @@ export const buildInspectionPayloadSnapshot = (form = {}) => {
   const hseFields = isHseInspectionType(inspectionType)
     ? normalizeHseFormFields(normalizedForm)
     : normalizeHseFormFields()
+  const isHseVersion2 = isHseInspectionType(inspectionType) && hseFields.hsePayloadVersion === 2
   const description =
     isHydraulicInspectionType(inspectionType) && !String(normalizedForm.description || '').trim()
       ? buildHydraulicDescription({ ...normalizedForm }, { checks: hydraulicChecks })
@@ -424,7 +425,9 @@ export const buildInspectionPayloadSnapshot = (form = {}) => {
                       )
                     : String(normalizedForm.description || '').trim()
   const photos = normalizePhotos(normalizedForm.photos)
-  const inspectionIssues = normalizeInspectionIssues(normalizedForm.inspectionIssues)
+  const inspectionIssues = isHseVersion2
+    ? []
+    : normalizeInspectionIssues(normalizedForm.inspectionIssues)
   const structuredChecklist = [
     ...(isScbaInspectionType(inspectionType)
       ? buildScbaChecklist(
@@ -507,7 +510,7 @@ export const buildInspectionPayloadSnapshot = (form = {}) => {
     locationIds,
     inspectedAt: String(normalizedForm.inspectedAt || '').trim(),
     description,
-    reportRemarks: String(normalizedForm.reportRemarks || '').trim(),
+    reportRemarks: isHseVersion2 ? '' : String(normalizedForm.reportRemarks || '').trim(),
     photos,
     inspectionIssues,
     inspectionTypeDrafts: normalizedForm.inspectionTypeDrafts || {},

@@ -18,6 +18,7 @@ import {
   CTableRow,
 } from '@coreui/react'
 import { useSelector } from 'react-redux'
+import { useLocation } from 'react-router-dom'
 
 import DataTableFooter from 'src/components/DataTableFooter'
 import ModulePageHeader from 'src/components/ModulePageHeader'
@@ -54,9 +55,13 @@ import {
 
 const AiHelperKnowledge = () => {
   const authUser = useSelector((state) => state.authUser)
+  const location = useLocation()
   const canReview = useMemo(() => isSystemAdministrator(authUser), [authUser])
 
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState(() => {
+    const status = String(new URLSearchParams(location.search).get('status') || '').toLowerCase()
+    return REVIEW_FILTERS.includes(status) ? status : 'all'
+  })
   const [scopeFilter, setScopeFilter] = useState('all')
   const [visibilityFilter, setVisibilityFilter] = useState('all')
   const [search, setSearch] = useState('')
@@ -225,13 +230,12 @@ const AiHelperKnowledge = () => {
         setSelected(null)
       }
       setDeleteTarget(null)
-      await loadEntries()
     } catch (err) {
       setDetailError(err.payload?.message || 'Unable to delete knowledge.')
     } finally {
       setSaving(false)
     }
-  }, [deleteTarget, loadEntries, saving, selected])
+  }, [deleteTarget, saving, selected])
 
   const openOriginal = useCallback((entryId) => {
     if (!entryId || typeof window === 'undefined') return

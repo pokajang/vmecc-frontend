@@ -5,7 +5,6 @@ import { CCloseButton, CSidebar, CSidebarBrand, CSidebarHeader } from '@coreui/r
 
 import { AppSidebarNav } from './AppSidebarNav'
 
-import logoHorizontalSvg from 'src/assets/brand/logo-horizontal.svg'
 import logoSvg from 'src/assets/brand/logo.svg'
 import useMessageUnreadCount from 'src/hooks/useMessageUnreadCount'
 import usePwaInstallPrompt from 'src/hooks/usePwaInstallPrompt'
@@ -61,18 +60,8 @@ const AppSidebar = () => {
     >
       <CSidebarHeader className="border-bottom sidebar-brand-header">
         <CSidebarBrand to="/">
-          <img
-            className="sidebar-brand-full"
-            src={logoHorizontalSvg}
-            alt="VMECC"
-            style={{ height: '50%', width: 'auto', maxWidth: 160, objectFit: 'contain' }}
-          />
-          <img
-            className="sidebar-brand-narrow"
-            src={logoSvg}
-            alt="VMECC"
-            style={{ height: '50%', width: 'auto', maxWidth: 40, objectFit: 'contain' }}
-          />
+          <img className="sidebar-brand-full sidebar-brand-mark" src={logoSvg} alt="VMECC" />
+          <img className="sidebar-brand-narrow sidebar-brand-mark" src={logoSvg} alt="VMECC" />
         </CSidebarBrand>
         <CCloseButton
           className="d-lg-none"

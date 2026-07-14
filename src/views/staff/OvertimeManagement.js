@@ -117,6 +117,10 @@ const OvertimeManagement = () => {
     [user?.name, user?.full_name, user?.email],
   )
   const isDetailRoute = Boolean(overtimeRouteKey)
+  const actionQueueAction = useMemo(() => {
+    const action = String(new URLSearchParams(location.search).get('action') || '').toLowerCase()
+    return ['review', 'recommend', 'approve'].includes(action) ? action : ''
+  }, [location.search])
 
   const toaster = useRef()
   const [toast, addToast] = useState(null)
@@ -184,6 +188,7 @@ const OvertimeManagement = () => {
         sort,
         page,
         per_page: rowsToShow,
+        action: actionQueueAction || undefined,
       }
 
       const requestId = overtimeRequestRef.current + 1
@@ -225,6 +230,7 @@ const OvertimeManagement = () => {
     },
     [
       isHrUser,
+      actionQueueAction,
       overtimeTypeFilter,
       page,
       period,

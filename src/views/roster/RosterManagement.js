@@ -75,7 +75,13 @@ const OverviewTab = ({ canManageRoster, exportedBy }) => {
 
 // Schedule tab
 
-const ScheduleTab = ({ canManageRoster, exportedBy }) => {
+const ScheduleTab = ({
+  canManageRoster,
+  exportedBy,
+  defaultRangeType,
+  initialStatusFilter,
+  initialAttentionFilter,
+}) => {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
   const [showPublishConfirm, setShowPublishConfirm] = useState(false)
 
@@ -120,7 +126,13 @@ const ScheduleTab = ({ canManageRoster, exportedBy }) => {
       handleNext,
       onMonthToggle,
     },
-  } = useRosterState(canManageRoster)
+  } = useRosterState(
+    canManageRoster,
+    false,
+    defaultRangeType,
+    initialStatusFilter,
+    initialAttentionFilter,
+  )
 
   const handleCancelClick = () => {
     if (isDirty) setShowCancelConfirm(true)
@@ -410,6 +422,9 @@ const RosterManagement = () => {
 
   const pathSegment = location.pathname.split('/').filter(Boolean).pop() || ''
   const resolvedTab = TAB_BY_PATH[pathSegment] || DEFAULT_TAB
+  const queueParams = new URLSearchParams(location.search)
+  const queueRange = queueParams.get('range') === 'all' ? 'all' : 'month'
+  const queueAttention = queueParams.get('attention') === 'draft' ? 'draft' : null
 
   const switchTab = (tab) => {
     if (!TAB_KEYS.includes(tab)) return
@@ -456,7 +471,13 @@ const RosterManagement = () => {
         <OverviewTab canManageRoster={canManageRoster} exportedBy={exportedBy} />
       )}
       {resolvedTab === 'schedule' && (
-        <ScheduleTab canManageRoster={canManageRoster} exportedBy={exportedBy} />
+        <ScheduleTab
+          canManageRoster={canManageRoster}
+          exportedBy={exportedBy}
+          defaultRangeType={queueRange}
+          initialStatusFilter={null}
+          initialAttentionFilter={queueAttention}
+        />
       )}
     </CContainer>
   )

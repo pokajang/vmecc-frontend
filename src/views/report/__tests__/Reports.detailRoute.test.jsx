@@ -240,6 +240,30 @@ afterEach(() => {
 })
 
 describe('Reports direct detail route loading', () => {
+  it('passes a returned-report queue filter to the records hook', () => {
+    renderReportsRoute('/report/erco?status=Rejected')
+
+    expect(mocks.useReportRecords).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actionFilter: '',
+        initialStatusFilter: 'Rejected',
+        reportTypeSlug: 'erco',
+      }),
+    )
+  })
+
+  it('passes an actionable review queue filter to the records hook', () => {
+    renderReportsRoute('/report/erco?scope=actionable&action=review')
+
+    expect(mocks.useReportRecords).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actionFilter: 'review',
+        initialStatusFilter: 'All',
+        reportTypeSlug: 'erco',
+      }),
+    )
+  })
+
   it('renders a direct route record after loading it from the API', async () => {
     mocks.refreshReportRecord.mockResolvedValue(ercoRecord)
 

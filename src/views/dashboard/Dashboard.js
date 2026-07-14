@@ -21,6 +21,7 @@ import { getPrimaryRoleLabel, hasPermission } from 'src/utils/authz'
 import { isModuleEnabled } from 'src/utils/modules'
 import { DASHBOARD_SECTION_PERMISSIONS } from 'src/constants/dashboardVisibility'
 import useDashboardStats from './hooks/useDashboardStats'
+import useDashboardActionQueue from './hooks/useDashboardActionQueue'
 import { PERIOD_OPTIONS, resolvePeriodLabel } from './components/DashboardHeader'
 import { MODULE_ACCENTS } from './utils/chartDefaults'
 import {
@@ -121,80 +122,17 @@ const SectionHeading = ({ title, subtext }) => (
   </div>
 )
 
-const buildDashboardActionQueue = ({
-  stats,
-  canViewPayrollSection,
-  canViewOvertimeSection,
-  canViewLeaveSection,
-  canViewRosterSection,
-  canViewReportsSection,
-}) => {
-  const items = []
-  const addItem = (condition, item) => {
-    if (condition && Number(item.count) > 0) items.push(item)
-  }
-
-  addItem(canViewPayrollSection, {
-    key: 'payroll-approvals',
-    module: 'Payroll',
-    label: 'Claims pending approval',
-    count: stats.payroll?.pendingApprovals,
-    to: '/staff/salary-claims/claims',
-    tone: MODULE_ACCENTS.payroll.base,
-  })
-  addItem(canViewPayrollSection, {
-    key: 'payroll-unpaid',
-    module: 'Payroll',
-    label: 'Approved unpaid claims',
-    count: stats.payroll?.approvedUnpaidCount,
-    to: '/staff/salary-claims/claims',
-    tone: MODULE_ACCENTS.payroll.base,
-  })
-  addItem(canViewOvertimeSection, {
-    key: 'overtime-approvals',
-    module: 'Overtime',
-    label: 'Requests pending approval',
-    count: stats.overtime?.pendingApprovals,
-    to: '/staff/overtime-management/records',
-    tone: MODULE_ACCENTS.overtime.base,
-  })
-  addItem(canViewLeaveSection, {
-    key: 'leave-approvals',
-    module: 'Leave',
-    label: 'Requests pending approval',
-    count: stats.leave?.pendingApprovals,
-    to: '/staff/leave-management/records',
-    tone: MODULE_ACCENTS.leave.base,
-  })
-  addItem(canViewRosterSection, {
-    key: 'roster-drafts',
-    module: 'Roster',
-    label: 'Draft days pending publish',
-    count: stats.roster?.draftsPendingPublish,
-    to: '/roster/schedule',
-    tone: MODULE_ACCENTS.roster.base,
-  })
-  addItem(canViewReportsSection, {
-    key: 'reports-review',
-    module: 'Reports',
-    label: 'Reports pending review',
-    count: stats.reports?.pendingReview,
-    to: '/report/erco',
-    tone: MODULE_ACCENTS.reports.base,
-  })
-  addItem(canViewReportsSection, {
-    key: 'reports-approval',
-    module: 'Reports',
-    label: 'Reports pending approval',
-    count: stats.reports?.pendingApproval,
-    to: '/report/erco',
-    tone: MODULE_ACCENTS.reports.base,
-  })
-
-  return items
+const ACTION_QUEUE_TONES = {
+  payroll: MODULE_ACCENTS.payroll.base,
+  overtime: MODULE_ACCENTS.overtime.base,
+  leave: MODULE_ACCENTS.leave.base,
+  roster: MODULE_ACCENTS.roster.base,
+  reports: MODULE_ACCENTS.reports.base,
+  inspection: MODULE_ACCENTS.reports.base,
+  admin: 'var(--cui-primary)',
 }
 
-const DashboardActionQueue = ({ items, loading, periodLabel, hasModuleErrors = false }) => {
+const DashboardActionQueue = ({ items, loading, error, onRetry }) => {
   const [visible, setVisible] = useState(true)
 
   return (
@@ -204,7 +142,7 @@ const DashboardActionQueue = ({ items, loading, periodLabel, hasModuleErrors = f
           <div>
             <div className="mb-1 fw-semibold">Action Queue</div>
             <div className="text-body-secondary small d-none d-md-block">
-              Items needing attention now - {periodLabel}
+              Items needing your attention now
             </div>
           </div>
           <CButton
@@ -224,9 +162,12 @@ const DashboardActionQueue = ({ items, loading, periodLabel, hasModuleErrors = f
             <div className="text-body-secondary small" data-testid="dashboard-action-queue-loading">
               Loading action queue...
             </div>
-          ) : hasModuleErrors && items.length === 0 ? (
+          ) : error ? (
             <div className="text-body-secondary small" data-testid="dashboard-action-queue-error">
-              Some dashboard modules could not be loaded. Action queue values may be partial.
+              <div className="mb-2">Unable to load your action queue. {error}</div>
+              <CButton size="sm" color="secondary" variant="outline" onClick={onRetry}>
+                Retry action queue
+              </CButton>
             </div>
           ) : items.length === 0 ? (
             <div className="text-body-secondary small" data-testid="dashboard-action-queue-empty">
@@ -248,13 +189,16 @@ const DashboardActionQueue = ({ items, loading, periodLabel, hasModuleErrors = f
                         width: 8,
                         height: 8,
                         borderRadius: '50%',
-                        background: item.tone,
+                        background:
+                          item.tone || ACTION_QUEUE_TONES[item.module] || 'var(--cui-primary)',
                         flexShrink: 0,
                       }}
                     />
                     <span className="d-grid" style={{ minWidth: 0 }}>
                       <span className="fw-semibold text-break">{item.label}</span>
-                      <span className="small text-body-secondary">{item.module}</span>
+                      <span className="small text-body-secondary text-capitalize">
+                        {item.module}
+                      </span>
                     </span>
                   </span>
                   <span className="fw-semibold">{item.count}</span>
@@ -355,39 +299,18 @@ const Dashboard = () => {
       canViewReportsSection,
     ],
   )
-  const { stats, loading, moduleStats } = useDashboardStats({
+  const { stats, moduleStats } = useDashboardStats({
     period,
     modules: visibleDashboardModules,
     refreshToken: dashboardRefreshToken,
   })
+  const actionQueue = useDashboardActionQueue({ refreshToken: dashboardRefreshToken })
   const payrollLoading = moduleStats?.payroll?.loading
   const overtimeLoading = moduleStats?.overtime?.loading
   const leaveLoading = moduleStats?.leave?.loading
   const rosterLoading = moduleStats?.roster?.loading
   const reportsLoading = moduleStats?.reports?.loading
   const refreshDashboardStats = () => setDashboardRefreshToken((value) => value + 1)
-  const actionQueueHasModuleErrors = visibleDashboardModules.some((moduleKey) =>
-    Boolean(moduleStats?.[moduleKey]?.error),
-  )
-  const actionQueueItems = useMemo(
-    () =>
-      buildDashboardActionQueue({
-        stats,
-        canViewPayrollSection,
-        canViewOvertimeSection,
-        canViewLeaveSection,
-        canViewRosterSection,
-        canViewReportsSection,
-      }),
-    [
-      stats,
-      canViewPayrollSection,
-      canViewOvertimeSection,
-      canViewLeaveSection,
-      canViewRosterSection,
-      canViewReportsSection,
-    ],
-  )
 
   if (!hasPermission(authUser, 'self.dashboard')) {
     return (
@@ -434,10 +357,10 @@ const Dashboard = () => {
       </CCard>
 
       <DashboardActionQueue
-        items={actionQueueItems}
-        loading={loading}
-        periodLabel={periodLabel}
-        hasModuleErrors={actionQueueHasModuleErrors}
+        items={actionQueue.items}
+        loading={actionQueue.loading}
+        error={actionQueue.error}
+        onRetry={actionQueue.retry}
       />
 
       <DashboardModuleSlot moduleKey="payroll" isVisible={canViewPayrollSection}>

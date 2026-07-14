@@ -34,8 +34,10 @@
   }
 }
 
-.sidebar-brand-full {
-  margin-left: 3px;
+.sidebar-brand-mark {
+  width: 2rem;
+  height: 2rem;
+  object-fit: contain;
 }
 
 .sidebar-header.sidebar-brand-header {

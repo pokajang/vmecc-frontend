@@ -12,6 +12,7 @@ const record = {
   id: 'erco-001',
   displayId: 'ERCO-001',
   reportType: 'erco',
+  canDownloadPdf: true,
   incidentType: 'Hazmat',
   weather: 'Clear',
   location: 'Zone 1',
@@ -102,5 +103,19 @@ describe('ReportDetailSection work-first mobile detail', () => {
     expect(screen.getByText('Prepared By')).toBeTruthy()
     expect(screen.getByText('Station Commander Review')).toBeTruthy()
     expect(screen.getByText('VMM Review')).toBeTruthy()
+  })
+
+  it('disables PDF download when the server capability is false', () => {
+    render(
+      <ReportDetailSection
+        {...buildProps({ selectedRecord: { ...record, canDownloadPdf: false } })}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'More' }))
+
+    const downloadActions = screen.getAllByTestId('erco-report-download-action')
+    expect(downloadActions.length).toBeGreaterThan(0)
+    downloadActions.forEach((action) => expect(action.disabled).toBe(true))
   })
 })

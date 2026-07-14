@@ -166,12 +166,20 @@ const InspectionFormActions = ({
   onRequestReview,
   onRetryDraftSync,
   sectionLabel = '',
+  submissionMode = 'review',
   validationStatusMessage,
   wrapperClassName = '',
 }) => {
   const syncStatus = String(draftSyncState?.status || '').trim()
   const syncFailed = syncStatus === 'failed'
-  const reviewLabel = isUpdateMode ? REVIEW_UPDATE_ACTION_LABEL : REVIEW_ACTION_LABEL
+  const reviewLabel =
+    submissionMode === 'direct'
+      ? isUpdateMode
+        ? 'Update Report'
+        : 'Submit Report'
+      : isUpdateMode
+        ? REVIEW_UPDATE_ACTION_LABEL
+        : REVIEW_ACTION_LABEL
   const statusClassName = `inspection-draft-status small ${
     validationStatusMessage ? 'text-warning-emphasis' : 'text-body-secondary'
   } ${alignLeft ? '' : 'me-sm-auto'} align-self-sm-center`.trim()
@@ -1355,6 +1363,15 @@ const InspectionFormBodySections = ({
     ? location.subLocationOptions
     : []
   const usesZoneLocationFlow = Boolean(selectedTypeDefinition?.usesZoneLocationFlow)
+  const usesCurrentTypePayloadVersion =
+    Number(selectedTypeDefinition?.payloadVersion || 0) > 0 &&
+    Number(form.hsePayloadVersion || 0) === Number(selectedTypeDefinition?.payloadVersion || 0)
+  const ownsRootEvidence =
+    selectedTypeDefinition?.ownsRootEvidence === true && usesCurrentTypePayloadVersion
+  const supportsGenericFindings =
+    selectedTypeDefinition?.supportsGenericFindings === true ||
+    (selectedTypeDefinition?.key === 'health-safety-environment-inspection' &&
+      !usesCurrentTypePayloadVersion)
   const hasLegacySelectedLocation = Boolean(String(form.selectedLocation || '').trim())
   const requiresZoneLocationCompletion =
     usesZoneLocationFlow &&
@@ -1452,6 +1469,12 @@ const InspectionFormBodySections = ({
       onRequestReview={onRequestReview}
       onRetryDraftSync={onRetryDraftSync}
       sectionLabel={nextStepAction ? "What's Next" : ''}
+      submissionMode={
+        selectedTypeDefinition?.submissionMode === 'direct' &&
+        Number(form.hsePayloadVersion || 0) === Number(selectedTypeDefinition?.payloadVersion || 0)
+          ? 'direct'
+          : 'review'
+      }
       validationStatusMessage={validationStatusMessage}
       wrapperClassName={wrapperClassName}
     />
@@ -1622,7 +1645,20 @@ const InspectionFormBodySections = ({
               fieldErrors={fieldErrors}
               validationState={validationState}
               isLoadingRows={isLoadingStructuredRows}
-              handlers={structuredSectionHandlers}
+              handlers={{
+                ...structuredSectionHandlers,
+                ...(ownsRootEvidence
+                  ? {
+                      onRemoveGeneralPhoto: removePhoto,
+                      onChangeGeneralPhotoDescription: updatePhotoDescription,
+                      onSaveGeneralPhotos: (nextPhotos) =>
+                        updateForm({
+                          ...(typeof getLatestForm === 'function' ? getLatestForm() : form),
+                          photos: Array.isArray(nextPhotos) ? nextPhotos : [],
+                        }),
+                    }
+                  : {}),
+              }}
               selectedTypeDefinition={selectedTypeDefinition}
               draftStatus={draftStatus}
             />
@@ -1636,11 +1672,9 @@ const InspectionFormBodySections = ({
             />
           ) : null}
 
-          {selectedTypeDefinition?.key === 'health-safety-environment-inspection'
-            ? renderFindings()
-            : null}
+          {supportsGenericFindings ? renderFindings() : null}
 
-          {renderPhotoEvidence()}
+          {!ownsRootEvidence ? renderPhotoEvidence() : null}
 
           {renderNextLocationCard()}
 

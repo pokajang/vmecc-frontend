@@ -1,4 +1,5 @@
-import { apiRequest, buildApiUrl, fetchWithCsrfRetry } from 'src/services/apiClient'
+import { apiRequest } from 'src/services/apiClient'
+import { downloadReportPdf } from 'src/services/api/reportPdfApi'
 import featureFlags from 'src/config/featureFlags'
 import {
   loadAllInspectionRecords,
@@ -56,6 +57,7 @@ const toPayload = (row) => {
   delete safe.updatedAt
   delete safe.recordKind
   delete safe.reportType
+  delete safe.canDownloadPdf
   delete safe.submissionKey
   delete safe.idempotentReplay
   delete safe.idempotent_replay
@@ -80,16 +82,16 @@ const toPayload = (row) => {
 
 export const isInspectionApiEnabled = () => INSPECTION_API_ENABLED
 
-export const fetchInspectionRecords = async ({ scope = 'mine' } = {}) => {
+export const fetchInspectionRecords = async ({ scope = 'mine', action = '', status = '' } = {}) => {
   assertInspectionPersistenceAvailable()
   if (!INSPECTION_API_ENABLED) return []
   const params = new URLSearchParams({ reportType: INSPECTION_TYPE })
-  if (
-    String(scope || '')
-      .trim()
-      .toLowerCase() === 'all'
-  )
-    params.set('scope', 'all')
+  const normalizedScope = String(scope || '')
+    .trim()
+    .toLowerCase()
+  if (normalizedScope) params.set('scope', normalizedScope)
+  if (action) params.set('action', String(action))
+  if (status) params.set('status', String(status))
   const response = await apiRequest(`/reports?${params.toString()}`)
   const rows = normalizeReportRecords(Array.isArray(response?.data) ? response.data : [])
   return rows.filter((row) => normalizeInspectionTypeSlug(row?.reportType) === INSPECTION_TYPE)
@@ -302,50 +304,10 @@ export const loadInspectionRecordsFromLocal = (userId) => loadInspectionRecords(
 
 export const downloadInspectionReportPdf = async (record) => {
   const reportUid = String(record?.id || '').trim()
-  const reportVersion = Number(record?.version || 0) || undefined
   if (!reportUid) {
     const error = new Error('Missing report UID for download.')
     error.status = 400
     throw error
   }
-  const response = await fetchWithCsrfRetry(buildApiUrl('/reports/inspection/pdf'), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: '*/*',
-    },
-    body: JSON.stringify({
-      report_uid: reportUid,
-      ...(reportVersion !== undefined ? { version: reportVersion } : {}),
-    }),
-  })
-
-  if (!response.ok) {
-    let message = 'Download failed'
-    let code = ''
-    try {
-      const raw = await response.text()
-      if (raw) {
-        try {
-          const payload = JSON.parse(raw)
-          message = payload?.message || raw || message
-          code = String(payload?.code || '').trim()
-        } catch {
-          message = raw
-        }
-      }
-    } catch {
-      // Ignore body parse/read failure; keep default message.
-    }
-    const error = new Error(message)
-    error.status = response.status
-    error.code = code
-    throw error
-  }
-
-  const blob = await response.blob()
-  const contentDisposition = response.headers.get('content-disposition') || ''
-  const filenameMatch = /filename\*?=(?:UTF-8''|")?([^\";]+)/i.exec(contentDisposition)
-  const filename = filenameMatch ? decodeURIComponent(filenameMatch[1]) : ''
-  return { blob, filename: String(filename || '').trim() }
+  return downloadReportPdf({ endpoint: '/reports/inspection/pdf', reportUid })
 }

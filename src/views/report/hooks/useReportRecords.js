@@ -13,14 +13,28 @@ import { toDateTime } from '../utils'
 
 const byNewest = (a, b) => toDateTime(b) - toDateTime(a)
 
-const useReportRecords = ({ user = null, userId, reportTypeSlug, reportId, draftRows = [] }) => {
+const useReportRecords = ({
+  user = null,
+  userId,
+  reportTypeSlug,
+  reportId,
+  draftRows = [],
+  actionFilter = '',
+  initialStatusFilter = 'All',
+}) => {
   const [records, setRecords] = useState([])
   const [search, setSearch] = useState('')
   const [recordScope, setRecordScope] = useState('mine')
   const [period, setPeriod] = useState('all')
   const [sort, setSort] = useState('reportedAt:desc')
   const [typeFilter, setTypeFilter] = useState('All')
-  const [statusFilter, setStatusFilter] = useState('All')
+  const [statusFilter, setStatusFilter] = useState(
+    actionFilter === 'review'
+      ? 'Submitted'
+      : actionFilter === 'approve'
+        ? 'Reviewed'
+        : initialStatusFilter,
+  )
   const [isLoading, setIsLoading] = useState(true)
   const [nowMs, setNowMs] = useState(() => Date.now())
   const apiEnabledForType = isReportApiEnabled(reportTypeSlug)
@@ -31,7 +45,12 @@ const useReportRecords = ({ user = null, userId, reportTypeSlug, reportId, draft
     setIsLoading(true)
     try {
       const rows = apiEnabledForType
-        ? await fetchReportRecords({ reportTypeSlug, scope: recordScope })
+        ? await fetchReportRecords({
+            reportTypeSlug,
+            scope: actionFilter ? 'actionable' : recordScope,
+            action: actionFilter,
+            status: !actionFilter && initialStatusFilter !== 'All' ? initialStatusFilter : '',
+          })
         : loadReportRecords(userId).filter(
             (row) =>
               String(row?.reportType || '').toLowerCase() ===
@@ -54,7 +73,12 @@ const useReportRecords = ({ user = null, userId, reportTypeSlug, reportId, draft
           await runReportApiBackfillMigration({ userId, reportTypeSlug })
         }
         const rows = apiEnabledForType
-          ? await fetchReportRecords({ reportTypeSlug, scope: recordScope })
+          ? await fetchReportRecords({
+              reportTypeSlug,
+              scope: actionFilter ? 'actionable' : recordScope,
+              action: actionFilter,
+              status: !actionFilter && initialStatusFilter !== 'All' ? initialStatusFilter : '',
+            })
           : loadReportRecords(userId).filter(
               (row) =>
                 String(row?.reportType || '').toLowerCase() ===
@@ -72,7 +96,15 @@ const useReportRecords = ({ user = null, userId, reportTypeSlug, reportId, draft
     return () => {
       cancelled = true
     }
-  }, [apiEnabledForType, recordScope, reportTypeSlug, shouldRunBackfill, userId])
+  }, [
+    actionFilter,
+    apiEnabledForType,
+    initialStatusFilter,
+    recordScope,
+    reportTypeSlug,
+    shouldRunBackfill,
+    userId,
+  ])
 
   useEffect(() => {
     if (period === 'all') return

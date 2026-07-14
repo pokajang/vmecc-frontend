@@ -1639,7 +1639,7 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
     expect(screen.getByText('Unable to delete finding. Please try again.')).toBeTruthy()
   })
 
-  it('renders repeatable finding cards for HSE inspections after the location-driven section', async () => {
+  it('does not render duplicate generic findings or evidence for lean HSE inspections', () => {
     setMobileViewport()
     const requestInspectionIssuePhotoUpload = vi.fn()
     const updateForm = vi.fn()
@@ -1652,6 +1652,7 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
     }
     const hseForm = {
       inspectionType: 'Health Safety Environment Inspection',
+      hsePayloadVersion: 2,
       zone: '1',
       mainLocation: 'Manjung Hub',
       subLocation: 'Reception',
@@ -1674,6 +1675,9 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
       selectedTypeDefinition: {
         key: 'health-safety-environment-inspection',
         usesZoneLocationFlow: true,
+        supportsGenericFindings: false,
+        ownsRootEvidence: true,
+        payloadVersion: 2,
       },
       StructuredEditSection: () => <div>HSE fields</div>,
       updateForm,
@@ -1681,55 +1685,11 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
     })
 
     expect(screen.getByText('HSE fields')).toBeTruthy()
-    expect(screen.getByText('1. Oil spill near walkway.')).toBeTruthy()
-    expect(screen.getByText('Action: Barricade and clean.')).toBeTruthy()
-    expect(screen.queryByText('Action added')).toBeNull()
-
-    fireEvent.click(screen.getByLabelText('Finding 1 actions'))
-    fireEvent.click(screen.getByText('Edit'))
-    expect(screen.getByText('Edit finding')).toBeTruthy()
-    expect(screen.getByText('Add finding photos')).toBeTruthy()
-    fireEvent.click(screen.getByText('Add finding photos'))
-    expect(
-      screen.getByText('Optional. Attach photos that belong to this finding only.'),
-    ).toBeTruthy()
-    fireEvent.click(screen.getByText('Take photo'))
-
-    expect(requestInspectionIssuePhotoUpload).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: 'issue-1',
-        label: 'Finding',
-        onAddPhotos: expect.any(Function),
-      }),
-      expect.any(Object),
-    )
-
-    await act(async () => {
-      requestInspectionIssuePhotoUpload.mock.calls[0][0].onAddPhotos([
-        {
-          id: 'finding-photo-1',
-          url: 'data:image/png;base64,QUFB',
-          description: 'Oil spill finding photo.',
-        },
-      ])
-    })
-    await act(async () => {
-      fireEvent.click(screen.getByText('Save'))
-    })
-
-    expect(onSaveDraft).toHaveBeenCalledTimes(1)
-    expect(onSaveDraft.mock.calls[0][0].inspectionIssues[0].photos).toEqual([
-      expect.objectContaining({
-        id: 'finding-photo-1',
-        description: 'Oil spill finding photo.',
-      }),
-    ])
-    expect(updateForm.mock.calls.at(-1)?.[0].inspectionIssues[0].photos).toEqual([
-      expect.objectContaining({
-        id: 'finding-photo-1',
-        description: 'Oil spill finding photo.',
-      }),
-    ])
+    expect(screen.queryByText('1. Oil spill near walkway.')).toBeNull()
+    expect(screen.queryByText('Add report evidence')).toBeNull()
+    expect(requestInspectionIssuePhotoUpload).not.toHaveBeenCalled()
+    expect(onSaveDraft).not.toHaveBeenCalled()
+    expect(updateForm).not.toHaveBeenCalled()
   })
 
   it('discards staged HSE evidence photos when the mobile observation drawer is cancelled', async () => {

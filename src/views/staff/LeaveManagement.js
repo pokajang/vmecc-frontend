@@ -52,6 +52,10 @@ const LeaveManagement = () => {
     [user],
   )
   const actorName = user?.name || user?.full_name || user?.email || 'System user'
+  const actionQueueAction = useMemo(() => {
+    const action = String(new URLSearchParams(location.search).get('action') || '').toLowerCase()
+    return ['review', 'recommend', 'approve'].includes(action) ? action : ''
+  }, [location.search])
 
   const toaster = useRef()
   const [isBulkLeaveSubmitting, setIsBulkLeaveSubmitting] = useState(false)
@@ -108,6 +112,7 @@ const LeaveManagement = () => {
     userId: user?.id,
     isHrUser,
     holidayYearFilter,
+    actionFilter: actionQueueAction,
   })
 
   const { loading: staffDirectoryLoading, optionsAll: staffDirectory } = useStaffDirectory({

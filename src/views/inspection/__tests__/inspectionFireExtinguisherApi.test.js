@@ -1,11 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { apiRequest } from 'src/services/apiClient'
 import {
+  createFireExtinguisherBatch,
+  FIRE_EXTINGUISHER_DUPLICATE_LOCATOR_CODE,
+  getFireExtinguisherBatchDuplicateConflict,
+  getFireExtinguisherDuplicateConflict,
   loadCachedFireExtinguisherCatalog,
   normalizeFireExtinguisherCatalogRows,
   normalizeFireExtinguisherCoverageRows,
   normalizeFireExtinguisherLastInspection,
   saveCachedFireExtinguisherCatalog,
 } from '../inspectionFireExtinguisherApi'
+
+vi.mock('src/services/apiClient', () => ({ apiRequest: vi.fn() }))
 
 const createStorageMock = () => {
   let store = {}
@@ -24,6 +31,7 @@ const createStorageMock = () => {
 }
 
 beforeEach(() => {
+  vi.mocked(apiRequest).mockReset()
   vi.stubGlobal('localStorage', createStorageMock())
   vi.stubGlobal('window', { localStorage })
 })
@@ -33,6 +41,99 @@ afterEach(() => {
 })
 
 describe('inspectionFireExtinguisherApi', () => {
+  it('posts an atomic batch and normalizes the created rows', async () => {
+    apiRequest.mockResolvedValue({
+      data: [{ id: 71, mainLocation: 'Canteen', idLocNo: 'CAN-071' }],
+      meta: { count: 1 },
+    })
+
+    const payload = {
+      mainLocation: 'Canteen',
+      items: [{ idLocNo: 'CAN-071', confirmDuplicate: false }],
+    }
+    const result = await createFireExtinguisherBatch(payload)
+
+    expect(apiRequest).toHaveBeenCalledWith('/inspection/fire-extinguishers/batch', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    })
+    expect(result).toMatchObject({
+      data: [expect.objectContaining({ catalogId: 71, idLocNo: 'CAN-071' })],
+      meta: { count: 1 },
+    })
+  })
+
+  it('normalizes the structured duplicate-locator conflict', () => {
+    const conflict = getFireExtinguisherDuplicateConflict({
+      status: 409,
+      payload: {
+        code: FIRE_EXTINGUISHER_DUPLICATE_LOCATOR_CODE,
+        message: 'One or more active fire extinguishers use this locator.',
+        data: {
+          matches: [
+            {
+              id: 41,
+              mainLocation: 'Canteen',
+              idLocNo: 'CAN-001',
+              barcodeNo: 'SR-DUP-001',
+            },
+          ],
+        },
+        meta: { count: 1 },
+      },
+    })
+
+    expect(conflict).toMatchObject({
+      count: 1,
+      matches: [
+        expect.objectContaining({
+          catalogId: 41,
+          mainLocation: 'Canteen',
+          barcodeNo: 'SR-DUP-001',
+        }),
+      ],
+    })
+    expect(getFireExtinguisherDuplicateConflict({ status: 422, payload: {} })).toBeNull()
+  })
+
+  it('normalizes indexed database and within-batch duplicate conflicts', () => {
+    const conflict = getFireExtinguisherBatchDuplicateConflict({
+      status: 409,
+      payload: {
+        code: FIRE_EXTINGUISHER_DUPLICATE_LOCATOR_CODE,
+        data: {
+          conflicts: [
+            {
+              index: 1,
+              matches: [{ id: 41, mainLocation: 'Canteen', barcodeNo: 'SR-DUP-001' }],
+              batchMatches: [
+                {
+                  index: 0,
+                  mainLocation: 'Canteen',
+                  idLocNo: 'CAN-001',
+                  barcodeNo: 'SR-DUP-001',
+                },
+              ],
+            },
+          ],
+        },
+        meta: { count: 1 },
+      },
+    })
+
+    expect(conflict).toMatchObject({
+      count: 1,
+      conflicts: [
+        {
+          index: 1,
+          matches: [expect.objectContaining({ catalogId: 41, barcodeNo: 'SR-DUP-001' })],
+          batchMatches: [expect.objectContaining({ batchIndex: 0, idLocNo: 'CAN-001' })],
+        },
+      ],
+    })
+    expect(getFireExtinguisherBatchDuplicateConflict({ status: 422, payload: {} })).toBeNull()
+  })
+
   it('treats seeded rows loaded from cache as editable and deletable by default', () => {
     const [row] = normalizeFireExtinguisherCatalogRows([
       {

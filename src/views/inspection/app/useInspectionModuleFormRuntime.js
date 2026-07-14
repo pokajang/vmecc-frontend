@@ -36,6 +36,8 @@ import {
   buildRecoveredDraftNavigationTarget,
   buildTypedInspectionWorkspaceForm,
   initializeInspectionRouteState,
+  trackInspectionDraftSyncTask,
+  waitForInspectionDraftSyncTasks,
 } from './inspectionModuleFlow'
 import {
   clearInspectionContinuationState,
@@ -48,6 +50,7 @@ import {
   resetInspectionWorkingState,
 } from './inspectionModuleUiFlow'
 import { getPendingSubmissionTypeKey } from '../form/pendingSubmissionSummary'
+import { usesDirectInspectionSubmission } from './inspectionTypeRegistry'
 
 const useInspectionModuleFormRuntime = ({
   activeDraftPayload,
@@ -65,12 +68,14 @@ const useInspectionModuleFormRuntime = ({
   setDraftVersion,
   setShowDraftChoice,
   user,
+  directSubmitRef,
 }) => {
   const initRouteKeyRef = useRef('')
   const lastPersistedSignatureRef = useRef('')
   const continuationCompletedKeysRef = useRef(new Set())
   const pendingDraftSnapshotRef = useRef(null)
   const draftSyncInFlightRef = useRef(false)
+  const draftSyncTaskRef = useRef(null)
   const draftSyncVersionRef = useRef(0)
 
   const [showMobileRecords, setShowMobileRecords] = useState(false)
@@ -489,7 +494,10 @@ const useInspectionModuleFormRuntime = ({
           pendingDraftSnapshotRef.current &&
           pendingDraftSnapshotRef.current.version !== snapshot.version
         ) {
-          void runDraftSnapshotSync(pendingDraftSnapshotRef.current)
+          void trackInspectionDraftSyncTask(
+            draftSyncTaskRef,
+            runDraftSnapshotSync(pendingDraftSnapshotRef.current),
+          )
         }
       }
     },
@@ -533,7 +541,9 @@ const useInspectionModuleFormRuntime = ({
         pendingType: snapshot.inspectionType,
         scope: snapshot.scope,
       }))
-      void runDraftSnapshotSync(snapshot)
+      if (!draftSyncInFlightRef.current) {
+        void trackInspectionDraftSyncTask(draftSyncTaskRef, runDraftSnapshotSync(snapshot))
+      }
       return { saved: true, local: true, pending: true }
     },
     [formState, routeMode, routeRecordId, runDraftSnapshotSync, user?.id],
@@ -552,10 +562,15 @@ const useInspectionModuleFormRuntime = ({
       delete draftMap[typeKey]
       if (Object.keys(draftMap).length === 0) {
         const emptyForm = normalizeInspectionForm(defaultInspectionForm)
+        draftSyncVersionRef.current += 1
         pendingDraftSnapshotRef.current = null
         setFormState(emptyForm)
         clearWorkspace(user.id)
-        void clearInspectionDraft(user.id)
+        // An earlier autosave may still be writing. Delete only after it
+        // settles so that write cannot recreate the draft afterward.
+        void waitForInspectionDraftSyncTasks(draftSyncTaskRef, draftSyncInFlightRef).then(() =>
+          clearInspectionDraft(user.id),
+        )
         setDraftStatus('')
         setDraftSyncState({
           status: 'idle',
@@ -606,7 +621,9 @@ const useInspectionModuleFormRuntime = ({
         pendingType: snapshot.inspectionType,
         scope: snapshot.scope,
       }))
-      void runDraftSnapshotSync(snapshot)
+      if (!draftSyncInFlightRef.current) {
+        void trackInspectionDraftSyncTask(draftSyncTaskRef, runDraftSnapshotSync(snapshot))
+      }
       return nextForm
     },
     [formState, routeMode, routeRecordId, runDraftSnapshotSync, user?.id],
@@ -616,7 +633,10 @@ const useInspectionModuleFormRuntime = ({
     if (activeSection !== 'form') return undefined
     const retryPendingDraft = () => {
       if (!pendingDraftSnapshotRef.current || draftSyncInFlightRef.current) return
-      void runDraftSnapshotSync(pendingDraftSnapshotRef.current)
+      void trackInspectionDraftSyncTask(
+        draftSyncTaskRef,
+        runDraftSnapshotSync(pendingDraftSnapshotRef.current),
+      )
     }
     const intervalId = window.setInterval(retryPendingDraft, 60 * 1000)
     window.addEventListener?.('online', retryPendingDraft)
@@ -627,12 +647,24 @@ const useInspectionModuleFormRuntime = ({
   }, [activeSection, runDraftSnapshotSync])
 
   const requestReviewForForm = useCallback(
-    (nextForm) => {
+    async (nextForm) => {
+      const usesDirectSubmission = usesDirectInspectionSubmission(nextForm)
       commitDraftSnapshot(nextForm, {
-        source: 'review-submissions',
-        reason: 'review-submissions-open',
+        source: usesDirectSubmission ? 'direct-submit' : 'review-submissions',
+        reason: usesDirectSubmission ? 'direct-submit-requested' : 'review-submissions-open',
         scope: 'all',
       })
+      if (usesDirectSubmission) {
+        // A direct submission clears its draft after the report is persisted.
+        // Drain all draft writes first so a slower write cannot recreate the
+        // draft after that delete completes.
+        await waitForInspectionDraftSyncTasks(draftSyncTaskRef, draftSyncInFlightRef)
+        if (typeof directSubmitRef?.current !== 'function') {
+          throw new Error('Direct inspection submission is not ready. Please try again.')
+        }
+        await directSubmitRef.current(nextForm)
+        return true
+      }
       requestInspectionReview({
         nextForm,
         applySessionInspector,
@@ -647,7 +679,15 @@ const useInspectionModuleFormRuntime = ({
       })
       return true
     },
-    [commitDraftSnapshot, navigate, reportBasePath, routeMode, routeRecordId, user],
+    [
+      commitDraftSnapshot,
+      directSubmitRef,
+      navigate,
+      reportBasePath,
+      routeMode,
+      routeRecordId,
+      user,
+    ],
   )
 
   const resolveDraftConflict = useCallback(

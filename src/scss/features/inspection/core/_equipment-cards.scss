@@ -116,6 +116,76 @@
   gap: 0.75rem 0.85rem;
 }
 
+.fire-extinguisher-drawer-location-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem 0.85rem;
+}
+
+.fire-extinguisher-location-field {
+  min-width: 0;
+}
+
+.fire-extinguisher-draft-form,
+.fire-extinguisher-staged-card {
+  border: 1px solid var(--cui-border-color);
+  background: var(--cui-tertiary-bg);
+}
+
+.fire-extinguisher-batch-line__fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 0.85rem;
+}
+
+.fire-extinguisher-staged-table-wrap {
+  overflow: hidden;
+  border: 1px solid var(--cui-border-color);
+  border-radius: var(--cui-border-radius-lg);
+}
+
+.fire-extinguisher-staged-table {
+  table-layout: fixed;
+}
+
+.fire-extinguisher-staged-table th:first-child,
+.fire-extinguisher-staged-table td:first-child {
+  width: 3rem;
+}
+
+.fire-extinguisher-staged-table th:last-child,
+.fire-extinguisher-staged-table td:last-child {
+  width: 5.25rem;
+  background: var(--cui-body-bg);
+}
+
+.fire-extinguisher-staged-table__actions-cell {
+  padding-inline: 0.25rem;
+}
+
+.fire-extinguisher-staged-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.1rem;
+  white-space: nowrap;
+}
+
+.fire-extinguisher-staged-actions .btn {
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+@media (max-width: 767.98px) {
+  .fire-extinguisher-drawer-location-grid,
+  .fire-extinguisher-batch-line__fields {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 430px) {
   .fire-extinguisher-drawer-location-meta,
   .fire-extinguisher-drawer-field-grid {

@@ -162,13 +162,6 @@ describe('AiHelperKnowledge action column', () => {
   })
 
   it('deletes a record from the kebab action menu after confirmation', async () => {
-    fetchAiHelperKnowledgeReview.mockResolvedValueOnce(listPayload).mockResolvedValueOnce({
-      data: [],
-      meta: {
-        counts: { pending: 0, approved: 0, rejected: 0, processing: 0, failed: 0, all: 0 },
-      },
-    })
-
     renderPage()
 
     const actionCell = await screen.findByTestId('ai-helper-knowledge-row-actions-21')
@@ -182,5 +175,6 @@ describe('AiHelperKnowledge action column', () => {
     await waitFor(() =>
       expect(screen.queryByTestId('ai-helper-knowledge-row-actions-21')).toBeNull(),
     )
+    expect(fetchAiHelperKnowledgeReview).toHaveBeenCalledTimes(1)
   })
 })

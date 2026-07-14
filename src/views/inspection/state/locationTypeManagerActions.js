@@ -34,6 +34,7 @@ export const saveLocationTypeAction = async ({
   selectedMainLocationRow,
   selectedZoneRow,
   catalogSource,
+  siteLocationCatalog,
   inspectionType,
   newLocationIconKey,
   backendMainLocations,
@@ -118,6 +119,104 @@ export const saveLocationTypeAction = async ({
         ? selectedZoneRow
         : null
   const parentId = getOptionId(selectedParentRow)
+
+  if (catalogSource === 'site-api') {
+    try {
+      if (locationDraftKind !== LOCATION_DRAFT_ZONE && !parentId) {
+        setAddLocationError(
+          locationDraftKind === LOCATION_DRAFT_SUB
+            ? 'Choose a saved main area before adding a location.'
+            : 'Choose a saved zone before adding a main area.',
+        )
+        return
+      }
+
+      let result
+      if (editKey && editingId) {
+        result = await siteLocationCatalog.updateNode(editingId, {
+          name: title,
+          description,
+          iconKey: locationDraftKind !== LOCATION_DRAFT_SUB ? newLocationIconKey : '',
+        })
+      } else if (locationDraftKind === LOCATION_DRAFT_ZONE) {
+        result = await siteLocationCatalog.createZone({
+          name: title,
+          description,
+          iconKey: newLocationIconKey,
+        })
+      } else if (locationDraftKind === LOCATION_DRAFT_MAIN) {
+        result = await siteLocationCatalog.createArea(parentId, {
+          name: title,
+          description,
+          iconKey: newLocationIconKey,
+        })
+      } else {
+        result = await siteLocationCatalog.createLocation(parentId, {
+          name: title,
+          description,
+        })
+      }
+
+      const savedNode = result?.data
+      if (!savedNode) {
+        setAddLocationError('Unable to save this location.')
+        return
+      }
+
+      const preservedEditedNode =
+        Boolean(editKey && editingId) && String(savedNode.id || '') === String(editingId)
+      if (locationDraftKind === LOCATION_DRAFT_SUB) {
+        selectSubLocation(savedNode.name || title, savedNode.id)
+      } else if (locationDraftKind === LOCATION_DRAFT_ZONE) {
+        setZone(savedNode.name || title, savedNode.id, preservedEditedNode)
+      } else {
+        selectMainLocation(
+          savedNode.name || title,
+          preservedEditedNode && sameKey(fallbackMainLocation, editKey) ? subLocation : '',
+          {
+            mainLocationId: savedNode.id,
+            ...(preservedEditedNode && sameKey(fallbackMainLocation, editKey)
+              ? {
+                  subLocationId: getOptionId(
+                    subLocationOptions.find((row) => sameKey(row.value, subLocation)),
+                  ),
+                }
+              : {}),
+          },
+        )
+      }
+
+      const noun =
+        locationDraftKind === LOCATION_DRAFT_ZONE
+          ? 'Zone'
+          : locationDraftKind === LOCATION_DRAFT_SUB
+            ? 'Location'
+            : 'Area'
+      const reusedExisting = result?.created === false || result?.updated === false
+      pushToast?.(
+        `${noun} "${savedNode.name || title}" ${reusedExisting ? 'selected' : editKey ? 'updated' : 'added'}.`,
+        {
+          title: reusedExisting
+            ? 'Existing location selected'
+            : editKey
+              ? 'Location updated'
+              : 'Location added',
+          color: 'success',
+        },
+      )
+
+      if (editKey) {
+        resetDraft()
+        setLocationEditMode(true)
+        return
+      }
+      closeAddModal()
+      return
+    } catch (error) {
+      setAddLocationError(error?.message || 'Unable to save this location to the database.')
+      return
+    }
+  }
 
   if (catalogSource === 'api') {
     try {
@@ -295,6 +394,7 @@ export const removeLocationTypeAction = ({
   selectedZoneValue,
   editLocationOptions,
   catalogSource,
+  siteLocationCatalog,
   inspectionType,
   backendMainLocations,
   setBackendMainLocations,
@@ -321,6 +421,57 @@ export const removeLocationTypeAction = ({
           ? selectedZoneValue
           : ''
   const targetRow = editLocationOptions.find((row) => sameKey(row.value, deleteKey))
+
+  if (catalogSource === 'site-api') {
+    const targetId = getOptionId(targetRow)
+    if (!targetId) {
+      setAddLocationError('Unable to archive this location because it is missing a database ID.')
+      return
+    }
+
+    return siteLocationCatalog
+      .archiveNode(targetId)
+      .then(() => {
+        if (locationDraftKind === LOCATION_DRAFT_SUB && sameKey(subLocation, deleteKey)) {
+          updateSetupField?.('locationSelection', {
+            zone: selectedZoneValue,
+            mainLocation: fallbackMainLocation,
+            subLocation: '',
+            subLocationId: '',
+          })
+        } else if (
+          locationDraftKind === LOCATION_DRAFT_ZONE &&
+          sameFireZoneKey(selectedZoneValue, deleteKey)
+        ) {
+          updateSetupField?.('locationSelection', {
+            zone: '',
+            zoneId: '',
+            mainLocation: '',
+            mainLocationId: '',
+            subLocation: '',
+            subLocationId: '',
+          })
+        } else if (
+          locationDraftKind === LOCATION_DRAFT_MAIN &&
+          sameKey(fallbackMainLocation, deleteKey)
+        ) {
+          updateSetupField?.('locationSelection', {
+            zone: selectedZoneValue,
+            mainLocation: '',
+            mainLocationId: '',
+            subLocation: '',
+            subLocationId: '',
+          })
+        }
+        pushToast?.('Location removed.', { title: 'Location removed', color: 'warning' })
+      })
+      .catch((error) => {
+        pushToast?.(error?.message || 'Unable to archive this location.', {
+          title: 'Location not removed',
+          color: 'danger',
+        })
+      })
+  }
 
   if (catalogSource === 'api') {
     const targetId = getOptionId(targetRow)

@@ -17,6 +17,7 @@ import { formatDateTime } from 'src/views/inspection/inspectionSharedUtils'
 import {
   applySessionInspector,
   buildInspectionReviewRecord,
+  buildInspectionSubmittedRecord,
   normalizeInspectionForm,
 } from '../inspectionFormHelpers'
 import InspectionModuleLayout, {
@@ -56,6 +57,7 @@ const InspectionModule = () => {
   const queueSyncLockRef = useRef(false)
   const reloadRecordsRef = useRef(null)
   const offlineWarningShownRef = useRef(false)
+  const directSubmitRef = useRef(null)
 
   const [feedback, setFeedback] = useState(null)
   const [showDiscard, setShowDiscard] = useState(false)
@@ -79,6 +81,16 @@ const InspectionModule = () => {
     activeSection === 'form' && /\/inspection\/[^/]+\/edit$/i.test(location.pathname)
   const routeMode = isEditRoute ? 'edit' : 'new'
   const routeRecordId = isEditRoute ? String(reportId || '').trim() : ''
+  const actionQueueAction = useMemo(() => {
+    const params = new URLSearchParams(location.search)
+    if (String(params.get('scope') || '').toLowerCase() !== 'actionable') return ''
+    const action = String(params.get('action') || '').toLowerCase()
+    return ['review', 'approve'].includes(action) ? action : ''
+  }, [location.search])
+  const actionQueueStatus = useMemo(() => {
+    const status = String(new URLSearchParams(location.search).get('status') || '')
+    return status === 'Rejected' ? status : 'All'
+  }, [location.search])
 
   const pushToast = useCallback((message, { title, color = 'light', delay = 5000 } = {}) => {
     setFeedback((current) => ({
@@ -165,6 +177,8 @@ const InspectionModule = () => {
     userId: user?.id,
     reportId,
     draftRows: draftRecordRows,
+    actionFilter: actionQueueAction,
+    initialStatusFilter: actionQueueStatus,
   })
 
   useEffect(() => {
@@ -246,6 +260,7 @@ const InspectionModule = () => {
     setDraftVersion,
     setShowDraftChoice,
     user,
+    directSubmitRef,
   })
 
   const currentWorkspace = useMemo(() => loadWorkspace(user?.id), [user?.id])
@@ -392,6 +407,27 @@ const InspectionModule = () => {
     submitLockRef,
     user,
   })
+
+  useEffect(() => {
+    directSubmitRef.current = async (nextForm) => {
+      const sessionForm = applySessionInspector(normalizeInspectionForm(nextForm), user)
+      setFormState(sessionForm)
+      const reviewRecord = buildInspectionReviewRecord({
+        form: sessionForm,
+        mode: routeMode,
+        editingRecord: routeMode === 'edit' ? editingRecord : null,
+        reportTypeSlug: 'inspection',
+        reportTypeIdPrefix,
+        sequence: nextReportSequence,
+        user,
+      })
+      const record = buildInspectionSubmittedRecord(reviewRecord, user)
+      return submit(record)
+    }
+    return () => {
+      directSubmitRef.current = null
+    }
+  }, [editingRecord, nextReportSequence, routeMode, setFormState, submit, user])
 
   const {
     workflowActionState,

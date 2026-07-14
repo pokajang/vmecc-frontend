@@ -385,14 +385,29 @@ const useInspectionCheckActions = ({ form, getLatestForm, mainLocation, updateFo
     }
     updateForm({
       ...form,
-      [field]: String(nextValue || '').trim(),
+      // Preserve in-progress whitespace. Normalization trims the final payload,
+      // but trimming on every keypress makes it impossible to type a space
+      // between words in controlled HSE text fields.
+      [field]: String(nextValue ?? ''),
     })
   }
 
   const toggleHseObservationSelection = (selection) => {
+    const isLeanHse = Number(form.hsePayloadVersion || 0) === 2
     updateForm({
       ...form,
-      hseSelections: toggleHseSelection(form.hseSelections, selection),
+      hseSelections: isLeanHse
+        ? form.hseSelections.includes(selection)
+          ? []
+          : [selection]
+        : toggleHseSelection(form.hseSelections, selection),
+      ...(isLeanHse
+        ? {
+            hseUnsafeActDetails: selection === 'unsafeAct' ? form.hseUnsafeActDetails : '',
+            hseUnsafeConditionDetails:
+              selection === 'unsafeCondition' ? form.hseUnsafeConditionDetails : '',
+          }
+        : {}),
       ...(selection === 'areaSatisfactory'
         ? {
             hseUnsafeActDetails: '',

@@ -20,7 +20,7 @@ import {
   OVERTIME_NORMAL_HOURS_STRATEGIES,
 } from '../utils'
 
-const useSalaryClaimsHydration = ({ user, isHrUser, pushToast }) => {
+const useSalaryClaimsHydration = ({ user, isHrUser, pushToast, actionFilter = '' }) => {
   const [salaryWorkflowRule, setSalaryWorkflowRule] = useState(() =>
     resolveSalaryWorkflowRule(DEFAULT_SALARY_WORKFLOW_RULES),
   )
@@ -47,7 +47,9 @@ const useSalaryClaimsHydration = ({ user, isHrUser, pushToast }) => {
     }
     setSalaryWorkflowRule(workflowRule)
 
-    const apiResult = await loadStaffPayrollClaimsApiFirst()
+    const apiResult = await loadStaffPayrollClaimsApiFirst(
+      actionFilter ? { action: actionFilter } : {},
+    )
     const rows = Array.isArray(apiResult?.data) ? apiResult.data : []
     if (!apiResult?.ok) {
       pushToast('Unable to load staff payroll claims from API. Please retry.', {
@@ -78,7 +80,7 @@ const useSalaryClaimsHydration = ({ user, isHrUser, pushToast }) => {
     }
     setClaimRows(normalizedRows)
     setIsClaimsLoading(false)
-  }, [pushToast])
+  }, [actionFilter, pushToast])
 
   const hydrateOvertimeRates = useCallback(async () => {
     let next = defaultOvertimeRateSettings()

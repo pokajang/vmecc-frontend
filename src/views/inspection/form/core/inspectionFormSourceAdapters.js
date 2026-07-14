@@ -15,11 +15,14 @@ const getInspectionIssuesSource = (source = {}) => {
 
 export const buildInspectionFormSourceInput = (source = {}) => ({
   selectedLocation: source.selectedLocation || source.location || '',
+  zone: source.zone || source.zone_name || '',
+  zoneId: source.zoneId || source.zone_id || '',
   mainLocation: source.mainLocation || source.main_location || '',
   subLocation: source.subLocation || source.sub_location || '',
   mainLocationId: source.mainLocationId || source.main_location_id || '',
   subLocationId: source.subLocationId || source.sub_location_id || '',
   locationPath: source.locationPath || source.location_path || [],
+  locationIds: source.locationIds || source.location_ids || [],
   inspectionType: source.incidentType || source.inspectionType || source.inspection_type || '',
   inspectedAt: source.inspectedAt || source.inspected_at || '',
   description: source.description || '',
@@ -66,6 +69,7 @@ export const buildInspectionFormSourceInput = (source = {}) => ({
   scbaCylinderChecks: source.scbaCylinderChecks || source.scba_cylinder_checks || [],
   scbaFaceMaskChecks: source.scbaFaceMaskChecks || source.scba_face_mask_checks || [],
   scbaCustomSections: source.scbaCustomSections || source.scba_custom_sections || [],
+  hsePayloadVersion: Number(source.hsePayloadVersion || source.hse_payload_version || 0) || 0,
   hseInspectedBy: source.hseInspectedBy || source.hse_inspected_by || '',
   hseInspectionDate: source.hseInspectionDate || source.hse_inspection_date || '',
   hseSelections: source.hseSelections || source.hse_selections || [],

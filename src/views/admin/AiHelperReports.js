@@ -25,6 +25,7 @@ import {
   CTableRow,
 } from '@coreui/react'
 import { useSelector } from 'react-redux'
+import { useLocation } from 'react-router-dom'
 
 import ModulePageHeader from 'src/components/ModulePageHeader'
 import PageState from 'src/components/PageState'
@@ -39,6 +40,7 @@ import { formatDateTime } from 'src/utils/users'
 
 const STATUSES = ['new', 'reviewing', 'resolved', 'dismissed']
 const STATUS_LABELS = {
+  actionable: 'Open',
   all: 'All',
   new: 'New',
   reviewing: 'Reviewing',
@@ -74,8 +76,11 @@ const getPageLabel = (report) => {
 
 const AiHelperReports = () => {
   const authUser = useSelector((state) => state.authUser)
+  const location = useLocation()
   const canReview = useMemo(() => isSystemAdministrator(authUser), [authUser])
-  const [status, setStatus] = useState('new')
+  const [status, setStatus] = useState(() =>
+    new URLSearchParams(location.search).get('status') === 'actionable' ? 'actionable' : 'new',
+  )
   const [reports, setReports] = useState([])
   const [counts, setCounts] = useState({})
   const [loading, setLoading] = useState(true)
@@ -174,7 +179,7 @@ const AiHelperReports = () => {
             data-testid="ai-helper-reports-filters"
           >
             <CButtonGroup role="group" aria-label="Ask AI report status filters">
-              {['new', 'reviewing', 'resolved', 'dismissed', 'all'].map((item) => (
+              {['actionable', 'new', 'reviewing', 'resolved', 'dismissed', 'all'].map((item) => (
                 <CButton
                   key={item}
                   color={status === item ? 'primary' : 'secondary'}

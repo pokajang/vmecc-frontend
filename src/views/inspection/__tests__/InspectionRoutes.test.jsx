@@ -29,6 +29,11 @@ describe('inspection route ownership', () => {
     expect(routes.find((route) => route.path === '/inspection/all-extinguishers')).toMatchObject({
       name: 'All Extinguishers',
     })
+    expect(
+      routes.find((route) => route.path === '/inspection/all-extinguishers/new'),
+    ).toMatchObject({
+      name: 'Add Fire Extinguisher',
+    })
     expect(routes.find((route) => route.path === '/inspection/:reportId')).toMatchObject({
       name: 'Inspection Detail',
     })

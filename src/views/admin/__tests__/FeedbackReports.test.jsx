@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { Provider } from 'react-redux'
 import { MemoryRouter } from 'react-router-dom'
 import { legacy_createStore as createStore } from 'redux'
@@ -55,14 +55,14 @@ const detailPayload = {
   },
 }
 
-const renderPage = () => {
+const renderPage = (initialEntry = '/admin/feedback-reports') => {
   const reducer = (state = { authUser }, action) =>
     action.type === 'set' ? { ...state, ...action } : state
   const store = createStore(reducer)
 
   render(
     <Provider store={store}>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[initialEntry]}>
         <FeedbackReports />
       </MemoryRouter>
     </Provider>,
@@ -70,6 +70,8 @@ const renderPage = () => {
 }
 
 describe('FeedbackReports', () => {
+  afterEach(() => cleanup())
+
   beforeEach(() => {
     vi.clearAllMocks()
     fetchFeedbackReports.mockResolvedValue(listPayload)
@@ -108,5 +110,17 @@ describe('FeedbackReports', () => {
         admin_note: 'Investigating layout issue',
       })
     })
+  })
+
+  it('loads the combined open queue from an action-queue deep link', async () => {
+    renderPage('/admin/feedback-reports?status=actionable')
+
+    await waitFor(() =>
+      expect(fetchFeedbackReports).toHaveBeenCalledWith({
+        status: 'actionable',
+        per_page: 50,
+      }),
+    )
+    expect(screen.getByRole('button', { name: /^Open/ })).toBeTruthy()
   })
 })

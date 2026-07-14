@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import TableLoader from 'src/components/TableLoader'
 import InspectionRecordsSection from 'src/views/inspection/InspectionRecordsSection'
 import InspectionDetailSection from 'src/views/inspection/InspectionDetailSection'
@@ -191,7 +192,36 @@ export const InspectionRecordsView = ({
   </>
 )
 
-export const AllExtinguishersView = () => <AllExtinguishersSection />
+const ALL_EXTINGUISHERS_PATH = '/inspection/all-extinguishers'
+const ADD_EXTINGUISHER_PATH = `${ALL_EXTINGUISHERS_PATH}/new`
+
+export const AllExtinguishersView = () => {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const isCreateOpen = location.pathname.toLowerCase() === ADD_EXTINGUISHER_PATH
+
+  return (
+    <AllExtinguishersSection
+      isCreateOpen={isCreateOpen}
+      initialViewState={location.state?.catalogViewState || null}
+      initialSuccessMessage={location.state?.catalogSuccessMessage || ''}
+      onRequestCreate={(viewState) => {
+        const state = { catalogViewState: viewState }
+        navigate(ALL_EXTINGUISHERS_PATH, { replace: true, state })
+        navigate(ADD_EXTINGUISHER_PATH, { state })
+      }}
+      onRequestCloseCreate={({ replace = false, viewState, successMessage = '' } = {}) =>
+        navigate(ALL_EXTINGUISHERS_PATH, {
+          replace,
+          state: {
+            catalogViewState: viewState || location.state?.catalogViewState || null,
+            catalogSuccessMessage: successMessage,
+          },
+        })
+      }
+    />
+  )
+}
 
 export const InspectionDetailView = ({
   selectedRecord,

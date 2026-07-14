@@ -97,6 +97,16 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
     const fromQuery = new URLSearchParams(location.search).get('draft')
     return String(fromQuery || '').trim()
   }, [location.search])
+  const actionQueueAction = useMemo(() => {
+    const params = new URLSearchParams(location.search)
+    if (String(params.get('scope') || '').toLowerCase() !== 'actionable') return ''
+    const action = String(params.get('action') || '').toLowerCase()
+    return ['review', 'approve'].includes(action) ? action : ''
+  }, [location.search])
+  const actionQueueStatus = useMemo(() => {
+    const status = String(new URLSearchParams(location.search).get('status') || '')
+    return status === 'Rejected' ? status : 'All'
+  }, [location.search])
   const { activeDraftRows, setActiveDraftRows } = useActiveReportDraftRows({
     activeFormSlug,
     draftVersion,
@@ -146,6 +156,8 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
     reportTypeSlug,
     reportId,
     draftRows: activeDraftRows,
+    actionFilter: actionQueueAction,
+    initialStatusFilter: actionQueueStatus,
   })
   const nextReportSequence = useMemo(() => {
     if (isLoading) return null

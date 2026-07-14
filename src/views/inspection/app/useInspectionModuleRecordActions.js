@@ -9,6 +9,7 @@ import {
   makeInspectionSubmissionKey,
 } from 'src/views/inspection/inspectionOfflineQueue'
 import { clearInspectionDraft } from 'src/views/inspection/inspectionStorage'
+import { triggerBlobDownload } from 'src/utils/downloadFile'
 import { submitInspectionSessionReport } from '../domain/api/inspectionSessionApi'
 import { getInspectionDraftMeta } from '../inspectionFormHelpers'
 import {
@@ -50,32 +51,19 @@ const useInspectionModuleRecordActions = ({
     async (id) => {
       const record = records.find((row) => String(row.id || '') === String(id || ''))
       if (!record) return
+      if (record.canDownloadPdf !== true) {
+        pushToast('PDF download is not available for this report.', {
+          title: 'Download unavailable',
+          color: 'warning',
+        })
+        return
+      }
       setDownloadingId(id)
       const downloadFilename = buildInspectionPdfFilename(record, user)
       try {
         const { blob } = await downloadInspectionReportPdf(record)
-        const a = document.createElement('a')
-        a.href = URL.createObjectURL(blob)
-        a.download = downloadFilename
-        a.click()
-        URL.revokeObjectURL(a.href)
+        triggerBlobDownload(blob, downloadFilename)
       } catch (err) {
-        if (err?.status === 409 || String(err?.code || '') === 'REPORT_VERSION_CONFLICT') {
-          try {
-            const { blob } = await downloadInspectionReportPdf({
-              id: record.id,
-              displayId: record.displayId,
-            })
-            const a = document.createElement('a')
-            a.href = URL.createObjectURL(blob)
-            a.download = downloadFilename
-            a.click()
-            URL.revokeObjectURL(a.href)
-            return
-          } catch {
-            // Fall through to default error toast below.
-          }
-        }
         pushToast(err.message || 'Unable to download PDF. Please try again.', {
           title: 'Download failed',
           color: 'danger',

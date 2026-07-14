@@ -169,6 +169,7 @@ export const normalizeReportRecord = (row) => {
     findings: Array.isArray(merged.findings) ? merged.findings : [],
     version: Number(merged.version || 0) || 0,
     revision: Number(merged.revision || 0) || 0,
+    canDownloadPdf: merged.canDownloadPdf === true || merged.can_download_pdf === true,
     submittedAt: String(merged.submittedAt || merged.submitted_at || '').trim(),
     submittedBy: String(merged.submittedBy || merged.submitted_by || '').trim(),
     createdAt: String(merged.createdAt || merged.created_at || '').trim(),

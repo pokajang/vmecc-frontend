@@ -70,6 +70,10 @@ const SalaryClaimsManagement = () => {
     () => user?.name || user?.full_name || user?.email || 'System user',
     [user?.name, user?.full_name, user?.email],
   )
+  const actionQueueAction = useMemo(() => {
+    const action = String(new URLSearchParams(location.search).get('action') || '').toLowerCase()
+    return ['check', 'review', 'approve', 'mark_paid'].includes(action) ? action : ''
+  }, [location.search])
 
   const isClaimDetailRoute =
     location.pathname.startsWith('/staff/salary-claims/') && Boolean(claimId)
@@ -110,7 +114,12 @@ const SalaryClaimsManagement = () => {
     [addToast],
   )
 
-  const hydration = useSalaryClaimsHydration({ user, isHrUser, pushToast })
+  const hydration = useSalaryClaimsHydration({
+    user,
+    isHrUser,
+    pushToast,
+    actionFilter: actionQueueAction,
+  })
   const combinedAssignmentRows = useMemo(
     () =>
       deriveAssignmentLifecycleRows([

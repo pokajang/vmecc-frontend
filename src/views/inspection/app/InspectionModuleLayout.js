@@ -31,22 +31,26 @@ export const buildInspectionPageTitle = ({
   recordsSectionActive,
   showMobileRecords,
 }) => {
+  let mobileTitle
+
   if (activeSection === 'review') {
-    return isUpdatingExistingRecord ? 'Review Updates' : 'Review Inspection'
-  }
-  if (activeSection === 'extinguishers') return 'All Extinguishers'
-
-  if (activeSection === 'records' && !showMobileRecords) {
-    return (
-      <>
-        <span className="d-md-none">Conduct Inspection</span>
-        <span className="d-none d-md-inline">Inspection Records</span>
-      </>
-    )
+    mobileTitle = isUpdatingExistingRecord ? 'Review Updates' : 'Review Inspection'
+  } else if (activeSection === 'extinguishers') {
+    mobileTitle = 'All Extinguishers'
+  } else if (activeSection === 'records' && !showMobileRecords) {
+    mobileTitle = 'Conduct Inspection'
+  } else if (recordsSectionActive) {
+    mobileTitle = 'Inspection Records'
+  } else {
+    mobileTitle = isUpdatingExistingRecord ? 'Edit Inspection' : 'Conduct Inspection'
   }
 
-  if (recordsSectionActive) return 'Inspection Records'
-  return isUpdatingExistingRecord ? 'Edit Inspection' : 'Conduct Inspection'
+  return (
+    <>
+      <span className="d-md-none">{mobileTitle}</span>
+      <span className="d-none d-md-inline">Inspection</span>
+    </>
+  )
 }
 
 export const buildInspectionHeaderActions = ({
@@ -144,7 +148,7 @@ const InspectionModuleLayout = ({
           },
           {
             key: 'new',
-            label: 'New',
+            label: 'Conduct Inspection',
             active: activeSection === 'form' || activeSection === 'review',
             onClick: () => runGuardedAction(startNew),
             dataTestId: 'inspection-new',

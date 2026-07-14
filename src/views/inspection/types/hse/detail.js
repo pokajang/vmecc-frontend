@@ -19,9 +19,14 @@ const buildStructuredItems = (_form, normalized) =>
     return {
       key: `hse:${selection || index}`,
       title: option?.label || selection || `Observation ${index + 1}`,
-      summaryLines: [
-        isFinding && detailText(normalized.hseSeverity) ? normalized.hseSeverity : 'Satisfactory',
-      ].filter(Boolean),
+      summaryLines:
+        normalized.hsePayloadVersion === 2
+          ? []
+          : [
+              isFinding && detailText(normalized.hseSeverity)
+                ? normalized.hseSeverity
+                : 'Satisfactory',
+            ].filter(Boolean),
       badges: isFinding ? [issueBadge(1, 'Finding')] : [],
       selection,
       field,
@@ -30,23 +35,30 @@ const buildStructuredItems = (_form, normalized) =>
   })
 
 const buildFollowUpItem = (form, normalized) => {
-  const hasContent = [
-    normalized.hseImmediateAction,
-    normalized.hseCorrectiveAction,
-    normalized.hseResponsiblePerson,
-    normalized.hseTargetDate,
-    normalized.hseRemarks,
-  ].some(detailText)
+  const isVersion2 = normalized.hsePayloadVersion === 2
+  const hasContent = (
+    isVersion2
+      ? [normalized.hseImmediateAction]
+      : [
+          normalized.hseImmediateAction,
+          normalized.hseCorrectiveAction,
+          normalized.hseResponsiblePerson,
+          normalized.hseTargetDate,
+          normalized.hseRemarks,
+        ]
+  ).some(detailText)
   const photos = Array.isArray(form.photos) ? form.photos : []
   if (!hasContent && photos.length === 0) return null
   return {
     key: 'hse:follow-up',
     title: 'Follow-up and evidence',
-    summaryLines: [
-      detailText(normalized.hseResponsiblePerson),
-      detailText(normalized.hseTargetDate),
-      detailPhotoSummary(photos),
-    ].filter(Boolean),
+    summaryLines: isVersion2
+      ? [detailPhotoSummary(photos)].filter(Boolean)
+      : [
+          detailText(normalized.hseResponsiblePerson),
+          detailText(normalized.hseTargetDate),
+          detailPhotoSummary(photos),
+        ].filter(Boolean),
     normalized,
     photos,
     followUp: true,
@@ -75,7 +87,7 @@ export const buildHseDetailFindingItems = (form = {}) => {
   return [
     ...structured,
     buildFollowUpItem(form, normalized),
-    ...buildLegacyItems(form, descriptions),
+    ...(normalized.hsePayloadVersion === 2 ? [] : buildLegacyItems(form, descriptions)),
   ].filter(Boolean)
 }
 
@@ -91,13 +103,21 @@ export const renderHseDetailFindingContent = (item = {}) => {
   }
   if (item.followUp) {
     const { normalized = {}, photos = [] } = item
+    const isVersion2 = normalized.hsePayloadVersion === 2
     return (
       <div className="inspection-form-section d-grid gap-3">
-        <DetailValueBlock label="Immediate action" value={normalized.hseImmediateAction} />
-        <DetailValueBlock label="Corrective action" value={normalized.hseCorrectiveAction} />
-        <DetailValueBlock label="Responsible person" value={normalized.hseResponsiblePerson} />
-        <DetailValueBlock label="Target date" value={normalized.hseTargetDate} />
-        <DetailValueBlock label="General HSE remarks" value={normalized.hseRemarks} />
+        <DetailValueBlock
+          label={isVersion2 ? 'Immediate corrective action' : 'Immediate action'}
+          value={normalized.hseImmediateAction}
+        />
+        {!isVersion2 ? (
+          <>
+            <DetailValueBlock label="Corrective action" value={normalized.hseCorrectiveAction} />
+            <DetailValueBlock label="Responsible person" value={normalized.hseResponsiblePerson} />
+            <DetailValueBlock label="Target date" value={normalized.hseTargetDate} />
+            <DetailValueBlock label="General HSE remarks" value={normalized.hseRemarks} />
+          </>
+        ) : null}
         <DetailEvidenceBlock title="HSE evidence" photos={photos} />
       </div>
     )
@@ -107,7 +127,11 @@ export const renderHseDetailFindingContent = (item = {}) => {
   return (
     <div className="inspection-form-section d-grid gap-3">
       <DetailValueBlock
-        label={field?.label || 'Area Condition Remarks'}
+        label={
+          normalized.hsePayloadVersion === 2
+            ? 'Description'
+            : field?.label || 'Area Condition Remarks'
+        }
         value={field ? normalized[field.key] : normalized.hseAreaConditionRemarks}
       />
       {isFinding ? <DetailValueBlock label="Severity" value={normalized.hseSeverity} /> : null}

@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { Provider } from 'react-redux'
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { legacy_createStore as createStore } from 'redux'
 
 import InspectionModule from '../InspectionModule'
@@ -46,6 +46,7 @@ const inspectionHarness = vi.hoisted(() => {
     closeWorkflowActionModal: vi.fn(),
     deleteQueuedSubmission: vi.fn(),
     reloadRecords: vi.fn(async () => true),
+    useInspectionRecords: vi.fn(),
   }
 })
 
@@ -341,7 +342,9 @@ vi.mock('../state/useInspectionOfflineHealthController', () => ({
 }))
 
 vi.mock('../state/useInspectionRecords', () => ({
-  default: ({ reportId, draftRows = [] }) => {
+  default: (options) => {
+    inspectionHarness.useInspectionRecords(options)
+    const { reportId, draftRows = [] } = options
     const rows = [...inspectionHarness.records, ...draftRows]
     const selectedRecord =
       rows.find((row) => String(row.id || '').trim() === String(reportId || '').trim()) || null
@@ -485,6 +488,9 @@ vi.mock('../inspectionFormHelpers', () => {
       description: form?.description || 'Review payload',
       photos: form?.photos || [],
       checklist: form?.checklist || [],
+      hsePayloadVersion: form?.hsePayloadVersion,
+      hseSelections: form?.hseSelections,
+      hseUnsafeConditionDetails: form?.hseUnsafeConditionDetails,
       version: editingRecord?.version || 1,
       mode,
     }),
@@ -564,7 +570,15 @@ vi.mock('../app/inspectionModuleUtils', () => ({
 
 const LocationProbe = () => {
   const location = useLocation()
-  return <div data-testid="location-path">{location.pathname}</div>
+  const navigate = useNavigate()
+  return (
+    <>
+      <div data-testid="location-path">{location.pathname}</div>
+      <button type="button" onClick={() => navigate(-1)}>
+        Browser back
+      </button>
+    </>
+  )
 }
 
 const renderModule = (initialPath = '/inspection') => {
@@ -586,6 +600,7 @@ const renderModule = (initialPath = '/inspection') => {
           <Route path="/inspection/new/:newSection" element={<InspectionModule />} />
           <Route path="/inspection/review" element={<InspectionModule />} />
           <Route path="/inspection/all-extinguishers" element={<InspectionModule />} />
+          <Route path="/inspection/all-extinguishers/new" element={<InspectionModule />} />
           <Route path="/inspection/:reportId/edit" element={<InspectionModule />} />
           <Route path="/inspection/:reportId" element={<InspectionModule />} />
         </Routes>
@@ -612,6 +627,7 @@ beforeEach(() => {
   inspectionHarness.closeWorkflowActionModal.mockClear()
   inspectionHarness.deleteQueuedSubmission.mockClear()
   inspectionHarness.reloadRecords.mockClear()
+  inspectionHarness.useInspectionRecords.mockClear()
 })
 
 afterEach(() => {
@@ -619,6 +635,55 @@ afterEach(() => {
 })
 
 describe('InspectionModule route family', () => {
+  it('passes action-queue filters to the inspection records hook', () => {
+    renderModule('/inspection?scope=actionable&action=approve')
+
+    expect(inspectionHarness.useInspectionRecords).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actionFilter: 'approve',
+        initialStatusFilter: 'All',
+      }),
+    )
+  })
+
+  it('passes returned inspections to the rejected status filter', () => {
+    renderModule('/inspection?status=Rejected')
+
+    expect(inspectionHarness.useInspectionRecords).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actionFilter: '',
+        initialStatusFilter: 'Rejected',
+      }),
+    )
+  })
+
+  it('keeps the desktop module heading stable while mobile headings follow the active section', async () => {
+    renderModule('/inspection')
+
+    const heading = screen.getByRole('heading', { level: 1 })
+    const desktopHeading = () => heading.querySelector('.d-none.d-md-inline')
+    const mobileHeading = () => heading.querySelector('.d-md-none')
+
+    expect(desktopHeading()?.textContent).toBe('Inspection')
+    expect(mobileHeading()?.textContent).toBe('Conduct Inspection')
+
+    fireEvent.click(screen.getByRole('button', { name: 'All Extinguishers' }))
+    await waitFor(() =>
+      expect(screen.getByTestId('location-path').textContent).toBe('/inspection/all-extinguishers'),
+    )
+
+    expect(desktopHeading()?.textContent).toBe('Inspection')
+    expect(mobileHeading()?.textContent).toBe('All Extinguishers')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Conduct Inspection' }))
+    await waitFor(() =>
+      expect(screen.getByTestId('location-path').textContent).toBe('/inspection/new'),
+    )
+
+    expect(desktopHeading()?.textContent).toBe('Inspection')
+    expect(mobileHeading()?.textContent).toBe('Conduct Inspection')
+  })
+
   it('opens the All Extinguishers tab without treating it as a detail record', async () => {
     renderModule('/inspection')
 
@@ -630,6 +695,68 @@ describe('InspectionModule route family', () => {
     expect(screen.getByRole('button', { name: 'All Extinguishers' }).dataset.active).toBe('true')
     expect(screen.getByTestId('all-extinguishers-section')).toBeTruthy()
     expect(screen.queryByText('Inspection detail shell')).toBeNull()
+  })
+
+  it('keeps the extinguisher catalogue active behind the route-backed add drawer', () => {
+    renderModule('/inspection/all-extinguishers/new')
+
+    const heading = screen.getByRole('heading', { level: 1 })
+    expect(heading.querySelector('.d-none.d-md-inline')?.textContent).toBe('Inspection')
+    expect(heading.querySelector('.d-md-none')?.textContent).toBe('All Extinguishers')
+    expect(screen.getByRole('button', { name: 'All Extinguishers' }).dataset.active).toBe('true')
+    expect(screen.getByRole('dialog', { name: 'Add Fire Extinguisher' })).toBeTruthy()
+    expect(screen.queryByText('Inspection detail shell')).toBeNull()
+  })
+
+  it('preserves extinguisher filters when the add route opens and closes', async () => {
+    renderModule('/inspection/all-extinguishers')
+
+    fireEvent.change(screen.getAllByPlaceholderText('Search extinguishers')[1], {
+      target: { value: 'CAN-010' },
+    })
+    const catalogue = screen.getByTestId('all-extinguishers-section')
+    fireEvent.click(within(catalogue).getByRole('button', { name: 'Add Extinguisher' }))
+
+    await waitFor(() =>
+      expect(screen.getByTestId('location-path').textContent).toBe(
+        '/inspection/all-extinguishers/new',
+      ),
+    )
+    fireEvent.click(
+      within(screen.getByRole('dialog', { name: 'Add Fire Extinguisher' })).getByRole('button', {
+        name: 'Cancel',
+      }),
+    )
+
+    await waitFor(() =>
+      expect(screen.getByTestId('location-path').textContent).toBe('/inspection/all-extinguishers'),
+    )
+    expect(screen.getAllByDisplayValue('CAN-010').length).toBeGreaterThan(0)
+  })
+
+  it('preserves extinguisher filters when browser Back closes the add route', async () => {
+    renderModule('/inspection/all-extinguishers')
+
+    fireEvent.change(screen.getAllByPlaceholderText('Search extinguishers')[1], {
+      target: { value: 'CAN-BACK' },
+    })
+    fireEvent.click(
+      within(screen.getByTestId('all-extinguishers-section')).getByRole('button', {
+        name: 'Add Extinguisher',
+      }),
+    )
+
+    await waitFor(() =>
+      expect(screen.getByTestId('location-path').textContent).toBe(
+        '/inspection/all-extinguishers/new',
+      ),
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Browser back' }))
+
+    await waitFor(() =>
+      expect(screen.getByTestId('location-path').textContent).toBe('/inspection/all-extinguishers'),
+    )
+    expect(screen.getAllByDisplayValue('CAN-BACK').length).toBeGreaterThan(0)
   })
 
   it('opens a detail route from the records shell', async () => {
@@ -745,6 +872,42 @@ describe('InspectionModule route family', () => {
     )
     await waitFor(() => expect(screen.getByTestId('location-path').textContent).toBe('/inspection'))
     expect(inspectionHarness.clearInspectionDraft).toHaveBeenCalled()
+  })
+
+  it('persists a direct HSE v2 submission as submitted instead of draft', async () => {
+    const workspace = {
+      mode: 'new',
+      recordId: '',
+      form: {
+        inspectionType: 'Health Safety Environment Inspection',
+        hsePayloadVersion: 2,
+        hseSelections: ['unsafeCondition'],
+        hseUnsafeConditionDetails: 'Open edge without a protective barrier.',
+        mainLocation: 'Zone A',
+        selectedLocation: 'Zone A',
+        photos: [{ id: 'hse-photo', url: 'data:image/png;base64,QUFB' }],
+      },
+    }
+    inspectionHarness.offlineWorkspaceByUser['user-1'] = workspace
+    sessionStorage.setItem('inspection_workspace_v1_user-1', JSON.stringify(workspace))
+    renderModule('/inspection/new')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continue to Review' }))
+
+    await waitFor(() =>
+      expect(inspectionHarness.persistInspectionRecord).toHaveBeenCalledWith(
+        'user-1',
+        expect.objectContaining({
+          status: 'Submitted',
+          submittedBy: 'Inspector One',
+          hsePayloadVersion: 2,
+          hseSelections: ['unsafeCondition'],
+        }),
+        expect.objectContaining({ submissionKey: expect.any(String) }),
+      ),
+    )
+    await waitFor(() => expect(screen.getByTestId('location-path').textContent).toBe('/inspection'))
+    expect(inspectionHarness.clearInspectionDraft).toHaveBeenCalledWith('user-1')
   })
 
   it('blocks leaving a dirty form until discard is confirmed', async () => {

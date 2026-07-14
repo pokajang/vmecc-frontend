@@ -15,6 +15,7 @@ import {
   isReportApiEnabled,
 } from '../reportApi'
 import { hasPermission, isSystemAdministrator } from 'src/utils/authz'
+import { triggerBlobDownload } from 'src/utils/downloadFile'
 import { recordToDraft } from '../reportDraftDomain'
 import { buildReportPdfFilename } from '../reportUiUtils'
 import { toDateTime, uid } from '../utils'
@@ -137,21 +138,25 @@ const useReportRouteActions = ({
 
       const recordType = String(record.reportType || '').toLowerCase()
       if (recordType === 'erco' || recordType === 'drill') {
+        if (record.canDownloadPdf !== true) {
+          pushToast('PDF download is not available for this report.', {
+            title: 'Download unavailable',
+            color: 'warning',
+          })
+          return
+        }
         setDownloadingId(id)
         try {
           const { blob, filename } =
             recordType === 'drill'
               ? await downloadDrillReportPdf(record)
               : await downloadErcoReportPdf(record)
-          const url = URL.createObjectURL(blob)
-          const a = document.createElement('a')
-          a.href = url
-          a.download =
+          triggerBlobDownload(
+            blob,
             buildReportPdfFilename(record, user, activeFormSlug) ||
-            filename ||
-            `${record.displayId || record.id}.pdf`
-          a.click()
-          URL.revokeObjectURL(url)
+              filename ||
+              `${record.displayId || record.id}.pdf`,
+          )
         } catch (err) {
           pushToast(err.message || 'Unable to download PDF. Please try again.', {
             title: 'Download failed',
@@ -164,12 +169,7 @@ const useReportRouteActions = ({
       }
 
       const blob = new Blob([JSON.stringify(record, null, 2)], { type: 'application/json' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${record.displayId || record.id}.json`
-      a.click()
-      URL.revokeObjectURL(url)
+      triggerBlobDownload(blob, `${record.displayId || record.id}.json`)
     },
     [activeFormSlug, recordFallbacks, records, pushToast, user],
   )

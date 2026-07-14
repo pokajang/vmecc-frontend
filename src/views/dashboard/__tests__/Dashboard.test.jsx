@@ -49,12 +49,40 @@ let dashboardStats = {
   },
 }
 
+let dashboardActionQueue = {
+  loading: false,
+  error: null,
+  retry: vi.fn(),
+  items: [
+    {
+      key: 'leave.review',
+      module: 'leave',
+      action: 'review',
+      label: 'Leave requests pending your review',
+      count: 2,
+      to: '/staff/leave-management/leaves?action=review',
+    },
+    {
+      key: 'reports.inspection.review',
+      module: 'inspection',
+      action: 'review',
+      label: 'Inspections pending your review',
+      count: 3,
+      to: '/inspection?scope=actionable&action=review',
+    },
+  ],
+}
+
 vi.mock('react-redux', () => ({
   useSelector: (selector) => selector({ authUser, moduleActivation }),
 }))
 
 vi.mock('../hooks/useDashboardStats', () => ({
   default: () => dashboardStats,
+}))
+
+vi.mock('../hooks/useDashboardActionQueue', () => ({
+  default: () => dashboardActionQueue,
 }))
 
 vi.mock('../components/PayrollStats', () => ({
@@ -129,6 +157,29 @@ const resetDefaults = () => {
       reports: { loading: false, error: null, stats: { pendingReview: 6, pendingApproval: 7 } },
     },
   }
+  dashboardActionQueue = {
+    loading: false,
+    error: null,
+    retry: vi.fn(),
+    items: [
+      {
+        key: 'leave.review',
+        module: 'leave',
+        action: 'review',
+        label: 'Leave requests pending your review',
+        count: 2,
+        to: '/staff/leave-management/leaves?action=review',
+      },
+      {
+        key: 'reports.inspection.review',
+        module: 'inspection',
+        action: 'review',
+        label: 'Inspections pending your review',
+        count: 3,
+        to: '/inspection?scope=actionable&action=review',
+      },
+    ],
+  }
 }
 
 afterEach(() => {
@@ -136,7 +187,7 @@ afterEach(() => {
   resetDefaults()
 })
 
-it('renders a global period control and an action queue from existing stats', () => {
+it('renders a global period control and the personalized action queue', () => {
   render(
     <MemoryRouter>
       <Dashboard />
@@ -145,14 +196,17 @@ it('renders a global period control and an action queue from existing stats', ()
 
   expect(screen.getByRole('button', { name: /2026/ })).toBeTruthy()
   expect(screen.getByText('Action Queue')).toBeTruthy()
-  expect(screen.getByText('Claims pending approval')).toBeTruthy()
-  expect(screen.getAllByText('Requests pending approval').length).toBeGreaterThan(0)
-  expect(screen.getByText('Draft days pending publish')).toBeTruthy()
-  expect(screen.getByText('Reports pending review')).toBeTruthy()
+  expect(screen.getByText('Leave requests pending your review')).toBeTruthy()
+  expect(screen.getByText('Inspections pending your review')).toBeTruthy()
   expect(
     screen
       .getAllByRole('link')
-      .some((link) => link.getAttribute('href') === '/staff/salary-claims/claims'),
+      .some((link) => link.getAttribute('href') === '/staff/leave-management/leaves?action=review'),
+  ).toBe(true)
+  expect(
+    screen
+      .getAllByRole('link')
+      .some((link) => link.getAttribute('href') === '/inspection?scope=actionable&action=review'),
   ).toBe(true)
   expect(screen.getByTestId('dashboard-module-payroll').getAttribute('data-visible')).toBe(
     'visible',
@@ -169,6 +223,7 @@ it('renders a global period control and an action queue from existing stats', ()
 
 it('marks role-limited modules as hidden at stable data-testid locations', () => {
   authUser.permissions = ['self.dashboard']
+  dashboardActionQueue.items = []
   dashboardStats.loading = false
   dashboardStats.stats = {}
   dashboardStats.moduleStats = {
@@ -196,6 +251,8 @@ it('marks role-limited modules as hidden at stable data-testid locations', () =>
 })
 
 it('shows module and action-queue fallback states when stats fail to load', () => {
+  dashboardActionQueue.items = []
+  dashboardActionQueue.error = 'Action queue failed'
   dashboardStats.stats = {}
   dashboardStats.moduleStats = {
     payroll: { loading: false, error: 'Payroll failed', stats: {} },

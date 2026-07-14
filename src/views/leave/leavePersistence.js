@@ -29,9 +29,17 @@ export const loadLeaveRecords = async (userId, _fallbackRows = []) => {
  * Load all leave records across all users (staff view — GET /staff/leave/records).
  * Returns { ok, data: LeaveRecord[] }
  */
-export const loadAllLeaveRecords = async (_fallbackRows = []) => {
+export const loadAllLeaveRecords = async (filters = {}) => {
   try {
-    const result = await apiRequest('/staff/leave/records')
+    const query = new URLSearchParams()
+    Object.entries(filters || {}).forEach(([key, value]) => {
+      if (value === undefined || value === null || value === '') return
+      query.set(key, String(value))
+    })
+    const path = query.toString()
+      ? `/staff/leave/records?${query.toString()}`
+      : '/staff/leave/records'
+    const result = await apiRequest(path)
     const data = (result?.data ?? []).map(normalizeApiLeaveRecord)
     return { ok: true, data, missing: false, migrated: false, recovered: false }
   } catch (error) {

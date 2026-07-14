@@ -139,7 +139,7 @@ export const deleteMyPayrollClaimApiFirst = async (serverId, options = {}) => {
   }
 }
 
-export const loadStaffPayrollClaimsApiFirst = async () => {
+export const loadStaffPayrollClaimsApiFirst = async (params = {}) => {
   if (!featureFlags.apiOtPayrollReadsPrimary) {
     return {
       ok: false,
@@ -149,7 +149,7 @@ export const loadStaffPayrollClaimsApiFirst = async () => {
     }
   }
   try {
-    const result = await fetchStaffPayrollClaims()
+    const result = await fetchStaffPayrollClaims(params)
     const rows = Array.isArray(result?.data) ? result.data.map(toUiClaimRow) : []
     return { ok: true, data: rows, source: 'api' }
   } catch (error) {

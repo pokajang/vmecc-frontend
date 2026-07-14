@@ -14,6 +14,9 @@ import {
   formatFileSize,
   formatKnowledgeDate,
   knowledgeEntryName,
+  knowledgeActionableFindings,
+  knowledgeFindings,
+  knowledgeQualityLabel,
   knowledgeScopeLabel,
   knowledgeUseLabel,
   KNOWLEDGE_READER_TAB_EXTRACTED,
@@ -174,7 +177,9 @@ const KnowledgeReaderModal = ({
     !hasOriginal && activeTab === KNOWLEDGE_READER_TAB_ORIGINAL
       ? KNOWLEDGE_READER_TAB_EXTRACTED
       : activeTab
-  const warning = Array.isArray(detail?.processing_warnings) ? detail.processing_warnings[0] : null
+  const actionableFindings = knowledgeActionableFindings(detail)
+  const notices = knowledgeFindings(detail, ['notice'])
+  const warning = actionableFindings[0]?.message || null
 
   const renderOriginal = () => {
     if (!hasOriginal) {
@@ -237,7 +242,7 @@ const KnowledgeReaderModal = ({
   }
 
   const renderExtracted = () => {
-    if (processing) {
+    if (processing && !detail?.extracted_content_available) {
       return (
         <div className="ai-helper-knowledge-reader__empty">
           This knowledge source is still processing. Extracted text will appear when processing
@@ -301,6 +306,21 @@ const KnowledgeReaderModal = ({
         <div>{knowledgeUseLabel(detail)}</div>
       </div>
       <div>
+        <div className="ai-helper-knowledge-reader__meta-label">Ingestion quality</div>
+        <div>{knowledgeQualityLabel(detail)}</div>
+      </div>
+      {detail?.pdf_page_count && detail?.pages_indexed ? (
+        <div>
+          <div className="ai-helper-knowledge-reader__meta-label">Page coverage</div>
+          <div>
+            {Number(detail.pages_indexed || 0)} text-bearing pages indexed out of{' '}
+            {Number(detail.pdf_page_count)}
+            {detail.pages_ocr ? ` - ${Number(detail.pages_ocr)} used OCR` : ''}
+            {detail.pages_blank ? ` - ${Number(detail.pages_blank)} blank` : ''}
+          </div>
+        </div>
+      ) : null}
+      <div>
         <div className="ai-helper-knowledge-reader__meta-label">Visibility</div>
         <div>{detail?.visibility === 'shared' ? 'Shared guidance' : 'Personal'}</div>
       </div>
@@ -328,13 +348,33 @@ const KnowledgeReaderModal = ({
           <div>{detail.review_note}</div>
         </div>
       ) : null}
-      {Array.isArray(detail?.processing_warnings) && detail.processing_warnings.length ? (
+      {notices.length ? (
         <div className="ai-helper-knowledge-reader__meta-span">
-          <div className="ai-helper-knowledge-reader__meta-label">Warnings</div>
+          <div className="ai-helper-knowledge-reader__meta-label">Processing notices</div>
           <div className="ai-helper-knowledge-reader__stack">
-            {detail.processing_warnings.map((item) => (
-              <CAlert key={item} color="warning" className="mb-0">
-                {item}
+            {notices.map((finding, index) => (
+              <CAlert
+                key={`${finding.code}-${finding.page || index}`}
+                color="info"
+                className="mb-0"
+              >
+                {finding.message}
+              </CAlert>
+            ))}
+          </div>
+        </div>
+      ) : null}
+      {actionableFindings.length ? (
+        <div className="ai-helper-knowledge-reader__meta-span">
+          <div className="ai-helper-knowledge-reader__meta-label">Findings requiring attention</div>
+          <div className="ai-helper-knowledge-reader__stack">
+            {actionableFindings.map((finding, index) => (
+              <CAlert
+                key={`${finding.code}-${finding.page || index}`}
+                color={finding.severity === 'error' ? 'danger' : 'warning'}
+                className="mb-0"
+              >
+                {finding.message}
               </CAlert>
             ))}
           </div>

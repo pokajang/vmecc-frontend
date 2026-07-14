@@ -63,6 +63,7 @@ const RosterFilter = ({
             onChange={(event) => onRangeChange(event.target.value)}
           >
             <option value="month">Monthly</option>
+            <option value="all">All dates</option>
             <option value="day">Daily</option>
             <option value="week">Weekly</option>
             <option value="custom">Custom range</option>

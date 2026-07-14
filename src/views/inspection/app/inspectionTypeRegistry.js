@@ -35,6 +35,15 @@ byInspectionType.set(normalizeKey(FRT_DAILY_LEGACY_INSPECTION_TYPE), frtDailyIns
 export const getInspectionTypeDefinition = (inspectionType) =>
   byInspectionType.get(normalizeKey(inspectionType)) || null
 
+export const usesDirectInspectionSubmission = (form = {}) => {
+  const definition = getInspectionTypeDefinition(form?.inspectionType || form?.incidentType)
+  return (
+    definition?.submissionMode === 'direct' &&
+    Number(form?.hsePayloadVersion || form?.hse_payload_version || 0) ===
+      Number(definition?.payloadVersion || 0)
+  )
+}
+
 export const getInspectionTypeOptions = () =>
   INSPECTION_TYPE_DEFINITIONS.map((definition) => ({
     value: definition.inspectionType,

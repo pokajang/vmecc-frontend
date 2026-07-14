@@ -7,6 +7,8 @@ const CACHE_KEY_PREFIX = 'inspection_fire_extinguisher_catalog_cache_v3_'
 const LOCATION_CACHE_KEY_PREFIX = 'inspection_fire_extinguisher_catalog_cache_v2_'
 const LEGACY_CACHE_KEY_PREFIX = 'inspection_fire_extinguisher_catalog_cache_v1_'
 
+export const FIRE_EXTINGUISHER_DUPLICATE_LOCATOR_CODE = 'FIRE_EXTINGUISHER_DUPLICATE_LOCATOR'
+
 const normalizeFeType = (value) =>
   String(value || '')
     .trim()
@@ -238,12 +240,72 @@ export const lookupFireExtinguisherByLocator = async (locator = '') => {
   return { data: normalizeRows([response?.data])[0] || null, meta: response?.meta || {} }
 }
 
-export const createFireExtinguisherOption = async (payload) => {
+export const createFireExtinguisherOption = async (
+  payload,
+  { confirmDuplicate = Boolean(payload?.confirmDuplicate) } = {},
+) => {
   const response = await apiRequest('/inspection/fire-extinguishers', {
+    method: 'POST',
+    body: JSON.stringify({ ...payload, confirmDuplicate }),
+  })
+  return normalizeRows([response?.data])[0] || null
+}
+
+export const createFireExtinguisherBatch = async (payload) => {
+  const response = await apiRequest('/inspection/fire-extinguishers/batch', {
     method: 'POST',
     body: JSON.stringify(payload),
   })
-  return normalizeRows([response?.data])[0] || null
+  const rows = normalizeRows(response?.data)
+  return { data: rows, meta: { ...(response?.meta || {}), count: rows.length } }
+}
+
+export const getFireExtinguisherDuplicateConflict = (error) => {
+  if (
+    Number(error?.status) !== 409 ||
+    error?.payload?.code !== FIRE_EXTINGUISHER_DUPLICATE_LOCATOR_CODE
+  ) {
+    return null
+  }
+
+  const matches = normalizeRows(error?.payload?.data?.matches || [])
+  return {
+    message:
+      String(error?.payload?.message || '').trim() ||
+      'One or more active fire extinguishers use this locator.',
+    matches,
+    count: Number(error?.payload?.meta?.count ?? matches.length) || matches.length,
+  }
+}
+
+export const getFireExtinguisherBatchDuplicateConflict = (error) => {
+  if (
+    Number(error?.status) !== 409 ||
+    error?.payload?.code !== FIRE_EXTINGUISHER_DUPLICATE_LOCATOR_CODE
+  ) {
+    return null
+  }
+
+  const conflicts = (
+    Array.isArray(error?.payload?.data?.conflicts) ? error.payload.data.conflicts : []
+  ).map((conflict) => ({
+    index: Number(conflict?.index),
+    matches: normalizeRows(conflict?.matches || []),
+    batchMatches: normalizeRows(
+      (conflict?.batchMatches || []).map((row) => ({
+        ...row,
+        batchIndex: Number(row?.index),
+      })),
+    ),
+  }))
+
+  return {
+    message:
+      String(error?.payload?.message || '').trim() ||
+      'One or more batch lines use a locator that is already in use.',
+    conflicts,
+    count: Number(error?.payload?.meta?.count ?? conflicts.length) || conflicts.length,
+  }
 }
 
 export const updateFireExtinguisherOption = async (id, payload) => {

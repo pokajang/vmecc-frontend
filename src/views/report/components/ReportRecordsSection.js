@@ -129,6 +129,8 @@ const buildRowActionItems = (
   const canApprove = Boolean(canApproveRecord?.(row))
   const canReject = Boolean(canRejectRecord?.(row))
   const canDelete = Boolean(canDeleteRecord?.(row))
+  const usesPdfDownload = ['erco', 'drill'].includes(String(row.reportType || '').toLowerCase())
+  const canDownload = !usesPdfDownload || row.canDownloadPdf === true
 
   return [
     row.recordKind === 'draft'
@@ -174,8 +176,10 @@ const buildRowActionItems = (
           {
             key: 'download',
             label: downloadingId === row.id ? 'Generating...' : 'Download',
-            disabled: Boolean(downloadingId),
-            disabledReason: downloadingId ? 'Another report PDF is being generated.' : undefined,
+            disabled: Boolean(downloadingId) || !canDownload,
+            disabledReason: downloadingId
+              ? 'Another report PDF is being generated.'
+              : disabledReason(canDownload, 'PDF download is not available for this report.'),
             onClick: () => onDownloadRecord?.(row.id),
           },
         ]),

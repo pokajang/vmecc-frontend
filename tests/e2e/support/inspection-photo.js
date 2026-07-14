@@ -5,8 +5,11 @@ const setInspectionPhotoFromButton = async (button, fileName) => {
   const page = button.page()
   await button.click()
 
-  const cameraModal = page.locator('.modal.show', { hasText: 'Take inspection photo' }).last()
-  await expect(cameraModal).toBeVisible()
+  const cameraModal = page
+    .getByRole('dialog')
+    .filter({ hasText: /Take inspection photo|Observation photo/i })
+    .last()
+  await expect(cameraModal).toBeVisible({ timeout: 10_000 })
   const uploadButton = cameraModal.getByRole('button', { name: 'Upload photo' })
   await expect(uploadButton).toBeVisible({ timeout: 10_000 })
 
@@ -27,6 +30,14 @@ const setInspectionPhotoFromButton = async (button, fileName) => {
   })
   const uploadResponse = await uploadResponsePromise
   expect([200, 201]).toContain(uploadResponse.status())
+
+  if (await cameraModal.isVisible().catch(() => false)) {
+    await cameraModal
+      .getByRole('button', { name: /^Close/i })
+      .first()
+      .click()
+    await expect(cameraModal).toBeHidden({ timeout: 10_000 })
+  }
 }
 
 module.exports = { setInspectionPhotoFromButton }

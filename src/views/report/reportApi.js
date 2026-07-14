@@ -1,4 +1,5 @@
-import { apiRequest, buildApiUrl, fetchWithCsrfRetry } from 'src/services/apiClient'
+import { apiRequest } from 'src/services/apiClient'
+import { downloadReportPdf } from 'src/services/api/reportPdfApi'
 import featureFlags from 'src/config/featureFlags'
 import { REPORT_TYPE_CONFIG } from './constants'
 import { loadReportRecords, saveReportRecords } from './reportStorage'
@@ -56,6 +57,7 @@ const REPORT_SERVER_FIELDS = [
   'canReview',
   'canApprove',
   'canReject',
+  'canDownloadPdf',
   'reviewedAt',
   'approvedAt',
   'rejectedAt',
@@ -80,6 +82,8 @@ export const fetchReportRecords = async (options = {}) => {
   const reportType = normalizeType(options?.reportTypeSlug || options?.reportType)
   if (reportType) query.set('reportType', reportType)
   if (options?.scope) query.set('scope', String(options.scope))
+  if (options?.action) query.set('action', String(options.action))
+  if (options?.status) query.set('status', String(options.status))
   const path = query.toString() ? `/reports?${query.toString()}` : '/reports'
   const response = await apiRequest(path)
   const rows = Array.isArray(response?.data) ? response.data : []
@@ -325,35 +329,7 @@ export const downloadErcoReportPdf = async (record) => {
   if (!reportUid) {
     throw new Error('Download unavailable until the ERCO report is saved.')
   }
-  const reportVersion = Number(record?.version || 0) || undefined
-  const response = await fetchWithCsrfRetry(buildApiUrl('/reports/erco/pdf'), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: '*/*',
-    },
-    body: JSON.stringify({ report_uid: reportUid, version: reportVersion }),
-  })
-
-  if (!response.ok) {
-    let message = 'Download failed'
-    try {
-      const payload = await response.json()
-      message = payload?.message || message
-    } catch {
-      const text = await response.text()
-      if (text) message = text
-    }
-    const error = new Error(message)
-    error.status = response.status
-    throw error
-  }
-
-  const blob = await response.blob()
-  const contentDisposition = response.headers.get('content-disposition') || ''
-  const filenameMatch = /filename\*?=(?:UTF-8''|")?([^\";]+)/i.exec(contentDisposition)
-  const filename = filenameMatch ? decodeURIComponent(filenameMatch[1]) : ''
-  return { blob, filename: String(filename || '').trim() }
+  return downloadReportPdf({ endpoint: '/reports/erco/pdf', reportUid })
 }
 
 export const downloadDrillReportPdf = async (record) => {
@@ -361,35 +337,7 @@ export const downloadDrillReportPdf = async (record) => {
   if (!reportUid) {
     throw new Error('Download unavailable until the drill report is saved.')
   }
-  const reportVersion = Number(record?.version || 0) || undefined
-  const response = await fetchWithCsrfRetry(buildApiUrl('/reports/drill/pdf'), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: '*/*',
-    },
-    body: JSON.stringify({ report_uid: reportUid, version: reportVersion }),
-  })
-
-  if (!response.ok) {
-    let message = 'Download failed'
-    try {
-      const payload = await response.json()
-      message = payload?.message || message
-    } catch {
-      const text = await response.text()
-      if (text) message = text
-    }
-    const error = new Error(message)
-    error.status = response.status
-    throw error
-  }
-
-  const blob = await response.blob()
-  const contentDisposition = response.headers.get('content-disposition') || ''
-  const filenameMatch = /filename\*?=(?:UTF-8''|")?([^\";]+)/i.exec(contentDisposition)
-  const filename = filenameMatch ? decodeURIComponent(filenameMatch[1]) : ''
-  return { blob, filename: String(filename || '').trim() }
+  return downloadReportPdf({ endpoint: '/reports/drill/pdf', reportUid })
 }
 
 const transitionReport = async ({ reportUid, action, version, remarks }) => {

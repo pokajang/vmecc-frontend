@@ -164,6 +164,7 @@ describe('inspectionFormHelpers', () => {
       scbaCylinderChecks: [],
       scbaFaceMaskChecks: [],
       scbaCustomSections: [],
+      hsePayloadVersion: 0,
       hseInspectedBy: '',
       hseInspectionDate: '',
       hseSelections: [],
@@ -664,6 +665,54 @@ describe('inspectionFormHelpers', () => {
     expect(reviewRecord.version).toBe(5)
     expect(reviewRecord.revision).toBe(2)
   })
+
+  it.each([
+    'Fire Extinguisher Inspection',
+    'General Inspection',
+    'Health Safety Environment Inspection',
+  ])(
+    'preserves the complete shared site path through review and reopen for %s',
+    (inspectionType) => {
+      const reviewRecord = buildInspectionReviewRecord({
+        form: {
+          ...baseForm,
+          inspectionType,
+          zone: '1',
+          zoneId: '494',
+          mainLocation: 'Manjung Hub',
+          mainLocationId: '495',
+          subLocation: 'Reception',
+          subLocationId: '496',
+        },
+        reportTypeSlug: 'inspection',
+        reportTypeIdPrefix: 'INS',
+        sequence: 4,
+        user: { name: 'Inspector' },
+      })
+      const submittedRecord = buildInspectionSubmittedRecord(
+        reviewRecord,
+        { name: 'Inspector' },
+        '2026-07-14T10:00:00.000Z',
+      )
+      const reopened = recordToInspectionForm(submittedRecord)
+
+      expect(reviewRecord).toMatchObject({
+        zone: '1',
+        zoneId: '494',
+        mainLocationId: '495',
+        subLocationId: '496',
+      })
+      expect(submittedRecord.zoneId).toBe('494')
+      expect(reopened).toMatchObject({
+        zone: '1',
+        zoneId: '494',
+        mainLocation: 'Manjung Hub',
+        mainLocationId: '495',
+        subLocation: 'Reception',
+        subLocationId: '496',
+      })
+    },
+  )
 
   it('keeps edited ER Aux submitted subsets intact through review and update submission', () => {
     const submittedRecord = {

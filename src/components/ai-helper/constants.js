@@ -207,6 +207,40 @@ export const knowledgeUseLabel = (entry = {}) => {
   return statusLabel(entry.status)
 }
 
+export const knowledgeFindings = (entry = {}, severities = []) => {
+  const findings = Array.isArray(entry.processing_findings) ? entry.processing_findings : []
+  if (!severities.length) return findings
+  return findings.filter((finding) => severities.includes(finding?.severity))
+}
+
+export const knowledgeActionableFindings = (entry = {}) => {
+  const findings = knowledgeFindings(entry, ['warning', 'error'])
+  if (findings.length) return findings
+
+  return (Array.isArray(entry.processing_warnings) ? entry.processing_warnings : []).map(
+    (message) => ({ severity: 'warning', code: 'LEGACY_WARNING', page: null, message }),
+  )
+}
+
+export const knowledgeQualityLabel = (entry = {}) => {
+  if (entry.status === 'processing') {
+    return entry.extraction_complete
+      ? 'Re-indexing - previous index remains available'
+      : 'Preparing complete document index'
+  }
+  if (entry.quality_status === 'review_required') {
+    const gaps = Number(entry.pages_visual_only || 0) + Number(entry.pages_unreadable || 0)
+    return `Review required${gaps ? ` - ${gaps} page${gaps === 1 ? ' needs' : 's need'} attention` : ''}`
+  }
+  if (entry.quality_status === 'failed' || entry.status === 'failed') return 'Failed'
+  if (entry.quality_status === 'ready_with_notices') {
+    const ocrPages = Number(entry.pages_ocr || 0)
+    return `Complete${ocrPages ? ` - OCR applied to ${ocrPages} page${ocrPages === 1 ? '' : 's'}` : ''}`
+  }
+  if (entry.extraction_complete) return 'Complete'
+  return 'Not ready'
+}
+
 export const safeAiHelperError = (
   error,
   fallback = 'Could not reach Ask AI. Check your connection and try again.',
@@ -232,6 +266,14 @@ export const safeAiHelperError = (
 
   if (code === 'AI_HELPER_KNOWLEDGE_NOT_READY' || status === 409) {
     return 'Ask AI is preparing the uploaded knowledge corpus. Wait for processing to finish or resolve failed documents.'
+  }
+
+  if (code === 'AI_HELPER_KNOWLEDGE_UPLOAD_RATE_LIMITED') {
+    const retryAfter = Number(error?.payload?.retry_after || error?.payload?.retryAfter || 0)
+    if (retryAfter > 0) {
+      return `Too many knowledge uploads. Try again in ${Math.ceil(retryAfter)}s.`
+    }
+    return 'Too many knowledge uploads. Wait briefly and try again.'
   }
 
   if (status === 429) {

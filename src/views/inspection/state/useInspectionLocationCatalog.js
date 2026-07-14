@@ -10,13 +10,9 @@ import {
   saveCachedInspectionLocationCatalog,
 } from '../domain/api/inspectionLocationApi'
 import {
-  FIRE_PARENT_SEPARATOR,
-  findChildLocationInRows,
   findLocationInRows,
-  getOptionId,
-  LOCATION_DRAFT_SUB,
+  LOCATION_DRAFT_MAIN,
   replaceMainLocationRow,
-  replaceSubLocationRow,
 } from './locationTypeManagerHelpers'
 
 const deferEffectState = (callback) => {
@@ -30,6 +26,7 @@ const deferEffectState = (callback) => {
 }
 
 const useInspectionLocationCatalog = ({
+  enabled = true,
   userId,
   inspectionType,
   isFireExtinguisherLocationFlow,
@@ -40,6 +37,10 @@ const useInspectionLocationCatalog = ({
   const [catalogSource, setCatalogSource] = useState('fallback')
 
   useEffect(() => {
+    if (!enabled) {
+      return undefined
+    }
+
     let active = true
     const controller = new AbortController()
     const cached = loadCachedInspectionLocationCatalog(inspectionType)
@@ -76,10 +77,11 @@ const useInspectionLocationCatalog = ({
       cancelCachedState()
       controller.abort()
     }
-  }, [inspectionType, isFireExtinguisherLocationFlow])
+  }, [enabled, inspectionType, isFireExtinguisherLocationFlow])
 
   useEffect(() => {
     if (
+      !enabled ||
       catalogSource !== 'api' ||
       !userId ||
       customLocationTypes.length === 0 ||
@@ -92,24 +94,12 @@ const useInspectionLocationCatalog = ({
     const migrate = async () => {
       let nextRows = backendMainLocations
       try {
-        const mainRows = customLocationTypes.filter((row) => {
-          if (row.hidden || row.kind === LOCATION_DRAFT_SUB) return false
-          return !isFireExtinguisherLocationFlow || !String(row.parentValue || '').trim()
-        })
-        const childRows = customLocationTypes
-          .filter((row) => {
-            if (row.hidden) return false
-            if (row.kind === LOCATION_DRAFT_SUB) return true
-            return isFireExtinguisherLocationFlow && String(row.parentValue || '').trim()
-          })
-          .sort((left, right) =>
-            left.kind === LOCATION_DRAFT_SUB && right.kind !== LOCATION_DRAFT_SUB
-              ? 1
-              : left.kind !== LOCATION_DRAFT_SUB && right.kind === LOCATION_DRAFT_SUB
-                ? -1
-                : 0,
-          )
-
+        const mainRows = customLocationTypes.filter(
+          (row) =>
+            !row.hidden &&
+            row.kind === LOCATION_DRAFT_MAIN &&
+            !String(row.parentValue || '').trim(),
+        )
         for (const row of mainRows) {
           const value = String(row.value || row.title || '').trim()
           if (!value || findLocationInRows(nextRows, value)) continue
@@ -122,34 +112,13 @@ const useInspectionLocationCatalog = ({
           if (created) nextRows = replaceMainLocationRow(nextRows, created)
         }
 
-        for (const row of childRows) {
-          const parentValue = String(row.parentValue || '').trim()
-          const value = String(row.value || row.title || '').trim()
-          const parent =
-            isFireExtinguisherLocationFlow && row.kind === LOCATION_DRAFT_SUB
-              ? findChildLocationInRows(
-                  nextRows,
-                  parentValue.split(FIRE_PARENT_SEPARATOR)[0],
-                  parentValue.split(FIRE_PARENT_SEPARATOR).slice(1).join(FIRE_PARENT_SEPARATOR),
-                )
-              : findLocationInRows(nextRows, parentValue)
-          if (!parent || !value) continue
-          if (findLocationInRows(parent.subLocations || parent.children || [], value)) continue
-          const created = await createInspectionLocationOption({
-            inspectionType,
-            parentId: getOptionId(parent),
-            name: value,
-            description: row.description || '',
-          })
-          if (created) nextRows = replaceSubLocationRow(nextRows, parent.value, created)
-        }
-
         if (!active) return
+        const remainingRows = customLocationTypes.filter((row) => !mainRows.includes(row))
         setBackendMainLocations(nextRows)
         saveCachedInspectionLocationCatalog(inspectionType, nextRows)
         markInspectionLocationMigrationComplete(userId)
-        setCustomLocationTypes([])
-        saveCustomLocationTypes(userId, [])
+        setCustomLocationTypes(remainingRows)
+        saveCustomLocationTypes(userId, remainingRows)
       } catch {
         // Keep local custom rows available through fallback/cache until the next successful migration.
       }
@@ -164,6 +133,7 @@ const useInspectionLocationCatalog = ({
     backendMainLocations,
     catalogSource,
     customLocationTypes,
+    enabled,
     inspectionType,
     isFireExtinguisherLocationFlow,
     setCustomLocationTypes,

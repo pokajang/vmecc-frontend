@@ -283,7 +283,10 @@ const ReportDetailSection = ({
         label: downloadingId === r.id ? 'Generating...' : 'Download',
         color: 'secondary',
         variant: 'outline',
-        disabled: Boolean(downloadingId),
+        disabled:
+          Boolean(downloadingId) ||
+          (['erco', 'drill'].includes(String(r.reportType || '').toLowerCase()) &&
+            r.canDownloadPdf !== true),
         testId: testAnchorPrefix ? `${testAnchorPrefix}-download-action` : '',
         onClick: () => onDownloadRecord?.(r.id),
       },

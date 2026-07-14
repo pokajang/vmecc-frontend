@@ -129,8 +129,13 @@ export const buildInspectionRowActionItems = (
           {
             key: 'download',
             label: downloadingId === row.id ? 'Generating...' : 'Download',
-            disabled: Boolean(downloadingId),
-            disabledReason: downloadingId ? 'Another report PDF is being generated.' : undefined,
+            disabled: Boolean(downloadingId) || row.canDownloadPdf !== true,
+            disabledReason: downloadingId
+              ? 'Another report PDF is being generated.'
+              : disabledReason(
+                  row.canDownloadPdf === true,
+                  'PDF download is not available for this report.',
+                ),
             onClick: () => onDownloadRecord?.(row.id),
           },
         ]),

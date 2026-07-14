@@ -18,3 +18,9 @@ export const fetchDashboardModulesStats = (modules, period = 'this_month', optio
     signal: options?.signal,
   })
 }
+
+export const fetchDashboardActionQueue = (options = {}) =>
+  apiRequest('/dashboard/action-queue', {
+    ...(options || {}),
+    signal: options?.signal,
+  })

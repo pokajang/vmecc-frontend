@@ -51,14 +51,27 @@ const isMineRecord = (row, userIdentitySet) => {
   return ownerTokens.some((token) => userIdentitySet.has(token))
 }
 
-const useInspectionRecords = ({ user, userId, reportId, draftRows = [] }) => {
+const useInspectionRecords = ({
+  user,
+  userId,
+  reportId,
+  draftRows = [],
+  actionFilter = '',
+  initialStatusFilter = 'All',
+}) => {
   const [records, setRecords] = useState([])
   const [recordScope, setRecordScope] = useState('mine')
   const [search, setSearch] = useState('')
   const [period, setPeriod] = useState('all')
   const [sort, setSort] = useState('reportedAt:desc')
   const [typeFilter, setTypeFilter] = useState('All')
-  const [statusFilter, setStatusFilter] = useState('All')
+  const [statusFilter, setStatusFilter] = useState(
+    actionFilter === 'review'
+      ? 'Submitted'
+      : actionFilter === 'approve'
+        ? 'Reviewed'
+        : initialStatusFilter,
+  )
   const [checklistFilter, setChecklistFilter] = useState('All')
   const [hasChecklistFilter, setHasChecklistFilter] = useState('All')
   const [isLoading, setIsLoading] = useState(true)
@@ -73,7 +86,11 @@ const useInspectionRecords = ({ user, userId, reportId, draftRows = [] }) => {
         setIsLoading(true)
         setLoadError(null)
         const rows = apiEnabledForInspection
-          ? await fetchInspectionRecords({ scope: recordScope })
+          ? await fetchInspectionRecords({
+              scope: actionFilter ? 'actionable' : recordScope,
+              action: actionFilter,
+              status: !actionFilter && initialStatusFilter !== 'All' ? initialStatusFilter : '',
+            })
           : loadInspectionRecordsForScope({ userId, scope: recordScope })
         if (signal.cancelled) return
         setRecords(rows.sort(byNewest))
@@ -84,7 +101,7 @@ const useInspectionRecords = ({ user, userId, reportId, draftRows = [] }) => {
         if (!signal.cancelled) setIsLoading(false)
       }
     },
-    [apiEnabledForInspection, recordScope, userId],
+    [actionFilter, apiEnabledForInspection, initialStatusFilter, recordScope, userId],
   )
 
   const reloadRecords = useCallback(() => loadRows(), [loadRows])

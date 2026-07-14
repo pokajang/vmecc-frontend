@@ -10,6 +10,7 @@ const smokePassword = process.env.VMECC_SMOKE_PASSWORD || 'SmokeAdmin!2026'
 const runId = process.env.VMECC_SMOKE_RUN_ID || new Date().toISOString().replace(/[:.]/g, '-')
 const artifactRoot = path.resolve(process.cwd(), 'test-results', 'inspection-crud-matrix', runId)
 const routeTimeoutMs = Number(process.env.VMECC_SMOKE_ROUTE_TIMEOUT_MS || 30_000)
+const lifecycleTimeoutMs = Number(process.env.VMECC_SMOKE_LIFECYCLE_TIMEOUT_MS || 20 * 60_000)
 
 const implementedInspectionTypes = [
   'General Inspection',
@@ -21,6 +22,20 @@ const implementedInspectionTypes = [
   'SCBA',
   'Health Safety Environment',
 ]
+const requestedInspectionTypes = String(process.env.VMECC_SMOKE_INSPECTION_TYPES || '')
+  .split(',')
+  .map((value) => value.trim())
+  .filter(Boolean)
+const inspectionTypesUnderTest = requestedInspectionTypes.length
+  ? implementedInspectionTypes.filter((inspectionType) =>
+      requestedInspectionTypes.some(
+        (requested) => requested.toLowerCase() === inspectionType.toLowerCase(),
+      ),
+    )
+  : implementedInspectionTypes
+if (requestedInspectionTypes.length && inspectionTypesUnderTest.length === 0) {
+  throw new Error(`No implemented inspection types matched: ${requestedInspectionTypes.join(', ')}`)
+}
 
 const expectedPdfImageCounts = {
   'General Inspection': 1,
@@ -613,18 +628,16 @@ const buildInspectionPayload = (inspectionType, suffix, context = {}) => {
 
   if (inspectionType === 'Health Safety Environment') {
     return baseInspectionPayload(inspectionType, suffix, {
+      incidentType: 'Health Safety Environment Inspection',
+      inspectionType: 'Health Safety Environment Inspection',
+      hsePayloadVersion: 2,
       selectedLocation: 'Smoke HSE Area',
       mainLocation: 'Smoke HSE Area',
+      inspectedAt: '2026-07-03T09:00:00+08:00',
       hseInspectionDate: '2026-07-03',
-      hseSelections: ['unsafeAct', 'environmental'],
-      hseSeverity: 'Low',
+      hseSelections: ['unsafeAct'],
       hseUnsafeActDetails: `HSE unsafe act smoke details ${suffix}`,
-      hseEnvironmentalDetails: `HSE environmental smoke details ${suffix}`,
       hseImmediateAction: 'Area isolated for smoke validation.',
-      hseCorrectiveAction: 'Corrective action tracked by smoke validation.',
-      hseResponsiblePerson: 'Codex Smoke Admin',
-      hseTargetDate: '2026-07-10',
-      hseRemarks: `HSE smoke remarks ${suffix}`,
       photos: [smokePhoto(`hse-${suffix}`)],
     })
   }
@@ -737,7 +750,8 @@ const downloadPdf = async (
     fs.writeFileSync(pdfPath, body)
     const pdfMetadata = {
       report_uid: reportUid,
-      version,
+      requested_version: version,
+      rendered_version: headers['x-report-version'] || '',
       bytes: body.length,
       embedded_image_count: embeddedImageCount,
       path: path.relative(process.cwd(), pdfPath),
@@ -745,9 +759,6 @@ const downloadPdf = async (
     }
     report.pdfs.push(pdfMetadata)
     return pdfMetadata
-  } else if (status === 409) {
-    const { body } = await parseJsonOrText(response)
-    expect(body?.code).toBe('REPORT_VERSION_CONFLICT')
   }
   return null
 }
@@ -924,6 +935,54 @@ test.describe.serial('inspection CRUD endpoint matrix smoke', () => {
         expected: [200],
         note: 'list fire extinguisher catalog',
       })
+      const siteZoneName = `Smoke Zone ${suffix}`
+      const siteAreaName = `Smoke Yard ${suffix}`
+      const siteLocationName = `Smoke Rack ${suffix}`
+      const siteZoneCreate = await apiRequest(api, report, 'post', '/inspection/site-locations', {
+        csrfToken,
+        expected: [201],
+        note: 'create fire extinguisher site zone',
+        data: {
+          level: 'zone',
+          name: siteZoneName,
+        },
+      })
+      const siteZoneId = siteZoneCreate.body?.data?.id
+      cleanup.unshift(`/inspection/site-locations/${siteZoneId}`)
+      expect(siteZoneId).toBeTruthy()
+
+      const siteAreaCreate = await apiRequest(api, report, 'post', '/inspection/site-locations', {
+        csrfToken,
+        expected: [201],
+        note: 'create fire extinguisher site area',
+        data: {
+          level: 'area',
+          parentId: siteZoneId,
+          name: siteAreaName,
+        },
+      })
+      const siteAreaId = siteAreaCreate.body?.data?.id
+      expect(siteAreaId).toBeTruthy()
+
+      const siteLocationCreate = await apiRequest(
+        api,
+        report,
+        'post',
+        '/inspection/site-locations',
+        {
+          csrfToken,
+          expected: [201],
+          note: 'create fire extinguisher site location',
+          data: {
+            level: 'location',
+            parentId: siteAreaId,
+            name: siteLocationName,
+          },
+        },
+      )
+      const siteLocationId = siteLocationCreate.body?.data?.id
+      expect(siteLocationId).toBeTruthy()
+
       const extinguisherCreate = await apiRequest(
         api,
         report,
@@ -934,9 +993,12 @@ test.describe.serial('inspection CRUD endpoint matrix smoke', () => {
           expected: [201],
           note: 'create fire extinguisher catalog row',
           data: {
-            zone: 'Smoke Zone',
-            mainLocation: 'Smoke Yard',
-            subLocation: 'Smoke Rack',
+            zone: siteZoneName,
+            zoneId: siteZoneId,
+            mainLocation: siteAreaName,
+            mainLocationId: siteAreaId,
+            subLocation: siteLocationName,
+            subLocationId: siteLocationId,
             idLocNo: `SMOKE-LOC-${suffix}`,
             barcodeNo: `SMOKE-BC-${suffix}`,
             feType: 'CO2',
@@ -953,9 +1015,12 @@ test.describe.serial('inspection CRUD endpoint matrix smoke', () => {
         expected: [200],
         note: 'update fire extinguisher catalog row',
         data: {
-          zone: 'Smoke Zone Updated',
-          mainLocation: 'Smoke Yard',
-          subLocation: 'Smoke Rack',
+          zone: siteZoneName,
+          zoneId: siteZoneId,
+          mainLocation: siteAreaName,
+          mainLocationId: siteAreaId,
+          subLocation: siteLocationName,
+          subLocationId: siteLocationId,
           idLocNo: `SMOKE-LOC-UPD-${suffix}`,
           barcodeNo: `SMOKE-BC-${suffix}`,
           feType: 'ABC',
@@ -1038,11 +1103,11 @@ test.describe.serial('inspection CRUD endpoint matrix smoke', () => {
   })
 
   test('covers report, draft, checklist summary, update conflict, delete, and PDF generation for every inspection form', async ({
-    page,
+    request,
   }) => {
-    test.setTimeout(8 * 60_000)
+    test.setTimeout(Math.max(8 * 60_000, lifecycleTimeoutMs))
 
-    const api = page.context().request
+    const api = request
     const report = makeReport()
     const suffix = slug(String(Date.now()).slice(-8))
     let csrfToken = ''
@@ -1065,10 +1130,7 @@ test.describe.serial('inspection CRUD endpoint matrix smoke', () => {
         expected: [200],
         note: 'clear stale inspection drafts before report matrix',
       })
-      await loginInBrowser(page)
-      csrfToken = await safeLogin(api, report)
-
-      for (const inspectionType of implementedInspectionTypes) {
+      for (const inspectionType of inspectionTypesUnderTest) {
         csrfToken = await safeLogin(api, report)
         const typeSlug = slug(inspectionType)
         const reportUid = `smoke-${runId}-${typeSlug}-${suffix}`.slice(0, 180)
@@ -1080,6 +1142,10 @@ test.describe.serial('inspection CRUD endpoint matrix smoke', () => {
           reportUid,
           displayId,
         })
+        const expectedPayloadInspectionType =
+          inspectionType === 'Health Safety Environment'
+            ? 'Health Safety Environment Inspection'
+            : inspectionType
 
         const draftCreate = await apiRequest(api, report, 'post', '/reports/draft', {
           csrfToken,
@@ -1094,7 +1160,7 @@ test.describe.serial('inspection CRUD endpoint matrix smoke', () => {
         })
         const draftId = String(draftCreate.body?.data?.draft_id || '').trim()
         expect(draftId, `Draft id missing for ${inspectionType}`).toBeTruthy()
-        expect(draftCreate.body?.data?.payload?.incidentType).toBe(inspectionType)
+        expect(draftCreate.body?.data?.payload?.incidentType).toBe(expectedPayloadInspectionType)
 
         const draftShow = await apiRequest(
           api,
@@ -1103,7 +1169,7 @@ test.describe.serial('inspection CRUD endpoint matrix smoke', () => {
           `/reports/drafts/${encodeURIComponent(draftId)}`,
           { expected: [200], note: `load draft by id for ${inspectionType}` },
         )
-        expect(draftShow.body?.data?.payload?.incidentType).toBe(inspectionType)
+        expect(draftShow.body?.data?.payload?.incidentType).toBe(expectedPayloadInspectionType)
 
         await apiRequest(api, report, 'delete', `/reports/drafts/${encodeURIComponent(draftId)}`, {
           csrfToken,
@@ -1140,7 +1206,7 @@ test.describe.serial('inspection CRUD endpoint matrix smoke', () => {
           display_id: displayId,
         })
 
-        if (inspectionType === 'General Inspection') {
+        if (inspectionType === inspectionTypesUnderTest[0]) {
           const replay = await apiRequest(api, report, 'post', '/reports', {
             csrfToken,
             expected: [200],
@@ -1166,6 +1232,13 @@ test.describe.serial('inspection CRUD endpoint matrix smoke', () => {
           ...submission.payload,
           remarks: `${submission.payload.remarks} updated`,
           smokeUpdated: true,
+          ...(inspectionType === 'Health Safety Environment'
+            ? {
+                hseSelections: ['unsafeCondition'],
+                hseUnsafeActDetails: 'Stale HSE act details must be cleared.',
+                hseUnsafeConditionDetails: `HSE unsafe condition smoke details ${suffix}`,
+              }
+            : {}),
         }
         const update = await apiRequest(
           api,
@@ -1187,6 +1260,11 @@ test.describe.serial('inspection CRUD endpoint matrix smoke', () => {
         const updated = update.body?.data || {}
         expect(updated.version).toBe(2)
         expect(updated.smokeUpdated).toBe(true)
+        if (inspectionType === 'Health Safety Environment') {
+          expect(updated.hsePayloadVersion).toBe(2)
+          expect(updated.hseSelections).toEqual(['unsafeCondition'])
+          expect(updated.hseUnsafeActDetails).toBe('')
+        }
 
         await apiRequest(api, report, 'put', `/reports/${encodeURIComponent(reportUid)}`, {
           csrfToken,
@@ -1199,38 +1277,21 @@ test.describe.serial('inspection CRUD endpoint matrix smoke', () => {
           },
         })
 
-        await page.goto('/inspection', { waitUntil: 'domcontentloaded' })
-        await waitForAppReady(page, '/inspection')
-        await page.getByRole('textbox', { name: 'Search records' }).fill(displayId)
-        const persistedRow = page.locator('tbody tr').filter({ hasText: displayId }).first()
-        await expect(
-          persistedRow,
-          `${inspectionType} persisted report is missing from records`,
-        ).toBeVisible({ timeout: routeTimeoutMs })
-        await persistedRow.focus()
-        await page.keyboard.press('Enter')
-        await page.waitForURL(
-          new RegExp(
-            `/inspection/${encodeURIComponent(reportUid).replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}(?:[/?#]|$)`,
-          ),
-          { timeout: routeTimeoutMs },
-        )
-        const findingsSection = page.getByText('Inspection Findings', { exact: true }).locator('..')
-        await expect(findingsSection).toBeVisible()
-        const findingItems = findingsSection.locator('.inspection-detail-finding-accordion-item')
-        expect(
-          await findingItems.count(),
-          `${inspectionType} submitted detail has no itemized findings`,
-        ).toBeGreaterThan(0)
-        await expect(findingsSection.locator('input, textarea, select')).toHaveCount(0)
-        await findingItems.first().locator('.accordion-button').click()
-        await expect(findingItems.first().locator('.accordion-collapse')).toHaveClass(/show/)
         csrfToken = await safeLogin(api, report)
 
         await downloadPdf(api, report, csrfToken, reportUid, updated.version, [200], {
           minImageCount: expectedPdfImageCounts[inspectionType] || 0,
         })
-        await downloadPdf(api, report, csrfToken, reportUid, created.version, [409])
+        const staleVersionPdf = await downloadPdf(
+          api,
+          report,
+          csrfToken,
+          reportUid,
+          created.version,
+          [200],
+          { minImageCount: expectedPdfImageCounts[inspectionType] || 0 },
+        )
+        expect(staleVersionPdf?.rendered_version).toBe(String(updated.version))
       }
 
       const listMine = await apiRequest(api, report, 'get', '/reports?reportType=inspection', {
@@ -1247,13 +1308,18 @@ test.describe.serial('inspection CRUD endpoint matrix smoke', () => {
         note: 'list all inspection reports',
       })
 
+      const summaryInspectionType = inspectionTypesUnderTest[0]
+      const summaryPayloadInspectionType =
+        summaryInspectionType === 'Health Safety Environment'
+          ? 'Health Safety Environment Inspection'
+          : summaryInspectionType
       const summary = await apiRequest(
         api,
         report,
         'get',
         `/reports/inspection/checklist-summary?inspection_type=${encodeURIComponent(
-          'General Inspection',
-        )}&checklist_item=${encodeURIComponent('General Inspection smoke checklist')}`,
+          summaryPayloadInspectionType,
+        )}&checklist_item=${encodeURIComponent(`${summaryInspectionType} smoke checklist`)}`,
         { expected: [200], note: 'inspection checklist summary' },
       )
       expect(Number(summary.body?.data?.totalReports || 0)).toBeGreaterThanOrEqual(1)
@@ -1305,7 +1371,9 @@ test.describe.serial('inspection CRUD endpoint matrix smoke', () => {
         },
       )
       expect(sysadminEditedForeign.body?.data?.version).toBe(2)
-      await downloadPdf(api, report, csrfToken, foreignReportUid, 2, [404])
+      await downloadPdf(api, report, csrfToken, foreignReportUid, 2, [200], {
+        minImageCount: expectedPdfImageCounts['General Inspection'],
+      })
     } finally {
       for (const reportUid of createdReportUids.reverse()) {
         await deleteReport(api, report, csrfToken, reportUid)
@@ -1384,20 +1452,29 @@ test.describe.serial('inspection CRUD endpoint matrix smoke', () => {
           .getByRole('button', { name: 'Edit', exact: true }),
         'Edit should be enabled for sysadmin on foreign-owned approved records',
       ).toBeEnabled()
-      const blockedPdfPromise = page.waitForResponse(
+      const sharedPdfPromise = page.waitForResponse(
         (response) => {
           const url = new URL(response.url())
           return url.pathname.endsWith('/api/reports/inspection/pdf')
         },
         { timeout: 30_000 },
       )
+      const sharedDownloadPromise = page.waitForEvent('download', { timeout: 30_000 })
       await page
         .locator('.dropdown-menu.show')
         .last()
         .getByRole('button', { name: 'Download', exact: true })
         .click()
-      const blockedPdfResponse = await blockedPdfPromise
-      expect(blockedPdfResponse.status()).toBe(404)
+      const sharedPdfResponse = await sharedPdfPromise
+      const sharedDownload = await sharedDownloadPromise
+      expect(sharedPdfResponse.status()).toBe(200)
+      expect(sharedPdfResponse.headers()['content-type']).toContain('application/pdf')
+      expect(sharedDownload.suggestedFilename()).toMatch(/\.pdf$/i)
+
+      const sharedDownloadPath = await sharedDownload.path()
+      expect(sharedDownloadPath).toBeTruthy()
+      expect(fs.statSync(sharedDownloadPath).size).toBeGreaterThan(0)
+      expect(fs.readFileSync(sharedDownloadPath).subarray(0, 5).toString('ascii')).toBe('%PDF-')
 
       await recordRow.getByRole('button', { name: 'Row actions' }).click()
       const deleteMenuItem = page

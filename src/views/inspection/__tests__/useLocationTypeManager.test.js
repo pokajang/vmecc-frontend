@@ -2,6 +2,28 @@
 import { act, cleanup, renderHook } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import useLocationTypeManager from '../useLocationTypeManager'
+import { SITE_ZONE_LOCATION_ROWS } from '../form/inspectionSiteLocationDefaults'
+import { resetSiteLocationCatalogStoreForTests } from '../state/siteLocationCatalogStore'
+
+const siteApi = vi.hoisted(() => ({
+  fetch: vi.fn(),
+  create: vi.fn(),
+  update: vi.fn(),
+  archive: vi.fn(),
+}))
+
+vi.mock('../domain/api/inspectionSiteLocationApi', () => ({
+  fetchSiteLocationHierarchy: siteApi.fetch,
+  createSiteLocationNode: siteApi.create,
+  updateSiteLocationNode: siteApi.update,
+  archiveSiteLocationNode: siteApi.archive,
+}))
+
+const MANJUNG_HUB_LOCATION_COUNT =
+  SITE_ZONE_LOCATION_ROWS.find((zone) => zone.value === '1')?.subLocations.find(
+    (area) => area.value === 'Manjung Hub',
+  )?.subLocations.length ?? 0
+const MANJUNG_HUB_META_LABEL = `${MANJUNG_HUB_LOCATION_COUNT} locations`
 
 const createStorageMock = () => {
   let store = {}
@@ -20,105 +42,40 @@ const createStorageMock = () => {
   }
 }
 
-const storedRows = () =>
-  Object.entries(localStorage.dump())
-    .filter(([key]) => key.includes('custom_location_types'))
-    .map(([, value]) => value)
-    .map((value) => JSON.parse(value))
-    .flat()
-
 const FIRE_LOCATION_CACHE_KEY = 'inspection_location_catalog_cache_v3_fire-extinguisher-inspection'
 const GENERAL_LOCATION_CACHE_KEY = 'inspection_location_catalog_cache_v3_general-inspection'
-const HSE_LOCATION_CACHE_KEY =
-  'inspection_location_catalog_cache_v3_health-safety-environment-inspection'
-const FIRE_LOCATION_CATALOG = [
-  {
-    value: '1',
-    title: '1',
-    subLocations: [
-      {
-        value: 'Manjung Hub',
-        title: 'Manjung Hub',
-        subLocations: [{ value: 'Reception', title: 'Reception' }],
-      },
-    ],
-  },
-  {
-    value: 'Others',
-    title: 'Others',
-    subLocations: [
-      {
-        value: 'Misc Area',
-        title: 'Misc Area',
-        subLocations: [{ value: 'Misc Room', title: 'Misc Room' }],
-      },
-    ],
-  },
-  {
-    value: '2',
-    title: '2',
-    subLocations: [
-      {
-        value: 'Zone 2 Area',
-        title: 'Zone 2 Area',
-        subLocations: [{ value: 'Level 1', title: 'Level 1' }],
-      },
-    ],
-  },
-  {
-    value: '3',
-    title: '3',
-    subLocations: [
-      {
-        value: 'Zone 3 Area',
-        title: 'Zone 3 Area',
-        subLocations: [{ value: 'Level 1', title: 'Level 1' }],
-      },
-    ],
-  },
-  {
-    value: '4 & 4B',
-    title: '4 & 4B',
-    subLocations: [
-      {
-        value: 'Zone 4 Area',
-        title: 'Zone 4 Area',
-        subLocations: [{ value: 'Level 1', title: 'Level 1' }],
-      },
-    ],
-  },
-  {
-    value: '5',
-    title: '5',
-    subLocations: [
-      {
-        value: 'Zone 5 Area',
-        title: 'Zone 5 Area',
-        subLocations: [{ value: 'Level 1', title: 'Level 1' }],
-      },
-    ],
-  },
-  {
-    value: '6',
-    title: '6',
-    subLocations: [
-      {
-        value: 'Zone 6 Area',
-        title: 'Zone 6 Area',
-        subLocations: [{ value: 'Level 1', title: 'Level 1' }],
-      },
-    ],
-  },
-]
 
-const seedFireLocationCatalogCache = () => {
-  if (localStorage.getItem(FIRE_LOCATION_CACHE_KEY)) return
-  localStorage.setItem(FIRE_LOCATION_CACHE_KEY, JSON.stringify({ data: FIRE_LOCATION_CATALOG }))
+let nextSiteId = 10000
+const canonicalSiteRows = (rows = SITE_ZONE_LOCATION_ROWS, parentId = null, depth = 0) =>
+  rows.map((row, index) => {
+    const id = String(row.id || `site-${depth}-${parentId || 'root'}-${index}`)
+    const name = String(row.value || row.title)
+    return {
+      id,
+      parentId,
+      level: ['zone', 'area', 'location'][depth],
+      name,
+      displayName: depth === 0 && /^\d/.test(name) ? `Zone ${name}` : name,
+      source: 'seed',
+      permissions: { canEdit: true, canDelete: true },
+      children: canonicalSiteRows(row.subLocations || row.children || [], id, depth + 1),
+    }
+  })
+
+const SITE_LOCATION_CACHE_KEY = 'inspection_site_location_catalog_cache_v1'
+const seedSiteLocationCatalogCache = () => {
+  if (!localStorage.getItem(SITE_LOCATION_CACHE_KEY)) {
+    localStorage.setItem(SITE_LOCATION_CACHE_KEY, JSON.stringify({ data: canonicalSiteRows() }))
+  }
 }
 
-const seedZoneLocationCatalogCache = (cacheKey) => {
-  if (localStorage.getItem(cacheKey)) return
-  localStorage.setItem(cacheKey, JSON.stringify({ data: FIRE_LOCATION_CATALOG }))
+const findCanonicalNode = (rows, id) => {
+  for (const row of rows) {
+    if (row.id === String(id)) return row
+    const child = findCanonicalNode(row.children, id)
+    if (child) return child
+  }
+  return null
 }
 
 const renderLocationManager = (props = {}) => {
@@ -141,7 +98,7 @@ const renderLocationManager = (props = {}) => {
 }
 
 const renderFireLocationManager = (props = {}) => {
-  seedFireLocationCatalogCache()
+  seedSiteLocationCatalogCache()
   return renderLocationManager({
     inspectionType: 'Fire Extinguisher Inspection',
     ...props,
@@ -149,7 +106,7 @@ const renderFireLocationManager = (props = {}) => {
 }
 
 const renderGeneralLocationManager = (props = {}) => {
-  seedZoneLocationCatalogCache(GENERAL_LOCATION_CACHE_KEY)
+  seedSiteLocationCatalogCache()
   return renderLocationManager({
     inspectionType: 'General Inspection',
     ...props,
@@ -157,7 +114,7 @@ const renderGeneralLocationManager = (props = {}) => {
 }
 
 const renderHseLocationManager = (props = {}) => {
-  seedZoneLocationCatalogCache(HSE_LOCATION_CACHE_KEY)
+  seedSiteLocationCatalogCache()
   return renderLocationManager({
     inspectionType: 'Health Safety Environment Inspection',
     ...props,
@@ -166,6 +123,31 @@ const renderHseLocationManager = (props = {}) => {
 
 beforeEach(() => {
   vi.stubGlobal('localStorage', createStorageMock())
+  resetSiteLocationCatalogStoreForTests()
+  nextSiteId = 10000
+  siteApi.fetch.mockRejectedValue(new Error('Catalog API unavailable'))
+  siteApi.create.mockImplementation(async (payload) => ({
+    data: {
+      id: String(nextSiteId++),
+      parentId: payload.parentId == null ? null : String(payload.parentId),
+      level: payload.level,
+      name: payload.name,
+      displayName: payload.level === 'zone' ? `Zone ${payload.name}` : payload.name,
+      source: 'custom',
+      permissions: { canEdit: true, canDelete: true },
+      children: [],
+    },
+    created: true,
+  }))
+  siteApi.update.mockImplementation(async (id, payload) => ({
+    data: {
+      ...findCanonicalNode(canonicalSiteRows(), id),
+      name: payload.name,
+      displayName: payload.name,
+    },
+    updated: true,
+  }))
+  siteApi.archive.mockResolvedValue(true)
   vi.stubGlobal(
     'fetch',
     vi.fn(async () => Promise.reject(new Error('Catalog API unavailable'))),
@@ -191,9 +173,11 @@ describe('useLocationTypeManager', () => {
 
     expect(updateSetupField).toHaveBeenLastCalledWith('locationSelection', {
       zone: '1',
-      zoneId: '',
+      zoneId: expect.any(String),
       mainLocation: 'Manjung Hub',
+      mainLocationId: expect.any(String),
       subLocation: 'Reception',
+      subLocationId: expect.any(String),
     })
   })
 
@@ -217,21 +201,21 @@ describe('useLocationTypeManager', () => {
     await act(async () => result.current.saveType())
     rerender({ zone: '1', mainLocation: 'Manjung Hub A', subLocation: 'Pump Room' })
 
-    expect(storedRows()).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          kind: 'sub',
-          parentValue: '1\u001fManjung Hub A',
-          value: 'Pump Room',
-        }),
-      ]),
+    expect(siteApi.create).toHaveBeenCalledWith(
+      expect.objectContaining({ level: 'location', name: 'Pump Room' }),
+    )
+    expect(siteApi.update).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ name: 'Manjung Hub A' }),
     )
     expect(result.current.subLocationOptions.map((row) => row.value)).toContain('Pump Room')
     expect(updateSetupField).toHaveBeenLastCalledWith('locationSelection', {
       zone: '1',
-      zoneId: '',
+      zoneId: expect.any(String),
       mainLocation: 'Manjung Hub A',
+      mainLocationId: expect.any(String),
       subLocation: 'Pump Room',
+      subLocationId: expect.any(String),
     })
   })
 
@@ -253,10 +237,28 @@ describe('useLocationTypeManager', () => {
     expect(result.current.areaOptions.map((row) => row.value)).toContain('Audit Area')
     expect(updateSetupField).toHaveBeenLastCalledWith('locationSelection', {
       zone: '1',
-      zoneId: '',
+      zoneId: expect.any(String),
       mainLocation: 'Audit Area',
+      mainLocationId: expect.any(String),
       subLocation: '',
     })
+  })
+
+  it('adds a new Zone globally and selects the returned canonical node', async () => {
+    const { result, updateSetupField } = renderFireLocationManager()
+
+    act(() => result.current.openAddZoneModal())
+    act(() => result.current.setNewLocationName('9'))
+    await act(async () => result.current.saveType())
+
+    expect(siteApi.create).toHaveBeenCalledWith(
+      expect.objectContaining({ level: 'zone', parentId: null, name: '9' }),
+    )
+    expect(result.current.zoneOptions.map((row) => row.value)).toContain('9')
+    expect(updateSetupField).toHaveBeenLastCalledWith(
+      'locationSelection',
+      expect.objectContaining({ zone: '9', zoneId: expect.any(String) }),
+    )
   })
 
   it('ignores stale two-level fire location cache and falls back to seeded zone options', () => {
@@ -285,7 +287,7 @@ describe('useLocationTypeManager', () => {
     expect(zoneValues).toContain('Others')
     expect(zoneValues).not.toContain('ASIC')
     expect(zoneValues).not.toContain('Canteen')
-    expect(localStorage.getItem(FIRE_LOCATION_CACHE_KEY)).toBeNull()
+    expect(localStorage.getItem(FIRE_LOCATION_CACHE_KEY)).not.toBeNull()
   })
 
   it('formats and sorts fire extinguisher zones numerically before alphabetic zones', () => {
@@ -313,8 +315,9 @@ describe('useLocationTypeManager', () => {
 
     expect(updateSetupField).toHaveBeenLastCalledWith('locationSelection', {
       zone: '1',
-      zoneId: '',
+      zoneId: expect.any(String),
       mainLocation: 'Manjung Hub',
+      mainLocationId: expect.any(String),
       subLocation: '',
     })
   })
@@ -338,6 +341,7 @@ describe('useLocationTypeManager', () => {
         ],
       }),
     )
+    seedSiteLocationCatalogCache()
 
     const { result } = renderLocationManager({
       inspectionType: 'General Inspection',
@@ -345,8 +349,9 @@ describe('useLocationTypeManager', () => {
     })
     const manjungHub = result.current.areaOptions.find((row) => row.value === 'Manjung Hub')
 
+    expect(MANJUNG_HUB_LOCATION_COUNT).toBeGreaterThan(0)
     expect(manjungHub?.metaLabel).not.toBe('0 locations')
-    expect(manjungHub?.metaLabel).toBe('13 locations')
+    expect(manjungHub?.metaLabel).toBe(MANJUNG_HUB_META_LABEL)
     expect(result.current.subLocationOptions).toHaveLength(0)
   })
 
@@ -362,9 +367,11 @@ describe('useLocationTypeManager', () => {
 
     expect(updateSetupField).toHaveBeenLastCalledWith('locationSelection', {
       zone: '1',
-      zoneId: '',
+      zoneId: expect.any(String),
       mainLocation: 'Manjung Hub',
+      mainLocationId: expect.any(String),
       subLocation: 'Reception',
+      subLocationId: expect.any(String),
     })
   })
 
@@ -373,7 +380,7 @@ describe('useLocationTypeManager', () => {
     const manjungHub = result.current.areaOptions.find((row) => row.value === 'Manjung Hub')
 
     expect(result.current.areaOptions.map((row) => row.value)).toContain('Manjung Hub')
-    expect(manjungHub?.metaLabel).toBe('13 locations')
+    expect(manjungHub?.metaLabel).toBe(MANJUNG_HUB_META_LABEL)
     expect(result.current.visibleZoneOptions.some((row) => row.value === '1')).toBe(true)
   })
 
@@ -426,7 +433,7 @@ describe('useLocationTypeManager', () => {
 
     expect(result.current.subLocationOptions.map((row) => row.value)).toContain('Audit Room')
 
-    act(() => result.current.removeType('Audit Room'))
+    await act(async () => result.current.removeType('Audit Room'))
 
     expect(result.current.subLocationOptions.map((row) => row.value)).not.toContain('Audit Room')
   })

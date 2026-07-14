@@ -23,7 +23,12 @@ const sanitizeLoadedAssignments = (rows) => {
   return safeRows.filter((row) => !isExactDemoAssignmentRow(row))
 }
 
-export default function useLeaveManagementDataActions({ userId, isHrUser, holidayYearFilter }) {
+export default function useLeaveManagementDataActions({
+  userId,
+  isHrUser,
+  holidayYearFilter,
+  actionFilter = '',
+}) {
   const [assignmentRows, setAssignmentRows] = useState([])
   const [allLeaveRecords, setAllLeaveRecords] = useState([])
   const [holidayRows, setHolidayRows] = useState([])
@@ -62,7 +67,7 @@ export default function useLeaveManagementDataActions({ userId, isHrUser, holida
     async ({ showWarningToast = true } = {}) => {
       setIsLeaveRecordsLoading(true)
       try {
-        const result = await loadAllLeaveRecords()
+        const result = await loadAllLeaveRecords(actionFilter ? { action: actionFilter } : {})
         setAllLeaveRecords(Array.isArray(result?.data) ? result.data : [])
         return result
       } catch {
@@ -77,7 +82,7 @@ export default function useLeaveManagementDataActions({ userId, isHrUser, holida
         setIsLeaveRecordsLoading(false)
       }
     },
-    [pushToast],
+    [actionFilter, pushToast],
   )
 
   const hydrateHolidaysFromApi = useCallback(async () => {

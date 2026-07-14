@@ -67,7 +67,9 @@ const Overtime = () => {
   } = useOvertimeEligibility({ enabled: canUseOvertimeModule })
   const isOvertimeEligibleEffective = isSysAdmin || isOvertimeEligible
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('All')
+  const [statusFilter, setStatusFilter] = useState(
+    () => new URLSearchParams(location.search).get('status') || 'All',
+  )
   const [period, setPeriod] = useState('all')
   const [sort, setSort] = useState('appliedAt:desc')
   const [isDiscardConfirmVisible, setIsDiscardConfirmVisible] = useState(false)

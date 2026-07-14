@@ -50,6 +50,7 @@ const Leave = () => {
   const navigate = useNavigate()
   const { leaveId } = useParams()
   const user = useSelector((state) => state.authUser)
+  const actionQueueStatus = new URLSearchParams(location.search).get('status') || 'All'
   const {
     search,
     setSearch,
@@ -64,7 +65,11 @@ const Leave = () => {
     activeSection,
     clearFilters,
     openRecord,
-  } = useLeaveViewControls({ pathname: location.pathname, navigate })
+  } = useLeaveViewControls({
+    pathname: location.pathname,
+    navigate,
+    initialStatusFilter: actionQueueStatus,
+  })
   const {
     leaveType,
     setLeaveType,

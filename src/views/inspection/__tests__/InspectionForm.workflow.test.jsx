@@ -1575,6 +1575,114 @@ describe('InspectionForm workflow', () => {
     )
   })
 
+  it('uses the direct submit action for a complete HSE v2 observation', () => {
+    const onRequestReview = vi.fn()
+    render(
+      <InspectionForm
+        {...baseProps}
+        onRequestReview={onRequestReview}
+        value={{
+          mainLocation: 'Zone A',
+          selectedLocation: 'Zone A',
+          inspectionType: 'Health Safety Environment Inspection',
+          inspectedAt: '2026-07-14T09:30',
+          hsePayloadVersion: 2,
+          hseSelections: ['unsafeAct'],
+          hseUnsafeActDetails: 'Worker crossed an active barricade.',
+          photos: [
+            {
+              id: 'hse-v2-photo',
+              fileName: 'hse-v2.png',
+              url: 'data:image/png;base64,QUFB',
+            },
+          ],
+        }}
+      />,
+    )
+
+    expect(screen.queryByText('Continue to Review')).toBeNull()
+    fireEvent.click(screen.getAllByText('Submit Report')[0])
+
+    expect(onRequestReview).toHaveBeenCalledWith(
+      expect.objectContaining({
+        hsePayloadVersion: 2,
+        hseSelections: ['unsafeAct'],
+        hseUnsafeActDetails: 'Worker crossed an active barricade.',
+        photos: [expect.objectContaining({ id: 'hse-v2-photo' })],
+      }),
+    )
+  })
+
+  it('preserves spaces while the inspector types an HSE v2 description', () => {
+    const onChange = vi.fn()
+    const Harness = () => {
+      const [value, setValue] = React.useState({
+        mainLocation: 'Zone A',
+        selectedLocation: 'Zone A',
+        inspectionType: 'Health Safety Environment Inspection',
+        inspectedAt: '2026-07-14T09:30',
+        hsePayloadVersion: 2,
+        hseSelections: ['unsafeAct'],
+        hseUnsafeActDetails: 'Worker',
+        photos: [],
+      })
+
+      return (
+        <InspectionForm
+          {...baseProps}
+          onChange={(nextValue) => {
+            onChange(nextValue)
+            setValue(nextValue)
+          }}
+          value={value}
+        />
+      )
+    }
+    render(<Harness />)
+
+    const description = screen.getByRole('textbox', { name: 'Observation description' })
+    fireEvent.change(description, { target: { value: 'Worker ' } })
+
+    expect(description.value).toBe('Worker ')
+    expect(onChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({ hseUnsafeActDetails: 'Worker ' }),
+    )
+  })
+
+  it('keeps the direct-submit lock until the async submission callback settles', async () => {
+    let resolveSubmission
+    const onRequestReview = vi.fn(
+      () =>
+        new Promise((resolve) => {
+          resolveSubmission = resolve
+        }),
+    )
+    render(
+      <InspectionForm
+        {...baseProps}
+        onRequestReview={onRequestReview}
+        value={{
+          mainLocation: 'Zone A',
+          selectedLocation: 'Zone A',
+          inspectionType: 'Health Safety Environment Inspection',
+          inspectedAt: '2026-07-14T09:30',
+          hsePayloadVersion: 2,
+          hseSelections: ['unsafeAct'],
+          hseUnsafeActDetails: 'Worker crossed an active barricade.',
+          photos: [{ id: 'hse-v2-photo', fileName: 'hse.png', url: 'data:image/png;base64,QUFB' }],
+        }}
+      />,
+    )
+
+    const submit = screen.getAllByText('Submit Report')[0]
+    fireEvent.click(submit)
+    fireEvent.click(submit)
+    expect(onRequestReview).toHaveBeenCalledTimes(1)
+
+    resolveSubmission()
+    await waitFor(() => expect(onRequestReview).toHaveBeenCalledTimes(1))
+  })
+
   it('hides Continue to Review for incomplete HSE observations', () => {
     const onRequestReview = vi.fn()
     render(

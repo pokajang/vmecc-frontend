@@ -7,6 +7,8 @@ import {
   formatFileSize,
   formatKnowledgeDate,
   knowledgeEntryName,
+  knowledgeActionableFindings,
+  knowledgeQualityLabel,
   knowledgeScopeLabel,
   knowledgeUseLabel,
 } from './constants'
@@ -87,6 +89,7 @@ const KnowledgeListView = ({
                 canManageKnowledge || Number(entry.uploaded_by) === Number(authUser?.id)
               const isDeleteTarget =
                 String(knowledgeDeleteTarget?.id ?? '') === String(entry.id ?? '')
+              const actionableFinding = knowledgeActionableFindings(entry)[0]
 
               return (
                 <div
@@ -149,12 +152,7 @@ const KnowledgeListView = ({
                             {entry.source_size ? ` - ${formatFileSize(entry.source_size)}` : ''}
                           </div>
                           <div className="ai-helper-knowledge__meta">
-                            <span>Ingestion</span>{' '}
-                            {entry.extraction_complete
-                              ? `Complete${entry.extraction_mode ? ` (${entry.extraction_mode})` : ''}`
-                              : entry.status === 'processing'
-                                ? 'Preparing complete document index'
-                                : 'Not ready'}
+                            <span>Ingestion</span> {knowledgeQualityLabel(entry)}
                             {entry.pdf_page_count ? ` - ${entry.pdf_page_count} pages` : ''}
                             {entry.extracted_characters
                               ? ` - ${entry.extracted_characters} characters`
@@ -165,10 +163,9 @@ const KnowledgeListView = ({
                               <span>Review note</span> {entry.review_note}
                             </div>
                           ) : null}
-                          {Array.isArray(entry.processing_warnings) &&
-                          entry.processing_warnings.length ? (
+                          {actionableFinding ? (
                             <div className="ai-helper-knowledge__warning">
-                              {entry.processing_warnings[0]}
+                              {actionableFinding.message}
                             </div>
                           ) : null}
                           {entry.error ? (

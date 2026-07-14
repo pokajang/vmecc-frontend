@@ -22,7 +22,6 @@ import {
   LOCATION_DRAFT_ZONE,
   LOCATION_TOGGLE_VALUE,
   LOCATION_VISIBLE_LIMIT,
-  mergeFallbackLocationChildren,
   mergeChildLocations,
   mergeMainLocations,
   mergeSubLocations,
@@ -34,6 +33,9 @@ import {
 } from './locationTypeManagerHelpers'
 import { removeLocationTypeAction, saveLocationTypeAction } from './locationTypeManagerActions'
 import useInspectionLocationCatalog from './useInspectionLocationCatalog'
+import useInspectionSiteLocationHierarchy from './useInspectionSiteLocationHierarchy'
+import { toLegacySiteLocationRows } from '../domain/locations/siteLocationHierarchy'
+import useLegacySiteLocationMigration from './useLegacySiteLocationMigration'
 
 export {
   LOCATION_TOGGLE_VALUE,
@@ -63,7 +65,13 @@ const useLocationTypeManager = ({
   const [showAllZoneTypes, setShowAllZoneTypes] = useState(false)
   const [showAddLocationModal, setShowAddLocationModal] = useState(false)
   const [locationEditMode, setLocationEditMode] = useState(false)
-  const [customLocationTypes, setCustomLocationTypes] = useState([])
+  const [customLocationTypes, setCustomLocationTypes] = useState(() =>
+    loadCustomLocationTypes(userId),
+  )
+  const [customLocationTypesUserId, setCustomLocationTypesUserId] = useState(() =>
+    String(userId || ''),
+  )
+  const customLocationTypesLoaded = customLocationTypesUserId === String(userId || '')
   const [locationDraftKind, setLocationDraftKind] = useState(LOCATION_DRAFT_MAIN)
   const [newLocationName, setNewLocationName] = useState('')
   const [newLocationDescription, setNewLocationDescription] = useState('')
@@ -71,19 +79,47 @@ const useLocationTypeManager = ({
   const [editingLocationKey, setEditingLocationKey] = useState('')
   const [editingLocationParentKey, setEditingLocationParentKey] = useState('')
   const [addLocationError, setAddLocationError] = useState('')
+  const siteLocationCatalog = useInspectionSiteLocationHierarchy({
+    enabled: isFireExtinguisherLocationFlow,
+  })
 
   useEffect(() => {
-    setCustomLocationTypes(loadCustomLocationTypes(userId))
+    let active = true
+    queueMicrotask(() => {
+      if (!active) return
+      setCustomLocationTypes(loadCustomLocationTypes(userId))
+      setCustomLocationTypesUserId(String(userId || ''))
+    })
+    return () => {
+      active = false
+    }
   }, [userId])
 
   const { backendMainLocations, setBackendMainLocations, catalogSource } =
     useInspectionLocationCatalog({
+      enabled: !isFireExtinguisherLocationFlow,
       userId,
       inspectionType,
       isFireExtinguisherLocationFlow,
       customLocationTypes,
       setCustomLocationTypes,
     })
+  const effectiveBackendMainLocations = useMemo(
+    () =>
+      isFireExtinguisherLocationFlow
+        ? toLegacySiteLocationRows(siteLocationCatalog.hierarchy)
+        : backendMainLocations,
+    [backendMainLocations, isFireExtinguisherLocationFlow, siteLocationCatalog.hierarchy],
+  )
+  const effectiveCatalogSource = isFireExtinguisherLocationFlow ? 'site-api' : catalogSource
+  useLegacySiteLocationMigration({
+    enabled: isFireExtinguisherLocationFlow,
+    userId,
+    rows: customLocationTypes,
+    rowsLoaded: customLocationTypesLoaded,
+    catalog: siteLocationCatalog,
+    onMigrated: setCustomLocationTypes,
+  })
 
   const iconOptions = useMemo(() => getTypeIconOptions('location'), [])
   const fallbackMainLocations = useMemo(
@@ -91,17 +127,21 @@ const useLocationTypeManager = ({
     [inspectionType],
   )
   const seededMainLocations = useMemo(() => {
-    const sourceRows =
-      backendMainLocations.length > 0
-        ? isFireExtinguisherLocationFlow
-          ? mergeFallbackLocationChildren(backendMainLocations, fallbackMainLocations)
-          : backendMainLocations
+    const sourceRows = isFireExtinguisherLocationFlow
+      ? effectiveBackendMainLocations
+      : effectiveBackendMainLocations.length > 0
+        ? effectiveBackendMainLocations
         : fallbackMainLocations
     return withInspectionLocationDisplayLabels(sourceRows, inspectionType)
-  }, [backendMainLocations, fallbackMainLocations, inspectionType, isFireExtinguisherLocationFlow])
+  }, [
+    effectiveBackendMainLocations,
+    fallbackMainLocations,
+    inspectionType,
+    isFireExtinguisherLocationFlow,
+  ])
   const customRowsForMerge = useMemo(
-    () => (catalogSource === 'api' ? [] : customLocationTypes),
-    [catalogSource, customLocationTypes],
+    () => (['api', 'site-api'].includes(effectiveCatalogSource) ? [] : customLocationTypes),
+    [customLocationTypes, effectiveCatalogSource],
   )
   const mainLocationOptions = useMemo(() => {
     const mergedRows = mergeMainLocations(seededMainLocations, customRowsForMerge)
@@ -263,7 +303,11 @@ const useLocationTypeManager = ({
   }
 
   const openAddLocationModal = (kind = LOCATION_DRAFT_MAIN) => {
-    setLocationDraftKind(kind === LOCATION_DRAFT_SUB ? LOCATION_DRAFT_SUB : LOCATION_DRAFT_MAIN)
+    setLocationDraftKind(
+      [LOCATION_DRAFT_ZONE, LOCATION_DRAFT_MAIN, LOCATION_DRAFT_SUB].includes(kind)
+        ? kind
+        : LOCATION_DRAFT_MAIN,
+    )
     setAddLocationError('')
     resetDraft()
     setNewLocationIconKey(pickLeastUsedTypeIconKey('location', customLocationTypes))
@@ -306,16 +350,22 @@ const useLocationTypeManager = ({
     selectMainLocation(value)
   }
 
-  const setZone = (value) => {
+  const setZone = (value, nextZoneId = '', preserveDescendants = false) => {
     setShowAllZoneTypes(false)
     const selectedRow = mainLocationOptions.find((row) => sameFireZoneKey(row.value, value))
     updateSetupField?.('locationSelection', {
       zone: String(selectedRow?.value || value || '').trim(),
-      zoneId: String(getOptionId(selectedRow) || '').trim(),
-      mainLocation: '',
-      subLocation: '',
-      mainLocationId: '',
-      subLocationId: '',
+      zoneId: String(nextZoneId || getOptionId(selectedRow) || '').trim(),
+      mainLocation: preserveDescendants ? fallbackMainLocation : '',
+      subLocation: preserveDescendants ? String(subLocation || '').trim() : '',
+      mainLocationId: preserveDescendants
+        ? String(getOptionId(selectedMainLocationRow) || '').trim()
+        : '',
+      subLocationId: preserveDescendants
+        ? String(
+            getOptionId(subLocationOptions.find((row) => sameKey(row.value, subLocation))) || '',
+          ).trim()
+        : '',
     })
   }
 
@@ -333,6 +383,7 @@ const useLocationTypeManager = ({
           }
         : {}),
       mainLocation: fallbackMainLocation,
+      mainLocationId: String(getOptionId(selectedMainLocationRow) || '').trim(),
       subLocation: nextSubLocation,
       ...(subLocationId ? { subLocationId } : {}),
     })
@@ -350,6 +401,7 @@ const useLocationTypeManager = ({
           }
         : {}),
       mainLocation: fallbackMainLocation,
+      mainLocationId: String(getOptionId(selectedMainLocationRow) || '').trim(),
       subLocation: String(value || '').trim(),
       ...(subLocationId ? { subLocationId } : {}),
     })
@@ -373,10 +425,11 @@ const useLocationTypeManager = ({
       editLocationOptions,
       selectedMainLocationRow,
       selectedZoneRow,
-      catalogSource,
+      catalogSource: effectiveCatalogSource,
+      siteLocationCatalog,
       inspectionType,
       newLocationIconKey,
-      backendMainLocations,
+      backendMainLocations: effectiveBackendMainLocations,
       setBackendMainLocations,
       saveCachedInspectionLocationCatalog,
       selectSubLocation,
@@ -421,9 +474,10 @@ const useLocationTypeManager = ({
       fallbackMainLocation,
       selectedZoneValue,
       editLocationOptions,
-      catalogSource,
+      catalogSource: effectiveCatalogSource,
+      siteLocationCatalog,
       inspectionType,
-      backendMainLocations,
+      backendMainLocations: effectiveBackendMainLocations,
       setBackendMainLocations,
       saveCachedInspectionLocationCatalog,
       subLocation,
