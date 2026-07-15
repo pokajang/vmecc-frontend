@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vmecc-app-shell-v7'
+const CACHE_NAME = 'vmecc-app-shell-v8'
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -12,6 +12,15 @@ const NEVER_CACHE_PATHS = ['/api/', '/sanctum/', '/version.json']
 const isNeverCached = (url) =>
   NEVER_CACHE_PATHS.some((path) => url.pathname === path || url.pathname.startsWith(path))
 
+const unavailableResponse = (request) => {
+  const isNavigation = request.mode === 'navigate'
+  return new Response(isNavigation ? 'VMECC is temporarily unavailable.' : '', {
+    status: 503,
+    statusText: 'Service Unavailable',
+    headers: isNavigation ? { 'Content-Type': 'text/plain; charset=utf-8' } : undefined,
+  })
+}
+
 const refreshAppShellCache = async () => {
   const cache = await caches.open(CACHE_NAME)
   await cache.addAll(APP_SHELL)
@@ -19,12 +28,7 @@ const refreshAppShellCache = async () => {
 }
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => cache.addAll(APP_SHELL))
-      .catch(() => undefined),
-  )
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)))
   self.skipWaiting()
 })
 
@@ -82,11 +86,21 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const copy = response.clone()
-          caches.open(CACHE_NAME).then((cache) => cache.put('/index.html', copy))
+          if (response.ok) {
+            const copy = response.clone()
+            event.waitUntil(
+              caches
+                .open(CACHE_NAME)
+                .then((cache) => cache.put('/index.html', copy))
+                .catch(() => undefined),
+            )
+          }
           return response
         })
-        .catch(() => caches.match('/index.html').then((cached) => cached || caches.match('/'))),
+        .catch(async () => {
+          const cached = (await caches.match('/index.html')) || (await caches.match('/'))
+          return cached || unavailableResponse(request)
+        }),
     )
     return
   }
@@ -95,22 +109,29 @@ self.addEventListener('fetch', (event) => {
     caches.match(request).then((cached) => {
       if (cached) return cached
 
-      return fetch(request).then((response) => {
-        const shouldCache =
-          response.ok &&
-          (url.pathname.startsWith('/assets/') ||
-            url.pathname.startsWith('/icons/') ||
-            url.pathname === '/manifest.json' ||
-            url.pathname === '/favicon.svg' ||
-            url.pathname === '/favicon.ico')
+      return fetch(request)
+        .then((response) => {
+          const shouldCache =
+            response.ok &&
+            (url.pathname.startsWith('/assets/') ||
+              url.pathname.startsWith('/icons/') ||
+              url.pathname === '/manifest.json' ||
+              url.pathname === '/favicon.svg' ||
+              url.pathname === '/favicon.ico')
 
-        if (shouldCache) {
-          const copy = response.clone()
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy))
-        }
+          if (shouldCache) {
+            const copy = response.clone()
+            event.waitUntil(
+              caches
+                .open(CACHE_NAME)
+                .then((cache) => cache.put(request, copy))
+                .catch(() => undefined),
+            )
+          }
 
-        return response
-      })
+          return response
+        })
+        .catch(() => unavailableResponse(request))
     }),
   )
 })

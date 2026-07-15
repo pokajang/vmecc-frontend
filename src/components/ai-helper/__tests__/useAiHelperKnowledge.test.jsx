@@ -5,23 +5,29 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { KNOWLEDGE_READER_TAB_EXTRACTED } from '../constants'
 
 const {
+  fetchAiHelperKnowledge,
   fetchAiHelperKnowledgeDetail,
   fetchAiHelperKnowledgeFileBlob,
   fetchAiHelperKnowledgeFileText,
+  uploadAiHelperKnowledge,
+  uploadAiHelperMarkdownKnowledge,
 } = vi.hoisted(() => ({
+  fetchAiHelperKnowledge: vi.fn(),
   fetchAiHelperKnowledgeDetail: vi.fn(),
   fetchAiHelperKnowledgeFileBlob: vi.fn(),
   fetchAiHelperKnowledgeFileText: vi.fn(),
+  uploadAiHelperKnowledge: vi.fn(),
+  uploadAiHelperMarkdownKnowledge: vi.fn(),
 }))
 
 vi.mock('src/services/apiClient', () => ({
   deleteAiHelperKnowledge: vi.fn(),
-  fetchAiHelperKnowledge: vi.fn(() => Promise.resolve({ data: [] })),
+  fetchAiHelperKnowledge,
   fetchAiHelperKnowledgeDetail,
   fetchAiHelperKnowledgeFileBlob,
   fetchAiHelperKnowledgeFileText,
-  uploadAiHelperKnowledge: vi.fn(),
-  uploadAiHelperMarkdownKnowledge: vi.fn(),
+  uploadAiHelperKnowledge,
+  uploadAiHelperMarkdownKnowledge,
 }))
 
 import useAiHelperKnowledge from '../useAiHelperKnowledge'
@@ -38,11 +44,92 @@ const deferred = () => {
 
 describe('useAiHelperKnowledge', () => {
   beforeEach(() => {
+    fetchAiHelperKnowledge.mockReset()
+    fetchAiHelperKnowledge.mockResolvedValue({ data: [] })
     fetchAiHelperKnowledgeDetail.mockReset()
     fetchAiHelperKnowledgeFileBlob.mockReset()
     fetchAiHelperKnowledgeFileText.mockReset()
+    uploadAiHelperKnowledge.mockReset()
+    uploadAiHelperMarkdownKnowledge.mockReset()
     global.URL.createObjectURL = vi.fn(() => 'blob:http://localhost/knowledge-preview')
     global.URL.revokeObjectURL = vi.fn()
+  })
+
+  it('turns a malformed knowledge list response into a visible load error', async () => {
+    fetchAiHelperKnowledge.mockResolvedValue({ data: null })
+
+    const { result } = renderHook(() =>
+      useAiHelperKnowledge({
+        authUser: { id: 7 },
+        currentPageContext: { path: '/inspection' },
+        isSysAdmin: false,
+        refreshCurrentContext: vi.fn(),
+        routeContext: { path: '/inspection' },
+        visibleKnowledgeModules: [],
+      }),
+    )
+
+    await act(async () => {
+      await result.current.loadKnowledge({ force: true })
+    })
+
+    expect(result.current.knowledgeEntries).toEqual([])
+    expect(result.current.knowledgeError).toBe('Could not load knowledge sources.')
+  })
+
+  it('rejects a malformed knowledge detail without rendering it', async () => {
+    fetchAiHelperKnowledgeDetail.mockResolvedValue({ data: [] })
+
+    const { result } = renderHook(() =>
+      useAiHelperKnowledge({
+        authUser: { id: 7 },
+        currentPageContext: { path: '/inspection' },
+        isSysAdmin: false,
+        refreshCurrentContext: vi.fn(),
+        routeContext: { path: '/inspection' },
+        visibleKnowledgeModules: [],
+      }),
+    )
+
+    await act(async () => {
+      await result.current.openKnowledgeReader(10)
+    })
+
+    expect(result.current.selectedKnowledgeDetail).toBe(null)
+    expect(result.current.knowledgeReaderError).toBe('Could not load this knowledge source.')
+    expect(result.current.knowledgeReaderLoading).toBe(false)
+  })
+
+  it('keeps the selected file when an upload returns no knowledge entry', async () => {
+    const refreshCurrentContext = vi.fn()
+    const setNotice = vi.fn()
+    uploadAiHelperKnowledge.mockResolvedValue({ data: null })
+
+    const { result } = renderHook(() =>
+      useAiHelperKnowledge({
+        authUser: { id: 7 },
+        currentPageContext: { path: '/inspection' },
+        isSysAdmin: false,
+        refreshCurrentContext,
+        routeContext: { path: '/inspection' },
+        visibleKnowledgeModules: [],
+      }),
+    )
+
+    const file = new File(['pdf'], 'guide.pdf', { type: 'application/pdf' })
+    act(() => {
+      result.current.handleKnowledgeFileChange({ target: { files: [file] } })
+      result.current.setKnowledgeAcknowledged(true)
+    })
+
+    await act(async () => {
+      await result.current.uploadKnowledge(setNotice)
+    })
+
+    expect(result.current.knowledgeFile).toBe(file)
+    expect(result.current.knowledgeError).toBe('Could not upload knowledge.')
+    expect(setNotice).not.toHaveBeenCalled()
+    expect(refreshCurrentContext).not.toHaveBeenCalled()
   })
 
   it('ignores stale detail responses after the reader is closed', async () => {

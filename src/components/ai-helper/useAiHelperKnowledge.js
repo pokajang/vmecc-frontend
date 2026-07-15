@@ -20,6 +20,28 @@ import {
   safeAiHelperError,
 } from './constants'
 
+const isKnowledgeEntry = (value) =>
+  Boolean(value && typeof value === 'object' && !Array.isArray(value) && value.id != null)
+
+const knowledgeEntriesFromResponse = (response) => {
+  const entries = response?.data
+  if (!Array.isArray(entries) || entries.some((entry) => !isKnowledgeEntry(entry))) {
+    throw new Error('Invalid knowledge list response.')
+  }
+  return entries
+}
+
+const knowledgeEntryFromResponse = (response, message) => {
+  const entry = response?.data
+  if (!isKnowledgeEntry(entry)) throw new Error(message)
+  return entry
+}
+
+const prependKnowledgeEntry = (entries, entry) => [
+  entry,
+  ...entries.filter((item) => item?.id !== entry.id),
+]
+
 const useAiHelperKnowledge = ({
   authUser,
   currentPageContext,
@@ -143,7 +165,7 @@ const useAiHelperKnowledge = ({
         .then((response) => {
           if (requestId !== knowledgeListRequestIdRef.current) return
           if (authUserIdRef.current !== requestUserId) return
-          setKnowledgeEntries(response?.data || [])
+          setKnowledgeEntries(knowledgeEntriesFromResponse(response))
           setKnowledgeLoaded(true)
           setKnowledgeLastLoadedAt(Date.now())
         })
@@ -291,8 +313,7 @@ const useAiHelperKnowledge = ({
       try {
         const response = await fetchAiHelperKnowledgeDetail(knowledgeId)
         if (knowledgeReaderRequestRef.current !== requestId) return
-        const detail = response?.data || null
-        if (!detail) throw new Error('Knowledge details are unavailable.')
+        const detail = knowledgeEntryFromResponse(response, 'Knowledge details are unavailable.')
 
         setSelectedKnowledgeDetail(detail)
         if (detail.original_available) {
@@ -380,9 +401,8 @@ const useAiHelperKnowledge = ({
       setKnowledgeError(null)
       try {
         const response = await uploadAiHelperKnowledge(formData)
-        const entry = response?.data
-        if (entry)
-          setKnowledgeEntries((prev) => [entry, ...prev.filter((item) => item.id !== entry.id)])
+        const entry = knowledgeEntryFromResponse(response, 'Uploaded knowledge is unavailable.')
+        setKnowledgeEntries((prev) => prependKnowledgeEntry(prev, entry))
         setKnowledgeLoaded(true)
         setKnowledgeLastLoadedAt(Date.now())
         setKnowledgeFile(null)
@@ -396,8 +416,8 @@ const useAiHelperKnowledge = ({
         refreshCurrentContext()
       } catch (error) {
         const entry = error?.payload?.data
-        if (entry) {
-          setKnowledgeEntries((prev) => [entry, ...prev.filter((item) => item.id !== entry.id)])
+        if (isKnowledgeEntry(entry)) {
+          setKnowledgeEntries((prev) => prependKnowledgeEntry(prev, entry))
           setKnowledgeLoaded(true)
           setKnowledgeLastLoadedAt(Date.now())
         }
@@ -451,9 +471,8 @@ const useAiHelperKnowledge = ({
       setKnowledgeError(null)
       try {
         const response = await uploadAiHelperMarkdownKnowledge(formData)
-        const entry = response?.data
-        if (entry)
-          setKnowledgeEntries((prev) => [entry, ...prev.filter((item) => item.id !== entry.id)])
+        const entry = knowledgeEntryFromResponse(response, 'Uploaded knowledge is unavailable.')
+        setKnowledgeEntries((prev) => prependKnowledgeEntry(prev, entry))
         setKnowledgeLoaded(true)
         setKnowledgeLastLoadedAt(Date.now())
         setMarkdownFile(null)

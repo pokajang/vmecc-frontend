@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { knowledgeActionableFindings, knowledgeQualityLabel, safeAiHelperError } from '../constants'
+import {
+  knowledgeActionableFindings,
+  knowledgeFindings,
+  knowledgeQualityLabel,
+  safeAiHelperError,
+} from '../constants'
 
 describe('safeAiHelperError', () => {
   it('shows the generation retry window for rate-limited Ask AI responses', () => {
@@ -23,6 +28,13 @@ describe('safeAiHelperError', () => {
 })
 
 describe('knowledge ingestion quality', () => {
+  it('handles an unavailable knowledge detail during loading transitions', () => {
+    expect(knowledgeFindings(null)).toEqual([])
+    expect(knowledgeFindings(null, null)).toEqual([])
+    expect(knowledgeActionableFindings(null)).toEqual([])
+    expect(knowledgeQualityLabel(null)).toBe('Not ready')
+  })
+
   it('does not promote informational OCR notices to actionable warnings', () => {
     const entry = {
       extraction_complete: true,

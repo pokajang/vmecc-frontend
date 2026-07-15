@@ -35,6 +35,28 @@ describe('KnowledgeReaderModal', () => {
     summary: 'Summary text',
   }
 
+  it('renders the loading state before knowledge details are available', () => {
+    render(
+      <KnowledgeReaderModal
+        activeTab={KNOWLEDGE_READER_TAB_EXTRACTED}
+        detail={null}
+        error={null}
+        loading
+        pdfError={null}
+        pdfLoading={false}
+        pdfUrl=""
+        markdownError={null}
+        markdownLoading={false}
+        markdownSource=""
+        open
+        onClose={vi.fn()}
+        onTabChange={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByText('Loading knowledge...')).toBeTruthy()
+  })
+
   it('renders the original PDF iframe and new tab link', () => {
     render(
       <KnowledgeReaderModal

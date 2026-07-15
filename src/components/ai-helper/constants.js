@@ -138,13 +138,13 @@ export const moduleLabel = (moduleKey) =>
   KNOWLEDGE_MODULE_OPTIONS.find((option) => option.key === moduleKey)?.label || moduleKey
 
 export const knowledgeScopeLabel = (entry = {}) => {
-  if (!entry.module_key && !entry.route_key) return 'General guidance'
-  if (entry.module_key) return `${moduleLabel(entry.module_key)} module`
+  if (!entry?.module_key && !entry?.route_key) return 'General guidance'
+  if (entry?.module_key) return `${moduleLabel(entry.module_key)} module`
   return 'Page guidance'
 }
 
 export const knowledgeEntryName = (entry = {}) =>
-  entry.title || entry.source_filename || 'Uploaded PDF'
+  entry?.title || entry?.source_filename || 'Uploaded PDF'
 
 export const makeLocalMessage = (role, content, status = 'completed', extra = {}) => ({
   id: `${role}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -193,51 +193,52 @@ export const statusLabel = (status) => {
 }
 
 export const knowledgeUseLabel = (entry = {}) => {
-  if (entry.status === 'processing') return 'Processing'
-  if (entry.status === 'deleting') return 'Deleting'
-  if (entry.status === 'failed') return 'Failed'
-  if (entry.review_status === 'rejected') return 'Rejected'
-  if (entry.visibility === 'shared' && entry.review_status === 'pending') return 'Pending review'
-  if (entry.visibility === 'shared' && entry.review_status === 'approved') {
-    return entry.active ? 'Approved shared' : 'Approved shared - disabled'
+  if (entry?.status === 'processing') return 'Processing'
+  if (entry?.status === 'deleting') return 'Deleting'
+  if (entry?.status === 'failed') return 'Failed'
+  if (entry?.review_status === 'rejected') return 'Rejected'
+  if (entry?.visibility === 'shared' && entry?.review_status === 'pending') return 'Pending review'
+  if (entry?.visibility === 'shared' && entry?.review_status === 'approved') {
+    return entry?.active ? 'Approved shared' : 'Approved shared - disabled'
   }
-  if (entry.visibility === 'personal') {
-    return entry.active ? 'Ready for you' : 'Personal - disabled'
+  if (entry?.visibility === 'personal') {
+    return entry?.active ? 'Ready for you' : 'Personal - disabled'
   }
-  return statusLabel(entry.status)
+  return statusLabel(entry?.status)
 }
 
 export const knowledgeFindings = (entry = {}, severities = []) => {
-  const findings = Array.isArray(entry.processing_findings) ? entry.processing_findings : []
-  if (!severities.length) return findings
-  return findings.filter((finding) => severities.includes(finding?.severity))
+  const findings = Array.isArray(entry?.processing_findings) ? entry.processing_findings : []
+  const allowedSeverities = Array.isArray(severities) ? severities : []
+  if (!allowedSeverities.length) return findings
+  return findings.filter((finding) => allowedSeverities.includes(finding?.severity))
 }
 
 export const knowledgeActionableFindings = (entry = {}) => {
   const findings = knowledgeFindings(entry, ['warning', 'error'])
   if (findings.length) return findings
 
-  return (Array.isArray(entry.processing_warnings) ? entry.processing_warnings : []).map(
+  return (Array.isArray(entry?.processing_warnings) ? entry.processing_warnings : []).map(
     (message) => ({ severity: 'warning', code: 'LEGACY_WARNING', page: null, message }),
   )
 }
 
 export const knowledgeQualityLabel = (entry = {}) => {
-  if (entry.status === 'processing') {
-    return entry.extraction_complete
+  if (entry?.status === 'processing') {
+    return entry?.extraction_complete
       ? 'Re-indexing - previous index remains available'
       : 'Preparing complete document index'
   }
-  if (entry.quality_status === 'review_required') {
-    const gaps = Number(entry.pages_visual_only || 0) + Number(entry.pages_unreadable || 0)
+  if (entry?.quality_status === 'review_required') {
+    const gaps = Number(entry?.pages_visual_only || 0) + Number(entry?.pages_unreadable || 0)
     return `Review required${gaps ? ` - ${gaps} page${gaps === 1 ? ' needs' : 's need'} attention` : ''}`
   }
-  if (entry.quality_status === 'failed' || entry.status === 'failed') return 'Failed'
-  if (entry.quality_status === 'ready_with_notices') {
-    const ocrPages = Number(entry.pages_ocr || 0)
+  if (entry?.quality_status === 'failed' || entry?.status === 'failed') return 'Failed'
+  if (entry?.quality_status === 'ready_with_notices') {
+    const ocrPages = Number(entry?.pages_ocr || 0)
     return `Complete${ocrPages ? ` - OCR applied to ${ocrPages} page${ocrPages === 1 ? '' : 's'}` : ''}`
   }
-  if (entry.extraction_complete) return 'Complete'
+  if (entry?.extraction_complete) return 'Complete'
   return 'Not ready'
 }
 
