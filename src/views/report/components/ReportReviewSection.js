@@ -1,7 +1,8 @@
 import React from 'react'
 import { CAlert, CBadge, CButton, CRow } from '@coreui/react'
 import FormActionGroup from 'src/components/FormActionGroup'
-import { DetailField, ReportPhotoImage } from 'src/components/report-workflow/ReportViewComponents'
+import ReportPhotoGallery from 'src/components/report-workflow/ReportPhotoGallery'
+import { DetailField } from 'src/components/report-workflow/ReportViewComponents'
 
 const text = (value) => String(value || '').trim()
 
@@ -148,26 +149,7 @@ const AnalysisRows = ({ analysis, photos = [], isDrill = false, onEdit }) => {
       {photoRows.length > 0 ? (
         <div>
           <div className="small text-body-secondary mb-2">Photographs</div>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
-              gap: '0.75rem',
-            }}
-          >
-            {photoRows.map((photo, index) => (
-              <div key={photo.id || index} className="rounded-3 border overflow-hidden">
-                <ReportPhotoImage
-                  photo={photo}
-                  alt={photo.description || photo.fileName || 'Report photo'}
-                  style={{ width: '100%', height: 120, objectFit: 'cover' }}
-                />
-                {photo.description ? (
-                  <div className="small p-2 text-body-secondary">{photo.description}</div>
-                ) : null}
-              </div>
-            ))}
-          </div>
+          <ReportPhotoGallery photos={photoRows} />
         </div>
       ) : null}
     </ReviewSectionBlock>

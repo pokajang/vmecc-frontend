@@ -21,7 +21,7 @@ import InlineFeedbackMessage from 'src/components/InlineFeedbackMessage'
 import ModuleNavTabs from 'src/components/ModuleNavTabs'
 import ModulePageHeader from 'src/components/ModulePageHeader'
 import TableLoader from 'src/components/TableLoader'
-import { SORT_OPTIONS } from './constants'
+import { REPORT_VIEW_PERMISSIONS, SORT_OPTIONS } from './constants'
 import { FORM_REGISTRY } from './formRegistry'
 import ReportDetailSection from './components/ReportDetailSection'
 import ReportRecordsSection from './components/ReportRecordsSection'
@@ -59,12 +59,7 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
   const reportType = overrideReportType || routeReportType
   const user = useSelector((state) => state.authUser)
   const routeReportTypeSlug = normalizeReportTypeSlug(reportType)
-  const routePermissionMap = {
-    erco: 'reports.erco.view',
-    drill: 'reports.drill.view',
-    'fitness-test': 'reports.fitness.view',
-  }
-  const requiredRoutePermission = routePermissionMap[routeReportTypeSlug] || ''
+  const requiredRoutePermission = REPORT_VIEW_PERMISSIONS[routeReportTypeSlug] || ''
   const canAccessReportRoute = requiredRoutePermission
     ? hasPermission(user, requiredRoutePermission)
     : false
@@ -547,11 +542,15 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
         onDeleteRecord={requestDeleteRecord}
         canEditRecord={canEditRecord}
         canDeleteRecord={canDeleteRecord}
+        canReviewRecord={canReviewRecord}
+        canApproveRecord={canApproveRecord}
+        canRejectRecord={canRejectRecord}
         downloadingId={downloadingId}
         onReviewRecord={transitionReview}
         onApproveRecord={transitionApprove}
         onRejectRecord={transitionReject}
         isActionBusy={isActionBusy}
+        isDeleting={isDeleting}
         testAnchorPrefix={testAnchorPrefix}
         typeLabel={
           isFitnessTestReport ? 'Fitness Test Type' : isDrillReport ? 'Drill Type' : 'Incident Type'
@@ -700,7 +699,11 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
         }
         confirmLabel="Delete"
         confirmColor="danger"
-        onClose={() => setDeleteTarget(null)}
+        confirmDisabled={isDeleting}
+        cancelDisabled={isDeleting}
+        onClose={() => {
+          if (!isDeleting) setDeleteTarget(null)
+        }}
         onConfirm={confirmDeleteRecord}
       />
       <ReportWorkflowActionModal

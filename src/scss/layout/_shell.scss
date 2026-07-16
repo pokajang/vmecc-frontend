@@ -104,6 +104,24 @@
   }
 }
 
+// The desktop header first appears at md. Keep its icon visuals compact while
+// giving every action a field-usable touch box at tablet widths.
+@media (min-width: 768px) and (max-width: 1024px) {
+  .header .app-header-action {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+.header .app-header-action:focus-visible {
+  outline: 0;
+  border-radius: var(--cui-border-radius);
+  box-shadow: var(--vmecc-focus-ring);
+}
+
 .footer {
   min-height: calc(3rem + 1px); // stylelint-disable-line function-disallowed-list
   background-color: var(--cui-body-bg);

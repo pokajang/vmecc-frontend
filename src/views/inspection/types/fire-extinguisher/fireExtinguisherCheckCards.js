@@ -346,18 +346,7 @@ const FireExtinguisherAdditionalInfo = ({ row, readOnly = false, handlers = {}, 
                   <Trash2 size={13} />
                   Clear
                 </CButton>
-              ) : (
-                <CButton
-                  type="button"
-                  color="secondary"
-                  variant="outline"
-                  size="sm"
-                  className="inspection-compact-action-btn"
-                  onClick={() => setExpanded(false)}
-                >
-                  Cancel
-                </CButton>
-              )}
+              ) : null}
             </div>
             <CFormTextarea
               rows={2}
@@ -366,6 +355,18 @@ const FireExtinguisherAdditionalInfo = ({ row, readOnly = false, handlers = {}, 
               value={rawRemarks}
               onChange={(event) => handlers.onUpdateCheck?.(row, { remarks: event.target.value })}
             />
+            {!hasRemarks ? (
+              <CButton
+                type="button"
+                color="secondary"
+                variant="outline"
+                size="sm"
+                className="inspection-compact-action-btn justify-self-start"
+                onClick={() => setExpanded(false)}
+              >
+                Cancel
+              </CButton>
+            ) : null}
           </div>
         )
       ) : null}

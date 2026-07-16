@@ -61,6 +61,40 @@ afterEach(() => {
 })
 
 describe('useInspectionFormPhotos', () => {
+  it('starts finding photos with a blank description even when the caller supplies a label', async () => {
+    const prepare = await import('../form/inspectionPhotoUtils')
+    const onAddPhotos = vi.fn()
+    const uploadedPhoto = {
+      id: 'finding-photo',
+      fileName: 'finding.jpg',
+      description: '',
+      url: 'data:image/jpeg;base64,ZmFrZQ==',
+    }
+    prepare.prepareInspectionPhotoUploads.mockResolvedValueOnce([uploadedPhoto])
+    const { result } = createTestHook()
+
+    act(() => {
+      result.current.requestInspectionIssuePhotoUpload(
+        { id: 'finding-1', label: 'Finding', onAddPhotos },
+        result.current.uploadInputRef,
+        { defaultDescription: 'Finding' },
+      )
+    })
+    await act(async () => {
+      await result.current.handlePhotoSelect({
+        target: {
+          files: [new File(['photo'], 'finding.jpg', { type: 'image/jpeg' })],
+          value: '',
+        },
+      })
+    })
+
+    expect(prepare.prepareInspectionPhotoUploads).toHaveBeenCalledWith(
+      expect.objectContaining({ defaultDescription: '' }),
+    )
+    expect(onAddPhotos).toHaveBeenCalledWith([uploadedPhoto])
+  })
+
   it('promotes low-memory camera failures to a manual upload fallback', async () => {
     const prepare = await import('../form/inspectionPhotoUtils')
     const pushToast = vi.fn()

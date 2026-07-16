@@ -35,6 +35,8 @@ describe('inspection duty token propagation', () => {
       status: 'Submitted',
       incidentType: 'General Inspection',
       description: 'Token propagation.',
+      recordActionsVersion: 1,
+      recordActions: { delete: { applicable: true, allowed: true } },
     }
 
     await persistInspectionRecord('user-1', row, {
@@ -43,6 +45,9 @@ describe('inspection duty token propagation', () => {
     })
     const createCall = apiRequest.mock.calls.find(([path]) => path === '/reports')
     expect(createCall[1].headers).toEqual({ 'X-Duty-Confirmation': 'create-token' })
+    const createBody = JSON.parse(createCall[1].body)
+    expect(createBody.payload).not.toHaveProperty('recordActionsVersion')
+    expect(createBody.payload).not.toHaveProperty('recordActions')
 
     apiRequest.mockClear()
     apiRequest.mockImplementation(async (path) => {

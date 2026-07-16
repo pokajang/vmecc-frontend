@@ -263,7 +263,7 @@ const AppHeader = () => {
           <CNavLink
             as="button"
             type="button"
-            className={`app-header-ask-ai px-2 border-0 bg-transparent d-inline-flex align-items-center gap-1 ${
+            className={`app-header-action app-header-ask-ai px-2 border-0 bg-transparent d-inline-flex align-items-center gap-1 ${
               aiHelperOpen ? 'active' : ''
             }`}
             onClick={openAiHelper}
@@ -309,7 +309,7 @@ const AppHeader = () => {
           <CNavLink
             as="button"
             type="button"
-            className="px-2 border-0 bg-transparent d-inline-flex align-items-center gap-1"
+            className="app-header-action px-2 border-0 bg-transparent d-inline-flex align-items-center gap-1"
             onClick={openFeedbackReportModal}
             aria-label="Report issue"
           >
@@ -324,7 +324,7 @@ const AppHeader = () => {
           <CNavLink
             as="button"
             type="button"
-            className="px-2 position-relative border-0 bg-transparent"
+            className="app-header-action px-2 position-relative border-0 bg-transparent"
             onClick={openNotifDrawer}
             aria-label="Notifications"
           >
@@ -341,7 +341,12 @@ const AppHeader = () => {
       {canLoadMessages && (
         <CNavItem>
           <CTooltip content="Messages" placement="bottom" trigger={HEADER_TOOLTIP_TRIGGER}>
-            <CNavLink as={NavLink} to="/messages" className="px-2 position-relative">
+            <CNavLink
+              as={NavLink}
+              to="/messages"
+              className="app-header-action px-2 position-relative"
+              aria-label="Messages"
+            >
               <MessageSquareText size={16} />
               {unreadCount > 0 && (
                 <CBadge color="light" className="header-message-badge">
@@ -362,6 +367,7 @@ const AppHeader = () => {
         <CContainer className="border-bottom px-3 px-md-4" fluid>
           <CTooltip content="Toggle sidebar" placement="bottom" trigger={HEADER_TOOLTIP_TRIGGER}>
             <CHeaderToggler
+              className="app-header-action"
               onClick={() =>
                 dispatch(
                   aiHelperOpen

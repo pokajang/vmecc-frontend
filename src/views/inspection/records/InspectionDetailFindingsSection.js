@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { Fragment } from 'react'
 import { CAccordion, CAccordionBody, CAccordionHeader, CAccordionItem, CBadge } from '@coreui/react'
 
 const text = (value) => String(value || '').trim()
@@ -64,20 +64,35 @@ const InspectionDetailFindingsSection = ({
       {findingsTitle ? <div className="small text-body-secondary">{findingsTitle}</div> : null}
       {hasItems ? (
         <CAccordion alwaysOpen>
-          {visibleItems.map((item) => (
-            <CAccordionItem
-              key={item.key || item.title}
-              itemKey={item.key || item.title}
-              className="inspection-detail-finding-accordion-item"
-            >
-              <CAccordionHeader>
-                <FindingSummaryHeader item={item} />
-              </CAccordionHeader>
-              <CAccordionBody>
-                {typeof renderItemContent === 'function' ? renderItemContent(item) : null}
-              </CAccordionBody>
-            </CAccordionItem>
-          ))}
+          {visibleItems.map((item, index) => {
+            const groupLabel = text(item.groupLabel)
+            const previousGroupLabel = text(visibleItems[index - 1]?.groupLabel)
+            const showGroupLabel = Boolean(groupLabel && groupLabel !== previousGroupLabel)
+            return (
+              <Fragment key={item.key || item.title}>
+                {showGroupLabel ? (
+                  <div
+                    className="inspection-detail-finding-group-label"
+                    role="heading"
+                    aria-level={3}
+                  >
+                    {groupLabel}
+                  </div>
+                ) : null}
+                <CAccordionItem
+                  itemKey={item.key || item.title}
+                  className="inspection-detail-finding-accordion-item"
+                >
+                  <CAccordionHeader>
+                    <FindingSummaryHeader item={item} />
+                  </CAccordionHeader>
+                  <CAccordionBody>
+                    {typeof renderItemContent === 'function' ? renderItemContent(item) : null}
+                  </CAccordionBody>
+                </CAccordionItem>
+              </Fragment>
+            )
+          })}
         </CAccordion>
       ) : null}
       {!hasItems && hasFallback ? fallbackContent : null}

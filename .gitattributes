@@ -1,2 +1,8 @@
 # Enforce Unix newlines
 * text=auto eol=lf
+
+# Generated bundles can contain significant whitespace inside template literals.
+build/assets/** -whitespace
+
+# Markdown uses trailing spaces for explicit hard line breaks.
+*.md whitespace=-trailing-space

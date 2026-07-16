@@ -20,6 +20,10 @@ import { recordToDraft } from '../reportDraftDomain'
 import { buildReportPdfFilename } from '../reportUiUtils'
 import { toDateTime, uid } from '../utils'
 import useReportWorkflowActions from './useReportWorkflowActions'
+import {
+  getRecordActionContract,
+  isRecordActionAllowed,
+} from 'src/components/report-workflow/recordActionResolver'
 
 const REPORT_PERMISSION_SLUGS = {
   erco: 'erco',
@@ -83,6 +87,7 @@ const useReportRouteActions = ({
   const [pendingReviewRecord, setPendingReviewRecord] = useState(null)
   const [pendingReviewBackSection, setPendingReviewBackSection] = useState('')
   const submitLockRef = useRef(false)
+  const deleteLockRef = useRef(false)
   const {
     canApproveRecord,
     canRejectRecord,
@@ -190,6 +195,7 @@ const useReportRouteActions = ({
     (row) => {
       if (!row) return false
       if (row.recordKind === 'draft') return true
+      if (getRecordActionContract(row)) return isRecordActionAllowed(row, 'edit')
       if (isSystemAdministrator(user)) return true
       const permission = getReportPermission(row.reportType || activeFormSlug, 'edit')
       if (permission && hasPermission(user, permission)) return true
@@ -203,6 +209,7 @@ const useReportRouteActions = ({
     (row) => {
       if (!row) return false
       if (row.recordKind === 'draft') return true
+      if (getRecordActionContract(row)) return isRecordActionAllowed(row, 'delete')
       if (isSystemAdministrator(user)) return true
       const permission = getReportPermission(row.reportType || activeFormSlug, 'delete')
       if (permission && hasPermission(user, permission)) return true
@@ -495,21 +502,26 @@ const useReportRouteActions = ({
     user?.id,
   ])
 
-  const requestDeleteRecord = useCallback((row) => setDeleteTarget(row || null), [])
+  const requestDeleteRecord = useCallback((row) => {
+    if (deleteLockRef.current) return
+    setDeleteTarget(row || null)
+  }, [])
 
   const confirmDeleteRecord = useCallback(async () => {
+    if (deleteLockRef.current) return
     const target = deleteTarget
-    setDeleteTarget(null)
     if (!target) return
-    if (!canDeleteRecord(target)) {
-      pushToast('This report cannot be deleted in its current status.', {
-        title: 'Delete unavailable',
-        color: 'warning',
-      })
-      return
-    }
-    setIsDeleting(true)
+    deleteLockRef.current = true
+    setDeleteTarget(null)
     try {
+      if (!canDeleteRecord(target)) {
+        pushToast('This report cannot be deleted in its current status.', {
+          title: 'Delete unavailable',
+          color: 'warning',
+        })
+        return
+      }
+      setIsDeleting(true)
       if (target.recordKind === 'draft') {
         await removeDraft(target.draftId)
         await reloadRecords()
@@ -545,6 +557,7 @@ const useReportRouteActions = ({
       if (String(reportId || '') === String(target.id)) navigate(reportBasePath)
     } finally {
       setIsDeleting(false)
+      deleteLockRef.current = false
     }
   }, [
     canDeleteRecord,

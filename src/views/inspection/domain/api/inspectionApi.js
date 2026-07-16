@@ -57,7 +57,43 @@ const toPayload = (row) => {
   delete safe.updatedAt
   delete safe.recordKind
   delete safe.reportType
+  delete safe.displayId
+  delete safe.ownerUserId
+  delete safe.status
+  delete safe.timeline
+  delete safe.createdAt
+  delete safe.updatedAt
+  delete safe.submittedAt
+  delete safe.submittedBy
+  delete safe.report_uid
+  delete safe.display_id
+  delete safe.owner_user_id
+  delete safe.created_at
+  delete safe.updated_at
+  delete safe.submitted_at
+  delete safe.submitted_by
   delete safe.canDownloadPdf
+  delete safe.canReview
+  delete safe.canApprove
+  delete safe.canReject
+  delete safe.can_review
+  delete safe.can_approve
+  delete safe.can_reject
+  delete safe.can_download_pdf
+  delete safe.recordActionsVersion
+  delete safe.recordActions
+  delete safe.record_actions_version
+  delete safe.record_actions
+  delete safe.workflowStage
+  delete safe.workflowSnapshot
+  delete safe.nextActionRole
+  delete safe.scopeTeamId
+  delete safe.approvalHistory
+  delete safe.workflow_stage
+  delete safe.workflow_snapshot
+  delete safe.next_action_role
+  delete safe.scope_team_id
+  delete safe.approval_history
   delete safe.submissionKey
   delete safe.idempotentReplay
   delete safe.idempotent_replay

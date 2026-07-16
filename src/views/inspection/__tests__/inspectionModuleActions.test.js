@@ -239,20 +239,17 @@ describe('submitInspectionRecordAction', () => {
     )
   })
 
-  it('replaces FRT seeded-row validation errors with user-friendly submission copy', async () => {
+  it('surfaces an unexpected legacy FRT seeded-row validation error without implying all compartments are required', async () => {
     const seededRowsError = new Error('checklist must include 92 seeded rows')
     seededRowsError.status = 422
     const { args, pushToast } = buildSubmitActionHarness({ persistError: seededRowsError })
 
     await submitInspectionRecordAction(args)
 
-    expect(pushToast).toHaveBeenCalledWith(
-      'Please complete inspection on all compartment before submission.',
-      {
-        title: 'Save failed',
-        color: 'danger',
-      },
-    )
+    expect(pushToast).toHaveBeenCalledWith('checklist must include 92 seeded rows', {
+      title: 'Save failed',
+      color: 'danger',
+    })
   })
 
   it('keeps raw message for non-FRT submission errors', async () => {

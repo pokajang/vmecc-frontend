@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CButton, CFormInput } from '@coreui/react'
 import CreateActionButton from 'src/components/CreateActionButton'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
@@ -28,6 +28,7 @@ import HighAngleCustomRecordModal from './HighAngleCustomRecordModal'
 import InspectionResetConfirmDrawer from './InspectionResetConfirmDrawer'
 import { InspectionElementDrawerFooter } from './InspectionElementUi'
 import { InspectionMobileCollapsedSelectorRow } from './InspectionSetupSelectorControls'
+import { resetInspectionViewport } from '../inspectionViewport'
 
 const text = (value) => String(value || '').trim()
 
@@ -68,8 +69,6 @@ export const HighAngleInspectionChecks = ({
   onUpdateCheck,
   onSaveRowDraft,
   onResetCheck,
-  onMarkRowOk,
-  onMarkAllOk,
   onAddCompartment,
   onUpdateCompartment,
   onDeleteCompartment,
@@ -84,6 +83,7 @@ export const HighAngleInspectionChecks = ({
   remarksError = false,
   readOnly = false,
 }) => {
+  const sectionRef = useRef(null)
   const visibleGroups = useMemo(() => summary?.visibleGroups || [], [summary?.visibleGroups])
   const [search, setSearch] = useState('')
   const [expandedRowIds, setExpandedRowIds] = useState(() => new Set())
@@ -318,11 +318,38 @@ export const HighAngleInspectionChecks = ({
   const canAddCompartment = !readOnly && typeof onAddCompartment === 'function'
   const canAddItem = !readOnly && selectedGroup && typeof onAddItem === 'function'
   const selectedCompartmentKey = selectedGroup?.key || ''
+  const selectedGroupIndex = visibleGroups.findIndex(
+    (group) => group.key === selectedCompartmentKey,
+  )
+  const selectedGroupComplete = Boolean(
+    selectedGroup?.rows?.length &&
+      selectedGroup.rows.every((row) => !isHighAngleRowIncomplete(row)),
+  )
+  const orderedRemainingGroups =
+    selectedGroupIndex >= 0
+      ? visibleGroups
+          .slice(selectedGroupIndex + 1)
+          .concat(visibleGroups.slice(0, selectedGroupIndex))
+      : []
+  const nextCompartment =
+    selectedGroupComplete && selectedGroupIndex >= 0
+      ? orderedRemainingGroups.find(
+          (group) =>
+            group?.key &&
+            group.rows?.length &&
+            group.rows.some((row) => isHighAngleRowIncomplete(row)),
+        )
+      : null
 
   if (!mainLocation && visibleGroups.length === 0) return null
 
   return (
-    <div className="d-grid gap-3">
+    <div
+      className="d-grid gap-3"
+      ref={sectionRef}
+      tabIndex={-1}
+      aria-label="High Angle compartment checklist"
+    >
       {!readOnly ? (
         <div className="d-grid gap-3">
           {selectedGroup && useMobileDrawer ? (
@@ -432,13 +459,6 @@ export const HighAngleInspectionChecks = ({
             onChange={(event) => setSearch(event.target.value)}
           />
           <div className="inspection-check-toolbar__actions">
-            {typeof onMarkAllOk === 'function' ? (
-              <CreateActionButton
-                label="Mark all Good"
-                className="inspection-compact-action-btn d-none d-md-inline-flex"
-                onClick={onMarkAllOk}
-              />
-            ) : null}
             {search ? (
               <CButton
                 type="button"
@@ -495,7 +515,6 @@ export const HighAngleInspectionChecks = ({
                   remarksError={remarksError}
                   setPhotoViewer={setPhotoViewer}
                   onUpdateCheck={onUpdateCheck}
-                  onMarkRowOk={onMarkRowOk}
                   onResetCheck={requestResetCheck}
                   onRequestPhotoUpload={(nextRow, photosKey = 'additionalPhotos', options = {}) =>
                     onRequestIssuePhotoUpload?.(nextRow, { ...options, photosKey })
@@ -539,6 +558,25 @@ export const HighAngleInspectionChecks = ({
           {search
             ? 'No high angle equipment rows match this search.'
             : 'No items in this compartment.'}
+        </div>
+      ) : null}
+
+      {nextCompartment && !readOnly ? (
+        <div className="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2">
+          <div className="small fw-semibold text-body-secondary">Next compartment</div>
+          <CButton
+            type="button"
+            color="primary"
+            variant="outline"
+            className="inspection-next-location-btn justify-self-start"
+            onClick={() => {
+              setSelectedGroupKey(nextCompartment.key)
+              setSearch('')
+              resetInspectionViewport(sectionRef.current)
+            }}
+          >
+            {nextCompartment.title}
+          </CButton>
         </div>
       ) : null}
 
@@ -619,7 +657,6 @@ export const HighAngleInspectionChecks = ({
                 onRemovePhoto={mobileDraftHandlers.onRemovePhoto}
                 onChangePhotoDescription={mobileDraftHandlers.onChangePhotoDescription}
                 onApplyPhotoCaption={mobileDraftHandlers.onApplyPhotoCaption}
-                onMarkRowOk={() => patchMobileDraftRow({ condition: 'Good' })}
               />
             </div>
             {!readOnly ? (

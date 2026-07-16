@@ -11,13 +11,23 @@ import {
 
 const findingSelections = new Set(['unsafeAct', 'unsafeCondition', 'environmental'])
 
-const buildStructuredItems = (_form, normalized) =>
+const getHseGroupLabel = (form = {}) =>
+  [
+    detailText(form.zone),
+    detailText(form.mainLocation || form.location),
+    detailText(form.subLocation),
+  ]
+    .filter(Boolean)
+    .join(' > ')
+
+const buildStructuredItems = (form, normalized) =>
   normalized.hseSelections.map((selection, index) => {
     const option = HSE_SELECTION_OPTIONS.find((candidate) => candidate.value === selection)
     const field = HSE_DETAIL_FIELDS[selection]
     const isFinding = findingSelections.has(selection)
     return {
       key: `hse:${selection || index}`,
+      groupLabel: getHseGroupLabel(form),
       title: option?.label || selection || `Observation ${index + 1}`,
       summaryLines:
         normalized.hsePayloadVersion === 2
@@ -51,6 +61,7 @@ const buildFollowUpItem = (form, normalized) => {
   if (!hasContent && photos.length === 0) return null
   return {
     key: 'hse:follow-up',
+    groupLabel: getHseGroupLabel(form),
     title: 'Follow-up and evidence',
     summaryLines: isVersion2
       ? [detailPhotoSummary(photos)].filter(Boolean)
@@ -70,6 +81,7 @@ const buildLegacyItems = (form, existingDescriptions) =>
     .filter((issue) => !existingDescriptions.has(detailText(issue.description).toLowerCase()))
     .map((issue, index) => ({
       key: detailText(issue.id) || `hse-legacy:${index}`,
+      groupLabel: getHseGroupLabel(form),
       title: detailText(issue.description) || `Additional finding ${index + 1}`,
       summaryLines: ['Additional finding', detailPhotoSummary(issue.photos)].filter(Boolean),
       badges: [issueBadge(1, 'Finding')],

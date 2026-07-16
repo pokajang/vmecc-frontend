@@ -40,6 +40,12 @@ export const buildScbaDetailFindingItems = (form = {}, summary = null) => {
         ]
         return {
           key: detailText(row.id) || `scba:${sectionIndex}:${rowIndex}`,
+          groupLabel: [
+            detailText(row.mainLocation || row.location || form.mainLocation),
+            detailText(section.title),
+          ]
+            .filter(Boolean)
+            .join(' > '),
           title: rowTitle(row),
           summaryLines: [
             [

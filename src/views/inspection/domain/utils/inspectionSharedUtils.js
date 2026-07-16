@@ -382,6 +382,14 @@ export const normalizeReportRecord = (row) => {
     canApprove: merged.canApprove === true || merged.can_approve === true,
     canReject: merged.canReject === true || merged.can_reject === true,
     canDownloadPdf: merged.canDownloadPdf === true || merged.can_download_pdf === true,
+    recordActionsVersion:
+      Number(merged.recordActionsVersion ?? merged.record_actions_version ?? 0) || 0,
+    recordActions:
+      merged.recordActions && typeof merged.recordActions === 'object'
+        ? merged.recordActions
+        : merged.record_actions && typeof merged.record_actions === 'object'
+          ? merged.record_actions
+          : null,
     inspectionActor:
       merged.inspectionActor && typeof merged.inspectionActor === 'object'
         ? merged.inspectionActor

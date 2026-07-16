@@ -246,14 +246,11 @@ describe('InspectionRecordsSection', () => {
     expect(props.onViewRecord).not.toHaveBeenCalled()
   })
 
-  it('exposes disabled inspection action reasons', () => {
+  it('hides inspection actions that are unavailable to the current actor', () => {
     render(<InspectionRecordsSection {...buildProps({ canReviewRecord: () => false })} />)
 
-    const reviewAction = screen.getAllByRole('button', {
-      name: 'Review. Review is not available for this status.',
-    })[0]
-
-    expect(reviewAction.getAttribute('title')).toBe('Review is not available for this status.')
+    expect(screen.queryByRole('button', { name: 'Review' })).toBeNull()
+    expect(screen.getAllByRole('button', { name: 'View details' }).length).toBeGreaterThan(0)
   })
 
   it('renders queued records with retry and local delete actions', () => {

@@ -257,10 +257,13 @@ export const InspectionDetailView = ({
   renderStatusBadge,
   editRecord,
   canEditRecord,
+  requestDeleteRecord,
+  canDeleteRecord,
   downloadRecord,
   downloadingId,
   openWorkflowActionModal,
   isActionBusy,
+  isDeleting,
 }) => (
   <InspectionDetailSection
     selectedRecord={selectedRecord}
@@ -269,12 +272,15 @@ export const InspectionDetailView = ({
     renderStatusBadge={renderStatusBadge}
     onEditRecord={editRecord}
     canEditRecord={canEditRecord}
+    onDeleteRecord={requestDeleteRecord}
+    canDeleteRecord={canDeleteRecord}
     onDownloadRecord={downloadRecord}
     downloadingId={downloadingId}
     onReviewRecord={(row) => openWorkflowActionModal(row, 'review')}
     onApproveRecord={(row) => openWorkflowActionModal(row, 'approve')}
     onRejectRecord={(row) => openWorkflowActionModal(row, 'reject')}
     isActionBusy={isActionBusy}
+    isDeleting={isDeleting}
   />
 )
 

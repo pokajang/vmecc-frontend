@@ -180,17 +180,13 @@ describe('ReportRecordsSection', () => {
     expect(props.onViewRecord).not.toHaveBeenCalled()
   })
 
-  it('exposes disabled report action reasons', () => {
+  it('hides report actions that are unavailable for the current status', () => {
     render(<ReportRecordsSection {...buildProps({ canReviewRecord: () => false })} />)
 
-    const reviewAction = screen.getAllByRole('button', {
-      name: 'Review. Review is not available for this status.',
-    })[0]
-
-    expect(reviewAction.getAttribute('title')).toBe('Review is not available for this status.')
+    expect(screen.queryByRole('button', { name: 'Review' })).toBeNull()
   })
 
-  it('disables PDF download when the server capability is false', () => {
+  it('hides PDF download when the server capability is false', () => {
     const unavailableRow = { ...submittedRow, canDownloadPdf: false }
     render(
       <ReportRecordsSection
@@ -198,11 +194,7 @@ describe('ReportRecordsSection', () => {
       />,
     )
 
-    const downloadActions = screen.getAllByRole('button', {
-      name: 'Download. PDF download is not available for this report.',
-    })
-    expect(downloadActions.length).toBeGreaterThan(0)
-    downloadActions.forEach((action) => expect(action.disabled).toBe(true))
+    expect(screen.queryByRole('button', { name: 'Download report' })).toBeNull()
   })
 
   it('renders the configured report type label in the desktop table', () => {

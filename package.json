@@ -20,6 +20,7 @@
     "test:e2e:smoke": "playwright test tests/e2e/smoke.spec.js --config=playwright.config.mjs",
     "test:e2e:smoke:full": "playwright test tests/e2e/smoke-full.spec.js --config=playwright.config.mjs",
     "test:e2e:reporting-workflow": "playwright test tests/e2e/reporting-workflow-smoke.spec.js --config=playwright.config.mjs",
+    "test:e2e:report-media": "playwright test tests/e2e/report-media-workflow-smoke.spec.js --config=playwright.report-media.config.mjs --workers=1",
     "test:e2e:inspection:crud": "playwright test tests/e2e/inspection-crud-matrix-smoke.spec.js --config=playwright.config.mjs",
     "test:e2e:inspection:live": "playwright test tests/e2e/inspection-live-smoke.spec.js --config=playwright.config.mjs --workers=1",
     "test:e2e:inspection:smoke": "playwright test tests/e2e/inspection-crud-matrix-smoke.spec.js --config=playwright.config.mjs --workers=1 && playwright test tests/e2e/inspection-er-aux-smoke.spec.js --config=playwright.config.mjs --workers=1 && playwright test tests/e2e/inspection-fire-extinguisher-smoke.spec.js --config=playwright.config.mjs --workers=1 && playwright test tests/e2e/inspection-scba-high-angle-smoke.spec.js --config=playwright.config.mjs --workers=1",

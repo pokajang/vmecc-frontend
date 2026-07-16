@@ -58,6 +58,49 @@ const AiHelperKnowledgeDiagnosticsCard = ({
             </CCol>
           </CRow>
 
+          <div className="border rounded-3 p-3 mb-3">
+            <div className="fw-semibold mb-2">Answer reliability</div>
+            <CRow className="g-3 small">
+              <CCol md={3} sm={6}>
+                <div className="text-body-secondary">Retrieval pipeline</div>
+                <div>v{diagnostics.knowledge_runtime?.retrieval_pipeline_version || 2}</div>
+              </CCol>
+              <CCol md={3} sm={6}>
+                <div className="text-body-secondary">Reranking</div>
+                <div>{diagnostics.knowledge_runtime?.rerank_enabled ? 'Enabled' : 'Disabled'}</div>
+              </CCol>
+              <CCol md={3} sm={6}>
+                <div className="text-body-secondary">Critical fact checks</div>
+                <div>
+                  {diagnostics.knowledge_runtime?.critical_fact_validation_enabled
+                    ? 'Enabled'
+                    : 'Disabled'}
+                </div>
+              </CCol>
+              <CCol md={3} sm={6}>
+                <div className="text-body-secondary">Grounding verifier</div>
+                <div>
+                  {diagnostics.knowledge_runtime?.grounding_verification_mode || 'disabled'}
+                </div>
+              </CCol>
+            </CRow>
+          </div>
+
+          {diagnostics.reliability?.sample_size ? (
+            <div className="border rounded-3 p-3 mb-3">
+              <div className="fw-semibold mb-2">Recent verified responses</div>
+              <div className="small text-body-secondary">
+                {diagnostics.reliability.verified} verified, {diagnostics.reliability.repaired}{' '}
+                repaired, {diagnostics.reliability.rejected} rejected from the latest{' '}
+                {diagnostics.reliability.sample_size} responses. P95 response time:{' '}
+                {diagnostics.reliability.p95_response_ms
+                  ? `${diagnostics.reliability.p95_response_ms} ms`
+                  : 'not available'}
+                .
+              </div>
+            </div>
+          ) : null}
+
           {(diagnostics.recent_failed_uploads || []).length ? (
             <div className="border rounded-3 p-3 bg-light">
               <div className="fw-semibold mb-2">Recent failed uploads</div>

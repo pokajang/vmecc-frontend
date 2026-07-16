@@ -499,16 +499,19 @@ const InspectionModule = () => {
       canConduct={canConduct}
       clearContinuationState={clearContinuationState}
       detailViewProps={buildInspectionDetailViewProps({
+        canDeleteRecord: canConduct ? canDeleteRecord : () => false,
         canEditRecord: canConduct ? canEditRecord : () => false,
         downloadRecord,
         downloadingId,
         editRecord,
         formatDateTime,
         isActionBusy,
+        isDeleting,
         navigate,
         openWorkflowActionModal,
         renderStatusBadge: renderInspectionStatusBadge,
         reportBasePath,
+        requestDeleteRecord: setDeleteTarget,
         selectedRecord,
       })}
       formViewProps={buildInspectionFormViewProps({

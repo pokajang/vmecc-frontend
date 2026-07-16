@@ -1,5 +1,9 @@
 import React from 'react'
 import { PhotoGallery } from '../form/components/InspectionFormDisplaySections'
+import {
+  isInspectionIssueStatus,
+  isInspectionNeutralStatus,
+} from '../domain/inspectionStatusSemantics'
 
 export const detailText = (value) => String(value ?? '').trim()
 
@@ -8,10 +12,8 @@ export const getDetailStatusTone = (value) => {
   if (['good', 'ok', 'checked', 'yes', 'pass', 'passed', 'satisfactory'].includes(normalized)) {
     return 'success'
   }
-  if (['not good', 'defect', 'issue', 'missing', 'no', 'fail', 'failed'].includes(normalized)) {
-    return 'danger'
-  }
-  if (['n/a', 'not applicable'].includes(normalized)) return 'warning'
+  if (isInspectionIssueStatus(normalized)) return 'danger'
+  if (isInspectionNeutralStatus(normalized)) return 'warning'
   return 'secondary'
 }
 

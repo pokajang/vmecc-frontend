@@ -19,7 +19,7 @@ import {
   formatErcoLocation,
   isErcoDirty,
 } from './utils'
-import { scrollToFirstError } from '../utils'
+import { resetReportViewport, scrollToFirstError } from '../utils'
 import {
   validateErcoAnalysis,
   validateErcoDetails,
@@ -70,10 +70,12 @@ const ErcoForm = ({
   const [hasDraftSeed, setHasDraftSeed] = useState(false)
   const [draftStatus, setDraftStatus] = useState('')
   const [draftDirtyStatus, setDraftDirtyStatus] = useState('')
+  const [draftHydrated, setDraftHydrated] = useState(skipDraftLoad)
   const originalSeedRef = useRef(null)
   const draftSeedRef = useRef(null)
   const activeDraftIdRef = useRef(String(activeDraftId || '').trim())
   const activeDraftVersionRef = useRef(0)
+  const handleDraftLoadSettled = useCallback(() => setDraftHydrated(true), [])
   const shouldShowEditBanner =
     Boolean(editingRecord) &&
     showEditSourceBanner &&
@@ -163,6 +165,7 @@ const ErcoForm = ({
       setDraftStatus('Draft loaded')
       onDirtyChange(false)
     },
+    onDraftLoadSettled: handleDraftLoadSettled,
   })
 
   useEffect(() => {
@@ -312,6 +315,10 @@ const ErcoForm = ({
   const activeSection = ERCO_NEW_SECTIONS[activeSectionIndex]
   const saveDraftLabel = editingRecord ? 'Save Update Draft' : 'Save Draft'
 
+  useEffect(() => {
+    resetReportViewport()
+  }, [activeSection])
+
   const navigateToSection = useCallback(
     (section, replace = false) => {
       if (!reportBasePath) return
@@ -322,10 +329,11 @@ const ErcoForm = ({
   )
 
   useEffect(() => {
+    if (!draftHydrated) return
     if (!reportBasePath) return
     if (normalizedSection === activeSection) return
     navigateToSection(activeSection, true)
-  }, [activeSection, navigateToSection, normalizedSection, reportBasePath])
+  }, [activeSection, draftHydrated, navigateToSection, normalizedSection, reportBasePath])
 
   const saveDraft = async ({ silentSuccess = false, overrides = {} } = {}) => {
     const draftPayload = {

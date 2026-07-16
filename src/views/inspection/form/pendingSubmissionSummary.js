@@ -18,6 +18,8 @@ import {
   SCBA_FACE_MASK_FIELDS,
 } from '../types/scba/helpers'
 import { buildInspectionReadinessFromBlockers } from './inspectionReadiness'
+import { resolveInspectionHierarchy } from '../domain/inspectionHierarchy'
+import { isInspectionIssueStatus } from '../domain/inspectionStatusSemantics'
 
 const text = (value) => String(value || '').trim()
 
@@ -98,21 +100,14 @@ const getRowLabel = (row = {}, fallback = 'Inspection item') =>
       row.id,
   ) || fallback
 
-const getRowZone = (row = {}, form = {}) => text(row.zone || form.zone) || 'No zone'
-
-const getRowMainLocation = (row = {}, form = {}) =>
-  text(
-    row.mainLocation || row.main_location || row.location || form.mainLocation || form.location,
-  ) || 'No main area'
-
-const getRowSubLocation = (row = {}, form = {}) =>
-  text(row.subLocation || row.sub_location || form.subLocation || form.selectedLocation) ||
-  'No location'
+const getReviewLocation = (definition = {}, row = {}, form = {}) => {
+  return resolveInspectionHierarchy({ source: definition, row, form })
+}
 
 const getStructuredRowStatus = (row = {}) => {
   const explicitStatus = text(row.status || row.condition)
   if (!explicitStatus) return 'Recorded'
-  if (['not good', 'defect', 'no', 'not operational'].includes(explicitStatus.toLowerCase())) {
+  if (isInspectionIssueStatus(explicitStatus)) {
     return 'Issue'
   }
   return explicitStatus
@@ -121,11 +116,14 @@ const getStructuredRowStatus = (row = {}) => {
 const getRowRemarks = (row = {}) =>
   text(row.remarks || row.remark || row.defectRemarks || row.defect_remarks)
 
-const mapRowsToGroups = (rows = [], form = {}, fallbackLabel = 'Inspection item') =>
+const mapRowsToGroups = (
+  rows = [],
+  form = {},
+  fallbackLabel = 'Inspection item',
+  definition = {},
+) =>
   (Array.isArray(rows) ? rows : []).map((row, index) => ({
-    zone: getRowZone(row, form),
-    mainLocation: getRowMainLocation(row, form),
-    subLocation: getRowSubLocation(row, form),
+    ...getReviewLocation(definition, row, form),
     label: getRowLabel(row, `${fallbackLabel} ${index + 1}`),
     status: getStructuredRowStatus(row),
     description: text(row.description || row.details || row.sectionLabel || row.label),
@@ -180,11 +178,6 @@ const getFireExtinguisherIssueRemarks = (row = {}) =>
     .filter(Boolean)
     .join(' | ') || text(row.remarks)
 
-const isIssueStatus = (value) =>
-  ['not good', 'defect', 'missing', 'n/a', 'no', 'not operational', 'issue'].includes(
-    text(value).toLowerCase(),
-  )
-
 const buildErAuxMetrics = (form = {}) => {
   const rows = Array.isArray(form.erAuxChecks) ? form.erAuxChecks : []
   const checkedRows = rows.filter((row) => text(row.quantity) && text(row.condition))
@@ -192,7 +185,7 @@ const buildErAuxMetrics = (form = {}) => {
   return {
     count: rows.length,
     checkedCount: checkedRows.length,
-    defectCount: rows.filter((row) => isIssueStatus(row.condition)).length,
+    defectCount: rows.filter((row) => isInspectionIssueStatus(row.condition)).length,
     incompleteCount: rows.length - checkedRows.length,
     evidenceIssueCount: defectRows.filter((row) => !text(row.defectRemarks)).length,
   }
@@ -208,20 +201,13 @@ const buildHydraulicMetrics = (form = {}) => {
       (field) => ({ row, field }),
     ),
   )
-  const naFields = rows.flatMap((row) =>
-    HYDRAULIC_CHECK_FIELDS.filter((field) => text(row[field.key]).toLowerCase() === 'n/a').map(
-      (field) => ({ row, field }),
-    ),
-  )
-
   return {
     count: rows.length,
     checkedCount: checkedRows.length,
-    defectCount: defectFields.length + naFields.length,
+    defectCount: defectFields.length,
     incompleteCount: rows.length - checkedRows.length,
-    evidenceIssueCount:
-      defectFields.filter(({ row, field }) => !text(row[field.remarksKey])).length +
-      naFields.filter(({ row, field }) => !text(row[field.remarksKey])).length,
+    evidenceIssueCount: defectFields.filter(({ row, field }) => !text(row[field.remarksKey]))
+      .length,
   }
 }
 
@@ -461,9 +447,7 @@ const buildGroups = (definition, form, summary = {}) => {
       (row) => {
         const validation = getFireExtinguisherRowValidation(row)
         return {
-          zone: text(row.zone) || 'No zone',
-          mainLocation: text(row.mainLocation || row.location) || 'No main area',
-          subLocation: text(row.subLocation) || 'No location',
+          ...getReviewLocation(definition, row, form),
           label: text(row.idLocNo || row.id || row.barcodeNo) || 'Fire extinguisher',
           status: validation.hasDefect
             ? 'Issue'
@@ -479,18 +463,7 @@ const buildGroups = (definition, form, summary = {}) => {
 
   if (definition?.key === 'general-inspection') {
     return normalizeInspectionIssues(form.inspectionIssues || form.issues).map((issue, index) => ({
-      zone: text(issue.zone || form.zone) || 'No zone',
-      mainLocation:
-        text(issue.mainLocation || issue.main_location || form.mainLocation) || 'No main area',
-      subLocation:
-        text(
-          issue.subLocation ||
-            issue.sub_location ||
-            issue.location ||
-            form.subLocation ||
-            form.selectedLocation ||
-            form.location,
-        ) || 'No location',
+      ...getReviewLocation(definition, issue, form),
       label: text(issue.description) || `Finding ${index + 1}`,
       status: text(issue.description) ? 'Issue' : 'Needs attention',
       description: text(issue.description),
@@ -504,28 +477,14 @@ const buildGroups = (definition, form, summary = {}) => {
     const groups = []
     if (summary?.selections?.length) {
       groups.push({
-        zone: text(form.zone) || 'No zone',
-        mainLocation: text(form.mainLocation) || 'No main area',
-        subLocation:
-          text(form.subLocation || form.selectedLocation || form.location) || 'No location',
+        ...getReviewLocation(definition, form, form),
         label: summary.isAreaSatisfactory ? 'Area satisfactory' : 'HSE finding',
         status: 'Recorded',
       })
     }
     issues.forEach((issue, index) => {
       groups.push({
-        zone: text(issue.zone || form.zone) || 'No zone',
-        mainLocation:
-          text(issue.mainLocation || issue.main_location || form.mainLocation) || 'No main area',
-        subLocation:
-          text(
-            issue.subLocation ||
-              issue.sub_location ||
-              issue.location ||
-              form.subLocation ||
-              form.selectedLocation ||
-              form.location,
-          ) || 'No location',
+        ...getReviewLocation(definition, issue, form),
         label: text(issue.description) || `Finding ${index + 1}`,
         status: text(issue.description) ? 'Issue' : 'Needs attention',
         description: text(issue.description),
@@ -537,9 +496,7 @@ const buildGroups = (definition, form, summary = {}) => {
 
   if (definition?.fieldRefKey === 'scbaChecks') {
     return getScbaSubmissionRows(form).map(({ row, fields, sectionLabel }, index) => ({
-      zone: getRowZone(row, form),
-      mainLocation: getRowMainLocation(row, form),
-      subLocation: getRowSubLocation(row, form),
+      ...getReviewLocation(definition, row, form),
       label: getRowLabel(
         {
           ...row,
@@ -564,15 +521,17 @@ const buildGroups = (definition, form, summary = {}) => {
       ],
       form,
       definition?.title,
+      definition,
     )
   }
 
   const field = text(definition?.checksField)
   if (field && Array.isArray(form[field]))
-    return mapRowsToGroups(form[field], form, definition?.title)
+    return mapRowsToGroups(form[field], form, definition?.title, definition)
 
   const summaryRows = getSummaryRows(summary)
-  if (summaryRows.length > 0) return mapRowsToGroups(summaryRows, form, definition?.title)
+  if (summaryRows.length > 0)
+    return mapRowsToGroups(summaryRows, form, definition?.title, definition)
 
   return []
 }

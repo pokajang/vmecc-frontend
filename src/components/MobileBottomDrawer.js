@@ -28,6 +28,16 @@ const releaseBodyScrollIfIdle = () => {
   document.body.style.removeProperty('padding-right')
 }
 
+const focusDocumentFallback = () => {
+  if (typeof document === 'undefined') return
+  const target = document.querySelector('main, [role="main"]') || document.body
+  if (!target || typeof target.focus !== 'function') return
+  const hadTabIndex = target.hasAttribute('tabindex')
+  if (!hadTabIndex) target.setAttribute('tabindex', '-1')
+  target.focus({ preventScroll: true })
+  if (!hadTabIndex) target.removeAttribute('tabindex')
+}
+
 const MobileBottomDrawer = ({
   visible,
   title,
@@ -40,10 +50,19 @@ const MobileBottomDrawer = ({
   panelRef,
   closeDisabled = false,
   closeLabel,
+  restoreFocusOnClose = true,
+  onAfterClose,
   ...offcanvasProps
 }) => {
   const [shouldRender, setShouldRender] = useState(Boolean(visible))
   const restoreFocusRef = useRef(null)
+  const restoreFocusOnCloseRef = useRef(restoreFocusOnClose)
+  const onAfterCloseRef = useRef(onAfterClose)
+
+  useEffect(() => {
+    restoreFocusOnCloseRef.current = restoreFocusOnClose
+    onAfterCloseRef.current = onAfterClose
+  }, [onAfterClose, restoreFocusOnClose])
 
   const handlePanelRef = useCallback(
     (element) => {
@@ -70,9 +89,16 @@ const MobileBottomDrawer = ({
       releaseBodyScrollIfIdle()
       const restoreTarget = restoreFocusRef.current
       restoreFocusRef.current = null
-      if (restoreTarget?.isConnected && typeof restoreTarget.focus === 'function') {
+      if (
+        restoreFocusOnCloseRef.current &&
+        restoreTarget?.isConnected &&
+        typeof restoreTarget.focus === 'function'
+      ) {
         restoreTarget.focus({ preventScroll: true })
+      } else if (!restoreFocusOnCloseRef.current && document.activeElement === restoreTarget) {
+        focusDocumentFallback()
       }
+      onAfterCloseRef.current?.()
     }, DRAWER_EXIT_MS)
 
     return () => window.clearTimeout(timer)
@@ -95,8 +121,14 @@ const MobileBottomDrawer = ({
       window.setTimeout(releaseBodyScrollIfIdle, 0)
       const restoreTarget = restoreFocusRef.current
       restoreFocusRef.current = null
-      if (restoreTarget?.isConnected && typeof restoreTarget.focus === 'function') {
+      if (
+        restoreFocusOnCloseRef.current &&
+        restoreTarget?.isConnected &&
+        typeof restoreTarget.focus === 'function'
+      ) {
         restoreTarget.focus({ preventScroll: true })
+      } else if (!restoreFocusOnCloseRef.current && document.activeElement === restoreTarget) {
+        focusDocumentFallback()
       }
     },
     [],

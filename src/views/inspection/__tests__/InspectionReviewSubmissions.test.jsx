@@ -360,18 +360,21 @@ describe('InspectionReviewView pending submissions', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'View' }))
 
-    const photoLink = screen.getByRole('button', { name: 'Inspection photos (2 total)' })
+    const photoLink = screen.getByRole('button', { name: 'Inspection photos (1 total)' })
     expect(photoLink).toBeTruthy()
-    expect(screen.queryByText('general.jpg')).toBeNull()
+    expect(screen.getByText('Additional report evidence (1)')).toBeTruthy()
+    expect(screen.getByText('general.jpg')).toBeTruthy()
+    expect(screen.getByText('General location evidence')).toBeTruthy()
+    expect(screen.queryByText('physical.jpg')).toBeNull()
 
     fireEvent.click(photoLink)
 
-    expect(screen.getByText('General Evidence Photos')).toBeTruthy()
     expect(screen.getByText('CAN-001 - Physical Condition Photos')).toBeTruthy()
-    expect(screen.getByText('general.jpg')).toBeTruthy()
-    expect(screen.getByText('General location evidence')).toBeTruthy()
     expect(screen.getByText('physical.jpg')).toBeTruthy()
     expect(screen.getByText('Physical condition evidence')).toBeTruthy()
+
+    const drawerText = screen.getByRole('dialog').textContent || ''
+    expect(drawerText.indexOf('physical.jpg')).toBeLessThan(drawerText.indexOf('general.jpg'))
   })
 
   it('renders non-fire-extinguisher issue rows in the details drawer', () => {

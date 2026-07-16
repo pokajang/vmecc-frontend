@@ -184,7 +184,7 @@
 
 .inspection-review-photo-group__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(7.75rem, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.55rem;
 }
 
@@ -198,8 +198,7 @@
 
 .inspection-review-photo-card__image {
   display: block;
-  width: auto;
-  max-width: 100%;
+  width: 100%;
   height: auto;
   max-height: 24rem;
   margin-inline: auto;

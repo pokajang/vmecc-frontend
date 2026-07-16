@@ -14,9 +14,17 @@ export const SectionHeading = ({ children }) => (
   <div className="fw-semibold text-muted border-bottom pb-2 mb-1">{children}</div>
 )
 
-export const ReportPhotoImage = ({ photo, onFinalError, onLoad, ...props }) => {
+export const ReportPhotoImage = ({
+  photo,
+  preferFullSize = false,
+  onFinalError,
+  onLoad,
+  ...props
+}) => {
   const fullUrl = String(photo?.url || '')
-  const previewUrl = String(photo?.thumbnailUrl || photo?.thumbnail_url || fullUrl)
+  const previewUrl = preferFullSize
+    ? fullUrl
+    : String(photo?.thumbnailUrl || photo?.thumbnail_url || fullUrl)
   const [failedPreviewUrl, setFailedPreviewUrl] = useState('')
   const source = previewUrl && failedPreviewUrl !== previewUrl ? previewUrl : fullUrl
 

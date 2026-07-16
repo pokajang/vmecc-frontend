@@ -17,14 +17,14 @@ const DrillStageHeader = ({ activeSection, onNavigate }) => {
       <CProgress height={6} aria-label={`Step ${index + 1} of ${DRILL_NEW_SECTIONS.length}`}>
         <CProgressBar value={percent} />
       </CProgress>
-      <div className="d-none d-md-flex flex-wrap gap-3 small text-body-secondary">
+      <div className="drill-stage-header__navigation d-none d-md-flex flex-wrap gap-3 small text-body-secondary">
         {DRILL_NEW_SECTIONS.map((section, sectionIndex) => (
           <CButton
             key={section}
             type="button"
             color="link"
             size="sm"
-            className={`p-0 text-decoration-none ${
+            className={`drill-stage-header__navigation-button p-0 text-decoration-none ${
               section === activeSection ? 'fw-semibold text-primary' : 'text-body-secondary'
             }`}
             aria-current={section === activeSection ? 'step' : undefined}

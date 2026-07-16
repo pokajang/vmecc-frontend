@@ -424,6 +424,7 @@ export const InspectionGeneralEvidenceCard = ({
                 <PhotoGallery
                   photos={draftPhotos}
                   readOnly={readOnly}
+                  fullWidth
                   onRemove={removeDraftPhoto}
                   onChangeDescription={updateDraftPhotoDescription}
                   emptyMessage={emptyMessage}
@@ -433,7 +434,7 @@ export const InspectionGeneralEvidenceCard = ({
                 </FormFieldError>
               </>
             ) : (
-              gallery
+              <div className="inspection-general-evidence-drawer-gallery">{gallery}</div>
             )}
           </div>
           {useStagedDrawer ? (

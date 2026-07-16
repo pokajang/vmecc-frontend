@@ -1,3 +1,10 @@
+import {
+  getInspectionHierarchyGroupKey,
+  getInspectionHierarchyLabels,
+  resolveInspectionHierarchy,
+} from '../domain/inspectionHierarchy'
+import { isInspectionIssueStatus } from '../domain/inspectionStatusSemantics'
+
 const text = (value) => String(value || '').trim()
 
 const pluralize = (count, singular, plural = `${singular}s`) =>
@@ -5,40 +12,34 @@ const pluralize = (count, singular, plural = `${singular}s`) =>
 
 const itemNoun = (count, singular, plural = `${singular}s`) => (count === 1 ? singular : plural)
 
-const TYPE_LABELS = [
+const TYPE_ITEM_LABELS = [
   {
     match: /fire extinguisher/i,
-    groupSingular: 'location',
     itemSingular: 'fire extinguisher',
     itemPlural: 'fire extinguishers',
   },
   {
     match: /fire truck|frt/i,
-    groupSingular: 'compartment',
     itemSingular: 'checklist item',
     itemPlural: 'checklist items',
   },
   {
     match: /general/i,
-    groupSingular: 'location',
     itemSingular: 'finding',
     itemPlural: 'findings',
   },
   {
     match: /health safety|hse/i,
-    groupSingular: 'location',
     itemSingular: 'observation',
     itemPlural: 'observations',
   },
   {
     match: /scba/i,
-    groupSingular: 'section',
     itemSingular: 'SCBA item',
     itemPlural: 'SCBA items',
   },
   {
     match: /high angle|er aux|hydraulic/i,
-    groupSingular: 'location',
     itemSingular: 'equipment item',
     itemPlural: 'equipment items',
   },
@@ -46,13 +47,14 @@ const TYPE_LABELS = [
 
 const getTypeLabels = (item = {}) => {
   const haystack = `${item.title || ''} ${item.inspectionType || ''}`
-  return (
-    TYPE_LABELS.find((entry) => entry.match.test(haystack)) || {
-      groupSingular: 'location',
+  const hierarchyLabels = getInspectionHierarchyLabels(item)
+  return {
+    ...hierarchyLabels,
+    ...(TYPE_ITEM_LABELS.find((entry) => entry.match.test(haystack)) || {
       itemSingular: 'item',
       itemPlural: 'items',
-    }
-  )
+    }),
+  }
 }
 
 const getRowIssue = (row = {}) => {
@@ -61,12 +63,7 @@ const getRowIssue = (row = {}) => {
     row.isIssue === true ||
     row.hasIssue === true ||
     row.hasDefect === true ||
-    status === 'issue' ||
-    status === 'needs attention' ||
-    status === 'not good' ||
-    status === 'not operational' ||
-    status === 'no' ||
-    status.includes('defect')
+    isInspectionIssueStatus(status)
   )
 }
 
@@ -76,27 +73,16 @@ const getRowComplete = (row = {}) => {
   return !['needs attention', 'incomplete', 'pending'].includes(status)
 }
 
-const getGroupKey = (row = {}) =>
-  [text(row.zone) || 'No zone', text(row.mainLocation) || 'No area', text(row.subLocation)]
-    .filter(Boolean)
-    .join('\u0000')
+const getGroupKey = (row = {}) => getInspectionHierarchyGroupKey(row)
 
-const getPhotoSourceGroupKey = (source = {}, form = {}) =>
-  getGroupKey({
-    zone: text(source.zone || form.zone) || 'No zone',
-    mainLocation:
-      text(source.mainLocation || source.main_location || source.location || form.mainLocation) ||
-      'No main area',
-    subLocation:
-      text(
-        source.subLocation ||
-          source.sub_location ||
-          source.selectedLocation ||
-          form.subLocation ||
-          form.selectedLocation ||
-          form.location,
-      ) || 'No location',
-  })
+const getPhotoSourceGroupKey = (source = {}, item = {}) =>
+  getGroupKey(
+    resolveInspectionHierarchy({
+      source: item,
+      row: source,
+      form: item.form || {},
+    }),
+  )
 
 const hasPhotoPayload = (photo = {}) =>
   Boolean(
@@ -158,8 +144,12 @@ const getPhotoSourceLabel = (source = {}, fallback = 'Inspection item') =>
       source.id,
   ) || fallback
 
-const getPhotoSignature = (photo = {}) =>
-  [photo.id, photo.url, photo.fileName, photo.description].map(text).filter(Boolean).join('|')
+const getPhotoSignature = (photo = {}) => {
+  if (text(photo.mediaId || photo.media_id)) return `media:${text(photo.mediaId || photo.media_id)}`
+  if (text(photo.id)) return `id:${text(photo.id)}`
+  if (text(photo.url)) return `url:${text(photo.url)}`
+  return [photo.fileName, photo.description].map(text).filter(Boolean).join('|')
+}
 
 const addPhotoGroup = (groupsByLocation, locationKey, title, photos) => {
   const normalizedPhotos = normalizePhotoArray(photos)
@@ -185,10 +175,10 @@ const addPhotoGroup = (groupsByLocation, locationKey, title, photos) => {
   })
 }
 
-const collectRowPhotoGroups = (groupsByLocation, row = {}, form = {}, fallbackLabel = '') => {
+const collectRowPhotoGroups = (groupsByLocation, row = {}, item = {}, fallbackLabel = '') => {
   if (!row || typeof row !== 'object' || Array.isArray(row)) return
 
-  const locationKey = getPhotoSourceGroupKey(row, form)
+  const locationKey = getPhotoSourceGroupKey(row, item)
   const sourceLabel = getPhotoSourceLabel(row, fallbackLabel)
   Object.entries(row).forEach(([key, value]) => {
     if (!isPhotoArrayKey(key) || normalizePhotoArray(value).length === 0) return
@@ -202,7 +192,7 @@ const collectRowPhotoGroups = (groupsByLocation, row = {}, form = {}, fallbackLa
 const collectNestedRowPhotoGroups = (
   groupsByLocation,
   container = {},
-  form = {},
+  item = {},
   fallbackLabel,
 ) => {
   if (!container || typeof container !== 'object' || Array.isArray(container)) return
@@ -213,33 +203,43 @@ const collectNestedRowPhotoGroups = (
       collectRowPhotoGroups(
         groupsByLocation,
         row,
-        form,
+        item,
         text(container.title || container.label || fallbackLabel) || `Item ${index + 1}`,
       ),
     )
   })
 }
 
-const buildLocationPhotoGroups = (form = {}) => {
+const buildLocationPhotoGroups = (item = {}) => {
   const groupsByLocation = new Map()
-  const formLocationKey = getPhotoSourceGroupKey(form, form)
-
-  addPhotoGroup(groupsByLocation, formLocationKey, 'General Evidence Photos', form.photos)
+  const form = item.form || {}
 
   Object.entries(form || {}).forEach(([key, value]) => {
     if (!Array.isArray(value) || isPhotoArrayKey(key)) return
     value.forEach((row, index) => {
-      collectRowPhotoGroups(groupsByLocation, row, form, `Item ${index + 1}`)
-      collectNestedRowPhotoGroups(groupsByLocation, row, form, `Item ${index + 1}`)
+      collectRowPhotoGroups(groupsByLocation, row, item, `Item ${index + 1}`)
+      collectNestedRowPhotoGroups(groupsByLocation, row, item, `Item ${index + 1}`)
     })
   })
 
   return groupsByLocation
 }
 
+const buildReportPhotoGroups = (form = {}) => {
+  const photos = normalizePhotoArray(form.photos)
+  if (photos.length === 0) return []
+  return [
+    {
+      key: 'additional-report-evidence',
+      title: 'Additional Report Evidence',
+      photos,
+    },
+  ]
+}
+
 const getZoneLabel = (zone) => {
   const value = text(zone)
-  if (!value) return 'No zone'
+  if (!value || /^no zone$/i.test(value)) return ''
   if (/^zone\b/i.test(value)) return value
   return /^\d+$/.test(value) ? `Zone ${value}` : value
 }
@@ -292,7 +292,7 @@ const compareLocationGroups = (left = {}, right = {}) => {
 const buildGroups = (item = {}) => {
   const byGroup = new Map()
   const rows = Array.isArray(item.groups) ? item.groups : []
-  const photoGroupsByLocation = buildLocationPhotoGroups(item.form)
+  const photoGroupsByLocation = buildLocationPhotoGroups(item)
 
   rows.forEach((row, index) => {
     const key = getGroupKey(row) || `group-${index}`
@@ -343,6 +343,12 @@ export const buildInspectionReviewDashboardItem = (item = {}) => {
   const groups = buildGroups(item)
   const metrics = item.metrics || {}
   const itemCount = Number(metrics.count || groups.reduce((sum, group) => sum + group.itemCount, 0))
+  const completedItemCount = Number(
+    metrics.checkedCount ?? groups.reduce((sum, group) => sum + group.completedCount, 0),
+  )
+  const incompleteCount = Number(
+    metrics.incompleteCount ?? Math.max(itemCount - completedItemCount, 0),
+  )
   const issueCount = Number(
     metrics.defectCount || groups.reduce((sum, group) => sum + group.issueCount, 0),
   )
@@ -356,9 +362,12 @@ export const buildInspectionReviewDashboardItem = (item = {}) => {
       ...metrics,
       groupCount,
       itemCount,
+      completedItemCount,
+      incompleteCount,
       issueCount,
     },
     labels,
+    reportPhotoGroups: buildReportPhotoGroups(item.form),
     locationRows: groups.map((group) => ({
       key: group.key,
       title: group.title,
@@ -389,6 +398,18 @@ export const buildInspectionReviewDashboardItem = (item = {}) => {
         hasDistinctLocation: group.hasDistinctLocation,
         issueCount: group.issueCount,
         rows: group.issueRows,
+      })),
+    incompleteGroups: groups
+      .filter((group) => group.completedCount < group.itemCount)
+      .map((group) => ({
+        key: group.key,
+        title: group.title,
+        subtitle: group.subtitle,
+        zoneLabel: group.zoneLabel,
+        areaLabel: group.areaLabel,
+        locationLabel: group.locationLabel,
+        hasDistinctLocation: group.hasDistinctLocation,
+        rows: group.rows.filter((row) => !row.isComplete),
       })),
     groupSummary: `${pluralize(groupCount, labels.groupSingular)} inspected`,
     itemSummary: `Total ${pluralize(itemCount, labels.itemSingular, labels.itemPlural)}`,

@@ -383,23 +383,7 @@ export const HydraulicEquipmentCheckDetails = ({
                     <Trash2 size={13} />
                     Clear
                   </CButton>
-                ) : (
-                  <CButton
-                    type="button"
-                    color="secondary"
-                    variant="outline"
-                    size="sm"
-                    className="inspection-compact-action-btn"
-                    onClick={() =>
-                      setExpandedGeneralRemarks((currentExpanded) => ({
-                        ...currentExpanded,
-                        [row.id]: false,
-                      }))
-                    }
-                  >
-                    Cancel
-                  </CButton>
-                )}
+                ) : null}
               </div>
               <CFormTextarea
                 rows={2}
@@ -408,6 +392,23 @@ export const HydraulicEquipmentCheckDetails = ({
                 placeholder="General equipment remarks"
                 onChange={(event) => onUpdateCheck(row, { remarks: event.target.value })}
               />
+              {!hasGeneralRemarks ? (
+                <CButton
+                  type="button"
+                  color="secondary"
+                  variant="outline"
+                  size="sm"
+                  className="inspection-compact-action-btn justify-self-start"
+                  onClick={() =>
+                    setExpandedGeneralRemarks((currentExpanded) => ({
+                      ...currentExpanded,
+                      [row.id]: false,
+                    }))
+                  }
+                >
+                  Cancel
+                </CButton>
+              ) : null}
             </div>
           )
         ) : null}

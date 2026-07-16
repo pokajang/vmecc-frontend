@@ -4,9 +4,7 @@ import {
   FIRE_EXTINGUISHER_CHECK_FIELDS,
   getErAuxCheckSummary,
   getFrtCheckSummary,
-  getHighAngleCheckSummary,
   getHydraulicCheckSummary,
-  HIGH_ANGLE_STATUS_OPTIONS,
   HYDRAULIC_CHECK_FIELDS,
   toggleHseSelection,
   toggleInspectionChecklistItem,
@@ -15,8 +13,6 @@ import {
   buildErAuxChecksAfterMarkAll,
   buildFrtChecksAfterMarkAll,
   buildFrtRowOkPatch,
-  buildHighAngleChecksAfterMarkAll,
-  buildHighAngleRowGoodPatch,
   buildHydraulicChecksAfterMarkAll,
   buildHydraulicRowOkPatch,
 } from './inspectionBulkActions'
@@ -26,7 +22,6 @@ import {
   buildFrtDailyCheckRow,
   buildFrtOneOffCheckRow,
   buildHighAngleCheckRow,
-  buildHighAngleFillBlankGoodPatch,
   buildHydraulicCheckRow,
   buildHydraulicFillBlankOkPatch,
 } from './inspectionCheckBuilders'
@@ -39,7 +34,6 @@ import {
 } from './inspectionResetActions'
 
 const useInspectionCheckActions = ({ form, getLatestForm, mainLocation, updateForm, zone }) => {
-  const highAngleGoodStatus = useMemo(() => HIGH_ANGLE_STATUS_OPTIONS[0]?.value || 'Good', [])
   const frtDailyCheckedPatch = useMemo(() => ({ status: 'Checked' }), [])
   const frtOneOffGoodPatch = useMemo(() => ({ condition: 'Good' }), [])
   const erAuxOkPatch = useMemo(() => ({ condition: 'OK' }), [])
@@ -308,22 +302,6 @@ const useInspectionCheckActions = ({ form, getLatestForm, mainLocation, updateFo
     updateHighAngleCheck(row, buildHighAngleResetPatch())
   }
 
-  const markHighAngleRowOk = (row) => {
-    const currentForm = getLatestForm()
-    const currentChecks = Array.isArray(currentForm.highAngleChecks)
-      ? currentForm.highAngleChecks
-      : []
-    updateHighAngleCheck(
-      row,
-      buildHighAngleRowGoodPatch({
-        row,
-        currentChecks,
-        highAngleGoodStatus,
-        buildHighAngleFillBlankGoodPatch,
-      }),
-    )
-  }
-
   function resetErAuxCheck(row) {
     updateErAuxCheck(row, buildErAuxResetPatch(row))
   }
@@ -460,27 +438,6 @@ const useInspectionCheckActions = ({ form, getLatestForm, mainLocation, updateFo
     })
   }
 
-  const markAllHighAngleGood = () => {
-    const currentForm = getLatestForm()
-    const currentChecks = Array.isArray(currentForm.highAngleChecks)
-      ? currentForm.highAngleChecks
-      : []
-    const visibleRows = getHighAngleCheckSummary(currentForm).visibleChecks || []
-    if (visibleRows.length === 0) return
-
-    updateForm({
-      ...currentForm,
-      highAngleChecks: buildHighAngleChecksAfterMarkAll({
-        currentChecks,
-        visibleRows,
-        highAngleGoodStatus,
-        mainLocation,
-        buildHighAngleCheckRow,
-        buildHighAngleFillBlankGoodPatch,
-      }),
-    })
-  }
-
   const markAllFrtOk = () => {
     const currentForm = getLatestForm()
     const summary = getFrtCheckSummary(currentForm)
@@ -512,11 +469,9 @@ const useInspectionCheckActions = ({ form, getLatestForm, mainLocation, updateFo
     deleteFrtItem,
     markAllErAuxOk,
     markAllFrtOk,
-    markAllHighAngleGood,
     markAllHydraulicOk,
     markErAuxEquipmentOk,
     markFrtRowOk,
-    markHighAngleRowOk,
     markHydraulicEquipmentOk,
     resetErAuxCheck,
     resetFireExtinguisherCheck,

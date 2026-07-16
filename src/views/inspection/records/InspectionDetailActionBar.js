@@ -1,232 +1,48 @@
-import React, { useMemo, useState } from 'react'
-import { CButton } from '@coreui/react'
-import ButtonLoader from 'src/components/ButtonLoader'
-import FormActionGroup from 'src/components/FormActionGroup'
-import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
-
-const renderActionLabel = (action) =>
-  action.loading ? <ButtonLoader label={action.label} size={14} /> : action.label
-
-const buildDesktopButton = (action) => (
-  <CButton
-    key={action.key}
-    color={action.color}
-    variant={action.variant}
-    disabled={action.disabled}
-    aria-busy={action.loading || undefined}
-    onClick={action.onClick}
-  >
-    {renderActionLabel(action)}
-  </CButton>
-)
-
-const buildMobileButton = (action, className = '') => (
-  <CButton
-    key={action.key}
-    color={action.color}
-    variant={action.variant}
-    className={className}
-    disabled={action.disabled}
-    aria-busy={action.loading || undefined}
-    onClick={action.onClick}
-  >
-    {renderActionLabel(action)}
-  </CButton>
-)
-
-const createActionDescriptors = ({
-  record,
-  onBack,
-  onEditRecord,
-  canEditRecord,
-  onReviewRecord,
-  onApproveRecord,
-  onRejectRecord,
-  onDownloadRecord,
-  downloadingId,
-  isActionBusy,
-}) => {
-  const descriptors = []
-
-  descriptors.push({
-    key: 'back',
-    label: 'Back to records',
-    color: 'light',
-    onClick: onBack,
-  })
-
-  if (typeof onEditRecord === 'function' && canEditRecord?.(record)) {
-    descriptors.push({
-      key: 'edit',
-      label: 'Edit',
-      color: 'primary',
-      variant: 'outline',
-      onClick: () => onEditRecord(record),
-    })
-  }
-
-  if (typeof onDownloadRecord === 'function') {
-    const isDownloading = downloadingId === record.id
-    descriptors.push({
-      key: 'download',
-      label: isDownloading ? 'Downloading...' : 'Download',
-      color: 'secondary',
-      variant: 'outline',
-      disabled: Boolean(downloadingId) || record.canDownloadPdf !== true,
-      loading: isDownloading,
-      onClick: () => onDownloadRecord(record.id),
-    })
-  }
-
-  if (record.canReview === true && typeof onReviewRecord === 'function') {
-    descriptors.push({
-      key: 'review',
-      label: 'Review',
-      color: 'primary',
-      disabled: isActionBusy,
-      onClick: () => onReviewRecord(record),
-    })
-  }
-
-  if (record.canApprove === true && typeof onApproveRecord === 'function') {
-    descriptors.push({
-      key: 'approve',
-      label: 'Approve',
-      color: 'success',
-      disabled: isActionBusy,
-      onClick: () => onApproveRecord(record),
-    })
-  }
-
-  if (record.canReject === true && typeof onRejectRecord === 'function') {
-    descriptors.push({
-      key: 'reject',
-      label: 'Reject',
-      color: 'danger',
-      disabled: isActionBusy,
-      onClick: () => onRejectRecord(record),
-    })
-  }
-
-  return descriptors
-}
-
-const getMobilePrimaryActionKeys = (descriptors) => {
-  const keys = descriptors.map((descriptor) => descriptor.key)
-  if (keys.includes('approve') || keys.includes('reject')) {
-    return ['approve', 'reject'].filter((key) => keys.includes(key))
-  }
-  if (keys.includes('review')) return ['review']
-  if (keys.includes('edit')) return ['edit']
-  return []
-}
+import React from 'react'
+import RecordDetailActions from 'src/components/report-workflow/RecordDetailActions'
 
 const InspectionDetailActionBar = ({
   record,
   onBack,
   onEditRecord,
   canEditRecord,
+  onDeleteRecord,
+  canDeleteRecord,
   onReviewRecord,
   onApproveRecord,
   onRejectRecord,
   onDownloadRecord,
   downloadingId = null,
   isActionBusy = false,
+  isDeleting = false,
   mode = 'both',
-}) => {
-  const [moreOpen, setMoreOpen] = useState(false)
-  const descriptors = useMemo(
-    () =>
-      createActionDescriptors({
-        record,
-        onBack,
-        onEditRecord,
-        canEditRecord,
-        onReviewRecord,
-        onApproveRecord,
-        onRejectRecord,
-        onDownloadRecord,
-        downloadingId,
-        isActionBusy,
-      }),
-    [
-      canEditRecord,
-      downloadingId,
-      isActionBusy,
-      onApproveRecord,
-      onBack,
-      onDownloadRecord,
-      onEditRecord,
-      onRejectRecord,
-      onReviewRecord,
-      record,
-    ],
-  )
-  const mobilePrimaryActionKeys = getMobilePrimaryActionKeys(descriptors)
-  const mobilePrimaryActions = mobilePrimaryActionKeys
-    .map((key) => descriptors.find((descriptor) => descriptor.key === key))
-    .filter(Boolean)
-  const moreActions = descriptors.filter(
-    (descriptor) => descriptor.key !== 'back' && !mobilePrimaryActionKeys.includes(descriptor.key),
-  )
-  const utilityActions = descriptors.filter((descriptor) => descriptor.key === 'back')
-  const drawerActions = [...moreActions, ...utilityActions]
-  const showDesktop = mode === 'both' || mode === 'desktop'
-  const showMobile = mode === 'both' || mode === 'mobile'
-
-  return (
-    <>
-      {showDesktop ? (
-        <div className="d-none d-md-flex flex-column flex-sm-row flex-wrap gap-2 justify-content-end">
-          {descriptors.map(buildDesktopButton)}
-        </div>
-      ) : null}
-
-      {showMobile ? (
-        <FormActionGroup
-          className="inspection-detail-inline-actions d-md-none"
-          mobileThumb={false}
-          ariaLabel="Inspection detail actions"
-        >
-          {mobilePrimaryActions.map((action) =>
-            buildMobileButton(action, 'inspection-detail-sticky-action-btn'),
-          )}
-          {drawerActions.length > 0 ? (
-            <CButton
-              color="secondary"
-              variant="outline"
-              className="inspection-detail-sticky-action-btn"
-              onClick={() => setMoreOpen(true)}
-            >
-              More
-            </CButton>
-          ) : null}
-        </FormActionGroup>
-      ) : null}
-
-      <MobileBottomDrawer
-        visible={moreOpen}
-        title="More actions"
-        bodyClassName="inspection-equipment-detail-drawer-shell"
-        onClose={() => setMoreOpen(false)}
-      >
-        <div className="inspection-detail-more-actions">
-          {drawerActions.map((action) =>
-            buildMobileButton(
-              {
-                ...action,
-                onClick: () => {
-                  setMoreOpen(false)
-                  action.onClick?.()
-                },
-              },
-              'w-100',
-            ),
-          )}
-        </div>
-      </MobileBottomDrawer>
-    </>
-  )
-}
+  testAnchorPrefix = 'inspection-detail',
+}) => (
+  <RecordDetailActions
+    record={record}
+    mode={mode}
+    ariaLabel="Inspection detail actions"
+    testAnchorPrefix={testAnchorPrefix}
+    downloadingId={downloadingId}
+    isActionBusy={isActionBusy}
+    isDeleting={isDeleting}
+    handlers={{
+      back: onBack,
+      edit: typeof onEditRecord === 'function' ? (row) => onEditRecord(row) : null,
+      delete: typeof onDeleteRecord === 'function' ? (row) => onDeleteRecord(row) : null,
+      review: typeof onReviewRecord === 'function' ? (row) => onReviewRecord(row) : null,
+      approve: typeof onApproveRecord === 'function' ? (row) => onApproveRecord(row) : null,
+      reject: typeof onRejectRecord === 'function' ? (row) => onRejectRecord(row) : null,
+      download: typeof onDownloadRecord === 'function' ? (row) => onDownloadRecord(row.id) : null,
+    }}
+    fallbackCapabilities={{
+      edit: canEditRecord,
+      delete: canDeleteRecord,
+      review: (row) => row?.canReview === true,
+      approve: (row) => row?.canApprove === true,
+      reject: (row) => row?.canReject === true,
+    }}
+  />
+)
 
 export default InspectionDetailActionBar

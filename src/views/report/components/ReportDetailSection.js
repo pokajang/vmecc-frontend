@@ -2,7 +2,9 @@ import React, { useState } from 'react'
 import { CAlert, CBadge, CButton, CRow } from '@coreui/react'
 import FormActionGroup from 'src/components/FormActionGroup'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
-import { DetailField, ReportPhotoImage } from 'src/components/report-workflow/ReportViewComponents'
+import ReportPhotoGallery from 'src/components/report-workflow/ReportPhotoGallery'
+import RecordDetailActions from 'src/components/report-workflow/RecordDetailActions'
+import { DetailField } from 'src/components/report-workflow/ReportViewComponents'
 
 const ChronologyRows = ({ chronology }) => {
   const rows = (Array.isArray(chronology) ? chronology : []).filter((r) => r.time || r.action)
@@ -122,29 +124,7 @@ const PostAnalysisRows = ({ analysis, fallbackPhotos = [], isDrill = false }) =>
       {photos.length > 0 ? (
         <div>
           <div className="small text-body-secondary mb-2">Photographs</div>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
-              gap: '0.75rem',
-            }}
-          >
-            {photos.map((photo, i) => (
-              <div
-                key={photo.id || i}
-                className="rounded-3 border border-light-subtle overflow-hidden"
-              >
-                <ReportPhotoImage
-                  photo={photo}
-                  alt={photo.description || photo.fileName || 'Report photo'}
-                  style={{ width: '100%', height: '120px', objectFit: 'cover' }}
-                />
-                {photo.description ? (
-                  <div className="small p-2 text-body-secondary">{photo.description}</div>
-                ) : null}
-              </div>
-            ))}
-          </div>
+          <ReportPhotoGallery photos={photos} />
         </div>
       ) : null}
     </section>
@@ -164,8 +144,12 @@ const ReportDetailSection = ({
   onDeleteRecord,
   canEditRecord,
   canDeleteRecord,
+  canReviewRecord,
+  canApproveRecord,
+  canRejectRecord,
   downloadingId = null,
   isActionBusy = false,
+  isDeleting = false,
   mode = 'detail',
   reviewActions = null,
   isSubmittingReview = false,
@@ -358,6 +342,43 @@ const ReportDetailSection = ({
   )
 
   const renderDetailActions = ({ mobile = false } = {}) => {
+    if (!isReviewMode) {
+      return (
+        <RecordDetailActions
+          record={r}
+          mode={mobile ? 'mobile' : 'desktop'}
+          ariaLabel="Report detail actions"
+          testAnchorPrefix={testAnchorPrefix}
+          downloadingId={downloadingId}
+          isActionBusy={isActionBusy}
+          isDeleting={isDeleting}
+          handlers={{
+            back: onBack,
+            download:
+              typeof onDownloadRecord === 'function'
+                ? (record) => onDownloadRecord(record.id)
+                : null,
+            edit: typeof onEditRecord === 'function' ? (record) => onEditRecord(record) : null,
+            delete:
+              typeof onDeleteRecord === 'function' ? (record) => onDeleteRecord(record) : null,
+            review:
+              typeof onReviewRecord === 'function' ? (record) => onReviewRecord(record) : null,
+            approve:
+              typeof onApproveRecord === 'function' ? (record) => onApproveRecord(record) : null,
+            reject:
+              typeof onRejectRecord === 'function' ? (record) => onRejectRecord(record) : null,
+          }}
+          fallbackCapabilities={{
+            edit: canEditRecord,
+            delete: canDeleteRecord,
+            review: canReviewRecord || ((record) => record?.canReview === true),
+            approve: canApproveRecord || ((record) => record?.canApprove === true),
+            reject: canRejectRecord || ((record) => record?.canReject === true),
+          }}
+        />
+      )
+    }
+
     const actions = buildActionDescriptors()
     if (!mobile) {
       return (

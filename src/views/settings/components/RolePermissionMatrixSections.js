@@ -14,11 +14,12 @@ import {
 } from '@coreui/react'
 import { Lock, X } from 'lucide-react'
 import {
-  LOCKED_ROLE,
   PERMISSION_GROUPS,
   PERMISSION_LABELS,
   VIEW_MODE_MATRIX,
   VIEW_MODE_ROLE,
+  hasFullRoleAccess,
+  isRolePermissionsLocked,
 } from '../rolePermissionDomain'
 
 export const RolePermissionToolbar = ({
@@ -145,6 +146,7 @@ export const RolePermissionMatrixTable = ({
   editMode,
   groupedRows,
   localMatrix,
+  roleAccess,
   saving,
   serverMatrix,
   togglePermission,
@@ -173,7 +175,7 @@ export const RolePermissionMatrixTable = ({
                 className="text-center align-middle"
                 style={{ minWidth: 140 }}
               >
-                {role === LOCKED_ROLE && (
+                {isRolePermissionsLocked(role, roleAccess) && (
                   <Lock size={12} className="me-1 text-muted align-text-bottom" />
                 )}
                 {role}
@@ -228,9 +230,10 @@ export const RolePermissionMatrixTable = ({
                   <div className="text-muted small">{perm}</div>
                 </CTableDataCell>
                 {visibleRoles.map((role) => {
-                  const isLocked = role === LOCKED_ROLE
-                  const checked = isLocked ? true : (localMatrix[role] || new Set()).has(perm)
-                  const wasChecked = isLocked ? true : new Set(serverMatrix[role] || []).has(perm)
+                  const isLocked = isRolePermissionsLocked(role, roleAccess)
+                  const fullAccess = hasFullRoleAccess(role, roleAccess)
+                  const checked = fullAccess ? true : (localMatrix[role] || new Set()).has(perm)
+                  const wasChecked = fullAccess ? true : new Set(serverMatrix[role] || []).has(perm)
                   const changed = !isLocked && checked !== wasChecked
 
                   return (
@@ -271,6 +274,7 @@ export const RolePermissionRoleEditor = ({
   editMode,
   groupedRows,
   localMatrix,
+  roleAccess,
   saving,
   serverMatrix,
   togglePermission,
@@ -302,9 +306,10 @@ export const RolePermissionRoleEditor = ({
 
         const { perm } = item
         const label = PERMISSION_LABELS[perm] || perm
-        const isLocked = activeFocusedRole === LOCKED_ROLE
-        const checked = isLocked ? true : (localMatrix[activeFocusedRole] || new Set()).has(perm)
-        const wasChecked = isLocked
+        const isLocked = isRolePermissionsLocked(activeFocusedRole, roleAccess)
+        const fullAccess = hasFullRoleAccess(activeFocusedRole, roleAccess)
+        const checked = fullAccess ? true : (localMatrix[activeFocusedRole] || new Set()).has(perm)
+        const wasChecked = fullAccess
           ? true
           : new Set(serverMatrix[activeFocusedRole] || []).has(perm)
         const changed = !isLocked && checked !== wasChecked

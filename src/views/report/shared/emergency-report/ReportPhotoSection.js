@@ -1,5 +1,5 @@
 import React from 'react'
-import { CAlert, CButton, CFormInput } from '@coreui/react'
+import { CAlert, CButton, CFormInput, CFormTextarea } from '@coreui/react'
 import { Camera, Trash2 } from 'lucide-react'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import CreateActionButton from 'src/components/CreateActionButton'
@@ -284,8 +284,9 @@ const ReportPhotoSection = ({
                   alt={photo.description || photo.fileName || `Report photo ${index + 1}`}
                   style={{ width: '100%', height: 220, objectFit: 'cover', borderRadius: 4 }}
                 />
-                <CFormInput
+                <CFormTextarea
                   size="sm"
+                  rows={2}
                   maxLength={descriptionMaxLength}
                   aria-label={`Description for ${photo.fileName || `photo ${index + 1}`}`}
                   value={String(photo.description || '')}

@@ -41,13 +41,49 @@
     padding-left: 1.25rem;
   }
 
+  ul ul,
+  ul ol,
+  ol ul,
+  ol ol {
+    margin: 0.2rem 0;
+    padding-left: 1.15rem;
+  }
+
   li {
     margin: 0.2rem 0;
     overflow-wrap: anywhere;
   }
 
+  li > p {
+    margin-bottom: 0.25rem;
+  }
+
+  code {
+    white-space: break-spaces;
+  }
+
   > :last-child {
     margin-bottom: 0;
+  }
+}
+
+.ai-helper-message__table-wrap {
+  max-width: 100%;
+  margin: 0.5rem 0 0.65rem;
+  overflow-x: auto;
+
+  table {
+    width: max-content;
+    min-width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+
+  th,
+  td {
+    padding: 0.35rem 0.45rem;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    vertical-align: top;
   }
 }
 

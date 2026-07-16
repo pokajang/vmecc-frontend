@@ -528,6 +528,7 @@ export const getFrtMissingFields = (form = {}) => {
   const summary = getFrtCheckSummary(form)
   const selectedTruck = resolveSelectedFrtTruckPlate(form)
   const selectedCompartment = getSelectedFrtCompartment(form)
+  const hasChecklistRows = summary.dailyRows.length + summary.oneOffRows.length > 0
   const hasIncompleteDaily = summary.dailyRows.some((row) =>
     row.rowKind === 'reading'
       ? !String(row.readingValue || '').trim()
@@ -538,11 +539,11 @@ export const getFrtMissingFields = (form = {}) => {
   return {
     frtSession: !selectedTruck,
     frtCompartment: !selectedCompartment,
-    frtDailyChecks: summary.dailyRows.length === 0 || hasIncompleteDaily,
+    frtDailyChecks: !hasChecklistRows || hasIncompleteDaily,
     frtDailyRemarks: summary.dailyRows.some(
       (row) => row.status === 'Issue' && !String(row.remarks || '').trim(),
     ),
-    frtOneOffChecks: summary.oneOffRows.length === 0 || hasIncompleteOneOff,
+    frtOneOffChecks: !hasChecklistRows || hasIncompleteOneOff,
     frtOneOffRemarks: summary.oneOffRows.some(
       (row) => row.condition === 'Not Good' && !String(row.remarks || '').trim(),
     ),

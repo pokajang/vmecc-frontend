@@ -101,6 +101,15 @@
   --cui-accordion-btn-focus-box-shadow: 0 0 0 0.16rem rgba(0, 126, 122, 0.12);
 }
 
+.inspection-detail-finding-group-label {
+  padding: 0.55rem 0.75rem;
+  border-left: 3px solid var(--cui-primary);
+  background: var(--cui-tertiary-bg);
+  color: var(--cui-body-color);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
 .inspection-detail-finding-accordion-item .accordion-button {
   color: var(--cui-body-color);
 }
@@ -168,6 +177,25 @@
 .inspection-detail-more-actions .btn {
   flex: 1 1 0;
   min-width: min(100%, 8rem);
+}
+
+.record-action-sheet .inspection-detail-more-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.5rem;
+}
+
+.record-action-sheet .inspection-detail-more-actions .btn {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.75rem;
+  justify-content: center;
+  white-space: normal;
+}
+
+.record-action-sheet .mobile-bottom-drawer__close {
+  width: 2.75rem;
+  height: 2.75rem;
 }
 
 @media (max-width: 575.98px) {

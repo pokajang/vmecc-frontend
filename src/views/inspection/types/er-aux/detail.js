@@ -7,12 +7,20 @@ import {
   detailText,
   issueBadge,
 } from '../../records/InspectionDetailReadOnly'
+import { isInspectionIssueStatus } from '../../domain/inspectionStatusSemantics'
 
-const isIssue = (value) => ['Defect', 'Missing', 'N/A'].includes(detailText(value))
+const isIssue = (value) => isInspectionIssueStatus(detailText(value))
 
-export const buildErAuxDetailFindingItems = (_form = {}, summary = null) =>
+export const buildErAuxDetailFindingItems = (form = {}, summary = null) =>
   (summary?.visibleChecks || []).map((row, index) => ({
     key: detailText(row.id) || `er-aux:${index}`,
+    groupLabel: [
+      detailText(row.zone || form.zone),
+      detailText(row.mainLocation || row.location || form.mainLocation),
+      detailText(row.subLocation || form.subLocation),
+    ]
+      .filter(Boolean)
+      .join(' > '),
     title: detailText(row.equipment) || `Equipment ${index + 1}`,
     summaryLines: [
       [detailText(row.condition), detailText(row.quantity) && `Qty ${row.quantity}`]

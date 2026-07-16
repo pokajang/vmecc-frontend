@@ -5,7 +5,7 @@ import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import { clearPendingCameraOperation } from 'src/utils/cameraRecovery'
 import { clearReportDraft, loadReportDraftRow, saveReportDraft } from '../reportStorage'
 import useReportDraft from '../hooks/useReportDraft'
-import { scrollToFirstError } from '../utils'
+import { resetReportViewport, scrollToFirstError } from '../utils'
 import { DRILL_NEW_SECTIONS } from './constants'
 import DrillChronologyStep from './DrillChronologyStep'
 import DrillDetailsStep from './DrillDetailsStep'
@@ -113,6 +113,10 @@ const DrillForm = ({
     .toLowerCase()
   const activeSection = DRILL_NEW_SECTIONS.includes(normalizedSection) ? normalizedSection : 'setup'
   const saveLabel = editingRecord ? 'Save Update Draft' : 'Save Draft'
+
+  useEffect(() => {
+    resetReportViewport()
+  }, [activeSection])
 
   const navigateToSection = useCallback(
     (section, replace = false) => {

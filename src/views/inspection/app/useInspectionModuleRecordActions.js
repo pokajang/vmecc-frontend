@@ -22,6 +22,10 @@ import {
 } from './inspectionModuleActions'
 import { buildInspectionPdfFilename } from './inspectionModuleUtils'
 import { isSystemAdministrator } from 'src/utils/authz'
+import {
+  getRecordActionContract,
+  isRecordActionAllowed,
+} from 'src/components/report-workflow/recordActionResolver'
 
 const useInspectionModuleRecordActions = ({
   clearWorkingState,
@@ -48,6 +52,7 @@ const useInspectionModuleRecordActions = ({
   user,
 }) => {
   const downloadLockRef = useRef(false)
+  const deleteLockRef = useRef(false)
 
   const downloadRecord = useCallback(
     async (id) => {
@@ -150,21 +155,28 @@ const useInspectionModuleRecordActions = ({
   )
 
   const confirmDeleteRecord = useCallback(async () => {
+    if (deleteLockRef.current) return
     const target = deleteTarget
+    if (!target) return
+    deleteLockRef.current = true
     setDeleteTarget(null)
-    return confirmInspectionDeleteAction({
-      target,
-      userId: user?.id,
-      setIsDeleting,
-      clearInspectionDraft,
-      clearWorkingState,
-      setDraftVersion,
-      deleteRecord,
-      pushToast,
-      reportId,
-      navigate,
-      reportBasePath,
-    })
+    try {
+      return await confirmInspectionDeleteAction({
+        target,
+        userId: user?.id,
+        setIsDeleting,
+        clearInspectionDraft,
+        clearWorkingState,
+        setDraftVersion,
+        deleteRecord,
+        pushToast,
+        reportId,
+        navigate,
+        reportBasePath,
+      })
+    } finally {
+      deleteLockRef.current = false
+    }
   }, [
     clearWorkingState,
     deleteRecord,
@@ -180,12 +192,18 @@ const useInspectionModuleRecordActions = ({
   ])
 
   const canEditRecord = useCallback(
-    (row) => canEditInspectionRecord({ row, user, isSystemAdministrator }),
+    (row) =>
+      row?.recordKind !== 'draft' && getRecordActionContract(row)
+        ? isRecordActionAllowed(row, 'edit')
+        : canEditInspectionRecord({ row, user, isSystemAdministrator }),
     [user],
   )
 
   const canDeleteRecord = useCallback(
-    (row) => canDeleteInspectionRecord({ row, user, isSystemAdministrator }),
+    (row) =>
+      row?.recordKind !== 'draft' && getRecordActionContract(row)
+        ? isRecordActionAllowed(row, 'delete')
+        : canDeleteInspectionRecord({ row, user, isSystemAdministrator }),
     [user],
   )
 

@@ -1469,7 +1469,7 @@ test.describe.serial('inspection CRUD endpoint matrix smoke', () => {
       await page
         .locator('.dropdown-menu.show')
         .last()
-        .getByRole('button', { name: 'Download', exact: true })
+        .getByRole('button', { name: 'Download report', exact: true })
         .click()
       const sharedPdfResponse = await sharedPdfPromise
       const sharedDownload = await sharedDownloadPromise

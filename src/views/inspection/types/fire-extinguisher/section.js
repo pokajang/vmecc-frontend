@@ -847,6 +847,9 @@ export const buildFireExtinguisherDetailFindingItems = (form = {}, summary = nul
   const visibleChecks = Array.isArray(summary?.visibleChecks) ? summary.visibleChecks : []
   return visibleChecks.map((row) => ({
     key: text(row.id) || getFireExtinguisherRowTitle(row),
+    groupLabel: [text(row.zone), text(row.mainLocation), text(row.subLocation)]
+      .filter(Boolean)
+      .join(' > '),
     title: getFireExtinguisherRowTitle(row),
     badges: getFireExtinguisherDetailBadges(row),
     summaryLines: getFireExtinguisherDetailSummaryLines(row),

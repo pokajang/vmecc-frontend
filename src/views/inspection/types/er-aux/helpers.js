@@ -1,4 +1,5 @@
 import { dedupePhotos } from 'src/views/inspection/inspectionSharedUtils'
+import { isInspectionIssueStatus } from '../../domain/inspectionStatusSemantics'
 
 export const ER_AUX_EQUIPMENT_INSPECTION_TYPE = 'ER Aux Equipment Inspection'
 
@@ -360,7 +361,7 @@ export const getErAuxSubmissionCandidateRows = (form = {}) => {
   })
 }
 
-const isIssueCondition = (value) => ['Defect', 'Missing', 'N/A'].includes(normalizeCondition(value))
+const isIssueCondition = (value) => isInspectionIssueStatus(normalizeCondition(value))
 const isDefectCondition = (value) => normalizeCondition(value) === 'Defect'
 
 const isErAuxRowComplete = (check = {}) => {

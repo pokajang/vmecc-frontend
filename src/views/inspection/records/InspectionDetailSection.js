@@ -328,12 +328,15 @@ const InspectionDetailSection = ({
   renderStatusBadge: customStatusRenderer,
   onEditRecord,
   canEditRecord,
+  onDeleteRecord,
+  canDeleteRecord,
   onReviewRecord,
   onApproveRecord,
   onRejectRecord,
   onDownloadRecord,
   downloadingId = null,
   isActionBusy = false,
+  isDeleting = false,
 }) => {
   const [photoViewer, setPhotoViewer] = useState(null)
   if (!selectedRecord) return <CAlert color="warning">Report not found.</CAlert>
@@ -405,12 +408,15 @@ const InspectionDetailSection = ({
             onBack={onBack}
             onEditRecord={onEditRecord}
             canEditRecord={canEditRecord}
+            onDeleteRecord={onDeleteRecord}
+            canDeleteRecord={canDeleteRecord}
             onReviewRecord={onReviewRecord}
             onApproveRecord={onApproveRecord}
             onRejectRecord={onRejectRecord}
             onDownloadRecord={onDownloadRecord}
             downloadingId={downloadingId}
             isActionBusy={isActionBusy}
+            isDeleting={isDeleting}
           />
         </div>
 
@@ -465,12 +471,15 @@ const InspectionDetailSection = ({
           onBack={onBack}
           onEditRecord={onEditRecord}
           canEditRecord={canEditRecord}
+          onDeleteRecord={onDeleteRecord}
+          canDeleteRecord={canDeleteRecord}
           onReviewRecord={onReviewRecord}
           onApproveRecord={onApproveRecord}
           onRejectRecord={onRejectRecord}
           onDownloadRecord={onDownloadRecord}
           downloadingId={downloadingId}
           isActionBusy={isActionBusy}
+          isDeleting={isDeleting}
         />
       </div>
       <InspectionPhotoViewerModal viewer={photoViewer} onClose={() => setPhotoViewer(null)} />

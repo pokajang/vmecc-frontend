@@ -137,4 +137,37 @@ describe('useInspectionModuleRecordActions downloadRecord', () => {
       await firstDownload
     })
   })
+
+  it('ignores rapid duplicate delete confirmations until the first one finishes', async () => {
+    let resolveDelete
+    const deleteRecord = vi.fn(
+      () =>
+        new Promise((resolve) => {
+          resolveDelete = resolve
+        }),
+    )
+    const props = buildHookProps({
+      deleteRecord,
+      deleteTarget: {
+        id: 'inspection-1',
+        displayId: 'INS-2026-001',
+        ownerUserId: 7,
+        status: 'Submitted',
+      },
+    })
+    const { result } = renderHook(() => useInspectionModuleRecordActions(props))
+
+    let firstDelete
+    await act(async () => {
+      firstDelete = result.current.confirmDeleteRecord()
+      await result.current.confirmDeleteRecord()
+    })
+
+    expect(deleteRecord).toHaveBeenCalledOnce()
+
+    await act(async () => {
+      resolveDelete({ saved: true })
+      await firstDelete
+    })
+  })
 })

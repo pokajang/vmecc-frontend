@@ -36,6 +36,7 @@ import {
   FRT_DAILY_SECTION_DEFINITIONS,
   FRT_ONE_OFF_SECTION_DEFINITIONS,
   getFrtCompartmentOptions,
+  getFrtMissingFields,
 } from '../types/frt-daily/helpers'
 import { getErAuxCheckSummary } from '../types/er-aux/helpers'
 import {
@@ -2820,6 +2821,44 @@ describe('inspectionFormHelpers', () => {
         visibleRows: [expect.objectContaining({ equipment: 'SPARE NOZZLE' })],
       }),
     )
+  })
+
+  it('allows completed FRT compartments that contain only one checklist family', () => {
+    const dailyOnlyRows = FRT_DAILY_SECTION_DEFINITIONS.find(
+      (section) => section.title === 'LOCKER 08',
+    ).rows.map((row) => ({ ...row, status: 'Checked' }))
+    expect(
+      getFrtMissingFields({
+        mainLocation: 'AJG9555',
+        subLocation: 'LOCKER 08',
+        frtTruckPlateNo: 'AJG9555',
+        frtDailyChecks: dailyOnlyRows,
+        frtOneOffChecks: [],
+      }),
+    ).toMatchObject({
+      frtSession: false,
+      frtCompartment: false,
+      frtDailyChecks: false,
+      frtOneOffChecks: false,
+    })
+
+    const oneOffOnlyRows = FRT_ONE_OFF_SECTION_DEFINITIONS.find(
+      (section) => section.title === 'CREW CABIN',
+    ).rows.map((row) => ({ ...row, condition: 'Good' }))
+    expect(
+      getFrtMissingFields({
+        mainLocation: 'AJG9555',
+        subLocation: 'CREW CABIN',
+        frtTruckPlateNo: 'AJG9555',
+        frtDailyChecks: [],
+        frtOneOffChecks: oneOffOnlyRows,
+      }),
+    ).toMatchObject({
+      frtSession: false,
+      frtCompartment: false,
+      frtDailyChecks: false,
+      frtOneOffChecks: false,
+    })
   })
 
   it('builds the seeded FRT payload, checklist, and description consistently', () => {

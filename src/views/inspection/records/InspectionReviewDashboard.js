@@ -35,6 +35,11 @@ const getVisibleWarningBlocker = (blockers = []) =>
 
 const getIssueColor = (issueCount) => (issueCount > 0 ? 'warning' : 'success')
 
+const toTitleCase = (value = '') => {
+  const label = String(value || '').trim()
+  return label ? `${label.charAt(0).toUpperCase()}${label.slice(1)}` : ''
+}
+
 const formatInspectionDate = (value) => {
   const raw = String(value || '').trim()
   if (!raw) return 'Not set'
@@ -198,7 +203,7 @@ const InspectionReviewLocationsList = ({ item }) => {
   if (locationRows.length === 0) {
     return (
       <CAlert color="info" className="mb-0">
-        No checked locations are available for this inspection.
+        No checked {item.labels?.groupPlural || 'locations'} are available for this inspection.
       </CAlert>
     )
   }
@@ -251,7 +256,9 @@ const InspectionReviewLocationsList = ({ item }) => {
 
 const InspectionReviewLocationContext = ({ group }) => (
   <div className="inspection-review-issue-group__location">
-    <div className="inspection-review-issue-group__zone">{group.zoneLabel || group.subtitle}</div>
+    {group.zoneLabel || group.subtitle ? (
+      <div className="inspection-review-issue-group__zone">{group.zoneLabel || group.subtitle}</div>
+    ) : null}
     <div className="inspection-review-issue-group__area">{group.areaLabel || group.title}</div>
     {group.hasDistinctLocation ? (
       <div className="inspection-review-issue-group__sub-location">{group.locationLabel}</div>
@@ -300,18 +307,51 @@ const InspectionReviewIssuesList = ({ item }) => {
   )
 }
 
+const InspectionReviewIncompleteList = ({ item }) => {
+  const groups = Array.isArray(item.incompleteGroups) ? item.incompleteGroups : []
+  if (groups.length === 0) return null
+
+  return (
+    <div className="inspection-review-issue-list">
+      {groups.map((group) => (
+        <div className="inspection-review-issue-group" key={group.key}>
+          <div className="inspection-review-issue-group__header">
+            <InspectionReviewLocationContext group={group} />
+          </div>
+          <CListGroup className="inspection-review-issue-group__rows">
+            {group.rows.map((row) => (
+              <CListGroupItem className="inspection-review-issue-row" key={row.key}>
+                <div className="fw-semibold">{row.title}</div>
+                <div className="text-body-secondary">Complete this item before submission.</div>
+              </CListGroupItem>
+            ))}
+          </CListGroup>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 const InspectionReviewDetailDrawer = ({ item, visible, onClose }) => {
   const useMobileDrawer = useMediaQuery('(max-width: 575.98px)')
   if (!item) return null
 
   const issueCount = item.metrics?.issueCount || 0
+  const incompleteCount = Number(item.metrics?.incompleteCount || 0)
   const locationCount = item.locationRows?.length || 0
+  const reportPhotoGroups = Array.isArray(item.reportPhotoGroups) ? item.reportPhotoGroups : []
+  const reportPhotoCount = reportPhotoGroups.reduce(
+    (count, group) => count + (Array.isArray(group?.photos) ? group.photos.length : 0),
+    0,
+  )
+  const reportRemarks = String(item.form?.reportRemarks || '').trim()
+  const checkedGroupLabel = toTitleCase(item.labels?.groupPlural || 'locations')
   const title = `${item.displayTitle} Details`
   const content = (
     <div className="inspection-review-detail-drawer__content">
       <section className="inspection-review-detail-section">
         <h3 className="inspection-review-detail-section__title h6 mb-0">
-          Locations checked ({locationCount})
+          {checkedGroupLabel} checked ({locationCount})
         </h3>
         <InspectionReviewLocationsList item={item} />
       </section>
@@ -321,6 +361,28 @@ const InspectionReviewDetailDrawer = ({ item, visible, onClose }) => {
         </h3>
         <InspectionReviewIssuesList item={item} />
       </section>
+      {incompleteCount > 0 ? (
+        <section className="inspection-review-detail-section">
+          <h3 className="inspection-review-detail-section__title h6 mb-0">
+            Items needing completion ({incompleteCount})
+          </h3>
+          <InspectionReviewIncompleteList item={item} />
+        </section>
+      ) : null}
+      {reportRemarks || reportPhotoCount > 0 ? (
+        <section className="inspection-review-detail-section">
+          <h3 className="inspection-review-detail-section__title h6 mb-0">
+            Additional report evidence
+            {reportPhotoCount > 0 ? ` (${reportPhotoCount})` : ''}
+          </h3>
+          {reportRemarks ? (
+            <div className="inspection-review-report-remarks" style={{ whiteSpace: 'pre-wrap' }}>
+              {reportRemarks}
+            </div>
+          ) : null}
+          <InspectionReviewInlinePhotoGroups groups={reportPhotoGroups} />
+        </section>
+      ) : null}
     </div>
   )
 
@@ -374,6 +436,26 @@ const InspectionReviewSubmitDrawer = ({
             <div>{item.groupSummary}</div>
             <div>{item.itemSummary}</div>
             <div>{item.issueSummary}</div>
+            {item.locationRows?.length ? (
+              <div className="mt-2">
+                <div className="fw-semibold">
+                  Included {item.labels?.groupPlural || 'locations'}
+                </div>
+                <ul className="mb-0 ps-3">
+                  {item.locationRows.map((location) => (
+                    <li key={location.key}>
+                      {[
+                        location.zoneLabel,
+                        location.areaLabel || location.title,
+                        location.locationLabel,
+                      ]
+                        .filter(Boolean)
+                        .join(' > ')}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </div>
         </div>
       }

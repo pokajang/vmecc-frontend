@@ -11,7 +11,7 @@ import {
 const defectFields = (row) =>
   HYDRAULIC_CHECK_FIELDS.filter((field) => detailText(row?.[field.key]) === 'Defect')
 
-export const buildHydraulicDetailFindingItems = (_form = {}, summary = null) =>
+export const buildHydraulicDetailFindingItems = (form = {}, summary = null) =>
   (summary?.visibleChecks || []).map((row, index) => {
     const defects = defectFields(row)
     const photos = [
@@ -20,6 +20,12 @@ export const buildHydraulicDetailFindingItems = (_form = {}, summary = null) =>
     ]
     return {
       key: detailText(row.id) || `hydraulic:${index}`,
+      groupLabel: [
+        detailText(row.mainLocation || row.location || form.mainLocation),
+        detailText(row.subLocation || form.subLocation),
+      ]
+        .filter(Boolean)
+        .join(' > '),
       title: detailText(row.equipment) || `Equipment ${index + 1}`,
       summaryLines: [
         defects.length > 0

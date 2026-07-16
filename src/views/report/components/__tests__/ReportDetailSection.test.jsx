@@ -39,6 +39,7 @@ const buildProps = (overrides = {}) => ({
   onDownloadRecord: vi.fn(),
   onDeleteRecord: vi.fn(),
   canEditRecord: () => true,
+  canReviewRecord: () => true,
   canDeleteRecord: () => true,
   testAnchorPrefix: 'erco-report',
   workFirstMobileDetail: true,
@@ -58,12 +59,12 @@ describe('ReportDetailSection work-first mobile detail', () => {
     expect(within(detail).getByText('Hazmat containment')).toBeTruthy()
     expect(within(detail).getByText('Spill isolated and monitored.')).toBeTruthy()
     expect(within(detail).getAllByText('Review').length).toBeGreaterThan(0)
-    expect(within(detail).getByRole('button', { name: 'More' })).toBeTruthy()
+    expect(within(detail).getByRole('button', { name: 'More actions' })).toBeTruthy()
 
-    fireEvent.click(within(detail).getByRole('button', { name: 'More' }))
+    fireEvent.click(within(detail).getByRole('button', { name: 'More actions' }))
 
     const moreDrawer = screen.getByRole('dialog')
-    expect(within(moreDrawer).getByText('Download')).toBeTruthy()
+    expect(within(moreDrawer).getByText('Download report')).toBeTruthy()
     expect(within(moreDrawer).getByText('Edit')).toBeTruthy()
     expect(within(moreDrawer).getByText('Delete')).toBeTruthy()
     expect(within(moreDrawer).getByTestId('erco-report-download-action')).toBeTruthy()
@@ -105,17 +106,15 @@ describe('ReportDetailSection work-first mobile detail', () => {
     expect(screen.getByText('VMM Review')).toBeTruthy()
   })
 
-  it('disables PDF download when the server capability is false', () => {
+  it('hides PDF download when the server capability is false', () => {
     render(
       <ReportDetailSection
         {...buildProps({ selectedRecord: { ...record, canDownloadPdf: false } })}
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'More' }))
+    fireEvent.click(screen.getByRole('button', { name: 'More actions' }))
 
-    const downloadActions = screen.getAllByTestId('erco-report-download-action')
-    expect(downloadActions.length).toBeGreaterThan(0)
-    downloadActions.forEach((action) => expect(action.disabled).toBe(true))
+    expect(screen.queryByTestId('erco-report-download-action')).toBeNull()
   })
 })

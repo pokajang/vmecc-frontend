@@ -61,6 +61,7 @@ import useFireExtinguisherInspectionRuntime from './hooks/useFireExtinguisherIns
 import { buildFireExtinguisherResetPatch } from './inspectionResetActions'
 import { CONTINUATION_SCAN_LABEL } from '../inspectionFormUiTokens'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
+import { resetInspectionViewport } from './inspectionViewport'
 
 const INSPECTION_TIMESTAMP_FIELDS = [
   'inspectedAt',
@@ -1314,6 +1315,19 @@ const InspectionForm = ({
 
   const scopeContinuation = fireExtinguisherLocationContinuation || typeScopeContinuation
 
+  const resetActiveInspectionViewport = () => {
+    const sectionRefs = {
+      erAuxChecks: erAuxChecksRef,
+      fireExtinguisherChecks: fireExtinguisherChecksRef,
+      frtChecks: frtChecksRef,
+      highAngleChecks: highAngleChecksRef,
+      hseObservation: hseObservationRef,
+      hydraulicChecks: hydraulicChecksRef,
+      scbaChecks: scbaChecksRef,
+    }
+    resetInspectionViewport(sectionRefs[selectedTypeDefinition?.fieldRefKey]?.current)
+  }
+
   const selectNextScope = (nextLocationOption) => {
     const latest = getLatestForm()
     const option =
@@ -1331,6 +1345,7 @@ const InspectionForm = ({
         subLocation: '',
         subLocationId: '',
       })
+      resetActiveInspectionViewport()
       return
     }
 
@@ -1342,6 +1357,7 @@ const InspectionForm = ({
       subLocation: nextLocation,
       subLocationId: String(option?.subLocationId || option?.id || '').trim(),
     })
+    resetActiveInspectionViewport()
   }
   const selectNextLocation = (nextLocationOption) => selectNextScope(nextLocationOption)
   const selectNextFireExtinguisherLocation = (nextLocationOption) =>

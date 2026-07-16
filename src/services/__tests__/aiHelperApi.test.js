@@ -40,6 +40,7 @@ describe('aiHelperApi streaming parser', () => {
         .mockResolvedValue(
           streamResponse([
             'event: meta\ndata: {"thread":{"id":1}}\n\n',
+            'event: status\ndata: {"status":"verifying","message":"Checking sources..."}\n\n',
             'event: delta\ndata: {"text":"Hello"}\n\n',
             'event: delta\ndata: {"text":" world"}\n\n',
             'event: done\ndata: {"message":{"id":9,"content":"Hello world"}}\n\n',
@@ -52,6 +53,7 @@ describe('aiHelperApi streaming parser', () => {
       { message: 'Hi' },
       {
         onMeta: (payload) => events.push(['meta', payload.thread.id]),
+        onStatus: (payload) => events.push(['status', payload.status]),
         onDelta: (payload) => events.push(['delta', payload.text]),
         onDone: (payload) => events.push(['done', payload.message.content]),
       },
@@ -59,6 +61,7 @@ describe('aiHelperApi streaming parser', () => {
 
     expect(events).toEqual([
       ['meta', 1],
+      ['status', 'verifying'],
       ['delta', 'Hello'],
       ['delta', ' world'],
       ['done', 'Hello world'],

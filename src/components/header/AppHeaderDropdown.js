@@ -92,8 +92,9 @@ const AppHeaderDropdown = ({
         </CDropdownToggle>
       ) : (
         <CDropdownToggle
-          className="app-header-account-toggle p-0 d-inline-flex align-items-center justify-content-center"
+          className="app-header-action app-header-account-toggle p-0 d-inline-flex align-items-center justify-content-center"
           caret={false}
+          aria-label="Account"
         >
           <CTooltip content="Account" placement="bottom">
             <span className="app-header-account-tooltip-target">

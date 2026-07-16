@@ -312,7 +312,7 @@ const ErcoSetupStep = ({
   }
 
   return (
-    <div className="mb-3 d-grid gap-4">
+    <div className="mb-3 d-grid gap-4" data-testid="erco-report-setup-ready">
       <ActionConfirmModal
         visible={Boolean(deleteTarget)}
         title="Delete Type"

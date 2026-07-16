@@ -68,11 +68,14 @@
 }
 
 .workflow-photo-preview--uncropped .workflow-photo-preview__image {
-  width: auto;
-  max-width: 100%;
+  width: 100%;
   height: auto;
   max-height: min(72dvh, 52rem);
   object-fit: contain;
+}
+
+.inspection-general-evidence-drawer-gallery > div:first-child {
+  grid-template-columns: minmax(0, 1fr) !important;
 }
 
 .workflow-photo-preview__fallback,

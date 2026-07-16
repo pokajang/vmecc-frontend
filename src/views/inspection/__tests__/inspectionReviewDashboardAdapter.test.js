@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { buildInspectionReviewDashboardItem } from '../records/inspectionReviewDashboardAdapter'
 
 describe('inspection review dashboard adapter', () => {
-  it('collects general, defect, and additional photos into the matching location row', () => {
+  it('keeps item photos with their location and report photos in a final separate group', () => {
     const item = buildInspectionReviewDashboardItem({
       key: 'er-aux-equipment-inspection',
       inspectionType: 'Emergency Response Auxiliary Equipment Inspection',
@@ -36,11 +36,33 @@ describe('inspection review dashboard adapter', () => {
     })
 
     expect(item.locationRows).toHaveLength(1)
-    expect(item.locationRows[0].photoCount).toBe(3)
+    expect(item.locationRows[0].photoCount).toBe(2)
     expect(item.locationRows[0].photoGroups.map((group) => group.title)).toEqual([
-      'General Evidence Photos',
       'Portable Pump - Defect Photos',
       'Portable Pump - Additional Photos',
     ])
+    expect(item.reportPhotoGroups).toEqual([
+      expect.objectContaining({
+        title: 'Additional Report Evidence',
+        photos: [expect.objectContaining({ id: 'general-photo' })],
+      }),
+    ])
+  })
+
+  it('does not classify neutral or incomplete statuses as issues', () => {
+    const item = buildInspectionReviewDashboardItem({
+      key: 'er-aux-equipment-inspection',
+      inspectionType: 'ER Aux Equipment Inspection',
+      groups: [
+        { mainLocation: 'Store', label: 'Spare radio', status: 'N/A' },
+        { mainLocation: 'Store', label: 'Helmet', status: 'Needs attention' },
+        { mainLocation: 'Store', label: 'Boot', status: 'Missing' },
+      ],
+      form: { mainLocation: 'Store' },
+    })
+
+    expect(item.metrics.issueCount).toBe(1)
+    expect(item.issueGroups).toHaveLength(1)
+    expect(item.issueGroups[0].rows.map((row) => row.title)).toEqual(['Boot'])
   })
 })

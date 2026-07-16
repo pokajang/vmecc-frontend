@@ -464,7 +464,7 @@ test.describe('ER Aux inspection prod smoke', () => {
       await page
         .locator('.dropdown-menu.show')
         .last()
-        .getByRole('button', { name: 'Download', exact: true })
+        .getByRole('button', { name: 'Download report', exact: true })
         .click()
       const download = await downloadPromise
       ensureArtifactRoot()

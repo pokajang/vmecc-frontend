@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { CAlert, CButton } from '@coreui/react'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import { clearReportDraft, loadReportDraftRow, saveReportDraft } from '../reportStorage'
-import { scrollToFirstError } from '../utils'
+import { resetReportViewport, scrollToFirstError } from '../utils'
 import useReportDraft from '../hooks/useReportDraft'
 import { buildFitnessTestRecord } from './recordFactory'
 import FitnessTestFormStep from './FitnessTestFormStep'
@@ -60,6 +60,10 @@ const FitnessTestForm = ({
     updateChronology,
     removeChronology,
   } = useFitnessTestForm()
+
+  useEffect(() => {
+    resetReportViewport()
+  }, [setupConfirmed])
 
   useReportDraft({
     userId: user?.id,

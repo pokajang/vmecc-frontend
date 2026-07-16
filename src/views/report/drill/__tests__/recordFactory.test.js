@@ -72,6 +72,7 @@ describe('buildDrillRecord', () => {
       mediaId: 'media-1',
       leaseId: 'lease-1',
       checksumSha256: 'abc',
+      description: 'Team response',
     })
   })
 })

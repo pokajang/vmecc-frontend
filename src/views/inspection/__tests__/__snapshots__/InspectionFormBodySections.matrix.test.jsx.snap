@@ -3,7 +3,9 @@
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'ER Aux Equipment Inspection' ['desktop'] > /desktop/er-aux-equipment-inspection/complete-with-next-location 1`] = `
 <div>
   <div
+    aria-label="Emergency Response Auxiliary Equipment checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -281,7 +283,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'ER Aux Equipment Inspection' ['mobile'] > /mobile/er-aux-equipment-inspection/complete-with-next-location 1`] = `
 <div>
   <div
+    aria-label="Emergency Response Auxiliary Equipment checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -413,7 +417,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'Fire Extinguisher Inspection' ['desktop'] > /desktop/fire-extinguisher-inspection/complete-with-next-location 1`] = `
 <div>
   <div
+    aria-label="Fire Extinguisher checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -675,7 +681,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'Fire Extinguisher Inspection' ['mobile'] > /mobile/fire-extinguisher-inspection/complete-with-next-location 1`] = `
 <div>
   <div
+    aria-label="Fire Extinguisher checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -791,7 +799,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'Fire Truck Daily Readiness' ['desktop'] > /desktop/frt-daily-inspection/complete-with-next-location 1`] = `
 <div>
   <div
+    aria-label="Fire Truck Daily Readiness checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -799,22 +809,6 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       Fire Truck Daily Readiness
        section
     </div>
-  </div>
-  <div
-    class="inspection-form-section d-grid gap-1"
-  >
-    <label
-      class="form-label small fw-semibold text-muted mb-1"
-      for="fire-truck-readiness-remarks"
-    >
-      Remarks
-    </label>
-    <textarea
-      class="form-control"
-      id="fire-truck-readiness-remarks"
-      placeholder="Optional general fire truck readiness remarks"
-      rows="3"
-    />
   </div>
   <div
     class="card inspection-general-evidence-card"
@@ -1069,7 +1063,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'Fire Truck Daily Readiness' ['mobile'] > /mobile/frt-daily-inspection/complete-with-next-location 1`] = `
 <div>
   <div
+    aria-label="Fire Truck Daily Readiness checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -1077,37 +1073,6 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       Fire Truck Daily Readiness
        section
     </div>
-  </div>
-  <div
-    class="inspection-general-evidence-mobile-compact d-grid gap-2"
-  >
-    <button
-      aria-label="Add optional remarks"
-      class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
-      type="button"
-    >
-      <svg
-        aria-hidden="true"
-        class="lucide lucide-plus me-1 align-text-bottom"
-        fill="none"
-        height="13"
-        stroke="currentColor"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="2"
-        viewBox="0 0 24 24"
-        width="13"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M5 12h14"
-        />
-        <path
-          d="M12 5v14"
-        />
-      </svg>
-      Add optional remarks
-    </button>
   </div>
   <div
     class="inspection-general-evidence-mobile-compact d-grid gap-2"
@@ -1646,7 +1611,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'Health Safety Environment Inspection' ['desktop'] > /desktop/health-safety-environment-inspection/complete-with-next-location 1`] = `
 <div>
   <div
+    aria-label="Health Safety Environment checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -1944,7 +1911,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'Health Safety Environment Inspection' ['mobile'] > /mobile/health-safety-environment-inspection/complete-with-next-location 1`] = `
 <div>
   <div
+    aria-label="Health Safety Environment checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -2096,7 +2065,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'High Angle Rescue Equipment Inspection' ['desktop'] > /desktop/high-angle-rescue-equipment-inspection/complete-with-next-location 1`] = `
 <div>
   <div
+    aria-label="High Angle Rescue Equipment checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -2358,7 +2329,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'High Angle Rescue Equipment Inspection' ['mobile'] > /mobile/high-angle-rescue-equipment-inspection/complete-with-next-location 1`] = `
 <div>
   <div
+    aria-label="High Angle Rescue Equipment checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -2474,7 +2447,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'Hydraulic Rescue Tools Inspection' ['desktop'] > /desktop/hydraulic-rescue-tools-inspection/complete-with-next-location 1`] = `
 <div>
   <div
+    aria-label="Hydraulic Rescue Tools checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -2736,7 +2711,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'Hydraulic Rescue Tools Inspection' ['mobile'] > /mobile/hydraulic-rescue-tools-inspection/complete-with-next-location 1`] = `
 <div>
   <div
+    aria-label="Hydraulic Rescue Tools checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -2852,7 +2829,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'SCBA Inspection' ['desktop'] > /desktop/scba-inspection/complete-with-next-location 1`] = `
 <div>
   <div
+    aria-label="SCBA checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -3114,7 +3093,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'complete-with-next-location' state visual baseline for 'SCBA Inspection' ['mobile'] > /mobile/scba-inspection/complete-with-next-location 1`] = `
 <div>
   <div
+    aria-label="SCBA checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -3262,7 +3243,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'empty'
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'ER Aux Equipment Inspection' ['desktop'] > /desktop/er-aux-equipment-inspection/missing-required 1`] = `
 <div>
   <div
+    aria-label="Emergency Response Auxiliary Equipment checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -3456,7 +3439,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'ER Aux Equipment Inspection' ['mobile'] > /mobile/er-aux-equipment-inspection/missing-required 1`] = `
 <div>
   <div
+    aria-label="Emergency Response Auxiliary Equipment checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -3568,7 +3553,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'Fire Extinguisher Inspection' ['desktop'] > /desktop/fire-extinguisher-inspection/missing-required 1`] = `
 <div>
   <div
+    aria-label="Fire Extinguisher checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -3746,7 +3733,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'Fire Extinguisher Inspection' ['mobile'] > /mobile/fire-extinguisher-inspection/missing-required 1`] = `
 <div>
   <div
+    aria-label="Fire Extinguisher checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -3842,7 +3831,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'Fire Truck Daily Readiness' ['desktop'] > /desktop/frt-daily-inspection/missing-required 1`] = `
 <div>
   <div
+    aria-label="Fire Truck Daily Readiness checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -3850,22 +3841,6 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       Fire Truck Daily Readiness
        section
     </div>
-  </div>
-  <div
-    class="inspection-form-section d-grid gap-1"
-  >
-    <label
-      class="form-label small fw-semibold text-muted mb-1"
-      for="fire-truck-readiness-remarks"
-    >
-      Remarks
-    </label>
-    <textarea
-      class="form-control"
-      id="fire-truck-readiness-remarks"
-      placeholder="Optional general fire truck readiness remarks"
-      rows="3"
-    />
   </div>
   <div
     class="card inspection-general-evidence-card"
@@ -4036,7 +4011,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'Fire Truck Daily Readiness' ['mobile'] > /mobile/frt-daily-inspection/missing-required 1`] = `
 <div>
   <div
+    aria-label="Fire Truck Daily Readiness checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -4044,37 +4021,6 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       Fire Truck Daily Readiness
        section
     </div>
-  </div>
-  <div
-    class="inspection-general-evidence-mobile-compact d-grid gap-2"
-  >
-    <button
-      aria-label="Add optional remarks"
-      class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
-      type="button"
-    >
-      <svg
-        aria-hidden="true"
-        class="lucide lucide-plus me-1 align-text-bottom"
-        fill="none"
-        height="13"
-        stroke="currentColor"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="2"
-        viewBox="0 0 24 24"
-        width="13"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M5 12h14"
-        />
-        <path
-          d="M12 5v14"
-        />
-      </svg>
-      Add optional remarks
-    </button>
   </div>
   <div
     class="inspection-general-evidence-mobile-compact d-grid gap-2"
@@ -4529,7 +4475,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'Health Safety Environment Inspection' ['desktop'] > /desktop/health-safety-environment-inspection/missing-required 1`] = `
 <div>
   <div
+    aria-label="Health Safety Environment checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -4763,7 +4711,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'Health Safety Environment Inspection' ['mobile'] > /mobile/health-safety-environment-inspection/missing-required 1`] = `
 <div>
   <div
+    aria-label="Health Safety Environment checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -4915,7 +4865,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'High Angle Rescue Equipment Inspection' ['desktop'] > /desktop/high-angle-rescue-equipment-inspection/missing-required 1`] = `
 <div>
   <div
+    aria-label="High Angle Rescue Equipment checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -5093,7 +5045,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'High Angle Rescue Equipment Inspection' ['mobile'] > /mobile/high-angle-rescue-equipment-inspection/missing-required 1`] = `
 <div>
   <div
+    aria-label="High Angle Rescue Equipment checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -5189,7 +5143,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'Hydraulic Rescue Tools Inspection' ['desktop'] > /desktop/hydraulic-rescue-tools-inspection/missing-required 1`] = `
 <div>
   <div
+    aria-label="Hydraulic Rescue Tools checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -5367,7 +5323,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'Hydraulic Rescue Tools Inspection' ['mobile'] > /mobile/hydraulic-rescue-tools-inspection/missing-required 1`] = `
 <div>
   <div
+    aria-label="Hydraulic Rescue Tools checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -5463,7 +5421,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'SCBA Inspection' ['desktop'] > /desktop/scba-inspection/missing-required 1`] = `
 <div>
   <div
+    aria-label="SCBA checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -5641,7 +5601,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missing-required' state visual baseline for 'SCBA Inspection' ['mobile'] > /mobile/scba-inspection/missing-required 1`] = `
 <div>
   <div
+    aria-label="SCBA checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -5737,7 +5699,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partial' state visual baseline for 'ER Aux Equipment Inspection' ['desktop'] > /desktop/er-aux-equipment-inspection/partial 1`] = `
 <div>
   <div
+    aria-label="Emergency Response Auxiliary Equipment checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -5931,7 +5895,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partial' state visual baseline for 'ER Aux Equipment Inspection' ['mobile'] > /mobile/er-aux-equipment-inspection/partial 1`] = `
 <div>
   <div
+    aria-label="Emergency Response Auxiliary Equipment checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -6155,7 +6121,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partial' state visual baseline for 'High Angle Rescue Equipment Inspection' ['desktop'] > /desktop/high-angle-rescue-equipment-inspection/partial 1`] = `
 <div>
   <div
+    aria-label="High Angle Rescue Equipment checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -6333,7 +6301,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partial' state visual baseline for 'High Angle Rescue Equipment Inspection' ['mobile'] > /mobile/high-angle-rescue-equipment-inspection/partial 1`] = `
 <div>
   <div
+    aria-label="High Angle Rescue Equipment checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -6429,7 +6399,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partial' state visual baseline for 'Hydraulic Rescue Tools Inspection' ['desktop'] > /desktop/hydraulic-rescue-tools-inspection/partial 1`] = `
 <div>
   <div
+    aria-label="Hydraulic Rescue Tools checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -6607,7 +6579,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partial' state visual baseline for 'Hydraulic Rescue Tools Inspection' ['mobile'] > /mobile/hydraulic-rescue-tools-inspection/partial 1`] = `
 <div>
   <div
+    aria-label="Hydraulic Rescue Tools checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -6703,7 +6677,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partial' state visual baseline for 'SCBA Inspection' ['desktop'] > /desktop/scba-inspection/partial 1`] = `
 <div>
   <div
+    aria-label="SCBA checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"
@@ -6881,7 +6857,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
 exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partial' state visual baseline for 'SCBA Inspection' ['mobile'] > /mobile/scba-inspection/partial 1`] = `
 <div>
   <div
+    aria-label="SCBA checklist"
     class="inspection-form-section inspection-form-body-start d-grid gap-3"
+    tabindex="-1"
   >
     <div
       data-testid="structured-section"

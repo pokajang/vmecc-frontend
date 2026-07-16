@@ -170,6 +170,14 @@ export const normalizeReportRecord = (row) => {
     version: Number(merged.version || 0) || 0,
     revision: Number(merged.revision || 0) || 0,
     canDownloadPdf: merged.canDownloadPdf === true || merged.can_download_pdf === true,
+    recordActionsVersion:
+      Number(merged.recordActionsVersion ?? merged.record_actions_version ?? 0) || 0,
+    recordActions:
+      merged.recordActions && typeof merged.recordActions === 'object'
+        ? merged.recordActions
+        : merged.record_actions && typeof merged.record_actions === 'object'
+          ? merged.record_actions
+          : null,
     submittedAt: String(merged.submittedAt || merged.submitted_at || '').trim(),
     submittedBy: String(merged.submittedBy || merged.submitted_by || '').trim(),
     createdAt: String(merged.createdAt || merged.created_at || '').trim(),
@@ -208,6 +216,16 @@ export const scrollToFirstError = () => {
     const el = document.querySelector('.is-invalid') || document.querySelector('.alert-danger')
     el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }, 0)
+}
+
+export const resetReportViewport = () => {
+  if (typeof document === 'undefined') return
+
+  const scrollContainers = [document.scrollingElement, document.documentElement, document.body]
+  new Set(scrollContainers.filter(Boolean)).forEach((element) => {
+    element.scrollTop = 0
+    element.scrollLeft = 0
+  })
 }
 
 export const formatDateTime = (date, time) => {

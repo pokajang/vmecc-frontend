@@ -129,7 +129,6 @@ export const HighAngleInspectionRowDetails = ({
   onRemovePhoto,
   onChangePhotoDescription,
   onApplyPhotoCaption,
-  onMarkRowOk,
 }) => {
   const hasIssue = text(row.condition) === 'Not Good'
   const conditionRemarks = String(row.conditionRemarks || row.remarks || '')
@@ -227,21 +226,6 @@ export const HighAngleInspectionRowDetails = ({
     </>
   ) : (
     <>
-      {onMarkRowOk ? (
-        <div className="d-flex justify-content-end">
-          <CButton
-            type="button"
-            color={text(row.condition) === 'Good' ? 'primary' : 'secondary'}
-            variant={text(row.condition) === 'Good' ? undefined : 'outline'}
-            size="sm"
-            className="inspection-compact-action-btn"
-            aria-pressed={text(row.condition) === 'Good'}
-            onClick={() => onMarkRowOk(sourceRow)}
-          >
-            All Good
-          </CButton>
-        </div>
-      ) : null}
       <div className="inspection-hydraulic-check-row inspection-hydraulic-check-row--stacked d-grid gap-2">
         <CFormLabel className="inspection-hydraulic-check-label small fw-semibold text-muted mb-0">
           Condition
@@ -363,7 +347,6 @@ const HighAngleInspectionRowCard = ({
   onRemovePhoto,
   onChangePhotoDescription,
   onApplyPhotoCaption,
-  onMarkRowOk,
   onEditItem,
   onDeleteItem,
   active = false,
@@ -442,7 +425,6 @@ const HighAngleInspectionRowCard = ({
         onRemovePhoto={onRemovePhoto}
         onChangePhotoDescription={onChangePhotoDescription}
         onApplyPhotoCaption={onApplyPhotoCaption}
-        onMarkRowOk={onMarkRowOk}
       />
     </InspectionElementCard>
   )

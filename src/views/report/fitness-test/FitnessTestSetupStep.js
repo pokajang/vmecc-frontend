@@ -47,7 +47,7 @@ const FitnessTestSetupStep = ({
   const dateTimeLabel = [form.reportDate, form.reportTime].filter(Boolean).join(' ')
 
   return (
-    <div className="mb-3 d-grid gap-4">
+    <div className="mb-3 d-grid gap-4" data-testid="fitness-test-report-setup-ready">
       <div className="report-setup-grid d-grid gap-4">
         <div className="d-grid gap-3">
           {!showTypePicker ? (

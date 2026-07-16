@@ -28,6 +28,20 @@ export const buildGeneralDetailFindingItems = (form = {}) => {
   }
   return issues.map((issue, index) => ({
     key: detailText(issue.id) || `general-finding:${index}`,
+    groupLabel: [
+      detailText(issue.zone || form.zone),
+      detailText(issue.mainLocation || issue.main_location || form.mainLocation),
+      detailText(
+        issue.subLocation ||
+          issue.sub_location ||
+          issue.location ||
+          form.subLocation ||
+          form.location,
+      ),
+    ]
+      .filter(Boolean)
+      .filter((value, valueIndex, values) => valueIndex === 0 || value !== values[valueIndex - 1])
+      .join(' > '),
     title: detailText(issue.description)
       ? `${index + 1}. ${truncate(issue.description)}`
       : `Finding ${index + 1}`,

@@ -6,13 +6,13 @@ import TableLoader from 'src/components/TableLoader'
 import { useSelector } from 'react-redux'
 import { hasPermission } from 'src/utils/authz'
 import {
-  LOCKED_ROLE,
   PERMISSION_GROUPS,
   PERMISSION_LABELS,
   PERM_TO_GROUP,
   VIEW_MODE_MATRIX,
   VIEW_MODE_ROLE,
   VIEW_MODE_STORAGE_KEY,
+  isRolePermissionsLocked,
 } from './rolePermissionDomain'
 import {
   RolePermissionLegend,
@@ -79,6 +79,7 @@ const RolePermissionMatrix = () => {
     localMatrix,
     permissions,
     roles,
+    roleAccess,
     save,
     saving,
     serverMatrix,
@@ -102,8 +103,11 @@ const RolePermissionMatrix = () => {
     [roles],
   )
   const defaultFocusedRole = useMemo(
-    () => roleViewOptions.find((role) => role !== LOCKED_ROLE) || roleViewOptions[0] || '',
-    [roleViewOptions],
+    () =>
+      roleViewOptions.find((role) => !isRolePermissionsLocked(role, roleAccess)) ||
+      roleViewOptions[0] ||
+      '',
+    [roleAccess, roleViewOptions],
   )
   const activeFocusedRole =
     focusedRole && roleViewOptions.includes(focusedRole) ? focusedRole : defaultFocusedRole
@@ -135,7 +139,7 @@ const RolePermissionMatrix = () => {
       }
       if (!changesOnly) return true
       return activeRolesForChanges.some((role) => {
-        if (role === LOCKED_ROLE) return false
+        if (isRolePermissionsLocked(role, roleAccess)) return false
         const current = (localMatrix[role] || new Set()).has(permission)
         const previous = new Set(serverMatrix[role] || []).has(permission)
         return current !== previous
@@ -148,6 +152,7 @@ const RolePermissionMatrix = () => {
     localMatrix,
     orderedPermissions,
     permSearch,
+    roleAccess,
     serverMatrix,
   ])
 
@@ -278,6 +283,7 @@ const RolePermissionMatrix = () => {
             editMode={editMode}
             groupedRows={groupedRows}
             localMatrix={localMatrix}
+            roleAccess={roleAccess}
             saving={saving}
             serverMatrix={serverMatrix}
             togglePermission={togglePermission}
@@ -291,6 +297,7 @@ const RolePermissionMatrix = () => {
             editMode={editMode}
             groupedRows={groupedRows}
             localMatrix={localMatrix}
+            roleAccess={roleAccess}
             saving={saving}
             serverMatrix={serverMatrix}
             togglePermission={togglePermission}

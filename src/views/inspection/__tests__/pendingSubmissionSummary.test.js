@@ -472,6 +472,49 @@ describe('pending submission summary', () => {
     )
   })
 
+  it('groups Fire Truck checks by every saved compartment instead of the active compartment', () => {
+    const summary = buildPendingSubmissionSummary({
+      form: {
+        inspectionType: 'Fire Truck Daily Readiness',
+        mainLocation: 'FRT-01',
+        subLocation: 'Locker 02',
+        frtTruckPlateNo: 'FRT-01',
+        frtDailyChecks: [
+          { id: 'daily-1', equipment: 'Hose', compartment: 'Locker 01', status: 'Checked' },
+          { id: 'daily-2', equipment: 'Nozzle', location: 'Locker 02', status: 'Checked' },
+        ],
+      },
+      draftSyncState: { status: 'synced' },
+    })
+
+    const frt = summary.items.find((item) => item.inspectionType === 'Fire Truck Daily Readiness')
+    expect(frt?.groups).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ mainLocation: 'FRT-01', subLocation: 'LOCKER 01' }),
+        expect.objectContaining({ mainLocation: 'FRT-01', subLocation: 'LOCKER 02' }),
+      ]),
+    )
+  })
+
+  it('treats N/A as a completed neutral result rather than an issue', () => {
+    const summary = buildPendingSubmissionSummary({
+      form: {
+        inspectionType: 'ER Aux Equipment Inspection',
+        mainLocation: 'Store',
+        erAuxChecks: [
+          { id: 'store:spare-radio', equipment: 'Spare radio', quantity: '0', condition: 'N/A' },
+        ],
+      },
+      draftSyncState: { status: 'synced' },
+    })
+
+    const erAux = summary.items.find(
+      (item) => item.inspectionType === 'ER Aux Equipment Inspection',
+    )
+    expect(erAux?.metrics).toEqual(expect.objectContaining({ checkedCount: 1, defectCount: 0 }))
+    expect(erAux?.groups[0]).toEqual(expect.objectContaining({ status: 'N/A' }))
+  })
+
   it('summarizes saved SCBA rows across locations and custom sections', () => {
     const summary = buildPendingSubmissionSummary({
       form: {

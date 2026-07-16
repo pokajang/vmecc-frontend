@@ -424,7 +424,7 @@ const submitAndDownloadPdf = async (page, report, submitLabel = 'Confirm Submit'
   await page
     .locator('.dropdown-menu.show')
     .last()
-    .getByRole('button', { name: 'Download', exact: true })
+    .getByRole('button', { name: 'Download report', exact: true })
     .click()
   const download = await downloadPromise
   ensureArtifactRoot()

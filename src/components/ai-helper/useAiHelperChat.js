@@ -287,6 +287,16 @@ const useAiHelperChat = ({
               if (!isActiveRequest()) return
               if (payload?.thread) setThread(payload.thread)
             },
+            onStatus: (payload) => {
+              if (!isActiveRequest()) return
+              const pipelineStatus = String(payload?.message || '').trim()
+              if (!pipelineStatus) return
+              updateMessageById(assistantMessage.id, (message) => ({
+                ...message,
+                pipeline_status: pipelineStatus,
+                status: message.content ? message.status : MESSAGE_STATUS_STREAMING,
+              }))
+            },
             onDelta: (payload) => {
               if (!isActiveRequest()) return
               const delta = payload?.text || ''
@@ -295,6 +305,7 @@ const useAiHelperChat = ({
               updateMessageById(assistantMessage.id, (message) => ({
                 ...message,
                 content: `${message.content || ''}${delta}`,
+                pipeline_status: null,
                 status: MESSAGE_STATUS_STREAMING,
               }))
             },
@@ -312,6 +323,7 @@ const useAiHelperChat = ({
                   retry_prompt: text,
                   retry_context: pageContext,
                   request_id: requestId,
+                  pipeline_status: null,
                   status: payload.message?.status || MESSAGE_STATUS_COMPLETED,
                 }))
                 return
@@ -324,6 +336,7 @@ const useAiHelperChat = ({
                 retry_prompt: text,
                 retry_context: pageContext,
                 request_id: requestId,
+                pipeline_status: null,
               }))
             },
             onError: (payload) => {

@@ -1221,87 +1221,6 @@ const InspectionFindingsSection = ({
   )
 }
 
-const getFrtGeneralRemarks = (form = {}) => {
-  const dailyRemarks = String(form.frtDailyRemarks || '')
-  const oneOffRemarks = String(form.frtOneOffRemarks || '')
-  const dailyRemarksText = dailyRemarks.trim()
-  const oneOffRemarksText = oneOffRemarks.trim()
-  if (dailyRemarksText && oneOffRemarksText && dailyRemarksText !== oneOffRemarksText) {
-    return [dailyRemarksText, oneOffRemarksText].join('\n')
-  }
-  return dailyRemarks || oneOffRemarks
-}
-
-const FrtGeneralRemarksField = ({ form, updateForm, useMobileDrawer }) => {
-  const [drawerOpen, setDrawerOpen] = useState(false)
-  const remarks = getFrtGeneralRemarks(form)
-  const updateRemarks = (nextValue) => {
-    updateForm({
-      ...form,
-      frtDailyRemarks: String(nextValue || ''),
-      frtOneOffRemarks: '',
-    })
-  }
-
-  if (useMobileDrawer) {
-    return (
-      <>
-        <div className="inspection-general-evidence-mobile-compact d-grid gap-2">
-          <CreateActionButton
-            label={`${String(remarks || '').trim() ? 'Edit' : 'Add'} optional remarks`}
-            className="inspection-compact-action-btn justify-self-start"
-            onClick={() => setDrawerOpen(true)}
-          />
-        </div>
-        <MobileBottomDrawer
-          visible={drawerOpen}
-          title="Remarks"
-          bodyClassName="inspection-equipment-detail-drawer-shell"
-          onClose={() => setDrawerOpen(false)}
-        >
-          <div className="inspection-mobile-detail-drawer-body inspection-equipment-detail-drawer-body d-grid">
-            <CFormTextarea
-              rows={5}
-              label="Remarks"
-              aria-label="Fire truck readiness remarks"
-              value={remarks}
-              placeholder="Optional general fire truck readiness remarks"
-              onChange={(event) => updateRemarks(event.target.value)}
-            />
-            <CButton
-              type="button"
-              color="primary"
-              size="sm"
-              className="inspection-compact-action-btn inspection-frt-remarks-drawer__done"
-              onClick={() => setDrawerOpen(false)}
-            >
-              Done
-            </CButton>
-          </div>
-        </MobileBottomDrawer>
-      </>
-    )
-  }
-
-  return (
-    <div className="inspection-form-section d-grid gap-1">
-      <CFormLabel
-        htmlFor="fire-truck-readiness-remarks"
-        className="small fw-semibold text-muted mb-1"
-      >
-        Remarks
-      </CFormLabel>
-      <CFormTextarea
-        id="fire-truck-readiness-remarks"
-        rows={3}
-        value={remarks}
-        placeholder="Optional general fire truck readiness remarks"
-        onChange={(event) => updateRemarks(event.target.value)}
-      />
-    </div>
-  )
-}
-
 const InspectionFormBodySections = ({
   currentStructuredSummary,
   draftStatus,
@@ -1628,6 +1547,8 @@ const InspectionFormBodySections = ({
           <div
             className="inspection-form-section inspection-form-body-start d-grid gap-3"
             ref={structuredSectionRef}
+            tabIndex={-1}
+            aria-label={`${selectedTypeDefinition?.title || 'Inspection'} checklist`}
           >
             <StructuredEditSection
               mainLocation={mainLocation}
@@ -1663,14 +1584,6 @@ const InspectionFormBodySections = ({
               draftStatus={draftStatus}
             />
           </div>
-
-          {isFireTruckCatalogInspectionForm ? (
-            <FrtGeneralRemarksField
-              form={form}
-              updateForm={updateForm}
-              useMobileDrawer={useMobileDrawer}
-            />
-          ) : null}
 
           {supportsGenericFindings ? renderFindings() : null}
 

@@ -95,6 +95,7 @@ const InspectionRecordsSection = ({
   )
   const buildActions = (row) =>
     buildInspectionRowActionItems(row, {
+      onViewRecord,
       onEditRecord,
       onReviewTransition:
         row?.recordKind === 'queued' ? () => onRetryQueue?.(row) : onReviewTransition,

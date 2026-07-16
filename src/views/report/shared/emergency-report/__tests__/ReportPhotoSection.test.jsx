@@ -120,4 +120,27 @@ describe('ReportPhotoSection', () => {
     expect(capturedSignal.aborted).toBe(true)
     await waitFor(() => expect(screen.queryByRole('button', { name: 'Cancel upload' })).toBeNull())
   })
+
+  it('preserves multiline photo descriptions without mutating sibling photos', () => {
+    const onChange = vi.fn()
+    render(
+      <ReportPhotoSection
+        moduleKey="erco"
+        photos={[
+          { id: 'one', fileName: 'one.jpg', url: '/report-media/one', description: '' },
+          { id: 'two', fileName: 'two.jpg', url: '/report-media/two', description: '' },
+        ]}
+        onChange={onChange}
+      />,
+    )
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Description for one.jpg' }), {
+      target: { value: 'Command position\nPortrait evidence' },
+    })
+
+    expect(onChange).toHaveBeenCalledWith([
+      expect.objectContaining({ id: 'one', description: 'Command position\nPortrait evidence' }),
+      expect.objectContaining({ id: 'two', description: '' }),
+    ])
+  })
 })

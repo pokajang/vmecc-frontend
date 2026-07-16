@@ -7,6 +7,12 @@ export const REPORT_TYPE_CONFIG = {
   'fitness-test': { label: 'Fitness Test', idPrefix: 'FIT' },
 }
 
+export const REPORT_VIEW_PERMISSIONS = {
+  erco: 'reports.erco.view',
+  drill: 'reports.drill.view',
+  'fitness-test': 'reports.fitness.view',
+}
+
 export const SORT_OPTIONS = [
   { value: 'reportedAt:desc', label: 'Latest reported' },
   { value: 'reportedAt:asc', label: 'Earliest reported' },

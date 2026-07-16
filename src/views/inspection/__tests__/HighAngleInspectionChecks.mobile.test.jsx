@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React, { useState } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { HighAngleInspectionChecks } from '../form/components/InspectionFormDisplaySections'
 
 const setMobileViewport = () => {
@@ -198,7 +198,7 @@ describe('HighAngleInspectionChecks mobile detail drawer', () => {
     expect(screen.queryByText('Needs evidence')).toBeNull()
   })
 
-  it('uses the supplied High Angle quick-mark handlers', () => {
+  it('does not show all-good helpers when condition is the only inspection criterion', () => {
     const onMarkRowOk = vi.fn()
     const onMarkAllOk = vi.fn()
     const row = {
@@ -234,11 +234,81 @@ describe('HighAngleInspectionChecks mobile detail drawer', () => {
     )
 
     fireEvent.click(screen.getByText('Locker A'))
-    fireEvent.click(screen.getByRole('button', { name: 'Mark all Good' }))
-    fireEvent.click(screen.getByRole('button', { name: 'All Good' }))
 
-    expect(onMarkAllOk).toHaveBeenCalledTimes(1)
-    expect(onMarkRowOk).toHaveBeenCalledWith(expect.objectContaining({ id: row.id }))
+    expect(screen.queryByRole('button', { name: 'Mark all Good' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'All Good' })).toBeNull()
+    expect(onMarkAllOk).not.toHaveBeenCalled()
+    expect(onMarkRowOk).not.toHaveBeenCalled()
+  })
+
+  it('offers the next compartment after the selected compartment is complete', async () => {
+    const scrollIntoView = vi.fn()
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoView,
+    })
+    render(
+      <HighAngleInspectionChecks
+        mainLocation="High Angle Rescue Kit"
+        summary={{
+          visibleGroups: [
+            {
+              key: 'locker-a',
+              title: 'Locker A',
+              rows: [{ id: 'row-a', equipment: 'Rope', condition: 'Good' }],
+            },
+            {
+              key: 'locker-b',
+              title: 'Locker B',
+              rows: [{ id: 'row-b', equipment: 'Harness', condition: '' }],
+            },
+          ],
+        }}
+      />,
+    )
+
+    fireEvent.click(screen.getByText('Locker A'))
+    expect(screen.getByText('Next compartment')).toBeTruthy()
+    const lockerBButtons = screen.getAllByRole('button', { name: /Locker B/ })
+    fireEvent.click(lockerBButtons.at(-1))
+    expect(
+      screen.getByRole('button', { name: /Locker B 1 item/ }).getAttribute('aria-pressed'),
+    ).toBe('true')
+    await waitFor(() => expect(scrollIntoView).toHaveBeenCalled())
+    delete HTMLElement.prototype.scrollIntoView
+  })
+
+  it('wraps to an earlier incomplete compartment and skips completed compartments', () => {
+    render(
+      <HighAngleInspectionChecks
+        mainLocation="High Angle Rescue Kit"
+        summary={{
+          visibleGroups: [
+            {
+              key: 'locker-a',
+              title: 'Locker A',
+              rows: [{ id: 'row-a', equipment: 'Rope', condition: '' }],
+            },
+            {
+              key: 'locker-b',
+              title: 'Locker B',
+              rows: [{ id: 'row-b', equipment: 'Harness', condition: 'Good' }],
+            },
+            {
+              key: 'locker-c',
+              title: 'Locker C',
+              rows: [{ id: 'row-c', equipment: 'Helmet', condition: 'Good' }],
+            },
+          ],
+        }}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /Locker C 1 item/ }))
+
+    expect(screen.getByText('Next compartment')).toBeTruthy()
+    expect(screen.getAllByRole('button', { name: /Locker A/ }).at(-1)).toBeTruthy()
+    expect(screen.getAllByRole('button', { name: /Locker B/ })).toHaveLength(1)
   })
 
   it('adds a compartment from the compartment selector', () => {

@@ -25,7 +25,7 @@ const pngChunk = (type, data = Buffer.alloc(0)) => {
   return Buffer.concat([lengthBuffer, typeBuffer, data, crcBuffer])
 }
 
-const createSmokePng = (seed = 'inspection-smoke') => {
+const createSmokePng = (seed = 'inspection-smoke', dimensions = {}) => {
   const key = String(seed)
   let hash = 2166136261
   for (let index = 0; index < key.length; index += 1) {
@@ -33,8 +33,12 @@ const createSmokePng = (seed = 'inspection-smoke') => {
     hash = Math.imul(hash, 16777619) >>> 0
   }
 
-  const width = 48
-  const height = 32
+  const normalizeDimension = (value, fallback) => {
+    const number = Number(value)
+    return Number.isInteger(number) && number > 0 && number <= 512 ? number : fallback
+  }
+  const width = normalizeDimension(dimensions.width, 48)
+  const height = normalizeDimension(dimensions.height, 32)
   const ihdr = Buffer.alloc(13)
   ihdr.writeUInt32BE(width, 0)
   ihdr.writeUInt32BE(height, 4)

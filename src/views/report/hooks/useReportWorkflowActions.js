@@ -1,5 +1,9 @@
 import { useCallback, useState } from 'react'
 import { approveReportRecord, rejectReportRecord, reviewReportRecord } from '../reportApi'
+import {
+  getRecordActionContract,
+  isRecordActionAllowed,
+} from 'src/components/report-workflow/recordActionResolver'
 
 const useReportWorkflowActions = ({ navigate, pushToast, reloadRecords, reportBasePath }) => {
   const [isActionBusy, setIsActionBusy] = useState(false)
@@ -15,24 +19,24 @@ const useReportWorkflowActions = ({ navigate, pushToast, reloadRecords, reportBa
 
   const canReviewRecord = useCallback((row) => {
     if (!row || row.recordKind === 'draft') return false
+    if (getRecordActionContract(row)) return isRecordActionAllowed(row, 'review')
     if (typeof row.canReview === 'boolean') return row.canReview
     return String(row.status || '').trim() === 'Submitted'
   }, [])
 
   const canApproveRecord = useCallback((row) => {
     if (!row || row.recordKind === 'draft') return false
+    if (getRecordActionContract(row)) return isRecordActionAllowed(row, 'approve')
     if (typeof row.canApprove === 'boolean') return row.canApprove
     return String(row.status || '').trim() === 'Reviewed'
   }, [])
 
-  const canRejectRecord = useCallback(
-    (row) => {
-      if (!row || row.recordKind === 'draft') return false
-      if (typeof row.canReject === 'boolean') return row.canReject
-      return canApproveRecord(row)
-    },
-    [canApproveRecord],
-  )
+  const canRejectRecord = useCallback((row) => {
+    if (!row || row.recordKind === 'draft') return false
+    if (getRecordActionContract(row)) return isRecordActionAllowed(row, 'reject')
+    if (typeof row.canReject === 'boolean') return row.canReject
+    return ['Submitted', 'Reviewed'].includes(String(row.status || '').trim())
+  }, [])
 
   const closeWorkflowActionModal = useCallback(() => {
     setWorkflowActionState({ visible: false, actionType: '', record: null })

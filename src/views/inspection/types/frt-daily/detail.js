@@ -21,6 +21,7 @@ const buildItems = (sections, kind, submittedIds = null) =>
         const photos = [...(row.photos || []), ...(row.additionalPhotos || [])]
         return {
           key: detailText(row.id) || `frt:${kind}:${sectionIndex}:${rowIndex}`,
+          groupLabel: detailText(row.compartment || row.location || section.title),
           title: detailText(row.equipment) || `Truck check ${rowIndex + 1}`,
           summaryLines: [
             [

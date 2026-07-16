@@ -15,6 +15,7 @@ export const buildHighAngleDetailFindingItems = (_form = {}, summary = null) =>
       const photos = row.conditionPhotos || row.photos || []
       return {
         key: detailText(row.id) || `high-angle:${groupIndex}:${rowIndex}`,
+        groupLabel: detailText(group.title),
         title: detailText(row.equipment) || `Equipment ${rowIndex + 1}`,
         summaryLines: [
           [detailText(row.condition), detailText(row.quantity) && `Qty ${row.quantity}`]

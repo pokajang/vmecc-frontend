@@ -33,6 +33,7 @@ import {
 } from './InspectionElementUi'
 import InspectionResetConfirmDrawer from './InspectionResetConfirmDrawer'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
+import { isInspectionIssueStatus } from '../../domain/inspectionStatusSemantics'
 
 const cloneRow = (row) => (row ? JSON.parse(JSON.stringify(row)) : null)
 const getRowSignature = (row) => JSON.stringify(row || {})
@@ -96,7 +97,7 @@ const ErAuxQuantityRow = ({ value, onChange, readOnly = false }) => (
 const getErAuxWorkflowState = (row = {}) => {
   const condition = String(row.condition || '').trim()
   const quantity = String(row.quantity ?? row.defaultQuantity ?? '').trim()
-  const isIssue = ['Defect', 'Missing', 'N/A'].includes(condition)
+  const isIssue = isInspectionIssueStatus(condition)
   const isDefect = condition === 'Defect'
   const hasDefectRemarks = String(row.defectRemarks || '').trim() !== ''
   const defectPhotos = Array.isArray(row.defectPhotos) ? row.defectPhotos : []
@@ -383,23 +384,7 @@ const ErAuxEquipmentCheckDetails = ({
                   <Trash2 size={13} />
                   Clear
                 </CButton>
-              ) : (
-                <CButton
-                  type="button"
-                  color="secondary"
-                  variant="outline"
-                  size="sm"
-                  className="inspection-compact-action-btn"
-                  onClick={() =>
-                    setExpandedAdditionalNotes((current) => ({
-                      ...current,
-                      [rowId]: false,
-                    }))
-                  }
-                >
-                  Cancel
-                </CButton>
-              )}
+              ) : null}
             </div>
             <CFormTextarea
               rows={2}
@@ -408,6 +393,23 @@ const ErAuxEquipmentCheckDetails = ({
               placeholder="General equipment remarks"
               onChange={(event) => onUpdateCheck?.(row, { additionalNotes: event.target.value })}
             />
+            {!hasAdditionalNotes ? (
+              <CButton
+                type="button"
+                color="secondary"
+                variant="outline"
+                size="sm"
+                className="inspection-compact-action-btn justify-self-start"
+                onClick={() =>
+                  setExpandedAdditionalNotes((current) => ({
+                    ...current,
+                    [rowId]: false,
+                  }))
+                }
+              >
+                Cancel
+              </CButton>
+            ) : null}
           </div>
         ) : null}
         {photos.length > 0 ? (

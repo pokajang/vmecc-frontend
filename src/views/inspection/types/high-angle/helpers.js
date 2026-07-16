@@ -507,17 +507,17 @@ export const getHighAngleRetainedEvidenceRows = (rows = []) =>
   })
 
 export const getHighAngleMissingFields = (form = {}) => {
-  const visibleChecks = getHighAngleVisibleChecks(form)
-  const hasVisibleRows = visibleChecks.length > 0
-  const hasIncompleteChecks = visibleChecks.some((row) => !isHighAngleRowComplete(row))
-  const hasMissingRemarks = visibleChecks.some(
+  const submittedChecks = getHighAngleSubmissionCandidateRows(form)
+  const hasSubmittedRows = submittedChecks.length > 0
+  const hasIncompleteChecks = submittedChecks.some((row) => !isHighAngleRowComplete(row))
+  const hasMissingRemarks = submittedChecks.some(
     (row) =>
       row.condition === 'Not Good' && !String(row.conditionRemarks || row.remarks || '').trim(),
   )
 
   return {
     highAngleSession: false,
-    highAngleChecks: !hasVisibleRows || hasIncompleteChecks,
+    highAngleChecks: !hasSubmittedRows || hasIncompleteChecks,
     highAngleRemarks: hasMissingRemarks,
   }
 }

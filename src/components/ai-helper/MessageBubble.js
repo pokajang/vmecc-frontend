@@ -1,154 +1,45 @@
 import React from 'react'
 import { CTooltip } from '@coreui/react'
 import { Check, Copy, Flag, RotateCcw } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 import { MESSAGE_STATUS_SLOW, getMessageActions } from './constants'
 import { buildAiHelperDocumentFileUrl } from 'src/services/apiClient'
 
 const renderAssistantContent = (content) => {
-  const lines = String(content || '').split(/\r?\n/)
-  const blocks = []
-  let paragraphLines = []
-  let listType = null
-  let listItems = []
-  let orderedListStart = 1
-
-  const flushParagraph = () => {
-    if (!paragraphLines.length) return
-
-    const key = `p-${blocks.length}`
-    blocks.push(
-      <p key={key}>
-        {paragraphLines.map((line, index) => (
-          <React.Fragment key={`${key}-${index}`}>
-            {index ? <br /> : null}
-            {line}
-          </React.Fragment>
-        ))}
-      </p>,
-    )
-    paragraphLines = []
-  }
-
-  const flushList = () => {
-    if (!listType || !listItems.length) {
-      listItems = []
-      listType = null
-      orderedListStart = 1
-      return
-    }
-
-    const key = `list-${blocks.length}`
-    if (listType === 'ol') {
-      const children = listItems.map((item, index) => (
-        <li key={`${key}-${index}`}>
-          <span>{item.text}</span>
-          {item.children.length ? (
-            <ul>
-              {item.children.map((child, childIndex) => (
-                <li key={`${key}-${index}-${childIndex}`}>{child}</li>
-              ))}
-            </ul>
-          ) : null}
-        </li>
-      ))
-
-      blocks.push(
-        <ol key={key} start={orderedListStart}>
-          {children}
-        </ol>,
-      )
-    } else {
-      const children = listItems.map((item, index) => <li key={`${key}-${index}`}>{item}</li>)
-      blocks.push(<ul key={key}>{children}</ul>)
-    }
-
-    listType = null
-    listItems = []
-    orderedListStart = 1
-  }
-
-  const addParagraphLine = (line) => {
-    paragraphLines.push(String(line))
-  }
-
-  lines.forEach((line) => {
-    const trimmed = line.trim()
-    const unorderedMatch = trimmed.match(/^[-*\u2022]\s*(.*)$/)
-    const orderedMatch = trimmed.match(/^(\d+)[.)]\s*(.*)$/)
-
-    if (!trimmed) {
-      flushParagraph()
-      return
-    }
-
-    if (orderedMatch) {
-      const itemText = orderedMatch[2]
-      const itemNumber = Number.parseInt(orderedMatch[1], 10) || 1
-      if (!itemText.trim()) {
-        flushParagraph()
-        flushList()
-        addParagraphLine(line)
-        return
-      }
-
-      flushParagraph()
-      if (listType === 'ul') {
-        flushList()
-      }
-
-      if (listType !== 'ol') {
-        listType = 'ol'
-        orderedListStart = itemNumber
-      } else if (listItems.length) {
-        const expectedNumber = orderedListStart + listItems.length
-        const continuesSequence = itemNumber === 1 || itemNumber === expectedNumber
-        if (!continuesSequence) {
-          flushList()
-          listType = 'ol'
-          orderedListStart = itemNumber
-        }
-      }
-
-      listItems.push({ text: itemText, children: [] })
-      return
-    }
-
-    if (unorderedMatch) {
-      const itemText = unorderedMatch[1]
-      if (!itemText.trim()) {
-        flushParagraph()
-        flushList()
-        addParagraphLine(line)
-        return
-      }
-
-      flushParagraph()
-      if (listType === 'ol' && listItems.length) {
-        listItems[listItems.length - 1].children.push(itemText)
-        return
-      }
-
-      if (listType && listType !== 'ul') {
-        flushList()
-      }
-      listType = 'ul'
-      listItems.push(itemText)
-      return
-    }
-
-    flushList()
-    addParagraphLine(line)
-  })
-
-  flushParagraph()
-  flushList()
-
-  if (!blocks.length) {
+  const markdown = String(content || '')
+  if (!markdown.trim()) {
     return <div className="ai-helper-message__content" />
   }
 
-  return <div className="ai-helper-message__content">{blocks}</div>
+  return (
+    <div className="ai-helper-message__content">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        skipHtml
+        components={{
+          table: ({ children, ...props }) => (
+            <div className="ai-helper-message__table-wrap">
+              <table {...props}>{children}</table>
+            </div>
+          ),
+          a: ({ href, children, ...props }) => {
+            const safeHref = /^(https?:|mailto:)/i.test(String(href || '')) ? href : null
+            return safeHref ? (
+              <a {...props} href={safeHref} target="_blank" rel="noopener noreferrer">
+                {children}
+              </a>
+            ) : (
+              <span>{children}</span>
+            )
+          },
+        }}
+      >
+        {markdown}
+      </ReactMarkdown>
+    </div>
+  )
 }
 
 const MessageBubble = ({ message, copied, onCopy, onReport, onRetry, retryDisabled }) => {
@@ -177,7 +68,7 @@ const MessageBubble = ({ message, copied, onCopy, onReport, onRetry, retryDisabl
           </span>
         ) : isStreamingOrSlow ? (
           <span className="ai-helper-muted" aria-live="polite">
-            Thinking...
+            {message?.pipeline_status || 'Thinking...'}
           </span>
         ) : hasContent ? (
           <span className="ai-helper-muted">No content was returned.</span>
@@ -213,6 +104,7 @@ const MessageBubble = ({ message, copied, onCopy, onReport, onRetry, retryDisabl
                     className="ai-helper-message__source-link"
                     aria-label={`Open source ${source?.title || 'knowledge document'}${pageLabel}`}
                   >
+                    {source?.source_id ? `${source.source_id} — ` : ''}
                     {source?.title || 'Knowledge document'}
                     {pageLabel}
                   </a>

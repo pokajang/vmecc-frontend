@@ -804,7 +804,7 @@ describe('InspectionDetailSection', () => {
     expect(screen.queryByText('Choose Sub-location')).toBeNull()
   })
 
-  it('renders inline mobile actions with More for reviewable records', () => {
+  it('renders the primary review action and supporting mobile action sheet', () => {
     const onBack = vi.fn()
     const onReviewRecord = vi.fn()
     const onDownloadRecord = vi.fn()
@@ -822,6 +822,7 @@ describe('InspectionDetailSection', () => {
           mainLocation: 'Zone A',
           incidentType: 'General Inspection',
           canReview: true,
+          canDownloadPdf: true,
           inspectionIssues: [
             {
               id: 'finding-1',
@@ -847,17 +848,17 @@ describe('InspectionDetailSection', () => {
     expect(actionGroup.className).toContain('inspection-detail-inline-actions')
     expect(actionGroup.className).not.toContain('action-row-thumb')
     expect(within(actionGroup).getByRole('button', { name: 'Review' })).toBeTruthy()
-    expect(within(actionGroup).getByRole('button', { name: 'More' })).toBeTruthy()
+    expect(within(actionGroup).getByRole('button', { name: 'More actions' })).toBeTruthy()
 
-    fireEvent.click(within(actionGroup).getByRole('button', { name: 'More' }))
+    fireEvent.click(within(actionGroup).getByRole('button', { name: 'More actions' }))
 
     const moreDrawer = screen.getByRole('dialog')
     expect(moreDrawer.querySelector('.inspection-detail-more-actions')).toBeTruthy()
-    expect(within(moreDrawer).getByRole('button', { name: 'Download' })).toBeTruthy()
+    expect(within(moreDrawer).getByRole('button', { name: 'Download report' })).toBeTruthy()
     expect(within(moreDrawer).getByRole('button', { name: 'Back to records' })).toBeTruthy()
   })
 
-  it('renders approve, reject, and more as the direct mobile action set for decision states', () => {
+  it('keeps approve primary and moves reject into the decision action sheet', () => {
     render(
       <InspectionDetailSection
         selectedRecord={{
@@ -895,7 +896,12 @@ describe('InspectionDetailSection', () => {
 
     const actionGroup = screen.getByRole('group', { name: 'Inspection detail actions' })
     expect(within(actionGroup).getByRole('button', { name: 'Approve' })).toBeTruthy()
-    expect(within(actionGroup).getByRole('button', { name: 'Reject' })).toBeTruthy()
-    expect(within(actionGroup).getByRole('button', { name: 'More' })).toBeTruthy()
+    expect(within(actionGroup).queryByRole('button', { name: 'Reject' })).toBeNull()
+
+    fireEvent.click(within(actionGroup).getByRole('button', { name: 'More actions' }))
+
+    const moreDrawer = screen.getByRole('dialog')
+    expect(within(moreDrawer).getByRole('button', { name: 'Reject' })).toBeTruthy()
+    expect(within(moreDrawer).getByRole('button', { name: 'Back to records' })).toBeTruthy()
   })
 })

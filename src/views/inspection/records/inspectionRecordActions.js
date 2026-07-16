@@ -1,3 +1,5 @@
+import { resolveRecordActions } from 'src/components/report-workflow/recordActionResolver'
+
 export const REPORT_GATES = [
   { action: 'Submitted', label: 'Submitted' },
   { action: 'Reviewed', label: 'Reviewed' },
@@ -27,6 +29,7 @@ export const getInspectionApprovalHistory = (row) => {
 export const buildInspectionRowActionItems = (
   row,
   {
+    onViewRecord,
     onEditRecord,
     onReviewTransition,
     onApproveTransition,
@@ -80,72 +83,46 @@ export const buildInspectionRowActionItems = (
   }
 
   const canEdit = Boolean(canEditRecord?.(row))
-  const canReview = Boolean(canReviewRecord?.(row))
-  const canApprove = Boolean(canApproveRecord?.(row))
-  const canReject = Boolean(canRejectRecord?.(row))
   const canDelete = Boolean(canDeleteRecord?.(row))
 
-  return [
-    row.recordKind === 'draft'
-      ? {
-          key: 'edit',
-          label: 'Open Draft',
-          onClick: () => onEditRecord(row),
-          disabled: !canEdit,
-          disabledReason: disabledReason(canEdit, 'This draft cannot be opened.'),
-        }
-      : {
-          key: 'review',
-          label: 'Review',
-          onClick: () => onReviewTransition?.(row),
-          disabled: !canReview,
-          disabledReason: disabledReason(canReview, 'Review is not available for this status.'),
-        },
-    ...(row.recordKind === 'draft'
-      ? []
-      : [
-          {
-            key: 'approve',
-            label: 'Approve',
-            disabled: !canApprove,
-            disabledReason: disabledReason(canApprove, 'Approve is not available for this status.'),
-            onClick: () => onApproveTransition?.(row),
-          },
-          {
-            key: 'reject',
-            label: 'Reject',
-            className: 'text-danger',
-            disabled: !canReject,
-            disabledReason: disabledReason(canReject, 'Reject is not available for this status.'),
-            onClick: () => onRejectTransition?.(row),
-          },
-          {
-            key: 'edit',
-            label: 'Edit',
-            disabled: !canEdit,
-            disabledReason: disabledReason(canEdit, 'Edit is not available for this status.'),
-            onClick: () => onEditRecord(row),
-          },
-          {
-            key: 'download',
-            label: downloadingId === row.id ? 'Downloading...' : 'Download',
-            disabled: Boolean(downloadingId) || row.canDownloadPdf !== true,
-            disabledReason: downloadingId
-              ? 'Another report PDF is being downloaded.'
-              : disabledReason(
-                  row.canDownloadPdf === true,
-                  'PDF download is not available for this report.',
-                ),
-            onClick: () => onDownloadRecord?.(row.id),
-          },
-        ]),
-    {
-      key: 'delete',
-      label: 'Delete',
-      className: 'text-danger',
-      disabled: !canDelete,
-      disabledReason: disabledReason(canDelete, 'Delete is not available for this status.'),
-      onClick: () => onDeleteRecord(row),
+  if (row.recordKind === 'draft') {
+    return [
+      {
+        key: 'edit',
+        label: 'Open Draft',
+        onClick: () => onEditRecord(row),
+        disabled: !canEdit,
+        disabledReason: disabledReason(canEdit, 'This draft cannot be opened.'),
+      },
+      {
+        key: 'delete',
+        label: 'Delete',
+        className: 'text-danger',
+        disabled: !canDelete,
+        disabledReason: disabledReason(canDelete, 'This draft cannot be deleted.'),
+        onClick: () => onDeleteRecord(row),
+      },
+    ]
+  }
+
+  return resolveRecordActions({
+    record: row,
+    downloadingId,
+    handlers: {
+      view: typeof onViewRecord === 'function' ? () => onViewRecord(row.id) : null,
+      download: typeof onDownloadRecord === 'function' ? () => onDownloadRecord(row.id) : null,
+      edit: typeof onEditRecord === 'function' ? () => onEditRecord(row) : null,
+      review: typeof onReviewTransition === 'function' ? () => onReviewTransition(row) : null,
+      approve: typeof onApproveTransition === 'function' ? () => onApproveTransition(row) : null,
+      reject: typeof onRejectTransition === 'function' ? () => onRejectTransition(row) : null,
+      delete: typeof onDeleteRecord === 'function' ? () => onDeleteRecord(row) : null,
     },
-  ]
+    fallbackCapabilities: {
+      edit: canEditRecord,
+      review: canReviewRecord,
+      approve: canApproveRecord,
+      reject: canRejectRecord,
+      delete: canDeleteRecord,
+    },
+  })
 }

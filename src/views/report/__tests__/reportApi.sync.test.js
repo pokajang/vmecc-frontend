@@ -110,6 +110,8 @@ describe('reportApi sync hardening', () => {
         location: 'Zone 1',
         timeline: [{ action: 'Submitted' }],
         workflowStage: 'review',
+        recordActionsVersion: 1,
+        recordActions: { edit: { applicable: true, allowed: true } },
       },
       { reportTypeSlug: 'erco', submissionKey: 'erco-submit-stable' },
     )
@@ -128,6 +130,8 @@ describe('reportApi sync hardening', () => {
     expect(body.payload).not.toHaveProperty('timeline')
     expect(body.payload).not.toHaveProperty('workflowStage')
     expect(body.payload).not.toHaveProperty('submissionKey')
+    expect(body.payload).not.toHaveProperty('recordActionsVersion')
+    expect(body.payload).not.toHaveProperty('recordActions')
   })
 
   it('updates only the requested ERCO report with its expected server version', async () => {

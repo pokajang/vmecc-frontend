@@ -78,6 +78,16 @@ beforeEach(() => {
 })
 
 describe('DrillForm V2 flow', () => {
+  it('uses full-height label targets for optional exercise categories', async () => {
+    renderForm({
+      newSection: 'setup',
+      initialFormSeed: { ...completeSeed, exerciseCategories: [] },
+    })
+
+    const fireCategory = await screen.findByLabelText('Fire')
+    expect(fireCategory.closest('.report-drill-category-choice')).toBeTruthy()
+  })
+
   it('falls back to the setup stage for an unknown editable sub-route', async () => {
     renderForm({ newSection: 'unknown-section' })
     expect(await screen.findByText('Exercise Setup')).toBeTruthy()

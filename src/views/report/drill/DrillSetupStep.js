@@ -93,7 +93,7 @@ const DrillSetupStep = ({
   })
 
   return (
-    <div className="mb-3 d-grid gap-4">
+    <div className="mb-3 d-grid gap-4" data-testid="drill-report-setup-ready">
       <ActionConfirmModal
         visible={Boolean(deleteTypeTarget)}
         testId="drill-report-type-manager-delete-modal"
@@ -281,6 +281,7 @@ const DrillSetupStep = ({
                   <CFormCheck
                     key={option.value}
                     id={`drill-category-${option.value.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`}
+                    className="report-drill-category-choice"
                     label={option.label}
                     checked={selected}
                     onChange={() =>

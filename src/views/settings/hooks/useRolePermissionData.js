@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useDispatch } from 'react-redux'
 import { fetchRolePermissions, fetchSession, saveRolePermissions } from 'src/services/apiClient'
-import { LOCKED_ROLE } from '../rolePermissionDomain'
+import { isRolePermissionsLocked } from '../rolePermissionDomain'
 
 const matrixToSets = (matrix = {}) => {
   const sets = {}
@@ -18,6 +18,7 @@ const useRolePermissionData = ({ editMode, setEditMode, setChangesOnly, pushToas
   const [error, setError] = useState(null)
   const [permissions, setPermissions] = useState([])
   const [roles, setRoles] = useState([])
+  const [roleAccess, setRoleAccess] = useState({})
   const [serverMatrix, setServerMatrix] = useState({})
   const [localMatrix, setLocalMatrix] = useState({})
 
@@ -28,6 +29,7 @@ const useRolePermissionData = ({ editMode, setEditMode, setChangesOnly, pushToas
       const data = await fetchRolePermissions()
       setPermissions(data.permissions || [])
       setRoles(data.roles || [])
+      setRoleAccess(data.role_access || {})
       setServerMatrix(data.matrix || {})
       setLocalMatrix(matrixToSets(data.matrix || {}))
     } catch (err) {
@@ -49,7 +51,7 @@ const useRolePermissionData = ({ editMode, setEditMode, setChangesOnly, pushToas
 
   const togglePermission = useCallback(
     (role, permission) => {
-      if (role === LOCKED_ROLE || !editMode) return
+      if (isRolePermissionsLocked(role, roleAccess) || !editMode) return
       setLocalMatrix((prev) => {
         const next = { ...prev }
         const set = new Set(prev[role] || [])
@@ -62,7 +64,7 @@ const useRolePermissionData = ({ editMode, setEditMode, setChangesOnly, pushToas
         return next
       })
     },
-    [editMode],
+    [editMode, roleAccess],
   )
 
   const save = useCallback(async () => {
@@ -70,7 +72,7 @@ const useRolePermissionData = ({ editMode, setEditMode, setChangesOnly, pushToas
     try {
       const matrix = {}
       for (const [role, set] of Object.entries(localMatrix)) {
-        if (role === LOCKED_ROLE) continue
+        if (isRolePermissionsLocked(role, roleAccess)) continue
         matrix[role] = Array.from(set)
       }
       const result = await saveRolePermissions(matrix)
@@ -111,7 +113,7 @@ const useRolePermissionData = ({ editMode, setEditMode, setChangesOnly, pushToas
     } finally {
       setSaving(false)
     }
-  }, [localMatrix, dispatch, pushToast, setChangesOnly, setEditMode])
+  }, [localMatrix, dispatch, pushToast, roleAccess, setChangesOnly, setEditMode])
 
   return {
     cancel,
@@ -120,6 +122,7 @@ const useRolePermissionData = ({ editMode, setEditMode, setChangesOnly, pushToas
     localMatrix,
     permissions,
     roles,
+    roleAccess,
     save,
     saving,
     serverMatrix,

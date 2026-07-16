@@ -36,13 +36,11 @@ export const buildStructuredSectionHandlers = ({
   fieldRefKey,
   markAllErAuxOk,
   markAllFrtOk,
-  markAllHighAngleGood,
   markAllHydraulicOk,
   markAllScbaOk,
   markScbaGroupOk,
   markErAuxEquipmentOk,
   markFrtRowOk,
-  markHighAngleRowOk,
   markHydraulicEquipmentOk,
   markScbaRowOk,
   openAddEquipmentModal,
@@ -203,11 +201,9 @@ export const buildStructuredSectionHandlers = ({
   onMarkRowOk:
     fieldRefKey === 'frtChecks'
       ? markFrtRowOk
-      : checksField === 'highAngleChecks'
-        ? markHighAngleRowOk
-        : fieldRefKey === 'scbaChecks'
-          ? markScbaRowOk
-          : undefined,
+      : fieldRefKey === 'scbaChecks'
+        ? markScbaRowOk
+        : undefined,
   onMarkAllOk:
     checksField === 'erAuxChecks'
       ? markAllErAuxOk
@@ -215,11 +211,9 @@ export const buildStructuredSectionHandlers = ({
         ? markAllHydraulicOk
         : fieldRefKey === 'frtChecks'
           ? markAllFrtOk
-          : checksField === 'highAngleChecks'
-            ? markAllHighAngleGood
-            : fieldRefKey === 'scbaChecks'
-              ? markAllScbaOk
-              : undefined,
+          : fieldRefKey === 'scbaChecks'
+            ? markAllScbaOk
+            : undefined,
   onMarkGroupOk: fieldRefKey === 'scbaChecks' ? markScbaGroupOk : undefined,
   onRequestPhotoUpload:
     checksField === 'erAuxChecks'

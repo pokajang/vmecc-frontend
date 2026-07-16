@@ -1,26 +1,9 @@
 import { DRAFT_STATUS_LABELS } from './inspectionModuleFlow'
-import { isFrtDailyInspectionType } from 'src/views/inspection/types/frt-daily/helpers'
 import { getInspectionApiErrorMessage } from '../domain/api/inspectionApiError'
 import { countFireExtinguisherSessionRetryQueue } from '../form/hooks/fireExtinguisherSessionRetryQueue'
 
 const text = (value) => String(value || '').trim()
-const isSeededChecklistError = (error) => {
-  const message = text(
-    error?.message || error?.payload?.message || error?.payload?.error || error?.code || '',
-  ).toLowerCase()
-  return (
-    message.includes('checklist must include') &&
-    message.includes('seeded') &&
-    message.includes('rows')
-  )
-}
 const getFriendlySubmitMessage = (error = {}, record = {}) => {
-  if (
-    isFrtDailyInspectionType(record?.inspectionType || record?.incidentType) &&
-    isSeededChecklistError(error)
-  ) {
-    return 'Please complete inspection on all compartment before submission.'
-  }
   return (
     getInspectionApiErrorMessage(error, 'Unable to save this report. Please try again.') ||
     'Unable to save this report. Please try again.'

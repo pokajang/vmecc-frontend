@@ -210,6 +210,89 @@
   min-width: 0;
 }
 
+.report-drill-category-choice {
+  display: inline-flex;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  margin-bottom: 0;
+}
+
+.report-drill-category-choice .form-check-label {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  padding-inline-start: 0.25rem;
+  cursor: pointer;
+}
+
+.report-photo-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: 0.75rem;
+}
+
+.report-photo-gallery__card {
+  display: grid;
+  min-width: 0;
+  padding: 0;
+  background: var(--cui-body-bg);
+  color: inherit;
+  text-align: left;
+}
+
+.report-photo-gallery__card:focus-visible {
+  outline: 3px solid rgba(var(--cui-primary-rgb), 0.3);
+  outline-offset: 2px;
+}
+
+.report-photo-gallery__thumbnail {
+  display: block;
+  width: 100%;
+  height: 7.5rem;
+  object-fit: cover;
+}
+
+.report-photo-gallery__description {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.report-photo-viewer__stage {
+  display: flex;
+  min-height: 12rem;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  background: #0b1220;
+}
+
+.report-photo-viewer__image {
+  display: block;
+  width: 100%;
+  max-height: 70dvh;
+  object-fit: contain;
+}
+
+.report-photo-viewer__description {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.report-photo-viewer__navigation {
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+}
+
+.report-photo-viewer__navigation .btn {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
 .report-option-card.inspection-option-card {
   min-height: 3.45rem;
 }
@@ -248,11 +331,9 @@
 
 .report-mobile-context__value {
   min-width: 0;
-  overflow: hidden;
   font-weight: 600;
   line-height: 1.25;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .report-workfirst-detail {
@@ -394,9 +475,7 @@
 
   .report-setup-grid {
     display: flex !important;
-    min-height: calc(
-      100dvh - var(--mobile-overlay-nav-height) - env(safe-area-inset-bottom, 0px) - 10rem
-    );
+    min-height: 0;
     flex-direction: column;
     gap: 0.9rem !important;
   }
@@ -405,28 +484,51 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 0.5rem;
-    margin-top: auto;
-    padding-top: 1.25rem;
+    margin-top: 0;
+    padding-top: 0.35rem;
   }
 
-  .report-setup-actions__button {
+  .inspection-module-page .report-setup-actions .report-setup-actions__button {
     min-width: 0;
-    min-height: 2.35rem;
+    min-height: 2.75rem !important;
     padding-inline: 0.65rem;
     white-space: nowrap;
   }
 
   .report-setup-actions__button:only-child {
-    grid-column: 2;
+    grid-column: 1 / -1;
+  }
+}
+
+@include media-breakpoint-only(md) {
+  .inspection-module-page .module-nav-link,
+  .inspection-module-page .drill-stage-header__navigation-button,
+  .inspection-module-page .report-setup-summary-row__edit,
+  .inspection-module-page .report-setup-summary-row__reset,
+  .inspection-module-page .create-action-button.create-action-button--inline,
+  .inspection-module-page .inspection-form-inline-actions .btn,
+  .inspection-module-page .report-setup-grid .btn-light {
+    min-height: 44px;
+  }
+
+  .inspection-module-page .report-setup-summary-row__edit,
+  .inspection-module-page .report-setup-summary-row__reset {
+    width: 44px;
+    height: 44px;
+  }
+
+  .inspection-module-page .report-setup-grid .form-control,
+  .inspection-module-page .report-setup-grid .form-select,
+  .inspection-module-page .erco-mobile-setup-grid .form-control,
+  .inspection-module-page .erco-mobile-setup-grid .form-select {
+    min-height: 44px;
   }
 }
 
 @include media-breakpoint-down(md) {
   .erco-mobile-setup-grid {
     display: flex !important;
-    min-height: calc(
-      100dvh - var(--mobile-overlay-nav-height) - env(safe-area-inset-bottom, 0px) - 10rem
-    );
+    min-height: 0;
     flex-direction: column;
     gap: 0.9rem !important;
   }
@@ -435,19 +537,52 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 0.5rem;
-    margin-top: auto;
-    padding-top: 1.25rem;
+    margin-top: 0;
+    padding-top: 0.35rem;
   }
 
   .erco-setup-actions__button {
     min-width: 0;
-    min-height: 2.35rem;
+    min-height: 2.75rem;
     padding-inline: 0.65rem;
     white-space: nowrap;
   }
 
   .erco-setup-actions__button:only-child {
-    grid-column: 2;
+    grid-column: 1 / -1;
+  }
+
+  .inspection-module-page .inspection-header-back-btn.inspection-compact-action-btn,
+  .inspection-module-page .create-action-button.create-action-button--inline {
+    min-height: 2.75rem !important;
+    padding-block: 0.5rem;
+  }
+
+  .inspection-module-page .report-setup-grid .btn-light {
+    min-height: 2.75rem;
+  }
+
+  .inspection-module-page .inspection-mobile-selector-chip__edit,
+  .inspection-module-page .inspection-mobile-selector-chip__reset {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .report-setup-grid .form-control,
+  .report-setup-grid .form-select,
+  .erco-mobile-setup-grid .form-control,
+  .erco-mobile-setup-grid .form-select {
+    min-height: 2.75rem;
+  }
+
+  .report-photo-gallery {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .report-photo-gallery__thumbnail {
+    height: auto;
+    max-height: 18rem;
+    object-fit: contain;
   }
 
   .erco-mobile-setup-grid

@@ -547,14 +547,13 @@ const useInspectionFormPhotos = ({
     )
 
   const requestInspectionIssuePhotoUpload = (issue, inputRef = cameraInputRef, options = {}) => {
-    const label = String(issue?.label || issue?.description || 'Finding').trim()
     openPhotoInput(
       {
         kind: 'inspectionIssue',
         issueId: issue?.id,
-        defaultDescription: label,
         onAddPhotos: issue?.onAddPhotos,
         ...options,
+        defaultDescription: '',
       },
       inputRef,
     )

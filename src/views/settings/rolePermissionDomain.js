@@ -97,6 +97,17 @@ export const PERM_TO_GROUP = PERMISSION_GROUPS.reduce((acc, group) => {
 }, {})
 
 export const LOCKED_ROLE = 'System Administrator'
+
+export const isRolePermissionsLocked = (role, roleAccess = {}) => {
+  const configured = roleAccess?.[role]?.permissions_locked
+  return typeof configured === 'boolean' ? configured : role === LOCKED_ROLE
+}
+
+export const hasFullRoleAccess = (role, roleAccess = {}) => {
+  const configured = roleAccess?.[role]?.full_access
+  return typeof configured === 'boolean' ? configured : role === LOCKED_ROLE
+}
+
 export const VIEW_MODE_MATRIX = 'matrix'
 export const VIEW_MODE_ROLE = 'role-focused'
 export const VIEW_MODE_STORAGE_KEY = 'settings.rolePermission.viewMode'

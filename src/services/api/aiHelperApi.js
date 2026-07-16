@@ -162,6 +162,11 @@ const dispatchSseEvent = (eventName, dataLines, handlers) => {
     return null
   }
 
+  if (dispatch.event === 'status') {
+    handlers.onStatus?.(dispatch.payload || {})
+    return null
+  }
+
   if (dispatch.event === 'delta') {
     handlers.onDelta?.(dispatch.payload || {})
     return null
