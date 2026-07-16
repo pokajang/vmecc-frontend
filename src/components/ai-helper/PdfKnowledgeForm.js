@@ -1,21 +1,14 @@
 import { CButton, CFormCheck, CFormInput, CFormLabel, CFormSelect } from '@coreui/react'
 
-import { KNOWLEDGE_SCOPE_GLOBAL, KNOWLEDGE_SCOPE_MODULE } from './constants'
-
 const PdfKnowledgeForm = ({
   knowledgeAcknowledged,
   knowledgeFile,
   knowledgeFileInputKey,
-  knowledgeModuleKey,
-  knowledgeScope,
   knowledgeTitle,
   knowledgeUploading,
   knowledgeVisibility,
-  visibleKnowledgeModules,
   onKnowledgeAcknowledgedChange,
   onKnowledgeFileChange,
-  onKnowledgeModuleKeyChange,
-  onKnowledgeScopeChange,
   onKnowledgeTitleChange,
   onKnowledgeVisibilityChange,
   onUploadKnowledge,
@@ -32,10 +25,11 @@ const PdfKnowledgeForm = ({
       accept="application/pdf,.pdf"
       onChange={onKnowledgeFileChange}
       disabled={knowledgeUploading}
-      aria-label="Upload knowledge PDF"
+      aria-label="Upload reference PDF"
     />
     <div className="ai-helper-knowledge__hint">
-      Ask AI reads text only. Images, screenshots, diagrams, and scanned pages are not learned.
+      This PDF is stored as a view-only reference document. Ask AI does not ingest, OCR, or learn
+      from the uploaded file.
     </div>
     <CFormLabel
       className="ai-helper-knowledge__field-label mt-2"
@@ -50,71 +44,11 @@ const PdfKnowledgeForm = ({
       onChange={(event) => onKnowledgeTitleChange(event.target.value)}
       placeholder="Optional. Defaults to the PDF file name."
       disabled={knowledgeUploading}
-      aria-label="Knowledge title"
+      aria-label="Document title"
     />
     <div className="ai-helper-knowledge__hint">
-      Use a short name that helps you recognize this guidance later.
+      Use a short name that helps users recognize the document later.
     </div>
-    <CFormLabel
-      className="ai-helper-knowledge__field-label mt-2"
-      htmlFor="ai-helper-knowledge-scope"
-    >
-      Use this guide for
-    </CFormLabel>
-    <CFormSelect
-      id="ai-helper-knowledge-scope"
-      value={knowledgeScope}
-      onChange={(event) => {
-        const nextScope = event.target.value
-        onKnowledgeScopeChange(nextScope)
-        if (
-          nextScope === KNOWLEDGE_SCOPE_MODULE &&
-          !knowledgeModuleKey &&
-          visibleKnowledgeModules.length
-        ) {
-          onKnowledgeModuleKeyChange(visibleKnowledgeModules[0].key)
-        }
-      }}
-      disabled={knowledgeUploading}
-      aria-label="Knowledge scope"
-    >
-      <option value={KNOWLEDGE_SCOPE_GLOBAL}>General guidance</option>
-      <option value={KNOWLEDGE_SCOPE_MODULE} disabled={!visibleKnowledgeModules.length}>
-        Specific module
-      </option>
-    </CFormSelect>
-    <div className="ai-helper-knowledge__hint">
-      General guidance lets Ask AI use this PDF as broad VMECC reference knowledge. Specific module
-      limits it to the module you choose.
-    </div>
-    {knowledgeScope === KNOWLEDGE_SCOPE_MODULE ? (
-      <>
-        <CFormLabel
-          className="ai-helper-knowledge__field-label mt-2"
-          htmlFor="ai-helper-knowledge-module"
-        >
-          Module
-        </CFormLabel>
-        <CFormSelect
-          id="ai-helper-knowledge-module"
-          value={knowledgeModuleKey}
-          onChange={(event) => onKnowledgeModuleKeyChange(event.target.value)}
-          disabled={knowledgeUploading}
-          aria-label="Knowledge module"
-        >
-          {!visibleKnowledgeModules.length ? <option value="">No modules available</option> : null}
-          {visibleKnowledgeModules.map((option) => (
-            <option key={option.key} value={option.key}>
-              {option.label}
-            </option>
-          ))}
-        </CFormSelect>
-        <div className="ai-helper-knowledge__hint">
-          Ask AI uses module guidance only when helping with the selected module. The list follows
-          the modules visible to your account.
-        </div>
-      </>
-    ) : null}
     <CFormLabel
       className="ai-helper-knowledge__field-label mt-2"
       htmlFor="ai-helper-knowledge-visibility"
@@ -126,14 +60,14 @@ const PdfKnowledgeForm = ({
       value={knowledgeVisibility}
       onChange={(event) => onKnowledgeVisibilityChange(event.target.value)}
       disabled={knowledgeUploading}
-      aria-label="Knowledge visibility"
+      aria-label="Document visibility"
     >
-      <option value="personal">Use for me only</option>
-      <option value="shared">Share with others</option>
+      <option value="personal">Only me</option>
+      <option value="shared">Everyone</option>
     </CFormSelect>
     <div className="ai-helper-knowledge__hint">
-      Use for me only keeps this source personal. Shared guidance can be used after processing, and
-      system administrators may audit it later.
+      Personal documents are visible only to you. Shared documents are visible to other signed-in
+      users in the reference library.
     </div>
     <CFormLabel
       className="ai-helper-knowledge__field-label mt-2"
@@ -147,21 +81,16 @@ const PdfKnowledgeForm = ({
       checked={knowledgeAcknowledged}
       onChange={(event) => onKnowledgeAcknowledgedChange(event.target.checked)}
       disabled={knowledgeUploading}
-      label="I confirm this file is valid VMECC operational guidance and is applicable for Ask AI responses."
+      label="I confirm this PDF is appropriate to share at the selected visibility."
     />
     <CButton
       color="primary"
       className="mt-3"
       size="sm"
       onClick={onUploadKnowledge}
-      disabled={
-        !knowledgeFile ||
-        !knowledgeAcknowledged ||
-        knowledgeUploading ||
-        (knowledgeScope === KNOWLEDGE_SCOPE_MODULE && !knowledgeModuleKey)
-      }
+      disabled={!knowledgeFile || !knowledgeAcknowledged || knowledgeUploading}
     >
-      {knowledgeUploading ? 'Uploading...' : 'Upload knowledge'}
+      {knowledgeUploading ? 'Uploading...' : 'Upload document'}
     </CButton>
   </section>
 )

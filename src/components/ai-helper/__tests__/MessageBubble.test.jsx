@@ -81,7 +81,7 @@ describe('MessageBubble', () => {
           content: 'Refer to the procedure.',
           sources: [
             {
-              knowledge_id: 79,
+              document_id: 79,
               title: 'Emergency Response Plan',
               page_start: 12,
               page_end: 13,
@@ -93,7 +93,7 @@ describe('MessageBubble', () => {
 
     const link = getByRole('link', { name: 'Open source Emergency Response Plan - pages 12-13' })
     expect(link.getAttribute('href')).toBe(
-      'http://localhost:8000/api/ai-helper/knowledge/79/file#page=12',
+      'http://localhost:8000/api/ai-helper/documents/79/file#page=12',
     )
     expect(link.getAttribute('target')).toBe('_blank')
   })

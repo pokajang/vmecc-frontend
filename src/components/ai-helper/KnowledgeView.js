@@ -1,16 +1,14 @@
 import { ArrowLeft } from 'lucide-react'
 
-import { KNOWLEDGE_VIEW_LIST, KNOWLEDGE_VIEW_MARKDOWN, KNOWLEDGE_VIEW_UPLOAD } from './constants'
+import { KNOWLEDGE_VIEW_LIST, KNOWLEDGE_VIEW_UPLOAD } from './constants'
 import KnowledgeListView from './KnowledgeListView'
 import KnowledgeReaderModal from './KnowledgeReaderModal'
-import MarkdownKnowledgeForm from './MarkdownKnowledgeForm'
 import PdfKnowledgeForm from './PdfKnowledgeForm'
 
 const KnowledgeView = ({
   authUser,
   backButtonRef,
   canManageKnowledge,
-  isSysAdmin,
   knowledgeAcknowledged,
   knowledgeDeleteTarget,
   knowledgeEntries,
@@ -25,49 +23,28 @@ const KnowledgeView = ({
   knowledgeReaderPdfLoading,
   knowledgeReaderPdfUrl,
   knowledgeReaderHasOriginal,
-  knowledgeReaderMarkdownError,
-  knowledgeReaderMarkdownLoading,
-  knowledgeReaderMarkdownSource,
   knowledgeReaderOpen,
   knowledgeReaderTab,
-  knowledgeModuleKey,
-  knowledgeScope,
   knowledgeTitle,
   knowledgeUpdatingId,
   knowledgeUploading,
   knowledgeView,
   knowledgeVisibility,
-  markdownAcknowledged,
-  markdownFile,
-  markdownFileInputKey,
-  markdownModuleKey,
-  markdownScope,
-  markdownTitle,
-  markdownUploading,
   selectedKnowledgeDetail,
-  visibleKnowledgeModules,
   onBack,
   onConfirmDeleteKnowledge,
   onKnowledgeAcknowledgedChange,
   onKnowledgeDeleteTargetChange,
   onKnowledgeErrorChange,
   onKnowledgeFileChange,
-  onKnowledgeModuleKeyChange,
   onKnowledgeReaderClose,
   onKnowledgeReaderTabChange,
-  onKnowledgeScopeChange,
   onKnowledgeTitleChange,
   onKnowledgeViewChange,
   onKnowledgeVisibilityChange,
   onLoadKnowledge,
   onOpenKnowledge,
-  onMarkdownAcknowledgedChange,
-  onMarkdownFileChange,
-  onMarkdownModuleKeyChange,
-  onMarkdownScopeChange,
-  onMarkdownTitleChange,
   onUploadKnowledge,
-  onUploadMarkdownKnowledge,
 }) => {
   const selectView = (view) => {
     onKnowledgeViewChange(view)
@@ -89,12 +66,12 @@ const KnowledgeView = ({
             <ArrowLeft size={16} />
             <span>Back to chat</span>
           </button>
-          <div className="ai-helper-history__heading">Knowledge</div>
+          <div className="ai-helper-history__heading">Reference documents</div>
         </div>
       </div>
 
       <div className="ai-helper-knowledge__body">
-        <div className="ai-helper-knowledge__switch" role="group" aria-label="Knowledge view">
+        <div className="ai-helper-knowledge__switch" role="group" aria-label="Document view">
           <button
             type="button"
             className={knowledgeView === KNOWLEDGE_VIEW_UPLOAD ? 'active' : ''}
@@ -103,23 +80,13 @@ const KnowledgeView = ({
           >
             Upload PDF
           </button>
-          {isSysAdmin ? (
-            <button
-              type="button"
-              className={knowledgeView === KNOWLEDGE_VIEW_MARKDOWN ? 'active' : ''}
-              onClick={() => selectView(KNOWLEDGE_VIEW_MARKDOWN)}
-              aria-pressed={knowledgeView === KNOWLEDGE_VIEW_MARKDOWN}
-            >
-              Upload MD
-            </button>
-          ) : null}
           <button
             type="button"
             className={knowledgeView === KNOWLEDGE_VIEW_LIST ? 'active' : ''}
             onClick={() => selectView(KNOWLEDGE_VIEW_LIST)}
             aria-pressed={knowledgeView === KNOWLEDGE_VIEW_LIST}
           >
-            Knowledge list
+            Document library
           </button>
         </div>
 
@@ -130,38 +97,14 @@ const KnowledgeView = ({
             knowledgeAcknowledged={knowledgeAcknowledged}
             knowledgeFile={knowledgeFile}
             knowledgeFileInputKey={knowledgeFileInputKey}
-            knowledgeModuleKey={knowledgeModuleKey}
-            knowledgeScope={knowledgeScope}
             knowledgeTitle={knowledgeTitle}
             knowledgeUploading={knowledgeUploading}
             knowledgeVisibility={knowledgeVisibility}
-            visibleKnowledgeModules={visibleKnowledgeModules}
             onKnowledgeAcknowledgedChange={onKnowledgeAcknowledgedChange}
             onKnowledgeFileChange={onKnowledgeFileChange}
-            onKnowledgeModuleKeyChange={onKnowledgeModuleKeyChange}
-            onKnowledgeScopeChange={onKnowledgeScopeChange}
             onKnowledgeTitleChange={onKnowledgeTitleChange}
             onKnowledgeVisibilityChange={onKnowledgeVisibilityChange}
             onUploadKnowledge={onUploadKnowledge}
-          />
-        ) : null}
-
-        {isSysAdmin && knowledgeView === KNOWLEDGE_VIEW_MARKDOWN ? (
-          <MarkdownKnowledgeForm
-            markdownAcknowledged={markdownAcknowledged}
-            markdownFile={markdownFile}
-            markdownFileInputKey={markdownFileInputKey}
-            markdownModuleKey={markdownModuleKey}
-            markdownScope={markdownScope}
-            markdownTitle={markdownTitle}
-            markdownUploading={markdownUploading}
-            visibleKnowledgeModules={visibleKnowledgeModules}
-            onMarkdownAcknowledgedChange={onMarkdownAcknowledgedChange}
-            onMarkdownFileChange={onMarkdownFileChange}
-            onMarkdownModuleKeyChange={onMarkdownModuleKeyChange}
-            onMarkdownScopeChange={onMarkdownScopeChange}
-            onMarkdownTitleChange={onMarkdownTitleChange}
-            onUploadMarkdownKnowledge={onUploadMarkdownKnowledge}
           />
         ) : null}
 
@@ -191,9 +134,6 @@ const KnowledgeView = ({
         pdfError={knowledgeReaderPdfError}
         pdfLoading={knowledgeReaderPdfLoading}
         pdfUrl={knowledgeReaderPdfUrl}
-        markdownError={knowledgeReaderMarkdownError}
-        markdownLoading={knowledgeReaderMarkdownLoading}
-        markdownSource={knowledgeReaderMarkdownSource}
         open={knowledgeReaderOpen}
         onClose={onKnowledgeReaderClose}
         onTabChange={onKnowledgeReaderTabChange}

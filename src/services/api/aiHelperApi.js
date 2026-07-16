@@ -22,14 +22,13 @@ export const fetchAiHelperThreadById = (threadId) =>
 export const deleteAiHelperThread = (threadId) =>
   apiRequest(`/ai-helper/threads/${encodeURIComponent(threadId)}`, { method: 'DELETE' })
 
-export const fetchAiHelperKnowledge = (params = {}) =>
-  apiRequest(appendQuery('/ai-helper/knowledge', params))
+export const fetchAiHelperDocuments = () => apiRequest('/ai-helper/documents')
 
-export const fetchAiHelperKnowledgeDetail = (knowledgeId) =>
-  apiRequest(`/ai-helper/knowledge/${encodeURIComponent(knowledgeId)}`)
+export const fetchAiHelperDocumentDetail = (documentId) =>
+  apiRequest(`/ai-helper/documents/${encodeURIComponent(documentId)}`)
 
-export const buildAiHelperKnowledgeFileUrl = (knowledgeId) =>
-  buildApiUrl(`/ai-helper/knowledge/${encodeURIComponent(knowledgeId)}/file`)
+export const buildAiHelperDocumentFileUrl = (documentId) =>
+  buildApiUrl(`/ai-helper/documents/${encodeURIComponent(documentId)}/file`)
 
 const buildKnowledgeFileRequestError = async (response) => {
   let payload = null
@@ -48,23 +47,8 @@ const buildKnowledgeFileRequestError = async (response) => {
   return error
 }
 
-export const fetchAiHelperKnowledgeFileText = async (knowledgeId) => {
-  const response = await fetchWithCsrfRetry(buildAiHelperKnowledgeFileUrl(knowledgeId), {
-    method: 'GET',
-    headers: {
-      Accept: 'text/plain, text/markdown, */*',
-    },
-  })
-
-  if (!response.ok) {
-    throw await buildKnowledgeFileRequestError(response)
-  }
-
-  return response.text()
-}
-
-export const fetchAiHelperKnowledgeFileBlob = async (knowledgeId) => {
-  const response = await fetchWithCsrfRetry(buildAiHelperKnowledgeFileUrl(knowledgeId), {
+export const fetchAiHelperDocumentFileBlob = async (documentId) => {
+  const response = await fetchWithCsrfRetry(buildAiHelperDocumentFileUrl(documentId), {
     method: 'GET',
     headers: {
       Accept: 'application/pdf, application/octet-stream, */*',
@@ -78,8 +62,8 @@ export const fetchAiHelperKnowledgeFileBlob = async (knowledgeId) => {
   return response.blob()
 }
 
-export const uploadAiHelperKnowledge = (formData) =>
-  apiRequest('/ai-helper/knowledge', {
+export const uploadAiHelperDocument = (formData) =>
+  apiRequest('/ai-helper/documents', {
     method: 'POST',
     body: formData,
   })
@@ -90,14 +74,8 @@ export const uploadAiHelperMarkdownKnowledge = (formData) =>
     body: formData,
   })
 
-export const updateAiHelperKnowledge = (knowledgeId, payload = {}) =>
-  apiRequest(`/ai-helper/knowledge/${encodeURIComponent(knowledgeId)}`, {
-    method: 'PATCH',
-    body: JSON.stringify(payload),
-  })
-
-export const deleteAiHelperKnowledge = (knowledgeId) =>
-  apiRequest(`/ai-helper/knowledge/${encodeURIComponent(knowledgeId)}`, { method: 'DELETE' })
+export const deleteAiHelperDocument = (documentId) =>
+  apiRequest(`/ai-helper/documents/${encodeURIComponent(documentId)}`, { method: 'DELETE' })
 
 export const fetchAiHelperKnowledgeReview = (params = {}) =>
   apiRequest(appendQuery('/ai-helper/knowledge-review', params))

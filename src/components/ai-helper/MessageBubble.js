@@ -3,7 +3,7 @@ import { CTooltip } from '@coreui/react'
 import { Check, Copy, Flag, RotateCcw } from 'lucide-react'
 
 import { MESSAGE_STATUS_SLOW, getMessageActions } from './constants'
-import { buildAiHelperKnowledgeFileUrl } from 'src/services/apiClient'
+import { buildAiHelperDocumentFileUrl } from 'src/services/apiClient'
 
 const renderAssistantContent = (content) => {
   const lines = String(content || '').split(/\r?\n/)
@@ -189,8 +189,8 @@ const MessageBubble = ({ message, copied, onCopy, onReport, onRetry, retryDisabl
             <div className="ai-helper-message__sources-label">Retrieved sources</div>
             <div className="ai-helper-message__sources-list">
               {sources.map((source, index) => {
-                const knowledgeId = Number(source?.knowledge_id)
-                if (!Number.isInteger(knowledgeId) || knowledgeId < 1) return null
+                const documentId = Number(source?.document_id)
+                if (!Number.isInteger(documentId) || documentId < 1) return null
 
                 const startPage = Number(source?.page_start)
                 const endPage = Number(source?.page_end)
@@ -200,13 +200,13 @@ const MessageBubble = ({ message, copied, onCopy, onReport, onRetry, retryDisabl
                       ? ` - pages ${startPage}-${endPage}`
                       : ` - page ${startPage}`
                     : ''
-                const href = `${buildAiHelperKnowledgeFileUrl(knowledgeId)}${
+                const href = `${buildAiHelperDocumentFileUrl(documentId)}${
                   Number.isInteger(startPage) && startPage > 0 ? `#page=${startPage}` : ''
                 }`
 
                 return (
                   <a
-                    key={`${knowledgeId}-${startPage || 'document'}-${index}`}
+                    key={`${documentId}-${startPage || 'document'}-${index}`}
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer"

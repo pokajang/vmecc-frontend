@@ -67,7 +67,7 @@ const ChatView = ({
           {knowledgeLoading || landingGuidancePreview.length ? (
             <div className="ai-helper-guidance-preview">
               <div className="ai-helper-guidance-preview__header">
-                <span>Available Guidance ({knowledgeEntries.length})</span>
+                <span>Reference Documents ({knowledgeEntries.length})</span>
                 {knowledgeEntries.length ? (
                   <button type="button" onClick={onOpenKnowledgeList}>
                     Show all
@@ -75,11 +75,11 @@ const ChatView = ({
                 ) : null}
               </div>
               {knowledgeLoading ? (
-                <div className="ai-helper-guidance-preview__loading">Loading guidance...</div>
+                <div className="ai-helper-guidance-preview__loading">Loading documents...</div>
               ) : (
                 <div
                   className="ai-helper-guidance-preview__list"
-                  aria-label="Available guidance files"
+                  aria-label="Available reference documents"
                 >
                   {landingGuidancePreview.map((entry) => (
                     <CTooltip key={entry.id} content={knowledgeEntryName(entry)} placement="top">

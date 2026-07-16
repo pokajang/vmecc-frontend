@@ -50,9 +50,9 @@ const AiHelperKnowledgeDiagnosticsCard = ({
             <CCol md={3} sm={6}>
               <div className="small text-body-secondary mb-1">Storage</div>
               <div>
-                {formatBytes(diagnostics.storage?.used_bytes)}
-                {diagnostics.storage?.max_total_bytes
-                  ? ` / ${formatBytes(diagnostics.storage.max_total_bytes)}`
+                {formatBytes(diagnostics.storage?.knowledge_used_bytes)}
+                {diagnostics.storage?.knowledge_max_total_bytes
+                  ? ` / ${formatBytes(diagnostics.storage.knowledge_max_total_bytes)}`
                   : ''}
               </div>
             </CCol>

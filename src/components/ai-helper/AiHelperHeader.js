@@ -81,13 +81,13 @@ const AiHelperHeader = ({
           <Plus size={16} />
         </button>
       </CTooltip>
-      <CTooltip content="Knowledge" placement="bottom">
+      <CTooltip content="Reference documents" placement="bottom">
         <button
           type="button"
           className={`ai-helper-icon-btn${knowledgeOpen ? ' active' : ''}`}
           onClick={onToggleKnowledge}
           aria-label={knowledgeOpen ? 'Back to chat' : 'Open knowledge sources'}
-          title="Knowledge"
+          title="Reference documents"
           disabled={sending}
         >
           <FileUp size={16} />

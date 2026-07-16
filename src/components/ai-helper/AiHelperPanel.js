@@ -10,7 +10,6 @@ import {
   KNOWLEDGE_VIEW_LIST,
   KNOWLEDGE_VIEW_UPLOAD,
   LANGUAGE_STORAGE_KEY,
-  isMarkdownKnowledgeEntry,
   normalizeResponseLanguage,
   STORAGE_KEY,
 } from './constants'
@@ -52,9 +51,8 @@ const AiHelperPanel = () => {
   const historyOpen = panelMode === 'history'
   const knowledgeOpen = panelMode === 'knowledge'
   const { clearNotice, notice, showNotice, showPersistentNotice } = useAiHelperNotice()
-  const { currentPageContext, contextPage, promptStarters, refreshCurrentContext, routeContext } =
-    useAiHelperContext({ location, open })
-  const { isSysAdmin, visibleKnowledgeModules } = useVisibleKnowledgeModules({
+  const { contextPage, promptStarters, routeContext } = useAiHelperContext({ location, open })
+  const { isSysAdmin } = useVisibleKnowledgeModules({
     authUser,
     moduleActivation,
   })
@@ -76,14 +74,7 @@ const AiHelperPanel = () => {
     routeContext,
     showNotice,
   })
-  const knowledge = useAiHelperKnowledge({
-    authUser,
-    currentPageContext,
-    isSysAdmin,
-    refreshCurrentContext,
-    routeContext,
-    visibleKnowledgeModules,
-  })
+  const knowledge = useAiHelperKnowledge({ authUser })
   const {
     closeReportModal,
     handleThreadOpened,
@@ -102,17 +93,7 @@ const AiHelperPanel = () => {
     knowledgeView,
     loadKnowledge,
   } = knowledge
-  const knowledgeEntriesForDisplay = useMemo(
-    () =>
-      isSysAdmin
-        ? knowledgeEntries
-        : knowledgeEntries.filter(
-            (entry) =>
-              !isMarkdownKnowledgeEntry(entry) ||
-              String(entry?.visibility || 'shared').toLowerCase() === 'shared',
-          ),
-    [isSysAdmin, knowledgeEntries],
-  )
+  const knowledgeEntriesForDisplay = knowledgeEntries
 
   const landingGuidancePreview = useMemo(
     () => knowledgeEntriesForDisplay.slice(0, AI_HELPER_LANDING_GROUP_LIMIT),
@@ -177,23 +158,6 @@ const AiHelperPanel = () => {
       loadKnowledge()
     }
   }, [knowledgeOpen, knowledgeView, loadKnowledge, open])
-
-  useEffect(() => {
-    if (
-      !open ||
-      !knowledgeOpen ||
-      !knowledgeEntriesForDisplay.some((entry) => entry.status === 'processing')
-    ) {
-      return undefined
-    }
-
-    const intervalId = window.setInterval(() => {
-      loadKnowledge({ force: true, showError: false, background: true })
-      refreshCurrentContext()
-    }, 4000)
-
-    return () => window.clearInterval(intervalId)
-  }, [knowledgeEntriesForDisplay, knowledgeOpen, loadKnowledge, open, refreshCurrentContext])
 
   useEffect(() => {
     if (!open) return
@@ -368,7 +332,6 @@ const AiHelperPanel = () => {
           authUser={authUser}
           backButtonRef={backButtonRef}
           canManageKnowledge={isSysAdmin}
-          isSysAdmin={isSysAdmin}
           knowledgeAcknowledged={knowledge.knowledgeAcknowledged}
           knowledgeDeleteTarget={knowledge.knowledgeDeleteTarget}
           knowledgeEntries={knowledgeEntriesForDisplay}
@@ -383,49 +346,28 @@ const AiHelperPanel = () => {
           knowledgeReaderPdfLoading={knowledge.knowledgeReaderPdfLoading}
           knowledgeReaderPdfUrl={knowledge.knowledgeReaderPdfUrl}
           knowledgeReaderHasOriginal={knowledge.knowledgeReaderHasOriginal}
-          knowledgeReaderMarkdownError={knowledge.knowledgeReaderMarkdownError}
-          knowledgeReaderMarkdownLoading={knowledge.knowledgeReaderMarkdownLoading}
-          knowledgeReaderMarkdownSource={knowledge.knowledgeReaderMarkdownSource}
           knowledgeReaderOpen={knowledge.knowledgeReaderOpen}
           knowledgeReaderTab={knowledge.knowledgeReaderTab}
-          knowledgeModuleKey={knowledge.knowledgeModuleKey}
-          knowledgeScope={knowledge.knowledgeScope}
           knowledgeTitle={knowledge.knowledgeTitle}
           knowledgeUpdatingId={knowledge.knowledgeUpdatingId}
           knowledgeUploading={knowledge.knowledgeUploading}
           knowledgeView={knowledge.knowledgeView}
           knowledgeVisibility={knowledge.knowledgeVisibility}
-          markdownAcknowledged={knowledge.markdownAcknowledged}
-          markdownFile={knowledge.markdownFile}
-          markdownFileInputKey={knowledge.markdownFileInputKey}
-          markdownModuleKey={knowledge.markdownModuleKey}
-          markdownScope={knowledge.markdownScope}
-          markdownTitle={knowledge.markdownTitle}
-          markdownUploading={knowledge.markdownUploading}
           selectedKnowledgeDetail={knowledge.selectedKnowledgeDetail}
-          visibleKnowledgeModules={visibleKnowledgeModules}
           onBack={closeSubView}
           onConfirmDeleteKnowledge={knowledge.confirmDeleteKnowledge}
           onKnowledgeAcknowledgedChange={knowledge.setKnowledgeAcknowledged}
           onKnowledgeDeleteTargetChange={knowledge.setKnowledgeDeleteTarget}
           onKnowledgeErrorChange={knowledge.setKnowledgeError}
           onKnowledgeFileChange={knowledge.handleKnowledgeFileChange}
-          onKnowledgeModuleKeyChange={knowledge.setKnowledgeModuleKey}
           onKnowledgeReaderClose={knowledge.closeKnowledgeReader}
           onKnowledgeReaderTabChange={knowledge.setKnowledgeReaderTab}
-          onKnowledgeScopeChange={knowledge.setKnowledgeScope}
           onKnowledgeTitleChange={knowledge.setKnowledgeTitle}
           onKnowledgeViewChange={knowledge.setKnowledgeView}
           onKnowledgeVisibilityChange={knowledge.setKnowledgeVisibility}
           onLoadKnowledge={() => knowledge.loadKnowledge({ force: true })}
           onOpenKnowledge={knowledge.openKnowledgeReader}
-          onMarkdownAcknowledgedChange={knowledge.setMarkdownAcknowledged}
-          onMarkdownFileChange={knowledge.handleMarkdownFileChange}
-          onMarkdownModuleKeyChange={knowledge.setMarkdownModuleKey}
-          onMarkdownScopeChange={knowledge.setMarkdownScope}
-          onMarkdownTitleChange={knowledge.setMarkdownTitle}
           onUploadKnowledge={() => knowledge.uploadKnowledge(showPersistentNotice)}
-          onUploadMarkdownKnowledge={() => knowledge.uploadMarkdownKnowledge(showPersistentNotice)}
         />
       ) : (
         <ChatView

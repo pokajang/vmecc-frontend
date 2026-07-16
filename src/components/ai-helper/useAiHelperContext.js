@@ -85,7 +85,7 @@ const useAiHelperContext = ({ location, open }) => {
             ...prev,
             status: 'ready',
             data: latestCached.data,
-            error: safeAiHelperError(error, 'Page guidance is unavailable.'),
+            error: safeAiHelperError(error, 'Page context is unavailable.'),
             loadedAt: latestCached.loadedAt,
             isStale: isContextStale(latestCached.loadedAt),
           }))
@@ -99,7 +99,7 @@ const useAiHelperContext = ({ location, open }) => {
         setContextState({
           status: 'error',
           data: null,
-          error: safeAiHelperError(error, 'Page guidance is unavailable.'),
+          error: safeAiHelperError(error, 'Page context is unavailable.'),
           loadedAt: null,
           isStale: false,
         })

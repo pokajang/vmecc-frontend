@@ -3,15 +3,7 @@ import { useEffect, useRef } from 'react'
 import { CTooltip } from '@coreui/react'
 import { Loader, Trash2 } from 'lucide-react'
 
-import {
-  formatFileSize,
-  formatKnowledgeDate,
-  knowledgeEntryName,
-  knowledgeActionableFindings,
-  knowledgeQualityLabel,
-  knowledgeScopeLabel,
-  knowledgeUseLabel,
-} from './constants'
+import { formatFileSize, formatKnowledgeDate, knowledgeEntryName } from './constants'
 
 const KnowledgeListView = ({
   authUser,
@@ -40,7 +32,7 @@ const KnowledgeListView = ({
   return (
     <section className="ai-helper-knowledge__section" aria-busy={knowledgeLoading}>
       <div className="ai-helper-knowledge__section-header">
-        <div className="ai-helper-knowledge__section-title">Knowledge list</div>
+        <div className="ai-helper-knowledge__section-title">Document library</div>
         <button type="button" onClick={onLoadKnowledge} disabled={knowledgeLoading}>
           {knowledgeLoading ? (
             <>
@@ -54,7 +46,7 @@ const KnowledgeListView = ({
       </div>
 
       {knowledgeInitialLoading ? (
-        <div className="ai-helper-knowledge__list" aria-label="Loading knowledge list">
+        <div className="ai-helper-knowledge__list" aria-label="Loading document library">
           {[0, 1, 2].map((item) => (
             <div
               key={item}
@@ -76,7 +68,7 @@ const KnowledgeListView = ({
           {knowledgeLoading ? (
             <div className="ai-helper-knowledge__loading-inline" aria-live="polite">
               <Loader size={14} className="icon-spin" aria-hidden="true" />
-              <span>Updating knowledge list...</span>
+              <span>Updating document library...</span>
             </div>
           ) : null}
           <div
@@ -89,8 +81,6 @@ const KnowledgeListView = ({
                 canManageKnowledge || Number(entry.uploaded_by) === Number(authUser?.id)
               const isDeleteTarget =
                 String(knowledgeDeleteTarget?.id ?? '') === String(entry.id ?? '')
-              const actionableFinding = knowledgeActionableFindings(entry)[0]
-
               return (
                 <div
                   key={entry.id}
@@ -139,12 +129,8 @@ const KnowledgeListView = ({
                               {knowledgeEntryName(entry)}
                             </div>
                           </CTooltip>
-                          {entry.summary ? (
-                            <div className="ai-helper-knowledge__summary">{entry.summary}</div>
-                          ) : null}
                           <div className="ai-helper-knowledge__meta">
-                            <span>Scope</span> {knowledgeScopeLabel(entry)} -{' '}
-                            {knowledgeUseLabel(entry)}
+                            <span>File</span> {entry.source_filename || 'PDF document'}
                           </div>
                           <div className="ai-helper-knowledge__meta">
                             <span>Uploaded by</span> {entry.uploader_name || 'Unknown user'}
@@ -152,25 +138,9 @@ const KnowledgeListView = ({
                             {entry.source_size ? ` - ${formatFileSize(entry.source_size)}` : ''}
                           </div>
                           <div className="ai-helper-knowledge__meta">
-                            <span>Ingestion</span> {knowledgeQualityLabel(entry)}
-                            {entry.pdf_page_count ? ` - ${entry.pdf_page_count} pages` : ''}
-                            {entry.extracted_characters
-                              ? ` - ${entry.extracted_characters} characters`
-                              : ''}
+                            <span>Availability</span>{' '}
+                            {entry.visibility === 'shared' ? 'Everyone' : 'Only me'}
                           </div>
-                          {entry.review_note ? (
-                            <div className="ai-helper-knowledge__meta">
-                              <span>Review note</span> {entry.review_note}
-                            </div>
-                          ) : null}
-                          {actionableFinding ? (
-                            <div className="ai-helper-knowledge__warning">
-                              {actionableFinding.message}
-                            </div>
-                          ) : null}
-                          {entry.error ? (
-                            <div className="ai-helper-knowledge__error">{entry.error}</div>
-                          ) : null}
                         </div>
                       </button>
                       {canDeleteKnowledge ? (
@@ -184,7 +154,7 @@ const KnowledgeListView = ({
                             }}
                             disabled={knowledgeUpdatingId === entry.id}
                             aria-label={`Delete ${knowledgeEntryName(entry)}`}
-                            title="Delete knowledge"
+                            title="Delete document"
                           >
                             <Trash2 size={15} />
                           </button>
@@ -202,10 +172,10 @@ const KnowledgeListView = ({
           {knowledgeLoading ? (
             <div className="ai-helper-knowledge__loading-inline" aria-live="polite">
               <Loader size={14} className="icon-spin" aria-hidden="true" />
-              <span>Updating knowledge list...</span>
+              <span>Updating document library...</span>
             </div>
           ) : null}
-          <div className="ai-helper-history__empty">No knowledge uploaded yet.</div>
+          <div className="ai-helper-history__empty">No reference documents uploaded yet.</div>
         </>
       )}
     </section>

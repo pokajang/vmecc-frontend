@@ -30,7 +30,6 @@ import { knowledgeEntryName } from 'src/components/ai-helper/constants'
 import useTableRows from 'src/hooks/useTableRows'
 import { activateOnEnterOrSpace } from 'src/utils/uiAccessibility'
 import {
-  buildAiHelperKnowledgeFileUrl,
   deleteAiHelperKnowledgeReview,
   fetchAiHelperDiagnostics,
   fetchAiHelperKnowledgeReview,
@@ -40,6 +39,7 @@ import {
 import { isSystemAdministrator } from 'src/utils/authz'
 import { formatDateTime } from 'src/utils/users'
 import AiHelperKnowledgeDiagnosticsCard from './ai-helper-knowledge/AiHelperKnowledgeDiagnosticsCard'
+import AiHelperMarkdownUploadCard from './ai-helper-knowledge/AiHelperMarkdownUploadCard'
 import AiHelperKnowledgeReviewModal from './ai-helper-knowledge/AiHelperKnowledgeReviewModal'
 import {
   REVIEW_FILTERS,
@@ -237,11 +237,6 @@ const AiHelperKnowledge = () => {
     }
   }, [deleteTarget, saving, selected])
 
-  const openOriginal = useCallback((entryId) => {
-    if (!entryId || typeof window === 'undefined') return
-    window.open(buildAiHelperKnowledgeFileUrl(entryId), '_blank', 'noopener,noreferrer')
-  }, [])
-
   const buildActionItems = useCallback(
     (entry) => [
       {
@@ -250,18 +245,13 @@ const AiHelperKnowledge = () => {
         onClick: () => openDetail(entry.id),
       },
       {
-        key: 'original',
-        label: 'Open original',
-        onClick: () => openOriginal(entry.id),
-      },
-      {
         key: 'delete',
         label: 'Delete',
         className: 'text-danger',
         onClick: () => requestDelete(entry),
       },
     ],
-    [openDetail, openOriginal, requestDelete],
+    [openDetail, requestDelete],
   )
 
   const mobileSections = useMemo(
@@ -357,6 +347,8 @@ const AiHelperKnowledge = () => {
         diagnosticsLoading={diagnosticsLoading}
         onRefresh={loadDiagnostics}
       />
+
+      <AiHelperMarkdownUploadCard onUploaded={loadEntries} />
 
       <CCard className="mb-4" data-testid="ai-helper-knowledge-records">
         <CCardHeader className="d-flex flex-wrap align-items-center justify-content-between gap-2">

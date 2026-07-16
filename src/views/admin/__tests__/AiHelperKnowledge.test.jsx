@@ -9,21 +9,21 @@ import { legacy_createStore as createStore } from 'redux'
 import AiHelperKnowledge from '../AiHelperKnowledge'
 
 vi.mock('src/services/apiClient', () => ({
-  buildAiHelperKnowledgeFileUrl: vi.fn(),
   deleteAiHelperKnowledgeReview: vi.fn(),
   fetchAiHelperDiagnostics: vi.fn(),
   fetchAiHelperKnowledgeReview: vi.fn(),
   fetchAiHelperKnowledgeReviewDetail: vi.fn(),
   updateAiHelperKnowledgeReview: vi.fn(),
+  uploadAiHelperMarkdownKnowledge: vi.fn(),
 }))
 
 import {
-  buildAiHelperKnowledgeFileUrl,
   deleteAiHelperKnowledgeReview,
   fetchAiHelperDiagnostics,
   fetchAiHelperKnowledgeReview,
   fetchAiHelperKnowledgeReviewDetail,
   updateAiHelperKnowledgeReview,
+  uploadAiHelperMarkdownKnowledge,
 } from 'src/services/apiClient'
 
 const authUser = {
@@ -38,8 +38,8 @@ const listPayload = {
     {
       id: 21,
       title: 'Operations overview',
-      summary: 'How the operations pages are organized for the field teams.',
-      source_filename: 'operations-overview.pdf',
+      source_filename: 'operations-overview.md',
+      source_mime: 'text/markdown',
       uploader_name: 'System',
       scope_type: 'module',
       module_key: 'teams',
@@ -59,8 +59,6 @@ const listPayload = {
 const detailPayload = {
   data: {
     ...listPayload.data[0],
-    content_preview: 'Extracted overview content',
-    chunks: [{ id: 301, chunk_index: 0, content: 'Chunk body' }],
     review_note: '',
     source_size: 4096,
   },
@@ -71,7 +69,7 @@ const diagnosticsPayload = {
     enabled: true,
     configured: true,
     queue: { default_connection: 'sync' },
-    storage: { used_bytes: 8192, max_total_bytes: 20000000000 },
+    storage: { knowledge_used_bytes: 8192, knowledge_max_total_bytes: 20000000000 },
     recent_failed_uploads: [],
   },
 }
@@ -108,8 +106,7 @@ describe('AiHelperKnowledge action column', () => {
       },
     })
     deleteAiHelperKnowledgeReview.mockResolvedValue({})
-    buildAiHelperKnowledgeFileUrl.mockReturnValue('/api/ai-helper/knowledge/21/file')
-    vi.spyOn(window, 'open').mockImplementation(() => null)
+    uploadAiHelperMarkdownKnowledge.mockResolvedValue({ data: {} })
   })
 
   it('opens review details from the kebab action menu and saves changes', async () => {
@@ -145,20 +142,17 @@ describe('AiHelperKnowledge action column', () => {
     )
   })
 
-  it('opens the original file from the kebab action menu', async () => {
+  it('keeps Markdown content and chunks hidden from the review modal', async () => {
     renderPage()
 
     const actionCell = await screen.findByTestId('ai-helper-knowledge-row-actions-21')
     fireEvent.click(within(actionCell).getByRole('button', { name: 'Row actions' }))
-    fireEvent.click(await screen.findByText('Open original'))
+    fireEvent.click(await screen.findByText('Review details'))
 
-    await waitFor(() =>
-      expect(window.open).toHaveBeenCalledWith(
-        '/api/ai-helper/knowledge/21/file',
-        '_blank',
-        'noopener,noreferrer',
-      ),
-    )
+    expect(await screen.findByText(/private application knowledge/i)).toBeTruthy()
+    expect(screen.queryByText('Extracted text')).toBeNull()
+    expect(screen.queryByText('Chunk body')).toBeNull()
+    expect(screen.queryByText('Open original')).toBeNull()
   })
 
   it('deletes a record from the kebab action menu after confirmation', async () => {

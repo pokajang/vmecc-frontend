@@ -212,20 +212,20 @@ describe('AiHelperPanel', () => {
     expect(screen.getByText('knowledge-view')).toBeTruthy()
   })
 
-  it('hides only non-shared markdown entries from non-sysadmin views', () => {
+  it('passes the authenticated document library through to user-facing views', () => {
     knowledgeState.knowledgeEntries = [
       {
         id: 1,
-        source_filename: 'shared-guidance.md',
-        source_mime: 'text/markdown',
-        title: 'Shared Markdown',
+        source_filename: 'shared-guidance.pdf',
+        source_mime: 'application/pdf',
+        title: 'Shared PDF',
         visibility: 'shared',
       },
       {
         id: 3,
-        source_filename: 'restricted-guidance.md',
-        source_mime: 'text/markdown',
-        title: 'Restricted Markdown',
+        source_filename: 'personal-reference.pdf',
+        source_mime: 'application/pdf',
+        title: 'Personal PDF',
         visibility: 'personal',
       },
       {
@@ -239,13 +239,13 @@ describe('AiHelperPanel', () => {
     render(<AiHelperPanel />)
 
     expect(chatProps).toBeTruthy()
-    expect(chatProps.knowledgeEntries).toHaveLength(2)
-    expect(chatProps.knowledgeEntries.map((entry) => entry.id)).toEqual([1, 2])
+    expect(chatProps.knowledgeEntries).toHaveLength(3)
+    expect(chatProps.knowledgeEntries.map((entry) => entry.id)).toEqual([1, 3, 2])
 
     fireEvent.click(screen.getByRole('button', { name: 'toggle-knowledge' }))
 
     expect(knowledgeProps).toBeTruthy()
-    expect(knowledgeProps.knowledgeEntries).toHaveLength(2)
-    expect(knowledgeProps.knowledgeEntries.map((entry) => entry.id)).toEqual([1, 2])
+    expect(knowledgeProps.knowledgeEntries).toHaveLength(3)
+    expect(knowledgeProps.knowledgeEntries.map((entry) => entry.id)).toEqual([1, 3, 2])
   })
 })

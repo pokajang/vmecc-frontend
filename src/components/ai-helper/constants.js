@@ -1,12 +1,8 @@
 export const STORAGE_KEY = 'vmecc_ai_helper_open'
 export const LANGUAGE_STORAGE_KEY = 'vmecc_ai_helper_language'
-export const KNOWLEDGE_SCOPE_GLOBAL = 'global'
-export const KNOWLEDGE_SCOPE_MODULE = 'module'
 export const KNOWLEDGE_VIEW_UPLOAD = 'upload'
-export const KNOWLEDGE_VIEW_MARKDOWN = 'markdown'
 export const KNOWLEDGE_VIEW_LIST = 'list'
 export const KNOWLEDGE_READER_TAB_ORIGINAL = 'original'
-export const KNOWLEDGE_READER_TAB_EXTRACTED = 'extracted'
 export const KNOWLEDGE_READER_TAB_METADATA = 'metadata'
 export const AI_HELPER_LIST_STALE_MS = 60000
 export const AI_HELPER_LANDING_GROUP_LIMIT = 2
@@ -169,13 +165,6 @@ export const formatKnowledgeDate = (value) => {
   return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-export const isMarkdownKnowledgeEntry = (entry = {}) => {
-  const mimeType = String(entry?.source_mime || '').toLowerCase()
-  const filename = String(entry?.source_filename || '').toLowerCase()
-
-  return mimeType === 'text/markdown' || filename.endsWith('.md') || filename.endsWith('.markdown')
-}
-
 export const formatFileSize = (value) => {
   const size = Number(value || 0)
   if (!size) return ''
@@ -277,6 +266,14 @@ export const safeAiHelperError = (
     return 'Too many knowledge uploads. Wait briefly and try again.'
   }
 
+  if (code === 'AI_HELPER_DOCUMENT_UPLOAD_RATE_LIMITED') {
+    const retryAfter = Number(error?.payload?.retry_after || error?.payload?.retryAfter || 0)
+    if (retryAfter > 0) {
+      return `Too many document uploads. Try again in ${Math.ceil(retryAfter)}s.`
+    }
+    return 'Too many document uploads. Wait briefly and try again.'
+  }
+
   if (status === 429) {
     const retryAfter = Number(error?.payload?.retry_after || error?.payload?.retryAfter || 0)
     if (retryAfter > 0) {
@@ -305,8 +302,8 @@ export const getPromptStarters = (context = {}) => {
     return [
       'What can I do on this Inspection page?',
       'What should I check before submitting an inspection?',
-      'What guidance has been uploaded?',
-      'Summarize the uploaded guidance.',
+      'Which reference documents are available?',
+      'How do I open a reference document?',
     ]
   }
 
@@ -314,8 +311,8 @@ export const getPromptStarters = (context = {}) => {
     return [
       'What should be included in this ERCO report?',
       'Help me review this ERCO report before submitting.',
-      'What guidance has been uploaded?',
-      'Summarize the uploaded guidance.',
+      'Which reference documents are available?',
+      'How do I open a reference document?',
     ]
   }
 
@@ -323,8 +320,8 @@ export const getPromptStarters = (context = {}) => {
     return [
       'What can I do on this Payroll page?',
       'Explain the salary or claim workflow.',
-      'What guidance has been uploaded?',
-      'Summarize the uploaded guidance.',
+      'Which reference documents are available?',
+      'How do I open a reference document?',
     ]
   }
 
@@ -332,8 +329,8 @@ export const getPromptStarters = (context = {}) => {
     return [
       'What can I do on this Leave page?',
       'Explain the leave approval workflow.',
-      'What guidance has been uploaded?',
-      'Summarize the uploaded guidance.',
+      'Which reference documents are available?',
+      'How do I open a reference document?',
     ]
   }
 
@@ -341,8 +338,8 @@ export const getPromptStarters = (context = {}) => {
     return [
       'What can I do on this Overtime page?',
       'Explain the overtime approval workflow.',
-      'What guidance has been uploaded?',
-      'Summarize the uploaded guidance.',
+      'Which reference documents are available?',
+      'How do I open a reference document?',
     ]
   }
 
@@ -350,8 +347,8 @@ export const getPromptStarters = (context = {}) => {
     return [
       'What can I do in Messages?',
       'How do I find or start a conversation?',
-      'What guidance has been uploaded?',
-      'Summarize the uploaded guidance.',
+      'Which reference documents are available?',
+      'How do I open a reference document?',
     ]
   }
 
@@ -359,8 +356,8 @@ export const getPromptStarters = (context = {}) => {
     return [
       'What can I configure on this Settings page?',
       'Explain role permissions.',
-      'What guidance has been uploaded?',
-      'Summarize the uploaded guidance.',
+      'Which reference documents are available?',
+      'How do I open a reference document?',
     ]
   }
 
@@ -368,15 +365,15 @@ export const getPromptStarters = (context = {}) => {
     return [
       'What does this dashboard show?',
       'Summarize what I should check first.',
-      'What guidance has been uploaded?',
-      'Summarize the uploaded guidance.',
+      'Which reference documents are available?',
+      'How do I open a reference document?',
     ]
   }
 
   return [
     `What can I do on ${title}?`,
     'Summarize what I should check here.',
-    'What guidance has been uploaded?',
-    'Summarize the uploaded guidance.',
+    'Which reference documents are available?',
+    'How do I open a reference document?',
   ]
 }

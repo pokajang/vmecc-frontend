@@ -1,22 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import {
-  deleteAiHelperKnowledge,
-  fetchAiHelperKnowledge,
-  fetchAiHelperKnowledgeDetail,
-  fetchAiHelperKnowledgeFileBlob,
-  fetchAiHelperKnowledgeFileText,
-  uploadAiHelperKnowledge,
-  uploadAiHelperMarkdownKnowledge,
+  deleteAiHelperDocument,
+  fetchAiHelperDocumentDetail,
+  fetchAiHelperDocumentFileBlob,
+  fetchAiHelperDocuments,
+  uploadAiHelperDocument,
 } from 'src/services/apiClient'
 import {
   isAiHelperListFresh,
-  isMarkdownKnowledgeEntry,
-  KNOWLEDGE_READER_TAB_EXTRACTED,
   KNOWLEDGE_READER_TAB_ORIGINAL,
-  KNOWLEDGE_SCOPE_GLOBAL,
-  KNOWLEDGE_SCOPE_MODULE,
-  KNOWLEDGE_VIEW_MARKDOWN,
   KNOWLEDGE_VIEW_UPLOAD,
   safeAiHelperError,
 } from './constants'
@@ -43,14 +36,7 @@ const prependKnowledgeEntry = (entries, entry) => [
   ...entries.filter((item) => item?.id !== entry.id),
 ]
 
-const useAiHelperKnowledge = ({
-  authUser,
-  currentPageContext,
-  isSysAdmin,
-  refreshCurrentContext,
-  routeContext,
-  visibleKnowledgeModules,
-}) => {
+const useAiHelperKnowledge = ({ authUser }) => {
   const authUserId = authUser?.id
   const [knowledgeLoading, setKnowledgeLoading] = useState(false)
   const [knowledgeLoaded, setKnowledgeLoaded] = useState(false)
@@ -61,18 +47,9 @@ const useAiHelperKnowledge = ({
   const [knowledgeFile, setKnowledgeFile] = useState(null)
   const [knowledgeFileInputKey, setKnowledgeFileInputKey] = useState(0)
   const [knowledgeTitle, setKnowledgeTitle] = useState('')
-  const [knowledgeScope, setKnowledgeScope] = useState(KNOWLEDGE_SCOPE_GLOBAL)
-  const [knowledgeModuleKey, setKnowledgeModuleKey] = useState('')
   const [knowledgeVisibility, setKnowledgeVisibility] = useState('personal')
   const [knowledgeAcknowledged, setKnowledgeAcknowledged] = useState(false)
   const [knowledgeUploading, setKnowledgeUploading] = useState(false)
-  const [markdownFile, setMarkdownFile] = useState(null)
-  const [markdownFileInputKey, setMarkdownFileInputKey] = useState(0)
-  const [markdownTitle, setMarkdownTitle] = useState('')
-  const [markdownScope, setMarkdownScope] = useState(KNOWLEDGE_SCOPE_GLOBAL)
-  const [markdownModuleKey, setMarkdownModuleKey] = useState('')
-  const [markdownAcknowledged, setMarkdownAcknowledged] = useState(false)
-  const [markdownUploading, setMarkdownUploading] = useState(false)
   const [knowledgeUpdatingId, setKnowledgeUpdatingId] = useState(null)
   const [knowledgeDeleteTarget, setKnowledgeDeleteTarget] = useState(null)
   const [knowledgeReaderOpen, setKnowledgeReaderOpen] = useState(false)
@@ -84,9 +61,6 @@ const useAiHelperKnowledge = ({
   const [knowledgeReaderPdfUrl, setKnowledgeReaderPdfUrl] = useState('')
   const [knowledgeReaderPdfLoading, setKnowledgeReaderPdfLoading] = useState(false)
   const [knowledgeReaderPdfError, setKnowledgeReaderPdfError] = useState(null)
-  const [knowledgeReaderMarkdownSource, setKnowledgeReaderMarkdownSource] = useState('')
-  const [knowledgeReaderMarkdownLoading, setKnowledgeReaderMarkdownLoading] = useState(false)
-  const [knowledgeReaderMarkdownError, setKnowledgeReaderMarkdownError] = useState(null)
   const knowledgeListRequestRef = useRef(null)
   const knowledgeListRequestIdRef = useRef(0)
   const knowledgeReaderRequestRef = useRef(0)
@@ -123,16 +97,6 @@ const useAiHelperKnowledge = ({
     setKnowledgeReaderPdfUrl('')
     setKnowledgeReaderPdfLoading(false)
     setKnowledgeReaderPdfError(null)
-    setKnowledgeReaderMarkdownSource('')
-    setKnowledgeReaderMarkdownLoading(false)
-    setKnowledgeReaderMarkdownError(null)
-    setMarkdownFile(null)
-    setMarkdownFileInputKey((prev) => prev + 1)
-    setMarkdownTitle('')
-    setMarkdownScope(KNOWLEDGE_SCOPE_GLOBAL)
-    setMarkdownModuleKey('')
-    setMarkdownAcknowledged(false)
-    setMarkdownUploading(false)
   }, [authUserId])
 
   useEffect(
@@ -162,7 +126,7 @@ const useAiHelperKnowledge = ({
       setKnowledgeLoading(true)
       if (showError && !background) setKnowledgeError(null)
 
-      const request = fetchAiHelperKnowledge()
+      const request = fetchAiHelperDocuments()
         .then((response) => {
           if (requestId !== knowledgeListRequestIdRef.current) return
           if (authUserIdRef.current !== requestUserId) return
@@ -188,23 +152,6 @@ const useAiHelperKnowledge = ({
     },
     [authUserId, knowledgeLastLoadedAt, knowledgeLoaded],
   )
-
-  useEffect(() => {
-    if (knowledgeScope !== KNOWLEDGE_SCOPE_MODULE) return
-    if (visibleKnowledgeModules.some((option) => option.key === knowledgeModuleKey)) return
-    setKnowledgeModuleKey(visibleKnowledgeModules[0]?.key || '')
-  }, [knowledgeModuleKey, knowledgeScope, visibleKnowledgeModules])
-
-  useEffect(() => {
-    if (markdownScope !== KNOWLEDGE_SCOPE_MODULE) return
-    if (visibleKnowledgeModules.some((option) => option.key === markdownModuleKey)) return
-    setMarkdownModuleKey(visibleKnowledgeModules[0]?.key || '')
-  }, [markdownModuleKey, markdownScope, visibleKnowledgeModules])
-
-  useEffect(() => {
-    if (isSysAdmin || knowledgeView !== KNOWLEDGE_VIEW_MARKDOWN) return
-    setKnowledgeView(KNOWLEDGE_VIEW_UPLOAD)
-  }, [isSysAdmin, knowledgeView])
 
   const setKnowledgeReaderPdfObjectUrl = useCallback((nextUrl) => {
     const previousUrl = knowledgeReaderPdfUrlRef.current
@@ -232,9 +179,6 @@ const useAiHelperKnowledge = ({
     setKnowledgeReaderPdfObjectUrl('')
     setKnowledgeReaderPdfLoading(false)
     setKnowledgeReaderPdfError(null)
-    setKnowledgeReaderMarkdownSource('')
-    setKnowledgeReaderMarkdownLoading(false)
-    setKnowledgeReaderMarkdownError(null)
   }, [setKnowledgeReaderPdfObjectUrl])
 
   const loadPdfSource = useCallback(
@@ -244,7 +188,7 @@ const useAiHelperKnowledge = ({
       setKnowledgeReaderPdfObjectUrl('')
 
       try {
-        const blob = await fetchAiHelperKnowledgeFileBlob(knowledgeId)
+        const blob = await fetchAiHelperDocumentFileBlob(knowledgeId)
         if (knowledgeReaderRequestRef.current !== requestId) return
         if (typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') {
           throw new Error('PDF preview is not supported in this browser.')
@@ -272,25 +216,6 @@ const useAiHelperKnowledge = ({
     [setKnowledgeReaderPdfObjectUrl],
   )
 
-  const loadMarkdownSource = useCallback(async (knowledgeId, requestId) => {
-    setKnowledgeReaderMarkdownLoading(true)
-    setKnowledgeReaderMarkdownError(null)
-    setKnowledgeReaderMarkdownSource('')
-    try {
-      const text = await fetchAiHelperKnowledgeFileText(knowledgeId)
-      if (knowledgeReaderRequestRef.current !== requestId) return
-      setKnowledgeReaderMarkdownSource(text)
-    } catch (error) {
-      if (knowledgeReaderRequestRef.current !== requestId) return
-      setKnowledgeReaderMarkdownError(
-        safeAiHelperError(error, 'Could not load the original Markdown file.'),
-      )
-    } finally {
-      if (knowledgeReaderRequestRef.current !== requestId) return
-      setKnowledgeReaderMarkdownLoading(false)
-    }
-  }, [])
-
   const openKnowledgeReader = useCallback(
     async (knowledgeId) => {
       if (!knowledgeId) return
@@ -301,31 +226,21 @@ const useAiHelperKnowledge = ({
       setKnowledgeReaderOpen(true)
       setKnowledgeReaderLoading(true)
       setKnowledgeReaderError(null)
-      setKnowledgeReaderTab(KNOWLEDGE_READER_TAB_EXTRACTED)
+      setKnowledgeReaderTab(KNOWLEDGE_READER_TAB_ORIGINAL)
       setSelectedKnowledgeId(knowledgeId)
       setSelectedKnowledgeDetail(null)
       setKnowledgeReaderPdfObjectUrl('')
       setKnowledgeReaderPdfLoading(false)
       setKnowledgeReaderPdfError(null)
-      setKnowledgeReaderMarkdownSource('')
-      setKnowledgeReaderMarkdownLoading(false)
-      setKnowledgeReaderMarkdownError(null)
 
       try {
-        const response = await fetchAiHelperKnowledgeDetail(knowledgeId)
+        const response = await fetchAiHelperDocumentDetail(knowledgeId)
         if (knowledgeReaderRequestRef.current !== requestId) return
         const detail = knowledgeEntryFromResponse(response, 'Knowledge details are unavailable.')
 
         setSelectedKnowledgeDetail(detail)
-        if (isMarkdownKnowledgeEntry(detail) || !detail.original_available) {
-          setKnowledgeReaderTab(KNOWLEDGE_READER_TAB_EXTRACTED)
-        } else {
-          setKnowledgeReaderTab(KNOWLEDGE_READER_TAB_ORIGINAL)
-        }
-
-        if (isMarkdownKnowledgeEntry(detail) && detail.original_available) {
-          await loadMarkdownSource(knowledgeId, requestId)
-        } else if (detail.source_mime === 'application/pdf' && detail.original_available) {
+        setKnowledgeReaderTab(KNOWLEDGE_READER_TAB_ORIGINAL)
+        if (detail.original_available) {
           await loadPdfSource(knowledgeId, requestId)
         }
       } catch (error) {
@@ -336,7 +251,7 @@ const useAiHelperKnowledge = ({
         setKnowledgeReaderLoading(false)
       }
     },
-    [loadMarkdownSource, loadPdfSource, setKnowledgeReaderPdfObjectUrl],
+    [loadPdfSource, setKnowledgeReaderPdfObjectUrl],
   )
 
   const handleKnowledgeFileChange = useCallback(
@@ -351,18 +266,6 @@ const useAiHelperKnowledge = ({
     [knowledgeTitle],
   )
 
-  const handleMarkdownFileChange = useCallback(
-    (event) => {
-      const file = event.target.files?.[0] || null
-      setMarkdownFile(file)
-      setKnowledgeError(null)
-      if (file && !markdownTitle.trim()) {
-        setMarkdownTitle(file.name.replace(/\.(md|markdown)$/i, ''))
-      }
-    },
-    [markdownTitle],
-  )
-
   const validateKnowledgeFile = useCallback((file, filenameRegex, label) => {
     if (!file) return null
     if (!filenameRegex.test(file.name || '')) {
@@ -374,11 +277,6 @@ const useAiHelperKnowledge = ({
   const uploadKnowledge = useCallback(
     async (setNotice) => {
       if (!knowledgeFile || knowledgeUploading || !knowledgeAcknowledged) return
-      if (knowledgeScope === KNOWLEDGE_SCOPE_MODULE && !knowledgeModuleKey) {
-        setKnowledgeError('Choose a module for this knowledge source.')
-        return
-      }
-
       const fileSizeError =
         validateKnowledgeFile(knowledgeFile, /\.pdf$/i, 'PDF file') ||
         (knowledgeFile.size > 10 * 1024 * 1024 ? 'PDF must be 10 MB or smaller.' : null)
@@ -390,31 +288,23 @@ const useAiHelperKnowledge = ({
       const formData = new FormData()
       formData.append('file', knowledgeFile)
       formData.append('title', knowledgeTitle.trim())
-      formData.append('scope_type', knowledgeScope)
-      if (knowledgeScope === KNOWLEDGE_SCOPE_MODULE)
-        formData.append('module_key', knowledgeModuleKey)
       formData.append('visibility', knowledgeVisibility)
-      formData.append('path', currentPageContext?.path || routeContext?.path || '/')
-      formData.append('page_context', JSON.stringify(currentPageContext || routeContext))
       formData.append('acknowledged', knowledgeAcknowledged ? 'true' : 'false')
 
       setKnowledgeUploading(true)
       setKnowledgeError(null)
       try {
-        const response = await uploadAiHelperKnowledge(formData)
-        const entry = knowledgeEntryFromResponse(response, 'Uploaded knowledge is unavailable.')
+        const response = await uploadAiHelperDocument(formData)
+        const entry = knowledgeEntryFromResponse(response, 'Uploaded document is unavailable.')
         setKnowledgeEntries((prev) => prependKnowledgeEntry(prev, entry))
         setKnowledgeLoaded(true)
         setKnowledgeLastLoadedAt(Date.now())
         setKnowledgeFile(null)
         setKnowledgeFileInputKey((prev) => prev + 1)
         setKnowledgeTitle('')
-        setKnowledgeScope(KNOWLEDGE_SCOPE_GLOBAL)
-        setKnowledgeModuleKey('')
         setKnowledgeVisibility('personal')
         setKnowledgeAcknowledged(false)
-        setNotice(response?.message || 'Knowledge uploaded.')
-        refreshCurrentContext()
+        setNotice(response?.message || 'Reference document uploaded.')
       } catch (error) {
         const entry = error?.payload?.data
         if (isKnowledgeEntry(entry)) {
@@ -422,84 +312,18 @@ const useAiHelperKnowledge = ({
           setKnowledgeLoaded(true)
           setKnowledgeLastLoadedAt(Date.now())
         }
-        setKnowledgeError(safeAiHelperError(error, 'Could not upload knowledge.'))
+        setKnowledgeError(safeAiHelperError(error, 'Could not upload the reference document.'))
       } finally {
         setKnowledgeUploading(false)
       }
     },
     [
-      currentPageContext,
       knowledgeAcknowledged,
       knowledgeFile,
-      knowledgeModuleKey,
-      knowledgeScope,
       validateKnowledgeFile,
       knowledgeTitle,
       knowledgeUploading,
       knowledgeVisibility,
-      refreshCurrentContext,
-      routeContext,
-    ],
-  )
-
-  const uploadMarkdownKnowledge = useCallback(
-    async (setNotice) => {
-      if (!isSysAdmin || !markdownFile || markdownUploading || !markdownAcknowledged) return
-      if (markdownScope === KNOWLEDGE_SCOPE_MODULE && !markdownModuleKey) {
-        setKnowledgeError('Choose a module for this Markdown knowledge source.')
-        return
-      }
-
-      const formatError = validateKnowledgeFile(markdownFile, /\.(md|markdown)$/i, 'Markdown .md')
-      if (formatError) {
-        setKnowledgeError(formatError)
-        return
-      }
-
-      if (markdownFile.size > 1024 * 1024) {
-        setKnowledgeError('Markdown file must be 1 MB or smaller.')
-        return
-      }
-
-      const formData = new FormData()
-      formData.append('file', markdownFile)
-      formData.append('title', markdownTitle.trim())
-      formData.append('scope_type', markdownScope)
-      if (markdownScope === KNOWLEDGE_SCOPE_MODULE) formData.append('module_key', markdownModuleKey)
-      formData.append('acknowledged', markdownAcknowledged ? 'true' : 'false')
-
-      setMarkdownUploading(true)
-      setKnowledgeError(null)
-      try {
-        const response = await uploadAiHelperMarkdownKnowledge(formData)
-        const entry = knowledgeEntryFromResponse(response, 'Uploaded knowledge is unavailable.')
-        setKnowledgeEntries((prev) => prependKnowledgeEntry(prev, entry))
-        setKnowledgeLoaded(true)
-        setKnowledgeLastLoadedAt(Date.now())
-        setMarkdownFile(null)
-        setMarkdownFileInputKey((prev) => prev + 1)
-        setMarkdownTitle('')
-        setMarkdownScope(KNOWLEDGE_SCOPE_GLOBAL)
-        setMarkdownModuleKey('')
-        setMarkdownAcknowledged(false)
-        setNotice(response?.message || 'Markdown knowledge uploaded.')
-        refreshCurrentContext()
-      } catch (error) {
-        setKnowledgeError(safeAiHelperError(error, 'Could not upload Markdown knowledge.'))
-      } finally {
-        setMarkdownUploading(false)
-      }
-    },
-    [
-      validateKnowledgeFile,
-      isSysAdmin,
-      markdownAcknowledged,
-      markdownFile,
-      markdownModuleKey,
-      markdownScope,
-      markdownTitle,
-      markdownUploading,
-      refreshCurrentContext,
     ],
   )
 
@@ -508,18 +332,17 @@ const useAiHelperKnowledge = ({
     setKnowledgeUpdatingId(knowledgeDeleteTarget.id)
     setKnowledgeError(null)
     try {
-      await deleteAiHelperKnowledge(knowledgeDeleteTarget.id)
+      await deleteAiHelperDocument(knowledgeDeleteTarget.id)
       setKnowledgeEntries((prev) => prev.filter((item) => item.id !== knowledgeDeleteTarget.id))
       setKnowledgeLoaded(true)
       setKnowledgeLastLoadedAt(Date.now())
       setKnowledgeDeleteTarget(null)
-      refreshCurrentContext()
     } catch (error) {
-      setKnowledgeError(safeAiHelperError(error, 'Could not delete this knowledge source.'))
+      setKnowledgeError(safeAiHelperError(error, 'Could not delete this reference document.'))
     } finally {
       setKnowledgeUpdatingId(null)
     }
-  }, [knowledgeDeleteTarget, knowledgeUpdatingId, refreshCurrentContext])
+  }, [knowledgeDeleteTarget, knowledgeUpdatingId])
 
   return {
     knowledgeAcknowledged,
@@ -530,32 +353,19 @@ const useAiHelperKnowledge = ({
     knowledgeFileInputKey,
     knowledgeInitialLoading: knowledgeLoading && !knowledgeLastLoadedAt,
     knowledgeLoading,
-    knowledgeModuleKey,
-    knowledgeScope,
     knowledgeTitle,
     knowledgeUpdatingId,
     knowledgeUploading,
     knowledgeView,
     knowledgeVisibility,
-    markdownAcknowledged,
-    markdownFile,
-    markdownFileInputKey,
-    markdownModuleKey,
-    markdownScope,
-    markdownTitle,
-    markdownUploading,
     closeKnowledgeReader,
     confirmDeleteKnowledge,
     handleKnowledgeFileChange,
-    handleMarkdownFileChange,
     knowledgeReaderError,
     knowledgeReaderLoading,
     knowledgeReaderPdfError,
     knowledgeReaderPdfLoading,
     knowledgeReaderPdfUrl,
-    knowledgeReaderMarkdownError,
-    knowledgeReaderMarkdownLoading,
-    knowledgeReaderMarkdownSource,
     knowledgeReaderOpen,
     knowledgeReaderTab,
     knowledgeReaderHasOriginal: Boolean(selectedKnowledgeDetail?.original_available),
@@ -566,18 +376,11 @@ const useAiHelperKnowledge = ({
     setKnowledgeAcknowledged,
     setKnowledgeDeleteTarget,
     setKnowledgeError,
-    setKnowledgeModuleKey,
-    setKnowledgeScope,
     setKnowledgeTitle,
     setKnowledgeView,
     setKnowledgeVisibility,
-    setMarkdownAcknowledged,
-    setMarkdownModuleKey,
-    setMarkdownScope,
-    setMarkdownTitle,
     setKnowledgeReaderTab,
     uploadKnowledge,
-    uploadMarkdownKnowledge,
   }
 }
 
