@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { useSelector } from 'react-redux'
 import TableLoader from 'src/components/TableLoader'
 import InspectionRecordsSection from 'src/views/inspection/InspectionRecordsSection'
 import InspectionDetailSection from 'src/views/inspection/InspectionDetailSection'
@@ -7,6 +8,7 @@ import InspectionReviewSection from 'src/views/inspection/InspectionReviewSectio
 import AllExtinguishersSection from 'src/views/inspection/records/AllExtinguishersSection'
 import InspectionReviewDashboard from 'src/views/inspection/records/InspectionReviewDashboard'
 import { refreshInspectionOfflineAssets } from 'src/views/inspection/inspectionOfflineHealth'
+import { hasPermission } from 'src/utils/authz'
 import InspectionForm from '../InspectionForm'
 import { buildInspectionSubmittedRecord } from '../inspectionFormHelpers'
 
@@ -210,10 +212,22 @@ const ADD_EXTINGUISHER_PATH = `${ALL_EXTINGUISHERS_PATH}/new`
 export const AllExtinguishersView = () => {
   const location = useLocation()
   const navigate = useNavigate()
+  const user = useSelector((state) => state.authUser)
   const isCreateOpen = location.pathname.toLowerCase() === ADD_EXTINGUISHER_PATH
+  const canManageReports = hasPermission(user, 'reports.manage')
+  const canManageCatalog =
+    canManageReports || hasPermission(user, 'reports.inspection.extinguishers.manage')
+  const canManageIssues =
+    canManageReports || hasPermission(user, 'reports.inspection.issues.manage')
+  const canVerifyIssues =
+    canManageReports || hasPermission(user, 'reports.inspection.issues.verify')
 
   return (
     <AllExtinguishersSection
+      currentUser={user}
+      canManageCatalog={canManageCatalog}
+      canManageIssues={canManageIssues}
+      canVerifyIssues={canVerifyIssues}
       isCreateOpen={isCreateOpen}
       initialViewState={location.state?.catalogViewState || null}
       initialSuccessMessage={location.state?.catalogSuccessMessage || ''}

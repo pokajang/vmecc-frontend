@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { INSPECTION_SORT_OPTIONS } from 'src/views/inspection/constants'
+import { hasPermission } from 'src/utils/authz'
 import useIncidentTypeManager, {
   INCIDENT_TYPE_TOGGLE_VALUE,
 } from 'src/views/inspection/useIncidentTypeManager'
@@ -53,6 +54,8 @@ const InspectionModule = () => {
   const navigate = useNavigate()
   const { reportId } = useParams()
   const user = useSelector((state) => state.authUser)
+  const canConduct =
+    hasPermission(user, 'reports.manage') || hasPermission(user, 'reports.inspection.conduct')
   const submitLockRef = useRef(false)
   const queueSyncLockRef = useRef(false)
   const reloadRecordsRef = useRef(null)
@@ -476,6 +479,7 @@ const InspectionModule = () => {
   }
 
   const headerActions = buildInspectionHeaderActions({
+    canConduct,
     isCreateSection,
     onMobileBack: handleMobileBack,
     onStartNew: () => runGuardedAction(startNew),
@@ -492,9 +496,10 @@ const InspectionModule = () => {
   return (
     <InspectionModuleLayout
       activeSection={activeSection}
+      canConduct={canConduct}
       clearContinuationState={clearContinuationState}
       detailViewProps={buildInspectionDetailViewProps({
-        canEditRecord,
+        canEditRecord: canConduct ? canEditRecord : () => false,
         downloadRecord,
         downloadingId,
         editRecord,
@@ -573,8 +578,8 @@ const InspectionModule = () => {
       recordsViewProps={buildInspectionRecordsViewProps({
         activeDraftRows,
         canApproveRecord,
-        canDeleteRecord,
-        canEditRecord,
+        canDeleteRecord: canConduct ? canDeleteRecord : () => false,
+        canEditRecord: canConduct ? canEditRecord : () => false,
         canRejectRecord,
         canReviewRecord,
         checklistFilter,

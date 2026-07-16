@@ -586,7 +586,11 @@ const renderModule = (initialPath = '/inspection') => {
     id: 'user-1',
     name: 'Inspector One',
     email: 'inspector@example.test',
-    permissions: ['reports.inspection.view'],
+    permissions: [
+      'reports.inspection.view',
+      'reports.inspection.conduct',
+      'reports.inspection.extinguishers.manage',
+    ],
   }
   const store = createStore((state = { authUser }) => state)
 

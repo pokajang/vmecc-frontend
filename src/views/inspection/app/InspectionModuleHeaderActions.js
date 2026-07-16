@@ -8,6 +8,7 @@ const InspectionModuleHeaderActions = ({
   onMobileBack,
   isCreateSection,
   onStartNew,
+  canConduct = true,
 }) => (
   <>
     {showMobileBackAction ? (
@@ -22,7 +23,7 @@ const InspectionModuleHeaderActions = ({
         Back
       </CButton>
     ) : null}
-    {!isCreateSection ? (
+    {!isCreateSection && canConduct ? (
       <CreateActionButton
         label="Conduct Inspection"
         importance="page-primary"

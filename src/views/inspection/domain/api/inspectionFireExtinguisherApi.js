@@ -327,6 +327,44 @@ export const deleteFireExtinguisherOption = async (id) => {
   return true
 }
 
+const fireExtinguisherLifecycleAction = async (id, action, payload = {}) => {
+  const response = await apiRequest(
+    `/inspection/fire-extinguishers/${encodeURIComponent(String(id))}/${action}`,
+    { method: 'POST', body: JSON.stringify(payload) },
+  )
+  return normalizeRows([response?.data])[0] || null
+}
+
+export const markFireExtinguisherOutOfService = (id, payload) =>
+  fireExtinguisherLifecycleAction(id, 'out-of-service', payload)
+
+export const returnFireExtinguisherToService = (id, payload = {}) =>
+  fireExtinguisherLifecycleAction(id, 'return-to-service', payload)
+
+export const retireFireExtinguisher = (id, payload) =>
+  fireExtinguisherLifecycleAction(id, 'retire', payload)
+
+export const restoreFireExtinguisher = (id, payload = {}) =>
+  fireExtinguisherLifecycleAction(id, 'restore', payload)
+
+export const fetchFireExtinguisherInspectionHistory = async (
+  id,
+  { page = 1, perPage = 25 } = {},
+) => {
+  const query = new URLSearchParams({ page: String(page), perPage: String(perPage) })
+  const response = await apiRequest(
+    `/inspection/fire-extinguishers/${encodeURIComponent(String(id))}/inspection-history?${query}`,
+  )
+  return { data: Array.isArray(response?.data) ? response.data : [], meta: response?.meta || {} }
+}
+
+export const fetchFireExtinguisherInspectionHistoryDetail = async (id, reportId) => {
+  const response = await apiRequest(
+    `/inspection/fire-extinguishers/${encodeURIComponent(String(id))}/inspection-history/${encodeURIComponent(String(reportId))}`,
+  )
+  return response?.data || null
+}
+
 const normalizeCoverageRow = (row = {}) => {
   const reportCount =
     Number(row.reportCount ?? row.report_count ?? row.duplicateCount ?? row.duplicate_count ?? 0) ||

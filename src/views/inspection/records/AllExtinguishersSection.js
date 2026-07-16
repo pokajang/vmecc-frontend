@@ -31,8 +31,10 @@ import { InspectionPhotoViewerModal } from 'src/views/inspection/form/components
 import {
   fetchFireExtinguisherCoverage,
   fetchFireExtinguisherCoverageDetail,
+  fetchFireExtinguisherInspectionHistory,
 } from 'src/views/inspection/inspectionFireExtinguisherApi'
 import FireExtinguisherCreateDrawer from './FireExtinguisherCreateDrawer'
+import FireExtinguisherManagementPanel from './FireExtinguisherManagementPanel'
 import FireExtinguisherExceptionExportDialog from './fire-extinguisher-export/FireExtinguisherExceptionExportDialog'
 
 const ALL_ROWS_VALUE = 'all'
@@ -275,9 +277,12 @@ const formatDateTime = (value) => {
 
 const getReportCount = (row = {}) => Number(row.reportCount ?? row.duplicateCount ?? 0) || 0
 
+const getOpenIssueCount = (row = {}) =>
+  Number(row.openIssueCount ?? row.open_issue_count ?? row.issueCount ?? 0) || 0
+
 const getInspectionStatus = (row) => {
   if (!row.latestInspectionAt) return 'not-inspected'
-  if (Number(row.issueCount || 0) > 0) return 'issues'
+  if (getOpenIssueCount(row) > 0) return 'issues'
   if (getReportCount(row) > 1) return 'duplicates'
   return 'inspected'
 }
@@ -397,8 +402,8 @@ const filterRows = ({
     if ((duplicateScope === 'report' || duplicateScope === 'reports') && getReportCount(row) <= 1) {
       return false
     }
-    if (issueFilter === 'with-issues' && Number(row.issueCount || 0) <= 0) return false
-    if (issueFilter === 'no-issues' && Number(row.issueCount || 0) > 0) return false
+    if (issueFilter === 'with-issues' && getOpenIssueCount(row) <= 0) return false
+    if (issueFilter === 'no-issues' && getOpenIssueCount(row) > 0) return false
     if (certificationFilter !== ALL_ROWS_VALUE && certificationStatus !== certificationFilter) {
       return false
     }
@@ -418,7 +423,7 @@ const sortRows = (rows, sort) => {
     return next.sort((a, b) => Number(a.daysLeft || 0) - Number(b.daysLeft || 0))
   }
   if (sort === 'issues') {
-    return next.sort((a, b) => Number(b.issueCount || 0) - Number(a.issueCount || 0))
+    return next.sort((a, b) => getOpenIssueCount(b) - getOpenIssueCount(a))
   }
   if (sort === 'duplicates') {
     return next.sort((a, b) => getReportCount(b) - getReportCount(a))
@@ -443,7 +448,7 @@ const getSummary = (rows) => ({
   total: rows.length,
   inspected: rows.filter((row) => row.latestInspectionAt).length,
   notInspected: rows.filter((row) => !row.latestInspectionAt).length,
-  issues: rows.filter((row) => Number(row.issueCount || 0) > 0).length,
+  issues: rows.filter((row) => getOpenIssueCount(row) > 0).length,
   duplicates: rows.filter((row) => getReportCount(row) > 1).length,
   locatorDuplicates: rows.filter((row) => Number(row.locatorDuplicateCount || 0) > 1).length,
   expired: rows.filter((row) => getCertificationStatus(row) === 'expired').length,
@@ -555,8 +560,8 @@ const AllExtinguishersTable = ({ visibleRows, onViewDetails }) => (
               </CTableDataCell>
               <CTableDataCell className={centeredCellClass}>
                 <StatusBadge
-                  value={Number(row.issueCount || 0) > 0 ? 'issues' : 'good'}
-                  label={`${row.issueCount} recorded`}
+                  value={getOpenIssueCount(row) > 0 ? 'issues' : 'good'}
+                  label={`${getOpenIssueCount(row)} open`}
                 />
               </CTableDataCell>
               <CTableDataCell className={centeredCellClass}>
@@ -613,7 +618,7 @@ const buildMobileSections = (rows, onViewDetails) => [
           {
             key: 'issues',
             label: 'Issues',
-            value: `${row.issueCount} recorded`,
+            value: `${getOpenIssueCount(row)} open`,
           },
           {
             key: 'reports',
@@ -1167,6 +1172,11 @@ const CoverageOverview = ({
   periodLabel,
   onSelectHistoryRecord,
   onViewPhotos,
+  currentUser,
+  canManageCatalog,
+  canManageIssues,
+  canVerifyIssues,
+  onAssetChanged,
 }) => {
   const latestHistoryRecord = historyRecords[0] || null
   const hasDirectChecks = Array.isArray(detail.checks) && detail.checks.length > 0
@@ -1303,6 +1313,14 @@ const CoverageOverview = ({
         onSelectRecord={onSelectHistoryRecord}
         onViewPhotos={onViewPhotos}
       />
+      <FireExtinguisherManagementPanel
+        detail={detail}
+        currentUser={currentUser}
+        canManageCatalog={canManageCatalog}
+        canManageIssues={canManageIssues}
+        canVerifyIssues={canVerifyIssues}
+        onAssetChanged={onAssetChanged}
+      />
     </div>
   )
 }
@@ -1317,6 +1335,11 @@ const CoverageDetailBody = ({
   selectedHistoryRecord,
   periodLabel,
   onSelectHistoryRecord,
+  currentUser,
+  canManageCatalog,
+  canManageIssues,
+  canVerifyIssues,
+  onAssetChanged,
 }) => {
   if (isLoading) {
     return <div className="text-body-secondary">Loading extinguisher details...</div>
@@ -1344,6 +1367,11 @@ const CoverageDetailBody = ({
       detail={detail}
       record={selectedHistoryRecord}
       onViewPhotos={onViewPhotos}
+      currentUser={currentUser}
+      canManageCatalog={canManageCatalog}
+      canManageIssues={canManageIssues}
+      canVerifyIssues={canVerifyIssues}
+      onAssetChanged={onAssetChanged}
     />
   ) : (
     <CoverageOverview
@@ -1352,6 +1380,11 @@ const CoverageDetailBody = ({
       periodLabel={periodLabel}
       onSelectHistoryRecord={onSelectHistoryRecord}
       onViewPhotos={onViewPhotos}
+      currentUser={currentUser}
+      canManageCatalog={canManageCatalog}
+      canManageIssues={canManageIssues}
+      canVerifyIssues={canVerifyIssues}
+      onAssetChanged={onAssetChanged}
     />
   )
 }
@@ -1455,6 +1488,11 @@ const CoverageDetailDialog = ({
   periodLabel,
   onSelectHistoryRecord,
   onBack,
+  currentUser,
+  canManageCatalog,
+  canManageIssues,
+  canVerifyIssues,
+  onAssetChanged,
 }) => {
   const title =
     view === 'historyDetail'
@@ -1475,6 +1513,11 @@ const CoverageDetailDialog = ({
       selectedHistoryRecord={selectedHistoryRecord}
       periodLabel={periodLabel}
       onSelectHistoryRecord={onSelectHistoryRecord}
+      currentUser={currentUser}
+      canManageCatalog={canManageCatalog}
+      canManageIssues={canManageIssues}
+      canVerifyIssues={canVerifyIssues}
+      onAssetChanged={onAssetChanged}
     />
   )
 
@@ -1500,9 +1543,18 @@ const AllExtinguishersSection = ({
   onRequestCloseCreate = null,
   initialViewState = null,
   initialSuccessMessage = '',
+  currentUser = null,
+  canManageCatalog = true,
+  canManageIssues = false,
+  canVerifyIssues = false,
 }) => {
   const useProvidedRows = Array.isArray(rows)
   const savedView = initialViewState || {}
+  const locationParams =
+    typeof window === 'undefined'
+      ? new URLSearchParams()
+      : new URLSearchParams(window.location.search)
+  const linkedIssueFilter = locationParams.get('issues') === 'with-issues' ? 'with-issues' : null
   const [remoteRows, setRemoteRows] = useState([])
   const [remoteMeta, setRemoteMeta] = useState(null)
   const [isFetchingRows, setIsFetchingRows] = useState(!useProvidedRows)
@@ -1526,10 +1578,13 @@ const AllExtinguishersSection = ({
     savedView.inspectedByFilter || ALL_ROWS_VALUE,
   )
   const [statusFilter, setStatusFilter] = useState(savedView.statusFilter || ALL_ROWS_VALUE)
-  const [issueFilter, setIssueFilter] = useState(savedView.issueFilter || ALL_ROWS_VALUE)
+  const [issueFilter, setIssueFilter] = useState(
+    savedView.issueFilter || linkedIssueFilter || ALL_ROWS_VALUE,
+  )
   const [certificationFilter, setCertificationFilter] = useState(
     savedView.certificationFilter || ALL_ROWS_VALUE,
   )
+  const [lifecycleFilter, setLifecycleFilter] = useState(savedView.lifecycleFilter || 'active')
   const [rowsToShow, setRowsToShow] = useState(savedView.rowsToShow ?? 10)
   const [currentPage, setCurrentPage] = useState(savedView.currentPage ?? 1)
   const [createSuccessMessage, setCreateSuccessMessage] = useState(initialSuccessMessage)
@@ -1572,6 +1627,7 @@ const AllExtinguishersSection = ({
         page: currentPage,
         perPage: rowsToShow,
         duplicateScope,
+        lifecycleStatus: lifecycleFilter,
       })
       setRemoteRows(response.data)
       setRemoteMeta(response.meta)
@@ -1601,6 +1657,7 @@ const AllExtinguishersSection = ({
     useProvidedRows,
     zoneFilter,
     duplicateScope,
+    lifecycleFilter,
   ])
 
   useEffect(() => {
@@ -1625,11 +1682,13 @@ const AllExtinguishersSection = ({
       statusFilter,
       issueFilter,
       certificationFilter,
+      lifecycleFilter,
       rowsToShow,
       currentPage,
     }),
     [
       certificationFilter,
+      lifecycleFilter,
       currentPage,
       duplicateScope,
       inspectedByFilter,
@@ -1817,6 +1876,7 @@ const AllExtinguishersSection = ({
     setStatusFilter(ALL_ROWS_VALUE)
     setIssueFilter(ALL_ROWS_VALUE)
     setCertificationFilter(ALL_ROWS_VALUE)
+    setLifecycleFilter('active')
   }
 
   const openDetails = useCallback(
@@ -1837,12 +1897,15 @@ const AllExtinguishersSection = ({
 
       setIsFetchingDetail(true)
       try {
-        const response = await fetchFireExtinguisherCoverageDetail(row.catalogId, {
-          period,
-          periodFrom: isCustomPeriod ? periodFrom : '',
-          periodTo: isCustomPeriod ? periodTo : '',
-        })
-        setDetail(response.data)
+        const [response, history] = await Promise.all([
+          fetchFireExtinguisherCoverageDetail(row.catalogId, {
+            period,
+            periodFrom: isCustomPeriod ? periodFrom : '',
+            periodTo: isCustomPeriod ? periodTo : '',
+          }),
+          fetchFireExtinguisherInspectionHistory(row.catalogId, { perPage: 100 }),
+        ])
+        setDetail({ ...response.data, historyRecords: history.data })
       } catch (error) {
         setDetail(row)
         setDetailError(error?.message || 'Unable to load extinguisher details.')
@@ -1856,6 +1919,16 @@ const AllExtinguishersSection = ({
   const retryDetails = useCallback(() => {
     if (detailTarget) openDetails(detailTarget)
   }, [detailTarget, openDetails])
+
+  const handleAssetChanged = useCallback(
+    (updated) => {
+      if (!updated) return
+      setDetail((current) => ({ ...(current || {}), ...updated }))
+      setDetailTarget((current) => ({ ...(current || {}), ...updated }))
+      loadCoverageRows()
+    },
+    [loadCoverageRows],
+  )
 
   const zoneOptions = useMemo(
     () =>
@@ -1935,6 +2008,21 @@ const AllExtinguishersSection = ({
               { value: 'not-inspected', label: 'Not inspected' },
               { value: 'issues', label: 'Issues' },
               { value: 'duplicates', label: 'Multiple reports' },
+            ],
+          },
+          {
+            key: 'lifecycle',
+            label: 'Lifecycle',
+            value: lifecycleFilter,
+            onChange: (value) => {
+              resetToFirstPage()
+              setLifecycleFilter(value)
+            },
+            options: [
+              { value: 'active', label: 'Active assets' },
+              { value: 'out_of_service', label: 'Out of service' },
+              { value: 'retired', label: 'Retired' },
+              { value: 'all', label: 'All lifecycle states' },
             ],
           },
           {
@@ -2159,7 +2247,7 @@ const AllExtinguishersSection = ({
         importance="section-primary"
         onClick={() => setIsExportOpen(true)}
       />
-      {onRequestCreate ? (
+      {onRequestCreate && canManageCatalog ? (
         <CreateActionButton
           label="Add Extinguisher"
           importance="section-primary"
@@ -2243,6 +2331,11 @@ const AllExtinguishersSection = ({
           setSelectedHistoryRecord(null)
           setDetailView('overview')
         }}
+        currentUser={currentUser}
+        canManageCatalog={canManageCatalog}
+        canManageIssues={canManageIssues}
+        canVerifyIssues={canVerifyIssues}
+        onAssetChanged={handleAssetChanged}
       />
       <InspectionPhotoViewerModal viewer={photoViewer} onClose={() => setPhotoViewer(null)} />
       <FireExtinguisherExceptionExportDialog

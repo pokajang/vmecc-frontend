@@ -54,6 +54,7 @@ export const buildInspectionPageTitle = ({
 }
 
 export const buildInspectionHeaderActions = ({
+  canConduct = true,
   isCreateSection,
   onMobileBack,
   onStartNew,
@@ -64,6 +65,7 @@ export const buildInspectionHeaderActions = ({
     onMobileBack={onMobileBack}
     isCreateSection={isCreateSection}
     onStartNew={onStartNew}
+    canConduct={canConduct}
   />
 )
 
@@ -91,6 +93,7 @@ const InspectionModuleLayout = ({
   navigate,
   reportBasePath,
   feedback,
+  canConduct = true,
 }) => {
   return (
     <CContainer fluid className="inspection-module-page" data-testid="inspection-module">
@@ -148,13 +151,17 @@ const InspectionModuleLayout = ({
                 navigate(`${reportBasePath}/all-extinguishers`)
               }),
           },
-          {
-            key: 'new',
-            label: 'Conduct Inspection',
-            active: activeSection === 'form' || activeSection === 'review',
-            onClick: () => runGuardedAction(startNew),
-            dataTestId: 'inspection-new',
-          },
+          ...(canConduct
+            ? [
+                {
+                  key: 'new',
+                  label: 'Conduct Inspection',
+                  active: activeSection === 'form' || activeSection === 'review',
+                  onClick: () => runGuardedAction(startNew),
+                  dataTestId: 'inspection-new',
+                },
+              ]
+            : []),
         ]}
       />
 
