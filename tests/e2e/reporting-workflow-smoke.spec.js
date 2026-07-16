@@ -362,11 +362,14 @@ const openRowActions = async (page, displayId) => {
 }
 
 const submitWorkflowModal = async (page, action, remarks) => {
-  const dialog = page.getByRole('dialog')
-  await expect(dialog.getByText(`${action} Report`)).toBeVisible()
+  const dialog = page
+    .locator('.modal.show')
+    .filter({ has: page.getByRole('heading', { name: new RegExp(`^${action} report$`, 'i') }) })
+    .last()
+  await expect(dialog).toBeVisible()
   await dialog.getByPlaceholder('Add your remarks').fill(remarks)
   await dialog.getByLabel(/I confirm this report workflow action is accurate/i).check()
-  await dialog.getByRole('button', { name: action }).click()
+  await dialog.getByRole('button', { name: action, exact: true }).click()
 }
 
 test.describe('Reporting workflow browser smoke', () => {
@@ -391,10 +394,10 @@ test.describe('Reporting workflow browser smoke', () => {
       })
       await waitForAppReady(page, `/reporting-settings/${module.key}`)
 
-      await expect(page.getByRole('heading', { name: 'Reporting Settings' })).toBeVisible()
+      await expect(page.getByRole('heading', { name: 'Reporting Workflow' })).toBeVisible()
       await expect(page.getByTestId('reporting-settings-rules')).toBeVisible()
       await expect(page.getByText(`${module.label} Workflow Rules`)).toBeVisible()
-      await expect(page.getByRole('link', { name: 'Reporting Settings' })).toHaveClass(/active/)
+      await expect(page.getByRole('link', { name: 'Reporting Workflow' })).toHaveClass(/active/)
       await expect(page.getByTestId('reporting-settings-nav').getByText(module.label)).toBeVisible()
     }
 

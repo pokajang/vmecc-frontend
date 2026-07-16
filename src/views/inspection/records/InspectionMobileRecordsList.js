@@ -20,7 +20,7 @@ const InspectionMobileRecordsList = ({
 }) => {
   const mobileItems = visibleRows.map((row, index) => {
     const displayId = formatInspectionDisplayId(row, index)
-    const isGeneratingDownload = downloadingId === row.id
+    const isDownloading = downloadingId === row.id
     const mobileSubtitle = [
       stripInspectionContext(row.incidentType) || 'Record',
       row.location || 'No location',
@@ -53,9 +53,9 @@ const InspectionMobileRecordsList = ({
           : row.recordKind === 'draft'
             ? onEditRecord(row)
             : onViewRecord(row.id),
-      actions: isGeneratingDownload ? (
+      actions: isDownloading ? (
         <span className="small text-muted">
-          <ButtonLoader label="Generating..." size={13} />
+          <ButtonLoader label="Downloading..." size={13} />
         </span>
       ) : (
         <RowActions

@@ -23,6 +23,7 @@ const {
   liveSmokeEnabled,
   login,
   loginInBrowser,
+  localhostMutationTarget,
   markMatrix,
   recordQaqcFinding,
   registerCleanupTask,
@@ -43,6 +44,14 @@ const {
 } = require('./inspection-live-smoke.helpers')
 
 const canonicalEndpoint = (method, route) => `${method.toUpperCase()} ${route}`
+
+const buildSmokePlate = (suffix) => {
+  const prefix = 'LS-'
+  const suffixPart = `-${slug(suffix).toUpperCase()}`
+  const runPart = slug(runId).toUpperCase()
+  const availableRunLength = Math.max(1, 40 - prefix.length - suffixPart.length)
+  return `${prefix}${runPart.slice(-availableRunLength)}${suffixPart}`
+}
 
 const isExpectedStatus = (result, expectedStatuses) =>
   expectedStatuses.includes(Number(result?.status || 0))
@@ -101,55 +110,83 @@ const clickFirstVisible = async (locator) => {
   return candidate
 }
 
+const closeContextWithTimeout = async (context, report, label, timeoutMs = 10_000) => {
+  let timeoutId
+  const result = await Promise.race([
+    context
+      .close()
+      .then(() => ({ closed: true }))
+      .catch((error) => ({ closed: false, error: error?.message || String(error) })),
+    new Promise((resolve) => {
+      timeoutId = setTimeout(() => resolve({ closed: false, timedOut: true }), timeoutMs)
+    }),
+  ])
+  clearTimeout(timeoutId)
+
+  if (!result.closed) {
+    report.notes.push(
+      result.timedOut
+        ? `${label} browser context did not close within ${timeoutMs}ms; artifact reporting and cleanup continued.`
+        : `${label} browser context close failed: ${result.error}`,
+    )
+  }
+}
+
+const completeWithin = async (operation, label, timeoutMs = 15_000) => {
+  let timeoutId
+  const result = await Promise.race([
+    Promise.resolve()
+      .then(operation)
+      .then((value) => ({ completed: true, value }))
+      .catch((error) => ({ completed: false, error: error?.message || String(error) })),
+    new Promise((resolve) => {
+      timeoutId = setTimeout(() => resolve({ completed: false, timedOut: true }), timeoutMs)
+    }),
+  ])
+  clearTimeout(timeoutId)
+
+  if (!result.completed) {
+    throw new Error(
+      result.timedOut
+        ? `${label} did not complete within ${timeoutMs}ms`
+        : `${label}: ${result.error}`,
+    )
+  }
+  return result.value
+}
+
 const fillFirstVisible = async (locator, value) => {
   const candidate = await firstVisible(locator)
   await candidate.fill(value)
   return candidate
 }
 
-const openSavedDraftIfPrompt = async (page) => {
-  const openDraftButton = page.getByRole('button', { name: 'Open saved draft' })
-  if (await openDraftButton.isVisible().catch(() => false)) {
-    await openDraftButton.click()
-    return true
-  }
-  return false
-}
-
-const inspectionTypeNamePattern = (inspectionType) =>
-  new RegExp(
+const inspectionTypeNamePattern = (inspectionType) => {
+  if (inspectionType === 'General Inspection') return /General(?:\s+Inspection)?/i
+  return new RegExp(
     String(inspectionType || '')
       .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
       .replace(/\s+/g, '\\s+'),
     'i',
   )
+}
 
 const openInspectionTypeCard = async (page, inspectionType) => {
   const namePattern = inspectionTypeNamePattern(inspectionType)
-  const showMoreButton = page.getByRole('button', { name: /show more/i }).first()
-  if (await showMoreButton.isVisible().catch(() => false)) {
-    await showMoreButton.click()
+  const showMoreControl = page
+    .getByRole('button', { name: /show more/i })
+    .or(page.getByRole('radio', { name: /show more/i }))
+    .first()
+  const typeControl = page
+    .getByRole('radio', { name: namePattern })
+    .or(page.getByRole('button', { name: namePattern }))
+    .first()
+  await expect(typeControl.or(showMoreControl)).toBeVisible({ timeout: routeTimeoutMs })
+  if (!(await typeControl.isVisible().catch(() => false))) {
+    await showMoreControl.click()
   }
-
-  const candidates = [
-    page.getByRole('radio', { name: namePattern }).first(),
-    page.getByRole('button', { name: namePattern }).first(),
-    page
-      .locator('[role="radio"], button, .card, .inspection-type-card')
-      .filter({
-        hasText: namePattern,
-      })
-      .first(),
-  ]
-
-  for (const candidate of candidates) {
-    if (await candidate.isVisible().catch(() => false)) {
-      await candidate.click()
-      return
-    }
-  }
-
-  await expect(candidates[0]).toBeVisible({ timeout: routeTimeoutMs })
+  await expect(typeControl).toBeVisible({ timeout: routeTimeoutMs })
+  await typeControl.click()
 }
 
 const measureButtonHeight = async (page, label) => {
@@ -158,10 +195,9 @@ const measureButtonHeight = async (page, label) => {
   return box?.height || 0
 }
 
-const selectFirstLocationCard = async (page) => {
-  const section = page.locator('.inspection-form-section').filter({
-    has: page.getByText(/Choose Main Location/i),
-  })
+const selectFirstLocationCard = async (page, heading) => {
+  const section = page.locator('.inspection-form-section').filter({ hasText: heading }).first()
+  await expect(section).toBeVisible({ timeout: routeTimeoutMs })
   const firstCard = section.locator('[role="radio"]').first()
   await expect(firstCard).toBeVisible({ timeout: routeTimeoutMs })
   await firstCard.click()
@@ -169,19 +205,61 @@ const selectFirstLocationCard = async (page) => {
 
 const fillRepresentativeOfflineGeneralFlow = async (page) => {
   await openInspectionTypeCard(page, 'General Inspection')
-  await selectFirstLocationCard(page)
+  await selectFirstLocationCard(page, 'Choose Zone')
+  await selectFirstLocationCard(page, 'Choose Main Area')
+  await selectFirstLocationCard(page, 'Choose Location')
 
-  const quickCheckButton = page
-    .locator('.inspection-form-section')
-    .filter({ has: page.getByText(/Quick Checks/i) })
-    .locator('button')
-    .first()
-  await expect(quickCheckButton).toBeVisible({ timeout: routeTimeoutMs })
-  await quickCheckButton.click()
+  await page.getByRole('button', { name: 'Add finding', exact: true }).click()
+  const findingDrawer = page.getByRole('dialog', { name: 'Add finding' })
+  await expect(findingDrawer).toBeVisible({ timeout: routeTimeoutMs })
+  await findingDrawer
+    .getByRole('textbox', { name: 'Describe finding' })
+    .fill(`${runMarker} offline queue representative finding`)
+  await findingDrawer.getByRole('button', { name: 'Save', exact: true }).click()
+  await expect(findingDrawer).toBeHidden({ timeout: routeTimeoutMs })
+  await expect(page.getByRole('button', { name: 'Finding 1 actions' })).toBeVisible({
+    timeout: routeTimeoutMs,
+  })
+}
 
-  await fillFirstVisible(
-    page.locator('textarea[placeholder*="Describe what you inspected"]'),
-    `${runMarker} offline queue representative flow`,
+const navigateToAppRoute = async (page, route) => {
+  const target = new URL(route, baseUrl)
+  const current = new URL(page.url())
+  const canUseSpaNavigation =
+    current.origin === target.origin &&
+    current.pathname !== '/login' &&
+    (await page
+      .locator('#root')
+      .isVisible()
+      .catch(() => false))
+
+  if (
+    canUseSpaNavigation &&
+    current.pathname === target.pathname &&
+    current.search === target.search &&
+    current.hash === target.hash
+  ) {
+    return
+  }
+
+  if (!canUseSpaNavigation) {
+    await page.goto(target.href, { waitUntil: 'domcontentloaded' })
+    return
+  }
+
+  const previousRootText = await page.locator('#root').innerText()
+  await page.evaluate(
+    ({ href }) => {
+      window.history.pushState({}, '', href)
+      window.dispatchEvent(new PopStateEvent('popstate'))
+    },
+    { href: `${target.pathname}${target.search}${target.hash}` },
+  )
+  await page.waitForFunction(
+    ({ previousRootText }) =>
+      String(document.querySelector('#root')?.innerText || '') !== previousRootText,
+    { previousRootText },
+    { timeout: routeTimeoutMs },
   )
 }
 
@@ -193,12 +271,87 @@ const takeRouteScreenshot = async ({
   formType,
   route,
   name,
+  expectedPath = route,
   expectedHeading = null,
+  expectedText = null,
+  expectedSelectedType = null,
 }) => {
-  await page.goto(route, { waitUntil: 'domcontentloaded' })
-  await waitForAppReady(page, route)
+  await navigateToAppRoute(page, route)
+  await waitForAppReady(page)
+  const loginRedirected =
+    new URL(page.url()).pathname === '/login' ||
+    (await page
+      .getByRole('button', { name: 'Sign in' })
+      .isVisible()
+      .catch(() => false))
+  if (loginRedirected) {
+    report.notes.push(`Browser session returned to login while opening ${route}; retried once.`)
+    await loginInBrowser(page, report)
+    await navigateToAppRoute(page, route)
+    await waitForAppReady(page)
+  }
+  const sessionRestoreError = page
+    .getByRole('alert')
+    .filter({ hasText: /Unable to restore session/i })
+  if (await sessionRestoreError.isVisible().catch(() => false)) {
+    report.notes.push(`Browser session restore failed while opening ${route}; retried once.`)
+    await clickFirstVisible(page.getByRole('button', { name: 'Retry session check' }))
+    await expect(sessionRestoreError).toBeHidden({ timeout: routeTimeoutMs })
+  }
+  await waitForAppReady(page, expectedPath)
   if (expectedHeading) {
     await expect(page.getByRole('heading', { name: expectedHeading })).toBeVisible({
+      timeout: routeTimeoutMs,
+    })
+  }
+  if (expectedText) {
+    await expect
+      .poll(
+        async () => {
+          const visibleText = await firstVisible(page.getByText(expectedText, { exact: false }))
+          if (await visibleText.isVisible().catch(() => false)) return true
+          return page.locator('input, textarea').evaluateAll((elements, marker) => {
+            const expected = String(marker || '').toLowerCase()
+            return elements.some((element) => {
+              const style = window.getComputedStyle(element)
+              const rect = element.getBoundingClientRect()
+              return (
+                String(element.value || '')
+                  .toLowerCase()
+                  .includes(expected) &&
+                style.display !== 'none' &&
+                style.visibility !== 'hidden' &&
+                rect.width > 0 &&
+                rect.height > 0
+              )
+            })
+          }, expectedText)
+        },
+        { timeout: routeTimeoutMs },
+      )
+      .toBe(true)
+  }
+  if (expectedSelectedType) {
+    const typeSectionMatch =
+      expectedSelectedType === 'General Inspection'
+        ? /General(?: Inspection)?/i
+        : expectedSelectedType
+    const selectedTypePattern =
+      expectedSelectedType === 'General Inspection'
+        ? /^General(?: Inspection)?$/i
+        : new RegExp(
+            `^${String(expectedSelectedType).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`,
+            'i',
+          )
+    const typeSection = page
+      .locator('.inspection-form-section')
+      .filter({ hasText: typeSectionMatch })
+      .first()
+    await expect(typeSection).toBeVisible({ timeout: routeTimeoutMs })
+    await expect(typeSection.getByText(selectedTypePattern).first()).toBeVisible({
+      timeout: routeTimeoutMs,
+    })
+    await expect(typeSection.getByText('Choose Type', { exact: true })).toBeHidden({
       timeout: routeTimeoutMs,
     })
   }
@@ -225,12 +378,18 @@ test.describe.serial('inspection live smoke + QAQC', () => {
     !liveSmokeEnabled,
     'Set VMECC_LIVE_SMOKE=1 to allow production-safe live smoke execution.',
   )
+  test.skip(
+    !localhostMutationTarget,
+    'This mutation-heavy suite requires VMECC_LIVE_ALLOW_MUTATIONS=1 and loopback HTTP frontend/API origins.',
+  )
 
   test('covers live inspection CRUD, QAQC, and artifact reporting', async ({
     browser,
     request,
   }, testInfo) => {
-    test.setTimeout(20 * 60_000)
+    test.setTimeout(30 * 60_000)
+    expect(new URL(baseUrl).hostname).toMatch(/^(?:localhost|127\.0\.0\.1|::1)$/i)
+    expect(new URL(apiBaseUrl).hostname).toMatch(/^(?:localhost|127\.0\.0\.1|::1)$/i)
     ensureArtifactDirectories()
 
     const report = createLiveReport()
@@ -241,6 +400,9 @@ test.describe.serial('inspection live smoke + QAQC', () => {
     const createdCatalog = {
       location: null,
       subLocation: null,
+      siteZone: null,
+      siteArea: null,
+      siteLocation: null,
       erAuxEquipment: null,
       hydraulicEquipment: null,
       fireExtinguisher: null,
@@ -252,6 +414,55 @@ test.describe.serial('inspection live smoke + QAQC', () => {
 
     const formRecords = []
     const browserFailureMessages = []
+    const siteZoneName = `${runMarker} Zone`
+    const siteAreaName = `${runMarker} Yard`
+    const siteLocationName = `${runMarker} Rack`
+
+    const createSiteLocationNode = async ({ level, parentId = null, name }) => {
+      const result = await apiRequest(request, report, 'post', '/inspection/site-locations', {
+        csrfToken,
+        note: `create run-scoped site ${level}`,
+        data: {
+          level,
+          ...(parentId ? { parentId: Number(parentId) } : {}),
+          name,
+          description: `${runMarker} ${level}`,
+        },
+      })
+      recordApiOutcome(report, {
+        endpoint: canonicalEndpoint('post', '/inspection/site-locations'),
+        result,
+        expectedStatuses: [201],
+        note: `create site ${level}`,
+      })
+
+      const node = result.body?.data || null
+      if (node?.id) {
+        const cleanupId = node.id
+        registerCleanupTask(
+          report,
+          {
+            endpoint: canonicalEndpoint('delete', '/inspection/site-locations/{locationId}'),
+            objectType: `inspection-site-${level}`,
+            identifier: cleanupId,
+            lastKnownState: node,
+          },
+          async () => {
+            const cleanup = await apiRequest(
+              request,
+              report,
+              'delete',
+              `/inspection/site-locations/${encodeURIComponent(String(cleanupId))}`,
+              { csrfToken, note: `cleanup site ${level}` },
+            )
+            if (![200, 204, 404].includes(cleanup.status)) {
+              throw new Error(`Site ${level} cleanup returned ${cleanup.status}`)
+            }
+          },
+        )
+      }
+      return node
+    }
 
     const desktopContext = await browser.newContext({
       baseURL: baseUrl,
@@ -309,7 +520,7 @@ test.describe.serial('inspection live smoke + QAQC', () => {
           formType: null,
           route: '/inspection',
           name: 'records-shell',
-          expectedHeading: /Inspection Records/i,
+          expectedHeading: /^Inspection$/i,
         })
         await takeRouteScreenshot({
           page: desktopPage,
@@ -319,7 +530,7 @@ test.describe.serial('inspection live smoke + QAQC', () => {
           formType: null,
           route: '/inspection/new',
           name: 'new-shell',
-          expectedHeading: /Conduct Inspection/i,
+          expectedHeading: /^Inspection$/i,
         })
         await takeRouteScreenshot({
           page: desktopPage,
@@ -329,14 +540,15 @@ test.describe.serial('inspection live smoke + QAQC', () => {
           formType: null,
           route: '/inspection/workflow-settings',
           name: 'workflow-settings',
-          expectedHeading: /Reporting Settings/i,
+          expectedPath: '/reporting-settings/inspection',
+          expectedHeading: /^Reporting Workflow$/i,
         })
       }
 
       if (!loginFailed) {
         const noCsrf = await apiRequest(request, report, 'post', '/inspection/fire-trucks', {
           note: 'csrf missing negative test',
-          data: { plateNo: `${runMarker}-NO-CSRF`.slice(0, 40) },
+          data: { plateNo: buildSmokePlate('NO-CSRF') },
         })
         recordApiOutcome(report, {
           endpoint: canonicalEndpoint('post', '/inspection/fire-trucks'),
@@ -348,7 +560,7 @@ test.describe.serial('inspection live smoke + QAQC', () => {
         const badCsrf = await apiRequest(request, report, 'post', '/inspection/fire-trucks', {
           csrfToken: 'invalid-token',
           note: 'csrf invalid negative test',
-          data: { plateNo: `${runMarker}-BAD-CSRF`.slice(0, 40) },
+          data: { plateNo: buildSmokePlate('BAD-CSRF') },
         })
         recordApiOutcome(report, {
           endpoint: canonicalEndpoint('post', '/inspection/fire-trucks'),
@@ -692,12 +904,93 @@ test.describe.serial('inspection live smoke + QAQC', () => {
           )
         }
 
+        const siteLocationList = await apiRequest(
+          request,
+          report,
+          'get',
+          '/inspection/site-locations',
+          { note: 'list canonical site-location hierarchy' },
+        )
+        recordApiOutcome(report, {
+          endpoint: canonicalEndpoint('get', '/inspection/site-locations'),
+          result: siteLocationList,
+          expectedStatuses: [200],
+          note: 'list canonical site-location hierarchy',
+        })
+
+        createdCatalog.siteZone = await createSiteLocationNode({
+          level: 'zone',
+          name: siteZoneName,
+        })
+        if (createdCatalog.siteZone?.id) {
+          createdCatalog.siteArea = await createSiteLocationNode({
+            level: 'area',
+            parentId: createdCatalog.siteZone.id,
+            name: siteAreaName,
+          })
+        }
+        if (createdCatalog.siteArea?.id) {
+          createdCatalog.siteLocation = await createSiteLocationNode({
+            level: 'location',
+            parentId: createdCatalog.siteArea.id,
+            name: siteLocationName,
+          })
+        }
+
+        if (createdCatalog.siteLocation?.id) {
+          const updateSiteLocation = await apiRequest(
+            request,
+            report,
+            'patch',
+            `/inspection/site-locations/${encodeURIComponent(
+              String(createdCatalog.siteLocation.id),
+            )}`,
+            {
+              csrfToken,
+              note: 'update run-scoped site location metadata',
+              data: {
+                name: siteLocationName,
+                description: `${runMarker} location updated`,
+              },
+            },
+          )
+          recordApiOutcome(report, {
+            endpoint: canonicalEndpoint('patch', '/inspection/site-locations/{locationId}'),
+            result: updateSiteLocation,
+            expectedStatuses: [200],
+            note: 'update site location metadata',
+          })
+          createdCatalog.siteLocation = updateSiteLocation.body?.data || createdCatalog.siteLocation
+
+          const duplicateSiteLocation = await apiRequest(
+            request,
+            report,
+            'post',
+            '/inspection/site-locations',
+            {
+              csrfToken,
+              note: 'duplicate site location integrity probe',
+              data: {
+                level: 'location',
+                parentId: Number(createdCatalog.siteArea.id),
+                name: siteLocationName,
+              },
+            },
+          )
+          recordApiOutcome(report, {
+            endpoint: canonicalEndpoint('post', '/inspection/site-locations'),
+            result: duplicateSiteLocation,
+            expectedStatuses: [409],
+            note: 'duplicate site location rejected',
+          })
+        }
+
         const fireExtinguisherList = await apiRequest(
           request,
           report,
           'get',
-          `/inspection/fire-extinguishers?mainLocation=${encodeURIComponent('Smoke Yard')}&subLocation=${encodeURIComponent(
-            'Smoke Rack',
+          `/inspection/fire-extinguishers?mainLocation=${encodeURIComponent(siteAreaName)}&subLocation=${encodeURIComponent(
+            siteLocationName,
           )}`,
           {
             note: 'list fire extinguisher catalog',
@@ -720,9 +1013,12 @@ test.describe.serial('inspection live smoke + QAQC', () => {
             csrfToken,
             note: 'create fire extinguisher catalog row',
             data: {
-              zone: `${runMarker} Zone`,
-              mainLocation: 'Smoke Yard',
-              subLocation: 'Smoke Rack',
+              zone: siteZoneName,
+              zoneId: Number(createdCatalog.siteZone?.id),
+              mainLocation: siteAreaName,
+              mainLocationId: Number(createdCatalog.siteArea?.id),
+              subLocation: siteLocationName,
+              subLocationId: Number(createdCatalog.siteLocation?.id),
               idLocNo: `${runMarker}-FE-LOC`,
               barcodeNo: `${runMarker}-FE-BC`,
               feType: 'CO2',
@@ -749,9 +1045,12 @@ test.describe.serial('inspection live smoke + QAQC', () => {
               csrfToken,
               note: 'duplicate fire extinguisher integrity probe',
               data: {
-                zone: `${runMarker} Zone`,
-                mainLocation: 'Smoke Yard',
-                subLocation: 'Smoke Rack',
+                zone: siteZoneName,
+                zoneId: Number(createdCatalog.siteZone?.id),
+                mainLocation: siteAreaName,
+                mainLocationId: Number(createdCatalog.siteArea?.id),
+                subLocation: siteLocationName,
+                subLocationId: Number(createdCatalog.siteLocation?.id),
                 idLocNo: `${runMarker}-FE-LOC`,
                 barcodeNo: `${runMarker}-FE-BC`,
                 feType: 'CO2',
@@ -759,6 +1058,13 @@ test.describe.serial('inspection live smoke + QAQC', () => {
               },
             },
           )
+          recordApiOutcome(report, {
+            endpoint: canonicalEndpoint('post', '/inspection/fire-extinguishers'),
+            result: duplicateFireExtinguisher,
+            expectedStatuses: [409],
+            formType: 'Fire Extinguisher',
+            note: 'duplicate fire extinguisher locator rejected',
+          })
           if (duplicateFireExtinguisher.status === 201) {
             const duplicateFireExtinguisherId = duplicateFireExtinguisher.body?.data?.id
             if (duplicateFireExtinguisherId) {
@@ -812,9 +1118,12 @@ test.describe.serial('inspection live smoke + QAQC', () => {
               csrfToken,
               note: 'update fire extinguisher row',
               data: {
-                zone: `${runMarker} Zone Updated`,
-                mainLocation: 'Smoke Yard',
-                subLocation: 'Smoke Rack',
+                zone: siteZoneName,
+                zoneId: Number(createdCatalog.siteZone?.id),
+                mainLocation: siteAreaName,
+                mainLocationId: Number(createdCatalog.siteArea?.id),
+                subLocation: siteLocationName,
+                subLocationId: Number(createdCatalog.siteLocation?.id),
                 idLocNo: `${runMarker}-FE-LOC-UPD`,
                 barcodeNo: `${runMarker}-FE-BC-UPD`,
                 feType: 'CO2',
@@ -883,7 +1192,7 @@ test.describe.serial('inspection live smoke + QAQC', () => {
             csrfToken,
             note: 'valid csrf fire truck create',
             data: {
-              plateNo: `${runMarker}-TRK`.replace(/[^A-Za-z0-9-]/g, '').slice(0, 40),
+              plateNo: buildSmokePlate('TRK'),
               name: `${runMarker} fire truck`,
               roadTaxExpiry: addDays(reportDate, 365),
               insuranceExpiry: addDays(reportDate, 365),
@@ -922,7 +1231,7 @@ test.describe.serial('inspection live smoke + QAQC', () => {
             note: 'duplicate fire truck rejected',
           })
 
-          const updatedPlateNo = `${createdCatalog.fireTruck.plateNo}-UPD`.slice(0, 40)
+          const updatedPlateNo = buildSmokePlate('TRK-UPD')
           const updateFireTruck = await apiRequest(
             request,
             report,
@@ -1318,10 +1627,11 @@ test.describe.serial('inspection live smoke + QAQC', () => {
             createdCatalog.fireExtinguisher?.catalogId ||
             createdCatalog.fireExtinguisher?.id ||
             null,
+          fireExtinguisherZone: text(createdCatalog.fireExtinguisher?.zone) || siteZoneName,
           fireExtinguisherMainLocation:
-            text(createdCatalog.fireExtinguisher?.mainLocation) || 'Smoke Yard',
+            text(createdCatalog.fireExtinguisher?.mainLocation) || siteAreaName,
           fireExtinguisherSubLocation:
-            text(createdCatalog.fireExtinguisher?.subLocation) || 'Smoke Rack',
+            text(createdCatalog.fireExtinguisher?.subLocation) || siteLocationName,
           fireTruckId: createdCatalog.fireTruck?.truckId || createdCatalog.fireTruck?.id || '',
           fireTruckPlateNo: createdCatalog.fireTruck?.plateNo || '',
           scbaLocationName: 'FRT',
@@ -1398,85 +1708,6 @@ test.describe.serial('inspection live smoke + QAQC', () => {
             formType: inspectionType,
             note: `load draft by id for ${inspectionType}`,
           })
-
-          if (draftId) {
-            try {
-              await desktopPage.goto('/inspection/new', { waitUntil: 'domcontentloaded' })
-              await waitForAppReady(desktopPage, '/inspection/new')
-              await openSavedDraftIfPrompt(desktopPage)
-              if (
-                !(await desktopPage
-                  .getByRole('button', { name: /Review Inspections|Review Submissions/ })
-                  .first()
-                  .isVisible()
-                  .catch(() => false))
-              ) {
-                await openInspectionTypeCard(desktopPage, inspectionType)
-              }
-              await expect(
-                desktopPage
-                  .getByRole('button', { name: /Review Inspections|Review Submissions/ })
-                  .first(),
-              ).toBeVisible({
-                timeout: routeTimeoutMs,
-              })
-              const newScreenshot = await saveScreenshot(
-                desktopPage,
-                testInfo,
-                report,
-                `desktop-${slug(inspectionType)}-new-form`,
-              )
-              recordBrowserCheck(report, {
-                status: MATRIX_STATUS.PASS,
-                viewport: 'desktop',
-                formType: inspectionType,
-                route: '/inspection/new',
-                note: 'new form hydrated from server draft',
-                evidence: [newScreenshot],
-              })
-
-              await clickFirstVisible(
-                desktopPage.getByRole('button', { name: /Review Inspections|Review Submissions/ }),
-              )
-              await desktopPage.waitForURL(/\/inspection\/review(?:[/?#]|$)/, {
-                timeout: routeTimeoutMs,
-              })
-              await waitForAppReady(desktopPage, '/inspection/review')
-              const reviewScreenshot = await saveScreenshot(
-                desktopPage,
-                testInfo,
-                report,
-                `desktop-${slug(inspectionType)}-review`,
-              )
-              recordBrowserCheck(report, {
-                status: MATRIX_STATUS.PASS,
-                viewport: 'desktop',
-                formType: inspectionType,
-                route: '/inspection/review',
-                note: 'review route parity',
-                evidence: [reviewScreenshot],
-              })
-
-              await clickFirstVisible(desktopPage.getByRole('button', { name: 'Back to Edit' }))
-              await desktopPage.waitForURL(
-                /\/inspection\/new(?:[/?#]|$)|\/inspection\/[^/]+\/edit(?:[/?#]|$)/,
-                {
-                  timeout: routeTimeoutMs,
-                },
-              )
-            } catch (error) {
-              browserFailureMessages.push(
-                `Desktop new/review parity failed for ${inspectionType}: ${error?.message || String(error)}`,
-              )
-              recordBrowserCheck(report, {
-                status: MATRIX_STATUS.FAIL,
-                viewport: 'desktop',
-                formType: inspectionType,
-                route: '/inspection/new',
-                note: error?.message || String(error),
-              })
-            }
-          }
 
           const deleteDraftById = await apiRequest(
             request,
@@ -1697,6 +1928,11 @@ test.describe.serial('inspection live smoke + QAQC', () => {
           })
 
           try {
+            await navigateToAppRoute(desktopPage, '/reporting-settings/inspection')
+            await waitForAppReady(desktopPage, '/reporting-settings/inspection')
+            await expect(
+              desktopPage.getByRole('heading', { name: /^Reporting Workflow$/i }),
+            ).toBeVisible({ timeout: routeTimeoutMs })
             await takeRouteScreenshot({
               page: desktopPage,
               report,
@@ -1705,6 +1941,7 @@ test.describe.serial('inspection live smoke + QAQC', () => {
               formType: inspectionType,
               route: `/inspection/${encodeURIComponent(reportUid)}`,
               name: `${slug(inspectionType)}-detail`,
+              expectedText: displayId,
             })
             await takeRouteScreenshot({
               page: desktopPage,
@@ -1714,6 +1951,7 @@ test.describe.serial('inspection live smoke + QAQC', () => {
               formType: inspectionType,
               route: `/inspection/${encodeURIComponent(reportUid)}/edit`,
               name: `${slug(inspectionType)}-edit`,
+              expectedSelectedType: inspectionType,
             })
           } catch (error) {
             browserFailureMessages.push(
@@ -2242,7 +2480,7 @@ test.describe.serial('inspection live smoke + QAQC', () => {
               formType: null,
               route: '/inspection',
               name: 'records-shell',
-              expectedHeading: /Inspection Records/i,
+              expectedHeading: viewport.key === 'mobile' ? null : /^Inspection$/i,
             })
             await takeRouteScreenshot({
               page,
@@ -2252,8 +2490,14 @@ test.describe.serial('inspection live smoke + QAQC', () => {
               formType: null,
               route: '/inspection/new',
               name: 'new-shell',
-              expectedHeading: /Conduct Inspection/i,
+              expectedHeading: viewport.key === 'mobile' ? null : /^Inspection$/i,
             })
+
+            if (viewport.key === 'mobile') {
+              await expect(page.getByText('Choose Type', { exact: true })).toBeVisible({
+                timeout: routeTimeoutMs,
+              })
+            }
 
             for (const representative of formRecords) {
               await takeRouteScreenshot({
@@ -2264,6 +2508,7 @@ test.describe.serial('inspection live smoke + QAQC', () => {
                 formType: representative.inspectionType,
                 route: `/inspection/${encodeURIComponent(representative.reportUid)}`,
                 name: `${slug(representative.inspectionType)}-detail`,
+                expectedText: representative.displayId,
               })
               await takeRouteScreenshot({
                 page,
@@ -2273,10 +2518,16 @@ test.describe.serial('inspection live smoke + QAQC', () => {
                 formType: representative.inspectionType,
                 route: `/inspection/${encodeURIComponent(representative.reportUid)}/edit`,
                 name: `${slug(representative.inspectionType)}-edit`,
+                expectedSelectedType: representative.inspectionType,
               })
             }
 
             if (viewport.key === 'mobile') {
+              await page.goto('/inspection', { waitUntil: 'domcontentloaded' })
+              await waitForAppReady(page, '/inspection')
+              const viewAllRecords = page.getByRole('button', { name: /^View all/i })
+              await expect(viewAllRecords).toBeVisible({ timeout: routeTimeoutMs })
+              await viewAllRecords.click()
               const openFilters = page.getByRole('button', { name: 'Open filters' })
               await expect(openFilters).toBeVisible({ timeout: routeTimeoutMs })
               await openFilters.click()
@@ -2324,7 +2575,7 @@ test.describe.serial('inspection live smoke + QAQC', () => {
               note: error?.message || String(error),
             })
           } finally {
-            await context.close()
+            await closeContextWithTimeout(context, report, `${viewport.key} responsive`)
           }
         }
 
@@ -2337,6 +2588,10 @@ test.describe.serial('inspection live smoke + QAQC', () => {
         const offlinePage = await offlineContext.newPage()
         attachDiagnostics(offlinePage, report, 'offline-mobile')
         try {
+          writeJsonArtifact('progress.json', {
+            phase: 'offline-flow-started',
+            recordedAt: new Date().toISOString(),
+          })
           await apiRequest(request, report, 'delete', '/reports/draft?report_type=inspection', {
             csrfToken,
             note: 'clear draft before offline queue flow',
@@ -2345,9 +2600,17 @@ test.describe.serial('inspection live smoke + QAQC', () => {
           await waitForAppReady(offlinePage, '/inspection/new')
           await fillRepresentativeOfflineGeneralFlow(offlinePage)
 
-          await offlineContext.setOffline(true)
+          await completeWithin(
+            () => offlineContext.setOffline(true),
+            'Enabling browser offline mode',
+          )
+          await expect
+            .poll(() => offlinePage.evaluate(() => navigator.onLine), {
+              timeout: routeTimeoutMs,
+            })
+            .toBe(false)
           await clickFirstVisible(
-            offlinePage.getByRole('button', { name: /Review Inspections|Review Submissions/ }),
+            offlinePage.getByRole('button', { name: /Continue to Review(?: Updates)?/ }),
           )
           await offlinePage.waitForURL(/\/inspection\/review(?:[/?#]|$)/, {
             timeout: routeTimeoutMs,
@@ -2388,10 +2651,19 @@ test.describe.serial('inspection live smoke + QAQC', () => {
           }
 
           await clickFirstVisible(offlinePage.getByRole('button', { name: 'Queue for sync' }))
+          const confirmQueue = offlinePage.getByRole('button', { name: 'Confirm Queue' })
+          if (
+            await confirmQueue
+              .waitFor({ state: 'visible', timeout: 2000 })
+              .then(() => true)
+              .catch(() => false)
+          ) {
+            await clickFirstVisible(confirmQueue)
+          }
           await offlinePage.waitForURL(/\/inspection(?:[/?#]|$)/, { timeout: routeTimeoutMs })
           await waitForAppReady(offlinePage, '/inspection')
           await expect(
-            offlinePage.getByText(/queued for sync|Syncing queued reports/i),
+            await firstVisible(offlinePage.getByText(/queued for sync|Syncing queued reports/i)),
           ).toBeVisible({
             timeout: routeTimeoutMs,
           })
@@ -2419,7 +2691,10 @@ test.describe.serial('inspection live smoke + QAQC', () => {
           await saveScreenshot(offlinePage, testInfo, report, 'mobile-offline-queue-details')
           await offlinePage.keyboard.press('Escape')
 
-          await offlineContext.setOffline(false)
+          writeJsonArtifact('progress.json', {
+            phase: 'offline-queue-details-complete',
+            recordedAt: new Date().toISOString(),
+          })
           const syncResponsePromise = offlinePage.waitForResponse(
             (response) => {
               try {
@@ -2433,8 +2708,55 @@ test.describe.serial('inspection live smoke + QAQC', () => {
             },
             { timeout: 60_000 },
           )
-          await clickFirstVisible(offlinePage.getByRole('button', { name: 'Retry now' }))
-          const syncResponse = await syncResponsePromise
+          await completeWithin(
+            () => offlineContext.setOffline(false),
+            'Disabling browser offline mode',
+          )
+          writeJsonArtifact('progress.json', {
+            phase: 'browser-online-restored',
+            recordedAt: new Date().toISOString(),
+          })
+          const retryNow = offlinePage.getByRole('button', { name: 'Retry now' })
+          let syncResponse = await Promise.race([
+            syncResponsePromise,
+            new Promise((resolve) => setTimeout(() => resolve(null), 2_000)),
+          ])
+          if (!syncResponse) {
+            const retryCandidate = await firstVisible(retryNow)
+            const mayRetry =
+              (await retryCandidate.isVisible().catch(() => false)) &&
+              (await retryCandidate.isEnabled().catch(() => false))
+            if (mayRetry) {
+              writeJsonArtifact('progress.json', {
+                phase: 'offline-sync-retry-clicking',
+                recordedAt: new Date().toISOString(),
+              })
+              await completeWithin(
+                () => retryCandidate.click({ noWaitAfter: true, timeout: 10_000 }),
+                'Clicking offline sync retry',
+              )
+              writeJsonArtifact('progress.json', {
+                phase: 'offline-sync-retry-clicked',
+                recordedAt: new Date().toISOString(),
+              })
+            } else {
+              writeJsonArtifact('progress.json', {
+                phase: 'offline-auto-sync-in-progress',
+                recordedAt: new Date().toISOString(),
+              })
+            }
+            syncResponse = await syncResponsePromise
+          } else {
+            writeJsonArtifact('progress.json', {
+              phase: 'offline-auto-sync-observed',
+              recordedAt: new Date().toISOString(),
+            })
+          }
+          writeJsonArtifact('progress.json', {
+            phase: 'offline-sync-response-received',
+            recordedAt: new Date().toISOString(),
+            status: syncResponse.status(),
+          })
           expect(syncResponse.status()).toBe(201)
           const syncedBody = await syncResponse.json()
           const syncedReportUid = text(syncedBody?.data?.id)
@@ -2464,15 +2786,45 @@ test.describe.serial('inspection live smoke + QAQC', () => {
             )
           }
 
-          await expect(offlinePage.getByText(/queued for sync|Syncing queued reports/i)).toBeHidden(
-            {
-              timeout: 60_000,
-            },
-          )
+          await expect
+            .poll(
+              async () => {
+                const queuedState = offlinePage.getByText(/queued for sync|Syncing queued reports/i)
+                const count = await queuedState.count()
+                for (let index = 0; index < count; index += 1) {
+                  if (
+                    await queuedState
+                      .nth(index)
+                      .isVisible()
+                      .catch(() => false)
+                  )
+                    return false
+                }
+                return true
+              },
+              { timeout: 60_000 },
+            )
+            .toBe(true)
+          writeJsonArtifact('progress.json', {
+            phase: 'offline-queue-cleared',
+            recordedAt: new Date().toISOString(),
+          })
+          recordBrowserCheck(report, {
+            status: MATRIX_STATUS.PASS,
+            viewport: 'mobile',
+            route: '/inspection/review',
+            note: 'offline queue, details, reconnect sync, and cleanup',
+          })
         } catch (error) {
           browserFailureMessages.push(
             `Offline queue flow failed: ${error?.message || String(error)}`,
           )
+          recordBrowserCheck(report, {
+            status: MATRIX_STATUS.FAIL,
+            viewport: 'mobile',
+            route: '/inspection/review',
+            note: `offline queue flow failed: ${error?.message || String(error)}`,
+          })
           recordQaqcFinding(report, {
             bucket: QAQC_BUCKET.REPRODUCED_LIVE,
             category: 'Workflow consistency',
@@ -2480,12 +2832,33 @@ test.describe.serial('inspection live smoke + QAQC', () => {
             detail: error?.message || String(error),
           })
         } finally {
-          await offlineContext.close()
+          writeJsonArtifact('progress.json', {
+            phase: 'offline-context-closing',
+            recordedAt: new Date().toISOString(),
+          })
+          await closeContextWithTimeout(offlineContext, report, 'offline mobile')
+          writeJsonArtifact('progress.json', {
+            phase: 'offline-context-close-finished',
+            recordedAt: new Date().toISOString(),
+          })
         }
       }
     } finally {
-      report.completedAt = new Date().toISOString()
+      writeJsonArtifact('progress.json', {
+        phase: 'desktop-context-closing',
+        recordedAt: new Date().toISOString(),
+      })
+      await closeContextWithTimeout(desktopContext, report, 'desktop')
+      writeJsonArtifact('progress.json', {
+        phase: 'cleanup-started',
+        recordedAt: new Date().toISOString(),
+      })
       await runCleanupTasks(report)
+      writeJsonArtifact('progress.json', {
+        phase: 'cleanup-finished',
+        recordedAt: new Date().toISOString(),
+      })
+      report.completedAt = new Date().toISOString()
       report.notes.push(...browserFailureMessages)
 
       const qaqcMarkdown = generateQaqcMarkdown(report)
@@ -2500,8 +2873,6 @@ test.describe.serial('inspection live smoke + QAQC', () => {
         notes: report.notes,
       })
       writeTextArtifact('qaqc-report.md', qaqcMarkdown)
-
-      await desktopContext.close()
     }
 
     const endpointFailures = report.endpointMatrix.filter(

@@ -135,6 +135,26 @@ export const HydraulicEquipmentCheckDetails = ({
     readOnly ? hasGeneralRemarks : expandedGeneralRemarks[row.id] || hasGeneralRemarks,
   )
   const photos = Array.isArray(current.photos) ? current.photos : []
+  const openGeneralPhotoViewer = (nextPhotos = photos) =>
+    setPhotoViewer({
+      title: `${row.equipment} - additional photos`,
+      photos: nextPhotos,
+      readOnly,
+      onAddMorePhoto: readOnly
+        ? undefined
+        : (currentPhotos) =>
+            onRequestPhotoUpload?.(
+              row,
+              buildPhotoViewerUploadOptions(openGeneralPhotoViewer, { currentPhotos }),
+            ),
+      onRemove: readOnly ? undefined : (photoId) => onRemovePhoto?.(row, photoId, 'photos'),
+      onChangeDescription: readOnly
+        ? undefined
+        : (photoId, description) => onChangePhotoDescription?.(row, photoId, description, 'photos'),
+      onApplyCaption: readOnly
+        ? undefined
+        : (photoId, caption) => onApplyPhotoCaption?.(row, photoId, caption, 'photos'),
+    })
 
   return (
     <>
@@ -322,7 +342,14 @@ export const HydraulicEquipmentCheckDetails = ({
               label="Photo"
               className="inspection-compact-action-btn"
               icon={<Camera size={13} className="me-1 align-text-bottom" />}
-              onClick={() => onRequestPhotoUpload?.(row)}
+              onClick={() =>
+                onRequestPhotoUpload?.(
+                  row,
+                  buildPhotoViewerUploadOptions(openGeneralPhotoViewer, {
+                    currentPhotos: photos,
+                  }),
+                )
+              }
             />
           </div>
         ) : null}
@@ -388,17 +415,7 @@ export const HydraulicEquipmentCheckDetails = ({
           <InspectionPhotoEvidenceSummary
             photos={photos}
             label="View photos"
-            onView={() =>
-              setPhotoViewer({
-                title: `${row.equipment} - additional photos`,
-                photos,
-                onRemove: (photoId) => onRemovePhoto?.(row, photoId, 'photos'),
-                onChangeDescription: (photoId, description) =>
-                  onChangePhotoDescription?.(row, photoId, description, 'photos'),
-                onApplyCaption: (photoId, caption) =>
-                  onApplyPhotoCaption?.(row, photoId, caption, 'photos'),
-              })
-            }
+            onView={() => openGeneralPhotoViewer(photos)}
           />
         ) : null}
       </div>

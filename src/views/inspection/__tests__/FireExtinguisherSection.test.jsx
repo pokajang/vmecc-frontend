@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React, { useState } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { FireExtinguisherEditSection } from '../types/fire-extinguisher/section'
 import { FIRE_EXTINGUISHER_CHECK_FIELDS } from '../types/fire-extinguisher/helpers'
 
@@ -432,6 +432,7 @@ describe('FireExtinguisherEditSection', () => {
   it('preserves the photo-viewer callback through the mobile draft upload handler', () => {
     setMobileViewport()
     const onRequestDefectPhotoUpload = vi.fn()
+    const onSaveFireExtinguisherRowDraft = vi.fn()
     const row = buildCompleteOkRow({
       id: 'fe:mobile-photo',
       physicalCondition: 'Not Good',
@@ -446,7 +447,7 @@ describe('FireExtinguisherEditSection', () => {
         totalCount: 1,
         defectCount: 1,
       },
-      handlers: { onRequestDefectPhotoUpload },
+      handlers: { onRequestDefectPhotoUpload, onSaveFireExtinguisherRowDraft },
     })
 
     fireEvent.click(screen.getByText('ADO-001'))
@@ -458,6 +459,45 @@ describe('FireExtinguisherEditSection', () => {
       expect.objectContaining({
         onAddPhotos: expect.any(Function),
         onAfterAddPhotos: expect.any(Function),
+      }),
+    )
+
+    const uploadOptions = onRequestDefectPhotoUpload.mock.calls[0][2]
+    const photo = {
+      id: 'captured-photo',
+      fileName: 'captured-photo.jpg',
+      url: '/captured-photo.jpg',
+    }
+    act(() => {
+      uploadOptions.onAddPhotos(row, 'physicalConditionPhotos', [photo])
+      uploadOptions.onAfterAddPhotos({
+        photosKey: 'physicalConditionPhotos',
+        photos: [photo],
+        addedPhotos: [photo],
+        row,
+      })
+    })
+
+    const photoDrawerTitle = screen.getByText('ADO-001 - FE Physical Condition defect photos')
+    const photoDrawer = photoDrawerTitle.closest('[role="dialog"]')
+    expect(photoDrawer).toBeTruthy()
+    expect(screen.getAllByRole('dialog')).toHaveLength(2)
+
+    fireEvent.change(within(photoDrawer).getByLabelText('Photo description'), {
+      target: { value: 'Damage beside the pressure gauge.' },
+    })
+    fireEvent.click(within(photoDrawer).getByRole('button', { name: 'Save' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(onSaveFireExtinguisherRowDraft).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'fe:mobile-photo',
+        physicalConditionPhotos: [
+          expect.objectContaining({
+            id: 'captured-photo',
+            description: 'Damage beside the pressure gauge.',
+          }),
+        ],
       }),
     )
   })

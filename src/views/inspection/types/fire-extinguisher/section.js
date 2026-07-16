@@ -14,6 +14,8 @@ import {
 import InspectionResetConfirmDrawer from '../../form/components/InspectionResetConfirmDrawer'
 import {
   applyPhotoCaptionById,
+  buildInspectionPhotoListPatch,
+  mergeInspectionPhotoLists,
   removePhotoById,
   updatePhotoDescriptionById,
 } from '../../form/inspectionPhotoUtils'
@@ -322,7 +324,11 @@ const FireExtinguisherListView = ({
   )
 
   const patchMobileDraftRow = useCallback((patch) => {
-    setMobileDraftRow((current) => (current ? { ...current, ...patch } : current))
+    setMobileDraftRow((current) => {
+      if (!current) return current
+      const resolvedPatch = typeof patch === 'function' ? patch(current) : patch
+      return { ...current, ...(resolvedPatch || {}) }
+    })
     setMobileSaveStatus('Unsaved changes')
   }, [])
 
@@ -334,7 +340,11 @@ const FireExtinguisherListView = ({
         handlers.onRequestPhotoUpload?.(
           row,
           buildStagedPhotoUploadOptions(options, (_targetRow, photosKey, photos) =>
-            patchMobileDraftRow({ [photosKey]: photos }),
+            patchMobileDraftRow((current) =>
+              buildInspectionPhotoListPatch(current, photosKey, (currentPhotos) =>
+                mergeInspectionPhotoLists(currentPhotos, photos),
+              ),
+            ),
           ),
         ),
       onRequestDefectPhotoUpload: (row, field, options = {}) =>
@@ -342,25 +352,31 @@ const FireExtinguisherListView = ({
           row,
           field,
           buildStagedPhotoUploadOptions(options, (_targetRow, photosKey, photos) =>
-            patchMobileDraftRow({ [photosKey]: photos }),
+            patchMobileDraftRow((current) =>
+              buildInspectionPhotoListPatch(current, photosKey, (currentPhotos) =>
+                mergeInspectionPhotoLists(currentPhotos, photos),
+              ),
+            ),
           ),
         ),
-      onRemovePhoto: (row, photoId, photosKey = 'photos') => {
-        const currentPhotos = Array.isArray(row?.[photosKey]) ? row[photosKey] : []
-        patchMobileDraftRow({ [photosKey]: removePhotoById(currentPhotos, photoId) })
-      },
-      onChangePhotoDescription: (row, photoId, description, photosKey = 'photos') => {
-        const currentPhotos = Array.isArray(row?.[photosKey]) ? row[photosKey] : []
-        patchMobileDraftRow({
-          [photosKey]: updatePhotoDescriptionById(currentPhotos, photoId, description),
-        })
-      },
-      onApplyPhotoCaption: (row, photoId, caption, photosKey = 'photos') => {
-        const currentPhotos = Array.isArray(row?.[photosKey]) ? row[photosKey] : []
-        patchMobileDraftRow({
-          [photosKey]: applyPhotoCaptionById(currentPhotos, photoId, caption, appendInspectionText),
-        })
-      },
+      onRemovePhoto: (_row, photoId, photosKey = 'photos') =>
+        patchMobileDraftRow((current) =>
+          buildInspectionPhotoListPatch(current, photosKey, (currentPhotos) =>
+            removePhotoById(currentPhotos, photoId),
+          ),
+        ),
+      onChangePhotoDescription: (_row, photoId, description, photosKey = 'photos') =>
+        patchMobileDraftRow((current) =>
+          buildInspectionPhotoListPatch(current, photosKey, (currentPhotos) =>
+            updatePhotoDescriptionById(currentPhotos, photoId, description),
+          ),
+        ),
+      onApplyPhotoCaption: (_row, photoId, caption, photosKey = 'photos') =>
+        patchMobileDraftRow((current) =>
+          buildInspectionPhotoListPatch(current, photosKey, (currentPhotos) =>
+            applyPhotoCaptionById(currentPhotos, photoId, caption, appendInspectionText),
+          ),
+        ),
     }),
     [handlers, patchMobileDraftRow],
   )
@@ -838,12 +854,12 @@ export const buildFireExtinguisherDetailFindingItems = (form = {}, summary = nul
   }))
 }
 
-export const renderFireExtinguisherDetailFindingContent = (item) => {
+export const renderFireExtinguisherDetailFindingContent = (item, { onViewPhotos } = {}) => {
   const row = item?.row
   if (!row) return null
   return (
     <div className="inspection-form-section d-grid gap-3">
-      <FireExtinguisherRowDetails readOnly row={row} />
+      <FireExtinguisherRowDetails readOnly row={row} onViewPhotos={onViewPhotos} />
     </div>
   )
 }

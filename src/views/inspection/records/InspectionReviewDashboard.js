@@ -1,7 +1,17 @@
 import React, { useMemo, useState } from 'react'
-import { CAlert, CButton, CFormLabel, CListGroup, CListGroupItem } from '@coreui/react'
+import {
+  CAlert,
+  CButton,
+  CListGroup,
+  CListGroupItem,
+  CModal,
+  CModalBody,
+  CModalHeader,
+  CModalTitle,
+} from '@coreui/react'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import { ReportPhotoImage } from 'src/components/report-workflow/ReportViewComponents'
+import useMediaQuery from 'src/hooks/useMediaQuery'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import { buildInspectionReviewDashboardItems } from './inspectionReviewDashboardAdapter'
 
@@ -39,9 +49,9 @@ const formatInspectionDate = (value) => {
   })
 }
 
-const getSubmitTitle = (item = {}, isUpdateMode = false) => {
+const getSubmitTitle = (item = {}, isUpdateMode = false, mayQueue = false) => {
   const title = String(item.displayTitle || 'Inspection').trim()
-  const action = isUpdateMode ? 'Update' : 'Submit'
+  const action = mayQueue ? 'Queue' : isUpdateMode ? 'Update' : 'Submit'
   return `${action} ${/inspection$/i.test(title) ? title : `${title} Inspection`}?`
 }
 
@@ -51,6 +61,7 @@ const InspectionReviewTypeCard = ({
   isRetryingSync,
   isSubmitting,
   isUpdateMode = false,
+  mayQueue = false,
   onViewDetails,
   onSubmit,
   onRetrySync,
@@ -95,6 +106,7 @@ const InspectionReviewTypeCard = ({
         <div className="inspection-review-type-card__actions">
           {retryableSyncBlocker ? (
             <CButton
+              type="button"
               size="sm"
               color="warning"
               variant="outline"
@@ -108,14 +120,25 @@ const InspectionReviewTypeCard = ({
                 : `Retry Sync${retryCount > 1 ? ` (${retryCount})` : ''}`}
             </CButton>
           ) : null}
-          <CButton size="sm" color="primary" disabled={!canSubmit} onClick={() => onSubmit(item)}>
+          <CButton
+            type="button"
+            size="sm"
+            color="primary"
+            disabled={!canSubmit}
+            onClick={() => onSubmit(item)}
+          >
             {backgroundSyncBlocker
               ? backgroundSyncBlocker.message || 'Syncing...'
-              : isUpdateMode
-                ? 'Update'
-                : 'Submit'}
+              : mayQueue
+                ? isUpdateMode
+                  ? 'Queue update'
+                  : 'Queue for sync'
+                : isUpdateMode
+                  ? 'Update'
+                  : 'Submit'}
           </CButton>
           <CButton
+            type="button"
             size="sm"
             color="secondary"
             variant="outline"
@@ -278,34 +301,50 @@ const InspectionReviewIssuesList = ({ item }) => {
 }
 
 const InspectionReviewDetailDrawer = ({ item, visible, onClose }) => {
+  const useMobileDrawer = useMediaQuery('(max-width: 575.98px)')
   if (!item) return null
 
   const issueCount = item.metrics?.issueCount || 0
   const locationCount = item.locationRows?.length || 0
+  const title = `${item.displayTitle} Details`
+  const content = (
+    <div className="inspection-review-detail-drawer__content">
+      <section className="inspection-review-detail-section">
+        <h3 className="inspection-review-detail-section__title h6 mb-0">
+          Locations checked ({locationCount})
+        </h3>
+        <InspectionReviewLocationsList item={item} />
+      </section>
+      <section className="inspection-review-detail-section">
+        <h3 className="inspection-review-detail-section__title h6 mb-0">
+          Issues recorded ({issueCount})
+        </h3>
+        <InspectionReviewIssuesList item={item} />
+      </section>
+    </div>
+  )
+
+  if (useMobileDrawer) {
+    return (
+      <MobileBottomDrawer
+        visible={visible}
+        title={title}
+        className="inspection-review-detail-drawer"
+        bodyClassName="inspection-review-detail-drawer__body"
+        onClose={onClose}
+      >
+        {content}
+      </MobileBottomDrawer>
+    )
+  }
 
   return (
-    <MobileBottomDrawer
-      visible={visible}
-      title={`${item.displayTitle} Details`}
-      className="inspection-review-detail-drawer"
-      bodyClassName="inspection-review-detail-drawer__body"
-      onClose={onClose}
-    >
-      <div className="inspection-review-detail-drawer__content">
-        <section className="inspection-review-detail-section">
-          <CFormLabel className="inspection-review-detail-section__title mb-0">
-            Locations checked ({locationCount})
-          </CFormLabel>
-          <InspectionReviewLocationsList item={item} />
-        </section>
-        <section className="inspection-review-detail-section">
-          <CFormLabel className="inspection-review-detail-section__title mb-0">
-            Issues recorded ({issueCount})
-          </CFormLabel>
-          <InspectionReviewIssuesList item={item} />
-        </section>
-      </div>
-    </MobileBottomDrawer>
+    <CModal visible={visible} onClose={onClose} size="lg" scrollable>
+      <CModalHeader onClose={onClose}>
+        <CModalTitle>{title}</CModalTitle>
+      </CModalHeader>
+      <CModalBody className="inspection-review-detail-drawer__body">{content}</CModalBody>
+    </CModal>
   )
 }
 
@@ -314,6 +353,7 @@ const InspectionReviewSubmitDrawer = ({
   visible,
   isSubmitting,
   isUpdateMode = false,
+  mayQueue = false,
   onClose,
   onConfirm,
 }) => {
@@ -322,11 +362,12 @@ const InspectionReviewSubmitDrawer = ({
   return (
     <ActionConfirmModal
       visible={visible}
-      title={getSubmitTitle(item, isUpdateMode)}
+      title={getSubmitTitle(item, isUpdateMode, mayQueue)}
       message={
         <div className="d-grid gap-2">
           <div>
-            Confirm that you want to {isUpdateMode ? 'update' : 'submit'} the following inspection:
+            Confirm that you want to {mayQueue ? 'queue' : isUpdateMode ? 'update' : 'submit'} the
+            following inspection:
           </div>
           <div className="inspection-review-submit-summary">
             <div>Date: {formatInspectionDate(item.form?.inspectedAt || item.inspectedAt)}</div>
@@ -336,7 +377,7 @@ const InspectionReviewSubmitDrawer = ({
           </div>
         </div>
       }
-      confirmLabel={isUpdateMode ? 'Confirm Update' : 'Confirm Submit'}
+      confirmLabel={mayQueue ? 'Confirm Queue' : isUpdateMode ? 'Confirm Update' : 'Confirm Submit'}
       confirmDisabled={isSubmitting}
       cancelDisabled={isSubmitting}
       mobileDrawer
@@ -351,6 +392,8 @@ const InspectionReviewDashboard = ({
   isSubmitting = false,
   isRetryingSync = false,
   isUpdateMode = false,
+  mayQueue = false,
+  queueWarning = '',
   onRetrySync,
   onSubmit,
 }) => {
@@ -388,6 +431,11 @@ const InspectionReviewDashboard = ({
 
   return (
     <section className="inspection-review-page inspection-review-dashboard d-grid gap-3">
+      {queueWarning ? (
+        <CAlert color="warning" className="mb-0">
+          {queueWarning}
+        </CAlert>
+      ) : null}
       <div className="inspection-review-dashboard__cards d-grid gap-2">
         {dashboardItems.length === 0 ? (
           <CAlert color="info" className="mb-0">
@@ -402,6 +450,7 @@ const InspectionReviewDashboard = ({
               isSubmitting={isSubmitting}
               isRetryingSync={isRetryingSync}
               isUpdateMode={isUpdateMode}
+              mayQueue={mayQueue}
               onViewDetails={openDetails}
               onSubmit={requestSubmit}
               onRetrySync={onRetrySync}
@@ -421,6 +470,7 @@ const InspectionReviewDashboard = ({
         visible={Boolean(submitTarget)}
         isSubmitting={isSubmitting}
         isUpdateMode={isUpdateMode}
+        mayQueue={mayQueue}
         onClose={closeSubmitDrawer}
         onConfirm={confirmSubmit}
       />

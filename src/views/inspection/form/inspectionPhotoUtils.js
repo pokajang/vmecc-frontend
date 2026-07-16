@@ -173,11 +173,11 @@ export const collectInspectionPhotos = (form = {}) => [
   ),
 ]
 
-const mergeCurrentPhotos = (formPhotos, additionalPhotos) => {
+export const mergeInspectionPhotoLists = (...photoLists) => {
   const mergedPhotos = []
   const seen = new Set()
 
-  for (const photo of [...formPhotos, ...additionalPhotos]) {
+  for (const photo of photoLists.flatMap((photos) => (Array.isArray(photos) ? photos : []))) {
     const identity = String(photo?.id || photo?.mediaId || photo?.url || '').trim()
     if (identity && seen.has(identity)) continue
     if (identity) seen.add(identity)
@@ -185,6 +185,17 @@ const mergeCurrentPhotos = (formPhotos, additionalPhotos) => {
   }
 
   return mergedPhotos
+}
+
+export const buildInspectionPhotoListPatch = (
+  row,
+  photosKey = 'photos',
+  updatePhotos = (photos) => photos,
+) => {
+  const photos = Array.isArray(row?.[photosKey]) ? row[photosKey] : []
+  return {
+    [photosKey]: typeof updatePhotos === 'function' ? updatePhotos(photos) : photos,
+  }
 }
 
 export const normalizePhotoFailure = (failure = {}, fileName = '') => {
@@ -303,7 +314,7 @@ export const prepareInspectionPhotoUploads = async ({
     notifyFailure(normalized)
   }
 
-  const allCurrentPhotos = mergeCurrentPhotos(
+  const allCurrentPhotos = mergeInspectionPhotoLists(
     collectInspectionPhotos(form),
     Array.isArray(additionalCurrentPhotos) ? additionalCurrentPhotos : [],
   )

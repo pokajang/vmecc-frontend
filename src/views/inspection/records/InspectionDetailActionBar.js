@@ -1,7 +1,11 @@
 import React, { useMemo, useState } from 'react'
 import { CButton } from '@coreui/react'
+import ButtonLoader from 'src/components/ButtonLoader'
 import FormActionGroup from 'src/components/FormActionGroup'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
+
+const renderActionLabel = (action) =>
+  action.loading ? <ButtonLoader label={action.label} size={14} /> : action.label
 
 const buildDesktopButton = (action) => (
   <CButton
@@ -9,9 +13,10 @@ const buildDesktopButton = (action) => (
     color={action.color}
     variant={action.variant}
     disabled={action.disabled}
+    aria-busy={action.loading || undefined}
     onClick={action.onClick}
   >
-    {action.label}
+    {renderActionLabel(action)}
   </CButton>
 )
 
@@ -22,9 +27,10 @@ const buildMobileButton = (action, className = '') => (
     variant={action.variant}
     className={className}
     disabled={action.disabled}
+    aria-busy={action.loading || undefined}
     onClick={action.onClick}
   >
-    {action.label}
+    {renderActionLabel(action)}
   </CButton>
 )
 
@@ -60,12 +66,14 @@ const createActionDescriptors = ({
   }
 
   if (typeof onDownloadRecord === 'function') {
+    const isDownloading = downloadingId === record.id
     descriptors.push({
       key: 'download',
-      label: downloadingId === record.id ? 'Generating...' : 'Download',
+      label: isDownloading ? 'Downloading...' : 'Download',
       color: 'secondary',
       variant: 'outline',
       disabled: Boolean(downloadingId) || record.canDownloadPdf !== true,
+      loading: isDownloading,
       onClick: () => onDownloadRecord(record.id),
     })
   }

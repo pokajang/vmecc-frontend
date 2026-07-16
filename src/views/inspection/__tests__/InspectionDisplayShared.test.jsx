@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, within } from '@testing-library/react'
 import {
   InspectionPhotoViewerModal,
+  PhotoGallery,
   isCompactInspectionViewport,
 } from '../form/components/InspectionDisplayShared'
 
@@ -31,6 +32,36 @@ afterEach(() => {
 })
 
 describe('InspectionDisplayShared', () => {
+  it('marks portrait and landscape previews for uncropped rendering', () => {
+    const { container } = render(
+      <PhotoGallery
+        readOnly
+        photos={[
+          {
+            id: 'landscape-photo',
+            fileName: 'landscape.jpg',
+            url: 'data:image/png;base64,landscape',
+            width: 1600,
+            height: 900,
+          },
+          {
+            id: 'portrait-photo',
+            fileName: 'portrait.jpg',
+            url: 'data:image/png;base64,portrait',
+            width: 900,
+            height: 1600,
+          },
+        ]}
+      />,
+    )
+
+    const previews = container.querySelectorAll('.workflow-photo-preview--uncropped')
+    expect(previews).toHaveLength(2)
+    expect(previews[0].className).toBe('workflow-photo-preview workflow-photo-preview--uncropped')
+    expect(previews[0].querySelector('img')?.getAttribute('src')).toContain('landscape')
+    expect(previews[1].querySelector('img')?.getAttribute('src')).toContain('portrait')
+  })
+
   it('opens photo evidence viewer in the mobile drawer', () => {
     setMobileViewport()
 

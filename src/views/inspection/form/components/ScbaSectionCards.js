@@ -10,6 +10,12 @@ import {
   buildStagedPhotoUploadOptions,
 } from '../inspectionPhotoFlow'
 import {
+  buildInspectionPhotoListPatch,
+  mergeInspectionPhotoLists,
+  removePhotoById,
+  updatePhotoDescriptionById,
+} from '../inspectionPhotoUtils'
+import {
   getScbaFieldEvidenceKeys,
   getScbaRowRetainedEvidenceFields,
   getScbaSectionFields,
@@ -181,7 +187,11 @@ const ScbaSectionCards = ({
   const mobileAllGoodActive = isScbaRowAllGood(mobileDisplayRow, mobileDetailFields, scbaGoodStatus)
 
   const patchMobileDraftRow = (patch = {}) => {
-    setMobileDraftRow((current) => (current ? { ...current, ...patch } : current))
+    setMobileDraftRow((current) => {
+      if (!current) return current
+      const resolvedPatch = typeof patch === 'function' ? patch(current) : patch
+      return { ...current, ...(resolvedPatch || {}) }
+    })
     setMobileSaveStatus('Unsaved changes')
   }
 
@@ -231,7 +241,11 @@ const ScbaSectionCards = ({
         sectionKey,
         row,
         buildStagedPhotoUploadOptions(options, (_targetSectionKey, _targetRow, photosKey, photos) =>
-          patchMobileDraftRow({ [photosKey]: photos }),
+          patchMobileDraftRow((current) =>
+            buildInspectionPhotoListPatch(current, photosKey, (currentPhotos) =>
+              mergeInspectionPhotoLists(currentPhotos, photos),
+            ),
+          ),
         ),
       ),
     onRequestIssuePhotoUpload: (sectionKey, row, field, options = {}) =>
@@ -240,33 +254,35 @@ const ScbaSectionCards = ({
         row,
         field,
         buildStagedPhotoUploadOptions(options, (_targetSectionKey, _targetRow, photosKey, photos) =>
-          patchMobileDraftRow({ [photosKey]: photos }),
+          patchMobileDraftRow((current) =>
+            buildInspectionPhotoListPatch(current, photosKey, (currentPhotos) =>
+              mergeInspectionPhotoLists(currentPhotos, photos),
+            ),
+          ),
         ),
       ),
-    onRemovePhoto: (_sectionKey, row, photoId, photosKey = 'photos') => {
-      const photos = Array.isArray(row?.[photosKey]) ? row[photosKey] : []
-      patchMobileDraftRow({
-        [photosKey]: photos.filter((photo) => String(photo?.id || '') !== String(photoId || '')),
-      })
-    },
-    onChangePhotoDescription: (_sectionKey, row, photoId, description, photosKey = 'photos') => {
-      const photos = Array.isArray(row?.[photosKey]) ? row[photosKey] : []
-      patchMobileDraftRow({
-        [photosKey]: photos.map((photo) =>
-          String(photo?.id || '') === String(photoId || '') ? { ...photo, description } : photo,
+    onRemovePhoto: (_sectionKey, _row, photoId, photosKey = 'photos') =>
+      patchMobileDraftRow((current) =>
+        buildInspectionPhotoListPatch(current, photosKey, (currentPhotos) =>
+          removePhotoById(currentPhotos, photoId),
         ),
-      })
-    },
-    onApplyPhotoCaption: (_sectionKey, row, photoId, caption, photosKey = 'photos') => {
-      const photos = Array.isArray(row?.[photosKey]) ? row[photosKey] : []
-      patchMobileDraftRow({
-        [photosKey]: photos.map((photo) =>
-          String(photo?.id || '') === String(photoId || '')
-            ? { ...photo, description: [photo.description, caption].filter(Boolean).join('\n') }
-            : photo,
+      ),
+    onChangePhotoDescription: (_sectionKey, _row, photoId, description, photosKey = 'photos') =>
+      patchMobileDraftRow((current) =>
+        buildInspectionPhotoListPatch(current, photosKey, (currentPhotos) =>
+          updatePhotoDescriptionById(currentPhotos, photoId, description),
         ),
-      })
-    },
+      ),
+    onApplyPhotoCaption: (_sectionKey, _row, photoId, caption, photosKey = 'photos') =>
+      patchMobileDraftRow((current) =>
+        buildInspectionPhotoListPatch(current, photosKey, (currentPhotos) =>
+          currentPhotos.map((photo) =>
+            String(photo?.id || '') === String(photoId || '')
+              ? { ...photo, description: [photo.description, caption].filter(Boolean).join('\n') }
+              : photo,
+          ),
+        ),
+      ),
   }
 
   const requestResetGroupedCheck = (sectionKey, row, options = {}) => {

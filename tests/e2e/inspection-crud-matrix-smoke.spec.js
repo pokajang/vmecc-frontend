@@ -469,8 +469,11 @@ const createForeignOwnedInspectionReport = ({
     [
       "require 'vendor/autoload.php';",
       "$app = require 'bootstrap/app.php';",
+      "$app->loadEnvironmentFrom('.env.testing');",
       '$kernel = $app->make(Illuminate\\Contracts\\Console\\Kernel::class);',
       '$kernel->bootstrap();',
+      "$database = (string) config('database.connections.'.config('database.default').'.database');",
+      "if (!app()->environment('testing') || !str_ends_with($database, '_test')) { fwrite(STDERR, 'Refusing smoke fixture mutation outside a testing _test database.'); exit(2); }",
       "$payload = json_decode(base64_decode(getenv('SMOKE_REPORT_PAYLOAD_B64')), true);",
       "$status = getenv('SMOKE_REPORT_STATUS') ?: 'Submitted';",
       "$user = App\\Models\\User::withTrashed()->updateOrCreate(['email' => getenv('SMOKE_FOREIGN_EMAIL')], ['name' => 'Codex Smoke Foreign Owner', 'password' => Illuminate\\Support\\Facades\\Hash::make('SmokeForeign!2026'), 'email_verified_at' => now(), 'status' => 'Active']);",
@@ -496,8 +499,11 @@ const deleteForeignOwnedInspectionReport = (reportUid) => {
     [
       "require 'vendor/autoload.php';",
       "$app = require 'bootstrap/app.php';",
+      "$app->loadEnvironmentFrom('.env.testing');",
       '$kernel = $app->make(Illuminate\\Contracts\\Console\\Kernel::class);',
       '$kernel->bootstrap();',
+      "$database = (string) config('database.connections.'.config('database.default').'.database');",
+      "if (!app()->environment('testing') || !str_ends_with($database, '_test')) { fwrite(STDERR, 'Refusing smoke fixture mutation outside a testing _test database.'); exit(2); }",
       "App\\Models\\Report::withTrashed()->where('report_uid', getenv('SMOKE_REPORT_UID'))->forceDelete();",
     ].join(' '),
     { SMOKE_REPORT_UID: reportUid },

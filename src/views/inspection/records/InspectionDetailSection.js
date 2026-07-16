@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { CAlert, CBadge, CRow } from '@coreui/react'
 import { DetailField } from 'src/components/report-workflow/ReportViewComponents'
 import {
@@ -10,6 +10,7 @@ import { formatInspectionRole, recordToInspectionForm } from '../form/inspection
 import {
   ChipRow,
   InspectionGeneralEvidenceCard,
+  InspectionPhotoViewerModal,
   formatInspectionDisplayLocationTitle,
 } from '../form/components/InspectionFormDisplaySections'
 import { INSPECTION_REPORT_EVIDENCE_COPY } from '../inspectionReportEvidenceCopy'
@@ -334,6 +335,7 @@ const InspectionDetailSection = ({
   downloadingId = null,
   isActionBusy = false,
 }) => {
+  const [photoViewer, setPhotoViewer] = useState(null)
   if (!selectedRecord) return <CAlert color="warning">Report not found.</CAlert>
 
   const record = selectedRecord
@@ -437,6 +439,7 @@ const InspectionDetailSection = ({
               form,
               summary: readOnlySummary,
               record,
+              onViewPhotos: setPhotoViewer,
             }) || null
           }
           fallbackContent={fallbackFindingsContent}
@@ -470,6 +473,7 @@ const InspectionDetailSection = ({
           isActionBusy={isActionBusy}
         />
       </div>
+      <InspectionPhotoViewerModal viewer={photoViewer} onClose={() => setPhotoViewer(null)} />
     </div>
   )
 }

@@ -70,8 +70,18 @@ const InspectionRecordsSection = ({
   isRefreshingOfflineAssets = false,
   onRecoverLocalDraft,
   canRecoverLocalDraft = false,
+  queueDetailsOpen: controlledQueueDetailsOpen,
+  onQueueDetailsOpenChange,
 }) => {
-  const [queueDetailsOpen, setQueueDetailsOpen] = React.useState(false)
+  const [localQueueDetailsOpen, setLocalQueueDetailsOpen] = React.useState(false)
+  const queueDetailsOpen =
+    typeof controlledQueueDetailsOpen === 'boolean'
+      ? controlledQueueDetailsOpen
+      : localQueueDetailsOpen
+  const setQueueDetailsOpen = (nextOpen) => {
+    if (typeof controlledQueueDetailsOpen !== 'boolean') setLocalQueueDetailsOpen(nextOpen)
+    onQueueDetailsOpenChange?.(nextOpen)
+  }
   const emptyMessage = (
     <div className="text-body-secondary">No inspection reports match the current filters.</div>
   )

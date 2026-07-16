@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { CButton, CFormLabel, CFormTextarea } from '@coreui/react'
 import { Camera, MessageSquare, Trash2 } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
+import { buildPhotoViewerUploadOptions } from '../inspectionPhotoFlow'
 import { InspectionPhotoEvidenceSummary } from './InspectionDisplayShared'
 
 const text = (value) => String(value || '').trim()
@@ -28,6 +29,30 @@ const InspectionItemAdditionalInfo = ({
   const hasRemarks = text(remarks) !== ''
   const photos = Array.isArray(row?.[photosKey]) ? row[photosKey] : []
   const showRemarks = readOnly ? hasRemarks : expanded || hasRemarks
+  const openPhotoViewer = (nextPhotos = photos) =>
+    setPhotoViewer?.({
+      title:
+        photoTitle || `${row?.equipment || row?.serialNo || rowId || 'Item'} - additional photos`,
+      photos: nextPhotos,
+      readOnly,
+      showDescriptionInput: !readOnly,
+      onAddMorePhoto: readOnly
+        ? undefined
+        : (currentPhotos) =>
+            onRequestPhotoUpload?.(
+              row,
+              photosKey,
+              buildPhotoViewerUploadOptions(openPhotoViewer, { currentPhotos }),
+            ),
+      onRemove: readOnly ? undefined : (photoId) => onRemovePhoto?.(row, photoId, photosKey),
+      onChangeDescription: readOnly
+        ? undefined
+        : (photoId, description) =>
+            onChangePhotoDescription?.(row, photoId, description, photosKey),
+      onApplyCaption: readOnly
+        ? undefined
+        : (photoId, caption) => onApplyPhotoCaption?.(row, photoId, caption, photosKey),
+    })
 
   if (readOnly && !hasRemarks && photos.length === 0) return null
 
@@ -48,7 +73,13 @@ const InspectionItemAdditionalInfo = ({
             label="Photo"
             className="inspection-compact-action-btn"
             icon={<Camera size={13} className="me-1 align-text-bottom" />}
-            onClick={() => onRequestPhotoUpload?.(row, photosKey)}
+            onClick={() =>
+              onRequestPhotoUpload?.(
+                row,
+                photosKey,
+                buildPhotoViewerUploadOptions(openPhotoViewer, { currentPhotos: photos }),
+              )
+            }
           />
         </div>
       ) : null}
@@ -105,26 +136,7 @@ const InspectionItemAdditionalInfo = ({
           photos={photos}
           label="View photos"
           readOnly={readOnly}
-          onView={() =>
-            setPhotoViewer?.({
-              title:
-                photoTitle ||
-                `${row?.equipment || row?.serialNo || rowId || 'Item'} - additional photos`,
-              photos,
-              readOnly,
-              showDescriptionInput: !readOnly,
-              onRemove: readOnly
-                ? undefined
-                : (photoId) => onRemovePhoto?.(row, photoId, photosKey),
-              onChangeDescription: readOnly
-                ? undefined
-                : (photoId, description) =>
-                    onChangePhotoDescription?.(row, photoId, description, photosKey),
-              onApplyCaption: readOnly
-                ? undefined
-                : (photoId, caption) => onApplyPhotoCaption?.(row, photoId, caption, photosKey),
-            })
-          }
+          onView={() => openPhotoViewer(photos)}
         />
       ) : null}
     </div>

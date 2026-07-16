@@ -11,6 +11,7 @@ import {
 } from 'src/services/apiClient'
 import {
   isAiHelperListFresh,
+  isMarkdownKnowledgeEntry,
   KNOWLEDGE_READER_TAB_EXTRACTED,
   KNOWLEDGE_READER_TAB_ORIGINAL,
   KNOWLEDGE_SCOPE_GLOBAL,
@@ -316,13 +317,13 @@ const useAiHelperKnowledge = ({
         const detail = knowledgeEntryFromResponse(response, 'Knowledge details are unavailable.')
 
         setSelectedKnowledgeDetail(detail)
-        if (detail.original_available) {
-          setKnowledgeReaderTab(KNOWLEDGE_READER_TAB_ORIGINAL)
-        } else {
+        if (isMarkdownKnowledgeEntry(detail) || !detail.original_available) {
           setKnowledgeReaderTab(KNOWLEDGE_READER_TAB_EXTRACTED)
+        } else {
+          setKnowledgeReaderTab(KNOWLEDGE_READER_TAB_ORIGINAL)
         }
 
-        if (detail.source_mime === 'text/markdown' && detail.original_available) {
+        if (isMarkdownKnowledgeEntry(detail) && detail.original_available) {
           await loadMarkdownSource(knowledgeId, requestId)
         } else if (detail.source_mime === 'application/pdf' && detail.original_available) {
           await loadPdfSource(knowledgeId, requestId)

@@ -8,6 +8,12 @@ import { HYDRAULIC_CHECK_FIELDS } from 'src/views/inspection/types/hydraulic/hel
 import { getActionCountLabel } from '../inspectionCountLabels'
 import { buildStagedPhotoUploadOptions } from '../inspectionPhotoFlow'
 import {
+  buildInspectionPhotoListPatch,
+  mergeInspectionPhotoLists,
+  removePhotoById,
+  updatePhotoDescriptionById,
+} from '../inspectionPhotoUtils'
+import {
   FormFieldError,
   InspectionPhotoViewerModal,
   rowContainsSearch,
@@ -91,7 +97,11 @@ export const HydraulicEquipmentChecks = ({
     getRowSignature(mobileDraftRow) !== getRowSignature(mobileDraftBaseRow)
 
   const patchMobileDraftRow = (patch = {}) => {
-    setMobileDraftRow((current) => (current ? { ...current, ...patch } : current))
+    setMobileDraftRow((current) => {
+      if (!current) return current
+      const resolvedPatch = typeof patch === 'function' ? patch(current) : patch
+      return { ...current, ...(resolvedPatch || {}) }
+    })
     setMobileSaveStatus('Unsaved changes')
   }
 
@@ -143,7 +153,12 @@ export const HydraulicEquipmentChecks = ({
           photosKeyOrOptions && typeof photosKeyOrOptions === 'object'
             ? photosKeyOrOptions
             : options,
-          (_targetRow, photosKey, photos) => patchMobileDraftRow({ [photosKey]: photos }),
+          (_targetRow, photosKey, photos) =>
+            patchMobileDraftRow((current) =>
+              buildInspectionPhotoListPatch(current, photosKey, (currentPhotos) =>
+                mergeInspectionPhotoLists(currentPhotos, photos),
+              ),
+            ),
         ),
       ),
     onRequestDefectPhotoUpload: (row, field, options = {}) =>
@@ -151,33 +166,35 @@ export const HydraulicEquipmentChecks = ({
         row,
         field,
         buildStagedPhotoUploadOptions(options, (_targetRow, photosKey, photos) =>
-          patchMobileDraftRow({ [photosKey]: photos }),
+          patchMobileDraftRow((current) =>
+            buildInspectionPhotoListPatch(current, photosKey, (currentPhotos) =>
+              mergeInspectionPhotoLists(currentPhotos, photos),
+            ),
+          ),
         ),
       ),
-    onRemovePhoto: (row, photoId, photosKey = 'photos') => {
-      const photos = Array.isArray(row?.[photosKey]) ? row[photosKey] : []
-      patchMobileDraftRow({
-        [photosKey]: photos.filter((photo) => String(photo?.id || '') !== String(photoId || '')),
-      })
-    },
-    onChangePhotoDescription: (row, photoId, description, photosKey = 'photos') => {
-      const photos = Array.isArray(row?.[photosKey]) ? row[photosKey] : []
-      patchMobileDraftRow({
-        [photosKey]: photos.map((photo) =>
-          String(photo?.id || '') === String(photoId || '') ? { ...photo, description } : photo,
+    onRemovePhoto: (_row, photoId, photosKey = 'photos') =>
+      patchMobileDraftRow((current) =>
+        buildInspectionPhotoListPatch(current, photosKey, (currentPhotos) =>
+          removePhotoById(currentPhotos, photoId),
         ),
-      })
-    },
-    onApplyPhotoCaption: (row, photoId, caption, photosKey = 'photos') => {
-      const photos = Array.isArray(row?.[photosKey]) ? row[photosKey] : []
-      patchMobileDraftRow({
-        [photosKey]: photos.map((photo) =>
-          String(photo?.id || '') === String(photoId || '')
-            ? { ...photo, description: [photo.description, caption].filter(Boolean).join('\n') }
-            : photo,
+      ),
+    onChangePhotoDescription: (_row, photoId, description, photosKey = 'photos') =>
+      patchMobileDraftRow((current) =>
+        buildInspectionPhotoListPatch(current, photosKey, (currentPhotos) =>
+          updatePhotoDescriptionById(currentPhotos, photoId, description),
         ),
-      })
-    },
+      ),
+    onApplyPhotoCaption: (_row, photoId, caption, photosKey = 'photos') =>
+      patchMobileDraftRow((current) =>
+        buildInspectionPhotoListPatch(current, photosKey, (currentPhotos) =>
+          currentPhotos.map((photo) =>
+            String(photo?.id || '') === String(photoId || '')
+              ? { ...photo, description: [photo.description, caption].filter(Boolean).join('\n') }
+              : photo,
+          ),
+        ),
+      ),
   }
 
   if (!mainLocation && visibleChecks.length === 0 && !isLoadingRows) return null

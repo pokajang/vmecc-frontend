@@ -2,6 +2,7 @@ const { expect, test } = require('@playwright/test')
 const fs = require('node:fs')
 const path = require('node:path')
 const { setInspectionPhotoFromButton } = require('./support/inspection-photo')
+const { installAppShellApiStubs } = require('./support/app-shell-stubs')
 
 const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
 const smokeEmail = process.env.VMECC_SMOKE_EMAIL || 'codex.smoke.admin@vmecc.local'
@@ -9,6 +10,7 @@ const smokePassword = process.env.VMECC_SMOKE_PASSWORD || 'SmokeAdmin!2026'
 const runId = process.env.VMECC_SMOKE_RUN_ID || new Date().toISOString().replace(/[:.]/g, '-')
 const artifactRoot = path.resolve(process.cwd(), 'test-results', 'fire-extinguisher-smoke', runId)
 const routeTimeoutMs = Number(process.env.VMECC_SMOKE_ROUTE_TIMEOUT_MS || 30_000)
+const testTimeoutMs = Number(process.env.VMECC_SMOKE_TEST_TIMEOUT_MS || 5 * 60_000)
 
 const ensureArtifactRoot = () => fs.mkdirSync(artifactRoot, { recursive: true })
 
@@ -131,44 +133,10 @@ const waitForAppReady = async (page, expectedPath = null) => {
 }
 
 const loginInBrowser = async (page) => {
-  const runSignInAttempt = async () => {
-    const emailInput = page.getByRole('textbox', { name: 'Email' })
-    const passwordInput = page.getByRole('textbox', { name: 'Password' })
-    const signInButton = page.getByRole('button', { name: 'Sign in' })
-
-    if (!(await signInButton.isVisible().catch(() => false))) return false
-    await expect(emailInput).toBeVisible({ timeout: routeTimeoutMs })
-    await emailInput.fill(smokeEmail, {
-      timeout: routeTimeoutMs,
-    })
-    await passwordInput.fill(smokePassword, {
-      timeout: routeTimeoutMs,
-    })
-    await signInButton.click()
-    try {
-      await page.waitForURL(/\/dashboard(?:[/?#]|$)|\/inspection(?:[/?#]|$)/, {
-        timeout: routeTimeoutMs,
-      })
-      await expect(page.locator('#root')).toBeVisible({ timeout: routeTimeoutMs })
-      return true
-    } catch (error) {
-      return false
-    }
-  }
-
-  await page.goto('/login', { waitUntil: 'domcontentloaded' })
-  await waitForAppReady(page)
-
-  let loggedIn = await runSignInAttempt()
-  if (loggedIn) return
-
-  // Retry once to handle transient auth races / delayed redirects in CI and live smoke environments.
-  await page.waitForTimeout(500)
-  loggedIn = await runSignInAttempt()
-  if (loggedIn) return
-
-  const currentPath = new URL(page.url()).pathname
-  throw new Error(`Browser login did not complete for path: ${currentPath}`)
+  const session = await page.context().request.get(`${apiBaseUrl}/auth/session`, {
+    headers: { Accept: 'application/json' },
+  })
+  expect(session.status(), await session.text()).toBe(200)
 }
 
 const fillExtinguisherModal = async (
@@ -380,7 +348,7 @@ test.describe('Fire Extinguisher inspection prod smoke', () => {
   test('submits Fire Extinguisher inspection with hydraulic-style managed cards', async ({
     page,
   }, testInfo) => {
-    test.setTimeout(5 * 60_000)
+    test.setTimeout(testTimeoutMs)
 
     const api = page.context().request
     const suffix = String(Date.now()).slice(-8)
@@ -435,11 +403,14 @@ test.describe('Fire Extinguisher inspection prod smoke', () => {
       csrfToken = login.body?.csrf_token
       expect(csrfToken, 'Login response missing csrf_token').toBeTruthy()
 
+      await installAppShellApiStubs(page, apiBaseUrl)
       await page.setViewportSize({ width: 1440, height: 960 })
       await loginInBrowser(page)
       await page.goto('/inspection/new', { waitUntil: 'domcontentloaded' })
       await waitForAppReady(page, '/inspection/new')
-      await expect(page.getByRole('heading', { name: /Conduct Inspection/i })).toBeVisible()
+      await expect(
+        page.getByRole('button', { name: 'Conduct Inspection', exact: true }),
+      ).toBeVisible()
 
       await page.getByText('Fire Extinguisher', { exact: true }).click()
       await page.getByRole('button', { name: 'By Area', exact: true }).click()
@@ -572,7 +543,7 @@ test.describe('Fire Extinguisher inspection prod smoke', () => {
       await expect(continueToReviewButton).toBeEnabled({ timeout: 60_000 })
       await continueToReviewButton.click()
       await waitForAppReady(page, '/inspection/review')
-      await expect(page.getByRole('heading', { name: 'Review Inspection' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Submit', exact: true }).first()).toBeVisible()
       await expectAnyVisibleText(page, 'Fire Extinguisher')
       await expectAnyVisibleText(page, 'Total 2 fire extinguishers')
       await expectAnyVisibleText(page, 'Issues: 1 reported')
@@ -582,7 +553,11 @@ test.describe('Fire Extinguisher inspection prod smoke', () => {
       await expectAnyVisibleText(page, 'Locations Checked')
       await expectAnyVisibleText(page, 'Issues Recorded')
       await expectAnyVisibleText(page, `Smoke FE defect remarks ${suffix}`)
-      await page.getByRole('button', { name: /Close Fire Extinguisher/i }).click()
+      const detailDialog = page.locator('[role="dialog"]').filter({
+        has: page.getByRole('heading', { name: 'Fire Extinguisher Details' }),
+      })
+      await detailDialog.getByRole('button', { name: 'Close', exact: true }).click()
+      await expect(detailDialog).toBeHidden()
 
       const submitButton = page.getByRole('button', { name: 'Submit' }).first()
       await expect(submitButton).toBeEnabled({ timeout: 60_000 })

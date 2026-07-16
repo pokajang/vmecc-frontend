@@ -1,8 +1,33 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
-import { prepareInspectionPhotoUploads } from '../form/inspectionPhotoUtils'
+import {
+  buildInspectionPhotoListPatch,
+  mergeInspectionPhotoLists,
+  prepareInspectionPhotoUploads,
+} from '../form/inspectionPhotoUtils'
 
 describe('inspection photo utilities', () => {
+  it('merges staged uploads without replacing newer photo metadata', () => {
+    const currentPhoto = { id: 'photo-1', description: 'Latest description' }
+    const stalePhoto = { id: 'photo-1', description: '' }
+    const uploadedPhoto = { id: 'photo-2', description: '' }
+
+    expect(mergeInspectionPhotoLists([currentPhoto], [stalePhoto, uploadedPhoto])).toEqual([
+      currentPhoto,
+      uploadedPhoto,
+    ])
+  })
+
+  it('builds photo patches from the latest draft row', () => {
+    const latestRow = { photos: [{ id: 'photo-1' }, { id: 'photo-2' }] }
+
+    expect(
+      buildInspectionPhotoListPatch(latestRow, 'photos', (photos) =>
+        photos.filter((photo) => photo.id !== 'photo-1'),
+      ),
+    ).toEqual({ photos: [{ id: 'photo-2' }] })
+  })
+
   it('counts unsaved drawer photos when enforcing the inspection photo limit', async () => {
     const onFailure = vi.fn()
     const additionalCurrentPhotos = Array.from({ length: 10 }, (_, index) => ({

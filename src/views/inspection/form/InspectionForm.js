@@ -480,6 +480,10 @@ const InspectionForm = ({
     () => getInspectionTypeDefinition(selectedType),
     [selectedType],
   )
+
+  useEffect(() => {
+    if (selectedType) setIsEditingType(false)
+  }, [selectedType])
   const isFullInspectionForm = isGeneralInspectionType(selectedType)
   const isStructuredInspectionForm = selectedTypeDefinition?.formMode === 'structured'
   const isEquipmentCatalogInspectionForm = selectedTypeDefinition?.supportsEquipmentCatalog === true

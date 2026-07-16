@@ -2,7 +2,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { KNOWLEDGE_READER_TAB_EXTRACTED } from '../constants'
+import { KNOWLEDGE_READER_TAB_EXTRACTED, KNOWLEDGE_READER_TAB_ORIGINAL } from '../constants'
 
 const {
   fetchAiHelperKnowledge,
@@ -207,10 +207,116 @@ describe('useAiHelperKnowledge', () => {
       expect(result.current.knowledgeReaderPdfUrl).toBe('blob:http://localhost/knowledge-preview')
       expect(result.current.knowledgeReaderPdfLoading).toBe(false)
       expect(result.current.knowledgeReaderPdfError).toBe(null)
+      expect(result.current.knowledgeReaderTab).toBe(KNOWLEDGE_READER_TAB_ORIGINAL)
     })
 
     expect(fetchAiHelperKnowledgeFileBlob).toHaveBeenCalledWith(11)
     expect(global.URL.createObjectURL).toHaveBeenCalledTimes(1)
+  })
+
+  it('defaults uploaded Markdown to rendered content while retaining its source', async () => {
+    fetchAiHelperKnowledgeDetail.mockResolvedValue({
+      data: {
+        id: 13,
+        title: 'Uploaded Markdown',
+        source_filename: 'guide.md',
+        source_mime: 'text/plain',
+        original_available: true,
+        extracted_content_available: true,
+      },
+    })
+    fetchAiHelperKnowledgeFileText.mockResolvedValue('---\ntitle: Guide\n---\n\n# Guide')
+
+    const { result } = renderHook(() =>
+      useAiHelperKnowledge({
+        authUser: { id: 7 },
+        currentPageContext: { path: '/inspection' },
+        isSysAdmin: false,
+        refreshCurrentContext: vi.fn(),
+        routeContext: { path: '/inspection' },
+        visibleKnowledgeModules: [],
+      }),
+    )
+
+    await act(async () => {
+      await result.current.openKnowledgeReader(13)
+    })
+
+    await waitFor(() => {
+      expect(result.current.knowledgeReaderTab).toBe(KNOWLEDGE_READER_TAB_EXTRACTED)
+      expect(result.current.knowledgeReaderHasOriginal).toBe(true)
+      expect(result.current.knowledgeReaderMarkdownSource).toContain('# Guide')
+    })
+
+    expect(fetchAiHelperKnowledgeFileText).toHaveBeenCalledWith(13)
+    expect(fetchAiHelperKnowledgeFileBlob).not.toHaveBeenCalled()
+  })
+
+  it('keeps rendered Markdown available when its original source cannot be loaded', async () => {
+    fetchAiHelperKnowledgeDetail.mockResolvedValue({
+      data: {
+        id: 14,
+        title: 'Uploaded Markdown',
+        source_filename: 'guide.md',
+        source_mime: 'text/markdown',
+        original_available: true,
+        extracted_content_available: true,
+        extracted_content: '# Available guide',
+      },
+    })
+    fetchAiHelperKnowledgeFileText.mockRejectedValue(new Error('Source unavailable'))
+
+    const { result } = renderHook(() =>
+      useAiHelperKnowledge({
+        authUser: { id: 7 },
+        currentPageContext: { path: '/inspection' },
+        isSysAdmin: false,
+        refreshCurrentContext: vi.fn(),
+        routeContext: { path: '/inspection' },
+        visibleKnowledgeModules: [],
+      }),
+    )
+
+    await act(async () => {
+      await result.current.openKnowledgeReader(14)
+    })
+
+    expect(result.current.knowledgeReaderTab).toBe(KNOWLEDGE_READER_TAB_EXTRACTED)
+    expect(result.current.selectedKnowledgeDetail?.extracted_content).toBe('# Available guide')
+    expect(result.current.knowledgeReaderMarkdownError).toBe(
+      'Could not load the original Markdown file.',
+    )
+  })
+
+  it('defaults PDFs without an original file to extracted text', async () => {
+    fetchAiHelperKnowledgeDetail.mockResolvedValue({
+      data: {
+        id: 15,
+        title: 'Extracted PDF',
+        source_mime: 'application/pdf',
+        original_available: false,
+        extracted_content_available: true,
+      },
+    })
+
+    const { result } = renderHook(() =>
+      useAiHelperKnowledge({
+        authUser: { id: 7 },
+        currentPageContext: { path: '/inspection' },
+        isSysAdmin: false,
+        refreshCurrentContext: vi.fn(),
+        routeContext: { path: '/inspection' },
+        visibleKnowledgeModules: [],
+      }),
+    )
+
+    await act(async () => {
+      await result.current.openKnowledgeReader(15)
+    })
+
+    expect(result.current.knowledgeReaderTab).toBe(KNOWLEDGE_READER_TAB_EXTRACTED)
+    expect(fetchAiHelperKnowledgeFileBlob).not.toHaveBeenCalled()
+    expect(fetchAiHelperKnowledgeFileText).not.toHaveBeenCalled()
   })
 
   it('defaults to extracted tab for seeded markdown without original source', async () => {

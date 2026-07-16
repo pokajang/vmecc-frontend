@@ -26,6 +26,9 @@ const MobileFilterDrawer = ({
     onHide={onClose}
     placement="bottom"
     className="table-filter-drawer d-md-none"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Filters"
   >
     <COffcanvasHeader className="table-filter-drawer__header d-flex align-items-center justify-content-between">
       <COffcanvasTitle>Filters</COffcanvasTitle>

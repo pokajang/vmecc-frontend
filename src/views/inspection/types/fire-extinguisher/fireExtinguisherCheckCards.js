@@ -270,6 +270,24 @@ const FireExtinguisherAdditionalInfo = ({ row, readOnly = false, handlers = {}, 
   const hasRemarks = text(rawRemarks) !== ''
   const showRemarks = readOnly ? hasRemarks : expanded || hasRemarks
   const photos = getFireExtinguisherPhotos(row, 'photos')
+  const openAdditionalPhotoViewer = (nextPhotos = photos) =>
+    onViewPhotos?.(
+      getFireExtinguisherPhotoViewer({
+        row,
+        title: `${row.idLocNo || row.barcodeNo || 'Fire extinguisher'} - additional photos`,
+        photos: nextPhotos,
+        photosKey: 'photos',
+        readOnly,
+        handlers,
+        onAddMorePhoto: readOnly
+          ? undefined
+          : (currentPhotos) =>
+              handlers.onRequestPhotoUpload?.(
+                row,
+                buildPhotoViewerUploadOptions(openAdditionalPhotoViewer, { currentPhotos }),
+              ),
+      }),
+    )
 
   if (readOnly && !showRemarks && photos.length === 0) return null
 
@@ -290,7 +308,14 @@ const FireExtinguisherAdditionalInfo = ({ row, readOnly = false, handlers = {}, 
             label="Photo"
             className="inspection-compact-action-btn"
             icon={<Camera size={13} className="me-1 align-text-bottom" />}
-            onClick={() => handlers.onRequestPhotoUpload?.(row)}
+            onClick={() =>
+              handlers.onRequestPhotoUpload?.(
+                row,
+                buildPhotoViewerUploadOptions(openAdditionalPhotoViewer, {
+                  currentPhotos: photos,
+                }),
+              )
+            }
           />
         </div>
       ) : null}
@@ -349,18 +374,7 @@ const FireExtinguisherAdditionalInfo = ({ row, readOnly = false, handlers = {}, 
           photos={photos}
           label="View photos"
           readOnly={readOnly}
-          onView={() =>
-            onViewPhotos?.(
-              getFireExtinguisherPhotoViewer({
-                row,
-                title: `${row.idLocNo || row.barcodeNo || 'Fire extinguisher'} - additional photos`,
-                photos,
-                photosKey: 'photos',
-                readOnly,
-                handlers,
-              }),
-            )
-          }
+          onView={() => openAdditionalPhotoViewer(photos)}
         />
       ) : null}
     </div>

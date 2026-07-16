@@ -68,7 +68,7 @@ export const PhotoGallery = ({
           key={photo.id || `${photo.fileName || 'photo'}-${index}`}
           className="rounded-3 border border-light-subtle p-2 d-grid gap-2"
         >
-          <PhotoPreview photo={photo} />
+          <PhotoPreview photo={photo} className="workflow-photo-preview--uncropped" />
           <div className="small text-truncate">{photo.fileName || 'Photo'}</div>
           {readOnly ? (
             String(photo?.description || '').trim() ? (

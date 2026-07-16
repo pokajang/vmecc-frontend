@@ -1,0 +1,122 @@
+.fire-extinguisher-export {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.fire-extinguisher-export__supporting {
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.fire-extinguisher-export legend {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.fire-extinguisher-export-card {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 64px;
+  margin: 0;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--cui-border-color);
+  border-radius: var(--cui-border-radius);
+  background: var(--cui-body-bg);
+  color: var(--cui-body-color);
+  cursor: pointer;
+  transition: border-color 120ms ease, background-color 120ms ease, box-shadow 120ms ease;
+}
+
+.fire-extinguisher-export-card:hover {
+  border-color: rgba(var(--cui-primary-rgb), 0.55);
+}
+
+.fire-extinguisher-export-card:focus-within {
+  border-color: var(--cui-primary);
+  box-shadow: 0 0 0 0.2rem rgba(var(--cui-primary-rgb), 0.18);
+}
+
+.fire-extinguisher-export-card.is-selected {
+  border-color: var(--cui-primary);
+  background: rgba(var(--cui-primary-rgb), 0.06);
+}
+
+.fire-extinguisher-export-card.is-disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.fire-extinguisher-export-card__check {
+  margin: 0;
+}
+
+.fire-extinguisher-export-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--cui-danger-bg-subtle);
+  color: var(--cui-danger-text-emphasis);
+}
+
+.fire-extinguisher-export-card__copy {
+  display: grid;
+  min-width: 0;
+}
+
+.fire-extinguisher-export-card__title {
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.fire-extinguisher-export-card__count {
+  min-width: 2.25rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  text-align: end;
+}
+
+.fire-extinguisher-export__selection-summary {
+  min-height: 2.75rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: var(--cui-border-radius);
+  background: var(--cui-tertiary-bg);
+  color: var(--cui-secondary-color);
+  line-height: 1.5;
+}
+
+.fire-extinguisher-export__footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  margin: 1rem -1rem -1rem;
+  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--cui-border-color);
+  background: var(--cui-body-bg);
+}
+
+@media (max-width: 575.98px) {
+  .fire-extinguisher-export-card {
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+    min-height: 68px;
+    padding: 0.75rem;
+  }
+
+  .fire-extinguisher-export-drawer {
+    padding-bottom: 0;
+  }
+
+  .fire-extinguisher-export__footer .btn {
+    min-height: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fire-extinguisher-export-card {
+    transition: none;
+  }
+}

@@ -543,6 +543,27 @@ describe('InspectionForm workflow', () => {
     delete window.matchMedia
   })
 
+  it('collapses the type chooser when an edit record hydrates asynchronously', async () => {
+    const { rerender } = render(<InspectionForm {...baseProps} value={{}} />)
+
+    expect(screen.getByText('Choose Type')).toBeTruthy()
+
+    rerender(
+      <InspectionForm
+        {...baseProps}
+        value={{
+          inspectionType: 'General Inspection',
+          description: 'Hydrated edit record',
+          photos: [],
+        }}
+      />,
+    )
+
+    await waitFor(() => expect(screen.queryByText('Choose Type')).toBeNull())
+    expect(screen.getByText('Type')).toBeTruthy()
+    expect(screen.getByText('General')).toBeTruthy()
+  })
+
   it('loads Fire Extinguisher main areas after selecting a zone', async () => {
     const ControlledFireForm = () => {
       const [form, setForm] = React.useState({

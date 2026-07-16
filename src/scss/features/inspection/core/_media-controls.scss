@@ -60,6 +60,21 @@
   display: block;
 }
 
+.workflow-photo-preview--uncropped {
+  align-self: start;
+  height: auto;
+  min-height: 7rem;
+  padding: 0.25rem;
+}
+
+.workflow-photo-preview--uncropped .workflow-photo-preview__image {
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: min(72dvh, 52rem);
+  object-fit: contain;
+}
+
 .workflow-photo-preview__fallback,
 .inspection-photo-preview__fallback {
   padding: 0.75rem;
@@ -132,4 +147,11 @@
     height: min(62dvh, 32rem);
     min-height: 18rem;
   }
+}
+.inspection-photo-upload-status {
+  position: fixed;
+  z-index: 1085;
+  right: 1rem;
+  bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  width: min(24rem, calc(100vw - 2rem));
 }

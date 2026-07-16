@@ -22,6 +22,7 @@ const baseProps = {
   onContinueDraft: vi.fn(),
   onDeleteDraft: vi.fn(),
   onOpenRecord: vi.fn(),
+  onViewQueueDetails: vi.fn(),
   onViewRecords: vi.fn(),
   onRetryQueue: vi.fn(),
 }
@@ -109,6 +110,25 @@ describe('InspectionMobileHome', () => {
 
     rerender(<InspectionMobileHome {...baseProps} />)
     expect(screen.getByText('No records yet.')).toBeTruthy()
+  })
+
+  it('opens queue details without reusing the view-all records action', () => {
+    const onViewQueueDetails = vi.fn()
+    const onViewRecords = vi.fn()
+
+    render(
+      <InspectionMobileHome
+        {...baseProps}
+        queueSummary={{ count: 1 }}
+        onViewQueueDetails={onViewQueueDetails}
+        onViewRecords={onViewRecords}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Details' }))
+
+    expect(onViewQueueDetails).toHaveBeenCalledTimes(1)
+    expect(onViewRecords).not.toHaveBeenCalled()
   })
 
   it('surfaces fire extinguisher draft progress and pending sync state', () => {

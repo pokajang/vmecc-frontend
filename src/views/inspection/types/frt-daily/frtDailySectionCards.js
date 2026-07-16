@@ -10,6 +10,12 @@ import {
   buildPhotoViewerUploadOptions,
   buildStagedPhotoUploadOptions,
 } from 'src/views/inspection/form/inspectionPhotoFlow'
+import {
+  buildInspectionPhotoListPatch,
+  mergeInspectionPhotoLists,
+  removePhotoById,
+  updatePhotoDescriptionById,
+} from 'src/views/inspection/form/inspectionPhotoUtils'
 import InspectionResetConfirmDrawer from 'src/views/inspection/form/components/InspectionResetConfirmDrawer'
 import {
   buildInspectionElementActions,
@@ -696,7 +702,11 @@ const FrtSectionCards = ({
   }
 
   const patchMobileDraftRow = (patch) => {
-    setMobileDraftRow((current) => (current ? { ...current, ...patch } : current))
+    setMobileDraftRow((current) => {
+      if (!current) return current
+      const resolvedPatch = typeof patch === 'function' ? patch(current) : patch
+      return { ...current, ...(resolvedPatch || {}) }
+    })
     setMobileSaveStatus('Unsaved changes')
   }
 
@@ -744,7 +754,11 @@ const FrtSectionCards = ({
       onRequestIssuePhotoUpload?.(
         row,
         buildStagedPhotoUploadOptions(options, (_targetRow, photosKey, photos) =>
-          patchMobileDraftRow({ [photosKey]: photos }),
+          patchMobileDraftRow((current) =>
+            buildInspectionPhotoListPatch(current, photosKey, (currentPhotos) =>
+              mergeInspectionPhotoLists(currentPhotos, photos),
+            ),
+          ),
         ),
       ),
     onRequestPhotoUpload: (row, photosKey = 'additionalPhotos', options = {}) =>
@@ -752,36 +766,39 @@ const FrtSectionCards = ({
         row,
         buildStagedPhotoUploadOptions(
           { ...options, photosKey },
-          (_targetRow, nextPhotosKey, photos) => patchMobileDraftRow({ [nextPhotosKey]: photos }),
+          (_targetRow, nextPhotosKey, photos) =>
+            patchMobileDraftRow((current) =>
+              buildInspectionPhotoListPatch(current, nextPhotosKey, (currentPhotos) =>
+                mergeInspectionPhotoLists(currentPhotos, photos),
+              ),
+            ),
         ),
       ),
-    onRemovePhoto: (row, photoId, photosKey = 'photos') => {
-      const photos = Array.isArray(row?.[photosKey]) ? row[photosKey] : []
-      patchMobileDraftRow({
-        [photosKey]: photos.filter((photo) => String(photo?.id || '') !== String(photoId || '')),
-      })
-    },
-    onChangePhotoDescription: (row, photoId, description, photosKey = 'photos') => {
-      const photos = Array.isArray(row?.[photosKey]) ? row[photosKey] : []
-      patchMobileDraftRow({
-        [photosKey]: photos.map((photo) =>
-          String(photo?.id || '') === String(photoId || '') ? { ...photo, description } : photo,
+    onRemovePhoto: (_row, photoId, photosKey = 'photos') =>
+      patchMobileDraftRow((current) =>
+        buildInspectionPhotoListPatch(current, photosKey, (currentPhotos) =>
+          removePhotoById(currentPhotos, photoId),
         ),
-      })
-    },
-    onApplyPhotoCaption: (row, photoId, caption, photosKey = 'photos') => {
-      const photos = Array.isArray(row?.[photosKey]) ? row[photosKey] : []
-      patchMobileDraftRow({
-        [photosKey]: photos.map((photo) =>
-          String(photo?.id || '') === String(photoId || '')
-            ? {
-                ...photo,
-                description: [photo.description, caption].filter(Boolean).join('\n'),
-              }
-            : photo,
+      ),
+    onChangePhotoDescription: (_row, photoId, description, photosKey = 'photos') =>
+      patchMobileDraftRow((current) =>
+        buildInspectionPhotoListPatch(current, photosKey, (currentPhotos) =>
+          updatePhotoDescriptionById(currentPhotos, photoId, description),
         ),
-      })
-    },
+      ),
+    onApplyPhotoCaption: (_row, photoId, caption, photosKey = 'photos') =>
+      patchMobileDraftRow((current) =>
+        buildInspectionPhotoListPatch(current, photosKey, (currentPhotos) =>
+          currentPhotos.map((photo) =>
+            String(photo?.id || '') === String(photoId || '')
+              ? {
+                  ...photo,
+                  description: [photo.description, caption].filter(Boolean).join('\n'),
+                }
+              : photo,
+          ),
+        ),
+      ),
   })
 
   const sharedRowProps = {
@@ -792,8 +809,8 @@ const FrtSectionCards = ({
     onResetCheck: requestResetCheck,
     onMarkRowOk,
     onDeleteItem,
-    onRequestPhotoUpload: (row, photosKey = 'additionalPhotos') =>
-      onRequestIssuePhotoUpload?.(row, { photosKey }),
+    onRequestPhotoUpload: (row, photosKey = 'additionalPhotos', options = {}) =>
+      onRequestIssuePhotoUpload?.(row, { ...options, photosKey }),
     onRequestIssuePhotoUpload,
     onRemovePhoto,
     onChangePhotoDescription,

@@ -1,4 +1,5 @@
 import { apiRequest } from 'src/services/apiClient'
+import { downloadReportFile } from 'src/services/api/reportPdfApi'
 import { normalizeInspectionLocationKey } from '../../form/inspectionLocationDefaults'
 import { calculateFireExtinguisherDaysLeft } from '../fireExtinguisherDateUtils'
 import { getFireExtinguisherCanonicalAssetKey } from '../../types/fire-extinguisher/identity'
@@ -427,6 +428,39 @@ export const fetchFireExtinguisherCoverageDetail = async (catalogId, params = {}
     },
     meta: response?.meta || {},
   }
+}
+
+export const previewFireExtinguisherExceptionExport = async (payload) => {
+  const response = await apiRequest('/inspection/fire-extinguishers/exception-export/preview', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+  const data = response?.data || {}
+
+  return {
+    total: Number(data.total) || 0,
+    issues: Number(data.issues) || 0,
+    expired: Number(data.expired) || 0,
+    overlap: Number(data.overlap) || 0,
+    appliedFilters: Array.isArray(data.appliedFilters) ? data.appliedFilters : [],
+    scope: String(data.scope || payload?.scope || 'current_filters'),
+  }
+}
+
+export const downloadFireExtinguisherExceptionExport = async (payload) => {
+  const format = payload?.format === 'docx' ? 'docx' : 'pdf'
+  const isDocx = format === 'docx'
+
+  return downloadReportFile({
+    endpoint: '/inspection/fire-extinguishers/exception-export/download',
+    payload: { ...payload, format },
+    accept: isDocx
+      ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      : 'application/pdf',
+    acceptedContentTypes: isDocx
+      ? ['application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+      : ['application/pdf'],
+  })
 }
 
 export const normalizeFireExtinguisherCatalogRows = normalizeRows

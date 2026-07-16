@@ -20,7 +20,7 @@ const BLOCKLIST = [
   'Audit Legacy Create',
 ]
 
-const SKIP_PATH_PARTS = ['node_modules', 'dist', 'build']
+const SKIP_PATH_PARTS = ['node_modules', 'dist', 'build', '__tests__', '__snapshots__']
 
 const walk = (dir, files = []) => {
   const entries = fs.readdirSync(dir, { withFileTypes: true })

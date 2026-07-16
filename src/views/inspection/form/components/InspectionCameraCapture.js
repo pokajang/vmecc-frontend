@@ -101,7 +101,7 @@ const InspectionCameraCapture = ({
     try {
       const file = await captureFrame({ video: videoRef.current })
       stopCamera()
-      await onCapture?.(file)
+      onCapture?.(file)
     } catch (error) {
       stopCamera()
       setErrorMessage(cameraErrorMessage(error))

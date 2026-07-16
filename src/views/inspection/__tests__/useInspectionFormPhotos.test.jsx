@@ -40,6 +40,14 @@ vi.mock('../form/inspectionPhotoUtils', async () => {
   }
 })
 
+vi.mock('src/services/api/reportMediaApi', async () => {
+  const actual = await vi.importActual('src/services/api/reportMediaApi')
+  return {
+    ...actual,
+    deleteReportMedia: vi.fn().mockResolvedValue(true),
+  }
+})
+
 beforeEach(() => {
   vi.spyOn(cameraCaptureUtils, 'supportsInAppInspectionCamera').mockReturnValue(true)
   vi.spyOn(cameraRecovery, 'isLikelyEmbeddedBrowser').mockReturnValue(false)
@@ -315,6 +323,157 @@ describe('useInspectionFormPhotos', () => {
         delete navigator.mediaDevices
       }
     }
+  })
+
+  it('keeps a slow capture bound to its row and blocks a second camera session', async () => {
+    const prepare = await import('../form/inspectionPhotoUtils')
+    let finishUpload
+    prepare.prepareInspectionPhotoUploads.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finishUpload = resolve
+        }),
+    )
+    const pushToast = vi.fn()
+    const updateFireExtinguisherCheck = vi.fn()
+    const { result } = renderHook(() =>
+      useInspectionFormPhotos({
+        appendInspectionText: noop,
+        createPhotoId: () => 'photo-id',
+        defaultHighAnglePhotosKey: 'photos',
+        form: { photos: [], fireExtinguisherChecks: [] },
+        getLatestForm: () => ({ photos: [], fireExtinguisherChecks: [] }),
+        getScbaExistingCheck: () => null,
+        getScbaFieldEvidenceKeys: () => ({ photosKey: 'photos' }),
+        pushToast,
+        updateErAuxCheck: noop,
+        updateFireExtinguisherCheck,
+        updateForm: noop,
+        updateFrtCheck: noop,
+        updateHighAngleCheck: noop,
+        updateHydraulicCheck: noop,
+        updateScbaGroupedCheck: noop,
+      }),
+    )
+    const firstRow = { id: 'FE-FIRST', photos: [] }
+    const secondRow = { id: 'FE-SECOND', photos: [] }
+    const uploadedPhoto = { id: 'photo-first', mediaId: 'media-first', url: '/media-first' }
+
+    act(() => result.current.requestFireExtinguisherPhotoUpload(firstRow))
+    let capturePromise
+    act(() => {
+      capturePromise = result.current.handleInAppCameraCapture(
+        new File(['first'], 'first.jpg', { type: 'image/jpeg' }),
+      )
+    })
+
+    expect(result.current.cameraCaptureVisible).toBe(false)
+    expect(result.current.isPhotoProcessing).toBe(true)
+
+    act(() => result.current.requestFireExtinguisherPhotoUpload(secondRow))
+
+    expect(result.current.cameraCaptureVisible).toBe(false)
+    expect(pushToast).toHaveBeenCalledWith(
+      expect.stringContaining('current photo'),
+      expect.objectContaining({ title: 'Photo upload in progress' }),
+    )
+
+    await act(async () => {
+      finishUpload([uploadedPhoto])
+      await capturePromise
+    })
+
+    expect(updateFireExtinguisherCheck).toHaveBeenCalledWith(firstRow, {
+      photos: [uploadedPhoto],
+    })
+    expect(updateFireExtinguisherCheck).not.toHaveBeenCalledWith(secondRow, expect.anything())
+  })
+
+  it('appends to the latest row photos when the form changes during upload', async () => {
+    const prepare = await import('../form/inspectionPhotoUtils')
+    const existingPhoto = { id: 'existing-photo' }
+    const concurrentPhoto = { id: 'concurrent-photo' }
+    const uploadedPhoto = { id: 'uploaded-photo', mediaId: 'uploaded-media' }
+    const row = { id: 'FE-LATEST', photos: [existingPhoto] }
+    const latestRow = { ...row, photos: [existingPhoto, concurrentPhoto] }
+    const getLatestForm = vi
+      .fn()
+      .mockReturnValueOnce({ photos: [], fireExtinguisherChecks: [row] })
+      .mockReturnValue({ photos: [], fireExtinguisherChecks: [latestRow] })
+    const updateFireExtinguisherCheck = vi.fn()
+    prepare.prepareInspectionPhotoUploads.mockResolvedValueOnce([uploadedPhoto])
+    const { result } = renderHook(() =>
+      useInspectionFormPhotos({
+        appendInspectionText: noop,
+        createPhotoId: () => 'photo-id',
+        defaultHighAnglePhotosKey: 'photos',
+        form: { photos: [], fireExtinguisherChecks: [row] },
+        getLatestForm,
+        getScbaExistingCheck: () => null,
+        getScbaFieldEvidenceKeys: () => ({ photosKey: 'photos' }),
+        pushToast: noop,
+        updateErAuxCheck: noop,
+        updateFireExtinguisherCheck,
+        updateForm: noop,
+        updateFrtCheck: noop,
+        updateHighAngleCheck: noop,
+        updateHydraulicCheck: noop,
+        updateScbaGroupedCheck: noop,
+      }),
+    )
+
+    act(() => result.current.requestFireExtinguisherPhotoUpload(row))
+    await act(async () => {
+      await result.current.handleInAppCameraCapture(
+        new File(['photo'], 'latest.jpg', { type: 'image/jpeg' }),
+      )
+    })
+
+    expect(updateFireExtinguisherCheck).toHaveBeenCalledWith(row, {
+      photos: [existingPhoto, concurrentPhoto, uploadedPhoto],
+    })
+  })
+
+  it('cleans up managed media and reports a row-attachment failure', async () => {
+    const prepare = await import('../form/inspectionPhotoUtils')
+    const reportMediaApi = await import('src/services/api/reportMediaApi')
+    const uploadedPhoto = { id: 'uploaded-photo', mediaId: 'uploaded-media' }
+    const pushToast = vi.fn()
+    prepare.prepareInspectionPhotoUploads.mockResolvedValueOnce([uploadedPhoto])
+    const { result } = renderHook(() =>
+      useInspectionFormPhotos({
+        appendInspectionText: noop,
+        createPhotoId: () => 'photo-id',
+        defaultHighAnglePhotosKey: 'photos',
+        form: { photos: [], fireExtinguisherChecks: [] },
+        getLatestForm: () => ({ photos: [], fireExtinguisherChecks: [] }),
+        getScbaExistingCheck: () => null,
+        getScbaFieldEvidenceKeys: () => ({ photosKey: 'photos' }),
+        pushToast,
+        updateErAuxCheck: noop,
+        updateFireExtinguisherCheck: () => {
+          throw new Error('Row is no longer available')
+        },
+        updateForm: noop,
+        updateFrtCheck: noop,
+        updateHighAngleCheck: noop,
+        updateHydraulicCheck: noop,
+        updateScbaGroupedCheck: noop,
+      }),
+    )
+
+    act(() => result.current.requestFireExtinguisherPhotoUpload({ id: 'FE-REMOVED' }))
+    await act(async () => {
+      await result.current.handleInAppCameraCapture(
+        new File(['photo'], 'orphan.jpg', { type: 'image/jpeg' }),
+      )
+    })
+
+    expect(reportMediaApi.deleteReportMedia).toHaveBeenCalledWith('uploaded-media')
+    expect(pushToast).toHaveBeenCalledWith(
+      expect.stringContaining('could not be attached'),
+      expect.objectContaining({ title: 'Photo attachment failed' }),
+    )
   })
 
   it('appends Add more captures to the current drawer photos when the row prop is stale', async () => {

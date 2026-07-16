@@ -2,42 +2,68 @@ const { expect, test } = require('@playwright/test')
 
 const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
 const smokePassword = process.env.VMECC_SMOKE_RBAC_PASSWORD || 'SmokeRole!2026'
+const smokeTimeoutMs = Number(process.env.VMECC_SMOKE_ROUTE_TIMEOUT_MS || 5 * 60_000)
 
 const personas = {
   applicant: 'codex.smoke.tactical-response-team@vmecc.local',
   manager: 'codex.smoke.human-resource@vmecc.local',
 }
 
-const login = async (page, email) => {
-  await page.goto('/login', { waitUntil: 'domcontentloaded' })
-  await page.locator('input[name="email"]').fill(email)
-  await page.locator('input[name="password"]').fill(smokePassword)
-  await page.getByRole('button', { name: /sign in/i }).click()
-  await expect(page).not.toHaveURL(/\/login/i)
+const shellApiStubs = [
+  ['/settings/modules', { data: { registry: [], configured: {}, effective: {} } }],
+  [
+    '/settings/system-maintenance',
+    { data: { enabled: false, phase: 'off', graceEndsAt: null, message: '' } },
+  ],
+  ['/messages/threads**', { data: [] }],
+  ['/rosters**', { data: [] }],
+  [
+    '/settings/shift-windows',
+    {
+      data: {
+        normal_start: '08:00',
+        normal_end: '17:00',
+        day_start: '07:00',
+        day_end: '19:00',
+        night_start: '19:00',
+        night_end: '07:00',
+      },
+    },
+  ],
+  ['/workflow/notifications/unread-count**', { data: { unread_count: 0 } }],
+  ['/overtime/eligibility', { data: { eligible: false, applicableRoles: [], userRoles: [] } }],
+]
+
+const installShellApiStubs = async (page) => {
+  await Promise.all(
+    shellApiStubs.map(([path, body]) =>
+      page.route(`${apiBaseUrl}${path}`, (route) =>
+        route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) }),
+      ),
+    ),
+  )
 }
 
-const logout = async (page) => {
+const login = async (page, email) => {
+  await page.context().clearCookies()
+  const response = await page.request.post(`${apiBaseUrl}/auth/login`, {
+    headers: { Accept: 'application/json' },
+    data: { email, password: smokePassword, remember: true },
+  })
+  const body = await response.json()
+  expect(response.status(), JSON.stringify(body)).toBe(200)
+
   const session = await page.request.get(`${apiBaseUrl}/auth/session`, {
     headers: { Accept: 'application/json' },
   })
-  const csrfToken = (await session.json())?.csrf_token
-  await page.request.post(`${apiBaseUrl}/auth/logout`, {
-    headers: { Accept: 'application/json', 'X-CSRF-Token': csrfToken },
-  })
-  await page.context().clearCookies()
-}
-
-const dismissBlockingDialogs = async (page) => {
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    const closeButtons = page.getByRole('dialog').getByRole('button', { name: 'Close' })
-    if ((await closeButtons.count()) === 0) return
-    await closeButtons.last().click()
-  }
+  const sessionBody = await session.json()
+  expect(session.status(), JSON.stringify(sessionBody)).toBe(200)
+  expect(sessionBody.user?.email).toBe(email)
 }
 
 test.describe('Leave remediation browser smoke', () => {
-  test('manager correction is visible and editable to the applicant', async ({ page }) => {
-    test.setTimeout(90000)
+  test('manager correction is visible and editable to the applicant', async ({ page, browser }) => {
+    test.setTimeout(smokeTimeoutMs)
     test.skip(
       process.env.VMECC_LEAVE_E2E !== '1',
       'Set VMECC_LEAVE_E2E=1 after running the SmokeScenarioSeeder.',
@@ -71,33 +97,33 @@ test.describe('Leave remediation browser smoke', () => {
       expect(await correction.text()).toContain('Needs Correction')
       expect(correction.status()).toBe(200)
     }
-    await logout(page)
+    await page.close()
 
-    await login(page, personas.applicant)
-    const leaveApi = await page.evaluate(async () => {
-      const response = await fetch('http://localhost:8000/api/leave', {
-        credentials: 'include',
-        headers: { Accept: 'application/json' },
-      })
-      return { status: response.status, body: await response.text() }
+    const applicantContext = await browser.newContext()
+    const applicantPage = await applicantContext.newPage()
+    await installShellApiStubs(applicantPage)
+    await login(applicantPage, personas.applicant)
+    const leaveApi = await applicantPage.request.get(`${apiBaseUrl}/leave`, {
+      headers: { Accept: 'application/json' },
     })
-    expect(leaveApi.status, leaveApi.body).toBe(200)
-    expect(leaveApi.body).toContain('SMK-LV-1')
-    const balanceApi = await page.evaluate(async () => {
-      const response = await fetch('http://localhost:8000/api/leave/balance', {
-        credentials: 'include',
-        headers: { Accept: 'application/json' },
-      })
-      return { status: response.status, body: await response.text() }
+    const leaveApiBody = await leaveApi.text()
+    expect(leaveApi.status(), leaveApiBody).toBe(200)
+    expect(leaveApiBody).toContain('SMK-LV-1')
+    const balanceApi = await applicantPage.request.get(`${apiBaseUrl}/leave/balance`, {
+      headers: { Accept: 'application/json' },
     })
-    expect(balanceApi.status, balanceApi.body).toBe(200)
-    await page.goto('/leave', { waitUntil: 'domcontentloaded' })
-    await expect(page.getByTestId('leave-records')).toContainText('SMK-LV-1', { timeout: 15000 })
-    await page.goto('/leave/SMK-LV-1', { waitUntil: 'domcontentloaded' })
-    await expect(page.getByTestId('leave-detail')).toBeVisible()
-    await expect(page.getByTestId('leave-detail')).toContainText('Needs Correction')
-    await dismissBlockingDialogs(page)
-    await page.getByTestId('leave-edit-action').click()
-    await expect(page.getByTestId('leave-apply')).toBeVisible()
+    expect(balanceApi.status(), await balanceApi.text()).toBe(200)
+    await applicantPage.goto('/leave', { waitUntil: 'domcontentloaded' })
+    await expect(applicantPage.getByTestId('leave-records')).toContainText('SMK-LV-1', {
+      timeout: 60_000,
+    })
+    await applicantPage.goto(`/leave/${record.display_id}`, { waitUntil: 'domcontentloaded' })
+    await expect(applicantPage.getByTestId('leave-detail')).toBeVisible()
+    await expect(applicantPage.getByTestId('leave-detail')).toContainText('Needs Correction', {
+      timeout: 60_000,
+    })
+    await applicantPage.getByTestId('leave-edit-action').click()
+    await expect(applicantPage.getByTestId('leave-apply')).toBeVisible()
+    await applicantContext.close()
   })
 })

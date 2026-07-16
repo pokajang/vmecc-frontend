@@ -16,7 +16,7 @@ import {
   CTableHeaderCell,
   CTableRow,
 } from '@coreui/react'
-import { ArrowLeft, Camera, MessageSquare, X } from 'lucide-react'
+import { ArrowLeft, Camera, Download, MessageSquare, X } from 'lucide-react'
 
 import DataTableFooter from 'src/components/DataTableFooter'
 import CreateActionButton from 'src/components/CreateActionButton'
@@ -33,6 +33,7 @@ import {
   fetchFireExtinguisherCoverageDetail,
 } from 'src/views/inspection/inspectionFireExtinguisherApi'
 import FireExtinguisherCreateDrawer from './FireExtinguisherCreateDrawer'
+import FireExtinguisherExceptionExportDialog from './fire-extinguisher-export/FireExtinguisherExceptionExportDialog'
 
 const ALL_ROWS_VALUE = 'all'
 
@@ -1532,6 +1533,7 @@ const AllExtinguishersSection = ({
   const [rowsToShow, setRowsToShow] = useState(savedView.rowsToShow ?? 10)
   const [currentPage, setCurrentPage] = useState(savedView.currentPage ?? 1)
   const [createSuccessMessage, setCreateSuccessMessage] = useState(initialSuccessMessage)
+  const [isExportOpen, setIsExportOpen] = useState(false)
   const isCustomPeriod = period === 'custom'
   const isCustomPeriodReady =
     !isCustomPeriod || (periodFrom !== '' && periodTo !== '' && periodFrom <= periodTo)
@@ -2145,15 +2147,27 @@ const AllExtinguishersSection = ({
     />
   )
   const detailPeriodLabel = getPeriodLabel(period, periodFrom, periodTo)
-  const createAction = onRequestCreate ? (
-    <div className="d-flex justify-content-end mb-3" data-testid="all-extinguishers-create-toolbar">
+  const createAction = (
+    <div
+      className="d-flex flex-wrap justify-content-end gap-2 mb-3"
+      data-testid="all-extinguishers-create-toolbar"
+    >
       <CreateActionButton
-        label="Add Extinguisher"
+        label="Export"
+        ariaLabel="Export fire extinguisher exceptions"
+        icon={<Download size={13} className="me-1" aria-hidden="true" />}
         importance="section-primary"
-        onClick={requestCreate}
+        onClick={() => setIsExportOpen(true)}
       />
+      {onRequestCreate ? (
+        <CreateActionButton
+          label="Add Extinguisher"
+          importance="section-primary"
+          onClick={requestCreate}
+        />
+      ) : null}
     </div>
-  ) : null
+  )
   const createSuccess = createSuccessMessage ? (
     <CAlert
       color="success"
@@ -2231,6 +2245,11 @@ const AllExtinguishersSection = ({
         }}
       />
       <InspectionPhotoViewerModal viewer={photoViewer} onClose={() => setPhotoViewer(null)} />
+      <FireExtinguisherExceptionExportDialog
+        visible={isExportOpen}
+        filterSnapshot={viewState}
+        onClose={() => setIsExportOpen(false)}
+      />
       {isCreateOpen ? (
         <FireExtinguisherCreateDrawer
           visible

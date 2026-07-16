@@ -1,15 +1,17 @@
 import { expect, test } from '@playwright/test'
+import { installAppShellApiStubs } from './support/app-shell-stubs'
 
 const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
 const routeTimeoutMs = Number(process.env.VMECC_SMOKE_ROUTE_TIMEOUT_MS || 30_000)
-const smokeEmail = process.env.VMECC_SMOKE_EMAIL || 'codex.smoke.admin@vmecc.local'
-const smokePassword = process.env.VMECC_SMOKE_PASSWORD || 'SmokeAdmin!2026'
+const smokeEmail = process.env.VMECC_SMOKE_EMAIL || 'codex.smoke.tactical-response-team@vmecc.local'
+const smokePassword = process.env.VMECC_SMOKE_PASSWORD || 'SmokeRole!2026'
 
 const text = (value) => String(value || '').trim()
 
 const stripProgressSuffix = (value = '') => {
   const raw = text(value)
   return raw
+    .replace(/\s*Loading\.\.\.$/i, '')
     .replace(/\s*\d+\s*\/\s*\d+\s*(?:fes?|locations?|areas?)\b.*$/i, '')
     .replace(/\s*\d+\s*(?:location|locations|area|areas|fes)\b.*$/i, '')
     .trim()
@@ -155,9 +157,18 @@ const parseReportBody = ({ body = {}, text: bodyText = '', response = null }) =>
       requestPayload?.uid ||
       requestPayload?.id,
   )
+  const displayId = text(
+    body?.data?.display_id ||
+      body?.data?.displayId ||
+      body?.display_id ||
+      body?.displayId ||
+      requestPayload?.display_id ||
+      requestPayload?.displayId,
+  )
 
   return {
     reportUid,
+    displayId,
     body,
     bodyText,
   }
@@ -181,6 +192,7 @@ const openFireExtinguisherByAreaMode = async (page, loggedInByApi = false) => {
     }
   }
 
+  await installAppShellApiStubs(page, apiBaseUrl)
   await goToInspectionRoute()
 
   let hasFireType = await isFireExtinguisherVisible()
@@ -263,8 +275,11 @@ const selectLocationByIndex = async (page, sectionTitle, index = 0) => {
 }
 
 const selectOrResolveLocationByIndex = async (page, sectionTitle, index = 0) => {
-  const selected = await getSelectedSectionOptionLabel(page, sectionTitle)
-  if (selected) return stripProgressSuffix(selected)
+  const section = getSection(page, sectionTitle)
+  const selected = section.locator('[role="radio"][aria-checked="true"]').first()
+  if (await selected.isVisible().catch(() => false)) {
+    return stripProgressSuffix(text(await selected.textContent()))
+  }
   return selectLocationByIndex(page, sectionTitle, index)
 }
 
@@ -296,19 +311,28 @@ const selectFireExtinguisherByAreaFirstLocation = async (page) => {
     }
   }
 
+  const zoneSection = getSection(page, 'Choose Zone')
+  await expect
+    .poll(() => zoneSection.locator('[role="radio"]').count(), { timeout: routeTimeoutMs })
+    .toBeGreaterThan(0)
   const selectedZoneLabel = await selectOrResolveLocationByIndex(page, 'Choose Zone', 0)
+
+  const mainAreaSection = getSection(page, 'Choose Main Area')
+  await expect(mainAreaSection).toBeVisible({ timeout: routeTimeoutMs })
+  await expect
+    .poll(() => mainAreaSection.locator('[role="radio"]').count(), {
+      timeout: routeTimeoutMs,
+    })
+    .toBeGreaterThan(0)
   const selectedMainAreaLabel = await selectOrResolveLocationByIndex(page, 'Choose Main Area', 0)
 
   const locationSection = getSection(page, 'Choose Location')
-  const locationCount = await locationSection.locator('[role="radio"]').count()
-  if (locationCount < 1) {
-    return {
-      zone: stripProgressSuffix(selectedZoneLabel),
-      mainArea: stripProgressSuffix(selectedMainAreaLabel),
-      location: '',
-    }
-  }
-
+  await expect(locationSection).toBeVisible({ timeout: routeTimeoutMs })
+  await expect
+    .poll(() => locationSection.locator('[role="radio"]').count(), {
+      timeout: routeTimeoutMs,
+    })
+    .toBeGreaterThan(0)
   const selectedLocationLabel = await selectLocationByIndex(page, 'Choose Location', 0)
 
   return {
@@ -320,25 +344,31 @@ const selectFireExtinguisherByAreaFirstLocation = async (page) => {
 
 const findSelectionWithAtLeastTwoLocations = async (page) => {
   const zoneSection = getSection(page, 'Choose Zone')
+  await expect
+    .poll(() => zoneSection.locator('[role="radio"]').count(), { timeout: routeTimeoutMs })
+    .toBeGreaterThan(0)
   const zoneCount = await zoneSection.locator('[role="radio"]').count()
 
   for (let z = 0; z < zoneCount; z++) {
     const zoneOption = getSection(page, 'Choose Zone').locator('[role="radio"]').nth(z)
     if (!(await zoneOption.isVisible().catch(() => false))) continue
 
-    const zoneRaw = text(await zoneOption.textContent())
-    await zoneOption.click()
+    const zoneRaw = await selectLocationByIndex(page, 'Choose Zone', z)
 
     const mainAreaSection = getSection(page, 'Choose Main Area')
     await expect(mainAreaSection).toBeVisible({ timeout: routeTimeoutMs })
+    await expect
+      .poll(() => mainAreaSection.locator('[role="radio"]').count(), {
+        timeout: routeTimeoutMs,
+      })
+      .toBeGreaterThan(0)
     const mainAreaCount = await mainAreaSection.locator('[role="radio"]').count()
 
     for (let m = 0; m < mainAreaCount; m++) {
       const mainAreaOption = getSection(page, 'Choose Main Area').locator('[role="radio"]').nth(m)
       if (!(await mainAreaOption.isVisible().catch(() => false))) continue
 
-      const mainAreaRaw = text(await mainAreaOption.textContent())
-      await mainAreaOption.click()
+      const mainAreaRaw = await selectLocationByIndex(page, 'Choose Main Area', m)
 
       const locationSection = getSection(page, 'Choose Location')
       await expect(locationSection).toBeVisible({ timeout: routeTimeoutMs })
@@ -371,6 +401,27 @@ const waitForCreateExtinguisherResponse = (response) => {
   try {
     const path = new URL(response.url()).pathname
     return path.endsWith('/api/inspection/fire-extinguishers')
+  } catch {
+    return false
+  }
+}
+
+const isInspectionSubmitResponse = (response) => {
+  if (response.request().method().toUpperCase() !== 'POST') return false
+  try {
+    const path = new URL(response.url()).pathname
+    return (
+      path.endsWith('/api/reports') || /^\/api\/inspection\/sessions\/[^/]+\/submit$/.test(path)
+    )
+  } catch {
+    return false
+  }
+}
+
+const isInspectionUpdateResponse = (response) => {
+  if (response.request().method().toUpperCase() !== 'PUT') return false
+  try {
+    return /^\/api\/reports\/[^/]+$/.test(new URL(response.url()).pathname)
   } catch {
     return false
   }
@@ -432,12 +483,21 @@ const completeRowAsGood = async (card) => {
   await expandRow(card)
   const goodButtons = card.getByRole('button', { name: 'Good', exact: true })
   const yesButtons = card.getByRole('button', { name: 'Yes', exact: true })
+  const selectIfNeeded = async (button) => {
+    const selected = await button.evaluate(
+      (element) =>
+        element.getAttribute('aria-pressed') === 'true' ||
+        element.classList.contains('active') ||
+        element.classList.contains('btn-primary'),
+    )
+    if (!selected) await button.click()
+  }
 
-  if ((await goodButtons.count()) > 0) await goodButtons.nth(0).click()
-  if ((await goodButtons.count()) > 1) await goodButtons.nth(1).click()
-  if ((await yesButtons.count()) > 0) await yesButtons.nth(0).click()
-  if ((await yesButtons.count()) > 1) await yesButtons.nth(1).click()
-  if ((await goodButtons.count()) > 2) await goodButtons.nth(2).click()
+  if ((await goodButtons.count()) > 0) await selectIfNeeded(goodButtons.nth(0))
+  if ((await goodButtons.count()) > 1) await selectIfNeeded(goodButtons.nth(1))
+  if ((await yesButtons.count()) > 0) await selectIfNeeded(yesButtons.nth(0))
+  if ((await yesButtons.count()) > 1) await selectIfNeeded(yesButtons.nth(1))
+  if ((await goodButtons.count()) > 2) await selectIfNeeded(goodButtons.nth(2))
 
   await expect(card.getByTestId('fire-extinguisher-status-inspected')).toBeVisible({
     timeout: routeTimeoutMs,
@@ -466,7 +526,8 @@ const deleteFireExtinguisherCatalogRow = async (api, csrfToken, catalogId) => {
 }
 
 const submitFireExtinguisherInspection = async (page, options = {}) => {
-  const expectedReviewText = text(options.reviewText)
+  const isUpdateMode = options.isUpdateMode === true
+  const actionLabel = isUpdateMode ? 'Update' : 'Submit'
 
   await page
     .getByRole('button', {
@@ -476,41 +537,32 @@ const submitFireExtinguisherInspection = async (page, options = {}) => {
     .first()
     .click()
 
-  await expect(page.getByRole('heading', { name: 'Review Inspection' })).toBeVisible({
+  await expect(page.getByRole('button', { name: actionLabel, exact: true }).first()).toBeVisible({
     timeout: routeTimeoutMs,
   })
-  if (expectedReviewText) {
-    await expect(page.getByText(expectedReviewText)).toBeVisible({ timeout: routeTimeoutMs })
-  }
-
   const submitResponsePromise = page.waitForResponse(
-    (response) => {
-      const requestMethod = response.request().method().toUpperCase()
-      if (requestMethod !== 'POST') return false
-
-      try {
-        return new URL(response.url()).pathname.endsWith('/api/reports')
-      } catch {
-        return false
-      }
-    },
+    isUpdateMode ? isInspectionUpdateResponse : isInspectionSubmitResponse,
     { timeout: routeTimeoutMs },
   )
 
   await page
-    .getByRole('button', { name: /^Submit$/i })
+    .getByRole('button', { name: new RegExp(`^${actionLabel}$`, 'i') })
     .first()
     .click()
-  await expect(page.getByText(/Submit Fire Extinguisher Inspection/)).toBeVisible()
-  await page.getByRole('button', { name: /Confirm Submit/i }).click()
+  await expect(
+    page.getByText(new RegExp(`${actionLabel} Fire Extinguisher Inspection`, 'i')),
+  ).toBeVisible()
+  await page.getByRole('button', { name: new RegExp(`Confirm ${actionLabel}`, 'i') }).click()
 
   const submitResponse = await submitResponsePromise
   const { body, text: responseText } = await parseJsonOrText(submitResponse)
-  const { reportUid } = parseReportBody({
+  const parsedReport = parseReportBody({
     body,
     text: responseText,
     response: submitResponse,
   })
+  const reportUid = parsedReport.reportUid || text(options.expectedReportUid)
+  const displayId = parsedReport.displayId
 
   if (!submitResponse.ok()) {
     throw new Error(`Inspection submit failed with status ${submitResponse.status()}`)
@@ -518,6 +570,7 @@ const submitFireExtinguisherInspection = async (page, options = {}) => {
 
   return {
     reportUid,
+    displayId,
     responseBody: body,
     responseText,
     status: submitResponse.status(),
@@ -538,12 +591,10 @@ test('fire extinguisher next-location labels are validated end-to-end', async ({
     await expect(page.getByText('Choose Zone')).toBeVisible({ timeout: routeTimeoutMs })
 
     const selectedScope = await findSelectionWithAtLeastTwoLocations(page)
-    if (!selectedScope) {
-      test.skip(
-        true,
-        'Test skipped: inspection fixture currently has no zone + main area with at least 2 locations in scope.',
-      )
-    }
+    expect(
+      selectedScope,
+      'Expected the seeded inspection hierarchy to contain a zone and main area with at least 2 locations.',
+    ).not.toBeNull()
 
     const selectedFirstLocationLabel = await selectLocationByIndex(page, 'Choose Location', 0)
     const selectedFirstLocationName = stripProgressSuffix(selectedFirstLocationLabel)
@@ -591,7 +642,7 @@ test('fire extinguisher next-location labels are validated end-to-end', async ({
       })
       .first()
       .click()
-    await expect(page.getByRole('heading', { name: 'Review Inspection' })).toBeVisible({
+    await expect(page.getByRole('button', { name: 'Submit', exact: true }).first()).toBeVisible({
       timeout: routeTimeoutMs,
     })
 
@@ -600,19 +651,9 @@ test('fire extinguisher next-location labels are validated end-to-end', async ({
     })
     await expect(page.getByText(/2 locations inspected/i)).toBeVisible({ timeout: routeTimeoutMs })
 
-    const submitResponsePromise = page.waitForResponse(
-      (response) => {
-        const requestMethod = response.request().method().toUpperCase()
-        if (requestMethod !== 'POST') return false
-
-        try {
-          return new URL(response.url()).pathname.endsWith('/api/reports')
-        } catch {
-          return false
-        }
-      },
-      { timeout: routeTimeoutMs },
-    )
+    const submitResponsePromise = page.waitForResponse(isInspectionSubmitResponse, {
+      timeout: routeTimeoutMs,
+    })
 
     await page
       .getByRole('button', { name: /^Submit$/i })
@@ -672,12 +713,7 @@ test('fire extinguisher draft is restored when user leaves mid-inspection and re
     await openFireExtinguisherByAreaMode(page, loggedInByApi)
 
     const selectedScope = await selectFireExtinguisherByAreaFirstLocation(page)
-    if (!selectedScope.location) {
-      test.skip(
-        true,
-        'Test skipped: inspection fixture currently has no location available for Fire Extinguisher.',
-      )
-    }
+    expect(selectedScope.location, 'Expected a seeded Fire Extinguisher location.').toBeTruthy()
 
     const rowSuffix = `MID-${String(Date.now()).slice(-6)}`
     const firstRow = await createFireExtinguisherRow(page, rowSuffix)
@@ -695,6 +731,8 @@ test('fire extinguisher draft is restored when user leaves mid-inspection and re
 
     await page.goto('/inspection/new', { waitUntil: 'domcontentloaded' })
     await waitForAppReady(page, '/inspection/new')
+    await page.waitForLoadState('networkidle', { timeout: routeTimeoutMs })
+    await expect(page.getByText('Inspection session unavailable')).toHaveCount(0)
 
     await expect
       .poll(
@@ -755,12 +793,7 @@ test('fire extinguisher submitted record can be edited and re-submitted', async 
     await openFireExtinguisherByAreaMode(page, loggedInByApi)
 
     const selectedScope = await selectFireExtinguisherByAreaFirstLocation(page)
-    if (!selectedScope.location) {
-      test.skip(
-        true,
-        'Test skipped: inspection fixture currently has no location available for Fire Extinguisher.',
-      )
-    }
+    expect(selectedScope.location, 'Expected a seeded Fire Extinguisher location.').toBeTruthy()
 
     const rowSuffix = `UPD-${String(Date.now()).slice(-6)}`
     const row = await createFireExtinguisherRow(page, rowSuffix)
@@ -774,7 +807,12 @@ test('fire extinguisher submitted record can be edited and re-submitted', async 
 
     await page.waitForURL(/\/inspection(?:[/?#]|$)/, { timeout: routeTimeoutMs })
 
-    const searchText = createdReportUid
+    const continuationModal = page.locator('.modal.show', { hasText: 'Continue this area?' }).last()
+    await expect(continuationModal).toBeVisible({ timeout: routeTimeoutMs })
+    await continuationModal.getByRole('button', { name: 'Dismiss', exact: true }).click()
+    await expect(continuationModal).toBeHidden({ timeout: routeTimeoutMs })
+
+    const searchText = submitted.displayId || createdReportUid
     await page.getByRole('textbox', { name: 'Search records' }).fill(searchText)
     const submittedRow = page.locator('tbody tr').filter({ hasText: searchText }).first()
     await expect(submittedRow).toBeVisible({ timeout: 20_000 })
@@ -787,7 +825,7 @@ test('fire extinguisher submitted record can be edited and re-submitted', async 
     await expect(editItem).toBeVisible()
     await editItem.click()
 
-    await expect(page).toHaveURL(new RegExp('^/inspection/.+/edit(?:[/?#]|$)'), {
+    await expect(page).toHaveURL(new RegExp('/inspection/.+/edit(?:[/?#]|$)'), {
       timeout: routeTimeoutMs,
     })
 
@@ -800,10 +838,22 @@ test('fire extinguisher submitted record can be edited and re-submitted', async 
     await expandRow(editedRow)
     const editRemark = `Edit smoke note ${rowSuffix}`
     await editedRow.getByRole('button', { name: 'Remark', exact: true }).click()
-    await editedRow.getByPlaceholder('General extinguisher remarks').fill(editRemark)
+    const remarksInput = editedRow.getByPlaceholder('General extinguisher remarks')
+    await remarksInput.fill(editRemark)
+    await expect(remarksInput).toHaveValue(editRemark)
 
-    const updated = await submitFireExtinguisherInspection(page, { reviewText: editRemark })
+    const updated = await submitFireExtinguisherInspection(page, {
+      isUpdateMode: true,
+      expectedReportUid: createdReportUid,
+    })
     expect(updated.reportUid).toBe(createdReportUid)
+
+    const updatedReportResponse = await api.get(
+      `${apiBaseUrl}/reports/${encodeURIComponent(createdReportUid)}`,
+      { headers: { Accept: 'application/json' } },
+    )
+    expect(updatedReportResponse.ok()).toBe(true)
+    expect(await updatedReportResponse.text()).toContain(editRemark)
   } finally {
     const csrfToken = await getCsrfToken(api)
 

@@ -59,7 +59,7 @@ const InspectionRecordsTable = ({
         {visibleRows.map((row, index) => {
           const reportedBy = row.timeline?.[0]?.by || row.submittedBy || '--'
           const rowSubtext = getInspectionTypeSubtext(row)
-          const isGeneratingDownload = downloadingId === row.id
+          const isDownloading = downloadingId === row.id
           const openRow = () =>
             row.recordKind === 'queued'
               ? undefined
@@ -117,9 +117,9 @@ const InspectionRecordsTable = ({
                 )}
               </CTableDataCell>
               <RowActionCell className="text-center">
-                {isGeneratingDownload ? (
+                {isDownloading ? (
                   <span className="small text-muted">
-                    <ButtonLoader label="Generating..." size={13} />
+                    <ButtonLoader label="Downloading..." size={13} />
                   </span>
                 ) : (
                   <RowActions hitArea={44} items={buildActions(row)} />

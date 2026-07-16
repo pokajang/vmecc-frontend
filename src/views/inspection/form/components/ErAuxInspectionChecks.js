@@ -12,6 +12,12 @@ import {
   buildStagedPhotoUploadOptions,
 } from '../inspectionPhotoFlow'
 import {
+  buildInspectionPhotoListPatch,
+  mergeInspectionPhotoLists,
+  removePhotoById,
+  updatePhotoDescriptionById,
+} from '../inspectionPhotoUtils'
+import {
   EvidenceBlock,
   FormFieldError,
   InspectionPhotoActionRow,
@@ -211,6 +217,20 @@ const ErAuxEquipmentCheckDetails = ({
       row,
       buildPhotoViewerUploadOptions(openDefectPhotoViewer, { currentPhotos: defectPhotos }),
     )
+  const openAdditionalPhotoViewer = (nextPhotos = photos) =>
+    setPhotoViewer({
+      title: `${row.equipment} - additional photos`,
+      photos: nextPhotos,
+      onAddMorePhoto: (currentPhotos) =>
+        onRequestPhotoUpload?.(
+          row,
+          buildPhotoViewerUploadOptions(openAdditionalPhotoViewer, { currentPhotos }),
+        ),
+      onRemove: (photoId) => onRemovePhoto?.(row, photoId),
+      onChangeDescription: (photoId, description) =>
+        onChangePhotoDescription?.(row, photoId, description),
+      onApplyCaption: (photoId, caption) => onApplyPhotoCaption?.(row, photoId, caption),
+    })
 
   if (readOnly) {
     return (
@@ -334,7 +354,14 @@ const ErAuxEquipmentCheckDetails = ({
               label="Photo"
               className="inspection-compact-action-btn justify-self-start"
               icon={<Camera size={13} className="me-1 align-text-bottom" />}
-              onClick={() => onRequestPhotoUpload?.(row)}
+              onClick={() =>
+                onRequestPhotoUpload?.(
+                  row,
+                  buildPhotoViewerUploadOptions(openAdditionalPhotoViewer, {
+                    currentPhotos: photos,
+                  }),
+                )
+              }
             />
           </div>
         </div>
@@ -387,16 +414,7 @@ const ErAuxEquipmentCheckDetails = ({
           <InspectionPhotoEvidenceSummary
             photos={photos}
             label="View photos"
-            onView={() =>
-              setPhotoViewer({
-                title: `${row.equipment} - additional photos`,
-                photos,
-                onRemove: (photoId) => onRemovePhoto?.(row, photoId),
-                onChangeDescription: (photoId, description) =>
-                  onChangePhotoDescription?.(row, photoId, description),
-                onApplyCaption: (photoId, caption) => onApplyPhotoCaption?.(row, photoId, caption),
-              })
-            }
+            onView={() => openAdditionalPhotoViewer(photos)}
           />
         ) : null}
       </div>
@@ -454,7 +472,11 @@ export const ErAuxEquipmentChecks = ({
     getRowSignature(mobileDraftRow) !== getRowSignature(mobileDraftBaseRow)
 
   const patchMobileDraftRow = (patch = {}) => {
-    setMobileDraftRow((current) => (current ? { ...current, ...patch } : current))
+    setMobileDraftRow((current) => {
+      if (!current) return current
+      const resolvedPatch = typeof patch === 'function' ? patch(current) : patch
+      return { ...current, ...(resolvedPatch || {}) }
+    })
     setMobileSaveStatus('Unsaved changes')
   }
 
@@ -506,40 +528,47 @@ export const ErAuxEquipmentChecks = ({
           photosKeyOrOptions && typeof photosKeyOrOptions === 'object'
             ? photosKeyOrOptions
             : options,
-          (_targetRow, photosKey, photos) => patchMobileDraftRow({ [photosKey]: photos }),
+          (_targetRow, photosKey, photos) =>
+            patchMobileDraftRow((current) =>
+              buildInspectionPhotoListPatch(current, photosKey, (currentPhotos) =>
+                mergeInspectionPhotoLists(currentPhotos, photos),
+              ),
+            ),
         ),
       ),
     onRequestDefectPhotoUpload: (row, options = {}) =>
       onRequestDefectPhotoUpload?.(
         row,
         buildStagedPhotoUploadOptions(options, (_targetRow, photosKey, photos) =>
-          patchMobileDraftRow({ [photosKey]: photos }),
+          patchMobileDraftRow((current) =>
+            buildInspectionPhotoListPatch(current, photosKey, (currentPhotos) =>
+              mergeInspectionPhotoLists(currentPhotos, photos),
+            ),
+          ),
         ),
       ),
-    onRemovePhoto: (row, photoId, photosKey = 'photos') => {
-      const photos = Array.isArray(row?.[photosKey]) ? row[photosKey] : []
-      patchMobileDraftRow({
-        [photosKey]: photos.filter((photo) => String(photo?.id || '') !== String(photoId || '')),
-      })
-    },
-    onChangePhotoDescription: (row, photoId, description, photosKey = 'photos') => {
-      const photos = Array.isArray(row?.[photosKey]) ? row[photosKey] : []
-      patchMobileDraftRow({
-        [photosKey]: photos.map((photo) =>
-          String(photo?.id || '') === String(photoId || '') ? { ...photo, description } : photo,
+    onRemovePhoto: (_row, photoId, photosKey = 'photos') =>
+      patchMobileDraftRow((current) =>
+        buildInspectionPhotoListPatch(current, photosKey, (currentPhotos) =>
+          removePhotoById(currentPhotos, photoId),
         ),
-      })
-    },
-    onApplyPhotoCaption: (row, photoId, caption, photosKey = 'photos') => {
-      const photos = Array.isArray(row?.[photosKey]) ? row[photosKey] : []
-      patchMobileDraftRow({
-        [photosKey]: photos.map((photo) =>
-          String(photo?.id || '') === String(photoId || '')
-            ? { ...photo, description: [photo.description, caption].filter(Boolean).join('\n') }
-            : photo,
+      ),
+    onChangePhotoDescription: (_row, photoId, description, photosKey = 'photos') =>
+      patchMobileDraftRow((current) =>
+        buildInspectionPhotoListPatch(current, photosKey, (currentPhotos) =>
+          updatePhotoDescriptionById(currentPhotos, photoId, description),
         ),
-      })
-    },
+      ),
+    onApplyPhotoCaption: (_row, photoId, caption, photosKey = 'photos') =>
+      patchMobileDraftRow((current) =>
+        buildInspectionPhotoListPatch(current, photosKey, (currentPhotos) =>
+          currentPhotos.map((photo) =>
+            String(photo?.id || '') === String(photoId || '')
+              ? { ...photo, description: [photo.description, caption].filter(Boolean).join('\n') }
+              : photo,
+          ),
+        ),
+      ),
   }
   const filteredChecks = visibleChecks.filter((row) =>
     rowContainsSearch(

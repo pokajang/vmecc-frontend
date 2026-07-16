@@ -198,9 +198,12 @@
 
 .inspection-review-photo-card__image {
   display: block;
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 24rem;
+  margin-inline: auto;
+  object-fit: contain;
   border-radius: 0.35rem;
   background: rgba(var(--cui-secondary-rgb), 0.08);
 }

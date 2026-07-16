@@ -377,6 +377,7 @@ describe('UI debt shared primitives', () => {
     expect(handleSearchChange).toHaveBeenCalledWith('allowance')
 
     fireEvent.click(openFiltersButton)
+    expect(screen.getByRole('dialog', { name: 'Filters' })).toBeTruthy()
     expect(screen.getByText('Filters')).toBeTruthy()
     expect(screen.getByText('Period')).toBeTruthy()
     expect(screen.getByText('Status')).toBeTruthy()

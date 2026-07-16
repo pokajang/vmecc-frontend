@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import {
   CAlert,
   CButton,
@@ -13,6 +14,7 @@ import { buildAiHelperKnowledgeFileUrl } from 'src/services/apiClient'
 import {
   formatFileSize,
   formatKnowledgeDate,
+  isMarkdownKnowledgeEntry,
   knowledgeEntryName,
   knowledgeActionableFindings,
   knowledgeFindings,
@@ -23,134 +25,7 @@ import {
   KNOWLEDGE_READER_TAB_METADATA,
   KNOWLEDGE_READER_TAB_ORIGINAL,
 } from './constants'
-
-const HEADING_TAGS_ENABLED = true
-
-const isMarkdownHeading = (line) => {
-  if (!HEADING_TAGS_ENABLED) return null
-
-  const headingMatch = String(line).match(/^\s{0,3}(#{1,3})\s+(.*\S.*)$/)
-  if (!headingMatch) return null
-
-  return {
-    level: headingMatch[1].length,
-    text: headingMatch[2].trim(),
-  }
-}
-
-const isMarkdownList = (line) => {
-  const bulletMatch = String(line).match(/^\s{0,3}[-*+]\s+(.*)$/)
-  if (bulletMatch) {
-    return { ordered: false, text: bulletMatch[1] }
-  }
-
-  const orderedMatch = String(line).match(/^\s{0,3}\d+\.\s+(.*)$/)
-  if (orderedMatch) {
-    return { ordered: true, text: orderedMatch[1] }
-  }
-
-  return null
-}
-
-const renderMarkdownLikeText = (text) => {
-  const lines = String(text || '')
-    .replace(/\r\n/g, '\n')
-    .split('\n')
-
-  const nodes = []
-  const paragraphLines = []
-  let listItems = null
-  let orderedList = false
-
-  const flushParagraph = () => {
-    if (!paragraphLines.length) return
-
-    nodes.push(
-      <p className="ai-helper-knowledge-reader__markdown-paragraph" key={`para-${nodes.length}`}>
-        {paragraphLines.map((line, index) => (
-          <span key={`para-line-${nodes.length}-${index}`}>
-            {line}
-            {index < paragraphLines.length - 1 ? <br /> : null}
-          </span>
-        ))}
-      </p>,
-    )
-    paragraphLines.length = 0
-  }
-
-  const flushList = () => {
-    if (!listItems?.length) return
-
-    const listNode = orderedList ? (
-      <ol className="ai-helper-knowledge-reader__markdown-list" key={`list-${nodes.length}`}>
-        {listItems.map((item, index) => (
-          <li key={`${nodes.length}-item-${index}`}>{item}</li>
-        ))}
-      </ol>
-    ) : (
-      <ul className="ai-helper-knowledge-reader__markdown-list" key={`list-${nodes.length}`}>
-        {listItems.map((item, index) => (
-          <li key={`${nodes.length}-item-${index}`}>{item}</li>
-        ))}
-      </ul>
-    )
-
-    nodes.push(listNode)
-    listItems = null
-    orderedList = false
-  }
-
-  for (const line of lines) {
-    const heading = isMarkdownHeading(line)
-    if (heading) {
-      flushParagraph()
-      flushList()
-
-      const HeadingTag = `h${heading.level}`
-      nodes.push(
-        <HeadingTag
-          className="ai-helper-knowledge-reader__markdown-heading"
-          key={`heading-${nodes.length}`}
-        >
-          {heading.text}
-        </HeadingTag>,
-      )
-      continue
-    }
-
-    const list = isMarkdownList(line)
-    if (list) {
-      if (!listItems) {
-        flushParagraph()
-        listItems = []
-        orderedList = list.ordered
-      }
-
-      if (orderedList !== list.ordered) {
-        flushList()
-        listItems = [list.text]
-        orderedList = list.ordered
-      } else {
-        listItems.push(list.text)
-      }
-
-      continue
-    }
-
-    if (line.trim() === '') {
-      flushParagraph()
-      flushList()
-      continue
-    }
-
-    paragraphLines.push(line)
-  }
-
-  flushParagraph()
-  flushList()
-
-  return nodes.length ? nodes : [<p key="empty-markdown"></p>]
-}
+import MarkdownDocument from './MarkdownDocument'
 
 const KnowledgeReaderModal = ({
   activeTab,
@@ -168,8 +43,9 @@ const KnowledgeReaderModal = ({
   onClose,
   onTabChange,
 }) => {
+  const readerId = useId()
   const fileUrl = detail?.id ? buildAiHelperKnowledgeFileUrl(detail.id) : ''
-  const isMarkdown = detail?.source_mime === 'text/markdown'
+  const isMarkdown = isMarkdownKnowledgeEntry(detail)
   const processing = detail?.status === 'processing'
   const failed = detail?.status === 'failed'
   const hasOriginal = Boolean(readerHasOriginal ?? detail?.original_available)
@@ -180,6 +56,33 @@ const KnowledgeReaderModal = ({
   const actionableFindings = knowledgeActionableFindings(detail)
   const notices = knowledgeFindings(detail, ['notice'])
   const warning = actionableFindings[0]?.message || null
+  const tabs = isMarkdown
+    ? [
+        { value: KNOWLEDGE_READER_TAB_EXTRACTED, label: 'Rendered' },
+        ...(hasOriginal ? [{ value: KNOWLEDGE_READER_TAB_ORIGINAL, label: 'Source' }] : []),
+        { value: KNOWLEDGE_READER_TAB_METADATA, label: 'Metadata' },
+      ]
+    : [
+        ...(hasOriginal ? [{ value: KNOWLEDGE_READER_TAB_ORIGINAL, label: 'Original PDF' }] : []),
+        { value: KNOWLEDGE_READER_TAB_EXTRACTED, label: 'Extracted text' },
+        { value: KNOWLEDGE_READER_TAB_METADATA, label: 'Metadata' },
+      ]
+
+  const handleTabKeyDown = (event, index) => {
+    let nextIndex = null
+
+    if (event.key === 'ArrowRight') nextIndex = (index + 1) % tabs.length
+    if (event.key === 'ArrowLeft') nextIndex = (index - 1 + tabs.length) % tabs.length
+    if (event.key === 'Home') nextIndex = 0
+    if (event.key === 'End') nextIndex = tabs.length - 1
+
+    if (nextIndex === null) return
+
+    event.preventDefault()
+    const tabButtons = event.currentTarget.parentElement?.querySelectorAll('[role="tab"]')
+    tabButtons?.[nextIndex]?.focus()
+    onTabChange(tabs[nextIndex].value)
+  }
 
   const renderOriginal = () => {
     if (!hasOriginal) {
@@ -205,7 +108,7 @@ const KnowledgeReaderModal = ({
       }
 
       return (
-        <pre className="ai-helper-knowledge-reader__code" aria-label="Original Markdown source">
+        <pre className="ai-helper-knowledge-reader__code" aria-label="Markdown source">
           {markdownSource}
         </pre>
       )
@@ -277,14 +180,21 @@ const KnowledgeReaderModal = ({
       return (
         <div
           className="ai-helper-knowledge-reader__text ai-helper-knowledge-reader__markdown"
-          aria-label="Extracted Markdown content"
+          aria-label="Rendered Markdown content"
         >
-          {renderMarkdownLikeText(detail.extracted_content)}
+          <MarkdownDocument source={detail.extracted_content} />
         </div>
       )
     }
 
-    return <pre className="ai-helper-knowledge-reader__text">{detail.extracted_content}</pre>
+    return (
+      <pre
+        className="ai-helper-knowledge-reader__text ai-helper-knowledge-reader__extracted-text"
+        aria-label="Extracted PDF text"
+      >
+        {detail.extracted_content}
+      </pre>
+    )
   }
 
   const renderMetadata = () => (
@@ -418,48 +328,55 @@ const KnowledgeReaderModal = ({
                 role="tablist"
                 aria-label="Reader tabs"
               >
-                {hasOriginal ? (
+                {tabs.map((tab, index) => (
                   <button
+                    id={`${readerId}-tab-${tab.value}`}
+                    key={tab.value}
                     type="button"
-                    className={selectedTab === KNOWLEDGE_READER_TAB_ORIGINAL ? 'active' : ''}
-                    onClick={() => onTabChange(KNOWLEDGE_READER_TAB_ORIGINAL)}
+                    className={selectedTab === tab.value ? 'active' : ''}
+                    onClick={() => onTabChange(tab.value)}
+                    onKeyDown={(event) => handleTabKeyDown(event, index)}
                     role="tab"
-                    aria-selected={selectedTab === KNOWLEDGE_READER_TAB_ORIGINAL}
+                    aria-selected={selectedTab === tab.value}
+                    aria-controls={`${readerId}-panel-${tab.value}`}
+                    tabIndex={selectedTab === tab.value ? 0 : -1}
                   >
-                    Original
+                    {tab.label}
                   </button>
-                ) : null}
-                <button
-                  type="button"
-                  className={selectedTab === KNOWLEDGE_READER_TAB_EXTRACTED ? 'active' : ''}
-                  onClick={() => onTabChange(KNOWLEDGE_READER_TAB_EXTRACTED)}
-                  role="tab"
-                  aria-selected={selectedTab === KNOWLEDGE_READER_TAB_EXTRACTED}
-                >
-                  Extracted text
-                </button>
-                <button
-                  type="button"
-                  className={selectedTab === KNOWLEDGE_READER_TAB_METADATA ? 'active' : ''}
-                  onClick={() => onTabChange(KNOWLEDGE_READER_TAB_METADATA)}
-                  role="tab"
-                  aria-selected={selectedTab === KNOWLEDGE_READER_TAB_METADATA}
-                >
-                  Metadata
-                </button>
+                ))}
               </div>
               {selectedTab === KNOWLEDGE_READER_TAB_ORIGINAL && hasOriginal ? (
                 <a href={fileUrl} target="_blank" rel="noopener noreferrer">
-                  Open in new tab
+                  {isMarkdown ? 'Open source in new tab' : 'Open PDF in new tab'}
                 </a>
               ) : null}
             </div>
 
-            <div className="ai-helper-knowledge-reader__content">
-              {selectedTab === KNOWLEDGE_READER_TAB_ORIGINAL ? renderOriginal() : null}
-              {selectedTab === KNOWLEDGE_READER_TAB_EXTRACTED ? renderExtracted() : null}
-              {selectedTab === KNOWLEDGE_READER_TAB_METADATA ? renderMetadata() : null}
-            </div>
+            {tabs.map((tab) => {
+              const selected = selectedTab === tab.value
+
+              return (
+                <div
+                  id={`${readerId}-panel-${tab.value}`}
+                  key={tab.value}
+                  className="ai-helper-knowledge-reader__content"
+                  role="tabpanel"
+                  aria-labelledby={`${readerId}-tab-${tab.value}`}
+                  tabIndex={selected ? 0 : -1}
+                  hidden={!selected}
+                >
+                  {selected && tab.value === KNOWLEDGE_READER_TAB_ORIGINAL
+                    ? renderOriginal()
+                    : null}
+                  {selected && tab.value === KNOWLEDGE_READER_TAB_EXTRACTED
+                    ? renderExtracted()
+                    : null}
+                  {selected && tab.value === KNOWLEDGE_READER_TAB_METADATA
+                    ? renderMetadata()
+                    : null}
+                </div>
+              )
+            })}
           </>
         ) : (
           <div className="ai-helper-knowledge-reader__empty">

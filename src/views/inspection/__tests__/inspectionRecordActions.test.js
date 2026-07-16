@@ -42,4 +42,17 @@ describe('buildInspectionRowActionItems', () => {
       })
     }
   })
+
+  it('uses download-specific progress wording while a PDF is in flight', () => {
+    const items = buildInspectionRowActionItems(
+      { id: 'inspection-1', status: 'Submitted', canDownloadPdf: true },
+      { ...handlers, downloadingId: 'inspection-1' },
+    )
+
+    expect(items.find((item) => item.key === 'download')).toMatchObject({
+      label: 'Downloading...',
+      disabled: true,
+      disabledReason: 'Another report PDF is being downloaded.',
+    })
+  })
 })

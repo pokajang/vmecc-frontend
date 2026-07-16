@@ -9,15 +9,32 @@ const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
 const trtEmail = 'codex.mobile.menu.trt@vmecc.local'
 const trtPassword = 'MobileMenu!2026'
 
-const runTinker = (code) => {
-  execFileSync('php', ['artisan', 'tinker', '--execute', code], {
+const runBackendPhp = (code) => {
+  const guardedCode = `
+    require 'vendor/autoload.php';
+    $app = require 'bootstrap/app.php';
+    $app->loadEnvironmentFrom('.env.testing');
+    $kernel = $app->make(\\Illuminate\\Contracts\\Console\\Kernel::class);
+    $kernel->bootstrap();
+    if (!app()->environment('testing') || !str_ends_with((string) \\Illuminate\\Support\\Facades\\DB::connection()->getDatabaseName(), '_test')) {
+      throw new \\RuntimeException('Mobile menu smoke refused a non-test database.');
+    }
+    ${code}
+  `
+
+  execFileSync('php', ['-r', guardedCode], {
     cwd: backendDir,
+    env: {
+      ...process.env,
+      APP_ENV: 'testing',
+      DB_DATABASE: 'vmecc_test',
+    },
     stdio: 'pipe',
   })
 }
 
 const ensureSmokeUser = () => {
-  runTinker(`
+  runBackendPhp(`
     $user = \\App\\Models\\User::withTrashed()->firstOrNew(['email' => '${trtEmail}']);
     if ($user->exists && method_exists($user, 'restore') && $user->trashed()) {
       $user->restore();
@@ -42,8 +59,21 @@ const ensureSmokeUser = () => {
   `)
 }
 
+const cleanupSmokeUser = () => {
+  runBackendPhp(`
+    $user = \\App\\Models\\User::withTrashed()->where('email', '${trtEmail}')->first();
+    if ($user) {
+      $user->forceDelete();
+    }
+  `)
+}
+
 test.beforeAll(() => {
   ensureSmokeUser()
+})
+
+test.afterAll(() => {
+  cleanupSmokeUser()
 })
 
 const loginAsSmokeUser = async (page) => {

@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { CButton, CCard, CCardBody, CCardHeader, CFormLabel, CFormTextarea } from '@coreui/react'
 import { Camera, MessageSquare, Trash2 } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
+import { buildPhotoViewerUploadOptions } from '../inspectionPhotoFlow'
 import { InspectionPhotoEvidenceSummary } from './InspectionDisplayShared'
 
 export const getScbaDisplayLabel = (row = {}) => {
@@ -27,6 +28,31 @@ export const ScbaAdditionalInfo = ({
   const remarks = String(row.remarks || '').trim()
   const photos = Array.isArray(row.photos) ? row.photos : []
   const showRemarks = readOnly ? remarks : expandedAdditionalRemarks[rowId] || remarks
+  const openPhotoViewer = (nextPhotos = photos) =>
+    setPhotoViewer?.({
+      title: `${getScbaDisplayLabel(row)} - additional photos`,
+      photos: nextPhotos,
+      readOnly,
+      showDescriptionInput: !readOnly,
+      onAddMorePhoto: readOnly
+        ? undefined
+        : (currentPhotos) =>
+            onRequestPhotoUpload?.(
+              sectionKey,
+              row,
+              buildPhotoViewerUploadOptions(openPhotoViewer, { currentPhotos }),
+            ),
+      onRemove: readOnly
+        ? undefined
+        : (photoId) => onRemovePhoto?.(sectionKey, row, photoId, 'photos'),
+      onChangeDescription: readOnly
+        ? undefined
+        : (photoId, description) =>
+            onChangePhotoDescription?.(sectionKey, row, photoId, description, 'photos'),
+      onApplyCaption: readOnly
+        ? undefined
+        : (photoId, caption) => onApplyPhotoCaption?.(sectionKey, row, photoId, caption, 'photos'),
+    })
 
   if (readOnly && !remarks && photos.length === 0) return null
 
@@ -52,7 +78,13 @@ export const ScbaAdditionalInfo = ({
             label="Photo"
             className="inspection-compact-action-btn"
             icon={<Camera size={13} className="me-1 align-text-bottom" />}
-            onClick={() => onRequestPhotoUpload?.(sectionKey, row)}
+            onClick={() =>
+              onRequestPhotoUpload?.(
+                sectionKey,
+                row,
+                buildPhotoViewerUploadOptions(openPhotoViewer, { currentPhotos: photos }),
+              )
+            }
           />
         </div>
       ) : null}
@@ -120,25 +152,7 @@ export const ScbaAdditionalInfo = ({
         <InspectionPhotoEvidenceSummary
           photos={photos}
           label="View photos"
-          onView={() =>
-            setPhotoViewer?.({
-              title: `${getScbaDisplayLabel(row)} - additional photos`,
-              photos,
-              readOnly,
-              showDescriptionInput: !readOnly,
-              onRemove: readOnly
-                ? undefined
-                : (photoId) => onRemovePhoto?.(sectionKey, row, photoId, 'photos'),
-              onChangeDescription: readOnly
-                ? undefined
-                : (photoId, description) =>
-                    onChangePhotoDescription?.(sectionKey, row, photoId, description, 'photos'),
-              onApplyCaption: readOnly
-                ? undefined
-                : (photoId, caption) =>
-                    onApplyPhotoCaption?.(sectionKey, row, photoId, caption, 'photos'),
-            })
-          }
+          onView={() => openPhotoViewer(photos)}
         />
       ) : null}
     </div>

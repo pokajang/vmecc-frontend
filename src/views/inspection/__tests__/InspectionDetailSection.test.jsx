@@ -368,6 +368,12 @@ describe('InspectionDetailSection', () => {
     expect(screen.getByText('Cylinder body dented.')).toBeTruthy()
     expect(screen.getByText('Cylinder defect')).toBeTruthy()
     expect(screen.getByText('Needs replacement.')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'View photos' }))
+
+    expect(screen.getByText('ADO-001 - FE Physical Condition defect photos')).toBeTruthy()
+    expect(screen.getByText('dent.jpg')).toBeTruthy()
+    expect(document.querySelector('.modal.show')).toBeTruthy()
     expectItemizedReadOnlyFindings()
   })
 

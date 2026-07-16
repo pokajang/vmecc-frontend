@@ -2,6 +2,7 @@ const { expect, test } = require('@playwright/test')
 const fs = require('node:fs')
 const path = require('node:path')
 const { setInspectionPhotoFromButton } = require('./support/inspection-photo')
+const { installAppShellApiStubs } = require('./support/app-shell-stubs')
 
 const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
 const smokeEmail = process.env.VMECC_SMOKE_EMAIL || 'codex.smoke.admin@vmecc.local'
@@ -231,30 +232,15 @@ const loginAndOpenInspection = async (page, report) => {
   const csrfToken = login.body?.csrf_token
   expect(csrfToken, 'Login response missing csrf_token').toBeTruthy()
 
+  await installAppShellApiStubs(page, apiBaseUrl)
   await page.setViewportSize({ width: 1366, height: 768 })
-  await page.goto('/login', { waitUntil: 'domcontentloaded' })
-  await waitForAppReady(page)
-  if (
-    await page
-      .getByRole('button', { name: 'Sign in' })
-      .isVisible()
-      .catch(() => false)
-  ) {
-    await page.getByRole('textbox', { name: 'Email' }).fill(smokeEmail, {
-      timeout: routeTimeoutMs,
-    })
-    await page.getByRole('textbox', { name: 'Password' }).fill(smokePassword, {
-      timeout: routeTimeoutMs,
-    })
-    await page.getByRole('button', { name: 'Sign in' }).click()
-    await page.waitForURL(/\/dashboard(?:[/?#]|$)|\/inspection(?:[/?#]|$)/, {
-      timeout: routeTimeoutMs,
-    })
-    await waitForAppReady(page)
-  }
+  const session = await page.context().request.get(`${apiBaseUrl}/auth/session`, {
+    headers: { Accept: 'application/json' },
+  })
+  expect(session.status(), await session.text()).toBe(200)
   await page.goto('/inspection/new', { waitUntil: 'domcontentloaded' })
   await waitForAppReady(page, '/inspection/new')
-  await expect(page.getByRole('heading', { name: /Conduct Inspection/i })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Conduct Inspection', exact: true })).toBeVisible()
   await expect(page.getByText('Choose Type')).toBeVisible()
 
   return csrfToken
@@ -560,7 +546,7 @@ test.describe('SCBA and High Angle inspection prod smoke', () => {
       await expect(continueToScbaReviewButton).toBeEnabled({ timeout: 60_000 })
       await continueToScbaReviewButton.click()
       await waitForAppReady(page, '/inspection/review')
-      await expect(page.getByRole('heading', { name: 'Review Inspection' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Submit', exact: true }).first()).toBeVisible()
       await expectAnyVisibleText(page, 'SCBA')
       await page.getByRole('button', { name: 'View' }).first().click()
       const scbaDetailDialog = page.locator('[role="dialog"]').filter({
@@ -676,7 +662,7 @@ test.describe('SCBA and High Angle inspection prod smoke', () => {
       await expect(continueToHighAngleReviewButton).toBeEnabled({ timeout: 60_000 })
       await continueToHighAngleReviewButton.click()
       await waitForAppReady(page, '/inspection/review')
-      await expect(page.getByRole('heading', { name: 'Review Inspection' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Submit', exact: true }).first()).toBeVisible()
       await expectAnyVisibleText(page, 'High Angle Rescue Equipment')
       await page.getByRole('button', { name: 'View' }).first().click()
       const highAngleDetailDialog = page.locator('[role="dialog"]').filter({

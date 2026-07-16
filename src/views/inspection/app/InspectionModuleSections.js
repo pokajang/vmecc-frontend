@@ -77,120 +77,132 @@ export const InspectionRecordsView = ({
   pushToast,
   recoverLocalDraft,
   startNew,
-}) => (
-  <>
-    {!showMobileRecords ? (
-      <InspectionMobileHome
-        draftRow={activeDraftRows[0] || null}
-        typeOptions={homeTypeOptions}
-        recentRecords={recentRecords}
-        recordsCount={scopedSubmittedRecords.length}
-        queueSummary={recordScope === 'mine' ? queueSummary : null}
-        isQueueSyncing={isQueueSyncing}
-        recordScope={recordScope}
-        onRecordScopeChange={setRecordScope}
-        isRecordsLoading={isLoading}
-        onSelectType={(inspectionType) => runGuardedAction(() => startNewWithType(inspectionType))}
-        onToggleTypes={() => homeIncident.setShowAllIncidentTypes((prev) => !prev)}
-        onAddType={homeIncident.openAddModal}
-        onContinueDraft={() => runGuardedAction(() => openSavedDraft(activeDraftRows[0]))}
-        onDeleteDraft={() => setDeleteTarget(activeDraftRows[0])}
-        onOpenRecord={(row) =>
-          row?.id ? navigate(`${reportBasePath}/${encodeURIComponent(row.id)}`) : null
-        }
-        onViewRecords={() => setShowMobileRecords(true)}
-        onRetryQueue={() => syncQueuedSubmissions({ silent: false, force: true })}
-      />
-    ) : null}
+}) => {
+  const [queueDetailsOpen, setQueueDetailsOpen] = useState(false)
 
-    <div className={showMobileRecords ? '' : 'd-none d-md-block'}>
-      <InspectionRecordsSection
-        startNew={startNew}
-        search={search}
-        setSearch={setSearch}
-        recordScope={recordScope}
-        setRecordScope={setRecordScope}
-        period={period}
-        setPeriod={setPeriod}
-        sort={sort}
-        setSort={setSort}
-        typeFilter={typeFilter}
-        setTypeFilter={setTypeFilter}
-        typeOptions={typeOptions}
-        statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
-        checklistFilter={checklistFilter}
-        setChecklistFilter={setChecklistFilter}
-        hasChecklistFilter={hasChecklistFilter}
-        setHasChecklistFilter={setHasChecklistFilter}
-        statusOptions={statusOptions}
-        checklistOptions={checklistOptions}
-        sortOptions={INSPECTION_SORT_OPTIONS}
-        clearFilters={clearFilters}
-        isLoading={isLoading}
-        filteredRecords={filteredRecords}
-        visibleRows={visibleRows}
-        onViewRecord={(id) => navigate(`${reportBasePath}/${encodeURIComponent(id)}`)}
-        onDownloadRecord={downloadRecord}
-        downloadingId={downloadingId}
-        onEditRecord={editRecord}
-        onDeleteRecord={(row) =>
-          row?.recordKind === 'queued' ? setQueuedDeleteTarget(row) : setDeleteTarget(row)
-        }
-        onReviewTransition={(row) => openWorkflowActionModal(row, 'review')}
-        onApproveTransition={(row) => openWorkflowActionModal(row, 'approve')}
-        onRejectTransition={(row) => openWorkflowActionModal(row, 'reject')}
-        canReviewRecord={canReviewRecord}
-        canApproveRecord={canApproveRecord}
-        canRejectRecord={canRejectRecord}
-        canEditRecord={canEditRecord}
-        canDeleteRecord={canDeleteRecord}
-        formatDateTime={formatDateTime}
-        rowsToShow={rowsToShow}
-        setRowsToShow={setRowsToShow}
-        totalCount={recordsInScopeCount}
-        showPrimaryAction={false}
-        queueSummary={recordScope === 'mine' ? queueSummary : null}
-        queueRows={queuedRecordRows}
-        isQueueSyncing={isQueueSyncing}
-        onRetryQueue={(row) =>
-          syncQueuedSubmissions({
-            silent: false,
-            force: true,
-            queueId: row?.queueId || '',
-          })
-        }
-        onOpenQueueConflict={(row) => setQueueConflictTarget(row)}
-        onSaveQueuedAsDraft={saveQueuedAsDraft}
-        offlineHealth={offlineHealth}
-        isOfflineHealthLoading={isOfflineHealthLoading}
-        isRefreshingOfflineAssets={isRefreshingOfflineAssets}
-        onRefreshOfflineAssets={async () => {
-          setIsRefreshingOfflineAssets(true)
-          try {
-            await refreshInspectionOfflineAssets()
-            await refreshOfflineHealth()
-            pushToast('Offline assets refreshed.', {
-              title: 'Offline ready',
-              color: 'success',
-            })
-          } catch (error) {
-            pushToast(error?.message || 'Unable to refresh offline assets.', {
-              title: 'Offline refresh failed',
-              color: 'danger',
-            })
-          } finally {
-            setIsRefreshingOfflineAssets(false)
+  return (
+    <>
+      {!showMobileRecords ? (
+        <InspectionMobileHome
+          draftRow={activeDraftRows[0] || null}
+          typeOptions={homeTypeOptions}
+          recentRecords={recentRecords}
+          recordsCount={scopedSubmittedRecords.length}
+          queueSummary={recordScope === 'mine' ? queueSummary : null}
+          isQueueSyncing={isQueueSyncing}
+          recordScope={recordScope}
+          onRecordScopeChange={setRecordScope}
+          isRecordsLoading={isLoading}
+          onSelectType={(inspectionType) =>
+            runGuardedAction(() => startNewWithType(inspectionType))
           }
-        }}
-        onRecoverLocalDraft={() => recoverLocalDraft()}
-        canRecoverLocalDraft={Boolean(
-          offlineHealth?.localDraftExists && activeDraftRows.length === 0,
-        )}
-      />
-    </div>
-  </>
-)
+          onToggleTypes={() => homeIncident.setShowAllIncidentTypes((prev) => !prev)}
+          onAddType={homeIncident.openAddModal}
+          onContinueDraft={() => runGuardedAction(() => openSavedDraft(activeDraftRows[0]))}
+          onDeleteDraft={() => setDeleteTarget(activeDraftRows[0])}
+          onOpenRecord={(row) =>
+            row?.id ? navigate(`${reportBasePath}/${encodeURIComponent(row.id)}`) : null
+          }
+          onViewQueueDetails={() => {
+            setShowMobileRecords(true)
+            setQueueDetailsOpen(true)
+          }}
+          onViewRecords={() => setShowMobileRecords(true)}
+          onRetryQueue={() => syncQueuedSubmissions({ silent: false, force: true })}
+        />
+      ) : null}
+
+      <div className={showMobileRecords ? '' : 'd-none d-md-block'}>
+        <InspectionRecordsSection
+          startNew={startNew}
+          search={search}
+          setSearch={setSearch}
+          recordScope={recordScope}
+          setRecordScope={setRecordScope}
+          period={period}
+          setPeriod={setPeriod}
+          sort={sort}
+          setSort={setSort}
+          typeFilter={typeFilter}
+          setTypeFilter={setTypeFilter}
+          typeOptions={typeOptions}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+          checklistFilter={checklistFilter}
+          setChecklistFilter={setChecklistFilter}
+          hasChecklistFilter={hasChecklistFilter}
+          setHasChecklistFilter={setHasChecklistFilter}
+          statusOptions={statusOptions}
+          checklistOptions={checklistOptions}
+          sortOptions={INSPECTION_SORT_OPTIONS}
+          clearFilters={clearFilters}
+          isLoading={isLoading}
+          filteredRecords={filteredRecords}
+          visibleRows={visibleRows}
+          onViewRecord={(id) => navigate(`${reportBasePath}/${encodeURIComponent(id)}`)}
+          onDownloadRecord={downloadRecord}
+          downloadingId={downloadingId}
+          onEditRecord={editRecord}
+          onDeleteRecord={(row) =>
+            row?.recordKind === 'queued' ? setQueuedDeleteTarget(row) : setDeleteTarget(row)
+          }
+          onReviewTransition={(row) => openWorkflowActionModal(row, 'review')}
+          onApproveTransition={(row) => openWorkflowActionModal(row, 'approve')}
+          onRejectTransition={(row) => openWorkflowActionModal(row, 'reject')}
+          canReviewRecord={canReviewRecord}
+          canApproveRecord={canApproveRecord}
+          canRejectRecord={canRejectRecord}
+          canEditRecord={canEditRecord}
+          canDeleteRecord={canDeleteRecord}
+          formatDateTime={formatDateTime}
+          rowsToShow={rowsToShow}
+          setRowsToShow={setRowsToShow}
+          totalCount={recordsInScopeCount}
+          showPrimaryAction={false}
+          queueSummary={recordScope === 'mine' ? queueSummary : null}
+          queueRows={queuedRecordRows}
+          isQueueSyncing={isQueueSyncing}
+          onRetryQueue={(row) =>
+            syncQueuedSubmissions({
+              silent: false,
+              force: true,
+              queueId: row?.queueId || '',
+            })
+          }
+          onOpenQueueConflict={(row) => setQueueConflictTarget(row)}
+          onSaveQueuedAsDraft={saveQueuedAsDraft}
+          offlineHealth={offlineHealth}
+          isOfflineHealthLoading={isOfflineHealthLoading}
+          isRefreshingOfflineAssets={isRefreshingOfflineAssets}
+          onRefreshOfflineAssets={async () => {
+            setIsRefreshingOfflineAssets(true)
+            try {
+              await refreshInspectionOfflineAssets()
+              await refreshOfflineHealth()
+              pushToast('Offline assets refreshed.', {
+                title: 'Offline ready',
+                color: 'success',
+              })
+            } catch (error) {
+              pushToast(error?.message || 'Unable to refresh offline assets.', {
+                title: 'Offline refresh failed',
+                color: 'danger',
+              })
+            } finally {
+              setIsRefreshingOfflineAssets(false)
+            }
+          }}
+          onRecoverLocalDraft={() => recoverLocalDraft()}
+          canRecoverLocalDraft={Boolean(
+            offlineHealth?.localDraftExists && activeDraftRows.length === 0,
+          )}
+          queueDetailsOpen={queueDetailsOpen}
+          onQueueDetailsOpenChange={setQueueDetailsOpen}
+        />
+      </div>
+    </>
+  )
+}
 
 const ALL_EXTINGUISHERS_PATH = '/inspection/all-extinguishers'
 const ADD_EXTINGUISHER_PATH = `${ALL_EXTINGUISHERS_PATH}/new`
@@ -273,6 +285,9 @@ export const InspectionReviewView = ({
   const [isRetryingSync, setIsRetryingSync] = useState(false)
   const retrySyncInFlightRef = useRef(false)
   const items = Array.isArray(pendingSubmissionSummary?.items) ? pendingSubmissionSummary.items : []
+  const queueWarning = reviewMayQueue
+    ? 'You appear to be offline or local sync is pending. This report will be queued on this device until sync succeeds.'
+    : ''
   const retrySync = async (item, blocker = {}) => {
     if (retrySyncInFlightRef.current) return null
     retrySyncInFlightRef.current = true
@@ -305,6 +320,8 @@ export const InspectionReviewView = ({
         items={items}
         isUpdateMode={isUpdatingExistingRecord}
         isRetryingSync={isRetryingSync}
+        mayQueue={reviewMayQueue}
+        queueWarning={queueWarning}
         onRetrySync={retrySync}
         onSubmit={(item) => {
           const selectedReviewRecord = buildPendingReviewRecord?.(item)
@@ -338,11 +355,7 @@ export const InspectionReviewView = ({
             : 'Confirm Submit',
         isUpdateMode: isUpdatingExistingRecord,
       }}
-      queueWarning={
-        reviewMayQueue
-          ? 'You appear to be offline or local sync is pending. This report will be queued on this device until sync succeeds.'
-          : ''
-      }
+      queueWarning={queueWarning}
       isSubmittingReview={isSubmitting}
       renderStatusBadge={renderStatusBadge}
     />

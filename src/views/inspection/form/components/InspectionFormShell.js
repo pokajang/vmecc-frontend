@@ -1,5 +1,5 @@
 import React from 'react'
-import { CAlert, CButton } from '@coreui/react'
+import { CAlert, CButton, CSpinner } from '@coreui/react'
 import { Upload } from 'lucide-react'
 import { formatCameraDiagnosticsLines } from 'src/utils/cameraDiagnostics'
 import InspectionFormBodySections from './InspectionFormBodySections'
@@ -84,16 +84,30 @@ const InspectionFormShell = ({
         setIncidentDeleteTarget={setIncidentDeleteTarget}
         setLocationDeleteTarget={setLocationDeleteTarget}
       />
-      <InspectionCameraCapture
-        visible={cameraCaptureVisible}
-        onCapture={handleInAppCameraCapture}
-        onClose={closeInAppCamera}
-        onUploadPhoto={() => requestUploadFromCameraFallback?.()}
-      />
+      {cameraCaptureVisible ? (
+        <InspectionCameraCapture
+          visible
+          onCapture={handleInAppCameraCapture}
+          onClose={closeInAppCamera}
+          onUploadPhoto={() => requestUploadFromCameraFallback?.()}
+        />
+      ) : null}
       {isPhotoProcessing ? (
-        <div className="small text-body-secondary mb-2" role="status">
-          {photoUploadProgress?.retrying ? 'Retrying photo upload' : 'Uploading photo'}{' '}
-          {Number(photoUploadProgress?.percent || 0)}%
+        <div
+          className="inspection-photo-upload-status rounded-3 border bg-body shadow-sm d-flex align-items-center gap-2 p-3"
+          role="status"
+          aria-live="polite"
+        >
+          <CSpinner size="sm" aria-hidden="true" />
+          <div className="small">
+            <div className="fw-semibold">
+              {photoUploadProgress?.retrying ? 'Retrying photo upload' : 'Preparing your photo'}
+            </div>
+            <div className="text-body-secondary">
+              {Number(photoUploadProgress?.percent || 0)}% complete. The photo will appear in this
+              check when ready.
+            </div>
+          </div>
         </div>
       ) : null}
 

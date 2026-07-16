@@ -38,6 +38,7 @@ const InspectionMobileHome = ({
   onContinueDraft,
   onDeleteDraft,
   onOpenRecord,
+  onViewQueueDetails,
   onViewRecords,
   onRetryQueue,
 }) => {
@@ -166,7 +167,7 @@ const InspectionMobileHome = ({
             variant="outline"
             size="sm"
             className="me-2"
-            onClick={onViewRecords}
+            onClick={onViewQueueDetails}
           >
             Details
           </CButton>

@@ -41,9 +41,12 @@ const useInspectionFormPhotos = ({
   const uploadInputRef = useRef(null)
   const cameraInputRef = useRef(null)
   const photoUploadTargetRef = useRef({ kind: 'root' })
+  const cameraUploadTargetRef = useRef(null)
   const activePhotoInputRef = useRef('upload')
+  const photoProcessingRef = useRef(false)
   const photoSelectionSequenceRef = useRef(0)
   const photoUploadAbortRef = useRef(null)
+  const photoCommitUploadsRef = useRef([])
   const photoAddedNotificationTimersRef = useRef(new Set())
   const interruptedCameraFallbackRef = useRef(getInterruptedCameraFallback('inspection'))
   const [cameraUploadFallback, setCameraUploadFallback] = useState(
@@ -143,6 +146,13 @@ const useInspectionFormPhotos = ({
         : []
 
   const openPhotoInput = (target, inputRef) => {
+    if (photoProcessingRef.current) {
+      pushToast?.('Wait for the current photo to finish uploading before adding another.', {
+        title: 'Photo upload in progress',
+        color: 'info',
+      })
+      return
+    }
     const nextTarget = target || { kind: 'root' }
     photoUploadTargetRef.current = nextTarget
     clearCameraUploadFallback()
@@ -165,6 +175,7 @@ const useInspectionFormPhotos = ({
         targetId: nextTarget?.row?.id || nextTarget?.issueId || '',
         photosKey: nextTarget?.photosKey || 'photos',
       })
+      cameraUploadTargetRef.current = nextTarget
       try {
         Promise.resolve(onBeforeCameraOpen?.(nextTarget)).catch(() => {})
       } catch {
@@ -178,7 +189,7 @@ const useInspectionFormPhotos = ({
     fallbackInputRef?.current?.click()
   }
 
-  const handlePhotoSelect = async (event) => {
+  const processPhotoSelect = async (event, context = {}) => {
     const selectionSequence = ++photoSelectionSequenceRef.current
     photoUploadAbortRef.current?.abort()
     const abortController = new AbortController()
@@ -190,8 +201,8 @@ const useInspectionFormPhotos = ({
       return
     }
 
-    const uploadTarget = photoUploadTargetRef.current || { kind: 'root' }
-    const source = activePhotoInputRef.current
+    const uploadTarget = context.uploadTarget || photoUploadTargetRef.current || { kind: 'root' }
+    const source = context.source || activePhotoInputRef.current
     if (source === 'camera') markPendingCameraUploadStarted('inspection')
     const currentForm = typeof getLatestForm === 'function' ? getLatestForm() : form
     const currentFormForUpload = Array.isArray(uploadTarget?.rootPhotos)
@@ -201,6 +212,7 @@ const useInspectionFormPhotos = ({
     let lastFailure = null
     let lastRetryableFailure = null
     let hadRetryableFailure = false
+    photoProcessingRef.current = true
     setIsPhotoProcessing(true)
     setPhotoUploadProgress({ percent: 0, index: 0, count: files.length, retrying: false })
 
@@ -239,7 +251,10 @@ const useInspectionFormPhotos = ({
       }
       hadRetryableFailure = true
     } finally {
-      if (selectionSequence === photoSelectionSequenceRef.current) setIsPhotoProcessing(false)
+      if (selectionSequence === photoSelectionSequenceRef.current) {
+        photoProcessingRef.current = false
+        setIsPhotoProcessing(false)
+      }
     }
 
     if (selectionSequence !== photoSelectionSequenceRef.current) return
@@ -270,6 +285,7 @@ const useInspectionFormPhotos = ({
       setCameraUploadFallback(null)
     }
 
+    photoCommitUploadsRef.current = nextPhotos
     const committedForm = typeof getLatestForm === 'function' ? getLatestForm() : currentForm
     if (uploadTarget?.kind === 'inspectionIssue') {
       if (typeof uploadTarget.onAddPhotos === 'function') {
@@ -310,8 +326,8 @@ const useInspectionFormPhotos = ({
       const row = uploadTarget.row || {}
       const rowId = String(row.id || '').trim()
       const existingCheck =
-        (Array.isArray(currentForm?.fireExtinguisherChecks)
-          ? currentForm.fireExtinguisherChecks
+        (Array.isArray(committedForm?.fireExtinguisherChecks)
+          ? committedForm.fireExtinguisherChecks
           : []
         ).find((check) => String(check.id || '') === rowId) || row
       const photosKey =
@@ -335,7 +351,7 @@ const useInspectionFormPhotos = ({
       const row = uploadTarget.row || {}
       const rowId = String(row.id || '').trim()
       const existingCheck =
-        (Array.isArray(currentForm?.hydraulicChecks) ? currentForm.hydraulicChecks : []).find(
+        (Array.isArray(committedForm?.hydraulicChecks) ? committedForm.hydraulicChecks : []).find(
           (check) => String(check.id || '') === rowId,
         ) || row
       const photosKey = uploadTarget?.kind === 'hydraulicDefect' ? uploadTarget.photosKey : 'photos'
@@ -359,7 +375,7 @@ const useInspectionFormPhotos = ({
       const rowId = String(row.id || '').trim()
       const isOneOff = String(row?.checklistKind || '').trim() === 'oneOff'
       const checksKey = isOneOff ? 'frtOneOffChecks' : 'frtDailyChecks'
-      const checks = Array.isArray(currentForm[checksKey]) ? currentForm[checksKey] : []
+      const checks = Array.isArray(committedForm[checksKey]) ? committedForm[checksKey] : []
       const existingCheck = checks.find((check) => String(check.id || '') === rowId) || row
       const photosKey = uploadTarget.photosKey || 'photos'
       if (typeof uploadTarget.onAddPhotos === 'function') {
@@ -383,7 +399,7 @@ const useInspectionFormPhotos = ({
       const row = uploadTarget.row || {}
       const rowId = String(row.id || '').trim()
       const existingCheck =
-        (Array.isArray(currentForm?.highAngleChecks) ? currentForm.highAngleChecks : []).find(
+        (Array.isArray(committedForm?.highAngleChecks) ? committedForm.highAngleChecks : []).find(
           (check) => String(check.id || '') === rowId,
         ) || row
       const photosKey = uploadTarget.photosKey || defaultHighAnglePhotosKey
@@ -406,7 +422,7 @@ const useInspectionFormPhotos = ({
       const row = uploadTarget.row || {}
       const rowId = String(row.id || '').trim()
       const sectionKey = uploadTarget.sectionKey || row.sectionKey
-      const existingCheck = getScbaExistingCheck(currentForm, sectionKey, rowId) || row
+      const existingCheck = getScbaExistingCheck(committedForm, sectionKey, rowId) || row
       const photosKey = uploadTarget.photosKey || 'photos'
       if (!photosKey) return
       if (typeof uploadTarget.onAddPhotos === 'function') {
@@ -436,7 +452,7 @@ const useInspectionFormPhotos = ({
       const row = uploadTarget.row || {}
       const rowId = String(row.id || '').trim()
       const existingCheck =
-        (Array.isArray(currentForm?.erAuxChecks) ? currentForm.erAuxChecks : []).find(
+        (Array.isArray(committedForm?.erAuxChecks) ? committedForm.erAuxChecks : []).find(
           (check) => String(check.id || '') === rowId,
         ) || row
       const photosKey = uploadTarget?.kind === 'erAuxDefect' ? 'defectPhotos' : 'photos'
@@ -472,13 +488,49 @@ const useInspectionFormPhotos = ({
     notifyPhotosAdded(uploadTarget, 'photos', photos, { addedPhotos: nextPhotos })
   }
 
+  const handlePhotoSelect = (event, context = {}) =>
+    processPhotoSelect(event, context)
+      .then((result) => {
+        photoCommitUploadsRef.current = []
+        return result
+      })
+      .catch(async (error) => {
+        const uncommittedPhotos = photoCommitUploadsRef.current
+        photoCommitUploadsRef.current = []
+        await Promise.allSettled(
+          uncommittedPhotos
+            .filter((photo) => photo?.mediaId)
+            .map((photo) => deleteReportMedia(photo.mediaId)),
+        )
+        if (error?.name === 'AbortError') return
+        photoProcessingRef.current = false
+        setIsPhotoProcessing(false)
+        clearPendingCameraOperation()
+        pushToast?.(
+          'The photo uploaded but could not be attached to this inspection check. Retry.',
+          {
+            title: 'Photo attachment failed',
+            color: 'danger',
+          },
+        )
+      })
+
   const handleInAppCameraCapture = (file) => {
+    const uploadTarget = cameraUploadTargetRef.current ||
+      photoUploadTargetRef.current || {
+        kind: 'root',
+      }
+    cameraUploadTargetRef.current = null
     setCameraCaptureVisible(false)
     activePhotoInputRef.current = 'camera'
-    return handlePhotoSelect({ target: { files: file ? [file] : [], value: '' } })
+    return handlePhotoSelect(
+      { target: { files: file ? [file] : [], value: '' } },
+      { uploadTarget, source: 'camera' },
+    )
   }
 
   const closeInAppCamera = () => {
+    cameraUploadTargetRef.current = null
     setCameraCaptureVisible(false)
     clearPendingCameraOperation()
   }

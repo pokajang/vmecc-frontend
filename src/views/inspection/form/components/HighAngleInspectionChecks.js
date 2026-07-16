@@ -10,6 +10,8 @@ import { appendInspectionText } from '../inspectionFormHelpers'
 import { buildStagedPhotoUploadOptions } from '../inspectionPhotoFlow'
 import {
   applyPhotoCaptionById,
+  buildInspectionPhotoListPatch,
+  mergeInspectionPhotoLists,
   removePhotoById,
   updatePhotoDescriptionById,
 } from '../inspectionPhotoUtils'
@@ -208,7 +210,11 @@ export const HighAngleInspectionChecks = ({
   }, [])
 
   const patchMobileDraftRow = useCallback((patch) => {
-    setMobileDraftRow((current) => (current ? { ...current, ...patch } : current))
+    setMobileDraftRow((current) => {
+      if (!current) return current
+      const resolvedPatch = typeof patch === 'function' ? patch(current) : patch
+      return { ...current, ...(resolvedPatch || {}) }
+    })
     setMobileSaveStatus('Unsaved changes')
   }, [])
 
@@ -219,7 +225,11 @@ export const HighAngleInspectionChecks = ({
         onRequestIssuePhotoUpload?.(
           row,
           buildStagedPhotoUploadOptions(options, (_targetRow, photosKey, photos) =>
-            patchMobileDraftRow({ [photosKey]: photos }),
+            patchMobileDraftRow((current) =>
+              buildInspectionPhotoListPatch(current, photosKey, (currentPhotos) =>
+                mergeInspectionPhotoLists(currentPhotos, photos),
+              ),
+            ),
           ),
         ),
       onRequestPhotoUpload: (row, photosKey = 'additionalPhotos', options = {}) =>
@@ -227,25 +237,32 @@ export const HighAngleInspectionChecks = ({
           row,
           buildStagedPhotoUploadOptions(
             { ...options, photosKey },
-            (_targetRow, nextPhotosKey, photos) => patchMobileDraftRow({ [nextPhotosKey]: photos }),
+            (_targetRow, nextPhotosKey, photos) =>
+              patchMobileDraftRow((current) =>
+                buildInspectionPhotoListPatch(current, nextPhotosKey, (currentPhotos) =>
+                  mergeInspectionPhotoLists(currentPhotos, photos),
+                ),
+              ),
           ),
         ),
-      onRemovePhoto: (row, photoId, photosKey) => {
-        const currentPhotos = Array.isArray(row?.[photosKey]) ? row[photosKey] : []
-        patchMobileDraftRow({ [photosKey]: removePhotoById(currentPhotos, photoId) })
-      },
-      onChangePhotoDescription: (row, photoId, description, photosKey) => {
-        const currentPhotos = Array.isArray(row?.[photosKey]) ? row[photosKey] : []
-        patchMobileDraftRow({
-          [photosKey]: updatePhotoDescriptionById(currentPhotos, photoId, description),
-        })
-      },
-      onApplyPhotoCaption: (row, photoId, caption, photosKey) => {
-        const currentPhotos = Array.isArray(row?.[photosKey]) ? row[photosKey] : []
-        patchMobileDraftRow({
-          [photosKey]: applyPhotoCaptionById(currentPhotos, photoId, caption, appendInspectionText),
-        })
-      },
+      onRemovePhoto: (_row, photoId, photosKey) =>
+        patchMobileDraftRow((current) =>
+          buildInspectionPhotoListPatch(current, photosKey, (currentPhotos) =>
+            removePhotoById(currentPhotos, photoId),
+          ),
+        ),
+      onChangePhotoDescription: (_row, photoId, description, photosKey) =>
+        patchMobileDraftRow((current) =>
+          buildInspectionPhotoListPatch(current, photosKey, (currentPhotos) =>
+            updatePhotoDescriptionById(currentPhotos, photoId, description),
+          ),
+        ),
+      onApplyPhotoCaption: (_row, photoId, caption, photosKey) =>
+        patchMobileDraftRow((current) =>
+          buildInspectionPhotoListPatch(current, photosKey, (currentPhotos) =>
+            applyPhotoCaptionById(currentPhotos, photoId, caption, appendInspectionText),
+          ),
+        ),
     }),
     [onRequestIssuePhotoUpload, patchMobileDraftRow],
   )
@@ -480,8 +497,8 @@ export const HighAngleInspectionChecks = ({
                   onUpdateCheck={onUpdateCheck}
                   onMarkRowOk={onMarkRowOk}
                   onResetCheck={requestResetCheck}
-                  onRequestPhotoUpload={(nextRow, photosKey = 'additionalPhotos') =>
-                    onRequestIssuePhotoUpload?.(nextRow, { photosKey })
+                  onRequestPhotoUpload={(nextRow, photosKey = 'additionalPhotos', options = {}) =>
+                    onRequestIssuePhotoUpload?.(nextRow, { ...options, photosKey })
                   }
                   onRequestIssuePhotoUpload={onRequestIssuePhotoUpload}
                   onRemovePhoto={onRemovePhoto}

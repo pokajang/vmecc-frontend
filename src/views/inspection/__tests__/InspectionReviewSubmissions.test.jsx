@@ -6,7 +6,24 @@ import { InspectionReviewView } from '../app/InspectionModuleSections'
 
 afterEach(() => {
   cleanup()
+  delete window.matchMedia
 })
+
+const setMobileViewport = () => {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    configurable: true,
+    value: vi.fn((query) => ({
+      matches: query === '(max-width: 575.98px)',
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  })
+}
 
 const buildItem = (overrides = {}) => ({
   key: 'fire-extinguisher-inspection',
@@ -37,6 +54,37 @@ const buildItem = (overrides = {}) => ({
 })
 
 describe('InspectionReviewView pending submissions', () => {
+  it('opens View in the mobile details drawer', () => {
+    setMobileViewport()
+
+    render(
+      <InspectionReviewView
+        backFromReview={vi.fn()}
+        buildPendingReviewRecord={vi.fn()}
+        clearInspectionTypeDraft={vi.fn()}
+        isSubmitting={false}
+        pendingSubmissionSummary={{ items: [buildItem()] }}
+        renderStatusBadge={(status) => <span>{status}</span>}
+        reviewMayQueue={false}
+        reviewRecord={null}
+        reviewWorkspace={{ mode: 'new' }}
+        saveDraft={vi.fn()}
+        sessionReviewForm={{}}
+        submit={vi.fn()}
+        user={{ name: 'Inspector' }}
+      />,
+    )
+
+    const viewButton = screen.getByRole('button', { name: 'View' })
+    expect(viewButton.getAttribute('type')).toBe('button')
+    fireEvent.click(viewButton)
+
+    expect(document.querySelector('.inspection-review-detail-drawer.offcanvas.show')).toBeTruthy()
+    expect(document.querySelector('.modal.show')).toBeNull()
+    expect(screen.getByText('Fire Extinguisher Details')).toBeTruthy()
+    expect(screen.getByText('Locations checked (1)')).toBeTruthy()
+  })
+
   it('submits the selected type without clearing other pending types', async () => {
     const submit = vi.fn(async (_record, options) => {
       options?.onSubmitted?.({ displayId: 'INS-1' }, _record)
@@ -119,6 +167,8 @@ describe('InspectionReviewView pending submissions', () => {
 
     fireEvent.click(screen.getAllByRole('button', { name: 'View' })[0])
 
+    expect(document.querySelector('.modal.show')).toBeTruthy()
+    expect(document.querySelector('.inspection-review-detail-drawer.offcanvas')).toBeNull()
     expect(screen.getByText('Fire Extinguisher Details')).toBeTruthy()
     expect(screen.getByText('Locations checked (1)')).toBeTruthy()
     expect(screen.getByText('Zone 1 > Canteen')).toBeTruthy()

@@ -1,5 +1,6 @@
 const fs = require('node:fs')
 const path = require('node:path')
+const { createHash } = require('node:crypto')
 const { createSmokePng } = require('./support/smoke-image')
 const { spawnSync } = require('node:child_process')
 const zlib = require('node:zlib')
@@ -9,6 +10,7 @@ const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
 const smokeEmail = process.env.VMECC_SMOKE_EMAIL || 'codex.smoke.admin@vmecc.local'
 const smokePassword = process.env.VMECC_SMOKE_PASSWORD || 'SmokeAdmin!2026'
 const liveSmokeEnabled = process.env.VMECC_LIVE_SMOKE === '1'
+const mutationSmokeEnabled = process.env.VMECC_LIVE_ALLOW_MUTATIONS === '1'
 const runId = process.env.VMECC_SMOKE_RUN_ID || new Date().toISOString().replace(/[:.]/g, '-')
 const runMarker = `LIVE-SMOKE-${runId}`
 const artifactRoot = path.resolve(process.cwd(), 'test-results', 'live-inspection-smoke', runId)
@@ -16,6 +18,21 @@ const screenshotRoot = path.join(artifactRoot, 'screenshots')
 const pdfRoot = path.join(artifactRoot, 'pdfs')
 const routeTimeoutMs = Number(process.env.VMECC_SMOKE_ROUTE_TIMEOUT_MS || 30_000)
 const allowUnsafeForeignWorkflow = process.env.VMECC_LIVE_ALLOW_FOREIGN_WORKFLOW === '1'
+
+const isLoopbackHttpOrigin = (value) => {
+  try {
+    const url = new URL(value)
+    return (
+      url.protocol === 'http:' &&
+      ['localhost', '127.0.0.1', '::1'].includes(url.hostname.toLowerCase())
+    )
+  } catch {
+    return false
+  }
+}
+
+const localhostMutationTarget =
+  mutationSmokeEnabled && isLoopbackHttpOrigin(baseUrl) && isLoopbackHttpOrigin(apiBaseUrl)
 
 const viewportProfiles = [
   { key: 'desktop', width: 1366, height: 768 },
@@ -264,6 +281,8 @@ const createLiveReport = () => ({
   startedAt: new Date().toISOString(),
   completedAt: null,
   liveSmokeEnabled,
+  localhostMutationTarget,
+  mutationSmokeEnabled,
   allowUnsafeForeignWorkflow,
   baseUrl,
   apiBaseUrl,
@@ -461,7 +480,34 @@ const waitForAppReady = async (page, expectedPath = null) => {
         .trim()
       const spinnerVisible = Boolean(document.querySelector('.spinner-border, .spinner-grow'))
       const loadingOnly = bodyText.length <= 160 && /loading/i.test(bodyText)
-      return bodyText.length > 0 && !spinnerVisible && !loadingOnly
+      const restoringSession =
+        bodyText.length <= 200 &&
+        /^(?:restoring (?:camera session and saved form|session)|loading application)/i.test(
+          bodyText,
+        )
+      const pendingMessage =
+        /^(?:loading(?: application| page| records)?|restoring (?:camera session and saved form|session)|please wait|submitting report)(?:â€¦|…|\.\.\.)?$/i
+      const visiblePendingState = Array.from(document.querySelectorAll('body *')).some(
+        (element) => {
+          if (!pendingMessage.test(String(element.textContent || '').trim())) return false
+          const style = window.getComputedStyle(element)
+          const rect = element.getBoundingClientRect()
+          return (
+            style.display !== 'none' &&
+            style.visibility !== 'hidden' &&
+            Number(style.opacity || 1) !== 0 &&
+            rect.width > 0 &&
+            rect.height > 0
+          )
+        },
+      )
+      return (
+        bodyText.length > 0 &&
+        !spinnerVisible &&
+        !loadingOnly &&
+        !restoringSession &&
+        !visiblePendingState
+      )
     },
     null,
     { timeout: routeTimeoutMs },
@@ -649,7 +695,11 @@ const downloadInspectionPdf = async (
 
   ensureArtifactDirectories()
   const body = await response.response.body()
-  const fileBase = `${slug(formType || reportUid)}-${slug(reportUid)}-v${version || 'latest'}`
+  const reportHash = createHash('sha256')
+    .update(String(reportUid || ''))
+    .digest('hex')
+    .slice(0, 12)
+  const fileBase = `${slug(formType || reportUid).slice(0, 40)}-${reportHash}-v${version || 'latest'}`
   const pdfPath = path.join(pdfRoot, `${fileBase}.pdf`)
   fs.writeFileSync(pdfPath, body)
   const embeddedImageCount = countPdfImageMarkers(body)
@@ -740,15 +790,15 @@ const erAuxRow = (suffix, equipment = `${runMarker} Radio ${suffix}`) => ({
   photos: [smokePhoto(`er-aux-additional-${suffix}`)],
 })
 
-const fireExtinguisherRow = (suffix, catalogId = null) => ({
+const fireExtinguisherRow = (suffix, catalogId = null, context = {}) => ({
   id: `live-smoke-fe-${suffix}`,
   catalogId,
   sourceRowNumber: `${runMarker}-${suffix}`.slice(0, 80),
   equipmentSource: 'custom',
-  zone: 'Smoke Zone',
-  mainLocation: 'Smoke Yard',
-  subLocation: 'Smoke Rack',
-  location: 'Smoke Yard',
+  zone: context.fireExtinguisherZone || 'Smoke Zone',
+  mainLocation: context.fireExtinguisherMainLocation || 'Smoke Yard',
+  subLocation: context.fireExtinguisherSubLocation || 'Smoke Rack',
+  location: context.fireExtinguisherMainLocation || 'Smoke Yard',
   idLocNo: `${runMarker}-LOC-${suffix}`.slice(0, 80),
   barcodeNo: `${runMarker}-BC-${suffix}`.slice(0, 80),
   feType: 'CO2',
@@ -883,7 +933,7 @@ const buildInspectionPayload = (inspectionType, suffix, context = {}) => {
       mainLocation: context.fireExtinguisherMainLocation || 'Smoke Yard',
       subLocation: context.fireExtinguisherSubLocation || 'Smoke Rack',
       fireExtinguisherInspectionDate: reportDate,
-      fireExtinguisherChecks: [fireExtinguisherRow(suffix, context.fireExtinguisherId)],
+      fireExtinguisherChecks: [fireExtinguisherRow(suffix, context.fireExtinguisherId, context)],
       fireExtinguisherRemarks: `${runMarker} FE remarks ${suffix}`,
     })
   }
@@ -1096,7 +1146,29 @@ const validatePdfExpectations = ({
       const normalizedExpected = normalizePdfComparable(value)
       if (normalizedPdfText.includes(normalizedExpected)) return false
       const compactExpected = compactPdfComparable(value)
-      return compactExpected.length >= 8 && !compactPdfText.includes(compactExpected)
+      if (compactExpected.length >= 8 && compactPdfText.includes(compactExpected)) return false
+
+      // Poppler's layout extraction can interleave adjacent PDF columns inside a long
+      // run marker. Preserve a meaningful form-specific assertion by matching the
+      // marker-free tail when the full run-scoped string is split by column content.
+      const markerFreeExpected = text(value)
+        .replaceAll(runMarker, '')
+        .replace(/^[-:\s]+/, '')
+      const compactMarkerFreeExpected = compactPdfComparable(markerFreeExpected)
+      if (
+        compactMarkerFreeExpected.length >= 5 &&
+        compactPdfText.includes(compactMarkerFreeExpected)
+      ) {
+        return false
+      }
+
+      const markerFreeTokens = normalizePdfComparable(markerFreeExpected)
+        .match(/[a-z0-9]+/g)
+        ?.filter((token) => token.length >= 3)
+      return !(
+        markerFreeTokens?.length > 0 &&
+        markerFreeTokens.every((token) => compactPdfText.includes(token))
+      )
     })
 
   return {
@@ -1226,6 +1298,7 @@ module.exports = {
   implementedInspectionTypes,
   inspectionTypeKey,
   liveSmokeEnabled,
+  localhostMutationTarget,
   loadFrtReferenceRows,
   login,
   loginInBrowser,

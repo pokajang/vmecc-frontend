@@ -47,6 +47,42 @@ const filenameFromHeaders = (headers) => {
   return decodeFilename(filenameMatch?.[1])
 }
 
+export const downloadReportFile = async ({
+  endpoint,
+  payload,
+  accept,
+  acceptedContentTypes = [],
+  invalidResponseMessage = 'The server returned an invalid report file.',
+  emptyResponseMessage = 'The generated report file is empty.',
+}) => {
+  const response = await fetchWithCsrfRetry(buildApiUrl(endpoint), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: accept,
+    },
+    body: JSON.stringify(payload),
+  })
+
+  if (!response.ok) throw await readError(response)
+
+  const contentType = String(response.headers.get('content-type') || '').toLowerCase()
+  if (!acceptedContentTypes.some((value) => contentType.includes(value))) {
+    throw new Error(invalidResponseMessage)
+  }
+
+  const blob = await response.blob()
+  if (!blob || blob.size === 0) {
+    throw new Error(emptyResponseMessage)
+  }
+
+  return {
+    blob,
+    filename: filenameFromHeaders(response.headers),
+    reportVersion: response.headers.get('x-report-version') || '',
+  }
+}
+
 export const downloadReportPdf = async ({ endpoint, reportUid }) => {
   const normalizedUid = String(reportUid || '').trim()
   if (!normalizedUid) {
@@ -55,30 +91,12 @@ export const downloadReportPdf = async ({ endpoint, reportUid }) => {
     throw error
   }
 
-  const response = await fetchWithCsrfRetry(buildApiUrl(endpoint), {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/pdf',
-    },
-    body: JSON.stringify({ report_uid: normalizedUid }),
+  return downloadReportFile({
+    endpoint,
+    payload: { report_uid: normalizedUid },
+    accept: 'application/pdf',
+    acceptedContentTypes: ['application/pdf'],
+    invalidResponseMessage: 'The server returned an invalid PDF response.',
+    emptyResponseMessage: 'The generated PDF is empty.',
   })
-
-  if (!response.ok) throw await readError(response)
-
-  const contentType = String(response.headers.get('content-type') || '').toLowerCase()
-  if (!contentType.includes('application/pdf')) {
-    throw new Error('The server returned an invalid PDF response.')
-  }
-
-  const blob = await response.blob()
-  if (!blob || blob.size === 0) {
-    throw new Error('The generated PDF is empty.')
-  }
-
-  return {
-    blob,
-    filename: filenameFromHeaders(response.headers),
-    reportVersion: response.headers.get('x-report-version') || '',
-  }
 }

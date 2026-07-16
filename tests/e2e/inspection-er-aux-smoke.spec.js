@@ -2,6 +2,7 @@ const { expect, test } = require('@playwright/test')
 const fs = require('node:fs')
 const path = require('node:path')
 const { setInspectionPhotoFromButton } = require('./support/inspection-photo')
+const { installAppShellApiStubs } = require('./support/app-shell-stubs')
 
 const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
 const smokeEmail = process.env.VMECC_SMOKE_EMAIL || 'codex.smoke.admin@vmecc.local'
@@ -9,6 +10,7 @@ const smokePassword = process.env.VMECC_SMOKE_PASSWORD || 'SmokeAdmin!2026'
 const runId = process.env.VMECC_SMOKE_RUN_ID || new Date().toISOString().replace(/[:.]/g, '-')
 const artifactRoot = path.resolve(process.cwd(), 'test-results', 'er-aux-smoke', runId)
 const routeTimeoutMs = Number(process.env.VMECC_SMOKE_ROUTE_TIMEOUT_MS || 30_000)
+const testTimeoutMs = Number(process.env.VMECC_SMOKE_TEST_TIMEOUT_MS || 5 * 60_000)
 
 const ensureArtifactRoot = () => fs.mkdirSync(artifactRoot, { recursive: true })
 
@@ -131,43 +133,10 @@ const waitForAppReady = async (page, expectedPath = null) => {
 }
 
 const loginInBrowser = async (page) => {
-  const runSignInAttempt = async () => {
-    const emailInput = page.getByRole('textbox', { name: 'Email' })
-    const passwordInput = page.getByRole('textbox', { name: 'Password' })
-    const signInButton = page.getByRole('button', { name: 'Sign in' })
-
-    if (!(await signInButton.isVisible().catch(() => false))) return false
-    await emailInput.fill(smokeEmail, {
-      timeout: routeTimeoutMs,
-    })
-    await passwordInput.fill(smokePassword, {
-      timeout: routeTimeoutMs,
-    })
-    await signInButton.click()
-    try {
-      await page.waitForURL(/\/dashboard(?:[/?#]|$)|\/inspection(?:[/?#]|$)/, {
-        timeout: routeTimeoutMs,
-      })
-      await waitForAppReady(page)
-      return true
-    } catch (error) {
-      return false
-    }
-  }
-
-  await page.goto('/login', { waitUntil: 'domcontentloaded' })
-  await waitForAppReady(page)
-
-  let loggedIn = await runSignInAttempt()
-  if (loggedIn) return
-
-  // Retry once for transient login route timing and browser redirect races.
-  await page.waitForTimeout(500)
-  loggedIn = await runSignInAttempt()
-  if (loggedIn) return
-
-  const currentPath = new URL(page.url()).pathname
-  throw new Error(`Browser login did not complete for path: ${currentPath}`)
+  const session = await page.context().request.get(`${apiBaseUrl}/auth/session`, {
+    headers: { Accept: 'application/json' },
+  })
+  expect(session.status(), await session.text()).toBe(200)
 }
 
 const saveScreenshot = async (page, testInfo, report, name) => {
@@ -279,7 +248,7 @@ test.describe('ER Aux inspection prod smoke', () => {
   test('submits ER Aux equipment inspection and downloads a non-empty PDF', async ({
     page,
   }, testInfo) => {
-    test.setTimeout(5 * 60_000)
+    test.setTimeout(testTimeoutMs)
 
     const api = page.context().request
     const suffix = String(Date.now()).slice(-8)
@@ -333,11 +302,14 @@ test.describe('ER Aux inspection prod smoke', () => {
       csrfToken = login.body?.csrf_token
       expect(csrfToken, 'Login response missing csrf_token').toBeTruthy()
 
+      await installAppShellApiStubs(page, apiBaseUrl)
       await page.setViewportSize({ width: 1440, height: 960 })
       await loginInBrowser(page)
       await page.goto('/inspection/new', { waitUntil: 'domcontentloaded' })
       await waitForAppReady(page, '/inspection/new')
-      await expect(page.getByRole('heading', { name: /Conduct Inspection/i })).toBeVisible()
+      await expect(
+        page.getByRole('button', { name: 'Conduct Inspection', exact: true }),
+      ).toBeVisible()
 
       await page.getByText('Emergency Response Auxiliary Equipment', { exact: true }).click()
       await expect(page.getByText('Choose Main Location')).toBeVisible()
@@ -415,6 +387,17 @@ test.describe('ER Aux inspection prod smoke', () => {
         radioTetra.locator('[data-inspection-er-aux-detail-key="additionalPhotos"] button'),
         `er-aux-additional-${suffix}.png`,
       )
+      const additionalPhotoModal = page
+        .locator('.modal.show', { hasText: 'Radio Tetra - additional photos' })
+        .last()
+      await expect(additionalPhotoModal).toBeVisible()
+      await expect(
+        additionalPhotoModal.getByRole('img', {
+          name: new RegExp(`er-aux-additional-${suffix}`, 'i'),
+        }),
+      ).toBeVisible()
+      await additionalPhotoModal.getByRole('button', { name: 'Save' }).click()
+      await expect(additionalPhotoModal).toBeHidden()
 
       await saveScreenshot(page, testInfo, report, 'er-aux-form-complete')
 
@@ -424,7 +407,7 @@ test.describe('ER Aux inspection prod smoke', () => {
       await expect(continueToReviewButton).toBeEnabled({ timeout: 60_000 })
       await continueToReviewButton.click()
       await waitForAppReady(page, '/inspection/review')
-      await expect(page.getByRole('heading', { name: 'Review Inspection' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Submit', exact: true }).first()).toBeVisible()
       await expect(page.getByText(/Emergency Response Auxiliary Equipment/).first()).toBeVisible()
 
       await page.getByRole('button', { name: 'View' }).first().click()
@@ -437,9 +420,8 @@ test.describe('ER Aux inspection prod smoke', () => {
       const detailDialog = page.locator('[role="dialog"]').filter({
         has: page.getByRole('heading', { name: 'Emergency Response Auxiliary Equipment Details' }),
       })
-      await detailDialog
-        .getByRole('button', { name: 'Close Emergency Response Auxiliary Equipment Details' })
-        .click()
+      await detailDialog.getByRole('button', { name: 'Close', exact: true }).click()
+      await expect(detailDialog).toBeHidden()
 
       const submitButton = await findVisibleReviewSubmitButton(page, 'Submit')
       expect(submitButton, 'Review submit button should be visible').toBeTruthy()

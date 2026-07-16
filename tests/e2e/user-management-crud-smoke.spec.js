@@ -6,7 +6,19 @@ const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
 const smokeEmail = process.env.VMECC_SMOKE_EMAIL || 'codex.smoke.admin@vmecc.local'
 const smokePassword = process.env.VMECC_SMOKE_PASSWORD || 'SmokeAdmin!2026'
 const runId = process.env.VMECC_SMOKE_RUN_ID || new Date().toISOString().replace(/[:.]/g, '-')
+const crudTimeoutMs = Number(process.env.VMECC_SMOKE_CRUD_TIMEOUT_MS || 15 * 60_000)
 const artifactRoot = path.resolve(process.cwd(), 'test-results', 'user-management-smoke', runId)
+const liveMutationsEnabled = process.env.VMECC_LIVE_ALLOW_MUTATIONS === '1'
+const isLoopbackUrl = (value) => {
+  try {
+    return ['localhost', '127.0.0.1', '::1'].includes(new URL(value).hostname)
+  } catch {
+    return false
+  }
+}
+const localhostMutationTarget =
+  isLoopbackUrl(apiBaseUrl) &&
+  isLoopbackUrl(process.env.VMECC_E2E_BASE_URL || 'http://localhost:3000')
 
 const today = () => new Date().toISOString().slice(0, 10)
 
@@ -197,7 +209,7 @@ const saveScreenshot = async (page, testInfo, report, name) => {
 }
 
 const findUserRow = async (page, email) => {
-  await page.locator('input[placeholder="Search name or email"]:visible').first().fill(email)
+  await page.getByRole('textbox', { name: /Search users by name or email/i }).fill(email)
   const row = page.locator('tbody tr').filter({ hasText: email }).first()
   await expect(row, `Expected table row for ${email}`).toBeVisible({ timeout: 15_000 })
   await row.scrollIntoViewIfNeeded()
@@ -274,9 +286,20 @@ const triggerExportAction = async (page, testInfo, report, user) => {
   const item = menu.getByRole('button', { name: 'Export CSV', exact: true })
   await expect(item, `Expected export action for ${user.email}`).toBeVisible()
 
-  const downloadPromise = page.waitForEvent('download', { timeout: 2_000 }).catch(() => null)
+  const downloadPromise = page.waitForEvent('download', { timeout: 30_000 })
   await item.click()
   const download = await downloadPromise
+  expect(await download.failure(), 'User activity CSV download should complete').toBeNull()
+  expect(download.suggestedFilename(), 'User activity export should use a CSV filename').toMatch(
+    /\.csv$/i,
+  )
+  const downloadedPath = await download.path()
+  expect(downloadedPath, 'User activity CSV should have a local download path').toBeTruthy()
+  const csvContent = fs.readFileSync(downloadedPath, 'utf8')
+  expect(csvContent.length, 'User activity CSV should not be empty').toBeGreaterThan(40)
+  expect(csvContent, 'User activity CSV should contain its first section').toContain(
+    'Login Records',
+  )
   await expect(page.locator('.modal.show'), 'Export action should not open a modal').toHaveCount(0)
 
   const screenshot = await saveScreenshot(page, testInfo, report, 'row-action-export-csv-no-modal')
@@ -285,15 +308,20 @@ const triggerExportAction = async (page, testInfo, report, user) => {
     action: 'Export CSV',
     expected_modal: null,
     modal_visible: false,
-    downloaded: Boolean(download),
-    suggested_filename: download?.suggestedFilename?.() || null,
+    downloaded: true,
+    suggested_filename: download.suggestedFilename(),
+    bytes: Buffer.byteLength(csvContent),
     screenshot,
   })
 }
 
 test.describe('User Management CRUD smoke', () => {
   test('covers CRUD endpoints, views, and every row action modal', async ({ page }, testInfo) => {
-    test.setTimeout(5 * 60_000)
+    test.skip(
+      !liveMutationsEnabled || !localhostMutationTarget,
+      'User CRUD smoke requires explicit mutation opt-in and loopback-only origins.',
+    )
+    test.setTimeout(crudTimeoutMs)
 
     const api = page.context().request
     const report = {
@@ -494,7 +522,7 @@ test.describe('User Management CRUD smoke', () => {
       await triggerModalAction(page, testInfo, report, {
         user: activeUser,
         actionLabel: 'Delete user',
-        modalTitle: 'Delete User Permanently',
+        modalTitle: 'Delete User',
       })
       await triggerModalAction(page, testInfo, report, {
         user: activeUser,

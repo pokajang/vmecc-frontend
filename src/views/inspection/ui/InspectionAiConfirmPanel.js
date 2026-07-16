@@ -204,7 +204,7 @@ const InspectionAiConfirmPanel = ({
           <ReportPhotoImage
             photo={photo}
             alt={photo.fileName}
-            style={{ maxHeight: 200, maxWidth: '100%', borderRadius: 8, objectFit: 'cover' }}
+            style={{ maxHeight: 200, maxWidth: '100%', borderRadius: 8, objectFit: 'contain' }}
           />
           <div className="text-body-secondary small mt-1">{photo.fileName}</div>
         </div>

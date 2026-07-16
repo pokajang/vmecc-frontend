@@ -42,9 +42,13 @@ export const PhotoPreview = ({ photo, alt = 'Inspection photo', className = '' }
 
   return (
     <div
-      className={`workflow-photo-preview ${
-        hasError ? 'workflow-photo-preview--missing' : ''
-      } ${className}`.trim()}
+      className={[
+        'workflow-photo-preview',
+        hasError ? 'workflow-photo-preview--missing' : '',
+        className,
+      ]
+        .filter(Boolean)
+        .join(' ')}
     >
       {!hasError ? (
         <ReportPhotoImage

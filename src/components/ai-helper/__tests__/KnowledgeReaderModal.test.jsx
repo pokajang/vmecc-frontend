@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 
 import KnowledgeReaderModal from '../KnowledgeReaderModal'
 import {
@@ -77,9 +77,41 @@ describe('KnowledgeReaderModal', () => {
     )
 
     expect(screen.getByTitle('Guide').getAttribute('src')).toBe('blob:http://localhost/pdf-preview')
-    expect(screen.getByRole('link', { name: /open in new tab/i }).getAttribute('href')).toBe(
+    expect(screen.getByRole('tab', { name: 'Original PDF' })).toBeTruthy()
+    expect(screen.getByRole('tab', { name: 'Extracted text' })).toBeTruthy()
+    expect(screen.getByRole('link', { name: /open pdf in new tab/i }).getAttribute('href')).toBe(
       'http://localhost:8000/api/ai-helper/knowledge/3/file',
     )
+  })
+
+  it('preserves PDF extraction line breaks in a normal-sized text block', () => {
+    const extractedContent =
+      '# ANNEX 1: Terminologies and Definitions\n\n## 999\n\n999 is an official emergency number.\n\n- First point\n- Second point'
+
+    render(
+      <KnowledgeReaderModal
+        activeTab={KNOWLEDGE_READER_TAB_EXTRACTED}
+        detail={{ ...baseDetail, extracted_content: extractedContent }}
+        error={null}
+        loading={false}
+        pdfError={null}
+        pdfLoading={false}
+        pdfUrl=""
+        markdownError={null}
+        markdownLoading={false}
+        markdownSource=""
+        open
+        onClose={vi.fn()}
+        onTabChange={vi.fn()}
+      />,
+    )
+
+    const extractedText = screen.getByLabelText('Extracted PDF text')
+    expect(extractedText.tagName).toBe('PRE')
+    expect(extractedText.classList.contains('ai-helper-knowledge-reader__extracted-text')).toBe(
+      true,
+    )
+    expect(extractedText.textContent).toBe(extractedContent)
   })
 
   it('renders raw markdown source in the original tab', () => {
@@ -105,8 +137,11 @@ describe('KnowledgeReaderModal', () => {
       />,
     )
 
-    expect(screen.getByLabelText('Original Markdown source').textContent).toContain('title: Guide')
-    expect(screen.getByLabelText('Original Markdown source').textContent).toContain('# Heading')
+    expect(screen.getByRole('tab', { name: 'Rendered' })).toBeTruthy()
+    expect(screen.getByRole('tab', { name: 'Source' })).toBeTruthy()
+    expect(screen.getByRole('link', { name: /open source in new tab/i })).toBeTruthy()
+    expect(screen.getByLabelText('Markdown source').textContent).toContain('title: Guide')
+    expect(screen.getByLabelText('Markdown source').textContent).toContain('# Heading')
   })
 
   it('renders extracted markdown headings as heading elements', () => {
@@ -135,12 +170,94 @@ describe('KnowledgeReaderModal', () => {
     )
 
     expect(screen.getByRole('heading', { level: 1, name: 'Heading One' })).toBeTruthy()
-    expect(screen.getByText('Body paragraph line one.')).toBeTruthy()
-    expect(screen.getByText('Line two.')).toBeTruthy()
+    expect(
+      screen.getByText(
+        (_, element) =>
+          element.tagName === 'P' && element.textContent === 'Body paragraph line one.\nLine two.',
+      ),
+    ).toBeTruthy()
     expect(screen.queryByRole('heading', { level: 2, name: 'Body paragraph line one.' })).toBeNull()
   })
 
-  it('hides the Original tab for knowledge entries without original source', () => {
+  it('renders extracted GFM tables and keeps frontmatter out of the rendered body', () => {
+    render(
+      <KnowledgeReaderModal
+        activeTab={KNOWLEDGE_READER_TAB_EXTRACTED}
+        detail={{
+          ...baseDetail,
+          source_filename: 'guide.md',
+          source_mime: 'text/markdown',
+          extracted_content:
+            '# Guide\n\n| Term | Definition |\n| --- | --- |\n| AED | Defibrillator |',
+          original_available: true,
+        }}
+        error={null}
+        loading={false}
+        pdfError={null}
+        pdfLoading={false}
+        pdfUrl=""
+        markdownError={null}
+        markdownLoading={false}
+        markdownSource={'---\ntitle: Guide\n---\n\n# Guide'}
+        open
+        onClose={vi.fn()}
+        onTabChange={vi.fn()}
+      />,
+    )
+
+    const renderedPanel = screen.getByRole('tabpanel')
+    expect(within(renderedPanel).getByRole('table')).toBeTruthy()
+    expect(within(renderedPanel).queryByText('title: Guide')).toBeNull()
+  })
+
+  it('supports arrow, Home, and End keyboard navigation across Markdown tabs', () => {
+    const onTabChange = vi.fn()
+    render(
+      <KnowledgeReaderModal
+        activeTab={KNOWLEDGE_READER_TAB_EXTRACTED}
+        detail={{
+          ...baseDetail,
+          source_filename: 'guide.md',
+          source_mime: 'text/markdown',
+        }}
+        error={null}
+        loading={false}
+        pdfError={null}
+        pdfLoading={false}
+        pdfUrl=""
+        markdownError={null}
+        markdownLoading={false}
+        markdownSource="# Guide"
+        open
+        onClose={vi.fn()}
+        onTabChange={onTabChange}
+      />,
+    )
+
+    const renderedTab = screen.getByRole('tab', { name: 'Rendered' })
+    const sourceTab = screen.getByRole('tab', { name: 'Source' })
+    const metadataTab = screen.getByRole('tab', { name: 'Metadata' })
+
+    fireEvent.keyDown(renderedTab, { key: 'ArrowRight' })
+    expect(onTabChange).toHaveBeenLastCalledWith(KNOWLEDGE_READER_TAB_ORIGINAL)
+    expect(document.activeElement).toBe(sourceTab)
+
+    fireEvent.keyDown(sourceTab, { key: 'End' })
+    expect(onTabChange).toHaveBeenLastCalledWith(KNOWLEDGE_READER_TAB_METADATA)
+    expect(document.activeElement).toBe(metadataTab)
+
+    fireEvent.keyDown(metadataTab, { key: 'Home' })
+    expect(onTabChange).toHaveBeenLastCalledWith(KNOWLEDGE_READER_TAB_EXTRACTED)
+    expect(document.activeElement).toBe(renderedTab)
+    const renderedPanel = screen.getByRole('tabpanel')
+    expect(renderedTab.getAttribute('aria-controls')).toBe(renderedPanel.id)
+    expect(renderedPanel.getAttribute('aria-labelledby')).toBe(renderedTab.id)
+    for (const tab of [renderedTab, sourceTab, metadataTab]) {
+      expect(document.getElementById(tab.getAttribute('aria-controls'))).toBeTruthy()
+    }
+  })
+
+  it('hides the Source tab for Markdown entries without an original source', () => {
     const detail = {
       ...baseDetail,
       source_mime: 'text/markdown',
@@ -167,8 +284,8 @@ describe('KnowledgeReaderModal', () => {
       />,
     )
 
-    expect(screen.queryByRole('button', { name: /original/i })).toBeNull()
-    expect(screen.queryByRole('link', { name: /open in new tab/i })).toBeNull()
+    expect(screen.queryByRole('tab', { name: 'Source' })).toBeNull()
+    expect(screen.queryByRole('link', { name: /open source in new tab/i })).toBeNull()
     expect(screen.getByText('Extracted content')).toBeTruthy()
 
     rerender(

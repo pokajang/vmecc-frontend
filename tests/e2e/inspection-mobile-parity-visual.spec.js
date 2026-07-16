@@ -1,15 +1,21 @@
 import { expect, test } from '@playwright/test'
 import path from 'node:path'
+import { INSPECTION_REPORT_EVIDENCE_COPY } from '../../src/views/inspection/inspectionReportEvidenceCopy.js'
+import { installAppShellApiStubs } from './support/app-shell-stubs'
+
+const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
+const smokeEmail = process.env.VMECC_SMOKE_EMAIL || 'codex.smoke.admin@vmecc.local'
+const smokePassword = process.env.VMECC_SMOKE_PASSWORD || 'SmokeAdmin!2026'
 
 const CASES = [
-  { id: 'fire-extinguisher', openText: 'CAN-001' },
-  { id: 'hydraulic', openText: 'Hydraulic Pump Motor 1' },
-  { id: 'er-aux', openText: 'Radio Tetra' },
-  { id: 'scba', openText: 'MSA 06' },
-  { id: 'high-angle', openText: 'Rescue Rope', openSequence: ['Locker A', 'Rescue Rope'] },
-  { id: 'frt', openText: 'Pump Panel' },
-  { id: 'hse', openLabel: 'Edit HSE observation' },
-  { id: 'general', openText: 'Add finding' },
+  'fire-extinguisher-inspection',
+  'hydraulic-rescue-tools-inspection',
+  'er-aux-equipment-inspection',
+  'scba-inspection',
+  'high-angle-rescue-equipment-inspection',
+  'frt-daily-inspection',
+  'health-safety-environment-inspection',
+  'general-inspection',
 ]
 
 test.use({
@@ -18,50 +24,42 @@ test.use({
 })
 
 test('captures inspection mobile parity states', async ({ page }, testInfo) => {
-  await page.goto('/tests/visual/inspection-mobile-parity.html')
-  await expect(page.getByText('Inspection Mobile UI Parity')).toBeVisible()
+  test.setTimeout(3 * 60_000)
+  const loginResponse = await page.context().request.post(`${apiBaseUrl}/auth/login`, {
+    headers: { Accept: 'application/json' },
+    data: { email: smokeEmail, password: smokePassword, remember: true },
+  })
+  expect(loginResponse.status(), await loginResponse.text()).toBe(200)
+
+  await installAppShellApiStubs(page, apiBaseUrl)
+  await page.goto('/inspection/ux-matrix?viewport=mobile&state=complete-with-next-location', {
+    waitUntil: 'domcontentloaded',
+  })
+  await expect(page.getByRole('heading', { name: 'Inspection UX Matrix' })).toBeVisible({
+    timeout: 60_000,
+  })
 
   const outputDir = path.join(testInfo.outputDir, 'inspection-mobile-parity')
 
-  for (const visualCase of CASES) {
-    const section = page.locator(`[data-visual-case="${visualCase.id}"]`)
+  for (const typeKey of CASES) {
+    const section = page.locator(
+      `[data-matrix-case="${typeKey}:complete-with-next-location:mobile"]`,
+    )
     await expect(section).toBeVisible()
-    await section.screenshot({
-      path: path.join(outputDir, `${visualCase.id}-list.png`),
-    })
+    await section.screenshot({ path: path.join(outputDir, `${typeKey}-list.png`) })
 
-    if (visualCase.openSequence) {
-      for (const itemText of visualCase.openSequence) {
-        await section.getByText(itemText, { exact: true }).click()
-      }
-    } else if (visualCase.openLabel) {
-      await section.getByLabel(visualCase.openLabel).click()
-    } else {
-      await section.getByText(visualCase.openText, { exact: true }).click()
-    }
-
+    await section
+      .getByRole('button', {
+        name: new RegExp(`^${INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel}`, 'i'),
+      })
+      .click()
     const drawer = page.locator('.offcanvas.show').last()
     await expect(drawer).toBeVisible()
-    await drawer.screenshot({
-      path: path.join(outputDir, `${visualCase.id}-drawer.png`),
-    })
-    await drawer.getByLabel(/close/i).click()
+    await expect(
+      drawer.getByText(INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle, { exact: true }),
+    ).toBeVisible()
+    await drawer.screenshot({ path: path.join(outputDir, `${typeKey}-evidence-drawer.png`) })
+    await drawer.getByRole('button', { name: /Close/i }).click()
     await expect(drawer).toBeHidden()
-
-    for (const extraDrawer of visualCase.extraDrawers || []) {
-      if (extraDrawer.openLabel) {
-        await section.getByLabel(extraDrawer.openLabel).click()
-      } else {
-        await section.getByText(extraDrawer.openText, { exact: true }).click()
-      }
-
-      const extra = page.locator('.offcanvas.show').last()
-      await expect(extra).toBeVisible()
-      await extra.screenshot({
-        path: path.join(outputDir, `${visualCase.id}-${extraDrawer.name}-drawer.png`),
-      })
-      await extra.getByLabel(/close/i).click()
-      await expect(extra).toBeHidden()
-    }
   }
 })
