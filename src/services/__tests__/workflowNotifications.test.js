@@ -49,4 +49,23 @@ describe('buildWorkflowNotificationDetailPath', () => {
     })
     expect(ownerPath).toBe('/staff/set-salary/set-salary?assignmentId=45')
   })
+
+  it.each([
+    ['inspection', '/inspection/report-inspection-1'],
+    ['erco', '/report/erco/report-erco-1'],
+    ['drill', '/report/drill/report-drill-1'],
+    ['fitness-test', '/report/fitness-test/report-fitness-test-1'],
+  ])('routes %s notifications to the exact report record', (reportType, expectedPath) => {
+    const path = buildWorkflowNotificationDetailPath({
+      event: {
+        module: 'report',
+        metadata: {
+          reportType,
+          reportUid: `report-${reportType}-1`,
+        },
+      },
+    })
+
+    expect(path).toBe(expectedPath)
+  })
 })

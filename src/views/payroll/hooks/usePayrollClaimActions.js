@@ -255,12 +255,21 @@ const usePayrollClaimActions = ({
     }
     const apiResult = await cancelMyPayrollClaimApiFirst(cancelTarget.serverId, '', {
       idempotencyKey: buildActionIdempotencyKey('cancel-claim', cancelTarget),
+      expectedVersion: cancelTarget.version,
     })
     if (!apiResult?.ok) {
-      pushToast('Unable to cancel claim. API request failed.', {
-        title: 'Cancel failed',
-        color: 'danger',
-      })
+      if (apiResult?.currentData) {
+        await refreshClaimRows()
+        pushToast('This claim changed and has been refreshed. Review it before trying again.', {
+          title: 'Claim refreshed',
+          color: 'warning',
+        })
+      } else {
+        pushToast('Unable to cancel claim. API request failed.', {
+          title: 'Cancel failed',
+          color: 'danger',
+        })
+      }
       return
     }
     await refreshClaimRows()

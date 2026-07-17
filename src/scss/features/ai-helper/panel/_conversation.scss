@@ -124,6 +124,21 @@
   }
 }
 
+.ai-helper-message__source-guide {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--cui-body-color);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.35;
+
+  svg {
+    flex: 0 0 auto;
+    color: var(--cui-info);
+  }
+}
+
 .ai-helper-message__actions {
   position: absolute;
   right: 0.45rem;

@@ -220,6 +220,7 @@ export const toUiClaimRow = (row = {}) => {
     workflowStage: String(row.workflow_stage || row.workflowStage || '').trim(),
     workflowSnapshot: row.workflow_snapshot || row.workflowSnapshot || null,
     nextActionRole: row.next_action_role || row.nextActionRole || null,
+    version: Number(row.version || 0) || 0,
     paymentDate: String(row.payment_date || row.paymentDate || '').trim(),
     paymentReference: String(row.payment_reference || row.paymentReference || '').trim(),
     paymentNote: String(row.payment_note || row.paymentNote || '').trim(),
@@ -392,6 +393,7 @@ export const toApiPayload = (row = {}) => {
     attachment_size_bytes: sanitizeAttachmentSize(row.attachmentSizeBytes),
     attachment_id: sanitizeAttachmentId(row.attachmentId),
     payroll_snapshot: row.payrollSnapshot || null,
+    ...(row?.version ? { expected_version: row.version } : {}),
     items: Array.isArray(row.items)
       ? row.items.map((item) => ({
           item_type: sanitizeText(

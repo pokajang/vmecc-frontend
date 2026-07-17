@@ -141,12 +141,15 @@ const useClaimsWorkflow = ({
             apiResult?.error,
             'Unable to process claim workflow action.',
           )
+          if (parsed.isConflict && apiResult?.currentData) {
+            applyClaimApiUpdate(claimRow, apiResult.currentData)
+          }
           if (normalizedDecision === 'reject' && parsed.fieldErrors?.remarks) {
             setWorkflowRejectError(parsed.fieldErrors.remarks)
           }
           pushToast(parsed.message, {
-            title: 'Update failed',
-            color: 'danger',
+            title: parsed.isConflict ? 'Claim refreshed' : 'Update failed',
+            color: parsed.isConflict ? 'warning' : 'danger',
           })
         }
         return false

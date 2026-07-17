@@ -53,7 +53,7 @@ const WorkflowNotifications = ({ onClose }) => {
       markRead(item.id)
     }
     onClose?.()
-    navigate(buildWorkflowNotificationDetailPath({ event: item }))
+    navigate(item.deepLink || buildWorkflowNotificationDetailPath({ event: item }))
   }
 
   const handleRequestDeleteAll = () => {

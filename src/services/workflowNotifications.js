@@ -85,5 +85,7 @@ export const buildWorkflowNotificationDetailPath = ({ event } = {}) => {
     recordId: event?.recordId || event?.metadata?.recordId,
     ownerUserId: event?.ownerUserId || event?.metadata?.ownerUserId,
     actionRequiredForViewer: event?.actionRequiredForViewer,
+    reportType: event?.reportType || event?.metadata?.reportType,
+    reportUid: event?.reportUid || event?.metadata?.reportUid,
   })
 }

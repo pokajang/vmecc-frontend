@@ -156,9 +156,19 @@ const useClaimPaymentActions = ({
           ? await markStaffPayrollClaimPaidApiFirst(target, payload)
           : await unmarkStaffPayrollClaimPaidApiFirst(target, payload)
         if (!result?.ok || !result?.data) {
+          if (result?.currentData) {
+            applyUpdatedRows([result.currentData])
+          }
           pushToast(
-            isMarkMode ? 'Unable to mark claim as paid.' : 'Unable to unmark claim as paid.',
-            { title: 'Update failed', color: 'danger' },
+            result?.currentData
+              ? 'This claim changed and has been refreshed. Review it before trying again.'
+              : isMarkMode
+                ? 'Unable to mark claim as paid.'
+                : 'Unable to unmark claim as paid.',
+            {
+              title: result?.currentData ? 'Claim refreshed' : 'Update failed',
+              color: result?.currentData ? 'warning' : 'danger',
+            },
           )
           return
         }

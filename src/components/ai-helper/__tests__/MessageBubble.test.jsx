@@ -153,4 +153,67 @@ describe('MessageBubble', () => {
     )
     expect(link.getAttribute('target')).toBe('_blank')
   })
+
+  it('renders system-guide citations as non-clickable internal guidance', () => {
+    const { getByLabelText, queryByRole } = render(
+      <MessageBubble
+        {...baseProps}
+        message={{
+          id: 'assistant-guide',
+          role: 'assistant',
+          status: 'completed',
+          content: 'Open the Leave page.',
+          sources: [
+            {
+              source_id: 'S2',
+              source_type: 'system_guide',
+              document_id: null,
+              title: 'Applying for Leave',
+              guide_version: 2,
+              display_label: 'VMECC System Guide',
+              source_path: 'seed:system-guide:leave-self-service',
+            },
+          ],
+        }}
+      />,
+    )
+
+    const guide = getByLabelText('Internal application guidance: Applying for Leave')
+    expect(guide.textContent).toContain('S2 — VMECC System Guide: Applying for Leave (v2)')
+    expect(guide.textContent).not.toContain('seed:system-guide')
+    expect(queryByRole('link')).toBeNull()
+  })
+
+  it('renders mixed PDF and system-guide sources independently', () => {
+    const { getAllByRole, getByLabelText } = render(
+      <MessageBubble
+        {...baseProps}
+        message={{
+          id: 'assistant-mixed',
+          role: 'assistant',
+          status: 'completed',
+          content: 'Mixed answer.',
+          sources: [
+            {
+              source_id: 'S1',
+              source_type: 'reference_document',
+              document_id: 9,
+              title: 'ERP',
+              page_start: 2,
+            },
+            {
+              source_id: 'S2',
+              source_type: 'system_guide',
+              document_id: null,
+              title: 'Dashboard Basics',
+              guide_version: 2,
+            },
+          ],
+        }}
+      />,
+    )
+
+    expect(getAllByRole('link')).toHaveLength(1)
+    expect(getByLabelText('Internal application guidance: Dashboard Basics')).toBeTruthy()
+  })
 })

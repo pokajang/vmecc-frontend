@@ -1,6 +1,6 @@
 import React from 'react'
 import { CTooltip } from '@coreui/react'
-import { Check, Copy, Flag, RotateCcw } from 'lucide-react'
+import { BookOpenText, Check, Copy, Flag, RotateCcw } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
@@ -80,8 +80,45 @@ const MessageBubble = ({ message, copied, onCopy, onReport, onRetry, retryDisabl
             <div className="ai-helper-message__sources-label">Retrieved sources</div>
             <div className="ai-helper-message__sources-list">
               {sources.map((source, index) => {
+                const sourceType = String(source?.source_type || '')
+                if (sourceType === 'system_guide') {
+                  const version = Number(source?.guide_version)
+                  const versionLabel =
+                    Number.isInteger(version) && version > 0 ? ` (v${version})` : ''
+                  const displayLabel = source?.display_label || 'VMECC System Guide'
+
+                  return (
+                    <div
+                      key={`system-guide-${source?.source_id || index}`}
+                      className="ai-helper-message__source-guide"
+                      aria-label={`Internal application guidance: ${source?.title || 'VMECC System Guide'}`}
+                    >
+                      <BookOpenText size={14} aria-hidden="true" />
+                      <span>
+                        {source?.source_id ? `${source.source_id} — ` : ''}
+                        {displayLabel}: {source?.title || 'System guidance'}
+                        {versionLabel}
+                      </span>
+                    </div>
+                  )
+                }
+
                 const documentId = Number(source?.document_id)
-                if (!Number.isInteger(documentId) || documentId < 1) return null
+                if (!Number.isInteger(documentId) || documentId < 1) {
+                  return (
+                    <div
+                      key={`knowledge-${source?.source_id || index}`}
+                      className="ai-helper-message__source-guide"
+                      aria-label={`Internal knowledge source: ${source?.title || 'VMECC knowledge'}`}
+                    >
+                      <BookOpenText size={14} aria-hidden="true" />
+                      <span>
+                        {source?.source_id ? `${source.source_id} — ` : ''}
+                        {source?.title || 'VMECC knowledge'}
+                      </span>
+                    </div>
+                  )
+                }
 
                 const startPage = Number(source?.page_start)
                 const endPage = Number(source?.page_end)

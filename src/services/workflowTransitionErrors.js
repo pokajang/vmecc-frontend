@@ -34,6 +34,8 @@ export const parseWorkflowTransitionError = (
     message,
     fieldErrors,
     status: Number(error?.status || 0) || 0,
+    code: String(payload?.code || '').trim(),
+    isConflict: Number(error?.status || 0) === 409,
     isValidation: Number(error?.status || 0) === 422 || Object.keys(fieldErrors).length > 0,
   }
 }

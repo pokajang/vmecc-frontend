@@ -23,6 +23,11 @@ import {
 import featureFlags from 'src/config/featureFlags'
 import { buildIdempotencyKey, toApiPayload, toUiClaimRow, toUiPayslipRow } from './mappers'
 
+const toConflictData = (error) => {
+  if (Number(error?.status || 0) !== 409 || !error?.payload?.currentRecord) return null
+  return toUiClaimRow(error.payload.currentRecord)
+}
+
 export const loadMyPayrollClaimsApiFirst = async (userId) => {
   if (!featureFlags.apiOtPayrollReadsPrimary) {
     return {
@@ -71,7 +76,7 @@ export const downloadMyPayrollPayslipApiFirst = async (payslipId) => {
     const result = await downloadPayrollPayslip(id)
     return { ok: true, data: result, source: 'api' }
   } catch (error) {
-    return { ok: false, source: 'api', error }
+    return { ok: false, source: 'api', error, currentData: toConflictData(error) }
   }
 }
 
@@ -98,7 +103,7 @@ export const submitMyPayrollClaimApiFirst = async (row, existingServerId = null)
         )
     return { ok: true, data: toUiClaimRow(result?.data || {}), source: 'api' }
   } catch (error) {
-    return { ok: false, source: 'api', error }
+    return { ok: false, source: 'api', error, currentData: toConflictData(error) }
   }
 }
 
@@ -111,14 +116,21 @@ export const cancelMyPayrollClaimApiFirst = async (serverId, remarks = '', optio
     const idempotencyKey =
       options?.idempotencyKey || buildIdempotencyKey('payroll-claim-cancel', [serverId])
     const payload = remarks
-      ? { remarks, idempotency_key: idempotencyKey }
-      : { idempotency_key: idempotencyKey }
+      ? {
+          remarks,
+          idempotency_key: idempotencyKey,
+          ...(options?.expectedVersion ? { expected_version: options.expectedVersion } : {}),
+        }
+      : {
+          idempotency_key: idempotencyKey,
+          ...(options?.expectedVersion ? { expected_version: options.expectedVersion } : {}),
+        }
     const result = await cancelPayrollClaim(serverId, payload, {
       headers: { 'X-Idempotency-Key': idempotencyKey },
     })
     return { ok: true, data: toUiClaimRow(result?.data || {}), source: 'api' }
   } catch (error) {
-    return { ok: false, source: 'api', error }
+    return { ok: false, source: 'api', error, currentData: toConflictData(error) }
   }
 }
 
@@ -135,7 +147,7 @@ export const deleteMyPayrollClaimApiFirst = async (serverId, options = {}) => {
     })
     return { ok: true, source: 'api' }
   } catch (error) {
-    return { ok: false, source: 'api', error }
+    return { ok: false, source: 'api', error, currentData: toConflictData(error) }
   }
 }
 
@@ -165,7 +177,10 @@ export const runStaffPayrollClaimWorkflowApi = async (row, decision, remarks = '
   const claimId = Number(row?.serverId || 0)
   if (!ownerId || !claimId) return { ok: false, source: 'api' }
 
-  const payload = remarks ? { remarks } : {}
+  const payload = {
+    ...(remarks ? { remarks } : {}),
+    ...(row?.version ? { expected_version: row.version } : {}),
+  }
   const action = String(decision || '').toLowerCase()
 
   try {
@@ -180,7 +195,7 @@ export const runStaffPayrollClaimWorkflowApi = async (row, decision, remarks = '
 
     return { ok: true, data: toUiClaimRow(result?.data || {}), source: 'api' }
   } catch (error) {
-    return { ok: false, source: 'api', error }
+    return { ok: false, source: 'api', error, currentData: toConflictData(error) }
   }
 }
 
@@ -192,10 +207,13 @@ export const markStaffPayrollClaimPaidApiFirst = async (row, payload = {}) => {
   const claimId = Number(row?.serverId || 0)
   if (!ownerId || !claimId) return { ok: false, source: 'api' }
   try {
-    const result = await markStaffPayrollClaimPaid(ownerId, claimId, payload)
+    const result = await markStaffPayrollClaimPaid(ownerId, claimId, {
+      ...payload,
+      ...(row?.version ? { expected_version: row.version } : {}),
+    })
     return { ok: true, data: toUiClaimRow(result?.data || {}), source: 'api' }
   } catch (error) {
-    return { ok: false, source: 'api', error }
+    return { ok: false, source: 'api', error, currentData: toConflictData(error) }
   }
 }
 
@@ -207,10 +225,13 @@ export const unmarkStaffPayrollClaimPaidApiFirst = async (row, payload = {}) => 
   const claimId = Number(row?.serverId || 0)
   if (!ownerId || !claimId) return { ok: false, source: 'api' }
   try {
-    const result = await unmarkStaffPayrollClaimPaid(ownerId, claimId, payload)
+    const result = await unmarkStaffPayrollClaimPaid(ownerId, claimId, {
+      ...payload,
+      ...(row?.version ? { expected_version: row.version } : {}),
+    })
     return { ok: true, data: toUiClaimRow(result?.data || {}), source: 'api' }
   } catch (error) {
-    return { ok: false, source: 'api', error }
+    return { ok: false, source: 'api', error, currentData: toConflictData(error) }
   }
 }
 
@@ -222,6 +243,7 @@ export const bulkMarkStaffPayrollClaimsPaidApiFirst = async (entries = [], paylo
     .map((row) => ({
       owner_id: String(row?.ownerId || '').trim(),
       claim_id: Number(row?.serverId || 0) || 0,
+      ...(row?.version ? { expected_version: row.version } : {}),
     }))
     .filter((entry) => entry.owner_id && entry.claim_id > 0)
   if (normalizedEntries.length === 0) return { ok: false, source: 'api' }
@@ -255,6 +277,7 @@ export const bulkUnmarkStaffPayrollClaimsPaidApiFirst = async (entries = [], pay
     .map((row) => ({
       owner_id: String(row?.ownerId || '').trim(),
       claim_id: Number(row?.serverId || 0) || 0,
+      ...(row?.version ? { expected_version: row.version } : {}),
     }))
     .filter((entry) => entry.owner_id && entry.claim_id > 0)
   if (normalizedEntries.length === 0) return { ok: false, source: 'api' }
