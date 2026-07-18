@@ -12,9 +12,74 @@ const apiOrigins = Array.from(
 )
 
 const personas = {
+  sysadmin: {
+    role: 'SysAdmin',
+    email: 'codex.smoke.sysadmin@vmecc.local',
+    password: smokePassword,
+  },
+  contractManager: {
+    role: 'Contract Manager',
+    email: 'codex.smoke.contract-manager@vmecc.local',
+    password: smokePassword,
+  },
+  humanResource: {
+    role: 'Human Resource',
+    email: 'codex.smoke.human-resource@vmecc.local',
+    password: smokePassword,
+  },
+  humanResourceSecondary: {
+    role: 'Human Resource (secondary)',
+    email: 'codex.e2e.human-resource-secondary@vmecc.local',
+    password: smokePassword,
+  },
+  humanResourceTertiary: {
+    role: 'Human Resource (tertiary)',
+    email: 'codex.e2e.human-resource-tertiary@vmecc.local',
+    password: smokePassword,
+  },
+  finance: {
+    role: 'Finance',
+    email: 'codex.smoke.finance@vmecc.local',
+    password: smokePassword,
+  },
+  adminRole: {
+    role: 'Admin',
+    email: 'codex.smoke.admin-role@vmecc.local',
+    password: smokePassword,
+  },
+  incidentCommander: {
+    role: 'Incident Commander',
+    email: 'codex.smoke.incident-commander@vmecc.local',
+    password: smokePassword,
+  },
+  assistantIncidentCommander: {
+    role: 'Assistant Incident Commander',
+    email: 'codex.smoke.assistant-incident-commander@vmecc.local',
+    password: smokePassword,
+  },
+  assistantIncidentCommanderBeta: {
+    role: 'Assistant Incident Commander (other team)',
+    email: 'codex.e2e.assistant-incident-commander-beta@vmecc.local',
+    password: smokePassword,
+  },
   submitter: {
     role: 'Tactical Response Team',
     email: 'codex.smoke.tactical-response-team@vmecc.local',
+    password: smokePassword,
+  },
+  submitterBeta: {
+    role: 'Tactical Response Team (other team)',
+    email: 'codex.e2e.tactical-response-team-beta@vmecc.local',
+    password: smokePassword,
+  },
+  clientContractManager: {
+    role: 'Client Contract Manager',
+    email: 'codex.smoke.client-contract-manager@vmecc.local',
+    password: smokePassword,
+  },
+  clientContractManagerAlpha: {
+    role: 'Client Contract Manager (Smoke Site Alpha)',
+    email: 'codex.e2e.client-contract-manager-alpha@vmecc.local',
     password: smokePassword,
   },
   unrelated: {

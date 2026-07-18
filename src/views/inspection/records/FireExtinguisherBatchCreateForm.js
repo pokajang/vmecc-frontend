@@ -270,7 +270,7 @@ const FireExtinguisherBatchCreateForm = ({
         ) : null}
       </section>
 
-      <FormFieldError>{error}</FormFieldError>
+      <FormFieldError role="alert">{error}</FormFieldError>
       {stagedRows.length > 0 ? (
         <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
           <div className="small text-body-secondary">

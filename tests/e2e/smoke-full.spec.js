@@ -372,6 +372,15 @@ const waitForNotificationHeader = async (page) => {
   await expect(page.getByLabel('Notifications').first()).toBeVisible({ timeout: routeTimeoutMs })
 }
 
+const expectNotificationBadgeCount = async (page, expectedCount) => {
+  const badge = page.getByLabel('Notifications').first().locator('.header-alert-badge')
+  if (expectedCount > 0) {
+    await expect(badge).toHaveText(String(expectedCount), { timeout: routeTimeoutMs })
+    return
+  }
+  await expect(badge).toHaveCount(0, { timeout: routeTimeoutMs })
+}
+
 const responseSnippet = async (response) => {
   const text = await response.text()
   return text.length > 1000 ? `${text.slice(0, 1000)}... [truncated ${text.length} chars]` : text
@@ -589,11 +598,7 @@ test.describe('FULL SMOKE repo-wide RBAC and notification harness', () => {
     const beforeCount = Number(beforeBody.data?.count || beforeBody.count || 0)
     await page.goto(`${baseUrl}/dashboard`, { waitUntil: 'domcontentloaded' })
     await waitForNotificationHeader(page)
-    if (beforeCount > 0) {
-      await expect(page.locator('.header-alert-badge').first()).toContainText(String(beforeCount))
-    } else {
-      await expect(page.locator('.header-alert-badge')).toHaveCount(0)
-    }
+    await expectNotificationBadgeCount(page, beforeCount)
 
     if (beforeCount === 0) {
       writeArtifact('workflow-notification-smoke.json', {
@@ -644,11 +649,7 @@ test.describe('FULL SMOKE repo-wide RBAC and notification harness', () => {
 
     await page.reload({ waitUntil: 'domcontentloaded' })
     await waitForNotificationHeader(page)
-    if (afterCount > 0) {
-      await expect(page.locator('.header-alert-badge').first()).toContainText(String(afterCount))
-    } else {
-      await expect(page.locator('.header-alert-badge')).toHaveCount(0)
-    }
+    await expectNotificationBadgeCount(page, afterCount)
 
     writeArtifact('workflow-notification-smoke.json', {
       role: persona.role,

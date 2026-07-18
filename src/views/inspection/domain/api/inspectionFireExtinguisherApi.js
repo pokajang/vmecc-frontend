@@ -350,10 +350,12 @@ export const restoreFireExtinguisher = (id, payload = {}) =>
 export const fetchFireExtinguisherInspectionHistory = async (
   id,
   { page = 1, perPage = 25 } = {},
+  options = {},
 ) => {
   const query = new URLSearchParams({ page: String(page), perPage: String(perPage) })
   const response = await apiRequest(
     `/inspection/fire-extinguishers/${encodeURIComponent(String(id))}/inspection-history?${query}`,
+    { signal: options.signal },
   )
   return { data: Array.isArray(response?.data) ? response.data : [], meta: response?.meta || {} }
 }
@@ -427,7 +429,7 @@ const normalizeCoverageCheck = (check = {}) => ({
 export const normalizeFireExtinguisherCoverageRows = (rows = []) =>
   (Array.isArray(rows) ? rows : []).map(normalizeCoverageRow)
 
-export const fetchFireExtinguisherCoverage = async (params = {}) => {
+export const fetchFireExtinguisherCoverage = async (params = {}, options = {}) => {
   const query = new URLSearchParams()
   Object.entries(params || {}).forEach(([key, value]) => {
     const normalized = String(value ?? '').trim()
@@ -435,6 +437,7 @@ export const fetchFireExtinguisherCoverage = async (params = {}) => {
   })
   const response = await apiRequest(
     `/inspection/fire-extinguishers/coverage${query.toString() ? `?${query.toString()}` : ''}`,
+    { signal: options.signal },
   )
   return {
     data: normalizeFireExtinguisherCoverageRows(response?.data),
@@ -442,7 +445,7 @@ export const fetchFireExtinguisherCoverage = async (params = {}) => {
   }
 }
 
-export const fetchFireExtinguisherCoverageDetail = async (catalogId, params = {}) => {
+export const fetchFireExtinguisherCoverageDetail = async (catalogId, params = {}, options = {}) => {
   const query = new URLSearchParams()
   Object.entries(params || {}).forEach(([key, value]) => {
     const normalized = String(value ?? '').trim()
@@ -452,6 +455,7 @@ export const fetchFireExtinguisherCoverageDetail = async (catalogId, params = {}
     `/inspection/fire-extinguishers/coverage/${encodeURIComponent(String(catalogId))}${
       query.toString() ? `?${query.toString()}` : ''
     }`,
+    { signal: options.signal },
   )
   const row = normalizeCoverageRow(response?.data || {})
   return {

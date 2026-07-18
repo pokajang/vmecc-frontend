@@ -3,13 +3,20 @@ import { apiRequest } from 'src/services/apiClient'
 const issuePath = (id = '') =>
   `/inspection/fire-extinguisher-issues${id ? `/${encodeURIComponent(String(id))}` : ''}`
 
-export const fetchFireExtinguisherIssues = async (filters = {}) => {
+export const fetchFireExtinguisherIssues = async (filters = {}, options = {}) => {
   const query = new URLSearchParams()
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== '' && value !== null && value !== undefined) query.set(key, String(value))
   })
-  const response = await apiRequest(`${issuePath()}${query.toString() ? `?${query}` : ''}`)
+  const response = await apiRequest(`${issuePath()}${query.toString() ? `?${query}` : ''}`, {
+    signal: options.signal,
+  })
   return { data: Array.isArray(response?.data) ? response.data : [], meta: response?.meta || {} }
+}
+
+export const fetchFireExtinguisherIssueAssignees = async (options = {}) => {
+  const response = await apiRequest(`${issuePath()}/assignees`, { signal: options.signal })
+  return Array.isArray(response?.data) ? response.data : []
 }
 
 export const fetchFireExtinguisherIssue = async (id) => {
@@ -34,6 +41,7 @@ const issueAction = async (id, action, payload) => {
 }
 
 export const assignFireExtinguisherIssue = (id, payload) => issueAction(id, 'assign', payload)
+export const unassignFireExtinguisherIssue = (id, payload) => issueAction(id, 'unassign', payload)
 export const startFireExtinguisherIssue = (id, payload) => issueAction(id, 'start', payload)
 export const resolveFireExtinguisherIssue = (id, payload) => issueAction(id, 'resolve', payload)
 export const verifyFireExtinguisherIssue = (id, payload) => issueAction(id, 'verify', payload)

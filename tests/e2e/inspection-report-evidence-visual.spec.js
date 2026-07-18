@@ -4,8 +4,8 @@ import { INSPECTION_REPORT_EVIDENCE_COPY } from '../../src/views/inspection/insp
 import { installAppShellApiStubs } from './support/app-shell-stubs'
 
 const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
-const smokeEmail = process.env.VMECC_SMOKE_EMAIL || 'codex.smoke.admin@vmecc.local'
-const smokePassword = process.env.VMECC_SMOKE_PASSWORD || 'SmokeAdmin!2026'
+const smokeEmail = process.env.VMECC_SMOKE_EMAIL || 'codex.smoke.sysadmin@vmecc.local'
+const smokePassword = process.env.VMECC_SMOKE_PASSWORD || 'SmokeRole!2026'
 
 const openGeneralMatrixCase = async (page, viewport) => {
   const loginResponse = await page.context().request.post(`${apiBaseUrl}/auth/login`, {

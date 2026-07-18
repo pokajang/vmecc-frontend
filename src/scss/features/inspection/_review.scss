@@ -481,25 +481,21 @@
 }
 
 .all-extinguishers-table {
-  &__clickable-row {
-    cursor: pointer;
-  }
-
-  &__clickable-row:focus-visible {
-    outline: 0;
-    box-shadow: inset 0 0 0 0.14rem rgba(0, 126, 122, 0.3);
-  }
-
-  &__clickable-row:hover td {
+  &__row:hover td {
     background-color: rgba(0, 126, 122, 0.04);
   }
 
   > tbody
-    > .all-extinguishers-table__clickable-row:hover
+    > .all-extinguishers-table__row:hover
     > .all-extinguishers-table__sticky-action-cell {
     --cui-table-bg: #fff;
     --cui-table-bg-state: transparent;
     background: #fff;
+  }
+
+  &__detail-trigger:focus-visible {
+    border-radius: 0.2rem;
+    box-shadow: 0 0 0 0.14rem rgba(0, 126, 122, 0.3);
   }
 }
 
@@ -525,14 +521,6 @@
   .table-responsive::-webkit-scrollbar-thumb:hover {
     background: #aeb5bd;
   }
-}
-
-.inspection-side-panel-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 1048;
-  border: 0;
-  background: rgba(17, 24, 39, 0.18);
 }
 
 .inspection-side-panel {
@@ -638,19 +626,6 @@
 .all-extinguishers-history-list__empty {
   padding-top: 0.7rem !important;
   padding-bottom: 0.7rem !important;
-}
-
-.all-extinguishers-history-list__clickable-row {
-  cursor: pointer;
-}
-
-.all-extinguishers-history-list__clickable-row:hover td {
-  background-color: rgba(0, 126, 122, 0.04);
-}
-
-.all-extinguishers-history-list__clickable-row:focus-visible {
-  outline: 0;
-  box-shadow: inset 0 0 0 0.14rem rgba(0, 126, 122, 0.3);
 }
 
 .all-extinguishers-history-criteria-cell {

@@ -94,6 +94,7 @@ const InspectionModuleLayout = ({
   reportBasePath,
   feedback,
   canConduct = true,
+  showExtinguisherCatalog = true,
 }) => {
   return (
     <CContainer fluid className="inspection-module-page" data-testid="inspection-module">
@@ -141,16 +142,20 @@ const InspectionModuleLayout = ({
                 navigate(reportBasePath)
               }),
           },
-          {
-            key: 'all-extinguishers',
-            label: 'All Extinguishers',
-            active: activeSection === 'extinguishers',
-            onClick: () =>
-              runGuardedAction(() => {
-                clearContinuationState()
-                navigate(`${reportBasePath}/all-extinguishers`)
-              }),
-          },
+          ...(showExtinguisherCatalog
+            ? [
+                {
+                  key: 'all-extinguishers',
+                  label: 'All Extinguishers',
+                  active: activeSection === 'extinguishers',
+                  onClick: () =>
+                    runGuardedAction(() => {
+                      clearContinuationState()
+                      navigate(`${reportBasePath}/all-extinguishers`)
+                    }),
+                },
+              ]
+            : []),
           ...(canConduct
             ? [
                 {
@@ -169,7 +174,9 @@ const InspectionModuleLayout = ({
         <InspectionRecordsView InspectionMobileHome={InspectionMobileHome} {...recordsViewProps} />
       ) : null}
 
-      {activeSection === 'extinguishers' ? <AllExtinguishersView /> : null}
+      {activeSection === 'extinguishers' && showExtinguisherCatalog ? (
+        <AllExtinguishersView />
+      ) : null}
 
       {activeSection === 'detail' ? (
         <COffcanvas

@@ -5,8 +5,8 @@ const { setInspectionPhotoFromButton } = require('./support/inspection-photo')
 const { installAppShellApiStubs } = require('./support/app-shell-stubs')
 
 const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
-const smokeEmail = process.env.VMECC_SMOKE_EMAIL || 'codex.smoke.admin@vmecc.local'
-const smokePassword = process.env.VMECC_SMOKE_PASSWORD || 'SmokeAdmin!2026'
+const smokeEmail = process.env.VMECC_SMOKE_EMAIL || 'codex.smoke.sysadmin@vmecc.local'
+const smokePassword = process.env.VMECC_SMOKE_PASSWORD || 'SmokeRole!2026'
 const runId = process.env.VMECC_SMOKE_RUN_ID || new Date().toISOString().replace(/[:.]/g, '-')
 const artifactRoot = path.resolve(
   process.cwd(),

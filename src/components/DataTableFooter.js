@@ -18,6 +18,7 @@ const DataTableFooter = ({
   totalCount = 0,
   visibleCount: visibleCountOverride = null,
   options = DEFAULT_OPTIONS,
+  showRowsPerPage = true,
   showFilteredFrom = true,
   currentPage = 1,
   lastPage = 1,
@@ -27,6 +28,7 @@ const DataTableFooter = ({
   const rowsSelectId = useId()
   if (!filteredCount) return null
 
+  const hasAllOption = options.some((option) => option.value === ALL_ROWS_VALUE)
   const isShowingAll = rowsToShow === ALL_ROWS_VALUE || rowsToShow >= filteredCount
   const visibleCount =
     visibleCountOverride === null
@@ -41,27 +43,33 @@ const DataTableFooter = ({
     <div
       className={`d-flex flex-wrap justify-content-end align-items-center gap-2 text-muted small mt-2 ${className}`.trim()}
     >
-      <CFormLabel htmlFor={rowsSelectId} className="mb-0">
-        Rows per page
-      </CFormLabel>
-      <CFormSelect
-        id={rowsSelectId}
-        size="sm"
-        className="data-table-footer__page-size"
-        value={
-          rowsToShow === ALL_ROWS_VALUE || rowsToShow >= filteredCount ? ALL_ROWS_VALUE : rowsToShow
-        }
-        onChange={(e) => {
-          const raw = e.target.value
-          onRowsToShowChange(raw === ALL_ROWS_VALUE ? ALL_ROWS_VALUE : Number(raw))
-        }}
-      >
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </CFormSelect>
+      {showRowsPerPage ? (
+        <>
+          <CFormLabel htmlFor={rowsSelectId} className="mb-0">
+            Rows per page
+          </CFormLabel>
+          <CFormSelect
+            id={rowsSelectId}
+            size="sm"
+            className="data-table-footer__page-size"
+            value={
+              rowsToShow === ALL_ROWS_VALUE || (hasAllOption && rowsToShow >= filteredCount)
+                ? ALL_ROWS_VALUE
+                : rowsToShow
+            }
+            onChange={(e) => {
+              const raw = e.target.value
+              onRowsToShowChange(raw === ALL_ROWS_VALUE ? ALL_ROWS_VALUE : Number(raw))
+            }}
+          >
+            {options.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </CFormSelect>
+        </>
+      ) : null}
       <span>
         Showing {visibleCount} of {filteredCount}
         {showFiltered ? <span className="ms-1">(filtered from {totalCount})</span> : null}

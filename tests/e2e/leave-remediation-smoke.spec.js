@@ -114,7 +114,10 @@ test.describe('Leave remediation browser smoke', () => {
     })
     expect(balanceApi.status(), await balanceApi.text()).toBe(200)
     await applicantPage.goto('/leave', { waitUntil: 'domcontentloaded' })
-    await expect(applicantPage.getByTestId('leave-records')).toContainText('SMK-LV-1', {
+    const leaveRecords = applicantPage.getByTestId('leave-records')
+    await expect(leaveRecords).toBeVisible({ timeout: 60_000 })
+    await leaveRecords.getByLabel('Rows per page').selectOption('all')
+    await expect(leaveRecords).toContainText('SMK-LV-1', {
       timeout: 60_000,
     })
     await applicantPage.goto(`/leave/${record.display_id}`, { waitUntil: 'domcontentloaded' })

@@ -1,0 +1,300 @@
+{
+  "schemaVersion": 1,
+  "modules": [
+    {
+      "key": "settings.module_activation",
+      "route": "/settings/modules",
+      "tier": "critical",
+      "specs": ["smoke-full.spec.js"]
+    },
+    {
+      "key": "settings.system_maintenance",
+      "route": "/settings",
+      "tier": "critical",
+      "specs": ["smoke-full.spec.js"]
+    },
+    {
+      "key": "settings.role_permissions",
+      "route": "/settings/role-permissions",
+      "tier": "critical",
+      "specs": ["smoke-full.spec.js"]
+    },
+    {
+      "key": "settings.dashboard_visibility",
+      "route": "/settings/dashboard-visibility",
+      "tier": "standard",
+      "specs": ["smoke-full.spec.js"]
+    },
+    {
+      "key": "users",
+      "route": "/admin/users",
+      "tier": "critical",
+      "specs": ["smoke-full.spec.js"]
+    },
+    {
+      "key": "audit",
+      "route": "/admin/audit",
+      "tier": "critical",
+      "specs": ["smoke-full.spec.js"]
+    },
+    { "key": "profile", "route": "/profile", "tier": "standard", "specs": ["smoke-full.spec.js"] },
+    {
+      "key": "staff",
+      "route": "/staff/details",
+      "tier": "standard",
+      "specs": ["smoke-full.spec.js"]
+    },
+    {
+      "key": "staff.directory",
+      "route": "/staff/details",
+      "tier": "standard",
+      "specs": ["smoke-full.spec.js"]
+    },
+    {
+      "key": "dashboard",
+      "route": "/dashboard",
+      "tier": "standard",
+      "specs": ["smoke-full.spec.js"]
+    },
+    {
+      "key": "dashboard.payroll",
+      "route": "/dashboard",
+      "tier": "contract",
+      "specs": ["smoke-full.spec.js"]
+    },
+    {
+      "key": "dashboard.overtime",
+      "route": "/dashboard",
+      "tier": "contract",
+      "specs": ["smoke-full.spec.js"]
+    },
+    {
+      "key": "dashboard.leave",
+      "route": "/dashboard",
+      "tier": "contract",
+      "specs": ["smoke-full.spec.js"]
+    },
+    {
+      "key": "dashboard.roster",
+      "route": "/dashboard",
+      "tier": "contract",
+      "specs": ["smoke-full.spec.js"]
+    },
+    {
+      "key": "dashboard.reports",
+      "route": "/dashboard",
+      "tier": "contract",
+      "specs": ["smoke-full.spec.js"]
+    },
+    {
+      "key": "messages",
+      "route": "/messages",
+      "tier": "standard",
+      "specs": ["smoke-full.spec.js"]
+    },
+    {
+      "key": "teams",
+      "route": "/team/details",
+      "tier": "standard",
+      "specs": ["smoke-full.spec.js"]
+    },
+    {
+      "key": "teams.directory",
+      "route": "/team/details",
+      "tier": "standard",
+      "specs": ["smoke-full.spec.js"]
+    },
+    {
+      "key": "roster",
+      "route": "/roster/overview",
+      "tier": "standard",
+      "specs": ["smoke-full.spec.js"]
+    },
+    {
+      "key": "roster.shift_settings",
+      "route": "/roster/shift-settings",
+      "tier": "standard",
+      "specs": ["smoke-full.spec.js"]
+    },
+    {
+      "key": "leave",
+      "route": "/leave",
+      "tier": "critical",
+      "specs": ["workflow-approvals-e2e.spec.js"]
+    },
+    {
+      "key": "leave.self_service",
+      "route": "/leave/new",
+      "tier": "critical",
+      "specs": ["workflow-approvals-e2e.spec.js"]
+    },
+    {
+      "key": "leave.management",
+      "route": "/staff/leave-management/leaves",
+      "tier": "critical",
+      "specs": ["workflow-approvals-e2e.spec.js"]
+    },
+    {
+      "key": "leave.assignments",
+      "route": "/staff/leave-management/set-leaves",
+      "tier": "standard",
+      "specs": ["smoke-full.spec.js"]
+    },
+    {
+      "key": "leave.holidays",
+      "route": "/staff/leave-management/set-holidays",
+      "tier": "standard",
+      "specs": ["smoke-full.spec.js"]
+    },
+    {
+      "key": "leave.workflow_rules",
+      "route": "/staff/leave-management/rules",
+      "tier": "critical",
+      "specs": ["workflow-approvals-e2e.spec.js"]
+    },
+    {
+      "key": "overtime",
+      "route": "/overtime",
+      "tier": "critical",
+      "specs": ["workflow-approvals-e2e.spec.js"]
+    },
+    {
+      "key": "overtime.self_service",
+      "route": "/overtime/new",
+      "tier": "critical",
+      "specs": ["workflow-approvals-e2e.spec.js"]
+    },
+    {
+      "key": "overtime.management",
+      "route": "/staff/overtime-management/records",
+      "tier": "critical",
+      "specs": ["workflow-approvals-e2e.spec.js"]
+    },
+    {
+      "key": "overtime.workflow_rules",
+      "route": "/staff/overtime-management/rules",
+      "tier": "critical",
+      "specs": ["workflow-approvals-e2e.spec.js"]
+    },
+    {
+      "key": "overtime.rate_settings",
+      "route": "/staff/set-salary/set-ot-rate",
+      "tier": "standard",
+      "specs": ["smoke-full.spec.js"]
+    },
+    {
+      "key": "payroll",
+      "route": "/payroll",
+      "tier": "critical",
+      "specs": ["workflow-approvals-e2e.spec.js"]
+    },
+    {
+      "key": "payroll.self_service",
+      "route": "/payroll",
+      "tier": "critical",
+      "specs": ["workflow-approvals-e2e.spec.js"]
+    },
+    {
+      "key": "payroll.claims",
+      "route": "/payroll/claims",
+      "tier": "critical",
+      "specs": ["workflow-approvals-e2e.spec.js"]
+    },
+    {
+      "key": "payroll.payslips",
+      "route": "/payroll/payslips",
+      "tier": "standard",
+      "specs": ["smoke-full.spec.js"]
+    },
+    {
+      "key": "payroll.salary_claims_management",
+      "route": "/staff/salary-claims/claims",
+      "tier": "critical",
+      "specs": ["workflow-approvals-e2e.spec.js"]
+    },
+    {
+      "key": "payroll.salary_settings",
+      "route": "/staff/set-salary/set-salary",
+      "tier": "standard",
+      "specs": ["smoke-full.spec.js"]
+    },
+    {
+      "key": "payroll.salary_assignments",
+      "route": "/staff/set-salary/set-salary",
+      "tier": "standard",
+      "specs": ["smoke-full.spec.js"]
+    },
+    {
+      "key": "payroll.workflow_rules",
+      "route": "/staff/set-salary/workflow-rules",
+      "tier": "critical",
+      "specs": ["workflow-approvals-e2e.spec.js"]
+    },
+    {
+      "key": "payroll.company_profile",
+      "route": "/staff/set-salary/company-legal",
+      "tier": "standard",
+      "specs": ["smoke-full.spec.js"]
+    },
+    {
+      "key": "payroll.statutory_rates",
+      "route": "/staff/set-salary/company-legal",
+      "tier": "standard",
+      "specs": ["smoke-full.spec.js"]
+    },
+    {
+      "key": "payroll.payment_actions",
+      "route": "/staff/salary-claims/claims",
+      "tier": "critical",
+      "specs": ["workflow-approvals-e2e.spec.js"]
+    },
+    {
+      "key": "reports",
+      "route": "/inspection",
+      "tier": "critical",
+      "specs": ["reporting-workflow-smoke.spec.js"]
+    },
+    {
+      "key": "reports.inspection",
+      "route": "/inspection",
+      "tier": "critical",
+      "specs": ["workflow-approvals-e2e.spec.js", "inspection-crud-matrix-smoke.spec.js"]
+    },
+    {
+      "key": "reports.erco",
+      "route": "/report/erco",
+      "tier": "critical",
+      "specs": ["reporting-workflow-smoke.spec.js"]
+    },
+    {
+      "key": "reports.drill",
+      "route": "/report/drill",
+      "tier": "critical",
+      "specs": ["reporting-workflow-smoke.spec.js"]
+    },
+    {
+      "key": "reports.fitness_test",
+      "route": "/report/fitness-test",
+      "tier": "critical",
+      "specs": ["reporting-workflow-smoke.spec.js"]
+    },
+    {
+      "key": "reports.pdf_exports",
+      "route": "/inspection",
+      "tier": "standard",
+      "specs": ["report-media-workflow-smoke.spec.js"]
+    },
+    {
+      "key": "workflow_notifications",
+      "route": "/notifications/workflow",
+      "tier": "critical",
+      "specs": ["workflow-approvals-e2e.spec.js", "smoke-full.spec.js"]
+    },
+    {
+      "key": "workflow_attachments",
+      "route": "/leave/new",
+      "tier": "standard",
+      "specs": ["report-media-workflow-smoke.spec.js"]
+    }
+  ]
+}

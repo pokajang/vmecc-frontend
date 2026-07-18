@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   CAlert,
   CBadge,
@@ -16,16 +16,14 @@ import {
   CTableHeaderCell,
   CTableRow,
 } from '@coreui/react'
-import { ArrowLeft, Camera, Download, MessageSquare, X } from 'lucide-react'
+import { Camera, Download, MessageSquare } from 'lucide-react'
 
 import DataTableFooter from 'src/components/DataTableFooter'
 import CreateActionButton from 'src/components/CreateActionButton'
-import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import ResponsiveRecordCollection from 'src/components/ResponsiveRecordCollection'
 import RowActionCell from 'src/components/RowActionCell'
 import RowActions from 'src/components/RowActions'
 import TableFilters from 'src/components/TableFilters'
-import useMediaQuery from 'src/hooks/useMediaQuery'
 import { formatLocalDate, getLocalDateInputValue } from 'src/utils/localDate'
 import { InspectionPhotoViewerModal } from 'src/views/inspection/form/components/InspectionDisplayShared'
 import {
@@ -35,9 +33,14 @@ import {
 } from 'src/views/inspection/inspectionFireExtinguisherApi'
 import FireExtinguisherCreateDrawer from './FireExtinguisherCreateDrawer'
 import FireExtinguisherManagementPanel from './FireExtinguisherManagementPanel'
+import InspectionSidePanel from './InspectionSidePanel'
 import FireExtinguisherExceptionExportDialog from './fire-extinguisher-export/FireExtinguisherExceptionExportDialog'
 
 const ALL_ROWS_VALUE = 'all'
+const REMOTE_PAGE_SIZE_OPTIONS = [10, 25, 50, 100].map((value) => ({
+  value,
+  label: String(value),
+}))
 
 const getTodayDateInputValue = () => getLocalDateInputValue()
 
@@ -495,19 +498,7 @@ const AllExtinguishersTable = ({ visibleRows, onViewDetails }) => (
         {visibleRows.map((row, index) => {
           const certificationStatus = getCertificationStatus(row)
           return (
-            <CTableRow
-              key={row.id}
-              className="all-extinguishers-table__clickable-row"
-              role="button"
-              tabIndex={0}
-              aria-label={`View details for ${row.idLocNo || row.barcodeNo || 'fire extinguisher'}`}
-              onClick={() => onViewDetails(row)}
-              onKeyDown={(event) => {
-                if (event.key !== 'Enter' && event.key !== ' ') return
-                event.preventDefault()
-                onViewDetails(row)
-              }}
-            >
+            <CTableRow key={row.id} className="all-extinguishers-table__row">
               <CTableDataCell
                 className={`text-body-secondary ${centeredCellClass}`}
                 style={indexColumnStyle}
@@ -516,8 +507,16 @@ const AllExtinguishersTable = ({ visibleRows, onViewDetails }) => (
               </CTableDataCell>
               <CTableDataCell className={nowrapCellClass}>{row.zone}</CTableDataCell>
               <CTableDataCell className={textCellClass}>{row.location}</CTableDataCell>
-              <CTableDataCell className={`fw-semibold ${nowrapCellClass}`}>
-                {row.idLocNo}
+              <CTableDataCell className={nowrapCellClass}>
+                <CButton
+                  type="button"
+                  color="link"
+                  className="all-extinguishers-table__detail-trigger p-0 fw-semibold text-start"
+                  onClick={() => onViewDetails(row)}
+                  aria-label={`View details for ${row.idLocNo || row.barcodeNo || 'fire extinguisher'}`}
+                >
+                  {row.idLocNo || row.barcodeNo || 'View details'}
+                </CButton>
               </CTableDataCell>
               <CTableDataCell className={textCellClass}>{row.subLocation}</CTableDataCell>
               <CTableDataCell className={nowrapCellClass}>{row.feType}</CTableDataCell>
@@ -907,24 +906,22 @@ const HistoricalIssueList = ({ issueRows, detail, onSelectRecord, onViewPhotos }
         <CTableBody>
           {issueRows.length > 0 ? (
             issueRows.map((issue) => (
-              <CTableRow
-                key={issue.key}
-                className={issue.record ? 'all-extinguishers-history-list__clickable-row' : ''}
-                role={issue.record ? 'button' : undefined}
-                tabIndex={issue.record ? 0 : undefined}
-                aria-label={
-                  issue.record ? `View ${issue.reportId} details for ${issue.label}` : undefined
-                }
-                onClick={() => {
-                  if (issue.record) onSelectRecord?.(issue.record)
-                }}
-                onKeyDown={(event) => {
-                  if (!issue.record || (event.key !== 'Enter' && event.key !== ' ')) return
-                  event.preventDefault()
-                  onSelectRecord?.(issue.record)
-                }}
-              >
-                <CTableDataCell className="fw-semibold">{issue.reportId}</CTableDataCell>
+              <CTableRow key={issue.key}>
+                <CTableDataCell>
+                  {issue.record ? (
+                    <CButton
+                      type="button"
+                      color="link"
+                      className="p-0 fw-semibold text-start"
+                      onClick={() => onSelectRecord?.(issue.record)}
+                      aria-label={`View ${issue.reportId} details for ${issue.label}`}
+                    >
+                      {issue.reportId}
+                    </CButton>
+                  ) : (
+                    <span className="fw-semibold">{issue.reportId}</span>
+                  )}
+                </CTableDataCell>
                 <CTableDataCell>{formatDateTime(issue.inspectedAt)}</CTableDataCell>
                 <CTableDataCell>
                   <div className="fw-semibold">{issue.label}</div>
@@ -1169,6 +1166,10 @@ const HistoricalRecordDetail = ({ detail, record, onViewPhotos }) => {
 const CoverageOverview = ({
   detail,
   historyRecords,
+  historyMeta,
+  isLoadingHistory,
+  historyError,
+  onHistoryPageChange,
   periodLabel,
   onSelectHistoryRecord,
   onViewPhotos,
@@ -1178,7 +1179,7 @@ const CoverageOverview = ({
   canVerifyIssues,
   onAssetChanged,
 }) => {
-  const latestHistoryRecord = historyRecords[0] || null
+  const latestHistoryRecord = detail.latestHistoryRecord || historyRecords[0] || null
   const hasDirectChecks = Array.isArray(detail.checks) && detail.checks.length > 0
   const checks =
     hasDirectChecks || !latestHistoryRecord?.checks?.length
@@ -1313,6 +1314,30 @@ const CoverageOverview = ({
         onSelectRecord={onSelectHistoryRecord}
         onViewPhotos={onViewPhotos}
       />
+      {historyError ? (
+        <CAlert color="danger" className="mb-0 py-2" role="alert">
+          {historyError}
+        </CAlert>
+      ) : null}
+      {isLoadingHistory ? (
+        <div className="small text-body-secondary" role="status">
+          Loading inspection history...
+        </div>
+      ) : null}
+      {Number(historyMeta?.total || 0) > 0 ? (
+        <DataTableFooter
+          rowsToShow={25}
+          showRowsPerPage={false}
+          visibleCount={historyRecords.length}
+          filteredCount={Number(historyMeta.total)}
+          totalCount={Number(historyMeta.total)}
+          currentPage={Number(historyMeta.page || 1)}
+          lastPage={Number(historyMeta.lastPage || 1)}
+          onPageChange={onHistoryPageChange}
+          showFilteredFrom={false}
+          className="mt-0"
+        />
+      ) : null}
       <FireExtinguisherManagementPanel
         detail={detail}
         currentUser={currentUser}
@@ -1340,6 +1365,9 @@ const CoverageDetailBody = ({
   canManageIssues,
   canVerifyIssues,
   onAssetChanged,
+  isLoadingHistory,
+  historyError,
+  onHistoryPageChange,
 }) => {
   if (isLoading) {
     return <div className="text-body-secondary">Loading extinguisher details...</div>
@@ -1377,6 +1405,10 @@ const CoverageDetailBody = ({
     <CoverageOverview
       detail={detail}
       historyRecords={historyRecords}
+      historyMeta={detail.historyMeta || {}}
+      isLoadingHistory={isLoadingHistory}
+      historyError={historyError}
+      onHistoryPageChange={onHistoryPageChange}
       periodLabel={periodLabel}
       onSelectHistoryRecord={onSelectHistoryRecord}
       onViewPhotos={onViewPhotos}
@@ -1386,92 +1418,6 @@ const CoverageDetailBody = ({
       canVerifyIssues={canVerifyIssues}
       onAssetChanged={onAssetChanged}
     />
-  )
-}
-
-const InspectionSidePanel = ({ visible, title, subtitle, children, onBack, onClose }) => {
-  const useMobileDrawer = useMediaQuery('(max-width: 575.98px)')
-
-  useEffect(() => {
-    if (!visible) return undefined
-
-    const handleEscape = (event) => {
-      if (event.key !== 'Escape') return
-      event.preventDefault()
-      if (onBack) {
-        onBack()
-        return
-      }
-      onClose?.()
-    }
-
-    window.addEventListener('keydown', handleEscape)
-    return () => window.removeEventListener('keydown', handleEscape)
-  }, [onBack, onClose, visible])
-
-  if (!visible) return null
-
-  const backButton = onBack ? (
-    <CButton
-      type="button"
-      color="link"
-      className="inspection-side-panel__icon-btn text-body-secondary"
-      onClick={onBack}
-      aria-label="Back to historical records"
-    >
-      <ArrowLeft size={18} />
-    </CButton>
-  ) : null
-
-  if (useMobileDrawer) {
-    return (
-      <MobileBottomDrawer
-        visible
-        title={title}
-        titleAction={
-          subtitle ? <span className="text-body-secondary small">{subtitle}</span> : null
-        }
-        headerAction={backButton}
-        bodyClassName="inspection-equipment-detail-drawer-shell"
-        onClose={onClose}
-      >
-        <div className="inspection-mobile-detail-drawer-body inspection-equipment-detail-drawer-body d-grid">
-          {children}
-        </div>
-      </MobileBottomDrawer>
-    )
-  }
-
-  return (
-    <>
-      <button
-        type="button"
-        className="inspection-side-panel-backdrop"
-        onClick={onClose}
-        aria-label="Close inspection detail panel overlay"
-      />
-      <aside className="inspection-side-panel" role="dialog" aria-modal="true" aria-label={title}>
-        <div className="inspection-side-panel__header">
-          <div className="inspection-side-panel__leading">
-            {backButton}
-            <div className="min-w-0">
-              <div className="inspection-side-panel__title">{title}</div>
-              {subtitle ? <div className="inspection-side-panel__subtitle">{subtitle}</div> : null}
-            </div>
-          </div>
-          <CButton
-            type="button"
-            color="link"
-            className="inspection-side-panel__icon-btn text-body-secondary"
-            onClick={onClose}
-            aria-label={`Close ${title}`}
-          >
-            <X size={18} />
-          </CButton>
-        </div>
-        <div className="inspection-side-panel__body">{children}</div>
-      </aside>
-    </>
   )
 }
 
@@ -1493,6 +1439,9 @@ const CoverageDetailDialog = ({
   canManageIssues,
   canVerifyIssues,
   onAssetChanged,
+  isLoadingHistory,
+  historyError,
+  onHistoryPageChange,
 }) => {
   const title =
     view === 'historyDetail'
@@ -1518,6 +1467,9 @@ const CoverageDetailDialog = ({
       canManageIssues={canManageIssues}
       canVerifyIssues={canVerifyIssues}
       onAssetChanged={onAssetChanged}
+      isLoadingHistory={isLoadingHistory}
+      historyError={historyError}
+      onHistoryPageChange={onHistoryPageChange}
     />
   )
 
@@ -1559,12 +1511,17 @@ const AllExtinguishersSection = ({
   const [remoteMeta, setRemoteMeta] = useState(null)
   const [isFetchingRows, setIsFetchingRows] = useState(!useProvidedRows)
   const [fetchError, setFetchError] = useState('')
+  const coverageRequestRef = useRef({ id: 0, controller: null })
   const [detailTarget, setDetailTarget] = useState(null)
   const [detail, setDetail] = useState(null)
   const [detailView, setDetailView] = useState('overview')
   const [selectedHistoryRecord, setSelectedHistoryRecord] = useState(null)
   const [isFetchingDetail, setIsFetchingDetail] = useState(false)
   const [detailError, setDetailError] = useState('')
+  const detailRequestRef = useRef({ id: 0, controller: null })
+  const historyRequestRef = useRef({ id: 0, controller: null })
+  const [isFetchingHistory, setIsFetchingHistory] = useState(false)
+  const [historyError, setHistoryError] = useState('')
   const [photoViewer, setPhotoViewer] = useState(null)
   const [search, setSearch] = useState(savedView.search || '')
   const [period, setPeriod] = useState(savedView.period || 'all')
@@ -1595,6 +1552,11 @@ const AllExtinguishersSection = ({
 
   const loadCoverageRows = useCallback(async () => {
     if (useProvidedRows) return
+    coverageRequestRef.current.controller?.abort()
+    const requestId = coverageRequestRef.current.id + 1
+    const controller = new AbortController()
+    coverageRequestRef.current = { id: requestId, controller }
+
     if (!isCustomPeriodReady) {
       setRemoteRows([])
       setRemoteMeta((current) => ({
@@ -1606,38 +1568,46 @@ const AllExtinguishersSection = ({
         summary: getSummary([]),
       }))
       setFetchError('Select a valid custom period to load extinguisher coverage.')
-      setIsFetchingRows(false)
+      if (coverageRequestRef.current.id === requestId) setIsFetchingRows(false)
       return
     }
 
     setIsFetchingRows(true)
     try {
-      const response = await fetchFireExtinguisherCoverage({
-        search,
-        period,
-        periodFrom: isCustomPeriod ? periodFrom : '',
-        periodTo: isCustomPeriod ? periodTo : '',
-        sort,
-        status: statusFilter,
-        issues: issueFilter,
-        certification: certificationFilter,
-        inspectedBy: inspectedByFilter === ALL_ROWS_VALUE ? '' : inspectedByFilter,
-        zone: zoneFilter === ALL_ROWS_VALUE ? '' : zoneFilter,
-        location: locationFilter === ALL_ROWS_VALUE ? '' : locationFilter,
-        page: currentPage,
-        perPage: rowsToShow,
-        duplicateScope,
-        lifecycleStatus: lifecycleFilter,
-      })
+      const response = await fetchFireExtinguisherCoverage(
+        {
+          search,
+          period,
+          periodFrom: isCustomPeriod ? periodFrom : '',
+          periodTo: isCustomPeriod ? periodTo : '',
+          sort,
+          status: statusFilter,
+          issues: issueFilter,
+          certification: certificationFilter,
+          inspectedBy: inspectedByFilter === ALL_ROWS_VALUE ? '' : inspectedByFilter,
+          zone: zoneFilter === ALL_ROWS_VALUE ? '' : zoneFilter,
+          location: locationFilter === ALL_ROWS_VALUE ? '' : locationFilter,
+          page: currentPage,
+          perPage: rowsToShow,
+          duplicateScope,
+          lifecycleStatus: lifecycleFilter,
+        },
+        { signal: controller.signal },
+      )
+      if (coverageRequestRef.current.id !== requestId) return
       setRemoteRows(response.data)
       setRemoteMeta(response.meta)
       setFetchError('')
     } catch (error) {
+      if (error?.name === 'AbortError' || coverageRequestRef.current.id !== requestId) return
       setFetchError(error?.message || 'Unable to load fire extinguisher coverage.')
       setRemoteRows([])
       setRemoteMeta(null)
     } finally {
-      setIsFetchingRows(false)
+      if (coverageRequestRef.current.id === requestId) {
+        setIsFetchingRows(false)
+        coverageRequestRef.current.controller = null
+      }
     }
   }, [
     certificationFilter,
@@ -1663,6 +1633,18 @@ const AllExtinguishersSection = ({
   useEffect(() => {
     loadCoverageRows()
   }, [loadCoverageRows])
+
+  useEffect(
+    () => () => {
+      coverageRequestRef.current.id += 1
+      coverageRequestRef.current.controller?.abort()
+      detailRequestRef.current.id += 1
+      detailRequestRef.current.controller?.abort()
+      historyRequestRef.current.id += 1
+      historyRequestRef.current.controller?.abort()
+    },
+    [],
+  )
 
   const resetToFirstPage = useCallback(() => {
     setCurrentPage(1)
@@ -1884,11 +1866,17 @@ const AllExtinguishersSection = ({
       onViewDetails?.(row)
       if (onViewDetails) return
 
+      detailRequestRef.current.controller?.abort()
+      const requestId = detailRequestRef.current.id + 1
+      const controller = new AbortController()
+      detailRequestRef.current = { id: requestId, controller }
+
       setDetailTarget(row)
       setDetail(useProvidedRows ? row : null)
       setDetailView('overview')
       setSelectedHistoryRecord(null)
       setDetailError('')
+      setHistoryError('')
 
       if (useProvidedRows) {
         setIsFetchingDetail(false)
@@ -1897,20 +1885,55 @@ const AllExtinguishersSection = ({
 
       setIsFetchingDetail(true)
       try {
-        const [response, history] = await Promise.all([
-          fetchFireExtinguisherCoverageDetail(row.catalogId, {
-            period,
-            periodFrom: isCustomPeriod ? periodFrom : '',
-            periodTo: isCustomPeriod ? periodTo : '',
-          }),
-          fetchFireExtinguisherInspectionHistory(row.catalogId, { perPage: 100 }),
+        const [detailResult, historyResult] = await Promise.allSettled([
+          fetchFireExtinguisherCoverageDetail(
+            row.catalogId,
+            {
+              period,
+              periodFrom: isCustomPeriod ? periodFrom : '',
+              periodTo: isCustomPeriod ? periodTo : '',
+            },
+            { signal: controller.signal },
+          ),
+          fetchFireExtinguisherInspectionHistory(
+            row.catalogId,
+            { perPage: 25 },
+            { signal: controller.signal },
+          ),
         ])
-        setDetail({ ...response.data, historyRecords: history.data })
+        if (detailRequestRef.current.id !== requestId) return
+        if (detailResult.status === 'rejected') throw detailResult.reason
+
+        const fallbackHistoryRecords = Array.isArray(detailResult.value.data?.historyRecords)
+          ? detailResult.value.data.historyRecords
+          : []
+        const historyRecords =
+          historyResult.status === 'fulfilled' ? historyResult.value.data : fallbackHistoryRecords
+        const historyMeta =
+          historyResult.status === 'fulfilled'
+            ? historyResult.value.meta
+            : { page: 1, lastPage: 1, total: fallbackHistoryRecords.length }
+        if (historyResult.status === 'rejected') {
+          if (historyResult.reason?.name === 'AbortError') throw historyResult.reason
+          setHistoryError(
+            historyResult.reason?.message || 'Unable to load paginated inspection history.',
+          )
+        }
+        setDetail({
+          ...detailResult.value.data,
+          historyRecords,
+          latestHistoryRecord: historyRecords[0] || null,
+          historyMeta,
+        })
       } catch (error) {
+        if (error?.name === 'AbortError' || detailRequestRef.current.id !== requestId) return
         setDetail(row)
         setDetailError(error?.message || 'Unable to load extinguisher details.')
       } finally {
-        setIsFetchingDetail(false)
+        if (detailRequestRef.current.id === requestId) {
+          setIsFetchingDetail(false)
+          detailRequestRef.current.controller = null
+        }
       }
     },
     [isCustomPeriod, onViewDetails, period, periodFrom, periodTo, useProvidedRows],
@@ -1919,6 +1942,40 @@ const AllExtinguishersSection = ({
   const retryDetails = useCallback(() => {
     if (detailTarget) openDetails(detailTarget)
   }, [detailTarget, openDetails])
+
+  const loadHistoryPage = useCallback(
+    async (page) => {
+      if (useProvidedRows || !detailTarget?.catalogId) return
+      historyRequestRef.current.controller?.abort()
+      const requestId = historyRequestRef.current.id + 1
+      const controller = new AbortController()
+      historyRequestRef.current = { id: requestId, controller }
+      setIsFetchingHistory(true)
+      setHistoryError('')
+      try {
+        const history = await fetchFireExtinguisherInspectionHistory(
+          detailTarget.catalogId,
+          { page, perPage: 25 },
+          { signal: controller.signal },
+        )
+        if (historyRequestRef.current.id !== requestId) return
+        setDetail((current) => ({
+          ...(current || detailTarget),
+          historyRecords: history.data,
+          historyMeta: history.meta,
+        }))
+      } catch (error) {
+        if (error?.name === 'AbortError' || historyRequestRef.current.id !== requestId) return
+        setHistoryError(error?.message || 'Unable to load inspection history.')
+      } finally {
+        if (historyRequestRef.current.id === requestId) {
+          setIsFetchingHistory(false)
+          historyRequestRef.current.controller = null
+        }
+      }
+    },
+    [detailTarget, useProvidedRows],
+  )
 
   const handleAssetChanged = useCallback(
     (updated) => {
@@ -2232,6 +2289,7 @@ const AllExtinguishersSection = ({
       currentPage={useProvidedRows ? 1 : (remoteMeta?.page ?? currentPage)}
       lastPage={useProvidedRows ? 1 : (remoteMeta?.lastPage ?? 1)}
       onPageChange={useProvidedRows ? null : setCurrentPage}
+      options={useProvidedRows ? undefined : REMOTE_PAGE_SIZE_OPTIONS}
     />
   )
   const detailPeriodLabel = getPeriodLabel(period, periodFrom, periodTo)
@@ -2287,7 +2345,7 @@ const AllExtinguishersSection = ({
         />
       </div>
 
-      <CCard className="d-none d-md-block" data-testid="all-extinguishers-section">
+      <CCard className="d-none d-lg-block" data-testid="all-extinguishers-section">
         <CCardBody>
           {createAction}
           {createSuccess}
@@ -2312,11 +2370,18 @@ const AllExtinguishersSection = ({
         isLoading={isFetchingDetail}
         error={detailError}
         onClose={() => {
+          detailRequestRef.current.id += 1
+          detailRequestRef.current.controller?.abort()
+          detailRequestRef.current.controller = null
+          historyRequestRef.current.id += 1
+          historyRequestRef.current.controller?.abort()
+          historyRequestRef.current.controller = null
           setDetailTarget(null)
           setDetail(null)
           setDetailView('overview')
           setSelectedHistoryRecord(null)
           setDetailError('')
+          setHistoryError('')
         }}
         onRetry={retryDetails}
         onViewPhotos={setPhotoViewer}
@@ -2336,6 +2401,9 @@ const AllExtinguishersSection = ({
         canManageIssues={canManageIssues}
         canVerifyIssues={canVerifyIssues}
         onAssetChanged={handleAssetChanged}
+        isLoadingHistory={isFetchingHistory}
+        historyError={historyError}
+        onHistoryPageChange={loadHistoryPage}
       />
       <InspectionPhotoViewerModal viewer={photoViewer} onClose={() => setPhotoViewer(null)} />
       <FireExtinguisherExceptionExportDialog

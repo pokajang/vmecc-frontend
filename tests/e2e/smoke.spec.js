@@ -4,8 +4,8 @@ const path = require('node:path')
 
 const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
 const baseUrl = process.env.VMECC_E2E_BASE_URL || 'http://localhost:3000'
-const smokeEmail = process.env.VMECC_SMOKE_EMAIL || 'codex.smoke.admin@vmecc.local'
-const smokePassword = process.env.VMECC_SMOKE_PASSWORD || 'SmokeAdmin!2026'
+const smokeEmail = process.env.VMECC_SMOKE_EMAIL || 'codex.smoke.sysadmin@vmecc.local'
+const smokePassword = process.env.VMECC_SMOKE_PASSWORD || 'SmokeRole!2026'
 const routeThrottleMs = Number(process.env.VMECC_E2E_ROUTE_THROTTLE_MS || 1800)
 const routeRetryDelayMs = Number(process.env.VMECC_E2E_ROUTE_RETRY_DELAY_MS || 3000)
 const routeMaxAttempts = Number(process.env.VMECC_E2E_ROUTE_ATTEMPTS || 2)

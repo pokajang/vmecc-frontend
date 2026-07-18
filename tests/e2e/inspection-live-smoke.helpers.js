@@ -7,8 +7,8 @@ const zlib = require('node:zlib')
 
 const baseUrl = process.env.VMECC_E2E_BASE_URL || 'http://localhost:3000'
 const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
-const smokeEmail = process.env.VMECC_SMOKE_EMAIL || 'codex.smoke.admin@vmecc.local'
-const smokePassword = process.env.VMECC_SMOKE_PASSWORD || 'SmokeAdmin!2026'
+const smokeEmail = process.env.VMECC_SMOKE_EMAIL || 'codex.smoke.sysadmin@vmecc.local'
+const smokePassword = process.env.VMECC_SMOKE_PASSWORD || 'SmokeRole!2026'
 const liveSmokeEnabled = process.env.VMECC_LIVE_SMOKE === '1'
 const mutationSmokeEnabled = process.env.VMECC_LIVE_ALLOW_MUTATIONS === '1'
 const runId = process.env.VMECC_SMOKE_RUN_ID || new Date().toISOString().replace(/[:.]/g, '-')

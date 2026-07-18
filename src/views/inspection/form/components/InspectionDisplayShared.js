@@ -19,8 +19,12 @@ import {
   INSPECTION_PHOTO_CAPTION_CHIPS,
 } from 'src/views/inspection/inspectionFormHelpers'
 
-export const FormFieldError = ({ children }) =>
-  children ? <div className="inspection-field-error text-danger small mt-2">{children}</div> : null
+export const FormFieldError = ({ children, className = '', ...props }) =>
+  children ? (
+    <div className={`inspection-field-error text-danger small mt-2 ${className}`.trim()} {...props}>
+      {children}
+    </div>
+  ) : null
 
 export const ChipButton = ({ children, onClick, className = '' }) => (
   <button

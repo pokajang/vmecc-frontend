@@ -169,7 +169,7 @@ describe('MessageBubble', () => {
               source_type: 'system_guide',
               document_id: null,
               title: 'Applying for Leave',
-              guide_version: 2,
+              guide_version: 3,
               display_label: 'VMECC System Guide',
               source_path: 'seed:system-guide:leave-self-service',
             },
@@ -179,7 +179,7 @@ describe('MessageBubble', () => {
     )
 
     const guide = getByLabelText('Internal application guidance: Applying for Leave')
-    expect(guide.textContent).toContain('S2 — VMECC System Guide: Applying for Leave (v2)')
+    expect(guide.textContent).toContain('S2 — VMECC System Guide: Applying for Leave (v3)')
     expect(guide.textContent).not.toContain('seed:system-guide')
     expect(queryByRole('link')).toBeNull()
   })
@@ -206,7 +206,7 @@ describe('MessageBubble', () => {
               source_type: 'system_guide',
               document_id: null,
               title: 'Dashboard Basics',
-              guide_version: 2,
+              guide_version: 3,
             },
           ],
         }}

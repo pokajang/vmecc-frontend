@@ -3,6 +3,8 @@ import { apiRequest } from 'src/services/apiClient'
 import {
   createFireExtinguisherBatch,
   FIRE_EXTINGUISHER_DUPLICATE_LOCATOR_CODE,
+  fetchFireExtinguisherCoverage,
+  fetchFireExtinguisherInspectionHistory,
   getFireExtinguisherBatchDuplicateConflict,
   getFireExtinguisherDuplicateConflict,
   loadCachedFireExtinguisherCatalog,
@@ -41,6 +43,29 @@ afterEach(() => {
 })
 
 describe('inspectionFireExtinguisherApi', () => {
+  it('forwards abort signals for paginated coverage and inspection history requests', async () => {
+    const controller = new AbortController()
+    apiRequest.mockResolvedValue({ data: [], meta: {} })
+
+    await fetchFireExtinguisherCoverage({ page: 2, perPage: 25 }, { signal: controller.signal })
+    await fetchFireExtinguisherInspectionHistory(
+      71,
+      { page: 3, perPage: 25 },
+      { signal: controller.signal },
+    )
+
+    expect(apiRequest).toHaveBeenNthCalledWith(
+      1,
+      '/inspection/fire-extinguishers/coverage?page=2&perPage=25',
+      { signal: controller.signal },
+    )
+    expect(apiRequest).toHaveBeenNthCalledWith(
+      2,
+      '/inspection/fire-extinguishers/71/inspection-history?page=3&perPage=25',
+      { signal: controller.signal },
+    )
+  })
+
   it('posts an atomic batch and normalizes the created rows', async () => {
     apiRequest.mockResolvedValue({
       data: [{ id: 71, mainLocation: 'Canteen', idLocNo: 'CAN-071' }],

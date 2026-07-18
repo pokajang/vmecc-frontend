@@ -50,6 +50,33 @@ const inspectionHarness = vi.hoisted(() => {
   }
 })
 
+const originalMatchMedia = window.matchMedia
+
+const setViewportWidth = (width) => {
+  Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
+    writable: true,
+    value: vi.fn((query) => ({
+      matches: (() => {
+        const minWidth = /\(min-width:\s*([\d.]+)px\)/.exec(query)
+        if (minWidth) return width >= Number(minWidth[1])
+        const maxWidth = /\(max-width:\s*([\d.]+)px\)/.exec(query)
+        if (maxWidth) return width <= Number(maxWidth[1])
+        return false
+      })(),
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  })
+}
+
+const setDesktopViewport = (isDesktop) => setViewportWidth(isDesktop ? 992 : 991)
+
 vi.mock('src/components/ModulePageHeader', () => ({
   default: ({ title, actions }) => (
     <header>
@@ -614,6 +641,7 @@ const renderModule = (initialPath = '/inspection') => {
 }
 
 beforeEach(() => {
+  setDesktopViewport(true)
   sessionStorage.clear()
   inspectionHarness.records = [{ ...inspectionHarness.baseRecord }]
   inspectionHarness.activeDraftRows = []
@@ -636,9 +664,51 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup()
+  if (originalMatchMedia) {
+    Object.defineProperty(window, 'matchMedia', {
+      configurable: true,
+      writable: true,
+      value: originalMatchMedia,
+    })
+  } else {
+    delete window.matchMedia
+  }
 })
 
 describe('InspectionModule route family', () => {
+  it.each([
+    [390, false],
+    [991, false],
+    [992, true],
+  ])('gates the All Extinguishers tab at %ipx', (width, isVisible) => {
+    setViewportWidth(width)
+    renderModule('/inspection')
+
+    expect(Boolean(screen.queryByRole('button', { name: 'All Extinguishers' }))).toBe(isVisible)
+  })
+
+  it('omits the All Extinguishers tab on mobile', () => {
+    setDesktopViewport(false)
+    renderModule('/inspection')
+
+    expect(screen.queryByRole('button', { name: 'All Extinguishers' })).toBeNull()
+  })
+
+  it.each(['/inspection/all-extinguishers', '/inspection/all-extinguishers/new'])(
+    'redirects the desktop-only extinguisher route on mobile: %s',
+    async (path) => {
+      setDesktopViewport(false)
+      renderModule(path)
+
+      await waitFor(() =>
+        expect(screen.getByTestId('location-path').textContent).toBe('/inspection'),
+      )
+      expect(screen.queryByTestId('all-extinguishers-section')).toBeNull()
+      expect(screen.queryByRole('button', { name: 'All Extinguishers' })).toBeNull()
+      expect(screen.getByText('Inspection records shell')).toBeTruthy()
+    },
+  )
+
   it('passes action-queue filters to the inspection records hook', () => {
     renderModule('/inspection?scope=actionable&action=approve')
 

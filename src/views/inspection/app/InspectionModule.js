@@ -2,8 +2,12 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { ChevronDown, ChevronUp } from 'lucide-react'
-import { INSPECTION_SORT_OPTIONS } from 'src/views/inspection/constants'
+import {
+  ALL_EXTINGUISHERS_DESKTOP_QUERY,
+  INSPECTION_SORT_OPTIONS,
+} from 'src/views/inspection/constants'
 import { hasPermission } from 'src/utils/authz'
+import useMediaQuery from 'src/hooks/useMediaQuery'
 import useIncidentTypeManager, {
   INCIDENT_TYPE_TOGGLE_VALUE,
 } from 'src/views/inspection/useIncidentTypeManager'
@@ -80,6 +84,9 @@ const InspectionModule = () => {
   const reportTypeIdPrefix = 'INS'
   const localWorkspaceStatus = DRAFT_STATUS_LABELS.localSaved
   const activeSection = useMemo(() => getActiveSection(location.pathname), [location.pathname])
+  const isDesktopViewport = useMediaQuery(ALL_EXTINGUISHERS_DESKTOP_QUERY)
+  const visibleActiveSection =
+    activeSection === 'extinguishers' && !isDesktopViewport ? 'records' : activeSection
   const isEditRoute =
     activeSection === 'form' && /\/inspection\/[^/]+\/edit$/i.test(location.pathname)
   const routeMode = isEditRoute ? 'edit' : 'new'
@@ -187,6 +194,11 @@ const InspectionModule = () => {
   useEffect(() => {
     reloadRecordsRef.current = reloadRecords
   }, [reloadRecords])
+
+  useEffect(() => {
+    if (activeSection !== 'extinguishers' || isDesktopViewport) return
+    navigate(reportBasePath, { replace: true })
+  }, [activeSection, isDesktopViewport, navigate])
 
   const nextReportSequence = useMemo(() => {
     const inspectionRecords = records.filter(
@@ -455,19 +467,19 @@ const InspectionModule = () => {
     )
   }
 
-  const isCreateSection = activeSection === 'form' || activeSection === 'review'
-  const recordsSectionActive = activeSection === 'records' || activeSection === 'detail'
+  const isCreateSection = visibleActiveSection === 'form' || visibleActiveSection === 'review'
+  const recordsSectionActive =
+    visibleActiveSection === 'records' || visibleActiveSection === 'detail'
 
   const showMobileBackAction =
-    activeSection === 'form' ||
-    activeSection === 'review' ||
-    activeSection === 'detail' ||
-    activeSection === 'extinguishers' ||
-    (activeSection === 'records' && showMobileRecords)
+    visibleActiveSection === 'form' ||
+    visibleActiveSection === 'review' ||
+    visibleActiveSection === 'detail' ||
+    (visibleActiveSection === 'records' && showMobileRecords)
 
   const handleMobileBack = () => {
     handleInspectionMobileBack({
-      activeSection,
+      activeSection: visibleActiveSection,
       showMobileRecords,
       setShowMobileRecords,
       backFromReview,
@@ -486,7 +498,7 @@ const InspectionModule = () => {
     showMobileBackAction,
   })
   const pageTitle = buildInspectionPageTitle({
-    activeSection,
+    activeSection: visibleActiveSection,
     isUpdatingExistingRecord,
     recordsSectionActive,
     showMobileRecords,
@@ -495,8 +507,9 @@ const InspectionModule = () => {
 
   return (
     <InspectionModuleLayout
-      activeSection={activeSection}
+      activeSection={visibleActiveSection}
       canConduct={canConduct}
+      showExtinguisherCatalog={isDesktopViewport}
       clearContinuationState={clearContinuationState}
       detailViewProps={buildInspectionDetailViewProps({
         canDeleteRecord: canConduct ? canDeleteRecord : () => false,

@@ -6,7 +6,12 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import AllExtinguishersSection, {
   ALL_EXTINGUISHERS_DEMO_ROWS,
 } from '../records/AllExtinguishersSection'
-import { createFireExtinguisherBatch } from '../inspectionFireExtinguisherApi'
+import {
+  createFireExtinguisherBatch,
+  fetchFireExtinguisherCoverage,
+  fetchFireExtinguisherCoverageDetail,
+  fetchFireExtinguisherInspectionHistory,
+} from '../inspectionFireExtinguisherApi'
 import {
   createSiteLocationNode,
   fetchSiteLocationHierarchy,
@@ -18,6 +23,9 @@ vi.mock('../inspectionFireExtinguisherApi', async (importOriginal) => {
   return {
     ...actual,
     createFireExtinguisherBatch: vi.fn(),
+    fetchFireExtinguisherCoverage: vi.fn(),
+    fetchFireExtinguisherCoverageDetail: vi.fn(),
+    fetchFireExtinguisherInspectionHistory: vi.fn(),
   }
 })
 
@@ -65,6 +73,22 @@ beforeEach(() => {
     clear: () => storage.clear(),
   })
   vi.mocked(createFireExtinguisherBatch).mockReset()
+  vi.mocked(fetchFireExtinguisherCoverage).mockReset()
+  vi.mocked(fetchFireExtinguisherCoverageDetail).mockReset()
+  vi.mocked(fetchFireExtinguisherInspectionHistory).mockReset()
+  vi.mocked(fetchFireExtinguisherCoverage).mockResolvedValue({
+    data: [],
+    meta: {
+      page: 1,
+      lastPage: 1,
+      total: 0,
+      filtered: 0,
+      summary: {},
+      options: {},
+    },
+  })
+  vi.mocked(fetchFireExtinguisherCoverageDetail).mockResolvedValue({ data: {}, meta: {} })
+  vi.mocked(fetchFireExtinguisherInspectionHistory).mockResolvedValue({ data: [], meta: {} })
   vi.mocked(fetchSiteLocationHierarchy).mockReset()
   vi.mocked(createSiteLocationNode).mockReset()
   resetSiteLocationCatalogStoreForTests()
@@ -567,6 +591,107 @@ describe('AllExtinguishersSection', () => {
     })
   })
 
+  it('ignores a stale coverage response after filters trigger a newer request', async () => {
+    let resolveFirst
+    let resolveSecond
+    vi.mocked(fetchFireExtinguisherCoverage)
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveFirst = resolve
+          }),
+      )
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveSecond = resolve
+          }),
+      )
+
+    render(<AllExtinguishersSection />)
+    fireEvent.change(screen.getAllByPlaceholderText('Search extinguishers')[1], {
+      target: { value: 'FRESH' },
+    })
+    await waitFor(() => expect(fetchFireExtinguisherCoverage).toHaveBeenCalledTimes(2))
+    resolveSecond({
+      data: [
+        { catalogId: 2, idLocNo: 'FRESH-002', location: 'Workshop', lifecycleStatus: 'active' },
+      ],
+      meta: {
+        page: 1,
+        lastPage: 1,
+        total: 1,
+        filtered: 1,
+        summary: { total: 1 },
+        options: {},
+      },
+    })
+    expect(await screen.findAllByText('FRESH-002')).not.toHaveLength(0)
+
+    resolveFirst({
+      data: [
+        { catalogId: 1, idLocNo: 'STALE-001', location: 'Old yard', lifecycleStatus: 'active' },
+      ],
+      meta: {
+        page: 1,
+        lastPage: 1,
+        total: 1,
+        filtered: 1,
+        summary: { total: 1 },
+        options: {},
+      },
+    })
+    await waitFor(() => expect(screen.queryAllByText('STALE-001')).toHaveLength(0))
+    expect(screen.getAllByText('FRESH-002').length).toBeGreaterThan(0)
+  })
+
+  it('keeps usable asset details visible when paginated history fails to load', async () => {
+    vi.mocked(fetchFireExtinguisherCoverage).mockResolvedValue({
+      data: [
+        {
+          catalogId: 77,
+          idLocNo: 'PARTIAL-077',
+          barcodeNo: 'BAR-PARTIAL-077',
+          location: 'Workshop',
+          lifecycleStatus: 'active',
+        },
+      ],
+      meta: {
+        page: 1,
+        lastPage: 1,
+        total: 1,
+        filtered: 1,
+        summary: { total: 1 },
+        options: {},
+      },
+    })
+    vi.mocked(fetchFireExtinguisherCoverageDetail).mockResolvedValue({
+      data: {
+        catalogId: 77,
+        idLocNo: 'PARTIAL-077',
+        barcodeNo: 'BAR-PARTIAL-077',
+        feType: 'DP 9KG',
+        location: 'Workshop',
+        lifecycleStatus: 'active',
+        historyRecords: [],
+      },
+      meta: {},
+    })
+    vi.mocked(fetchFireExtinguisherInspectionHistory).mockRejectedValue(
+      new Error('Inspection history is temporarily unavailable.'),
+    )
+
+    render(<AllExtinguishersSection />)
+    const detailButton = await screen.findByRole('button', {
+      name: 'View details for PARTIAL-077',
+    })
+    fireEvent.click(detailButton)
+
+    const panel = await screen.findByRole('dialog', { name: 'PARTIAL-077' })
+    expect(within(panel).getByText('DP 9KG')).toBeTruthy()
+    expect(within(panel).getByText('Inspection history is temporarily unavailable.')).toBeTruthy()
+  })
+
   it('filters fixture rows by last inspected by', async () => {
     render(<AllExtinguishersSection rows={ALL_EXTINGUISHERS_DEMO_ROWS} />)
 
@@ -655,14 +780,27 @@ describe('AllExtinguishersSection', () => {
     expect(screen.getByRole('dialog', { name: 'ADO-001' })).toBeTruthy()
   })
 
-  it('opens the extinguisher detail panel when a desktop table row is activated by keyboard', () => {
+  it('uses a native focusable button to open extinguisher details', () => {
     render(<AllExtinguishersSection rows={ALL_EXTINGUISHERS_DEMO_ROWS} />)
 
-    fireEvent.keyDown(screen.getByRole('button', { name: 'View details for ADO-001' }), {
-      key: 'Enter',
-    })
+    const detailButton = screen.getByRole('button', { name: 'View details for ADO-001' })
+    detailButton.focus()
+    expect(document.activeElement).toBe(detailButton)
+    fireEvent.click(detailButton)
 
     expect(screen.getByRole('dialog', { name: 'ADO-001' })).toBeTruthy()
+  })
+
+  it('returns focus to the detail trigger after the offcanvas closes', async () => {
+    render(<AllExtinguishersSection rows={ALL_EXTINGUISHERS_DEMO_ROWS} />)
+
+    const detailButton = screen.getByRole('button', { name: 'View details for ADO-001' })
+    detailButton.focus()
+    fireEvent.click(detailButton)
+    const panel = screen.getByRole('dialog', { name: 'ADO-001' })
+    fireEvent.click(within(panel).getByRole('button', { name: 'Close ADO-001' }))
+
+    await waitFor(() => expect(document.activeElement).toBe(detailButton))
   })
 
   it('switches from history list to a historical record detail and back', () => {
