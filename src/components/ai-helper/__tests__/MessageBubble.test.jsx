@@ -109,6 +109,25 @@ describe('MessageBubble', () => {
     expect(container.textContent).toContain('Safe text')
   })
 
+  it('renders retrieved-source markers as compact non-link citations', () => {
+    const { container, getByLabelText } = render(
+      <MessageBubble
+        {...baseProps}
+        message={{
+          id: 'assistant-citations',
+          role: 'assistant',
+          status: 'completed',
+          content: 'Open Overtime. [S1] Then review the request. [S2]',
+        }}
+      />,
+    )
+
+    expect(getByLabelText('Retrieved source S1').textContent).toBe('S1')
+    expect(getByLabelText('Retrieved source S2').textContent).toBe('S2')
+    expect(container.querySelectorAll('.ai-helper-message__citation')).toHaveLength(2)
+    expect(container.querySelector('a')).toBeNull()
+  })
+
   it('shows verifier progress without adding it to the final answer content', () => {
     const { getByText } = render(
       <MessageBubble

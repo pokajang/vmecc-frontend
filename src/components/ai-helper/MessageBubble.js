@@ -7,11 +7,19 @@ import remarkGfm from 'remark-gfm'
 import { MESSAGE_STATUS_SLOW, getMessageActions } from './constants'
 import { buildAiHelperDocumentFileUrl } from 'src/services/apiClient'
 
+const SOURCE_CITATION_PATTERN = /\[(S[1-9]\d*)\](?!\()/g
+const SOURCE_CITATION_TARGET_PATTERN = /^#ai-helper-source-(S[1-9]\d*)$/
+
 const renderAssistantContent = (content) => {
   const markdown = String(content || '')
   if (!markdown.trim()) {
     return <div className="ai-helper-message__content" />
   }
+
+  const markdownWithCitationLinks = markdown.replace(
+    SOURCE_CITATION_PATTERN,
+    (_, sourceId) => `[${sourceId}](#ai-helper-source-${sourceId})`,
+  )
 
   return (
     <div className="ai-helper-message__content">
@@ -25,6 +33,19 @@ const renderAssistantContent = (content) => {
             </div>
           ),
           a: ({ href, children, ...props }) => {
+            const sourceCitation = SOURCE_CITATION_TARGET_PATTERN.exec(String(href || ''))
+            if (sourceCitation) {
+              return (
+                <span
+                  className="ai-helper-message__citation"
+                  aria-label={`Retrieved source ${sourceCitation[1]}`}
+                  title={`Retrieved source ${sourceCitation[1]}`}
+                >
+                  {children}
+                </span>
+              )
+            }
+
             const safeHref = /^(https?:|mailto:)/i.test(String(href || '')) ? href : null
             return safeHref ? (
               <a {...props} href={safeHref} target="_blank" rel="noopener noreferrer">
@@ -36,7 +57,7 @@ const renderAssistantContent = (content) => {
           },
         }}
       >
-        {markdown}
+        {markdownWithCitationLinks}
       </ReactMarkdown>
     </div>
   )
