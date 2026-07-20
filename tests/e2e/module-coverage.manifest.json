@@ -1,5 +1,15 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
+  "coverageDefaults": {
+    "owner": "unassigned",
+    "apiFamilies": [],
+    "positiveCaseIds": [],
+    "negativeCaseIds": [],
+    "workflowCaseIds": [],
+    "artifactCaseIds": [],
+    "automationStatus": "mapped",
+    "lastQualifiedAt": null
+  },
   "modules": [
     {
       "key": "settings.module_activation",
@@ -132,7 +142,13 @@
       "key": "leave.management",
       "route": "/staff/leave-management/leaves",
       "tier": "critical",
-      "specs": ["workflow-approvals-e2e.spec.js"]
+      "specs": ["workflow-approvals-e2e.spec.js"],
+      "owner": "People Operations",
+      "apiFamilies": ["/api/staff/leave/records"],
+      "positiveCaseIds": ["LEAVE-APPROVAL-UI-HAPPY"],
+      "negativeCaseIds": ["LEAVE-WRONG-ROLE-DENIED"],
+      "workflowCaseIds": ["LEAVE-REVIEW-RECOMMEND-APPROVE"],
+      "automationStatus": "partial"
     },
     {
       "key": "leave.assignments",
@@ -168,7 +184,13 @@
       "key": "overtime.management",
       "route": "/staff/overtime-management/records",
       "tier": "critical",
-      "specs": ["workflow-approvals-e2e.spec.js"]
+      "specs": ["workflow-approvals-e2e.spec.js"],
+      "owner": "People Operations",
+      "apiFamilies": ["/api/staff/overtime/records"],
+      "positiveCaseIds": ["OVERTIME-APPROVAL-UI-HAPPY"],
+      "negativeCaseIds": ["OVERTIME-REPEAT-ACTOR-DENIED"],
+      "workflowCaseIds": ["OVERTIME-REVIEW-RECOMMEND-APPROVE"],
+      "automationStatus": "partial"
     },
     {
       "key": "overtime.workflow_rules",
@@ -210,7 +232,14 @@
       "key": "payroll.salary_claims_management",
       "route": "/staff/salary-claims/claims",
       "tier": "critical",
-      "specs": ["workflow-approvals-e2e.spec.js"]
+      "specs": ["workflow-approvals-e2e.spec.js"],
+      "owner": "Finance Operations",
+      "routeFamilies": ["/staff/salary-claims/claims", "/staff/salary-claims/salary"],
+      "apiFamilies": ["/api/staff/salary-claims/records"],
+      "positiveCaseIds": ["PAYROLL-APPROVAL-UI-HAPPY"],
+      "negativeCaseIds": [],
+      "workflowCaseIds": ["PAYROLL-CHECK-REVIEW-APPROVE"],
+      "automationStatus": "partial"
     },
     {
       "key": "payroll.salary_settings",
@@ -244,9 +273,15 @@
     },
     {
       "key": "payroll.payment_actions",
-      "route": "/staff/salary-claims/claims",
+      "route": "/staff/salary-claims/salary",
       "tier": "critical",
-      "specs": ["workflow-approvals-e2e.spec.js"]
+      "specs": ["workflow-approvals-e2e.spec.js"],
+      "owner": "Finance Operations",
+      "apiFamilies": ["/api/staff/salary-claims/records/*/mark-paid"],
+      "positiveCaseIds": ["PAYROLL-MARK-PAID-UI"],
+      "negativeCaseIds": [],
+      "workflowCaseIds": ["PAYROLL-APPROVE-THEN-PAY"],
+      "automationStatus": "partial"
     },
     {
       "key": "reports",
@@ -258,7 +293,14 @@
       "key": "reports.inspection",
       "route": "/inspection",
       "tier": "critical",
-      "specs": ["workflow-approvals-e2e.spec.js", "inspection-crud-matrix-smoke.spec.js"]
+      "specs": ["workflow-approvals-e2e.spec.js", "inspection-crud-matrix-smoke.spec.js"],
+      "owner": "Emergency Operations",
+      "apiFamilies": ["/api/reports"],
+      "positiveCaseIds": ["INSPECTION-APPROVAL-UI-HAPPY", "INSPECTION-CRUD-MATRIX"],
+      "negativeCaseIds": ["INSPECTION-CROSS-TEAM-DENIED"],
+      "workflowCaseIds": ["INSPECTION-REVIEW-APPROVE"],
+      "artifactCaseIds": ["INSPECTION-PDF-EXPORT"],
+      "automationStatus": "partial"
     },
     {
       "key": "reports.erco",
