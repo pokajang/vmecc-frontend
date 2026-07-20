@@ -2,6 +2,10 @@ const { expect, test } = require('@playwright/test')
 const fs = require('node:fs')
 const path = require('node:path')
 const { evidencePath } = require('./support/evidence-path')
+const {
+  isNavigationCancellationPageError,
+  isRequestCancellation,
+} = require('./support/navigation-diagnostics')
 
 const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
 const baseUrl = process.env.VMECC_E2E_BASE_URL || 'http://localhost:3000'
@@ -242,6 +246,7 @@ const clearAuthCookiesFromPage = async (page) => {
 }
 
 const loginWithPage = async (page, persona) => {
+  await clearAuthCookiesFromPage(page)
   const { response, csrfToken } = await loginSession(page.request, persona)
   await syncAuthCookiesToPage(page, response)
   return csrfToken
@@ -501,11 +506,17 @@ test.describe('FULL SMOKE repo-wide RBAC and notification harness', () => {
     const pageErrors = []
     const failedResponses = []
     const deniedResponses = []
+    const cancelledRequests = []
 
     page.on('console', (msg) => {
       if (msg.type() === 'error') consoleErrors.push({ url: page.url(), message: msg.text() })
     })
     page.on('pageerror', (error) => pageErrors.push({ url: page.url(), message: error.message }))
+    page.on('requestfailed', (request) => {
+      const errorText = String(request.failure()?.errorText || '')
+      if (!isRequestCancellation(errorText)) return
+      cancelledRequests.push({ errorText, url: request.url() })
+    })
     page.on('response', (response) => {
       const url = response.url()
       if ([401, 403].includes(response.status()) && url.startsWith(apiBaseUrl)) {
@@ -528,6 +539,7 @@ test.describe('FULL SMOKE repo-wide RBAC and notification harness', () => {
         const beforeErrors = pageErrors.length
         const beforeResponses = failedResponses.length
         const beforeDeniedResponses = deniedResponses.length
+        const beforeCancelledRequests = cancelledRequests.length
         const result = { role: persona.role, route, passed: true, notes: [] }
 
         try {
@@ -553,10 +565,16 @@ test.describe('FULL SMOKE repo-wide RBAC and notification harness', () => {
           result.passed = false
           result.notes.push(`console.error: ${item.message}`)
         })
-        pageErrors.slice(beforeErrors).forEach((item) => {
-          result.passed = false
-          result.notes.push(`pageerror: ${item.message}`)
-        })
+        const routeCancelledRequests = cancelledRequests.slice(beforeCancelledRequests)
+        pageErrors
+          .slice(beforeErrors)
+          .filter(
+            (item) => !isNavigationCancellationPageError(item.message, routeCancelledRequests),
+          )
+          .forEach((item) => {
+            result.passed = false
+            result.notes.push(`pageerror: ${item.message}`)
+          })
         failedResponses.slice(beforeResponses).forEach((item) => {
           result.passed = false
           result.notes.push(`failed response: ${item.status} ${item.url}`)
@@ -569,9 +587,11 @@ test.describe('FULL SMOKE repo-wide RBAC and notification harness', () => {
         results.push(result)
       }
 
+      await page.goto('about:blank')
       await page.request.post(`${apiBaseUrl}/auth/logout`, {
         headers: { Accept: 'application/json', 'X-CSRF-Token': csrfToken },
       })
+      await clearAuthCookiesFromPage(page)
     }
 
     writeArtifact('ui-route-rbac-sweep.json', results)

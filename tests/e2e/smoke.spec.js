@@ -2,6 +2,11 @@ const { expect, test } = require('@playwright/test')
 const fs = require('node:fs')
 const path = require('node:path')
 const { evidencePath } = require('./support/evidence-path')
+const {
+  isExpectedMissingResourceConsoleError,
+  isNavigationCancellationPageError,
+  isRequestCancellation,
+} = require('./support/navigation-diagnostics')
 
 const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
 const baseUrl = process.env.VMECC_E2E_BASE_URL || 'http://localhost:3000'
@@ -209,6 +214,12 @@ const waitForRouteReady = async (page, route) => {
     }
   }
 
+  // Full-page route traversal can otherwise cancel late API and dynamic-import
+  // requests from the preceding page. Firefox and WebKit surface those
+  // navigation cancellations as page errors even when the responses are valid.
+  await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => null)
+  await page.waitForTimeout(250)
+
   const alertText = await page
     .locator('[role="alert"]')
     .first()
@@ -285,6 +296,7 @@ test.describe('SMOKE route sweep (manual)', () => {
     const consoleErrors = []
     const pageErrors = []
     const failedResponses = []
+    const cancelledRequests = []
 
     page.on('console', (msg) => {
       if (msg.type() === 'error') {
@@ -299,6 +311,16 @@ test.describe('SMOKE route sweep (manual)', () => {
       pageErrors.push({
         route: new URL(page.url()).pathname,
         message: error?.message || String(error),
+      })
+    })
+
+    page.on('requestfailed', (request) => {
+      const errorText = String(request.failure()?.errorText || '')
+      if (!isRequestCancellation(errorText)) return
+
+      cancelledRequests.push({
+        errorText,
+        url: request.url(),
       })
     })
 
@@ -326,12 +348,14 @@ test.describe('SMOKE route sweep (manual)', () => {
       let routeConsoleErrors = []
       let routePageErrors = []
       let routeFailedResponses = []
+      let routeCancelledRequests = []
       let routeError = null
 
       for (let attempt = 1; attempt <= routeMaxAttempts; attempt += 1) {
         const beforeConsole = consoleErrors.length
         const beforePageError = pageErrors.length
         const beforeFailureResponse = failedResponses.length
+        const beforeCancelledRequest = cancelledRequests.length
 
         try {
           await page.goto(`${baseUrl}${route.path}`, {
@@ -346,12 +370,14 @@ test.describe('SMOKE route sweep (manual)', () => {
           routeConsoleErrors = consoleErrors.slice(beforeConsole)
           routePageErrors = pageErrors.slice(beforePageError)
           routeFailedResponses = failedResponses.slice(beforeFailureResponse)
+          routeCancelledRequests = cancelledRequests.slice(beforeCancelledRequest)
           break
         } catch (error) {
           routeError = error
           routeConsoleErrors = consoleErrors.slice(beforeConsole)
           routePageErrors = pageErrors.slice(beforePageError)
           routeFailedResponses = failedResponses.slice(beforeFailureResponse)
+          routeCancelledRequests = cancelledRequests.slice(beforeCancelledRequest)
 
           if (attempt < routeMaxAttempts && !page.isClosed()) {
             await page.waitForTimeout(routeRetryDelayMs)
@@ -364,12 +390,18 @@ test.describe('SMOKE route sweep (manual)', () => {
         notes.push(`Route failure: ${routeError.message}`)
       }
 
-      routeConsoleErrors.forEach(({ message }) => {
-        notes.push(`console.error: ${message}`)
-      })
-      routePageErrors.forEach(({ message }) => {
-        notes.push(`pageerror: ${message}`)
-      })
+      routeConsoleErrors
+        .filter(({ message }) => !isExpectedMissingResourceConsoleError(route, message))
+        .forEach(({ message }) => {
+          notes.push(`console.error: ${message}`)
+        })
+      routePageErrors
+        .filter(
+          ({ message }) => !isNavigationCancellationPageError(message, routeCancelledRequests),
+        )
+        .forEach(({ message }) => {
+          notes.push(`pageerror: ${message}`)
+        })
       routeFailedResponses
         .filter(({ status }) => !(route.allowMissingResource && status === 404))
         .filter((failure) => !isExpectedBackgroundModuleResponse({ route, ...failure }))
