@@ -223,13 +223,17 @@ test.describe('SMOKE route sweep (manual)', () => {
   test.describe.configure({ mode: 'serial', timeout: routeSweepTimeoutMs + 60_000 })
 
   test('API CSRF enforcement for unsafe sessioned updates', async ({ request }) => {
-    const csrfToken = await routeLogin(request)
+    await routeLogin(request)
     const sessionResponse = await request.get(`${apiBaseUrl}/auth/session`, {
       headers: { Accept: 'application/json' },
     })
     expect(sessionResponse.status()).toBe(200)
-    const originalName = (await sessionResponse.json())?.user?.name
+    const sessionBody = await sessionResponse.json()
+    const originalName = sessionBody?.user?.name
+    const csrfToken = sessionBody?.csrf_token
     expect(typeof originalName).toBe('string')
+    expect(typeof csrfToken, 'Session response missing the current csrf_token').toBe('string')
+    expect(csrfToken).toBeTruthy()
 
     try {
       const noTokenResponse = await request.put(`${apiBaseUrl}/profile`, {
