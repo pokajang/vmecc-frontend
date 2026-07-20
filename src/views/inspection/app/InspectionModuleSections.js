@@ -1,11 +1,17 @@
 import React, { useRef, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import TableLoader from 'src/components/TableLoader'
 import InspectionRecordsSection from 'src/views/inspection/InspectionRecordsSection'
 import InspectionDetailSection from 'src/views/inspection/InspectionDetailSection'
 import InspectionReviewSection from 'src/views/inspection/InspectionReviewSection'
 import AllExtinguishersSection from 'src/views/inspection/records/AllExtinguishersSection'
+import FireExtinguisherDetailPage from 'src/views/inspection/records/FireExtinguisherDetailPage'
+import {
+  buildFireExtinguisherCatalogLocation,
+  parseFireExtinguisherCatalogViewState,
+  serializeFireExtinguisherCatalogViewState,
+} from 'src/views/inspection/records/fireExtinguisherCatalogViewState'
 import InspectionReviewDashboard from 'src/views/inspection/records/InspectionReviewDashboard'
 import { refreshInspectionOfflineAssets } from 'src/views/inspection/inspectionOfflineHealth'
 import { hasPermission } from 'src/utils/authz'
@@ -110,6 +116,7 @@ export const InspectionRecordsView = ({
             setQueueDetailsOpen(true)
           }}
           onViewRecords={() => setShowMobileRecords(true)}
+          onViewExtinguishers={() => navigate(`${reportBasePath}/all-extinguishers`)}
           onRetryQueue={() => syncQueuedSubmissions({ silent: false, force: true })}
         />
       ) : null}
@@ -212,6 +219,7 @@ const ADD_EXTINGUISHER_PATH = `${ALL_EXTINGUISHERS_PATH}/new`
 export const AllExtinguishersView = () => {
   const location = useLocation()
   const navigate = useNavigate()
+  const { extinguisherId } = useParams()
   const user = useSelector((state) => state.authUser)
   const isCreateOpen = location.pathname.toLowerCase() === ADD_EXTINGUISHER_PATH
   const canManageReports = hasPermission(user, 'reports.manage')
@@ -222,6 +230,23 @@ export const AllExtinguishersView = () => {
   const canVerifyIssues =
     canManageReports || hasPermission(user, 'reports.inspection.issues.verify')
 
+  if (extinguisherId) {
+    return (
+      <FireExtinguisherDetailPage
+        currentUser={user}
+        canManageCatalog={canManageCatalog}
+        canManageIssues={canManageIssues}
+        canVerifyIssues={canVerifyIssues}
+      />
+    )
+  }
+
+  const queryViewState = parseFireExtinguisherCatalogViewState(location.search)
+  const initialViewState = {
+    ...queryViewState,
+    ...(location.state?.catalogViewState || {}),
+  }
+
   return (
     <AllExtinguishersSection
       currentUser={user}
@@ -229,15 +254,35 @@ export const AllExtinguishersView = () => {
       canManageIssues={canManageIssues}
       canVerifyIssues={canVerifyIssues}
       isCreateOpen={isCreateOpen}
-      initialViewState={location.state?.catalogViewState || null}
+      initialViewState={initialViewState}
       initialSuccessMessage={location.state?.catalogSuccessMessage || ''}
+      onViewStateChange={(viewState) => {
+        const search = serializeFireExtinguisherCatalogViewState(viewState)
+        if (search === location.search) return
+        navigate(`${location.pathname}${search}`, {
+          replace: true,
+          state: { ...(location.state || {}), catalogViewState: viewState },
+        })
+      }}
+      onViewDetails={(row, viewState) => {
+        const catalogLocation = buildFireExtinguisherCatalogLocation(viewState)
+        const state = {
+          catalogViewState: viewState,
+          catalogSearch: serializeFireExtinguisherCatalogViewState(viewState),
+        }
+        navigate(catalogLocation, { replace: true, state })
+        navigate(`${ALL_EXTINGUISHERS_PATH}/${encodeURIComponent(row.catalogId || row.id)}`, {
+          state: { ...state, returnTo: catalogLocation },
+        })
+      }}
       onRequestCreate={(viewState) => {
-        const state = { catalogViewState: viewState }
-        navigate(ALL_EXTINGUISHERS_PATH, { replace: true, state })
-        navigate(ADD_EXTINGUISHER_PATH, { state })
+        const search = serializeFireExtinguisherCatalogViewState(viewState)
+        const state = { catalogViewState: viewState, catalogSearch: search }
+        navigate(`${ALL_EXTINGUISHERS_PATH}${search}`, { replace: true, state })
+        navigate(`${ADD_EXTINGUISHER_PATH}${search}`, { state })
       }}
       onRequestCloseCreate={({ replace = false, viewState, successMessage = '' } = {}) =>
-        navigate(ALL_EXTINGUISHERS_PATH, {
+        navigate(buildFireExtinguisherCatalogLocation(viewState || initialViewState), {
           replace,
           state: {
             catalogViewState: viewState || location.state?.catalogViewState || null,

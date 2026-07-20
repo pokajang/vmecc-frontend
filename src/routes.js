@@ -291,6 +291,11 @@ const routes = [
     name: 'Add Fire Extinguisher',
     element: Inspection,
   },
+  {
+    path: '/inspection/all-extinguishers/:extinguisherId',
+    name: 'Fire Extinguisher Detail',
+    element: Inspection,
+  },
   { path: '/inspection/:reportId/edit', name: 'Inspection Edit', element: Inspection },
   { path: '/inspection/:reportId', name: 'Inspection Detail', element: Inspection },
   {

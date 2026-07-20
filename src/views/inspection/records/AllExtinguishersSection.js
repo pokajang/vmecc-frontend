@@ -32,6 +32,10 @@ import {
   fetchFireExtinguisherInspectionHistory,
 } from 'src/views/inspection/inspectionFireExtinguisherApi'
 import FireExtinguisherCreateDrawer from './FireExtinguisherCreateDrawer'
+import FireExtinguisherEditDialog from './FireExtinguisherEditDialog'
+import FireExtinguisherLifecycleDialog, {
+  buildFireExtinguisherLifecycleMenuItems,
+} from './FireExtinguisherLifecycleDialog'
 import FireExtinguisherManagementPanel from './FireExtinguisherManagementPanel'
 import InspectionSidePanel from './InspectionSidePanel'
 import FireExtinguisherExceptionExportDialog from './fire-extinguisher-export/FireExtinguisherExceptionExportDialog'
@@ -56,7 +60,7 @@ const PERIOD_OPTIONS = [
   { value: 'custom', label: 'Custom range' },
 ]
 
-const getPeriodLabel = (period, periodFrom = '', periodTo = '') => {
+export const getPeriodLabel = (period, periodFrom = '', periodTo = '') => {
   if (period === 'custom') {
     const from = periodFrom ? formatDate(periodFrom) : ''
     const to = periodTo ? formatDate(periodTo) : ''
@@ -318,6 +322,9 @@ const badgeTone = {
   expiring: 'warning',
   'not-inspected': 'secondary',
   unknown: 'secondary',
+  active: 'success',
+  out_of_service: 'warning',
+  retired: 'secondary',
 }
 
 const StatusBadge = ({ value, label }) => {
@@ -377,6 +384,7 @@ const filterRows = ({
   issueFilter,
   certificationFilter,
   duplicateScope,
+  lifecycleFilter,
 }) => {
   const query = text(search).toLowerCase()
 
@@ -408,6 +416,12 @@ const filterRows = ({
     if (issueFilter === 'with-issues' && getOpenIssueCount(row) <= 0) return false
     if (issueFilter === 'no-issues' && getOpenIssueCount(row) > 0) return false
     if (certificationFilter !== ALL_ROWS_VALUE && certificationStatus !== certificationFilter) {
+      return false
+    }
+    if (
+      lifecycleFilter !== ALL_ROWS_VALUE &&
+      (row.lifecycleStatus || 'active') !== lifecycleFilter
+    ) {
       return false
     }
     if (duplicateScope === 'locator' && Number(row.locatorDuplicateCount || 0) <= 1) {
@@ -457,12 +471,36 @@ const getSummary = (rows) => ({
   expired: rows.filter((row) => getCertificationStatus(row) === 'expired').length,
 })
 
+const getLifecycleSummary = (rows) => ({
+  all: rows.length,
+  active: rows.filter((row) => (row.lifecycleStatus || 'active') === 'active').length,
+  outOfService: rows.filter((row) => row.lifecycleStatus === 'out_of_service').length,
+  retired: rows.filter((row) => row.lifecycleStatus === 'retired').length,
+})
+
 const nowrapCellClass = 'all-extinguishers-table__nowrap'
 const textCellClass = 'all-extinguishers-table__text-cell'
 const centeredCellClass = `text-center ${nowrapCellClass}`
 const indexColumnStyle = { width: '56px', minWidth: '56px' }
 
-const AllExtinguishersTable = ({ visibleRows, onViewDetails }) => (
+const lifecycleStatusLabel = {
+  active: 'Active',
+  out_of_service: 'Out of service',
+  retired: 'Retired',
+}
+
+const isInteractiveRowTarget = (target) =>
+  Boolean(
+    target?.closest?.('a, button, input, select, textarea, [role="button"], [role="menuitem"]'),
+  )
+
+const AllExtinguishersTable = ({
+  visibleRows,
+  onViewDetails,
+  onEditAsset,
+  onLifecycleAction,
+  canManageCatalog,
+}) => (
   <div className="all-extinguishers-table-frame d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-body">
     <CTable align="middle" className="all-extinguishers-table mb-0" hover responsive>
       <CTableHead color="light">
@@ -475,6 +513,7 @@ const AllExtinguishersTable = ({ visibleRows, onViewDetails }) => (
           <CTableHeaderCell>ID Loc. No.</CTableHeaderCell>
           <CTableHeaderCell>Sub-location</CTableHeaderCell>
           <CTableHeaderCell>FE Type</CTableHeaderCell>
+          <CTableHeaderCell>Lifecycle</CTableHeaderCell>
           <CTableHeaderCell>Barcode</CTableHeaderCell>
           <CTableHeaderCell>Certification Validity</CTableHeaderCell>
           <CTableHeaderCell className="text-center">Physical</CTableHeaderCell>
@@ -498,7 +537,13 @@ const AllExtinguishersTable = ({ visibleRows, onViewDetails }) => (
         {visibleRows.map((row, index) => {
           const certificationStatus = getCertificationStatus(row)
           return (
-            <CTableRow key={row.id} className="all-extinguishers-table__row">
+            <CTableRow
+              key={row.id || row.catalogId}
+              className="all-extinguishers-table__row all-extinguishers-table__row--interactive"
+              onClick={(event) => {
+                if (!isInteractiveRowTarget(event.target)) onViewDetails(row)
+              }}
+            >
               <CTableDataCell
                 className={`text-body-secondary ${centeredCellClass}`}
                 style={indexColumnStyle}
@@ -508,18 +553,36 @@ const AllExtinguishersTable = ({ visibleRows, onViewDetails }) => (
               <CTableDataCell className={nowrapCellClass}>{row.zone}</CTableDataCell>
               <CTableDataCell className={textCellClass}>{row.location}</CTableDataCell>
               <CTableDataCell className={nowrapCellClass}>
-                <CButton
-                  type="button"
-                  color="link"
-                  className="all-extinguishers-table__detail-trigger p-0 fw-semibold text-start"
-                  onClick={() => onViewDetails(row)}
+                <a
+                  href={`/inspection/all-extinguishers/${encodeURIComponent(row.catalogId || row.id)}`}
+                  className="all-extinguishers-table__detail-trigger fw-semibold text-start"
+                  onClick={(event) => {
+                    if (
+                      event.button === 0 &&
+                      !event.metaKey &&
+                      !event.ctrlKey &&
+                      !event.shiftKey &&
+                      !event.altKey
+                    ) {
+                      event.preventDefault()
+                      onViewDetails(row)
+                    }
+                  }}
                   aria-label={`View details for ${row.idLocNo || row.barcodeNo || 'fire extinguisher'}`}
                 >
                   {row.idLocNo || row.barcodeNo || 'View details'}
-                </CButton>
+                </a>
               </CTableDataCell>
               <CTableDataCell className={textCellClass}>{row.subLocation}</CTableDataCell>
               <CTableDataCell className={nowrapCellClass}>{row.feType}</CTableDataCell>
+              <CTableDataCell className={nowrapCellClass}>
+                <StatusBadge
+                  value={row.lifecycleStatus || 'active'}
+                  label={
+                    lifecycleStatusLabel[row.lifecycleStatus || 'active'] || row.lifecycleStatus
+                  }
+                />
+              </CTableDataCell>
               <CTableDataCell className={nowrapCellClass}>{row.barcodeNo || '--'}</CTableDataCell>
               <CTableDataCell className={nowrapCellClass}>
                 {formatDate(row.certificationValidity)}
@@ -581,6 +644,12 @@ const AllExtinguishersTable = ({ visibleRows, onViewDetails }) => (
                         onViewDetails(row)
                       },
                     },
+                    ...buildFireExtinguisherLifecycleMenuItems({
+                      asset: row,
+                      canManage: canManageCatalog,
+                      onEdit: onEditAsset,
+                      onLifecycleAction,
+                    }),
                   ]}
                   toggleAriaLabel={`Extinguisher actions for ${row.idLocNo}`}
                 />
@@ -593,7 +662,13 @@ const AllExtinguishersTable = ({ visibleRows, onViewDetails }) => (
   </div>
 )
 
-const buildMobileSections = (rows, onViewDetails) => [
+const buildMobileSections = (
+  rows,
+  onViewDetails,
+  onEditAsset,
+  onLifecycleAction,
+  canManageCatalog,
+) => [
   {
     key: 'all-extinguishers',
     label: 'All Extinguishers',
@@ -602,12 +677,17 @@ const buildMobileSections = (rows, onViewDetails) => [
       const inspectionStatus = getInspectionStatus(row)
       const certificationStatus = getCertificationStatus(row)
       return {
-        key: row.id,
+        key: row.id || row.catalogId,
         title: row.idLocNo,
         subtitle: `${row.zone} > ${row.location} > ${row.subLocation}`,
         eyebrow: row.feType,
         status: <StatusBadge value={inspectionStatus} label={statusLabel[inspectionStatus]} />,
         fields: [
+          {
+            key: 'lifecycle',
+            label: 'Lifecycle',
+            value: lifecycleStatusLabel[row.lifecycleStatus || 'active'] || row.lifecycleStatus,
+          },
           {
             key: 'latest',
             label: 'Last inspected date',
@@ -642,6 +722,12 @@ const buildMobileSections = (rows, onViewDetails) => [
                 label: 'View details',
                 onClick: () => onViewDetails(row),
               },
+              ...buildFireExtinguisherLifecycleMenuItems({
+                asset: row,
+                canManage: canManageCatalog,
+                onEdit: onEditAsset,
+                onLifecycleAction,
+              }),
             ]}
             toggleAriaLabel={`Extinguisher actions for ${row.idLocNo}`}
           />
@@ -889,10 +975,71 @@ const CriteriaStatusCell = ({ record, checkKey, detail, onViewPhotos }) => {
   )
 }
 
-const HistoricalIssueList = ({ issueRows, detail, onSelectRecord, onViewPhotos }) => (
+const HistoricalIssueList = ({
+  issueRows,
+  detail,
+  onSelectRecord,
+  onViewPhotos,
+  showMobileCards = false,
+}) => (
   <section className="d-grid gap-2">
     <div className="fw-semibold">Historical Issues</div>
-    <div className="all-extinguishers-history-list all-extinguishers-history-list--issues">
+    {showMobileCards ? (
+      <div className="all-extinguishers-history-cards d-grid d-md-none gap-2">
+        {issueRows.length > 0 ? (
+          issueRows.map((issue) => (
+            <article key={`mobile-${issue.key}`} className="rounded-3 border p-3 d-grid gap-2">
+              <div className="d-flex align-items-start justify-content-between gap-2">
+                <CButton
+                  type="button"
+                  color="link"
+                  className="p-0 fw-semibold text-start"
+                  onClick={() => onSelectRecord?.(issue.record)}
+                >
+                  {issue.reportId}
+                </CButton>
+                <StatusBadge value="issues" label={issue.value || 'Issue'} />
+              </div>
+              <div className="small text-body-secondary">{formatDateTime(issue.inspectedAt)}</div>
+              <div>
+                <div className="fw-semibold">{issue.label}</div>
+                {issue.remarks ? <div className="small mt-1">{issue.remarks}</div> : null}
+              </div>
+              {Array.isArray(issue.photos) && issue.photos.length > 0 ? (
+                <CButton
+                  type="button"
+                  color="secondary"
+                  variant="outline"
+                  size="sm"
+                  className="inspection-compact-action-btn justify-self-start"
+                  onClick={() =>
+                    onViewPhotos?.({
+                      title: `${detail.idLocNo || detail.barcodeNo || 'Fire extinguisher'} - ${
+                        issue.label
+                      } photos`,
+                      photos: issue.photos,
+                      readOnly: true,
+                      showDescriptionInput: false,
+                    })
+                  }
+                >
+                  View {issue.evidenceCount} photo{issue.evidenceCount === 1 ? '' : 's'}
+                </CButton>
+              ) : null}
+            </article>
+          ))
+        ) : (
+          <div className="rounded-3 border p-3 text-body-secondary">
+            No historical issues found for the selected period.
+          </div>
+        )}
+      </div>
+    ) : null}
+    <div
+      className={`all-extinguishers-history-list all-extinguishers-history-list--issues${
+        showMobileCards ? ' d-none d-md-block' : ''
+      }`}
+    >
       <CTable small responsive className="mb-0">
         <CTableHead>
           <CTableRow>
@@ -976,10 +1123,79 @@ const HistoricalIssueList = ({ issueRows, detail, onSelectRecord, onViewPhotos }
   </section>
 )
 
-const HistoricalRecordList = ({ records, detail, onSelectRecord, onViewPhotos }) => (
+const HistoricalRecordList = ({
+  records,
+  detail,
+  onSelectRecord,
+  onViewPhotos,
+  showMobileCards = false,
+}) => (
   <section className="d-grid gap-2">
     <div className="fw-semibold">Historical Inspection Records</div>
-    <div className="all-extinguishers-history-list all-extinguishers-history-list--records">
+    {showMobileCards ? (
+      <div className="all-extinguishers-history-cards d-grid d-md-none gap-2">
+        {records.length > 0 ? (
+          records.map((record) => (
+            <article
+              key={`mobile-${record.displayId || record.reportId}-${record.submittedAt}`}
+              className="rounded-3 border p-3 d-grid gap-3"
+            >
+              <div className="d-flex flex-wrap align-items-start justify-content-between gap-2">
+                <div>
+                  <div className="fw-semibold">{record.displayId || '--'}</div>
+                  <div className="small text-body-secondary">
+                    {formatDateTime(record.submittedAt)}
+                  </div>
+                  <div className="small text-body-secondary">
+                    Inspected by {record.submittedBy || '--'}
+                  </div>
+                </div>
+                {records.length > 1 ? <CBadge color="warning">Repeat check</CBadge> : null}
+              </div>
+              <div className="all-extinguishers-history-card__criteria d-grid gap-2">
+                {CHECK_FIELDS.map((field) => (
+                  <div
+                    key={`${record.reportId}-${field.key}`}
+                    className="d-flex align-items-center justify-content-between gap-2"
+                  >
+                    <span className="small text-body-secondary">{field.label}</span>
+                    <CriteriaStatusCell
+                      record={record}
+                      checkKey={field.key}
+                      detail={detail}
+                      onViewPhotos={onViewPhotos}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="d-flex align-items-center justify-content-between gap-2">
+                <span className="small text-body-secondary">
+                  {record.issueCount} issues · {record.evidenceCount} evidence
+                </span>
+                <CButton
+                  type="button"
+                  color="secondary"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onSelectRecord(record)}
+                >
+                  View record
+                </CButton>
+              </div>
+            </article>
+          ))
+        ) : (
+          <div className="rounded-3 border p-3 text-body-secondary">
+            No inspection records found for the selected period.
+          </div>
+        )}
+      </div>
+    ) : null}
+    <div
+      className={`all-extinguishers-history-list all-extinguishers-history-list--records${
+        showMobileCards ? ' d-none d-md-block' : ''
+      }`}
+    >
       <CTable small responsive className="mb-0">
         <CTableHead>
           <CTableRow>
@@ -1170,6 +1386,7 @@ const CoverageOverview = ({
   isLoadingHistory,
   historyError,
   onHistoryPageChange,
+  pageLayout = false,
   periodLabel,
   onSelectHistoryRecord,
   onViewPhotos,
@@ -1307,12 +1524,14 @@ const CoverageOverview = ({
         detail={detail}
         onSelectRecord={onSelectHistoryRecord}
         onViewPhotos={onViewPhotos}
+        showMobileCards={pageLayout}
       />
       <HistoricalRecordList
         records={historyRecords}
         detail={detail}
         onSelectRecord={onSelectHistoryRecord}
         onViewPhotos={onViewPhotos}
+        showMobileCards={pageLayout}
       />
       {historyError ? (
         <CAlert color="danger" className="mb-0 py-2" role="alert">
@@ -1350,7 +1569,7 @@ const CoverageOverview = ({
   )
 }
 
-const CoverageDetailBody = ({
+export const CoverageDetailBody = ({
   detail,
   isLoading,
   error,
@@ -1368,6 +1587,7 @@ const CoverageDetailBody = ({
   isLoadingHistory,
   historyError,
   onHistoryPageChange,
+  pageLayout = false,
 }) => {
   if (isLoading) {
     return <div className="text-body-secondary">Loading extinguisher details...</div>
@@ -1409,6 +1629,7 @@ const CoverageDetailBody = ({
       isLoadingHistory={isLoadingHistory}
       historyError={historyError}
       onHistoryPageChange={onHistoryPageChange}
+      pageLayout={pageLayout}
       periodLabel={periodLabel}
       onSelectHistoryRecord={onSelectHistoryRecord}
       onViewPhotos={onViewPhotos}
@@ -1490,6 +1711,7 @@ const AllExtinguishersSection = ({
   rows = null,
   isLoading = false,
   onViewDetails = null,
+  onViewStateChange = null,
   isCreateOpen = false,
   onRequestCreate = null,
   onRequestCloseCreate = null,
@@ -1523,6 +1745,10 @@ const AllExtinguishersSection = ({
   const [isFetchingHistory, setIsFetchingHistory] = useState(false)
   const [historyError, setHistoryError] = useState('')
   const [photoViewer, setPhotoViewer] = useState(null)
+  const [lifecycleTarget, setLifecycleTarget] = useState(null)
+  const [lifecycleAction, setLifecycleAction] = useState('')
+  const [editTarget, setEditTarget] = useState(null)
+  const [assetFeedback, setAssetFeedback] = useState(null)
   const [search, setSearch] = useState(savedView.search || '')
   const [period, setPeriod] = useState(savedView.period || 'all')
   const [periodFrom, setPeriodFrom] = useState(savedView.periodFrom || getTodayDateInputValue)
@@ -1687,6 +1913,10 @@ const AllExtinguishersSection = ({
     ],
   )
 
+  useEffect(() => {
+    onViewStateChange?.(viewState)
+  }, [onViewStateChange, viewState])
+
   const requestCreate = useCallback(() => {
     setCreateSuccessMessage('')
     onRequestCreate?.(viewState)
@@ -1809,6 +2039,13 @@ const AllExtinguishersSection = ({
     () => (useProvidedRows ? getSummary(allRows) : remoteMeta?.summary || getSummary(allRows)),
     [allRows, remoteMeta?.summary, useProvidedRows],
   )
+  const lifecycleSummary = useMemo(
+    () =>
+      useProvidedRows
+        ? getLifecycleSummary(allRows)
+        : remoteMeta?.lifecycleSummary || getLifecycleSummary(allRows),
+    [allRows, remoteMeta?.lifecycleSummary, useProvidedRows],
+  )
   const filteredRows = useMemo(() => {
     if (!useProvidedRows) return allRows
     return sortRows(
@@ -1822,6 +2059,7 @@ const AllExtinguishersSection = ({
         issueFilter,
         certificationFilter,
         duplicateScope,
+        lifecycleFilter,
       }),
       sort,
     )
@@ -1831,6 +2069,7 @@ const AllExtinguishersSection = ({
     inspectedByFilter,
     issueFilter,
     locationFilter,
+    lifecycleFilter,
     search,
     sort,
     duplicateScope,
@@ -1863,7 +2102,7 @@ const AllExtinguishersSection = ({
 
   const openDetails = useCallback(
     async (row) => {
-      onViewDetails?.(row)
+      onViewDetails?.(row, viewState)
       if (onViewDetails) return
 
       detailRequestRef.current.controller?.abort()
@@ -1897,7 +2136,12 @@ const AllExtinguishersSection = ({
           ),
           fetchFireExtinguisherInspectionHistory(
             row.catalogId,
-            { perPage: 25 },
+            {
+              perPage: 25,
+              period,
+              periodFrom: isCustomPeriod ? periodFrom : '',
+              periodTo: isCustomPeriod ? periodTo : '',
+            },
             { signal: controller.signal },
           ),
         ])
@@ -1936,7 +2180,7 @@ const AllExtinguishersSection = ({
         }
       }
     },
-    [isCustomPeriod, onViewDetails, period, periodFrom, periodTo, useProvidedRows],
+    [isCustomPeriod, onViewDetails, period, periodFrom, periodTo, useProvidedRows, viewState],
   )
 
   const retryDetails = useCallback(() => {
@@ -1955,7 +2199,13 @@ const AllExtinguishersSection = ({
       try {
         const history = await fetchFireExtinguisherInspectionHistory(
           detailTarget.catalogId,
-          { page, perPage: 25 },
+          {
+            page,
+            perPage: 25,
+            period,
+            periodFrom: isCustomPeriod ? periodFrom : '',
+            periodTo: isCustomPeriod ? periodTo : '',
+          },
           { signal: controller.signal },
         )
         if (historyRequestRef.current.id !== requestId) return
@@ -1974,7 +2224,7 @@ const AllExtinguishersSection = ({
         }
       }
     },
-    [detailTarget, useProvidedRows],
+    [detailTarget, isCustomPeriod, period, periodFrom, periodTo, useProvidedRows],
   )
 
   const handleAssetChanged = useCallback(
@@ -1986,6 +2236,23 @@ const AllExtinguishersSection = ({
     },
     [loadCoverageRows],
   )
+
+  const handleCatalogAssetChanged = useCallback(
+    (updated, result = {}) => {
+      if (result.message) setAssetFeedback(result)
+      if (updated) {
+        setDetail((current) => (current ? { ...current, ...updated } : current))
+        setDetailTarget((current) => (current ? { ...current, ...updated } : current))
+      }
+      loadCoverageRows()
+    },
+    [loadCoverageRows],
+  )
+
+  const openLifecycleAction = useCallback((asset, action) => {
+    setLifecycleTarget(asset)
+    setLifecycleAction(action)
+  }, [])
 
   const zoneOptions = useMemo(
     () =>
@@ -2169,15 +2436,47 @@ const AllExtinguishersSection = ({
     >
       <SummaryItem
         label="Total"
-        value={summary.total}
+        value={lifecycleSummary.all}
         onClick={() => {
           resetToFirstPage()
+          setLifecycleFilter(ALL_ROWS_VALUE)
           setStatusFilter(ALL_ROWS_VALUE)
           setIssueFilter(ALL_ROWS_VALUE)
           setCertificationFilter(ALL_ROWS_VALUE)
           setDuplicateScope('all')
           setSort('zone-location')
         }}
+        isActive={lifecycleFilter === ALL_ROWS_VALUE}
+      />
+      <SummaryItem
+        label="Active"
+        value={lifecycleSummary.active}
+        tone="success"
+        onClick={() => {
+          resetToFirstPage()
+          setLifecycleFilter('active')
+        }}
+        isActive={lifecycleFilter === 'active'}
+      />
+      <SummaryItem
+        label="Out of service"
+        value={lifecycleSummary.outOfService}
+        tone="warning"
+        onClick={() => {
+          resetToFirstPage()
+          setLifecycleFilter('out_of_service')
+        }}
+        isActive={lifecycleFilter === 'out_of_service'}
+      />
+      <SummaryItem
+        label="Retired"
+        value={lifecycleSummary.retired}
+        tone="secondary"
+        onClick={() => {
+          resetToFirstPage()
+          setLifecycleFilter('retired')
+        }}
+        isActive={lifecycleFilter === 'retired'}
       />
       <SummaryItem
         label="Inspected"
@@ -2324,6 +2623,33 @@ const AllExtinguishersSection = ({
       {createSuccessMessage}
     </CAlert>
   ) : null
+  const lifecycleFeedback = assetFeedback?.message ? (
+    <CAlert
+      color="success"
+      dismissible
+      onClose={() => setAssetFeedback(null)}
+      className="mb-3"
+      role="status"
+    >
+      <div className="d-flex flex-wrap align-items-center gap-2">
+        <span>{assetFeedback.message}</span>
+        {assetFeedback.lifecycleFilter ? (
+          <CButton
+            type="button"
+            color="link"
+            className="p-0 fw-semibold"
+            onClick={() => {
+              resetToFirstPage()
+              setLifecycleFilter(assetFeedback.lifecycleFilter)
+              setAssetFeedback(null)
+            }}
+          >
+            {assetFeedback.followUpLabel || 'View updated assets'}
+          </CButton>
+        ) : null}
+      </div>
+    </CAlert>
+  ) : null
 
   return (
     <>
@@ -2333,22 +2659,30 @@ const AllExtinguishersSection = ({
       >
         {createAction}
         {createSuccess}
+        {lifecycleFeedback}
         {renderSummaryStrip('all-extinguishers-summary-mobile')}
         {filters}
         <ResponsiveRecordCollection
           isLoading={isLoading || isFetchingRows}
           isEmpty={filteredRows.length === 0}
           emptyMessage={emptyMessage}
-          mobileSections={buildMobileSections(visibleRows, openDetails)}
+          mobileSections={buildMobileSections(
+            visibleRows,
+            openDetails,
+            setEditTarget,
+            openLifecycleAction,
+            canManageCatalog,
+          )}
           renderDesktop={null}
           footer={footer}
         />
       </div>
 
-      <CCard className="d-none d-lg-block" data-testid="all-extinguishers-section">
+      <CCard className="d-none d-md-block" data-testid="all-extinguishers-section">
         <CCardBody>
           {createAction}
           {createSuccess}
+          {lifecycleFeedback}
           {renderSummaryStrip('all-extinguishers-summary')}
           {filters}
           <ResponsiveRecordCollection
@@ -2357,7 +2691,13 @@ const AllExtinguishersSection = ({
             emptyMessage={emptyMessage}
             mobileSections={[]}
             renderDesktop={() => (
-              <AllExtinguishersTable visibleRows={visibleRows} onViewDetails={openDetails} />
+              <AllExtinguishersTable
+                visibleRows={visibleRows}
+                onViewDetails={openDetails}
+                onEditAsset={setEditTarget}
+                onLifecycleAction={openLifecycleAction}
+                canManageCatalog={canManageCatalog}
+              />
             )}
             footer={footer}
           />
@@ -2406,6 +2746,20 @@ const AllExtinguishersSection = ({
         onHistoryPageChange={loadHistoryPage}
       />
       <InspectionPhotoViewerModal viewer={photoViewer} onClose={() => setPhotoViewer(null)} />
+      <FireExtinguisherLifecycleDialog
+        asset={lifecycleTarget}
+        action={lifecycleAction}
+        onClose={() => {
+          setLifecycleTarget(null)
+          setLifecycleAction('')
+        }}
+        onChanged={handleCatalogAssetChanged}
+      />
+      <FireExtinguisherEditDialog
+        asset={editTarget}
+        onClose={() => setEditTarget(null)}
+        onChanged={handleCatalogAssetChanged}
+      />
       <FireExtinguisherExceptionExportDialog
         visible={isExportOpen}
         filterSnapshot={viewState}

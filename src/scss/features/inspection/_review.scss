@@ -399,24 +399,27 @@
 }
 
 .all-extinguishers-summary-item--clickable {
-  border: 1px solid rgba(13, 110, 253, 0.25);
-  background: rgba(13, 110, 253, 0.06);
+  border: 1px solid rgba(var(--cui-primary-rgb), 0.25);
+  background: rgba(var(--cui-primary-rgb), 0.06);
   cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .all-extinguishers-summary-item--clickable:hover {
-  border-color: rgba(13, 110, 253, 0.45);
+  border-color: rgba(var(--cui-primary-rgb), 0.45);
 }
 
 .all-extinguishers-summary-item--active {
-  border-color: rgba(13, 110, 253, 0.55);
-  background: rgba(13, 110, 253, 0.14);
+  border-color: rgba(var(--cui-primary-rgb), 0.55);
+  background: rgba(var(--cui-primary-rgb), 0.14);
 }
 
 .all-extinguishers-summary-item--clickable:focus-visible {
   outline: 0;
-  box-shadow: inset 0 0 0 0.14rem rgba(13, 110, 253, 0.25);
+  box-shadow: inset 0 0 0 0.14rem rgba(var(--cui-primary-rgb), 0.25);
 }
 
 .all-extinguishers-table {
@@ -453,7 +456,7 @@
 }
 
 .all-extinguishers-table > :not(caption) > * > .all-extinguishers-table__sticky-action-cell {
-  --cui-table-bg: #fff;
+  --cui-table-bg: var(--cui-body-bg);
   --cui-table-bg-state: transparent;
   --cui-table-bg-type: transparent;
   --cui-table-accent-bg: transparent;
@@ -464,7 +467,7 @@
   position: sticky;
   right: 0;
   z-index: 2;
-  background: #fff;
+  background: var(--cui-body-bg);
   box-shadow: -1px 0 0 var(--cui-border-color);
 }
 
@@ -472,12 +475,12 @@
   > thead
   > tr
   > th.all-extinguishers-table__sticky-action-cell:last-child {
-  --cui-table-bg: #fff;
+  --cui-table-bg: var(--cui-body-bg);
   --cui-table-bg-state: transparent;
   --cui-table-bg-type: transparent;
   --cui-table-accent-bg: transparent;
   z-index: 3;
-  background: #fff;
+  background: var(--cui-body-bg);
 }
 
 .all-extinguishers-table {
@@ -485,17 +488,79 @@
     background-color: rgba(0, 126, 122, 0.04);
   }
 
-  > tbody
-    > .all-extinguishers-table__row:hover
-    > .all-extinguishers-table__sticky-action-cell {
-    --cui-table-bg: #fff;
+  &__row--interactive {
+    cursor: pointer;
+  }
+
+  &__row--interactive:focus-within td {
+    background-color: rgba(var(--cui-primary-rgb), 0.06);
+  }
+
+  > tbody > .all-extinguishers-table__row:hover > .all-extinguishers-table__sticky-action-cell {
+    --cui-table-bg: rgba(var(--cui-primary-rgb), 0.04);
     --cui-table-bg-state: transparent;
-    background: #fff;
+    background: rgba(var(--cui-primary-rgb), 0.04);
+  }
+
+  &__detail-trigger {
+    color: var(--cui-link-color);
+    text-decoration: none;
+  }
+
+  &__detail-trigger:hover {
+    text-decoration: underline;
   }
 
   &__detail-trigger:focus-visible {
     border-radius: 0.2rem;
     box-shadow: 0 0 0 0.14rem rgba(0, 126, 122, 0.3);
+  }
+}
+
+.fire-extinguisher-detail-page {
+  min-width: 0;
+}
+
+.fire-extinguisher-detail-page__header {
+  padding-block: 0.25rem;
+}
+
+.fire-extinguisher-detail-page__back {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--cui-secondary-color);
+  text-decoration: none;
+}
+
+.fire-extinguisher-detail-page__back:hover,
+.fire-extinguisher-detail-page__back:focus-visible {
+  color: var(--cui-primary);
+}
+
+.fire-extinguisher-detail-page__content {
+  min-width: 0;
+  border-color: var(--cui-border-color);
+  box-shadow: none;
+}
+
+.fire-extinguisher-detail-page .all-extinguishers-history-list {
+  max-width: 100%;
+}
+
+@media (max-width: 767.98px) {
+  .fire-extinguisher-detail-page__content {
+    border-inline: 0;
+    border-radius: 0;
+  }
+
+  .fire-extinguisher-detail-page__content > .card-body {
+    padding-inline: 0;
+  }
+
+  .fire-extinguisher-detail-page .all-extinguishers-detail__meta-card {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -670,6 +735,15 @@
 
 .all-extinguishers-history-list--records table {
   min-width: 70rem;
+}
+
+.all-extinguishers-history-card__criteria {
+  padding-block: 0.25rem;
+  border-block: 1px solid var(--cui-border-color);
+}
+
+.all-extinguishers-history-card__criteria > div {
+  min-height: 2.25rem;
 }
 
 .all-extinguishers-detail__meta-card {

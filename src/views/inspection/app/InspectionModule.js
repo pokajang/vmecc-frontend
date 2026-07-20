@@ -2,12 +2,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { ChevronDown, ChevronUp } from 'lucide-react'
-import {
-  ALL_EXTINGUISHERS_DESKTOP_QUERY,
-  INSPECTION_SORT_OPTIONS,
-} from 'src/views/inspection/constants'
+import { INSPECTION_SORT_OPTIONS } from 'src/views/inspection/constants'
 import { hasPermission } from 'src/utils/authz'
-import useMediaQuery from 'src/hooks/useMediaQuery'
 import useIncidentTypeManager, {
   INCIDENT_TYPE_TOGGLE_VALUE,
 } from 'src/views/inspection/useIncidentTypeManager'
@@ -85,9 +81,7 @@ const InspectionModule = () => {
   const reportTypeIdPrefix = 'INS'
   const localWorkspaceStatus = DRAFT_STATUS_LABELS.localSaved
   const activeSection = useMemo(() => getActiveSection(location.pathname), [location.pathname])
-  const isDesktopViewport = useMediaQuery(ALL_EXTINGUISHERS_DESKTOP_QUERY)
-  const visibleActiveSection =
-    activeSection === 'extinguishers' && !isDesktopViewport ? 'records' : activeSection
+  const visibleActiveSection = activeSection
   const isEditRoute =
     activeSection === 'form' && /\/inspection\/[^/]+\/edit$/i.test(location.pathname)
   const routeMode = isEditRoute ? 'edit' : 'new'
@@ -195,11 +189,6 @@ const InspectionModule = () => {
   useEffect(() => {
     reloadRecordsRef.current = reloadRecords
   }, [reloadRecords])
-
-  useEffect(() => {
-    if (activeSection !== 'extinguishers' || isDesktopViewport) return
-    navigate(reportBasePath, { replace: true })
-  }, [activeSection, isDesktopViewport, navigate])
 
   const nextReportSequence = useMemo(() => {
     const inspectionRecords = records.filter(
@@ -511,7 +500,7 @@ const InspectionModule = () => {
     <InspectionModuleLayout
       activeSection={visibleActiveSection}
       canConduct={canConduct}
-      showExtinguisherCatalog={isDesktopViewport}
+      showExtinguisherCatalog
       clearContinuationState={clearContinuationState}
       detailViewProps={buildInspectionDetailViewProps({
         canDeleteRecord: canConduct ? canDeleteRecord : () => false,

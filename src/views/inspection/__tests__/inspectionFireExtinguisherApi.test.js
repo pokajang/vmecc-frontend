@@ -50,7 +50,13 @@ describe('inspectionFireExtinguisherApi', () => {
     await fetchFireExtinguisherCoverage({ page: 2, perPage: 25 }, { signal: controller.signal })
     await fetchFireExtinguisherInspectionHistory(
       71,
-      { page: 3, perPage: 25 },
+      {
+        page: 3,
+        perPage: 25,
+        period: 'custom',
+        periodFrom: '2026-07-01',
+        periodTo: '2026-07-20',
+      },
       { signal: controller.signal },
     )
 
@@ -61,7 +67,7 @@ describe('inspectionFireExtinguisherApi', () => {
     )
     expect(apiRequest).toHaveBeenNthCalledWith(
       2,
-      '/inspection/fire-extinguishers/71/inspection-history?page=3&perPage=25',
+      '/inspection/fire-extinguishers/71/inspection-history?page=3&perPage=25&period=custom&periodFrom=2026-07-01&periodTo=2026-07-20',
       { signal: controller.signal },
     )
   })

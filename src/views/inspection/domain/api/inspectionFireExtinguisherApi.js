@@ -347,12 +347,13 @@ export const retireFireExtinguisher = (id, payload) =>
 export const restoreFireExtinguisher = (id, payload = {}) =>
   fireExtinguisherLifecycleAction(id, 'restore', payload)
 
-export const fetchFireExtinguisherInspectionHistory = async (
-  id,
-  { page = 1, perPage = 25 } = {},
-  options = {},
-) => {
+export const fetchFireExtinguisherInspectionHistory = async (id, params = {}, options = {}) => {
+  const { page = 1, perPage = 25, ...filters } = params || {}
   const query = new URLSearchParams({ page: String(page), perPage: String(perPage) })
+  Object.entries(filters).forEach(([key, value]) => {
+    const normalized = String(value ?? '').trim()
+    if (normalized) query.set(key, normalized)
+  })
   const response = await apiRequest(
     `/inspection/fire-extinguishers/${encodeURIComponent(String(id))}/inspection-history?${query}`,
     { signal: options.signal },

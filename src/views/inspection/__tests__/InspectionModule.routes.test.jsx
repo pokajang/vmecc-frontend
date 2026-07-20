@@ -222,7 +222,7 @@ vi.mock('../InspectionForm', () => ({
 }))
 
 vi.mock('../app/InspectionMobileHome', () => ({
-  default: ({ onSelectType, onContinueDraft, onViewRecords }) => (
+  default: ({ onSelectType, onContinueDraft, onViewRecords, onViewExtinguishers }) => (
     <section>
       <div>Inspection mobile home</div>
       <button type="button" onClick={() => onSelectType('Hydraulic Rescue Tools Inspection')}>
@@ -233,6 +233,13 @@ vi.mock('../app/InspectionMobileHome', () => ({
       </button>
       <button type="button" onClick={onViewRecords}>
         View records
+      </button>
+      <button
+        type="button"
+        data-testid="inspection-all-extinguishers"
+        onClick={onViewExtinguishers}
+      >
+        Open extinguisher catalogue
       </button>
     </section>
   ),
@@ -632,6 +639,10 @@ const renderModule = (initialPath = '/inspection') => {
           <Route path="/inspection/review" element={<InspectionModule />} />
           <Route path="/inspection/all-extinguishers" element={<InspectionModule />} />
           <Route path="/inspection/all-extinguishers/new" element={<InspectionModule />} />
+          <Route
+            path="/inspection/all-extinguishers/:extinguisherId"
+            element={<InspectionModule />}
+          />
           <Route path="/inspection/:reportId/edit" element={<InspectionModule />} />
           <Route path="/inspection/:reportId" element={<InspectionModule />} />
         </Routes>
@@ -677,35 +688,48 @@ afterEach(() => {
 
 describe('InspectionModule route family', () => {
   it.each([
-    [390, false],
-    [991, false],
+    [390, true],
+    [991, true],
     [992, true],
-  ])('gates the All Extinguishers tab at %ipx', (width, isVisible) => {
+  ])('keeps the All Extinguishers route available at %ipx', (width, isAvailable) => {
     setViewportWidth(width)
     renderModule('/inspection')
 
-    expect(Boolean(screen.queryByRole('button', { name: 'All Extinguishers' }))).toBe(isVisible)
+    expect(screen.getAllByRole('button', { name: 'All Extinguishers' }).length > 0).toBe(
+      isAvailable,
+    )
   })
 
-  it('omits the All Extinguishers tab on mobile', () => {
+  it('keeps the desktop tab strip visually hidden on mobile', () => {
     setDesktopViewport(false)
     renderModule('/inspection')
 
-    expect(screen.queryByRole('button', { name: 'All Extinguishers' })).toBeNull()
+    expect(screen.getByTestId('module-nav-tabs').getAttribute('data-classname')).toContain(
+      'd-none d-md-flex',
+    )
+  })
+
+  it('exposes the extinguisher catalogue from the mobile inspection home', async () => {
+    setViewportWidth(390)
+    renderModule('/inspection')
+
+    fireEvent.click(screen.getByTestId('inspection-all-extinguishers'))
+
+    await waitFor(() =>
+      expect(screen.getByTestId('location-path').textContent).toBe('/inspection/all-extinguishers'),
+    )
+    expect(screen.getByTestId('all-extinguishers-section-mobile')).toBeTruthy()
   })
 
   it.each(['/inspection/all-extinguishers', '/inspection/all-extinguishers/new'])(
-    'redirects the desktop-only extinguisher route on mobile: %s',
-    async (path) => {
+    'keeps the responsive extinguisher route open on mobile: %s',
+    (path) => {
       setDesktopViewport(false)
       renderModule(path)
 
-      await waitFor(() =>
-        expect(screen.getByTestId('location-path').textContent).toBe('/inspection'),
-      )
-      expect(screen.queryByTestId('all-extinguishers-section')).toBeNull()
-      expect(screen.queryByRole('button', { name: 'All Extinguishers' })).toBeNull()
-      expect(screen.getByText('Inspection records shell')).toBeTruthy()
+      expect(screen.getByTestId('location-path').textContent).toBe(path)
+      expect(screen.getByTestId('all-extinguishers-section-mobile')).toBeTruthy()
+      expect(screen.queryByText('Inspection records shell')).toBeNull()
     },
   )
 

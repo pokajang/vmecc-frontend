@@ -565,13 +565,63 @@ describe('AllExtinguishersSection', () => {
 
     const summary = screen.getByTestId('all-extinguishers-summary')
     expect(within(summary).getByText('Total')).toBeTruthy()
-    expect(within(summary).getByText('6')).toBeTruthy()
+    expect(within(summary).getByRole('button', { name: /^Total\s*6$/ })).toBeTruthy()
+    expect(
+      within(summary)
+        .getByRole('button', { name: /^Active\s*6$/ })
+        .getAttribute('aria-pressed'),
+    ).toBe('true')
+    expect(within(summary).getByText('Retired')).toBeTruthy()
     expect(within(summary).getByText('Inspected')).toBeTruthy()
     expect(within(summary).getByText('4')).toBeTruthy()
     expect(within(summary).getByText('Not inspected')).toBeTruthy()
     expect(within(summary).getByText('2')).toBeTruthy()
     expect(within(summary).getByText('Issues')).toBeTruthy()
     expect(within(summary).getAllByText('1').length).toBeGreaterThan(0)
+  })
+
+  it('opens details when a non-interactive desktop row cell is clicked', () => {
+    const onViewDetails = vi.fn()
+    render(
+      <AllExtinguishersSection rows={ALL_EXTINGUISHERS_DEMO_ROWS} onViewDetails={onViewDetails} />,
+    )
+
+    const row = screen.getByRole('link', { name: 'View details for ADO-001' }).closest('tr')
+    fireEvent.click(within(row).getByText('Reception'))
+
+    expect(onViewDetails).toHaveBeenCalledWith(
+      expect.objectContaining({ idLocNo: 'ADO-001' }),
+      expect.objectContaining({ lifecycleFilter: 'active' }),
+    )
+  })
+
+  it('filters fixture rows immediately from lifecycle summary badges', () => {
+    const rows = [
+      { ...ALL_EXTINGUISHERS_DEMO_ROWS[0], id: 'active', idLocNo: 'ACTIVE-001' },
+      {
+        ...ALL_EXTINGUISHERS_DEMO_ROWS[1],
+        id: 'retired',
+        idLocNo: 'RETIRED-001',
+        lifecycleStatus: 'retired',
+      },
+      {
+        ...ALL_EXTINGUISHERS_DEMO_ROWS[2],
+        id: 'out-of-service',
+        idLocNo: 'OOS-001',
+        lifecycleStatus: 'out_of_service',
+      },
+    ]
+    render(<AllExtinguishersSection rows={rows} />)
+
+    expect(screen.queryByText('RETIRED-001')).toBeNull()
+    fireEvent.click(
+      within(screen.getByTestId('all-extinguishers-summary')).getByRole('button', {
+        name: /^Retired\s*1$/,
+      }),
+    )
+
+    expect(screen.getAllByText('RETIRED-001').length).toBeGreaterThan(0)
+    expect(screen.queryByText('ACTIVE-001')).toBeNull()
   })
 
   it('filters fixture rows by search text', async () => {
@@ -682,7 +732,7 @@ describe('AllExtinguishersSection', () => {
     )
 
     render(<AllExtinguishersSection />)
-    const detailButton = await screen.findByRole('button', {
+    const detailButton = await screen.findByRole('link', {
       name: 'View details for PARTIAL-077',
     })
     fireEvent.click(detailButton)
@@ -775,7 +825,7 @@ describe('AllExtinguishersSection', () => {
   it('opens the extinguisher detail panel when a desktop table row is clicked', () => {
     render(<AllExtinguishersSection rows={ALL_EXTINGUISHERS_DEMO_ROWS} />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'View details for ADO-001' }))
+    fireEvent.click(screen.getByRole('link', { name: 'View details for ADO-001' }))
 
     expect(screen.getByRole('dialog', { name: 'ADO-001' })).toBeTruthy()
   })
@@ -783,7 +833,7 @@ describe('AllExtinguishersSection', () => {
   it('uses a native focusable button to open extinguisher details', () => {
     render(<AllExtinguishersSection rows={ALL_EXTINGUISHERS_DEMO_ROWS} />)
 
-    const detailButton = screen.getByRole('button', { name: 'View details for ADO-001' })
+    const detailButton = screen.getByRole('link', { name: 'View details for ADO-001' })
     detailButton.focus()
     expect(document.activeElement).toBe(detailButton)
     fireEvent.click(detailButton)
@@ -794,7 +844,7 @@ describe('AllExtinguishersSection', () => {
   it('returns focus to the detail trigger after the offcanvas closes', async () => {
     render(<AllExtinguishersSection rows={ALL_EXTINGUISHERS_DEMO_ROWS} />)
 
-    const detailButton = screen.getByRole('button', { name: 'View details for ADO-001' })
+    const detailButton = screen.getByRole('link', { name: 'View details for ADO-001' })
     detailButton.focus()
     fireEvent.click(detailButton)
     const panel = screen.getByRole('dialog', { name: 'ADO-001' })

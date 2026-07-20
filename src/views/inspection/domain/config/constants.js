@@ -3,8 +3,6 @@ import { getInspectionTypeOptions } from '../../app/inspectionTypeRegistry'
 
 export const INSPECTION_INCIDENT_TYPE_OPTIONS = getInspectionTypeOptions()
 
-export const ALL_EXTINGUISHERS_DESKTOP_QUERY = '(min-width: 992px)'
-
 export const INSPECTION_LOCATION_OPTIONS = [
   {
     value: 'Zone 1',

@@ -40,6 +40,7 @@ const InspectionMobileHome = ({
   onOpenRecord,
   onViewQueueDetails,
   onViewRecords,
+  onViewExtinguishers,
   onRetryQueue,
 }) => {
   const draftType = stripInspectionContext(draftRow?.incidentType) || 'Draft'
@@ -99,6 +100,23 @@ const InspectionMobileHome = ({
           }
         />
       </div>
+
+      {onViewExtinguishers ? (
+        <div className="inspection-mobile-home__section d-grid gap-2 mb-1">
+          <div className="fw-semibold text-muted">Equipment</div>
+          <CButton
+            type="button"
+            color="secondary"
+            variant="outline"
+            className="w-100 text-start"
+            onClick={onViewExtinguishers}
+            data-testid="inspection-all-extinguishers"
+            aria-label="Open extinguisher catalogue"
+          >
+            All Extinguishers
+          </CButton>
+        </div>
+      ) : null}
 
       {draftRow ? (
         <div className="inspection-mobile-home__draft-list list-group list-group-flush overflow-hidden border rounded-3">

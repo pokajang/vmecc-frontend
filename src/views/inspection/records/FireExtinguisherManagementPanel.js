@@ -10,13 +10,6 @@ import {
 } from '@coreui/react'
 
 import {
-  markFireExtinguisherOutOfService,
-  restoreFireExtinguisher,
-  retireFireExtinguisher,
-  returnFireExtinguisherToService,
-  updateFireExtinguisherOption,
-} from 'src/views/inspection/inspectionFireExtinguisherApi'
-import {
   assignFireExtinguisherIssue,
   cancelFireExtinguisherIssue,
   fetchFireExtinguisherIssueAssignees,
@@ -29,9 +22,10 @@ import {
   verifyFireExtinguisherIssue,
 } from 'src/views/inspection/inspectionFireExtinguisherIssueApi'
 import DataTableFooter from 'src/components/DataTableFooter'
-import { AddFireExtinguisherForm } from '../types/fire-extinguisher/fireExtinguisherEditForm'
 import { PhotosGrid } from 'src/components/report-workflow/ReportViewComponents'
 import ReportPhotoSection from 'src/views/report/shared/emergency-report/ReportPhotoSection'
+import FireExtinguisherEditDialog from './FireExtinguisherEditDialog'
+import FireExtinguisherLifecycleDialog from './FireExtinguisherLifecycleDialog'
 
 const lifecycleLabels = {
   active: 'Active',
@@ -397,9 +391,6 @@ const FireExtinguisherManagementPanel = ({
   const [assigneeError, setAssigneeError] = useState('')
   const [editOpen, setEditOpen] = useState(false)
   const [lifecycleAction, setLifecycleAction] = useState('')
-  const [reason, setReason] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState('')
 
   const catalogId = detail?.catalogId || detail?.id
   const loadIssues = useCallback(async () => {
@@ -472,49 +463,9 @@ const FireExtinguisherManagementPanel = ({
     [],
   )
 
-  const saveAsset = async (payload) => {
-    setBusy(true)
-    setError('')
-    try {
-      const updated = await updateFireExtinguisherOption(catalogId, {
-        ...payload,
-        lockVersion: detail.lockVersion,
-        zone: payload.zone || detail.zone,
-        mainLocation: payload.mainLocation || detail.mainLocation || detail.location,
-        subLocation: payload.subLocation || detail.subLocation,
-      })
-      setEditOpen(false)
-      onAssetChanged?.(updated)
-      return updated
-    } catch (requestError) {
-      setError(requestError?.message || 'Unable to update extinguisher.')
-      return false
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const applyLifecycle = async () => {
-    setBusy(true)
-    setError('')
-    try {
-      const payload = { reason: reason.trim(), lockVersion: detail.lockVersion }
-      let updated
-      if (lifecycleAction === 'out_of_service')
-        updated = await markFireExtinguisherOutOfService(catalogId, payload)
-      if (lifecycleAction === 'active')
-        updated = await returnFireExtinguisherToService(catalogId, payload)
-      if (lifecycleAction === 'retired') updated = await retireFireExtinguisher(catalogId, payload)
-      if (lifecycleAction === 'restore') updated = await restoreFireExtinguisher(catalogId, payload)
-      setLifecycleAction('')
-      setReason('')
-      onAssetChanged?.(updated)
-      loadIssues()
-    } catch (requestError) {
-      setError(requestError?.message || 'Unable to change extinguisher lifecycle status.')
-    } finally {
-      setBusy(false)
-    }
+  const handleAssetChanged = (updated, result) => {
+    onAssetChanged?.(updated, result)
+    if (result?.action && result.action !== 'edit') loadIssues()
   }
 
   const lifecycleStatus = detail.lifecycleStatus || 'active'
@@ -602,56 +553,17 @@ const FireExtinguisherManagementPanel = ({
             ) : null}
           </div>
         ) : null}
-        {error ? (
-          <CAlert color="danger" className="mb-0 py-2">
-            {error}
-          </CAlert>
-        ) : null}
-        {lifecycleAction ? (
-          <div className="rounded-3 bg-light-subtle border p-3 d-grid gap-2">
-            {!['active', 'restore'].includes(lifecycleAction) ? (
-              <CFormTextarea
-                label="Reason"
-                aria-label="Reason"
-                value={reason}
-                onChange={(event) => setReason(event.target.value)}
-              />
-            ) : null}
-            <div className="d-flex justify-content-end gap-2">
-              <CButton
-                size="sm"
-                color="secondary"
-                variant="outline"
-                onClick={() => setLifecycleAction('')}
-                disabled={busy}
-              >
-                Cancel
-              </CButton>
-              <CButton
-                size="sm"
-                color={lifecycleAction === 'retired' ? 'danger' : 'primary'}
-                onClick={applyLifecycle}
-                disabled={
-                  busy || (!['active', 'restore'].includes(lifecycleAction) && !reason.trim())
-                }
-              >
-                {busy ? 'Saving...' : 'Confirm'}
-              </CButton>
-            </div>
-          </div>
-        ) : null}
-        {editOpen ? (
-          <AddFireExtinguisherForm
-            presentation="plain"
-            editableLocation
-            mode="edit"
-            submitLabel="Save changes"
-            initialValue={{ ...detail, mainLocation: detail.mainLocation || detail.location }}
-            onCancel={() => setEditOpen(false)}
-            onSave={saveAsset}
-            onSubmittingChange={setBusy}
-          />
-        ) : null}
+        <FireExtinguisherLifecycleDialog
+          asset={lifecycleAction ? detail : null}
+          action={lifecycleAction}
+          onClose={() => setLifecycleAction('')}
+          onChanged={handleAssetChanged}
+        />
+        <FireExtinguisherEditDialog
+          asset={editOpen ? detail : null}
+          onClose={() => setEditOpen(false)}
+          onChanged={handleAssetChanged}
+        />
       </section>
 
       <section className="rounded-3 border p-3 d-grid gap-3">
