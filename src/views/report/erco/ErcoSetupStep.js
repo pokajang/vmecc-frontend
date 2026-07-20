@@ -12,7 +12,7 @@ import { recordTypeUsage } from './typeUsageStorage'
 import useIncidentTypeManager, { INCIDENT_TYPE_TOGGLE_VALUE } from './useIncidentTypeManager'
 import useWeatherTypeManager, { WEATHER_TOGGLE_VALUE } from './useWeatherTypeManager'
 import useLocationTypeManager, { LOCATION_TOGGLE_VALUE } from './useLocationTypeManager'
-import useIsMobile from './erco-form-components/useIsMobile'
+import useIsMobile, { ERCO_MOBILE_QUERY } from './erco-form-components/useIsMobile'
 
 const ACTIVE_CARD_BG = 'rgba(0, 126, 122, 0.2)'
 const ACTIVE_CARD_BORDER = 'rgba(0, 126, 122, 0.45)'
@@ -315,6 +315,7 @@ const ErcoSetupStep = ({
     <div className="mb-3 d-grid gap-4" data-testid="erco-report-setup-ready">
       <ActionConfirmModal
         visible={Boolean(deleteTarget)}
+        mobileDrawerQuery={ERCO_MOBILE_QUERY}
         title="Delete Type"
         message={
           deleteTarget?.label
@@ -329,6 +330,8 @@ const ErcoSetupStep = ({
 
       <TypeManagerModal
         visible={incident.showAddTypeModal}
+        mobileDrawer
+        mobileDrawerQuery={ERCO_MOBILE_QUERY}
         onClose={incident.closeAddModal}
         editMode={incident.incidentEditMode}
         onSetEditMode={incident.setIncidentEditMode}
@@ -363,6 +366,8 @@ const ErcoSetupStep = ({
 
       <TypeManagerModal
         visible={weather.showAddWeatherModal}
+        mobileDrawer
+        mobileDrawerQuery={ERCO_MOBILE_QUERY}
         onClose={weather.closeAddModal}
         editMode={weather.weatherEditMode}
         onSetEditMode={weather.setWeatherEditMode}
@@ -397,6 +402,8 @@ const ErcoSetupStep = ({
 
       <TypeManagerModal
         visible={location.showAddLocationModal}
+        mobileDrawer
+        mobileDrawerQuery={ERCO_MOBILE_QUERY}
         onClose={location.closeAddModal}
         editMode={location.locationEditMode}
         onSetEditMode={location.setLocationEditMode}

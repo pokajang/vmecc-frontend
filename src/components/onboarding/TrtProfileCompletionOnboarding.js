@@ -23,11 +23,11 @@ import ButtonLoader from 'src/components/ButtonLoader'
 import { updateOnboardingState, updateProfile } from 'src/services/apiClient'
 import {
   PROFILE_COMPLETION_GROUPS,
-  TRT_REMINDER_DELAY_MS,
-  TRT_PROFILE_ONBOARDING_KEY,
-  TRT_PROFILE_ONBOARDING_VERSION,
-  getTrtOperationalProfileCompleteness,
-  getTrtProfileOnboardingStorageKey,
+  PROFILE_COMPLETION_ONBOARDING_KEY,
+  PROFILE_COMPLETION_ONBOARDING_VERSION,
+  PROFILE_COMPLETION_REMINDER_DELAY_MS,
+  getProfileCompleteness,
+  getProfileOnboardingStorageKey,
   hasCriticalMedicalInfoAcknowledgement,
 } from 'src/onboarding/trtProfileCompletion'
 
@@ -252,13 +252,13 @@ const SelectField = ({ id, label, children, ...props }) => (
   </FormField>
 )
 
-const TrtProfileCompletionOnboarding = () => {
+const ProfileCompletionOnboarding = () => {
   const dispatch = useDispatch()
   const location = useLocation()
   const authUser = useSelector((state) => state.authUser)
-  const completeness = useMemo(() => getTrtOperationalProfileCompleteness(authUser), [authUser])
-  const storageKey = useMemo(() => getTrtProfileOnboardingStorageKey(authUser?.id), [authUser?.id])
-  const serverOnboardingRecord = authUser?.onboarding?.[TRT_PROFILE_ONBOARDING_KEY] || null
+  const completeness = useMemo(() => getProfileCompleteness(authUser), [authUser])
+  const storageKey = useMemo(() => getProfileOnboardingStorageKey(authUser?.id), [authUser?.id])
+  const serverOnboardingRecord = authUser?.onboarding?.[PROFILE_COMPLETION_ONBOARDING_KEY] || null
 
   const [visible, setVisible] = useState(false)
   const [mode, setMode] = useState('prompt')
@@ -329,16 +329,16 @@ const TrtProfileCompletionOnboarding = () => {
 
   const persistProfileOnboardingEvent = async ({ event, payload = {}, fallbackRecord }) => {
     try {
-      const response = await updateOnboardingState(TRT_PROFILE_ONBOARDING_KEY, {
-        version: TRT_PROFILE_ONBOARDING_VERSION,
+      const response = await updateOnboardingState(PROFILE_COMPLETION_ONBOARDING_KEY, {
+        version: PROFILE_COMPLETION_ONBOARDING_VERSION,
         event,
         ...payload,
       })
-      const nextState = response?.data?.[TRT_PROFILE_ONBOARDING_KEY]
+      const nextState = response?.data?.[PROFILE_COMPLETION_ONBOARDING_KEY]
       if (nextState) {
         dispatch({
           type: 'set',
-          authUser: mergeOnboardingState(authUser, TRT_PROFILE_ONBOARDING_KEY, nextState),
+          authUser: mergeOnboardingState(authUser, PROFILE_COMPLETION_ONBOARDING_KEY, nextState),
         })
       }
       return nextState
@@ -351,7 +351,7 @@ const TrtProfileCompletionOnboarding = () => {
   }
 
   const handleRemindLater = async () => {
-    const snoozedUntil = new Date(Date.now() + TRT_REMINDER_DELAY_MS).toISOString()
+    const snoozedUntil = new Date(Date.now() + PROFILE_COMPLETION_REMINDER_DELAY_MS).toISOString()
     setVisible(false)
     await persistProfileOnboardingEvent({
       event: 'snoozed',
@@ -398,7 +398,7 @@ const TrtProfileCompletionOnboarding = () => {
       const nextUser = response?.user || null
       dispatch({ type: 'set', authUser: nextUser })
 
-      const nextCompleteness = getTrtOperationalProfileCompleteness(nextUser)
+      const nextCompleteness = getProfileCompleteness(nextUser)
       if (nextCompleteness.complete) {
         setMode('complete')
       } else {
@@ -430,20 +430,20 @@ const TrtProfileCompletionOnboarding = () => {
             ? `Welcome, ${firstName}`
             : mode === 'complete'
               ? 'Profile ready'
-              : 'Complete your operational profile'}
+              : 'Complete your profile'}
         </CModalTitle>
       </CModalHeader>
-      <CModalBody className="d-grid gap-3">
+      <CModalBody className="d-grid align-content-start gap-3">
         {mode === 'prompt' && (
           <>
             <div>
               <h4 className="mb-2">
-                Hi, {firstName}, as part of the Tactical Response Team, let&apos;s complete a few
-                things before you start using this system.
+                Hi, {firstName}, let&apos;s complete a few things before you start using this
+                system.
               </h4>
               <p className="mb-0 text-body-secondary">
-                This only takes a moment and helps supervisors and response leads reach the right
-                person quickly when needed.
+                This only takes a moment and keeps your contact and emergency details available when
+                needed.
               </p>
             </div>
             <MissingSummary missingByGroup={completeness.missingByGroup} />
@@ -685,7 +685,7 @@ const TrtProfileCompletionOnboarding = () => {
           <div className="d-flex align-items-start gap-3">
             <CircleCheck size={24} className="text-success flex-shrink-0 mt-1" aria-hidden="true" />
             <div>
-              <h4 className="mb-2">Your operational profile is ready.</h4>
+              <h4 className="mb-2">Your profile is ready.</h4>
               <p className="mb-0 text-body-secondary">
                 Your contact, emergency, and medical readiness details are complete. You can now
                 continue using the system.
@@ -732,4 +732,4 @@ const TrtProfileCompletionOnboarding = () => {
   )
 }
 
-export default TrtProfileCompletionOnboarding
+export default ProfileCompletionOnboarding

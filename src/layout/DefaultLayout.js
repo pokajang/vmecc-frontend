@@ -4,7 +4,7 @@ import { AppContent, AppSidebar, AppHeader, AppFooter } from '../components/inde
 import AiHelperPanel from 'src/components/ai-helper/AiHelperPanel'
 import AppUpdateBanner from 'src/components/AppUpdateBanner'
 import MaintenanceGraceBanner from 'src/components/MaintenanceGraceBanner'
-import TrtProfileCompletionOnboarding from 'src/components/onboarding/TrtProfileCompletionOnboarding'
+import ProfileCompletionOnboarding from 'src/components/onboarding/TrtProfileCompletionOnboarding'
 import { PwaInstallProvider } from 'src/hooks/usePwaInstallPrompt'
 
 const DefaultLayout = () => {
@@ -18,7 +18,7 @@ const DefaultLayout = () => {
           className={`wrapper d-flex flex-column min-vh-100${aiHelperOpen ? ' ai-helper-open' : ''}`}
         >
           <AppHeader />
-          <TrtProfileCompletionOnboarding />
+          <ProfileCompletionOnboarding />
           <MaintenanceGraceBanner />
           <AppUpdateBanner />
           <div className="body flex-grow-1 d-flex flex-column" style={{ minHeight: 0 }}>

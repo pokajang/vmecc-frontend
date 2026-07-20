@@ -4,12 +4,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import ActionConfirmModal from '../ActionConfirmModal'
 
-const setMobileViewport = () => {
+const setMobileViewport = (matchedQuery = '(max-width: 575.98px)') => {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
     configurable: true,
     value: vi.fn((query) => ({
-      matches: query === '(max-width: 575.98px)',
+      matches: query === matchedQuery,
       media: query,
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
@@ -54,5 +54,24 @@ describe('ActionConfirmModal', () => {
 
     fireEvent.click(within(drawer).getByRole('button', { name: 'Delete' }))
     expect(onConfirm).toHaveBeenCalledTimes(1)
+  })
+
+  it('supports a caller-provided mobile drawer breakpoint', () => {
+    const mobileDrawerQuery = '(max-width: 767.98px)'
+    setMobileViewport(mobileDrawerQuery)
+
+    render(
+      <ActionConfirmModal
+        visible
+        mobileDrawerQuery={mobileDrawerQuery}
+        title="Reset ERCO Report"
+        message="Reset this report?"
+        onClose={vi.fn()}
+        onConfirm={vi.fn()}
+      />,
+    )
+
+    expect(document.querySelector('.mobile-bottom-drawer')).toBeTruthy()
+    expect(document.querySelector('.modal.show')).toBeNull()
   })
 })

@@ -83,7 +83,7 @@ export const RESPONSE_LANGUAGE_OPTIONS = [
 ]
 
 export const normalizeResponseLanguage = (value) =>
-  RESPONSE_LANGUAGE_OPTIONS.some((option) => option.value === value) ? value : 'bm'
+  RESPONSE_LANGUAGE_OPTIONS.some((option) => option.value === value) ? value : 'auto'
 
 export const responseLanguageLabel = (value) =>
   RESPONSE_LANGUAGE_OPTIONS.find((option) => option.value === value)?.label || 'Auto'

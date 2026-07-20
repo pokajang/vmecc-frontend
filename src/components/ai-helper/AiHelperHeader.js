@@ -21,7 +21,7 @@ const AiHelperHeader = ({
       </div>
       <div className="ai-helper-header__title-wrap">
         <div className="ai-helper-title">
-          <span className="ai-helper-title__text">Ask AI</span>
+          <h2 className="ai-helper-title__text">Ask AI</h2>
           <span className="ai-helper-beta-text">Beta</span>
         </div>
       </div>

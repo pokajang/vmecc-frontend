@@ -33,7 +33,7 @@ import {
   PreMobModeModal,
   ChronologyStartModeModal,
 } from './erco-form-components'
-import useIsMobile from './erco-form-components/useIsMobile'
+import useIsMobile, { ERCO_MOBILE_QUERY } from './erco-form-components/useIsMobile'
 import useIncidentTitleSuggestions from './useIncidentTitleSuggestions'
 
 const ErcoDetailsStep = ({
@@ -394,6 +394,7 @@ const ErcoDetailsStep = ({
     <div className="mb-3 d-grid gap-4">
       <ActionConfirmModal
         visible={Boolean(deleteTitleTarget)}
+        mobileDrawerQuery={ERCO_MOBILE_QUERY}
         title="Delete Title"
         message={
           deleteTitleTarget?.label
@@ -434,6 +435,8 @@ const ErcoDetailsStep = ({
 
       <TypeManagerModal
         visible={titleManager.showAddTitleModal}
+        mobileDrawer
+        mobileDrawerQuery={ERCO_MOBILE_QUERY}
         onClose={titleManager.closeAddModal}
         editMode={titleManager.titleEditMode}
         onSetEditMode={titleManager.setTitleEditMode}

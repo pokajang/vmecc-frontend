@@ -13,11 +13,12 @@ const ActionConfirmModal = ({
   confirmDisabled = false,
   cancelDisabled = false,
   mobileDrawer = true,
+  mobileDrawerQuery = '(max-width: 575.98px)',
   testId = '',
   onClose,
   onConfirm,
 }) => {
-  const useMobileDrawer = useMediaQuery('(max-width: 575.98px)')
+  const useMobileDrawer = useMediaQuery(mobileDrawerQuery)
   const handleClose = () => {
     if (cancelDisabled) return
     onClose?.()

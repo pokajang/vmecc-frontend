@@ -18,7 +18,7 @@ import {
   normalizeKey,
   normalizeSection,
 } from './postIncidentAnalysisConstants'
-import useIsMobile from './useIsMobile'
+import useIsMobile, { ERCO_MOBILE_QUERY } from './useIsMobile'
 
 const MOBILE_SECTION_ORDER = [
   'strengths',
@@ -481,6 +481,8 @@ const PostIncidentAnalysisSection = ({ value, onChange, pushToast, onBeforeCamer
     <div className="d-grid gap-4">
       <TypeManagerModal
         visible={Boolean(addModalSectionKey)}
+        mobileDrawer
+        mobileDrawerQuery={ERCO_MOBILE_QUERY}
         onClose={closeAddModal}
         editMode={addModalEditMode}
         onSetEditMode={setAddModalEditMode}

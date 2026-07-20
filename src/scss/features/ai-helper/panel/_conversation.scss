@@ -28,81 +28,6 @@
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
-.ai-helper-message__content {
-  white-space: normal;
-
-  p {
-    margin: 0 0 0.65rem;
-  }
-
-  ul,
-  ol {
-    margin: 0.35rem 0 0.65rem;
-    padding-left: 1.25rem;
-  }
-
-  ul ul,
-  ul ol,
-  ol ul,
-  ol ol {
-    margin: 0.2rem 0;
-    padding-left: 1.15rem;
-  }
-
-  li {
-    margin: 0.2rem 0;
-    overflow-wrap: anywhere;
-  }
-
-  li > p {
-    margin-bottom: 0.25rem;
-  }
-
-  code {
-    white-space: break-spaces;
-  }
-
-  > :last-child {
-    margin-bottom: 0;
-  }
-}
-
-.ai-helper-message__table-wrap {
-  max-width: 100%;
-  margin: 0.5rem 0 0.65rem;
-  overflow-x: auto;
-
-  table {
-    width: max-content;
-    min-width: 100%;
-    border-collapse: collapse;
-    font-size: 0.82rem;
-  }
-
-  th,
-  td {
-    padding: 0.35rem 0.45rem;
-    border: 1px solid rgba(148, 163, 184, 0.35);
-    vertical-align: top;
-  }
-}
-
-.ai-helper-message__citation {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.05rem 0.28rem;
-  border: 1px solid rgba(148, 163, 184, 0.32);
-  border-radius: 999px;
-  background: rgba(148, 163, 184, 0.1);
-  color: var(--cui-secondary-color);
-  font-size: 0.68rem;
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-  line-height: 1.25;
-  vertical-align: 0.08em;
-  white-space: nowrap;
-}
-
 .ai-helper-message__bubble--actionable {
   position: relative;
   padding-bottom: 2.05rem;
@@ -125,18 +50,27 @@
 .ai-helper-message__sources-list {
   display: grid;
   gap: 0.25rem;
+  min-width: 0;
 }
 
 .ai-helper-message__source-link {
+  display: block;
   color: var(--cui-primary);
   font-size: 0.82rem;
   font-weight: 600;
+  overflow-wrap: anywhere;
   text-decoration: underline;
   text-underline-offset: 0.15em;
 
   &:hover,
   &:focus-visible {
-    color: #006966;
+    color: var(--cui-link-hover-color, #006966);
+  }
+
+  &:focus-visible {
+    border-radius: 0.15rem;
+    outline: 0;
+    box-shadow: var(--vmecc-focus-ring);
   }
 }
 
@@ -148,6 +82,12 @@
   font-size: 0.82rem;
   font-weight: 600;
   line-height: 1.35;
+  min-width: 0;
+
+  span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
 
   svg {
     flex: 0 0 auto;

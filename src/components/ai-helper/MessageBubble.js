@@ -1,67 +1,10 @@
 import React from 'react'
 import { CTooltip } from '@coreui/react'
 import { BookOpenText, Check, Copy, Flag, RotateCcw } from 'lucide-react'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 
+import AiResponseContent from './AiResponseContent'
 import { MESSAGE_STATUS_SLOW, getMessageActions } from './constants'
 import { buildAiHelperDocumentFileUrl } from 'src/services/apiClient'
-
-const SOURCE_CITATION_PATTERN = /\[(S[1-9]\d*)\](?!\()/g
-const SOURCE_CITATION_TARGET_PATTERN = /^#ai-helper-source-(S[1-9]\d*)$/
-
-const renderAssistantContent = (content) => {
-  const markdown = String(content || '')
-  if (!markdown.trim()) {
-    return <div className="ai-helper-message__content" />
-  }
-
-  const markdownWithCitationLinks = markdown.replace(
-    SOURCE_CITATION_PATTERN,
-    (_, sourceId) => `[${sourceId}](#ai-helper-source-${sourceId})`,
-  )
-
-  return (
-    <div className="ai-helper-message__content">
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        skipHtml
-        components={{
-          table: ({ children, ...props }) => (
-            <div className="ai-helper-message__table-wrap">
-              <table {...props}>{children}</table>
-            </div>
-          ),
-          a: ({ href, children, ...props }) => {
-            const sourceCitation = SOURCE_CITATION_TARGET_PATTERN.exec(String(href || ''))
-            if (sourceCitation) {
-              return (
-                <span
-                  className="ai-helper-message__citation"
-                  aria-label={`Retrieved source ${sourceCitation[1]}`}
-                  title={`Retrieved source ${sourceCitation[1]}`}
-                >
-                  {children}
-                </span>
-              )
-            }
-
-            const safeHref = /^(https?:|mailto:)/i.test(String(href || '')) ? href : null
-            return safeHref ? (
-              <a {...props} href={safeHref} target="_blank" rel="noopener noreferrer">
-                {children}
-              </a>
-            ) : (
-              <span>{children}</span>
-            )
-          },
-        }}
-      >
-        {markdownWithCitationLinks}
-      </ReactMarkdown>
-    </div>
-  )
-}
 
 const MessageBubble = ({ message, copied, onCopy, onReport, onRetry, retryDisabled }) => {
   const isUser = message.role === 'user'
@@ -81,7 +24,7 @@ const MessageBubble = ({ message, copied, onCopy, onReport, onRetry, retryDisabl
           isUser ? (
             <span>{message.content}</span>
           ) : (
-            renderAssistantContent(message.content)
+            <AiResponseContent content={message.content} />
           )
         ) : status === MESSAGE_STATUS_SLOW ? (
           <span className="ai-helper-muted" aria-live="polite">

@@ -35,7 +35,7 @@ const AiHelperPanel = () => {
     try {
       return normalizeResponseLanguage(localStorage.getItem(LANGUAGE_STORAGE_KEY))
     } catch {
-      return 'bm'
+      return 'auto'
     }
   })
   const [panelMode, setPanelMode] = useState('chat')

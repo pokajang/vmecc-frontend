@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  getTrtOperationalProfileCompleteness,
+  getProfileCompleteness,
   hasCriticalMedicalInfoAcknowledgement,
   isTacticalResponseTeamMember,
 } from '../trtProfileCompletion'
@@ -30,7 +30,7 @@ describe('trtProfileCompletion', () => {
   })
 
   it('returns complete for a TRT user with operational essentials', () => {
-    const result = getTrtOperationalProfileCompleteness(completeTrtUser)
+    const result = getProfileCompleteness(completeTrtUser)
 
     expect(result.applies).toBe(true)
     expect(result.complete).toBe(true)
@@ -38,7 +38,7 @@ describe('trtProfileCompletion', () => {
   })
 
   it('returns missing field groups for an incomplete TRT user', () => {
-    const result = getTrtOperationalProfileCompleteness({
+    const result = getProfileCompleteness({
       ...completeTrtUser,
       phone: '',
       state: '',
@@ -55,11 +55,20 @@ describe('trtProfileCompletion', () => {
     ])
   })
 
-  it('does not apply to non-TRT users', () => {
-    const result = getTrtOperationalProfileCompleteness({
+  it('applies to authenticated users regardless of role', () => {
+    const result = getProfileCompleteness({
+      id: 2,
       roles: ['Admin'],
       name: '',
     })
+
+    expect(result.applies).toBe(true)
+    expect(result.complete).toBe(false)
+    expect(result.missingGroups).toEqual(['personal', 'emergency', 'medical'])
+  })
+
+  it('does not apply without an authenticated user', () => {
+    const result = getProfileCompleteness(null)
 
     expect(result.applies).toBe(false)
     expect(result.complete).toBe(true)

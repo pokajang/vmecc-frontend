@@ -6,12 +6,12 @@ import { Provider } from 'react-redux'
 import { legacy_createStore as createStore } from 'redux'
 import { MemoryRouter } from 'react-router-dom'
 
-import TrtProfileCompletionOnboarding from '../TrtProfileCompletionOnboarding'
+import ProfileCompletionOnboarding from '../TrtProfileCompletionOnboarding'
 import { updateOnboardingState, updateProfile } from 'src/services/apiClient'
 import {
-  TRT_PROFILE_ONBOARDING_KEY,
-  TRT_PROFILE_ONBOARDING_VERSION,
-  getTrtProfileOnboardingStorageKey,
+  PROFILE_COMPLETION_ONBOARDING_KEY,
+  PROFILE_COMPLETION_ONBOARDING_VERSION,
+  getProfileOnboardingStorageKey,
 } from 'src/onboarding/trtProfileCompletion'
 
 vi.mock('src/services/apiClient', () => ({
@@ -77,7 +77,7 @@ const renderWithStore = (authUser, route = '/dashboard') => {
   render(
     <MemoryRouter initialEntries={[route]}>
       <Provider store={store}>
-        <TrtProfileCompletionOnboarding />
+        <ProfileCompletionOnboarding />
       </Provider>
     </MemoryRouter>,
   )
@@ -90,8 +90,8 @@ beforeEach(() => {
   vi.stubGlobal('localStorage', createStorageMock())
   updateOnboardingState.mockResolvedValue({
     data: {
-      [TRT_PROFILE_ONBOARDING_KEY]: {
-        version: TRT_PROFILE_ONBOARDING_VERSION,
+      [PROFILE_COMPLETION_ONBOARDING_KEY]: {
+        version: PROFILE_COMPLETION_ONBOARDING_VERSION,
       },
     },
   })
@@ -104,24 +104,27 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
-describe('TrtProfileCompletionOnboarding', () => {
-  it('shows the prompt for incomplete TRT users', async () => {
+describe('ProfileCompletionOnboarding', () => {
+  it('shows the prompt for incomplete authenticated users', async () => {
     renderWithStore(incompleteUser)
 
     expect(await screen.findByText('Welcome, Azam', {}, { timeout: 3500 })).toBeTruthy()
-    expect(screen.getByText(/as part of the Tactical Response Team/i)).toBeTruthy()
+    expect(screen.getByText(/let's complete a few things/i)).toBeTruthy()
+    expect(document.querySelector('.modal-body')?.classList.contains('align-content-start')).toBe(
+      true,
+    )
   })
 
-  it('does not show for complete TRT users', async () => {
+  it('does not show for complete users', async () => {
     renderWithStore(completeUser)
 
-    await waitFor(() => expect(screen.queryByText('Complete your operational profile')).toBeNull())
+    await waitFor(() => expect(screen.queryByText('Welcome, TRT')).toBeNull())
   })
 
-  it('does not show for non-TRT users', async () => {
+  it('shows for incomplete users with another role', async () => {
     renderWithStore({ ...incompleteUser, roles: ['Admin'] })
 
-    await waitFor(() => expect(screen.queryByText('Complete your operational profile')).toBeNull())
+    expect(await screen.findByText('Welcome, Azam', {}, { timeout: 3500 })).toBeTruthy()
   })
 
   it('does not interrupt an incomplete user on a task route', async () => {
@@ -133,15 +136,15 @@ describe('TrtProfileCompletionOnboarding', () => {
 
   it('uses local fallback suppression when backend state exists but is not suppressing', async () => {
     localStorage.setItem(
-      getTrtProfileOnboardingStorageKey(incompleteUser.id),
+      getProfileOnboardingStorageKey(incompleteUser.id),
       JSON.stringify({ dismissed: true, dismissedAt: '2026-06-25T01:00:00.000Z' }),
     )
 
     renderWithStore({
       ...incompleteUser,
       onboarding: {
-        [TRT_PROFILE_ONBOARDING_KEY]: {
-          version: TRT_PROFILE_ONBOARDING_VERSION,
+        [PROFILE_COMPLETION_ONBOARDING_KEY]: {
+          version: PROFILE_COMPLETION_ONBOARDING_VERSION,
           lastStartedAt: '2026-06-25T00:00:00.000Z',
         },
       },
@@ -157,9 +160,9 @@ describe('TrtProfileCompletionOnboarding', () => {
 
     await waitFor(() =>
       expect(updateOnboardingState).toHaveBeenCalledWith(
-        TRT_PROFILE_ONBOARDING_KEY,
+        PROFILE_COMPLETION_ONBOARDING_KEY,
         expect.objectContaining({
-          version: TRT_PROFILE_ONBOARDING_VERSION,
+          version: PROFILE_COMPLETION_ONBOARDING_VERSION,
           event: 'snoozed',
           snoozedUntil: expect.any(String),
         }),
@@ -167,7 +170,7 @@ describe('TrtProfileCompletionOnboarding', () => {
     )
     const [, payload] = updateOnboardingState.mock.calls[0]
     expect(Date.parse(payload.snoozedUntil)).toBeGreaterThan(Date.now())
-    expect(localStorage.getItem(getTrtProfileOnboardingStorageKey(incompleteUser.id))).toBeNull()
+    expect(localStorage.getItem(getProfileOnboardingStorageKey(incompleteUser.id))).toBeNull()
   })
 
   it('falls back to local storage when profile onboarding persistence fails', async () => {
@@ -178,7 +181,7 @@ describe('TrtProfileCompletionOnboarding', () => {
 
     await waitFor(() =>
       expect(
-        JSON.parse(localStorage.getItem(getTrtProfileOnboardingStorageKey(incompleteUser.id)))
+        JSON.parse(localStorage.getItem(getProfileOnboardingStorageKey(incompleteUser.id)))
           .snoozedUntil,
       ).toBeTruthy(),
     )
@@ -263,7 +266,7 @@ describe('TrtProfileCompletionOnboarding', () => {
       }),
     )
     expect(await screen.findByText('Profile ready')).toBeTruthy()
-    expect(screen.getByText('Your operational profile is ready.')).toBeTruthy()
+    expect(screen.getByText('Your profile is ready.')).toBeTruthy()
     expect(screen.getByRole('button', { name: /continue/i })).toBeTruthy()
     expect(store.getState().authUser).toEqual(completeUser)
   })
@@ -286,6 +289,6 @@ describe('TrtProfileCompletionOnboarding', () => {
     fireEvent.click(screen.getByRole('button', { name: /continue/i }))
 
     await waitFor(() => expect(document.querySelector('.modal.show')).toBeNull())
-    expect(localStorage.getItem(getTrtProfileOnboardingStorageKey(completeUser.id))).toBeNull()
+    expect(localStorage.getItem(getProfileOnboardingStorageKey(completeUser.id))).toBeNull()
   })
 })

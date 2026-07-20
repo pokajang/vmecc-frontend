@@ -54,11 +54,12 @@ const TypeManagerModal = ({
   warningNotice = '',
   testId = '',
   mobileDrawer = false,
+  mobileDrawerQuery = '(max-width: 575.98px)',
 }) => {
   const shouldShowIconPicker = showIconPicker || iconOptions.length > 0
   const hasIconPicker = shouldShowIconPicker && typeof onChangeIcon === 'function'
   const iconPickerUnavailable = showIconPicker && hasIconPicker && iconOptions.length === 0
-  const isMobileDrawerViewport = useMediaQuery('(max-width: 575.98px)')
+  const isMobileDrawerViewport = useMediaQuery(mobileDrawerQuery)
   const useDrawer = mobileDrawer && isMobileDrawerViewport
   const title = editMode || editingKey ? editTitle : addTitle
 
@@ -264,7 +265,12 @@ const TypeManagerModal = ({
 
   if (useDrawer) {
     return (
-      <MobileBottomDrawer visible={visible} title={title} onClose={onClose}>
+      <MobileBottomDrawer
+        visible={visible}
+        title={title}
+        onClose={onClose}
+        {...(testId ? { 'data-testid': testId } : {})}
+      >
         <div className="type-manager-modal__body d-grid gap-3">
           {body}
           <div className="mobile-bottom-drawer__footer d-flex justify-content-end gap-2">

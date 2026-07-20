@@ -6,6 +6,7 @@ import TypeManagerModal from '../TypeManagerModal'
 
 afterEach(() => {
   cleanup()
+  delete window.matchMedia
 })
 
 const baseProps = {
@@ -36,6 +37,27 @@ const baseProps = {
 }
 
 describe('TypeManagerModal', () => {
+  it('supports an opt-in drawer breakpoint without changing its default presentation', () => {
+    const mobileDrawerQuery = '(max-width: 767.98px)'
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      configurable: true,
+      value: vi.fn((query) => ({
+        matches: query === mobileDrawerQuery,
+        media: query,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+      })),
+    })
+
+    render(<TypeManagerModal {...baseProps} mobileDrawer mobileDrawerQuery={mobileDrawerQuery} />)
+
+    expect(document.querySelector('.mobile-bottom-drawer')).toBeTruthy()
+    expect(document.querySelector('.modal.show')).toBeNull()
+  })
+
   it('gives edit and delete icon actions accessible labels', () => {
     render(<TypeManagerModal {...baseProps} />)
 

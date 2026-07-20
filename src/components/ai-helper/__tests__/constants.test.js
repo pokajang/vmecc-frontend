@@ -4,8 +4,19 @@ import {
   knowledgeActionableFindings,
   knowledgeFindings,
   knowledgeQualityLabel,
+  normalizeResponseLanguage,
+  responseLanguageLabel,
   safeAiHelperError,
 } from '../constants'
+
+describe('response language defaults', () => {
+  it('defaults missing or invalid preferences to the latest-message language', () => {
+    expect(normalizeResponseLanguage(null)).toBe('auto')
+    expect(normalizeResponseLanguage('unsupported')).toBe('auto')
+    expect(responseLanguageLabel(normalizeResponseLanguage(null))).toBe('Auto')
+    expect(normalizeResponseLanguage('bm')).toBe('bm')
+  })
+})
 
 describe('safeAiHelperError', () => {
   it.each([

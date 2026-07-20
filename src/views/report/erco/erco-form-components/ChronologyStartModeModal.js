@@ -1,10 +1,10 @@
 import React from 'react'
 import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
-import useMediaQuery from 'src/hooks/useMediaQuery'
+import useIsMobile from './useIsMobile'
 
 const ChronologyStartModeModal = ({ visible, responseStartTime, onClose, onManual, onPremob }) => {
-  const isMobileDrawer = useMediaQuery('(max-width: 575.98px)')
+  const isMobileDrawer = useIsMobile()
   const body = (
     <>
       Response start time is set to <strong>{responseStartTime}</strong>. Choose how to begin
@@ -31,7 +31,7 @@ const ChronologyStartModeModal = ({ visible, responseStartTime, onClose, onManua
         <div className="inspection-mobile-detail-drawer-body inspection-equipment-detail-drawer-body">
           {body}
         </div>
-        <div className="mobile-bottom-drawer__footer d-flex align-items-center justify-content-end gap-2">
+        <div className="mobile-bottom-drawer__footer d-flex flex-wrap align-items-center justify-content-end gap-2">
           {actions}
         </div>
       </MobileBottomDrawer>

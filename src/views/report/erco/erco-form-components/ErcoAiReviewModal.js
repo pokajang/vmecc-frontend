@@ -11,7 +11,9 @@ import {
   CSpinner,
 } from '@coreui/react'
 import { ClipboardCheck } from 'lucide-react'
+import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import { AI_REVIEW_STATUS, normalizeReviewStatus, reviewStatusLabel } from '../aiAssist'
+import useIsMobile from './useIsMobile'
 
 const statusColor = (status) => {
   const normalized = normalizeReviewStatus(status)
@@ -20,21 +22,17 @@ const statusColor = (status) => {
   return 'info'
 }
 
-const ErcoAiReviewModal = ({ visible, stage, items, errorMessage, onClose, onRun, onRetry }) => (
-  <CModal
-    alignment="center"
-    visible={visible}
-    onClose={stage === 'loading' ? undefined : onClose}
-    fullscreen="sm"
-    scrollable
-  >
-    <CModalHeader>
-      <CModalTitle className="d-flex align-items-center gap-2">
-        <ClipboardCheck size={17} />
-        Check Report with AI
-      </CModalTitle>
-    </CModalHeader>
-    <CModalBody className="d-grid gap-3">
+const ErcoAiReviewModal = ({ visible, stage, items, errorMessage, onClose, onRun, onRetry }) => {
+  const isMobile = useIsMobile()
+  const closeDisabled = stage === 'loading'
+  const title = (
+    <span className="d-flex align-items-center gap-2">
+      <ClipboardCheck size={17} />
+      Check Report with AI
+    </span>
+  )
+  const body = (
+    <div className="d-grid gap-3">
       {stage === 'confirm' ? (
         <div className="text-body-secondary">
           AI can check for possible missing or unclear ERCO report information. This does not block
@@ -83,8 +81,10 @@ const ErcoAiReviewModal = ({ visible, stage, items, errorMessage, onClose, onRun
           {errorMessage || 'Ask AI could not check the report. You can continue manually.'}
         </CAlert>
       ) : null}
-    </CModalBody>
-    <CModalFooter>
+    </div>
+  )
+  const actions = (
+    <>
       {stage === 'confirm' ? (
         <>
           <CButton type="button" color="light" onClick={onClose}>
@@ -115,8 +115,41 @@ const ErcoAiReviewModal = ({ visible, stage, items, errorMessage, onClose, onRun
           </CButton>
         </>
       ) : null}
-    </CModalFooter>
-  </CModal>
-)
+    </>
+  )
+
+  if (isMobile) {
+    return (
+      <MobileBottomDrawer
+        visible={visible}
+        title={title}
+        aria-label="Check Report with AI"
+        onClose={onClose}
+        closeDisabled={closeDisabled}
+      >
+        {body}
+        <div className="mobile-bottom-drawer__footer d-flex flex-wrap justify-content-end gap-2">
+          {actions}
+        </div>
+      </MobileBottomDrawer>
+    )
+  }
+
+  return (
+    <CModal
+      alignment="center"
+      visible={visible}
+      onClose={closeDisabled ? undefined : onClose}
+      fullscreen="sm"
+      scrollable
+    >
+      <CModalHeader>
+        <CModalTitle>{title}</CModalTitle>
+      </CModalHeader>
+      <CModalBody>{body}</CModalBody>
+      <CModalFooter>{actions}</CModalFooter>
+    </CModal>
+  )
+}
 
 export default ErcoAiReviewModal

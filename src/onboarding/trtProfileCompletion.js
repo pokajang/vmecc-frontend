@@ -1,8 +1,15 @@
-export const TRT_PROFILE_ONBOARDING_KEY = 'profile_completion_trt'
-export const TRT_PROFILE_ONBOARDING_VERSION = 'v1'
-export const TRT_PROFILE_ONBOARDING_STORAGE_PREFIX = `vmecc_onboarding:${TRT_PROFILE_ONBOARDING_KEY}:${TRT_PROFILE_ONBOARDING_VERSION}`
+// Keep the persisted key stable so existing snooze and completion records remain valid.
+export const PROFILE_COMPLETION_ONBOARDING_KEY = 'profile_completion_trt'
+export const PROFILE_COMPLETION_ONBOARDING_VERSION = 'v1'
+export const PROFILE_COMPLETION_ONBOARDING_STORAGE_PREFIX = `vmecc_onboarding:${PROFILE_COMPLETION_ONBOARDING_KEY}:${PROFILE_COMPLETION_ONBOARDING_VERSION}`
 export const TRT_ROLE = 'Tactical Response Team'
-export const TRT_REMINDER_DELAY_MS = 24 * 60 * 60 * 1000
+export const PROFILE_COMPLETION_REMINDER_DELAY_MS = 24 * 60 * 60 * 1000
+
+// Backward-compatible aliases for existing imports while this feature transitions from TRT-only.
+export const TRT_PROFILE_ONBOARDING_KEY = PROFILE_COMPLETION_ONBOARDING_KEY
+export const TRT_PROFILE_ONBOARDING_VERSION = PROFILE_COMPLETION_ONBOARDING_VERSION
+export const TRT_PROFILE_ONBOARDING_STORAGE_PREFIX = PROFILE_COMPLETION_ONBOARDING_STORAGE_PREFIX
+export const TRT_REMINDER_DELAY_MS = PROFILE_COMPLETION_REMINDER_DELAY_MS
 
 export const PROFILE_COMPLETION_GROUPS = [
   {
@@ -63,8 +70,8 @@ export const hasCriticalMedicalInfoAcknowledgement = (medicalInfo) => {
   )
 }
 
-export const getTrtOperationalProfileCompleteness = (user) => {
-  const applies = isTacticalResponseTeamMember(user)
+export const getProfileCompleteness = (user) => {
+  const applies = Boolean(user?.id)
   if (!applies) {
     return {
       applies: false,
@@ -106,5 +113,8 @@ export const getTrtOperationalProfileCompleteness = (user) => {
   }
 }
 
-export const getTrtProfileOnboardingStorageKey = (userId) =>
-  `${TRT_PROFILE_ONBOARDING_STORAGE_PREFIX}:${userId || 'anonymous'}`
+export const getProfileOnboardingStorageKey = (userId) =>
+  `${PROFILE_COMPLETION_ONBOARDING_STORAGE_PREFIX}:${userId || 'anonymous'}`
+
+export const getTrtOperationalProfileCompleteness = getProfileCompleteness
+export const getTrtProfileOnboardingStorageKey = getProfileOnboardingStorageKey

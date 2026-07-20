@@ -31,6 +31,7 @@ import ErcoSetupStep from './ErcoSetupStep'
 import ErcoRespondingTeamStep from './ErcoRespondingTeamStep'
 import ErcoDetailsStep from './ErcoDetailsStep'
 import ErcoPostAnalysisStep from './ErcoPostAnalysisStep'
+import { ERCO_MOBILE_QUERY } from './erco-form-components/useIsMobile'
 
 const ERCO_NEW_SECTIONS = ['setup', 'team', 'form', 'analysis']
 const createDraftSignature = (form) => JSON.stringify(form || {})
@@ -543,6 +544,7 @@ const ErcoForm = ({
     <>
       <ActionConfirmModal
         visible={showReset}
+        mobileDrawerQuery={ERCO_MOBILE_QUERY}
         title={`Reset ${reportTypeLabel} Report`}
         message="Reset this report and clear the saved draft? This cannot be undone."
         confirmLabel="Reset"
