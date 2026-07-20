@@ -2,6 +2,18 @@ import React from 'react'
 import { CAlert, CBadge, CButton, CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/react'
 import { formatBytes, truncate } from './helpers'
 
+const semanticStatus = (ready) => {
+  if (ready === true) {
+    return { color: 'success', label: 'Ready' }
+  }
+
+  if (ready === false) {
+    return { color: 'danger', label: 'Needs rebuild' }
+  }
+
+  return { color: 'secondary', label: 'Unknown' }
+}
+
 const AiHelperKnowledgeDiagnosticsCard = ({
   diagnostics = null,
   diagnosticsError = null,
@@ -81,6 +93,41 @@ const AiHelperKnowledgeDiagnosticsCard = ({
                 <div className="text-body-secondary">Grounding verifier</div>
                 <div>
                   {diagnostics.knowledge_runtime?.grounding_verification_mode || 'disabled'}
+                </div>
+              </CCol>
+            </CRow>
+            <hr className="my-3" />
+            <CRow className="g-3 small">
+              <CCol md={3} sm={6}>
+                <div className="text-body-secondary">Semantic index</div>
+                <CBadge
+                  color={semanticStatus(diagnostics.knowledge_runtime?.semantic_ready).color}
+                  data-testid="ai-helper-semantic-status"
+                >
+                  {semanticStatus(diagnostics.knowledge_runtime?.semantic_ready).label}
+                </CBadge>
+              </CCol>
+              <CCol md={3} sm={6}>
+                <div className="text-body-secondary">Compatible sources</div>
+                <div data-testid="ai-helper-semantic-source-count">
+                  {diagnostics.knowledge_runtime?.semantic_sources ?? 0} /{' '}
+                  {diagnostics.knowledge_runtime?.usable_sources ?? 0}
+                </div>
+                <div className="text-body-secondary">
+                  {diagnostics.knowledge_runtime?.incompatible_semantic_sources ?? 0} incompatible
+                </div>
+              </CCol>
+              <CCol md={3} sm={6}>
+                <div className="text-body-secondary">Missing chunk vectors</div>
+                <div>{diagnostics.knowledge_runtime?.missing_embeddings ?? 0}</div>
+              </CCol>
+              <CCol md={3} sm={6}>
+                <div className="text-body-secondary">Index fingerprint</div>
+                <div
+                  className="font-monospace text-break"
+                  data-testid="ai-helper-index-fingerprint"
+                >
+                  {diagnostics.knowledge_runtime?.index_fingerprint || 'Not available'}
                 </div>
               </CCol>
             </CRow>

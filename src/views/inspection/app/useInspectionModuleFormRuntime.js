@@ -149,6 +149,21 @@ const useInspectionModuleFormRuntime = ({
     user?.id,
   ])
 
+  const updateFormState = useCallback(
+    (nextForm) => {
+      const normalizedForm = normalizeInspectionForm(nextForm)
+      if (user?.id) {
+        saveWorkspace(user.id, {
+          mode: routeMode,
+          recordId: routeRecordId,
+          form: normalizedForm,
+        })
+      }
+      setFormState(normalizedForm)
+    },
+    [routeMode, routeRecordId, user?.id],
+  )
+
   useEffect(() => {
     if (activeSection !== 'form' || !isFormReady || !user?.id) return
     const normalizedForm = normalizeInspectionForm(formState)
@@ -765,6 +780,7 @@ const useInspectionModuleFormRuntime = ({
     setContinuationPrompt,
     setDraftStatus,
     setFormState,
+    updateFormState,
     setIsFormDirty,
     setShowMobileRecords,
     showMobileRecords,

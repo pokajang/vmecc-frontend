@@ -812,10 +812,12 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
         ? 'Remove the stored items and keep the emergency exit route clear.'
         : 'The emergency exit route was obstructed by stored items.'
       handlers.onDone?.({
+        embedded_result: { text },
         message: {
           content: JSON.stringify({
             text,
           }),
+          embedded_result: { text },
         },
       })
     })
@@ -861,6 +863,7 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
     expect(streamAiHelperMessage.mock.calls[0][0]).toEqual(
       expect.objectContaining({
         response_language: 'en',
+        embedded_task: 'inspection_translate_finding',
         page_context: expect.objectContaining({
           module_key: 'inspection',
           route_key: 'inspection.form.finding',

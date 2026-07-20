@@ -1,6 +1,7 @@
 const { expect, test } = require('@playwright/test')
 const fs = require('node:fs')
 const path = require('node:path')
+const { evidencePath } = require('./support/evidence-path')
 const { setInspectionPhotoFromButton } = require('./support/inspection-photo')
 const { installAppShellApiStubs } = require('./support/app-shell-stubs')
 
@@ -8,12 +9,7 @@ const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
 const smokeEmail = process.env.VMECC_SMOKE_EMAIL || 'codex.smoke.sysadmin@vmecc.local'
 const smokePassword = process.env.VMECC_SMOKE_PASSWORD || 'SmokeRole!2026'
 const runId = process.env.VMECC_SMOKE_RUN_ID || new Date().toISOString().replace(/[:.]/g, '-')
-const artifactRoot = path.resolve(
-  process.cwd(),
-  'test-results',
-  'inspection-scba-high-angle-smoke',
-  runId,
-)
+const artifactRoot = evidencePath('inspection-scba-high-angle-smoke', runId)
 const routeTimeoutMs = Number(process.env.VMECC_SMOKE_ROUTE_TIMEOUT_MS || 30_000)
 
 const ensureArtifactRoot = () => fs.mkdirSync(artifactRoot, { recursive: true })

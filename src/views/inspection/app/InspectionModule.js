@@ -35,6 +35,7 @@ import {
   DRAFT_STATUS_LABELS,
   MOBILE_HOME_RECENT_RECORD_LIMIT,
 } from './inspectionModuleFlow'
+import { shouldQueueInspectionReview } from '../domain/offline/inspectionReviewConnectivity'
 import { handleInspectionMobileBack } from './inspectionModuleUiFlow'
 import {
   buildInspectionDetailViewProps,
@@ -253,6 +254,7 @@ const InspectionModule = () => {
     setContinuationPrompt,
     setDraftStatus,
     setFormState,
+    updateFormState,
     setIsFormDirty,
     setShowMobileRecords,
     showMobileRecords,
@@ -385,10 +387,10 @@ const InspectionModule = () => {
           user,
         })
       : null
-  const reviewMayQueue =
-    (typeof navigator !== 'undefined' && navigator.onLine === false) ||
-    Number(queueSummary?.count || 0) > 0 ||
-    Boolean(offlineHealth?.warnings?.length)
+  const reviewMayQueue = shouldQueueInspectionReview({
+    isOnline: typeof navigator === 'undefined' ? true : navigator.onLine,
+    queuedCount: queueSummary?.count,
+  })
 
   const {
     backFromReview,
@@ -541,7 +543,7 @@ const InspectionModule = () => {
         saveDraft,
         commitDraftSnapshot,
         setDraftStatus,
-        setFormState,
+        setFormState: updateFormState,
         user,
       })}
       headerActions={headerActions}

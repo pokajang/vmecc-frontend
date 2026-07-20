@@ -1,6 +1,7 @@
 const { expect, test } = require('@playwright/test')
 const fs = require('node:fs')
 const path = require('node:path')
+const { evidencePath } = require('./support/evidence-path')
 
 const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
 const baseUrl = process.env.VMECC_E2E_BASE_URL || 'http://localhost:3000'
@@ -8,10 +9,7 @@ const smokePassword = process.env.VMECC_SMOKE_RBAC_PASSWORD || 'SmokeRole!2026'
 const routeTimeoutMs = Number(process.env.VMECC_SMOKE_ROUTE_TIMEOUT_MS || 20_000)
 const apiPacingMs = Number(process.env.VMECC_SMOKE_API_PACING_MS || 650)
 const loginCookieNames = ['vmecc_session', 'vmecc_remember']
-const artifactRoot = path.resolve(
-  process.cwd(),
-  '..',
-  'qa-artifacts',
+const artifactRoot = evidencePath(
   'smoke-full',
   process.env.VMECC_SMOKE_RUN_ID || new Date().toISOString().replace(/[:.]/g, '-'),
 )

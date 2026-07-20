@@ -231,23 +231,76 @@ export const knowledgeQualityLabel = (entry = {}) => {
   return 'Not ready'
 }
 
+const TRANSIENT_AI_HELPER_ERROR_CODES = new Set([
+  'AI_HELPER_PROVIDER_RATE_LIMITED',
+  'AI_HELPER_PROVIDER_TIMEOUT',
+  'AI_HELPER_PROVIDER_UNAVAILABLE',
+  'AI_HELPER_PROVIDER_CIRCUIT_OPEN',
+  'AI_HELPER_PROVIDER_STREAM_INTERRUPTED',
+  'AI_HELPER_PROVIDER_OUTPUT_INCOMPLETE',
+  'AI_HELPER_PROVIDER_RESPONSE_FAILED',
+  'AI_HELPER_PROVIDER_INVALID_RESPONSE',
+  'AI_HELPER_PROVIDER_CALL_BUDGET_EXCEEDED',
+  'AI_HELPER_DEADLINE_EXCEEDED',
+  'AI_HELPER_STREAM_FAILED',
+])
+
 export const safeAiHelperError = (
   error,
   fallback = 'Could not reach Ask AI. Check your connection and try again.',
 ) => {
   const status = Number(error?.status || 0)
-  const code = error?.payload?.code
+  const code = error?.payload?.code || error?.code
 
-  if (error?.code === 'AI_HELPER_STREAM_INCOMPLETE') {
+  if (code === 'AI_HELPER_STREAM_INCOMPLETE') {
     return 'The Ask AI response stopped before it finished. Try again.'
   }
 
-  if (error?.code === 'AI_HELPER_STREAM_ABORTED') {
+  if (code === 'AI_HELPER_STREAM_ABORTED') {
     return 'Ask AI response was stopped.'
   }
 
-  if (error?.code === 'AI_HELPER_STREAM_TRANSPORT_ERROR') {
+  if (code === 'AI_HELPER_STREAM_TRANSPORT_ERROR') {
     return 'Ask AI response could not be streamed. Please try again.'
+  }
+
+  if (TRANSIENT_AI_HELPER_ERROR_CODES.has(code)) {
+    return 'Ask AI hit a temporary service issue before the response finished. Please try again.'
+  }
+
+  if (code === 'AI_HELPER_PROVIDER_TEMPORARY') {
+    return 'The AI provider is temporarily unavailable. Your VMECC knowledge remains available; please try again shortly.'
+  }
+
+  if (code === 'AI_HELPER_BUSY_RETRY') {
+    const retryAfter = Number(error?.payload?.retry_after || error?.payload?.retryAfter || 0)
+    return retryAfter > 0
+      ? `Ask AI is busy. Try again in about ${Math.ceil(retryAfter)}s.`
+      : 'Ask AI is busy. Wait briefly and try again.'
+  }
+
+  if (code === 'AI_HELPER_DUPLICATE_REQUEST') {
+    return 'This question is already being processed. Wait for the current response before retrying.'
+  }
+
+  if (code === 'AI_HELPER_SENSITIVE_DATA_BLOCKED') {
+    return 'Remove passwords, tokens, identity numbers, or bank account values before sending this question.'
+  }
+
+  if (code === 'AI_HELPER_NO_AUTHORIZED_EVIDENCE') {
+    return 'No relevant guidance available to your account was found for that question.'
+  }
+
+  if (code === 'AI_HELPER_AMBIGUOUS_QUESTION') {
+    return 'Ask AI needs a little more detail. Name the page, form, document, or action you mean.'
+  }
+
+  if (code === 'AI_HELPER_EVIDENCE_INCOMPLETE') {
+    return 'Related guidance was found, but it was not sufficient to verify a complete answer.'
+  }
+
+  if (code === 'AI_HELPER_VALIDATION_FAILED') {
+    return 'Ask AI found guidance but could not verify a safe answer. Please rephrase or open the listed source.'
   }
 
   if (code === 'AI_HELPER_UNAVAILABLE' || status === 503) {
@@ -255,7 +308,7 @@ export const safeAiHelperError = (
   }
 
   if (code === 'AI_HELPER_KNOWLEDGE_NOT_READY' || status === 409) {
-    return 'Ask AI is preparing the uploaded knowledge corpus. Wait for processing to finish or resolve failed documents.'
+    return 'Ask AI does not yet have an active knowledge release. Wait for the first corpus build to finish or resolve failed documents.'
   }
 
   if (code === 'AI_HELPER_KNOWLEDGE_UPLOAD_RATE_LIMITED') {

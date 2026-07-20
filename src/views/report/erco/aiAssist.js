@@ -7,6 +7,12 @@ export const AI_REVIEW_STATUS = {
   MISSING_INFORMATION: 'missing_information',
 }
 
+export const ERCO_EMBEDDED_TASK = {
+  GENERATE_SUMMARY: 'erco_generate_summary',
+  IMPROVE_SUMMARY: 'erco_improve_summary',
+  REVIEW_REPORT: 'erco_review_report',
+}
+
 const STATUS_LABELS = {
   [AI_REVIEW_STATUS.LOOKS_OK]: 'Looks OK',
   [AI_REVIEW_STATUS.NEEDS_ATTENTION]: 'Needs attention',
@@ -61,6 +67,7 @@ export const buildErcoAiPayload = ({
 
   return {
     reportType: 'erco',
+    summary: compactText(form?.summary),
     incident: {
       title: compactText(form?.details),
       type: compactText(form?.incidentType),
@@ -105,6 +112,7 @@ export const buildErcoAiContext = (payload) => ({
     location: payload.incident.location,
     incident_date: payload.incident.date,
     incident_time: payload.incident.time,
+    summary_present: Boolean(payload.summary),
     responding_team: payload.response.team,
     responding_members: payload.response.respondersSummary,
     chronology_count: payload.chronology.length,
@@ -154,7 +162,7 @@ export const buildErcoReviewPrompt = (payload) =>
   ].join('\n')
 
 export const normalizeGeneratedSummary = (value) =>
-  compactText(value)
+  compactText(value && typeof value === 'object' ? value.summary : value)
     .replace(/^```(?:text|markdown)?\s*/i, '')
     .replace(/\s*```$/i, '')
     .replace(/^(incident summary|summary)\s*:\s*/i, '')
@@ -182,8 +190,9 @@ export const reviewStatusLabel = (status) =>
   STATUS_LABELS[normalizeReviewStatus(status)] || STATUS_LABELS[AI_REVIEW_STATUS.NEEDS_ATTENTION]
 
 export const parseAiReviewItems = (value) => {
-  const jsonText = extractJsonObject(value)
-  if (!jsonText) {
+  const structuredValue = value && typeof value === 'object' ? value : null
+  const jsonText = structuredValue ? null : extractJsonObject(value)
+  if (!structuredValue && !jsonText) {
     const fallbackMessage = compactText(value)
     return fallbackMessage
       ? [{ status: AI_REVIEW_STATUS.NEEDS_ATTENTION, message: fallbackMessage }]
@@ -191,7 +200,7 @@ export const parseAiReviewItems = (value) => {
   }
 
   try {
-    const parsed = JSON.parse(jsonText)
+    const parsed = structuredValue || JSON.parse(jsonText)
     const rows = Array.isArray(parsed?.items) ? parsed.items : []
     return rows
       .map((row) => ({

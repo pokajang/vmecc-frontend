@@ -369,7 +369,20 @@ const submitWorkflowModal = async (page, action, remarks) => {
   await expect(dialog).toBeVisible()
   await dialog.getByPlaceholder('Add your remarks').fill(remarks)
   await dialog.getByLabel(/I confirm this report workflow action is accurate/i).check()
+  const normalizedAction = String(action || '')
+    .trim()
+    .toLowerCase()
+  const transitionResponse = page.waitForResponse(
+    (response) =>
+      response.request().method() === 'POST' &&
+      apiBaseUrls.some((candidate) => response.url().startsWith(`${candidate}/reports/`)) &&
+      response.url().endsWith(`/${normalizedAction}`),
+    { timeout: routeTimeoutMs },
+  )
   await dialog.getByRole('button', { name: action, exact: true }).click()
+  const response = await transitionResponse
+  expect(response.status(), `${action} workflow transition failed`).toBe(200)
+  await expect(dialog).toBeHidden({ timeout: routeTimeoutMs })
 }
 
 test.describe('Reporting workflow browser smoke', () => {

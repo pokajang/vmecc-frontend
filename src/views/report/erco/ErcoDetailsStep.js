@@ -16,6 +16,7 @@ import {
   buildErcoAiPayload,
   buildErcoReviewPrompt,
   buildErcoSummaryPrompt,
+  ERCO_EMBEDDED_TASK,
   normalizeGeneratedSummary,
   parseAiReviewItems,
 } from './aiAssist'
@@ -258,6 +259,7 @@ const ErcoDetailsStep = ({
     summaryAbortControllerRef.current = abortController
     let streamedText = ''
     let doneText = ''
+    let doneEmbeddedResult = null
     let streamError = null
 
     try {
@@ -267,6 +269,10 @@ const ErcoDetailsStep = ({
           thread_id: null,
           new_thread: true,
           conversation_purpose: 'embedded_helper',
+          embedded_task:
+            summaryGenerationMode === 'improve'
+              ? ERCO_EMBEDDED_TASK.IMPROVE_SUMMARY
+              : ERCO_EMBEDDED_TASK.GENERATE_SUMMARY,
           message: buildErcoSummaryPrompt(payload, summaryGenerationMode),
           page_context: buildErcoAiContext(payload),
           response_language: 'en',
@@ -277,6 +283,8 @@ const ErcoDetailsStep = ({
           },
           onDone: (payload) => {
             doneText = String(payload?.message?.content || '')
+            doneEmbeddedResult =
+              payload?.embedded_result || payload?.message?.embedded_result || null
           },
           onError: (payload) => {
             streamError = new Error(payload?.message || 'Ask AI could not generate the summary.')
@@ -287,7 +295,7 @@ const ErcoDetailsStep = ({
 
       if (streamError) throw streamError
 
-      const nextSummary = normalizeGeneratedSummary(doneText || streamedText)
+      const nextSummary = normalizeGeneratedSummary(doneEmbeddedResult || doneText || streamedText)
       if (!nextSummary) {
         throw new Error('Ask AI returned an empty summary.')
       }
@@ -316,6 +324,7 @@ const ErcoDetailsStep = ({
     reviewAbortControllerRef.current = abortController
     let streamedText = ''
     let doneText = ''
+    let doneEmbeddedResult = null
     let streamError = null
 
     try {
@@ -325,6 +334,7 @@ const ErcoDetailsStep = ({
           thread_id: null,
           new_thread: true,
           conversation_purpose: 'embedded_helper',
+          embedded_task: ERCO_EMBEDDED_TASK.REVIEW_REPORT,
           message: buildErcoReviewPrompt(payload),
           page_context: buildErcoAiContext(payload),
           response_language: 'en',
@@ -335,6 +345,8 @@ const ErcoDetailsStep = ({
           },
           onDone: (eventPayload) => {
             doneText = String(eventPayload?.message?.content || '')
+            doneEmbeddedResult =
+              eventPayload?.embedded_result || eventPayload?.message?.embedded_result || null
           },
           onError: (eventPayload) => {
             streamError = new Error(eventPayload?.message || 'Ask AI could not check the report.')
@@ -345,7 +357,7 @@ const ErcoDetailsStep = ({
 
       if (streamError) throw streamError
 
-      const nextItems = parseAiReviewItems(doneText || streamedText)
+      const nextItems = parseAiReviewItems(doneEmbeddedResult || doneText || streamedText)
       if (nextItems.length === 0) {
         throw new Error('Ask AI returned an empty review.')
       }

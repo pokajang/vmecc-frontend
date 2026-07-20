@@ -1,5 +1,6 @@
 const fs = require('node:fs')
 const path = require('node:path')
+const { evidencePath } = require('./support/evidence-path')
 const { createHash } = require('node:crypto')
 const { createSmokePng } = require('./support/smoke-image')
 const { spawnSync } = require('node:child_process')
@@ -13,7 +14,7 @@ const liveSmokeEnabled = process.env.VMECC_LIVE_SMOKE === '1'
 const mutationSmokeEnabled = process.env.VMECC_LIVE_ALLOW_MUTATIONS === '1'
 const runId = process.env.VMECC_SMOKE_RUN_ID || new Date().toISOString().replace(/[:.]/g, '-')
 const runMarker = `LIVE-SMOKE-${runId}`
-const artifactRoot = path.resolve(process.cwd(), 'test-results', 'live-inspection-smoke', runId)
+const artifactRoot = evidencePath('live-inspection-smoke', runId)
 const screenshotRoot = path.join(artifactRoot, 'screenshots')
 const pdfRoot = path.join(artifactRoot, 'pdfs')
 const routeTimeoutMs = Number(process.env.VMECC_SMOKE_ROUTE_TIMEOUT_MS || 30_000)

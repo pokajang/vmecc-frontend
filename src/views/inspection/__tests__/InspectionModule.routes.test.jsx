@@ -877,6 +877,21 @@ describe('InspectionModule route family', () => {
     expect(screen.getByText('Inspection form shell')).toBeTruthy()
   })
 
+  it('persists each form edit locally before the user can leave the route', () => {
+    renderModule('/inspection/new')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mutate form' }))
+
+    expect(JSON.parse(sessionStorage.getItem('inspection_workspace_v1_user-1'))).toMatchObject({
+      mode: 'new',
+      recordId: '',
+      form: {
+        inspectionType: 'General Inspection',
+        description: 'Dirty change',
+      },
+    })
+  })
+
   it('returns to the edit route when backing out of review for an existing record', async () => {
     renderModule('/inspection/inspection-1/edit')
 

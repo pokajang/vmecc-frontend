@@ -176,6 +176,73 @@ describe('useAiHelperChat', () => {
     })
   })
 
+  it('preserves a typed SSE error code and shows its retry guidance', async () => {
+    streamAiHelperMessage.mockImplementation(async (_payload, handlers) => {
+      handlers.onError({
+        code: 'AI_HELPER_DEADLINE_EXCEEDED',
+        message: 'AI helper response deadline was exceeded.',
+      })
+    })
+
+    const { result } = renderHook(() =>
+      useAiHelperChat({
+        authUser: { id: 1 },
+        contextPage: { path: '/inspection' },
+        open: true,
+        recordThreadActivity: vi.fn(),
+        responseLanguage: 'en',
+        routeContext: { path: '/inspection' },
+        showNotice: vi.fn(),
+      }),
+    )
+
+    await waitFor(() => expect(result.current.loadingThread).toBe(false))
+    await act(async () => {
+      await result.current.sendMessage({ prompt: 'deadline question' })
+    })
+
+    const retryMessage =
+      'Ask AI hit a temporary service issue before the response finished. Please try again.'
+    expect(result.current.sendError).toBe(retryMessage)
+    expect(
+      result.current.messages.find(
+        (message) => message.role === 'assistant' && message.status === MESSAGE_STATUS_FAILED,
+      ),
+    ).toMatchObject({
+      content: retryMessage,
+      retry_prompt: 'deadline question',
+    })
+  })
+
+  it('sends a UUID idempotency key with each generation request', async () => {
+    let sentPayload
+    streamAiHelperMessage.mockImplementation(async (payload, handlers) => {
+      sentPayload = payload
+      handlers.onDone({ message: { content: 'ready', status: MESSAGE_STATUS_COMPLETED } })
+    })
+
+    const { result } = renderHook(() =>
+      useAiHelperChat({
+        authUser: { id: 1 },
+        contextPage: { path: '/inspection' },
+        open: true,
+        recordThreadActivity: vi.fn(),
+        responseLanguage: 'en',
+        routeContext: { path: '/inspection' },
+        showNotice: vi.fn(),
+      }),
+    )
+
+    await waitFor(() => expect(result.current.loadingThread).toBe(false))
+    await act(async () => {
+      await result.current.sendMessage({ prompt: 'How do I apply for leave?' })
+    })
+
+    expect(sentPayload.request_uuid).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    )
+  })
+
   it('marks in-flight assistant generation as aborted when user stops it', async () => {
     const showNotice = vi.fn()
     let streamCall

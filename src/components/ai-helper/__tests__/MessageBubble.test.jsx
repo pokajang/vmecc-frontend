@@ -167,9 +167,9 @@ describe('MessageBubble', () => {
     )
 
     const link = getByRole('link', { name: 'Open source Emergency Response Plan - pages 12-13' })
-    expect(link.getAttribute('href')).toBe(
-      'http://localhost:8000/api/ai-helper/documents/79/file#page=12',
-    )
+    const sourceUrl = new URL(link.getAttribute('href'))
+    expect(sourceUrl.pathname).toBe('/api/ai-helper/documents/79/file')
+    expect(sourceUrl.hash).toBe('#page=12')
     expect(link.getAttribute('target')).toBe('_blank')
   })
 

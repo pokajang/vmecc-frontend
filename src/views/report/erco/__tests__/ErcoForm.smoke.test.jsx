@@ -50,8 +50,10 @@ beforeEach(() => {
         text: reviewJson,
       })
       handlers.onDone?.({
+        embedded_result: JSON.parse(reviewJson),
         message: {
           content: reviewJson,
+          embedded_result: JSON.parse(reviewJson),
         },
       })
       return
@@ -61,8 +63,10 @@ beforeEach(() => {
       text: 'Generated incident summary from AI.',
     })
     handlers.onDone?.({
+      embedded_result: { summary: 'Generated incident summary from AI.' },
       message: {
         content: 'Generated incident summary from AI.',
+        embedded_result: { summary: 'Generated incident summary from AI.' },
       },
     })
   })
@@ -337,6 +341,7 @@ describe('ERCO step smoke flow', () => {
 
     const [payload] = streamAiHelperMessage.mock.calls[0]
     expect(payload.response_language).toBe('en')
+    expect(payload.embedded_task).toBe('erco_generate_summary')
     expect(payload.page_context.route_key).toBe('reports.erco.form')
     expect(payload.message).toContain('Generate an ERCO emergency response incident summary')
     expect(payload.message).toContain('Do not invent facts')
@@ -367,10 +372,12 @@ describe('ERCO step smoke flow', () => {
     })
 
     const [payload] = streamAiHelperMessage.mock.calls[0]
+    expect(payload.embedded_task).toBe('erco_improve_summary')
     expect(payload.message).toContain(
       'Improve the existing ERCO emergency response incident summary',
     )
     expect(payload.message).toContain('Preserve the original meaning and facts')
+    expect(payload.message).toContain('Existing summary that needs clearer wording.')
   })
 
   it('checks the ERCO report with AI as an optional non-blocking review', async () => {
@@ -390,6 +397,7 @@ describe('ERCO step smoke flow', () => {
 
     const [payload] = streamAiHelperMessage.mock.calls[0]
     expect(payload.response_language).toBe('en')
+    expect(payload.embedded_task).toBe('erco_review_report')
     expect(payload.page_context.route_key).toBe('reports.erco.form')
     expect(payload.message).toContain('Check this ERCO report')
     expect(payload.message).toContain('Return strict JSON only')

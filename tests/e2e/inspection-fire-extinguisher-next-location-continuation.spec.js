@@ -3,7 +3,7 @@ import { installAppShellApiStubs } from './support/app-shell-stubs'
 
 const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
 const routeTimeoutMs = Number(process.env.VMECC_SMOKE_ROUTE_TIMEOUT_MS || 30_000)
-const smokeEmail = process.env.VMECC_SMOKE_EMAIL || 'codex.smoke.sysadmin@vmecc.local'
+const smokeEmail = process.env.VMECC_SMOKE_EMAIL || 'codex.smoke.tactical-response-team@vmecc.local'
 const smokePassword = process.env.VMECC_SMOKE_PASSWORD || 'SmokeRole!2026'
 
 const text = (value) => String(value || '').trim()
@@ -505,6 +505,23 @@ const completeRowAsGood = async (card) => {
   await expect(card.getByTestId('fire-extinguisher-status-inline')).toContainText(/checked/i)
 }
 
+const completeVisibleLocationRowsAsGood = async (page) => {
+  const cards = page.locator('[data-fire-extinguisher-row-id]')
+  const count = await cards.count()
+  for (let index = 0; index < count; index += 1) {
+    const card = cards.nth(index)
+    if (
+      await card
+        .getByTestId('fire-extinguisher-status-not-inspected')
+        .isVisible()
+        .catch(() => false)
+    ) {
+      await completeRowAsGood(card)
+    }
+  }
+  return count
+}
+
 const deleteReport = async (api, csrfToken, reportUid) => {
   if (!reportUid || !csrfToken) return
   await api.delete(`${apiBaseUrl}/reports/${encodeURIComponent(reportUid)}`, {
@@ -602,7 +619,7 @@ test('fire extinguisher next-location labels are validated end-to-end', async ({
     const firstSuffix = `A-${String(Date.now()).slice(-6)}`
     const firstRow = await createFireExtinguisherRow(page, firstSuffix)
     if (firstRow.catalogId) createdCatalogIds.push(firstRow.catalogId)
-    await completeRowAsGood(firstRow.card)
+    const firstLocationCount = await completeVisibleLocationRowsAsGood(page)
 
     await expectProgressMetaForSelection(page, 'Choose Zone')
     await expectProgressMetaForSelection(page, 'Choose Main Area')
@@ -629,7 +646,7 @@ test('fire extinguisher next-location labels are validated end-to-end', async ({
     const secondSuffix = `B-${String(Date.now()).slice(-6)}`
     const secondRow = await createFireExtinguisherRow(page, secondSuffix)
     if (secondRow.catalogId) createdCatalogIds.push(secondRow.catalogId)
-    await completeRowAsGood(secondRow.card)
+    const secondLocationCount = await completeVisibleLocationRowsAsGood(page)
 
     await expectProgressMetaForSelection(page, 'Choose Zone')
     await expectProgressMetaForSelection(page, 'Choose Main Area')
@@ -646,7 +663,10 @@ test('fire extinguisher next-location labels are validated end-to-end', async ({
       timeout: routeTimeoutMs,
     })
 
-    await expect(page.getByText(/Total 2 fire extinguishers/i)).toBeVisible({
+    const completedExtinguisherCount = firstLocationCount + secondLocationCount
+    await expect(
+      page.getByText(new RegExp(`Total ${completedExtinguisherCount} fire extinguishers`, 'i')),
+    ).toBeVisible({
       timeout: routeTimeoutMs,
     })
     await expect(page.getByText(/2 locations inspected/i)).toBeVisible({ timeout: routeTimeoutMs })

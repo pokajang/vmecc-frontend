@@ -8,6 +8,24 @@ import {
 } from '../constants'
 
 describe('safeAiHelperError', () => {
+  it.each([
+    'AI_HELPER_PROVIDER_RATE_LIMITED',
+    'AI_HELPER_PROVIDER_TIMEOUT',
+    'AI_HELPER_PROVIDER_UNAVAILABLE',
+    'AI_HELPER_PROVIDER_CIRCUIT_OPEN',
+    'AI_HELPER_PROVIDER_STREAM_INTERRUPTED',
+    'AI_HELPER_PROVIDER_OUTPUT_INCOMPLETE',
+    'AI_HELPER_PROVIDER_RESPONSE_FAILED',
+    'AI_HELPER_PROVIDER_INVALID_RESPONSE',
+    'AI_HELPER_PROVIDER_CALL_BUDGET_EXCEEDED',
+    'AI_HELPER_DEADLINE_EXCEEDED',
+    'AI_HELPER_STREAM_FAILED',
+  ])('offers retry guidance for the typed SSE error %s', (code) => {
+    expect(safeAiHelperError({ code })).toBe(
+      'Ask AI hit a temporary service issue before the response finished. Please try again.',
+    )
+  })
+
   it('shows the generation retry window for rate-limited Ask AI responses', () => {
     expect(
       safeAiHelperError({
@@ -24,6 +42,18 @@ describe('safeAiHelperError', () => {
         payload: { code: 'AI_HELPER_KNOWLEDGE_UPLOAD_RATE_LIMITED', retry_after: 12.2 },
       }),
     ).toBe('Too many knowledge uploads. Try again in 13s.')
+  })
+
+  it('distinguishes provider, capacity, and evidence failures', () => {
+    expect(
+      safeAiHelperError({ status: 503, payload: { code: 'AI_HELPER_PROVIDER_TEMPORARY' } }),
+    ).toContain('temporarily unavailable')
+    expect(
+      safeAiHelperError({ status: 429, payload: { code: 'AI_HELPER_BUSY_RETRY', retry_after: 5 } }),
+    ).toBe('Ask AI is busy. Try again in about 5s.')
+    expect(safeAiHelperError({ payload: { code: 'AI_HELPER_EVIDENCE_INCOMPLETE' } })).toContain(
+      'not sufficient to verify',
+    )
   })
 })
 

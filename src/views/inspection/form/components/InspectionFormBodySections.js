@@ -15,6 +15,7 @@ import {
 import {
   buildInspectionFindingAiContext,
   buildInspectionFindingFieldTranslatePrompt,
+  INSPECTION_FINDING_EMBEDDED_TASK,
   parseTranslatedFindingField,
 } from '../inspectionFindingAiAssist'
 import { getInspectionReviewReadiness } from '../inspectionReviewReadiness'
@@ -841,6 +842,7 @@ const InspectionFindingsSection = ({
     aiTranslateAbortRefs.current[field] = abortController
     let streamedText = ''
     let doneText = ''
+    let doneEmbeddedResult = null
     let streamError = null
 
     try {
@@ -850,6 +852,7 @@ const InspectionFindingsSection = ({
           thread_id: null,
           new_thread: true,
           conversation_purpose: 'embedded_helper',
+          embedded_task: INSPECTION_FINDING_EMBEDDED_TASK,
           message: buildInspectionFindingFieldTranslatePrompt(payload),
           page_context: buildInspectionFindingAiContext(payload),
           response_language: 'en',
@@ -860,6 +863,8 @@ const InspectionFindingsSection = ({
           },
           onDone: (eventPayload) => {
             doneText = String(eventPayload?.message?.content || '')
+            doneEmbeddedResult =
+              eventPayload?.embedded_result || eventPayload?.message?.embedded_result || null
           },
           onError: (eventPayload) => {
             streamError = new Error(
@@ -873,7 +878,7 @@ const InspectionFindingsSection = ({
       if (abortController.signal.aborted) return
       if (streamError) throw streamError
 
-      const suggestion = parseTranslatedFindingField(doneText || streamedText)
+      const suggestion = parseTranslatedFindingField(doneEmbeddedResult || doneText || streamedText)
       if (!suggestion) {
         throw new Error('Unable to translate finding right now. Please try again.')
       }

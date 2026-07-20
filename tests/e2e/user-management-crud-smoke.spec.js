@@ -1,13 +1,14 @@
 const { expect, test } = require('@playwright/test')
 const fs = require('node:fs')
 const path = require('node:path')
+const { evidencePath } = require('./support/evidence-path')
 
 const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
 const smokeEmail = process.env.VMECC_SMOKE_EMAIL || 'codex.smoke.sysadmin@vmecc.local'
 const smokePassword = process.env.VMECC_SMOKE_PASSWORD || 'SmokeRole!2026'
 const runId = process.env.VMECC_SMOKE_RUN_ID || new Date().toISOString().replace(/[:.]/g, '-')
 const crudTimeoutMs = Number(process.env.VMECC_SMOKE_CRUD_TIMEOUT_MS || 15 * 60_000)
-const artifactRoot = path.resolve(process.cwd(), 'test-results', 'user-management-smoke', runId)
+const artifactRoot = evidencePath('user-management-smoke', runId)
 const liveMutationsEnabled = process.env.VMECC_LIVE_ALLOW_MUTATIONS === '1'
 const isLoopbackUrl = (value) => {
   try {

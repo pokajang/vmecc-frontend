@@ -1,4 +1,5 @@
 import { apiRequest, buildApiUrl, fetchWithCsrfRetry } from './httpClient'
+import { createRequestUuid } from './requestUuid'
 
 const appendQuery = (basePath, params = {}) => {
   const query = new URLSearchParams()
@@ -186,11 +187,15 @@ const dispatchSseEvent = (eventName, dataLines, handlers) => {
 }
 
 export const streamAiHelperMessage = async (payload, handlers = {}, options = {}) => {
+  const requestPayload = {
+    ...(payload || {}),
+    request_uuid: payload?.request_uuid || createRequestUuid(),
+  }
   let response
   try {
     response = await fetchWithCsrfRetry(buildApiUrl('/ai-helper/messages/stream'), {
       method: 'POST',
-      body: JSON.stringify(payload || {}),
+      body: JSON.stringify(requestPayload),
       signal: options.signal,
     })
   } catch (error) {

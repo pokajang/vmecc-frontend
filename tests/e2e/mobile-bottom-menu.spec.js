@@ -2,9 +2,10 @@ const { execFileSync } = require('node:child_process')
 const { mkdirSync } = require('node:fs')
 const path = require('node:path')
 const { expect, test } = require('@playwright/test')
+const { evidencePath } = require('./support/evidence-path')
 
 const backendDir = path.resolve(process.cwd(), '..', 'vmecc-backend')
-const screenshotDir = path.resolve(process.cwd(), 'test-results', 'mobile-bottom-menu')
+const screenshotDir = evidencePath('mobile-bottom-menu')
 const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
 const trtEmail = 'codex.mobile.menu.trt@vmecc.local'
 const trtPassword = 'MobileMenu!2026'

@@ -1,6 +1,7 @@
 const { expect, test } = require('@playwright/test')
 const fs = require('node:fs')
 const path = require('node:path')
+const { evidencePath } = require('./support/evidence-path')
 const { setInspectionPhotoFromButton } = require('./support/inspection-photo')
 const { installAppShellApiStubs } = require('./support/app-shell-stubs')
 
@@ -8,7 +9,7 @@ const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
 const smokeEmail = process.env.VMECC_SMOKE_EMAIL || 'codex.smoke.sysadmin@vmecc.local'
 const smokePassword = process.env.VMECC_SMOKE_PASSWORD || 'SmokeRole!2026'
 const runId = process.env.VMECC_SMOKE_RUN_ID || new Date().toISOString().replace(/[:.]/g, '-')
-const artifactRoot = path.resolve(process.cwd(), 'test-results', 'er-aux-smoke', runId)
+const artifactRoot = evidencePath('er-aux-smoke', runId)
 const routeTimeoutMs = Number(process.env.VMECC_SMOKE_ROUTE_TIMEOUT_MS || 30_000)
 const testTimeoutMs = Number(process.env.VMECC_SMOKE_TEST_TIMEOUT_MS || 5 * 60_000)
 

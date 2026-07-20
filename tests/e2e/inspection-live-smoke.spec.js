@@ -7,6 +7,7 @@ const {
   allowUnsafeForeignWorkflow,
   apiRequest,
   apiBaseUrl,
+  artifactRoot,
   attachDiagnostics,
   baseUrl,
   buildFormRecordSeed,
@@ -2889,7 +2890,7 @@ test.describe.serial('inspection live smoke + QAQC', () => {
         cleanupFailures: cleanupFailures.length,
         browserFailures: browserFailures.length,
       },
-      `Live smoke found failures. See ${runMarker} artifacts under test-results/live-inspection-smoke/${runId}.`,
+      `Live smoke found failures. See ${runMarker} artifacts under ${artifactRoot}.`,
     ).toEqual({
       endpointFailures: 0,
       cleanupFailures: 0,

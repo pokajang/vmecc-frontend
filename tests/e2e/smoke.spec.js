@@ -1,6 +1,7 @@
 const { expect, test } = require('@playwright/test')
 const fs = require('node:fs')
 const path = require('node:path')
+const { evidencePath } = require('./support/evidence-path')
 
 const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
 const baseUrl = process.env.VMECC_E2E_BASE_URL || 'http://localhost:3000'
@@ -11,7 +12,7 @@ const routeRetryDelayMs = Number(process.env.VMECC_E2E_ROUTE_RETRY_DELAY_MS || 3
 const routeMaxAttempts = Number(process.env.VMECC_E2E_ROUTE_ATTEMPTS || 2)
 const routeReadyTimeoutMs = 30_000
 const routeDefaultTimeoutMs = 25_000
-const screenshotRoot = path.resolve(process.cwd(), 'test-results', 'smoke')
+const screenshotRoot = evidencePath('smoke')
 const routeDefinitionsPath = path.resolve(process.cwd(), 'src', 'routes.js')
 
 const CORE_ROUTE_EXPECTATIONS = [
@@ -223,35 +224,53 @@ test.describe('SMOKE route sweep (manual)', () => {
 
   test('API CSRF enforcement for unsafe sessioned updates', async ({ request }) => {
     const csrfToken = await routeLogin(request)
-
-    const noTokenResponse = await request.put(`${apiBaseUrl}/profile`, {
-      data: { name: 'Smoke Sessionless Update' },
+    const sessionResponse = await request.get(`${apiBaseUrl}/auth/session`, {
       headers: { Accept: 'application/json' },
     })
-    expect(noTokenResponse.status(), 'PUT /api/profile without CSRF should be rejected').toBe(419)
+    expect(sessionResponse.status()).toBe(200)
+    const originalName = (await sessionResponse.json())?.user?.name
+    expect(typeof originalName).toBe('string')
 
-    const withInvalidTokenResponse = await request.put(`${apiBaseUrl}/profile`, {
-      data: { name: 'Smoke Invalid Token Update' },
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        'X-CSRF-Token': 'invalid-token',
-      },
-    })
-    expect(
-      withInvalidTokenResponse.status(),
-      'PUT /api/profile with invalid CSRF should be rejected',
-    ).toBe(419)
+    try {
+      const noTokenResponse = await request.put(`${apiBaseUrl}/profile`, {
+        data: { name: 'Smoke Sessionless Update' },
+        headers: { Accept: 'application/json' },
+      })
+      expect(noTokenResponse.status(), 'PUT /api/profile without CSRF should be rejected').toBe(419)
 
-    const withTokenResponse = await request.put(`${apiBaseUrl}/profile`, {
-      data: { name: 'Smoke CSRF Update' },
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        'X-CSRF-Token': csrfToken,
-      },
-    })
-    expect(withTokenResponse.status(), 'PUT /api/profile with CSRF should be allowed').toBe(200)
+      const withInvalidTokenResponse = await request.put(`${apiBaseUrl}/profile`, {
+        data: { name: 'Smoke Invalid Token Update' },
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': 'invalid-token',
+        },
+      })
+      expect(
+        withInvalidTokenResponse.status(),
+        'PUT /api/profile with invalid CSRF should be rejected',
+      ).toBe(419)
+
+      const withTokenResponse = await request.put(`${apiBaseUrl}/profile`, {
+        data: { name: 'Smoke CSRF Update' },
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfToken,
+        },
+      })
+      expect(withTokenResponse.status(), 'PUT /api/profile with CSRF should be allowed').toBe(200)
+    } finally {
+      const restoreResponse = await request.put(`${apiBaseUrl}/profile`, {
+        data: { name: originalName },
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfToken,
+        },
+      })
+      expect(restoreResponse.status(), 'CSRF smoke must restore the canonical persona').toBe(200)
+    }
   })
 
   test('throttled route traversal reaches landmarks without persistent loading', async ({

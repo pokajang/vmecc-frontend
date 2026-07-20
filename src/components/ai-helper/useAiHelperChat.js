@@ -5,6 +5,7 @@ import {
   reportAiHelperMessage,
   streamAiHelperMessage,
 } from 'src/services/apiClient'
+import { createRequestUuid } from 'src/services/api/requestUuid'
 import {
   MESSAGE_STATUS_ABORTED,
   MESSAGE_STATUS_COMPLETED,
@@ -245,10 +246,12 @@ const useAiHelperChat = ({
       if (!text || sending) return
 
       const requestId = ++sendRequestRef.current
+      const requestUuid = createRequestUuid()
       const pageContext = override.context || contextPage || routeContext
       const userMessage = makeLocalMessage('user', text)
       const assistantMessage = makeLocalMessage('assistant', '', MESSAGE_STATUS_STREAMING, {
         request_id: requestId,
+        request_uuid: requestUuid,
         retry_prompt: text,
         retry_context: pageContext,
       })
@@ -281,6 +284,7 @@ const useAiHelperChat = ({
             message: text,
             page_context: pageContext,
             response_language: responseLanguage,
+            request_uuid: requestUuid,
           },
           {
             onMeta: (payload) => {
@@ -341,15 +345,16 @@ const useAiHelperChat = ({
             },
             onError: (payload) => {
               if (!isActiveRequest()) return
-              markSendFailure(
-                assistantMessage.id,
+              const streamError =
                 payload instanceof Error
                   ? payload
-                  : new Error(payload?.message || safeAiHelperError(payload)),
-                text,
-                pageContext,
-                requestId,
-              )
+                  : new Error(payload?.message || safeAiHelperError(payload))
+              if (!(payload instanceof Error) && payload?.code) {
+                streamError.code = payload.code
+                streamError.payload = payload
+                if (payload.status) streamError.status = payload.status
+              }
+              markSendFailure(assistantMessage.id, streamError, text, pageContext, requestId)
             },
           },
           { signal: controller.signal },

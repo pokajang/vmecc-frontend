@@ -1,7 +1,7 @@
 const { expect, test } = require('@playwright/test')
 
-const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
-const baseUrl = process.env.VMECC_E2E_BASE_URL || 'http://localhost:3000'
+const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://127.0.0.1:8000/api'
+const baseUrl = process.env.VMECC_E2E_BASE_URL || 'http://127.0.0.1:3000'
 const smokePassword = process.env.VMECC_SMOKE_RBAC_PASSWORD || 'SmokeRole!2026'
 
 const personas = {
@@ -68,13 +68,13 @@ test.describe('Overtime remediation browser smoke', () => {
     const applicantContext = await browser.newContext()
     const applicantPage = await applicantContext.newPage()
     await login(applicantPage, personas.applicant)
-    const applicantOvertime = await applicantPage.evaluate(async () => {
+    const applicantOvertime = await applicantPage.evaluate(async (browserApiBaseUrl) => {
       const [eligibilityResponse, recordsResponse] = await Promise.all([
-        fetch('http://localhost:8000/api/overtime/eligibility', {
+        fetch(`${browserApiBaseUrl}/overtime/eligibility`, {
           credentials: 'include',
           headers: { Accept: 'application/json' },
         }),
-        fetch('http://localhost:8000/api/overtime', {
+        fetch(`${browserApiBaseUrl}/overtime`, {
           credentials: 'include',
           headers: { Accept: 'application/json' },
         }),
@@ -90,7 +90,7 @@ test.describe('Overtime remediation browser smoke', () => {
           body: await recordsResponse.json(),
         },
       }
-    })
+    }, apiBaseUrl)
     expect(applicantOvertime.eligibility.status).toBe(200)
     expect(applicantOvertime.eligibility.body.data?.eligible).toBe(true)
     expect(applicantOvertime.records.status).toBe(200)
@@ -100,33 +100,36 @@ test.describe('Overtime remediation browser smoke', () => {
     const overtimeRecord = applicantOvertime.records.body.data.find(
       (row) => row.display_id === 'SMK-OT-WORKFLOW',
     )
-    const resubmission = await applicantPage.evaluate(async (record) => {
-      const sessionResponse = await fetch('http://localhost:8000/api/auth/session', {
-        credentials: 'include',
-        headers: { Accept: 'application/json' },
-      })
-      const session = await sessionResponse.json()
-      const response = await fetch(`http://localhost:8000/api/overtime/${record.id}`, {
-        method: 'PUT',
-        credentials: 'include',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': session.csrf_token,
-        },
-        body: JSON.stringify({
-          overtime_type: record.overtime_type,
-          claim_date: record.claim_date,
-          start_time: record.start_time,
-          end_time: record.end_time,
-          is_overnight: record.is_overnight,
-          duration_minutes: record.duration_minutes,
-          reason: 'Completed handover, asset checks, and incident log reconciliation.',
-          expected_version: record.version,
-        }),
-      })
-      return { status: response.status, body: await response.json() }
-    }, overtimeRecord)
+    const resubmission = await applicantPage.evaluate(
+      async ({ record, browserApiBaseUrl }) => {
+        const sessionResponse = await fetch(`${browserApiBaseUrl}/auth/session`, {
+          credentials: 'include',
+          headers: { Accept: 'application/json' },
+        })
+        const session = await sessionResponse.json()
+        const response = await fetch(`${browserApiBaseUrl}/overtime/${record.id}`, {
+          method: 'PUT',
+          credentials: 'include',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': session.csrf_token,
+          },
+          body: JSON.stringify({
+            overtime_type: record.overtime_type,
+            claim_date: record.claim_date,
+            start_time: record.start_time,
+            end_time: record.end_time,
+            is_overnight: record.is_overnight,
+            duration_minutes: record.duration_minutes,
+            reason: 'Completed handover, asset checks, and incident log reconciliation.',
+            expected_version: record.version,
+          }),
+        })
+        return { status: response.status, body: await response.json() }
+      },
+      { record: overtimeRecord, browserApiBaseUrl: apiBaseUrl },
+    )
     expect(resubmission.status).toBe(200)
     expect(resubmission.body.data?.status).toBe('Pending')
     expect(resubmission.body.data?.workflow_stage).toBe('review')

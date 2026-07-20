@@ -5,6 +5,8 @@ const compactText = (value) =>
 
 const jsonBlock = (payload) => JSON.stringify(payload, null, 2)
 
+export const INSPECTION_FINDING_EMBEDDED_TASK = 'inspection_translate_finding'
+
 export const buildInspectionFindingAiContext = (payload = {}) => ({
   assistant_surface: 'embedded_helper',
   conversation_purpose: 'embedded_helper',
@@ -100,6 +102,7 @@ export const parseTranslatedFinding = (value) => {
 }
 
 export const parseTranslatedFindingField = (value) => {
+  if (value && typeof value === 'object') return compactText(value.text)
   const jsonText = extractJsonObject(value)
   if (!jsonText) return ''
 
