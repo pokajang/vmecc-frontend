@@ -2,12 +2,13 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import useReportRouteActions from '../useReportRouteActions'
-import { clearReportDraft, deleteErcoDraft } from '../../reportStorage'
+import { clearReportDraft, deleteErcoDraft, deleteReportDraft } from '../../reportStorage'
 
 vi.mock('../../reportStorage', () => ({
   clearReportDraft: vi.fn(async () => true),
   createErcoDraft: vi.fn(),
   deleteErcoDraft: vi.fn(async () => true),
+  deleteReportDraft: vi.fn(async () => true),
   listErcoDrafts: vi.fn(async () => []),
   loadReportDraft: vi.fn(async () => null),
   saveReportDraft: vi.fn(async () => true),
@@ -283,6 +284,63 @@ describe('useReportRouteActions', () => {
     expect(deleteErcoDraft).not.toHaveBeenCalled()
   })
 
+  it('removes one Drill draft by active draft id fallback when source draft id is missing', async () => {
+    const { result } = renderHook(() =>
+      useReportRouteActions(
+        baseProps({
+          activeFormSlug: 'drill',
+          reportBasePath: '/report/drill',
+          reportTypeLabel: 'Drill',
+          activeDraftRows: [{ draftId: 'drf_drill_fallback', displayId: 'Drill fallback draft' }],
+          queryDraftId: '',
+          user: { id: 'user-1', name: 'Alex Tan', permissions: ['reports.drill.view'] },
+        }),
+      ),
+    )
+
+    await act(async () => {
+      result.current.confirmReviewSubmit({
+        id: 'drill-new',
+        displayId: 'DRILL-NEW',
+        reportType: 'drill',
+        status: 'Submitted',
+        submissionKey: 'drill-submit-stable',
+      })
+    })
+
+    expect(deleteReportDraft).toHaveBeenCalledWith('user-1', 'drf_drill_fallback')
+    expect(clearReportDraft).not.toHaveBeenCalled()
+    expect(deleteErcoDraft).not.toHaveBeenCalled()
+  })
+
+  it('removes one Drill draft by draft id during submit when draft identity is known', async () => {
+    const { result } = renderHook(() =>
+      useReportRouteActions(
+        baseProps({
+          activeFormSlug: 'drill',
+          reportBasePath: '/report/drill',
+          reportTypeLabel: 'Drill',
+          queryDraftId: 'drf_drill_resumed',
+          user: { id: 'user-1', name: 'Alex Tan', permissions: ['reports.drill.view'] },
+        }),
+      ),
+    )
+
+    await act(async () => {
+      result.current.confirmReviewSubmit({
+        id: 'drill-new',
+        displayId: 'DRILL-NEW',
+        reportType: 'drill',
+        status: 'Submitted',
+        submissionKey: 'drill-submit-stable',
+        sourceDraftId: 'drf_drill_resumed',
+      })
+    })
+
+    expect(deleteReportDraft).toHaveBeenCalledWith('user-1', 'drf_drill_resumed')
+    expect(clearReportDraft).not.toHaveBeenCalled()
+  })
+
   it('does not clear unrelated ERCO drafts when the submitted report has no source draft', async () => {
     const { result } = renderHook(() =>
       useReportRouteActions(
@@ -307,6 +365,64 @@ describe('useReportRouteActions', () => {
     })
 
     expect(clearReportDraft).not.toHaveBeenCalled()
+  })
+
+  it('removes one Fitness draft by draft id during submit when draft identity is known', async () => {
+    const { result } = renderHook(() =>
+      useReportRouteActions(
+        baseProps({
+          activeFormSlug: 'fitness-test',
+          reportBasePath: '/report/fitness-test',
+          reportTypeLabel: 'Fitness Test',
+          queryDraftId: 'drf_fitness_resumed',
+          user: { id: 'user-1', name: 'Alex Tan', permissions: ['reports.fitness.view'] },
+        }),
+      ),
+    )
+
+    await act(async () => {
+      result.current.confirmReviewSubmit({
+        id: 'fitness-new',
+        displayId: 'FIT-NEW',
+        reportType: 'fitness-test',
+        status: 'Submitted',
+        submissionKey: 'fitness-submit-stable',
+        sourceDraftId: 'drf_fitness_resumed',
+      })
+    })
+
+    expect(deleteReportDraft).toHaveBeenCalledWith('user-1', 'drf_fitness_resumed')
+    expect(clearReportDraft).not.toHaveBeenCalledWith('user-1', 'fitness-test')
+  })
+
+  it('removes one Fitness draft by active draft id fallback when source draft id is missing', async () => {
+    const { result } = renderHook(() =>
+      useReportRouteActions(
+        baseProps({
+          activeFormSlug: 'fitness-test',
+          reportBasePath: '/report/fitness-test',
+          reportTypeLabel: 'Fitness Test',
+          activeDraftRows: [
+            { draftId: 'drf_fitness_fallback', displayId: 'Fitness fallback draft' },
+          ],
+          queryDraftId: '',
+          user: { id: 'user-1', name: 'Alex Tan', permissions: ['reports.fitness.view'] },
+        }),
+      ),
+    )
+
+    await act(async () => {
+      result.current.confirmReviewSubmit({
+        id: 'fitness-new',
+        displayId: 'FIT-NEW',
+        reportType: 'fitness-test',
+        status: 'Submitted',
+        submissionKey: 'fitness-submit-stable',
+      })
+    })
+
+    expect(deleteReportDraft).toHaveBeenCalledWith('user-1', 'drf_fitness_fallback')
+    expect(clearReportDraft).not.toHaveBeenCalledWith('user-1', 'fitness-test')
   })
 
   it('limits edit/delete to admins, explicit permissions, or own report rows', () => {

@@ -47,7 +47,10 @@ const FitnessTestFormStep = ({
             Edit Setup
           </CButton>
         </div>
-        <div>
+        <div
+          data-fitness-test-field="details"
+          aria-invalid={Boolean(fieldErrors.details) || undefined}
+        >
           <CFormLabel htmlFor="fitness-test-details" className="fw-semibold text-muted">
             Test details
           </CFormLabel>
@@ -60,7 +63,10 @@ const FitnessTestFormStep = ({
           />
           <CFormFeedback invalid>{fieldErrors.details}</CFormFeedback>
         </div>
-        <div>
+        <div
+          data-fitness-test-field="summary"
+          aria-invalid={Boolean(fieldErrors.summary) || undefined}
+        >
           <CFormLabel htmlFor="fitness-test-summary" className="fw-semibold text-muted">
             Test summary
           </CFormLabel>
@@ -75,15 +81,20 @@ const FitnessTestFormStep = ({
         </div>
       </div>
 
-      <ReportChronologySection
-        title="Chronology of Test Activities"
-        actionLabel="Activity / Observation"
-        fieldError={fieldErrors.chronology}
-        rows={form.chronology}
-        onAddRow={addChronology}
-        onUpdateRow={updateChronology}
-        onRemoveRow={removeChronology}
-      />
+      <div
+        data-fitness-test-field="chronology"
+        aria-invalid={Boolean(fieldErrors.chronology) || undefined}
+      >
+        <ReportChronologySection
+          title="Chronology of Test Activities"
+          actionLabel="Activity / Observation"
+          fieldError={fieldErrors.chronology}
+          rows={form.chronology}
+          onAddRow={addChronology}
+          onUpdateRow={updateChronology}
+          onRemoveRow={removeChronology}
+        />
+      </div>
 
       <div className="d-none d-md-flex flex-md-row justify-content-end gap-2 mb-4">
         {draftStatus ? (

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { CAlert, CButton } from '@coreui/react'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import { clearReportDraft, loadReportDraftRow, saveReportDraft } from '../reportStorage'
@@ -10,7 +10,11 @@ import FitnessTestFormStep from './FitnessTestFormStep'
 import FitnessTestSetupStep from './FitnessTestSetupStep'
 import useFitnessTestForm from './useFitnessTestForm'
 import { defaultFitnessTestForm, isFitnessTestDirty } from './utils'
-import { validateFitnessTestForm, validateFitnessTestSetup } from './validation'
+import {
+  firstFitnessTestError,
+  validateFitnessTestForm,
+  validateFitnessTestSetup,
+} from './validation'
 
 const createDraftSignature = (form) => JSON.stringify(form || {})
 
@@ -40,6 +44,7 @@ const FitnessTestForm = ({
   const lastSavedDraftSignatureRef = useRef(null)
   const [showReset, setShowReset] = useState(false)
   const [editViewMode, setEditViewMode] = useState(preferSavedEditDraft ? 'draft' : 'original')
+  const [pendingFocusField, setPendingFocusField] = useState('')
   const [hasDraftSeed, setHasDraftSeed] = useState(false)
   const [draftStatus, setDraftStatus] = useState('')
   const [draftDirtyStatus, setDraftDirtyStatus] = useState('')
@@ -90,6 +95,30 @@ const FitnessTestForm = ({
       onDirtyChange(false)
     },
   })
+
+  const focusFitnessTestField = useCallback((field) => {
+    if (!field || typeof document === 'undefined') return false
+    const container = document.querySelector(`[data-fitness-test-field="${field}"]`)
+    if (!container) return false
+    container.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
+    const target = container.matches('input, textarea, select, button, [tabindex]')
+      ? container
+      : container.querySelector(
+          'input:not([type="hidden"]):not(:disabled), textarea, select, button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        )
+    window.setTimeout(() => target?.focus?.({ preventScroll: true }), 120)
+    return true
+  }, [])
+
+  useEffect(() => {
+    if (!pendingFocusField) return
+    const timer = window.setTimeout(() => {
+      if (focusFitnessTestField(pendingFocusField)) {
+        setPendingFocusField('')
+      }
+    }, 80)
+    return () => window.clearTimeout(timer)
+  }, [focusFitnessTestField, pendingFocusField])
 
   useEffect(() => {
     if (initialSeedAppliedRef.current || !initialFormSeed) return
@@ -234,6 +263,8 @@ const FitnessTestForm = ({
     const result = validateFitnessTestSetup(form)
     setSetupFieldErrors(result.errors)
     if (!result.isValid) {
+      const firstError = firstFitnessTestError(result.errors)
+      if (firstError.field) setPendingFocusField(firstError.field)
       scrollToFirstError()
       pushToast('Complete all setup selections before continuing.', {
         title: 'Setup incomplete',
@@ -248,6 +279,8 @@ const FitnessTestForm = ({
     const result = validateFitnessTestForm(form)
     setFieldErrors(result.errors)
     if (!result.isValid) {
+      const firstError = firstFitnessTestError(result.errors)
+      if (firstError.field) setPendingFocusField(firstError.field)
       scrollToFirstError()
       pushToast('Please complete all required fields before submitting.', {
         title: 'Validation error',

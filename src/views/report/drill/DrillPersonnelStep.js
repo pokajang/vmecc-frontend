@@ -221,113 +221,118 @@ const DrillPersonnelStep = ({
         <CAlert color="danger">{fieldErrors.respondingAttendance}</CAlert>
       ) : null}
 
-      {!loading
-        ? groups.map(([teamName, members]) => (
-            <section key={teamName} className="rounded-3 border p-3 d-grid gap-3">
-              <div className="fw-semibold">{teamName}</div>
-              {members.map((member) => (
-                <div
-                  key={member.memberKey}
-                  className="d-grid d-md-flex align-items-md-center gap-2 border-top pt-3"
-                >
-                  <CFormCheck
-                    id={`drill-member-${member.memberKey}`}
-                    checked={member.present !== false}
-                    label={member.name}
-                    onChange={(event) =>
-                      updateRow(member.memberKey, { present: event.target.checked })
-                    }
-                  />
-                  <div className="small text-body-secondary flex-grow-1">
-                    {member.role || 'Member'}
-                  </div>
-                  <CFormSelect
-                    aria-label={`Exercise role for ${member.name}`}
-                    value={member.exerciseRole || ''}
-                    onChange={(event) =>
-                      updateRow(member.memberKey, { exerciseRole: event.target.value })
-                    }
+      <section className="d-grid gap-3" data-drill-field="respondingAttendance">
+        {!loading
+          ? groups.map(([teamName, members]) => (
+              <section key={teamName} className="rounded-3 border p-3 d-grid gap-3">
+                <div className="fw-semibold">{teamName}</div>
+                {members.map((member) => (
+                  <div
+                    key={member.memberKey}
+                    className="d-grid d-md-flex align-items-md-center gap-2 border-top pt-3"
                   >
-                    <option value="">No exercise role</option>
-                    {DRILL_EXERCISE_ROLE_OPTIONS.map((role) => (
-                      <option key={role} value={role}>
-                        {role}
-                      </option>
-                    ))}
-                  </CFormSelect>
-                  {member.source === 'manual' ? (
-                    <CButton
-                      type="button"
-                      color="light"
-                      aria-label={`Remove ${member.name}`}
-                      onClick={() =>
-                        setForm((prev) => ({
-                          ...prev,
-                          respondingAttendance: prev.respondingAttendance.filter(
-                            (row) => row.memberKey !== member.memberKey,
-                          ),
-                        }))
+                    <CFormCheck
+                      id={`drill-member-${member.memberKey}`}
+                      checked={member.present !== false}
+                      label={member.name}
+                      onChange={(event) =>
+                        updateRow(member.memberKey, { present: event.target.checked })
+                      }
+                    />
+                    <div className="small text-body-secondary flex-grow-1">
+                      {member.role || 'Member'}
+                    </div>
+                    <CFormSelect
+                      aria-label={`Exercise role for ${member.name}`}
+                      value={member.exerciseRole || ''}
+                      onChange={(event) =>
+                        updateRow(member.memberKey, { exerciseRole: event.target.value })
                       }
                     >
-                      <Trash2 size={16} />
-                    </CButton>
-                  ) : null}
-                </div>
-              ))}
-            </section>
-          ))
-        : null}
+                      <option value="">No exercise role</option>
+                      {DRILL_EXERCISE_ROLE_OPTIONS.map((role) => (
+                        <option key={role} value={role}>
+                          {role}
+                        </option>
+                      ))}
+                    </CFormSelect>
+                    {member.source === 'manual' ? (
+                      <CButton
+                        type="button"
+                        color="light"
+                        aria-label={`Remove ${member.name}`}
+                        onClick={() =>
+                          setForm((prev) => ({
+                            ...prev,
+                            respondingAttendance: prev.respondingAttendance.filter(
+                              (row) => row.memberKey !== member.memberKey,
+                            ),
+                          }))
+                        }
+                      >
+                        <Trash2 size={16} />
+                      </CButton>
+                    ) : null}
+                  </div>
+                ))}
+              </section>
+            ))
+          : null}
 
-      <section className="rounded-3 border p-3 d-grid gap-3" aria-labelledby="manual-person-title">
-        <div id="manual-person-title" className="fw-semibold">
-          Add manual / external participant
-        </div>
-        <div className="row g-2">
-          <div className="col-12 col-md-4">
-            <CFormLabel htmlFor="drill-manual-name">Name</CFormLabel>
-            <CFormInput
-              id="drill-manual-name"
-              maxLength={DRILL_FIELD_LIMITS.shortText}
-              value={manual.name}
-              onChange={(event) => setManual((prev) => ({ ...prev, name: event.target.value }))}
-            />
+        <section
+          className="rounded-3 border p-3 d-grid gap-3"
+          aria-labelledby="manual-person-title"
+        >
+          <div id="manual-person-title" className="fw-semibold">
+            Add manual / external participant
           </div>
-          <div className="col-12 col-md-3">
-            <CFormLabel htmlFor="drill-manual-org-role">Organisation role</CFormLabel>
-            <CFormInput
-              id="drill-manual-org-role"
-              maxLength={DRILL_FIELD_LIMITS.shortText}
-              value={manual.role}
-              onChange={(event) => setManual((prev) => ({ ...prev, role: event.target.value }))}
-            />
+          <div className="row g-2">
+            <div className="col-12 col-md-4">
+              <CFormLabel htmlFor="drill-manual-name">Name</CFormLabel>
+              <CFormInput
+                id="drill-manual-name"
+                maxLength={DRILL_FIELD_LIMITS.shortText}
+                value={manual.name}
+                onChange={(event) => setManual((prev) => ({ ...prev, name: event.target.value }))}
+              />
+            </div>
+            <div className="col-12 col-md-3">
+              <CFormLabel htmlFor="drill-manual-org-role">Organisation role</CFormLabel>
+              <CFormInput
+                id="drill-manual-org-role"
+                maxLength={DRILL_FIELD_LIMITS.shortText}
+                value={manual.role}
+                onChange={(event) => setManual((prev) => ({ ...prev, role: event.target.value }))}
+              />
+            </div>
+            <div className="col-12 col-md-3">
+              <CFormLabel htmlFor="drill-manual-exercise-role">Exercise role</CFormLabel>
+              <CFormSelect
+                id="drill-manual-exercise-role"
+                value={manual.exerciseRole}
+                onChange={(event) =>
+                  setManual((prev) => ({ ...prev, exerciseRole: event.target.value }))
+                }
+              >
+                {DRILL_EXERCISE_ROLE_OPTIONS.map((role) => (
+                  <option key={role} value={role}>
+                    {role}
+                  </option>
+                ))}
+              </CFormSelect>
+            </div>
+            <div className="col-12 col-md-2 d-grid align-self-end">
+              <CButton
+                type="button"
+                color="light"
+                disabled={!manual.name.trim() || rows.length >= DRILL_FIELD_LIMITS.personnel}
+                onClick={addManual}
+              >
+                <Plus size={14} className="me-1" /> Add
+              </CButton>
+            </div>
           </div>
-          <div className="col-12 col-md-3">
-            <CFormLabel htmlFor="drill-manual-exercise-role">Exercise role</CFormLabel>
-            <CFormSelect
-              id="drill-manual-exercise-role"
-              value={manual.exerciseRole}
-              onChange={(event) =>
-                setManual((prev) => ({ ...prev, exerciseRole: event.target.value }))
-              }
-            >
-              {DRILL_EXERCISE_ROLE_OPTIONS.map((role) => (
-                <option key={role} value={role}>
-                  {role}
-                </option>
-              ))}
-            </CFormSelect>
-          </div>
-          <div className="col-12 col-md-2 d-grid align-self-end">
-            <CButton
-              type="button"
-              color="light"
-              disabled={!manual.name.trim() || rows.length >= DRILL_FIELD_LIMITS.personnel}
-              onClick={addManual}
-            >
-              <Plus size={14} className="me-1" /> Add
-            </CButton>
-          </div>
-        </div>
+        </section>
       </section>
 
       <DrillStageActions

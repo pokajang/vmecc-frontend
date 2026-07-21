@@ -70,18 +70,23 @@ const DrillChronologyStep = ({
           { label: 'Title', value: form.exerciseTitle || form.details },
         ]}
       />
-      <ReportChronologySection
-        title="Chronology of Drill Events"
-        actionLabel="Event / Action"
-        fieldError={fieldErrors.chronology}
-        rows={form.chronology}
-        onAddRow={addChronology}
-        onUpdateRow={handleUpdate}
-        onRemoveRow={handleRemove}
-        onMoveRow={moveChronology}
-        maxRows={DRILL_FIELD_LIMITS.chronology}
-        actionMaxLength={DRILL_FIELD_LIMITS.chronologyAction}
-      />
+      <div
+        data-drill-field="chronology"
+        aria-invalid={Boolean(fieldErrors.chronology) || undefined}
+      >
+        <ReportChronologySection
+          title="Chronology of Drill Events"
+          actionLabel="Event / Action"
+          fieldError={fieldErrors.chronology}
+          rows={form.chronology}
+          onAddRow={addChronology}
+          onUpdateRow={handleUpdate}
+          onRemoveRow={handleRemove}
+          onMoveRow={moveChronology}
+          maxRows={DRILL_FIELD_LIMITS.chronology}
+          actionMaxLength={DRILL_FIELD_LIMITS.chronologyAction}
+        />
+      </div>
       {hasOutOfOrderTime(form.chronology) ? (
         <CAlert color="warning" className="mb-0">
           One event is earlier than the event above it. Confirm the times or reorder the rows.

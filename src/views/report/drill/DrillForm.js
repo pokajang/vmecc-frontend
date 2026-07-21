@@ -27,6 +27,7 @@ import {
   validateDrillChronology,
   validateDrillDetails,
   validateDrillForm,
+  firstDrillError,
   validateDrillPersonnel,
   validateDrillSetup,
 } from './validation'
@@ -81,6 +82,7 @@ const DrillForm = ({
   const draftSeedRef = useRef(null)
   const draftIdRef = useRef('')
   const draftVersionRef = useRef(0)
+  const [pendingFocusField, setPendingFocusField] = useState('')
   const [showReset, setShowReset] = useState(false)
   const [lastSavedSignature, setLastSavedSignature] = useState(() =>
     editingDraftSeed ? signature(normalizeDrillForm(editingDraftSeed)) : null,
@@ -108,6 +110,28 @@ const DrillForm = ({
   useEffect(() => {
     formRef.current = form
   }, [form])
+
+  const focusDrillField = useCallback((field) => {
+    if (!field || typeof document === 'undefined') return false
+    const container = document.querySelector(`[data-drill-field="${field}"]`)
+    if (!container) return false
+    container.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
+    const target = container.matches('input, textarea, select, button, [tabindex]')
+      ? container
+      : container.querySelector(
+          'input:not([type="hidden"]):not(:disabled), textarea, select, button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        )
+    window.setTimeout(() => target?.focus?.({ preventScroll: true }), 120)
+    return true
+  }, [])
+
+  useEffect(() => {
+    if (!pendingFocusField) return
+    const timer = window.setTimeout(() => {
+      if (focusDrillField(pendingFocusField)) setPendingFocusField('')
+    }, 80)
+    return () => window.clearTimeout(timer)
+  }, [focusDrillField, pendingFocusField])
 
   const normalizedSection = String(newSection || '')
     .trim()
@@ -279,6 +303,12 @@ const DrillForm = ({
       setBlockerMessage('')
       return true
     }
+    const firstError = firstDrillError(result.errors)
+    if (firstError.field) {
+      if (firstError.stage && firstError.stage !== activeSection)
+        navigateToSection(firstError.stage)
+      setPendingFocusField(firstError.field)
+    }
     setBlockerMessage(message)
     window.setTimeout(scrollToFirstError, 0)
     return false
@@ -305,7 +335,9 @@ const DrillForm = ({
     setFieldErrors(result.errors)
     setSetupFieldErrors(result.errors)
     if (!result.isValid) {
-      const firstSection = result.errors.incidentType || result.errors.reportDate ? 'setup' : null
+      const firstError = firstDrillError(result.errors)
+      const firstSection = firstError.stage
+      if (firstError.field) setPendingFocusField(firstError.field)
       setBlockerMessage('Complete the required Drill fields before review.')
       if (firstSection) navigateToSection(firstSection)
       window.setTimeout(scrollToFirstError, 0)

@@ -3,6 +3,7 @@ import {
   clearReportDraft,
   createErcoDraft,
   deleteErcoDraft,
+  deleteReportDraft,
   listErcoDrafts,
   loadReportDraft,
   saveReportDraft,
@@ -117,6 +118,21 @@ const useReportRouteActions = ({
       const trimmedDraftId = String(draftId || '').trim()
       if (!trimmedDraftId) {
         if (activeFormSlug === 'erco') return true
+        const fallbackDraftId = Array.isArray(activeDraftRows)
+          ? String(
+              activeDraftRows.find((row) => String(row?.draftId || '').trim())?.draftId || '',
+            ).trim()
+          : ''
+        if (fallbackDraftId) {
+          const removedById = await deleteReportDraft(user?.id, fallbackDraftId)
+          if (!removedById) return false
+          setActiveDraftRows((prev) => {
+            if (!Array.isArray(prev) || prev.length === 0) return prev
+            return prev.filter((row) => String(row?.draftId || '').trim() !== fallbackDraftId)
+          })
+          setDraftVersion((prev) => prev + 1)
+          return true
+        }
         if (!Array.isArray(activeDraftRows) || activeDraftRows.length === 0) return true
         const removed = await clearReportDraft(user?.id, activeFormSlug)
         if (!removed) return false
@@ -136,9 +152,13 @@ const useReportRouteActions = ({
         return true
       }
 
-      const removed = await clearReportDraft(user?.id, activeFormSlug)
+      const removed = await deleteReportDraft(user?.id, trimmedDraftId)
       if (!removed) return false
-      setActiveDraftRows([])
+      setActiveDraftRows((prev) => {
+        if (!Array.isArray(prev) || prev.length === 0) return prev
+        const next = prev.filter((row) => String(row?.draftId || '').trim() !== trimmedDraftId)
+        return next.length === prev.length ? prev : next
+      })
       setDraftVersion((prev) => prev + 1)
       return removed
     },

@@ -59,6 +59,11 @@ export const clearReportDraft = (userId, reportTypeSlug) => {
   return clearReportDraftApi({ reportTypeSlug }).then(() => true)
 }
 
+export const deleteReportDraft = (userId, draftId) => {
+  if (!userId) return Promise.resolve(false)
+  return deleteReportDraftApi({ draftId }).then(() => true)
+}
+
 export const listErcoDrafts = (userId, { page = 1, limit = 50 } = {}) => {
   if (!userId) return Promise.resolve([])
   return listReportDraftsApi({ reportTypeSlug: 'erco', page, limit })

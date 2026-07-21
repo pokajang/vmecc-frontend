@@ -71,7 +71,7 @@ const DrillDetailsStep = ({
         ]}
       />
 
-      <div>
+      <div data-drill-field="details" aria-invalid={Boolean(fieldErrors.details) || undefined}>
         <CFormLabel htmlFor="drill-exercise-title" className="fw-semibold">
           Exercise title (optional)
         </CFormLabel>
@@ -109,7 +109,12 @@ const DrillDetailsStep = ({
         <CFormFeedback invalid>{fieldErrors.details}</CFormFeedback>
       </div>
 
-      <section className="d-grid gap-2" aria-labelledby="drill-objectives-title">
+      <section
+        className="d-grid gap-2"
+        aria-labelledby="drill-objectives-title"
+        data-drill-field="exerciseObjectives"
+        aria-invalid={Boolean(fieldErrors.exerciseObjectives) || undefined}
+      >
         <div className="d-flex justify-content-between align-items-center gap-2">
           <div id="drill-objectives-title" className="fw-semibold">
             Exercise objectives (optional)
@@ -167,7 +172,12 @@ const DrillDetailsStep = ({
         ))}
       </section>
 
-      <section className="d-grid gap-2" aria-labelledby="drill-erp-title">
+      <section
+        className="d-grid gap-2"
+        aria-labelledby="drill-erp-title"
+        data-drill-field="erpReferences"
+        aria-invalid={Boolean(fieldErrors.erpReferences) || undefined}
+      >
         <div className="d-flex justify-content-between align-items-center gap-2">
           <div id="drill-erp-title" className="fw-semibold">
             ERP / Annex references (optional)
@@ -246,7 +256,7 @@ const DrillDetailsStep = ({
         })}
       </section>
 
-      <div>
+      <div data-drill-field="summary" aria-invalid={Boolean(fieldErrors.summary) || undefined}>
         <CFormLabel htmlFor="drill-summary" className="fw-semibold">
           Outcome summary
         </CFormLabel>

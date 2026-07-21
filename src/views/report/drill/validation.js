@@ -3,6 +3,43 @@ import { DRILL_FIELD_LIMITS } from './constants'
 
 const text = (value) => String(value ?? '').trim()
 
+export const DRILL_FIELD_ORDER = [
+  'incidentType',
+  'weather',
+  'location',
+  'reportDate',
+  'reportTime',
+  'respondingAttendance',
+  'details',
+  'erpReferences',
+  'summary',
+  'exerciseObjectives',
+  'chronology',
+  'postIncidentAnalysis',
+]
+
+const DRILL_FIELD_STAGE = {
+  incidentType: 'setup',
+  weather: 'setup',
+  location: 'setup',
+  reportDate: 'setup',
+  reportTime: 'setup',
+  respondingAttendance: 'personnel',
+  details: 'details',
+  summary: 'details',
+  exerciseObjectives: 'details',
+  chronology: 'chronology',
+  postIncidentAnalysis: 'analysis',
+  erpReferences: 'details',
+}
+
+const visibleDrillErrorField = (key) => {
+  if (!key) return ''
+  if (key === 'reportTime') return 'reportDate'
+  if (key === 'erpReferences' || key.startsWith('erpReferences.')) return 'erpReferences'
+  return key
+}
+
 export const validateDrillChronology = (form) => {
   const next = {}
   const value = normalizeDrillForm(form)
@@ -130,5 +167,31 @@ export const validateDrillForm = (form) => {
   return {
     isValid: Object.keys(errors).length === 0,
     errors,
+  }
+}
+
+export const orderedDrillErrorFields = (errors = {}) =>
+  DRILL_FIELD_ORDER.filter((field) => {
+    if (field === 'location') {
+      return (
+        Boolean(errors.location) ||
+        Object.keys(errors).some(
+          (key) => key.startsWith('location') || key.startsWith('locations') || field === key,
+        )
+      )
+    }
+    return Object.keys(errors).some((key) => {
+      if (key === 'location') return field === 'location'
+      const visibleField = visibleDrillErrorField(key)
+      if (!visibleField) return false
+      return visibleField === field
+    })
+  })
+
+export const firstDrillError = (errors = {}) => {
+  const [field] = orderedDrillErrorFields(errors)
+  return {
+    field: visibleDrillErrorField(field),
+    stage: DRILL_FIELD_STAGE[visibleDrillErrorField(field)] || 'setup',
   }
 }

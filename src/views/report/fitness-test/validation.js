@@ -1,3 +1,31 @@
+export const FITNESS_TEST_FIELD_ORDER = [
+  'incidentType',
+  'weather',
+  'location',
+  'reportDate',
+  'reportTime',
+  'details',
+  'summary',
+  'chronology',
+]
+
+const FITNESS_TEST_FIELD_STAGE = {
+  incidentType: 'setup',
+  weather: 'setup',
+  location: 'setup',
+  reportDate: 'setup',
+  reportTime: 'setup',
+  details: 'test',
+  summary: 'test',
+  chronology: 'test',
+}
+
+const visibleFitnessTestErrorField = (key) => {
+  if (!key) return ''
+  if (key === 'reportTime') return 'reportDate'
+  return key
+}
+
 export const validateFitnessTestForm = (form) => {
   const next = {}
   if (!form.reportDate) next.reportDate = 'Date is required.'
@@ -14,6 +42,17 @@ export const validateFitnessTestForm = (form) => {
   return {
     isValid: Object.keys(next).length === 0,
     errors: next,
+  }
+}
+
+export const orderedFitnessTestErrorFields = (errors = {}) =>
+  FITNESS_TEST_FIELD_ORDER.filter((field) => Object.keys(errors).includes(field))
+
+export const firstFitnessTestError = (errors = {}) => {
+  const [field] = orderedFitnessTestErrorFields(errors)
+  return {
+    field: visibleFitnessTestErrorField(field),
+    stage: FITNESS_TEST_FIELD_STAGE[visibleFitnessTestErrorField(field)] || 'setup',
   }
 }
 
