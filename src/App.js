@@ -12,10 +12,8 @@ import { normalizeModuleActivationPayload } from './utils/modules'
 import { shouldShowMaintenancePage } from './utils/systemMaintenance'
 import PageState from './components/PageState'
 import { getPendingCameraOperation } from './utils/cameraRecovery'
-import {
-  loadSystemMaintenanceSetting,
-  normalizeSystemMaintenanceSetting,
-} from './views/settings/systemMaintenanceStorage'
+import useSystemMaintenanceMonitor from './hooks/useSystemMaintenanceMonitor'
+import { normalizeSystemMaintenanceSetting } from './views/settings/systemMaintenanceStorage'
 
 // Containers
 const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))
@@ -28,8 +26,6 @@ const Page403 = React.lazy(() => import('./views/pages/page403/Page403'))
 const Page404 = React.lazy(() => import('./views/pages/page404/Page404'))
 const Page500 = React.lazy(() => import('./views/pages/page500/Page500'))
 const Maintenance = React.lazy(() => import('./views/pages/maintenance/Maintenance'))
-const MAINTENANCE_POLL_INTERVAL_AUTHENTICATED_MS = 10000
-const MAINTENANCE_POLL_INTERVAL_PUBLIC_MS = 30000
 const AUTH_BOOTSTRAP_TIMEOUT_MS = 12_000
 
 const PUBLIC_AUTH_BOOTSTRAP_PATHS = new Set(['/login', '/forgot-password', '/reset-password'])
@@ -78,6 +74,8 @@ const App = () => {
   const authUser = useSelector((state) => state.authUser)
   const authError = useSelector((state) => state.authError)
   const systemMaintenance = useSelector((state) => state.systemMaintenance)
+  const systemMaintenanceHydrated = useSelector((state) => state.systemMaintenanceHydrated)
+  const systemMaintenanceLoadError = useSelector((state) => state.systemMaintenanceLoadError)
   const systemMaintenanceRef = useRef(systemMaintenance)
   const sessionCheckInFlightRef = useRef(false)
   const sessionRetryTimersRef = useRef(new Set())
@@ -184,6 +182,15 @@ const App = () => {
     (nextValue) => {
       const normalized = normalizeSystemMaintenanceSetting(nextValue)
       const current = systemMaintenanceRef.current || {}
+      const currentVersion = Date.parse(String(current?.updatedAt || ''))
+      const nextVersion = Date.parse(String(normalized?.updatedAt || ''))
+      if (
+        Number.isFinite(currentVersion) &&
+        Number.isFinite(nextVersion) &&
+        nextVersion < currentVersion
+      ) {
+        return
+      }
       const unchanged =
         Boolean(current?.enabled) === Boolean(normalized?.enabled) &&
         String(current?.phase || '') === String(normalized?.phase || '') &&
@@ -199,6 +206,28 @@ const App = () => {
     },
     [dispatch],
   )
+
+  const handleSystemMaintenanceResult = useCallback(
+    (result) => {
+      const nextError = result?.ok
+        ? null
+        : result?.error?.message || 'Unable to load maintenance setting.'
+      if (systemMaintenanceHydrated && systemMaintenanceLoadError === nextError) return
+      dispatch({
+        type: 'set',
+        systemMaintenanceHydrated: true,
+        systemMaintenanceLoadError: nextError,
+      })
+    },
+    [dispatch, systemMaintenanceHydrated, systemMaintenanceLoadError],
+  )
+
+  useSystemMaintenanceMonitor({
+    enabled: authStatus === 'authenticated',
+    setting: systemMaintenance,
+    onUpdate: applySystemMaintenance,
+    onResult: handleSystemMaintenanceResult,
+  })
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.href.split('?')[1])
@@ -266,62 +295,16 @@ const App = () => {
   }, [authStatus, loadSession])
 
   useEffect(() => {
-    let isMounted = true
-    let timer = null
-    let inFlight = false
-    let controller = null
-
-    const nextDelay = () =>
-      authStatus === 'authenticated'
-        ? MAINTENANCE_POLL_INTERVAL_AUTHENTICATED_MS
-        : MAINTENANCE_POLL_INTERVAL_PUBLIC_MS
-
-    const currentPath = window.location?.pathname || '/'
-    if (authStatus !== 'authenticated' && PUBLIC_AUTH_BOOTSTRAP_PATHS.has(currentPath)) {
-      return () => {
-        isMounted = false
-      }
-    }
-
-    const scheduleNext = () => {
-      if (!isMounted) return
-      if (timer) clearTimeout(timer)
-      timer = setTimeout(() => {
-        loadMaintenanceSetting()
-      }, nextDelay())
-    }
-
-    const loadMaintenanceSetting = async () => {
-      if (inFlight) return
-      inFlight = true
-      controller = new AbortController()
-      const result = await loadSystemMaintenanceSetting({ signal: controller.signal })
-      controller = null
-      if (!isMounted) return
-      // Keep the last known state on transient fetch failures to prevent
-      // maintenance page flicker that looks like app auto-refresh.
-      if (result?.ok) {
-        applySystemMaintenance(result.data)
-      }
-      inFlight = false
-      scheduleNext()
-    }
-    loadMaintenanceSetting()
-    return () => {
-      isMounted = false
-      if (timer) clearTimeout(timer)
-      controller?.abort()
-    }
-  }, [applySystemMaintenance, authStatus])
-
-  useEffect(() => {
     const handleMaintenanceEvent = (event) => {
       const payload = event?.detail
+      const current = systemMaintenanceRef.current || {}
       const maintenanceData = normalizeSystemMaintenanceSetting(payload?.data || payload, {
+        ...current,
         enabled: true,
-        message: payload?.message || 'System is under maintenance. Please try again later.',
-        updatedAt: '',
-        updatedByUserId: null,
+        message:
+          payload?.message ||
+          current?.message ||
+          'System is under maintenance. Please try again later.',
       })
       applySystemMaintenance(maintenanceData)
     }

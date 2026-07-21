@@ -32,6 +32,8 @@ const initialState = {
     message: 'System is under maintenance. Please try again later.',
     updatedAt: '',
   },
+  systemMaintenanceHydrated: false,
+  systemMaintenanceLoadError: null,
 }
 
 const changeState = (state = initialState, { type, ...rest }) => {

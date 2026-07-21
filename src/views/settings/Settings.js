@@ -9,7 +9,6 @@ import TableLoader from 'src/components/TableLoader'
 import { hasPermission } from 'src/utils/authz'
 import {
   DEFAULT_SYSTEM_MAINTENANCE,
-  loadSystemMaintenanceSetting,
   saveSystemMaintenance,
 } from 'src/views/settings/systemMaintenanceStorage'
 
@@ -37,6 +36,9 @@ const formatCountdown = (ms) => {
 
 const Settings = () => {
   const authUser = useSelector((state) => state.authUser)
+  const storedMaintenanceSetting = useSelector((state) => state.systemMaintenance)
+  const maintenanceHydrated = useSelector((state) => state.systemMaintenanceHydrated)
+  const maintenanceLoadError = useSelector((state) => state.systemMaintenanceLoadError)
   const canManage = useMemo(() => hasPermission(authUser, 'settings.manage'), [authUser])
   const dispatch = useDispatch()
   const navigate = useNavigate()
@@ -54,16 +56,18 @@ const Settings = () => {
         ? TAB_MODULES
         : TAB_GENERAL
 
-  const [maintenanceSetting, setMaintenanceSetting] = useState({ ...DEFAULT_SYSTEM_MAINTENANCE })
-  const [maintenanceLoading, setMaintenanceLoading] = useState(true)
+  const [maintenanceOverride, setMaintenanceOverride] = useState(null)
   const [maintenanceSaving, setMaintenanceSaving] = useState(false)
   const [maintenanceError, setMaintenanceError] = useState(null)
   const [, forceCountdownTick] = useState(0)
 
+  const maintenanceSetting =
+    maintenanceOverride || storedMaintenanceSetting || DEFAULT_SYSTEM_MAINTENANCE
   const maintenanceEnabled = Boolean(maintenanceSetting?.enabled)
   const maintenancePhase = String(maintenanceSetting?.phase || 'off')
   const isGracePhase = maintenanceEnabled && maintenancePhase === 'grace'
   const remainingMs = toRemainingMs(maintenanceSetting?.graceEndsAt)
+  const maintenanceLoading = !maintenanceHydrated
 
   useEffect(() => {
     if (!isGracePhase) return undefined
@@ -71,28 +75,8 @@ const Settings = () => {
     return () => window.clearInterval(timer)
   }, [isGracePhase])
 
-  useEffect(() => {
-    let isMounted = true
-    const load = async () => {
-      setMaintenanceLoading(true)
-      setMaintenanceError(null)
-      const result = await loadSystemMaintenanceSetting()
-      if (!isMounted) return
-      setMaintenanceSetting(result?.data || { ...DEFAULT_SYSTEM_MAINTENANCE })
-      if (!result?.ok) {
-        setMaintenanceError(result?.error?.message || 'Unable to load maintenance setting.')
-      }
-      setMaintenanceLoading(false)
-    }
-    load()
-    return () => {
-      isMounted = false
-    }
-  }, [])
-
   const handleMaintenanceToggle = useCallback(
     async (nextEnabled) => {
-      const previousSetting = maintenanceSetting
       setMaintenanceSaving(true)
       setMaintenanceError(null)
 
@@ -103,7 +87,7 @@ const Settings = () => {
         phase: nextEnabled ? 'grace' : 'off',
         graceEndsAt: nextEnabled ? maintenanceSetting?.graceEndsAt || null : null,
       }
-      setMaintenanceSetting(optimistic)
+      setMaintenanceOverride(optimistic)
 
       const result = await saveSystemMaintenance({
         enabled: nextEnabled,
@@ -113,13 +97,17 @@ const Settings = () => {
 
       if (result?.ok) {
         const nextSetting = result?.data || optimistic
-        setMaintenanceSetting(nextSetting)
-        dispatch({ type: 'set', systemMaintenance: nextSetting })
+        dispatch({
+          type: 'set',
+          systemMaintenance: nextSetting,
+          systemMaintenanceHydrated: true,
+          systemMaintenanceLoadError: null,
+        })
       } else {
-        setMaintenanceSetting(previousSetting)
         setMaintenanceError(result?.error?.message || 'Unable to save maintenance setting.')
       }
 
+      setMaintenanceOverride(null)
       setMaintenanceSaving(false)
     },
     [dispatch, maintenanceSetting],
@@ -127,7 +115,6 @@ const Settings = () => {
 
   const handleEnforceNow = useCallback(async () => {
     if (!maintenanceEnabled || maintenancePhase !== 'grace') return
-    const previousSetting = maintenanceSetting
     setMaintenanceSaving(true)
     setMaintenanceError(null)
 
@@ -137,7 +124,7 @@ const Settings = () => {
       graceEndsAt: null,
       updatedAt: new Date().toISOString(),
     }
-    setMaintenanceSetting(optimistic)
+    setMaintenanceOverride(optimistic)
 
     const result = await saveSystemMaintenance({
       enabled: true,
@@ -148,13 +135,17 @@ const Settings = () => {
 
     if (result?.ok) {
       const nextSetting = result?.data || optimistic
-      setMaintenanceSetting(nextSetting)
-      dispatch({ type: 'set', systemMaintenance: nextSetting })
+      dispatch({
+        type: 'set',
+        systemMaintenance: nextSetting,
+        systemMaintenanceHydrated: true,
+        systemMaintenanceLoadError: null,
+      })
     } else {
-      setMaintenanceSetting(previousSetting)
       setMaintenanceError(result?.error?.message || 'Unable to enforce maintenance lock.')
     }
 
+    setMaintenanceOverride(null)
     setMaintenanceSaving(false)
   }, [dispatch, maintenanceEnabled, maintenancePhase, maintenanceSetting])
 
@@ -259,9 +250,9 @@ const Settings = () => {
                   <ButtonLoader label="Applying maintenance setting..." size={13} />
                 </div>
               )}
-              {maintenanceError && (
+              {(maintenanceError || maintenanceLoadError) && (
                 <CAlert color="warning" className="mt-2 mb-0 py-2">
-                  {maintenanceError}
+                  {maintenanceError || maintenanceLoadError}
                 </CAlert>
               )}
             </CCardBody>
