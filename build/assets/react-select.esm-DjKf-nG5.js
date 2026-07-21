@@ -1,0 +1,1 @@
+import{u as s,S as o,_ as S}from"./useStateManager-7e1e8489.esm-DM4V-jXr.js";import{r as e}from"./index-Ch-ALbPA.js";var n=e.forwardRef(function(a,t){var r=s(a);return e.createElement(o,S({ref:t},r))}),l=n;export{l as S};

@@ -238,6 +238,41 @@ describe('useSystemMaintenanceMonitor', () => {
     expect(onResult).not.toHaveBeenCalled()
   })
 
+  it('keeps scheduling from the latest external state when an older request finishes', async () => {
+    let finishOlderRequest
+    const loadSetting = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            finishOlderRequest = resolve
+          }),
+      )
+      .mockResolvedValue({ ok: true, data: ENFORCED_SETTING })
+
+    const { rerender } = renderHook(
+      ({ setting }) =>
+        useSystemMaintenanceMonitor({
+          enabled: true,
+          setting,
+          loadSetting,
+          onUpdate: vi.fn(),
+          random: NO_JITTER,
+        }),
+      { initialProps: { setting: OFF_SETTING } },
+    )
+
+    rerender({ setting: ENFORCED_SETTING })
+    await act(async () => {
+      finishOlderRequest({ ok: true, data: OFF_SETTING })
+      await Promise.resolve()
+      await Promise.resolve()
+    })
+
+    await advance(MAINTENANCE_ACTIVE_POLL_INTERVAL_MS)
+    expect(loadSetting).toHaveBeenCalledTimes(2)
+  })
+
   it('queues one immediate refresh when visibility returns before an aborted request settles', async () => {
     let finishAbortedRequest
     const loadSetting = vi

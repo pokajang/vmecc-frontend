@@ -109,6 +109,40 @@ describe('App session recheck', () => {
     expect(store.getState().systemMaintenanceHydrated).toBe(true)
   })
 
+  it('does not let an older unversioned poll overwrite a newer maintenance event', async () => {
+    let finishMaintenanceRequest
+    loadSystemMaintenanceSetting.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finishMaintenanceRequest = resolve
+        }),
+    )
+    fetchSession.mockResolvedValueOnce({ user: { id: 1, email: 'user@example.test' } })
+
+    const store = renderApp()
+    await waitFor(() => expect(loadSystemMaintenanceSetting).toHaveBeenCalledTimes(1))
+
+    window.dispatchEvent(
+      new CustomEvent('vmecc:system-maintenance', {
+        detail: {
+          data: {
+            enabled: true,
+            phase: 'enforced',
+            updatedAt: '2026-07-21T00:01:00+00:00',
+          },
+        },
+      }),
+    )
+    await waitFor(() => expect(store.getState().systemMaintenance.enabled).toBe(true))
+
+    finishMaintenanceRequest({
+      ok: true,
+      data: { enabled: false, phase: 'off', updatedAt: '' },
+    })
+    await waitFor(() => expect(store.getState().systemMaintenanceHydrated).toBe(true))
+    expect(store.getState().systemMaintenance.enabled).toBe(true)
+  })
+
   it('ignores stale maintenance events and preserves the current message for header-only events', async () => {
     fetchSession.mockResolvedValueOnce({ user: { id: 1, email: 'user@example.test' } })
     const currentSetting = {

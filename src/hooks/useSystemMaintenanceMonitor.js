@@ -163,7 +163,6 @@ const useSystemMaintenanceMonitor = ({
 
         if (result?.ok) {
           runtime.failureCount = 0
-          settingRef.current = result.data
           onUpdateRef.current?.(result.data)
         } else {
           runtime.failureCount += 1

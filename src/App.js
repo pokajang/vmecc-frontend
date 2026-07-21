@@ -186,8 +186,7 @@ const App = () => {
       const nextVersion = Date.parse(String(normalized?.updatedAt || ''))
       if (
         Number.isFinite(currentVersion) &&
-        Number.isFinite(nextVersion) &&
-        nextVersion < currentVersion
+        (!Number.isFinite(nextVersion) || nextVersion < currentVersion)
       ) {
         return
       }
