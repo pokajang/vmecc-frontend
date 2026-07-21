@@ -201,7 +201,7 @@ const proceedToDetailsStep = async () => {
   )
 }
 
-const renderSetupStep = ({ mobile = false, seed = {} } = {}) => {
+const renderSetupStep = ({ mobile = false, seed = {}, errors = {} } = {}) => {
   setMobileViewport(mobile)
 
   const Harness = () => {
@@ -214,7 +214,7 @@ const renderSetupStep = ({ mobile = false, seed = {} } = {}) => {
       incidentTime: '09:30',
       ...seed,
     }))
-    const [setupFieldErrors, setSetupFieldErrors] = useState({})
+    const [setupFieldErrors, setSetupFieldErrors] = useState(errors)
 
     return (
       <ErcoSetupStep
@@ -466,6 +466,17 @@ describe('ERCO mobile setup polish', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Edit Incident Type' }))
     expect(screen.getByText('Choose Emergency / Incident Type')).toBeTruthy()
   })
+
+  it('reopens a completed desktop group when validation finds an invalid value', () => {
+    renderSetupStep({
+      mobile: false,
+      errors: { incidentDate: 'Incident date cannot be in the future.' },
+    })
+
+    expect(screen.getByText('Choose Incident Date')).toBeTruthy()
+    expect(screen.getByText('Incident date cannot be in the future.')).toBeTruthy()
+    expect(screen.queryByLabelText('Edit Date & Time')).toBeNull()
+  })
 })
 
 describe('ERCO post-analysis mobile polish', () => {
@@ -494,7 +505,7 @@ describe('ERCO post-analysis mobile polish', () => {
     })
 
     fireEvent.click(screen.getByRole('button', { name: /Photos\s*0 photos/i }))
-    expect(screen.getByText('No photos yet. Upload photos to continue.')).toBeTruthy()
+    expect(screen.getByText('No incident photographs uploaded yet.')).toBeTruthy()
 
     fireEvent.click(screen.getByRole('button', { name: /Strengths\s*1 selected/i }))
     expect(screen.getByText('KPI Response Time')).toBeTruthy()
@@ -506,6 +517,6 @@ describe('ERCO post-analysis mobile polish', () => {
     expect(screen.getByText('Resources, Equipment & Consumables Mobilised')).toBeTruthy()
     expect(screen.getByText('Strengths')).toBeTruthy()
     expect(screen.getByText('Improvement Opportunities')).toBeTruthy()
-    expect(screen.getByText('Photographs')).toBeTruthy()
+    expect(screen.getByText('Incident photographs')).toBeTruthy()
   })
 })

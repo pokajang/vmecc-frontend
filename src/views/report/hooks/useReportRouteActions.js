@@ -115,23 +115,34 @@ const useReportRouteActions = ({
   const removeDraft = useCallback(
     async (draftId = '') => {
       const trimmedDraftId = String(draftId || '').trim()
-      if (activeFormSlug === 'erco' && !trimmedDraftId) return true
-      const removed =
-        activeFormSlug === 'erco' && trimmedDraftId
-          ? await deleteErcoDraft(user?.id, trimmedDraftId)
-          : await clearReportDraft(user?.id, activeFormSlug)
-      if (!removed) return false
-      setActiveDraftRows((prev) => {
-        if (!Array.isArray(prev) || prev.length === 0) return prev
-        if (activeFormSlug === 'erco' && trimmedDraftId) {
+      if (!trimmedDraftId) {
+        if (activeFormSlug === 'erco') return true
+        if (!Array.isArray(activeDraftRows) || activeDraftRows.length === 0) return true
+        const removed = await clearReportDraft(user?.id, activeFormSlug)
+        if (!removed) return false
+        setActiveDraftRows([])
+        setDraftVersion((prev) => prev + 1)
+        return true
+      }
+
+      if (activeFormSlug === 'erco') {
+        const removed = await deleteErcoDraft(user?.id, trimmedDraftId)
+        if (!removed) return false
+        setActiveDraftRows((prev) => {
+          if (!Array.isArray(prev) || prev.length === 0) return prev
           return prev.filter((row) => String(row?.draftId || '').trim() !== trimmedDraftId)
-        }
-        return []
-      })
+        })
+        setDraftVersion((prev) => prev + 1)
+        return true
+      }
+
+      const removed = await clearReportDraft(user?.id, activeFormSlug)
+      if (!removed) return false
+      setActiveDraftRows([])
       setDraftVersion((prev) => prev + 1)
       return removed
     },
-    [activeFormSlug, setActiveDraftRows, setDraftVersion, user?.id],
+    [activeDraftRows, activeFormSlug, setActiveDraftRows, setDraftVersion, user?.id],
   )
 
   const downloadRecord = useCallback(
@@ -591,6 +602,9 @@ const useReportRouteActions = ({
         const usesSingleRecordPersistence = ['erco', 'drill', 'fitness-test'].includes(
           activeFormSlug,
         )
+        const sourceDraftId = String(
+          record?.sourceDraftId || record?.source_draft_id || queryDraftId || '',
+        ).trim()
         const nextRecord =
           isUpdate && !usesSingleRecordPersistence
             ? {
@@ -625,6 +639,7 @@ const useReportRouteActions = ({
                 ? Number(existingRecord?.version || record?.version || 0)
                 : 0,
               submissionKey: isUpdate ? '' : String(record?.submissionKey || '').trim(),
+              sourceDraftId,
             })
           : await persistRecords(
               [nextRecord, ...sameTypeRecords.filter((row) => row.id !== record.id)].sort(
@@ -648,7 +663,7 @@ const useReportRouteActions = ({
         }
         let draftRemoved = true
         try {
-          draftRemoved = await removeDraft(queryDraftId)
+          draftRemoved = await removeDraft(sourceDraftId || queryDraftId)
         } catch {
           draftRemoved = false
         }
@@ -781,16 +796,20 @@ const useReportRouteActions = ({
   const requestReview = useCallback(
     (record, backSection = '') => {
       if (!record) return
-      setPendingReviewRecord(record)
+      const sourceDraftId = String(
+        record?.sourceDraftId || record?.source_draft_id || queryDraftId || '',
+      ).trim()
+      const reviewRecord = sourceDraftId ? { ...record, sourceDraftId } : record
+      setPendingReviewRecord(reviewRecord)
       setPendingReviewBackSection(backSection)
-      navigate(`${reportBasePath}/new/review`, {
+      navigate(`${reportBasePath}/new/review${location.search || ''}`, {
         state: {
-          reviewRecord: record,
+          reviewRecord,
           reviewBackSection: backSection,
         },
       })
     },
-    [navigate, reportBasePath],
+    [location.search, navigate, queryDraftId, reportBasePath],
   )
 
   const backFromReview = useCallback(

@@ -163,7 +163,7 @@ const waitForSetup = async (page, moduleKey) => {
 
 const getPhotoInputs = (page, moduleKey) => {
   const section = page.getByRole('region', {
-    name: moduleKey === 'drill' ? 'Exercise photographs' : 'Photographs',
+    name: moduleKey === 'drill' ? 'Exercise photographs' : 'Incident photographs',
   })
   return {
     upload: page.getByLabel(`Upload ${moduleKey} report photos`),
@@ -205,6 +205,9 @@ const runAuthenticatedMediaFlow = async (page, moduleKey) => {
         })
         .first(),
     ).toBeVisible()
+    if (moduleKey === 'erco') {
+      await expect(page.getByRole('button', { name: 'Capture photo' })).toHaveCount(0)
+    }
 
     const photoInputs = getPhotoInputs(page, moduleKey)
     const uploadResponses = []
@@ -272,7 +275,9 @@ const runAuthenticatedMediaFlow = async (page, moduleKey) => {
     await expect(reloadedInputs.descriptionOne).toHaveValue(multilineDescription)
     await expect(reloadedInputs.descriptionTwo).toHaveValue('')
 
-    await page.getByRole('button', { name: 'Review & Submit' }).click()
+    await page
+      .getByRole('button', { name: moduleKey === 'erco' ? 'Review report' : 'Review & Submit' })
+      .click()
     await expect(page).toHaveURL(new RegExp(`/report/${moduleKey}/new/review`))
     await expect(page.getByText(multilineDescription)).toBeVisible()
     const thumbnailImages = page.locator('.report-photo-gallery__thumbnail')

@@ -12,7 +12,13 @@ const ReportPhotoGallery = ({ photos = [], title = 'Photographs' }) => {
     [photos],
   )
   const [selectedIndex, setSelectedIndex] = useState(null)
+  const [viewMode, setViewMode] = useState('fit')
   const selectedPhoto = selectedIndex === null ? null : visiblePhotos[selectedIndex]
+
+  const closeViewer = () => {
+    setSelectedIndex(null)
+    setViewMode('fit')
+  }
 
   if (visiblePhotos.length === 0) return null
 
@@ -55,25 +61,54 @@ const ReportPhotoGallery = ({ photos = [], title = 'Photographs' }) => {
 
       <CModal
         visible={Boolean(selectedPhoto)}
-        onClose={() => setSelectedIndex(null)}
+        onClose={closeViewer}
         size="xl"
         fullscreen="sm"
         scrollable
         aria-labelledby="report-photo-viewer-title"
       >
-        <CModalHeader onClose={() => setSelectedIndex(null)}>
+        <CModalHeader onClose={closeViewer}>
           <CModalTitle id="report-photo-viewer-title">{title}</CModalTitle>
         </CModalHeader>
         <CModalBody className="report-photo-viewer d-grid gap-3">
           {selectedPhoto ? (
             <>
-              <div className="report-photo-viewer__stage">
+              <div className={`report-photo-viewer__stage report-photo-viewer__stage--${viewMode}`}>
                 <ReportPhotoImage
                   photo={selectedPhoto}
                   preferFullSize
                   alt={getPhotoLabel(selectedPhoto, selectedIndex)}
-                  className="report-photo-viewer__image"
+                  className={`report-photo-viewer__image report-photo-viewer__image--${viewMode}`}
                 />
+              </div>
+              <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div className="small text-body-secondary">
+                  {selectedPhoto.fileName || `Photo ${selectedIndex + 1}`}
+                </div>
+                <div className="btn-group" role="group" aria-label="Photo size">
+                  <CButton
+                    type="button"
+                    color={viewMode === 'fit' ? 'primary' : 'secondary'}
+                    variant={viewMode === 'fit' ? undefined : 'outline'}
+                    size="sm"
+                    aria-label="Fit photo to viewer"
+                    aria-pressed={viewMode === 'fit'}
+                    onClick={() => setViewMode('fit')}
+                  >
+                    Fit
+                  </CButton>
+                  <CButton
+                    type="button"
+                    color={viewMode === 'original' ? 'primary' : 'secondary'}
+                    variant={viewMode === 'original' ? undefined : 'outline'}
+                    size="sm"
+                    aria-label="View photo at original size"
+                    aria-pressed={viewMode === 'original'}
+                    onClick={() => setViewMode('original')}
+                  >
+                    100%
+                  </CButton>
+                </div>
               </div>
               {selectedPhoto.description ? (
                 <div className="report-photo-viewer__description">{selectedPhoto.description}</div>

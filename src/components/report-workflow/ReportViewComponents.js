@@ -21,19 +21,30 @@ export const ReportPhotoImage = ({
   onLoad,
   ...props
 }) => {
+  const { width: widthProp, height: heightProp, ...imageProps } = props
   const fullUrl = String(photo?.url || '')
   const previewUrl = preferFullSize
     ? fullUrl
     : String(photo?.thumbnailUrl || photo?.thumbnail_url || fullUrl)
   const [failedPreviewUrl, setFailedPreviewUrl] = useState('')
   const source = previewUrl && failedPreviewUrl !== previewUrl ? previewUrl : fullUrl
+  const sourceWidth = Number(
+    preferFullSize ? photo?.width : photo?.thumbnailWidth || photo?.thumbnail_width || photo?.width,
+  )
+  const sourceHeight = Number(
+    preferFullSize
+      ? photo?.height
+      : photo?.thumbnailHeight || photo?.thumbnail_height || photo?.height,
+  )
 
   if (!source) return null
 
   return (
     <img
-      {...props}
+      {...imageProps}
       src={source}
+      width={widthProp ?? (sourceWidth > 0 ? sourceWidth : undefined)}
+      height={heightProp ?? (sourceHeight > 0 ? sourceHeight : undefined)}
       loading="lazy"
       decoding="async"
       onLoad={onLoad}

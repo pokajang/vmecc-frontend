@@ -22,7 +22,7 @@ const IncidentSummaryTextarea = ({
   const generateLabel = hasSummary ? 'Improve Summary with AI' : 'Generate AI Summary'
 
   return (
-    <div className="d-grid gap-2">
+    <div className="d-grid gap-2" data-erco-field="summary">
       <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
         <CFormLabel
           htmlFor="erco-incident-summary"
@@ -66,11 +66,15 @@ const IncidentSummaryTextarea = ({
       <CFormTextarea
         id="erco-incident-summary"
         rows={4}
+        maxLength={20000}
         value={value}
         invalid={invalid}
+        aria-describedby={invalid ? 'erco-incident-summary-error' : undefined}
         onChange={onChange}
       />
-      <CFormFeedback invalid>{error}</CFormFeedback>
+      <CFormFeedback id="erco-incident-summary-error" invalid>
+        {error}
+      </CFormFeedback>
     </div>
   )
 }

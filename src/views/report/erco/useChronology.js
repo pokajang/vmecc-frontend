@@ -10,6 +10,8 @@ import {
   reorderRows,
   buildPreMobRowsFromStart,
   buildManualRowFromStart,
+  isChronologySequenceOutOfOrder,
+  sortChronologyRowsByTime,
 } from './chronologyUtils'
 
 // --- Pointer-drag DOM helpers (no React state, pure DOM) ---
@@ -132,14 +134,7 @@ export const useChronology = ({ form, setForm, pushToast }) => {
     !String(chronologyRows[0]?.action || '').trim()
   const showChronologyStarter = isChronologyDefault
 
-  const isChronologyOutOfOrder = chronologyRows.some((row, idx) => {
-    if (idx === 0) return false
-    const prev = chronologyRows[idx - 1]
-    const prevMin = parseTimeToMinutes(prev?.time)
-    const currMin = parseTimeToMinutes(row?.time)
-    if (prevMin === null || currMin === null) return false
-    return currMin < prevMin
-  })
+  const isChronologyOutOfOrder = isChronologySequenceOutOfOrder(chronologyRows)
 
   useEffect(
     () => () => {
@@ -256,16 +251,7 @@ export const useChronology = ({ form, setForm, pushToast }) => {
 
   const sortChronologyByTime = () => {
     snapshotChronology()
-    updateChronologyRows((rows) =>
-      [...rows].sort((a, b) => {
-        const aMin = parseTimeToMinutes(a?.time)
-        const bMin = parseTimeToMinutes(b?.time)
-        if (aMin === null && bMin === null) return 0
-        if (aMin === null) return 1
-        if (bMin === null) return -1
-        return aMin - bMin
-      }),
-    )
+    updateChronologyRows((rows) => sortChronologyRowsByTime(rows, form.incidentTime))
     if (pushToast)
       pushToast('Chronology sorted by time.', { title: 'Events sorted', color: 'info' })
   }

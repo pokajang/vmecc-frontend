@@ -164,6 +164,7 @@ export const submitInspectionRecordAction = async ({
   clearWorkingStateOnSuccess = true,
   navigateOnSuccess = true,
   onSubmitted = null,
+  sourceDraftId = '',
 }) => {
   if (submitLockRef.current) return
   submitLockRef.current = true
@@ -175,6 +176,7 @@ export const submitInspectionRecordAction = async ({
     Boolean(text(editingRecord?.id)) && !['draft', 'queued'].includes(editingRecordKind)
   const isUpdate = Number(record?.version || 0) > 0 || hasPersistedEditingRecord
   const useSessionSubmit = Boolean(inspectionSessionUid) && !isUpdate
+  const sourceDraftOptions = sourceDraftId ? { sourceDraftId } : {}
   try {
     if (
       useSessionSubmit &&
@@ -191,17 +193,22 @@ export const submitInspectionRecordAction = async ({
           sessionUid: inspectionSessionUid,
           displayId: record.displayId,
           submissionKey,
+          ...sourceDraftOptions,
           reportRemarks: record.reportRemarks,
           photos: record.photos,
           inspectedAt: record.inspectedAt,
           submittedAt: record.submittedAt,
           sessionVersion: record.inspectionSessionVersion,
         })
-      : await persistInspectionRecord(userId, record, { submissionKey })
+      : await persistInspectionRecord(userId, record, { submissionKey, ...sourceDraftOptions })
     if (!saved) throw new Error('Unable to save this report in database/API. Please try again.')
     const nextContinuationPrompt = prepareContinuationPrompt(record)
     await reloadRecords()
-    if (clearWorkingStateOnSuccess) await clearInspectionDraft(userId)
+    if (clearWorkingStateOnSuccess) {
+      await (sourceDraftId
+        ? clearInspectionDraft(userId, sourceDraftId)
+        : clearInspectionDraft(userId))
+    }
     setDraftVersion((prev) => prev + 1)
     if (clearWorkingStateOnSuccess) clearWorkingState()
     onSubmitted?.(saved, record)
@@ -220,7 +227,11 @@ export const submitInspectionRecordAction = async ({
     if (!useSessionSubmit && isInspectionQueueableError(error)) {
       const queued = enqueueInspectionSubmission({
         userId,
-        record: { ...record, submissionKey },
+        record: {
+          ...record,
+          submissionKey,
+          ...(sourceDraftId ? { sourceDraftId } : {}),
+        },
         submissionKey,
         operation: isUpdate ? 'update' : 'create',
         baseServerSnapshot: isUpdate ? editingRecord : null,

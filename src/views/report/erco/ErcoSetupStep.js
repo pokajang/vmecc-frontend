@@ -240,8 +240,20 @@ const ErcoSetupStep = ({
     }
   }
 
+  const setupGroupHasError = (group) => {
+    if (group === 'incident') return Boolean(setupFieldErrors.incidentType)
+    if (group === 'weather') return Boolean(setupFieldErrors.weather)
+    if (group === 'area') return Boolean(setupFieldErrors.location)
+    if (group === 'datetime') {
+      return Boolean(setupFieldErrors.incidentDate || setupFieldErrors.incidentTime)
+    }
+    return false
+  }
+
   const shouldShowSetupEditor = (group) =>
-    isMobile ? effectiveMobileGroup === group : !completion[group] || desktopEditGroup === group
+    isMobile
+      ? effectiveMobileGroup === group
+      : !completion[group] || desktopEditGroup === group || setupGroupHasError(group)
 
   const handleContinueClick = () => {
     if (isMobile) {
@@ -437,7 +449,11 @@ const ErcoSetupStep = ({
       />
 
       <div className="erco-mobile-setup-grid d-grid gap-4">
-        <div className="d-grid gap-2">
+        <div
+          className="d-grid gap-2"
+          data-erco-field="incidentType"
+          aria-invalid={Boolean(setupFieldErrors.incidentType) || undefined}
+        >
           {renderSetupSummary(
             'incident',
             'Incident Type',
@@ -498,11 +514,18 @@ const ErcoSetupStep = ({
                     : {}
                 }}
               />
+              {setupFieldErrors.incidentType ? (
+                <div className="invalid-feedback d-block">{setupFieldErrors.incidentType}</div>
+              ) : null}
             </>
           ) : null}
         </div>
 
-        <div className="d-grid gap-2">
+        <div
+          className="d-grid gap-2"
+          data-erco-field="weather"
+          aria-invalid={Boolean(setupFieldErrors.weather) || undefined}
+        >
           {renderSetupSummary(
             'weather',
             'Weather',
@@ -563,11 +586,18 @@ const ErcoSetupStep = ({
                     : {}
                 }}
               />
+              {setupFieldErrors.weather ? (
+                <div className="invalid-feedback d-block">{setupFieldErrors.weather}</div>
+              ) : null}
             </>
           ) : null}
         </div>
 
-        <div className="d-grid gap-2">
+        <div
+          className="d-grid gap-2"
+          data-erco-field="location"
+          aria-invalid={Boolean(setupFieldErrors.location) || undefined}
+        >
           {renderSetupSummary(
             'area',
             'Area',
@@ -640,6 +670,9 @@ const ErcoSetupStep = ({
                   }
                 }}
               />
+              {setupFieldErrors.location ? (
+                <div className="invalid-feedback d-block">{setupFieldErrors.location}</div>
+              ) : null}
               {selectedLocations.length > 0 ? (
                 <div className="d-flex justify-content-end">
                   <CButton
@@ -671,7 +704,7 @@ const ErcoSetupStep = ({
           )}
           {shouldShowSetupEditor('datetime') ? (
             <>
-              <div className="d-grid gap-2">
+              <div className="d-grid gap-2" data-erco-field="incidentDate">
                 <div className="fw-semibold text-muted">
                   <span className="d-md-none">Incident Date</span>
                   <span className="d-none d-md-inline">Choose Incident Date</span>
@@ -725,7 +758,7 @@ const ErcoSetupStep = ({
                 ) : null}
               </div>
               <CRow className="g-2">
-                <CCol xs={12} md={4}>
+                <CCol xs={12} md={4} data-erco-field="incidentTime">
                   <div className="d-flex align-items-center justify-content-between gap-2 mb-2">
                     <div className="fw-semibold text-muted">
                       <span className="d-md-none">Incident Time</span>

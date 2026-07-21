@@ -1,5 +1,5 @@
 import { persistInspectionRecord } from '../../inspectionApi'
-import { loadOfflineQueueSync, saveOfflineQueue } from './inspectionOfflineStore'
+import { clearOfflineDraft, loadOfflineQueueSync, saveOfflineQueue } from './inspectionOfflineStore'
 import { normalizeInspectionTypeSlug } from '../utils/inspectionSharedUtils'
 import {
   renewInspectionPayloadMediaLeases,
@@ -394,6 +394,9 @@ export const syncInspectionQueue = async ({
       if (item.operation === 'update') syncOptions.expectedVersion = item.baseVersion
       const saved = await persistInspectionRecord(userId, item.record, syncOptions)
       if (!saved) throw new Error('Unable to sync queued inspection.')
+      if (String(item.record?.sourceDraftId || item.record?.source_draft_id || '').trim()) {
+        await clearOfflineDraft(userId)
+      }
       markInspectionQueueItem(userId, item.queueId, {
         status: 'synced',
         historyEvent: {

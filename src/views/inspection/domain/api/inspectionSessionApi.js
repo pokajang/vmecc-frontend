@@ -172,6 +172,7 @@ export const submitInspectionSessionReport = async ({
   sessionUid,
   displayId = '',
   submissionKey = '',
+  sourceDraftId = '',
   remarks = '',
   reportRemarks = '',
   photos = [],
@@ -196,6 +197,7 @@ export const submitInspectionSessionReport = async ({
     body: JSON.stringify({
       display_id: displayId,
       submission_key: submissionKey,
+      ...(text(sourceDraftId) ? { source_draft_id: text(sourceDraftId) } : {}),
       remarks,
       report_remarks: reportRemarks,
       photos: Array.isArray(photos) ? photos : [],

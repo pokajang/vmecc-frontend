@@ -336,7 +336,10 @@ const DrillForm = ({
           ...(editingRecord.revision !== undefined ? { revision: editingRecord.revision } : {}),
         }
       : nextRecord
-    onRequestReview?.(record, 'analysis')
+    onRequestReview?.(
+      draftIdRef.current ? { ...record, sourceDraftId: draftIdRef.current } : record,
+      'analysis',
+    )
   }
 
   const loadSeed = (seed, mode) => {

@@ -411,6 +411,7 @@ const InspectionModule = () => {
     setIsSubmitting,
     setContinuationPrompt,
     submitLockRef,
+    sourceDraftId: activeDraftPayload?.__serverDraftId || '',
     user,
   })
 

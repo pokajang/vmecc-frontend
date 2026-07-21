@@ -39,6 +39,11 @@
   border-top: 1px solid rgba(148, 163, 184, 0.28);
 }
 
+.ai-helper-message__sources .ai-helper-message__source-item {
+  color: var(--cui-secondary-color);
+  font-weight: 500;
+}
+
 .ai-helper-message__sources-label {
   margin-bottom: 0.25rem;
   color: var(--cui-secondary-color);
@@ -55,7 +60,6 @@
 
 .ai-helper-message__source-link {
   display: block;
-  color: var(--cui-primary);
   font-size: 0.82rem;
   font-weight: 600;
   overflow-wrap: anywhere;
@@ -72,6 +76,10 @@
     outline: 0;
     box-shadow: var(--vmecc-focus-ring);
   }
+}
+
+.ai-helper-message__source-item.ai-helper-message__source-link {
+  color: var(--cui-secondary-color);
 }
 
 .ai-helper-message__source-guide {

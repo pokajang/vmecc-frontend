@@ -6,6 +6,22 @@ import { CalendarDays, Clock } from 'lucide-react'
 import FitnessTestForm from '../FitnessTestForm'
 import { REPORT_MOBILE_QUERY } from '../../hooks/useReportIsMobile'
 
+const storageMocks = vi.hoisted(() => ({
+  loadRow: vi.fn(),
+  save: vi.fn(),
+  clear: vi.fn(),
+}))
+
+vi.mock('../../reportStorage', async () => {
+  const actual = await vi.importActual('../../reportStorage')
+  return {
+    ...actual,
+    loadReportDraftRow: storageMocks.loadRow,
+    saveReportDraft: storageMocks.save,
+    clearReportDraft: storageMocks.clear,
+  }
+})
+
 const setMobileViewport = () => {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
@@ -23,6 +39,9 @@ const setMobileViewport = () => {
 
 beforeEach(() => {
   window.HTMLElement.prototype.scrollIntoView = vi.fn()
+  storageMocks.loadRow.mockReset().mockResolvedValue(null)
+  storageMocks.save.mockReset().mockResolvedValue({ saved: true })
+  storageMocks.clear.mockReset().mockResolvedValue(true)
 })
 
 afterEach(() => {
@@ -132,5 +151,40 @@ describe('FitnessTestForm', () => {
       expect.objectContaining({ title: 'Setup incomplete', color: 'warning' }),
     )
     expect(screen.queryByText('Fitness test setup')).toBeNull()
+  })
+
+  it('attaches the exact resumed draft identity to the review candidate', async () => {
+    storageMocks.loadRow.mockResolvedValue({
+      draftId: 'drf_fitness_test',
+      version: 2,
+      payload: {
+        setupConfirmed: true,
+        incidentType: 'Heat Stress Test',
+        weather: 'Normal',
+        location: 'Training Yard',
+        reportDate: '2026-04-29',
+        reportTime: '08:00',
+        details: 'Routine fitness assessment.',
+        summary: 'Assessment completed.',
+        chronology: [{ id: 'row-1', time: '08:00', action: 'Assessment started' }],
+      },
+    })
+    const onRequestReview = vi.fn()
+
+    render(
+      <FitnessTestForm
+        {...baseProps({ skipDraftLoad: false, initialFormSeed: null, onRequestReview })}
+      />,
+    )
+
+    const reviewButtons = await screen.findAllByRole('button', { name: 'Review & Submit' })
+    fireEvent.click(reviewButtons[0])
+
+    await waitFor(() =>
+      expect(onRequestReview).toHaveBeenCalledWith(
+        expect.objectContaining({ sourceDraftId: 'drf_fitness_test' }),
+        '',
+      ),
+    )
   })
 })

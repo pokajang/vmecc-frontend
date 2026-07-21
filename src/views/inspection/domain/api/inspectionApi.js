@@ -95,6 +95,8 @@ const toPayload = (row) => {
   delete safe.scope_team_id
   delete safe.approval_history
   delete safe.submissionKey
+  delete safe.sourceDraftId
+  delete safe.source_draft_id
   delete safe.idempotentReplay
   delete safe.idempotent_replay
   delete safe.queueId
@@ -167,7 +169,7 @@ export const loadInspectionRecordsForScope = ({ userId, scope = 'mine' }) => {
 
 const upsertInspectionRecordToApi = async (
   row,
-  { submissionKey = '', expectedVersion, dutyConfirmationToken = '' } = {},
+  { submissionKey = '', sourceDraftId = '', expectedVersion, dutyConfirmationToken = '' } = {},
 ) => {
   if (
     !row ||
@@ -190,6 +192,13 @@ const upsertInspectionRecordToApi = async (
     inspected_at: String(row?.inspectedAt || '').trim(),
     ...(String(submissionKey || row?.submissionKey || '').trim()
       ? { submission_key: String(submissionKey || row?.submissionKey || '').trim() }
+      : {}),
+    ...(String(sourceDraftId || row?.sourceDraftId || row?.source_draft_id || '').trim()
+      ? {
+          source_draft_id: String(
+            sourceDraftId || row?.sourceDraftId || row?.source_draft_id || '',
+          ).trim(),
+        }
       : {}),
   }
   const confirmationToken =

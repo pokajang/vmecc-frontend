@@ -23,6 +23,8 @@ const ErcoPostAnalysisStep = ({
   saveLabel = 'Save Draft',
   primaryLabel = 'Submit Report',
   draftStatus = '',
+  photoProcessing = false,
+  onPhotoProcessingChange,
 }) => {
   const isMobile = useIsMobile()
   const teamLabel = resolveRespondingTeamLabel(form.respondingTeamName, form.respondingAttendance)
@@ -72,7 +74,9 @@ const ErcoPostAnalysisStep = ({
           }))
         }
         pushToast={pushToast}
-        onBeforeCameraOpen={onSaveDraft}
+        allowCapture={false}
+        fieldErrors={fieldErrors}
+        onPhotoProcessingChange={onPhotoProcessingChange}
       />
 
       {showActions ? (
@@ -82,7 +86,9 @@ const ErcoPostAnalysisStep = ({
             saveLabel={saveLabel}
             primaryLabel={primaryLabel}
             primaryType="submit"
-            statusMessage={draftStatus}
+            saveDisabled={photoProcessing}
+            primaryDisabled={photoProcessing}
+            statusMessage={photoProcessing ? 'Uploading incident photo…' : draftStatus}
           />
         ) : (
           <DetailsStepActions
@@ -91,7 +97,9 @@ const ErcoPostAnalysisStep = ({
             onSaveDraft={onSaveDraft}
             saveLabel={saveLabel}
             primaryLabel={primaryLabel}
-            statusMessage={draftStatus}
+            saveDisabled={photoProcessing}
+            primaryDisabled={photoProcessing}
+            statusMessage={photoProcessing ? 'Uploading incident photo…' : draftStatus}
           />
         )
       ) : null}

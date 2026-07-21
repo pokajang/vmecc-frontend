@@ -66,6 +66,13 @@ const ErcoDetailsStep = ({
   const [aiReviewError, setAiReviewError] = React.useState('')
   const summaryAbortControllerRef = React.useRef(null)
   const reviewAbortControllerRef = React.useRef(null)
+  const chronologyDetailsRef = React.useRef(null)
+
+  React.useEffect(() => {
+    if (fieldErrors.chronology && chronologyDetailsRef.current) {
+      chronologyDetailsRef.current.open = true
+    }
+  }, [fieldErrors.chronology])
 
   const teamLabel = resolveRespondingTeamLabel(form.respondingTeamName, form.respondingAttendance)
   const shiftLabel = String(form.respondingTeamShift || '').trim()
@@ -529,7 +536,11 @@ const ErcoDetailsStep = ({
         updateIncidentTitleField={updateIncidentTitleField}
       />
 
-      <details className="rounded-3 border bg-body p-3">
+      <details
+        ref={chronologyDetailsRef}
+        className="rounded-3 border bg-body p-3"
+        data-erco-field="chronology"
+      >
         <summary className="fw-semibold">Chronology</summary>
         <div className="mt-3">
           <ChronologySection

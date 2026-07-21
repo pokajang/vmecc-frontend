@@ -51,6 +51,7 @@ const buildSubmitActionHarness = ({
   editingRecord = null,
   persistError,
   inspectSessionError,
+  sourceDraftId = '',
 } = {}) => {
   const draftRecord = {
     id: 'inspection-record-1',
@@ -98,6 +99,7 @@ const buildSubmitActionHarness = ({
     editingRecord,
     refreshQueueRows,
     onSubmitted: vi.fn(),
+    sourceDraftId,
   }
 
   return {
@@ -237,6 +239,20 @@ describe('submitInspectionRecordAction', () => {
     expect(submitInspectionSessionReport).toHaveBeenCalledWith(
       expect.objectContaining({ sessionUid: 'inspection-session-draft' }),
     )
+  })
+
+  it('passes the resumed inspection draft identity to final persistence', async () => {
+    const { args, persistInspectionRecord, draftRecord } = buildSubmitActionHarness({
+      sourceDraftId: 'drf_inspection_resumed',
+    })
+
+    await submitInspectionRecordAction(args)
+
+    expect(persistInspectionRecord).toHaveBeenCalledWith(7, draftRecord, {
+      submissionKey: 'inspection-submission-key',
+      sourceDraftId: 'drf_inspection_resumed',
+    })
+    expect(args.clearInspectionDraft).toHaveBeenCalledWith(7, 'drf_inspection_resumed')
   })
 
   it('surfaces an unexpected legacy FRT seeded-row validation error without implying all compartments are required', async () => {

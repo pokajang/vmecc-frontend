@@ -6,6 +6,8 @@ import AiResponseContent from './AiResponseContent'
 import { MESSAGE_STATUS_SLOW, getMessageActions } from './constants'
 import { buildAiHelperDocumentFileUrl } from 'src/services/apiClient'
 
+const formatSourceId = (sourceId) => (sourceId ? `${sourceId} - ` : '')
+
 const MessageBubble = ({ message, copied, onCopy, onReport, onRetry, retryDisabled }) => {
   const isUser = message.role === 'user'
   const { canCopy, canReport, canRetry, hasContent, isStreamingOrSlow } = getMessageActions(message)
@@ -54,12 +56,12 @@ const MessageBubble = ({ message, copied, onCopy, onReport, onRetry, retryDisabl
                   return (
                     <div
                       key={`system-guide-${source?.source_id || index}`}
-                      className="ai-helper-message__source-guide"
+                      className="ai-helper-message__source-guide ai-helper-message__source-item"
                       aria-label={`Internal application guidance: ${source?.title || 'VMECC System Guide'}`}
                     >
                       <BookOpenText size={14} aria-hidden="true" />
                       <span>
-                        {source?.source_id ? `${source.source_id} — ` : ''}
+                        {formatSourceId(source?.source_id)}
                         {displayLabel}: {source?.title || 'System guidance'}
                         {versionLabel}
                       </span>
@@ -72,12 +74,12 @@ const MessageBubble = ({ message, copied, onCopy, onReport, onRetry, retryDisabl
                   return (
                     <div
                       key={`knowledge-${source?.source_id || index}`}
-                      className="ai-helper-message__source-guide"
+                      className="ai-helper-message__source-guide ai-helper-message__source-item"
                       aria-label={`Internal knowledge source: ${source?.title || 'VMECC knowledge'}`}
                     >
                       <BookOpenText size={14} aria-hidden="true" />
                       <span>
-                        {source?.source_id ? `${source.source_id} — ` : ''}
+                        {formatSourceId(source?.source_id)}
                         {source?.title || 'VMECC knowledge'}
                       </span>
                     </div>
@@ -102,10 +104,10 @@ const MessageBubble = ({ message, copied, onCopy, onReport, onRetry, retryDisabl
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="ai-helper-message__source-link"
+                    className="ai-helper-message__source-link ai-helper-message__source-item"
                     aria-label={`Open source ${source?.title || 'knowledge document'}${pageLabel}`}
                   >
-                    {source?.source_id ? `${source.source_id} — ` : ''}
+                    {formatSourceId(source?.source_id)}
                     {source?.title || 'Knowledge document'}
                     {pageLabel}
                   </a>

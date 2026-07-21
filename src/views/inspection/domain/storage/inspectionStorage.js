@@ -198,13 +198,17 @@ export const saveInspectionDraft = async (userId, draft) => {
   }
 }
 
-export const clearInspectionDraft = async (userId) => {
+export const clearInspectionDraft = async (userId, draftId = '') => {
   if (!userId) return false
   await clearOfflineDraft(userId)
   try {
-    await apiRequest(`/reports/draft?report_type=${encodeURIComponent(INSPECTION_TYPE)}`, {
-      method: 'DELETE',
-    })
+    const normalizedDraftId = String(draftId || '').trim()
+    await apiRequest(
+      normalizedDraftId
+        ? `/reports/drafts/${encodeURIComponent(normalizedDraftId)}`
+        : `/reports/draft?report_type=${encodeURIComponent(INSPECTION_TYPE)}`,
+      { method: 'DELETE' },
+    )
   } catch {
     // Local draft is cleared even if the server is unavailable.
   }

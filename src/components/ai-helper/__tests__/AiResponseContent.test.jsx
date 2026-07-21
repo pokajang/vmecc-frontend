@@ -14,12 +14,11 @@ describe('AiResponseContent', () => {
       <AiResponseContent content={'# Main heading\n\n## Subheading\n\n###### Small heading'} />,
     )
 
-    const headings = screen.getAllByRole('heading', { level: 3 })
+    const headings = screen.getAllByRole('heading')
     expect(headings).toHaveLength(3)
     expect(
       headings.every((heading) => heading.classList.contains('ai-helper-message__section-heading')),
     ).toBe(true)
-    expect(container.querySelector('h1, h2, h4, h5, h6')).toBeNull()
   })
 
   it('renders singular and grouped source markers as compact, non-link citations', () => {

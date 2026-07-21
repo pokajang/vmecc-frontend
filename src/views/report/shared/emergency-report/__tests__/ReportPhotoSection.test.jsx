@@ -40,6 +40,29 @@ beforeEach(() => {
 })
 
 describe('ReportPhotoSection', () => {
+  it('supports an upload-only required-photo workflow', () => {
+    render(
+      <ReportPhotoSection
+        moduleKey="erco"
+        photos={[]}
+        onChange={vi.fn()}
+        allowCapture={false}
+        uploadLabel="Upload photos"
+        required
+        error="Upload at least one incident photograph."
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: 'Upload photos' })).toBeTruthy()
+    expect(screen.getByLabelText('Upload erco report photos')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Capture photo' })).toBeNull()
+    expect(screen.queryByLabelText('Take erco report photo')).toBeNull()
+    expect(screen.getByText('Upload at least 1 photo. 0 of 10 uploaded.')).toBeTruthy()
+    expect(screen.getByRole('alert').textContent).toContain(
+      'Upload at least one incident photograph.',
+    )
+  })
+
   it('opens photo removal confirmation in a drawer throughout the reporting mobile breakpoint', () => {
     Object.defineProperty(window, 'matchMedia', {
       writable: true,

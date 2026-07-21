@@ -38,6 +38,9 @@ const ReportPhotoSection = ({
   captureLabel = 'Capture photo',
   uploadLabel = 'Upload photo',
   descriptionMaxLength,
+  allowCapture = true,
+  required = false,
+  error = '',
 }) => {
   const cameraRef = React.useRef(null)
   const uploadRef = React.useRef(null)
@@ -45,12 +48,13 @@ const ReportPhotoSection = ({
   const operationRef = React.useRef(0)
   const [processing, setProcessing] = React.useState(false)
   const [progress, setProgress] = React.useState(null)
-  const [fallback, setFallback] = React.useState(
-    () => getInterruptedCameraFallback(moduleKey)?.message || '',
+  const [fallback, setFallback] = React.useState(() =>
+    allowCapture ? getInterruptedCameraFallback(moduleKey)?.message || '' : '',
   )
   const [removeTarget, setRemoveTarget] = React.useState(null)
 
   const rows = Array.isArray(photos) ? photos : []
+  const uploadedCount = rows.filter((photo) => String(photo?.url || '').trim()).length
   const setProcessingState = React.useCallback(
     (next) => {
       setProcessing(next)
@@ -66,10 +70,10 @@ const ReportPhotoSection = ({
     },
     [onProcessingChange],
   )
-  React.useEffect(
-    () => subscribeToCameraReturn(moduleKey, (value) => setFallback(value?.message || '')),
-    [moduleKey],
-  )
+  React.useEffect(() => {
+    if (!allowCapture) return undefined
+    return subscribeToCameraReturn(moduleKey, (value) => setFallback(value?.message || ''))
+  }, [allowCapture, moduleKey])
 
   const upload = async (event, source) => {
     const files = Array.from(event.target.files || [])
@@ -186,7 +190,12 @@ const ReportPhotoSection = ({
   }
 
   return (
-    <section className="d-grid gap-2" aria-label={title}>
+    <section
+      className="d-grid gap-2"
+      aria-label={title}
+      aria-invalid={Boolean(error) || undefined}
+      data-erco-field={moduleKey === 'erco' ? 'postIncidentPhotos' : undefined}
+    >
       <ActionConfirmModal
         visible={Boolean(removeTarget)}
         mobileDrawerQuery={REPORT_MOBILE_QUERY}
@@ -198,14 +207,25 @@ const ReportPhotoSection = ({
         onConfirm={confirmRemove}
       />
       <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <div className="fw-semibold">{title}</div>
+        <div>
+          <div className="fw-semibold">
+            {title} {required ? <span className="text-danger">*</span> : null}
+          </div>
+          {required ? (
+            <div className="small text-body-secondary">
+              Upload at least 1 photo. {uploadedCount} of {REPORT_PHOTO_MAX_COUNT} uploaded.
+            </div>
+          ) : null}
+        </div>
         <div className="d-flex gap-2">
-          <CreateActionButton
-            label={captureLabel}
-            icon={<Camera size={13} className="me-1 align-text-bottom" />}
-            onClick={startCamera}
-            disabled={processing}
-          />
+          {allowCapture ? (
+            <CreateActionButton
+              label={captureLabel}
+              icon={<Camera size={13} className="me-1 align-text-bottom" />}
+              onClick={startCamera}
+              disabled={processing}
+            />
+          ) : null}
           <CButton
             type="button"
             color="secondary"
@@ -218,16 +238,18 @@ const ReportPhotoSection = ({
           </CButton>
         </div>
       </div>
-      <CFormInput
-        ref={cameraRef}
-        type="file"
-        aria-label={`Take ${moduleKey} report photo`}
-        accept="image/*"
-        capture="environment"
-        className="d-none"
-        disabled={processing}
-        onChange={(event) => void upload(event, 'camera')}
-      />
+      {allowCapture ? (
+        <CFormInput
+          ref={cameraRef}
+          type="file"
+          aria-label={`Take ${moduleKey} report photo`}
+          accept="image/*"
+          capture="environment"
+          className="d-none"
+          disabled={processing}
+          onChange={(event) => void upload(event, 'camera')}
+        />
+      ) : null}
       <CFormInput
         ref={uploadRef}
         type="file"
@@ -250,6 +272,11 @@ const ReportPhotoSection = ({
           >
             {uploadLabel}
           </CButton>
+        </CAlert>
+      ) : null}
+      {error ? (
+        <CAlert color="danger" className="mb-0">
+          {error}
         </CAlert>
       ) : null}
       {processing ? (
@@ -284,7 +311,7 @@ const ReportPhotoSection = ({
                 <ReportPhotoImage
                   photo={photo}
                   alt={photo.description || photo.fileName || `Report photo ${index + 1}`}
-                  style={{ width: '100%', height: 220, objectFit: 'cover', borderRadius: 4 }}
+                  className="report-photo-editor__image"
                 />
                 <CFormTextarea
                   size="sm"

@@ -26,6 +26,7 @@ vi.mock('../../reportStorage', async () => {
 })
 
 const completeSeed = {
+  setupConfirmed: true,
   reportDate: '2026-07-11',
   reportTime: '09:00',
   weather: 'Clear',
@@ -64,6 +65,7 @@ const renderForm = (props = {}) =>
 afterEach(cleanup)
 
 beforeEach(() => {
+  window.HTMLElement.prototype.scrollIntoView = vi.fn()
   Object.defineProperty(window, 'localStorage', {
     configurable: true,
     value: {
@@ -122,6 +124,35 @@ describe('DrillForm V2 flow', () => {
       exerciseTitle: 'Workshop response exercise',
     })
     expect(onRequestReview.mock.calls[0][1]).toBe('analysis')
+  })
+
+  it('attaches the exact resumed draft identity to the review candidate', async () => {
+    storageMocks.load.mockResolvedValue({
+      ...completeSeed,
+      postIncidentAnalysis: {
+        strengths: ['Restored strength'],
+        resourcesMobilised: [],
+        improvementOpportunities: [],
+        photos: [],
+      },
+    })
+    const onRequestReview = vi.fn()
+    renderForm({
+      onRequestReview,
+      skipDraftLoad: false,
+      initialFormSeed: null,
+    })
+
+    await screen.findByDisplayValue('Restored strength')
+    const reviewButtons = await screen.findAllByRole('button', { name: 'Review & Submit' })
+    fireEvent.click(reviewButtons[0])
+
+    await waitFor(() =>
+      expect(onRequestReview).toHaveBeenCalledWith(
+        expect.objectContaining({ sourceDraftId: 'drf_drill_test' }),
+        'analysis',
+      ),
+    )
   })
 
   it('shows a truthful inline server error when draft saving fails', async () => {

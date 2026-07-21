@@ -39,6 +39,21 @@ describe('ReportPhotoGallery', () => {
     expect(within(dialog).getByAltText('Initial response position').getAttribute('src')).toBe(
       '/media/photo-1.jpg',
     )
+    expect(
+      within(dialog)
+        .getByRole('button', { name: 'Fit photo to viewer' })
+        .getAttribute('aria-pressed'),
+    ).toBe('true')
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'View photo at original size' }))
+    expect(within(dialog).getByAltText('Initial response position').className).toContain(
+      'report-photo-viewer__image--original',
+    )
+    expect(
+      within(dialog)
+        .getByRole('button', { name: 'View photo at original size' })
+        .getAttribute('aria-pressed'),
+    ).toBe('true')
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Next photo' }))
     expect(within(dialog).getByText('2 of 2')).toBeTruthy()

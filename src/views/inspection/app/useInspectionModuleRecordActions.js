@@ -49,6 +49,7 @@ const useInspectionModuleRecordActions = ({
   setIsSubmitting,
   setContinuationPrompt,
   submitLockRef,
+  sourceDraftId,
   user,
 }) => {
   const downloadLockRef = useRef(false)
@@ -131,6 +132,8 @@ const useInspectionModuleRecordActions = ({
         enqueueInspectionSubmission,
         editingRecord,
         refreshQueueRows,
+        sourceDraftId:
+          options.clearWorkingStateOnSuccess === false ? '' : String(sourceDraftId || '').trim(),
         clearWorkingStateOnSuccess: options.clearWorkingStateOnSuccess !== false,
         navigateOnSuccess: options.navigateOnSuccess !== false,
         onSubmitted: options.onSubmitted,
@@ -150,6 +153,7 @@ const useInspectionModuleRecordActions = ({
       setDraftVersion,
       setIsSubmitting,
       submitLockRef,
+      sourceDraftId,
       user?.id,
     ],
   )

@@ -281,7 +281,10 @@ const FitnessTestForm = ({
             : nextRecord.timeline,
         }
       : nextRecord
-    onRequestReview?.(record, '')
+    onRequestReview?.(
+      draftIdRef.current ? { ...record, sourceDraftId: draftIdRef.current } : record,
+      '',
+    )
   }
 
   return (

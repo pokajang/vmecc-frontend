@@ -113,7 +113,11 @@ describe('reportApi sync hardening', () => {
         recordActionsVersion: 1,
         recordActions: { edit: { applicable: true, allowed: true } },
       },
-      { reportTypeSlug: 'erco', submissionKey: 'erco-submit-stable' },
+      {
+        reportTypeSlug: 'erco',
+        submissionKey: 'erco-submit-stable',
+        sourceDraftId: 'drf_erco_resumed',
+      },
     )
 
     expect(saved).toEqual(expect.objectContaining({ id: 'erco-new', version: 1 }))
@@ -124,12 +128,14 @@ describe('reportApi sync hardening', () => {
     })
     const body = JSON.parse(apiRequest.mock.calls[0][1].body)
     expect(body.submission_key).toBe('erco-submit-stable')
+    expect(body.source_draft_id).toBe('drf_erco_resumed')
     expect(body.payload).toEqual(
       expect.objectContaining({ incidentType: 'Fire', location: 'Zone 1' }),
     )
     expect(body.payload).not.toHaveProperty('timeline')
     expect(body.payload).not.toHaveProperty('workflowStage')
     expect(body.payload).not.toHaveProperty('submissionKey')
+    expect(body.payload).not.toHaveProperty('sourceDraftId')
     expect(body.payload).not.toHaveProperty('recordActionsVersion')
     expect(body.payload).not.toHaveProperty('recordActions')
   })

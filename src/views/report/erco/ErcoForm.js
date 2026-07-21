@@ -19,11 +19,13 @@ import {
   formatErcoLocation,
   isErcoDirty,
 } from './utils'
-import { resetReportViewport, scrollToFirstError } from '../utils'
+import { resetReportViewport } from '../utils'
 import {
-  validateErcoAnalysis,
+  errorsForErcoStage,
+  firstErcoError,
   validateErcoDetails,
   validateErcoForm,
+  validateErcoRespondingTeam,
   validateErcoSetup,
 } from './validation'
 import { buildErcoRecord } from './recordFactory'
@@ -31,6 +33,7 @@ import ErcoSetupStep from './ErcoSetupStep'
 import ErcoRespondingTeamStep from './ErcoRespondingTeamStep'
 import ErcoDetailsStep from './ErcoDetailsStep'
 import ErcoPostAnalysisStep from './ErcoPostAnalysisStep'
+import ErcoValidationSummary from './ErcoValidationSummary'
 import { ERCO_MOBILE_QUERY } from './erco-form-components/useIsMobile'
 
 const ERCO_NEW_SECTIONS = ['setup', 'team', 'form', 'analysis']
@@ -72,6 +75,8 @@ const ErcoForm = ({
   const [draftStatus, setDraftStatus] = useState('')
   const [draftDirtyStatus, setDraftDirtyStatus] = useState('')
   const [draftHydrated, setDraftHydrated] = useState(skipDraftLoad)
+  const [isPhotoProcessing, setIsPhotoProcessing] = useState(false)
+  const [pendingFocusField, setPendingFocusField] = useState('')
   const originalSeedRef = useRef(null)
   const draftSeedRef = useRef(null)
   const activeDraftIdRef = useRef(String(activeDraftId || '').trim())
@@ -316,6 +321,50 @@ const ErcoForm = ({
   const activeSection = ERCO_NEW_SECTIONS[activeSectionIndex]
   const saveDraftLabel = editingRecord ? 'Save Update Draft' : 'Save Draft'
 
+  const currentValidationErrors = validateErcoForm(form).errors
+  const visibleSetupFieldErrors = Object.fromEntries(
+    Object.keys(setupFieldErrors)
+      .filter((field) => currentValidationErrors[field])
+      .map((field) => [field, currentValidationErrors[field]]),
+  )
+  const visibleFieldErrors = Object.fromEntries(
+    Object.keys(fieldErrors)
+      .filter((field) => currentValidationErrors[field])
+      .map((field) => [field, currentValidationErrors[field]]),
+  )
+  const visibleRespondingTeamError = currentValidationErrors.respondingAttendance
+    ? respondingTeamError
+    : ''
+  const allErrors = {
+    ...visibleFieldErrors,
+    ...visibleSetupFieldErrors,
+    ...(visibleRespondingTeamError ? { respondingAttendance: visibleRespondingTeamError } : {}),
+  }
+  const activeSectionErrors = errorsForErcoStage(allErrors, activeSection)
+
+  const focusErcoField = useCallback((field) => {
+    if (!field || typeof document === 'undefined') return false
+    const container = document.querySelector(`[data-erco-field="${field}"]`)
+    if (!container) return false
+    if (container.tagName === 'DETAILS') container.open = true
+    container.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
+    const target = container.matches('input, textarea, select, button, [tabindex]')
+      ? container
+      : container.querySelector(
+          'input:not([type="hidden"]):not(.d-none), textarea, select, button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        )
+    window.setTimeout(() => target?.focus?.({ preventScroll: true }), 120)
+    return true
+  }, [])
+
+  useEffect(() => {
+    if (!pendingFocusField) return
+    const timer = window.setTimeout(() => {
+      if (focusErcoField(pendingFocusField)) setPendingFocusField('')
+    }, 80)
+    return () => window.clearTimeout(timer)
+  }, [activeSection, focusErcoField, pendingFocusField])
+
   useEffect(() => {
     resetReportViewport()
   }, [activeSection])
@@ -438,7 +487,8 @@ const ErcoForm = ({
     const result = validateErcoSetup(form)
     setSetupFieldErrors(result.errors)
     if (!result.isValid) {
-      scrollToFirstError()
+      const { field } = firstErcoError(result.errors)
+      setPendingFocusField(field)
       pushToast('Complete all setup selections before continuing.', {
         title: 'Setup incomplete',
         color: 'warning',
@@ -451,9 +501,13 @@ const ErcoForm = ({
   const validateBeforeSubmit = () => {
     const result = validateErcoForm(form)
     setFieldErrors(result.errors)
+    setSetupFieldErrors(validateErcoSetup(form).errors)
+    setRespondingTeamError(result.errors.respondingAttendance || '')
     if (!result.isValid) {
-      scrollToFirstError()
-      pushToast('Please complete all required fields before submitting.', {
+      const { field, stage } = firstErcoError(result.errors)
+      setPendingFocusField(field)
+      if (stage !== activeSection) navigateToSection(stage)
+      pushToast('Review the highlighted items before continuing to report review.', {
         title: 'Validation error',
         color: 'danger',
       })
@@ -466,7 +520,8 @@ const ErcoForm = ({
     const result = validateErcoDetails(form)
     setFieldErrors(result.errors)
     if (!result.isValid) {
-      scrollToFirstError()
+      const { field } = firstErcoError(result.errors)
+      setPendingFocusField(field)
       pushToast('Complete details, chronology, and summary before continuing.', {
         title: 'Details incomplete',
         color: 'warning',
@@ -476,37 +531,14 @@ const ErcoForm = ({
     return true
   }
 
-  const validateAnalysisBeforeSubmit = () => {
-    const result = validateErcoAnalysis(form)
-    setFieldErrors((prev) => {
-      const next = { ...prev }
-      if (result.errors.postIncidentStrengths) {
-        next.postIncidentStrengths = result.errors.postIncidentStrengths
-      } else {
-        delete next.postIncidentStrengths
-      }
-      return next
-    })
-    if (!result.isValid) {
-      scrollToFirstError()
-      pushToast('Complete post-incident analysis before submitting.', {
-        title: 'Analysis incomplete',
-        color: 'warning',
-      })
-      return false
-    }
-    return true
-  }
-
   const validateRespondingTeamBeforeContinue = () => {
-    const rows = Array.isArray(form.respondingAttendance) ? form.respondingAttendance : []
-    const selected = rows.filter((row) => row?.present)
-    if (selected.length > 0) {
+    const result = validateErcoRespondingTeam(form)
+    if (result.isValid) {
       setRespondingTeamError('')
       return true
     }
-    setRespondingTeamError('Tick at least one responding member before continuing.')
-    scrollToFirstError()
+    setRespondingTeamError(result.errors.respondingAttendance)
+    setPendingFocusField('respondingAttendance')
     pushToast('Tick at least one responding member before continuing.', {
       title: 'Attendance required',
       color: 'warning',
@@ -537,7 +569,10 @@ const ErcoForm = ({
             : nextRecord.timeline,
         }
       : nextRecord
-    onRequestReview?.(record, 'analysis')
+    onRequestReview?.(
+      activeDraftIdRef.current ? { ...record, sourceDraftId: activeDraftIdRef.current } : record,
+      'analysis',
+    )
   }
 
   return (
@@ -611,17 +646,24 @@ const ErcoForm = ({
         onSubmit={(e) => {
           e.preventDefault()
           if (activeSection !== 'analysis') return
-          if (!validateAnalysisBeforeSubmit()) return
+          if (isPhotoProcessing) {
+            pushToast('Wait for the photo upload to finish before reviewing this report.', {
+              title: 'Photo upload in progress',
+              color: 'warning',
+            })
+            return
+          }
           if (!validateBeforeSubmit()) return
           requestReview()
         }}
       >
+        <ErcoValidationSummary errors={activeSectionErrors} onSelectField={focusErcoField} />
         {activeSection === 'setup' ? (
           <ErcoSetupStep
             userId={user?.id}
             form={form}
             setForm={setForm}
-            setupFieldErrors={setupFieldErrors}
+            setupFieldErrors={visibleSetupFieldErrors}
             setSetupFieldErrors={setSetupFieldErrors}
             datePresetOptions={datePresetOptions}
             pushToast={pushToast}
@@ -641,7 +683,7 @@ const ErcoForm = ({
             user={user}
             form={form}
             setForm={setForm}
-            errorMessage={respondingTeamError}
+            errorMessage={visibleRespondingTeamError}
             clearError={() => setRespondingTeamError('')}
             pushToast={pushToast}
             onSaveDraft={() => saveDraft()}
@@ -668,7 +710,7 @@ const ErcoForm = ({
           <ErcoDetailsStep
             userId={user?.id}
             form={form}
-            fieldErrors={fieldErrors}
+            fieldErrors={visibleFieldErrors}
             setForm={setForm}
             pushToast={pushToast}
             onBack={() => {
@@ -698,7 +740,7 @@ const ErcoForm = ({
         {activeSection === 'analysis' ? (
           <ErcoPostAnalysisStep
             form={form}
-            fieldErrors={fieldErrors}
+            fieldErrors={visibleFieldErrors}
             setForm={setForm}
             pushToast={pushToast}
             onBack={() => {
@@ -709,7 +751,9 @@ const ErcoForm = ({
             onSaveDraft={saveDraft}
             saveLabel={saveDraftLabel}
             draftStatus={displayDraftStatus}
-            primaryLabel={editingRecord ? 'Review & Update' : 'Review & Submit'}
+            primaryLabel={editingRecord ? 'Review changes' : 'Review report'}
+            photoProcessing={isPhotoProcessing}
+            onPhotoProcessingChange={setIsPhotoProcessing}
           />
         ) : null}
       </form>

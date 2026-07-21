@@ -278,7 +278,15 @@ const validPayloadForModule = (module) => {
         name: 'Smoke Team',
         attendance: [{ memberId: 'smoke-1', name: 'Smoke Responder', role: 'TRT' }],
       },
-      postIncidentAnalysis: { strengths: ['Prompt mobilisation'], photos: [] },
+      postIncidentAnalysis: {
+        strengths: ['Prompt mobilisation'],
+        photos: [
+          {
+            id: 'required-photo-1',
+            url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+          },
+        ],
+      },
     }
   }
   if (module.key === 'drill') {

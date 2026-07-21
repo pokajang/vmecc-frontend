@@ -65,6 +65,53 @@ export const resolveNextChronologyTime = (rows, incidentTime, stepMinutes = 5) =
   return addMinutesToTime(baseTime, stepMinutes)
 }
 
+const MIDNIGHT_ROLLOVER_THRESHOLD_MINUTES = 12 * 60
+
+export const isChronologySequenceOutOfOrder = (rows) => {
+  let previousAbsoluteMinutes = null
+  let dayOffset = 0
+
+  for (const row of Array.isArray(rows) ? rows : []) {
+    const clockMinutes = parseTimeToMinutes(row?.time)
+    if (clockMinutes === null) continue
+
+    let absoluteMinutes = clockMinutes + dayOffset
+    if (previousAbsoluteMinutes !== null && absoluteMinutes < previousAbsoluteMinutes) {
+      const backwardJump = previousAbsoluteMinutes - absoluteMinutes
+      if (backwardJump < MIDNIGHT_ROLLOVER_THRESHOLD_MINUTES) return true
+      dayOffset += 1440
+      absoluteMinutes = clockMinutes + dayOffset
+    }
+    previousAbsoluteMinutes = absoluteMinutes
+  }
+
+  return false
+}
+
+export const sortChronologyRowsByTime = (rows, incidentTime = '') => {
+  const incidentMinutes = parseTimeToMinutes(incidentTime)
+  return (Array.isArray(rows) ? rows : [])
+    .map((row, index) => {
+      const clockMinutes = parseTimeToMinutes(row?.time)
+      const crossesMidnight =
+        clockMinutes !== null &&
+        incidentMinutes !== null &&
+        incidentMinutes - clockMinutes >= MIDNIGHT_ROLLOVER_THRESHOLD_MINUTES
+      return {
+        row,
+        index,
+        sortMinutes: clockMinutes === null ? null : clockMinutes + (crossesMidnight ? 1440 : 0),
+      }
+    })
+    .sort((a, b) => {
+      if (a.sortMinutes === null && b.sortMinutes === null) return a.index - b.index
+      if (a.sortMinutes === null) return 1
+      if (b.sortMinutes === null) return -1
+      return a.sortMinutes - b.sortMinutes || a.index - b.index
+    })
+    .map(({ row }) => row)
+}
+
 export const PRESET_TYPES = {
   PREMOB: 'premob',
   DEMOB: 'demob',

@@ -99,7 +99,7 @@
 .ai-helper-message__section-heading {
   margin: 0.78rem 0 0.28rem;
   color: var(--cui-body-color);
-  font-weight: 700;
+  font-weight: 650;
   line-height: 1.35;
   overflow-wrap: anywhere;
 }
@@ -111,14 +111,15 @@
 .ai-helper-message__section-heading--h5,
 .ai-helper-message__section-heading--h6 {
   margin-top: 0.72rem;
+  font-size: 0.95rem;
 }
 
-.ai-helper-message__section-heading--h1 { font-size: 1.16rem; }
-.ai-helper-message__section-heading--h2 { font-size: 1.08rem; }
-.ai-helper-message__section-heading--h3 { font-size: 1rem; }
-.ai-helper-message__section-heading--h4 { font-size: 0.92rem; }
-.ai-helper-message__section-heading--h5 { font-size: 0.88rem; }
-.ai-helper-message__section-heading--h6 { font-size: 0.84rem; font-weight: 600; }
+.ai-helper-message__section-heading--h1 { font-size: 0.95rem; }
+.ai-helper-message__section-heading--h2 { font-size: 0.95rem; }
+.ai-helper-message__section-heading--h3 { font-size: 0.95rem; }
+.ai-helper-message__section-heading--h4 { font-size: 0.95rem; }
+.ai-helper-message__section-heading--h5 { font-size: 0.95rem; }
+.ai-helper-message__section-heading--h6 { font-size: 0.95rem; font-weight: 650; }
 
 .ai-helper-message__quote {
   margin: 0.55rem 0 0.65rem;
@@ -232,14 +233,14 @@
   display: inline-flex;
   align-items: center;
   max-width: 100%;
-  padding: 0.05rem 0.28rem;
-  border: 1px solid rgba(148, 163, 184, 0.22);
+  padding: 0.03rem 0.28rem;
+  border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 999px;
-  background: rgba(148, 163, 184, 0.07);
+  background: transparent;
   color: var(--cui-secondary-color);
-  font-size: 0.66rem;
+  font-size: 0.68rem;
   font-variant-numeric: tabular-nums;
-  font-weight: 600;
+  font-weight: 550;
   line-height: 1.25;
   vertical-align: 0.08em;
   overflow-wrap: anywhere;

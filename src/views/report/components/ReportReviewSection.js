@@ -177,6 +177,7 @@ const ReportReviewSection = ({
 
   const r = selectedRecord
   const isDrill = reportKind === 'drill' || text(r.reportType).toLowerCase() === 'drill'
+  const isErco = reportKind === 'erco' || text(r.reportType).toLowerCase() === 'erco'
   const reportTitle =
     (isDrill ? text(r.exerciseTitle) : '') || text(r.incidentType) || text(r.displayId) || 'Report'
   const statusBadge = getStatusBadge('Ready to submit', renderStatusBadge)
@@ -276,7 +277,7 @@ const ReportReviewSection = ({
 
       <ReviewSectionBlock
         title="Report Details"
-        onEdit={isDrill ? () => editSection('setup') : null}
+        onEdit={isDrill || isErco ? () => editSection('setup') : null}
       >
         <CRow className="g-3">
           <DetailField label={typeLabel} xs={12} md={6}>
@@ -309,7 +310,9 @@ const ReportReviewSection = ({
       {detailsText || summaryText ? (
         <ReviewSectionBlock
           title={isDrill ? 'Exercise Details' : 'Summary'}
-          onEdit={isDrill ? () => editSection('details') : null}
+          onEdit={
+            isDrill ? () => editSection('details') : isErco ? () => editSection('form') : null
+          }
         >
           {isDrill && r.exerciseTitle ? (
             <div>
@@ -378,17 +381,21 @@ const ReportReviewSection = ({
       <RespondingTeamRows
         respondingTeam={r.respondingTeam}
         isDrill={isDrill}
-        onEdit={isDrill ? () => editSection('personnel') : null}
+        onEdit={
+          isDrill ? () => editSection('personnel') : isErco ? () => editSection('team') : null
+        }
       />
       <ChronologyRows
         chronology={r.chronology}
-        onEdit={isDrill ? () => editSection('chronology') : null}
+        onEdit={
+          isDrill ? () => editSection('chronology') : isErco ? () => editSection('form') : null
+        }
       />
       <AnalysisRows
         analysis={r.postIncidentAnalysis}
         photos={Array.isArray(r.photos) ? r.photos : []}
         isDrill={isDrill}
-        onEdit={isDrill ? () => editSection('analysis') : null}
+        onEdit={isDrill || isErco ? () => editSection('analysis') : null}
       />
 
       {isDrill ? (

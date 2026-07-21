@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
+  clearInspectionDraft,
   loadInspectionDraft,
   resolveInspectionDraftConflict,
   saveInspectionDraft,
@@ -154,5 +155,17 @@ describe('inspection draft concurrency', () => {
       expect.objectContaining({ method: 'POST' }),
     )
     expect(harness.localDraft.__serverDraftId).toBe('draft-2')
+  })
+
+  it('clears the exact resumed draft after submission', async () => {
+    harness.localDraft = { __serverDraftId: 'draft-1', description: 'Submitted draft' }
+    harness.apiRequest.mockResolvedValue({ data: null })
+
+    await clearInspectionDraft('user-1', 'draft-1')
+
+    expect(harness.apiRequest).toHaveBeenCalledWith('/reports/drafts/draft-1', {
+      method: 'DELETE',
+    })
+    expect(harness.localDraft).toBeNull()
   })
 })

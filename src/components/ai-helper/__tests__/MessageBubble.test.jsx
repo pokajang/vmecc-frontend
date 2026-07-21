@@ -198,7 +198,7 @@ describe('MessageBubble', () => {
     )
 
     const guide = getByLabelText('Internal application guidance: Applying for Leave')
-    expect(guide.textContent).toContain('S2 — VMECC System Guide: Applying for Leave (v3)')
+    expect(guide.textContent).toContain('S2 - VMECC System Guide: Applying for Leave (v3)')
     expect(guide.textContent).not.toContain('seed:system-guide')
     expect(queryByRole('link')).toBeNull()
   })

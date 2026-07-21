@@ -43,6 +43,8 @@ const REPORT_SERVER_FIELDS = [
   'displayId',
   'ownerUserId',
   'submissionKey',
+  'sourceDraftId',
+  'source_draft_id',
   'submittedAt',
   'submittedBy',
   'status',
@@ -159,12 +161,16 @@ export const persistReportRecord = async (userId, row, options = {}) => {
   }
 
   const submissionKey = String(options?.submissionKey || row?.submissionKey || '').trim()
+  const sourceDraftId = String(
+    options?.sourceDraftId || row?.sourceDraftId || row?.source_draft_id || '',
+  ).trim()
   const response = isUpdate
     ? await apiRequest(`/reports/${encodeURIComponent(reportUid)}`, {
         method: 'PUT',
         body: JSON.stringify({
           ...body,
           version: expectedVersion || Number(row?.version || 1),
+          ...(sourceDraftId ? { source_draft_id: sourceDraftId } : {}),
         }),
       })
     : await apiRequest('/reports', {
@@ -173,6 +179,7 @@ export const persistReportRecord = async (userId, row, options = {}) => {
           ...body,
           report_uid: reportUid,
           ...(submissionKey ? { submission_key: submissionKey } : {}),
+          ...(sourceDraftId ? { source_draft_id: sourceDraftId } : {}),
         }),
       })
 

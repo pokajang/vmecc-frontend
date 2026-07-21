@@ -100,16 +100,57 @@ describe('useReportRouteActions', () => {
         reportType: 'erco',
         status: 'Submitted',
         submissionKey: 'erco-submit-stable',
+        sourceDraftId: 'drf_erco_resumed',
       })
     })
 
     await waitFor(() => expect(persistRecord).toHaveBeenCalledTimes(1))
     expect(persistRecord.mock.calls[0][0].id).toBe('erco-new')
     expect(persistRecord.mock.calls[0][1]).toEqual(
-      expect.objectContaining({ isUpdate: false, submissionKey: 'erco-submit-stable' }),
+      expect.objectContaining({
+        isUpdate: false,
+        submissionKey: 'erco-submit-stable',
+        sourceDraftId: 'drf_erco_resumed',
+      }),
     )
+    expect(deleteErcoDraft).toHaveBeenCalledWith('user-1', 'drf_erco_resumed')
     expect(persistRecords).not.toHaveBeenCalled()
     expect(sibling).toEqual(expect.objectContaining({ status: 'Reviewed', version: 7 }))
+  })
+
+  it('keeps the resumed ERCO draft identity while moving from analysis to review', () => {
+    const navigate = vi.fn()
+    const { result } = renderHook(() =>
+      useReportRouteActions(
+        baseProps({
+          activeFormSlug: 'erco',
+          reportBasePath: '/report/erco',
+          reportTypeLabel: 'ERCO',
+          location: {
+            pathname: '/report/erco/new/analysis',
+            search: '?draft=drf_erco_resumed',
+            state: null,
+          },
+          queryDraftId: 'drf_erco_resumed',
+          navigate,
+          user: { id: 'user-1', name: 'Alex Tan', permissions: ['reports.erco.view'] },
+        }),
+      ),
+    )
+
+    act(() => {
+      result.current.requestReview(
+        { id: 'erco-new', reportType: 'erco', status: 'Submitted' },
+        'analysis',
+      )
+    })
+
+    expect(navigate).toHaveBeenCalledWith('/report/erco/new/review?draft=drf_erco_resumed', {
+      state: {
+        reviewRecord: expect.objectContaining({ sourceDraftId: 'drf_erco_resumed' }),
+        reviewBackSection: 'analysis',
+      },
+    })
   })
 
   it('submits one Drill record without rewriting an approved Drill sibling', async () => {
@@ -185,6 +226,61 @@ describe('useReportRouteActions', () => {
       'Report saved, but the old draft could not be removed. You can delete it later.',
       expect.objectContaining({ title: 'Draft cleanup pending', color: 'warning' }),
     )
+  })
+
+  it('does not perform type-wide draft cleanup for Drill when no source draft id exists', async () => {
+    const { result } = renderHook(() =>
+      useReportRouteActions(
+        baseProps({
+          activeFormSlug: 'drill',
+          reportBasePath: '/report/drill',
+          reportTypeLabel: 'Drill',
+          queryDraftId: '',
+          user: { id: 'user-1', name: 'Alex Tan', permissions: ['reports.drill.view'] },
+        }),
+      ),
+    )
+
+    await act(async () => {
+      result.current.confirmReviewSubmit({
+        id: 'drill-new',
+        displayId: 'DRILL-NEW',
+        reportType: 'drill',
+        status: 'Submitted',
+        submissionKey: 'drill-submit-stable',
+      })
+    })
+
+    expect(clearReportDraft).not.toHaveBeenCalled()
+    expect(deleteErcoDraft).not.toHaveBeenCalled()
+  })
+
+  it('clears one Drill draft record during submit when draft exists without a draft id identity', async () => {
+    const { result } = renderHook(() =>
+      useReportRouteActions(
+        baseProps({
+          activeFormSlug: 'drill',
+          reportBasePath: '/report/drill',
+          reportTypeLabel: 'Drill',
+          activeDraftRows: [{ draftId: '', displayId: 'Drill draft' }],
+          queryDraftId: '',
+          user: { id: 'user-1', name: 'Alex Tan', permissions: ['reports.drill.view'] },
+        }),
+      ),
+    )
+
+    await act(async () => {
+      result.current.confirmReviewSubmit({
+        id: 'drill-new',
+        displayId: 'DRILL-NEW',
+        reportType: 'drill',
+        status: 'Submitted',
+        submissionKey: 'drill-submit-stable',
+      })
+    })
+
+    expect(clearReportDraft).toHaveBeenCalledWith('user-1', 'drill')
+    expect(deleteErcoDraft).not.toHaveBeenCalled()
   })
 
   it('does not clear unrelated ERCO drafts when the submitted report has no source draft', async () => {

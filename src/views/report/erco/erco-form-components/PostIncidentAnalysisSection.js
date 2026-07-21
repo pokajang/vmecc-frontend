@@ -33,7 +33,15 @@ const MOBILE_SECTION_LABELS = {
   photos: 'Photos',
 }
 
-const PostIncidentAnalysisSection = ({ value, onChange, pushToast, onBeforeCameraOpen }) => {
+const PostIncidentAnalysisSection = ({
+  value,
+  onChange,
+  pushToast,
+  onBeforeCameraOpen,
+  allowCapture = true,
+  fieldErrors = {},
+  onPhotoProcessingChange,
+}) => {
   const section = React.useMemo(() => normalizeSection(value), [value])
   const isMobile = useIsMobile()
   const [showAllBySection, setShowAllBySection] = React.useState({
@@ -92,6 +100,12 @@ const PostIncidentAnalysisSection = ({ value, onChange, pushToast, onBeforeCamer
       setOpenMobileSection(getFirstIncompleteMobileSection())
     }
   }, [getFirstIncompleteMobileSection, isMobile, openMobileSection])
+
+  React.useEffect(() => {
+    if (!isMobile) return
+    if (fieldErrors.postIncidentStrengths) setOpenMobileSection('strengths')
+    else if (fieldErrors.postIncidentPhotos) setOpenMobileSection('photos')
+  }, [fieldErrors.postIncidentPhotos, fieldErrors.postIncidentStrengths, isMobile])
 
   const buildVisibleOptions = (key) => {
     const sectionMeta = SECTION_META[key] || {}
@@ -294,7 +308,11 @@ const PostIncidentAnalysisSection = ({ value, onChange, pushToast, onBeforeCamer
       key === 'resourcesMobilised' && options.length === 5 ? { xs: 6, md: true } : { xs: 6, md: 3 }
 
     return (
-      <div key={key} className="d-grid gap-2">
+      <div
+        key={key}
+        className="d-grid gap-2"
+        data-erco-field={key === 'strengths' ? 'postIncidentStrengths' : undefined}
+      >
         <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
           <div className="fw-semibold">{meta.title}</div>
           <CreateActionButton label={meta.addLabel} onClick={() => openAddModal(key)} />
@@ -435,9 +453,14 @@ const PostIncidentAnalysisSection = ({ value, onChange, pushToast, onBeforeCamer
       onChange={(photos) => updateSection({ photos })}
       pushToast={pushToast}
       onBeforeCameraOpen={onBeforeCameraOpen}
-      captureLabel="Add photo"
-      uploadLabel="Upload photos"
-      emptyMessage="No photos yet. Upload photos to continue."
+      allowCapture={allowCapture}
+      uploadLabel="Upload incident photos"
+      title="Incident photographs"
+      required
+      error={fieldErrors.postIncidentPhotos}
+      descriptionMaxLength={2000}
+      onProcessingChange={onPhotoProcessingChange}
+      emptyMessage="No incident photographs uploaded yet."
     />
   )
 

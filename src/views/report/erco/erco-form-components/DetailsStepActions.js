@@ -11,6 +11,8 @@ const DetailsStepActions = ({
   primaryType = 'submit',
   onPrimary,
   statusMessage = '',
+  saveDisabled = false,
+  primaryDisabled = false,
 }) => (
   <FormActionGroup
     className="inspection-form-inline-actions"
@@ -33,11 +35,11 @@ const DetailsStepActions = ({
       </CButton>
     ) : null}
     {onSaveDraft ? (
-      <CButton type="button" color="secondary" onClick={onSaveDraft}>
+      <CButton type="button" color="secondary" disabled={saveDisabled} onClick={onSaveDraft}>
         {saveLabel}
       </CButton>
     ) : null}
-    <CButton type={primaryType} color="primary" onClick={onPrimary}>
+    <CButton type={primaryType} color="primary" disabled={primaryDisabled} onClick={onPrimary}>
       {primaryLabel}
     </CButton>
   </FormActionGroup>

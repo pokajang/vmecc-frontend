@@ -464,7 +464,11 @@ const ErcoRespondingTeamStep = ({
 
   return (
     <div className="mb-3 d-grid gap-3">
-      <div className="d-grid gap-2">
+      <div
+        className="d-grid gap-2"
+        data-erco-field="respondingAttendance"
+        aria-invalid={Boolean(errorMessage) || undefined}
+      >
         <div className="d-grid gap-2">
           <div className="fw-semibold">Incident Summary</div>
           <div className="rounded-3 border p-3 p-md-4">

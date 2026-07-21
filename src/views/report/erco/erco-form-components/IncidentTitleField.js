@@ -28,7 +28,7 @@ const IncidentTitleField = ({
   setIsTitleMenuOpen,
   updateIncidentTitleField,
 }) => (
-  <div className="d-grid gap-3">
+  <div className="d-grid gap-3" data-erco-field="details">
     <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
       <div className="fw-semibold text-muted">Title of Incident</div>
       <CreateActionButton
@@ -49,6 +49,8 @@ const IncidentTitleField = ({
         DropdownIndicator: TitleSelectDropdownIndicator,
       }}
       isSearchable
+      aria-invalid={Boolean(fieldError)}
+      aria-describedby={fieldError ? 'erco-incident-title-error' : undefined}
       openMenuOnFocus
       isClearable={Boolean(String(detailsValue || '').trim())}
       filterOption={null}
@@ -139,6 +141,11 @@ const IncidentTitleField = ({
         }),
       }}
     />
+    {fieldError ? (
+      <div id="erco-incident-title-error" className="invalid-feedback d-block">
+        {fieldError}
+      </div>
+    ) : null}
   </div>
 )
 
