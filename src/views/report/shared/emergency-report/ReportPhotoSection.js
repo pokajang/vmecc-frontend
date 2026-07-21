@@ -21,6 +21,7 @@ import {
   subscribeToCameraReturn,
 } from 'src/utils/cameraRecovery'
 import { uid } from '../../utils'
+import { REPORT_MOBILE_QUERY } from '../../hooks/useReportIsMobile'
 
 const PHOTO_ACCEPT =
   '.jpg,.jpeg,.png,.webp,.heic,.heif,image/jpeg,image/png,image/webp,image/heic,image/heif'
@@ -188,6 +189,7 @@ const ReportPhotoSection = ({
     <section className="d-grid gap-2" aria-label={title}>
       <ActionConfirmModal
         visible={Boolean(removeTarget)}
+        mobileDrawerQuery={REPORT_MOBILE_QUERY}
         title="Remove photo"
         message="Remove this uploaded photo from the report?"
         confirmLabel="Remove"

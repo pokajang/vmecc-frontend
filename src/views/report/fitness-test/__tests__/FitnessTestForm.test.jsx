@@ -4,6 +4,22 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { CalendarDays, Clock } from 'lucide-react'
 import FitnessTestForm from '../FitnessTestForm'
+import { REPORT_MOBILE_QUERY } from '../../hooks/useReportIsMobile'
+
+const setMobileViewport = () => {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    configurable: true,
+    value: vi.fn((query) => ({
+      matches: query === REPORT_MOBILE_QUERY,
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+    })),
+  })
+}
 
 beforeEach(() => {
   window.HTMLElement.prototype.scrollIntoView = vi.fn()
@@ -11,6 +27,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup()
+  delete window.matchMedia
 })
 
 const baseProps = (overrides = {}) => ({
@@ -36,6 +53,33 @@ const baseProps = (overrides = {}) => ({
 })
 
 describe('FitnessTestForm', () => {
+  it('opens reset confirmation in a drawer throughout the reporting mobile breakpoint', async () => {
+    setMobileViewport()
+    render(
+      <FitnessTestForm
+        {...baseProps({
+          initialFormSeed: {
+            setupConfirmed: true,
+            incidentType: 'Heat Stress Test',
+            weather: 'Normal',
+            location: 'Training Yard',
+            reportDate: '2026-04-29',
+            reportTime: '08:00',
+            details: 'Routine fitness assessment.',
+            summary: 'Assessment completed.',
+            chronology: [{ id: 'row-1', time: '08:00', action: 'Assessment started' }],
+          },
+        })}
+      />,
+    )
+
+    await screen.findByLabelText('Test details')
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
+
+    expect(document.querySelector('.mobile-bottom-drawer')).toBeTruthy()
+    expect(document.querySelector('.modal.show')).toBeNull()
+  })
+
   it('preselects the initial seeded type and supports summary edit/done flow', async () => {
     render(
       <FitnessTestForm

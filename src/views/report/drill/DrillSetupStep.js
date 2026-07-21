@@ -16,6 +16,7 @@ import TypeManagerModal from 'src/components/report-workflow/TypeManagerModal'
 import { DRILL_ENVIRONMENT_OPTIONS, DRILL_EXERCISE_CATEGORY_OPTIONS } from './constants'
 import SelectionCards from '../components/SelectionCards'
 import { ReportSetupActions, ReportSetupSummaryRow } from '../components/ReportWorkflowUi'
+import { REPORT_MOBILE_QUERY } from '../hooks/useReportIsMobile'
 import useDrillTypeManager, { DRILL_TYPE_TOGGLE_VALUE } from './useDrillTypeManager'
 import useDrillLocationManager, { DRILL_LOCATION_TOGGLE_VALUE } from './useDrillLocationManager'
 import { recordDrillTypeUsage } from './typeUsageStorage'
@@ -96,6 +97,7 @@ const DrillSetupStep = ({
     <div className="mb-3 d-grid gap-4" data-testid="drill-report-setup-ready">
       <ActionConfirmModal
         visible={Boolean(deleteTypeTarget)}
+        mobileDrawerQuery={REPORT_MOBILE_QUERY}
         testId="drill-report-type-manager-delete-modal"
         title="Delete Type"
         message={
@@ -113,6 +115,7 @@ const DrillSetupStep = ({
       />
       <ActionConfirmModal
         visible={Boolean(deleteLocationTarget)}
+        mobileDrawerQuery={REPORT_MOBILE_QUERY}
         testId="drill-report-location-manager-delete-modal"
         title="Delete Location"
         message={
@@ -131,6 +134,8 @@ const DrillSetupStep = ({
 
       <TypeManagerModal
         visible={drillType.showAddTypeModal}
+        mobileDrawer
+        mobileDrawerQuery={REPORT_MOBILE_QUERY}
         testId="drill-report-type-manager-modal"
         onClose={drillType.closeAddModal}
         editMode={drillType.drillTypeEditMode}
@@ -165,6 +170,8 @@ const DrillSetupStep = ({
       />
       <TypeManagerModal
         visible={drillLocation.showAddLocationModal}
+        mobileDrawer
+        mobileDrawerQuery={REPORT_MOBILE_QUERY}
         testId="drill-report-location-manager-modal"
         onClose={drillLocation.closeAddModal}
         editMode={drillLocation.locationEditMode}

@@ -29,6 +29,7 @@ import ReportReviewSection from './components/ReportReviewSection'
 import ReportWorkflowActionModal from './components/ReportWorkflowActionModal'
 import { refreshReportRecord } from './reportApi'
 import useReportMetadata from './hooks/useReportMetadata'
+import { REPORT_MOBILE_QUERY } from './hooks/useReportIsMobile'
 import useReportRecords from './hooks/useReportRecords'
 import useUnsavedChangesGuard from './hooks/useUnsavedChangesGuard'
 import useActiveReportDraftRows from './hooks/useActiveReportDraftRows'
@@ -651,6 +652,7 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
       ) : null}
       <ActionConfirmModal
         visible={showDiscard}
+        mobileDrawerQuery={REPORT_MOBILE_QUERY}
         title="Discard Unsaved Changes"
         message="You have unsaved changes. Discard them and continue?"
         confirmLabel="Discard"
@@ -670,6 +672,7 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
       />
       <ActionConfirmModal
         visible={showDraftChoice}
+        mobileDrawerQuery={REPORT_MOBILE_QUERY}
         title="Saved Draft Found"
         message={`A saved ${reportTypeLabel.toLowerCase()} draft exists. Continue the draft, or start a blank report without deleting it.`}
         cancelLabel="Continue Draft"
@@ -680,6 +683,7 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
       />
       <ActionConfirmModal
         visible={showEditDraftChoice}
+        mobileDrawerQuery={REPORT_MOBILE_QUERY}
         title="Saved Draft Available"
         message={`A saved edit draft exists for ${pendingEditRow?.displayId || 'this report'}. Continue with draft changes, or discard and load the latest submitted data?`}
         cancelLabel="Continue Draft"
@@ -690,6 +694,7 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
       />
       <ActionConfirmModal
         visible={Boolean(deleteTarget)}
+        mobileDrawerQuery={REPORT_MOBILE_QUERY}
         testId={testAnchorPrefix ? `${testAnchorPrefix}-delete-modal` : ''}
         title={deleteTarget?.recordKind === 'draft' ? 'Delete Draft' : 'Delete Report'}
         message={

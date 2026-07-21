@@ -1,5 +1,6 @@
 import React from 'react'
 import FormActionGroup from 'src/components/FormActionGroup'
+import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import {
   CAlert,
   CButton,
@@ -18,43 +19,13 @@ import {
   CRow,
 } from '@coreui/react'
 import { ArrowDown, ArrowUp, MoreHorizontal, Pencil, Plus, RotateCcw, Trash2 } from 'lucide-react'
+import {
+  REPORT_MOBILE_BREAKPOINT,
+  REPORT_MOBILE_QUERY,
+  useReportIsMobile,
+} from '../hooks/useReportIsMobile'
 
-const MOBILE_BREAKPOINT = 767.98
-const MOBILE_QUERY = `(max-width: ${MOBILE_BREAKPOINT}px)`
-
-const getIsMobile = () => {
-  if (typeof window === 'undefined') return false
-  const matchesQuery =
-    typeof window.matchMedia === 'function' && window.matchMedia(MOBILE_QUERY).matches
-  return matchesQuery || Number(window.innerWidth || 0) <= MOBILE_BREAKPOINT
-}
-
-export const useReportIsMobile = () => {
-  const [isMobile, setIsMobile] = React.useState(() => getIsMobile())
-  React.useEffect(() => {
-    if (typeof window === 'undefined') return undefined
-    const mq = typeof window.matchMedia === 'function' ? window.matchMedia(MOBILE_QUERY) : null
-    const handler = () => setIsMobile(getIsMobile())
-    handler()
-    window.addEventListener('resize', handler)
-    if (typeof mq?.addEventListener === 'function') {
-      mq.addEventListener('change', handler)
-      return () => {
-        window.removeEventListener('resize', handler)
-        mq.removeEventListener('change', handler)
-      }
-    }
-    if (typeof mq?.addListener === 'function') {
-      mq.addListener(handler)
-      return () => {
-        window.removeEventListener('resize', handler)
-        mq.removeListener(handler)
-      }
-    }
-    return () => window.removeEventListener('resize', handler)
-  }, [])
-  return isMobile
-}
+export { REPORT_MOBILE_BREAKPOINT, REPORT_MOBILE_QUERY, useReportIsMobile }
 
 export const ReportSetupSummaryRow = ({ label, value, onEdit, onReset, showDesktop = false }) => {
   const isMobile = useReportIsMobile()
@@ -289,6 +260,44 @@ export const ReportChronologySection = ({
     }
     closeRowModal()
   }
+  const rowEditorTitle = rowModal.mode === 'add' ? 'Add chronology row' : 'Edit chronology row'
+  const rowEditorBody = (
+    <div className="d-grid gap-3">
+      <div>
+        <CFormLabel htmlFor="report-row-modal-time">Time</CFormLabel>
+        <CFormInput
+          id="report-row-modal-time"
+          type="time"
+          value={rowModal.draft?.time || ''}
+          onChange={(event) => updateDraft({ time: event.target.value })}
+        />
+      </div>
+      <div>
+        <CFormLabel htmlFor="report-row-modal-action">{actionLabel}</CFormLabel>
+        <CFormInput
+          id="report-row-modal-action"
+          value={rowModal.draft?.action || ''}
+          maxLength={actionMaxLength}
+          onChange={(event) => updateDraft({ action: event.target.value })}
+        />
+      </div>
+    </div>
+  )
+  const rowEditorActions = (
+    <>
+      <CButton type="button" color="secondary" variant="outline" onClick={closeRowModal}>
+        Cancel
+      </CButton>
+      <CButton
+        type="button"
+        color="primary"
+        disabled={rowModal.mode === 'add' && rowLimitReached}
+        onClick={saveRowModal}
+      >
+        Save
+      </CButton>
+    </>
+  )
 
   return (
     <div className="mb-3 d-grid gap-3">
@@ -462,46 +471,26 @@ export const ReportChronologySection = ({
         </div>
       )}
 
-      <CModal visible={rowModal.visible} fullscreen="sm" onClose={closeRowModal}>
-        <CModalHeader closeButton>
-          <CModalTitle>
-            {rowModal.mode === 'add' ? 'Add chronology row' : 'Edit chronology row'}
-          </CModalTitle>
-        </CModalHeader>
-        <CModalBody className="d-grid gap-3">
-          <div>
-            <CFormLabel htmlFor="report-row-modal-time">Time</CFormLabel>
-            <CFormInput
-              id="report-row-modal-time"
-              type="time"
-              value={rowModal.draft?.time || ''}
-              onChange={(event) => updateDraft({ time: event.target.value })}
-            />
+      {isMobile ? (
+        <MobileBottomDrawer
+          visible={rowModal.visible}
+          title={rowEditorTitle}
+          onClose={closeRowModal}
+        >
+          {rowEditorBody}
+          <div className="mobile-bottom-drawer__footer d-flex flex-wrap justify-content-end gap-2">
+            {rowEditorActions}
           </div>
-          <div>
-            <CFormLabel htmlFor="report-row-modal-action">{actionLabel}</CFormLabel>
-            <CFormInput
-              id="report-row-modal-action"
-              value={rowModal.draft?.action || ''}
-              maxLength={actionMaxLength}
-              onChange={(event) => updateDraft({ action: event.target.value })}
-            />
-          </div>
-        </CModalBody>
-        <CModalFooter>
-          <CButton type="button" color="secondary" variant="outline" onClick={closeRowModal}>
-            Cancel
-          </CButton>
-          <CButton
-            type="button"
-            color="primary"
-            disabled={rowModal.mode === 'add' && rowLimitReached}
-            onClick={saveRowModal}
-          >
-            Save
-          </CButton>
-        </CModalFooter>
-      </CModal>
+        </MobileBottomDrawer>
+      ) : (
+        <CModal visible={rowModal.visible} fullscreen="sm" onClose={closeRowModal}>
+          <CModalHeader closeButton>
+            <CModalTitle>{rowEditorTitle}</CModalTitle>
+          </CModalHeader>
+          <CModalBody>{rowEditorBody}</CModalBody>
+          <CModalFooter>{rowEditorActions}</CModalFooter>
+        </CModal>
+      )}
     </div>
   )
 }

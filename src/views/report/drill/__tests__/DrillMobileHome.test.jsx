@@ -3,6 +3,7 @@ import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import DrillMobileHome from '../DrillMobileHome'
+import { REPORT_MOBILE_QUERY } from '../../hooks/useReportIsMobile'
 
 const createStorageMock = () => {
   let store = {}
@@ -27,6 +28,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
+  delete window.matchMedia
 })
 
 const buildProps = (overrides = {}) => ({
@@ -63,6 +65,27 @@ const buildProps = (overrides = {}) => ({
 })
 
 describe('DrillMobileHome', () => {
+  it('opens the drill type manager in a drawer throughout the mobile breakpoint', () => {
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      configurable: true,
+      value: vi.fn((query) => ({
+        matches: query === REPORT_MOBILE_QUERY,
+        media: query,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+      })),
+    })
+    render(<DrillMobileHome {...buildProps()} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add type' }))
+
+    expect(document.querySelector('.mobile-bottom-drawer')).toBeTruthy()
+    expect(document.querySelector('.modal.show')).toBeNull()
+  })
+
   it('renders work-first drill type selection before draft and recent records', () => {
     render(<DrillMobileHome {...buildProps()} />)
 

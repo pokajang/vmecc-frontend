@@ -3,6 +3,7 @@ import React from 'react'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import ReportPhotoSection from '../ReportPhotoSection'
+import { REPORT_MOBILE_QUERY } from '../../../hooks/useReportIsMobile'
 
 const mediaMocks = vi.hoisted(() => ({
   upload: vi.fn(),
@@ -27,7 +28,10 @@ vi.mock('src/utils/cameraRecovery', () => ({
   subscribeToCameraReturn: vi.fn(() => () => {}),
 }))
 
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  delete window.matchMedia
+})
 
 beforeEach(() => {
   mediaMocks.upload.mockReset()
@@ -36,6 +40,33 @@ beforeEach(() => {
 })
 
 describe('ReportPhotoSection', () => {
+  it('opens photo removal confirmation in a drawer throughout the reporting mobile breakpoint', () => {
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      configurable: true,
+      value: vi.fn((query) => ({
+        matches: query === REPORT_MOBILE_QUERY,
+        media: query,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+      })),
+    })
+    render(
+      <ReportPhotoSection
+        moduleKey="drill"
+        photos={[{ id: 'one', fileName: 'one.jpg', url: '/report-media/one' }]}
+        onChange={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove' }))
+
+    expect(document.querySelector('.mobile-bottom-drawer')).toBeTruthy()
+    expect(document.querySelector('.modal.show')).toBeNull()
+  })
+
   it('opens the camera input synchronously without awaiting draft persistence', () => {
     const beforeCamera = vi.fn(() => new Promise(() => {}))
     render(

@@ -5,6 +5,7 @@ import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import { clearPendingCameraOperation } from 'src/utils/cameraRecovery'
 import { clearReportDraft, loadReportDraftRow, saveReportDraft } from '../reportStorage'
 import useReportDraft from '../hooks/useReportDraft'
+import { REPORT_MOBILE_QUERY } from '../hooks/useReportIsMobile'
 import { resetReportViewport, scrollToFirstError } from '../utils'
 import { DRILL_NEW_SECTIONS } from './constants'
 import DrillChronologyStep from './DrillChronologyStep'
@@ -369,6 +370,7 @@ const DrillForm = ({
     <>
       <ActionConfirmModal
         visible={showReset}
+        mobileDrawerQuery={REPORT_MOBILE_QUERY}
         title={`Reset ${reportTypeLabel} Report`}
         message="Reset this form and clear its saved server draft? This cannot be undone."
         confirmLabel="Reset"

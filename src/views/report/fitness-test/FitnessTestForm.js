@@ -4,6 +4,7 @@ import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import { clearReportDraft, loadReportDraftRow, saveReportDraft } from '../reportStorage'
 import { resetReportViewport, scrollToFirstError } from '../utils'
 import useReportDraft from '../hooks/useReportDraft'
+import { REPORT_MOBILE_QUERY } from '../hooks/useReportIsMobile'
 import { buildFitnessTestRecord } from './recordFactory'
 import FitnessTestFormStep from './FitnessTestFormStep'
 import FitnessTestSetupStep from './FitnessTestSetupStep'
@@ -287,6 +288,7 @@ const FitnessTestForm = ({
     <>
       <ActionConfirmModal
         visible={showReset}
+        mobileDrawerQuery={REPORT_MOBILE_QUERY}
         title={`Reset ${reportTypeLabel} Report`}
         message="Reset this report and clear the saved draft? This cannot be undone."
         confirmLabel="Reset"

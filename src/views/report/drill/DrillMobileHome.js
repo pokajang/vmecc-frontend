@@ -10,6 +10,7 @@ import RecordScopeSegmentedControl from 'src/components/report-workflow/RecordSc
 import TableLoader from 'src/components/TableLoader'
 import TypeManagerModal from 'src/components/report-workflow/TypeManagerModal'
 import { formatMobileReportDate } from '../reportUiUtils'
+import { REPORT_MOBILE_QUERY } from '../hooks/useReportIsMobile'
 import useDrillTypeManager, { DRILL_TYPE_TOGGLE_VALUE } from './useDrillTypeManager'
 import { recordDrillTypeUsage } from './typeUsageStorage'
 
@@ -90,6 +91,7 @@ const DrillMobileHome = ({
     >
       <ActionConfirmModal
         visible={Boolean(deleteTypeTarget)}
+        mobileDrawerQuery={REPORT_MOBILE_QUERY}
         testId="drill-report-type-manager-delete-modal"
         title="Delete Type"
         message={
@@ -108,6 +110,8 @@ const DrillMobileHome = ({
 
       <TypeManagerModal
         visible={drillType.showAddTypeModal}
+        mobileDrawer
+        mobileDrawerQuery={REPORT_MOBILE_QUERY}
         testId="drill-report-type-manager-modal"
         onClose={drillType.closeAddModal}
         editMode={drillType.drillTypeEditMode}
