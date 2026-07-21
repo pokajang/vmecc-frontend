@@ -7,7 +7,8 @@ import remarkAiCitations from './remarkAiCitations'
 const SOURCE_CITATION_TARGET_PATTERN = /^#ai-helper-source-(S[1-9]\d{0,3}(?:,S[1-9]\d{0,3}){0,11})$/
 const SAFE_EXTERNAL_LINK_PATTERN = /^(https?:|mailto:)/i
 
-const headingClass = level => `ai-helper-message__section-heading ai-helper-message__section-heading--${level}`
+const headingClass = (level) =>
+  `ai-helper-message__section-heading ai-helper-message__section-heading--${level}`
 
 const AiResponseHeading = ({ level, children }) => {
   const Tag = level
