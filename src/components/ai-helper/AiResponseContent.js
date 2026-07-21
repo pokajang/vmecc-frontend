@@ -7,17 +7,21 @@ import remarkAiCitations from './remarkAiCitations'
 const SOURCE_CITATION_TARGET_PATTERN = /^#ai-helper-source-(S[1-9]\d{0,3}(?:,S[1-9]\d{0,3}){0,11})$/
 const SAFE_EXTERNAL_LINK_PATTERN = /^(https?:|mailto:)/i
 
-const AiResponseHeading = ({ children }) => (
-  <h3 className="ai-helper-message__section-heading">{children}</h3>
-)
+const headingClass = level => `ai-helper-message__section-heading ai-helper-message__section-heading--${level}`
+
+const AiResponseHeading = ({ level, children }) => {
+  const Tag = level
+
+  return <Tag className={headingClass(level)}>{children}</Tag>
+}
 
 const markdownComponents = {
-  h1: AiResponseHeading,
-  h2: AiResponseHeading,
-  h3: AiResponseHeading,
-  h4: AiResponseHeading,
-  h5: AiResponseHeading,
-  h6: AiResponseHeading,
+  h1: ({ children }) => <AiResponseHeading level="h1">{children}</AiResponseHeading>,
+  h2: ({ children }) => <AiResponseHeading level="h2">{children}</AiResponseHeading>,
+  h3: ({ children }) => <AiResponseHeading level="h3">{children}</AiResponseHeading>,
+  h4: ({ children }) => <AiResponseHeading level="h4">{children}</AiResponseHeading>,
+  h5: ({ children }) => <AiResponseHeading level="h5">{children}</AiResponseHeading>,
+  h6: ({ children }) => <AiResponseHeading level="h6">{children}</AiResponseHeading>,
   blockquote: ({ children }) => (
     <blockquote className="ai-helper-message__quote">{children}</blockquote>
   ),
