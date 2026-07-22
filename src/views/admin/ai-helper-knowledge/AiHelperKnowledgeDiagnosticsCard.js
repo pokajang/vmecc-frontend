@@ -71,6 +71,28 @@ const AiHelperKnowledgeDiagnosticsCard = ({
           </CRow>
 
           <div className="border rounded-3 p-3 mb-3">
+            <div className="fw-semibold mb-2">Provider runtime</div>
+            <CRow className="g-3 small">
+              <CCol md={4} sm={6}>
+                <div className="text-body-secondary">API version</div>
+                <div>{diagnostics.provider?.api_version || 'Unknown'}</div>
+              </CCol>
+              <CCol md={4} sm={6}>
+                <div className="text-body-secondary">Primary model</div>
+                <div className="font-monospace text-break" data-testid="ai-helper-primary-model">
+                  {diagnostics.provider?.primary_model || 'Not configured'}
+                </div>
+              </CCol>
+              <CCol md={4} sm={6}>
+                <div className="text-body-secondary">Embedding model</div>
+                <div className="font-monospace text-break" data-testid="ai-helper-embedding-model">
+                  {diagnostics.provider?.embedding_model || 'Not configured'}
+                </div>
+              </CCol>
+            </CRow>
+          </div>
+
+          <div className="border rounded-3 p-3 mb-3">
             <div className="fw-semibold mb-2">Answer reliability</div>
             <CRow className="g-3 small">
               <CCol md={3} sm={6}>

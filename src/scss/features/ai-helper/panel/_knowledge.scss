@@ -1,9 +1,14 @@
+@use '../../../foundation/scrollbars' as scrollbars;
+
 .ai-helper-messages {
   flex: 1 1 auto;
   min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
   padding: 1rem;
   background: var(--cui-body-bg);
+
+  @include scrollbars.vmecc-scrollbar;
 }
 
 .ai-helper-history {
@@ -38,6 +43,8 @@
   overflow-x: hidden;
   overflow-y: auto;
   padding: 0 0.75rem 0.9rem;
+
+  @include scrollbars.vmecc-scrollbar;
 }
 
 .ai-helper-knowledge__switch {
@@ -389,6 +396,8 @@
   overflow-x: auto;
   padding: 0.125rem;
 
+  @include scrollbars.vmecc-scrollbar;
+
   button {
     flex: 0 0 auto;
     min-height: 2rem;
@@ -444,6 +453,8 @@
   overflow: auto;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+
+  @include scrollbars.vmecc-scrollbar;
 }
 
 .ai-helper-knowledge-reader__code {
@@ -561,6 +572,8 @@
     border-radius: 0.5rem;
     background: var(--cui-tertiary-bg);
     white-space: pre;
+
+    @include scrollbars.vmecc-scrollbar;
   }
 
   pre code {
@@ -586,6 +599,8 @@
   overflow-x: auto;
   border: 1px solid var(--cui-border-color);
   border-radius: 0.6rem;
+
+  @include scrollbars.vmecc-scrollbar;
 
   &:focus-visible {
     outline: 2px solid var(--cui-primary);

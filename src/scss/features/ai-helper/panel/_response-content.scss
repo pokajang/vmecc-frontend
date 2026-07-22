@@ -1,3 +1,5 @@
+@use '../../../foundation/scrollbars' as scrollbars;
+
 .ai-helper-message:not(.ai-helper-message--user) .ai-helper-message__bubble {
   display: block;
   width: 100%;
@@ -114,12 +116,25 @@
   font-size: 0.95rem;
 }
 
-.ai-helper-message__section-heading--h1 { font-size: 0.95rem; }
-.ai-helper-message__section-heading--h2 { font-size: 0.95rem; }
-.ai-helper-message__section-heading--h3 { font-size: 0.95rem; }
-.ai-helper-message__section-heading--h4 { font-size: 0.95rem; }
-.ai-helper-message__section-heading--h5 { font-size: 0.95rem; }
-.ai-helper-message__section-heading--h6 { font-size: 0.95rem; font-weight: 650; }
+.ai-helper-message__section-heading--h1 {
+  font-size: 0.95rem;
+}
+.ai-helper-message__section-heading--h2 {
+  font-size: 0.95rem;
+}
+.ai-helper-message__section-heading--h3 {
+  font-size: 0.95rem;
+}
+.ai-helper-message__section-heading--h4 {
+  font-size: 0.95rem;
+}
+.ai-helper-message__section-heading--h5 {
+  font-size: 0.95rem;
+}
+.ai-helper-message__section-heading--h6 {
+  font-size: 0.95rem;
+  font-weight: 650;
+}
 
 .ai-helper-message__quote {
   margin: 0.55rem 0 0.65rem;
@@ -164,6 +179,8 @@
   overflow: auto;
   overscroll-behavior: contain;
 
+  @include scrollbars.vmecc-scrollbar;
+
   &:focus-visible {
     outline: 0;
     box-shadow: var(--vmecc-focus-ring);
@@ -198,6 +215,8 @@
   border-radius: 0.35rem;
   overflow-x: auto;
   overscroll-behavior-inline: contain;
+
+  @include scrollbars.vmecc-scrollbar;
 
   &:focus-visible {
     outline: 0;

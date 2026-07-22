@@ -8,6 +8,11 @@ import AiHelperKnowledgeDiagnosticsCard from '../AiHelperKnowledgeDiagnosticsCar
 const diagnostics = {
   enabled: true,
   configured: true,
+  provider: {
+    api_version: 'v1',
+    primary_model: 'gpt-5.4-mini',
+    embedding_model: 'text-embedding-3-small',
+  },
   queue: { default_connection: 'database' },
   storage: { knowledge_used_bytes: 8192, knowledge_max_total_bytes: 2147483648 },
   knowledge_runtime: {
@@ -42,5 +47,10 @@ describe('AiHelperKnowledgeDiagnosticsCard semantic index status', () => {
     expect(screen.getByTestId('ai-helper-index-fingerprint').textContent).toBe(
       diagnostics.knowledge_runtime.index_fingerprint,
     )
+    expect(screen.getByTestId('ai-helper-primary-model').textContent).toBe('gpt-5.4-mini')
+    expect(screen.getByTestId('ai-helper-embedding-model').textContent).toBe(
+      'text-embedding-3-small',
+    )
+    expect(within(card).getByText('v1')).toBeTruthy()
   })
 })

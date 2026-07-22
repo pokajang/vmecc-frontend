@@ -16,6 +16,7 @@ import {
   makeLocalMessage,
   safeAiHelperError,
 } from './constants'
+import { getAiHelperUiState } from './uiState'
 
 const useAiHelperChat = ({
   authUser,
@@ -248,6 +249,7 @@ const useAiHelperChat = ({
       const requestId = ++sendRequestRef.current
       const requestUuid = createRequestUuid()
       const pageContext = override.context || contextPage || routeContext
+      const uiState = getAiHelperUiState(pageContext?.path)
       const userMessage = makeLocalMessage('user', text)
       const assistantMessage = makeLocalMessage('assistant', '', MESSAGE_STATUS_STREAMING, {
         request_id: requestId,
@@ -283,6 +285,7 @@ const useAiHelperChat = ({
             new_thread: startNewThread,
             message: text,
             page_context: pageContext,
+            ui_state: uiState || undefined,
             response_language: responseLanguage,
             request_uuid: requestUuid,
           },

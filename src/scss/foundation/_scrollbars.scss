@@ -1,0 +1,56 @@
+@mixin vmecc-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--vmecc-scrollbar-thumb) var(--vmecc-scrollbar-track);
+
+  &::-webkit-scrollbar {
+    width: var(--vmecc-scrollbar-size);
+    height: var(--vmecc-scrollbar-size);
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--vmecc-scrollbar-track);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--vmecc-scrollbar-thumb);
+    border-radius: var(--vmecc-scrollbar-radius);
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: var(--vmecc-scrollbar-thumb-hover);
+  }
+}
+
+.vmecc-scroll-x {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+
+  @include vmecc-scrollbar;
+}
+
+.vmecc-scroll-y {
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  @include vmecc-scrollbar;
+}
+
+.vmecc-scroll-both {
+  overflow: auto;
+
+  @include vmecc-scrollbar;
+}
+
+:is(
+  .table-responsive,
+  .table-responsive-sm,
+  .table-responsive-md,
+  .table-responsive-lg,
+  .table-responsive-xl,
+  .table-responsive-xxl
+),
+.modal-dialog-scrollable .modal-body,
+.offcanvas-body {
+  @include vmecc-scrollbar;
+}

@@ -54,6 +54,7 @@ import useInspectionCheckActions from './useInspectionCheckActions'
 import useInspectionFormPhotos from './useInspectionFormPhotos'
 import useInspectionHighAngleCatalogActions from './useInspectionHighAngleCatalogActions'
 import useInspectionReviewRequest from './useInspectionReviewRequest'
+import useInspectionAiHelperUiState from './useInspectionAiHelperUiState'
 import useInspectionScbaRuntime from './useInspectionScbaRuntime'
 import useInspectionStructuredHandlers from './useInspectionStructuredHandlers'
 import { buildEquipmentManagerOptions } from './inspectionEquipmentManagerOptions'
@@ -1819,6 +1820,14 @@ const InspectionForm = ({
     setFieldErrors,
     setValidationState,
     validationState,
+  })
+
+  useInspectionAiHelperUiState({
+    canReview: reviewRequest.readiness.isReadyToReview,
+    canSaveDraft: typeof onSaveDraft === 'function',
+    draftStatus,
+    form,
+    selectedType,
   })
 
   const structuredRuntime = useInspectionStructuredHandlers({
