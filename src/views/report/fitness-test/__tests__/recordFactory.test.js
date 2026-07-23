@@ -29,15 +29,22 @@ describe('buildFitnessTestRecord', () => {
       sequence: 1,
     })
 
-    expect(record).toEqual(
-      expect.objectContaining({
-        schemaVersion: 1,
-        submissionKey: 'fitness-submit-stable',
-        reportDate: '2026-07-13',
-        reportTime: '09:00',
-        location: 'Training yard',
-      }),
-    )
+    expect(record).toMatchObject({
+      schemaVersion: 1,
+      submissionKey: 'fitness-submit-stable',
+      reportDate: '2026-07-13',
+      reportTime: '09:00',
+      location: 'Training yard',
+      reportingMonth: '2026-07',
+      shiftGroups: [{ id: expect.any(String), shiftName: 'Training yard' }],
+    })
     expect(record.chronology).toEqual([{ time: '09:00', action: 'Fitness test started.' }])
+    expect(record).toMatchObject({
+      incidentType: 'Endurance Test',
+      details: 'Fitness test session details.',
+      summary: 'Fitness test completed safely.',
+      documentReference: '',
+      protocolRevision: '',
+    })
   })
 })

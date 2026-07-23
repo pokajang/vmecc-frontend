@@ -1,6 +1,7 @@
 import {
   Activity,
   ClipboardCheck,
+  Droplets,
   Flame,
   LifeBuoy,
   MapPinned,
@@ -85,19 +86,31 @@ export const DRILL_LOCATION_OPTIONS = [
 
 export const DRILL_NEW_SECTIONS = ['setup', 'personnel', 'details', 'chronology', 'analysis']
 
-export const DRILL_SECTION_LABELS = {
-  setup: 'Exercise Setup',
-  personnel: 'Exercise Personnel',
-  details: 'Exercise Details',
-  chronology: 'Chronology',
-  analysis: 'Post-Exercise Analysis',
-}
-
 export const DRILL_EXERCISE_CATEGORY_OPTIONS = [
-  { value: 'Fire', label: 'Fire' },
-  { value: 'Rescue', label: 'Rescue' },
-  { value: 'Hazmat / Oil Spill', label: 'Hazmat / Oil Spill' },
-  { value: 'Special Assistance', label: 'Special Assistance' },
+  {
+    value: 'Fire',
+    title: 'Fire',
+    description: 'Fire response and suppression procedures.',
+    icon: Flame,
+  },
+  {
+    value: 'Rescue',
+    title: 'Rescue',
+    description: 'Casualty extraction and rescue procedures.',
+    icon: LifeBuoy,
+  },
+  {
+    value: 'Hazmat / Oil Spill',
+    title: 'Hazmat / Oil Spill',
+    description: 'Hazardous material or spill control procedures.',
+    icon: Droplets,
+  },
+  {
+    value: 'Special Assistance',
+    title: 'Special Assistance',
+    description: 'Special assistance and support services.',
+    icon: ShieldCheck,
+  },
 ]
 
 export const DRILL_EXERCISE_ROLE_OPTIONS = [

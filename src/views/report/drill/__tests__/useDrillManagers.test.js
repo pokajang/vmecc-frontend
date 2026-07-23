@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import useDrillCategoryManager from '../useDrillCategoryManager'
 import useDrillLocationManager from '../useDrillLocationManager'
 import useDrillTypeManager from '../useDrillTypeManager'
 
@@ -48,6 +49,21 @@ const renderLocationManager = (overrides = {}) => {
     useDrillLocationManager({
       userId: 'user-1',
       selectedLocation: '',
+      updateSetupField,
+      pushToast,
+      ...overrides,
+    }),
+  )
+  return { ...hook, updateSetupField, pushToast }
+}
+
+const renderCategoryManager = (overrides = {}) => {
+  const updateSetupField = vi.fn()
+  const pushToast = vi.fn()
+  const hook = renderHook(() =>
+    useDrillCategoryManager({
+      userId: 'user-1',
+      selectedCategories: [],
       updateSetupField,
       pushToast,
       ...overrides,
@@ -209,6 +225,104 @@ describe('useDrillLocationManager', () => {
     act(() => result.current.removeType('Crusher Workshop'))
     expect(storedRows()).not.toEqual(
       expect.arrayContaining([expect.objectContaining({ value: 'Crusher Workshop' })]),
+    )
+  })
+})
+
+describe('useDrillCategoryManager', () => {
+  it('adds, selects, and persists a custom exercise category', async () => {
+    const { result, updateSetupField, pushToast } = renderCategoryManager()
+
+    act(() => result.current.openAddModal())
+    await waitFor(() => expect(result.current.newCategoryIconKey).toBeTruthy())
+    act(() => {
+      result.current.setNewCategoryName('Medical Response')
+      result.current.setNewCategoryDescription('Casualty triage and medical handover.')
+    })
+    act(() => result.current.saveCategory())
+
+    expect(updateSetupField).toHaveBeenCalledWith('exerciseCategories', ['Medical Response'])
+    expect(pushToast).toHaveBeenCalledWith(
+      'Exercise category "Medical Response" added.',
+      expect.objectContaining({ title: 'Category added', color: 'success' }),
+    )
+    expect(storedRows()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          value: 'Medical Response',
+          description: 'Casualty triage and medical handover.',
+          iconKey: expect.any(String),
+        }),
+      ]),
+    )
+  })
+
+  it('blocks duplicate exercise categories', async () => {
+    const { result } = renderCategoryManager()
+
+    act(() => result.current.openAddModal())
+    await waitFor(() => expect(result.current.newCategoryIconKey).toBeTruthy())
+    act(() => result.current.setNewCategoryName('Fire'))
+    act(() => result.current.saveCategory())
+
+    expect(result.current.addCategoryError).toBe('This exercise category already exists.')
+  })
+
+  it('chooses an unused icon for each newly added exercise category', async () => {
+    const { result } = renderCategoryManager()
+
+    for (const name of ['Medical Response', 'Traffic Control', 'Command Support']) {
+      act(() => result.current.openAddModal())
+      await waitFor(() => expect(result.current.newCategoryIconKey).toBeTruthy())
+      expect(result.current.iconOptions.map((option) => option.key)).toContain(
+        result.current.newCategoryIconKey,
+      )
+      act(() => result.current.setNewCategoryName(name))
+      act(() => result.current.saveCategory())
+      expect(result.current.addCategoryError).toBe('')
+    }
+
+    expect(storedRows()).toHaveLength(3)
+  })
+
+  it('edits and removes a selected custom exercise category', async () => {
+    const first = renderCategoryManager()
+    act(() => first.result.current.openAddModal())
+    await waitFor(() => expect(first.result.current.newCategoryIconKey).toBeTruthy())
+    act(() => first.result.current.setNewCategoryName('Medical Response'))
+    act(() => first.result.current.saveCategory())
+    first.unmount()
+
+    const edited = renderCategoryManager({
+      selectedCategories: ['Fire', 'Medical Response'],
+    })
+    await waitFor(() =>
+      expect(
+        edited.result.current.categoryOptions.some((row) => row.value === 'Medical Response'),
+      ).toBe(true),
+    )
+    const customCategory = edited.result.current.categoryOptions.find(
+      (row) => row.value === 'Medical Response',
+    )
+    act(() => edited.result.current.startEditCategory(customCategory))
+    act(() => edited.result.current.setNewCategoryName('Medical Support'))
+    act(() => edited.result.current.saveCategory())
+    expect(edited.updateSetupField).toHaveBeenCalledWith('exerciseCategories', [
+      'Fire',
+      'Medical Support',
+    ])
+    edited.unmount()
+
+    const removed = renderCategoryManager({ selectedCategories: ['Fire', 'Medical Support'] })
+    await waitFor(() =>
+      expect(
+        removed.result.current.categoryOptions.some((row) => row.value === 'Medical Support'),
+      ).toBe(true),
+    )
+    act(() => removed.result.current.removeCategory('Medical Support'))
+    expect(removed.updateSetupField).toHaveBeenLastCalledWith('exerciseCategories', ['Fire'])
+    expect(storedRows()).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ value: 'Medical Support' })]),
     )
   })
 })

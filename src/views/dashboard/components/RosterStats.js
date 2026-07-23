@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import { CCard, CCardBody, CCardHeader, CCol, CRow, CWidgetStatsA } from '@coreui/react'
 import { CChartBar, CChartLine } from '@coreui/react-chartjs'
 import { getStyle } from '@coreui/utils'
+import DashboardEmptyState from './DashboardEmptyState'
 import {
   sparklineOptions,
   sparklineDataset,
@@ -91,38 +92,45 @@ export const RosterActivityChart = ({ stats }) => {
   const trend = stats?.monthlyTrend ?? []
 
   return (
-    <CCard className="h-100">
-      <CCardHeader>
+    <CCard className="dashboard-chart-card h-100">
+      <CCardHeader className="dashboard-chart-card__header">
         <div className="fw-semibold">Roster Coverage</div>
         <div className="text-body-secondary small mt-1">Scheduled days per month</div>
       </CCardHeader>
       <CCardBody>
-        <CChartBar
-          data={{
-            labels: trend.map((t) => t.month),
-            datasets: [
-              {
-                label: 'Scheduled Days',
-                backgroundColor: MODULE_ACCENTS.roster.base,
-                data: trend.map((t) => t.scheduledDays),
-                borderRadius: 4,
+        {trend.length === 0 ? (
+          <DashboardEmptyState message="No roster coverage is available for this period." />
+        ) : (
+          <CChartBar
+            className="dashboard-activity-chart"
+            aria-label="Scheduled roster days by month"
+            role="img"
+            data={{
+              labels: trend.map((t) => t.month),
+              datasets: [
+                {
+                  label: 'Scheduled Days',
+                  backgroundColor: MODULE_ACCENTS.roster.base,
+                  data: trend.map((t) => t.scheduledDays),
+                  borderRadius: 4,
+                },
+              ],
+            }}
+            options={{
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { grid: { display: false } },
+                y: {
+                  beginAtZero: true,
+                  grid: { color: getStyle('--cui-border-color-translucent') },
+                  ticks: { stepSize: 5 },
+                },
               },
-            ],
-          }}
-          options={{
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-              x: { grid: { display: false } },
-              y: {
-                beginAtZero: true,
-                grid: { color: getStyle('--cui-border-color-translucent') },
-                ticks: { stepSize: 5 },
-              },
-            },
-          }}
-          style={{ minHeight: '220px' }}
-        />
+            }}
+            style={{ minHeight: '220px' }}
+          />
+        )}
       </CCardBody>
     </CCard>
   )
@@ -154,100 +162,114 @@ export const RosterTeamBreakdown = ({ stats }) => {
   const teams = stats?.teams ?? []
 
   return (
-    <CCard className="h-100">
-      <CCardHeader>
+    <CCard className="dashboard-chart-card h-100">
+      <CCardHeader className="dashboard-chart-card__header">
         <div className="fw-semibold">Team Shift Summary</div>
         <div className="text-body-secondary small mt-1">
           Shifts covered per team · Current period
         </div>
       </CCardHeader>
       <CCardBody className="p-0">
-        <div className="table-responsive">
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: 'var(--cui-secondary-bg)' }}>
-                {['Team', 'Staff', 'Day', 'Night', 'Total'].map((h) => (
-                  <th
-                    key={h}
-                    style={{
-                      padding: '10px 14px',
-                      fontWeight: 600,
-                      fontSize: '0.8rem',
-                      color: 'var(--cui-secondary-color)',
-                      borderBottom: '1px solid var(--cui-border-color)',
-                      textAlign: h === 'Team' ? 'left' : 'center',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {teams.map((team, i) => {
-                const { bg, text } = getTeamColor(team.name)
-                return (
-                  <tr
-                    key={team.name}
-                    style={{
-                      borderTop: i > 0 ? '1px solid var(--cui-border-color)' : undefined,
-                    }}
-                  >
-                    <td style={{ padding: '10px 14px' }}>
-                      <span
-                        className="rounded-pill px-2 py-1 fw-semibold"
-                        style={{ background: bg, color: text, fontSize: '0.82rem' }}
+        {teams.length === 0 ? (
+          <DashboardEmptyState message="No team shift summary is available for this period." />
+        ) : (
+          <>
+            <div className="dashboard-table-scroll-hint">Swipe to view all shift columns.</div>
+            <div
+              className="table-responsive dashboard-team-table-scroll"
+              tabIndex={0}
+              aria-label="Team shift summary table. Scroll horizontally to view all columns."
+            >
+              <table style={{ width: '100%', minWidth: '32rem', borderCollapse: 'collapse' }}>
+                <caption className="visually-hidden">
+                  Team shift summary for the current period
+                </caption>
+                <thead>
+                  <tr style={{ background: 'var(--cui-secondary-bg)' }}>
+                    {['Team', 'Staff', 'Day', 'Night', 'Total'].map((h) => (
+                      <th
+                        key={h}
+                        style={{
+                          padding: '10px 14px',
+                          fontWeight: 600,
+                          fontSize: '0.8rem',
+                          color: 'var(--cui-secondary-color)',
+                          borderBottom: '1px solid var(--cui-border-color)',
+                          textAlign: h === 'Team' ? 'left' : 'center',
+                          whiteSpace: 'nowrap',
+                        }}
                       >
-                        {team.name}
-                      </span>
-                    </td>
-                    <td
-                      style={{
-                        padding: '10px 14px',
-                        textAlign: 'center',
-                        color: 'var(--cui-secondary-color)',
-                        fontSize: '0.875rem',
-                      }}
-                    >
-                      {team.memberCount}
-                    </td>
-                    <td
-                      style={{
-                        padding: '10px 14px',
-                        textAlign: 'center',
-                        fontWeight: 500,
-                        fontSize: '0.875rem',
-                      }}
-                    >
-                      {team.dayShifts}
-                    </td>
-                    <td
-                      style={{
-                        padding: '10px 14px',
-                        textAlign: 'center',
-                        fontWeight: 500,
-                        fontSize: '0.875rem',
-                      }}
-                    >
-                      {team.nightShifts}
-                    </td>
-                    <td
-                      style={{
-                        padding: '10px 14px',
-                        textAlign: 'center',
-                        fontWeight: 700,
-                        fontSize: '0.875rem',
-                      }}
-                    >
-                      {team.totalShifts}
-                    </td>
+                        {h}
+                      </th>
+                    ))}
                   </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
+                </thead>
+                <tbody>
+                  {teams.map((team, i) => {
+                    const { bg, text } = getTeamColor(team.name)
+                    return (
+                      <tr
+                        key={team.name}
+                        style={{
+                          borderTop: i > 0 ? '1px solid var(--cui-border-color)' : undefined,
+                        }}
+                      >
+                        <td style={{ padding: '10px 14px' }}>
+                          <span
+                            className="rounded-pill px-2 py-1 fw-semibold"
+                            style={{ background: bg, color: text, fontSize: '0.82rem' }}
+                          >
+                            {team.name}
+                          </span>
+                        </td>
+                        <td
+                          style={{
+                            padding: '10px 14px',
+                            textAlign: 'center',
+                            color: 'var(--cui-secondary-color)',
+                            fontSize: '0.875rem',
+                          }}
+                        >
+                          {team.memberCount}
+                        </td>
+                        <td
+                          style={{
+                            padding: '10px 14px',
+                            textAlign: 'center',
+                            fontWeight: 500,
+                            fontSize: '0.875rem',
+                          }}
+                        >
+                          {team.dayShifts}
+                        </td>
+                        <td
+                          style={{
+                            padding: '10px 14px',
+                            textAlign: 'center',
+                            fontWeight: 500,
+                            fontSize: '0.875rem',
+                          }}
+                        >
+                          {team.nightShifts}
+                        </td>
+                        <td
+                          style={{
+                            padding: '10px 14px',
+                            textAlign: 'center',
+                            fontWeight: 700,
+                            fontSize: '0.875rem',
+                          }}
+                        >
+                          {team.totalShifts}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
       </CCardBody>
     </CCard>
   )

@@ -408,6 +408,18 @@ const normalizeCoverageRow = (row = {}) => {
     repeatCount: Number(row.repeatCount ?? row.repeat_count ?? Math.max(0, reportCount - 1)) || 0,
     duplicateCount: reportCount,
     latestReportId: String(row.latestReportId || row.latest_report_id || ''),
+    monthlyCompliance: {
+      status: String(row.monthlyCompliance?.status || row.monthly_compliance?.status || ''),
+      label: String(row.monthlyCompliance?.label || row.monthly_compliance?.label || ''),
+      isRequired: Boolean(row.monthlyCompliance?.isRequired ?? row.monthly_compliance?.is_required),
+      isExcluded: Boolean(row.monthlyCompliance?.isExcluded ?? row.monthly_compliance?.is_excluded),
+      reportCount:
+        Number(row.monthlyCompliance?.reportCount ?? row.monthly_compliance?.report_count ?? 0) ||
+        0,
+      cycleLabel: String(
+        row.monthlyCompliance?.cycleLabel || row.monthly_compliance?.cycle_label || '',
+      ),
+    },
   }
 }
 
@@ -430,6 +442,30 @@ const normalizeCoverageCheck = (check = {}) => ({
 export const normalizeFireExtinguisherCoverageRows = (rows = []) =>
   (Array.isArray(rows) ? rows : []).map(normalizeCoverageRow)
 
+const normalizeFireExtinguisherCoverageMeta = (meta = {}) => {
+  if (!meta?.summary || typeof meta.summary !== 'object') return meta || {}
+
+  const cycle = meta.summary.cycle || {}
+  return {
+    ...meta,
+    summary: {
+      ...meta.summary,
+      openIssues: Number(meta.summary.openIssues ?? meta.summary.issues ?? 0) || 0,
+      cycle: {
+        type: String(cycle.type || ''),
+        label: String(cycle.label || ''),
+        start: String(cycle.start || ''),
+        end: String(cycle.end || ''),
+        inspected: Number(cycle.inspected ?? 0) || 0,
+        notInspected: Number(cycle.notInspected ?? 0) || 0,
+        repeatChecks: Number(cycle.repeatChecks ?? 0) || 0,
+        excludedOutOfService: Number(cycle.excludedOutOfService ?? 0) || 0,
+        excludedRetired: Number(cycle.excludedRetired ?? 0) || 0,
+      },
+    },
+  }
+}
+
 export const fetchFireExtinguisherCoverage = async (params = {}, options = {}) => {
   const query = new URLSearchParams()
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -442,7 +478,7 @@ export const fetchFireExtinguisherCoverage = async (params = {}, options = {}) =
   )
   return {
     data: normalizeFireExtinguisherCoverageRows(response?.data),
-    meta: response?.meta || {},
+    meta: normalizeFireExtinguisherCoverageMeta(response?.meta),
   }
 }
 

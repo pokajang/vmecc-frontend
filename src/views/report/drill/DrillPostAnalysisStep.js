@@ -25,7 +25,6 @@ const DrillPostAnalysisStep = ({
   fieldErrors,
   pushToast,
   onBack,
-  onReset,
   onSaveDraft,
   onRequestReview,
   saveLabel,
@@ -127,7 +126,6 @@ const DrillPostAnalysisStep = ({
 
       <DrillStageActions
         onBack={onBack}
-        onReset={onReset}
         onSaveDraft={onSaveDraft}
         onContinue={onRequestReview}
         saveLabel={saveLabel}

@@ -5,6 +5,35 @@ import { useRef, useState } from 'react'
 import useReportDraft from '../useReportDraft'
 
 describe('useReportDraft', () => {
+  it('never hydrates a draft after a mounted blank session stops receiving skipDraftLoad', async () => {
+    const loadDraft = vi.fn(async () => ({ incidentType: 'Stale saved drill' }))
+
+    const { result, rerender } = renderHook(
+      ({ skipDraftLoad }) => {
+        const [form, setForm] = useState({ incidentType: '' })
+        const draftLoadedRef = useRef(false)
+        useReportDraft({
+          userId: 7,
+          reportTypeSlug: 'drill',
+          draftLoadedRef,
+          setForm,
+          skipDraftLoad,
+          loadDraft,
+        })
+        return form
+      },
+      { initialProps: { skipDraftLoad: true } },
+    )
+
+    await act(async () => {
+      rerender({ skipDraftLoad: false })
+      await Promise.resolve()
+    })
+
+    expect(loadDraft).not.toHaveBeenCalled()
+    expect(result.current.incidentType).toBe('')
+  })
+
   it('does not cancel hydration when inline lifecycle callbacks change identity', async () => {
     let resolveDraft
     const pendingDraft = new Promise((resolve) => {

@@ -1,11 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { CAlert, CButton } from '@coreui/react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
-import { clearPendingCameraOperation } from 'src/utils/cameraRecovery'
-import { clearReportDraft, loadReportDraftRow, saveReportDraft } from '../reportStorage'
+import { loadReportDraftRow, saveReportDraft } from '../reportStorage'
 import useReportDraft from '../hooks/useReportDraft'
-import { REPORT_MOBILE_QUERY } from '../hooks/useReportIsMobile'
 import { resetReportViewport, scrollToFirstError } from '../utils'
 import { DRILL_NEW_SECTIONS } from './constants'
 import DrillChronologyStep from './DrillChronologyStep'
@@ -13,9 +10,7 @@ import DrillDetailsStep from './DrillDetailsStep'
 import DrillPersonnelStep from './DrillPersonnelStep'
 import DrillPostAnalysisStep from './DrillPostAnalysisStep'
 import DrillSetupStep from './DrillSetupStep'
-import DrillStageHeader from './DrillStageHeader'
 import {
-  createDefaultDrillForm,
   hasMeaningfulDrillChanges,
   normalizeDrillForm,
   toSerializableDrillForm,
@@ -54,7 +49,6 @@ const DrillForm = ({
   reportTypeSlug,
   reportTypeIdPrefix,
   nextReportSequence,
-  reportTypeLabel,
   reportBasePath,
   newSection,
   datePresetOptions,
@@ -83,7 +77,6 @@ const DrillForm = ({
   const draftIdRef = useRef('')
   const draftVersionRef = useRef(0)
   const [pendingFocusField, setPendingFocusField] = useState('')
-  const [showReset, setShowReset] = useState(false)
   const [lastSavedSignature, setLastSavedSignature] = useState(() =>
     editingDraftSeed ? signature(normalizeDrillForm(editingDraftSeed)) : null,
   )
@@ -264,37 +257,6 @@ const DrillForm = ({
     return true
   }
 
-  const resetForm = async () => {
-    setBlockerMessage('')
-    let cleared = false
-    try {
-      cleared = Boolean(await clearReportDraft(user?.id, reportTypeSlug))
-    } catch {
-      cleared = false
-    }
-    if (!cleared) {
-      setBlockerMessage(
-        'The saved server draft could not be cleared. The form was kept to prevent the old draft returning later.',
-      )
-      setShowReset(false)
-      return
-    }
-    setForm(createDefaultDrillForm())
-    setFieldErrors({})
-    setSetupFieldErrors({})
-    setLastSavedSignature(null)
-    draftIdRef.current = ''
-    draftVersionRef.current = 0
-    draftSeedRef.current = null
-    setHasDraftSeed(false)
-    setSaveState('idle')
-    clearPendingCameraOperation()
-    setShowReset(false)
-    navigateToSection('setup')
-    onDraftSaved?.()
-    pushToast('Drill report and saved draft reset.', { title: 'Report reset', color: 'info' })
-  }
-
   const validateStage = (validator, message, errorTarget = 'field') => {
     const result = validator(formRef.current)
     if (errorTarget === 'setup') setSetupFieldErrors(result.errors)
@@ -386,7 +348,6 @@ const DrillForm = ({
     setForm,
     fieldErrors,
     setFieldErrors,
-    onReset: () => setShowReset(true),
     onSaveDraft: saveDraft,
     saveLabel,
     draftStatus:
@@ -403,16 +364,6 @@ const DrillForm = ({
 
   return (
     <>
-      <ActionConfirmModal
-        visible={showReset}
-        mobileDrawerQuery={REPORT_MOBILE_QUERY}
-        title={`Reset ${reportTypeLabel} Report`}
-        message="Reset this form and clear its saved server draft? This cannot be undone."
-        confirmLabel="Reset"
-        confirmColor="danger"
-        onClose={() => setShowReset(false)}
-        onConfirm={() => void resetForm()}
-      />
       {editingRecord ? (
         <CAlert color="info" className="d-flex flex-wrap justify-content-between gap-2">
           <span>
@@ -440,7 +391,6 @@ const DrillForm = ({
       ) : null}
 
       <form onSubmit={(event) => event.preventDefault()}>
-        <DrillStageHeader activeSection={activeSection} onNavigate={navigateWithDraft} />
         {activeSection === 'setup' ? (
           <DrillSetupStep
             user={user}
@@ -463,7 +413,6 @@ const DrillForm = ({
                     : SAVE_MESSAGES.idle
             }
             blockerMessage={blockerMessage}
-            onReset={() => setShowReset(true)}
             onContinue={() =>
               void continueTo(
                 validateDrillSetup,

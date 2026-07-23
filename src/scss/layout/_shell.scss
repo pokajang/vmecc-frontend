@@ -207,16 +207,19 @@
 }
 
 .sidebar-main .simplebar-track.simplebar-vertical {
-  width: 8px;
+  width: var(--vmecc-scrollbar-size);
 }
 
 .sidebar-main .simplebar-scrollbar::before {
-  background: #cfd4dc;
+  background: var(--vmecc-scrollbar-thumb);
   opacity: 0.85;
-  inset-inline: 2px;
+  inset-inline: 1px;
+  border-radius: var(--vmecc-scrollbar-radius);
 }
 
-.sidebar-main .simplebar-scrollbar.simplebar-visible::before {
+.sidebar-main .simplebar-scrollbar.simplebar-visible::before,
+.sidebar-main .simplebar-scrollbar:hover::before {
+  background: var(--vmecc-scrollbar-thumb-hover);
   opacity: 1;
 }
 

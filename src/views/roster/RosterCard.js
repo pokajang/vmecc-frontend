@@ -169,13 +169,9 @@ const RosterCard = ({ monthBlock, editMode = false, teams = [], allShifts = [], 
       <div className="fw-semibold mb-2 month-label">{monthBlock.month}</div>
 
       <div
-        className="rounded-3"
+        className="rounded-3 vmecc-scroll-x"
         style={{
           border: '1px solid var(--cui-border-color)',
-          overflowX: 'auto',
-          overflowY: 'hidden',
-          scrollbarWidth: 'thin',
-          scrollbarColor: '#d1d5db transparent',
         }}
       >
         <table style={{ borderCollapse: 'collapse', width: '100%', tableLayout: 'auto' }}>

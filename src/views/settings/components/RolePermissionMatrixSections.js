@@ -153,119 +153,117 @@ export const RolePermissionMatrixTable = ({
   visibleRoles,
 }) => (
   <div className="rounded-3 shadow-sm overflow-hidden bg-body mt-2 matrix-table-shell">
-    <div className="rpm-scroll matrix-table-scroll">
-      <CTable align="middle" className="mb-0" hover responsive>
-        <CTableHead color="light">
-          <CTableRow>
+    <CTable align="middle" className="mb-0" hover responsive>
+      <CTableHead color="light">
+        <CTableRow>
+          <CTableHeaderCell
+            className="align-middle"
+            style={{
+              minWidth: 200,
+              position: 'sticky',
+              left: 0,
+              zIndex: 2,
+              background: 'var(--cui-light-bg-subtle, #f8f9fa)',
+            }}
+          >
+            Permission
+          </CTableHeaderCell>
+          {visibleRoles.map((role) => (
             <CTableHeaderCell
-              className="align-middle"
-              style={{
-                minWidth: 200,
-                position: 'sticky',
-                left: 0,
-                zIndex: 2,
-                background: 'var(--cui-light-bg-subtle, #f8f9fa)',
-              }}
+              key={role}
+              className="text-center align-middle"
+              style={{ minWidth: 140 }}
             >
-              Permission
+              {isRolePermissionsLocked(role, roleAccess) && (
+                <Lock size={12} className="me-1 text-muted align-text-bottom" />
+              )}
+              {role}
             </CTableHeaderCell>
-            {visibleRoles.map((role) => (
-              <CTableHeaderCell
-                key={role}
-                className="text-center align-middle"
-                style={{ minWidth: 140 }}
-              >
-                {isRolePermissionsLocked(role, roleAccess) && (
-                  <Lock size={12} className="me-1 text-muted align-text-bottom" />
-                )}
-                {role}
-              </CTableHeaderCell>
-            ))}
+          ))}
+        </CTableRow>
+      </CTableHead>
+      <CTableBody>
+        {groupedRows.length === 0 && (
+          <CTableRow>
+            <CTableDataCell
+              colSpan={visibleRoles.length + 1}
+              className="text-center text-muted py-4 small"
+            >
+              No permissions match the current filters.
+            </CTableDataCell>
           </CTableRow>
-        </CTableHead>
-        <CTableBody>
-          {groupedRows.length === 0 && (
-            <CTableRow>
-              <CTableDataCell
-                colSpan={visibleRoles.length + 1}
-                className="text-center text-muted py-4 small"
-              >
-                No permissions match the current filters.
-              </CTableDataCell>
-            </CTableRow>
-          )}
-          {groupedRows.map((item, index) => {
-            if (item.type === 'header') {
-              return (
-                <CTableRow key={`group-${item.group}-${index}`} className="table-light">
-                  <CTableDataCell
-                    colSpan={visibleRoles.length + 1}
-                    className="small fw-semibold text-muted py-1 px-3"
-                    style={{
-                      letterSpacing: '0.04em',
-                      textTransform: 'uppercase',
-                      fontSize: '0.78rem',
-                    }}
-                  >
-                    {item.group}
-                  </CTableDataCell>
-                </CTableRow>
-              )
-            }
-
-            const { perm } = item
-            const label = PERMISSION_LABELS[perm] || perm
+        )}
+        {groupedRows.map((item, index) => {
+          if (item.type === 'header') {
             return (
-              <CTableRow key={perm}>
+              <CTableRow key={`group-${item.group}-${index}`} className="table-light">
                 <CTableDataCell
-                  className="align-middle"
+                  colSpan={visibleRoles.length + 1}
+                  className="small fw-semibold text-muted py-1 px-3"
                   style={{
-                    position: 'sticky',
-                    left: 0,
-                    zIndex: 1,
-                    background: 'var(--cui-body-bg, #fff)',
+                    letterSpacing: '0.04em',
+                    textTransform: 'uppercase',
+                    fontSize: '0.78rem',
                   }}
                 >
-                  <div className="fw-medium">{label}</div>
-                  <div className="text-muted small">{perm}</div>
+                  {item.group}
                 </CTableDataCell>
-                {visibleRoles.map((role) => {
-                  const isLocked = isRolePermissionsLocked(role, roleAccess)
-                  const fullAccess = hasFullRoleAccess(role, roleAccess)
-                  const checked = fullAccess ? true : (localMatrix[role] || new Set()).has(perm)
-                  const wasChecked = fullAccess ? true : new Set(serverMatrix[role] || []).has(perm)
-                  const changed = !isLocked && checked !== wasChecked
-
-                  return (
-                    <CTableDataCell
-                      key={role}
-                      className="text-center align-middle"
-                      style={{
-                        background: changed
-                          ? checked
-                            ? 'var(--vmecc-status-success-bg, #d1f5d3)'
-                            : 'var(--vmecc-status-danger-bg, #fde8e8)'
-                          : undefined,
-                      }}
-                    >
-                      <input
-                        type="checkbox"
-                        className="form-check-input"
-                        checked={checked}
-                        disabled={isLocked || !editMode || saving}
-                        onChange={() => togglePermission(role, perm)}
-                        aria-label={`${role} - ${label}`}
-                        style={{ cursor: isLocked || !editMode ? 'default' : 'pointer' }}
-                      />
-                    </CTableDataCell>
-                  )
-                })}
               </CTableRow>
             )
-          })}
-        </CTableBody>
-      </CTable>
-    </div>
+          }
+
+          const { perm } = item
+          const label = PERMISSION_LABELS[perm] || perm
+          return (
+            <CTableRow key={perm}>
+              <CTableDataCell
+                className="align-middle"
+                style={{
+                  position: 'sticky',
+                  left: 0,
+                  zIndex: 1,
+                  background: 'var(--cui-body-bg, #fff)',
+                }}
+              >
+                <div className="fw-medium">{label}</div>
+                <div className="text-muted small">{perm}</div>
+              </CTableDataCell>
+              {visibleRoles.map((role) => {
+                const isLocked = isRolePermissionsLocked(role, roleAccess)
+                const fullAccess = hasFullRoleAccess(role, roleAccess)
+                const checked = fullAccess ? true : (localMatrix[role] || new Set()).has(perm)
+                const wasChecked = fullAccess ? true : new Set(serverMatrix[role] || []).has(perm)
+                const changed = !isLocked && checked !== wasChecked
+
+                return (
+                  <CTableDataCell
+                    key={role}
+                    className="text-center align-middle"
+                    style={{
+                      background: changed
+                        ? checked
+                          ? 'var(--vmecc-status-success-bg, #d1f5d3)'
+                          : 'var(--vmecc-status-danger-bg, #fde8e8)'
+                        : undefined,
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      className="form-check-input"
+                      checked={checked}
+                      disabled={isLocked || !editMode || saving}
+                      onChange={() => togglePermission(role, perm)}
+                      aria-label={`${role} - ${label}`}
+                      style={{ cursor: isLocked || !editMode ? 'default' : 'pointer' }}
+                    />
+                  </CTableDataCell>
+                )
+              })}
+            </CTableRow>
+          )
+        })}
+      </CTableBody>
+    </CTable>
   </div>
 )
 

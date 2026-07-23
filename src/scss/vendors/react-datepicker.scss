@@ -1,3 +1,5 @@
+@use '../foundation/scrollbars' as scrollbars;
+
 .erco-timepicker {
   .react-datepicker__header--time {
     background-color: rgba(0, 126, 122, 0.08);
@@ -31,14 +33,7 @@
   }
 
   .react-datepicker__time-list {
-    &::-webkit-scrollbar {
-      width: 4px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background-color: rgba(0, 126, 122, 0.35);
-      border-radius: 2px;
-    }
+    @include scrollbars.vmecc-scrollbar;
   }
 
   .react-datepicker {

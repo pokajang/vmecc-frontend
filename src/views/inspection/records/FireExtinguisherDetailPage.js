@@ -3,17 +3,12 @@ import { CAlert, CBadge, CButton, CCard, CCardBody } from '@coreui/react'
 import { ArrowLeft } from 'lucide-react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
-import RowActions from 'src/components/RowActions'
 import { InspectionPhotoViewerModal } from 'src/views/inspection/form/components/InspectionDisplayShared'
 import {
   fetchFireExtinguisherCoverageDetail,
   fetchFireExtinguisherInspectionHistory,
 } from 'src/views/inspection/inspectionFireExtinguisherApi'
 import { CoverageDetailBody, getPeriodLabel } from './AllExtinguishersSection'
-import FireExtinguisherEditDialog from './FireExtinguisherEditDialog'
-import FireExtinguisherLifecycleDialog, {
-  buildFireExtinguisherLifecycleMenuItems,
-} from './FireExtinguisherLifecycleDialog'
 import {
   buildFireExtinguisherCatalogLocation,
   isSafeFireExtinguisherReturnLocation,
@@ -50,8 +45,6 @@ const FireExtinguisherDetailPage = ({
   const [isLoadingHistory, setIsLoadingHistory] = useState(false)
   const [selectedHistoryRecord, setSelectedHistoryRecord] = useState(null)
   const [photoViewer, setPhotoViewer] = useState(null)
-  const [lifecycleAction, setLifecycleAction] = useState('')
-  const [editAsset, setEditAsset] = useState(null)
   const [feedback, setFeedback] = useState(null)
 
   const catalogViewState = useMemo(
@@ -197,15 +190,6 @@ const FireExtinguisherDetailPage = ({
     if (result.message) setFeedback(result)
   }
 
-  const actionItems = detail
-    ? buildFireExtinguisherLifecycleMenuItems({
-        asset: detail,
-        canManage: canManageCatalog,
-        onEdit: setEditAsset,
-        onLifecycleAction: (_asset, action) => setLifecycleAction(action),
-      })
-    : []
-
   return (
     <div
       className="fire-extinguisher-detail-page d-grid gap-3"
@@ -213,15 +197,6 @@ const FireExtinguisherDetailPage = ({
     >
       <div className="fire-extinguisher-detail-page__header d-flex flex-wrap align-items-start justify-content-between gap-3">
         <div className="d-grid gap-1">
-          <CButton
-            type="button"
-            color="link"
-            className="fire-extinguisher-detail-page__back p-0 text-start"
-            onClick={() => navigate(returnTo, { replace: true, state: { catalogViewState } })}
-          >
-            <ArrowLeft size={16} aria-hidden="true" />
-            Back to all extinguishers
-          </CButton>
           <div className="d-flex flex-wrap align-items-center gap-2">
             <h2 className="h4 mb-0">
               {detail?.idLocNo || detail?.barcodeNo || 'Fire extinguisher'}
@@ -240,13 +215,17 @@ const FireExtinguisherDetailPage = ({
             </div>
           ) : null}
         </div>
-        {actionItems.length > 0 ? (
-          <RowActions
-            items={actionItems}
-            hitArea={44}
-            toggleAriaLabel={`Asset actions for ${detail?.idLocNo || 'fire extinguisher'}`}
-          />
-        ) : null}
+        <CButton
+          type="button"
+          color="secondary"
+          variant="outline"
+          size="sm"
+          className="inspection-compact-action-btn d-inline-flex align-items-center gap-1"
+          onClick={() => navigate(returnTo, { replace: true, state: { catalogViewState } })}
+        >
+          <ArrowLeft size={14} aria-hidden="true" />
+          Back to all extinguishers
+        </CButton>
       </div>
 
       {feedback?.message ? (
@@ -318,17 +297,6 @@ const FireExtinguisherDetailPage = ({
         </CCardBody>
       </CCard>
 
-      <FireExtinguisherLifecycleDialog
-        asset={lifecycleAction ? detail : null}
-        action={lifecycleAction}
-        onClose={() => setLifecycleAction('')}
-        onChanged={handleAssetChanged}
-      />
-      <FireExtinguisherEditDialog
-        asset={editAsset}
-        onClose={() => setEditAsset(null)}
-        onChanged={handleAssetChanged}
-      />
       <InspectionPhotoViewerModal viewer={photoViewer} onClose={() => setPhotoViewer(null)} />
     </div>
   )

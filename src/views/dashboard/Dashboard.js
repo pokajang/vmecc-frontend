@@ -1,22 +1,27 @@
-import React, { useMemo, useState } from 'react'
+import React, { useId, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import {
   CAlert,
   CButton,
+  CButtonGroup,
   CCard,
   CCardBody,
   CCardHeader,
   CCol,
-  CDropdown,
-  CDropdownItem,
-  CDropdownMenu,
-  CDropdownToggle,
   CListGroup,
   CListGroupItem,
   CRow,
 } from '@coreui/react'
-import { CalendarDays, Clock3, Eye, EyeOff, LayoutGrid, TriangleAlert, Wallet } from 'lucide-react'
+import {
+  CalendarDays,
+  ChevronDown,
+  ChevronUp,
+  Clock3,
+  LayoutGrid,
+  TriangleAlert,
+  Wallet,
+} from 'lucide-react'
 import { getPrimaryRoleLabel, hasPermission } from 'src/utils/authz'
 import { isModuleEnabled } from 'src/utils/modules'
 import { DASHBOARD_SECTION_PERMISSIONS } from 'src/constants/dashboardVisibility'
@@ -42,83 +47,55 @@ import { LeaveKpiTiles, LeaveActivityChart, LeaveTeamBreakdown } from './compone
 import { RosterKpiTiles, RosterActivityChart, RosterTeamBreakdown } from './components/RosterStats'
 import { ReportKpiTiles, ReportActivityChart, ReportBreakdown } from './components/ReportStats'
 
-const ModuleSectionHeader = ({
-  title,
-  subtext,
-  accentColor = '#1b7a4a',
-  icon: Icon,
-  period,
-  onPeriodChange,
-  children,
-}) => {
+const ModuleSectionHeader = ({ title, subtext, accentColor = '#1b7a4a', icon: Icon, children }) => {
   const [visible, setVisible] = useState(true)
-  const selectedPeriodLabel =
-    PERIOD_OPTIONS.find((option) => option.value === period)?.label || resolvePeriodLabel(period)
+  const contentId = useId()
 
   return (
     <CCard className={`${visible ? 'mt-5' : 'mt-3'} mb-4 dashboard-module-card`}>
       <CCardHeader
-        className={`px-3 px-md-4 py-3 ${visible ? 'border-bottom' : 'border-bottom-0'}`}
-        style={{ borderLeft: `4px solid ${accentColor}` }}
+        className={`dashboard-module-card__header px-3 px-md-4 py-3 ${
+          visible ? 'border-bottom' : 'border-bottom-0'
+        }`}
+        style={{ borderInlineStart: `4px solid ${accentColor}` }}
       >
-        <div
-          className="d-flex align-items-start justify-content-between gap-3 flex-wrap"
-          style={{ minWidth: 0 }}
-        >
-          <div
-            className="me-auto"
-            style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}
-          >
+        <div className="dashboard-module-card__toolbar">
+          <div className="dashboard-module-card__heading">
             {Icon && <Icon size={18} style={{ color: accentColor, flexShrink: 0 }} />}
-            <div className="d-md-flex align-items-md-baseline gap-md-2" style={{ minWidth: 0 }}>
-              <div className="fw-semibold text-break">{title}</div>
-              {subtext && <div className="text-muted text-break d-none d-md-block">{subtext}</div>}
+            <div>
+              <h2 className="dashboard-module-card__title">{title}</h2>
+              {subtext && <div className="dashboard-module-card__subtext">{subtext}</div>}
             </div>
           </div>
-          <div className="d-flex align-items-center gap-2 ms-auto flex-shrink-0">
-            {period && onPeriodChange && (
-              <CDropdown alignment="end">
-                <CDropdownToggle
-                  size="sm"
-                  className="d-inline-flex align-items-center border-0 shadow-none"
-                  style={{ background: 'rgba(0, 126, 122, 0.12)', color: 'var(--cui-primary)' }}
-                >
-                  {selectedPeriodLabel}
-                </CDropdownToggle>
-                <CDropdownMenu>
-                  {PERIOD_OPTIONS.map((option) => (
-                    <CDropdownItem
-                      key={option.value}
-                      active={option.value === period}
-                      onClick={() => onPeriodChange(option.value)}
-                    >
-                      {option.label}
-                    </CDropdownItem>
-                  ))}
-                </CDropdownMenu>
-              </CDropdown>
+          <CButton
+            size="sm"
+            className="dashboard-collapse-button"
+            onClick={() => setVisible((value) => !value)}
+            aria-controls={contentId}
+            aria-expanded={visible}
+            aria-label={visible ? `Collapse ${title}` : `Expand ${title}`}
+          >
+            {visible ? (
+              <ChevronUp size={17} aria-hidden="true" />
+            ) : (
+              <ChevronDown size={17} aria-hidden="true" />
             )}
-            <CButton
-              size="sm"
-              className="px-2 py-1 d-inline-flex align-items-center border-0 bg-transparent shadow-none text-primary"
-              onClick={() => setVisible((v) => !v)}
-              aria-label={visible ? 'Hide section' : 'Show section'}
-              title={visible ? 'Hide section' : 'Show section'}
-            >
-              {visible ? <EyeOff size={14} /> : <Eye size={14} />}
-            </CButton>
-          </div>
+          </CButton>
         </div>
       </CCardHeader>
-      {visible && <CCardBody className="p-3 p-md-4">{children}</CCardBody>}
+      {visible && (
+        <CCardBody id={contentId} className="dashboard-module-card__body p-3 p-md-4">
+          {children}
+        </CCardBody>
+      )}
     </CCard>
   )
 }
 
 const SectionHeading = ({ title, subtext }) => (
-  <div className="mb-3 mt-3">
-    <span className="fw-semibold">{title}</span>
-    {subtext && <span className="text-muted ms-2">{subtext}</span>}
+  <div className="dashboard-section-heading">
+    <h3 className="dashboard-section-heading__title">{title}</h3>
+    {subtext && <p className="dashboard-section-heading__subtext">{subtext}</p>}
   </div>
 )
 
@@ -134,30 +111,40 @@ const ACTION_QUEUE_TONES = {
 
 const DashboardActionQueue = ({ items, loading, error, onRetry }) => {
   const [visible, setVisible] = useState(true)
+  const contentId = useId()
 
   return (
-    <CCard className="mb-4" data-testid="dashboard-action-queue">
-      <CCardHeader className={`px-3 px-md-4 py-3 ${visible ? 'border-bottom' : 'border-bottom-0'}`}>
-        <div className="d-flex flex-wrap align-items-start justify-content-between gap-2">
+    <CCard className="dashboard-action-queue mb-4" data-testid="dashboard-action-queue">
+      <CCardHeader
+        className={`dashboard-action-queue__header px-3 px-md-4 py-3 ${
+          visible ? 'border-bottom' : 'border-bottom-0'
+        }`}
+      >
+        <div className="dashboard-action-queue__toolbar">
           <div>
-            <div className="mb-1 fw-semibold">Action Queue</div>
-            <div className="text-body-secondary small d-none d-md-block">
+            <h2 className="dashboard-action-queue__title">Action Queue</h2>
+            <div className="dashboard-action-queue__description">
               Items needing your attention now
             </div>
           </div>
           <CButton
             size="sm"
-            className="px-2 py-1 d-inline-flex align-items-center border-0 bg-transparent shadow-none text-primary ms-auto flex-shrink-0"
+            className="dashboard-collapse-button"
             onClick={() => setVisible((value) => !value)}
-            aria-label={visible ? 'Hide action queue' : 'Show action queue'}
-            title={visible ? 'Hide action queue' : 'Show action queue'}
+            aria-controls={contentId}
+            aria-expanded={visible}
+            aria-label={visible ? 'Collapse action queue' : 'Expand action queue'}
           >
-            {visible ? <EyeOff size={14} /> : <Eye size={14} />}
+            {visible ? (
+              <ChevronUp size={17} aria-hidden="true" />
+            ) : (
+              <ChevronDown size={17} aria-hidden="true" />
+            )}
           </CButton>
         </div>
       </CCardHeader>
       {visible && (
-        <CCardBody className="p-3 p-md-4">
+        <CCardBody id={contentId} className="dashboard-action-queue__body p-3 p-md-4">
           {loading ? (
             <div className="text-body-secondary small" data-testid="dashboard-action-queue-loading">
               Loading action queue...
@@ -180,28 +167,30 @@ const DashboardActionQueue = ({ items, loading, error, onRetry }) => {
                   as={Link}
                   key={item.key}
                   to={item.to}
-                  className="list-group-item-action d-flex flex-wrap align-items-center justify-content-between gap-2 text-decoration-none text-body"
+                  className="dashboard-action-queue__item list-group-item-action text-decoration-none text-body"
                 >
-                  <span className="d-flex align-items-center gap-2" style={{ minWidth: 0 }}>
+                  <span className="dashboard-action-queue__item-content">
                     <span
                       aria-hidden="true"
+                      className="dashboard-action-queue__tone"
                       style={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: '50%',
-                        background:
+                        '--dashboard-action-tone':
                           item.tone || ACTION_QUEUE_TONES[item.module] || 'var(--cui-primary)',
-                        flexShrink: 0,
                       }}
                     />
-                    <span className="d-grid" style={{ minWidth: 0 }}>
-                      <span className="fw-semibold text-break">{item.label}</span>
-                      <span className="small text-body-secondary text-capitalize">
+                    <span className="dashboard-action-queue__item-copy">
+                      <span className="dashboard-action-queue__item-label">{item.label}</span>
+                      <span className="dashboard-action-queue__item-module text-capitalize">
                         {item.module}
                       </span>
                     </span>
                   </span>
-                  <span className="fw-semibold">{item.count}</span>
+                  <span
+                    className="dashboard-action-queue__count"
+                    aria-label={`${item.count} items`}
+                  >
+                    {item.count}
+                  </span>
                 </CListGroupItem>
               ))}
             </CListGroup>
@@ -321,40 +310,38 @@ const Dashboard = () => {
   }
 
   return (
-    <div data-testid="dashboard-module">
-      <CCard
-        className="mb-4 border-0"
-        data-testid="dashboard-overview"
-        style={{ background: 'rgba(0, 126, 122, 0.08)' }}
-      >
-        <CCardBody>
-          <div>
-            <div className="d-flex align-items-start justify-content-between gap-3 mb-1">
-              <div className="fw-semibold">Dashboard Overview</div>
-              <CDropdown alignment="end" data-testid="dashboard-period-control">
-                <CDropdownToggle size="sm" color="primary" variant="outline">
-                  {periodLabel}
-                </CDropdownToggle>
-                <CDropdownMenu>
-                  {PERIOD_OPTIONS.map((option) => (
-                    <CDropdownItem
-                      key={option.value}
-                      active={option.value === period}
-                      onClick={() => setPeriod(option.value)}
-                    >
-                      {option.label}
-                    </CDropdownItem>
-                  ))}
-                </CDropdownMenu>
-              </CDropdown>
-            </div>
-            <div className="text-body-secondary text-break">
-              {userName ? `Welcome back, ${userName}` : ''}
-              {userName && userRole ? ` (${userRole})` : ''}
+    <div className="dashboard-page" data-testid="dashboard-module">
+      <header className="dashboard-overview mb-4" data-testid="dashboard-overview">
+        <div className="dashboard-overview__content">
+          <div className="dashboard-overview__identity">
+            <h1 id="dashboard-page-title" className="dashboard-overview__title">
+              Dashboard Overview
+            </h1>
+            <p className="dashboard-overview__description">
+              {userName ? `Welcome back, ${userName}` : 'Your operations overview'}
+              {userRole ? ` · ${userRole}` : ''}
+            </p>
+          </div>
+          <div className="dashboard-overview__period" data-testid="dashboard-period-control">
+            <span className="dashboard-overview__period-label">Reporting period</span>
+            <div className="vmecc-scroll-x dashboard-period-switcher">
+              <CButtonGroup size="sm" role="group" aria-label="Select dashboard reporting period">
+                {PERIOD_OPTIONS.map((option) => (
+                  <CButton
+                    key={option.value}
+                    color={period === option.value ? 'primary' : 'outline-secondary'}
+                    aria-pressed={option.value === period}
+                    onClick={() => setPeriod(option.value)}
+                  >
+                    {option.label}
+                  </CButton>
+                ))}
+              </CButtonGroup>
             </div>
           </div>
-        </CCardBody>
-      </CCard>
+        </div>
+        <div className="dashboard-overview__period-summary">Showing {periodLabel}</div>
+      </header>
 
       <DashboardActionQueue
         items={actionQueue.items}
@@ -380,7 +367,7 @@ const Dashboard = () => {
                 title="Current Status"
                 subtext={`Key claim metrics - ${periodLabel}`}
               />
-              <CRow className="mb-4" xs={{ gutter: 4 }}>
+              <CRow className="dashboard-kpi-row mb-4" xs={{ gutter: 4 }}>
                 <PayrollKpiTiles
                   stats={stats.payroll}
                   loading={payrollLoading}
@@ -392,7 +379,7 @@ const Dashboard = () => {
                 title="Period Summary"
                 subtext={`Payroll & assignment totals - ${periodLabel}`}
               />
-              <CRow className="mb-4" xs={{ gutter: 4 }}>
+              <CRow className="dashboard-summary-row mb-4" xs={{ gutter: 4 }}>
                 <PayrollOperationsCard
                   stats={stats.payroll}
                   loading={payrollLoading}
@@ -401,7 +388,7 @@ const Dashboard = () => {
                 <PayrollAssignmentsCard stats={stats.payroll} loading={payrollLoading} />
               </CRow>
 
-              <CRow className="mb-4" xs={{ gutter: 4 }}>
+              <CRow className="dashboard-chart-row mb-4" xs={{ gutter: 4 }}>
                 <CCol xs={12} lg={6}>
                   <PayrollActivityChart
                     stats={stats.payroll}
@@ -436,7 +423,7 @@ const Dashboard = () => {
               onRetry={refreshDashboardStats}
             >
               <SectionHeading title="Current Status" subtext={`Key OT metrics - ${periodLabel}`} />
-              <CRow className="mb-4" xs={{ gutter: 4 }}>
+              <CRow className="dashboard-kpi-row mb-4" xs={{ gutter: 4 }}>
                 <OvertimeKpiTiles
                   stats={stats.overtime}
                   loading={overtimeLoading}
@@ -448,7 +435,7 @@ const Dashboard = () => {
                 title="Period Summary"
                 subtext={`OT approvals & team distribution - ${periodLabel}`}
               />
-              <CRow className="mb-4" xs={{ gutter: 4 }}>
+              <CRow className="dashboard-summary-row mb-4" xs={{ gutter: 4 }}>
                 <OvertimeOperationsCard
                   stats={stats.overtime}
                   loading={overtimeLoading}
@@ -457,7 +444,7 @@ const Dashboard = () => {
                 <OvertimeTeamCard stats={stats.overtime} loading={overtimeLoading} />
               </CRow>
 
-              <CRow className="mb-4" xs={{ gutter: 4 }}>
+              <CRow className="dashboard-chart-row mb-4" xs={{ gutter: 4 }}>
                 <CCol xs={12} lg={6}>
                   <OvertimeActivityChart
                     stats={stats.overtime}
@@ -495,7 +482,7 @@ const Dashboard = () => {
                 title="Current Status"
                 subtext={`Key leave metrics - ${periodLabel}`}
               />
-              <CRow className="mb-4" xs={{ gutter: 4 }}>
+              <CRow className="dashboard-kpi-row mb-4" xs={{ gutter: 4 }}>
                 <LeaveKpiTiles
                   stats={stats.leave}
                   loading={leaveLoading}
@@ -503,7 +490,7 @@ const Dashboard = () => {
                 />
               </CRow>
 
-              <CRow className="mb-4" xs={{ gutter: 4 }}>
+              <CRow className="dashboard-chart-row mb-4" xs={{ gutter: 4 }}>
                 <CCol xs={12} lg={6}>
                   <LeaveActivityChart
                     stats={stats.leave}
@@ -538,11 +525,11 @@ const Dashboard = () => {
               onRetry={refreshDashboardStats}
             >
               <SectionHeading title="Current Status" subtext="Live roster snapshot" />
-              <CRow className="mb-4" xs={{ gutter: 4 }}>
+              <CRow className="dashboard-kpi-row mb-4" xs={{ gutter: 4 }}>
                 <RosterKpiTiles stats={stats.roster} loading={rosterLoading} />
               </CRow>
 
-              <CRow className="mb-4" xs={{ gutter: 4 }}>
+              <CRow className="dashboard-chart-row mb-4" xs={{ gutter: 4 }}>
                 <CCol xs={12} lg={6}>
                   <RosterActivityChart stats={stats.roster} loading={rosterLoading} />
                 </CCol>
@@ -572,7 +559,7 @@ const Dashboard = () => {
                 title="Current Status"
                 subtext={`Key report metrics - ${periodLabel}`}
               />
-              <CRow className="mb-4" xs={{ gutter: 4 }}>
+              <CRow className="dashboard-kpi-row mb-4" xs={{ gutter: 4 }}>
                 <ReportKpiTiles
                   stats={stats.reports}
                   loading={reportsLoading}
@@ -580,7 +567,7 @@ const Dashboard = () => {
                 />
               </CRow>
 
-              <CRow className="mb-4" xs={{ gutter: 4 }}>
+              <CRow className="dashboard-chart-row mb-4" xs={{ gutter: 4 }}>
                 <CCol xs={12} lg={5}>
                   <ReportActivityChart
                     stats={stats.reports}

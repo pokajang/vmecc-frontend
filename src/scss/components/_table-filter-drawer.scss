@@ -1,3 +1,5 @@
+@use '../foundation/scrollbars' as scrollbars;
+
 .offcanvas-bottom.table-filter-drawer {
   --cui-offcanvas-height: auto;
   height: auto;
@@ -12,7 +14,9 @@
 .table-filter-drawer .offcanvas-body {
   flex: 0 1 auto;
   padding: 0.75rem 1.35rem 1.35rem;
+  overflow-x: hidden;
   overflow-y: auto;
+  @include scrollbars.vmecc-scrollbar;
 }
 
 .table-filter-drawer__controls {
@@ -33,5 +37,6 @@
 @media (max-height: 520px) {
   .table-filter-drawer .offcanvas-body {
     overflow-y: auto;
+    @include scrollbars.vmecc-scrollbar;
   }
 }

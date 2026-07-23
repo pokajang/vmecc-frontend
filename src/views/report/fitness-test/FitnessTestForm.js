@@ -9,6 +9,7 @@ import { buildFitnessTestRecord } from './recordFactory'
 import FitnessTestFormStep from './FitnessTestFormStep'
 import FitnessTestSetupStep from './FitnessTestSetupStep'
 import useFitnessTestForm from './useFitnessTestForm'
+import { normalizeFitnessTestForm } from './fitnessTestFormDomain'
 import { defaultFitnessTestForm, isFitnessTestDirty } from './utils'
 import {
   firstFitnessTestError,
@@ -17,6 +18,7 @@ import {
 } from './validation'
 
 const createDraftSignature = (form) => JSON.stringify(form || {})
+const normalizeSeedForm = (seed) => normalizeFitnessTestForm(seed || {})
 
 const FitnessTestForm = ({
   user,
@@ -85,6 +87,7 @@ const FitnessTestForm = ({
       draftVersionRef.current = Number(row?.version || 0) || 0
       return row?.payload || null
     },
+    normalizeDraft: normalizeSeedForm,
     onDraftLoaded: (draftForm) => {
       lastSavedDraftSignatureRef.current = createDraftSignature(draftForm)
       if (editingRecord) {
@@ -122,7 +125,7 @@ const FitnessTestForm = ({
 
   useEffect(() => {
     if (initialSeedAppliedRef.current || !initialFormSeed) return
-    const seed = { ...(initialFormSeed || {}) }
+    const seed = normalizeSeedForm(initialFormSeed)
     delete seed.setupConfirmed
     delete seed.savedAt
     setForm((prev) => ({
@@ -153,7 +156,7 @@ const FitnessTestForm = ({
     if (!editId || !editingDraftSeed) return
     if (preferSavedEditDraft) return
     if (seededEditIdRef.current === editId) return
-    const draftForm = { ...(editingDraftSeed || {}) }
+    const draftForm = normalizeSeedForm(editingDraftSeed)
     delete draftForm.setupConfirmed
     delete draftForm.savedAt
     setForm((prev) => ({
@@ -177,7 +180,7 @@ const FitnessTestForm = ({
 
   useEffect(() => {
     if (!editingRecord || !editingDraftSeed) return
-    const draftForm = { ...(editingDraftSeed || {}) }
+    const draftForm = normalizeSeedForm(editingDraftSeed)
     delete draftForm.setupConfirmed
     delete draftForm.savedAt
     originalSeedRef.current = draftForm
@@ -185,7 +188,7 @@ const FitnessTestForm = ({
 
   useEffect(() => {
     if (!reviewReturnRecord || reviewSeedAppliedRef.current) return
-    const reviewForm = { ...(reviewReturnRecord || {}) }
+    const reviewForm = normalizeSeedForm(reviewReturnRecord)
     delete reviewForm.setupConfirmed
     delete reviewForm.savedAt
     setForm((prev) => ({

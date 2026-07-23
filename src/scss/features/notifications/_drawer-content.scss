@@ -1,29 +1,13 @@
 @use '../../tools/coreui-tools' as *;
+@use '../../foundation/scrollbars' as scrollbars;
 
 .notification-drawer-body {
   flex: 1;
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
 
-  scrollbar-width: thin;
-  scrollbar-color: #e2e8f0 transparent;
-
-  &::-webkit-scrollbar {
-    width: 4px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: #e2e8f0;
-    border-radius: 999px;
-
-    &:hover {
-      background: #cbd5e1;
-    }
-  }
+  @include scrollbars.vmecc-scrollbar;
 }
 
 .notification-drawer-content {

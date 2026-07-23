@@ -54,7 +54,7 @@ const ModuleNavTabs = ({
       ) : null}
       <CNav
         variant="underline"
-        className={`mb-3 flex-nowrap overflow-auto pb-1 ${
+        className={`mb-3 flex-nowrap vmecc-scroll-x pb-1 ${
           usesMobileSelect ? 'd-none d-md-flex' : ''
         } ${className}`.trim()}
       >

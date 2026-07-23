@@ -22,23 +22,6 @@ import {
 } from './components/RolePermissionMatrixSections'
 import useRolePermissionData from './hooks/useRolePermissionData'
 
-const scrollbarStyle = `
-  .rpm-scroll::-webkit-scrollbar {
-    height: 4px;
-    width: 4px;
-  }
-  .rpm-scroll::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  .rpm-scroll::-webkit-scrollbar-thumb {
-    background: #dee2e6;
-    border-radius: 4px;
-  }
-  .rpm-scroll::-webkit-scrollbar-thumb:hover {
-    background: #adb5bd;
-  }
-`
-
 const RolePermissionMatrix = () => {
   const authUser = useSelector((state) => state.authUser)
   const canManage = useMemo(() => hasPermission(authUser, 'settings.manage'), [authUser])
@@ -197,7 +180,6 @@ const RolePermissionMatrix = () => {
 
   return (
     <>
-      <style>{scrollbarStyle}</style>
       <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
 
       <div className="mb-4" data-testid="settings-role-permissions-panel">

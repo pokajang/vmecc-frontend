@@ -110,8 +110,6 @@ const ErcoDetailsStep = ({
     hasAnyPresetRows,
     isChronologyDefault,
     showChronologyStarter,
-    draggingRowId,
-    dragOverRowId,
     draggingEventRowId,
     dragOverEventRowId,
     hoveredEventRowId,
@@ -119,9 +117,7 @@ const ErcoDetailsStep = ({
     focusedEventRowId,
     setFocusedEventRowId,
     swappedRowIds,
-    swapEffectScope,
     eventFieldRefs,
-    rowContainerRefs,
     isAdvanceMenuOpen,
     setIsAdvanceMenuOpen,
     showPreMobModeModal,
@@ -134,8 +130,7 @@ const ErcoDetailsStep = ({
     updateChronologyRow,
     addChronologyRowAfter,
     removeChronologyRow,
-    moveChronologyRow,
-    handleRowGripPointerDown,
+    moveChronologyEventPayload,
     handleEventGripPointerDown,
     handleAddSimpleRow,
     handleAddPreMobRows,
@@ -195,8 +190,6 @@ const ErcoDetailsStep = ({
   const chronologyRowProps = {
     rowsCount: chronologyRows.length,
     eventFieldRefs,
-    draggingRowId,
-    dragOverRowId,
     draggingEventRowId,
     dragOverEventRowId,
     hoveredEventRowId,
@@ -204,12 +197,10 @@ const ErcoDetailsStep = ({
     focusedEventRowId,
     setFocusedEventRowId,
     swappedRowIds,
-    swapEffectScope,
     updateChronologyRow,
-    moveChronologyRow,
+    moveChronologyEventPayload,
     removeChronologyRow,
     addChronologyRowAfter,
-    handleRowGripPointerDown,
     handleEventGripPointerDown,
     incidentTime: form.incidentTime,
   }
@@ -567,7 +558,6 @@ const ErcoDetailsStep = ({
             isChronologyOutOfOrder={isChronologyOutOfOrder}
             sortChronologyByTime={sortChronologyByTime}
             chronologyRows={chronologyRows}
-            rowContainerRefs={rowContainerRefs}
             chronologyRowProps={chronologyRowProps}
             rowModal={rowModal}
             onOpenAddRowModal={openAddRowModal}

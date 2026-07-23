@@ -1,4 +1,5 @@
 @use '../../../tools/coreui-tools' as *;
+@use '../../../foundation/scrollbars' as scrollbars;
 
 .type-manager-modal .modal-content {
   max-height: min(92dvh, 44rem);
@@ -280,6 +281,7 @@
 .inspection-queue-details-modal .modal-body {
   align-content: start;
   overflow-y: auto;
+  @include scrollbars.vmecc-scrollbar;
 }
 
 .modal .modal-dialog:not([class*='modal-fullscreen']) {

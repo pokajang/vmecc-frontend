@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { uid } from '../utils'
 import { defaultFitnessTestForm } from './utils'
+import { uid } from '../utils'
 
 const useFitnessTestForm = () => {
   const [form, setForm] = useState(defaultFitnessTestForm)

@@ -138,7 +138,7 @@ const FireExtinguisherStatusSegment = ({ field, value, readOnly = false, onChang
       <div className="inspection-hydraulic-check-label small fw-semibold text-muted">
         {field.label}
       </div>
-      <div className="inspection-hydraulic-status-group d-flex flex-nowrap justify-content-start gap-2 overflow-auto pb-1">
+      <div className="inspection-hydraulic-status-group d-flex flex-nowrap justify-content-start gap-2 vmecc-scroll-x pb-1">
         {field.options.map((option) => {
           const active = text(value).toLowerCase() === option.toLowerCase()
 

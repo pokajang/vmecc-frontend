@@ -7,10 +7,7 @@ const ChronologyRow = ({
   row,
   idx,
   rowsCount,
-  rowRef,
   eventFieldRefs,
-  draggingRowId,
-  dragOverRowId,
   draggingEventRowId,
   dragOverEventRowId,
   hoveredEventRowId,
@@ -18,12 +15,10 @@ const ChronologyRow = ({
   focusedEventRowId,
   setFocusedEventRowId,
   swappedRowIds,
-  swapEffectScope,
   updateChronologyRow,
-  moveChronologyRow,
+  moveChronologyEventPayload,
   removeChronologyRow,
   addChronologyRowAfter,
-  handleRowGripPointerDown,
   handleEventGripPointerDown,
   incidentTime,
 }) => {
@@ -31,44 +26,22 @@ const ChronologyRow = ({
   const isLast = idx >= rowsCount - 1
   const isOnly = rowsCount <= 1
 
-  const rowSwapStyle =
-    swappedRowIds.includes(row.id) && swapEffectScope === 'row'
-      ? {
-          backgroundColor: 'rgba(0, 126, 122, 0.12)',
-          borderRadius: '0.5rem',
-          transition: 'background-color 280ms ease',
-        }
-      : { transition: 'background-color 280ms ease' }
-
-  const eventSwapStyle =
-    swappedRowIds.includes(row.id) && swapEffectScope === 'event'
-      ? {
-          backgroundColor: 'rgba(0, 126, 122, 0.12)',
-          borderRadius: '0.5rem',
-          transition: 'background-color 280ms ease',
-        }
-      : { transition: 'background-color 280ms ease' }
+  const eventSwapStyle = swappedRowIds.includes(row.id)
+    ? {
+        backgroundColor: 'rgba(0, 126, 122, 0.12)',
+        borderRadius: '0.5rem',
+        transition: 'background-color 280ms ease',
+      }
+    : { transition: 'background-color 280ms ease' }
 
   const showEventGrip =
     hoveredEventRowId === row.id || focusedEventRowId === row.id || draggingEventRowId === row.id
 
-  const isRowDragging = draggingRowId === row.id
-  const isRowDragTarget = dragOverRowId === row.id && !isRowDragging
   const isEventDragging = draggingEventRowId === row.id
   const isEventDragTarget = dragOverEventRowId === row.id && !isEventDragging
 
   return (
-    <CRow
-      ref={rowRef}
-      className={[
-        'g-2 mb-2 align-items-end',
-        isRowDragging ? 'opacity-25' : '',
-        isRowDragTarget ? 'border border-primary rounded-2 bg-primary bg-opacity-10' : '',
-      ]
-        .filter(Boolean)
-        .join(' ')}
-      style={rowSwapStyle}
-    >
+    <CRow className="g-2 mb-2 align-items-end">
       <CCol xs={5} md={2} className="order-1">
         <CFormInput
           type="time"
@@ -115,11 +88,11 @@ const ChronologyRow = ({
             className="position-absolute end-0 top-50 translate-middle-y me-2 d-none d-md-flex"
             style={{ opacity: showEventGrip ? 1 : 0.2, transition: 'opacity 150ms ease' }}
           >
-            <CTooltip content="Drag event only">
+            <CTooltip content="Drag event/action to another time">
               <CButton
                 type="button"
                 color="light"
-                aria-label={`Drag event only for chronology row ${idx + 1}`}
+                aria-label={`Drag event/action for chronology row ${idx + 1}`}
                 className="p-1 border-0 bg-transparent text-body-secondary shadow-none"
                 style={{
                   cursor: isEventDragging ? 'grabbing' : 'grab',
@@ -137,32 +110,14 @@ const ChronologyRow = ({
       </CCol>
 
       <CCol xs={7} md={2} className="order-2 order-md-3 d-flex justify-content-end gap-1">
-        <CTooltip content="Drag to reorder row">
-          <CButton
-            type="button"
-            color="light"
-            aria-label={`Drag chronology row ${idx + 1}`}
-            className="p-1 border-0 bg-transparent text-body-secondary shadow-none d-none d-md-inline-flex"
-            style={{
-              cursor: isRowDragging ? 'grabbing' : 'grab',
-              touchAction: 'none',
-              minWidth: 40,
-              minHeight: 40,
-            }}
-            onPointerDown={(e) => handleRowGripPointerDown(e, row.id)}
-          >
-            <GripVertical size={14} />
-          </CButton>
-        </CTooltip>
-
-        <CTooltip content={isFirst ? 'This row is already at the top' : 'Move row up'}>
+        <CTooltip content={isFirst ? 'This event is already at the top' : 'Move event up'}>
           <span className="d-inline-flex" tabIndex={isFirst ? 0 : -1}>
             <CButton
               type="button"
               color="light"
               disabled={isFirst}
-              onClick={() => moveChronologyRow(idx, idx - 1)}
-              aria-label={`Move chronology row ${idx + 1} up`}
+              onClick={() => moveChronologyEventPayload(idx, idx - 1)}
+              aria-label={`Move event/action for chronology row ${idx + 1} up`}
               className="p-1 border-0 bg-transparent text-body-secondary shadow-none"
               style={{ minWidth: 40, minHeight: 40 }}
             >
@@ -171,14 +126,14 @@ const ChronologyRow = ({
           </span>
         </CTooltip>
 
-        <CTooltip content={isLast ? 'This row is already at the bottom' : 'Move row down'}>
+        <CTooltip content={isLast ? 'This event is already at the bottom' : 'Move event down'}>
           <span className="d-inline-flex" tabIndex={isLast ? 0 : -1}>
             <CButton
               type="button"
               color="light"
               disabled={isLast}
-              onClick={() => moveChronologyRow(idx, idx + 1)}
-              aria-label={`Move chronology row ${idx + 1} down`}
+              onClick={() => moveChronologyEventPayload(idx, idx + 1)}
+              aria-label={`Move event/action for chronology row ${idx + 1} down`}
               className="p-1 border-0 bg-transparent text-body-secondary shadow-none"
               style={{ minWidth: 40, minHeight: 40 }}
             >

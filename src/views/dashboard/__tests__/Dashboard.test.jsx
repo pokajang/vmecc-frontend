@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react'
 import { afterEach, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import Dashboard from '../Dashboard'
 
@@ -194,7 +194,10 @@ it('renders a global period control and the personalized action queue', () => {
     </MemoryRouter>,
   )
 
-  expect(screen.getByRole('button', { name: /2026/ })).toBeTruthy()
+  expect(screen.getByRole('group', { name: 'Select dashboard reporting period' })).toBeTruthy()
+  expect(screen.getByRole('button', { name: 'This Month' }).getAttribute('aria-pressed')).toBe(
+    'true',
+  )
   expect(screen.getByText('Action Queue')).toBeTruthy()
   expect(screen.getByText('Leave requests pending your review')).toBeTruthy()
   expect(screen.getByText('Inspections pending your review')).toBeTruthy()
@@ -219,6 +222,11 @@ it('renders a global period control and the personalized action queue', () => {
   expect(screen.getByTestId('dashboard-module-reports').getAttribute('data-visible')).toBe(
     'visible',
   )
+
+  const payrollCollapse = screen.getByRole('button', { name: 'Collapse Payroll Claims' })
+  fireEvent.click(payrollCollapse)
+  expect(payrollCollapse.getAttribute('aria-expanded')).toBe('false')
+  expect(screen.queryByText('Payroll KPI')).toBeNull()
 })
 
 it('marks role-limited modules as hidden at stable data-testid locations', () => {

@@ -1053,8 +1053,8 @@ const FireExtinguisherScanner = ({
           />
           {manualSerialOptions.length > 0 ? (
             <div
-              className="position-absolute top-100 start-0 end-0 z-3 mt-1 bg-body border rounded shadow-sm overflow-hidden"
-              style={{ maxHeight: '11rem', overflowY: 'auto' }}
+              className="position-absolute top-100 start-0 end-0 z-3 mt-1 bg-body border rounded shadow-sm overflow-hidden vmecc-scroll-y"
+              style={{ maxHeight: '11rem' }}
             >
               {manualSerialOptions.map((option) => (
                 <button

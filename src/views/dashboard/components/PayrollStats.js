@@ -13,6 +13,7 @@ import {
 import { CChartBar, CChartDoughnut, CChartLine } from '@coreui/react-chartjs'
 import { getStyle } from '@coreui/utils'
 import { BadgeDollarSign, Users } from 'lucide-react'
+import DashboardEmptyState from './DashboardEmptyState'
 import {
   sparklineOptions,
   bgChartOptions,
@@ -259,8 +260,8 @@ export const PayrollActivityChart = ({ stats, periodLabel }) => {
   const trend = stats?.monthlyTrend ?? []
 
   return (
-    <CCard className="h-100">
-      <CCardHeader className="d-flex justify-content-between align-items-center">
+    <CCard className="dashboard-chart-card h-100">
+      <CCardHeader className="dashboard-chart-card__header d-flex justify-content-between align-items-center">
         <div>
           <div className="fw-semibold">Claims Submitted</div>
           <div className="text-body-secondary small mt-1">
@@ -272,32 +273,39 @@ export const PayrollActivityChart = ({ stats, periodLabel }) => {
         )}
       </CCardHeader>
       <CCardBody>
-        <CChartBar
-          data={{
-            labels: trend.map((t) => t.month),
-            datasets: [
-              {
-                label: 'Submissions',
-                backgroundColor: getStyle('--cui-success'),
-                data: trend.map((t) => t.count),
-                borderRadius: 4,
+        {trend.length === 0 ? (
+          <DashboardEmptyState message="No claim submissions for this period." />
+        ) : (
+          <CChartBar
+            className="dashboard-activity-chart"
+            aria-label="Claims submitted by month"
+            role="img"
+            data={{
+              labels: trend.map((t) => t.month),
+              datasets: [
+                {
+                  label: 'Submissions',
+                  backgroundColor: getStyle('--cui-success'),
+                  data: trend.map((t) => t.count),
+                  borderRadius: 4,
+                },
+              ],
+            }}
+            options={{
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { grid: { display: false } },
+                y: {
+                  beginAtZero: true,
+                  grid: { color: getStyle('--cui-border-color-translucent') },
+                  ticks: { stepSize: 5 },
+                },
               },
-            ],
-          }}
-          options={{
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-              x: { grid: { display: false } },
-              y: {
-                beginAtZero: true,
-                grid: { color: getStyle('--cui-border-color-translucent') },
-                ticks: { stepSize: 5 },
-              },
-            },
-          }}
-          style={{ minHeight: '220px' }}
-        />
+            }}
+            style={{ minHeight: '220px' }}
+          />
+        )}
       </CCardBody>
     </CCard>
   )
@@ -328,10 +336,11 @@ export const PayrollStatusBreakdown = ({ stats, periodLabel }) => {
   const byType = stats?.byType ?? { salary: 0, expense: 0, other: 0 }
   const byStatus = stats?.byStatus ?? {}
   const statusTotal = STATUS_ROWS.reduce((sum, r) => sum + (byStatus[r.key] ?? 0), 0)
+  const hasBreakdownData = statusTotal > 0 || Object.values(byType).some((count) => count > 0)
 
   return (
-    <CCard className="h-100">
-      <CCardHeader className="d-flex justify-content-between align-items-center">
+    <CCard className="dashboard-chart-card h-100">
+      <CCardHeader className="dashboard-chart-card__header d-flex justify-content-between align-items-center">
         <div>
           <div className="fw-semibold">Claims Breakdown</div>
           <div className="text-body-secondary small mt-1">By type and workflow status</div>
@@ -341,54 +350,60 @@ export const PayrollStatusBreakdown = ({ stats, periodLabel }) => {
         )}
       </CCardHeader>
       <CCardBody>
-        <CRow className="g-4">
-          <CCol xs={12} md={5}>
-            <div className="text-body-secondary small mb-2">By type</div>
-            <CChartDoughnut
-              style={{ maxHeight: '200px' }}
-              data={{
-                labels: ['Salary', 'Expense', 'Exceptional'],
-                datasets: [
-                  {
-                    data: [byType.salary, byType.expense, byType.other],
-                    backgroundColor: [
-                      getStyle('--cui-success'),
-                      getStyle('--cui-primary'),
-                      getStyle('--cui-info'),
-                    ],
-                    borderWidth: 0,
+        {hasBreakdownData ? (
+          <CRow className="g-4">
+            <CCol xs={12} md={5}>
+              <div className="text-body-secondary small mb-2">By type</div>
+              <CChartDoughnut
+                className="dashboard-breakdown-chart"
+                aria-label="Claim type distribution"
+                role="img"
+                data={{
+                  labels: ['Salary', 'Expense', 'Exceptional'],
+                  datasets: [
+                    {
+                      data: [byType.salary, byType.expense, byType.other],
+                      backgroundColor: [
+                        getStyle('--cui-success'),
+                        getStyle('--cui-primary'),
+                        getStyle('--cui-info'),
+                      ],
+                      borderWidth: 0,
+                    },
+                  ],
+                }}
+                options={{
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12 } },
                   },
-                ],
-              }}
-              options={{
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12 } },
-                },
-              }}
-            />
-          </CCol>
-          <CCol xs={12} md={7}>
-            <div className="text-body-secondary small mb-2">By status</div>
-            {STATUS_ROWS.map((row) => {
-              const count = byStatus[row.key] ?? 0
-              const pct = statusTotal > 0 ? Math.round((count / statusTotal) * 100) : 0
-              return (
-                <div key={row.key} className="mb-2">
-                  <CRow className="align-items-center g-0 mb-1">
-                    <CCol xs="auto" className="text-body-secondary small me-auto">
-                      {row.label}
-                    </CCol>
-                    <CCol xs="auto" className="text-body-secondary small fw-semibold">
-                      {count}
-                    </CCol>
-                  </CRow>
-                  <CProgress thin color={row.color} value={pct} />
-                </div>
-              )
-            })}
-          </CCol>
-        </CRow>
+                }}
+              />
+            </CCol>
+            <CCol xs={12} md={7}>
+              <div className="text-body-secondary small mb-2">By status</div>
+              {STATUS_ROWS.map((row) => {
+                const count = byStatus[row.key] ?? 0
+                const pct = statusTotal > 0 ? Math.round((count / statusTotal) * 100) : 0
+                return (
+                  <div key={row.key} className="mb-2">
+                    <CRow className="align-items-center g-0 mb-1">
+                      <CCol xs="auto" className="text-body-secondary small me-auto">
+                        {row.label}
+                      </CCol>
+                      <CCol xs="auto" className="text-body-secondary small fw-semibold">
+                        {count}
+                      </CCol>
+                    </CRow>
+                    <CProgress thin color={row.color} value={pct} />
+                  </div>
+                )
+              })}
+            </CCol>
+          </CRow>
+        ) : (
+          <DashboardEmptyState message="No claim breakdown is available for this period." />
+        )}
       </CCardBody>
     </CCard>
   )

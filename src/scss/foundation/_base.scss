@@ -38,6 +38,11 @@ html {
   --vmecc-shadow-overlay: 0 0.75rem 2rem rgba(15, 23, 42, 0.18);
   --vmecc-touch-target: 2.75rem;
   --vmecc-primary-soft: rgba(0, 126, 122, 0.1);
+  --vmecc-scrollbar-size: 6px;
+  --vmecc-scrollbar-track: transparent;
+  --vmecc-scrollbar-thumb: color-mix(in srgb, var(--cui-secondary-color) 42%, transparent);
+  --vmecc-scrollbar-thumb-hover: color-mix(in srgb, var(--cui-secondary-color) 62%, transparent);
+  --vmecc-scrollbar-radius: 999px;
   --ai-helper-width: clamp(360px, 30vw, 420px);
   --vmecc-status-draft-bg: #fef3c7;
   --vmecc-status-draft-text: #92400e;
@@ -66,8 +71,6 @@ html {
   --mobile-overlay-section-bottom-gap: 0.22rem;
   --mobile-overlay-row-gap: 0.32rem;
   --mobile-overlay-list-gap: 0.6rem;
-  --mobile-overlay-scrollbar: #e2e8f0;
-  --mobile-overlay-scrollbar-hover: #cbd5e1;
   --mobile-overlay-danger-bg: #dc2626;
   --mobile-overlay-danger-bg-hover: #b91c1c;
   --mobile-overlay-danger-text: #ffffff;
@@ -164,11 +167,6 @@ html {
   min-width: 2rem;
   height: 2rem;
   padding: 0;
-}
-
-.matrix-table-scroll {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 .matrix-table-shell .table {

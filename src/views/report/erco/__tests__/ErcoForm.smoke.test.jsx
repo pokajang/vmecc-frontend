@@ -256,6 +256,27 @@ const renderPostAnalysis = ({ mobile = false, seed = {} } = {}) => {
 }
 
 describe('ERCO step smoke flow', () => {
+  it('moves event actions between fixed chronology times', async () => {
+    await proceedToDetailsStep()
+
+    const timeInputs = screen.getAllByLabelText(/Time for chronology row/i)
+    const eventInputs = screen.getAllByLabelText(/Event \/ Action for chronology row/i)
+    const originalTimes = timeInputs.map((input) => input.value)
+    const firstAction = eventInputs[0].value
+    const secondAction = eventInputs[1].value
+
+    expect(screen.queryByLabelText(/Drag chronology row/i)).toBeNull()
+    expect(screen.getAllByLabelText(/Drag event\/action for chronology row/i)).toHaveLength(
+      eventInputs.length,
+    )
+
+    fireEvent.click(screen.getByLabelText('Move event/action for chronology row 1 down'))
+
+    expect(timeInputs.map((input) => input.value)).toEqual(originalTimes)
+    expect(eventInputs[0].value).toBe(secondAction)
+    expect(eventInputs[1].value).toBe(firstAction)
+  })
+
   it('progresses setup -> team -> details and supports title + chronology interactions', async () => {
     await proceedToDetailsStep()
 

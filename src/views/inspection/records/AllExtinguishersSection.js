@@ -37,6 +37,7 @@ import FireExtinguisherLifecycleDialog, {
   buildFireExtinguisherLifecycleMenuItems,
 } from './FireExtinguisherLifecycleDialog'
 import FireExtinguisherManagementPanel from './FireExtinguisherManagementPanel'
+import FireExtinguisherMonthlyComplianceStatus from './FireExtinguisherMonthlyComplianceStatus'
 import InspectionSidePanel from './InspectionSidePanel'
 import FireExtinguisherExceptionExportDialog from './fire-extinguisher-export/FireExtinguisherExceptionExportDialog'
 
@@ -523,6 +524,7 @@ const AllExtinguishersTable = ({
           <CTableHeaderCell className="text-center">Operational</CTableHeaderCell>
           <CTableHeaderCell>Last Inspected By</CTableHeaderCell>
           <CTableHeaderCell>Last Inspected Date</CTableHeaderCell>
+          <CTableHeaderCell>Monthly Status</CTableHeaderCell>
           <CTableHeaderCell>Remarks</CTableHeaderCell>
           <CTableHeaderCell className="text-center">Days Left</CTableHeaderCell>
           <CTableHeaderCell className="text-center">Issues</CTableHeaderCell>
@@ -609,6 +611,9 @@ const AllExtinguishersTable = ({
               <CTableDataCell className={nowrapCellClass}>
                 {formatDateTime(row.latestInspectionAt)}
               </CTableDataCell>
+              <CTableDataCell className={nowrapCellClass}>
+                <FireExtinguisherMonthlyComplianceStatus compliance={row.monthlyCompliance} />
+              </CTableDataCell>
               <CTableDataCell className={textCellClass}>{row.remarks || '--'}</CTableDataCell>
               <CTableDataCell className={centeredCellClass}>
                 <StatusBadge
@@ -674,19 +679,25 @@ const buildMobileSections = (
     label: 'All Extinguishers',
     summary: `${rows.length} shown`,
     items: rows.map((row) => {
-      const inspectionStatus = getInspectionStatus(row)
       const certificationStatus = getCertificationStatus(row)
       return {
         key: row.id || row.catalogId,
         title: row.idLocNo,
         subtitle: `${row.zone} > ${row.location} > ${row.subLocation}`,
         eyebrow: row.feType,
-        status: <StatusBadge value={inspectionStatus} label={statusLabel[inspectionStatus]} />,
+        status: <FireExtinguisherMonthlyComplianceStatus compliance={row.monthlyCompliance} />,
         fields: [
           {
             key: 'lifecycle',
             label: 'Lifecycle',
             value: lifecycleStatusLabel[row.lifecycleStatus || 'active'] || row.lifecycleStatus,
+          },
+          {
+            key: 'monthly-status',
+            label: row.monthlyCompliance?.cycleLabel
+              ? `${row.monthlyCompliance.cycleLabel} status`
+              : 'Monthly status',
+            value: <FireExtinguisherMonthlyComplianceStatus compliance={row.monthlyCompliance} />,
           },
           {
             key: 'latest',
@@ -983,7 +994,7 @@ const HistoricalIssueList = ({
   showMobileCards = false,
 }) => (
   <section className="d-grid gap-2">
-    <div className="fw-semibold">Historical Issues</div>
+    <div className="fw-semibold">Issues in inspection history</div>
     {showMobileCards ? (
       <div className="all-extinguishers-history-cards d-grid d-md-none gap-2">
         {issueRows.length > 0 ? (
@@ -1126,12 +1137,16 @@ const HistoricalIssueList = ({
 const HistoricalRecordList = ({
   records,
   detail,
+  periodLabel,
   onSelectRecord,
   onViewPhotos,
   showMobileCards = false,
 }) => (
   <section className="d-grid gap-2">
-    <div className="fw-semibold">Historical Inspection Records</div>
+    <div className="fw-semibold">
+      Inspection history
+      {periodLabel ? <span className="fw-normal text-body-secondary"> · {periodLabel}</span> : null}
+    </div>
     {showMobileCards ? (
       <div className="all-extinguishers-history-cards d-grid d-md-none gap-2">
         {records.length > 0 ? (
@@ -1420,27 +1435,26 @@ const CoverageOverview = ({
     { label: 'FE Type', value: detail.feType || '--' },
     { label: 'Barcode', value: detail.barcodeNo || '--' },
     { label: 'Certification', value: formatDate(detail.certificationValidity) },
-    {
-      label: 'Last inspected',
-      value: latestInspectionAt
-        ? `${formatDateTime(latestInspectionAt)}${latestInspectedBy ? ` by ${latestInspectedBy}` : ''}`
-        : 'Not inspected',
-    },
   ]
 
   return (
     <div className="all-extinguishers-detail d-grid gap-3">
-      <div className="all-extinguishers-detail__context d-flex flex-wrap align-items-center justify-content-between gap-2">
-        <div className="text-body-secondary">Showing records: {periodLabel}</div>
-        <StatusBadge
-          value={historicalIssueRows.length > 0 ? 'issues' : 'good'}
-          label={`${historicalIssueRows.length} historical issue${
-            historicalIssueRows.length === 1 ? '' : 's'
-          }`}
-        />
+      <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <div>
+          <div className="fw-semibold">
+            {detail.monthlyCompliance?.cycleLabel || 'Monthly'} status
+          </div>
+          <div className="text-body-secondary">
+            Last inspected:{' '}
+            {latestInspectionAt
+              ? `${formatDateTime(latestInspectionAt)}${latestInspectedBy ? ` by ${latestInspectedBy}` : ''}`
+              : 'Not inspected'}
+          </div>
+        </div>
+        <FireExtinguisherMonthlyComplianceStatus compliance={detail.monthlyCompliance} />
       </div>
 
-      <div className="all-extinguishers-detail__meta-card rounded-3 border bg-light-subtle p-3">
+      <div className="all-extinguishers-detail__meta-card">
         {metadataItems.map((item) => (
           <div key={item.label} className="all-extinguishers-detail__meta-item">
             <div className="all-extinguishers-detail__meta-label">{item.label}</div>
@@ -1464,9 +1478,9 @@ const CoverageOverview = ({
             </div>
           </section>
 
-          <section className="d-grid gap-2">
-            <div className="fw-semibold">Issues recorded ({issueChecks.length})</div>
-            {issueChecks.length > 0 ? (
+          {issueChecks.length > 0 ? (
+            <section className="d-grid gap-2">
+              <div className="fw-semibold">Issues recorded ({issueChecks.length})</div>
               <div className="d-grid gap-2">
                 {issueChecks.map((check) => (
                   <div key={check.key} className="rounded-3 border p-3 d-grid gap-2">
@@ -1505,12 +1519,8 @@ const CoverageOverview = ({
                   </div>
                 ))}
               </div>
-            ) : (
-              <div className="rounded-3 border border-success-subtle bg-success-subtle p-3 text-success">
-                No issues recorded for the latest submitted inspection.
-              </div>
-            )}
-          </section>
+            </section>
+          ) : null}
 
           <section className="d-grid gap-2">
             <div className="fw-semibold">Latest inspection criteria</div>
@@ -1519,20 +1529,33 @@ const CoverageOverview = ({
         </>
       ) : null}
 
-      <HistoricalIssueList
-        issueRows={historicalIssueRows}
-        detail={detail}
-        onSelectRecord={onSelectHistoryRecord}
-        onViewPhotos={onViewPhotos}
-        showMobileCards={pageLayout}
-      />
-      <HistoricalRecordList
-        records={historyRecords}
-        detail={detail}
-        onSelectRecord={onSelectHistoryRecord}
-        onViewPhotos={onViewPhotos}
-        showMobileCards={pageLayout}
-      />
+      {historicalIssueRows.length > 0 ? (
+        <HistoricalIssueList
+          issueRows={historicalIssueRows}
+          detail={detail}
+          onSelectRecord={onSelectHistoryRecord}
+          onViewPhotos={onViewPhotos}
+          showMobileCards={pageLayout}
+        />
+      ) : null}
+      {historyRecords.length > 0 ? (
+        <HistoricalRecordList
+          records={historyRecords}
+          detail={detail}
+          periodLabel={periodLabel}
+          onSelectRecord={onSelectHistoryRecord}
+          onViewPhotos={onViewPhotos}
+          showMobileCards={pageLayout}
+        />
+      ) : (
+        <section className="d-grid gap-1">
+          <div className="fw-semibold">
+            Inspection history{' '}
+            <span className="fw-normal text-body-secondary">· {periodLabel}</span>
+          </div>
+          <div className="text-body-secondary">No inspection history for the selected period.</div>
+        </section>
+      )}
       {historyError ? (
         <CAlert color="danger" className="mb-0 py-2" role="alert">
           {historyError}
@@ -1761,6 +1784,9 @@ const AllExtinguishersSection = ({
     savedView.inspectedByFilter || ALL_ROWS_VALUE,
   )
   const [statusFilter, setStatusFilter] = useState(savedView.statusFilter || ALL_ROWS_VALUE)
+  const [monthlyComplianceFilter, setMonthlyComplianceFilter] = useState(
+    savedView.monthlyComplianceFilter || ALL_ROWS_VALUE,
+  )
   const [issueFilter, setIssueFilter] = useState(
     savedView.issueFilter || linkedIssueFilter || ALL_ROWS_VALUE,
   )
@@ -1808,6 +1834,7 @@ const AllExtinguishersSection = ({
           periodTo: isCustomPeriod ? periodTo : '',
           sort,
           status: statusFilter,
+          monthlyCompliance: monthlyComplianceFilter,
           issues: issueFilter,
           certification: certificationFilter,
           inspectedBy: inspectedByFilter === ALL_ROWS_VALUE ? '' : inspectedByFilter,
@@ -1843,6 +1870,7 @@ const AllExtinguishersSection = ({
     isCustomPeriod,
     isCustomPeriodReady,
     locationFilter,
+    monthlyComplianceFilter,
     period,
     periodFrom,
     periodTo,
@@ -1888,6 +1916,7 @@ const AllExtinguishersSection = ({
       locationFilter,
       inspectedByFilter,
       statusFilter,
+      monthlyComplianceFilter,
       issueFilter,
       certificationFilter,
       lifecycleFilter,
@@ -1902,6 +1931,7 @@ const AllExtinguishersSection = ({
       inspectedByFilter,
       issueFilter,
       locationFilter,
+      monthlyComplianceFilter,
       period,
       periodFrom,
       periodTo,
@@ -2039,6 +2069,11 @@ const AllExtinguishersSection = ({
     () => (useProvidedRows ? getSummary(allRows) : remoteMeta?.summary || getSummary(allRows)),
     [allRows, remoteMeta?.summary, useProvidedRows],
   )
+  const monthlyCycle = summary.cycle || {}
+  const monthlyCyclePrefix = monthlyCycle.label ? `${monthlyCycle.label} ` : ''
+  const monthlyInspected = monthlyCycle.inspected ?? summary.inspected ?? 0
+  const monthlyNotInspected = monthlyCycle.notInspected ?? summary.notInspected ?? 0
+  const monthlyRepeatChecks = monthlyCycle.repeatChecks ?? summary.duplicates ?? 0
   const lifecycleSummary = useMemo(
     () =>
       useProvidedRows
@@ -2095,6 +2130,7 @@ const AllExtinguishersSection = ({
     setInspectedByFilter(ALL_ROWS_VALUE)
     setDuplicateScope('all')
     setStatusFilter(ALL_ROWS_VALUE)
+    setMonthlyComplianceFilter(ALL_ROWS_VALUE)
     setIssueFilter(ALL_ROWS_VALUE)
     setCertificationFilter(ALL_ROWS_VALUE)
     setLifecycleFilter('active')
@@ -2285,6 +2321,7 @@ const AllExtinguishersSection = ({
         periodValue={period}
         onPeriodChange={updatePeriod}
         periodOptions={PERIOD_OPTIONS}
+        periodLabel="Record period"
         filters={[
           {
             key: 'sort',
@@ -2323,7 +2360,7 @@ const AllExtinguishersSection = ({
           },
           {
             key: 'status',
-            label: 'Status',
+            label: 'Record status',
             value: statusFilter,
             onChange: updateStatusFilter,
             options: [
@@ -2332,6 +2369,23 @@ const AllExtinguishersSection = ({
               { value: 'not-inspected', label: 'Not inspected' },
               { value: 'issues', label: 'Issues' },
               { value: 'duplicates', label: 'Multiple reports' },
+            ],
+          },
+          {
+            key: 'monthly-compliance',
+            label: 'Monthly status',
+            value: monthlyComplianceFilter,
+            onChange: (value) => {
+              resetToFirstPage()
+              setMonthlyComplianceFilter(value)
+            },
+            options: [
+              { value: ALL_ROWS_VALUE, label: 'All monthly status' },
+              { value: 'complete', label: 'Complete' },
+              { value: 'not_inspected', label: 'Not inspected' },
+              { value: 'repeat_check', label: 'Repeat checks' },
+              { value: 'out_of_service', label: 'Excluded: out of service' },
+              { value: 'retired', label: 'Excluded: retired' },
             ],
           },
           {
@@ -2434,6 +2488,12 @@ const AllExtinguishersSection = ({
       className="all-extinguishers-summary-strip d-flex flex-wrap align-items-center gap-2 mb-3"
       data-testid={testId}
     >
+      {monthlyCycle.label ? (
+        <div className="w-100 small text-body-secondary">
+          Monthly compliance: {monthlyCycle.label} · {formatDate(monthlyCycle.start)} -{' '}
+          {formatDate(monthlyCycle.end)}
+        </div>
+      ) : null}
       <SummaryItem
         label="Total"
         value={lifecycleSummary.all}
@@ -2444,6 +2504,7 @@ const AllExtinguishersSection = ({
           setIssueFilter(ALL_ROWS_VALUE)
           setCertificationFilter(ALL_ROWS_VALUE)
           setDuplicateScope('all')
+          setMonthlyComplianceFilter(ALL_ROWS_VALUE)
           setSort('zone-location')
         }}
         isActive={lifecycleFilter === ALL_ROWS_VALUE}
@@ -2479,40 +2540,45 @@ const AllExtinguishersSection = ({
         isActive={lifecycleFilter === 'retired'}
       />
       <SummaryItem
-        label="Inspected"
-        value={summary.inspected}
+        label={`${monthlyCyclePrefix}Inspected`}
+        value={monthlyInspected}
         tone="success"
         onClick={() => {
           resetToFirstPage()
-          const nextStatus = statusFilter === 'inspected' ? ALL_ROWS_VALUE : 'inspected'
-          setStatusFilter(nextStatus)
+          const nextStatus = monthlyComplianceFilter === 'complete' ? ALL_ROWS_VALUE : 'complete'
+          setPeriod('thismonth')
+          setMonthlyComplianceFilter(nextStatus)
+          setStatusFilter(ALL_ROWS_VALUE)
           setIssueFilter(ALL_ROWS_VALUE)
           setDuplicateScope('all')
           if (nextStatus === 'inspected') {
             setSort('latest')
           }
         }}
-        isActive={statusFilter === 'inspected'}
+        isActive={monthlyComplianceFilter === 'complete'}
       />
       <SummaryItem
-        label="Not inspected"
-        value={summary.notInspected}
+        label={`${monthlyCyclePrefix}Not inspected`}
+        value={monthlyNotInspected}
         tone="secondary"
         onClick={() => {
           resetToFirstPage()
-          const nextStatus = statusFilter === 'not-inspected' ? ALL_ROWS_VALUE : 'not-inspected'
-          setStatusFilter(nextStatus)
+          const nextStatus =
+            monthlyComplianceFilter === 'not_inspected' ? ALL_ROWS_VALUE : 'not_inspected'
+          setPeriod('thismonth')
+          setMonthlyComplianceFilter(nextStatus)
+          setStatusFilter(ALL_ROWS_VALUE)
           setIssueFilter(ALL_ROWS_VALUE)
           setDuplicateScope('all')
-          if (nextStatus === 'not-inspected') {
+          if (nextStatus === 'not_inspected') {
             setSort('zone-location')
           }
         }}
-        isActive={statusFilter === 'not-inspected'}
+        isActive={monthlyComplianceFilter === 'not_inspected'}
       />
       <SummaryItem
-        label="Issues"
-        value={summary.issues}
+        label="Open issues"
+        value={summary.openIssues ?? summary.issues}
         tone="danger"
         onClick={() => {
           resetToFirstPage()
@@ -2527,18 +2593,21 @@ const AllExtinguishersSection = ({
         isActive={issueFilter === 'with-issues'}
       />
       <SummaryItem
-        label="Repeat checks"
-        value={summary.duplicates}
+        label={`${monthlyCyclePrefix}Repeat checks`}
+        value={monthlyRepeatChecks}
         tone="warning"
         onClick={() => {
           resetToFirstPage()
-          const nextScope = duplicateScope === 'report' ? 'all' : 'report'
-          setDuplicateScope(nextScope)
-          if (nextScope === 'report') {
+          const nextScope =
+            monthlyComplianceFilter === 'repeat_check' ? ALL_ROWS_VALUE : 'repeat_check'
+          setPeriod('thismonth')
+          setMonthlyComplianceFilter(nextScope)
+          setDuplicateScope('all')
+          if (nextScope === 'repeat_check') {
             setSort('duplicates')
           }
         }}
-        isActive={duplicateScope === 'report'}
+        isActive={monthlyComplianceFilter === 'repeat_check'}
       />
       <SummaryItem
         label="Duplicate S/N"
@@ -2574,7 +2643,10 @@ const AllExtinguishersSection = ({
 
   const emptyMessage = (
     <div className="text-body-secondary">
-      {fetchError || 'No extinguishers match the current filters.'}
+      {fetchError ||
+        (monthlyComplianceFilter === 'not_inspected'
+          ? `All required extinguishers are complete for ${monthlyCycle.label || 'this month'}.`
+          : 'No extinguishers match the current filters.')}
     </div>
   )
 

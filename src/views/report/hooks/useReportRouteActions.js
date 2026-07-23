@@ -11,6 +11,7 @@ import {
 } from '../reportStorage'
 import {
   deleteReportRecord,
+  downloadFitnessTestReportJson,
   downloadDrillReportPdf,
   downloadErcoReportPdf,
   isReportApiEnabled,
@@ -23,6 +24,7 @@ import { toDateTime, uid } from '../utils'
 import useReportWorkflowActions from './useReportWorkflowActions'
 import {
   getRecordActionContract,
+  getRecordActionCapability,
   isRecordActionAllowed,
 } from 'src/components/report-workflow/recordActionResolver'
 
@@ -172,6 +174,20 @@ const useReportRouteActions = ({
         recordFallbacks.find((r) => String(r?.id) === String(id))
       if (!record) return
 
+      const downloadCapability = getRecordActionCapability(record, 'download')
+      if (downloadCapability && !downloadCapability.allowed) {
+        pushToast(
+          downloadCapability.reasonCode === 'download_forbidden'
+            ? 'Download is unavailable for this report.'
+            : 'This report is not available for download.',
+          {
+            title: 'Download unavailable',
+            color: 'warning',
+          },
+        )
+        return
+      }
+
       const recordType = String(record.reportType || '').toLowerCase()
       if (recordType === 'erco' || recordType === 'drill') {
         if (record.canDownloadPdf !== true) {
@@ -195,6 +211,22 @@ const useReportRouteActions = ({
           )
         } catch (err) {
           pushToast(err.message || 'Unable to download PDF. Please try again.', {
+            title: 'Download failed',
+            color: 'danger',
+          })
+        } finally {
+          setDownloadingId(null)
+        }
+        return
+      }
+
+      if (recordType === 'fitness-test') {
+        setDownloadingId(id)
+        try {
+          const { blob, filename } = await downloadFitnessTestReportJson(record)
+          triggerBlobDownload(blob, filename || `${record.displayId || record.id}.json`)
+        } catch (err) {
+          pushToast(err.message || 'Unable to export report data. Please try again.', {
             title: 'Download failed',
             color: 'danger',
           })
