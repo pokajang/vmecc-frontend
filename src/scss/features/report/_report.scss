@@ -1,20 +1,8 @@
 @use '../../tools/coreui-tools' as *;
+@use '../../foundation/scrollbars' as scrollbars;
 
-.erco-title-select__menu-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-.erco-title-select__menu-list::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.erco-title-select__menu-list::-webkit-scrollbar-thumb {
-  background-color: rgba(129, 137, 151, 0.7);
-  border-radius: 999px;
-}
-
-.erco-title-select__menu-list::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(129, 137, 151, 0.9);
+.erco-title-select__menu-list {
+  @include scrollbars.vmecc-scrollbar;
 }
 
 .erco-team-accordion__item {
@@ -281,6 +269,8 @@
   overflow: auto;
   border-radius: 0.5rem;
   background: #0b1220;
+
+  @include scrollbars.vmecc-scrollbar;
 }
 
 .report-photo-viewer__image {

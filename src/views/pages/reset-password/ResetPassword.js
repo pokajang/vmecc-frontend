@@ -102,8 +102,8 @@ const ResetPassword = () => {
   return (
     <div
       data-testid="reset-password-shell"
-      className="bg-body-tertiary d-flex align-items-center justify-content-center"
-      style={{ minHeight: '100dvh', overflowY: 'auto' }}
+      className="bg-body-tertiary d-flex align-items-center justify-content-center vmecc-scroll-y"
+      style={{ minHeight: '100dvh' }}
     >
       <CContainer fluid className="px-2 px-sm-3 py-4">
         <CRow

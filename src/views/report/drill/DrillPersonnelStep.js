@@ -55,7 +55,6 @@ const DrillPersonnelStep = ({
   fieldErrors,
   setFieldErrors = () => {},
   onBack,
-  onReset,
   onSaveDraft,
   onContinue,
   saveLabel,
@@ -337,7 +336,6 @@ const DrillPersonnelStep = ({
 
       <DrillStageActions
         onBack={onBack}
-        onReset={onReset}
         onSaveDraft={onSaveDraft}
         onContinue={onContinue}
         saveLabel={saveLabel}

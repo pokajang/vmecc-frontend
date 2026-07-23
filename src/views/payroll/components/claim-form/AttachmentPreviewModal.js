@@ -60,7 +60,7 @@ const AttachmentPreviewModal = ({
           Preview is unavailable for this attachment in current draft state.
         </div>
       ) : isImage ? (
-        <div style={{ maxHeight: '70vh', overflow: 'auto' }}>
+        <div className="vmecc-scroll-both" style={{ maxHeight: '70vh' }}>
           <img
             src={attachmentPreviewUrl}
             alt={attachmentPreviewItem.attachmentName || 'Attachment preview'}

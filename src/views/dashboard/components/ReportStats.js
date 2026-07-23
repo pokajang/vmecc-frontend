@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import { CCard, CCardBody, CCardHeader, CCol, CProgress, CRow, CWidgetStatsA } from '@coreui/react'
 import { CChartBar, CChartDoughnut, CChartLine } from '@coreui/react-chartjs'
 import { getStyle } from '@coreui/utils'
+import DashboardEmptyState from './DashboardEmptyState'
 import {
   sparklineOptions,
   sparklineDataset,
@@ -108,8 +109,8 @@ export const ReportActivityChart = ({ stats, periodLabel }) => {
   const trend = stats?.monthlyTrend ?? []
 
   return (
-    <CCard className="h-100">
-      <CCardHeader className="d-flex justify-content-between align-items-center">
+    <CCard className="dashboard-chart-card h-100">
+      <CCardHeader className="dashboard-chart-card__header d-flex justify-content-between align-items-center">
         <div>
           <div className="fw-semibold">Reports Submitted</div>
           <div className="text-body-secondary small mt-1">
@@ -121,32 +122,39 @@ export const ReportActivityChart = ({ stats, periodLabel }) => {
         )}
       </CCardHeader>
       <CCardBody>
-        <CChartBar
-          data={{
-            labels: trend.map((t) => t.month),
-            datasets: [
-              {
-                label: 'Reports',
-                backgroundColor: ACCENT,
-                data: trend.map((t) => t.count),
-                borderRadius: 4,
+        {trend.length === 0 ? (
+          <DashboardEmptyState message="No reports were submitted for this period." />
+        ) : (
+          <CChartBar
+            className="dashboard-activity-chart"
+            aria-label="Reports submitted by month"
+            role="img"
+            data={{
+              labels: trend.map((t) => t.month),
+              datasets: [
+                {
+                  label: 'Reports',
+                  backgroundColor: ACCENT,
+                  data: trend.map((t) => t.count),
+                  borderRadius: 4,
+                },
+              ],
+            }}
+            options={{
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { grid: { display: false } },
+                y: {
+                  beginAtZero: true,
+                  grid: { color: getStyle('--cui-border-color-translucent') },
+                  ticks: { stepSize: 5 },
+                },
               },
-            ],
-          }}
-          options={{
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-              x: { grid: { display: false } },
-              y: {
-                beginAtZero: true,
-                grid: { color: getStyle('--cui-border-color-translucent') },
-                ticks: { stepSize: 5 },
-              },
-            },
-          }}
-          style={{ minHeight: '220px' }}
-        />
+            }}
+            style={{ minHeight: '220px' }}
+          />
+        )}
       </CCardBody>
     </CCard>
   )
@@ -169,10 +177,14 @@ export const ReportBreakdown = ({ stats, periodLabel }) => {
   const byPersonnel = stats?.byPersonnel ?? []
   const incidentMax = ercoByType.length > 0 ? ercoByType[0].count : 1
   const personnelMax = byPersonnel.length > 0 ? byPersonnel[0].count : 1
+  const hasBreakdownData =
+    Object.values(byType).some((count) => count > 0) ||
+    ercoByType.length > 0 ||
+    byPersonnel.length > 0
 
   return (
-    <CCard className="h-100">
-      <CCardHeader className="d-flex justify-content-between align-items-center">
+    <CCard className="dashboard-chart-card h-100">
+      <CCardHeader className="dashboard-chart-card__header d-flex justify-content-between align-items-center">
         <div>
           <div className="fw-semibold">Reports Breakdown</div>
           <div className="text-body-secondary small mt-1">By type, incident, and personnel</div>
@@ -182,73 +194,79 @@ export const ReportBreakdown = ({ stats, periodLabel }) => {
         )}
       </CCardHeader>
       <CCardBody>
-        <CRow className="g-4">
-          {/* By report type — doughnut */}
-          <CCol xs={12} md={4}>
-            <div className="text-body-secondary small mb-2">By report type</div>
-            <CChartDoughnut
-              style={{ maxHeight: '200px' }}
-              data={{
-                labels: ['ERCO', 'Drill', 'Fitness Test'],
-                datasets: [
-                  {
-                    data: [byType.erco, byType.drill, byType.fitnessTest],
-                    backgroundColor: [ACCENT, getStyle('--cui-warning'), getStyle('--cui-info')],
-                    borderWidth: 0,
+        {hasBreakdownData ? (
+          <CRow className="g-4">
+            {/* By report type — doughnut */}
+            <CCol xs={12} md={4}>
+              <div className="text-body-secondary small mb-2">By report type</div>
+              <CChartDoughnut
+                className="dashboard-breakdown-chart"
+                aria-label="Report type distribution"
+                role="img"
+                data={{
+                  labels: ['ERCO', 'Drill', 'Fitness Test'],
+                  datasets: [
+                    {
+                      data: [byType.erco, byType.drill, byType.fitnessTest],
+                      backgroundColor: [ACCENT, getStyle('--cui-warning'), getStyle('--cui-info')],
+                      borderWidth: 0,
+                    },
+                  ],
+                }}
+                options={{
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12 } },
                   },
-                ],
-              }}
-              options={{
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12 } },
-                },
-              }}
-            />
-          </CCol>
+                }}
+              />
+            </CCol>
 
-          {/* ERCO by incident type — ranked list */}
-          <CCol xs={12} md={4}>
-            <div className="text-body-secondary small mb-2">ERCO by incident type</div>
-            {ercoByType.map((row) => {
-              const pct = Math.round((row.count / incidentMax) * 100)
-              return (
-                <div key={row.type} className="mb-2">
-                  <CRow className="align-items-center g-0 mb-1">
-                    <CCol xs="auto" className="text-body-secondary small me-auto">
-                      {row.type}
-                    </CCol>
-                    <CCol xs="auto" className="text-body-secondary small fw-semibold">
-                      {row.count}
-                    </CCol>
-                  </CRow>
-                  <CProgress thin color="danger" value={pct} />
-                </div>
-              )
-            })}
-          </CCol>
+            {/* ERCO by incident type — ranked list */}
+            <CCol xs={12} md={4}>
+              <div className="text-body-secondary small mb-2">ERCO by incident type</div>
+              {ercoByType.map((row) => {
+                const pct = Math.round((row.count / incidentMax) * 100)
+                return (
+                  <div key={row.type} className="mb-2">
+                    <CRow className="align-items-center g-0 mb-1">
+                      <CCol xs="auto" className="text-body-secondary small me-auto">
+                        {row.type}
+                      </CCol>
+                      <CCol xs="auto" className="text-body-secondary small fw-semibold">
+                        {row.count}
+                      </CCol>
+                    </CRow>
+                    <CProgress thin color="danger" value={pct} />
+                  </div>
+                )
+              })}
+            </CCol>
 
-          {/* By personnel — ranked list */}
-          <CCol xs={12} md={4}>
-            <div className="text-body-secondary small mb-2">By personnel</div>
-            {byPersonnel.map((row) => {
-              const pct = Math.round((row.count / personnelMax) * 100)
-              return (
-                <div key={row.name} className="mb-2">
-                  <CRow className="align-items-center g-0 mb-1">
-                    <CCol xs="auto" className="text-body-secondary small me-auto">
-                      {row.name}
-                    </CCol>
-                    <CCol xs="auto" className="text-body-secondary small fw-semibold">
-                      {row.count}
-                    </CCol>
-                  </CRow>
-                  <CProgress thin color="secondary" value={pct} />
-                </div>
-              )
-            })}
-          </CCol>
-        </CRow>
+            {/* By personnel — ranked list */}
+            <CCol xs={12} md={4}>
+              <div className="text-body-secondary small mb-2">By personnel</div>
+              {byPersonnel.map((row) => {
+                const pct = Math.round((row.count / personnelMax) * 100)
+                return (
+                  <div key={row.name} className="mb-2">
+                    <CRow className="align-items-center g-0 mb-1">
+                      <CCol xs="auto" className="text-body-secondary small me-auto">
+                        {row.name}
+                      </CCol>
+                      <CCol xs="auto" className="text-body-secondary small fw-semibold">
+                        {row.count}
+                      </CCol>
+                    </CRow>
+                    <CProgress thin color="secondary" value={pct} />
+                  </div>
+                )
+              })}
+            </CCol>
+          </CRow>
+        ) : (
+          <DashboardEmptyState message="No report breakdown is available for this period." />
+        )}
       </CCardBody>
     </CCard>
   )

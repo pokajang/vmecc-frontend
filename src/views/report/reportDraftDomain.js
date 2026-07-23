@@ -1,4 +1,5 @@
 import { uid } from './utils'
+import { normalizeFitnessTestRecordToForm } from './fitness-test/fitnessTestFormDomain'
 import { normalizeDrillRecordToForm } from './drill/drillFormDomain'
 
 const statusToneMap = {
@@ -88,6 +89,14 @@ const buildErcoPostIncidentAnalysisDraft = (record) => {
 }
 
 const recordToDraft = (record, reportTypeSlug) => {
+  if (reportTypeSlug === 'fitness-test') {
+    return {
+      ...record,
+      ...normalizeFitnessTestRecordToForm(record),
+      setupConfirmed: true,
+      savedAt: new Date().toISOString(),
+    }
+  }
   if (reportTypeSlug === 'drill') {
     return {
       ...record,

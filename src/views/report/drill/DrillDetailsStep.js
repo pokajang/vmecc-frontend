@@ -21,7 +21,6 @@ const DrillDetailsStep = ({
   fieldErrors,
   setFieldErrors,
   onBack,
-  onReset,
   onSaveDraft,
   onContinue,
   saveLabel,
@@ -283,7 +282,6 @@ const DrillDetailsStep = ({
 
       <DrillStageActions
         onBack={onBack}
-        onReset={onReset}
         onSaveDraft={onSaveDraft}
         onContinue={onContinue}
         saveLabel={saveLabel}

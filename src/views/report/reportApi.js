@@ -1,5 +1,5 @@
 import { apiRequest } from 'src/services/apiClient'
-import { downloadReportPdf } from 'src/services/api/reportPdfApi'
+import { downloadReportFile, downloadReportPdf } from 'src/services/api/reportPdfApi'
 import featureFlags from 'src/config/featureFlags'
 import { REPORT_TYPE_CONFIG } from './constants'
 import { loadReportRecords, saveReportRecords } from './reportStorage'
@@ -371,6 +371,67 @@ export const downloadDrillReportPdf = async (record) => {
     throw new Error('Download unavailable until the drill report is saved.')
   }
   return downloadReportPdf({ endpoint: '/reports/drill/pdf', reportUid })
+}
+
+export const downloadFitnessTestReportJson = async (record) => {
+  return downloadFitnessTestReport(record, 'json')
+}
+
+export const downloadFitnessTestReportXlsx = async (record) => {
+  return downloadFitnessTestReport(record, 'xlsx')
+}
+
+export const downloadFitnessTestReport = async (record, format = 'json') => {
+  const reportUid = String(record?.id || '').trim()
+  if (!reportUid) {
+    throw new Error('Export unavailable until the fitness report is saved.')
+  }
+
+  const normalizedFormat = String(format || 'json')
+    .trim()
+    .toLowerCase()
+
+  if (normalizedFormat === 'pdf') {
+    return downloadReportFile({
+      endpoint: '/reports/fitness-test/export',
+      payload: { report_uid: reportUid, format: normalizedFormat },
+      accept: 'application/pdf',
+      acceptedContentTypes: ['application/pdf'],
+      invalidResponseMessage: 'The generated fitness PDF export is invalid.',
+      emptyResponseMessage: 'The generated fitness PDF export is empty.',
+    })
+  }
+
+  if (normalizedFormat === 'html') {
+    return downloadReportFile({
+      endpoint: '/reports/fitness-test/export',
+      payload: { report_uid: reportUid, format: normalizedFormat },
+      accept: 'text/html',
+      acceptedContentTypes: ['text/html'],
+      invalidResponseMessage: 'The generated fitness HTML export is invalid.',
+      emptyResponseMessage: 'The generated fitness HTML export is empty.',
+    })
+  }
+
+  if (normalizedFormat === 'xlsx') {
+    return downloadReportFile({
+      endpoint: '/reports/fitness-test/export',
+      payload: { report_uid: reportUid, format: normalizedFormat },
+      accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      acceptedContentTypes: ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+      invalidResponseMessage: 'The generated fitness XLSX export is invalid.',
+      emptyResponseMessage: 'The generated fitness XLSX export is empty.',
+    })
+  }
+
+  return downloadReportFile({
+    endpoint: '/reports/fitness-test/export',
+    payload: { report_uid: reportUid, format: 'json' },
+    accept: 'application/json',
+    acceptedContentTypes: ['application/json'],
+    invalidResponseMessage: 'The server returned an invalid fitness export response.',
+    emptyResponseMessage: 'The generated fitness export is empty.',
+  })
 }
 
 const transitionReport = async ({ reportUid, action, version, remarks }) => {

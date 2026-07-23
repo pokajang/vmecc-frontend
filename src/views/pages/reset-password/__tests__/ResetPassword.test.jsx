@@ -22,8 +22,8 @@ describe('ResetPassword', () => {
     const shell = screen.getByTestId('reset-password-shell')
     expect(shell.style.minHeight).toBe('100dvh')
     expect(shell.style.height).toBe('')
-    expect(shell.style.overflowY).toBe('auto')
     expect(shell.className).toContain('align-items-center')
+    expect(shell.className).toContain('vmecc-scroll-y')
 
     const logo = screen.getByAltText('VMECC')
     expect(logo.style.getPropertyValue('--auth-logo-width')).toBe('clamp(68px, 16vw, 120px)')

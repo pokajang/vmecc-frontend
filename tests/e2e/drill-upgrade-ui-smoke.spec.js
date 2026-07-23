@@ -217,14 +217,20 @@ test.describe('Drill Upgrade UI V1', () => {
       await installApiStubs(page)
       await page.goto(`${baseUrl}/report/drill/new/setup`)
 
-      await expect(page.getByRole('heading', { name: 'Exercise Setup' })).toBeVisible()
-      await expect(page.getByRole('checkbox', { name: 'Fire' })).toBeChecked()
-      await expect(page.getByRole('checkbox', { name: 'Rescue' })).toBeChecked()
+      await expect(page.getByTestId('drill-report-setup-ready')).toBeVisible()
+      await expect(page.getByRole('button', { name: /^Fire/ })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      )
+      await expect(page.getByRole('button', { name: /^Rescue/ })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      )
+      await expect(page.getByRole('button', { name: 'Add category' })).toBeVisible()
       await expectNoHorizontalOverflow(page)
 
       await page.getByRole('button', { name: 'Continue' }).click()
       await expect(page).toHaveURL(/\/report\/drill\/new\/personnel/)
-      await expect(page.getByRole('heading', { name: 'Exercise Personnel' })).toBeVisible()
       await expect(page.getByRole('checkbox', { name: 'Exercise Commander' })).toBeChecked()
       await expectNoHorizontalOverflow(page)
 
@@ -251,7 +257,8 @@ test.describe('Drill Upgrade UI V1', () => {
       await expect(page.getByRole('textbox', { name: 'Strengths entry 1' })).toHaveValue(
         'Clear command structure',
       )
-      await expect(page.getByRole('button', { name: 'Capture photo' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Upload photo' })).toBeVisible()
+      await expect(page.getByRole('button', { name: 'Reset' })).toHaveCount(0)
       await expectNoHorizontalOverflow(page)
 
       await page.getByRole('button', { name: 'Review & Submit' }).click()
@@ -270,7 +277,6 @@ test.describe('Drill Upgrade UI V1', () => {
     await installApiStubs(page, stressDraftPayload)
     await page.goto(`${baseUrl}/report/drill/new/analysis`)
 
-    await expect(page.getByRole('heading', { name: 'Post-Exercise Analysis' })).toBeVisible()
     const photoSection = page.getByRole('region', { name: 'Exercise photographs' })
     await expect(photoSection.locator('img')).toHaveCount(10)
     await expect(photoSection.getByRole('textbox')).toHaveCount(10)
@@ -302,12 +308,43 @@ test.describe('Drill Upgrade UI V1', () => {
       page.getByRole('textbox', { name: 'Description for camera-return.jpg' }),
     ).toBeVisible()
     await expect(page).toHaveURL(/\/report\/drill\/new\/analysis/)
-    await expect(page.getByRole('heading', { name: 'Post-Exercise Analysis' })).toBeVisible()
+    await expect(page.getByRole('region', { name: 'Exercise photographs' })).toBeVisible()
     await expectNoHorizontalOverflow(page)
 
     await page.getByRole('button', { name: 'Review & Submit' }).click()
     await expect(page).toHaveURL(/\/report\/drill\/new\/review/)
     await expect(page.getByRole('img', { name: 'camera-return.jpg' })).toBeVisible()
+    await expectNoHorizontalOverflow(page)
+  })
+
+  test('adds and restores a custom exercise category without checkbox controls', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 900 })
+    await installApiStubs(page)
+    await page.goto(`${baseUrl}/report/drill/new/setup`)
+
+    await page.getByRole('button', { name: 'Add category' }).click()
+    const manager = page.getByTestId('drill-report-category-manager-modal')
+    await expect(manager).toBeVisible()
+    await manager.getByLabel('Exercise Category Name').fill('Medical Response')
+    await manager
+      .getByLabel('Exercise category details (optional)')
+      .fill('Casualty triage and medical handover.')
+    await manager.getByRole('button', { name: 'Save Category' }).click()
+
+    const customCategory = page.getByRole('button', { name: /^Medical Response/ })
+    await expect(customCategory).toBeVisible()
+    await expect(customCategory).toHaveAttribute('aria-pressed', 'true')
+    await expect(page.getByRole('checkbox')).toHaveCount(0)
+
+    await page.getByRole('button', { name: 'Save Draft' }).click()
+    await page.reload()
+
+    await expect(page.getByRole('button', { name: /^Medical Response/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
     await expectNoHorizontalOverflow(page)
   })
 })

@@ -2,6 +2,46 @@ import { describe, expect, it } from 'vitest'
 import { buildChangeSummary, recordToDraft } from '../../reportDraftDomain'
 
 describe('Drill report draft domain integration', () => {
+  it('normalizes fitness-test records through recordToDraft', () => {
+    const result = recordToDraft(
+      {
+        reportType: 'fitness-test',
+        schemaVersion: 1,
+        reportDate: '2026-07-13',
+        reportTime: '09:00',
+        location: 'Training yard',
+        reportingMonth: '2026-07',
+        shiftGroups: [
+          {
+            id: 'sg-1',
+            teamId: 12,
+            shiftName: 'Day',
+            assessor: { userId: '1', name: 'Tester' },
+            participants: [{ name: 'Alpha' }],
+          },
+        ],
+        chronology: [{ id: 'row-1', time: '09:10', action: 'Started' }],
+      },
+      'fitness-test',
+    )
+
+    expect(result.setupConfirmed).toBe(true)
+    expect(result.reportType).toBe('fitness-test')
+    expect(result.shiftGroups).toEqual([
+      {
+        id: 'sg-1',
+        teamId: 12,
+        shiftName: 'Day',
+        assessor: { userId: 1, name: 'Tester' },
+        participants: [{ name: 'Alpha' }],
+      },
+    ])
+    expect(result.reportingMonth).toBe('2026-07')
+    expect(result.chronology[0]).toMatchObject({ time: '09:10', action: 'Started' })
+    expect(result.reportDate).toBe('2026-07-13')
+    expect(result.reportTime).toBe('09:00')
+  })
+
   it('normalizes Drill records through recordToDraft and preserves media metadata', () => {
     const result = recordToDraft(
       {

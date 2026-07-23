@@ -576,7 +576,7 @@ describe('AllExtinguishersSection', () => {
     expect(within(summary).getByText('4')).toBeTruthy()
     expect(within(summary).getByText('Not inspected')).toBeTruthy()
     expect(within(summary).getByText('2')).toBeTruthy()
-    expect(within(summary).getByText('Issues')).toBeTruthy()
+    expect(within(summary).getByText('Open issues')).toBeTruthy()
     expect(within(summary).getAllByText('1').length).toBeGreaterThan(0)
   })
 
@@ -805,10 +805,10 @@ describe('AllExtinguishersSection', () => {
 
     const panel = screen.getByRole('dialog', { name: 'ADO-002' })
     expect(panel).toBeTruthy()
-    expect(within(panel).getByText('Showing records: All time')).toBeTruthy()
-    expect(within(panel).getByText('1 historical issue')).toBeTruthy()
-    expect(within(panel).getByText('Historical Issues')).toBeTruthy()
-    expect(within(panel).getByText('Historical Inspection Records')).toBeTruthy()
+    expect(within(panel).getByText('Monthly status')).toBeTruthy()
+    expect(within(panel).getByText(/Last inspected:/)).toBeTruthy()
+    expect(within(panel).getByText('Issues in inspection history')).toBeTruthy()
+    expect(within(panel).getByText(/^Inspection history/)).toBeTruthy()
     expect(within(panel).getByText('Physical')).toBeTruthy()
     expect(within(panel).getByText('Signage')).toBeTruthy()
     expect(within(panel).getByText('Box Key')).toBeTruthy()
@@ -871,7 +871,7 @@ describe('AllExtinguishersSection', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Back to historical records' }))
 
     expect(screen.getByRole('dialog', { name: 'ADO-002' })).toBeTruthy()
-    expect(screen.getByText('Historical Inspection Records')).toBeTruthy()
+    expect(screen.getByText(/^Inspection history/)).toBeTruthy()
   })
 
   it('opens the historical record detail from a historical issue row', () => {
@@ -1010,15 +1010,9 @@ describe('AllExtinguishersSection', () => {
     expect(within(panel).getByText('FE Type')).toBeTruthy()
     expect(within(panel).getByText('Barcode')).toBeTruthy()
     expect(within(panel).getByText('Certification')).toBeTruthy()
-    expect(within(panel).getByText('Last inspected')).toBeTruthy()
-    expect(within(panel).getByText('Historical Issues')).toBeTruthy()
-    expect(within(panel).getAllByText('Report ID').length).toBeGreaterThanOrEqual(2)
-    expect(
-      within(panel).getByText('No historical issues found for the selected period.'),
-    ).toBeTruthy()
-    expect(
-      within(panel).getByText('No inspection records found for the selected period.'),
-    ).toBeTruthy()
+    expect(within(panel).getByText(/Last inspected:/)).toBeTruthy()
+    expect(within(panel).queryByText('Issues in inspection history')).toBeNull()
+    expect(within(panel).getByText('No inspection history for the selected period.')).toBeTruthy()
     expect(within(panel).queryByText('Latest Inspection')).toBeNull()
     expect(within(panel).queryByText('Issues recorded (0)')).toBeNull()
     expect(within(panel).queryByText('Latest inspection criteria')).toBeNull()

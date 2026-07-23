@@ -384,93 +384,91 @@ const DashboardVisibilityMatrix = () => {
               </div>
             ) : (
               <div className="rounded-3 shadow-sm overflow-hidden bg-body mt-2 matrix-table-shell">
-                <div className="matrix-table-scroll">
-                  <CTable align="middle" className="mb-0" hover responsive>
-                    <CTableHead color="light">
-                      <CTableRow>
+                <CTable align="middle" className="mb-0" hover responsive>
+                  <CTableHead color="light">
+                    <CTableRow>
+                      <CTableHeaderCell
+                        className="align-middle"
+                        style={{
+                          minWidth: 260,
+                          position: 'sticky',
+                          left: 0,
+                          zIndex: 2,
+                          background: 'var(--cui-light-bg-subtle, #f8f9fa)',
+                        }}
+                      >
+                        Dashboard Section
+                      </CTableHeaderCell>
+                      {roles.map((role) => (
                         <CTableHeaderCell
+                          key={role}
+                          className="text-center align-middle"
+                          style={{ minWidth: 140 }}
+                        >
+                          {role === LOCKED_ROLE && (
+                            <Lock size={12} className="me-1 text-muted align-text-bottom" />
+                          )}
+                          {role}
+                        </CTableHeaderCell>
+                      ))}
+                    </CTableRow>
+                  </CTableHead>
+                  <CTableBody>
+                    {visibleRows.map((row) => (
+                      <CTableRow key={row.permission}>
+                        <CTableDataCell
                           className="align-middle"
                           style={{
-                            minWidth: 260,
                             position: 'sticky',
                             left: 0,
-                            zIndex: 2,
-                            background: 'var(--cui-light-bg-subtle, #f8f9fa)',
+                            zIndex: 1,
+                            background: 'var(--cui-body-bg, #fff)',
                           }}
                         >
-                          Dashboard Section
-                        </CTableHeaderCell>
-                        {roles.map((role) => (
-                          <CTableHeaderCell
-                            key={role}
-                            className="text-center align-middle"
-                            style={{ minWidth: 140 }}
-                          >
-                            {role === LOCKED_ROLE && (
-                              <Lock size={12} className="me-1 text-muted align-text-bottom" />
-                            )}
-                            {role}
-                          </CTableHeaderCell>
-                        ))}
-                      </CTableRow>
-                    </CTableHead>
-                    <CTableBody>
-                      {visibleRows.map((row) => (
-                        <CTableRow key={row.permission}>
-                          <CTableDataCell
-                            className="align-middle"
-                            style={{
-                              position: 'sticky',
-                              left: 0,
-                              zIndex: 1,
-                              background: 'var(--cui-body-bg, #fff)',
-                            }}
-                          >
-                            <div className="fw-medium">{row.title}</div>
-                            <div className="text-muted small">{row.description}</div>
-                            <div className="text-muted small">{row.permission}</div>
-                          </CTableDataCell>
-                          {roles.map((role) => {
-                            const isLocked = role === LOCKED_ROLE
-                            const checked = isLocked
-                              ? true
-                              : (localMatrix[role] || new Set()).has(row.permission)
-                            const wasChecked = isLocked
-                              ? true
-                              : new Set(serverMatrix[role] || []).has(row.permission)
-                            const changed = !isLocked && checked !== wasChecked
+                          <div className="fw-medium">{row.title}</div>
+                          <div className="text-muted small">{row.description}</div>
+                          <div className="text-muted small">{row.permission}</div>
+                        </CTableDataCell>
+                        {roles.map((role) => {
+                          const isLocked = role === LOCKED_ROLE
+                          const checked = isLocked
+                            ? true
+                            : (localMatrix[role] || new Set()).has(row.permission)
+                          const wasChecked = isLocked
+                            ? true
+                            : new Set(serverMatrix[role] || []).has(row.permission)
+                          const changed = !isLocked && checked !== wasChecked
 
-                            return (
-                              <CTableDataCell
-                                key={`${role}-${row.permission}`}
-                                className="text-center align-middle"
+                          return (
+                            <CTableDataCell
+                              key={`${role}-${row.permission}`}
+                              className="text-center align-middle"
+                              style={{
+                                background: changed
+                                  ? checked
+                                    ? 'var(--vmecc-status-success-bg, #d1f5d3)'
+                                    : 'var(--vmecc-status-danger-bg, #fde8e8)'
+                                  : undefined,
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                className="form-check-input"
+                                checked={checked}
+                                disabled={isLocked || !editMode || saving}
+                                onChange={() => togglePermission(role, row.permission)}
+                                aria-label={`${role} - ${row.title}`}
                                 style={{
-                                  background: changed
-                                    ? checked
-                                      ? 'var(--vmecc-status-success-bg, #d1f5d3)'
-                                      : 'var(--vmecc-status-danger-bg, #fde8e8)'
-                                    : undefined,
+                                  cursor: isLocked || !editMode ? 'default' : 'pointer',
                                 }}
-                              >
-                                <input
-                                  type="checkbox"
-                                  className="form-check-input"
-                                  checked={checked}
-                                  disabled={isLocked || !editMode || saving}
-                                  onChange={() => togglePermission(role, row.permission)}
-                                  aria-label={`${role} - ${row.title}`}
-                                  style={{
-                                    cursor: isLocked || !editMode ? 'default' : 'pointer',
-                                  }}
-                                />
-                              </CTableDataCell>
-                            )
-                          })}
-                        </CTableRow>
-                      ))}
-                    </CTableBody>
-                  </CTable>
-                </div>
+                              />
+                            </CTableDataCell>
+                          )
+                        })}
+                      </CTableRow>
+                    ))}
+                  </CTableBody>
+                </CTable>
               </div>
             )}
           </>

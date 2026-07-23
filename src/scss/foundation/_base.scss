@@ -71,8 +71,6 @@ html {
   --mobile-overlay-section-bottom-gap: 0.22rem;
   --mobile-overlay-row-gap: 0.32rem;
   --mobile-overlay-list-gap: 0.6rem;
-  --mobile-overlay-scrollbar: #e2e8f0;
-  --mobile-overlay-scrollbar-hover: #cbd5e1;
   --mobile-overlay-danger-bg: #dc2626;
   --mobile-overlay-danger-bg-hover: #b91c1c;
   --mobile-overlay-danger-text: #ffffff;
@@ -169,11 +167,6 @@ html {
   min-width: 2rem;
   height: 2rem;
   padding: 0;
-}
-
-.matrix-table-scroll {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 .matrix-table-shell .table {

@@ -11,6 +11,7 @@
 @use 'layout/shell';
 @use 'features/report/report';
 @use 'features/settings/reporting-workflow';
+@use 'features/dashboard/dashboard';
 @use 'components/mobile-nav';
 @use 'components/table-filter-drawer';
 @use 'features/notifications/drawer-shell';

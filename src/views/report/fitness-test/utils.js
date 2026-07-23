@@ -1,20 +1,6 @@
-import { createReportSubmissionKey, uid } from '../utils'
-import { getLocalDateInputValue } from 'src/utils/localDate'
+import { createDefaultFitnessTestForm } from './fitnessTestFormDomain'
 
-export const defaultFitnessTestForm = () => ({
-  schemaVersion: 1,
-  submissionKey: createReportSubmissionKey('fitness-test'),
-  reportDate: getLocalDateInputValue(),
-  reportTime: '',
-  weather: 'Routine',
-  incidentType: 'Endurance Test',
-  location: '',
-  details: '',
-  summary: '',
-  sc: '',
-  asc: '',
-  chronology: [{ id: uid(), time: '', action: '' }],
-})
+export const defaultFitnessTestForm = () => createDefaultFitnessTestForm()
 
 export const isFitnessTestDirty = (form) => {
   const d = defaultFitnessTestForm()

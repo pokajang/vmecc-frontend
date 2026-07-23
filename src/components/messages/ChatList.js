@@ -97,7 +97,7 @@ const ChatList = ({
           ))}
         </div>
       </div>
-      <div className="overflow-auto flex-grow-1" style={{ minHeight: 0 }}>
+      <div className="vmecc-scroll-y flex-grow-1" style={{ minHeight: 0 }}>
         {loading ? (
           <TableLoader />
         ) : filteredThreads.length === 0 ? (

@@ -1,4 +1,5 @@
 @use '../../tools/coreui-tools' as *;
+@use '../../foundation/scrollbars' as scrollbars;
 
 .mobile-nav-sheet-backdrop {
   position: fixed;
@@ -151,28 +152,12 @@
 }
 
 .mobile-nav-sheet-body {
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   padding: 0;
   overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-color: var(--mobile-overlay-scrollbar) transparent;
 
-  &::-webkit-scrollbar {
-    width: 4px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: var(--mobile-overlay-scrollbar);
-    border-radius: 999px;
-
-    &:hover {
-      background: var(--mobile-overlay-scrollbar-hover);
-    }
-  }
+  @include scrollbars.vmecc-scrollbar;
 }
 
 .mobile-overlay-section,
@@ -479,19 +464,6 @@
 // Push page content above the phone bottom bar. Keep this aligned with
 // AppHeader's d-md-none bottom navigation breakpoint.
 @include media-breakpoint-down(md) {
-  html,
-  body {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  html::-webkit-scrollbar,
-  body::-webkit-scrollbar {
-    display: none;
-    width: 0;
-    height: 0;
-  }
-
   .wrapper {
     padding-bottom: calc(var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px));
   }

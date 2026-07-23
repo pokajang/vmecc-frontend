@@ -25,7 +25,6 @@ const DrillChronologyStep = ({
   removeChronology,
   moveChronology,
   onBack,
-  onReset,
   onSaveDraft,
   onContinue,
   saveLabel,
@@ -94,7 +93,6 @@ const DrillChronologyStep = ({
       ) : null}
       <DrillStageActions
         onBack={onBack}
-        onReset={onReset}
         onSaveDraft={onSaveDraft}
         onContinue={onContinue}
         saveLabel={saveLabel}

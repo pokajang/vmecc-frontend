@@ -41,7 +41,7 @@ const getRowSignature = (row) => JSON.stringify(row || {})
 const ErAuxConditionSegment = ({ value, onChange, readOnly = false }) => (
   <div className="inspection-hydraulic-check-row inspection-hydraulic-check-row--stacked d-grid gap-2">
     <div className="inspection-hydraulic-check-label small fw-semibold text-muted">Condition</div>
-    <div className="inspection-hydraulic-status-group d-flex flex-nowrap justify-content-start gap-2 overflow-auto pb-1">
+    <div className="inspection-hydraulic-status-group d-flex flex-nowrap justify-content-start gap-2 vmecc-scroll-x pb-1">
       {ER_AUX_CONDITION_OPTIONS.map((option) =>
         readOnly ? (
           <span

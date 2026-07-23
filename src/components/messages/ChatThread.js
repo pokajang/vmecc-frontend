@@ -168,7 +168,7 @@ const ChatThread = ({
           <div className="flex-grow-1 position-relative" style={{ minHeight: 0 }}>
             <div
               ref={scrollRef}
-              className="h-100 overflow-auto px-4 py-3"
+              className="h-100 vmecc-scroll-y px-4 py-3"
               style={{ background: 'var(--cui-tertiary-bg)' }}
             >
               {threadLoading ? (

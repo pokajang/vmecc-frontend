@@ -28,7 +28,7 @@ const NewChatModal = ({
       {loading && <div className="text-center text-muted py-3">Loading contacts...</div>}
       {error && <CAlert color="danger">{error}</CAlert>}
       {!loading && !error && (
-        <div className="d-flex flex-column gap-2" style={{ maxHeight: 360, overflow: 'auto' }}>
+        <div className="d-flex flex-column gap-2 vmecc-scroll-y" style={{ maxHeight: 360 }}>
           {contacts.length === 0 ? (
             <div className="text-muted text-center py-3">No contacts found.</div>
           ) : (

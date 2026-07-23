@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import { CCard, CCardBody, CCardHeader, CCol, CProgress, CRow, CWidgetStatsA } from '@coreui/react'
 import { CChartBar, CChartLine } from '@coreui/react-chartjs'
 import { getStyle } from '@coreui/utils'
+import DashboardEmptyState from './DashboardEmptyState'
 import {
   sparklineOptions,
   sparklineDataset,
@@ -133,8 +134,8 @@ export const LeaveActivityChart = ({ stats, periodLabel }) => {
   const trend = stats?.monthlyTrend ?? []
 
   return (
-    <CCard className="h-100">
-      <CCardHeader className="d-flex justify-content-between align-items-center">
+    <CCard className="dashboard-chart-card h-100">
+      <CCardHeader className="dashboard-chart-card__header d-flex justify-content-between align-items-center">
         <div>
           <div className="fw-semibold">Leave Requests Submitted</div>
           <div className="text-body-secondary small mt-1">
@@ -146,32 +147,39 @@ export const LeaveActivityChart = ({ stats, periodLabel }) => {
         )}
       </CCardHeader>
       <CCardBody>
-        <CChartBar
-          data={{
-            labels: trend.map((t) => t.month),
-            datasets: [
-              {
-                label: 'Submissions',
-                backgroundColor: getStyle('--cui-info'),
-                data: trend.map((t) => t.count),
-                borderRadius: 4,
+        {trend.length === 0 ? (
+          <DashboardEmptyState message="No leave requests were submitted for this period." />
+        ) : (
+          <CChartBar
+            className="dashboard-activity-chart"
+            aria-label="Leave requests submitted by month"
+            role="img"
+            data={{
+              labels: trend.map((t) => t.month),
+              datasets: [
+                {
+                  label: 'Submissions',
+                  backgroundColor: getStyle('--cui-info'),
+                  data: trend.map((t) => t.count),
+                  borderRadius: 4,
+                },
+              ],
+            }}
+            options={{
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { grid: { display: false } },
+                y: {
+                  beginAtZero: true,
+                  grid: { color: getStyle('--cui-border-color-translucent') },
+                  ticks: { stepSize: 5 },
+                },
               },
-            ],
-          }}
-          options={{
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-              x: { grid: { display: false } },
-              y: {
-                beginAtZero: true,
-                grid: { color: getStyle('--cui-border-color-translucent') },
-                ticks: { stepSize: 5 },
-              },
-            },
-          }}
-          style={{ minHeight: '220px' }}
-        />
+            }}
+            style={{ minHeight: '220px' }}
+          />
+        )}
       </CCardBody>
     </CCard>
   )
@@ -193,8 +201,8 @@ export const LeaveTeamBreakdown = ({ stats, periodLabel }) => {
   const teamMax = byTeam.length > 0 ? byTeam[0].count : 1
 
   return (
-    <CCard className="h-100">
-      <CCardHeader className="d-flex justify-content-between align-items-center">
+    <CCard className="dashboard-chart-card h-100">
+      <CCardHeader className="dashboard-chart-card__header d-flex justify-content-between align-items-center">
         <div>
           <div className="fw-semibold">Leave by Team</div>
           <div className="text-body-secondary small mt-1">Requests ranked by volume</div>
@@ -204,22 +212,26 @@ export const LeaveTeamBreakdown = ({ stats, periodLabel }) => {
         )}
       </CCardHeader>
       <CCardBody>
-        {byTeam.map((row) => {
-          const pct = Math.round((row.count / teamMax) * 100)
-          return (
-            <div key={row.team} className="mb-3">
-              <CRow className="align-items-center g-0 mb-1">
-                <CCol xs="auto" className="text-body-secondary small me-auto">
-                  {row.team}
-                </CCol>
-                <CCol xs="auto" className="text-body-secondary small fw-semibold">
-                  {row.count}
-                </CCol>
-              </CRow>
-              <CProgress thin color="info" value={pct} />
-            </div>
-          )
-        })}
+        {byTeam.length === 0 ? (
+          <DashboardEmptyState message="No team leave activity is available for this period." />
+        ) : (
+          byTeam.map((row) => {
+            const pct = Math.round((row.count / teamMax) * 100)
+            return (
+              <div key={row.team} className="mb-3">
+                <CRow className="align-items-center g-0 mb-1">
+                  <CCol xs="auto" className="text-body-secondary small me-auto">
+                    {row.team}
+                  </CCol>
+                  <CCol xs="auto" className="text-body-secondary small fw-semibold">
+                    {row.count}
+                  </CCol>
+                </CRow>
+                <CProgress thin color="info" value={pct} />
+              </div>
+            )
+          })
+        )}
       </CCardBody>
     </CCard>
   )

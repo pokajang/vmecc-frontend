@@ -88,7 +88,7 @@ const DashboardHeader = ({ period, onPeriodChange, userName }) => {
           </div>
         </CCol>
         <CCol xs={12} md="auto">
-          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <div className="vmecc-scroll-x">
             <CButtonGroup size="sm" role="group" aria-label="Select data period">
               {PERIOD_OPTIONS.map((opt) => (
                 <CButton

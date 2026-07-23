@@ -139,7 +139,7 @@ const FrtValidationBadges = ({ missingStatusKeys = [], missingRemarkKeys = [] })
 }
 
 const FrtStatusSegment = ({ options, value, onChange, readOnly = false }) => (
-  <div className="inspection-hydraulic-status-group d-flex flex-nowrap justify-content-start gap-2 overflow-auto pb-1">
+  <div className="inspection-hydraulic-status-group d-flex flex-nowrap justify-content-start gap-2 vmecc-scroll-x pb-1">
     {options.map((option) =>
       readOnly ? (
         <span

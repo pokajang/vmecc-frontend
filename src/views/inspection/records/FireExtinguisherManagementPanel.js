@@ -27,12 +27,6 @@ import ReportPhotoSection from 'src/views/report/shared/emergency-report/ReportP
 import FireExtinguisherEditDialog from './FireExtinguisherEditDialog'
 import FireExtinguisherLifecycleDialog from './FireExtinguisherLifecycleDialog'
 
-const lifecycleLabels = {
-  active: 'Active',
-  out_of_service: 'Out of service',
-  retired: 'Retired',
-}
-
 const IssueActions = ({
   issue,
   currentUser,
@@ -477,20 +471,7 @@ const FireExtinguisherManagementPanel = ({
   return (
     <div className="d-grid gap-3">
       <section className="rounded-3 border p-3 d-grid gap-2">
-        <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
-          <div className="fw-semibold">Asset lifecycle</div>
-          <CBadge
-            color={
-              lifecycleStatus === 'active'
-                ? 'success'
-                : lifecycleStatus === 'retired'
-                  ? 'secondary'
-                  : 'warning'
-            }
-          >
-            {lifecycleLabels[lifecycleStatus] || lifecycleStatus}
-          </CBadge>
-        </div>
+        <div className="fw-semibold">Asset lifecycle</div>
         {detail.outOfServiceReason ? (
           <div className="small text-body-secondary">Reason: {detail.outOfServiceReason}</div>
         ) : null}
@@ -568,7 +549,7 @@ const FireExtinguisherManagementPanel = ({
 
       <section className="rounded-3 border p-3 d-grid gap-3">
         <div className="d-flex align-items-center justify-content-between gap-2">
-          <div className="fw-semibold">Managed issues</div>
+          <div className="fw-semibold">Issue management</div>
           <CBadge
             color={Number(issueMeta.active || detail.openIssueCount || 0) ? 'danger' : 'success'}
           >
@@ -592,7 +573,7 @@ const FireExtinguisherManagementPanel = ({
           </CAlert>
         ) : null}
         {!loadingIssues && !issueError && issues.length === 0 ? (
-          <div className="text-body-secondary">No managed issues for this extinguisher.</div>
+          <div className="text-body-secondary">No managed issues.</div>
         ) : null}
         {[...activeIssues, ...closedIssues].map((issue) => (
           <div key={issue.id} className="rounded-3 border p-3 d-grid gap-1">

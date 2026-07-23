@@ -4,7 +4,6 @@ import { ReportMobileActionGroup } from '../components/ReportWorkflowUi'
 
 const DrillStageActions = ({
   onBack,
-  onReset,
   onSaveDraft,
   onContinue,
   saveLabel = 'Save Draft',
@@ -29,11 +28,6 @@ const DrillStageActions = ({
           Back
         </CButton>
       ) : null}
-      {typeof onReset === 'function' ? (
-        <CButton type="button" color="light" onClick={onReset}>
-          Reset
-        </CButton>
-      ) : null}
       <CButton type="button" color="secondary" disabled={isSaving} onClick={onSaveDraft}>
         {isSaving ? 'Saving...' : saveLabel}
       </CButton>
@@ -51,18 +45,11 @@ const DrillStageActions = ({
         saveDisabled={isSaving}
         statusMessage={statusMessage}
       />
-      {typeof onBack === 'function' || typeof onReset === 'function' ? (
+      {typeof onBack === 'function' ? (
         <div className="d-flex gap-2 mt-2">
-          {typeof onBack === 'function' ? (
-            <CButton type="button" color="light" className="flex-fill" onClick={onBack}>
-              Back
-            </CButton>
-          ) : null}
-          {typeof onReset === 'function' ? (
-            <CButton type="button" color="light" className="flex-fill" onClick={onReset}>
-              Reset
-            </CButton>
-          ) : null}
+          <CButton type="button" color="light" className="flex-fill" onClick={onBack}>
+            Back
+          </CButton>
         </div>
       ) : null}
     </div>

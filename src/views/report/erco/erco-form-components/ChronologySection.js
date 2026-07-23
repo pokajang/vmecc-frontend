@@ -52,7 +52,6 @@ const ChronologySection = ({
   isChronologyOutOfOrder,
   sortChronologyByTime,
   chronologyRows,
-  rowContainerRefs,
   chronologyRowProps,
   // Row modal (mobile)
   rowModal,
@@ -62,7 +61,7 @@ const ChronologySection = ({
   onRowModalDraftChange,
   onCommitRowModal,
 }) => {
-  const { moveChronologyRow, removeChronologyRow } = chronologyRowProps
+  const { moveChronologyEventPayload, removeChronologyRow } = chronologyRowProps
 
   return (
     <div className="d-grid gap-3">
@@ -288,18 +287,18 @@ const ChronologySection = ({
                       </CDropdownItem>
                       <CDropdownItem
                         disabled={isFirst}
-                        onClick={() => moveChronologyRow(idx, idx - 1)}
+                        onClick={() => moveChronologyEventPayload(idx, idx - 1)}
                       >
                         <span className="d-inline-flex align-items-center gap-2">
-                          <ArrowUp size={14} /> Move up
+                          <ArrowUp size={14} /> Move event up
                         </span>
                       </CDropdownItem>
                       <CDropdownItem
                         disabled={isLast}
-                        onClick={() => moveChronologyRow(idx, idx + 1)}
+                        onClick={() => moveChronologyEventPayload(idx, idx + 1)}
                       >
                         <span className="d-inline-flex align-items-center gap-2">
-                          <ArrowDown size={14} /> Move down
+                          <ArrowDown size={14} /> Move event down
                         </span>
                       </CDropdownItem>
                       <CDropdownItem
@@ -333,16 +332,7 @@ const ChronologySection = ({
               <div style={{ flex: '0 0 16.666%' }} />
             </div>
             {chronologyRows.map((row, idx) => (
-              <ChronologyRow
-                key={row.id}
-                row={row}
-                idx={idx}
-                rowRef={(el) => {
-                  if (el) rowContainerRefs.current[row.id] = el
-                  else delete rowContainerRefs.current[row.id]
-                }}
-                {...chronologyRowProps}
-              />
+              <ChronologyRow key={row.id} row={row} idx={idx} {...chronologyRowProps} />
             ))}
           </div>
 

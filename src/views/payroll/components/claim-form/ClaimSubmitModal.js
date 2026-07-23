@@ -52,10 +52,10 @@ const ClaimSubmitModal = ({
             <div className="d-grid gap-2 pt-2">
               <span className="fw-semibold">{lineItemsLabel}</span>
               <div
-                className={
+                className={`${
                   lineItemsVariant === 'compact' ? 'border rounded-2 bg-body' : 'd-grid gap-2'
-                }
-                style={{ maxHeight: 220, overflowY: 'auto' }}
+                } vmecc-scroll-y`}
+                style={{ maxHeight: 220 }}
               >
                 {lineItems.map((item, index) => {
                   if (lineItemsVariant === 'compact') {

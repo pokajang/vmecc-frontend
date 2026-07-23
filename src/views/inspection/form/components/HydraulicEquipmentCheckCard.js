@@ -25,7 +25,7 @@ const HydraulicStatusSegment = ({ field, value, onChange, readOnly = false }) =>
     <div className="inspection-hydraulic-check-label small fw-semibold text-muted">
       {field.label}
     </div>
-    <div className="inspection-hydraulic-status-group d-flex flex-nowrap justify-content-start gap-2 overflow-auto pb-1">
+    <div className="inspection-hydraulic-status-group d-flex flex-nowrap justify-content-start gap-2 vmecc-scroll-x pb-1">
       {HYDRAULIC_CHECK_STATUS_OPTIONS.map((option) => {
         const isSelected = value === option.value
         const className = `inspection-hydraulic-status-btn btn btn-sm ${

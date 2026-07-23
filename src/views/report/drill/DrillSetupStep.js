@@ -1,22 +1,14 @@
 import React, { useState } from 'react'
-import {
-  CButton,
-  CAlert,
-  CCol,
-  CFormCheck,
-  CFormFeedback,
-  CFormInput,
-  CFormLabel,
-  CRow,
-} from '@coreui/react'
+import { CButton, CAlert, CCol, CFormFeedback, CFormInput, CFormLabel, CRow } from '@coreui/react'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import CreateActionButton from 'src/components/CreateActionButton'
 import IconOptionGrid from 'src/components/IconOptionGrid'
 import TypeManagerModal from 'src/components/report-workflow/TypeManagerModal'
-import { DRILL_ENVIRONMENT_OPTIONS, DRILL_EXERCISE_CATEGORY_OPTIONS } from './constants'
+import { DRILL_ENVIRONMENT_OPTIONS } from './constants'
 import SelectionCards from '../components/SelectionCards'
 import { ReportSetupActions, ReportSetupSummaryRow } from '../components/ReportWorkflowUi'
 import { REPORT_MOBILE_QUERY } from '../hooks/useReportIsMobile'
+import useDrillCategoryManager, { DRILL_CATEGORY_TOGGLE_VALUE } from './useDrillCategoryManager'
 import useDrillTypeManager, { DRILL_TYPE_TOGGLE_VALUE } from './useDrillTypeManager'
 import useDrillLocationManager, { DRILL_LOCATION_TOGGLE_VALUE } from './useDrillLocationManager'
 import { recordDrillTypeUsage } from './typeUsageStorage'
@@ -46,7 +38,6 @@ const DrillSetupStep = ({
   saveLabel = 'Save Draft',
   draftStatus = '',
   blockerMessage = '',
-  onReset,
 }) => {
   const [isEditingType, setIsEditingType] = useState(() => !String(form.incidentType || '').trim())
   const [isEditingEnvironment, setIsEditingEnvironment] = useState(
@@ -62,6 +53,7 @@ const DrillSetupStep = ({
     () => !String(form.reportDate || '').trim() || !String(form.reportTime || '').trim(),
   )
   const [deleteTypeTarget, setDeleteTypeTarget] = useState(null)
+  const [deleteCategoryTarget, setDeleteCategoryTarget] = useState(null)
   const [deleteLocationTarget, setDeleteLocationTarget] = useState(null)
 
   const updateSetupField = (field, value) => {
@@ -92,6 +84,18 @@ const DrillSetupStep = ({
     updateSetupField,
     pushToast,
   })
+  const drillCategory = useDrillCategoryManager({
+    userId: user?.id,
+    selectedCategories: form.exerciseCategories,
+    updateSetupField,
+    pushToast,
+  })
+  const categorySummary = (Array.isArray(form.exerciseCategories) ? form.exerciseCategories : [])
+    .map(
+      (value) =>
+        drillCategory.categoryOptions.find((option) => option.value === value)?.title || value,
+    )
+    .join(', ')
 
   return (
     <div className="mb-3 d-grid gap-4" data-testid="drill-report-setup-ready">
@@ -111,6 +115,24 @@ const DrillSetupStep = ({
         onConfirm={() => {
           if (deleteTypeTarget?.value) drillType.removeType(deleteTypeTarget.value)
           setDeleteTypeTarget(null)
+        }}
+      />
+      <ActionConfirmModal
+        visible={Boolean(deleteCategoryTarget)}
+        mobileDrawerQuery={REPORT_MOBILE_QUERY}
+        testId="drill-report-category-manager-delete-modal"
+        title="Delete Category"
+        message={
+          deleteCategoryTarget?.label
+            ? `Delete "${deleteCategoryTarget.label}"? This cannot be undone.`
+            : 'Delete this category?'
+        }
+        confirmLabel="Delete"
+        confirmColor="danger"
+        onClose={() => setDeleteCategoryTarget(null)}
+        onConfirm={() => {
+          if (deleteCategoryTarget?.value) drillCategory.removeCategory(deleteCategoryTarget.value)
+          setDeleteCategoryTarget(null)
         }}
       />
       <ActionConfirmModal
@@ -166,6 +188,42 @@ const DrillSetupStep = ({
         iconOptions={drillType.iconOptions}
         iconValue={drillType.newTypeIconKey}
         onChangeIcon={drillType.setNewTypeIconKey}
+        showIconPicker
+      />
+      <TypeManagerModal
+        visible={drillCategory.showAddCategoryModal}
+        mobileDrawer
+        mobileDrawerQuery={REPORT_MOBILE_QUERY}
+        testId="drill-report-category-manager-modal"
+        onClose={drillCategory.closeAddModal}
+        editMode={drillCategory.categoryEditMode}
+        onSetEditMode={drillCategory.setCategoryEditMode}
+        editTitle="Edit Exercise Categories"
+        addTitle="Add Exercise Category"
+        options={drillCategory.categoryOptions}
+        onStartEdit={drillCategory.startEditCategory}
+        onRequestDelete={({ value, label }) => setDeleteCategoryTarget({ value, label })}
+        nameLabel="Exercise Category Name"
+        nameValue={drillCategory.newCategoryName}
+        onChangeName={(value) => {
+          drillCategory.setNewCategoryName(value)
+          if (drillCategory.addCategoryError) drillCategory.setAddCategoryError('')
+        }}
+        namePlaceholder="e.g. Medical Response"
+        descriptionLabel="Exercise category details (optional)"
+        descriptionValue={drillCategory.newCategoryDescription}
+        onChangeDescription={drillCategory.setNewCategoryDescription}
+        descriptionPlaceholder="Subtext shown below category name."
+        error={drillCategory.addCategoryError}
+        editingKey={drillCategory.editingCategoryKey}
+        editingLabel="Editing category"
+        editButtonLabel="Edit Categories"
+        onSave={drillCategory.saveCategory}
+        saveLabel="Save Category"
+        updateLabel="Update Category"
+        iconOptions={drillCategory.iconOptions}
+        iconValue={drillCategory.newCategoryIconKey}
+        onChangeIcon={drillCategory.setNewCategoryIconKey}
         showIconPicker
       />
       <TypeManagerModal
@@ -266,7 +324,7 @@ const DrillSetupStep = ({
         !isEditingCategories ? (
           <ReportSetupSummaryRow
             label="Exercise Categories"
-            value={form.exerciseCategories.join(', ')}
+            value={categorySummary}
             showDesktop
             onEdit={() => setIsEditingCategories(true)}
             onReset={() => {
@@ -275,39 +333,45 @@ const DrillSetupStep = ({
             }}
           />
         ) : (
-          <fieldset className="d-grid gap-2">
-            <legend className="fs-6 fw-semibold text-muted mb-0">
-              Exercise Categories (optional)
-            </legend>
-            <div className="d-flex flex-wrap gap-3">
-              {DRILL_EXERCISE_CATEGORY_OPTIONS.map((option) => {
-                const selected = Array.isArray(form.exerciseCategories)
-                  ? form.exerciseCategories.includes(option.value)
-                  : false
-                return (
-                  <CFormCheck
-                    key={option.value}
-                    id={`drill-category-${option.value.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`}
-                    className="report-drill-category-choice"
-                    label={option.label}
-                    checked={selected}
-                    onChange={() =>
-                      setForm((prev) => {
-                        const current = Array.isArray(prev.exerciseCategories)
-                          ? prev.exerciseCategories
-                          : []
-                        return {
-                          ...prev,
-                          exerciseCategories: selected
-                            ? current.filter((value) => value !== option.value)
-                            : [...current, option.value],
-                        }
-                      })
-                    }
-                  />
-                )
-              })}
+          <div className="d-grid gap-2" role="group" aria-labelledby="drill-category-title">
+            <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
+              <div id="drill-category-title" className="fw-semibold text-muted">
+                Exercise Categories (optional)
+              </div>
+              <CreateActionButton label="Add category" onClick={drillCategory.openAddModal} />
             </div>
+            <IconOptionGrid
+              options={drillCategory.visibleCategoryOptions}
+              value={Array.isArray(form.exerciseCategories) ? form.exerciseCategories : []}
+              onChange={(nextValue) => {
+                if (nextValue === DRILL_CATEGORY_TOGGLE_VALUE) {
+                  drillCategory.setShowAllCategories((prev) => !prev)
+                  return
+                }
+                setForm((prev) => {
+                  const current = Array.isArray(prev.exerciseCategories)
+                    ? prev.exerciseCategories
+                    : []
+                  return {
+                    ...prev,
+                    exerciseCategories: current.includes(nextValue)
+                      ? current.filter((value) => value !== nextValue)
+                      : [...current, nextValue],
+                  }
+                })
+              }}
+              variant="compact"
+              showDescription
+              columns={{ xs: 6, md: 3 }}
+              cardProps={(option) =>
+                option?.value === DRILL_CATEGORY_TOGGLE_VALUE
+                  ? TOGGLE_CARD_PROPS
+                  : { className: 'report-option-card' }
+              }
+              selectionMode="multi"
+              ariaLabel="Exercise categories"
+              testIdPrefix="drill-category"
+            />
             <div className="small text-body-secondary">
               Select every emergency response category exercised by this drill.
             </div>
@@ -324,7 +388,7 @@ const DrillSetupStep = ({
                 </CButton>
               </div>
             ) : null}
-          </fieldset>
+          </div>
         )}
         <div
           data-drill-field="weather"
@@ -495,11 +559,6 @@ const DrillSetupStep = ({
             {blockerMessage}
           </CAlert>
         ) : null}
-        <div className="d-flex justify-content-end">
-          <CButton type="button" color="light" size="sm" onClick={onReset}>
-            Reset
-          </CButton>
-        </div>
         <ReportSetupActions
           onSaveDraft={onSaveDraft}
           onContinue={onContinue}

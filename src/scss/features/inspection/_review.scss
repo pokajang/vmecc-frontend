@@ -1,3 +1,5 @@
+@use '../../foundation/scrollbars' as scrollbars;
+
 .inspection-review-page {
   max-width: 100%;
 }
@@ -566,25 +568,7 @@
 
 .all-extinguishers-table-frame {
   .table-responsive {
-    scrollbar-color: #c4c9cf #f3f4f6;
-    scrollbar-width: thin;
-  }
-
-  .table-responsive::-webkit-scrollbar {
-    height: 0.45rem;
-  }
-
-  .table-responsive::-webkit-scrollbar-track {
-    background: #f3f4f6;
-  }
-
-  .table-responsive::-webkit-scrollbar-thumb {
-    border-radius: 999px;
-    background: #c4c9cf;
-  }
-
-  .table-responsive::-webkit-scrollbar-thumb:hover {
-    background: #aeb5bd;
+    @include scrollbars.vmecc-scrollbar;
   }
 }
 
@@ -650,14 +634,19 @@
 .inspection-side-panel__body {
   min-height: 0;
   flex: 1 1 auto;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
   padding: 1rem;
+
+  @include scrollbars.vmecc-scrollbar;
 }
 
 .all-extinguishers-history-list {
   overflow: auto;
   border: 1px solid var(--cui-border-color);
   border-radius: 0.45rem;
+
+  @include scrollbars.vmecc-scrollbar;
 }
 
 .all-extinguishers-history-list .table {

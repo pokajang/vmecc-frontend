@@ -13,6 +13,7 @@ import {
 import { CChartBar, CChartDoughnut, CChartLine } from '@coreui/react-chartjs'
 import { getStyle } from '@coreui/utils'
 import { Clock, Building2 } from 'lucide-react'
+import DashboardEmptyState from './DashboardEmptyState'
 import {
   sparklineOptions,
   bgChartOptions,
@@ -255,8 +256,8 @@ export const OvertimeActivityChart = ({ stats, periodLabel }) => {
   const trend = stats?.monthlyTrend ?? []
 
   return (
-    <CCard className="h-100">
-      <CCardHeader className="d-flex justify-content-between align-items-center">
+    <CCard className="dashboard-chart-card h-100">
+      <CCardHeader className="dashboard-chart-card__header d-flex justify-content-between align-items-center">
         <div>
           <div className="fw-semibold">OT Requests Submitted</div>
           <div className="text-body-secondary small mt-1">
@@ -268,32 +269,39 @@ export const OvertimeActivityChart = ({ stats, periodLabel }) => {
         )}
       </CCardHeader>
       <CCardBody>
-        <CChartBar
-          data={{
-            labels: trend.map((t) => t.month),
-            datasets: [
-              {
-                label: 'Submissions',
-                backgroundColor: getStyle('--cui-warning'),
-                data: trend.map((t) => t.count),
-                borderRadius: 4,
+        {trend.length === 0 ? (
+          <DashboardEmptyState message="No overtime requests were submitted for this period." />
+        ) : (
+          <CChartBar
+            className="dashboard-activity-chart"
+            aria-label="Overtime requests submitted by month"
+            role="img"
+            data={{
+              labels: trend.map((t) => t.month),
+              datasets: [
+                {
+                  label: 'Submissions',
+                  backgroundColor: getStyle('--cui-warning'),
+                  data: trend.map((t) => t.count),
+                  borderRadius: 4,
+                },
+              ],
+            }}
+            options={{
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { grid: { display: false } },
+                y: {
+                  beginAtZero: true,
+                  grid: { color: getStyle('--cui-border-color-translucent') },
+                  ticks: { stepSize: 5 },
+                },
               },
-            ],
-          }}
-          options={{
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-              x: { grid: { display: false } },
-              y: {
-                beginAtZero: true,
-                grid: { color: getStyle('--cui-border-color-translucent') },
-                ticks: { stepSize: 5 },
-              },
-            },
-          }}
-          style={{ minHeight: '220px' }}
-        />
+            }}
+            style={{ minHeight: '220px' }}
+          />
+        )}
       </CCardBody>
     </CCard>
   )
@@ -323,10 +331,12 @@ export const OvertimeStatusBreakdown = ({ stats, periodLabel }) => {
   const byTeam = stats?.byTeam ?? []
   const statusTotal = OT_STATUS_ROWS.reduce((sum, r) => sum + (byStatus[r.key] ?? 0), 0)
   const teamMax = byTeam.length > 0 ? byTeam[0].count : 1
+  const hasBreakdownData =
+    statusTotal > 0 || Object.values(byType).some((count) => count > 0) || byTeam.length > 0
 
   return (
-    <CCard className="h-100">
-      <CCardHeader className="d-flex justify-content-between align-items-center">
+    <CCard className="dashboard-chart-card h-100">
+      <CCardHeader className="dashboard-chart-card__header d-flex justify-content-between align-items-center">
         <div>
           <div className="fw-semibold">Overtime Breakdown</div>
           <div className="text-body-secondary small mt-1">By type, status, and team</div>
@@ -336,78 +346,84 @@ export const OvertimeStatusBreakdown = ({ stats, periodLabel }) => {
         )}
       </CCardHeader>
       <CCardBody>
-        <CRow className="g-4">
-          {/* By type — doughnut */}
-          <CCol xs={12} md={4}>
-            <div className="text-body-secondary small mb-2">By type</div>
-            <CChartDoughnut
-              style={{ maxHeight: '200px' }}
-              data={{
-                labels: ['Weekday', 'Weekend', 'Holiday'],
-                datasets: [
-                  {
-                    data: [byType.weekday, byType.weekend, byType.holiday],
-                    backgroundColor: [
-                      getStyle('--cui-warning'),
-                      getStyle('--cui-primary'),
-                      getStyle('--cui-danger'),
-                    ],
-                    borderWidth: 0,
+        {hasBreakdownData ? (
+          <CRow className="g-4">
+            {/* By type — doughnut */}
+            <CCol xs={12} md={4}>
+              <div className="text-body-secondary small mb-2">By type</div>
+              <CChartDoughnut
+                className="dashboard-breakdown-chart"
+                aria-label="Overtime request type distribution"
+                role="img"
+                data={{
+                  labels: ['Weekday', 'Weekend', 'Holiday'],
+                  datasets: [
+                    {
+                      data: [byType.weekday, byType.weekend, byType.holiday],
+                      backgroundColor: [
+                        getStyle('--cui-warning'),
+                        getStyle('--cui-primary'),
+                        getStyle('--cui-danger'),
+                      ],
+                      borderWidth: 0,
+                    },
+                  ],
+                }}
+                options={{
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12 } },
                   },
-                ],
-              }}
-              options={{
-                maintainAspectRatio: false,
-                plugins: {
-                  legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12 } },
-                },
-              }}
-            />
-          </CCol>
+                }}
+              />
+            </CCol>
 
-          {/* By status — progress bars */}
-          <CCol xs={12} md={4}>
-            <div className="text-body-secondary small mb-2">By status</div>
-            {OT_STATUS_ROWS.map((row) => {
-              const count = byStatus[row.key] ?? 0
-              const pct = statusTotal > 0 ? Math.round((count / statusTotal) * 100) : 0
-              return (
-                <div key={row.key} className="mb-2">
-                  <CRow className="align-items-center g-0 mb-1">
-                    <CCol xs="auto" className="text-body-secondary small me-auto">
-                      {row.label}
-                    </CCol>
-                    <CCol xs="auto" className="text-body-secondary small fw-semibold">
-                      {count}
-                    </CCol>
-                  </CRow>
-                  <CProgress thin color={row.color} value={pct} />
-                </div>
-              )
-            })}
-          </CCol>
+            {/* By status — progress bars */}
+            <CCol xs={12} md={4}>
+              <div className="text-body-secondary small mb-2">By status</div>
+              {OT_STATUS_ROWS.map((row) => {
+                const count = byStatus[row.key] ?? 0
+                const pct = statusTotal > 0 ? Math.round((count / statusTotal) * 100) : 0
+                return (
+                  <div key={row.key} className="mb-2">
+                    <CRow className="align-items-center g-0 mb-1">
+                      <CCol xs="auto" className="text-body-secondary small me-auto">
+                        {row.label}
+                      </CCol>
+                      <CCol xs="auto" className="text-body-secondary small fw-semibold">
+                        {count}
+                      </CCol>
+                    </CRow>
+                    <CProgress thin color={row.color} value={pct} />
+                  </div>
+                )
+              })}
+            </CCol>
 
-          {/* By team — ranked list */}
-          <CCol xs={12} md={4}>
-            <div className="text-body-secondary small mb-2">By team</div>
-            {byTeam.map((row) => {
-              const pct = Math.round((row.count / teamMax) * 100)
-              return (
-                <div key={row.team} className="mb-2">
-                  <CRow className="align-items-center g-0 mb-1">
-                    <CCol xs="auto" className="text-body-secondary small me-auto">
-                      {row.team}
-                    </CCol>
-                    <CCol xs="auto" className="text-body-secondary small fw-semibold">
-                      {row.count}
-                    </CCol>
-                  </CRow>
-                  <CProgress thin color="warning" value={pct} />
-                </div>
-              )
-            })}
-          </CCol>
-        </CRow>
+            {/* By team — ranked list */}
+            <CCol xs={12} md={4}>
+              <div className="text-body-secondary small mb-2">By team</div>
+              {byTeam.map((row) => {
+                const pct = Math.round((row.count / teamMax) * 100)
+                return (
+                  <div key={row.team} className="mb-2">
+                    <CRow className="align-items-center g-0 mb-1">
+                      <CCol xs="auto" className="text-body-secondary small me-auto">
+                        {row.team}
+                      </CCol>
+                      <CCol xs="auto" className="text-body-secondary small fw-semibold">
+                        {row.count}
+                      </CCol>
+                    </CRow>
+                    <CProgress thin color="warning" value={pct} />
+                  </div>
+                )
+              })}
+            </CCol>
+          </CRow>
+        ) : (
+          <DashboardEmptyState message="No overtime breakdown is available for this period." />
+        )}
       </CCardBody>
     </CCard>
   )

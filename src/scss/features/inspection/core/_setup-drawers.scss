@@ -1,3 +1,5 @@
+@use '../../../foundation/scrollbars' as scrollbars;
+
 .inspection-next-location-card {
   max-width: 100%;
 }
@@ -150,27 +152,10 @@
 .inspection-mobile-setup-drawer__body {
   flex: 0 1 auto;
   padding: 0.75rem 1.1rem calc(2rem + env(safe-area-inset-bottom, 0px));
+  overflow-x: hidden;
   overflow-y: auto;
-  scrollbar-color: #cfd5dd #f3f5f7;
-  scrollbar-width: thin;
-}
 
-.inspection-mobile-setup-drawer__body::-webkit-scrollbar {
-  width: 6px;
-}
-
-.inspection-mobile-setup-drawer__body::-webkit-scrollbar-track {
-  background-color: #f3f5f7;
-  border-radius: 999px;
-}
-
-.inspection-mobile-setup-drawer__body::-webkit-scrollbar-thumb {
-  background-color: #cfd5dd;
-  border-radius: 999px;
-}
-
-.inspection-mobile-setup-drawer__body::-webkit-scrollbar-thumb:hover {
-  background-color: #b8c0ca;
+  @include scrollbars.vmecc-scrollbar;
 }
 
 .inspection-mobile-setup-drawer__field-label {

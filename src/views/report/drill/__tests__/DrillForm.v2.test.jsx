@@ -7,7 +7,6 @@ import DrillForm from '../DrillForm'
 
 const storageMocks = vi.hoisted(() => ({
   save: vi.fn(),
-  clear: vi.fn(),
   load: vi.fn(),
 }))
 
@@ -16,7 +15,6 @@ vi.mock('../../reportStorage', async () => {
   return {
     ...actual,
     saveReportDraft: storageMocks.save,
-    clearReportDraft: storageMocks.clear,
     loadReportDraft: storageMocks.load,
     loadReportDraftRow: vi.fn(async () => {
       const payload = await storageMocks.load()
@@ -75,25 +73,31 @@ beforeEach(() => {
     },
   })
   storageMocks.save.mockReset().mockResolvedValue(true)
-  storageMocks.clear.mockReset().mockResolvedValue(true)
   storageMocks.load.mockReset().mockResolvedValue(null)
 })
 
 describe('DrillForm V2 flow', () => {
-  it('uses full-height label targets for optional exercise categories', async () => {
+  it('uses ERCO-style multi-select cards for optional exercise categories', async () => {
     renderForm({
       newSection: 'setup',
       initialFormSeed: { ...completeSeed, exerciseCategories: [] },
     })
 
-    const fireCategory = await screen.findByLabelText('Fire')
-    expect(fireCategory.closest('.report-drill-category-choice')).toBeTruthy()
+    const fireCategory = await screen.findByRole('button', { name: /^Fire/ })
+    const rescueCategory = screen.getByRole('button', { name: /^Rescue/ })
+
+    expect(fireCategory.getAttribute('aria-pressed')).toBe('false')
+    fireEvent.click(fireCategory)
+    fireEvent.click(rescueCategory)
+    expect(fireCategory.getAttribute('aria-pressed')).toBe('true')
+    expect(rescueCategory.getAttribute('aria-pressed')).toBe('true')
   })
 
   it('falls back to the setup stage for an unknown editable sub-route', async () => {
     renderForm({ newSection: 'unknown-section' })
-    expect(await screen.findByText('Exercise Setup')).toBeTruthy()
-    expect(screen.getByText('Choose Drill Type')).toBeTruthy()
+    expect(await screen.findByText('Choose Drill Type')).toBeTruthy()
+    expect(screen.queryByText('Exercise Setup')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Reset' })).toBeNull()
   })
 
   it('restores a normalized server draft directly into the requested stage', async () => {
