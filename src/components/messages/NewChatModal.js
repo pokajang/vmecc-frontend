@@ -40,12 +40,11 @@ const NewChatModal = ({
                 onClick={() => onSelectContact(contact)}
               >
                 <div
-                  className="rounded-circle d-flex align-items-center justify-content-center text-white"
+                  className="vmecc-label rounded-circle d-flex align-items-center justify-content-center text-white"
                   style={{
                     width: 36,
                     height: 36,
                     background: 'var(--cui-primary)',
-                    fontWeight: 600,
                   }}
                 >
                   {getInitials(contact.name || contact.email || '')}

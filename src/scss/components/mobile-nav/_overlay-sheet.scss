@@ -109,9 +109,9 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.98rem;
-  font-weight: 700;
-  line-height: 1.25;
+  font-size: var(--vmecc-text-section-title);
+  font-weight: var(--vmecc-weight-bold);
+  line-height: var(--vmecc-leading-heading);
 }
 
 .mobile-overlay-shell-count,
@@ -120,8 +120,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  font-size: 0.82rem;
-  font-weight: 700;
+  font-size: var(--vmecc-text-meta);
+  font-weight: var(--vmecc-weight-bold);
   line-height: 1.2;
 }
 
@@ -169,8 +169,8 @@
   margin-top: var(--mobile-overlay-section-gap);
   margin-bottom: var(--mobile-overlay-section-bottom-gap);
   padding: 0.2rem 0.55rem;
-  font-size: 0.82rem;
-  font-weight: 700;
+  font-size: var(--vmecc-text-meta);
+  font-weight: var(--vmecc-weight-bold);
   letter-spacing: 0.03em;
   text-transform: uppercase;
   color: #475569;
@@ -202,8 +202,9 @@
   border: 1px solid var(--cui-border-color);
   border-radius: 0.65rem;
   background: #f8fafc;
-  font-size: 0.88rem;
-  line-height: 1.35;
+  font-size: var(--vmecc-text-meta);
+  font-weight: var(--vmecc-weight-medium);
+  line-height: var(--vmecc-leading-compact);
 }
 
 .mobile-nav-sheet-user-label {
@@ -215,7 +216,7 @@
   max-width: 100%;
   overflow: hidden;
   color: var(--cui-emphasis-color);
-  font-weight: 700;
+  font-weight: var(--vmecc-weight-bold);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -249,7 +250,7 @@
   text-align: left;
   padding: 0.5rem 0.58rem;
   min-height: var(--mobile-overlay-row-min-height);
-  font-size: 0.92rem;
+  font-size: var(--vmecc-text-body);
 }
 
 .mobile-overlay-item:hover,
@@ -327,15 +328,16 @@
 .mobile-overlay-item-label {
   min-width: 0;
   color: var(--cui-body-color);
-  font-weight: 500;
+  font-weight: var(--vmecc-weight-semibold);
   line-height: var(--mobile-overlay-label-line-height);
   overflow-wrap: anywhere;
 }
 
 .mobile-overlay-item-subtext {
   color: var(--cui-secondary-color);
-  font-size: 0.84rem;
-  line-height: 1.35;
+  font-size: var(--vmecc-text-meta);
+  font-weight: var(--vmecc-weight-medium);
+  line-height: var(--vmecc-leading-compact);
   overflow-wrap: anywhere;
 }
 
@@ -432,8 +434,8 @@
 .mobile-overlay-action-button {
   min-height: 2rem;
   border-radius: 0.55rem;
-  font-size: 0.84rem;
-  font-weight: 700;
+  font-size: var(--vmecc-text-meta);
+  font-weight: var(--vmecc-weight-bold);
   line-height: 1.2;
   padding: 0.4rem 0.62rem;
 }
@@ -444,7 +446,8 @@
   background: var(--cui-body-bg);
   color: var(--cui-secondary-color);
   padding: 0.8rem;
-  font-size: 0.88rem;
+  font-size: var(--vmecc-text-meta);
+  font-weight: var(--vmecc-weight-medium);
 }
 
 @media (max-width: 430px) {

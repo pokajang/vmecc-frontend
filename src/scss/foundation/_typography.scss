@@ -1,0 +1,157 @@
+:root {
+  --vmecc-font-sans: 'Manrope Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --vmecc-font-mono: Consolas, 'Courier New', monospace;
+  --vmecc-text-page-title: 1.5rem;
+  --vmecc-text-section-title: 1.125rem;
+  --vmecc-text-card-title: 1rem;
+  --vmecc-text-body: 1rem;
+  --vmecc-text-label: 0.95rem;
+  --vmecc-text-meta: 0.875rem;
+  --vmecc-text-caption: 0.82rem;
+  --vmecc-leading-heading: 1.25;
+  --vmecc-leading-compact: 1.35;
+  --vmecc-leading-body: 1.5;
+  --vmecc-weight-body: 500;
+  --vmecc-weight-medium: 500;
+  --vmecc-weight-semibold: 600;
+  --vmecc-weight-bold: 700;
+}
+
+body,
+button,
+input,
+optgroup,
+select,
+textarea {
+  font-family: var(--vmecc-font-sans);
+}
+
+body {
+  font-weight: var(--vmecc-weight-body);
+  font-synthesis: style;
+}
+
+.vmecc-page-title {
+  margin: 0;
+  color: var(--cui-emphasis-color);
+  font-size: var(--vmecc-text-page-title);
+  font-weight: var(--vmecc-weight-bold);
+  line-height: var(--vmecc-leading-heading);
+}
+
+.vmecc-section-title {
+  color: var(--cui-emphasis-color);
+  font-size: var(--vmecc-text-section-title);
+  font-weight: var(--vmecc-weight-bold);
+  line-height: var(--vmecc-leading-heading);
+}
+
+.vmecc-card-title {
+  color: var(--cui-emphasis-color);
+  font-size: var(--vmecc-text-card-title);
+  font-weight: var(--vmecc-weight-semibold);
+  line-height: var(--vmecc-leading-compact);
+}
+
+.vmecc-body-text {
+  font-size: var(--vmecc-text-body);
+  font-weight: var(--vmecc-weight-body);
+  line-height: var(--vmecc-leading-body);
+}
+
+.vmecc-label {
+  font-size: var(--vmecc-text-label);
+  font-weight: var(--vmecc-weight-semibold);
+  line-height: var(--vmecc-leading-compact);
+}
+
+.vmecc-meta {
+  font-size: var(--vmecc-text-meta);
+  font-weight: var(--vmecc-weight-medium);
+  line-height: var(--vmecc-leading-compact);
+}
+
+.vmecc-caption {
+  font-size: var(--vmecc-text-caption);
+  font-weight: var(--vmecc-weight-semibold);
+  line-height: 1.25;
+}
+
+.vmecc-overline {
+  font-size: var(--vmecc-text-caption);
+  font-weight: var(--vmecc-weight-bold);
+  line-height: 1.25;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.vmecc-tabular,
+.table td,
+.table th {
+  font-variant-numeric: tabular-nums;
+}
+
+.form-label,
+.form-check-label {
+  font-weight: var(--vmecc-weight-semibold);
+}
+
+.form-control,
+.form-select,
+.form-control-plaintext,
+.input-group-text {
+  font-weight: var(--vmecc-weight-medium);
+}
+
+.form-control::placeholder,
+.form-select::placeholder,
+.form-control-plaintext::placeholder,
+textarea.form-control::placeholder {
+  font-weight: var(--vmecc-weight-body);
+}
+
+.form-text,
+.valid-feedback,
+.invalid-feedback {
+  font-size: var(--vmecc-text-meta);
+  line-height: var(--vmecc-leading-compact);
+}
+
+.table > thead > tr > th {
+  font-weight: var(--vmecc-weight-semibold);
+}
+
+.modal-title,
+.offcanvas-title,
+.popover-header {
+  font-weight: var(--vmecc-weight-bold);
+}
+
+.btn {
+  font-weight: var(--vmecc-weight-semibold);
+}
+
+code,
+kbd,
+pre,
+samp {
+  font-family: var(--vmecc-font-mono);
+}
+
+@media (max-width: 767.98px) {
+  :root {
+    --vmecc-text-page-title: 1.375rem;
+    --vmecc-text-section-title: 1.125rem;
+    --vmecc-text-card-title: 1rem;
+    --vmecc-text-body: 1rem;
+    --vmecc-text-label: 0.9375rem;
+    --vmecc-text-meta: 0.875rem;
+    --vmecc-text-caption: 0.8125rem;
+  }
+
+  .form-label,
+  .form-check-label,
+  .btn {
+    font-weight: var(--vmecc-weight-semibold);
+  }
+}

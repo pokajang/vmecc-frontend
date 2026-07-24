@@ -150,4 +150,64 @@ describe('InspectionLocationOptionPicker', () => {
 
     expect(onRequestEdit).toHaveBeenCalledTimes(1)
   })
+
+  it('clears a previous mobile search when reset restores the fresh picker', () => {
+    const options = makeOptions(14)
+    const visibleOptions = options.slice(0, 3)
+    const onRequestReset = vi.fn()
+    const { rerender } = render(
+      <InspectionLocationOptionPicker
+        options={options}
+        visibleOptions={visibleOptions}
+        value=""
+        sectionLabel="Main Location"
+        isCompactViewport
+        isExpanded
+        onChange={vi.fn()}
+        onRequestReset={onRequestReset}
+        searchAriaLabel="Search main location"
+      />,
+    )
+
+    fireEvent.change(screen.getByLabelText('Search main location'), {
+      target: { value: 'remote pump' },
+    })
+    expect(screen.getByText('Location 14')).toBeTruthy()
+
+    rerender(
+      <InspectionLocationOptionPicker
+        options={options}
+        visibleOptions={visibleOptions}
+        value="Location 14"
+        selectedLabel="Location 14"
+        sectionLabel="Main Location"
+        isCompactViewport
+        isExpanded={false}
+        onChange={vi.fn()}
+        onRequestReset={onRequestReset}
+        searchAriaLabel="Search main location"
+      />,
+    )
+    fireEvent.click(screen.getByLabelText('Reset Main Location'))
+
+    expect(onRequestReset).toHaveBeenCalledTimes(1)
+
+    rerender(
+      <InspectionLocationOptionPicker
+        options={options}
+        visibleOptions={visibleOptions}
+        value=""
+        sectionLabel="Main Location"
+        isCompactViewport
+        isExpanded
+        onChange={vi.fn()}
+        onRequestReset={onRequestReset}
+        searchAriaLabel="Search main location"
+      />,
+    )
+
+    expect(screen.getByLabelText('Search main location').value).toBe('')
+    expect(screen.getByText('Location 1')).toBeTruthy()
+    expect(screen.queryByText('Location 14')).toBeNull()
+  })
 })

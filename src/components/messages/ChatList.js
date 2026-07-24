@@ -131,12 +131,11 @@ const ChatList = ({
                 } ${idx === filteredThreads.length - 1 ? '' : 'border-bottom'}`}
               >
                 <div
-                  className="rounded-circle d-flex align-items-center justify-content-center text-white flex-shrink-0"
+                  className="vmecc-label rounded-circle d-flex align-items-center justify-content-center text-white flex-shrink-0"
                   style={{
                     width: 44,
                     height: 44,
                     background: 'var(--cui-primary)',
-                    fontWeight: 600,
                   }}
                 >
                   {initials}
@@ -148,10 +147,7 @@ const ChatList = ({
                         {thread.user?.name || thread.user?.email || 'Unknown'}
                       </span>
                       {roleLabel && (
-                        <span
-                          className="text-muted small fw-normal flex-shrink-0"
-                          style={{ fontSize: '0.78rem' }}
-                        >
+                        <span className="vmecc-caption text-muted fw-normal flex-shrink-0">
                           {roleLabel}
                         </span>
                       )}
@@ -192,7 +188,7 @@ const ChatList = ({
       </div>
 
       {isCapped && (
-        <div className="text-center text-muted py-2 border-top" style={{ fontSize: '0.78rem' }}>
+        <div className="vmecc-caption text-center text-muted py-2 border-top">
           Showing the 300 most recent conversations.
         </div>
       )}

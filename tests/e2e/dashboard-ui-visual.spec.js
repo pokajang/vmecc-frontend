@@ -5,6 +5,12 @@ const user = {
   name: 'Dashboard Reviewer',
   email: 'dashboard.reviewer@example.test',
   status: 'active',
+  ic_number: '900101-01-9010',
+  phone: '0123456789',
+  address: '1 Dashboard Way',
+  state: 'Selangor',
+  emergency_contact: { name: 'Emergency Contact', relationship: 'Sibling', phone: '0198765432' },
+  medical_info: { noKnownCriticalMedicalInfo: true },
   permissions: ['*'],
   roles: ['System Administrator'],
 }
@@ -158,6 +164,30 @@ const expectNoHorizontalPageOverflow = async (page) => {
     .toBe(true)
 }
 
+const expectTypographyContract = async (page, { mobile = false } = {}) => {
+  await expect
+    .poll(() => page.evaluate(() => document.fonts.check('16px "Manrope Variable"')))
+    .toBe(true)
+
+  const family = await page
+    .locator('body')
+    .evaluate((element) => getComputedStyle(element).fontFamily)
+  expect(family).toContain('Manrope Variable')
+
+  const title = page.getByRole('heading', { name: 'Dashboard Overview' })
+  await expect(title).toHaveCSS('font-weight', '700')
+  await expect(title).toHaveCSS('font-size', mobile ? '22px' : '21px')
+
+  if (mobile) {
+    await expect(page.locator('.dashboard-metric-list__summary').first()).toHaveCSS(
+      'font-size',
+      '16px',
+    )
+    await expect(page.locator('.app-bottom-nav-label').first()).toHaveCSS('font-size', '13px')
+    await expect(page.locator('.app-bottom-nav-label').first()).toHaveCSS('font-weight', '600')
+  }
+}
+
 test('dashboard has a usable desktop and mobile composition', async ({ page }, testInfo) => {
   await installDashboardStubs(page)
 
@@ -166,7 +196,15 @@ test('dashboard has a usable desktop and mobile composition', async ({ page }, t
   await expect(page.getByRole('heading', { name: 'Dashboard Overview' })).toBeVisible()
   await expect(page.getByRole('group', { name: 'Select dashboard reporting period' })).toBeVisible()
   await expect(page.getByText('Leave requests pending review')).toBeVisible()
+  await expect(page.locator('.dashboard-analytics').first()).toHaveAttribute('open', '')
+  await expect(
+    page.getByTestId('dashboard-module-roster').locator('.dashboard-team-table-desktop'),
+  ).toBeVisible()
+  await expect(
+    page.getByTestId('dashboard-module-roster').locator('.dashboard-team-summary-list'),
+  ).toBeHidden()
   await expectNoHorizontalPageOverflow(page)
+  await expectTypographyContract(page)
   await page.screenshot({ path: testInfo.outputPath('dashboard-desktop.png') })
 
   await page.setViewportSize({ width: 820, height: 1000 })
@@ -175,17 +213,89 @@ test('dashboard has a usable desktop and mobile composition', async ({ page }, t
 
   await page.setViewportSize({ width: 390, height: 844 })
   await expect(page.getByRole('heading', { name: 'Dashboard Overview' })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'This Month' })).toBeVisible()
+  const mobilePeriodDropdown = page.getByTestId('dashboard-period-dropdown')
+  const mobilePeriodToggle = mobilePeriodDropdown.getByRole('button', {
+    name: /Select dashboard reporting period/,
+  })
+  await expect(mobilePeriodToggle).toBeVisible()
+  await expect(mobilePeriodToggle).toContainText('This Month')
+  await expect(page.getByRole('group', { name: 'Select dashboard reporting period' })).toBeHidden()
   await expect(page.getByRole('button', { name: 'Collapse Payroll Claims' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Collapse action queue' })).toBeVisible()
+  await expect(page.locator('.dashboard-analytics').first()).not.toHaveAttribute('open', '')
+  await expect(page.getByText('Payroll analytics')).toBeVisible()
+  await expect(page.getByText('View details').first()).toBeVisible()
+  await expectTypographyContract(page, { mobile: true })
   await expect
     .poll(async () => {
-      const cards = await page.locator('.dashboard-kpi-row').first().locator(':scope > div').all()
-      const [firstCard, secondCard] = await Promise.all(
-        cards.slice(0, 2).map((card) => card.boundingBox()),
+      const rows = await page
+        .locator('.dashboard-kpi-row')
+        .first()
+        .locator('.dashboard-metric-list__item')
+        .all()
+      const [firstRow, secondRow] = await Promise.all(
+        rows.slice(0, 2).map((row) => row.boundingBox()),
       )
-      return Boolean(firstCard && secondCard && secondCard.y > firstCard.y)
+      return Boolean(firstRow && secondRow && secondRow.y > firstRow.y)
     })
     .toBe(true)
-  await expectNoHorizontalPageOverflow(page)
+  await expect(
+    page.locator('.dashboard-kpi-row').first().locator('.dashboard-metric-list__item').first(),
+  ).toHaveCSS('border-top-width', '0px')
+  await expect(
+    page.locator('.dashboard-kpi-row').first().locator('.dashboard-metric-list__item').nth(1),
+  ).toHaveCSS('border-top-width', '1px')
+  await expect(page.locator('.dashboard-summary-row--grouped').first()).toHaveCSS(
+    'border-top-width',
+    '1px',
+  )
   await page.screenshot({ path: testInfo.outputPath('dashboard-mobile.png'), fullPage: true })
+  await mobilePeriodToggle.click()
+  await page.screenshot({
+    path: testInfo.outputPath('dashboard-mobile-period-menu.png'),
+    fullPage: true,
+  })
+  await page.getByTestId('dashboard-period-option-3m').click()
+  await expect(mobilePeriodToggle).toContainText('3M')
+  await page.locator('.dashboard-analytics__summary').first().click()
+  await expect(page.locator('.dashboard-analytics').first()).toHaveAttribute('open', '')
+  await expect(page.getByText('Payroll claims')).toBeVisible()
+  const rosterModule = page.getByTestId('dashboard-module-roster')
+  await rosterModule.locator('.dashboard-analytics__summary').click()
+  await expect(rosterModule.locator('.dashboard-team-summary-list')).toBeVisible()
+  await expect(rosterModule.locator('.dashboard-team-table-desktop')).toBeHidden()
+  await page.screenshot({
+    path: testInfo.outputPath('dashboard-mobile-roster-summary.png'),
+    fullPage: true,
+  })
+  await expectNoHorizontalPageOverflow(page)
+
+  await page.getByRole('button', { name: 'Open menu' }).click()
+  const menuDialog = page.getByRole('dialog', { name: 'Menu' })
+  await expect(menuDialog).toBeVisible()
+  await expect(menuDialog.locator('.mobile-overlay-shell-title-text')).toHaveCSS(
+    'font-size',
+    '18px',
+  )
+  await expect(menuDialog.locator('.mobile-overlay-shell-title-text')).toHaveCSS(
+    'font-weight',
+    '700',
+  )
+  await expect(menuDialog.locator('.mobile-overlay-item-label').first()).toHaveCSS(
+    'font-size',
+    '16px',
+  )
+  await expect(menuDialog.locator('.mobile-overlay-item-label').first()).toHaveCSS(
+    'font-weight',
+    '600',
+  )
+  const overflowingMenuLabels = await menuDialog
+    .locator('.mobile-overlay-item-label')
+    .evaluateAll((nodes) =>
+      nodes
+        .filter((node) => node.scrollWidth > node.clientWidth + 1)
+        .map((node) => node.textContent.trim()),
+    )
+  expect(overflowingMenuLabels).toEqual([])
+  await page.screenshot({ path: testInfo.outputPath('dashboard-mobile-menu.png') })
 })

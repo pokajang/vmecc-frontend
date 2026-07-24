@@ -74,7 +74,7 @@ describe('HseEditSection mobile drawer', () => {
     expect(screen.queryByText('Outcome')).toBeNull()
     expect(screen.queryByText('Area Condition Remarks')).toBeNull()
 
-    fireEvent.click(screen.getByLabelText('Edit HSE observation'))
+    fireEvent.click(screen.getByRole('button', { name: /^Edit HSE observation:/ }))
 
     expect(screen.getByText('Outcome')).toBeTruthy()
     expect(screen.getByText('Area Condition Remarks')).toBeTruthy()
@@ -86,7 +86,7 @@ describe('HseEditSection mobile drawer', () => {
     render(<HseEditHarness />)
 
     fireEvent.click(screen.getByText('Area Satisfactory'))
-    fireEvent.click(screen.getByLabelText('Edit HSE observation'))
+    fireEvent.click(screen.getByRole('button', { name: /^Edit HSE observation:/ }))
 
     const remarks = screen.getByPlaceholderText(
       'Record the current safe/satisfactory condition of this area.',
@@ -106,7 +106,7 @@ describe('HseEditSection mobile drawer', () => {
     render(<HseEditHarness onSaveHseObservationDraft={onSaveHseObservationDraft} />)
 
     fireEvent.click(screen.getByText('Area Satisfactory'))
-    fireEvent.click(screen.getByLabelText('Edit HSE observation'))
+    fireEvent.click(screen.getByRole('button', { name: /^Edit HSE observation:/ }))
 
     const remarks = screen.getByPlaceholderText(
       'Record the current safe/satisfactory condition of this area.',
@@ -126,7 +126,7 @@ describe('HseEditSection mobile drawer', () => {
 
     fireEvent.click(screen.getByText('Cancel'))
     fireEvent.click(screen.getByRole('button', { name: 'Discard' }))
-    fireEvent.click(screen.getByLabelText('Edit HSE observation'))
+    fireEvent.click(screen.getByRole('button', { name: /^Edit HSE observation:/ }))
 
     expect(
       screen.getByPlaceholderText('Record the current safe/satisfactory condition of this area.')

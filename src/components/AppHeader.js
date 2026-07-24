@@ -280,13 +280,11 @@ const AppHeader = () => {
         <CNavItem className="d-none d-sm-flex align-items-center">
           <NavLink to="/roster/overview" className="text-decoration-none">
             <span
-              className="d-inline-flex align-items-center gap-1 rounded-pill px-2 py-1 fw-semibold"
+              className="vmecc-caption d-inline-flex align-items-center gap-1 rounded-pill px-2 py-1"
               style={{
-                fontSize: '0.78rem',
                 background: onDuty.shift === 'day' ? '#fef9c3' : '#1e293b',
                 color: onDuty.shift === 'day' ? '#854d0e' : '#e2e8f0',
                 border: onDuty.shift === 'day' ? '1px solid #fde047' : '1px solid #334155',
-                lineHeight: 1.4,
               }}
             >
               <span

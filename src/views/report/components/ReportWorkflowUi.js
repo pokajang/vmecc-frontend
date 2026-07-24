@@ -1,6 +1,7 @@
 import React from 'react'
 import FormActionGroup from 'src/components/FormActionGroup'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
+import MobileSetupSummaryRow from 'src/components/report-workflow/MobileSetupSummaryRow'
 import {
   CAlert,
   CButton,
@@ -27,9 +28,17 @@ import {
 
 export { REPORT_MOBILE_BREAKPOINT, REPORT_MOBILE_QUERY, useReportIsMobile }
 
-export const ReportSetupSummaryRow = ({ label, value, onEdit, onReset, showDesktop = false }) => {
+export const ReportSetupSummaryRow = ({
+  label,
+  value,
+  secondaryValue = '',
+  onEdit,
+  onReset,
+  showDesktop = false,
+}) => {
   const isMobile = useReportIsMobile()
   if (!isMobile && !showDesktop) return null
+  const desktopValue = [value, secondaryValue].filter(Boolean).join(' ')
 
   if (!isMobile) {
     return (
@@ -40,7 +49,7 @@ export const ReportSetupSummaryRow = ({ label, value, onEdit, onReset, showDeskt
       >
         <span className="report-setup-summary-row__section-label small text-muted">{label}</span>
         <span className="report-setup-summary-row__value fw-semibold">
-          <span className="text-truncate w-100">{value || '--'}</span>
+          <span className="text-truncate w-100">{desktopValue || '--'}</span>
         </span>
         <span className="report-setup-summary-row__actions d-inline-flex align-items-center gap-1">
           {typeof onReset === 'function' ? (
@@ -77,49 +86,14 @@ export const ReportSetupSummaryRow = ({ label, value, onEdit, onReset, showDeskt
   }
 
   return (
-    <div className="report-setup-summary-row inspection-mobile-selector-row d-flex align-items-center justify-content-between gap-3 d-md-none">
-      <div
-        className="inspection-mobile-selector-chip rounded-3 border border-primary bg-primary bg-opacity-10"
-        role="group"
-        aria-label={label}
-      >
-        <span className="inspection-mobile-selector-chip__section-label small text-muted">
-          {label}
-        </span>
-        <span className="inspection-mobile-selector-chip__label report-setup-summary-row__value fw-semibold">
-          <span className="text-truncate w-100">{value || '--'}</span>
-        </span>
-        <span className="inspection-mobile-selector-chip__actions d-inline-flex align-items-center gap-1">
-          {typeof onReset === 'function' ? (
-            <CButton
-              type="button"
-              color="primary"
-              variant="ghost"
-              size="sm"
-              className="inspection-mobile-selector-chip__reset p-1 border-0 shadow-none"
-              aria-label={`Reset ${label}`}
-              title={`Reset ${label}`}
-              onClick={onReset}
-            >
-              <RotateCcw size={15} />
-            </CButton>
-          ) : null}
-          {typeof onEdit === 'function' ? (
-            <CButton
-              type="button"
-              color="primary"
-              variant="ghost"
-              size="sm"
-              className="inspection-mobile-selector-chip__edit p-1 border-0 shadow-none"
-              aria-label={`Edit ${label}`}
-              title={`Edit ${label}`}
-              onClick={onEdit}
-            >
-              <Pencil size={15} />
-            </CButton>
-          ) : null}
-        </span>
-      </div>
+    <div className="report-setup-summary-row mobile-setup-summary-row d-md-none">
+      <MobileSetupSummaryRow
+        label={label}
+        value={value}
+        secondaryValue={secondaryValue}
+        onEdit={onEdit}
+        onReset={onReset}
+      />
     </div>
   )
 }

@@ -62,10 +62,9 @@ const ClaimPeriodSection = ({
                     <Calendar size={14} />
                   </div>
                   <span
-                    className="fw-medium"
+                    className="vmecc-meta"
                     style={{
                       color: isActive ? 'var(--cui-primary)' : 'var(--cui-body-color)',
-                      fontSize: '0.9rem',
                     }}
                   >
                     {option.label}

@@ -198,13 +198,9 @@ const ImagePicker = ({ currentImageUrl, onChange }) => {
             )}
           </div>
           {fileError ? (
-            <span className="text-danger" style={{ fontSize: '0.78rem' }}>
-              {fileError}
-            </span>
+            <span className="vmecc-caption text-danger">{fileError}</span>
           ) : (
-            <span className="text-muted" style={{ fontSize: '0.78rem' }}>
-              JPG, PNG, WebP · max 4 MB
-            </span>
+            <span className="vmecc-caption text-muted">JPG, PNG, WebP · max 4 MB</span>
           )}
         </div>
         <input
@@ -250,9 +246,7 @@ const ImagePicker = ({ currentImageUrl, onChange }) => {
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               />
             </div>
-            <div className="text-center text-muted mt-1" style={{ fontSize: '0.75rem' }}>
-              {preset.label}
-            </div>
+            <div className="vmecc-caption text-center text-muted mt-1">{preset.label}</div>
           </button>
         ))}
       </div>

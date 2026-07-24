@@ -104,24 +104,14 @@ const InspectionModuleLayout = ({
       ) : null}
       {(isDeleting || isSubmitting) && (
         <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: 'rgba(0,0,0,0.18)',
-            zIndex: 9999,
-          }}
+          className="inspection-loading-overlay"
+          role="status"
+          aria-live="polite"
+          aria-label={
+            isSubmitting ? 'Submitting inspection report' : 'Processing inspection action'
+          }
         >
-          <div
-            style={{
-              background: '#fff',
-              borderRadius: 12,
-              padding: '28px 36px',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.14)',
-            }}
-          >
+          <div className="inspection-loading-overlay__panel">
             <TableLoader message={isSubmitting ? 'Submitting report...' : 'Please wait...'} />
           </div>
         </div>

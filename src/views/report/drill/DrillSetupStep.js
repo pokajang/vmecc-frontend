@@ -68,10 +68,6 @@ const DrillSetupStep = ({
     isEditingDateTime ||
     !String(form.reportDate || '').trim() ||
     !String(form.reportTime || '').trim()
-  const dateTimeLabel = `${[form.reportDate, form.reportTime].filter(Boolean).join(' ')}${
-    form.reportIssuanceDate ? ` | Issued ${form.reportIssuanceDate}` : ''
-  }`
-
   const drillType = useDrillTypeManager({
     userId: user?.id,
     selectedType: form.incidentType,
@@ -260,7 +256,7 @@ const DrillSetupStep = ({
         showRowIcon={false}
       />
 
-      <div className="report-setup-grid d-grid gap-4">
+      <div className="report-setup-grid mobile-setup-picker d-grid gap-4">
         <div className="d-grid gap-3" data-drill-field="incidentType">
           {!showTypePicker ? (
             <>
@@ -270,6 +266,7 @@ const DrillSetupStep = ({
                 showDesktop
                 onEdit={() => setIsEditingType(true)}
                 onReset={() => {
+                  drillType.setShowAllDrillTypes(false)
                   updateSetupField('incidentType', '')
                   setIsEditingType(true)
                 }}
@@ -289,6 +286,7 @@ const DrillSetupStep = ({
                     drillType.setShowAllDrillTypes((prev) => !prev)
                     return
                   }
+                  drillType.setShowAllDrillTypes(false)
                   const value = String(nextValue || '').trim()
                   updateSetupField('incidentType', value)
                   recordDrillTypeUsage(user?.id, value)
@@ -328,6 +326,7 @@ const DrillSetupStep = ({
             showDesktop
             onEdit={() => setIsEditingCategories(true)}
             onReset={() => {
+              drillCategory.setShowAllCategories(false)
               updateSetupField('exerciseCategories', [])
               setIsEditingCategories(true)
             }}
@@ -430,6 +429,7 @@ const DrillSetupStep = ({
               showDesktop
               onEdit={() => setIsEditingLocation(true)}
               onReset={() => {
+                drillLocation.setShowAllDrillLocations(false)
                 updateSetupField('location', '')
                 setIsEditingLocation(true)
               }}
@@ -448,6 +448,7 @@ const DrillSetupStep = ({
                   drillLocation.setShowAllDrillLocations((prev) => !prev)
                   return
                 }
+                drillLocation.setShowAllDrillLocations(false)
                 updateSetupField('location', String(nextValue || '').trim())
                 setIsEditingLocation(false)
               }}
@@ -471,7 +472,10 @@ const DrillSetupStep = ({
           {form.reportDate && form.reportTime && !showDateTimePicker ? (
             <ReportSetupSummaryRow
               label="Date & Time"
-              value={dateTimeLabel}
+              value={form.reportDate}
+              secondaryValue={`${form.reportTime}${
+                form.reportIssuanceDate ? ` · Issued ${form.reportIssuanceDate}` : ''
+              }`}
               showDesktop
               onEdit={() => setIsEditingDateTime(true)}
               onReset={() => {

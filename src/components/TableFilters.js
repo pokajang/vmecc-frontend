@@ -146,8 +146,7 @@ const TableFilters = ({
               {activeFilterItems.length > 0 ? (
                 <CBadge
                   color="danger"
-                  className="position-absolute top-0 start-100 translate-middle rounded-pill"
-                  style={{ fontSize: '0.78rem' }}
+                  className="vmecc-caption position-absolute top-0 start-100 translate-middle rounded-pill"
                 >
                   {activeFilterItems.length}
                 </CBadge>

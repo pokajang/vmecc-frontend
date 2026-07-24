@@ -52,7 +52,12 @@ describe('UI debt shared primitives', () => {
       />,
     )
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Payroll Records' })).toBeTruthy()
+    expect(screen.getByRole('heading', { level: 1, name: 'Payroll Records' }).className).toContain(
+      'vmecc-page-title',
+    )
+    expect(screen.getByText('Salary and claim records.').closest('div').className).toContain(
+      'vmecc-meta',
+    )
     expect(screen.getByText('Salary and claim records.').className).toContain('d-md-none')
     expect(
       screen.getByText('Review salary and claim records across payroll periods.').className,
@@ -92,7 +97,8 @@ describe('UI debt shared primitives', () => {
 
     const card = screen.getByRole('button', { name: 'Open leave record LV-001 summary' })
     expect(screen.getByText('April 2026')).toBeTruthy()
-    expect(screen.getByText('Annual Leave')).toBeTruthy()
+    expect(screen.getByText('Annual Leave').className).toContain('vmecc-caption')
+    expect(screen.getByText('LV-001').className).toContain('vmecc-card-title')
     expect(screen.getByText('15 Apr 2026')).toBeTruthy()
 
     fireEvent.keyDown(card, { key: 'Enter' })

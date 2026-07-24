@@ -1,162 +1,42 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { CCard, CCardBody, CCardHeader, CCol, CRow, CWidgetStatsA } from '@coreui/react'
-import { CChartBar, CChartLine } from '@coreui/react-chartjs'
-import { getStyle } from '@coreui/utils'
+import { CCard, CCardBody, CCardHeader, CCol } from '@coreui/react'
 import DashboardEmptyState from './DashboardEmptyState'
-import {
-  sparklineOptions,
-  sparklineDataset,
-  MODULE_ACCENTS,
-  PeriodLabel,
-  TileTitle,
-} from '../utils/chartDefaults'
+import DashboardMetricList from './DashboardMetricList'
+import { DashboardActivityChart } from './DashboardCharts'
 
-// ─── Zone 1 — two KPI tiles ───────────────────────────────────────────────────
-
-export const RosterKpiTiles = ({ stats }) => {
-  const trend = stats?.monthlyTrend ?? []
-  const trendCounts = trend.map((t) => t.scheduledDays)
-  const trendLabels = trend.map((t) => t.month)
-
-  const sparkline = (color, filled = false) => (
-    <CChartLine
-      className="mt-3 mx-3"
-      style={{ height: '64px' }}
-      data={{
-        labels: trendLabels,
-        datasets: [{ ...sparklineDataset(color, filled), data: trendCounts }],
-      }}
-      options={sparklineOptions}
+export const RosterKpiTiles = ({ stats }) => (
+  <CCol xs={12}>
+    <DashboardMetricList
+      metrics={[
+        {
+          key: 'teams-on-duty',
+          value: stats?.teamsOnDuty ?? 0,
+          unit: 'teams',
+          label: 'on duty now',
+          tone: 'success',
+        },
+        {
+          key: 'drafts-pending-publish',
+          value: stats?.draftsPendingPublish ?? 0,
+          label: 'draft days to publish',
+          tone: 'warning',
+        },
+      ]}
     />
-  )
+  </CCol>
+)
 
-  return (
-    <>
-      {/* Tile 1 — Teams on duty right now · success */}
-      <CCol xs={6} lg={4} xxl={3}>
-        <CWidgetStatsA
-          className="h-100"
-          color="success"
-          value={
-            <>
-              {stats?.teamsOnDuty ?? 0} <span className="fs-6 fw-normal">teams</span>
-            </>
-          }
-          title={
-            <TileTitle>
-              Teams on Duty
-              <PeriodLabel label="Right Now" />
-            </TileTitle>
-          }
-          chart={sparkline(getStyle('--cui-success'), true)}
-        />
-      </CCol>
-
-      {/* Tile 2 — Draft rosters pending publish · warning */}
-      <CCol xs={6} lg={4} xxl={3}>
-        <CWidgetStatsA
-          className="h-100"
-          color="warning"
-          value={
-            <>
-              {stats?.draftsPendingPublish ?? 0} <span className="fs-6 fw-normal">days</span>
-            </>
-          }
-          title={
-            <TileTitle>
-              Draft Roster Days
-              <PeriodLabel label="Unpublished" />
-            </TileTitle>
-          }
-          chart={sparkline(getStyle('--cui-warning'))}
-        />
-      </CCol>
-    </>
-  )
-}
-
-RosterKpiTiles.propTypes = {
-  stats: PropTypes.shape({
-    teamsOnDuty: PropTypes.number,
-    draftsPendingPublish: PropTypes.number,
-    monthlyTrend: PropTypes.arrayOf(
-      PropTypes.shape({ month: PropTypes.string, scheduledDays: PropTypes.number }),
-    ),
-  }),
-}
-
-// ─── Zone 3 — monthly scheduled days chart ────────────────────────────────────
-
-export const RosterActivityChart = ({ stats }) => {
-  const trend = stats?.monthlyTrend ?? []
-
-  return (
-    <CCard className="dashboard-chart-card h-100">
-      <CCardHeader className="dashboard-chart-card__header">
-        <div className="fw-semibold">Roster Coverage</div>
-        <div className="text-body-secondary small mt-1">Scheduled days per month</div>
-      </CCardHeader>
-      <CCardBody>
-        {trend.length === 0 ? (
-          <DashboardEmptyState message="No roster coverage is available for this period." />
-        ) : (
-          <CChartBar
-            className="dashboard-activity-chart"
-            aria-label="Scheduled roster days by month"
-            role="img"
-            data={{
-              labels: trend.map((t) => t.month),
-              datasets: [
-                {
-                  label: 'Scheduled Days',
-                  backgroundColor: MODULE_ACCENTS.roster.base,
-                  data: trend.map((t) => t.scheduledDays),
-                  borderRadius: 4,
-                },
-              ],
-            }}
-            options={{
-              maintainAspectRatio: false,
-              plugins: { legend: { display: false } },
-              scales: {
-                x: { grid: { display: false } },
-                y: {
-                  beginAtZero: true,
-                  grid: { color: getStyle('--cui-border-color-translucent') },
-                  ticks: { stepSize: 5 },
-                },
-              },
-            }}
-            style={{ minHeight: '220px' }}
-          />
-        )}
-      </CCardBody>
-    </CCard>
-  )
-}
-
-RosterActivityChart.propTypes = {
-  stats: PropTypes.shape({
-    monthlyTrend: PropTypes.arrayOf(
-      PropTypes.shape({ month: PropTypes.string, scheduledDays: PropTypes.number }),
-    ),
-  }),
-}
-
-// ─── Zone 4 — per-team shift breakdown table ──────────────────────────────────
-
-const TEAM_COLORS = {
-  alpha: { bg: '#eef2ff', text: '#4338ca' },
-  bravo: { bg: '#ecfdf5', text: '#059669' },
-  charlie: { bg: '#fffbeb', text: '#d97706' },
-  delta: { bg: '#fff1f2', text: '#e11d48' },
-}
-
-const getTeamColor = (name) => {
-  const key = (name || '').trim().toLowerCase()
-  return TEAM_COLORS[key] || { bg: '#f1f5f9', text: '#475569' }
-}
+export const RosterActivityChart = ({ stats }) => (
+  <DashboardActivityChart
+    title="Roster coverage"
+    description="Scheduled days per month"
+    trend={stats?.monthlyTrend ?? []}
+    valueKey="scheduledDays"
+    datasetLabel="Scheduled days"
+    emptyMessage="No roster coverage is available for this period."
+  />
+)
 
 export const RosterTeamBreakdown = ({ stats }) => {
   const teams = stats?.teams ?? []
@@ -164,110 +44,64 @@ export const RosterTeamBreakdown = ({ stats }) => {
   return (
     <CCard className="dashboard-chart-card h-100">
       <CCardHeader className="dashboard-chart-card__header">
-        <div className="fw-semibold">Team Shift Summary</div>
-        <div className="text-body-secondary small mt-1">
-          Shifts covered per team · Current period
-        </div>
+        <div className="fw-semibold">Team shift summary</div>
+        <div className="text-body-secondary small mt-1">Shifts covered in the current period</div>
       </CCardHeader>
       <CCardBody className="p-0">
         {teams.length === 0 ? (
           <DashboardEmptyState message="No team shift summary is available for this period." />
         ) : (
           <>
-            <div className="dashboard-table-scroll-hint">Swipe to view all shift columns.</div>
             <div
-              className="table-responsive dashboard-team-table-scroll"
+              className="table-responsive dashboard-team-table-scroll dashboard-team-table-desktop"
               tabIndex={0}
               aria-label="Team shift summary table. Scroll horizontally to view all columns."
             >
-              <table style={{ width: '100%', minWidth: '32rem', borderCollapse: 'collapse' }}>
+              <table className="dashboard-team-table">
                 <caption className="visually-hidden">
                   Team shift summary for the current period
                 </caption>
                 <thead>
-                  <tr style={{ background: 'var(--cui-secondary-bg)' }}>
-                    {['Team', 'Staff', 'Day', 'Night', 'Total'].map((h) => (
-                      <th
-                        key={h}
-                        style={{
-                          padding: '10px 14px',
-                          fontWeight: 600,
-                          fontSize: '0.8rem',
-                          color: 'var(--cui-secondary-color)',
-                          borderBottom: '1px solid var(--cui-border-color)',
-                          textAlign: h === 'Team' ? 'left' : 'center',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {h}
+                  <tr>
+                    {['Team', 'Staff', 'Day', 'Night', 'Total'].map((heading) => (
+                      <th key={heading} scope="col">
+                        {heading}
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {teams.map((team, i) => {
-                    const { bg, text } = getTeamColor(team.name)
-                    return (
-                      <tr
-                        key={team.name}
-                        style={{
-                          borderTop: i > 0 ? '1px solid var(--cui-border-color)' : undefined,
-                        }}
-                      >
-                        <td style={{ padding: '10px 14px' }}>
-                          <span
-                            className="rounded-pill px-2 py-1 fw-semibold"
-                            style={{ background: bg, color: text, fontSize: '0.82rem' }}
-                          >
-                            {team.name}
-                          </span>
-                        </td>
-                        <td
-                          style={{
-                            padding: '10px 14px',
-                            textAlign: 'center',
-                            color: 'var(--cui-secondary-color)',
-                            fontSize: '0.875rem',
-                          }}
-                        >
-                          {team.memberCount}
-                        </td>
-                        <td
-                          style={{
-                            padding: '10px 14px',
-                            textAlign: 'center',
-                            fontWeight: 500,
-                            fontSize: '0.875rem',
-                          }}
-                        >
-                          {team.dayShifts}
-                        </td>
-                        <td
-                          style={{
-                            padding: '10px 14px',
-                            textAlign: 'center',
-                            fontWeight: 500,
-                            fontSize: '0.875rem',
-                          }}
-                        >
-                          {team.nightShifts}
-                        </td>
-                        <td
-                          style={{
-                            padding: '10px 14px',
-                            textAlign: 'center',
-                            fontWeight: 700,
-                            fontSize: '0.875rem',
-                          }}
-                        >
-                          {team.totalShifts}
-                        </td>
-                      </tr>
-                    )
-                  })}
+                  {teams.map((team) => (
+                    <tr key={team.name}>
+                      <td>
+                        <span className="dashboard-team-badge">{team.name}</span>
+                      </td>
+                      <td>{team.memberCount}</td>
+                      <td>{team.dayShifts}</td>
+                      <td>{team.nightShifts}</td>
+                      <td>{team.totalShifts}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
+            <ul className="dashboard-team-summary-list" aria-label="Team shift summaries">
+              {teams.map((team) => (
+                <li key={team.name} className="dashboard-team-summary-list__item">
+                  <div className="dashboard-team-summary-list__primary">
+                    <strong className="dashboard-team-summary-list__name">{team.name}</strong>
+                    <span className="dashboard-team-summary-list__total">
+                      <strong>{team.totalShifts}</strong> shifts
+                    </span>
+                  </div>
+                  <div className="dashboard-team-summary-list__details">
+                    <span>{team.memberCount} staff</span>
+                    <span>Day {team.dayShifts}</span>
+                    <span>Night {team.nightShifts}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
           </>
         )}
       </CCardBody>
@@ -275,16 +109,23 @@ export const RosterTeamBreakdown = ({ stats }) => {
   )
 }
 
-RosterTeamBreakdown.propTypes = {
-  stats: PropTypes.shape({
-    teams: PropTypes.arrayOf(
-      PropTypes.shape({
-        name: PropTypes.string,
-        memberCount: PropTypes.number,
-        dayShifts: PropTypes.number,
-        nightShifts: PropTypes.number,
-        totalShifts: PropTypes.number,
-      }),
-    ),
-  }),
+const rosterStatsShape = {
+  teamsOnDuty: PropTypes.number,
+  draftsPendingPublish: PropTypes.number,
+  monthlyTrend: PropTypes.arrayOf(
+    PropTypes.shape({ month: PropTypes.string, scheduledDays: PropTypes.number }),
+  ),
+  teams: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string,
+      memberCount: PropTypes.number,
+      dayShifts: PropTypes.number,
+      nightShifts: PropTypes.number,
+      totalShifts: PropTypes.number,
+    }),
+  ),
 }
+
+RosterKpiTiles.propTypes = { stats: PropTypes.shape(rosterStatsShape) }
+RosterActivityChart.propTypes = { stats: PropTypes.shape(rosterStatsShape) }
+RosterTeamBreakdown.propTypes = { stats: PropTypes.shape(rosterStatsShape) }

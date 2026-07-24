@@ -300,10 +300,7 @@ const ScheduleTab = ({
           ) : (
             <div id="roster-print-area">
               {allShifts.some((s) => s.builtin === false) && (
-                <div
-                  className="d-flex align-items-center gap-2 mb-3"
-                  style={{ fontSize: '0.8rem', color: 'var(--cui-secondary-color)' }}
-                >
+                <div className="vmecc-caption d-flex align-items-center gap-2 mb-3 text-body-secondary">
                   <span
                     style={{
                       width: 7,

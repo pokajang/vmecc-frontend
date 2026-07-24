@@ -33,12 +33,12 @@
 
   &__field-label {
     margin-bottom: 0.4rem;
-    font-size: 0.875rem;
+    font-size: var(--vmecc-text-meta);
   }
 
   &__select.form-select {
     min-height: 2.1rem;
-    font-size: 0.875rem;
+    font-size: var(--vmecc-text-meta);
   }
 
   &__select.form-select:disabled {

@@ -115,8 +115,8 @@
 
 .ai-helper-beta-text {
   color: var(--cui-primary);
-  font-size: 0.82rem;
-  font-weight: 400;
+  font-size: var(--vmecc-text-caption);
+  font-weight: var(--vmecc-weight-body);
   line-height: 1.15;
 }
 
@@ -135,7 +135,7 @@
   border-radius: 0.55rem;
   background: transparent;
   color: var(--cui-secondary-color);
-  font-size: 0.84rem;
+  font-size: var(--vmecc-text-meta);
   font-weight: 700;
   line-height: 1.2;
   white-space: nowrap;
@@ -161,7 +161,7 @@
 .ai-helper-muted,
 .ai-helper-footnote {
   color: var(--cui-secondary-color);
-  font-size: 0.84rem;
+  font-size: var(--vmecc-text-meta);
 }
 
 .ai-helper-icon-btn,

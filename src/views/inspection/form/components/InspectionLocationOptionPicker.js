@@ -86,6 +86,14 @@ const InspectionLocationOptionPicker = ({
 
   const shouldShowCollapsedSelection =
     isCompactViewport && !isExpanded && String(selectedLabel || value || '').trim()
+  const handleOptionChange = (...args) => {
+    setSearchState({ scopeKey: '', text: '' })
+    onChange?.(...args)
+  }
+  const handleReset = () => {
+    setSearchState({ scopeKey: '', text: '' })
+    onRequestReset?.()
+  }
 
   if (shouldShowCollapsedSelection) {
     return (
@@ -96,14 +104,14 @@ const InspectionLocationOptionPicker = ({
         metaLabel={selectedMetaLabel}
         metaTone={selectedMetaTone}
         resetLabel={`Reset ${sectionLabel}`}
-        onReset={onRequestReset}
+        onReset={handleReset}
         onEdit={onRequestEdit}
       />
     )
   }
 
   return (
-    <div className="d-grid gap-3">
+    <div className="mobile-setup-picker d-grid gap-3">
       {shouldShowSearch ? (
         <div className="d-flex align-items-center gap-2">
           <CFormInput
@@ -135,7 +143,7 @@ const InspectionLocationOptionPicker = ({
           <InspectionMobileSelectorButtonGrid
             options={displayedOptions}
             value={value}
-            onChange={onChange}
+            onChange={handleOptionChange}
             columns={columns}
             getOptionKey={getOptionKey}
             testIdPrefix={testIdPrefix}
@@ -147,7 +155,7 @@ const InspectionLocationOptionPicker = ({
         <IconOptionGrid
           options={displayedOptions}
           value={value}
-          onChange={onChange}
+          onChange={handleOptionChange}
           variant={variant}
           showDescription={showDescription}
           columns={columns}

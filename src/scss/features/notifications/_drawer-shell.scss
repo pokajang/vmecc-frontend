@@ -72,20 +72,26 @@
 }
 
 .notification-drawer-title {
-  font-weight: 600;
-  font-size: 16px;
+  font-weight: var(--vmecc-weight-bold);
+  font-size: var(--vmecc-text-card-title);
   display: flex;
   align-items: center;
   gap: 0.4rem;
 }
 
 .notification-drawer-count {
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: var(--vmecc-text-caption);
+  font-weight: var(--vmecc-weight-bold);
   background: #e9ecef;
   color: #495057;
   border-radius: 10px;
   padding: 1px 7px;
+}
+
+@include media-breakpoint-down(md) {
+  .notification-drawer-title {
+    font-size: var(--vmecc-text-section-title);
+  }
 }
 
 .notification-drawer-close {

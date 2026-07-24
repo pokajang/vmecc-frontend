@@ -63,8 +63,28 @@ describe('safeAiHelperError', () => {
       safeAiHelperError({ status: 429, payload: { code: 'AI_HELPER_BUSY_RETRY', retry_after: 5 } }),
     ).toBe('Ask AI is busy. Try again in about 5s.')
     expect(safeAiHelperError({ payload: { code: 'AI_HELPER_EVIDENCE_INCOMPLETE' } })).toContain(
-      'not sufficient to verify',
+      'need a little more detail',
     )
+  })
+
+  it('keeps knowledge-readiness failures polite and uses the trusted server message when present', () => {
+    expect(
+      safeAiHelperError({
+        status: 409,
+        payload: {
+          code: 'AI_HELPER_KNOWLEDGE_NOT_READY',
+          message: 'Maaf, maklumat rujukan belum tersedia buat sementara waktu.',
+        },
+      }),
+    ).toBe('Maaf, maklumat rujukan belum tersedia buat sementara waktu.')
+
+    const fallback = safeAiHelperError({
+      status: 409,
+      payload: { code: 'AI_HELPER_KNOWLEDGE_NOT_READY' },
+    })
+    expect(fallback).toContain('temporarily unavailable')
+    expect(fallback).not.toContain('corpus')
+    expect(fallback).not.toContain('failed documents')
   })
 })
 

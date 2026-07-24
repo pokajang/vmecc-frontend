@@ -47,7 +47,7 @@
 .inspection-mobile-selector-chip__section-label {
   min-width: 0;
   overflow: hidden;
-  font-weight: 400;
+  font-weight: var(--vmecc-weight-body);
   line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -79,7 +79,7 @@
 }
 
 .inspection-mobile-datetime-label {
-  font-weight: 400;
+  font-weight: var(--vmecc-weight-body);
   line-height: 1.2;
 }
 
@@ -160,7 +160,7 @@
 
 .inspection-mobile-setup-drawer__field-label {
   margin-bottom: -0.5rem;
-  font-weight: 400;
+  font-weight: var(--vmecc-weight-body);
 }
 
 .inspection-mobile-setup-drawer__done {

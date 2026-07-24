@@ -17,8 +17,8 @@ const renderFields = (fields) =>
     <div className="row g-2 mt-3">
       {fields.map((field) => (
         <div key={field.key || field.label} className="col-6">
-          <div className="small text-body-secondary">{field.label}</div>
-          <div className="fw-semibold">{field.value ?? '-'}</div>
+          <div className="vmecc-meta text-body-secondary">{field.label}</div>
+          <div className="vmecc-card-title">{field.value ?? '-'}</div>
         </div>
       ))}
     </div>
@@ -65,16 +65,13 @@ const RecordCard = ({ item = {}, className = '', variant = 'card' }) => {
         >
           <div className="record-card__main min-w-0 flex-grow-1" style={{ minWidth: 0 }}>
             {item.eyebrow ? (
-              <div
-                className="record-card-eyebrow text-body-tertiary mb-1"
-                style={{ fontSize: '0.82rem', lineHeight: 1.2 }}
-              >
+              <div className="record-card-eyebrow vmecc-caption text-body-tertiary mb-1">
                 {item.eyebrow}
               </div>
             ) : null}
-            <div className="record-card__title fw-semibold text-truncate">{item.title}</div>
+            <div className="record-card__title vmecc-card-title text-truncate">{item.title}</div>
             {item.subtitle ? (
-              <div className="record-card__subtitle small text-body-secondary text-truncate mt-1">
+              <div className="record-card__subtitle vmecc-meta text-body-secondary text-truncate mt-1">
                 {item.subtitle}
               </div>
             ) : null}
@@ -113,13 +110,13 @@ const RecordCard = ({ item = {}, className = '', variant = 'card' }) => {
               <div className="d-flex align-items-start justify-content-between gap-3">
                 <div className="min-w-0">
                   {item.eyebrow ? (
-                    <div className="small text-body-secondary mb-1">{item.eyebrow}</div>
+                    <div className="vmecc-caption text-body-secondary mb-1">{item.eyebrow}</div>
                   ) : null}
                   {item.title ? (
-                    <div className="fw-semibold text-truncate">{item.title}</div>
+                    <div className="vmecc-card-title text-truncate">{item.title}</div>
                   ) : null}
                   {item.subtitle ? (
-                    <div className="small text-body-secondary mt-1">{item.subtitle}</div>
+                    <div className="vmecc-meta text-body-secondary mt-1">{item.subtitle}</div>
                   ) : null}
                 </div>
                 {item.status ? (
@@ -135,7 +132,7 @@ const RecordCard = ({ item = {}, className = '', variant = 'card' }) => {
 
             {renderFields(item.fields)}
             {item.detail ? (
-              <div className="small text-body-secondary mt-3">{item.detail}</div>
+              <div className="vmecc-meta text-body-secondary mt-3">{item.detail}</div>
             ) : null}
           </div>
         )}
@@ -168,11 +165,11 @@ const RecordCard = ({ item = {}, className = '', variant = 'card' }) => {
         <div className="d-flex align-items-start justify-content-between gap-3">
           <div className="min-w-0">
             {item.eyebrow ? (
-              <div className="small text-body-secondary mb-1">{item.eyebrow}</div>
+              <div className="vmecc-caption text-body-secondary mb-1">{item.eyebrow}</div>
             ) : null}
-            <div className="fw-semibold text-truncate">{item.title}</div>
+            <div className="vmecc-card-title text-truncate">{item.title}</div>
             {item.subtitle ? (
-              <div className="small text-body-secondary mt-1">{item.subtitle}</div>
+              <div className="vmecc-meta text-body-secondary mt-1">{item.subtitle}</div>
             ) : null}
           </div>
           {item.status ? (
@@ -186,7 +183,9 @@ const RecordCard = ({ item = {}, className = '', variant = 'card' }) => {
         </div>
 
         {renderFields(item.fields)}
-        {item.detail ? <div className="small text-body-secondary mt-3">{item.detail}</div> : null}
+        {item.detail ? (
+          <div className="vmecc-meta text-body-secondary mt-3">{item.detail}</div>
+        ) : null}
       </div>
 
       {item.expanded && item.expandedContent ? (

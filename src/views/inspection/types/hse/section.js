@@ -144,18 +144,19 @@ const getHseSelectedOutcomeLabel = (normalized) => {
 const HseMobileObservationCard = ({ label, onEdit }) => (
   <button
     type="button"
-    className="inspection-mobile-selector-chip rounded-3 border border-primary bg-primary bg-opacity-10 text-start"
+    className="mobile-setup-summary hse-mobile-observation-card text-start"
+    aria-label={`Edit HSE observation: ${label}`}
     onClick={onEdit}
   >
-    <span className="inspection-mobile-selector-chip__section-label text-body-secondary">
-      Observation
+    <span className="mobile-setup-summary__label">Observation</span>
+    <span className="mobile-setup-summary__value">
+      <span className="mobile-setup-summary__value-text">{label}</span>
     </span>
-    <span className="fw-semibold text-truncate">{label}</span>
     <span
-      className="inspection-mobile-selector-chip__edit text-primary"
-      aria-label="Edit HSE observation"
+      className="mobile-setup-summary__action mobile-setup-summary__edit text-primary"
+      aria-hidden="true"
     >
-      <Pencil size={17} />
+      <Pencil size={17} aria-hidden="true" />
     </span>
   </button>
 )

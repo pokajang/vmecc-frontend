@@ -21,7 +21,7 @@
 
 .inspection-review-eyebrow {
   color: var(--cui-secondary-color);
-  font-size: 0.84rem;
+  font-size: var(--vmecc-text-meta);
   font-weight: 600;
   text-transform: uppercase;
 }
@@ -34,7 +34,7 @@
 
 .inspection-review-meta {
   color: var(--cui-secondary-color);
-  font-size: 0.82rem;
+  font-size: var(--vmecc-text-caption);
   line-height: 1.35;
 }
 
@@ -148,7 +148,7 @@
 .inspection-review-detail-location-list__path,
 .inspection-review-detail-location-list__count {
   color: var(--cui-secondary-color);
-  font-weight: 400;
+  font-weight: var(--vmecc-weight-body);
 }
 
 .inspection-review-detail-location-list__path {
@@ -217,14 +217,14 @@
 .inspection-review-photo-card__name {
   margin-top: 0.35rem;
   color: var(--cui-body-color);
-  font-size: 0.82rem;
+  font-size: var(--vmecc-text-caption);
   font-weight: 600;
 }
 
 .inspection-review-photo-card__description {
   margin-top: 0.15rem;
   color: var(--cui-secondary-color);
-  font-size: 0.8rem;
+  font-size: var(--vmecc-text-caption);
   line-height: 1.35;
 }
 
@@ -301,7 +301,7 @@
 
 .inspection-review-section__title {
   color: var(--cui-secondary-color);
-  font-size: 0.82rem;
+  font-size: var(--vmecc-text-caption);
   font-weight: 700;
 }
 
@@ -334,7 +334,7 @@
 
 .inspection-review-status-row__label {
   color: var(--cui-secondary-color);
-  font-size: 0.82rem;
+  font-size: var(--vmecc-text-caption);
   font-weight: 600;
 }
 
@@ -345,7 +345,7 @@
   min-width: 4.5rem;
   border-radius: 999px;
   padding: 0.25rem 0.55rem;
-  font-size: 0.84rem;
+  font-size: var(--vmecc-text-meta);
   font-weight: 700;
   white-space: nowrap;
 }
@@ -373,6 +373,14 @@
 .all-extinguishers-summary-strip {
   row-gap: 0.7rem;
   column-gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .all-extinguishers-filter-row > .flex-grow-1 {
+    flex: 1 1 14rem !important;
+    width: auto;
+    min-width: 14rem;
+  }
 }
 
 .all-extinguishers-summary-item {
@@ -695,7 +703,7 @@
   justify-content: center;
   gap: 0.35rem;
   color: var(--cui-secondary-color);
-  font-size: 0.82rem;
+  font-size: var(--vmecc-text-caption);
   line-height: 1.2;
   white-space: nowrap;
 }
@@ -747,7 +755,7 @@
 
 .all-extinguishers-detail__meta-label {
   color: var(--cui-secondary-color);
-  font-size: 0.82rem;
+  font-size: var(--vmecc-text-caption);
   line-height: 1.25;
 }
 

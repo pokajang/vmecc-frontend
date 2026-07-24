@@ -35,11 +35,7 @@ export const MonthGroupLabel = ({
       className={`d-inline-flex align-items-center gap-2 ${className}`.trim()}
       data-testid={testId}
     >
-      <span
-        className="text-body-secondary fw-semibold small"
-        style={{ letterSpacing: '0.06em' }}
-        data-testid={`${testId}-month`}
-      >
+      <span className="vmecc-overline text-body-secondary" data-testid={`${testId}-month`}>
         {toUpperLabel(resolvedLabel, 'Unknown month')}
       </span>
       <CountBadge count={count} noun={countNoun} />
@@ -80,8 +76,8 @@ export const UserGroupLabel = ({
         />
       ) : (
         <span
-          className="rounded-circle bg-body-secondary text-body-secondary d-inline-flex align-items-center justify-content-center small"
-          style={{ width: 24, height: 24, fontSize: '0.75rem' }}
+          className="vmecc-caption rounded-circle bg-body-secondary text-body-secondary d-inline-flex align-items-center justify-content-center"
+          style={{ width: 24, height: 24 }}
           data-testid={`${testId}-avatar`}
         >
           {initials || '?'}

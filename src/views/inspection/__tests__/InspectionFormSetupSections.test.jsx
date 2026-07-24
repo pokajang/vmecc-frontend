@@ -228,10 +228,15 @@ describe('InspectionFormSetupSections', () => {
     mockCompactViewport(true)
     const updateInspectionType = vi.fn()
     const setIsEditingType = vi.fn()
+    const incident = {
+      ...baseProps.incident,
+      setShowAllIncidentTypes: vi.fn(),
+    }
 
     render(
       <InspectionFormSetupSections
         {...baseProps}
+        incident={incident}
         isEditingType={false}
         selectedType="Fire Extinguisher Inspection"
         selectedTypeOption={{
@@ -247,6 +252,7 @@ describe('InspectionFormSetupSections', () => {
 
     expect(updateInspectionType).toHaveBeenCalledWith('')
     expect(setIsEditingType).toHaveBeenCalledWith(false)
+    expect(incident.setShowAllIncidentTypes).toHaveBeenCalledWith(false)
   })
 
   it('returns to the type-only mobile landing state after resetting type', () => {
@@ -282,6 +288,9 @@ describe('InspectionFormSetupSections', () => {
     fireEvent.click(screen.getByLabelText('Reset type'))
 
     expect(screen.getByText('Choose Type')).toBeTruthy()
+    const typePicker = screen.getByRole('radiogroup')
+    expect(typePicker.classList.contains('inspection-mobile-selector-grid')).toBe(true)
+    expect(typePicker.closest('.mobile-setup-picker')).toBeTruthy()
     expect(screen.queryByText('Date and time')).toBeNull()
     expect(screen.queryByText('Choose Main Location')).toBeNull()
     expect(screen.queryByText('ASIC')).toBeNull()
@@ -345,7 +354,8 @@ describe('InspectionFormSetupSections', () => {
     )
 
     expect(screen.getByText('Date and time')).toBeTruthy()
-    expect(screen.getByText('2026-07-05T14:27')).toBeTruthy()
+    expect(screen.getByText('2026-07-05')).toBeTruthy()
+    expect(screen.getByText('14:27')).toBeTruthy()
 
     fireEvent.click(screen.getByLabelText('Edit date and time'))
 

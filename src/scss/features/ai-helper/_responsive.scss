@@ -39,7 +39,8 @@
   }
 
   .ai-helper-language-toggle {
-    font-size: 0.84rem;
+    font-size: var(--vmecc-text-meta);
+    font-weight: var(--vmecc-weight-semibold);
     padding-inline: 0.42rem;
   }
 

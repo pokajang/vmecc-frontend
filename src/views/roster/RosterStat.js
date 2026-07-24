@@ -198,8 +198,7 @@ const MonthlyBreakdown = ({ monthlyStats = [], allShifts = [], exportedBy = '' }
         <div className="d-flex align-items-center gap-3">
           <button
             type="button"
-            className="btn btn-link btn-sm p-0 text-decoration-none"
-            style={{ fontSize: '0.8rem' }}
+            className="vmecc-caption btn btn-link btn-sm p-0 text-decoration-none"
             onClick={() => {
               setShowAll((v) => !v)
               setHidden(new Set())
@@ -423,12 +422,7 @@ const RosterStat = ({
         {hasGroups ? (
           groupKeys.map((groupKey) => (
             <div key={groupKey} className="mb-4">
-              <div
-                className="text-muted small fw-semibold mb-2"
-                style={{ letterSpacing: '0.05em', textTransform: 'uppercase' }}
-              >
-                {groupKey}
-              </div>
+              <div className="vmecc-overline text-muted mb-2">{groupKey}</div>
               <CRow className="g-3">
                 {groupMap[groupKey].map((team) => (
                   <StatCard

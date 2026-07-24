@@ -37,7 +37,8 @@
 }
 
 .erco-team-accordion__count {
-  font-size: 0.8rem;
+  font-size: var(--vmecc-text-caption);
+  font-weight: var(--vmecc-weight-semibold);
   white-space: nowrap;
 }
 
@@ -75,15 +76,17 @@
 
 .erco-mobile-context__label {
   color: var(--cui-secondary-color);
-  font-size: 0.82rem;
-  line-height: 1.2;
+  font-size: var(--vmecc-text-meta);
+  font-weight: var(--vmecc-weight-medium);
+  line-height: var(--vmecc-leading-compact);
 }
 
 .erco-mobile-context__value {
   min-width: 0;
   overflow: hidden;
-  font-weight: 600;
-  line-height: 1.25;
+  font-size: var(--vmecc-text-body);
+  font-weight: var(--vmecc-weight-semibold);
+  line-height: var(--vmecc-leading-compact);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -119,8 +122,8 @@
 
 .erco-chronology-mobile-row__time {
   color: var(--cui-primary);
-  font-size: 0.86rem;
-  font-weight: 700;
+  font-size: var(--vmecc-text-meta);
+  font-weight: var(--vmecc-weight-bold);
   white-space: nowrap;
 }
 
@@ -164,7 +167,7 @@
 .report-setup-summary-row__section-label {
   min-width: 0;
   overflow: hidden;
-  font-weight: 400;
+  font-weight: var(--vmecc-weight-body);
   line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -345,14 +348,16 @@
 
 .report-mobile-context__label {
   color: var(--cui-secondary-color);
-  font-size: 0.82rem;
-  line-height: 1.2;
+  font-size: var(--vmecc-text-meta);
+  font-weight: var(--vmecc-weight-medium);
+  line-height: var(--vmecc-leading-compact);
 }
 
 .report-mobile-context__value {
   min-width: 0;
-  font-weight: 600;
-  line-height: 1.25;
+  font-size: var(--vmecc-text-body);
+  font-weight: var(--vmecc-weight-semibold);
+  line-height: var(--vmecc-leading-compact);
   overflow-wrap: anywhere;
 }
 
@@ -398,8 +403,9 @@
 .report-workfirst-detail__label {
   min-width: 0;
   color: var(--cui-secondary-color);
-  font-size: 0.84rem;
-  line-height: 1.25;
+  font-size: var(--vmecc-text-meta);
+  font-weight: var(--vmecc-weight-medium);
+  line-height: var(--vmecc-leading-compact);
 }
 
 .report-workfirst-detail__value {
@@ -462,8 +468,8 @@
 
 .report-chronology-mobile-row__time {
   color: var(--cui-primary);
-  font-size: 0.86rem;
-  font-weight: 700;
+  font-size: var(--vmecc-text-meta);
+  font-weight: var(--vmecc-weight-bold);
   white-space: nowrap;
 }
 
@@ -674,7 +680,8 @@
 
   .erco-analysis-mobile-section__title {
     min-width: 0;
-    font-weight: 600;
+    font-size: var(--vmecc-text-body);
+    font-weight: var(--vmecc-weight-semibold);
   }
 
   .erco-analysis-mobile-section__meta {
@@ -683,7 +690,8 @@
     align-items: center;
     gap: 0.35rem;
     color: var(--cui-secondary-color);
-    font-size: 0.84rem;
+    font-size: var(--vmecc-text-meta);
+    font-weight: var(--vmecc-weight-medium);
     white-space: nowrap;
   }
 

@@ -2428,7 +2428,7 @@ const AllExtinguishersSection = ({
           },
         ]}
         onClear={clearFilters}
-        rowClassName="inspection-records-filter-row align-items-md-end"
+        rowClassName="inspection-records-filter-row all-extinguishers-filter-row align-items-md-end"
         searchColMd={3}
         periodColMd={2}
         filterColMd={2}

@@ -99,7 +99,7 @@ const LeaveManagementTabsContent = ({
         items={[
           {
             key: 'records',
-            label: 'All Leaves',
+            label: 'Leave Requests',
             to: 'records',
             match: 'records',
           },
@@ -132,7 +132,7 @@ const LeaveManagementTabsContent = ({
     {resolvedManagementTab === 'records' && (
       <LeaveRecordsSection
         isLoading={isLeaveRecordsLoading}
-        title="All Leaves"
+        title="Leave Requests"
         showPrimaryAction={false}
         actionMode="review"
         unknownGroupLabel="Unknown period"

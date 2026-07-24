@@ -1,0 +1,165 @@
+@use '../tools/coreui-tools' as *;
+
+@include media-breakpoint-down(md) {
+  .mobile-setup-summary {
+    display: grid;
+    grid-template-columns: minmax(4.5rem, 5.25rem) minmax(0, 1fr) auto;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    min-height: 4rem;
+    padding: 0.55rem 0.45rem 0.55rem 0.75rem;
+    column-gap: 0.5rem;
+    border: 0;
+    border-radius: var(--vmecc-radius-card, 0.5rem);
+    background: rgba(var(--cui-primary-rgb), 0.055);
+    color: var(--cui-body-color);
+    box-shadow: none;
+  }
+
+  @supports (background: color-mix(in srgb, white, black)) {
+    .mobile-setup-summary {
+      background: color-mix(in srgb, var(--cui-primary) 5%, var(--cui-body-bg));
+    }
+  }
+
+  .mobile-setup-summary:focus-within {
+    box-shadow: var(--vmecc-focus-ring);
+  }
+
+  .mobile-setup-input-card {
+    border-color: var(--cui-border-color) !important;
+    background: var(--cui-body-bg) !important;
+    box-shadow: none;
+  }
+
+  .mobile-setup-summary__label {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--cui-secondary-color);
+    font-size: var(--vmecc-text-meta);
+    font-weight: var(--vmecc-weight-medium);
+    line-height: var(--vmecc-leading-compact);
+    overflow-wrap: anywhere;
+  }
+
+  .mobile-setup-summary__value {
+    display: grid;
+    min-width: 0;
+    align-content: center;
+    gap: 0.08rem;
+    font-size: var(--vmecc-text-body);
+    font-weight: var(--vmecc-weight-semibold);
+    line-height: var(--vmecc-leading-compact);
+  }
+
+  .mobile-setup-summary__value-text {
+    display: -webkit-box;
+    min-width: 0;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    text-overflow: ellipsis;
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .mobile-setup-summary__value-secondary {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--cui-secondary-color);
+    font-size: var(--vmecc-text-meta);
+    font-weight: var(--vmecc-weight-medium);
+    line-height: var(--vmecc-leading-compact);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-setup-summary__value--split .mobile-setup-summary__value-text {
+    -webkit-line-clamp: 1;
+  }
+
+  .mobile-setup-summary__actions {
+    display: inline-flex;
+    min-width: 0;
+    align-items: center;
+    justify-self: end;
+    gap: 0.125rem;
+  }
+
+  .mobile-setup-summary__action {
+    display: inline-flex;
+    width: var(--vmecc-touch-target, 2.75rem);
+    min-width: var(--vmecc-touch-target, 2.75rem);
+    height: var(--vmecc-touch-target, 2.75rem);
+    min-height: var(--vmecc-touch-target, 2.75rem);
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none;
+  }
+
+  .mobile-setup-summary__action:active {
+    background: rgba(var(--cui-primary-rgb), 0.1) !important;
+  }
+
+  .mobile-setup-summary__actions--paired .mobile-setup-summary__reset svg {
+    transform: translateX(0.1875rem);
+  }
+
+  .mobile-setup-summary__actions--paired .mobile-setup-summary__edit svg {
+    transform: translateX(-0.1875rem);
+  }
+
+  .mobile-setup-summary-row {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .mobile-setup-picker {
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  .mobile-setup-picker > .row,
+  .report-setup-grid .row,
+  .erco-mobile-setup-grid .row,
+  .inspection-mobile-selector-grid,
+  .report-setup-option-grid {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    margin-right: 0;
+    margin-left: 0;
+  }
+
+  .inspection-mobile-selector-grid > *,
+  .report-setup-option-grid > * {
+    min-width: 0;
+  }
+
+  .hse-mobile-observation-card {
+    grid-template-columns: minmax(4.5rem, 5.25rem) minmax(0, 1fr) auto;
+    text-decoration: none;
+  }
+
+  .hse-mobile-observation-card:active {
+    background: rgba(var(--cui-primary-rgb), 0.1);
+  }
+}
+
+@media (max-width: 359.98px) {
+  .mobile-setup-summary,
+  .hse-mobile-observation-card {
+    grid-template-columns: minmax(4rem, 4.5rem) minmax(0, 1fr) auto;
+    padding-left: 0.6rem;
+    column-gap: 0.35rem;
+  }
+
+  .mobile-setup-summary__actions {
+    gap: 0;
+  }
+}

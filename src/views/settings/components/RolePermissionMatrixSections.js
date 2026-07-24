@@ -199,12 +199,7 @@ export const RolePermissionMatrixTable = ({
               <CTableRow key={`group-${item.group}-${index}`} className="table-light">
                 <CTableDataCell
                   colSpan={visibleRoles.length + 1}
-                  className="small fw-semibold text-muted py-1 px-3"
-                  style={{
-                    letterSpacing: '0.04em',
-                    textTransform: 'uppercase',
-                    fontSize: '0.78rem',
-                  }}
+                  className="vmecc-overline text-muted py-1 px-3"
                 >
                   {item.group}
                 </CTableDataCell>
@@ -294,8 +289,7 @@ export const RolePermissionRoleEditor = ({
           return (
             <div
               key={`role-group-${item.group}-${index}`}
-              className="small fw-semibold text-muted mt-3 mb-2"
-              style={{ letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: '0.78rem' }}
+              className="vmecc-overline text-muted mt-3 mb-2"
             >
               {item.group}
             </div>

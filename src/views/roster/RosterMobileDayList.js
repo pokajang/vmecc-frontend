@@ -37,12 +37,10 @@ const TeamBadge = ({ team, leaveMarker }) => {
   return (
     <span className="d-inline-flex flex-column align-items-start gap-1">
       <span
-        className="d-inline-flex rounded-pill px-2 fw-semibold"
+        className="vmecc-caption d-inline-flex rounded-pill px-2"
         style={{
           background: bg,
           color: text,
-          fontSize: '0.8125rem',
-          lineHeight: '1.6',
           maxWidth: '100%',
           whiteSpace: 'normal',
         }}

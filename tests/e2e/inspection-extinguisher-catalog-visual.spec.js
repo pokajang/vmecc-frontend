@@ -154,7 +154,7 @@ test('catalogue and detail pages remain usable across desktop, tablet, and mobil
   await tableRow.locator('td').nth(1).click()
   await expect(page).toHaveURL(/\/inspection\/all-extinguishers\/42$/)
   await expect(page.getByRole('heading', { name: 'CAN-002' })).toBeVisible()
-  await expect(page.getByText('Historical Inspection Records', { exact: true })).toBeVisible()
+  await expect(page.getByText(/^Inspection history/)).toBeVisible()
   await expectNoPageOverflow(page)
   await page.screenshot({
     path: testInfo.outputPath('extinguisher-detail-desktop.png'),
@@ -164,6 +164,17 @@ test('catalogue and detail pages remain usable across desktop, tablet, and mobil
   await page.setViewportSize({ width: 820, height: 1000 })
   await page.goto('/inspection/all-extinguishers', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('tbody tr').filter({ hasText: 'CAN-002' }).first()).toBeVisible()
+  const tabletSearch = page.getByLabel('Search records').last()
+  await expect(tabletSearch).toBeVisible()
+  const tabletSearchBox = await tabletSearch.boundingBox()
+  const tabletSearchMetrics = await tabletSearch.evaluate((element) => ({
+    parentClassName: element.parentElement?.className,
+    rowClassName: element.closest('.row')?.className,
+    parentFlex: getComputedStyle(element.parentElement).flex,
+    parentMinWidth: getComputedStyle(element.parentElement).minWidth,
+  }))
+  expect(tabletSearchBox).not.toBeNull()
+  expect(tabletSearchBox.width, JSON.stringify(tabletSearchMetrics)).toBeGreaterThanOrEqual(180)
   await expectNoPageOverflow(page)
   await page.screenshot({
     path: testInfo.outputPath('extinguisher-catalog-tablet.png'),

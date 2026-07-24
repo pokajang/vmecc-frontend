@@ -1,0 +1,480 @@
+@use '../../tools/coreui-tools' as *;
+
+// Mobile-only refinements for field use. These rules intentionally load after
+// the existing inspection styles so compact desktop-oriented overrides do not
+// reduce touch comfort or hide operational feedback on narrow screens.
+@include media-breakpoint-down(md) {
+  :root {
+    --inspection-mobile-control-height: var(--vmecc-touch-target, 2.75rem);
+    --inspection-mobile-section-gap: 1.25rem;
+    --inspection-mobile-control-gap: 0.5rem;
+  }
+
+  .inspection-module-page {
+    min-width: 0;
+  }
+
+  .inspection-module-page .module-page-header {
+    min-height: var(--inspection-mobile-control-height);
+    margin-bottom: 0.85rem;
+    gap: 0.75rem;
+  }
+
+  .inspection-module-page .module-page-header__title .vmecc-page-title {
+    font-size: var(--vmecc-text-page-title);
+    font-weight: var(--vmecc-weight-bold);
+    line-height: var(--vmecc-leading-heading);
+  }
+
+  .inspection-mobile-home {
+    gap: var(--inspection-mobile-section-gap) !important;
+  }
+
+  .inspection-mobile-home__section {
+    gap: 0.75rem !important;
+    margin-bottom: 0 !important;
+  }
+
+  .inspection-mobile-section-title {
+    margin: 0;
+    color: var(--cui-body-color);
+    font-size: 1.0625rem;
+    font-weight: var(--vmecc-weight-bold);
+    line-height: var(--vmecc-leading-compact);
+  }
+
+  .inspection-mobile-home__section-header {
+    min-height: var(--inspection-mobile-control-height);
+  }
+
+  .inspection-mobile-home__type-grid {
+    row-gap: 0.6rem !important;
+  }
+
+  .inspection-mobile-home__type-grid .inspection-option-card {
+    min-height: 3.5rem;
+    padding: 0.6rem 0.75rem !important;
+    border-color: var(--cui-border-color) !important;
+    border-radius: var(--vmecc-radius-card, 0.5rem) !important;
+    background: var(--cui-body-bg) !important;
+    color: var(--cui-body-color);
+    box-shadow: none;
+  }
+
+  .inspection-mobile-home__type-grid .inspection-option-card:active {
+    background: var(--cui-tertiary-bg) !important;
+  }
+
+  .inspection-mobile-home__type-grid .inspection-option-card[aria-pressed='true'],
+  .inspection-mobile-home__type-grid .inspection-option-card[aria-checked='true'] {
+    border-color: rgba(var(--cui-primary-rgb), 0.55) !important;
+    background: rgba(var(--cui-primary-rgb), 0.08) !important;
+  }
+
+  .inspection-mobile-home__equipment-btn {
+    min-height: 3rem;
+    padding: 0.7rem 0.85rem;
+    border-color: var(--cui-border-color);
+    border-radius: var(--vmecc-radius-card, 0.5rem);
+    color: var(--cui-body-color);
+    font-weight: 600;
+  }
+
+  .inspection-mobile-home__equipment-btn:active {
+    background: var(--cui-tertiary-bg);
+  }
+
+  .inspection-mobile-home .inspection-draft-card {
+    border-left-color: var(--cui-warning) !important;
+    border-radius: var(--vmecc-radius-card, 0.5rem) !important;
+  }
+
+  .inspection-draft-card__summary,
+  .inspection-draft-card__date {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .inspection-queue-banner {
+    gap: 0.75rem !important;
+    border-color: rgba(var(--cui-warning-rgb), 0.38) !important;
+    border-left: 3px solid var(--cui-warning) !important;
+    border-radius: var(--vmecc-radius-card, 0.5rem) !important;
+  }
+
+  .inspection-queue-banner__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--inspection-mobile-control-gap);
+  }
+
+  .inspection-queue-banner__actions .btn {
+    min-height: var(--inspection-mobile-control-height);
+    margin: 0 !important;
+  }
+
+  .inspection-mobile-home__records-toolbar {
+    gap: 0.65rem !important;
+  }
+
+  .inspection-mobile-home__records-toolbar .workflow-scope-segmented,
+  .inspection-mobile-home__records-toolbar .inspection-scope-segmented {
+    flex: 1 1 auto;
+  }
+
+  .inspection-mobile-home__records-toolbar .inspection-view-all-btn {
+    flex: 0 0 auto;
+  }
+
+  .inspection-mobile-home .record-card__compact-row,
+  .inspection-mobile-section .record-card__compact-row {
+    min-height: var(--inspection-mobile-control-height);
+    align-items: center !important;
+  }
+
+  .inspection-mobile-home .record-card__title,
+  .inspection-mobile-section .record-card__title {
+    font-size: var(--vmecc-text-card-title);
+    font-weight: var(--vmecc-weight-semibold);
+    line-height: var(--vmecc-leading-compact);
+  }
+
+  .inspection-mobile-home .record-card__subtitle,
+  .inspection-mobile-section .record-card__subtitle {
+    margin-top: 0.2rem !important;
+    font-size: var(--vmecc-text-meta);
+    font-weight: var(--vmecc-weight-medium);
+    line-height: var(--vmecc-leading-compact);
+  }
+
+  // Restore the app's touch-target contract where older compact inspection
+  // rules reduced controls below a comfortable field-use size.
+  .inspection-module-page .inspection-header-back-btn,
+  .inspection-module-page .inspection-view-all-btn,
+  .inspection-module-page .inspection-compact-action-btn,
+  .inspection-mobile-home .inspection-view-all-btn,
+  .inspection-mobile-home .inspection-compact-action-btn,
+  .inspection-module-page .inspection-next-location-btn,
+  .inspection-module-page .inspection-check-status-btn,
+  .inspection-module-page .inspection-hydraulic-status-btn,
+  .inspection-module-page .inspection-helper-chip,
+  .inspection-module-page .inspection-fire-truck-actions__toggle,
+  .inspection-module-page .inspection-side-panel__icon-btn,
+  .inspection-module-page .inspection-fire-extinguisher-drawer-title-action,
+  .inspection-module-page .fire-extinguisher-staged-actions .btn,
+  .inspection-detail-drawer__close,
+  .inspection-mobile-setup-drawer__close,
+  .inspection-mobile-selector-chip__edit,
+  .inspection-mobile-selector-chip__reset {
+    min-width: var(--inspection-mobile-control-height);
+    min-height: var(--inspection-mobile-control-height) !important;
+  }
+
+  .inspection-module-page .inspection-header-back-btn,
+  .inspection-module-page .inspection-view-all-btn,
+  .inspection-module-page .inspection-compact-action-btn,
+  .inspection-mobile-home .inspection-view-all-btn,
+  .inspection-mobile-home .inspection-compact-action-btn {
+    padding: 0.55rem 0.75rem;
+    font-size: var(--vmecc-text-meta);
+    line-height: 1.2;
+  }
+
+  .inspection-module-page .workflow-scope-segmented,
+  .inspection-module-page .inspection-scope-segmented,
+  .inspection-mobile-home .workflow-scope-segmented,
+  .inspection-mobile-home .inspection-scope-segmented,
+  .inspection-mobile-section .workflow-scope-segmented,
+  .inspection-mobile-section .inspection-scope-segmented {
+    min-height: var(--inspection-mobile-control-height);
+    padding: 2px;
+  }
+
+  .inspection-module-page .workflow-scope-segment,
+  .inspection-module-page .inspection-scope-segment,
+  .inspection-mobile-home .workflow-scope-segment,
+  .inspection-mobile-home .inspection-scope-segment,
+  .inspection-mobile-section .workflow-scope-segment,
+  .inspection-mobile-section .inspection-scope-segment {
+    min-height: calc(var(--inspection-mobile-control-height) - 6px);
+    padding: 0.45rem 0.75rem;
+    font-size: var(--vmecc-text-meta);
+    font-weight: 600;
+  }
+
+  .inspection-module-page .inspection-hse-choice-btn {
+    min-height: 3.25rem !important;
+    padding: 0.7rem 0.8rem;
+  }
+
+  .inspection-check-card-header,
+  .inspection-hydraulic-card-header {
+    min-height: var(--inspection-mobile-control-height);
+    padding: 0.6rem 0.75rem;
+  }
+
+  .inspection-check-card-header .fw-semibold,
+  .inspection-hydraulic-card-header .fw-semibold {
+    font-size: 0.9375rem;
+    line-height: 1.3;
+  }
+
+  .inspection-check-card-header .inspection-compact-action-btn,
+  .inspection-hydraulic-card-header .inspection-compact-action-btn {
+    min-height: var(--inspection-mobile-control-height) !important;
+    padding: 0.5rem 0.65rem;
+    font-size: var(--vmecc-text-meta);
+  }
+
+  .inspection-check-card-body,
+  .inspection-hydraulic-card-body,
+  .inspection-general-evidence-card-body {
+    padding: 0.85rem;
+  }
+
+  .inspection-check-label,
+  .inspection-hydraulic-check-label,
+  .inspection-module-page .form-label {
+    font-size: var(--vmecc-text-meta);
+    line-height: 1.35;
+  }
+
+  .inspection-check-status-group,
+  .inspection-hydraulic-status-group {
+    gap: var(--inspection-mobile-control-gap) !important;
+    padding-bottom: 0.1rem;
+  }
+
+  .inspection-module-page .inspection-check-status-btn,
+  .inspection-module-page .inspection-hydraulic-status-btn {
+    min-width: 3.25rem;
+    padding-inline: 0.7rem;
+    font-size: var(--vmecc-text-meta);
+    font-weight: 600;
+  }
+
+  .inspection-fire-extinguisher-detail-drawer-body .inspection-hydraulic-status-btn,
+  .inspection-equipment-detail-drawer-body .inspection-hydraulic-status-btn {
+    min-width: 3.25rem;
+    min-height: var(--inspection-mobile-control-height);
+  }
+
+  .inspection-module-page .form-control,
+  .inspection-module-page .form-select {
+    min-height: var(--inspection-mobile-control-height);
+    border-color: var(--cui-border-color);
+    font-size: 1rem;
+    line-height: 1.35;
+  }
+
+  .inspection-module-page textarea.form-control {
+    min-height: 6rem;
+    padding: 0.7rem 0.75rem;
+  }
+
+  .inspection-module-page .form-control::placeholder {
+    color: var(--cui-tertiary-color);
+    opacity: 1;
+  }
+
+  .inspection-field-error,
+  .invalid-feedback {
+    margin-top: 0.35rem;
+    font-size: var(--vmecc-text-caption);
+    line-height: 1.4;
+  }
+
+  .inspection-form-sections {
+    gap: var(--inspection-mobile-section-gap) !important;
+  }
+
+  .inspection-form-section {
+    min-width: 0;
+  }
+
+  .inspection-form-section > .small.text-body-secondary,
+  .inspection-form-section .text-body-secondary.small {
+    line-height: 1.4;
+  }
+
+  .inspection-next-location-card {
+    gap: 0.65rem !important;
+    padding: 0.85rem !important;
+    border-color: var(--cui-border-color) !important;
+    border-radius: var(--vmecc-radius-card, 0.5rem) !important;
+    background: var(--cui-body-bg) !important;
+  }
+
+  .inspection-next-location-btn {
+    max-width: 100%;
+    padding: 0.55rem 0.75rem;
+    overflow: hidden;
+    font-size: var(--vmecc-text-meta);
+    text-overflow: ellipsis;
+  }
+
+  .inspection-helper-chip-row,
+  .inspection-photo-caption-chips {
+    gap: var(--inspection-mobile-control-gap) !important;
+  }
+
+  .inspection-photo-caption-chips .inspection-helper-chip {
+    min-height: var(--inspection-mobile-control-height);
+    padding: 0.45rem 0.65rem;
+    font-size: var(--vmecc-text-caption);
+  }
+
+  .inspection-form-inline-actions .btn {
+    min-height: var(--inspection-mobile-control-height);
+    padding: 0.55rem 0.75rem;
+    font-size: var(--vmecc-text-meta);
+    white-space: normal;
+  }
+
+  .inspection-form-inline-actions-row-status,
+  .inspection-form-sticky-message,
+  .inspection-form-inline-actions .action-row-thumb-status {
+    width: 100%;
+    max-width: 100%;
+    overflow: visible;
+    font-size: var(--vmecc-text-caption);
+    line-height: 1.4;
+    text-align: left;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .inspection-form-inline-actions {
+    margin-top: 0.85rem !important;
+  }
+
+  .inspection-form-inline-actions-row {
+    gap: var(--inspection-mobile-control-gap) !important;
+  }
+
+  .inspection-mobile-selector-chip,
+  .inspection-mobile-datetime-card {
+    min-height: 3.75rem;
+    padding: 0.5rem 0.6rem 0.5rem 0.75rem;
+  }
+
+  .inspection-mobile-selector-chip__section-label,
+  .inspection-mobile-datetime-label {
+    font-size: var(--vmecc-text-meta);
+    line-height: 1.35;
+  }
+
+  .offcanvas-bottom.inspection-mobile-setup-drawer {
+    max-height: min(88dvh, 44rem);
+  }
+
+  .inspection-mobile-setup-drawer__header {
+    min-height: 3.75rem;
+    padding: 0.75rem 1rem 0.6rem;
+    border-bottom: 1px solid var(--cui-border-color-translucent);
+  }
+
+  .inspection-mobile-setup-drawer__title {
+    font-size: 1.0625rem;
+    line-height: 1.3;
+  }
+
+  .inspection-mobile-setup-drawer__body {
+    padding: 0.9rem 1rem calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .inspection-detail-drawer__header {
+    min-height: 3.75rem;
+    padding: 0.6rem 0.75rem 0.6rem 1rem;
+  }
+
+  .inspection-detail-drawer__body {
+    padding: 0.9rem 1rem calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .inspection-detail-field,
+  .workflow-detail-field {
+    gap: 0.75rem;
+    padding-block: 0.2rem;
+  }
+
+  .inspection-detail-field__label,
+  .workflow-detail-field__label {
+    font-size: var(--vmecc-text-caption);
+    line-height: 1.35;
+  }
+
+  .inspection-detail-field__value,
+  .workflow-detail-field__value {
+    max-width: 62%;
+    line-height: 1.4;
+  }
+
+  .inspection-review-hero,
+  .inspection-review-section {
+    padding: 0.9rem;
+    border-radius: var(--vmecc-radius-card, 0.5rem);
+  }
+
+  .inspection-review-title {
+    font-size: 1.0625rem;
+  }
+
+  .inspection-review-section__title,
+  .inspection-review-status-row__label,
+  .inspection-review-meta {
+    font-size: var(--vmecc-text-caption);
+    line-height: 1.4;
+  }
+
+  .inspection-review-status-row {
+    min-height: var(--inspection-mobile-control-height);
+    padding-block: 0.55rem;
+  }
+
+  .inspection-review-status-pill {
+    min-height: 2rem;
+    padding-inline: 0.65rem;
+  }
+
+  .inspection-loading-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(15, 23, 42, 0.28);
+  }
+
+  .inspection-loading-overlay__panel {
+    width: min(100%, 20rem);
+    padding: 1.25rem;
+    border: 1px solid var(--cui-border-color);
+    border-radius: var(--vmecc-radius-overlay, 0.875rem);
+    background: var(--cui-body-bg);
+    box-shadow: var(--vmecc-shadow-overlay);
+  }
+}
+
+@media (max-width: 359.98px) {
+  .inspection-queue-banner__actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .inspection-mobile-home__records-toolbar {
+    align-items: stretch !important;
+  }
+
+  .inspection-mobile-home__records-toolbar .workflow-scope-segmented,
+  .inspection-mobile-home__records-toolbar .inspection-scope-segmented,
+  .inspection-mobile-home__records-toolbar .inspection-view-all-btn {
+    width: 100%;
+  }
+
+  .inspection-mobile-home__records-toolbar .inspection-view-all-btn {
+    justify-content: center;
+  }
+}

@@ -144,8 +144,8 @@ const ChatThread = ({
           >
             <div className="d-flex align-items-center gap-2 gap-lg-3">
               <div
-                className="rounded-circle d-flex align-items-center justify-content-center text-white"
-                style={{ width: 40, height: 40, background: 'var(--cui-primary)', fontWeight: 600 }}
+                className="vmecc-label rounded-circle d-flex align-items-center justify-content-center text-white"
+                style={{ width: 40, height: 40, background: 'var(--cui-primary)' }}
               >
                 {getInitials(activeUserName)}
               </div>
@@ -153,7 +153,7 @@ const ChatThread = ({
                 <div className="d-flex align-items-baseline gap-2">
                   <span className="fw-semibold">{activeUserName}</span>
                   {getPrimaryRoleLabel(activeThread?.user) && (
-                    <span className="text-muted fw-normal" style={{ fontSize: '0.78rem' }}>
+                    <span className="vmecc-caption text-muted fw-normal">
                       {ROLE_ABBREVIATIONS[getPrimaryRoleLabel(activeThread?.user)] ??
                         getPrimaryRoleLabel(activeThread?.user)}
                     </span>
@@ -242,8 +242,8 @@ const ChatThread = ({
                               </div>
                             )}
                             <div
-                              className="text-muted ms-auto"
-                              style={{ fontSize: '0.75rem', lineHeight: 1.4, whiteSpace: 'nowrap' }}
+                              className="vmecc-caption text-muted ms-auto"
+                              style={{ whiteSpace: 'nowrap' }}
                             >
                               {formatChatTime(message.created_at)}
                               {showSeen && <span className="ms-1">· Seen</span>}

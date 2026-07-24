@@ -44,11 +44,9 @@ const FitnessTestSetupStep = ({
     isEditingDateTime ||
     !String(form.reportDate || '').trim() ||
     !String(form.reportTime || '').trim()
-  const dateTimeLabel = [form.reportDate, form.reportTime].filter(Boolean).join(' ')
-
   return (
     <div className="mb-3 d-grid gap-4" data-testid="fitness-test-report-setup-ready">
-      <div className="report-setup-grid d-grid gap-4">
+      <div className="report-setup-grid mobile-setup-picker d-grid gap-4">
         <div
           className="d-grid gap-3"
           data-fitness-test-field="incidentType"
@@ -166,7 +164,8 @@ const FitnessTestSetupStep = ({
           {form.reportDate && form.reportTime && !showDateTimePicker ? (
             <ReportSetupSummaryRow
               label="Date & Time"
-              value={dateTimeLabel}
+              value={form.reportDate}
+              secondaryValue={form.reportTime}
               showDesktop
               onEdit={() => setIsEditingDateTime(true)}
               onReset={() => {

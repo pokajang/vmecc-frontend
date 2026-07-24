@@ -3,12 +3,12 @@ body {
 }
 
 html {
-  font-size: 14px;
+  font-size: 16.8px;
 }
 
 @media (max-width: 767.98px) {
   html {
-    font-size: 16px;
+    font-size: 19.2px;
   }
 
   .form-control,
@@ -24,7 +24,7 @@ html {
   .form-select::placeholder,
   .form-control-plaintext::placeholder,
   textarea.form-control::placeholder {
-    font-weight: 400;
+    font-weight: var(--vmecc-weight-body);
   }
 }
 
@@ -106,7 +106,7 @@ html {
   padding: 0.2rem 0.45rem;
   border: 1px solid transparent;
   border-radius: var(--vmecc-radius-pill);
-  font-size: 0.78rem;
+  font-size: var(--vmecc-text-caption);
   font-weight: 600;
   line-height: 1.2;
 }

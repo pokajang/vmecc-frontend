@@ -279,18 +279,21 @@ const ErcoSetupStep = ({
     openMobileGroup(group)
 
     if (group === 'incident') {
+      incident.setShowAllIncidentTypes(false)
       setForm((prev) => ({ ...prev, incidentType: '' }))
       setSetupFieldErrors((prev) => ({ ...prev, incidentType: undefined }))
       return
     }
 
     if (group === 'weather') {
+      weather.setShowAllWeatherTypes(false)
       setForm((prev) => ({ ...prev, weather: '' }))
       setSetupFieldErrors((prev) => ({ ...prev, weather: undefined }))
       return
     }
 
     if (group === 'area') {
+      location.setShowAllLocationTypes(false)
       setForm((prev) => ({ ...prev, location: [] }))
       setSetupFieldErrors((prev) => ({ ...prev, location: undefined }))
       return
@@ -310,12 +313,13 @@ const ErcoSetupStep = ({
     if (!isMobile && desktopEditGroup === group) setDesktopEditGroup('')
   }
 
-  const renderSetupSummary = (group, label, value) => {
+  const renderSetupSummary = (group, label, value, secondaryValue = '') => {
     if (!completion[group] || shouldShowSetupEditor(group)) return null
     return (
       <ReportSetupSummaryRow
         label={label}
         value={value}
+        secondaryValue={secondaryValue}
         showDesktop
         onEdit={() => openMobileGroup(group)}
         onReset={() => resetMobileGroup(group)}
@@ -448,7 +452,7 @@ const ErcoSetupStep = ({
         onChangeIcon={location.setNewLocationIconKey}
       />
 
-      <div className="erco-mobile-setup-grid d-grid gap-4">
+      <div className="erco-mobile-setup-grid mobile-setup-picker d-grid gap-4">
         <div
           className="d-grid gap-2"
           data-erco-field="incidentType"
@@ -480,6 +484,7 @@ const ErcoSetupStep = ({
                     incident.setShowAllIncidentTypes((prev) => !prev)
                     return
                   }
+                  incident.setShowAllIncidentTypes(false)
                   recordTypeUsage(userId, 'incident', value)
                   updateSetupField('incidentType', value)
                   collapseDesktopGroup('incident')
@@ -552,6 +557,7 @@ const ErcoSetupStep = ({
                     weather.setShowAllWeatherTypes((prev) => !prev)
                     return
                   }
+                  weather.setShowAllWeatherTypes(false)
                   recordTypeUsage(userId, 'weather', value)
                   updateSetupField('weather', value)
                   collapseDesktopGroup('weather')
@@ -700,7 +706,8 @@ const ErcoSetupStep = ({
           {renderSetupSummary(
             'datetime',
             'Date & Time',
-            `${form.incidentDate || '--'} ${form.incidentTime || ''}`.trim(),
+            form.incidentDate || '--',
+            form.incidentTime,
           )}
           {shouldShowSetupEditor('datetime') ? (
             <>

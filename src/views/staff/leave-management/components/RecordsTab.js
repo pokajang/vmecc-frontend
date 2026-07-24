@@ -54,7 +54,7 @@ const RecordsTab = ({
 }) => {
   return (
     <CCard>
-      <CCardHeader>All Leaves</CCardHeader>
+      <CCardHeader>Leave Requests</CCardHeader>
       <CCardBody>
         <TableFilters
           searchValue={search}

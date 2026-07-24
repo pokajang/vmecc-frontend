@@ -12,8 +12,8 @@ const StatusPill = ({ label }) => {
   const { dot, text } = statusConfig(label)
   return (
     <span
-      className="d-inline-flex align-items-center gap-1 px-2 py-1 rounded-pill"
-      style={{ background: `${dot}18`, fontSize: '0.78rem', fontWeight: 500, color: text }}
+      className="vmecc-caption d-inline-flex align-items-center gap-1 px-2 py-1 rounded-pill"
+      style={{ background: `${dot}18`, color: text }}
     >
       <span
         style={{

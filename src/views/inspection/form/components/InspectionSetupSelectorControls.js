@@ -1,7 +1,7 @@
 import React from 'react'
 import { CButton, CCol, CRow } from '@coreui/react'
-import { Pencil, RotateCcw } from 'lucide-react'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
+import MobileSetupSummaryRow from 'src/components/report-workflow/MobileSetupSummaryRow'
 import { OptionMetaLabel } from 'src/components/IconOptionGrid'
 
 const buildClassName = (...parts) => parts.filter(Boolean).join(' ')
@@ -16,6 +16,7 @@ const sanitizeSegment = (value) =>
 export const InspectionMobileCollapsedSelectorRow = ({
   label,
   value,
+  secondaryValue = '',
   metaIconKey = '',
   metaLabel = '',
   metaTone = '',
@@ -33,56 +34,27 @@ export const InspectionMobileCollapsedSelectorRow = ({
   return (
     <div
       className={buildClassName(
-        'inspection-mobile-selector-row d-flex align-items-center justify-content-between gap-3',
+        'inspection-mobile-selector-row mobile-setup-summary-row',
         className,
       )}
     >
-      <div
-        className="inspection-mobile-selector-chip rounded-3 border border-primary bg-primary bg-opacity-10"
-        role="group"
-        aria-label={label}
-      >
-        <span className="inspection-mobile-selector-chip__section-label small text-muted">
-          {label}
-        </span>
-        <span className="inspection-mobile-selector-chip__label fw-semibold d-inline-flex flex-wrap align-items-center gap-2">
-          <span className="text-truncate">{value}</span>
-          {metaLabel ? (
+      <MobileSetupSummaryRow
+        label={label}
+        value={value}
+        secondaryValue={secondaryValue}
+        meta={
+          metaLabel ? (
             <OptionMetaLabel iconKey={metaIconKey} label={metaLabel} tone={metaTone} />
-          ) : null}
-        </span>
-        <span className="inspection-mobile-selector-chip__actions d-inline-flex align-items-center gap-1">
-          {extraAction}
-          {typeof onReset === 'function' ? (
-            <CButton
-              type="button"
-              color="primary"
-              variant="ghost"
-              size="sm"
-              className="inspection-mobile-selector-chip__reset p-1 border-0 shadow-none"
-              aria-label={resetLabel || `Reset ${label}`}
-              title={resetLabel || `Reset ${label}`}
-              onClick={onReset}
-            >
-              {resetIcon || <RotateCcw size={15} />}
-            </CButton>
-          ) : null}
-          {typeof onEdit === 'function' ? (
-            <CButton
-              type="button"
-              color="primary"
-              variant="ghost"
-              size="sm"
-              className="inspection-mobile-selector-chip__edit p-1 border-0 shadow-none"
-              aria-label={editLabel || `Edit ${label}`}
-              title={editLabel || `Edit ${label}`}
-              onClick={onEdit}
-            >
-              {editIcon || <Pencil size={15} />}
-            </CButton>
-          ) : null}
-        </span>
-      </div>
+          ) : null
+        }
+        extraAction={extraAction}
+        editLabel={editLabel}
+        editIcon={editIcon}
+        resetLabel={resetLabel}
+        resetIcon={resetIcon}
+        onEdit={onEdit}
+        onReset={onReset}
+      />
     </div>
   )
 }
@@ -120,7 +92,7 @@ export const InspectionMobileSelectorButtonGrid = ({
   if (!Array.isArray(options) || options.length === 0) return null
 
   return (
-    <CRow className="g-2" role="radiogroup">
+    <CRow className="inspection-mobile-selector-grid g-2 mx-0" role="radiogroup">
       {options.map((option) => {
         const optionValue = option?.value
         const optionTitle = option?.title || option?.label || String(optionValue || '')

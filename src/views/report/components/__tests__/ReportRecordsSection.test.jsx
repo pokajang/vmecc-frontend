@@ -106,9 +106,9 @@ describe('ReportRecordsSection', () => {
 
     expect(document.querySelector('.list-group')).toBeTruthy()
     expect(mobileArticle.className).toContain('list-group-item')
-    expect(mobileCard.querySelector('.fw-semibold')?.textContent).toBe('Medical Emergency')
+    expect(mobileCard.querySelector('.record-card__title')?.textContent).toBe('Medical Emergency')
     expect(mobileCard.querySelector('.record-card-eyebrow')?.textContent).toBe('ERCO-2026-001')
-    expect(mobileCard.querySelector('.small.text-body-secondary')?.textContent).toBe('Engine Room')
+    expect(mobileCard.querySelector('.record-card__subtitle')?.textContent).toBe('Engine Room')
     expect(mobileCard.textContent).toContain('ERCO-2026-001')
     expect(mobileCard.textContent).toContain('Medical Emergency')
     expect(mobileCard.textContent).toContain('Engine Room')

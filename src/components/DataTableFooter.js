@@ -41,7 +41,7 @@ const DataTableFooter = ({
 
   return (
     <div
-      className={`d-flex flex-wrap justify-content-end align-items-center gap-2 text-muted small mt-2 ${className}`.trim()}
+      className={`vmecc-meta d-flex flex-wrap justify-content-end align-items-center gap-2 text-muted mt-2 ${className}`.trim()}
     >
       {showRowsPerPage ? (
         <>

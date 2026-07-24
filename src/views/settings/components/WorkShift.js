@@ -183,7 +183,9 @@ const BuiltinShifts = () => {
               className="d-grid d-sm-flex align-items-sm-center gap-2 gap-sm-3"
               style={{ gridTemplateColumns: '1fr' }}
             >
-              <div style={{ minWidth: 60, fontWeight: 500 }}>{label}</div>
+              <div className="fw-medium" style={{ minWidth: 60 }}>
+                {label}
+              </div>
               <CFormLabel
                 htmlFor={`desktop-${key}-shift-start`}
                 className="text-muted mb-0"

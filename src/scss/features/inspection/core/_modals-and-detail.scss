@@ -1,6 +1,28 @@
 @use '../../../tools/coreui-tools' as *;
 @use '../../../foundation/scrollbars' as scrollbars;
 
+.inspection-form-actions {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.inspection-form-actions .inspection-draft-status {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.inspection-form-actions .btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+@include media-breakpoint-up(md) {
+  .inspection-form-actions .inspection-draft-status {
+    flex: 1 1 0;
+  }
+}
+
 .type-manager-modal .modal-content {
   max-height: min(92dvh, 44rem);
 }
@@ -107,7 +129,7 @@
   border-left: 3px solid var(--cui-primary);
   background: var(--cui-tertiary-bg);
   color: var(--cui-body-color);
-  font-size: 0.875rem;
+  font-size: var(--vmecc-text-meta);
   font-weight: 700;
 }
 
@@ -247,7 +269,7 @@
 .inspection-detail-field__label {
   flex: 0 0 auto;
   color: var(--cui-secondary-color);
-  font-size: 0.8125rem;
+  font-size: var(--vmecc-text-caption);
 }
 
 .workflow-detail-field__value,
@@ -426,7 +448,7 @@
   .inspection-form-inline-actions-row-status {
     width: 100%;
     overflow: hidden;
-    font-size: 0.84rem;
+    font-size: var(--vmecc-text-meta);
     line-height: 1.2;
     text-align: left;
     text-overflow: ellipsis;
@@ -452,7 +474,7 @@
   .inspection-form-sticky-message {
     width: 100%;
     overflow: hidden;
-    font-size: 0.84rem;
+    font-size: var(--vmecc-text-meta);
     line-height: 1.2;
     text-align: center;
     text-overflow: ellipsis;
@@ -517,7 +539,7 @@
     min-height: 44px;
     min-width: 0;
     padding: 0.32rem 0.65rem;
-    font-size: 0.84rem;
+    font-size: var(--vmecc-text-meta);
   }
 
   .inspection-compact-action-btn,

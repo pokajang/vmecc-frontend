@@ -69,7 +69,7 @@ describe('LeaveRecordsSection bulk workflow', () => {
     const onBulkWorkflowAction = vi.fn(async () => ({ succeeded: 2, failed: 0 }))
     render(
       <LeaveRecordsSection
-        title="All Leaves"
+        title="Leave Requests"
         actionMode="review"
         search=""
         setSearch={vi.fn()}
@@ -138,7 +138,7 @@ describe('LeaveRecordsSection bulk workflow', () => {
     const approveLeave = vi.fn()
     render(
       <LeaveRecordsSection
-        title="All Leaves"
+        title="Leave Requests"
         actionMode="review"
         search=""
         setSearch={vi.fn()}

@@ -198,6 +198,10 @@ it('renders a global period control and the personalized action queue', () => {
   expect(screen.getByRole('button', { name: 'This Month' }).getAttribute('aria-pressed')).toBe(
     'true',
   )
+  const periodDropdown = screen.getByTestId('dashboard-period-dropdown')
+  expect(periodDropdown.textContent).toContain('This Month')
+  fireEvent.click(screen.getByTestId('dashboard-period-option-3m'))
+  expect(periodDropdown.textContent).toContain('3M')
   expect(screen.getByText('Action Queue')).toBeTruthy()
   expect(screen.getByText('Leave requests pending your review')).toBeTruthy()
   expect(screen.getByText('Inspections pending your review')).toBeTruthy()
@@ -255,7 +259,9 @@ it('marks role-limited modules as hidden at stable data-testid locations', () =>
   expect(screen.getByTestId('dashboard-module-leave').getAttribute('data-visible')).toBe('hidden')
   expect(screen.getByTestId('dashboard-module-roster').getAttribute('data-visible')).toBe('hidden')
   expect(screen.getByTestId('dashboard-module-reports').getAttribute('data-visible')).toBe('hidden')
-  expect(screen.getByTestId('dashboard-action-queue-empty')).toBeTruthy()
+  expect(screen.getByTestId('dashboard-action-queue-empty').textContent).toContain(
+    'All caught up - no actions need attention.',
+  )
 })
 
 it('shows module and action-queue fallback states when stats fail to load', () => {

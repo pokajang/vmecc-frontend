@@ -659,6 +659,7 @@ const InspectionFormSetupSections = ({
       String(selectedSubLocationLabel || '').trim(),
   )
   const hasInspectedAt = String(form.inspectedAt || '').trim() !== ''
+  const [inspectedAtDate = '', inspectedAtTime = ''] = String(form.inspectedAt || '').split('T')
   const primaryLocationOptions = isFireTruckCatalogInspectionForm
     ? fireTruckOptions
     : isFireExtinguisherCatalogInspectionForm
@@ -886,6 +887,7 @@ const InspectionFormSetupSections = ({
   }
 
   const resetTypeSelection = () => {
+    incident.setShowAllIncidentTypes(false)
     if (typeof resetInspectionTypeSelection === 'function') {
       resetInspectionTypeSelection()
     } else {
@@ -905,6 +907,8 @@ const InspectionFormSetupSections = ({
   }
 
   const resetPrimaryLocation = () => {
+    location.setShowAllZoneTypes?.(false)
+    location.setShowAllMainLocationTypes?.(false)
     if (typeof resetPrimaryLocationSelection === 'function') {
       resetPrimaryLocationSelection()
       closeMobileSetupDrawer()
@@ -933,6 +937,7 @@ const InspectionFormSetupSections = ({
   }
 
   const resetMainArea = () => {
+    location.setShowAllMainLocationTypes?.(false)
     if (typeof resetMainAreaSelection === 'function') {
       resetMainAreaSelection()
       closeMobileSetupDrawer()
@@ -943,6 +948,7 @@ const InspectionFormSetupSections = ({
   }
 
   const resetSubLocation = () => {
+    location.setShowAllSubLocationTypes?.(false)
     if (typeof resetSubLocationSelection === 'function') {
       resetSubLocationSelection()
       closeMobileSetupDrawer()
@@ -1084,7 +1090,10 @@ const InspectionFormSetupSections = ({
 
   return (
     <>
-      <div className="inspection-form-section d-grid gap-3" ref={inspectionTypeRef}>
+      <div
+        className="inspection-form-section mobile-setup-picker d-grid gap-3"
+        ref={inspectionTypeRef}
+      >
         {isMobileTypeCollapsed || isDesktopTypeCollapsed ? (
           <>
             {!isCompactViewport ? (
@@ -1207,7 +1216,7 @@ const InspectionFormSetupSections = ({
                         color="primary"
                         variant="ghost"
                         size="sm"
-                        className="inspection-mobile-selector-chip__reset p-1 border-0 shadow-none"
+                        className="mobile-setup-summary__action p-0 border-0 shadow-none"
                         aria-label={CONTINUATION_SCAN_LABEL}
                         title={CONTINUATION_SCAN_LABEL}
                         onClick={fireExtinguisherScan.onOpenScanner}
@@ -1232,7 +1241,8 @@ const InspectionFormSetupSections = ({
                 <div className="d-md-none">
                   <InspectionMobileCollapsedSelectorRow
                     label="Date and time"
-                    value={String(form.inspectedAt || '')}
+                    value={inspectedAtDate}
+                    secondaryValue={inspectedAtTime}
                     editLabel="Edit date and time"
                     resetLabel="Reset date and time"
                     onReset={resetInspectedAt}
@@ -1240,7 +1250,7 @@ const InspectionFormSetupSections = ({
                   />
                 </div>
               ) : (
-                <div className="inspection-mobile-datetime-card rounded-3 border border-primary bg-primary bg-opacity-10 d-md-none">
+                <div className="inspection-mobile-datetime-card mobile-setup-input-card rounded-3 border d-md-none">
                   <label
                     className="inspection-mobile-datetime-label small text-muted"
                     htmlFor="inspection-mobile-inspected-at"

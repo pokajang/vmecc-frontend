@@ -125,7 +125,7 @@
     display: block;
     min-width: 0;
     overflow: hidden;
-    font-size: 0.84rem;
+    font-size: var(--vmecc-text-meta);
     line-height: 1.2;
     text-align: center;
     text-overflow: ellipsis;

@@ -164,8 +164,7 @@ const RosterFilter = ({
                 {monthOptions.length > DEFAULT_MONTH_WINDOW && (
                   <button
                     type="button"
-                    className="btn btn-link btn-sm p-0 text-decoration-none"
-                    style={{ fontSize: '0.8rem' }}
+                    className="vmecc-caption btn btn-link btn-sm p-0 text-decoration-none"
                     onClick={() => {
                       const next = !showAllMonths
                       setShowAllMonths(next)

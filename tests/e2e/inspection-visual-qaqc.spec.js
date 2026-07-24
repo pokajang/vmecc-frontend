@@ -1,0 +1,179 @@
+import { expect, test } from '@playwright/test'
+
+const auditUser = {
+  id: 903,
+  name: 'Inspection Visual Auditor',
+  email: 'inspection.visual.audit@example.test',
+  status: 'active',
+  permissions: ['*'],
+  roles: ['System Administrator'],
+}
+
+const json = (route, body) =>
+  route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
+
+const installApiStubs = async (page) => {
+  await page.route('**:8000/api/**', (route) => {
+    const path = new URL(route.request().url()).pathname.replace(/^\/api/, '')
+
+    if (path === '/auth/session') {
+      return json(route, { user: auditUser, csrf_token: 'inspection-visual-audit-token' })
+    }
+    if (path === '/settings/modules') {
+      return json(route, {
+        data: {
+          registry: [],
+          configured: {},
+          effective: {},
+          forceAllEnabled: true,
+          fallbackMode: true,
+        },
+      })
+    }
+    if (path === '/settings/system-maintenance') {
+      return json(route, { data: { enabled: false, phase: 'off', message: '' } })
+    }
+    if (path === '/workflow/notifications/unread-count') {
+      return json(route, { data: { unread_count: 0 } })
+    }
+
+    return json(route, { data: [], meta: {} })
+  })
+}
+
+const expectNoHorizontalOverflow = async (locator) => {
+  const metrics = await locator.evaluate((element) => ({
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+    overflowingChildren: [...element.querySelectorAll('*')]
+      .filter((child) => child.scrollWidth > child.clientWidth + 1)
+      .slice(0, 8)
+      .map((child) => ({
+        className: child.className,
+        clientWidth: child.clientWidth,
+        scrollWidth: child.scrollWidth,
+        text: child.textContent.trim().slice(0, 80),
+      })),
+  }))
+  expect(metrics.scrollWidth, JSON.stringify(metrics)).toBeLessThanOrEqual(metrics.clientWidth + 1)
+}
+
+const cases = [
+  {
+    name: 'fire-extinguisher-complete-narrow',
+    width: 320,
+    height: 700,
+    viewport: 'mobile',
+    state: 'complete-with-next-location',
+    type: 'fire-extinguisher-inspection',
+  },
+  {
+    name: 'high-angle-partial-mobile',
+    width: 390,
+    height: 844,
+    viewport: 'mobile',
+    state: 'partial',
+    type: 'high-angle-rescue-equipment-inspection',
+  },
+  {
+    name: 'hse-missing-required-tablet',
+    width: 768,
+    height: 1024,
+    viewport: 'desktop',
+    state: 'missing-required',
+    type: 'health-safety-environment-inspection',
+  },
+  {
+    name: 'frt-complete-desktop',
+    width: 1440,
+    height: 960,
+    viewport: 'desktop',
+    state: 'complete-with-next-location',
+    type: 'frt-daily-inspection',
+  },
+]
+
+test('inspection matrix remains legible and overflow-safe across representative QA cases', async ({
+  page,
+}, testInfo) => {
+  const pageErrors = []
+  page.on('pageerror', (error) => pageErrors.push(error.message))
+  await installApiStubs(page)
+
+  for (const auditCase of cases) {
+    await page.setViewportSize({ width: auditCase.width, height: auditCase.height })
+    await page.goto(
+      `/inspection/ux-matrix?viewport=${auditCase.viewport}&state=${auditCase.state}&type=${auditCase.type}`,
+      { waitUntil: 'domcontentloaded' },
+    )
+
+    const inspectionCase = page.locator(
+      `[data-matrix-case="${auditCase.type}:${auditCase.state}:${auditCase.viewport}"]`,
+    )
+    await expect(inspectionCase).toBeVisible()
+    await expectNoHorizontalOverflow(page.locator('html'))
+    await expectNoHorizontalOverflow(inspectionCase.locator('.inspection-ux-matrix-preview-shell'))
+    await expect
+      .poll(() => page.evaluate(() => document.fonts.check('16px "Manrope Variable"')))
+      .toBe(true)
+
+    const bodyFont = await page
+      .locator('body')
+      .evaluate((element) => getComputedStyle(element).fontFamily)
+    expect(bodyFont).toContain('Manrope Variable')
+
+    if (auditCase.viewport === 'mobile') {
+      const actionTargets = inspectionCase.locator(
+        '.inspection-form-actions .btn, .inspection-form-inline-actions .btn, .inspection-next-location-btn',
+      )
+      const boxes = await actionTargets.evaluateAll((elements) =>
+        elements
+          .filter((element) => {
+            const style = getComputedStyle(element)
+            return (
+              style.display !== 'none' &&
+              style.visibility !== 'hidden' &&
+              element.getClientRects().length > 0
+            )
+          })
+          .map((element) => ({
+            height: element.getBoundingClientRect().height,
+            label: element.getAttribute('aria-label') || element.textContent.trim(),
+          })),
+      )
+      expect(boxes.length).toBeGreaterThan(0)
+      expect(
+        boxes.filter(({ height }) => height < 43.5),
+        JSON.stringify(boxes),
+      ).toEqual([])
+
+      const bottomNavigation = page.locator('.app-bottom-nav')
+      const statusMessage = inspectionCase
+        .locator(
+          '.inspection-form-inline-actions-row-status:visible, .inspection-draft-status:visible',
+        )
+        .last()
+      if ((await bottomNavigation.count()) && (await statusMessage.count())) {
+        await statusMessage.scrollIntoViewIfNeeded()
+        const [navigationBox, statusBox] = await Promise.all([
+          bottomNavigation.boundingBox(),
+          statusMessage.boundingBox(),
+        ])
+        expect(navigationBox).not.toBeNull()
+        expect(statusBox).not.toBeNull()
+        expect(statusBox.y + statusBox.height).toBeLessThanOrEqual(navigationBox.y)
+      }
+    } else {
+      const draftButton = inspectionCase.getByRole('button', { name: 'Save Draft' }).last()
+      if (await draftButton.count()) {
+        await expect(draftButton).toHaveCSS('white-space', 'nowrap')
+      }
+    }
+
+    await inspectionCase.screenshot({
+      path: testInfo.outputPath(`${auditCase.name}.png`),
+    })
+  }
+
+  expect(pageErrors).toEqual([])
+})

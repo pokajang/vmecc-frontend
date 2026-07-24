@@ -112,7 +112,7 @@ const IncidentTitleField = ({
         }),
         option: (base, state) => ({
           ...base,
-          fontWeight: 400,
+          fontWeight: 500,
           backgroundColor: state.isSelected
             ? ERCO_GREEN_BG
             : state.isFocused
@@ -123,7 +123,7 @@ const IncidentTitleField = ({
         }),
         singleValue: (base) => ({
           ...base,
-          fontWeight: 400,
+          fontWeight: 500,
         }),
         clearIndicator: (base, state) => ({
           ...base,

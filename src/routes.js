@@ -340,7 +340,7 @@ const routes = [
     name: 'Leave Management',
     element: StaffLeaveManagementRedirect,
   },
-  { path: '/staff/leave-management/leaves', name: 'All Leaves', element: LeaveManagement },
+  { path: '/staff/leave-management/leaves', name: 'Leave Requests', element: LeaveManagement },
   {
     path: '/staff/leave-management/set-leaves',
     name: 'Leave Entitlements',

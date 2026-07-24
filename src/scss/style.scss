@@ -1,12 +1,26 @@
+@use '@fontsource-variable/manrope/wght.css';
 @use '@coreui/coreui/scss/coreui' as * with (
   $enable-deprecation-messages: false,
   $primary: #007e7aff,
-  $sidebar-width: 18rem
+  $sidebar-width: 18rem,
+  $font-family-sans-serif: (
+    'Manrope Variable',
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif,
+  ),
+  $font-weight-light: 500,
+  $font-weight-normal: 500,
+  $font-weight-base: 500,
+  $headings-font-weight: 700,
+  $btn-font-weight: 600
 );
 @use '@coreui/chartjs/scss/coreui-chartjs';
 @use 'vendors/simplebar';
 @use 'vendors/react-datepicker';
 @use 'foundation/base';
+@use 'foundation/typography';
 @use 'foundation/scrollbars';
 @use 'layout/shell';
 @use 'features/report/report';
@@ -14,6 +28,7 @@
 @use 'features/dashboard/dashboard';
 @use 'components/mobile-nav';
 @use 'components/table-filter-drawer';
+@use 'components/mobile-setup-summary';
 @use 'features/notifications/drawer-shell';
 @use 'components/touch-targets';
 @use 'features/inspection/mobile-home';
@@ -23,4 +38,5 @@
 @use 'features/ai-helper/panel';
 @use 'features/inspection/review';
 @use 'features/inspection/review-responsive';
+@use 'features/inspection/mobile-polish';
 @use 'features/ai-helper/responsive';

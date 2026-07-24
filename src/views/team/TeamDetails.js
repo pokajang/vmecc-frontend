@@ -188,12 +188,7 @@ const TeamDetails = () => {
                     if (!hasGroups) return <CRow className="g-3">{teams.map(renderCard)}</CRow>
                     return groupKeys.map((groupKey) => (
                       <div key={groupKey} className="mb-4">
-                        <div
-                          className="text-muted small fw-semibold mb-2"
-                          style={{ letterSpacing: '0.05em', textTransform: 'uppercase' }}
-                        >
-                          {groupKey}
-                        </div>
+                        <div className="vmecc-overline text-muted mb-2">{groupKey}</div>
                         <CRow className="g-3">{groupMap[groupKey].map(renderCard)}</CRow>
                       </div>
                     ))

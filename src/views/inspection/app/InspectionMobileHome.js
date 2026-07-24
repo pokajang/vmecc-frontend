@@ -69,12 +69,15 @@ const InspectionMobileHome = ({
 
   return (
     <div className="inspection-mobile-home d-md-none d-grid gap-3 mb-3">
-      <div
+      <section
         className="inspection-mobile-home__section d-grid gap-3 mb-2"
         data-testid="inspection-new"
+        aria-labelledby="inspection-mobile-choose-type"
       >
         <div className="inspection-mobile-home__section-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-          <div className="fw-semibold text-muted">Choose Type</div>
+          <h2 id="inspection-mobile-choose-type" className="inspection-mobile-section-title">
+            Choose type
+          </h2>
           <CreateActionButton
             label="Add type"
             className="inspection-compact-action-btn"
@@ -99,23 +102,28 @@ const InspectionMobileHome = ({
             option?.value === INCIDENT_TYPE_TOGGLE_VALUE ? TOGGLE_CARD_PROPS : {}
           }
         />
-      </div>
+      </section>
 
       {onViewExtinguishers ? (
-        <div className="inspection-mobile-home__section d-grid gap-2 mb-1">
-          <div className="fw-semibold text-muted">Equipment</div>
+        <section
+          className="inspection-mobile-home__section d-grid gap-2 mb-1"
+          aria-labelledby="inspection-mobile-equipment"
+        >
+          <h2 id="inspection-mobile-equipment" className="inspection-mobile-section-title">
+            Equipment
+          </h2>
           <CButton
             type="button"
             color="secondary"
             variant="outline"
-            className="w-100 text-start"
+            className="inspection-mobile-home__equipment-btn w-100 text-start"
             onClick={onViewExtinguishers}
             data-testid="inspection-all-extinguishers"
             aria-label="Open extinguisher catalogue"
           >
             All Extinguishers
           </CButton>
-        </div>
+        </section>
       ) : null}
 
       {draftRow ? (
@@ -167,7 +175,11 @@ const InspectionMobileHome = ({
       ) : null}
 
       {queueSummary?.count ? (
-        <div className="inspection-queue-banner rounded-3 border bg-warning-subtle p-3 d-grid gap-2">
+        <section
+          className="inspection-queue-banner rounded-3 border bg-warning-subtle p-3 d-grid gap-2"
+          aria-label="Inspection sync queue"
+          aria-live="polite"
+        >
           <div>
             <div className="fw-semibold">
               {isQueueSyncing
@@ -180,32 +192,31 @@ const InspectionMobileHome = ({
               <div className="small text-body-secondary mt-1">{queueSummary.lastError}</div>
             ) : null}
           </div>
-          <CButton
-            color="secondary"
-            variant="outline"
-            size="sm"
-            className="me-2"
-            onClick={onViewQueueDetails}
-          >
-            Details
-          </CButton>
-          <CButton
-            color="secondary"
-            variant="outline"
-            size="sm"
-            disabled={isQueueSyncing}
-            onClick={onRetryQueue}
-          >
-            {isQueueSyncing ? 'Retrying...' : 'Retry now'}
-          </CButton>
-        </div>
+          <div className="inspection-queue-banner__actions">
+            <CButton color="secondary" variant="outline" size="sm" onClick={onViewQueueDetails}>
+              Details
+            </CButton>
+            <CButton
+              color="secondary"
+              variant="outline"
+              size="sm"
+              disabled={isQueueSyncing}
+              onClick={onRetryQueue}
+            >
+              {isQueueSyncing ? 'Retrying...' : 'Retry now'}
+            </CButton>
+          </div>
+        </section>
       ) : null}
 
-      <div
+      <section
         className="inspection-mobile-home__section d-grid gap-2 mb-1"
         data-testid="inspection-records"
+        aria-labelledby="inspection-mobile-recent-records"
       >
-        <div className="fw-semibold text-muted">Recent Records</div>
+        <h2 id="inspection-mobile-recent-records" className="inspection-mobile-section-title">
+          Recent records
+        </h2>
         <div className="inspection-mobile-home__records-toolbar d-flex align-items-center justify-content-between gap-2">
           <RecordScopeSegmentedControl
             value={recordScope}
@@ -224,7 +235,7 @@ const InspectionMobileHome = ({
             {recordsCount ? ` (${recordsCount})` : ''}
           </CButton>
         </div>
-      </div>
+      </section>
 
       {isRecordsLoading ? (
         <div className="border rounded-3 bg-body">

@@ -26,12 +26,10 @@ const TeamBadge = ({ team, leaveMarker }) => {
   return (
     <div className="d-inline-flex flex-column align-items-center gap-1">
       <span
-        className="d-inline-block rounded-pill px-2 fw-semibold"
+        className="vmecc-meta d-inline-block rounded-pill px-2"
         style={{
           background: bg,
           color: text,
-          fontSize: '0.875rem',
-          lineHeight: '1.6',
           whiteSpace: 'nowrap',
         }}
       >
@@ -61,7 +59,6 @@ const ShiftSelect = ({ value, teams, onChange }) => {
     <select
       className="form-select form-select-sm"
       style={{
-        fontSize: '0.875rem',
         width: '100%',
         minWidth: 0,
         border: isOrphaned ? '1px solid var(--cui-danger)' : '1px solid var(--cui-border-color)',
@@ -151,8 +148,6 @@ const RosterCard = ({ monthBlock, editMode = false, teams = [], allShifts = [], 
 
   const labelCellStyle = {
     padding: '8px 14px',
-    fontWeight: 600,
-    fontSize: '0.875rem',
     whiteSpace: 'nowrap',
     color: 'var(--cui-secondary-color)',
     background: 'var(--cui-secondary-bg)',
@@ -178,7 +173,10 @@ const RosterCard = ({ monthBlock, editMode = false, teams = [], allShifts = [], 
           {/* Date header row */}
           <thead>
             <tr>
-              <th style={{ ...labelCellStyle, borderBottom: '1px solid var(--cui-border-color)' }}>
+              <th
+                className="vmecc-label"
+                style={{ ...labelCellStyle, borderBottom: '1px solid var(--cui-border-color)' }}
+              >
                 Shift
               </th>
               {allRows.map((row) => (
@@ -190,22 +188,17 @@ const RosterCard = ({ monthBlock, editMode = false, teams = [], allShifts = [], 
                   }}
                 >
                   <div
+                    className="vmecc-overline"
                     style={{
-                      fontSize: '0.82rem',
-                      fontWeight: 600,
                       color: isToday(row.date) ? '#2563eb' : 'var(--cui-secondary-color)',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.04em',
                     }}
                   >
                     {row.dayName.slice(0, 3)}
                   </div>
                   <div
+                    className={`vmecc-label ${isToday(row.date) ? 'fw-bold' : ''}`.trim()}
                     style={{
-                      fontSize: '0.95rem',
-                      fontWeight: isToday(row.date) ? 700 : 500,
                       color: isToday(row.date) ? '#1d4ed8' : 'inherit',
-                      lineHeight: 1.2,
                     }}
                   >
                     {row.date.slice(8)}
@@ -221,6 +214,7 @@ const RosterCard = ({ monthBlock, editMode = false, teams = [], allShifts = [], 
               return (
                 <tr key={shiftDef.slug}>
                   <td
+                    className="vmecc-label"
                     style={{
                       ...labelCellStyle,
                       ...(isLast ? {} : { borderBottom: '1px solid var(--cui-border-color)' }),

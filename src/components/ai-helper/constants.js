@@ -269,7 +269,7 @@ export const safeAiHelperError = (
   }
 
   if (code === 'AI_HELPER_PROVIDER_TEMPORARY') {
-    return 'The AI provider is temporarily unavailable. Your VMECC knowledge remains available; please try again shortly.'
+    return 'Ask AI is temporarily unavailable. Please try again shortly.'
   }
 
   if (code === 'AI_HELPER_BUSY_RETRY') {
@@ -288,7 +288,7 @@ export const safeAiHelperError = (
   }
 
   if (code === 'AI_HELPER_NO_AUTHORIZED_EVIDENCE') {
-    return 'No relevant guidance available to your account was found for that question.'
+    return 'Sorry, I could not find enough relevant guidance to answer that accurately. Try naming the procedure, page, or task.'
   }
 
   if (code === 'AI_HELPER_AMBIGUOUS_QUESTION') {
@@ -296,11 +296,11 @@ export const safeAiHelperError = (
   }
 
   if (code === 'AI_HELPER_EVIDENCE_INCOMPLETE') {
-    return 'Related guidance was found, but it was not sufficient to verify a complete answer.'
+    return 'I found related guidance but need a little more detail to give a reliable answer.'
   }
 
   if (code === 'AI_HELPER_VALIDATION_FAILED') {
-    return 'Ask AI found guidance but could not verify a safe answer. Please rephrase or open the listed source.'
+    return 'Sorry, I could not confirm a reliable answer. Please rephrase the question or check with the responsible person.'
   }
 
   if (code === 'AI_HELPER_UNAVAILABLE' || status === 503) {
@@ -308,7 +308,10 @@ export const safeAiHelperError = (
   }
 
   if (code === 'AI_HELPER_KNOWLEDGE_NOT_READY' || status === 409) {
-    return 'Ask AI does not yet have an active knowledge release. Wait for the first corpus build to finish or resolve failed documents.'
+    return (
+      error?.payload?.message ||
+      'The reference information needed for this question is temporarily unavailable. Please try again later.'
+    )
   }
 
   if (code === 'AI_HELPER_KNOWLEDGE_UPLOAD_RATE_LIMITED') {

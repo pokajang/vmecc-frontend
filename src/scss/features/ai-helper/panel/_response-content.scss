@@ -101,7 +101,7 @@
 .ai-helper-message__section-heading {
   margin: 0.78rem 0 0.28rem;
   color: var(--cui-body-color);
-  font-weight: 650;
+  font-weight: var(--vmecc-weight-semibold);
   line-height: 1.35;
   overflow-wrap: anywhere;
 }
@@ -133,7 +133,7 @@
 }
 .ai-helper-message__section-heading--h6 {
   font-size: 0.95rem;
-  font-weight: 650;
+  font-weight: var(--vmecc-weight-semibold);
 }
 
 .ai-helper-message__quote {
@@ -193,7 +193,7 @@
     padding: 0.55rem 0.65rem;
     background: transparent;
     color: var(--cui-body-color);
-    font-size: 0.78rem;
+    font-size: var(--vmecc-text-caption);
     line-height: 1.45;
     tab-size: 2;
   }
@@ -229,7 +229,7 @@
     margin: 0;
     border-collapse: collapse;
     color: var(--cui-body-color);
-    font-size: 0.82rem;
+    font-size: var(--vmecc-text-caption);
   }
 
   th,
@@ -257,9 +257,9 @@
   border-radius: 999px;
   background: transparent;
   color: var(--cui-secondary-color);
-  font-size: 0.68rem;
+  font-size: var(--vmecc-text-caption);
   font-variant-numeric: tabular-nums;
-  font-weight: 550;
+  font-weight: var(--vmecc-weight-semibold);
   line-height: 1.25;
   vertical-align: 0.08em;
   overflow-wrap: anywhere;
@@ -274,6 +274,6 @@
   display: inline-block;
   margin: 0.25rem 0;
   color: var(--cui-secondary-color);
-  font-size: 0.8rem;
+  font-size: var(--vmecc-text-caption);
   font-style: italic;
 }
