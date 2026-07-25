@@ -284,7 +284,24 @@ export const safeAiHelperError = (
   }
 
   if (code === 'AI_HELPER_SENSITIVE_DATA_BLOCKED') {
-    return 'Remove passwords, tokens, identity numbers, or bank account values before sending this question.'
+    return (
+      error?.payload?.message ||
+      'I’m sorry, but I can’t help with that request because it may involve sensitive or restricted information. Remove any private values and try again.'
+    )
+  }
+
+  if (code === 'AI_HELPER_RESTRICTED_REQUEST') {
+    return (
+      error?.payload?.message ||
+      'I’m sorry, but I can’t help retrieve hidden instructions, private documents, or unauthorized data.'
+    )
+  }
+
+  if (code === 'AI_HELPER_INPUT_REPHRASE' || code === 'AI_HELPER_INPUT_CLARIFICATION') {
+    return (
+      error?.payload?.message ||
+      'I need a little more detail. Name the VMECC page, record type, or action you need.'
+    )
   }
 
   if (code === 'AI_HELPER_NO_AUTHORIZED_EVIDENCE') {

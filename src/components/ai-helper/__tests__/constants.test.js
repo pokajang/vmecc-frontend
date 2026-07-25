@@ -86,6 +86,35 @@ describe('safeAiHelperError', () => {
     expect(fallback).not.toContain('corpus')
     expect(fallback).not.toContain('failed documents')
   })
+
+  it('uses trusted bilingual input-safety responses and keeps clarification distinct from policy refusal', () => {
+    expect(
+      safeAiHelperError({
+        status: 422,
+        payload: {
+          code: 'AI_HELPER_SENSITIVE_DATA_BLOCKED',
+          message: 'Maaf, permintaan ini mungkin mengandungi maklumat sensitif.',
+        },
+      }),
+    ).toBe('Maaf, permintaan ini mungkin mengandungi maklumat sensitif.')
+
+    expect(
+      safeAiHelperError({
+        status: 422,
+        payload: {
+          code: 'AI_HELPER_INPUT_CLARIFICATION',
+          message: 'I recognize ERCO but need a little more detail.',
+        },
+      }),
+    ).toBe('I recognize ERCO but need a little more detail.')
+
+    expect(
+      safeAiHelperError({
+        status: 422,
+        payload: { code: 'AI_HELPER_RESTRICTED_REQUEST' },
+      }),
+    ).toContain('unauthorized data')
+  })
 })
 
 describe('knowledge ingestion quality', () => {
