@@ -55,7 +55,9 @@ const MobileBottomDrawer = ({
   ...offcanvasProps
 }) => {
   const [shouldRender, setShouldRender] = useState(Boolean(visible))
-  const restoreFocusRef = useRef(null)
+  const restoreFocusRef = useRef(
+    visible && typeof document !== 'undefined' ? document.activeElement : null,
+  )
   const restoreFocusOnCloseRef = useRef(restoreFocusOnClose)
   const onAfterCloseRef = useRef(onAfterClose)
 
@@ -167,7 +169,7 @@ const MobileBottomDrawer = ({
             disabled={closeDisabled}
             aria-label={closeLabel || (typeof title === 'string' ? `Close ${title}` : 'Close')}
           >
-            <X size={18} />
+            <X size={18} aria-hidden="true" />
           </CButton>
         </div>
       </COffcanvasHeader>

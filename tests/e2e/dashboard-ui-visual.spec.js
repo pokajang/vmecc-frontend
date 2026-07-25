@@ -114,8 +114,12 @@ const fulfillJson = (route, body) =>
   route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
 
 const installDashboardStubs = async (page) => {
+  let notificationRead = false
+  let notificationsDeleted = false
+
   await page.route('http://localhost:8000/api/**', (route) => {
     const path = new URL(route.request().url()).pathname.replace(/^\/api/, '')
+    const method = route.request().method()
 
     if (path === '/auth/session') return fulfillJson(route, { user, csrf_token: 'dashboard-token' })
     if (path === '/settings/modules') {
@@ -147,7 +151,35 @@ const installDashboardStubs = async (page) => {
     }
     if (path === '/stats') return fulfillJson(route, dashboardStats)
     if (path === '/workflow/notifications/unread-count') {
-      return fulfillJson(route, { data: { unread_count: 0 } })
+      const count = notificationsDeleted || notificationRead ? 0 : 1
+      return fulfillJson(route, { data: { count, unread_count: count } })
+    }
+    if (path === '/workflow/notifications/read-all' && method === 'POST') {
+      notificationRead = true
+      return fulfillJson(route, { data: { updated: 1 } })
+    }
+    if (path === '/workflow/notifications' && method === 'DELETE') {
+      notificationsDeleted = true
+      return fulfillJson(route, { data: { deleted: 1 } })
+    }
+    if (path === '/workflow/notifications') {
+      return fulfillJson(route, {
+        data: notificationsDeleted
+          ? []
+          : [
+              {
+                id: 247,
+                module: 'inspection',
+                event: 'submitted',
+                title: 'azamhusain9 submitted Inspection INS-01-2472026.',
+                createdAt: '2026-07-24T09:55:00.000Z',
+                read: notificationRead,
+                actionRequiredForViewer: false,
+                reportType: 'inspection',
+                reportUid: 'INS-01-2472026',
+              },
+            ],
+      })
     }
 
     return fulfillJson(route, { data: [], meta: {} })
@@ -164,6 +196,41 @@ const expectNoHorizontalPageOverflow = async (page) => {
     .toBe(true)
 }
 
+const expectMobileDrawerItemsFit = async (dialog) => {
+  const issues = await dialog.evaluate((drawer) => {
+    const drawerBounds = drawer.getBoundingClientRect()
+
+    return [...drawer.querySelectorAll('.mobile-overlay-item')].flatMap((item) => {
+      const itemBounds = item.getBoundingClientRect()
+      const label = item.querySelector('.mobile-overlay-item-label')
+      const labelStyle = label ? getComputedStyle(label) : null
+      const labelLineHeight = labelStyle ? Number.parseFloat(labelStyle.lineHeight) : 0
+      const itemIssues = []
+
+      if (itemBounds.left < drawerBounds.left - 1 || itemBounds.right > drawerBounds.right + 1) {
+        itemIssues.push(`${label?.textContent?.trim() || 'Unnamed item'} escapes the drawer`)
+      }
+      if (itemBounds.height < 44) {
+        itemIssues.push(`${label?.textContent?.trim() || 'Unnamed item'} is below 44px`)
+      }
+      if (label && label.scrollWidth > label.clientWidth + 1) {
+        itemIssues.push(`${label.textContent.trim()} clips horizontally`)
+      }
+      if (
+        label &&
+        labelLineHeight > 0 &&
+        label.getBoundingClientRect().height > labelLineHeight * 1.2
+      ) {
+        itemIssues.push(`${label.textContent.trim()} wraps`)
+      }
+
+      return itemIssues
+    })
+  })
+
+  expect(issues).toEqual([])
+}
+
 const expectTypographyContract = async (page, { mobile = false } = {}) => {
   await expect
     .poll(() => page.evaluate(() => document.fonts.check('16px "Manrope Variable"')))
@@ -173,18 +240,32 @@ const expectTypographyContract = async (page, { mobile = false } = {}) => {
     .locator('body')
     .evaluate((element) => getComputedStyle(element).fontFamily)
   expect(family).toContain('Manrope Variable')
+  await expect(page.locator('body')).toHaveCSS('font-weight', '500')
 
   const title = page.getByRole('heading', { name: 'Dashboard Overview' })
   await expect(title).toHaveCSS('font-weight', '700')
-  await expect(title).toHaveCSS('font-size', mobile ? '22px' : '21px')
+  await expect(title).toHaveCSS('font-size', mobile ? '26.4px' : '25.2px')
+  await expect(page.locator('.dashboard-overview__description')).toHaveCSS('font-weight', '500')
 
   if (mobile) {
     await expect(page.locator('.dashboard-metric-list__summary').first()).toHaveCSS(
       'font-size',
-      '16px',
+      '19.2px',
     )
-    await expect(page.locator('.app-bottom-nav-label').first()).toHaveCSS('font-size', '13px')
+    await expect(page.locator('.app-bottom-nav-label').first()).toHaveCSS('font-size', '15.6px')
     await expect(page.locator('.app-bottom-nav-label').first()).toHaveCSS('font-weight', '600')
+    const overflowingBottomNavLabels = await page
+      .locator('.app-bottom-nav-label')
+      .evaluateAll((nodes) =>
+        nodes
+          .filter((node) => node.scrollWidth > node.clientWidth + 1)
+          .map((node) => node.textContent.trim()),
+      )
+    expect(overflowingBottomNavLabels).toEqual([])
+    await expect(page.locator('.dashboard-module-card__subtext').first()).toHaveCSS(
+      'font-weight',
+      '500',
+    )
   }
 }
 
@@ -219,9 +300,40 @@ test('dashboard has a usable desktop and mobile composition', async ({ page }, t
   })
   await expect(mobilePeriodToggle).toBeVisible()
   await expect(mobilePeriodToggle).toContainText('This Month')
+  expect(
+    await mobilePeriodToggle.evaluate((element) => element.getBoundingClientRect().width),
+  ).toBeLessThan(250)
+  expect(
+    await mobilePeriodToggle.evaluate((element) => element.getBoundingClientRect().height),
+  ).toBeLessThan(40)
   await expect(page.getByRole('group', { name: 'Select dashboard reporting period' })).toBeHidden()
   await expect(page.getByRole('button', { name: 'Collapse Payroll Claims' })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Collapse action queue' })).toBeVisible()
+  await expect(
+    page.getByTestId('dashboard-action-queue').locator('.dashboard-action-queue__header'),
+  ).toHaveCSS('border-left-width', '4px')
+  await page.getByTestId('dashboard-action-queue').locator('.dashboard-header-toggle').click()
+  await expect(
+    page.getByTestId('dashboard-action-queue').locator('.dashboard-action-queue__body'),
+  ).toHaveCount(0)
+  await page.getByTestId('dashboard-action-queue').locator('.dashboard-header-toggle').click()
+  await expect(
+    page.getByTestId('dashboard-action-queue').locator('.dashboard-action-queue__body'),
+  ).toBeVisible()
+  expect(
+    await page
+      .getByTestId('dashboard-module-payroll')
+      .locator('.dashboard-module-card')
+      .evaluate((card) => {
+        const header = card.querySelector('.dashboard-module-card__header')
+        const body = card.querySelector('.dashboard-module-card__body')
+        return (
+          header &&
+          body &&
+          getComputedStyle(header).backgroundColor === getComputedStyle(body).backgroundColor
+        )
+      }),
+  ).toBe(true)
   await expect(page.locator('.dashboard-analytics').first()).not.toHaveAttribute('open', '')
   await expect(page.getByText('Payroll analytics')).toBeVisible()
   await expect(page.getByText('View details').first()).toBeVisible()
@@ -275,7 +387,7 @@ test('dashboard has a usable desktop and mobile composition', async ({ page }, t
   await expect(menuDialog).toBeVisible()
   await expect(menuDialog.locator('.mobile-overlay-shell-title-text')).toHaveCSS(
     'font-size',
-    '18px',
+    '21.6px',
   )
   await expect(menuDialog.locator('.mobile-overlay-shell-title-text')).toHaveCSS(
     'font-weight',
@@ -283,7 +395,7 @@ test('dashboard has a usable desktop and mobile composition', async ({ page }, t
   )
   await expect(menuDialog.locator('.mobile-overlay-item-label').first()).toHaveCSS(
     'font-size',
-    '16px',
+    '19.2px',
   )
   await expect(menuDialog.locator('.mobile-overlay-item-label').first()).toHaveCSS(
     'font-weight',
@@ -297,5 +409,97 @@ test('dashboard has a usable desktop and mobile composition', async ({ page }, t
         .map((node) => node.textContent.trim()),
     )
   expect(overflowingMenuLabels).toEqual([])
+  const firstMenuItems = await menuDialog.locator('.mobile-overlay-item').all()
+  const [firstMenuItem, secondMenuItem] = await Promise.all(
+    firstMenuItems.slice(0, 2).map((item) => item.boundingBox()),
+  )
+  expect(firstMenuItem).not.toBeNull()
+  expect(secondMenuItem).not.toBeNull()
+  expect(Math.abs(secondMenuItem.y - firstMenuItem.y)).toBeLessThan(1)
+  const inspectionMenuItem = menuDialog.getByRole('button', {
+    name: 'Inspection',
+    exact: true,
+  })
+  const ercoMenuItem = menuDialog.getByRole('button', { name: 'ERCO', exact: true })
+  const [inspectionBox, ercoBox] = await Promise.all([
+    inspectionMenuItem.boundingBox(),
+    ercoMenuItem.boundingBox(),
+  ])
+  expect(inspectionBox).not.toBeNull()
+  expect(ercoBox).not.toBeNull()
+  expect(Math.abs(inspectionBox.y - ercoBox.y)).toBeLessThan(1)
+  await expect(menuDialog.getByText('Team Directory', { exact: true })).toHaveCSS(
+    'white-space',
+    'nowrap',
+  )
+  for (const width of [320, 390, 430, 767]) {
+    await page.setViewportSize({ width, height: 844 })
+    await expect(menuDialog).toBeVisible()
+    await expectMobileDrawerItemsFit(menuDialog)
+    await expectNoHorizontalPageOverflow(page)
+    if (width === 320 || width === 767) {
+      await page.screenshot({ path: testInfo.outputPath(`dashboard-menu-${width}px.png`) })
+    }
+  }
+  await page.setViewportSize({ width: 390, height: 844 })
   await page.screenshot({ path: testInfo.outputPath('dashboard-mobile-menu.png') })
+
+  await menuDialog.getByRole('button', { name: 'Close', exact: true }).click()
+  await page.getByRole('button', { name: 'Open account menu' }).click()
+  const accountDialog = page.getByRole('dialog', { name: 'Account drawer' })
+  await expect(accountDialog).toBeVisible()
+  for (const width of [320, 390, 430, 767]) {
+    await page.setViewportSize({ width, height: 844 })
+    await expect(accountDialog).toBeVisible()
+    await expectMobileDrawerItemsFit(accountDialog)
+    await expectNoHorizontalPageOverflow(page)
+    if (width === 320 || width === 767) {
+      await page.screenshot({ path: testInfo.outputPath(`dashboard-account-${width}px.png`) })
+    }
+  }
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.screenshot({ path: testInfo.outputPath('dashboard-mobile-account.png') })
+  await accountDialog.getByRole('button', { name: 'Close', exact: true }).click()
+
+  await page.getByRole('button', { name: 'Notifications' }).click()
+  const notificationDialog = page.getByRole('dialog', { name: 'Notifications' })
+  await expect(notificationDialog).toBeVisible()
+
+  const markAllButton = notificationDialog.getByRole('button', {
+    name: 'Mark all notifications as read',
+  })
+  const deleteAllButton = notificationDialog.getByRole('button', {
+    name: 'Delete all notifications',
+  })
+  const refreshButton = notificationDialog.getByRole('button', {
+    name: 'Refresh notifications',
+  })
+  await expect(markAllButton).toBeVisible()
+  await expect(deleteAllButton).toBeVisible()
+  await expect(refreshButton).toBeVisible()
+  for (const actionButton of [markAllButton, deleteAllButton, refreshButton]) {
+    const box = await actionButton.boundingBox()
+    expect(box.width).toBeGreaterThanOrEqual(44)
+    expect(box.height).toBeGreaterThanOrEqual(44)
+  }
+  expect(await markAllButton.textContent()).toBe('')
+  expect(await deleteAllButton.textContent()).toBe('')
+  expect(await refreshButton.textContent()).toBe('')
+  await expect(notificationDialog.locator('.notification-item-dot')).toHaveCount(0)
+  await expect(notificationDialog.locator('.notification-item-body')).toHaveCSS('flex-grow', '1')
+  await page.screenshot({ path: testInfo.outputPath('dashboard-mobile-notifications.png') })
+
+  await markAllButton.click()
+  await expect(notificationDialog.getByText('All messages marked as read.')).toBeVisible()
+  await refreshButton.click()
+  await expect(notificationDialog.getByText('Messages refreshed successfully.')).toBeVisible()
+
+  await deleteAllButton.click()
+  await expect(notificationDialog.getByText('Delete all notifications?')).toBeVisible()
+  await notificationDialog.getByRole('button', { name: 'Delete all', exact: true }).click()
+  await expect(notificationDialog.getByText('All messages deleted.')).toBeVisible()
+  await expect(notificationDialog.getByText('No notifications yet.')).toBeVisible()
+  await page.screenshot({
+    path: testInfo.outputPath('dashboard-mobile-notifications-empty.png'),
+  })
 })

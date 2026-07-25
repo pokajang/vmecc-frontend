@@ -30,6 +30,8 @@ const cameraErrorMessage = (error) => {
   return String(error?.message || '').trim() || 'The in-app camera could not start.'
 }
 
+const DEFAULT_CAMERA_STARTUP_TIMEOUT_MS = 10_000
+
 const InspectionCameraCapture = ({
   visible,
   onCapture,
@@ -37,18 +39,27 @@ const InspectionCameraCapture = ({
   onUploadPhoto,
   startCameraStream = startInspectionCameraStream,
   captureFrame = captureInspectionCameraFrame,
+  cameraStartupTimeoutMs = DEFAULT_CAMERA_STARTUP_TIMEOUT_MS,
 }) => {
   const videoRef = useRef(null)
   const streamRef = useRef(null)
   const sessionRef = useRef(0)
+  const startupTimeoutRef = useRef(null)
   const [phase, setPhase] = useState('idle')
   const [errorMessage, setErrorMessage] = useState('')
 
+  const clearStartupTimeout = useCallback(() => {
+    if (startupTimeoutRef.current === null) return
+    window.clearTimeout(startupTimeoutRef.current)
+    startupTimeoutRef.current = null
+  }, [])
+
   const stopCamera = useCallback(() => {
+    clearStartupTimeout()
     stopInspectionCameraStream(streamRef.current)
     streamRef.current = null
     if (videoRef.current) videoRef.current.srcObject = null
-  }, [])
+  }, [clearStartupTimeout])
 
   useEffect(() => {
     if (!visible) {
@@ -63,6 +74,13 @@ const InspectionCameraCapture = ({
       if (sessionRef.current !== session) return
       setPhase('starting')
       setErrorMessage('')
+      startupTimeoutRef.current = window.setTimeout(() => {
+        if (sessionRef.current !== session) return
+        sessionRef.current += 1
+        stopCamera()
+        setErrorMessage('The in-app camera took too long to start. Upload the photo instead.')
+        setPhase('error')
+      }, cameraStartupTimeoutMs)
 
       void startCameraStream()
         .then(async (stream) => {
@@ -76,8 +94,12 @@ const InspectionCameraCapture = ({
           video.srcObject = stream
           const playResult = video.play?.()
           await playResult?.catch(() => undefined)
-          if (video.videoWidth > 0 && video.videoHeight > 0) setPhase('ready')
-          else setPhase('streaming')
+          if (video.videoWidth > 0 && video.videoHeight > 0) {
+            clearStartupTimeout()
+            setPhase('ready')
+          } else {
+            setPhase('streaming')
+          }
         })
         .catch((error) => {
           if (sessionRef.current !== session) return
@@ -92,7 +114,7 @@ const InspectionCameraCapture = ({
       sessionRef.current += 1
       stopCamera()
     }
-  }, [startCameraStream, stopCamera, visible])
+  }, [cameraStartupTimeoutMs, clearStartupTimeout, startCameraStream, stopCamera, visible])
 
   const handleCapture = async () => {
     if (phase !== 'ready') return
@@ -122,7 +144,7 @@ const InspectionCameraCapture = ({
 
   const isStarting = phase === 'starting' || phase === 'streaming'
   const isCapturing = phase === 'capturing'
-  const canUploadPhoto = phase === 'error' && typeof onUploadPhoto === 'function'
+  const canUploadPhoto = typeof onUploadPhoto === 'function'
 
   return (
     <CModal
@@ -146,6 +168,7 @@ const InspectionCameraCapture = ({
             aria-label="Inspection camera preview"
             onCanPlay={() => {
               if (streamRef.current) {
+                clearStartupTimeout()
                 setPhase((current) =>
                   current === 'starting' || current === 'streaming' ? 'ready' : current,
                 )

@@ -26,7 +26,6 @@ const WorkflowNotificationCard = ({ item, onClick, onDelete, onMarkRead }) => {
       className={`notification-item${item.unread ? ' unread' : ''}${item.actionRequiredForViewer ? ' action-required' : ''}`}
     >
       <button type="button" className="notification-item-main" onClick={() => onClick(item)}>
-        <span className="notification-item-dot" aria-hidden="true" />
         <span className="notification-item-body">
           <span className="notification-item-text">{summary}</span>
           {item.actionRequiredForViewer && (

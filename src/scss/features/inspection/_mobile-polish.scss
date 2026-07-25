@@ -5,7 +5,7 @@
 // reduce touch comfort or hide operational feedback on narrow screens.
 @include media-breakpoint-down(md) {
   :root {
-    --inspection-mobile-control-height: var(--vmecc-touch-target, 2.75rem);
+    --inspection-mobile-control-height: max(2.75rem, 44px);
     --inspection-mobile-section-gap: 1.25rem;
     --inspection-mobile-control-gap: 0.5rem;
   }
@@ -162,6 +162,7 @@
   .inspection-module-page .inspection-side-panel__icon-btn,
   .inspection-module-page .inspection-fire-extinguisher-drawer-title-action,
   .inspection-module-page .fire-extinguisher-staged-actions .btn,
+  .inspection-module-page .inspection-form-actions .btn,
   .inspection-detail-drawer__close,
   .inspection-mobile-setup-drawer__close,
   .inspection-mobile-selector-chip__edit,
@@ -308,14 +309,30 @@
   .inspection-next-location-btn {
     max-width: 100%;
     padding: 0.55rem 0.75rem;
-    overflow: hidden;
+    overflow: visible;
     font-size: var(--vmecc-text-meta);
-    text-overflow: ellipsis;
+    line-height: 1.3;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   .inspection-helper-chip-row,
   .inspection-photo-caption-chips {
     gap: var(--inspection-mobile-control-gap) !important;
+  }
+
+  .inspection-general-evidence-mobile-compact {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .inspection-general-evidence-mobile-compact .inspection-compact-action-btn {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   .inspection-photo-caption-chips .inspection-helper-chip {
@@ -325,7 +342,7 @@
   }
 
   .inspection-form-inline-actions .btn {
-    min-height: var(--inspection-mobile-control-height);
+    min-height: var(--inspection-mobile-control-height) !important;
     padding: 0.55rem 0.75rem;
     font-size: var(--vmecc-text-meta);
     white-space: normal;
@@ -476,5 +493,15 @@
 
   .inspection-mobile-home__records-toolbar .inspection-view-all-btn {
     justify-content: center;
+  }
+}
+
+// Tablet layouts can use the desktop composition while still being operated
+// entirely by touch. Keep controls comfortable through the tablet breakpoint
+// and on larger devices that explicitly report a coarse pointer.
+@media (max-width: 991.98px), (hover: none) and (pointer: coarse) {
+  .inspection-module-page button,
+  .inspection-module-page .btn {
+    min-height: 44px !important;
   }
 }

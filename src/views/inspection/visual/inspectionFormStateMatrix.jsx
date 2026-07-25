@@ -649,7 +649,7 @@ export const buildInspectionBodyMatrix = ({ includeViewports = true } = {}) =>
 
 export const getInspectionBodyStateLabel = (state) =>
   state === 'complete-with-next-location'
-    ? 'Complete with next location'
+    ? 'Section complete with next location'
     : String(state || '')
         .replace(/-/g, ' ')
         .replace(/\b\w/g, (character) => character.toUpperCase())

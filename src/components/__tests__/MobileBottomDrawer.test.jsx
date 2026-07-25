@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
 import React from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import MobileBottomDrawer from '../MobileBottomDrawer'
 
-const renderDrawer = (visible) => (
-  <MobileBottomDrawer visible={visible} title="Change Location" onClose={vi.fn()}>
+const renderDrawer = (visible, onClose = vi.fn()) => (
+  <MobileBottomDrawer visible={visible} title="Change Location" onClose={onClose}>
     <div>Drawer body</div>
   </MobileBottomDrawer>
 )
@@ -32,5 +32,38 @@ describe('MobileBottomDrawer', () => {
 
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     expect(document.body.style.overflow).toBe('')
+  })
+
+  it('provides a named dialog and close action', async () => {
+    render(renderDrawer(true))
+
+    expect(await screen.findByRole('dialog', { name: 'Change Location' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Close Change Location' })).toBeTruthy()
+  })
+
+  it('restores focus to its trigger after closing', async () => {
+    const trigger = document.createElement('button')
+    trigger.textContent = 'Open location drawer'
+    document.body.appendChild(trigger)
+    trigger.focus()
+
+    const { rerender } = render(renderDrawer(true))
+    await screen.findByRole('dialog', { name: 'Change Location' })
+
+    rerender(renderDrawer(false))
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    expect(document.activeElement).toBe(trigger)
+    trigger.remove()
+  })
+
+  it('requests dismissal when Escape is pressed', async () => {
+    const onClose = vi.fn()
+    render(renderDrawer(true, onClose))
+
+    const dialog = await screen.findByRole('dialog', { name: 'Change Location' })
+    fireEvent.keyDown(dialog, { key: 'Escape', code: 'Escape' })
+
+    await waitFor(() => expect(onClose).toHaveBeenCalled())
   })
 })

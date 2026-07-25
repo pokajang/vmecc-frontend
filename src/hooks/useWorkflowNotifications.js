@@ -71,14 +71,14 @@ const useWorkflowNotifications = ({ unreadOnly = false } = {}) => {
       setItems([])
       setUnreadCount(0)
       if (broadcast) notify(0)
-      return
+      return false
     }
     if (authBlockedRef.current) {
       setItems([])
       setUnreadCount(0)
       if (broadcast) notify(0)
       if (!silent) setError(AUTH_ERROR_MESSAGE)
-      return
+      return false
     }
     if (!silent) {
       setLoading(true)
@@ -96,7 +96,7 @@ const useWorkflowNotifications = ({ unreadOnly = false } = {}) => {
         setUnreadCount(0)
         if (broadcast) notify(0)
         if (!silent) setError(getAuthBlockedMessage(itemsResult, countResult))
-        return
+        return false
       }
       if (itemsResult?.ok) {
         const data = Array.isArray(itemsResult.data) ? itemsResult.data : []
@@ -125,8 +125,10 @@ const useWorkflowNotifications = ({ unreadOnly = false } = {}) => {
         setUnreadCount(count)
       }
       if (broadcast) notify(count)
+      return Boolean(itemsResult?.ok && countResult?.ok)
     } catch (err) {
       if (!silent) setError(err?.message || 'Failed to load notifications.')
+      return false
     } finally {
       if (!silent) setLoading(false)
     }

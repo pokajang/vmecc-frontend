@@ -137,11 +137,9 @@
   gap: 0.75rem;
 }
 
-.dashboard-module-card__icon,
-.dashboard-action-queue__icon {
-  display: block;
-  flex: 0 0 auto;
-  margin-top: 0.1rem;
+.dashboard-module-card__header,
+.dashboard-action-queue__header {
+  position: relative;
 }
 
 .dashboard-action-queue__heading {
@@ -150,7 +148,7 @@
   gap: 0.75rem;
 }
 
-.dashboard-collapse-button {
+.dashboard-collapse-indicator {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
@@ -158,16 +156,27 @@
   min-width: 2.25rem;
   min-height: 2.25rem;
   padding: 0.35rem;
-  border: 0;
   color: var(--cui-primary);
-  background: transparent;
-  box-shadow: none;
+  pointer-events: none;
 }
 
-.dashboard-collapse-button:hover,
-.dashboard-collapse-button:focus-visible {
-  color: var(--cui-primary);
-  background: color-mix(in srgb, var(--cui-secondary-color) 12%, transparent);
+.dashboard-header-toggle {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.dashboard-header-toggle:hover {
+  background: color-mix(in srgb, var(--cui-secondary-color) 5%, transparent);
+}
+
+.dashboard-header-toggle:focus-visible {
+  outline: 0;
+  box-shadow: inset var(--vmecc-focus-ring);
 }
 
 .dashboard-section-heading {
@@ -567,6 +576,7 @@
 @include media-breakpoint-down(md) {
   .dashboard-overview {
     padding: 1rem;
+    border: 0;
   }
 
   .dashboard-overview__content {
@@ -575,7 +585,8 @@
   }
 
   .dashboard-overview__period {
-    width: 100%;
+    width: fit-content;
+    max-width: 100%;
   }
 
   .dashboard-period-switcher {
@@ -583,8 +594,29 @@
   }
 
   .dashboard-period-dropdown {
-    display: block;
-    width: 100%;
+    display: inline-block;
+    width: fit-content;
+    max-width: 100%;
+  }
+
+  .dashboard-period-dropdown__toggle {
+    width: max-content;
+    min-width: 11.5rem;
+    max-width: 100%;
+    min-height: 2rem;
+    padding-block: 0.15rem;
+    font-size: var(--vmecc-text-meta);
+    white-space: nowrap;
+  }
+
+  .dashboard-action-queue,
+  .dashboard-module-card {
+    border: 0;
+  }
+
+  .dashboard-action-queue__body,
+  .dashboard-module-card__body {
+    background: var(--cui-card-cap-bg);
   }
 
   .dashboard-module-card {
@@ -602,7 +634,7 @@
     font-weight: var(--vmecc-weight-medium);
   }
 
-  .dashboard-collapse-button {
+  .dashboard-collapse-indicator {
     min-width: var(--vmecc-touch-target);
     min-height: var(--vmecc-touch-target);
   }

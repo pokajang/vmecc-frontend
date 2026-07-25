@@ -17,17 +17,7 @@ import {
   CListGroupItem,
   CRow,
 } from '@coreui/react'
-import {
-  CalendarDays,
-  CircleCheck,
-  ChevronDown,
-  ChevronUp,
-  Clock3,
-  LayoutGrid,
-  ListChecks,
-  TriangleAlert,
-  Wallet,
-} from 'lucide-react'
+import { CircleCheck, ChevronDown, ChevronUp } from 'lucide-react'
 import { getPrimaryRoleLabel, hasPermission } from 'src/utils/authz'
 import { isModuleEnabled } from 'src/utils/modules'
 import { DASHBOARD_SECTION_PERMISSIONS } from 'src/constants/dashboardVisibility'
@@ -54,7 +44,7 @@ import { LeaveKpiTiles, LeaveActivityChart, LeaveTeamBreakdown } from './compone
 import { RosterKpiTiles, RosterActivityChart, RosterTeamBreakdown } from './components/RosterStats'
 import { ReportKpiTiles, ReportActivityChart, ReportBreakdown } from './components/ReportStats'
 
-const ModuleSectionHeader = ({ title, subtext, accentColor = '#1b7a4a', icon: Icon, children }) => {
+const ModuleSectionHeader = ({ title, subtext, accentColor = '#1b7a4a', children }) => {
   const [visible, setVisible] = useState(true)
   const contentId = useId()
 
@@ -68,33 +58,27 @@ const ModuleSectionHeader = ({ title, subtext, accentColor = '#1b7a4a', icon: Ic
       >
         <div className="dashboard-module-card__toolbar">
           <div className="dashboard-module-card__heading">
-            {Icon && (
-              <Icon
-                className="dashboard-module-card__icon"
-                size={18}
-                style={{ color: accentColor }}
-              />
-            )}
             <div>
               <h2 className="dashboard-module-card__title">{title}</h2>
               {subtext && <div className="dashboard-module-card__subtext">{subtext}</div>}
             </div>
           </div>
-          <CButton
-            size="sm"
-            className="dashboard-collapse-button"
-            onClick={() => setVisible((value) => !value)}
-            aria-controls={contentId}
-            aria-expanded={visible}
-            aria-label={visible ? `Collapse ${title}` : `Expand ${title}`}
-          >
+          <span className="dashboard-collapse-indicator" aria-hidden="true">
             {visible ? (
               <ChevronUp size={17} aria-hidden="true" />
             ) : (
               <ChevronDown size={17} aria-hidden="true" />
             )}
-          </CButton>
+          </span>
         </div>
+        <button
+          type="button"
+          className="dashboard-header-toggle"
+          onClick={() => setVisible((value) => !value)}
+          aria-controls={contentId}
+          aria-expanded={visible}
+          aria-label={visible ? `Collapse ${title}` : `Expand ${title}`}
+        />
       </CCardHeader>
       {visible && (
         <CCardBody id={contentId} className="dashboard-module-card__body p-3 p-md-4">
@@ -132,15 +116,10 @@ const DashboardActionQueue = ({ items, loading, error, onRetry }) => {
         className={`dashboard-action-queue__header px-3 px-md-4 py-3 ${
           visible ? 'border-bottom' : 'border-bottom-0'
         }`}
+        style={{ borderInlineStart: '4px solid var(--cui-primary)' }}
       >
         <div className="dashboard-action-queue__toolbar">
           <div className="dashboard-action-queue__heading">
-            <ListChecks
-              aria-hidden="true"
-              className="dashboard-action-queue__icon"
-              color="var(--cui-primary)"
-              size={18}
-            />
             <div>
               <h2 className="dashboard-action-queue__title">Action Queue</h2>
               <div className="dashboard-action-queue__description">
@@ -148,21 +127,22 @@ const DashboardActionQueue = ({ items, loading, error, onRetry }) => {
               </div>
             </div>
           </div>
-          <CButton
-            size="sm"
-            className="dashboard-collapse-button"
-            onClick={() => setVisible((value) => !value)}
-            aria-controls={contentId}
-            aria-expanded={visible}
-            aria-label={visible ? 'Collapse action queue' : 'Expand action queue'}
-          >
+          <span className="dashboard-collapse-indicator" aria-hidden="true">
             {visible ? (
               <ChevronUp size={17} aria-hidden="true" />
             ) : (
               <ChevronDown size={17} aria-hidden="true" />
             )}
-          </CButton>
+          </span>
         </div>
+        <button
+          type="button"
+          className="dashboard-header-toggle"
+          onClick={() => setVisible((value) => !value)}
+          aria-controls={contentId}
+          aria-expanded={visible}
+          aria-label={visible ? 'Collapse action queue' : 'Expand action queue'}
+        />
       </CCardHeader>
       {visible && (
         <CCardBody id={contentId} className="dashboard-action-queue__body p-3 p-md-4">
@@ -366,6 +346,7 @@ const Dashboard = () => {
                 className="dashboard-period-dropdown__toggle"
                 color="secondary"
                 variant="outline"
+                size="sm"
                 aria-label={`Select dashboard reporting period, currently ${selectedPeriodOption?.label || ''}, ${periodLabel}`}
               >
                 {selectedPeriodOption?.label} · {periodLabel}
@@ -401,7 +382,6 @@ const Dashboard = () => {
             title="Payroll Claims"
             subtext="Salary and expense claims"
             accentColor={MODULE_ACCENTS.payroll.base}
-            icon={Wallet}
           >
             <DashboardModuleCardGuard
               moduleKey="payroll"
@@ -443,7 +423,6 @@ const Dashboard = () => {
             title="Overtime"
             subtext="OT requests and approvals"
             accentColor={MODULE_ACCENTS.overtime.base}
-            icon={Clock3}
           >
             <DashboardModuleCardGuard
               moduleKey="overtime"
@@ -485,7 +464,6 @@ const Dashboard = () => {
             title="Leave"
             subtext="Leave requests and absences"
             accentColor={MODULE_ACCENTS.leave.base}
-            icon={CalendarDays}
           >
             <DashboardModuleCardGuard
               moduleKey="leave"
@@ -518,7 +496,6 @@ const Dashboard = () => {
             title="Roster & Teams"
             subtext="Shift scheduling and team coverage"
             accentColor={MODULE_ACCENTS.roster.base}
-            icon={LayoutGrid}
           >
             <DashboardModuleCardGuard
               moduleKey="roster"
@@ -551,7 +528,6 @@ const Dashboard = () => {
             title="Reports"
             subtext="ERCO, drill, and fitness test submissions"
             accentColor={MODULE_ACCENTS.reports.base}
-            icon={TriangleAlert}
           >
             <DashboardModuleCardGuard
               moduleKey="reports"

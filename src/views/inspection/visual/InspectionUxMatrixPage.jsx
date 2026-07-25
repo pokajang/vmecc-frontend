@@ -222,6 +222,11 @@ const InspectionUxMatrixPage = () => {
             Capture route for the shared pre-submission inspection matrix. Use the filters to
             generate desktop and mobile evidence from the same fixture as the matrix tests.
           </p>
+          <p className="inspection-ux-matrix-note small mt-2">
+            Matrix states describe the active inspection section only. Review readiness still
+            depends on the date, time, required findings, evidence, and type-specific validation
+            shown inside each preview.
+          </p>
         </div>
         <div className="inspection-ux-matrix-toolbar-grid">
           <div>

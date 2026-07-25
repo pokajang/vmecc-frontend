@@ -51,7 +51,7 @@ export default defineConfig({
     ...(browserName === 'chromium'
       ? {
           launchOptions: {
-            args: ['--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1'],
+            args: ['--host-resolver-rules=EXCLUDE localhost, EXCLUDE 127.0.0.1, MAP * ~NOTFOUND'],
           },
         }
       : {}),

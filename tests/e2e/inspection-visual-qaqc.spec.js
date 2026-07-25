@@ -60,6 +60,14 @@ const expectNoHorizontalOverflow = async (locator) => {
 
 const cases = [
   {
+    name: 'general-complete-mobile',
+    width: 430,
+    height: 932,
+    viewport: 'mobile',
+    state: 'complete-with-next-location',
+    type: 'general-inspection',
+  },
+  {
     name: 'fire-extinguisher-complete-narrow',
     width: 320,
     height: 700,
@@ -74,6 +82,22 @@ const cases = [
     viewport: 'mobile',
     state: 'partial',
     type: 'high-angle-rescue-equipment-inspection',
+  },
+  {
+    name: 'hydraulic-missing-required-narrow',
+    width: 320,
+    height: 700,
+    viewport: 'mobile',
+    state: 'missing-required',
+    type: 'hydraulic-rescue-tools-inspection',
+  },
+  {
+    name: 'scba-partial-mobile',
+    width: 390,
+    height: 844,
+    viewport: 'mobile',
+    state: 'partial',
+    type: 'scba-inspection',
   },
   {
     name: 'hse-missing-required-tablet',
@@ -91,11 +115,20 @@ const cases = [
     state: 'complete-with-next-location',
     type: 'frt-daily-inspection',
   },
+  {
+    name: 'er-aux-complete-tablet',
+    width: 820,
+    height: 1000,
+    viewport: 'desktop',
+    state: 'complete-with-next-location',
+    type: 'er-aux-equipment-inspection',
+  },
 ]
 
 test('inspection matrix remains legible and overflow-safe across representative QA cases', async ({
   page,
 }, testInfo) => {
+  test.setTimeout(120_000)
   const pageErrors = []
   page.on('pageerror', (error) => pageErrors.push(error.message))
   await installApiStubs(page)
@@ -121,6 +154,46 @@ test('inspection matrix remains legible and overflow-safe across representative 
       .locator('body')
       .evaluate((element) => getComputedStyle(element).fontFamily)
     expect(bodyFont).toContain('Manrope Variable')
+
+    const accessibilityIssues = await inspectionCase.evaluate((element) => {
+      const visible = (node) => {
+        const style = getComputedStyle(node)
+        return (
+          style.display !== 'none' &&
+          style.visibility !== 'hidden' &&
+          node.getClientRects().length > 0
+        )
+      }
+      const ids = [...element.querySelectorAll('[id]')].map((node) => node.id).filter(Boolean)
+      const duplicateIds = [...new Set(ids.filter((id, index) => ids.indexOf(id) !== index))]
+      const unnamedButtons = [...element.querySelectorAll('button')]
+        .filter(visible)
+        .filter(
+          (button) =>
+            !button.textContent.trim() &&
+            !button.getAttribute('aria-label') &&
+            !button.getAttribute('aria-labelledby') &&
+            !button.getAttribute('title'),
+        )
+        .map((button) => button.outerHTML.slice(0, 180))
+      const unlabeledFields = [...element.querySelectorAll('input, select, textarea')]
+        .filter((field) => field.type !== 'hidden' && visible(field))
+        .filter(
+          (field) =>
+            field.labels?.length === 0 &&
+            !field.getAttribute('aria-label') &&
+            !field.getAttribute('aria-labelledby') &&
+            !field.getAttribute('title'),
+        )
+        .map((field) => field.outerHTML.slice(0, 180))
+
+      return { duplicateIds, unnamedButtons, unlabeledFields }
+    })
+    expect(accessibilityIssues).toEqual({
+      duplicateIds: [],
+      unnamedButtons: [],
+      unlabeledFields: [],
+    })
 
     if (auditCase.viewport === 'mobile') {
       const actionTargets = inspectionCase.locator(

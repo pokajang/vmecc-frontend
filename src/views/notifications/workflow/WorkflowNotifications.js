@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import useWorkflowNotifications from 'src/hooks/useWorkflowNotifications'
 import { buildWorkflowNotificationDetailPath } from 'src/services/workflowNotifications'
 import TableLoader from 'src/components/TableLoader'
+import InlineFeedbackMessage from 'src/components/InlineFeedbackMessage'
 import WorkflowNotificationCard from '../WorkflowNotificationCard'
 import MobileOverlaySection from 'src/components/header/MobileOverlaySection'
 
@@ -46,6 +47,8 @@ const WorkflowNotifications = ({ onClose }) => {
   } = useWorkflowNotifications({ unreadOnly: false })
 
   const [confirmOpen, setConfirmOpen] = useState(false)
+  const [feedback, setFeedback] = useState(null)
+  const [activeAction, setActiveAction] = useState(null)
   const groupedItems = groupWorkflowNotifications(items)
 
   const handleClick = (item) => {
@@ -64,10 +67,28 @@ const WorkflowNotifications = ({ onClose }) => {
     setConfirmOpen(false)
   }
 
+  const runBatchAction = async (actionName, action, successMessage) => {
+    setFeedback(null)
+    setActiveAction(actionName)
+    try {
+      const succeeded = await action()
+      if (succeeded) {
+        setFeedback({ color: 'success', message: successMessage })
+      }
+    } finally {
+      setActiveAction(null)
+    }
+  }
+
+  const handleMarkAllRead = () =>
+    runBatchAction('mark-all-read', markAllRead, 'All messages marked as read.')
+
   const handleConfirmDeleteAll = async () => {
     setConfirmOpen(false)
-    await deleteAll()
+    await runBatchAction('delete-all', deleteAll, 'All messages deleted.')
   }
+
+  const handleRefresh = () => runBatchAction('refresh', refresh, 'Messages refreshed successfully.')
 
   return (
     <>
@@ -75,30 +96,43 @@ const WorkflowNotifications = ({ onClose }) => {
         {/* Batch actions */}
         <div className="notification-drawer-actions" data-testid="workflow-notifications-actions">
           <button
+            type="button"
             className="notification-drawer-action-btn"
-            onClick={markAllRead}
+            onClick={handleMarkAllRead}
             disabled={loading || submitting || items.every((i) => !i.unread)}
+            aria-label="Mark all notifications as read"
+            title="Mark all as read"
+            aria-busy={activeAction === 'mark-all-read'}
           >
-            <CheckCheck size={13} />
-            &nbsp;Mark all read
+            <CheckCheck aria-hidden="true" />
           </button>
           <button
+            type="button"
             className="notification-drawer-action-btn notification-drawer-action-btn--danger"
             onClick={handleRequestDeleteAll}
             disabled={loading || submitting || items.length === 0}
+            aria-label="Delete all notifications"
+            title="Delete all notifications"
           >
-            <Trash2 size={13} />
-            &nbsp;Delete all
+            <Trash2 aria-hidden="true" />
           </button>
           <button
-            className="notification-drawer-action-btn ms-auto"
-            onClick={refresh}
+            type="button"
+            className="notification-drawer-action-btn"
+            onClick={handleRefresh}
             disabled={loading || submitting}
+            aria-label="Refresh notifications"
+            title="Refresh notifications"
+            aria-busy={activeAction === 'refresh'}
           >
-            <RefreshCw size={13} />
-            &nbsp;Refresh
+            <RefreshCw
+              className={activeAction === 'refresh' ? 'notification-drawer-action-icon--spin' : ''}
+              aria-hidden="true"
+            />
           </button>
         </div>
+
+        <InlineFeedbackMessage feedback={feedback} className="notification-drawer-feedback" />
 
         {confirmOpen && (
           <div className="notification-drawer-inline-confirm" role="alert">

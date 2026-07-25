@@ -28,6 +28,8 @@ test('Manrope is bundled and remains available from the offline asset cache', as
     .locator('body')
     .evaluate((element) => getComputedStyle(element).fontFamily)
   expect(fontFamily).toContain('Manrope Variable')
+  await expect(page.locator('html')).toHaveCSS('font-size', '16.8px')
+  await expect(page.locator('body')).toHaveCSS('font-weight', '500')
 
   const fontUrl = await page.evaluate(
     () =>

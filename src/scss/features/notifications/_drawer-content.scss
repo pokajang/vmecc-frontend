@@ -17,26 +17,66 @@
 
 .notification-drawer-actions {
   display: flex;
+  justify-content: flex-end;
   gap: 0.75rem;
   padding: 0.5rem 1rem;
   border-bottom: 1px solid var(--cui-border-color);
 }
 
 .notification-drawer-action-btn {
-  border: 0;
-  background: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--cui-border-color);
+  border-radius: 0.55rem;
+  background: var(--cui-body-bg);
   color: var(--cui-primary);
-  font-size: 14px;
-  padding: 0;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  justify-content: center;
+  padding: 0;
+
+  svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    stroke-width: 2.25;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: currentColor;
+    background: color-mix(in srgb, currentColor 7%, var(--cui-body-bg));
+  }
+
+  &:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--cui-primary) 28%, transparent);
+    outline-offset: 2px;
+  }
 
   &:disabled {
     color: var(--cui-secondary-color);
     cursor: default;
+    opacity: 0.62;
   }
+}
+
+.notification-drawer-action-icon--spin {
+  animation: notification-drawer-action-spin 0.75s linear infinite;
+}
+
+@keyframes notification-drawer-action-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.notification-drawer-feedback {
+  margin: 0.5rem 1rem;
+  border: 1px solid color-mix(in srgb, var(--cui-success) 30%, transparent);
+  border-radius: 0.55rem;
+  background: color-mix(in srgb, var(--cui-success) 8%, var(--cui-body-bg));
+  font-size: var(--vmecc-text-meta);
+  font-weight: var(--vmecc-weight-semibold);
+  padding: 0.55rem 0.7rem;
 }
 
 .notification-drawer-inline-confirm {
@@ -184,10 +224,6 @@
   }
 
   &.action-required {
-    .notification-item-dot {
-      background: #d97706;
-    }
-
     &:hover {
       background: rgba(217, 119, 6, 0.05);
     }
@@ -208,7 +244,6 @@
   flex: 1;
   display: flex;
   align-items: flex-start;
-  gap: 0.6rem;
   padding: 0.75rem 0.5rem 0.75rem 1rem;
   border: 0;
   background: transparent;
@@ -217,20 +252,8 @@
   min-width: 0;
 }
 
-.notification-item-dot {
-  flex-shrink: 0;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  margin-top: 5px;
-  background: transparent;
-
-  .unread & {
-    background: #007e7a;
-  }
-}
-
 .notification-item-body {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
@@ -238,7 +261,7 @@
 }
 
 .notification-item-text {
-  font-size: 15px;
+  font-size: var(--vmecc-text-body);
   line-height: 1.45;
   color: var(--cui-body-color);
   white-space: normal;
@@ -246,7 +269,7 @@
 }
 
 .notification-item-meta {
-  font-size: 14px;
+  font-size: var(--vmecc-text-meta);
   color: var(--cui-secondary-color);
 }
 
@@ -332,15 +355,12 @@
     }
 
     .notification-drawer-action-btn {
-      min-height: 2rem;
-      border: 1px solid var(--cui-border-color);
-      border-radius: 0.55rem;
-      background: var(--cui-body-bg);
-      color: var(--cui-primary);
-      font-size: var(--vmecc-text-meta);
-      font-weight: var(--vmecc-weight-bold);
-      line-height: 1.2;
-      padding: 0.38rem 0.55rem;
+      width: 2.75rem;
+      height: 2.75rem;
+    }
+
+    .notification-drawer-feedback {
+      margin: 0;
     }
 
     .notification-drawer-inline-confirm {
@@ -396,34 +416,7 @@
     }
 
     .notification-item-main {
-      gap: 0.75rem;
       padding: 0.58rem 0.5rem 0.58rem 0.58rem;
-    }
-
-    .notification-item-dot {
-      width: var(--mobile-overlay-icon-slot);
-      height: var(--mobile-overlay-icon-slot);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      margin-top: 0;
-      background: transparent !important;
-    }
-
-    .notification-item-dot::before {
-      width: 7px;
-      height: 7px;
-      border-radius: 999px;
-      background: transparent;
-      content: '';
-    }
-
-    .notification-item.unread .notification-item-dot::before {
-      background: #007e7a;
-    }
-
-    .notification-item.action-required .notification-item-dot::before {
-      background: #d97706;
     }
 
     .notification-item-body {

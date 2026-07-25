@@ -61,4 +61,23 @@ describe('InspectionCameraCapture', () => {
     fireEvent.click(uploadButton)
     expect(onUploadPhoto).toHaveBeenCalledTimes(1)
   })
+
+  it('keeps upload available and exits a stalled camera startup', async () => {
+    const onUploadPhoto = vi.fn()
+    render(
+      <InspectionCameraCapture
+        visible
+        startCameraStream={vi.fn(() => new Promise(() => {}))}
+        cameraStartupTimeoutMs={20}
+        onUploadPhoto={onUploadPhoto}
+      />,
+    )
+
+    expect(await screen.findByRole('button', { name: 'Upload photo' })).toBeTruthy()
+    expect(
+      await screen.findByText(
+        'The in-app camera took too long to start. Upload the photo instead.',
+      ),
+    ).toBeTruthy()
+  })
 })
