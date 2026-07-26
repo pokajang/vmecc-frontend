@@ -1,3 +1,9 @@
+import {
+  checkForServiceWorkerUpdate,
+  setAppServiceWorkerRegistration,
+  startServiceWorkerUpdateChecks,
+} from './serviceWorkerUpdates'
+
 export const registerAppServiceWorker = async ({
   serviceWorker = globalThis.navigator?.serviceWorker,
   scriptUrl = '/service-worker.js',
@@ -5,12 +11,14 @@ export const registerAppServiceWorker = async ({
   if (!serviceWorker?.register) return null
 
   try {
-    const registration = await serviceWorker.register(scriptUrl)
+    const registration = await serviceWorker.register(scriptUrl, { updateViaCache: 'none' })
+    setAppServiceWorkerRegistration(registration)
     try {
-      await registration?.update?.()
+      await checkForServiceWorkerUpdate({ serviceWorker })
     } catch {
       // The active worker remains usable when an update check fails.
     }
+    startServiceWorkerUpdateChecks({ serviceWorker })
     return registration || null
   } catch {
     return null

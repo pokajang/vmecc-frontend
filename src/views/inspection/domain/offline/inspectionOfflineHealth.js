@@ -46,12 +46,14 @@ const getServiceWorkerMessageTarget = async () => {
     : { target: null, error: 'Service worker is not active yet.' }
 }
 
-const postServiceWorkerMessage = async (type) => {
+const postServiceWorkerMessage = async (type, { target: explicitTarget = null } = {}) => {
   if (typeof MessageChannel === 'undefined') {
     return { ok: false, error: 'MessageChannel is unavailable.' }
   }
 
-  const { target, error } = await getServiceWorkerMessageTarget()
+  const { target, error } = explicitTarget
+    ? { target: explicitTarget, error: '' }
+    : await getServiceWorkerMessageTarget()
   if (!target) return { ok: false, error }
 
   return new Promise((resolve) => {
@@ -114,7 +116,9 @@ export const refreshInspectionOfflineAssets = async () => {
   const readyPromise = globalThis.navigator?.serviceWorker?.ready
   const registration = readyPromise?.catch ? await readyPromise.catch(() => null) : null
   await registration?.update?.()
-  const response = await postServiceWorkerMessage('VMECC_REFRESH_OFFLINE_ASSETS')
+  const response = await postServiceWorkerMessage('VMECC_REFRESH_OFFLINE_ASSETS', {
+    target: registration?.waiting || registration?.active || null,
+  })
   if (response?.ok) return response.payload
   throw new Error(response?.error || 'Unable to refresh offline assets.')
 }
@@ -153,6 +157,7 @@ export const getInspectionOfflineHealth = async (userId) => {
   return {
     indexedDbAvailable,
     indexedDbStatus,
+    cacheBuildId: String(cacheStatus?.buildId || '').trim(),
     cacheName: cacheStatus?.cacheName || '',
     cacheExpected: cacheStatus?.cacheExpected !== false,
     cachedShellCount: Number(cacheStatus?.cachedShellCount || 0),

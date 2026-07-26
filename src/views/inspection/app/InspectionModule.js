@@ -306,6 +306,7 @@ const InspectionModule = () => {
 
   useInspectionUnsavedChangesGuard(
     useCallback(() => activeSection === 'form' && isFormDirty, [activeSection, isFormDirty]),
+    { id: 'inspection-form' },
   )
 
   const { reviewWorkspace, sessionReviewForm, reviewRecord } = buildInspectionReviewContext({

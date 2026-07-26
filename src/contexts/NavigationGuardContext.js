@@ -80,6 +80,8 @@ export const NavigationGuardProvider = ({ children }) => {
       setPendingAction({
         action: action || null,
         allowUnload,
+        title: String(options?.title || '').trim(),
+        confirmLabel: String(options?.confirmLabel || '').trim(),
       })
       return false
     },
@@ -99,6 +101,8 @@ export const NavigationGuardProvider = ({ children }) => {
     setPendingAction(null)
   }, [])
   const useMobileDrawer = useMediaQuery('(max-width: 575.98px)')
+  const pendingTitle = pendingAction?.title || 'Discard unsaved changes?'
+  const pendingConfirmLabel = pendingAction?.confirmLabel || 'Discard and leave'
 
   useEffect(() => {
     currentPathRef.current = `${location.pathname}${location.search}${location.hash}`
@@ -180,7 +184,7 @@ export const NavigationGuardProvider = ({ children }) => {
       {useMobileDrawer ? (
         <MobileBottomDrawer
           visible={Boolean(pendingAction)}
-          title="Discard unsaved changes?"
+          title={pendingTitle}
           onClose={stayOnPage}
           className="mobile-bottom-drawer--confirm"
         >
@@ -192,14 +196,14 @@ export const NavigationGuardProvider = ({ children }) => {
               Stay
             </CButton>
             <CButton color="danger" onClick={confirmDiscard}>
-              Discard and leave
+              {pendingConfirmLabel}
             </CButton>
           </div>
         </MobileBottomDrawer>
       ) : (
         <CModal visible={Boolean(pendingAction)} alignment="center" onClose={stayOnPage}>
           <CModalHeader onClose={stayOnPage}>
-            <CModalTitle>Discard unsaved changes?</CModalTitle>
+            <CModalTitle>{pendingTitle}</CModalTitle>
           </CModalHeader>
           <CModalBody>{promptMessage}</CModalBody>
           <CModalFooter>
@@ -207,7 +211,7 @@ export const NavigationGuardProvider = ({ children }) => {
               Stay
             </CButton>
             <CButton color="danger" onClick={confirmDiscard}>
-              Discard and leave
+              {pendingConfirmLabel}
             </CButton>
           </CModalFooter>
         </CModal>
@@ -223,6 +227,8 @@ export const useNavigationGuard = () => {
   }
   return context
 }
+
+export const useOptionalNavigationGuard = () => useContext(NavigationGuardContext)
 
 export const useGuardedNavigate = () => {
   const navigate = useNavigate()

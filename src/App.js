@@ -11,6 +11,7 @@ import { isSystemAdministrator } from './utils/authz'
 import { normalizeModuleActivationPayload } from './utils/modules'
 import { shouldShowMaintenancePage } from './utils/systemMaintenance'
 import PageState from './components/PageState'
+import AppUpdateBanner from './components/AppUpdateBanner'
 import { getPendingCameraOperation } from './utils/cameraRecovery'
 import useSystemMaintenanceMonitor from './hooks/useSystemMaintenanceMonitor'
 import { normalizeSystemMaintenanceSetting } from './views/settings/systemMaintenanceStorage'
@@ -385,6 +386,7 @@ const App = () => {
   return (
     <BrowserRouter>
       <NavigationGuardProvider>
+        <AppUpdateBanner />
         <Suspense fallback={<PageState message="Loading application…" minHeight="100dvh" />}>
           <Routes>
             <Route exact path="/login" name="Login Page" element={renderPublicRoute(<Login />)} />

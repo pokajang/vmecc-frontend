@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import useInspectionUnsavedChangesGuard from 'src/views/inspection/state/useInspectionUnsavedChangesGuard'
 import { deleteReportMedia } from 'src/services/api/reportMediaApi'
 import {
   clearPendingCameraOperation,
@@ -53,6 +54,13 @@ const useInspectionFormPhotos = ({
     () => interruptedCameraFallbackRef.current,
   )
   const [isPhotoProcessing, setIsPhotoProcessing] = useState(false)
+  useInspectionUnsavedChangesGuard(
+    useCallback(() => isPhotoProcessing, [isPhotoProcessing]),
+    {
+      id: 'inspection-photo-processing',
+      message: 'A photo is still processing. Wait for it to finish before updating VMECC.',
+    },
+  )
   const [photoUploadProgress, setPhotoUploadProgress] = useState(null)
   const [cameraCaptureVisible, setCameraCaptureVisible] = useState(false)
 

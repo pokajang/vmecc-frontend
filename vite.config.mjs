@@ -54,11 +54,46 @@ const appVersionPlugin = (metadata) => ({
       res.end(`${JSON.stringify(metadata, null, 2)}\n`)
     })
   },
-  generateBundle() {
+  generateBundle(_options, bundle) {
+    const precacheAssets = new Set()
+    const visitedChunks = new Set()
+    const collectChunkAssets = (fileName) => {
+      if (visitedChunks.has(fileName)) return
+      visitedChunks.add(fileName)
+      const output = bundle[fileName]
+      if (!output) return
+      precacheAssets.add(`/${fileName}`)
+      if (output.type !== 'chunk') return
+      output.imports.forEach(collectChunkAssets)
+      output.viteMetadata?.importedCss?.forEach((asset) => precacheAssets.add(`/${asset}`))
+      output.viteMetadata?.importedAssets?.forEach((asset) => precacheAssets.add(`/${asset}`))
+    }
+    Object.values(bundle)
+      .filter((output) => output.type === 'chunk' && output.isEntry)
+      .forEach((output) => collectChunkAssets(output.fileName))
+
+    const serviceWorkerTemplate = readFileSync(
+      path.resolve(__dirname, 'src/service-worker/service-worker.template.js'),
+      'utf8',
+    )
+    const serviceWorkerSource = serviceWorkerTemplate
+      .replaceAll('__VMECC_SW_BUILD_ID__', () => JSON.stringify(metadata.buildId))
+      .replaceAll('__VMECC_SW_PRECACHE_ASSETS__', () => JSON.stringify([...precacheAssets].sort()))
+    if (
+      serviceWorkerSource.includes('__VMECC_SW_BUILD_ID__') ||
+      serviceWorkerSource.includes('__VMECC_SW_PRECACHE_ASSETS__')
+    ) {
+      this.error('Unable to inject the VMECC build metadata into service-worker.js.')
+    }
     this.emitFile({
       type: 'asset',
       fileName: 'version.json',
       source: `${JSON.stringify(metadata, null, 2)}\n`,
+    })
+    this.emitFile({
+      type: 'asset',
+      fileName: 'service-worker.js',
+      source: serviceWorkerSource,
     })
   },
 })
@@ -73,7 +108,7 @@ export default defineConfig(() => {
       __VMECC_BUILD_ID__: JSON.stringify(buildMetadata.buildId),
     },
     build: {
-      outDir: 'build',
+      outDir: String(process.env.VITE_OUT_DIR || '').trim() || 'build',
     },
     css: {
       postcss: {

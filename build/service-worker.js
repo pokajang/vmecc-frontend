@@ -1,13 +1,16 @@
-const CACHE_NAME = 'vmecc-app-shell-v8'
+const BUILD_ID = "ff303ac76b7f-20260726113237"
+const CACHE_PREFIX = 'vmecc-app-shell-'
+const CACHE_NAME = `${CACHE_PREFIX}${String(BUILD_ID).replace(/[^a-zA-Z0-9._-]/g, '-')}`
+const BUILD_ASSETS = ["/assets/index-BDV7cz8E.js","/assets/index-CKaYHNts.css","/assets/manrope-cyrillic-wght-normal-Dvxsihut.woff2","/assets/manrope-greek-wght-normal-DL7QRZyv.woff2","/assets/manrope-latin-ext-wght-normal-Ch3YOpNY.woff2","/assets/manrope-latin-wght-normal-DHIcAJRg.woff2","/assets/manrope-vietnamese-wght-normal-usUDDRr7.woff2"]
 const APP_SHELL = [
   '/',
   '/index.html',
-  '/inspection',
   '/manifest.json?v=20260714',
   '/favicon.svg?v=20260714',
   '/favicon.ico?v=20260714',
+  ...BUILD_ASSETS,
 ]
-const NEVER_CACHE_PATHS = ['/api/', '/sanctum/', '/version.json']
+const NEVER_CACHE_PATHS = ['/api/', '/sanctum/', '/version.json', '/service-worker.js']
 
 const isNeverCached = (url) =>
   NEVER_CACHE_PATHS.some((path) => url.pathname === path || url.pathname.startsWith(path))
@@ -21,37 +24,47 @@ const unavailableResponse = (request) => {
   })
 }
 
+const shellRequests = () => APP_SHELL.map((path) => new Request(path, { cache: 'reload' }))
+
 const refreshAppShellCache = async () => {
   const cache = await caches.open(CACHE_NAME)
-  await cache.addAll(APP_SHELL)
-  return { cacheName: CACHE_NAME, shellCount: APP_SHELL.length }
+  await cache.addAll(shellRequests())
+  return { buildId: BUILD_ID, cacheName: CACHE_NAME, shellCount: APP_SHELL.length }
 }
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)))
-  self.skipWaiting()
+  event.waitUntil(refreshAppShellCache())
 })
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) =>
-        Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))),
-      ),
+      .then((keys) => {
+        const previousCaches = keys.filter(
+          (key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME,
+        )
+        // Keep the newest previous shell for another open client that is still running it.
+        const staleCaches = previousCaches.slice(0, -1)
+        return Promise.all(staleCaches.map((key) => caches.delete(key)))
+      })
+      .then(() => self.clients.claim()),
   )
-  self.clients.claim()
 })
 
 self.addEventListener('message', (event) => {
   const type = event?.data?.type
   const port = event?.ports?.[0]
+  if (type === 'VMECC_SKIP_WAITING') {
+    event.waitUntil(self.skipWaiting())
+  }
   if (type === 'VMECC_GET_OFFLINE_CACHE_STATUS') {
     event.waitUntil(
       caches
         .open(CACHE_NAME)
         .then((cache) =>
           Promise.all(APP_SHELL.map((path) => cache.match(path))).then((matches) => ({
+            buildId: BUILD_ID,
             cacheName: CACHE_NAME,
             shellCount: APP_SHELL.length,
             cachedShellCount: matches.filter(Boolean).length,

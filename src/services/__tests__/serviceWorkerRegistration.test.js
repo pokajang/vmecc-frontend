@@ -1,7 +1,10 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { registerAppServiceWorker } from '../serviceWorkerRegistration'
+import { resetServiceWorkerUpdateStateForTests } from '../serviceWorkerUpdates'
 
 describe('service worker registration', () => {
+  beforeEach(() => resetServiceWorkerUpdateStateForTests())
+
   it('checks for an update without attaching an automatic page-reload listener', async () => {
     const registration = { update: vi.fn().mockResolvedValue(undefined) }
     const serviceWorker = {
@@ -11,7 +14,9 @@ describe('service worker registration', () => {
 
     await expect(registerAppServiceWorker({ serviceWorker })).resolves.toBe(registration)
 
-    expect(serviceWorker.register).toHaveBeenCalledWith('/service-worker.js')
+    expect(serviceWorker.register).toHaveBeenCalledWith('/service-worker.js', {
+      updateViaCache: 'none',
+    })
     expect(registration.update).toHaveBeenCalledTimes(1)
     expect(serviceWorker.addEventListener).not.toHaveBeenCalled()
   })

@@ -4,9 +4,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import useAppUpdateAvailable, { APP_UPDATE_CHECK_INTERVAL_MS } from '../useAppUpdateAvailable'
 
 const checkForAppUpdate = vi.fn()
+const prepareAppUpdate = vi.fn()
+const activateWaitingWorker = vi.fn()
 
 vi.mock('src/services/appVersion', () => ({
   checkForAppUpdate: (...args) => checkForAppUpdate(...args),
+}))
+vi.mock('src/services/serviceWorkerUpdates', () => ({
+  SERVICE_WORKER_UPDATE_READY_EVENT: 'vmecc:service-worker-update-ready',
+  prepareAppUpdate: (...args) => prepareAppUpdate(...args),
+  activateWaitingWorker: (...args) => activateWaitingWorker(...args),
 }))
 
 describe('useAppUpdateAvailable', () => {
@@ -14,6 +21,8 @@ describe('useAppUpdateAvailable', () => {
     vi.useRealTimers()
     vi.resetAllMocks()
     sessionStorage.clear()
+    prepareAppUpdate.mockResolvedValue({ state: 'installed' })
+    activateWaitingWorker.mockResolvedValue({})
   })
 
   it('shows and snoozes available updates for the current session', async () => {
@@ -28,6 +37,11 @@ describe('useAppUpdateAvailable', () => {
 
     act(() => {
       result.current.dismissUpdate()
+    })
+    expect(result.current.updateAvailable).toBe(false)
+
+    act(() => {
+      window.dispatchEvent(new Event('vmecc:service-worker-update-ready'))
     })
     expect(result.current.updateAvailable).toBe(false)
 
@@ -79,5 +93,46 @@ describe('useAppUpdateAvailable', () => {
       await Promise.resolve()
     })
     expect(checkForAppUpdate).toHaveBeenCalledTimes(2)
+  })
+
+  it('surfaces a worker that is already waiting during rollout migration', async () => {
+    checkForAppUpdate.mockResolvedValue({
+      available: false,
+      latest: { buildId: 'current-build' },
+    })
+    const { result } = renderHook(() => useAppUpdateAvailable())
+
+    await waitFor(() => expect(checkForAppUpdate).toHaveBeenCalled())
+    act(() => {
+      window.dispatchEvent(new Event('vmecc:service-worker-update-ready'))
+    })
+
+    expect(result.current.updateAvailable).toBe(true)
+    expect(result.current.status).toBe('ready')
+  })
+
+  it('does not let a current-version response hide an earlier worker-ready signal', async () => {
+    let resolveVersionCheck
+    checkForAppUpdate.mockReturnValue(
+      new Promise((resolve) => {
+        resolveVersionCheck = resolve
+      }),
+    )
+    const { result } = renderHook(() => useAppUpdateAvailable())
+
+    await waitFor(() => expect(checkForAppUpdate).toHaveBeenCalled())
+    act(() => {
+      window.dispatchEvent(new Event('vmecc:service-worker-update-ready'))
+    })
+    await act(async () => {
+      resolveVersionCheck({
+        available: false,
+        latest: { buildId: 'current-build' },
+      })
+      await Promise.resolve()
+    })
+
+    expect(result.current.updateAvailable).toBe(true)
+    expect(result.current.status).toBe('ready')
   })
 })

@@ -14,11 +14,15 @@ const renderBanner = ({
   dismissUpdate = vi.fn(),
   reloadPage = vi.fn(),
   guard = false,
+  status,
+  applyUpdate,
 } = {}) => {
   const useUpdateState = () => ({
     updateAvailable,
     latestVersion: updateAvailable ? { buildId: 'new-build' } : null,
     dismissUpdate,
+    status,
+    applyUpdate,
   })
 
   const DirtyGuard = ({ active }) => {
@@ -66,7 +70,7 @@ describe('AppUpdateBanner', () => {
     const reloadPage = vi.fn()
     renderBanner({ reloadPage })
 
-    fireEvent.click(screen.getByRole('button', { name: /Refresh/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Update/ }))
     expect(reloadPage).toHaveBeenCalledTimes(1)
   })
 
@@ -75,13 +79,32 @@ describe('AppUpdateBanner', () => {
     renderBanner({ reloadPage, guard: true })
 
     await waitFor(() => expect(screen.getByText(/A new version is available/)).toBeTruthy())
-    fireEvent.click(screen.getByRole('button', { name: /Refresh/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Update/ }))
 
     expect(reloadPage).not.toHaveBeenCalled()
-    expect(screen.getByText('Discard unsaved changes?')).toBeTruthy()
+    expect(screen.getByText('Update VMECC and discard unsaved changes?')).toBeTruthy()
     expect(screen.getByText('You have unsaved test changes.')).toBeTruthy()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Discard and leave' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Discard and update' }))
     expect(reloadPage).toHaveBeenCalledTimes(1)
+  })
+
+  it('automatically applies a ready update when the page is safe', async () => {
+    const reloadPage = vi.fn()
+    const applyUpdate = vi.fn().mockResolvedValue(true)
+    renderBanner({ applyUpdate, reloadPage, status: 'ready' })
+
+    await waitFor(() => expect(applyUpdate).toHaveBeenCalledTimes(1))
+    expect(reloadPage).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not automatically apply a ready update while a guard is active', async () => {
+    const reloadPage = vi.fn()
+    const applyUpdate = vi.fn().mockResolvedValue(true)
+    renderBanner({ applyUpdate, guard: true, reloadPage, status: 'ready' })
+
+    await waitFor(() => expect(screen.getByText(/A new version is available/)).toBeTruthy())
+    expect(applyUpdate).not.toHaveBeenCalled()
+    expect(reloadPage).not.toHaveBeenCalled()
   })
 })
