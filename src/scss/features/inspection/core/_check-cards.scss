@@ -310,6 +310,37 @@
     padding-right: 0.55rem;
   }
 
+  .inspection-fire-extinguisher-detail-drawer-body
+    .inspection-hydraulic-check-row.inspection-hydraulic-check-row--stacked,
+  .inspection-equipment-detail-drawer-body
+    .inspection-hydraulic-check-row.inspection-hydraulic-check-row--stacked {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: flex-start;
+  }
+
+  .inspection-fire-extinguisher-detail-drawer-body
+    .inspection-hydraulic-check-row.inspection-hydraulic-check-row--stacked
+    .inspection-hydraulic-check-label,
+  .inspection-equipment-detail-drawer-body
+    .inspection-hydraulic-check-row.inspection-hydraulic-check-row--stacked
+    .inspection-hydraulic-check-label {
+    max-width: 100%;
+  }
+
+  .inspection-fire-extinguisher-detail-drawer-body
+    .inspection-hydraulic-check-row.inspection-hydraulic-check-row--stacked
+    .inspection-hydraulic-status-group,
+  .inspection-equipment-detail-drawer-body
+    .inspection-hydraulic-check-row.inspection-hydraulic-check-row--stacked
+    .inspection-hydraulic-status-group {
+    width: 100%;
+    min-width: 0;
+    justify-content: flex-start !important;
+    justify-self: stretch;
+    flex-wrap: wrap !important;
+    overflow: visible;
+  }
+
   .inspection-equipment-detail-drawer-body .inspection-equipment-additional-actions {
     justify-content: flex-end !important;
   }
