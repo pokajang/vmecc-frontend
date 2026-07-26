@@ -70,22 +70,6 @@ const MessageBubble = ({ message, copied, onCopy, onReport, onRetry, retryDisabl
                 }
 
                 const documentId = Number(source?.document_id)
-                if (!Number.isInteger(documentId) || documentId < 1) {
-                  return (
-                    <div
-                      key={`knowledge-${source?.source_id || index}`}
-                      className="ai-helper-message__source-guide ai-helper-message__source-item"
-                      aria-label={`Internal knowledge source: ${source?.title || 'VMECC knowledge'}`}
-                    >
-                      <BookOpenText size={14} aria-hidden="true" />
-                      <span>
-                        {formatSourceId(source?.source_id)}
-                        {source?.title || 'VMECC knowledge'}
-                      </span>
-                    </div>
-                  )
-                }
-
                 const startPage = Number(source?.page_start)
                 const endPage = Number(source?.page_end)
                 const pageLabel =
@@ -94,6 +78,25 @@ const MessageBubble = ({ message, copied, onCopy, onReport, onRetry, retryDisabl
                       ? ` - pages ${startPage}-${endPage}`
                       : ` - page ${startPage}`
                     : ''
+                if (!Number.isInteger(documentId) || documentId < 1) {
+                  return (
+                    <div
+                      key={`knowledge-${source?.source_id || index}`}
+                      className="ai-helper-message__source-guide ai-helper-message__source-item"
+                      aria-label={`Internal knowledge source: ${
+                        source?.title || 'VMECC knowledge'
+                      }${pageLabel}`}
+                    >
+                      <BookOpenText size={14} aria-hidden="true" />
+                      <span>
+                        {formatSourceId(source?.source_id)}
+                        {source?.title || 'VMECC knowledge'}
+                        {pageLabel}
+                      </span>
+                    </div>
+                  )
+                }
+
                 const href = `${buildAiHelperDocumentFileUrl(documentId)}${
                   Number.isInteger(startPage) && startPage > 0 ? `#page=${startPage}` : ''
                 }`

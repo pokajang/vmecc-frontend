@@ -1,7 +1,7 @@
-const BUILD_ID = "ff303ac76b7f-20260726113237"
+const BUILD_ID = "7255810c5d99-20260726150112"
 const CACHE_PREFIX = 'vmecc-app-shell-'
 const CACHE_NAME = `${CACHE_PREFIX}${String(BUILD_ID).replace(/[^a-zA-Z0-9._-]/g, '-')}`
-const BUILD_ASSETS = ["/assets/index-BDV7cz8E.js","/assets/index-CKaYHNts.css","/assets/manrope-cyrillic-wght-normal-Dvxsihut.woff2","/assets/manrope-greek-wght-normal-DL7QRZyv.woff2","/assets/manrope-latin-ext-wght-normal-Ch3YOpNY.woff2","/assets/manrope-latin-wght-normal-DHIcAJRg.woff2","/assets/manrope-vietnamese-wght-normal-usUDDRr7.woff2"]
+const BUILD_ASSETS = ["/assets/index-CKaYHNts.css","/assets/index-y_iBIrxm.js","/assets/manrope-cyrillic-wght-normal-Dvxsihut.woff2","/assets/manrope-greek-wght-normal-DL7QRZyv.woff2","/assets/manrope-latin-ext-wght-normal-Ch3YOpNY.woff2","/assets/manrope-latin-wght-normal-DHIcAJRg.woff2","/assets/manrope-vietnamese-wght-normal-usUDDRr7.woff2"]
 const APP_SHELL = [
   '/',
   '/index.html',

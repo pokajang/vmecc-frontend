@@ -203,6 +203,35 @@ describe('MessageBubble', () => {
     expect(queryByRole('link')).toBeNull()
   })
 
+  it('renders page-aware Markdown-only citations without a download link', () => {
+    const { getByLabelText, queryByRole } = render(
+      <MessageBubble
+        {...baseProps}
+        message={{
+          id: 'assistant-markdown-source',
+          role: 'assistant',
+          status: 'completed',
+          content: 'Use the documented access route.',
+          sources: [
+            {
+              source_id: 'S3',
+              source_type: 'reference_document',
+              document_id: null,
+              title: 'SOW ER Service',
+              source_mime: 'text/markdown',
+              page_start: 2,
+              page_end: 2,
+            },
+          ],
+        }}
+      />,
+    )
+
+    const source = getByLabelText('Internal knowledge source: SOW ER Service - page 2')
+    expect(source.textContent).toContain('S3 - SOW ER Service - page 2')
+    expect(queryByRole('link')).toBeNull()
+  })
+
   it('renders mixed PDF and system-guide sources independently', () => {
     const { getAllByRole, getByLabelText } = render(
       <MessageBubble
