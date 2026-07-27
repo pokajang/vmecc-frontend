@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  buildFailedAssistantMessage,
+  getMessageActions,
+  isAiHelperErrorRetryable,
   knowledgeActionableFindings,
   knowledgeFindings,
   knowledgeQualityLabel,
@@ -114,6 +117,24 @@ describe('safeAiHelperError', () => {
         payload: { code: 'AI_HELPER_RESTRICTED_REQUEST' },
       }),
     ).toContain('unauthorized data')
+  })
+
+  it('shows request validation failures accurately and prevents unchanged retries', () => {
+    const error = {
+      status: 422,
+      payload: { code: 'AI_HELPER_VALIDATION_FAILED' },
+    }
+
+    expect(safeAiHelperError(error)).toBe(
+      'The AI request could not be sent because some information was invalid. Refresh the page and try again.',
+    )
+    expect(isAiHelperErrorRetryable(error)).toBe(false)
+
+    const message = buildFailedAssistantMessage(safeAiHelperError(error), {
+      retry_prompt: 'same invalid request',
+      retryable: isAiHelperErrorRetryable(error),
+    })
+    expect(getMessageActions({ ...message, role: 'assistant' }).canRetry).toBe(false)
   })
 })
 

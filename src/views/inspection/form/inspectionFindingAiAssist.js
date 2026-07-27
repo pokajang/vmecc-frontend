@@ -1,3 +1,5 @@
+import { buildAiHelperPageContext } from 'src/components/ai-helper/pageContextContract'
+
 const compactText = (value) =>
   String(value || '')
     .replace(/\s+/g, ' ')
@@ -7,23 +9,22 @@ const jsonBlock = (payload) => JSON.stringify(payload, null, 2)
 
 export const INSPECTION_FINDING_EMBEDDED_TASK = 'inspection_translate_finding'
 
-export const buildInspectionFindingAiContext = (payload = {}) => ({
-  assistant_surface: 'embedded_helper',
-  conversation_purpose: 'embedded_helper',
-  module_key: 'inspection',
-  route_key: 'inspection.form.finding',
-  title: 'Inspection Finding',
-  path:
-    typeof window !== 'undefined' && window.location?.pathname
-      ? window.location.pathname
-      : '/inspection',
-  inspection_type: compactText(payload.inspectionType),
-  location: {
-    zone: compactText(payload.zone),
-    main_area: compactText(payload.mainLocation),
-    location: compactText(payload.subLocation),
-  },
-})
+export const buildInspectionFindingAiContext = (payload = {}) =>
+  buildAiHelperPageContext({
+    path:
+      typeof window !== 'undefined' && window.location?.pathname
+        ? window.location.pathname
+        : '/inspection',
+    moduleKey: 'inspection',
+    routeKey: 'inspection.form.finding',
+    title: 'Inspection Finding',
+    params: {
+      inspection_type: compactText(payload.inspectionType),
+      zone: compactText(payload.zone),
+      main_area: compactText(payload.mainLocation),
+      location: compactText(payload.subLocation),
+    },
+  })
 
 export const buildInspectionFindingTranslatePrompt = (payload = {}) =>
   [

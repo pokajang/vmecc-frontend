@@ -13,6 +13,7 @@ import {
   MESSAGE_STATUS_SLOW,
   MESSAGE_STATUS_STREAMING,
   buildFailedAssistantMessage,
+  isAiHelperErrorRetryable,
   makeLocalMessage,
   safeAiHelperError,
 } from './constants'
@@ -71,6 +72,7 @@ const useAiHelperChat = ({
           retry_prompt: text,
           retry_context: pageContext,
           request_id: requestId,
+          retryable: isAiHelperErrorRetryable(error),
         }),
       }))
       return errorMessage

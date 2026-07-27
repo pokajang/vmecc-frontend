@@ -161,18 +161,20 @@ const InspectionReviewSection = ({
   const readOnlyChecks = selectedTypeDefinition?.checksField
     ? form[selectedTypeDefinition.checksField] || []
     : []
-  const readOnlySummary = selectedTypeDefinition?.getSummary?.(
-    {
-      ...form,
-      ...(selectedTypeDefinition?.checksField
-        ? {
-            [selectedTypeDefinition.checksField]: readOnlyChecks,
-            [selectedTypeDefinition.equipmentRowsField]: readOnlyChecks,
-          }
-        : {}),
-    },
-    selectedTypeDefinition?.checksField ? { checks: readOnlyChecks } : {},
-  )
+  const readOnlySummary = selectedTypeDefinition?.getReadOnlySummary
+    ? selectedTypeDefinition.getReadOnlySummary(form, r)
+    : selectedTypeDefinition?.getSummary?.(
+        {
+          ...form,
+          ...(selectedTypeDefinition?.checksField
+            ? {
+                [selectedTypeDefinition.checksField]: readOnlyChecks,
+                [selectedTypeDefinition.equipmentRowsField]: readOnlyChecks,
+              }
+            : {}),
+        },
+        selectedTypeDefinition?.checksField ? { checks: readOnlyChecks } : {},
+      )
   const isGeneral = isGeneralInspectionType(r.incidentType || form.inspectionType)
   const mainLocationLabel = formatInspectionDisplayLocationTitle(r.incidentType, form.mainLocation)
   const ReadOnlySection = selectedTypeDefinition?.ReadOnlySection || null

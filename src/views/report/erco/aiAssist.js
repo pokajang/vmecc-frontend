@@ -1,3 +1,4 @@
+import { buildAiHelperPageContext } from 'src/components/ai-helper/pageContextContract'
 import { formatErcoLocation } from './utils'
 import { sortResponders } from './chronologyUtils'
 
@@ -12,6 +13,10 @@ export const ERCO_EMBEDDED_TASK = {
   IMPROVE_SUMMARY: 'erco_improve_summary',
   REVIEW_REPORT: 'erco_review_report',
 }
+
+export const ERCO_AI_MESSAGE_MAX_LENGTH = 12000
+export const ERCO_AI_MESSAGE_TOO_LONG =
+  'This report is too long for AI assistance. Shorten the summary or continue editing manually.'
 
 const STATUS_LABELS = {
   [AI_REVIEW_STATUS.LOOKS_OK]: 'Looks OK',
@@ -92,38 +97,30 @@ export const buildErcoAiPayload = ({
   }
 }
 
-const jsonBlock = (payload) => JSON.stringify(payload, null, 2)
+const jsonBlock = (payload) => JSON.stringify(payload)
 
-export const buildErcoAiContext = (payload) => ({
-  assistant_surface: 'embedded_helper',
-  conversation_purpose: 'embedded_helper',
-  module_key: 'reports',
-  route_key: 'reports.erco.form',
-  title: 'ERCO Report Form',
-  path:
-    typeof window !== 'undefined' && window.location?.pathname
-      ? window.location.pathname
-      : '/report/erco',
-  report_type: 'erco',
-  form_snapshot: {
-    incident_title: payload.incident.title,
-    incident_type: payload.incident.type,
-    weather: payload.incident.weather,
-    location: payload.incident.location,
-    incident_date: payload.incident.date,
-    incident_time: payload.incident.time,
-    summary_present: Boolean(payload.summary),
-    responding_team: payload.response.team,
-    responding_members: payload.response.respondersSummary,
-    chronology_count: payload.chronology.length,
-    post_incident_analysis_present: Boolean(
-      payload.postIncidentAnalysis.resourcesMobilised.length ||
-        payload.postIncidentAnalysis.strengths.length ||
-        payload.postIncidentAnalysis.improvementOpportunities.length ||
-        payload.postIncidentAnalysis.photos.length,
-    ),
-  },
-})
+export const buildErcoAiContext = () =>
+  buildAiHelperPageContext({
+    path:
+      typeof window !== 'undefined' && window.location?.pathname
+        ? window.location.pathname
+        : '/report/erco',
+    moduleKey: 'reports',
+    routeKey: 'reports.erco.form',
+    title: 'ERCO Report Form',
+    params: {
+      report_type: 'erco',
+    },
+  })
+
+export const assertErcoAiMessageWithinLimit = (message) => {
+  const value = String(message || '')
+  if (value.length <= ERCO_AI_MESSAGE_MAX_LENGTH) return value
+
+  const error = new Error(ERCO_AI_MESSAGE_TOO_LONG)
+  error.code = 'AI_HELPER_MESSAGE_TOO_LONG'
+  throw error
+}
 
 export const buildErcoSummaryPrompt = (payload, mode = 'generate') => {
   const isImproveMode = mode === 'improve'

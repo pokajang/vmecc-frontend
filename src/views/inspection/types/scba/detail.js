@@ -1,5 +1,11 @@
 import React from 'react'
-import { getScbaFieldEvidenceKeys } from './helpers'
+import {
+  getScbaFieldEvidenceKeys,
+  normalizeScbaBackPlateChecks,
+  normalizeScbaCustomSections,
+  normalizeScbaCylinderChecks,
+  normalizeScbaFaceMaskChecks,
+} from './helpers'
 import {
   DetailEvidenceBlock,
   DetailStatusRow,
@@ -14,19 +20,18 @@ const rowTitle = (row) =>
 
 export const buildScbaDetailFindingItems = (form = {}, summary = null) => {
   const submittedRows = [
-    ...(form.scbaBackPlateChecks || []),
-    ...(form.scbaCylinderChecks || []),
-    ...(form.scbaFaceMaskChecks || []),
-    ...(form.scbaCustomSections || []).flatMap(
+    ...normalizeScbaBackPlateChecks(form.scbaBackPlateChecks || form.scba_back_plate_checks),
+    ...normalizeScbaCylinderChecks(form.scbaCylinderChecks || form.scba_cylinder_checks),
+    ...normalizeScbaFaceMaskChecks(form.scbaFaceMaskChecks || form.scba_face_mask_checks),
+    ...normalizeScbaCustomSections(form.scbaCustomSections || form.scba_custom_sections).flatMap(
       (section) => section.visibleRows || section.rows || section.checks || [],
     ),
   ]
   const submittedIds = new Set(submittedRows.map((row) => detailText(row.id)).filter(Boolean))
-  const hasSubmittedRows = submittedRows.length > 0
 
   return (summary?.visibleSections || []).flatMap((section, sectionIndex) =>
     (section.visibleRows || [])
-      .filter((row) => !hasSubmittedRows || submittedIds.has(detailText(row.id)))
+      .filter((row) => submittedIds.has(detailText(row.id)))
       .map((row, rowIndex) => {
         const issueFields = (section.fields || []).filter(
           (field) => field.kind === 'status' && detailText(row[field.key]) === 'Not Good',

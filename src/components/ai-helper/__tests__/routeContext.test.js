@@ -13,5 +13,14 @@ describe('resolveAiHelperRouteContext', () => {
     expect(context.search).toBe('?tab=records')
     expect(context.route_name).toBe('Inspection Detail')
     expect(context.params.reportId).toBe('INS-001')
+    expect(Object.keys(context)).toEqual([
+      'path',
+      'search',
+      'route_key',
+      'route_name',
+      'module_key',
+      'title',
+      'params',
+    ])
   })
 })

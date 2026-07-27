@@ -554,6 +554,73 @@ describe('InspectionReviewSection', () => {
     expect(reviewText.indexOf('Cylinder')).toBeLessThan(reviewText.indexOf('Face Mask'))
   })
 
+  it('renders only saved SCBA sections and equipment during review', () => {
+    render(
+      <InspectionReviewSection
+        selectedRecord={{
+          id: 'inspection-scba-partial-review',
+          displayId: 'INSP-SCBA-PARTIAL',
+          status: 'In Review',
+          location: 'FRT',
+          mainLocation: 'FRT',
+          incidentType: 'SCBA Inspection',
+          scbaBackPlateChecks: [
+            {
+              id: 'backPlate:frt:msa:06',
+              location: 'FRT',
+              brand: 'MSA',
+              serialNo: '06',
+              backPlateHarnessCondition: 'Good',
+            },
+          ],
+          scbaCylinderChecks: [],
+          scbaFaceMaskChecks: [],
+          scbaCustomSections: [],
+        }}
+        reviewActions={{
+          onBackToEdit: vi.fn(),
+          onSaveDraft: vi.fn(),
+          onConfirm: vi.fn(),
+          confirmLabel: 'Confirm Submit',
+        }}
+      />,
+    )
+
+    expect(screen.getAllByText('Back Plate').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('MSA 06').length).toBeGreaterThan(0)
+    expect(screen.queryByText('MSA 07')).toBeNull()
+    expect(screen.queryByText('Cylinder')).toBeNull()
+    expect(screen.queryByText('Face Mask')).toBeNull()
+  })
+
+  it('does not seed SCBA equipment into an empty historical review', () => {
+    render(
+      <InspectionReviewSection
+        selectedRecord={{
+          id: 'inspection-scba-empty-review',
+          displayId: 'INSP-SCBA-EMPTY',
+          status: 'In Review',
+          location: 'FRT',
+          mainLocation: 'FRT',
+          incidentType: 'SCBA Inspection',
+          scbaBackPlateChecks: [],
+          scbaCylinderChecks: [],
+          scbaFaceMaskChecks: [],
+          scbaCustomSections: [],
+        }}
+        reviewActions={{
+          onBackToEdit: vi.fn(),
+          onSaveDraft: vi.fn(),
+          onConfirm: vi.fn(),
+          confirmLabel: 'Confirm Submit',
+        }}
+      />,
+    )
+
+    expect(screen.queryByText('SCBA Items')).toBeNull()
+    expect(screen.queryByText('MSA 06')).toBeNull()
+  })
+
   it('renders High Angle read-only sections during review', () => {
     const { container } = render(
       <InspectionReviewSection
@@ -606,6 +673,7 @@ describe('InspectionReviewSection', () => {
     expect(screen.getAllByText('Response Kit #1').length).toBeGreaterThan(0)
     expect(screen.getAllByText('General Kit Items').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Main Compartment').length).toBeGreaterThan(0)
+    expect(screen.queryByText('2nd Compartment')).toBeNull()
     expect(screen.getAllByText('Locking Carabiner - CT - Steel - S').length).toBeGreaterThan(0)
     expect(container.textContent || '').toContain('Qty 10')
     expect(container.textContent || '').toContain('Gate spring is sticking.')
@@ -691,5 +759,56 @@ describe('InspectionReviewSection', () => {
     expect(reviewText.indexOf('Truck Readiness')).toBeLessThan(
       reviewText.indexOf('One-Off Readiness Checklist'),
     )
+  })
+
+  it('renders only Crew Cabin rows during a crew-cabin-only Fire Truck review', () => {
+    render(
+      <InspectionReviewSection
+        selectedRecord={{
+          id: 'inspection-frt-crew-cabin-review',
+          displayId: 'INSP-FRT-CREW-CABIN',
+          status: 'In Review',
+          location: 'FIRE TRUCK',
+          mainLocation: 'FIRE TRUCK',
+          incidentType: 'FRT Daily Inspection',
+          frtInspectedBy: 'Inspector Truck',
+          frtInspectionDate: '2026-07-27',
+          frtTruckPlateNo: 'AJG9555',
+          frtTruckReference: { plateNo: 'AJG9555' },
+          frtDailyChecks: [],
+          frtOneOffChecks: [
+            {
+              id: 'one-off:fire-truck:45',
+              rowNumber: '45',
+              mainLocation: 'FIRE TRUCK',
+              location: 'CREW CABIN',
+              equipment: 'BA SET : 4',
+              condition: 'Good',
+            },
+            {
+              id: 'one-off:fire-truck:46',
+              rowNumber: '46',
+              mainLocation: 'FIRE TRUCK',
+              location: 'CREW CABIN',
+              equipment: 'RADIO SET : 1',
+              condition: 'Not Good',
+              remarks: 'Radio requires service.',
+            },
+          ],
+        }}
+        reviewActions={{
+          onBackToEdit: vi.fn(),
+          onSaveDraft: vi.fn(),
+          onConfirm: vi.fn(),
+          confirmLabel: 'Confirm Submit',
+        }}
+      />,
+    )
+
+    expect(screen.getAllByText('CREW CABIN').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('BA SET : 4').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('RADIO SET : 1').length).toBeGreaterThan(0)
+    expect(screen.queryByText('LOCKER 01')).toBeNull()
+    expect(screen.queryByText('FIRE HOSE 2.5"')).toBeNull()
   })
 })

@@ -342,6 +342,32 @@ const getScbaIncompleteIssueEvidenceCount = (row = {}, fields = []) =>
     return !String(row?.[remarksKey] || '').trim()
   }).length
 
+const buildScbaSectionSummary = (section, visibleRows) => {
+  const fields = Array.isArray(section.fields) ? section.fields : []
+  const checkedCount = visibleRows.filter((row) => isScbaRowComplete(row, fields)).length
+  const issueCount = visibleRows.reduce(
+    (count, row) => count + getScbaRowIssueFields(row, fields).length,
+    0,
+  )
+  const incompleteRemarksCount = visibleRows.filter(
+    (row) => getScbaIncompleteIssueEvidenceCount(row, fields) > 0,
+  ).length
+  const retainedEvidenceCount = visibleRows.reduce(
+    (count, row) => count + getScbaRowRetainedEvidenceFields(row, fields).length,
+    0,
+  )
+
+  return {
+    ...section,
+    visibleRows,
+    checkedCount,
+    issueCount,
+    incompleteRemarksCount,
+    incompletePhotoCount: 0,
+    retainedEvidenceCount,
+  }
+}
+
 const buildVisibleSection = (section, form) => {
   const mainLocation = getMainLocation(form)
   if (section.isCustomSection) {
@@ -362,29 +388,7 @@ const buildVisibleSection = (section, form) => {
         isExtensionRow: true,
       }))
 
-    const checkedCount = visibleRows.filter((row) => isScbaRowComplete(row, section.fields)).length
-    const issueCount = visibleRows.reduce(
-      (count, row) => count + getScbaRowIssueFields(row, section.fields).length,
-      0,
-    )
-    const incompleteRemarksCount = visibleRows.filter(
-      (row) => getScbaIncompleteIssueEvidenceCount(row, section.fields) > 0,
-    ).length
-    const incompletePhotoCount = 0
-    const retainedEvidenceCount = visibleRows.reduce(
-      (count, row) => count + getScbaRowRetainedEvidenceFields(row, section.fields).length,
-      0,
-    )
-
-    return {
-      ...section,
-      visibleRows,
-      checkedCount,
-      issueCount,
-      incompleteRemarksCount,
-      incompletePhotoCount,
-      retainedEvidenceCount,
-    }
+    return buildScbaSectionSummary(section, visibleRows)
   }
 
   const seededRows = section.rows.filter(
@@ -429,29 +433,7 @@ const buildVisibleSection = (section, form) => {
     }
   })
 
-  const checkedCount = visibleRows.filter((row) => isScbaRowComplete(row, section.fields)).length
-  const issueCount = visibleRows.reduce(
-    (count, row) => count + getScbaRowIssueFields(row, section.fields).length,
-    0,
-  )
-  const incompleteRemarksCount = visibleRows.filter(
-    (row) => getScbaIncompleteIssueEvidenceCount(row, section.fields) > 0,
-  ).length
-  const incompletePhotoCount = 0
-  const retainedEvidenceCount = visibleRows.reduce(
-    (count, row) => count + getScbaRowRetainedEvidenceFields(row, section.fields).length,
-    0,
-  )
-
-  return {
-    ...section,
-    visibleRows,
-    checkedCount,
-    issueCount,
-    incompleteRemarksCount,
-    incompletePhotoCount,
-    retainedEvidenceCount,
-  }
+  return buildScbaSectionSummary(section, visibleRows)
 }
 
 export const getScbaVisibleSections = (form = {}) => [
@@ -462,6 +444,34 @@ export const getScbaVisibleSections = (form = {}) => [
     .filter((section) => section.removed !== true)
     .map((section) => buildVisibleSection(section, form)),
 ]
+
+const buildPersistedScbaSection = (section, rows = []) => {
+  const visibleRows = (Array.isArray(rows) ? rows : [])
+    .filter((row) => row.removed !== true)
+    .map((row) => ({
+      ...row,
+      sectionKey: section.key,
+      label: row.label || getRowLabel(row),
+      isWorkbookSeedRow: false,
+    }))
+
+  return buildScbaSectionSummary(section, visibleRows)
+}
+
+export const getScbaReadOnlySections = (form = {}) => {
+  const standardSections = SCBA_SECTION_DEFINITIONS.map((section) =>
+    buildPersistedScbaSection(section, getScbaSectionChecks(form, section.key)),
+  )
+  const customSections = normalizeScbaCustomSections(
+    form.scbaCustomSections || form.scba_custom_sections,
+  )
+    .filter((section) => section.removed !== true)
+    .map((section) => buildPersistedScbaSection(section, section.rows))
+
+  return [...standardSections, ...customSections].filter(
+    (section) => section.visibleRows.length > 0,
+  )
+}
 
 export const getScbaCheckSummary = (form = {}, options = {}) => {
   const visibleSections = Array.isArray(options.sections)
@@ -492,6 +502,9 @@ export const getScbaCheckSummary = (form = {}, options = {}) => {
     visibleSections,
   }
 }
+
+export const getScbaReadOnlySummary = (form = {}) =>
+  getScbaCheckSummary(form, { sections: getScbaReadOnlySections(form) })
 
 export const getScbaMissingFields = (form = {}) => {
   const { visibleSections } = getScbaCheckSummary(form)

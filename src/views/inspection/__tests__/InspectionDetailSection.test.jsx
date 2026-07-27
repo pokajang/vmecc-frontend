@@ -692,6 +692,64 @@ describe('InspectionDetailSection', () => {
     expectItemizedReadOnlyFindings()
   })
 
+  it('renders only Crew Cabin rows for a crew-cabin-only Fire Truck report', () => {
+    const { container } = render(
+      <InspectionDetailSection
+        selectedRecord={{
+          id: 'inspection-frt-detail-crew-cabin',
+          displayId: 'INSP-FRT-CREW-CABIN',
+          status: 'Submitted',
+          submittedAt: '2026-07-27T10:00:00.000Z',
+          submittedBy: 'Inspector Truck',
+          location: 'FIRE TRUCK',
+          selectedLocation: 'FIRE TRUCK',
+          mainLocation: 'FIRE TRUCK',
+          incidentType: 'FRT Daily Inspection',
+          frtInspectedBy: 'Inspector Truck',
+          frtInspectionDate: '2026-07-27',
+          frtTruckPlateNo: 'AJG9555',
+          frtTruckReference: { plateNo: 'AJG9555' },
+          frtDailyChecks: [],
+          frtOneOffChecks: [
+            {
+              id: 'one-off:fire-truck:45',
+              rowNumber: '45',
+              mainLocation: 'FIRE TRUCK',
+              location: 'CREW CABIN',
+              equipment: 'BA SET : 4',
+              condition: 'Good',
+            },
+            {
+              id: 'one-off:fire-truck:46',
+              rowNumber: '46',
+              mainLocation: 'FIRE TRUCK',
+              location: 'CREW CABIN',
+              equipment: 'RADIO SET : 1',
+              condition: 'Not Good',
+              remarks: 'Radio requires service.',
+            },
+          ],
+        }}
+        onBack={vi.fn()}
+        formatDateTime={() => ''}
+        renderStatusBadge={(status) => <span>{status}</span>}
+        onEditRecord={vi.fn()}
+        canEditRecord={() => false}
+        onReviewRecord={vi.fn()}
+        onApproveRecord={vi.fn()}
+        onRejectRecord={vi.fn()}
+        onDownloadRecord={vi.fn()}
+      />,
+    )
+
+    expect(screen.getAllByText('CREW CABIN').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('BA SET : 4').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('RADIO SET : 1').length).toBeGreaterThan(0)
+    expect(screen.queryByText('LOCKER 01')).toBeNull()
+    expect(screen.queryByText('FIRE HOSE 2.5"')).toBeNull()
+    expect(container.querySelectorAll('.inspection-detail-finding-accordion-item')).toHaveLength(2)
+  })
+
   it('renders workflow history inside report metadata without a detached workflow section', () => {
     render(
       <InspectionDetailSection

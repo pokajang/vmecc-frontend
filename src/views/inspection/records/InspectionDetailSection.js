@@ -356,18 +356,20 @@ const InspectionDetailSection = ({
   const readOnlyChecks = selectedTypeDefinition?.checksField
     ? form[selectedTypeDefinition.checksField] || []
     : []
-  const readOnlySummary = selectedTypeDefinition?.getSummary?.(
-    {
-      ...form,
-      ...(selectedTypeDefinition?.checksField
-        ? {
-            [selectedTypeDefinition.checksField]: readOnlyChecks,
-            [selectedTypeDefinition.equipmentRowsField]: readOnlyChecks,
-          }
-        : {}),
-    },
-    selectedTypeDefinition?.checksField ? { checks: readOnlyChecks } : {},
-  )
+  const readOnlySummary = selectedTypeDefinition?.getReadOnlySummary
+    ? selectedTypeDefinition.getReadOnlySummary(form, record)
+    : selectedTypeDefinition?.getSummary?.(
+        {
+          ...form,
+          ...(selectedTypeDefinition?.checksField
+            ? {
+                [selectedTypeDefinition.checksField]: readOnlyChecks,
+                [selectedTypeDefinition.equipmentRowsField]: readOnlyChecks,
+              }
+            : {}),
+        },
+        selectedTypeDefinition?.checksField ? { checks: readOnlyChecks } : {},
+      )
   const mainLocationLabel = formatInspectionDisplayLocationTitle(selectedType, form.mainLocation)
   const BlockReadOnlySection = selectedTypeDefinition?.ReadOnlySection || null
   const detailContextFields =

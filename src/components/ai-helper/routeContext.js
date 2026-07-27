@@ -1,10 +1,6 @@
 import { matchPath } from 'react-router-dom'
 import routes from 'src/routes'
-
-const serializableParams = (params = {}) =>
-  Object.fromEntries(
-    Object.entries(params || {}).map(([key, value]) => [key, value == null ? '' : String(value)]),
-  )
+import { buildAiHelperPageContext } from './pageContextContract'
 
 export const resolveAiHelperRouteContext = (location) => {
   const pathname = location?.pathname || '/'
@@ -37,14 +33,14 @@ export const resolveAiHelperRouteContext = (location) => {
 
   const routeName =
     matchedRoute?.name || (typeof document !== 'undefined' ? document.title : '') || 'Current page'
-  return {
+  return buildAiHelperPageContext({
     path: pathname,
     search: location?.search || '',
-    route_name: routeName,
-    module_key: matchedRoute?.module || '',
+    routeName,
+    moduleKey: matchedRoute?.module || '',
     title: routeName,
-    params: serializableParams(matchedParams),
-  }
+    params: matchedParams,
+  })
 }
 
 export const routeContextSignature = (context) =>

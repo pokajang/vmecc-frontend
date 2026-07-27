@@ -124,7 +124,7 @@ export const HighAngleInspectionChecks = ({
           )
           .map((row) => withGroupMeta(row, group)),
       }))
-      .filter((group) => !search || group.rows.length > 0)
+      .filter((group) => group.rows.length > 0 || (!readOnly && !search))
   }, [readOnly, search, selectedGroup, visibleGroups])
 
   const totalFilteredRows = filteredGroups.reduce((count, group) => count + group.rows.length, 0)

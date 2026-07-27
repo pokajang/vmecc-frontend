@@ -4,7 +4,7 @@ import eslintPluginReactHooks from 'eslint-plugin-react-hooks'
 import globals from 'globals'
 
 export default [
-  { ignores: ['eslint.config.mjs'] },
+  { ignores: ['eslint.config.mjs', 'build/**', '.codex-run/**'] },
   {
     ...eslintPluginReact.configs.flat.recommended,
     ...eslintPluginReact.configs.flat['jsx-runtime'],

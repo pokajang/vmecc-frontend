@@ -4,6 +4,7 @@ import {
   buildScbaDescription,
   getScbaCheckSummary,
   getScbaMissingFields,
+  getScbaReadOnlySummary,
   getScbaVisibleSections,
   isScbaInspectionType,
   normalizeScbaBackPlateChecks,
@@ -42,6 +43,7 @@ const scbaInspectionDefinition = {
   },
   isInspectionType: isScbaInspectionType,
   getSummary: getScbaCheckSummary,
+  getReadOnlySummary: getScbaReadOnlySummary,
   getVisibleChecks: getScbaVisibleSections,
   getMissingFields: getScbaMissingFields,
   buildContinuationOptions: (form, _summary, context = {}) =>

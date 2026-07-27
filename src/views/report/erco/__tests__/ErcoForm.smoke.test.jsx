@@ -201,6 +201,41 @@ const proceedToDetailsStep = async () => {
   )
 }
 
+const renderDetailsStep = ({ seed = {} } = {}) => {
+  cleanup()
+  setMobileViewport(false)
+
+  const Harness = () => {
+    const [form, setForm] = useState(() => ({
+      ...defaultErcoForm(),
+      incidentType: 'Fire',
+      weather: 'Clear',
+      location: ['Zone 1'],
+      incidentDate: '2026-04-25',
+      incidentTime: '09:30',
+      ...seed,
+    }))
+
+    return (
+      <form>
+        <ErcoDetailsStep
+          userId="u-1"
+          form={form}
+          fieldErrors={{}}
+          setForm={setForm}
+          pushToast={vi.fn()}
+          onBack={vi.fn()}
+          onContinue={vi.fn()}
+          onClear={vi.fn()}
+          onSaveDraft={vi.fn()}
+        />
+      </form>
+    )
+  }
+
+  return render(<Harness />)
+}
+
 const renderSetupStep = ({ mobile = false, seed = {}, errors = {} } = {}) => {
   setMobileViewport(mobile)
 
@@ -363,7 +398,20 @@ describe('ERCO step smoke flow', () => {
     const [payload] = streamAiHelperMessage.mock.calls[0]
     expect(payload.response_language).toBe('en')
     expect(payload.embedded_task).toBe('erco_generate_summary')
-    expect(payload.page_context.route_key).toBe('reports.erco.form')
+    expect(payload.page_context).toEqual({
+      path: expect.any(String),
+      search: '',
+      route_key: 'reports.erco.form',
+      route_name: '',
+      module_key: 'reports',
+      title: 'ERCO Report Form',
+      params: {
+        report_type: 'erco',
+      },
+    })
+    expect(payload.page_context).not.toHaveProperty('assistant_surface')
+    expect(payload.page_context).not.toHaveProperty('conversation_purpose')
+    expect(payload.page_context).not.toHaveProperty('form_snapshot')
     expect(payload.message).toContain('Generate an ERCO emergency response incident summary')
     expect(payload.message).toContain('Do not invent facts')
     expect(payload.message).toContain('Do not include unrelated HSE, inspection')
@@ -419,9 +467,30 @@ describe('ERCO step smoke flow', () => {
     const [payload] = streamAiHelperMessage.mock.calls[0]
     expect(payload.response_language).toBe('en')
     expect(payload.embedded_task).toBe('erco_review_report')
-    expect(payload.page_context.route_key).toBe('reports.erco.form')
+    expect(payload.page_context.params).toEqual({ report_type: 'erco' })
     expect(payload.message).toContain('Check this ERCO report')
     expect(payload.message).toContain('Return strict JSON only')
+  })
+
+  it('keeps an oversized ERCO report editable and does not send it to AI', async () => {
+    renderDetailsStep({ seed: { summary: 'x'.repeat(12000) } })
+
+    fireEvent.click(screen.getByRole('button', { name: /Improve Summary with AI/i }))
+    await waitFor(() => expect(screen.getByText('Improve Incident Summary')).toBeTruthy())
+    fireEvent.click(screen.getByRole('button', { name: 'Improve Summary' }))
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          'This report is too long for AI assistance. Shorten the summary or continue editing manually.',
+        ),
+      ).toBeTruthy()
+    })
+
+    expect(streamAiHelperMessage).not.toHaveBeenCalled()
+    expect(screen.getByLabelText('Summary of Emergency / Incident').value).toHaveLength(12000)
+    expect(screen.queryByRole('button', { name: 'Retry' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeTruthy()
   })
 })
 

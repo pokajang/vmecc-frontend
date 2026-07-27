@@ -26,6 +26,7 @@ const SummaryGenerationModal = ({
   currentSummary,
   generatedSummary,
   errorMessage,
+  canRetry = true,
   mode = 'generate',
   onClose,
   onGenerate,
@@ -121,9 +122,11 @@ const SummaryGenerationModal = ({
           <CButton type="button" color="light" onClick={onClose}>
             Cancel
           </CButton>
-          <CButton type="button" color="danger" onClick={onRetry}>
-            Retry
-          </CButton>
+          {canRetry ? (
+            <CButton type="button" color="danger" onClick={onRetry}>
+              Retry
+            </CButton>
+          ) : null}
         </>
       ) : null}
     </>

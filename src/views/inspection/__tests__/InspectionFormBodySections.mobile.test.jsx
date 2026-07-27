@@ -874,6 +874,22 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
       'laluan emergency exit kena block barang',
     )
     expect(streamAiHelperMessage.mock.calls[0][0].message).toContain('"field": "description"')
+    expect(streamAiHelperMessage.mock.calls[0][0].page_context.params).toEqual({
+      inspection_type: 'General Inspection',
+      zone: '1',
+      main_area: 'Manjung Hub',
+      location: 'Reception',
+    })
+    expect(streamAiHelperMessage.mock.calls[0][0].page_context).not.toHaveProperty(
+      'assistant_surface',
+    )
+    expect(streamAiHelperMessage.mock.calls[0][0].page_context).not.toHaveProperty(
+      'conversation_purpose',
+    )
+    expect(streamAiHelperMessage.mock.calls[0][0].page_context).not.toHaveProperty(
+      'inspection_type',
+    )
+    expect(streamAiHelperMessage.mock.calls[0][0].page_context).not.toHaveProperty('location')
     expect(screen.getByText('AI suggested English')).toBeTruthy()
     expect(onSaveDraft).not.toHaveBeenCalled()
     expect(screen.getByDisplayValue('laluan emergency exit kena block barang')).toBeTruthy()
@@ -961,7 +977,7 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
       fireEvent.click(screen.getAllByRole('button', { name: 'AI translate' })[0])
     })
 
-    expect(streamAiHelperMessage.mock.calls[0][0].page_context.location.location).toBe('Reception')
+    expect(streamAiHelperMessage.mock.calls[0][0].page_context.params.location).toBe('Reception')
     expect(screen.getByText('AI suggested English')).toBeTruthy()
 
     fireEvent.click(
@@ -970,6 +986,108 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
 
     expect(screen.getByDisplayValue('ada minyak dekat walkway')).toBeTruthy()
     expect(screen.queryByText('The walkway was affected by an oil spill.')).toBeNull()
+  })
+
+  it('shows request validation failures without offering an unchanged retry', async () => {
+    const form = {
+      inspectionType: 'General Inspection',
+      zone: '1',
+      mainLocation: 'Manjung Hub',
+      subLocation: 'Reception',
+      inspectionIssues: [],
+      photos: [],
+    }
+    const validationError = new Error('The given data was invalid.')
+    validationError.status = 422
+    validationError.payload = { code: 'AI_HELPER_VALIDATION_FAILED' }
+    streamAiHelperMessage.mockRejectedValueOnce(validationError)
+
+    renderBodySections({
+      form,
+      getLatestForm: vi.fn(() => form),
+      isFullInspectionForm: true,
+      location: {
+        selectedMainLocationTitle: 'Manjung Hub',
+        subLocationOptions: [{ value: 'Reception', title: 'Reception' }],
+      },
+      mainLocation: 'Manjung Hub',
+      selectedType: 'General Inspection',
+      selectedTypeDefinition: {},
+      updateForm: vi.fn(),
+      zone: '1',
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add finding' }))
+    fireEvent.change(screen.getByLabelText('Describe finding'), {
+      target: { value: 'makan nasi' },
+    })
+
+    await act(async () => {
+      fireEvent.click(screen.getAllByRole('button', { name: 'AI translate' })[0])
+    })
+
+    const panel = screen.getByTestId('ai-translate-description-panel')
+    expect(
+      within(panel).getByText(
+        'The AI request could not be sent because some information was invalid. Refresh the page and try again.',
+      ),
+    ).toBeTruthy()
+    expect(within(panel).queryByRole('button', { name: 'Retry' })).toBeNull()
+    expect(within(panel).getByRole('button', { name: 'Cancel' })).toBeTruthy()
+  })
+
+  it('uses the canonical translator contract for legacy HSE generic findings', async () => {
+    const form = {
+      inspectionType: 'Health Safety Environment Inspection',
+      hsePayloadVersion: 0,
+      zone: '1',
+      mainLocation: 'Manjung Hub',
+      subLocation: 'Reception',
+      inspectionIssues: [],
+      photos: [],
+    }
+    streamAiHelperMessage.mockImplementationOnce(async (_payload, handlers) => {
+      handlers.onDone?.({ embedded_result: { text: 'The access route was obstructed.' } })
+    })
+
+    renderBodySections({
+      form,
+      getLatestForm: vi.fn(() => form),
+      isStructuredInspectionForm: true,
+      location: {
+        selectedMainLocationTitle: 'Manjung Hub',
+        subLocationOptions: [{ value: 'Reception', title: 'Reception' }],
+      },
+      mainLocation: 'Manjung Hub',
+      selectedType: 'Health Safety Environment Inspection',
+      selectedTypeDefinition: {
+        key: 'health-safety-environment-inspection',
+        payloadVersion: 2,
+        supportsGenericFindings: false,
+        usesZoneLocationFlow: true,
+      },
+      StructuredEditSection: () => <div>Legacy HSE fields</div>,
+      updateForm: vi.fn(),
+      zone: '1',
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add finding' }))
+    fireEvent.change(screen.getByLabelText('Describe finding'), {
+      target: { value: 'laluan masuk kena block' },
+    })
+
+    await act(async () => {
+      fireEvent.click(screen.getAllByRole('button', { name: 'AI translate' })[0])
+    })
+
+    expect(streamAiHelperMessage).toHaveBeenCalledTimes(1)
+    expect(streamAiHelperMessage.mock.calls[0][0].page_context.params).toEqual({
+      inspection_type: 'Health Safety Environment Inspection',
+      zone: '1',
+      main_area: 'Manjung Hub',
+      location: 'Reception',
+    })
+    expect(screen.getByText('The access route was obstructed.')).toBeTruthy()
   })
 
   it('hides stale AI suggestions when the translated field is edited', async () => {

@@ -22,7 +22,16 @@ const statusColor = (status) => {
   return 'info'
 }
 
-const ErcoAiReviewModal = ({ visible, stage, items, errorMessage, onClose, onRun, onRetry }) => {
+const ErcoAiReviewModal = ({
+  visible,
+  stage,
+  items,
+  errorMessage,
+  canRetry = true,
+  onClose,
+  onRun,
+  onRetry,
+}) => {
   const isMobile = useIsMobile()
   const closeDisabled = stage === 'loading'
   const title = (
@@ -110,9 +119,11 @@ const ErcoAiReviewModal = ({ visible, stage, items, errorMessage, onClose, onRun
           <CButton type="button" color="light" onClick={onClose}>
             Close
           </CButton>
-          <CButton type="button" color="danger" onClick={onRetry}>
-            Retry
-          </CButton>
+          {canRetry ? (
+            <CButton type="button" color="danger" onClick={onRetry}>
+              Retry
+            </CButton>
+          ) : null}
         </>
       ) : null}
     </>

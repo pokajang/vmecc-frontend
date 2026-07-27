@@ -6,7 +6,11 @@ import CreateActionButton from 'src/components/CreateActionButton'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import RowActions from 'src/components/RowActions'
 import useMediaQuery from 'src/hooks/useMediaQuery'
-import { safeAiHelperError } from 'src/components/ai-helper/constants'
+import {
+  isAiHelperErrorRetryable,
+  normalizeAiHelperError,
+  safeAiHelperError,
+} from 'src/components/ai-helper/constants'
 import { streamAiHelperMessage } from 'src/services/api/aiHelperApi'
 import {
   createInspectionIssue,
@@ -49,6 +53,7 @@ const createAiFieldState = () => ({
   stage: 'idle',
   suggestion: '',
   error: '',
+  retryable: true,
 })
 
 const createAiFieldStates = () =>
@@ -835,6 +840,7 @@ const InspectionFindingsSection = ({
         stage: 'loading',
         suggestion: '',
         error: '',
+        retryable: true,
       },
     }))
 
@@ -867,8 +873,9 @@ const InspectionFindingsSection = ({
               eventPayload?.embedded_result || eventPayload?.message?.embedded_result || null
           },
           onError: (eventPayload) => {
-            streamError = new Error(
-              eventPayload?.message || 'Unable to translate finding right now. Please try again.',
+            streamError = normalizeAiHelperError(
+              eventPayload,
+              'Unable to translate finding right now. Please try again.',
             )
           },
         },
@@ -902,6 +909,7 @@ const InspectionFindingsSection = ({
             error,
             'Unable to translate finding right now. Please try again.',
           ),
+          retryable: isAiHelperErrorRetryable(error),
         },
       }))
     } finally {
@@ -957,14 +965,16 @@ const InspectionFindingsSection = ({
             <CButton type="button" color="light" size="sm" onClick={() => resetAiFieldState(field)}>
               Cancel
             </CButton>
-            <CButton
-              type="button"
-              color="danger"
-              size="sm"
-              onClick={() => runAiTranslateField(field)}
-            >
-              Retry
-            </CButton>
+            {fieldState.retryable !== false ? (
+              <CButton
+                type="button"
+                color="danger"
+                size="sm"
+                onClick={() => runAiTranslateField(field)}
+              >
+                Retry
+              </CButton>
+            ) : null}
           </div>
         </div>
       )

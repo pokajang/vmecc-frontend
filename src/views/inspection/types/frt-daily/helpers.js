@@ -524,6 +524,12 @@ export const getFrtCheckSummary = (form = {}, options = {}) => {
   }
 }
 
+export const getFrtReadOnlySummary = (form = {}) =>
+  getFrtCheckSummary(form, {
+    dailyRows: normalizeFrtDailyChecks(form.frtDailyChecks || form.frt_daily_checks),
+    oneOffRows: normalizeFrtOneOffChecks(form.frtOneOffChecks || form.frt_one_off_checks),
+  })
+
 export const getFrtMissingFields = (form = {}) => {
   const summary = getFrtCheckSummary(form)
   const selectedTruck = resolveSelectedFrtTruckPlate(form)

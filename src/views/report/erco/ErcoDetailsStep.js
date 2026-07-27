@@ -2,7 +2,11 @@ import React from 'react'
 import { CAlert } from '@coreui/react'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import TypeManagerModal from 'src/components/report-workflow/TypeManagerModal'
-import { safeAiHelperError } from 'src/components/ai-helper/constants'
+import {
+  isAiHelperErrorRetryable,
+  normalizeAiHelperError,
+  safeAiHelperError,
+} from 'src/components/ai-helper/constants'
 import { streamAiHelperMessage } from 'src/services/api/aiHelperApi'
 import {
   ReportBasicPathSummary,
@@ -16,6 +20,7 @@ import {
   buildErcoAiPayload,
   buildErcoReviewPrompt,
   buildErcoSummaryPrompt,
+  assertErcoAiMessageWithinLimit,
   ERCO_EMBEDDED_TASK,
   normalizeGeneratedSummary,
   parseAiReviewItems,
@@ -59,11 +64,13 @@ const ErcoDetailsStep = ({
   const [isGeneratingSummary, setIsGeneratingSummary] = React.useState(false)
   const [generatedSummaryDraft, setGeneratedSummaryDraft] = React.useState('')
   const [summaryGenerationError, setSummaryGenerationError] = React.useState('')
+  const [summaryGenerationCanRetry, setSummaryGenerationCanRetry] = React.useState(true)
   const [showAiReviewModal, setShowAiReviewModal] = React.useState(false)
   const [aiReviewStage, setAiReviewStage] = React.useState('confirm')
   const [isReviewingWithAi, setIsReviewingWithAi] = React.useState(false)
   const [aiReviewItems, setAiReviewItems] = React.useState([])
   const [aiReviewError, setAiReviewError] = React.useState('')
+  const [aiReviewCanRetry, setAiReviewCanRetry] = React.useState(true)
   const summaryAbortControllerRef = React.useRef(null)
   const reviewAbortControllerRef = React.useRef(null)
   const chronologyDetailsRef = React.useRef(null)
@@ -222,6 +229,7 @@ const ErcoDetailsStep = ({
     setShowSummaryGenerationModal(true)
     setSummaryGenerationStage('confirm')
     setSummaryGenerationError('')
+    setSummaryGenerationCanRetry(true)
     setGeneratedSummaryDraft('')
   }, [form.summary])
 
@@ -237,6 +245,7 @@ const ErcoDetailsStep = ({
     setShowAiReviewModal(true)
     setAiReviewStage('confirm')
     setAiReviewError('')
+    setAiReviewCanRetry(true)
     setAiReviewItems([])
   }, [])
 
@@ -262,6 +271,9 @@ const ErcoDetailsStep = ({
 
     try {
       const payload = buildCurrentAiPayload()
+      const message = assertErcoAiMessageWithinLimit(
+        buildErcoSummaryPrompt(payload, summaryGenerationMode),
+      )
       await streamAiHelperMessage(
         {
           thread_id: null,
@@ -271,8 +283,8 @@ const ErcoDetailsStep = ({
             summaryGenerationMode === 'improve'
               ? ERCO_EMBEDDED_TASK.IMPROVE_SUMMARY
               : ERCO_EMBEDDED_TASK.GENERATE_SUMMARY,
-          message: buildErcoSummaryPrompt(payload, summaryGenerationMode),
-          page_context: buildErcoAiContext(payload),
+          message,
+          page_context: buildErcoAiContext(),
           response_language: 'en',
         },
         {
@@ -285,7 +297,7 @@ const ErcoDetailsStep = ({
               payload?.embedded_result || payload?.message?.embedded_result || null
           },
           onError: (payload) => {
-            streamError = new Error(payload?.message || 'Ask AI could not generate the summary.')
+            streamError = normalizeAiHelperError(payload, 'Ask AI could not generate the summary.')
           },
         },
         { signal: abortController.signal },
@@ -301,6 +313,7 @@ const ErcoDetailsStep = ({
       setGeneratedSummaryDraft(nextSummary)
       setSummaryGenerationStage('preview')
     } catch (error) {
+      setSummaryGenerationCanRetry(isAiHelperErrorRetryable(error))
       setSummaryGenerationError(
         safeAiHelperError(error, error?.message || 'Unable to generate summary right now.'),
       )
@@ -327,14 +340,15 @@ const ErcoDetailsStep = ({
 
     try {
       const payload = buildCurrentAiPayload()
+      const message = assertErcoAiMessageWithinLimit(buildErcoReviewPrompt(payload))
       await streamAiHelperMessage(
         {
           thread_id: null,
           new_thread: true,
           conversation_purpose: 'embedded_helper',
           embedded_task: ERCO_EMBEDDED_TASK.REVIEW_REPORT,
-          message: buildErcoReviewPrompt(payload),
-          page_context: buildErcoAiContext(payload),
+          message,
+          page_context: buildErcoAiContext(),
           response_language: 'en',
         },
         {
@@ -347,7 +361,7 @@ const ErcoDetailsStep = ({
               eventPayload?.embedded_result || eventPayload?.message?.embedded_result || null
           },
           onError: (eventPayload) => {
-            streamError = new Error(eventPayload?.message || 'Ask AI could not check the report.')
+            streamError = normalizeAiHelperError(eventPayload, 'Ask AI could not check the report.')
           },
         },
         { signal: abortController.signal },
@@ -363,6 +377,7 @@ const ErcoDetailsStep = ({
       setAiReviewItems(nextItems)
       setAiReviewStage('results')
     } catch (error) {
+      setAiReviewCanRetry(isAiHelperErrorRetryable(error))
       setAiReviewError(
         safeAiHelperError(error, error?.message || 'Ask AI could not check the report.'),
       )
@@ -415,6 +430,7 @@ const ErcoDetailsStep = ({
         currentSummary={String(form.summary || '')}
         generatedSummary={generatedSummaryDraft}
         errorMessage={summaryGenerationError}
+        canRetry={summaryGenerationCanRetry}
         mode={summaryGenerationMode}
         onClose={closeSummaryGenerationModal}
         onGenerate={handleGenerateSummary}
@@ -426,6 +442,7 @@ const ErcoDetailsStep = ({
         stage={aiReviewStage}
         items={aiReviewItems}
         errorMessage={aiReviewError}
+        canRetry={aiReviewCanRetry}
         onClose={closeAiReviewModal}
         onRun={handleRunAiReview}
         onRetry={handleRunAiReview}

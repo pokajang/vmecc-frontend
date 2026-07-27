@@ -37,6 +37,7 @@ export const buildFailedAssistantMessage = (text, context = {}) => ({
   retry_prompt: context.retry_prompt || null,
   retry_context: context.retry_context || null,
   request_id: context.request_id || null,
+  retryable: context.retryable !== false,
 })
 
 export const getMessageActions = (message = {}) => {
@@ -68,7 +69,8 @@ export const getMessageActions = (message = {}) => {
       ![MESSAGE_STATUS_STREAMING, MESSAGE_STATUS_SLOW, MESSAGE_STATUS_FAILED].includes(status),
     canRetry:
       [MESSAGE_STATUS_FAILED, MESSAGE_STATUS_ABORTED].includes(status) &&
-      Boolean(message.retry_prompt),
+      Boolean(message.retry_prompt) &&
+      message.retryable !== false,
     isStreamingOrSlow: [MESSAGE_STATUS_STREAMING, MESSAGE_STATUS_SLOW].includes(status),
   }
 }
@@ -245,12 +247,34 @@ const TRANSIENT_AI_HELPER_ERROR_CODES = new Set([
   'AI_HELPER_STREAM_FAILED',
 ])
 
+const NON_RETRYABLE_AI_HELPER_ERROR_CODES = new Set([
+  'AI_HELPER_VALIDATION_FAILED',
+  'AI_HELPER_MESSAGE_TOO_LONG',
+  'AI_HELPER_SENSITIVE_DATA_BLOCKED',
+  'AI_HELPER_RESTRICTED_REQUEST',
+])
+
+export const aiHelperErrorCode = (error) => error?.payload?.code || error?.code || ''
+
+export const isAiHelperErrorRetryable = (error) =>
+  !NON_RETRYABLE_AI_HELPER_ERROR_CODES.has(aiHelperErrorCode(error))
+
+export const normalizeAiHelperError = (error, fallback = 'Ask AI request failed.') => {
+  if (error instanceof Error) return error
+
+  const normalized = new Error(error?.message || fallback)
+  normalized.code = error?.code || ''
+  normalized.payload = error?.payload || error || null
+  if (error?.status) normalized.status = error.status
+  return normalized
+}
+
 export const safeAiHelperError = (
   error,
   fallback = 'Could not reach Ask AI. Check your connection and try again.',
 ) => {
   const status = Number(error?.status || 0)
-  const code = error?.payload?.code || error?.code
+  const code = aiHelperErrorCode(error)
 
   if (code === 'AI_HELPER_STREAM_INCOMPLETE') {
     return 'The Ask AI response stopped before it finished. Try again.'
@@ -317,7 +341,11 @@ export const safeAiHelperError = (
   }
 
   if (code === 'AI_HELPER_VALIDATION_FAILED') {
-    return 'Sorry, I could not confirm a reliable answer. Please rephrase the question or check with the responsible person.'
+    return 'The AI request could not be sent because some information was invalid. Refresh the page and try again.'
+  }
+
+  if (code === 'AI_HELPER_MESSAGE_TOO_LONG') {
+    return error?.message || 'This information is too long for AI assistance. Continue manually.'
   }
 
   if (code === 'AI_HELPER_UNAVAILABLE' || status === 503) {

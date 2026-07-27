@@ -7,11 +7,12 @@ import {
   detailText,
   issueBadge,
 } from '../../records/InspectionDetailReadOnly'
+import { normalizeFrtDailyChecks, normalizeFrtOneOffChecks } from './helpers'
 
-const buildItems = (sections, kind, submittedIds = null) =>
+const buildItems = (sections, kind, submittedIds) =>
   (sections || []).flatMap((section, sectionIndex) =>
     (section.visibleRows || [])
-      .filter((row) => !submittedIds || submittedIds.has(detailText(row.id)))
+      .filter((row) => submittedIds.has(detailText(row.id)))
       .map((row, rowIndex) => {
         const isReading = kind === 'daily' && row.rowKind === 'reading'
         const result = isReading
@@ -42,14 +43,10 @@ const buildItems = (sections, kind, submittedIds = null) =>
   )
 
 export const buildFrtDetailFindingItems = (form = {}, summary = null) => {
-  const dailyRows = form.frtDailyChecks || []
-  const oneOffRows = form.frtOneOffChecks || []
-  const dailyIds = dailyRows.length
-    ? new Set(dailyRows.map((row) => detailText(row.id)).filter(Boolean))
-    : null
-  const oneOffIds = oneOffRows.length
-    ? new Set(oneOffRows.map((row) => detailText(row.id)).filter(Boolean))
-    : null
+  const dailyRows = normalizeFrtDailyChecks(form.frtDailyChecks || form.frt_daily_checks)
+  const oneOffRows = normalizeFrtOneOffChecks(form.frtOneOffChecks || form.frt_one_off_checks)
+  const dailyIds = new Set(dailyRows.map((row) => detailText(row.id)).filter(Boolean))
+  const oneOffIds = new Set(oneOffRows.map((row) => detailText(row.id)).filter(Boolean))
   return [
     ...buildItems(summary?.visibleDailySections, 'daily', dailyIds),
     ...buildItems(summary?.visibleOneOffSections, 'oneOff', oneOffIds),
