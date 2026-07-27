@@ -50,6 +50,7 @@ const FitnessTestForm = ({
   const [hasDraftSeed, setHasDraftSeed] = useState(false)
   const [draftStatus, setDraftStatus] = useState('')
   const [draftDirtyStatus, setDraftDirtyStatus] = useState('')
+  const [photoProcessing, setPhotoProcessing] = useState(false)
   const originalSeedRef = useRef(null)
   const draftSeedRef = useRef(null)
   const draftIdRef = useRef('')
@@ -295,6 +296,13 @@ const FitnessTestForm = ({
   }
 
   const requestReview = () => {
+    if (photoProcessing) {
+      pushToast('Wait for the photo upload to finish before reviewing the report.', {
+        title: 'Photo upload in progress',
+        color: 'warning',
+      })
+      return
+    }
     const nextRecord = buildFitnessTestRecord({
       form,
       reportTypeSlug,
@@ -422,6 +430,9 @@ const FitnessTestForm = ({
             saveLabel={editingRecord ? 'Save Update Draft' : 'Save Draft'}
             submitLabel={editingRecord ? 'Review & Update' : 'Review & Submit'}
             draftStatus={displayDraftStatus}
+            pushToast={pushToast}
+            photoProcessing={photoProcessing}
+            onPhotoProcessingChange={setPhotoProcessing}
           />
         ) : null}
       </form>

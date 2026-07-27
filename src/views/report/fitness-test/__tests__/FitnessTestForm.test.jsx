@@ -93,6 +93,7 @@ describe('FitnessTestForm', () => {
     )
 
     await screen.findByLabelText('Test details')
+    expect(screen.getByLabelText('Upload fitness-test report photos')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
 
     expect(document.querySelector('.mobile-bottom-drawer')).toBeTruthy()

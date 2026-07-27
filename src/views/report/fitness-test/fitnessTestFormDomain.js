@@ -33,8 +33,45 @@ export const createDefaultFitnessTestForm = () => ({
   summary: '',
   sc: '',
   asc: '',
+  photos: [],
   chronology: [{ id: `chronology-${uid()}`, time: '', action: '' }],
 })
+
+const normalizePhotos = (rows) =>
+  (Array.isArray(rows) ? rows : [])
+    .map((photo, index) => {
+      if (!photo) return null
+      if (typeof photo === 'string') {
+        const url = text(photo)
+        return url
+          ? {
+              id: `photo-${index + 1}`,
+              mediaId: '',
+              fileName: `photo-${index + 1}`,
+              url,
+              description: '',
+            }
+          : null
+      }
+
+      const url = text(photo.url ?? photo.src ?? photo.dataUrl)
+      if (!url) return null
+
+      return {
+        ...photo,
+        id: text(photo.id) || `photo-${index + 1}`,
+        mediaId: text(photo.mediaId ?? photo.media_id),
+        fileName: text(photo.fileName ?? photo.file_name ?? photo.name) || `photo-${index + 1}`,
+        url,
+        thumbnailUrl: text(photo.thumbnailUrl ?? photo.thumbnail_url),
+        mimeType: text(photo.mimeType ?? photo.mime_type),
+        sizeBytes: Number(photo.sizeBytes ?? photo.size_bytes ?? 0) || 0,
+        width: Number(photo.width ?? 0) || 0,
+        height: Number(photo.height ?? 0) || 0,
+        description: String(photo.description ?? photo.caption ?? ''),
+      }
+    })
+    .filter(Boolean)
 
 const normalizeChronology = (rows) => {
   const normalized = (Array.isArray(rows) ? rows : []).map((row) => ({
@@ -92,6 +129,7 @@ export const normalizeFitnessTestForm = (input = {}) => {
     summary: text(source.summary ?? ''),
     sc: text(source.sc),
     asc: text(source.asc),
+    photos: normalizePhotos(source.photos),
     chronology: normalizeChronology(source.chronology),
     reportingMonth: monthFromDate(source.reportingMonth ?? source.reporting_month ?? reportDate),
     documentReference: text(source.documentReference ?? source.document_reference ?? ''),
@@ -165,6 +203,19 @@ export const buildFitnessTestRecord = ({
     documentReference: value.documentReference,
     protocolRevision: value.protocolRevision,
     shiftGroups: canonicalShiftGroups,
+    photos: value.photos.map((photo) => ({
+      ...photo,
+      id: text(photo.id),
+      mediaId: text(photo.mediaId ?? photo.media_id),
+      fileName: text(photo.fileName ?? photo.file_name),
+      url: text(photo.url),
+      thumbnailUrl: text(photo.thumbnailUrl ?? photo.thumbnail_url),
+      mimeType: text(photo.mimeType ?? photo.mime_type),
+      sizeBytes: Number(photo.sizeBytes ?? photo.size_bytes ?? 0) || 0,
+      width: Number(photo.width ?? 0) || 0,
+      height: Number(photo.height ?? 0) || 0,
+      description: text(photo.description),
+    })),
     chronology: value.chronology
       .filter((row) => row.time || row.action)
       .map((row) => ({ time: row.time, action: row.action.trim() })),

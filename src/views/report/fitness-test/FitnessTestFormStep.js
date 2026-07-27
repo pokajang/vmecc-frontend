@@ -3,9 +3,10 @@ import { CButton, CFormFeedback, CFormLabel, CFormTextarea } from '@coreui/react
 import {
   ReportBasicPathSummary,
   ReportChronologySection,
+  ReportMobileActionGroup,
   ReportMobileContextPanel,
-  ReportSetupActions,
 } from '../components/ReportWorkflowUi'
+import ReportPhotoSection from '../shared/emergency-report/ReportPhotoSection'
 
 const FitnessTestFormStep = ({
   form,
@@ -20,6 +21,9 @@ const FitnessTestFormStep = ({
   saveLabel = 'Save Draft',
   submitLabel = 'Submit Report',
   draftStatus = '',
+  pushToast,
+  photoProcessing = false,
+  onPhotoProcessingChange,
 }) => {
   const dateTimeLabel = [form.reportDate, form.reportTime].filter(Boolean).join(' ')
   const chronologyCount = Array.isArray(form.chronology) ? form.chronology.length : 0
@@ -79,6 +83,17 @@ const FitnessTestFormStep = ({
           />
           <CFormFeedback invalid>{fieldErrors.summary}</CFormFeedback>
         </div>
+        <ReportPhotoSection
+          moduleKey="fitness-test"
+          title="Fitness test photographs"
+          photos={form.photos}
+          onChange={(photos) => setForm((previous) => ({ ...previous, photos }))}
+          pushToast={pushToast}
+          allowCapture={false}
+          onProcessingChange={onPhotoProcessingChange}
+          emptyMessage="No fitness test photos added. Photos are optional."
+          descriptionMaxLength={2000}
+        />
       </div>
 
       <div
@@ -102,23 +117,30 @@ const FitnessTestFormStep = ({
             {draftStatus}
           </div>
         ) : null}
-        <CButton type="button" color="light" onClick={onClear}>
+        <CButton type="button" color="light" disabled={photoProcessing} onClick={onClear}>
           Reset
         </CButton>
-        <CButton type="button" color="secondary" onClick={() => onSaveDraft()}>
+        <CButton
+          type="button"
+          color="secondary"
+          disabled={photoProcessing}
+          onClick={() => onSaveDraft()}
+        >
           {saveLabel}
         </CButton>
-        <CButton type="submit" color="primary">
+        <CButton type="submit" color="primary" disabled={photoProcessing}>
           {submitLabel}
         </CButton>
       </div>
       <div className="d-md-none">
-        <ReportSetupActions
+        <ReportMobileActionGroup
           onSaveDraft={onSaveDraft}
           saveLabel={saveLabel}
-          continueLabel={submitLabel}
+          primaryLabel={submitLabel}
           primaryType="submit"
-          statusMessage={draftStatus}
+          saveDisabled={photoProcessing}
+          primaryDisabled={photoProcessing}
+          statusMessage={photoProcessing ? 'Uploading fitness test photo…' : draftStatus}
         />
       </div>
     </>

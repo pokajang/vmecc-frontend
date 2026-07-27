@@ -64,6 +64,15 @@ describe('fitnessTestFormDomain', () => {
       ],
       details: 'Canonical details',
       summary: 'Canonical summary',
+      photos: [
+        {
+          id: 'photo-1',
+          mediaId: 'rpm_fitness_1',
+          url: '/api/report-media/rpm_fitness_1',
+          fileName: 'fitness.jpg',
+          description: 'Team completing the endurance test.',
+        },
+      ],
       chronology: [{ time: '10:00', action: 'Ready' }],
     })
 
@@ -75,6 +84,13 @@ describe('fitnessTestFormDomain', () => {
       action: 'Ready',
       id: expect.any(String),
     })
+    expect(result.photos).toEqual([
+      expect.objectContaining({
+        mediaId: 'rpm_fitness_1',
+        url: '/api/report-media/rpm_fitness_1',
+        description: 'Team completing the endurance test.',
+      }),
+    ])
   })
 
   it('builds payloads with reporting month and shift groups for API submit', () => {
@@ -89,6 +105,15 @@ describe('fitnessTestFormDomain', () => {
         location: 'Main Yard',
         details: 'Fitness test session details.',
         summary: 'Fitness test completed safely.',
+        photos: [
+          {
+            id: 'photo-1',
+            mediaId: 'rpm_fitness_1',
+            url: '/api/report-media/rpm_fitness_1',
+            fileName: 'fitness.jpg',
+            description: 'Fitness test in progress.',
+          },
+        ],
         chronology: [{ id: 'row-1', time: '08:30', action: 'Fitness test started.' }],
       },
       reportTypeSlug: 'fitness-test',
@@ -113,6 +138,13 @@ describe('fitnessTestFormDomain', () => {
         expect.objectContaining({
           id: expect.stringMatching(/^shift-group-default-/),
           shiftName: 'Main Yard',
+        }),
+      ],
+      photos: [
+        expect.objectContaining({
+          mediaId: 'rpm_fitness_1',
+          url: '/api/report-media/rpm_fitness_1',
+          description: 'Fitness test in progress.',
         }),
       ],
     })

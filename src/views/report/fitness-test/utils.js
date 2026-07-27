@@ -8,5 +8,6 @@ export const isFitnessTestDirty = (form) => {
   if (form.incidentType !== d.incidentType || form.location.trim() || form.details.trim())
     return true
   if (form.summary.trim()) return true
+  if (Array.isArray(form.photos) && form.photos.length > 0) return true
   return form.chronology.some((x) => x.time || x.action.trim())
 }

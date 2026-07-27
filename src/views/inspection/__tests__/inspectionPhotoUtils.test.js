@@ -2,6 +2,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
   buildInspectionPhotoListPatch,
+  collectInspectionPhotos,
   mergeInspectionPhotoLists,
   prepareInspectionPhotoUploads,
 } from '../form/inspectionPhotoUtils'
@@ -26,6 +27,18 @@ describe('inspection photo utilities', () => {
         photos.filter((photo) => photo.id !== 'photo-1'),
       ),
     ).toEqual({ photos: [{ id: 'photo-2' }] })
+  })
+
+  it('includes finding photos in the inspection-wide photo inventory', () => {
+    const reportPhoto = { id: 'report-photo' }
+    const findingPhoto = { id: 'finding-photo' }
+
+    expect(
+      collectInspectionPhotos({
+        photos: [reportPhoto],
+        inspectionIssues: [{ id: 'finding-1', photos: [findingPhoto] }],
+      }),
+    ).toEqual([reportPhoto, findingPhoto])
   })
 
   it('counts unsaved drawer photos when enforcing the inspection photo limit', async () => {

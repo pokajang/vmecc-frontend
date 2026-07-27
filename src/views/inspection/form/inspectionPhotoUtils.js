@@ -103,6 +103,9 @@ const normalizeErrorMessage = (error) => asString(error?.message).replace(/\s+/g
 
 export const collectInspectionPhotos = (form = {}) => [
   ...(Array.isArray(form.photos) ? form.photos : []),
+  ...(Array.isArray(form.inspectionIssues)
+    ? form.inspectionIssues.flatMap((issue) => (Array.isArray(issue?.photos) ? issue.photos : []))
+    : []),
   ...(Array.isArray(form.fireExtinguisherChecks)
     ? form.fireExtinguisherChecks.flatMap((check) => [
         ...(Array.isArray(check.photos) ? check.photos : []),

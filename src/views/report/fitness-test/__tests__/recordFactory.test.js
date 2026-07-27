@@ -14,6 +14,20 @@ describe('buildFitnessTestRecord', () => {
       location: 'Training yard',
       details: 'Fitness test session details.',
       summary: 'Fitness test completed safely.',
+      photos: [
+        {
+          id: 'photo-1',
+          mediaId: 'rpm_fitness_1',
+          url: '/api/report-media/rpm_fitness_1',
+          thumbnailUrl: '/api/report-media/rpm_fitness_1?variant=thumbnail',
+          fileName: 'fitness.jpg',
+          mimeType: 'image/jpeg',
+          sizeBytes: 1234,
+          width: 1200,
+          height: 800,
+          description: 'Participant completing the test.',
+        },
+      ],
       chronology: [
         { id: 'row-1', time: '09:00', action: 'Fitness test started.' },
         { id: 'row-2', time: '', action: '' },
@@ -37,6 +51,13 @@ describe('buildFitnessTestRecord', () => {
       location: 'Training yard',
       reportingMonth: '2026-07',
       shiftGroups: [{ id: expect.any(String), shiftName: 'Training yard' }],
+      photos: [
+        expect.objectContaining({
+          mediaId: 'rpm_fitness_1',
+          fileName: 'fitness.jpg',
+          description: 'Participant completing the test.',
+        }),
+      ],
     })
     expect(record.chronology).toEqual([{ time: '09:00', action: 'Fitness test started.' }])
     expect(record).toMatchObject({
