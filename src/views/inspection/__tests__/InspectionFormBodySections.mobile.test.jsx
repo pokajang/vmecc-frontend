@@ -870,10 +870,14 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
         }),
       }),
     )
-    expect(streamAiHelperMessage.mock.calls[0][0].message).toContain(
-      'laluan emergency exit kena block barang',
-    )
-    expect(streamAiHelperMessage.mock.calls[0][0].message).toContain('"field": "description"')
+    expect(JSON.parse(streamAiHelperMessage.mock.calls[0][0].message)).toEqual({
+      inspectionType: 'General Inspection',
+      zone: '1',
+      mainLocation: 'Manjung Hub',
+      subLocation: 'Reception',
+      field: 'description',
+      sourceText: 'laluan emergency exit kena block barang',
+    })
     expect(streamAiHelperMessage.mock.calls[0][0].page_context.params).toEqual({
       inspection_type: 'General Inspection',
       zone: '1',
@@ -908,8 +912,14 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
     })
 
     expect(streamAiHelperMessage).toHaveBeenCalledTimes(2)
-    expect(streamAiHelperMessage.mock.calls[1][0].message).toContain('tolong clear barang')
-    expect(streamAiHelperMessage.mock.calls[1][0].message).toContain('"field": "actionRequired"')
+    expect(JSON.parse(streamAiHelperMessage.mock.calls[1][0].message)).toEqual({
+      inspectionType: 'General Inspection',
+      zone: '1',
+      mainLocation: 'Manjung Hub',
+      subLocation: 'Reception',
+      field: 'actionRequired',
+      sourceText: 'tolong clear barang',
+    })
 
     fireEvent.click(
       within(screen.getByTestId('ai-translate-actionRequired-panel')).getByText('Accept'),

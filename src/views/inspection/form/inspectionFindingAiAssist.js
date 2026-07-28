@@ -47,32 +47,15 @@ export const buildInspectionFindingTranslatePrompt = (payload = {}) =>
     }),
   ].join('\n')
 
-const AI_FIELD_LABELS = {
-  description: 'finding description',
-  actionRequired: 'action required',
-}
-
-export const buildInspectionFindingFieldTranslatePrompt = (payload = {}) =>
-  [
-    `Translate and polish this General/HSE inspection ${AI_FIELD_LABELS[payload.field] || 'finding field'} into concise professional English.`,
-    'Return strict JSON only in this exact shape:',
-    '{"text":"..."}',
-    'Translate/rewrite only what the user typed in sourceText.',
-    'Do not invent findings, causes, severity, dates, responsible parties, deadlines, completion status, or extra corrective actions.',
-    'If sourceText is blank, return an empty string for text.',
-    'If text is unclear, keep the wording conservative and avoid adding assumptions.',
-    'Do not include markdown, labels, commentary, or code fences.',
-    '',
-    'Field payload:',
-    jsonBlock({
-      inspectionType: compactText(payload.inspectionType),
-      zone: compactText(payload.zone),
-      mainLocation: compactText(payload.mainLocation),
-      subLocation: compactText(payload.subLocation),
-      field: compactText(payload.field),
-      sourceText: compactText(payload.sourceText),
-    }),
-  ].join('\n')
+export const buildInspectionFindingFieldTranslateRequest = (payload = {}) =>
+  JSON.stringify({
+    inspectionType: compactText(payload.inspectionType),
+    zone: compactText(payload.zone),
+    mainLocation: compactText(payload.mainLocation),
+    subLocation: compactText(payload.subLocation),
+    field: compactText(payload.field),
+    sourceText: compactText(payload.sourceText),
+  })
 
 const extractJsonObject = (value) => {
   const text = String(value || '').trim()

@@ -18,7 +18,7 @@ import {
 } from 'src/views/inspection/types/inspectionIssues'
 import {
   buildInspectionFindingAiContext,
-  buildInspectionFindingFieldTranslatePrompt,
+  buildInspectionFindingFieldTranslateRequest,
   INSPECTION_FINDING_EMBEDDED_TASK,
   parseTranslatedFindingField,
 } from '../inspectionFindingAiAssist'
@@ -859,7 +859,7 @@ const InspectionFindingsSection = ({
           new_thread: true,
           conversation_purpose: 'embedded_helper',
           embedded_task: INSPECTION_FINDING_EMBEDDED_TASK,
-          message: buildInspectionFindingFieldTranslatePrompt(payload),
+          message: buildInspectionFindingFieldTranslateRequest(payload),
           page_context: buildInspectionFindingAiContext(payload),
           response_language: 'en',
         },
