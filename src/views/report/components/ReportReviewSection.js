@@ -1,8 +1,20 @@
 import React from 'react'
-import { CAlert, CBadge, CButton, CRow } from '@coreui/react'
+import {
+  CAlert,
+  CBadge,
+  CButton,
+  CRow,
+  CTable,
+  CTableBody,
+  CTableDataCell,
+  CTableHead,
+  CTableHeaderCell,
+  CTableRow,
+} from '@coreui/react'
 import FormActionGroup from 'src/components/FormActionGroup'
 import ReportPhotoGallery from 'src/components/report-workflow/ReportPhotoGallery'
 import { DetailField } from 'src/components/report-workflow/ReportViewComponents'
+import { getProficiencyCheckpointSummary } from '../fitness-test/fitnessFormDomain'
 
 const text = (value) => String(value || '').trim()
 
@@ -156,6 +168,120 @@ const AnalysisRows = ({ analysis, photos = [], isDrill = false, onEdit }) => {
   )
 }
 
+const FitnessReviewRows = ({ report, onEdit }) => {
+  const groups = Array.isArray(report.shiftGroups) ? report.shiftGroups : []
+  const completion = report.completion || {}
+  const resultBadge = (result) => (
+    <CBadge color={result === 'pass' ? 'success' : result === 'failed' ? 'danger' : 'secondary'}>
+      {result === 'pass' ? 'Pass' : result === 'failed' ? 'Failed' : 'Not tested'}
+    </CBadge>
+  )
+  const checkpointLabel = (proficiency) => {
+    const summary = getProficiencyCheckpointSummary(proficiency)
+    return `${summary.completed}/${summary.total} CP`
+  }
+  return (
+    <>
+      <ReviewSectionBlock title="Report Details" onEdit={() => onEdit('period')}>
+        <CRow className="g-3">
+          <DetailField label="Reporting Month" xs={12} md={4}>
+            {report.reportingMonth || '--'}
+          </DetailField>
+          <DetailField label="Document Reference" xs={12} md={4}>
+            {report.documentReference || '--'}
+          </DetailField>
+          <DetailField label="Revision" xs={12} md={4}>
+            {report.protocolRevision || '--'}
+          </DetailField>
+          <DetailField label="Personnel" xs={6} md={3}>
+            {completion.participants ?? '--'}
+          </DetailField>
+          <DetailField label="Passed Assessments" xs={6} md={3}>
+            {completion.passedAssessments ?? '--'}
+          </DetailField>
+          <DetailField label="Failed Assessments" xs={6} md={3}>
+            {completion.failedAssessments ?? '--'}
+          </DetailField>
+          <DetailField label="Incomplete" xs={6} md={3}>
+            {completion.incompleteAssessments ?? '--'}
+          </DetailField>
+        </CRow>
+      </ReviewSectionBlock>
+      <ReviewSectionBlock title="Physical and Proficiency Results" onEdit={() => onEdit('results')}>
+        {groups.map((group) => (
+          <div key={group.id || group.shift} className="d-grid gap-2">
+            <div className="d-flex flex-wrap justify-content-between gap-2">
+              <div className="fw-semibold">{group.shift}</div>
+              <div className="small text-body-secondary">
+                Assessor: {group.assessor?.name || '--'}
+              </div>
+            </div>
+            <div className="table-responsive rounded-3 border">
+              <CTable className="mb-0" small align="middle">
+                <CTableHead>
+                  <CTableRow>
+                    <CTableHeaderCell>Name</CTableHeaderCell>
+                    <CTableHeaderCell>Age</CTableHeaderCell>
+                    <CTableHeaderCell>Fitness</CTableHeaderCell>
+                    <CTableHeaderCell>Fitness date</CTableHeaderCell>
+                    <CTableHeaderCell>Checkpoints</CTableHeaderCell>
+                    <CTableHeaderCell>Proficiency time</CTableHeaderCell>
+                    <CTableHeaderCell>Proficiency date</CTableHeaderCell>
+                  </CTableRow>
+                </CTableHead>
+                <CTableBody>
+                  {(Array.isArray(group.participants) ? group.participants : []).map(
+                    (participant) => (
+                      <CTableRow key={participant.id || participant.name}>
+                        <CTableHeaderCell scope="row">{participant.name}</CTableHeaderCell>
+                        <CTableDataCell>{participant.ageSnapshot || '--'}</CTableDataCell>
+                        <CTableDataCell>
+                          <div>
+                            {participant.fitness?.sitUps ?? '--'} /{' '}
+                            {participant.fitness?.jumpingJacks ?? '--'} /{' '}
+                            {participant.fitness?.pushUps ?? '--'}
+                          </div>
+                          {resultBadge(participant.fitness?.result)}
+                        </CTableDataCell>
+                        <CTableDataCell>{participant.fitness?.testedOn || '--'}</CTableDataCell>
+                        <CTableDataCell>{checkpointLabel(participant.proficiency)}</CTableDataCell>
+                        <CTableDataCell>
+                          <div>
+                            {participant.proficiency?.durationSeconds
+                              ? `${participant.proficiency.durationSeconds}s`
+                              : '--'}
+                          </div>
+                          {resultBadge(participant.proficiency?.result)}
+                        </CTableDataCell>
+                        <CTableDataCell>{participant.proficiency?.testedOn || '--'}</CTableDataCell>
+                      </CTableRow>
+                    ),
+                  )}
+                </CTableBody>
+              </CTable>
+            </div>
+          </div>
+        ))}
+      </ReviewSectionBlock>
+      {text(report.notes) ? (
+        <ReviewSectionBlock title="Notes" onEdit={() => onEdit('signoff')}>
+          <div style={{ whiteSpace: 'pre-wrap' }}>{report.notes}</div>
+        </ReviewSectionBlock>
+      ) : null}
+      <ReviewSectionBlock title="Workflow Sign-Off" onEdit={() => onEdit('signoff')}>
+        <CRow className="g-3">
+          <DetailField label="Prepared By" xs={12} md={6}>
+            {report.submittedBy || '--'}
+          </DetailField>
+          <DetailField label="Verified By" xs={12} md={6}>
+            Assigned during review
+          </DetailField>
+        </CRow>
+      </ReviewSectionBlock>
+    </>
+  )
+}
+
 const ReportReviewSection = ({
   selectedRecord,
   reviewActions = null,
@@ -178,8 +304,14 @@ const ReportReviewSection = ({
   const r = selectedRecord
   const isDrill = reportKind === 'drill' || text(r.reportType).toLowerCase() === 'drill'
   const isErco = reportKind === 'erco' || text(r.reportType).toLowerCase() === 'erco'
+  const isFitness =
+    reportKind === 'fitness-test' || text(r.reportType).toLowerCase() === 'fitness-test'
   const reportTitle =
-    (isDrill ? text(r.exerciseTitle) : '') || text(r.incidentType) || text(r.displayId) || 'Report'
+    (isFitness ? `Physical Test Report - ${text(r.reportingMonth)}` : '') ||
+    (isDrill ? text(r.exerciseTitle) : '') ||
+    text(r.incidentType) ||
+    text(r.displayId) ||
+    'Report'
   const statusBadge = getStatusBadge('Ready to submit', renderStatusBadge)
   const dateTime =
     typeof formatDateTime === 'function'
@@ -275,39 +407,43 @@ const ReportReviewSection = ({
         <div className="inspection-review-hero__status">{statusBadge}</div>
       </div>
 
-      <ReviewSectionBlock
-        title="Report Details"
-        onEdit={isDrill || isErco ? () => editSection('setup') : null}
-      >
-        <CRow className="g-3">
-          <DetailField label={typeLabel} xs={12} md={6}>
-            {r.incidentType || '--'}
-          </DetailField>
-          <DetailField label="Date / Time" xs={12} md={6}>
-            {dateTime || '--'}
-          </DetailField>
-          {r.weather ? (
-            <DetailField label={conditionLabel} xs={12} md={6}>
-              {r.weather}
-            </DetailField>
-          ) : null}
-          <DetailField label="Location" xs={12} md={6}>
-            {r.location || '--'}
-          </DetailField>
-          {isDrill && exerciseCategories.length ? (
-            <DetailField label="Exercise Categories" xs={12} md={6}>
-              {exerciseCategories.join(', ')}
-            </DetailField>
-          ) : null}
-          {isDrill && r.reportIssuanceDate ? (
-            <DetailField label="Report Issuance Date" xs={12} md={6}>
-              {r.reportIssuanceDate}
-            </DetailField>
-          ) : null}
-        </CRow>
-      </ReviewSectionBlock>
+      {isFitness ? <FitnessReviewRows report={r} onEdit={editSection} /> : null}
 
-      {detailsText || summaryText ? (
+      {!isFitness ? (
+        <ReviewSectionBlock
+          title="Report Details"
+          onEdit={isDrill || isErco ? () => editSection('setup') : null}
+        >
+          <CRow className="g-3">
+            <DetailField label={typeLabel} xs={12} md={6}>
+              {r.incidentType || '--'}
+            </DetailField>
+            <DetailField label="Date / Time" xs={12} md={6}>
+              {dateTime || '--'}
+            </DetailField>
+            {r.weather ? (
+              <DetailField label={conditionLabel} xs={12} md={6}>
+                {r.weather}
+              </DetailField>
+            ) : null}
+            <DetailField label="Location" xs={12} md={6}>
+              {r.location || '--'}
+            </DetailField>
+            {isDrill && exerciseCategories.length ? (
+              <DetailField label="Exercise Categories" xs={12} md={6}>
+                {exerciseCategories.join(', ')}
+              </DetailField>
+            ) : null}
+            {isDrill && r.reportIssuanceDate ? (
+              <DetailField label="Report Issuance Date" xs={12} md={6}>
+                {r.reportIssuanceDate}
+              </DetailField>
+            ) : null}
+          </CRow>
+        </ReviewSectionBlock>
+      ) : null}
+
+      {!isFitness && (detailsText || summaryText) ? (
         <ReviewSectionBlock
           title={isDrill ? 'Exercise Details' : 'Summary'}
           onEdit={
@@ -378,25 +514,31 @@ const ReportReviewSection = ({
         </ReviewSectionBlock>
       ) : null}
 
-      <RespondingTeamRows
-        respondingTeam={r.respondingTeam}
-        isDrill={isDrill}
-        onEdit={
-          isDrill ? () => editSection('personnel') : isErco ? () => editSection('team') : null
-        }
-      />
-      <ChronologyRows
-        chronology={r.chronology}
-        onEdit={
-          isDrill ? () => editSection('chronology') : isErco ? () => editSection('form') : null
-        }
-      />
-      <AnalysisRows
-        analysis={r.postIncidentAnalysis}
-        photos={Array.isArray(r.photos) ? r.photos : []}
-        isDrill={isDrill}
-        onEdit={isDrill || isErco ? () => editSection('analysis') : null}
-      />
+      {!isFitness ? (
+        <RespondingTeamRows
+          respondingTeam={r.respondingTeam}
+          isDrill={isDrill}
+          onEdit={
+            isDrill ? () => editSection('personnel') : isErco ? () => editSection('team') : null
+          }
+        />
+      ) : null}
+      {!isFitness ? (
+        <ChronologyRows
+          chronology={r.chronology}
+          onEdit={
+            isDrill ? () => editSection('chronology') : isErco ? () => editSection('form') : null
+          }
+        />
+      ) : null}
+      {!isFitness ? (
+        <AnalysisRows
+          analysis={r.postIncidentAnalysis}
+          photos={Array.isArray(r.photos) ? r.photos : []}
+          isDrill={isDrill}
+          onEdit={isDrill || isErco ? () => editSection('analysis') : null}
+        />
+      ) : null}
 
       {isDrill ? (
         <ReviewSectionBlock title="Workflow Sign-Off">

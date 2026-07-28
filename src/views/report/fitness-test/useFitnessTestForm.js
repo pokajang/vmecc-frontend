@@ -1,32 +1,60 @@
 import { useState } from 'react'
-import { defaultFitnessTestForm } from './utils'
-import { uid } from '../utils'
+import { createDefaultFitnessTestForm, updateFitnessParticipantResults } from './fitnessFormDomain'
 
 const useFitnessTestForm = () => {
-  const [form, setForm] = useState(defaultFitnessTestForm)
+  const [form, setForm] = useState(createDefaultFitnessTestForm)
   const [fieldErrors, setFieldErrors] = useState({})
-  const [setupFieldErrors, setSetupFieldErrors] = useState({})
-  const [setupConfirmed, setSetupConfirmed] = useState(false)
 
-  const addChronology = (patch = {}) =>
-    setForm((prev) => ({
-      ...prev,
-      chronology: [...prev.chronology, { id: uid(), time: '', action: '', ...patch }],
+  const updateParticipant = (groupId, participantId, patch) =>
+    setForm((current) => ({
+      ...current,
+      shiftGroups: current.shiftGroups.map((group) =>
+        group.id !== groupId
+          ? group
+          : {
+              ...group,
+              participants: group.participants.map((participant) =>
+                participant.id === participantId
+                  ? updateFitnessParticipantResults(participant, patch)
+                  : participant,
+              ),
+            },
+      ),
     }))
 
-  const updateChronology = (rowId, patch) =>
-    setForm((prev) => ({
-      ...prev,
-      chronology: prev.chronology.map((row) => (row.id === rowId ? { ...row, ...patch } : row)),
+  const setShiftAssessor = (groupId, name) =>
+    setForm((current) => ({
+      ...current,
+      shiftGroups: current.shiftGroups.map((group) =>
+        group.id === groupId
+          ? {
+              ...group,
+              assessor:
+                name && typeof name === 'object'
+                  ? { userId: String(name.userId || ''), name: String(name.name || '') }
+                  : { ...group.assessor, name: String(name || '') },
+            }
+          : group,
+      ),
     }))
 
-  const removeChronology = (rowId) =>
-    setForm((prev) => ({
-      ...prev,
-      chronology:
-        prev.chronology.length <= 1
-          ? prev.chronology
-          : prev.chronology.filter((row) => row.id !== rowId),
+  const applyShiftTestDate = (groupId, mode, testedOn) =>
+    setForm((current) => ({
+      ...current,
+      shiftGroups: current.shiftGroups.map((group) =>
+        group.id !== groupId
+          ? group
+          : {
+              ...group,
+              participants: group.participants.map((participant) =>
+                participant?.[mode]?.testedOn
+                  ? participant
+                  : updateFitnessParticipantResults(participant, {
+                      [mode]: { testedOn },
+                    }),
+              ),
+            },
+      ),
     }))
 
   return {
@@ -34,13 +62,9 @@ const useFitnessTestForm = () => {
     setForm,
     fieldErrors,
     setFieldErrors,
-    setupFieldErrors,
-    setSetupFieldErrors,
-    setupConfirmed,
-    setSetupConfirmed,
-    addChronology,
-    updateChronology,
-    removeChronology,
+    updateParticipant,
+    setShiftAssessor,
+    applyShiftTestDate,
   }
 }
 

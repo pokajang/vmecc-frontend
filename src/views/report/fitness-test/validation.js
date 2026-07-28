@@ -1,71 +1,80 @@
-export const FITNESS_TEST_FIELD_ORDER = [
-  'incidentType',
-  'weather',
-  'location',
-  'reportDate',
-  'reportTime',
-  'details',
-  'summary',
-  'chronology',
-]
+import {
+  flattenFitnessParticipants,
+  resolveFitnessResult,
+  resolveProficiencyResult,
+} from './fitnessFormDomain'
 
-const FITNESS_TEST_FIELD_STAGE = {
-  incidentType: 'setup',
-  weather: 'setup',
-  location: 'setup',
-  reportDate: 'setup',
-  reportTime: 'setup',
-  details: 'test',
-  summary: 'test',
-  chronology: 'test',
+export const FITNESS_TEST_FIELD_ORDER = ['reportingMonth', 'shiftGroups', 'results', 'assessors']
+
+const FIELD_STAGE = {
+  reportingMonth: 'period',
+  shiftGroups: 'personnel',
+  results: 'results',
+  assessors: 'signoff',
+}
+const result = (errors) => ({ isValid: Object.keys(errors).length === 0, errors })
+
+export const validateFitnessPeriod = (form) =>
+  result(
+    /^\d{4}-\d{2}$/.test(String(form?.reportingMonth || ''))
+      ? {}
+      : { reportingMonth: 'Reporting month is required.' },
+  )
+
+export const validateFitnessPersonnel = (form) =>
+  result(
+    flattenFitnessParticipants(form).length
+      ? {}
+      : { shiftGroups: 'Select at least one participant.' },
+  )
+
+export const validateFitnessResults = (form) => {
+  const participants = flattenFitnessParticipants(form)
+  const invalidAge = participants.some((participant) => {
+    const age = Number(participant.ageSnapshot)
+    return !Number.isInteger(age) || age < 18 || age > 100
+  })
+  const incomplete = participants.some(
+    (participant) =>
+      resolveFitnessResult(participant.fitness) === 'incomplete' ||
+      resolveProficiencyResult(participant.proficiency) === 'incomplete',
+  )
+  return result(
+    invalidAge || incomplete
+      ? {
+          results: invalidAge
+            ? 'Enter a valid age from 18 to 100 for every participant.'
+            : 'Complete the fitness results, CP1–CP6 status, combined time, and test dates for every participant.',
+        }
+      : {},
+  )
 }
 
-const visibleFitnessTestErrorField = (key) => {
-  if (!key) return ''
-  if (key === 'reportTime') return 'reportDate'
-  return key
-}
+export const validateFitnessSignoff = (form) =>
+  result(
+    form.shiftGroups.some(
+      (group) => group.participants.length && !String(group.assessor?.name || '').trim(),
+    )
+      ? { assessors: 'Enter an assessor for every participating shift.' }
+      : {},
+  )
 
 export const validateFitnessTestForm = (form) => {
-  const next = {}
-  if (!form.reportDate) next.reportDate = 'Date is required.'
-  if (!form.reportTime) next.reportTime = 'Time is required.'
-  if (!form.location.trim()) next.location = 'Location is required.'
-  if (!form.details.trim()) next.details = 'Details are required.'
-  if (!form.summary.trim()) next.summary = 'Summary is required.'
-
-  const rows = form.chronology.filter((row) => row.time || row.action)
-  if (rows.length === 0 || rows.some((row) => !row.time || !row.action.trim())) {
-    next.chronology = 'Chronology rows require both time and action.'
-  }
-
-  return {
-    isValid: Object.keys(next).length === 0,
-    errors: next,
-  }
+  const validations = [
+    validateFitnessPeriod(form),
+    validateFitnessPersonnel(form),
+    validateFitnessResults(form),
+    validateFitnessSignoff(form),
+  ]
+  return result(Object.assign({}, ...validations.map((item) => item.errors)))
 }
 
 export const orderedFitnessTestErrorFields = (errors = {}) =>
-  FITNESS_TEST_FIELD_ORDER.filter((field) => Object.keys(errors).includes(field))
+  FITNESS_TEST_FIELD_ORDER.filter((field) => Object.hasOwn(errors, field))
 
 export const firstFitnessTestError = (errors = {}) => {
-  const [field] = orderedFitnessTestErrorFields(errors)
-  return {
-    field: visibleFitnessTestErrorField(field),
-    stage: FITNESS_TEST_FIELD_STAGE[visibleFitnessTestErrorField(field)] || 'setup',
-  }
+  const field = orderedFitnessTestErrorFields(errors)[0] || ''
+  return { field, stage: FIELD_STAGE[field] || 'period' }
 }
 
-export const validateFitnessTestSetup = (form) => {
-  const next = {}
-  if (!form.incidentType) next.incidentType = 'Test type is required.'
-  if (!form.weather) next.weather = 'Condition is required.'
-  if (!form.location.trim()) next.location = 'Location is required.'
-  if (!form.reportDate) next.reportDate = 'Test date is required.'
-  if (!form.reportTime) next.reportTime = 'Start time is required.'
-
-  return {
-    isValid: Object.keys(next).length === 0,
-    errors: next,
-  }
-}
+export const validateFitnessTestSetup = validateFitnessPeriod

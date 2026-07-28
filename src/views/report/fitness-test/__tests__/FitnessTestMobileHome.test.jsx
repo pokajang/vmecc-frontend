@@ -13,16 +13,14 @@ const buildProps = (overrides = {}) => ({
     {
       id: 'draft-1',
       recordKind: 'draft',
-      incidentType: 'Strength Test',
-      location: 'Gym / Indoor hall',
+      reportingMonth: '2026-04',
       savedAt: '2026-04-28T10:00:00.000Z',
     },
   ],
   recentRecords: [
     {
       id: 'FIT-001',
-      incidentType: 'Endurance Test',
-      location: 'Training yard',
+      reportingMonth: '2026-04',
       status: 'Submitted',
       reportDate: '2026-04-29',
     },
@@ -43,7 +41,7 @@ describe('FitnessTestMobileHome', () => {
   it('renders work-first fitness test type selection before draft and recent records', () => {
     render(<FitnessTestMobileHome {...buildProps()} />)
 
-    const typeHeading = screen.getByText('Choose Type')
+    const typeHeading = screen.getByText('Start Monthly Report')
     const draftHeading = screen.getByText('Continue Draft')
     const recentHeading = screen.getByText('Recent Records')
 
@@ -71,44 +69,38 @@ describe('FitnessTestMobileHome', () => {
             {
               id: 'draft-1',
               recordKind: 'draft',
-              incidentType: 'Strength Test',
-              location: 'Gym / Indoor hall',
+              reportingMonth: '2026-04',
               savedAt: '2026-04-28T10:00:00.000Z',
             },
             {
               id: 'draft-2',
               recordKind: 'draft',
-              incidentType: 'Endurance Test',
-              location: 'Training yard',
+              reportingMonth: '2026-05',
               savedAt: '2026-04-28T11:00:00.000Z',
             },
           ],
           recentRecords: [
             {
               id: 'FIT-001',
-              incidentType: 'Endurance Test',
-              location: 'Training yard',
+              reportingMonth: '2026-04',
               status: 'Submitted',
               reportDate: '2026-04-29',
             },
             {
               id: 'FIT-002',
-              incidentType: 'Strength Test',
-              location: 'Gym / Indoor hall',
+              reportingMonth: '2026-05',
               status: 'Approved',
               reportDate: '2026-04-30',
             },
             {
               id: 'FIT-003',
-              incidentType: 'Heat Stress Test',
-              location: 'Medical bay',
+              reportingMonth: '2026-06',
               status: 'Submitted',
               reportDate: '2026-05-01',
             },
             {
               id: 'FIT-004',
-              incidentType: 'Team Readiness Test',
-              location: 'Field track',
+              reportingMonth: '2026-07',
               status: 'Submitted',
               reportDate: '2026-05-02',
             },
@@ -121,34 +113,34 @@ describe('FitnessTestMobileHome', () => {
     expect(screen.getAllByText('Continue Draft')).toHaveLength(1)
     expect(
       screen.getByRole('button', {
-        name: /Open fitness test record Endurance Test Training yard/i,
+        name: /Open physical test report 2026-04/i,
       }),
     ).toBeTruthy()
     expect(
       screen.getByRole('button', {
-        name: /Open fitness test record Strength Test Gym \/ Indoor hall/i,
+        name: /Open physical test report 2026-05/i,
       }),
     ).toBeTruthy()
     expect(
       screen.getByRole('button', {
-        name: /Open fitness test record Heat Stress Test Medical bay/i,
+        name: /Open physical test report 2026-06/i,
       }),
     ).toBeTruthy()
     expect(
       screen.queryByRole('button', {
-        name: /Open fitness test record Team Readiness Test Field track/i,
+        name: /Open physical test report 2026-07/i,
       }),
     ).toBeNull()
     expect(screen.getByRole('button', { name: 'View all (4)' })).toBeTruthy()
   })
 
-  it('starts a new fitness test with the selected type', () => {
+  it('starts a new monthly physical test report', () => {
     const props = buildProps()
     render(<FitnessTestMobileHome {...props} />)
 
-    fireEvent.click(screen.getByText('Heat Stress Test'))
+    fireEvent.click(screen.getByText('Monthly Physical Test'))
 
-    expect(props.onSelectType).toHaveBeenCalledWith('Heat Stress Test')
+    expect(props.onSelectType).toHaveBeenCalledWith('Physical Test Report')
   })
 
   it('opens draft and recent record rows without mixing actions', () => {
@@ -158,7 +150,7 @@ describe('FitnessTestMobileHome', () => {
     fireEvent.click(screen.getByText('Continue Draft'))
     expect(props.onContinueDraft).toHaveBeenCalledWith(props.draftRows[0])
 
-    const recentCard = screen.getByRole('button', { name: /Endurance Test/i })
+    const recentCard = screen.getByRole('button', { name: /Open physical test report 2026-04/i })
     fireEvent.click(recentCard)
     expect(props.onOpenRecord).toHaveBeenCalledWith(props.recentRecords[0])
 

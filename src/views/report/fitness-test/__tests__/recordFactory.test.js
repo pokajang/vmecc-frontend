@@ -1,19 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { buildFitnessTestRecord } from '../recordFactory'
-import { defaultFitnessTestForm } from '../utils'
+import { createDefaultFitnessTestForm } from '../fitnessFormDomain'
 
 describe('buildFitnessTestRecord', () => {
-  it('serializes the complete Fitness Test payload with a stable submission key', () => {
+  it('serializes the v3 fitness payload and v1 compatibility fields', () => {
     const form = {
-      ...defaultFitnessTestForm(),
+      ...createDefaultFitnessTestForm(),
       submissionKey: 'fitness-submit-stable',
-      reportDate: '2026-07-13',
-      reportTime: '09:00',
-      weather: 'Routine',
-      incidentType: 'Endurance Test',
-      location: 'Training yard',
-      details: 'Fitness test session details.',
-      summary: 'Fitness test completed safely.',
+      reportingMonth: '2026-06',
       photos: [
         {
           id: 'photo-1',
@@ -28,12 +22,23 @@ describe('buildFitnessTestRecord', () => {
           description: 'Participant completing the test.',
         },
       ],
-      chronology: [
-        { id: 'row-1', time: '09:00', action: 'Fitness test started.' },
-        { id: 'row-2', time: '', action: '' },
+      shiftGroups: [
+        {
+          id: 'alpha',
+          shift: 'Alpha',
+          assessor: { name: 'Assessor One' },
+          participants: [
+            {
+              id: 'member-1',
+              name: 'Member One',
+              ageSnapshot: 30,
+              fitness: { sitUps: 21, jumpingJacks: 52, pushUps: 20, testedOn: '2026-06-10' },
+              proficiency: { durationSeconds: 250, testedOn: '2026-06-10' },
+            },
+          ],
+        },
       ],
     }
-
     const record = buildFitnessTestRecord({
       form,
       reportTypeSlug: 'fitness-test',
@@ -42,30 +47,32 @@ describe('buildFitnessTestRecord', () => {
       nowIso: '2026-07-13T09:30:00.000Z',
       sequence: 1,
     })
-
-    expect(record).toMatchObject({
-      schemaVersion: 1,
-      submissionKey: 'fitness-submit-stable',
-      reportDate: '2026-07-13',
-      reportTime: '09:00',
-      location: 'Training yard',
-      reportingMonth: '2026-07',
-      shiftGroups: [{ id: expect.any(String), shiftName: 'Training yard' }],
-      photos: [
-        expect.objectContaining({
-          mediaId: 'rpm_fitness_1',
-          fileName: 'fitness.jpg',
-          description: 'Participant completing the test.',
-        }),
-      ],
+    expect(record).toEqual(
+      expect.objectContaining({
+        schemaVersion: 1,
+        fitnessSchemaVersion: 3,
+        submissionKey: 'fitness-submit-stable',
+        reportingMonth: '2026-06',
+        reportDate: '2026-06-01',
+        incidentType: 'Physical Test Report',
+        photos: [
+          expect.objectContaining({
+            mediaId: 'rpm_fitness_1',
+            fileName: 'fitness.jpg',
+            description: 'Participant completing the test.',
+          }),
+        ],
+      }),
+    )
+    expect(record.shiftGroups[0].participants[0].fitness.result).toBe('pass')
+    expect(record.shiftGroups[0].participants[0].proficiency.checkpointCompletion).toEqual({
+      cp1: true,
+      cp2: true,
+      cp3: true,
+      cp4: true,
+      cp5: true,
+      cp6: true,
     })
-    expect(record.chronology).toEqual([{ time: '09:00', action: 'Fitness test started.' }])
-    expect(record).toMatchObject({
-      incidentType: 'Endurance Test',
-      details: 'Fitness test session details.',
-      summary: 'Fitness test completed safely.',
-      documentReference: '',
-      protocolRevision: '',
-    })
+    expect(record.chronology).toHaveLength(1)
   })
 })

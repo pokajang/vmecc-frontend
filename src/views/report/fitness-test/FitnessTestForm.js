@@ -1,298 +1,237 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { CAlert, CButton } from '@coreui/react'
-import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
-import { clearReportDraft, loadReportDraftRow, saveReportDraft } from '../reportStorage'
-import { resetReportViewport, scrollToFirstError } from '../utils'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { loadReportDraftRow, saveReportDraft } from '../reportStorage'
 import useReportDraft from '../hooks/useReportDraft'
-import { REPORT_MOBILE_QUERY } from '../hooks/useReportIsMobile'
-import { buildFitnessTestRecord } from './recordFactory'
+import { resetReportViewport, scrollToFirstError } from '../utils'
+import FitnessStageHeader from './FitnessStageHeader'
 import FitnessTestFormStep from './FitnessTestFormStep'
+import FitnessTestPersonnelStep from './FitnessTestPersonnelStep'
 import FitnessTestSetupStep from './FitnessTestSetupStep'
+import FitnessTestSignoffStep from './FitnessTestSignoffStep'
+import {
+  isFitnessTestDirty,
+  normalizeFitnessTestForm,
+  toSerializableFitnessTestForm,
+} from './fitnessFormDomain'
+import { buildFitnessTestRecord } from './recordFactory'
 import useFitnessTestForm from './useFitnessTestForm'
-import { normalizeFitnessTestForm } from './fitnessTestFormDomain'
-import { defaultFitnessTestForm, isFitnessTestDirty } from './utils'
 import {
   firstFitnessTestError,
+  validateFitnessPeriod,
+  validateFitnessPersonnel,
+  validateFitnessResults,
+  validateFitnessSignoff,
   validateFitnessTestForm,
-  validateFitnessTestSetup,
 } from './validation'
 
-const createDraftSignature = (form) => JSON.stringify(form || {})
-const normalizeSeedForm = (seed) => normalizeFitnessTestForm(seed || {})
+const signature = (form) => JSON.stringify(toSerializableFitnessTestForm(form))
+const VALIDATORS = {
+  period: validateFitnessPeriod,
+  personnel: validateFitnessPersonnel,
+  results: validateFitnessResults,
+  signoff: validateFitnessSignoff,
+}
+const SAVE_MESSAGES = {
+  idle: '',
+  dirty: 'Unsaved changes',
+  saving: 'Saving draft...',
+  saved: 'Draft saved',
+  failed: 'Draft save failed. Retry required.',
+}
 
 const FitnessTestForm = ({
   user,
   reportTypeSlug,
   reportTypeIdPrefix,
   nextReportSequence,
-  reportTypeLabel,
-  datePresetOptions,
-  timePresetOptions,
+  reportBasePath,
+  newSection,
   pushToast,
   onDirtyChange,
   skipDraftLoad = false,
   editingRecord = null,
   editingDraftSeed = null,
-  preferSavedEditDraft = false,
   reviewReturnRecord = null,
   initialFormSeed = null,
   onRequestReview,
   onDraftSaved,
 }) => {
+  const location = useLocation()
+  const navigate = useNavigate()
   const draftLoadedRef = useRef(false)
-  const seededEditIdRef = useRef('')
-  const reviewSeedAppliedRef = useRef(false)
-  const initialSeedAppliedRef = useRef(false)
-  const lastSavedDraftSignatureRef = useRef(null)
-  const [showReset, setShowReset] = useState(false)
-  const [editViewMode, setEditViewMode] = useState(preferSavedEditDraft ? 'draft' : 'original')
-  const [pendingFocusField, setPendingFocusField] = useState('')
-  const [hasDraftSeed, setHasDraftSeed] = useState(false)
-  const [draftStatus, setDraftStatus] = useState('')
-  const [draftDirtyStatus, setDraftDirtyStatus] = useState('')
-  const [photoProcessing, setPhotoProcessing] = useState(false)
-  const originalSeedRef = useRef(null)
-  const draftSeedRef = useRef(null)
+  const seedAppliedRef = useRef(false)
+  const formRef = useRef(null)
+  const saveLockRef = useRef(false)
   const draftIdRef = useRef('')
   const draftVersionRef = useRef(0)
-
+  const requestedStep = ['period', 'personnel', 'results', 'signoff'].includes(newSection)
+    ? newSection
+    : 'period'
+  const [activeStep, setActiveStep] = useState(requestedStep)
+  const [lastSavedSignature, setLastSavedSignature] = useState(null)
+  const [saveState, setSaveState] = useState('idle')
+  const [blockerMessage, setBlockerMessage] = useState('')
+  const [photoProcessing, setPhotoProcessing] = useState(false)
   const {
     form,
     setForm,
     fieldErrors,
     setFieldErrors,
-    setupFieldErrors,
-    setSetupFieldErrors,
-    setupConfirmed,
-    setSetupConfirmed,
-    addChronology,
-    updateChronology,
-    removeChronology,
+    updateParticipant,
+    applyShiftTestDate,
+    setShiftAssessor,
   } = useFitnessTestForm()
 
   useEffect(() => {
+    formRef.current = form
+  }, [form])
+
+  useEffect(() => {
     resetReportViewport()
-  }, [setupConfirmed])
+  }, [activeStep])
+
+  const navigateToStep = useCallback(
+    (step, replace = false) => {
+      if (!reportBasePath) return
+      navigate(`${reportBasePath}/new/${step}${location.search || ''}`, {
+        replace,
+        state: location.state,
+      })
+    },
+    [location.search, location.state, navigate, reportBasePath],
+  )
+
+  useEffect(() => {
+    if (newSection === requestedStep) return
+    navigateToStep(requestedStep, true)
+  }, [navigateToStep, newSection, requestedStep])
+
+  useEffect(() => {
+    if (newSection && requestedStep !== activeStep) setActiveStep(requestedStep)
+  }, [activeStep, newSection, requestedStep])
 
   useReportDraft({
     userId: user?.id,
     reportTypeSlug,
     draftLoadedRef,
     setForm,
-    setSetupConfirmed,
     pushToast,
     skipDraftLoad,
+    normalizeDraft: normalizeFitnessTestForm,
     loadDraft: async ({ userId }) => {
       const row = await loadReportDraftRow(userId, reportTypeSlug)
       draftIdRef.current = String(row?.draftId || '').trim()
       draftVersionRef.current = Number(row?.version || 0) || 0
       return row?.payload || null
     },
-    normalizeDraft: normalizeSeedForm,
     onDraftLoaded: (draftForm) => {
-      lastSavedDraftSignatureRef.current = createDraftSignature(draftForm)
-      if (editingRecord) {
-        draftSeedRef.current = draftForm
-        setHasDraftSeed(true)
-      }
-      setDraftStatus('Draft loaded')
+      const normalized = normalizeFitnessTestForm(draftForm)
+      setActiveStep(normalized.workflowStep)
+      navigateToStep(normalized.workflowStep, true)
+      setLastSavedSignature(signature(normalized))
+      setSaveState('saved')
       onDirtyChange(false)
     },
   })
 
-  const focusFitnessTestField = useCallback((field) => {
-    if (!field || typeof document === 'undefined') return false
-    const container = document.querySelector(`[data-fitness-test-field="${field}"]`)
-    if (!container) return false
-    container.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
-    const target = container.matches('input, textarea, select, button, [tabindex]')
-      ? container
-      : container.querySelector(
-          'input:not([type="hidden"]):not(:disabled), textarea, select, button:not([disabled]), [tabindex]:not([tabindex="-1"])',
-        )
-    window.setTimeout(() => target?.focus?.({ preventScroll: true }), 120)
-    return true
-  }, [])
-
   useEffect(() => {
-    if (!pendingFocusField) return
-    const timer = window.setTimeout(() => {
-      if (focusFitnessTestField(pendingFocusField)) {
-        setPendingFocusField('')
-      }
-    }, 80)
-    return () => window.clearTimeout(timer)
-  }, [focusFitnessTestField, pendingFocusField])
-
-  useEffect(() => {
-    if (initialSeedAppliedRef.current || !initialFormSeed) return
-    const seed = normalizeSeedForm(initialFormSeed)
-    delete seed.setupConfirmed
-    delete seed.savedAt
-    setForm((prev) => ({
-      ...prev,
-      ...seed,
-      chronology: seed.chronology?.length ? seed.chronology : prev.chronology,
-    }))
-    setSetupConfirmed(Boolean(initialFormSeed.setupConfirmed))
-    initialSeedAppliedRef.current = true
-  }, [initialFormSeed, setForm, setSetupConfirmed])
-
-  useEffect(() => {
-    const isDirty =
-      isFitnessTestDirty(form) && createDraftSignature(form) !== lastSavedDraftSignatureRef.current
-    onDirtyChange(isDirty)
-    const timerId = window.setTimeout(() => {
-      setDraftDirtyStatus(isDirty ? 'Unsaved changes' : '')
-    }, 0)
-    return () => window.clearTimeout(timerId)
-  }, [form, onDirtyChange])
-
-  const displayDraftStatus = draftStatus.includes('failed')
-    ? draftStatus
-    : draftDirtyStatus || draftStatus
-
-  useEffect(() => {
-    const editId = String(editingRecord?.id || '').trim()
-    if (!editId || !editingDraftSeed) return
-    if (preferSavedEditDraft) return
-    if (seededEditIdRef.current === editId) return
-    const draftForm = normalizeSeedForm(editingDraftSeed)
-    delete draftForm.setupConfirmed
-    delete draftForm.savedAt
-    setForm((prev) => ({
-      ...prev,
-      ...draftForm,
-      chronology: draftForm.chronology?.length ? draftForm.chronology : prev.chronology,
-    }))
-    setSetupConfirmed(false)
-    originalSeedRef.current = draftForm
-    lastSavedDraftSignatureRef.current = createDraftSignature(draftForm)
-    seededEditIdRef.current = editId
+    if (seedAppliedRef.current) return
+    const source = reviewReturnRecord || editingDraftSeed || initialFormSeed
+    if (!source) return
+    const normalized = normalizeFitnessTestForm(source)
+    setForm(normalized)
+    const seedStep = newSection || (reviewReturnRecord ? 'signoff' : normalized.workflowStep)
+    setActiveStep(seedStep)
+    setLastSavedSignature(signature(normalized))
+    seedAppliedRef.current = true
     onDirtyChange(false)
-  }, [
-    editingDraftSeed,
-    editingRecord?.id,
-    onDirtyChange,
-    preferSavedEditDraft,
-    setForm,
-    setSetupConfirmed,
-  ])
+  }, [editingDraftSeed, initialFormSeed, newSection, onDirtyChange, reviewReturnRecord, setForm])
 
+  const dirty = isFitnessTestDirty(form) && signature(form) !== lastSavedSignature
   useEffect(() => {
-    if (!editingRecord || !editingDraftSeed) return
-    const draftForm = normalizeSeedForm(editingDraftSeed)
-    delete draftForm.setupConfirmed
-    delete draftForm.savedAt
-    originalSeedRef.current = draftForm
-  }, [editingDraftSeed, editingRecord])
+    onDirtyChange(dirty)
+    if (dirty && saveState !== 'saving') setSaveState('dirty')
+  }, [dirty, onDirtyChange, saveState])
 
-  useEffect(() => {
-    if (!reviewReturnRecord || reviewSeedAppliedRef.current) return
-    const reviewForm = normalizeSeedForm(reviewReturnRecord)
-    delete reviewForm.setupConfirmed
-    delete reviewForm.savedAt
-    setForm((prev) => ({
-      ...prev,
-      ...reviewForm,
-      chronology: reviewForm.chronology?.length ? reviewForm.chronology : prev.chronology,
-    }))
-    setSetupConfirmed(Boolean(reviewReturnRecord.setupConfirmed ?? true))
-    reviewSeedAppliedRef.current = true
-  }, [reviewReturnRecord, setForm, setSetupConfirmed])
+  const clearError = useCallback(
+    (field) => setFieldErrors((current) => ({ ...current, [field]: undefined })),
+    [setFieldErrors],
+  )
 
-  const saveDraft = async ({ silentSuccess = false, overrides = {} } = {}) => {
-    const draftPayload = {
-      ...form,
-      setupConfirmed,
-      ...overrides,
-      savedAt: new Date().toISOString(),
-      ...(editingRecord
-        ? { __draftMode: 'edit', __editReportId: String(editingRecord.id || '') }
-        : { __draftMode: 'new', __editReportId: '' }),
-    }
-    let saved = null
+  const focusField = (field) => {
+    if (!field || typeof document === 'undefined') return
+    const container = document.querySelector(`[data-fitness-test-field="${field}"]`)
+    container?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
+    window.setTimeout(() => container?.querySelector('input, textarea, button')?.focus(), 100)
+  }
+
+  const saveDraft = async ({ silentSuccess = false, step = activeStep } = {}) => {
+    if (saveLockRef.current) return false
+    saveLockRef.current = true
+    const snapshot = toSerializableFitnessTestForm({ ...formRef.current, workflowStep: step })
+    setSaveState('saving')
+    setBlockerMessage('')
     try {
-      saved = await saveReportDraft(user?.id, draftPayload, reportTypeSlug, {
-        draftId: draftIdRef.current,
-        baseVersion: draftVersionRef.current,
-      })
-      if (saved && typeof saved === 'object') {
-        draftIdRef.current = String(saved?.draftId || draftIdRef.current).trim()
-        draftVersionRef.current = Number(saved?.version || 0) || draftVersionRef.current
-      }
+      const saved = await saveReportDraft(
+        user?.id,
+        {
+          ...snapshot,
+          savedAt: new Date().toISOString(),
+          __draftMode: editingRecord ? 'edit' : 'new',
+          __editReportId: String(editingRecord?.id || ''),
+        },
+        reportTypeSlug,
+        {
+          draftId: draftIdRef.current,
+          baseVersion: draftVersionRef.current,
+        },
+      )
+      if (!saved) throw new Error('Draft save failed')
+      draftIdRef.current = String(saved?.draftId || draftIdRef.current).trim()
+      draftVersionRef.current = Number(saved?.version || draftVersionRef.current) || 0
+      setLastSavedSignature(signature(snapshot))
+      setSaveState('saved')
+      onDirtyChange(false)
+      onDraftSaved?.()
+      if (!silentSuccess) pushToast('Draft saved.', { title: 'Draft saved', color: 'success' })
+      return true
     } catch {
-      saved = null
-    }
-    if (!saved) {
-      setDraftDirtyStatus('')
-      setDraftStatus('Draft save failed. Retry required.')
+      setSaveState('failed')
+      setBlockerMessage('The draft could not be saved. Your changes remain in this form.')
       pushToast('Unable to save the draft to the server. Please retry after reconnecting.', {
         title: 'Draft save failed',
         color: 'danger',
       })
-      return
+      return false
+    } finally {
+      saveLockRef.current = false
     }
-    if (!silentSuccess) {
-      pushToast('Draft saved.', { title: 'Draft saved', color: 'success' })
-    }
-    setDraftDirtyStatus('')
-    setDraftStatus('Draft saved')
-    draftSeedRef.current = { ...form, setupConfirmed, ...overrides }
-    setHasDraftSeed(true)
-    lastSavedDraftSignatureRef.current = createDraftSignature(form)
-    onDirtyChange(false)
-    if (typeof onDraftSaved === 'function') onDraftSaved()
-    return true
   }
 
-  const clearForm = () => {
-    const run = async () => {
-      await clearReportDraft(user?.id, reportTypeSlug)
-      if (typeof onDraftSaved === 'function') onDraftSaved()
-      lastSavedDraftSignatureRef.current = null
-      draftIdRef.current = ''
-      draftVersionRef.current = 0
-      setForm(defaultFitnessTestForm())
-      setSetupConfirmed(false)
-      setDraftDirtyStatus('')
-      setDraftStatus('')
-      setShowReset(false)
-      pushToast('Form reset.', { title: 'Report reset', color: 'info' })
-    }
-    run()
-  }
-
-  const validateSetupBeforeContinue = () => {
-    const result = validateFitnessTestSetup(form)
-    setSetupFieldErrors(result.errors)
-    if (!result.isValid) {
-      const firstError = firstFitnessTestError(result.errors)
-      if (firstError.field) setPendingFocusField(firstError.field)
+  const goToStep = (nextStep) => {
+    const validation = VALIDATORS[activeStep](form)
+    setFieldErrors(validation.errors)
+    if (!validation.isValid) {
+      const firstError = firstFitnessTestError(validation.errors)
+      focusField(firstError.field)
       scrollToFirstError()
-      pushToast('Complete all setup selections before continuing.', {
-        title: 'Setup incomplete',
+      pushToast('Complete the required information before continuing.', {
+        title: 'Step incomplete',
         color: 'warning',
       })
-      return false
+      return
     }
-    return true
+    setForm((current) => ({ ...current, workflowStep: nextStep }))
+    setActiveStep(nextStep)
+    navigateToStep(nextStep)
+    void saveDraft({ silentSuccess: true, step: nextStep })
   }
 
-  const validateBeforeSubmit = () => {
-    const result = validateFitnessTestForm(form)
-    setFieldErrors(result.errors)
-    if (!result.isValid) {
-      const firstError = firstFitnessTestError(result.errors)
-      if (firstError.field) setPendingFocusField(firstError.field)
-      scrollToFirstError()
-      pushToast('Please complete all required fields before submitting.', {
-        title: 'Validation error',
-        color: 'danger',
-      })
-      return false
-    }
-    return true
+  const returnToStep = (nextStep) => {
+    setForm((current) => ({ ...current, workflowStep: nextStep }))
+    setActiveStep(nextStep)
+    navigateToStep(nextStep)
   }
 
   const requestReview = () => {
@@ -300,6 +239,19 @@ const FitnessTestForm = ({
       pushToast('Wait for the photo upload to finish before reviewing the report.', {
         title: 'Photo upload in progress',
         color: 'warning',
+      })
+      return
+    }
+    const validation = validateFitnessTestForm(form)
+    setFieldErrors(validation.errors)
+    if (!validation.isValid) {
+      const firstError = firstFitnessTestError(validation.errors)
+      setActiveStep(firstError.stage)
+      navigateToStep(firstError.stage)
+      window.setTimeout(() => focusField(firstError.field), 80)
+      pushToast('Complete all required results and signoff fields before review.', {
+        title: 'Report incomplete',
+        color: 'danger',
       })
       return
     }
@@ -318,8 +270,7 @@ const FitnessTestForm = ({
           ownerUserId: editingRecord.ownerUserId || nextRecord.ownerUserId,
           submittedAt: editingRecord.submittedAt || nextRecord.submittedAt,
           submittedBy: editingRecord.submittedBy || nextRecord.submittedBy,
-          ...(editingRecord.version !== undefined ? { version: editingRecord.version } : {}),
-          ...(editingRecord.revision !== undefined ? { revision: editingRecord.revision } : {}),
+          version: editingRecord.version,
           timeline: Array.isArray(editingRecord.timeline)
             ? editingRecord.timeline
             : nextRecord.timeline,
@@ -327,116 +278,85 @@ const FitnessTestForm = ({
       : nextRecord
     onRequestReview?.(
       draftIdRef.current ? { ...record, sourceDraftId: draftIdRef.current } : record,
-      '',
+      'signoff',
     )
   }
 
+  const saveLabel = editingRecord ? 'Save Update Draft' : 'Save Draft'
+  const common = {
+    form,
+    fieldErrors,
+    clearError,
+    onSaveDraft: saveDraft,
+    saveLabel,
+    draftStatus: SAVE_MESSAGES[saveState],
+    pushToast,
+  }
+
   return (
-    <>
-      <ActionConfirmModal
-        visible={showReset}
-        mobileDrawerQuery={REPORT_MOBILE_QUERY}
-        title={`Reset ${reportTypeLabel} Report`}
-        message="Reset this report and clear the saved draft? This cannot be undone."
-        confirmLabel="Reset"
-        confirmColor="danger"
-        onClose={() => setShowReset(false)}
-        onConfirm={clearForm}
-      />
-      {editingRecord && hasDraftSeed ? (
-        <CAlert
-          color="info"
-          className="d-flex flex-wrap align-items-center justify-content-between gap-2"
-        >
-          <span>
-            Editing <strong>{editingRecord.displayId}</strong>. Original data stays unchanged until
-            you click <strong>Update Report</strong>.
-          </span>
-          <div className="d-flex gap-2">
-            <CButton
-              type="button"
-              color={editViewMode === 'original' ? 'primary' : 'light'}
-              onClick={() => {
-                const seed = originalSeedRef.current
-                if (!seed) return
-                setForm((prev) => ({
-                  ...prev,
-                  ...seed,
-                  chronology: seed.chronology?.length ? seed.chronology : prev.chronology,
-                }))
-                setSetupConfirmed(false)
-                setEditViewMode('original')
-              }}
-            >
-              Load Original
-            </CButton>
-            <CButton
-              type="button"
-              color={editViewMode === 'draft' ? 'primary' : 'light'}
-              disabled={!hasDraftSeed}
-              onClick={() => {
-                const seed = draftSeedRef.current
-                if (!seed) return
-                setForm((prev) => ({
-                  ...prev,
-                  ...seed,
-                  chronology: seed.chronology?.length ? seed.chronology : prev.chronology,
-                }))
-                setSetupConfirmed(Boolean(seed.setupConfirmed))
-                setEditViewMode('draft')
-              }}
-            >
-              Load Draft
-            </CButton>
-          </div>
+    <form
+      className="fitness-test-form"
+      onSubmit={(event) => {
+        event.preventDefault()
+        requestReview()
+      }}
+    >
+      {editingRecord ? (
+        <CAlert color="info">
+          Editing <strong>{editingRecord.displayId}</strong>. Changes are applied only after review
+          and update.
         </CAlert>
       ) : null}
-      <form
-        onSubmit={(e) => {
-          e.preventDefault()
-          if (!validateBeforeSubmit()) return
-          requestReview()
-        }}
-      >
-        {!setupConfirmed ? (
-          <FitnessTestSetupStep
-            form={form}
-            setForm={setForm}
-            setupFieldErrors={setupFieldErrors}
-            setSetupFieldErrors={setSetupFieldErrors}
-            datePresetOptions={datePresetOptions}
-            timePresetOptions={timePresetOptions}
-            onSaveDraft={saveDraft}
-            saveLabel={editingRecord ? 'Save Update Draft' : 'Save Draft'}
-            draftStatus={displayDraftStatus}
-            onContinue={() => {
-              if (!validateSetupBeforeContinue()) return
-              setSetupConfirmed(true)
-              void saveDraft({ silentSuccess: true, overrides: { setupConfirmed: true } })
-            }}
-          />
-        ) : null}
-        {setupConfirmed ? (
-          <FitnessTestFormStep
-            form={form}
-            fieldErrors={fieldErrors}
-            setForm={setForm}
-            onEditSetup={() => setSetupConfirmed(false)}
-            addChronology={addChronology}
-            updateChronology={updateChronology}
-            removeChronology={removeChronology}
-            onClear={() => setShowReset(true)}
-            onSaveDraft={saveDraft}
-            saveLabel={editingRecord ? 'Save Update Draft' : 'Save Draft'}
-            submitLabel={editingRecord ? 'Review & Update' : 'Review & Submit'}
-            draftStatus={displayDraftStatus}
-            pushToast={pushToast}
-            photoProcessing={photoProcessing}
-            onPhotoProcessingChange={setPhotoProcessing}
-          />
-        ) : null}
-      </form>
-    </>
+      {blockerMessage ? (
+        <CAlert
+          color="warning"
+          className="d-flex flex-wrap align-items-center justify-content-between gap-2"
+        >
+          <span>{blockerMessage}</span>
+          <CButton type="button" color="warning" variant="outline" onClick={() => saveDraft()}>
+            Retry save
+          </CButton>
+        </CAlert>
+      ) : null}
+      <FitnessStageHeader activeStep={activeStep} />
+      {activeStep === 'period' ? (
+        <FitnessTestSetupStep
+          {...common}
+          setForm={setForm}
+          onContinue={() => goToStep('personnel')}
+        />
+      ) : null}
+      {activeStep === 'personnel' ? (
+        <FitnessTestPersonnelStep
+          {...common}
+          setForm={setForm}
+          onBack={() => returnToStep('period')}
+          onContinue={() => goToStep('results')}
+        />
+      ) : null}
+      {activeStep === 'results' ? (
+        <FitnessTestFormStep
+          {...common}
+          setForm={setForm}
+          updateParticipant={updateParticipant}
+          applyShiftTestDate={applyShiftTestDate}
+          photoProcessing={photoProcessing}
+          onPhotoProcessingChange={setPhotoProcessing}
+          onBack={() => returnToStep('personnel')}
+          onContinue={() => goToStep('signoff')}
+        />
+      ) : null}
+      {activeStep === 'signoff' ? (
+        <FitnessTestSignoffStep
+          {...common}
+          user={user}
+          setForm={setForm}
+          setShiftAssessor={setShiftAssessor}
+          onBack={() => returnToStep('results')}
+          submitLabel={editingRecord ? 'Review & Update' : 'Review & Submit'}
+        />
+      ) : null}
+    </form>
   )
 }
 

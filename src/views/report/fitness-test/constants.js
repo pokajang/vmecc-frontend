@@ -1,84 +1,41 @@
-import {
-  Activity,
-  Gauge,
-  HeartPulse,
-  MapPinned,
-  ShieldCheck,
-  TimerReset,
-  Users,
-} from 'lucide-react'
+import { ClipboardCheck } from 'lucide-react'
 
-export const FITNESS_TEST_TYPE_OPTIONS = [
-  {
-    value: 'Endurance Test',
-    title: 'Endurance Test',
-    description: 'Cardio and sustained effort assessment.',
-    icon: Activity,
-  },
-  {
-    value: 'Strength Test',
-    title: 'Strength Test',
-    description: 'Strength and lifting capacity assessment.',
-    icon: Gauge,
-  },
-  {
-    value: 'Heat Stress Test',
-    title: 'Heat Stress Test',
-    description: 'Heat tolerance and monitoring protocol test.',
-    icon: HeartPulse,
-  },
-  {
-    value: 'Team Readiness Test',
-    title: 'Team Readiness Test',
-    description: 'Group coordination and readiness assessment.',
-    icon: Users,
-  },
-]
+export const FITNESS_FORM_VERSION = 3
+export const FITNESS_REPORT_OPTION = {
+  value: 'Physical Test Report',
+  title: 'Monthly Physical Test',
+  description: 'Record fitness and proficiency results for every participating shift member.',
+  icon: ClipboardCheck,
+}
+export const FITNESS_TEST_TYPE_OPTIONS = [FITNESS_REPORT_OPTION]
 
-export const FITNESS_TEST_CONDITION_OPTIONS = [
-  {
-    value: 'Routine',
-    title: 'Routine',
-    description: 'Standard planned testing conditions.',
-    icon: ShieldCheck,
+export const FITNESS_PROTOCOL = Object.freeze({
+  documentReference: 'VMECC-TRG-001',
+  revision: '0',
+  fitness: { sitUps: 20, jumpingJacks: 50, pushUps: 20, timeLimitSeconds: 60 },
+  proficiency: {
+    timeLimitSeconds: 300,
+    checkpoints: [
+      { id: 'cp1', label: 'Don bunker suit and SCBA' },
+      { id: 'cp2', label: 'Carry two 2.5-inch fire hoses for 15 m' },
+      { id: 'cp3', label: 'Lay one 2.5-inch fire hose' },
+      { id: 'cp4', label: 'Carry two 9 kg dry-powder extinguishers for 15 m' },
+      { id: 'cp5', label: 'Carry the rope rescue bag for 15 m' },
+      { id: 'cp6', label: 'Complete the weight-lifting station for 3 m' },
+    ],
   },
-  {
-    value: 'Re-test',
-    title: 'Re-test',
-    description: 'Follow-up test after remediation.',
-    icon: TimerReset,
-  },
-  {
-    value: 'Special',
-    title: 'Special',
-    description: 'Special testing condition or requirement.',
-    icon: Activity,
-  },
-]
+})
 
-export const FITNESS_TEST_LOCATION_OPTIONS = [
-  {
-    value: 'Training yard',
-    title: 'Training yard',
-    description: 'Outdoor physical training area.',
-    icon: MapPinned,
-  },
-  {
-    value: 'Gym / Indoor hall',
-    title: 'Gym / Indoor hall',
-    description: 'Indoor exercise and assessment facility.',
-    icon: MapPinned,
-  },
-  {
-    value: 'Field track',
-    title: 'Field track',
-    description: 'Running and endurance route.',
-    icon: MapPinned,
-  },
-  {
-    value: 'Medical bay',
-    title: 'Medical bay',
-    description: 'Monitored assessment environment.',
-    icon: MapPinned,
-  },
-]
+export const FITNESS_WORKFLOW_STEPS = ['period', 'personnel', 'results', 'signoff']
+export const FITNESS_RESULT_LABELS = Object.freeze({
+  pass: 'Pass',
+  failed: 'Failed',
+  incomplete: 'Not tested',
+})
+export const FITNESS_FIELD_LIMITS = Object.freeze({
+  participants: 100,
+  count: 999,
+  age: 100,
+  assessor: 190,
+  notes: 4000,
+})
