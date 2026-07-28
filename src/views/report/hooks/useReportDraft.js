@@ -36,7 +36,11 @@ const useReportDraft = ({
 
   useEffect(() => {
     if (!userId || draftLoadedRef.current) return
-    if (skipDraftLoad) return
+    if (skipDraftLoad) {
+      draftLoadedRef.current = true
+      lifecycleRef.current?.onDraftLoadSettled?.()
+      return
+    }
     draftLoadedRef.current = true
     let cancelled = false
     const run = async () => {

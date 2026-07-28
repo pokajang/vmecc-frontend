@@ -27,24 +27,22 @@ const FitnessTestMobileHome = ({
   const draftRow = draftRows[0] || null
   const draftSyncStatus = String(draftRow?.syncStatus || draftRow?.__offlineSyncStatus || '').trim()
   const draftSummary = draftRow
-    ? [draftRow.incidentType || 'Fitness Test', draftRow.location || 'No location']
+    ? ['Physical Test Report', draftRow.reportingMonth || 'Month not selected']
         .filter(Boolean)
         .join(' - ')
     : ''
   const recentRecordItems = recentRecords.slice(0, MOBILE_HOME_RECENT_RECORD_LIMIT).map((row) => ({
     key: row.recordKey || row.id,
     layout: 'compact',
-    title: row.incidentType || 'Record',
-    subtitle: row.location || 'No location',
+    title: 'Physical Test Report',
+    subtitle: row.reportingMonth || row.reportDate?.slice?.(0, 7) || 'Month unavailable',
     status: (
       <>
         <div className="small fw-semibold text-nowrap">{row.status || '--'}</div>
         <div className="small text-body-secondary text-nowrap">{formatMobileReportDate(row)}</div>
       </>
     ),
-    ariaLabel: `Open fitness test record ${row.incidentType || 'Record'} ${
-      row.location || 'No location'
-    } summary`,
+    ariaLabel: `Open physical test report ${row.reportingMonth || ''} summary`,
     onOpen: () => onOpenRecord?.(row),
   }))
 
@@ -58,7 +56,7 @@ const FitnessTestMobileHome = ({
         data-testid="fitness-test-report-mobile-type-selection"
       >
         <div className="inspection-mobile-home__section-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-          <div className="fw-semibold text-muted">Choose Type</div>
+          <div className="fw-semibold text-muted">Start Monthly Report</div>
         </div>
         <IconOptionGrid
           options={FITNESS_TEST_TYPE_OPTIONS}

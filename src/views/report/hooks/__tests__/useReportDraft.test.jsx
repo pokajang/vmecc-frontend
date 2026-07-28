@@ -65,4 +65,29 @@ describe('useReportDraft', () => {
 
     await waitFor(() => expect(settled).toHaveBeenCalledTimes(1))
   })
+
+  it('permanently skips hydration for a blank mounted form session', async () => {
+    const loadDraft = vi.fn().mockResolvedValue({ incidentType: 'Stale draft' })
+    const settled = vi.fn()
+    const { rerender } = renderHook(
+      ({ skipDraftLoad }) => {
+        const [, setForm] = useState({})
+        const draftLoadedRef = useRef(false)
+        useReportDraft({
+          userId: 7,
+          reportTypeSlug: 'fitness-test',
+          draftLoadedRef,
+          setForm,
+          loadDraft,
+          skipDraftLoad,
+          onDraftLoadSettled: settled,
+        })
+      },
+      { initialProps: { skipDraftLoad: true } },
+    )
+
+    await waitFor(() => expect(settled).toHaveBeenCalledTimes(1))
+    rerender({ skipDraftLoad: false })
+    await waitFor(() => expect(loadDraft).not.toHaveBeenCalled())
+  })
 })
