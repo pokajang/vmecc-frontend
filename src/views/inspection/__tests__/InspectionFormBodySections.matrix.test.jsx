@@ -64,6 +64,7 @@ describe('InspectionFormBodySections cross-form in-form continuation matrix', ()
         ...screen.queryAllByRole('button', {
           name: /Continue to Review|Continue to Review Updates/,
         }),
+        ...screen.queryAllByRole('button', { name: /Submit Report|Submit Report Updates/ }),
         ...screen.queryAllByRole('button', { name: /Save Draft|Save Update Draft/ }),
       ]
       const hasActionButton = actionButtons.length > 0

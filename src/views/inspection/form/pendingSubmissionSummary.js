@@ -337,16 +337,12 @@ const buildGenericMetrics = (definition, form, summary) => {
 
   if (definition?.fieldRefKey === 'hseObservation') {
     const selections = Array.isArray(summary?.selections) ? summary.selections : []
-    const issues = normalizeInspectionIssues(form.inspectionIssues || form.issues)
     const observationCount = selections.length > 0 ? 1 : 0
-    const incompleteIssueCount = issues.filter((issue) => !text(issue.description)).length
     return {
-      count: observationCount + issues.length,
-      checkedCount: observationCount + issues.length - incompleteIssueCount,
-      defectCount:
-        (Array.isArray(summary?.findingSelections) ? summary.findingSelections.length : 0) +
-        issues.length,
-      incompleteCount: incompleteIssueCount,
+      count: observationCount,
+      checkedCount: observationCount,
+      defectCount: Array.isArray(summary?.findingSelections) ? summary.findingSelections.length : 0,
+      incompleteCount: 0,
       evidenceIssueCount: 0,
     }
   }
@@ -473,24 +469,14 @@ const buildGroups = (definition, form, summary = {}) => {
 
   if (definition?.fieldRefKey === 'hseObservation') {
     const summary = definition?.getSummary?.(form) || {}
-    const issues = normalizeInspectionIssues(form.inspectionIssues || form.issues)
     const groups = []
     if (summary?.selections?.length) {
       groups.push({
         ...getReviewLocation(definition, form, form),
-        label: summary.isAreaSatisfactory ? 'Area satisfactory' : 'HSE finding',
+        label: summary.visibleChecks?.[0]?.label || 'HSE observation',
         status: 'Recorded',
       })
     }
-    issues.forEach((issue, index) => {
-      groups.push({
-        ...getReviewLocation(definition, issue, form),
-        label: text(issue.description) || `Finding ${index + 1}`,
-        status: text(issue.description) ? 'Issue' : 'Needs attention',
-        description: text(issue.description),
-        remarks: getRowRemarks(issue),
-      })
-    })
     return groups
   }
 

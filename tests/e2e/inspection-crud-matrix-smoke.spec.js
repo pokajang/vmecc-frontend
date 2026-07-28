@@ -641,7 +641,7 @@ const buildInspectionPayload = (inspectionType, suffix, context = {}) => {
       selectedLocation: 'Smoke HSE Area',
       mainLocation: 'Smoke HSE Area',
       inspectedAt: '2026-07-03T09:00:00+08:00',
-      hseInspectionDate: '2026-07-03',
+      hseInspectedBy: 'Smoke Inspector',
       hseSelections: ['unsafeAct'],
       hseUnsafeActDetails: `HSE unsafe act smoke details ${suffix}`,
       hseImmediateAction: 'Area isolated for smoke validation.',

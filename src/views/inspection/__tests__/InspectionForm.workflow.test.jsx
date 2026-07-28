@@ -1565,41 +1565,6 @@ describe('InspectionForm workflow', () => {
     ).toBe(false)
   })
 
-  it('renders HSE observation and allows area-satisfactory review without photos', () => {
-    const onRequestReview = vi.fn()
-    render(
-      <InspectionForm
-        {...baseProps}
-        onRequestReview={onRequestReview}
-        value={{
-          mainLocation: 'Zone A',
-          selectedLocation: 'Zone A',
-          inspectionType: 'Health Safety Environment Inspection',
-          hseInspectedBy: 'Inspector A',
-          hseInspectionDate: '2026-06-29',
-          hseSelections: ['areaSatisfactory'],
-          hseAreaConditionRemarks: 'Area is clear and housekeeping is acceptable.',
-        }}
-      />,
-    )
-
-    expect(screen.getByText('HSE Observation')).toBeTruthy()
-    expect(screen.queryByText('Actual field coming soon')).toBeNull()
-    expect(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle)).toBeTruthy()
-
-    fireEvent.click(screen.getAllByText('Continue to Review')[0])
-
-    expect(onRequestReview).toHaveBeenCalledWith(
-      expect.objectContaining({
-        hseInspectedBy: 'Inspector',
-        hseInspectionDate: '2026-06-29',
-        hseSelections: ['areaSatisfactory'],
-        hseAreaConditionRemarks: 'Area is clear and housekeeping is acceptable.',
-        photos: [],
-      }),
-    )
-  })
-
   it('uses the direct submit action for a complete HSE v2 observation', () => {
     const onRequestReview = vi.fn()
     render(
@@ -1718,19 +1683,18 @@ describe('InspectionForm workflow', () => {
           mainLocation: 'Zone A',
           selectedLocation: 'Zone A',
           inspectionType: 'Health Safety Environment Inspection',
-          hseInspectedBy: 'Inspector A',
-          hseInspectionDate: '2026-06-29',
-          hseSelections: ['unsafeAct', 'environmental'],
+          inspectedAt: '2026-07-14T09:30',
+          hsePayloadVersion: 2,
+          hseSelections: ['unsafeAct'],
           hseUnsafeActDetails: '',
-          hseEnvironmentalDetails: '',
+          photos: [],
         }}
       />,
     )
 
     expect(screen.queryByRole('button', { name: 'Continue to Review' })).toBeNull()
     expect(onRequestReview).not.toHaveBeenCalled()
-    expect(screen.getAllByText('Take HSE photo').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Upload HSE photo').length).toBeGreaterThan(0)
+    expect(screen.getByText('Observation photo')).toBeTruthy()
   })
 
   it('applies the HSE outcome caption to uploaded evidence photos', async () => {
@@ -1743,17 +1707,16 @@ describe('InspectionForm workflow', () => {
           mainLocation: 'Zone A',
           selectedLocation: 'Zone A',
           inspectionType: 'Health Safety Environment Inspection',
-          hseInspectedBy: 'Inspector A',
-          hseInspectionDate: '2026-06-29',
+          inspectedAt: '2026-07-14T09:30',
+          hsePayloadVersion: 2,
           hseSelections: ['unsafeAct'],
           hseUnsafeActDetails: 'Unsafe lifting observed.',
-          hseSeverity: 'High',
           photos: [],
         }}
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Upload HSE photo' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Upload photo' }))
 
     const uploadInput = container.querySelector('input[type="file"]:not([capture])')
     expect(uploadInput).toBeTruthy()
@@ -3602,7 +3565,7 @@ describe('InspectionForm workflow', () => {
     })
 
     expect(await screen.findByText('Radio Tetra - defect photos')).toBeTruthy()
-    expect(screen.getByText('er-aux-defect.png')).toBeTruthy()
+    expect(screen.getAllByText('er-aux-defect.png').length).toBeGreaterThan(0)
     fireEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     await waitFor(() => {
@@ -3898,7 +3861,7 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    expect(screen.getByText('HSE Observation')).toBeTruthy()
+    expect(screen.getByText('What did you observe?')).toBeTruthy()
 
     fireEvent.click(screen.getByText('Edit'))
     fireEvent.click(screen.getByText('General Inspection'))

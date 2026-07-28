@@ -26,7 +26,7 @@ const FIELD_REASONS = {
   scbaChecks: 'complete every required SCBA status',
   scbaRemarks: 'add remarks for every SCBA issue',
   hseSession: 'set the HSE inspector and inspection date',
-  hseSelection: 'select Area Satisfactory or at least one HSE finding',
+  hseSelection: 'select Unsafe Act or Unsafe Condition',
   hseDetails: 'complete the required HSE observation details',
 }
 

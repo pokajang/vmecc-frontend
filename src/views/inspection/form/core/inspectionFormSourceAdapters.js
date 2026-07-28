@@ -1,16 +1,15 @@
 import { normalizeInspectionDraft } from 'src/views/inspection/utils'
 import { isGeneralInspectionType } from 'src/views/inspection/types/general/helpers'
-import { isHseInspectionType } from 'src/views/inspection/types/hse/helpers'
 
 const getInspectionIssuesSource = (source = {}) => {
+  const inspectionType =
+    source.incidentType || source.inspectionType || source.inspection_type || ''
+  if (!isGeneralInspectionType(inspectionType)) return []
+
   const explicitIssues = source.inspectionIssues || source.inspection_issues
   if (explicitIssues) return explicitIssues
 
-  const inspectionType =
-    source.incidentType || source.inspectionType || source.inspection_type || ''
-  return isGeneralInspectionType(inspectionType) || isHseInspectionType(inspectionType)
-    ? source.issues || source.observations || []
-    : []
+  return source.issues || source.observations || []
 }
 
 export const buildInspectionFormSourceInput = (source = {}) => ({
@@ -71,20 +70,11 @@ export const buildInspectionFormSourceInput = (source = {}) => ({
   scbaCustomSections: source.scbaCustomSections || source.scba_custom_sections || [],
   hsePayloadVersion: Number(source.hsePayloadVersion || source.hse_payload_version || 0) || 0,
   hseInspectedBy: source.hseInspectedBy || source.hse_inspected_by || '',
-  hseInspectionDate: source.hseInspectionDate || source.hse_inspection_date || '',
   hseSelections: source.hseSelections || source.hse_selections || [],
-  hseAreaConditionRemarks:
-    source.hseAreaConditionRemarks || source.hse_area_condition_remarks || '',
   hseUnsafeActDetails: source.hseUnsafeActDetails || source.hse_unsafe_act_details || '',
   hseUnsafeConditionDetails:
     source.hseUnsafeConditionDetails || source.hse_unsafe_condition_details || '',
-  hseEnvironmentalDetails: source.hseEnvironmentalDetails || source.hse_environmental_details || '',
-  hseSeverity: source.hseSeverity || source.hse_severity || '',
   hseImmediateAction: source.hseImmediateAction || source.hse_immediate_action || '',
-  hseCorrectiveAction: source.hseCorrectiveAction || source.hse_corrective_action || '',
-  hseResponsiblePerson: source.hseResponsiblePerson || source.hse_responsible_person || '',
-  hseTargetDate: source.hseTargetDate || source.hse_target_date || '',
-  hseRemarks: source.hseRemarks || source.hse_remarks || '',
 })
 
 export const buildRecordInspectionFormSource = (record = {}) =>

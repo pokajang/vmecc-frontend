@@ -338,7 +338,7 @@ const InspectionNextLocationCard = ({ continueAction = null, onContinueToLocatio
 
   return (
     <div className="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2">
-      <div className="small fw-semibold text-body-secondary">Next {continuationSuffix}</div>
+      <div className="small fw-semibold text-body-secondary">{`Next ${continuationSuffix}`}</div>
       <div className="inspection-next-location-options d-flex flex-wrap gap-2">
         {recommendedOptions.map((option) => {
           const value = getContinuationOptionValue(option)
@@ -1302,10 +1302,7 @@ const InspectionFormBodySections = ({
     Number(form.hsePayloadVersion || 0) === Number(selectedTypeDefinition?.payloadVersion || 0)
   const ownsRootEvidence =
     selectedTypeDefinition?.ownsRootEvidence === true && usesCurrentTypePayloadVersion
-  const supportsGenericFindings =
-    selectedTypeDefinition?.supportsGenericFindings === true ||
-    (selectedTypeDefinition?.key === 'health-safety-environment-inspection' &&
-      !usesCurrentTypePayloadVersion)
+  const supportsGenericFindings = selectedTypeDefinition?.supportsGenericFindings === true
   const hasLegacySelectedLocation = Boolean(String(form.selectedLocation || '').trim())
   const requiresZoneLocationCompletion =
     usesZoneLocationFlow &&

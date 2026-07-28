@@ -110,7 +110,6 @@ export const buildStructuredSectionHandlers = ({
   updateHighAnglePhotoDescription,
   updateHighAngleSessionMeta,
   updateHseField,
-  updateHseSessionMeta,
   updateHydraulicCheck,
   updateHydraulicPhotoDescription,
   updateScbaGroupedCheck,
@@ -176,9 +175,7 @@ export const buildStructuredSectionHandlers = ({
             ? updateFireExtinguisherSessionMeta
             : fieldRefKey === 'scbaChecks'
               ? updateScbaSessionMeta
-              : fieldRefKey === 'hseObservation'
-                ? updateHseSessionMeta
-                : undefined,
+              : undefined,
   onUpdateHseField: fieldRefKey === 'hseObservation' ? updateHseField : undefined,
   onSaveHseObservationDraft: fieldRefKey === 'hseObservation' ? saveHseObservationDraft : undefined,
   onSaveInspectionFindingDraft: saveInspectionFindingDraft,

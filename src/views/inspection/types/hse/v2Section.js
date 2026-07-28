@@ -1,28 +1,20 @@
 import React from 'react'
-import { CButton, CCard, CCardBody, CFormTextarea } from '@coreui/react'
+import { CBadge, CButton, CCard, CCardBody, CFormTextarea } from '@coreui/react'
 import {
   FormFieldError,
   InspectionGeneralEvidenceCard,
 } from '../../form/components/InspectionFormDisplaySections'
-import { HseEditSection as LegacyHseEditSection } from './section'
-import { HSE_PAYLOAD_VERSION, HSE_SELECTION_OPTIONS, normalizeHseFormFields } from './helpers'
-
-const LEAN_SELECTIONS = HSE_SELECTION_OPTIONS.filter((option) =>
-  ['unsafeAct', 'unsafeCondition'].includes(option.value),
-)
+import { HSE_SELECTION_OPTIONS, normalizeHseFormFields } from './helpers'
 
 const observationFieldFor = (selection) =>
   selection === 'unsafeAct' ? 'hseUnsafeActDetails' : 'hseUnsafeConditionDetails'
 
-export const HseVersionedEditSection = (props) => {
-  const version = Number(props?.form?.hsePayloadVersion || props?.form?.hse_payload_version || 0)
-  if (version !== HSE_PAYLOAD_VERSION) {
-    return <LegacyHseEditSection {...props} />
-  }
-
+export const HseEditSection = (props) => {
   const { form = {}, fieldErrors = {}, handlers = {}, validationState = {} } = props
   const normalized = normalizeHseFormFields(form, { preserveWhitespace: true })
   const selection = normalized.hseSelections[0] || ''
+  const selectionLabel =
+    HSE_SELECTION_OPTIONS.find((option) => option.value === selection)?.label || ''
   const descriptionField = observationFieldFor(selection)
   const missingDetailKey = validationState?.hse?.firstTarget?.detailKey || ''
 
@@ -32,7 +24,7 @@ export const HseVersionedEditSection = (props) => {
         <div className="d-grid gap-2" data-hse-field="hseSelection">
           <div className="fw-semibold">What did you observe?</div>
           <div className="row g-2">
-            {LEAN_SELECTIONS.map((option) => {
+            {HSE_SELECTION_OPTIONS.map((option) => {
               const selected = selection === option.value
               return (
                 <div className="col-12 col-md-6" key={option.value}>
@@ -89,8 +81,8 @@ export const HseVersionedEditSection = (props) => {
           drawerDescription="Attach at least one clear photo of the unsafe act or condition."
           emptyMessage="No observation photo attached."
           remarksLabel=""
-          onTakePhoto={(options) => handlers.onTakeGeneralPhoto?.('', options)}
-          onUploadPhoto={(options) => handlers.onUploadGeneralPhoto?.('', options)}
+          onTakePhoto={(options) => handlers.onTakeGeneralPhoto?.(selectionLabel, options)}
+          onUploadPhoto={(options) => handlers.onUploadGeneralPhoto?.(selectionLabel, options)}
           onRemovePhoto={handlers.onRemoveGeneralPhoto}
           onChangePhotoDescription={handlers.onChangeGeneralPhotoDescription}
           onSavePhotos={handlers.onSaveGeneralPhotos}
@@ -111,4 +103,43 @@ export const HseVersionedEditSection = (props) => {
   )
 }
 
-export default HseVersionedEditSection
+const ReadOnlyValue = ({ label, value }) => {
+  if (!String(value || '').trim()) return null
+  return (
+    <div>
+      <div className="small text-muted">{label}</div>
+      <div style={{ whiteSpace: 'pre-wrap' }}>{value}</div>
+    </div>
+  )
+}
+
+export const HseReadOnlySection = ({ form = {} }) => {
+  const normalized = normalizeHseFormFields(form)
+  const selection = normalized.hseSelections[0] || ''
+  const option = HSE_SELECTION_OPTIONS.find((candidate) => candidate.value === selection)
+  const descriptionField = observationFieldFor(selection)
+
+  return (
+    <div className="inspection-form-section">
+      <CCard className="inspection-check-card">
+        <CCardBody className="d-grid gap-3">
+          <div>
+            <div className="small text-muted mb-2">Observation type</div>
+            {option ? (
+              <CBadge color="primary">{option.label}</CBadge>
+            ) : (
+              <span className="text-body-secondary">No HSE observation selected.</span>
+            )}
+          </div>
+          <ReadOnlyValue label="Description" value={normalized[descriptionField]} />
+          <ReadOnlyValue
+            label="Immediate corrective action"
+            value={normalized.hseImmediateAction}
+          />
+        </CCardBody>
+      </CCard>
+    </div>
+  )
+}
+
+export default HseEditSection

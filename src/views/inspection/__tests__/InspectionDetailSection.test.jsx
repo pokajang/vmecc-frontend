@@ -100,17 +100,12 @@ describe('InspectionDetailSection', () => {
           selectedLocation: 'Zone A',
           mainLocation: 'Zone A',
           incidentType: 'Health Safety Environment',
+          hsePayloadVersion: 2,
           hseInspectedBy: 'Inspector HSE',
-          hseInspectionDate: '2026-06-29',
-          hseSelections: ['unsafeAct', 'environmental'],
-          hseSeverity: 'High',
-          hseUnsafeActDetails: 'Observed unsafe lifting posture.',
-          hseEnvironmentalDetails: 'Oil spill near the loading bay.',
+          inspectedAt: '2026-06-29T10:00:00.000Z',
+          hseSelections: ['unsafeCondition'],
+          hseUnsafeConditionDetails: 'Oil spill near the loading bay.',
           hseImmediateAction: 'Area cordoned off.',
-          hseCorrectiveAction: 'Spill kit deployed.',
-          hseResponsiblePerson: 'Shift supervisor',
-          hseTargetDate: '2026-06-30',
-          hseRemarks: 'Follow-up inspection required.',
           photos: [
             {
               id: 'hse-photo-1',
@@ -133,17 +128,11 @@ describe('InspectionDetailSection', () => {
     )
 
     expect(screen.getAllByText('HSE Observation').length).toBeGreaterThan(0)
-    expect(screen.getByText('Unsafe Act')).toBeTruthy()
-    expect(screen.getByText('Environmental')).toBeTruthy()
-    expect(screen.getAllByText('High').length).toBeGreaterThan(0)
-    expect(screen.getByText('Observed unsafe lifting posture.')).toBeTruthy()
+    expect(screen.getByText('Unsafe Condition')).toBeTruthy()
     expect(screen.getByText('Oil spill near the loading bay.')).toBeTruthy()
     expect(screen.getByText('Area cordoned off.')).toBeTruthy()
-    expect(screen.getByText('Spill kit deployed.')).toBeTruthy()
-    expect(screen.getAllByText('Shift supervisor').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('2026-06-30').length).toBeGreaterThan(0)
-    expect(screen.getByText('Follow-up inspection required.')).toBeTruthy()
-    expectItemizedReadOnlyFindings()
+    const findings = screen.getByText('Inspection Findings').closest('section')
+    expect(findings?.querySelectorAll('.inspection-detail-finding-accordion-item')).toHaveLength(2)
   })
 
   it('renders ER Aux read-only equipment cards in detail mode', () => {

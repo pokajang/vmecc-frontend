@@ -196,17 +196,12 @@ describe('InspectionReviewSection', () => {
           location: 'Zone A',
           mainLocation: 'Zone A',
           incidentType: 'Health Safety Environment Inspection',
+          hsePayloadVersion: 2,
           hseInspectedBy: 'Inspector HSE',
-          hseInspectionDate: '2026-06-29',
-          hseSelections: ['unsafeAct', 'environmental'],
-          hseSeverity: 'High',
-          hseUnsafeActDetails: 'Observed unsafe lifting posture.',
-          hseEnvironmentalDetails: 'Oil spill near the loading bay.',
+          inspectedAt: '2026-06-29T10:00:00.000Z',
+          hseSelections: ['unsafeCondition'],
+          hseUnsafeConditionDetails: 'Oil spill near the loading bay.',
           hseImmediateAction: 'Area cordoned off.',
-          hseCorrectiveAction: 'Spill kit deployed.',
-          hseResponsiblePerson: 'Shift supervisor',
-          hseTargetDate: '2026-06-30',
-          hseRemarks: 'Follow-up inspection required.',
         }}
         reviewActions={{
           onBackToEdit: vi.fn(),
@@ -217,17 +212,10 @@ describe('InspectionReviewSection', () => {
       />,
     )
 
-    expect(screen.getAllByText('HSE Observation').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Unsafe Act').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Environmental').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('High').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Observed unsafe lifting posture.').length).toBeGreaterThan(0)
+    expect(screen.getByText('Checked Items')).toBeTruthy()
+    expect(screen.getAllByText('Unsafe Condition').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Oil spill near the loading bay.').length).toBeGreaterThan(0)
     expect(screen.getAllByText('Area cordoned off.').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Spill kit deployed.').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Shift supervisor').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('2026-06-30').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Follow-up inspection required.').length).toBeGreaterThan(0)
   })
 
   it('renders ER Aux read-only equipment cards during review', () => {

@@ -1022,18 +1022,15 @@ const buildInspectionPayload = (inspectionType, suffix, context = {}) => {
 
   if (inspectionType === 'Health Safety Environment') {
     return baseInspectionPayload(inspectionType, suffix, {
+      incidentType: 'Health Safety Environment Inspection',
+      inspectionType: 'Health Safety Environment Inspection',
+      hsePayloadVersion: 2,
       selectedLocation: 'Smoke HSE Area',
       mainLocation: 'Smoke HSE Area',
-      hseInspectionDate: reportDate,
-      hseSelections: ['unsafeAct', 'environmental'],
-      hseSeverity: 'Low',
+      hseInspectedBy: 'Live Smoke Admin',
+      hseSelections: ['unsafeAct'],
       hseUnsafeActDetails: `${runMarker} HSE unsafe act details ${suffix}`,
-      hseEnvironmentalDetails: `${runMarker} HSE environmental details ${suffix}`,
       hseImmediateAction: `${runMarker} area isolated.`,
-      hseCorrectiveAction: `${runMarker} corrective action tracked.`,
-      hseResponsiblePerson: 'Live Smoke Admin',
-      hseTargetDate: addDays(reportDate, 7),
-      hseRemarks: `${runMarker} HSE remarks ${suffix}`,
       photos: [smokePhoto(`hse-${suffix}`)],
     })
   }
@@ -1122,11 +1119,7 @@ const buildPdfExpectedStrings = (inspectionType, payload = {}, context = {}) => 
     ])
   }
   if (inspectionType === 'Health Safety Environment') {
-    return common.concat([
-      payload.hseSeverity,
-      payload.hseUnsafeActDetails,
-      payload.hseEnvironmentalDetails,
-    ])
+    return common.concat([payload.hseUnsafeActDetails, payload.hseImmediateAction])
   }
   return common
 }

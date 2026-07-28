@@ -264,6 +264,7 @@ export const buildInspectionBodyCase = (
   const isStructured = definition.formMode === 'structured'
   const isFireExtinguisher = definition.key === 'fire-extinguisher-inspection'
   const isFireTruck = definition.key === 'frt-daily-inspection'
+  const isHse = definition.key === 'health-safety-environment-inspection'
   const isGeneral = definition.formMode === 'generic'
   const isZoneFlow = Boolean(definition.usesZoneLocationFlow)
   const onSelectNextScope = createMock()
@@ -285,6 +286,7 @@ export const buildInspectionBodyCase = (
         form: {
           inspectionType: definition.inspectionType,
           photos: [],
+          ...(isHse ? definition.initialFormState : {}),
           ...(isFireExtinguisher ? { zone: '1', mainLocation: '', subLocation: '' } : {}),
           ...(isGeneral ? { zone: '1', mainLocation: '', subLocation: '' } : {}),
           ...(definition.key === 'health-safety-environment-inspection'
@@ -400,6 +402,7 @@ export const buildInspectionBodyCase = (
           ...baseProps,
           form: {
             inspectionType: definition.inspectionType,
+            ...definition.initialFormState,
             zone: '1',
             mainLocation: config.mainLocation,
             subLocation: '',
@@ -559,7 +562,14 @@ export const buildInspectionBodyCase = (
             mainLocation: config.mainLocation,
             subLocation: 'Reception',
             photos: shouldHavePhotos ? withPhoto() : [],
-            inspectionIssues: [],
+            ...(isHse
+              ? {
+                  ...definition.initialFormState,
+                  inspectedAt: '2026-07-14T09:30',
+                  hseSelections: ['unsafeCondition'],
+                  hseUnsafeConditionDetails: 'Guardrail is missing beside the access route.',
+                }
+              : { inspectionIssues: [] }),
           },
           mainLocation: config.mainLocation,
           location: {

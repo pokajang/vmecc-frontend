@@ -160,13 +160,11 @@ export const buildInspectionFormMissingFields = (
   }
 
   if (isHseInspectionType(normalizedForm.inspectionType)) {
-    const issueDetails = getInspectionIssueValidationDetails(normalizedForm.inspectionIssues)
     return {
       ...baseMissing,
       photos: false,
       description: false,
       ...SHARED_STRUCTURED_MISSING,
-      inspectionIssues: issueDetails.errorCount > 0,
       ...getHseMissingFields(normalizedForm),
     }
   }
@@ -226,17 +224,16 @@ export const buildInspectionFormValidationState = (normalizedForm = {}, missing 
   const general = isGeneral
     ? getGeneralValidationDetails(normalizedForm)
     : { missingFields: {}, firstTarget: null, errorCount: 0 }
-  const issueValidation =
-    isGeneral || isHse
-      ? getInspectionIssueValidationDetails(normalizedForm.inspectionIssues)
-      : { incompleteIssues: [], firstTarget: null, errorCount: 0 }
+  const issueValidation = isGeneral
+    ? getInspectionIssueValidationDetails(normalizedForm.inspectionIssues)
+    : { incompleteIssues: [], firstTarget: null, errorCount: 0 }
   const missingRequiredGeneralIssueCount =
     isGeneral && missing.inspectionIssues && issueValidation.errorCount === 0 ? 1 : 0
 
   const errorCount =
     Object.entries(missing).reduce((count, [field, value]) => {
       if (!value) return count
-      if ((isGeneral || isHse) && field === 'inspectionIssues') return count
+      if (isGeneral && field === 'inspectionIssues') return count
       if (isErAux && ['erAuxChecks', 'erAuxRemarks'].includes(field)) return count
       if (
         isFireExtinguisher &&

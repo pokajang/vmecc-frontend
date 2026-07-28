@@ -27,7 +27,6 @@ import {
   recordToInspectionForm,
   selectInspectionInitialForm,
   splitLegacyInspectionLocation,
-  toggleHseSelection,
   toggleInspectionChecklistItem,
 } from '../inspectionFormHelpers'
 import { normalizeReportRecord } from '../inspectionSharedUtils'
@@ -167,18 +166,10 @@ describe('inspectionFormHelpers', () => {
       scbaCustomSections: [],
       hsePayloadVersion: 0,
       hseInspectedBy: '',
-      hseInspectionDate: '',
       hseSelections: [],
-      hseAreaConditionRemarks: '',
       hseUnsafeActDetails: '',
       hseUnsafeConditionDetails: '',
-      hseEnvironmentalDetails: '',
-      hseSeverity: '',
       hseImmediateAction: '',
-      hseCorrectiveAction: '',
-      hseResponsiblePerson: '',
-      hseTargetDate: '',
-      hseRemarks: '',
       hydraulicChecks: [],
       hydraulicEquipmentRows: [],
     })
@@ -260,7 +251,6 @@ describe('inspectionFormHelpers', () => {
       ['frtInspectionDate', 'FRT Daily Inspection'],
       ['highAngleInspectionDate', 'High Angle Rescue Equipment Inspection'],
       ['scbaInspectionDate', 'SCBA Inspection'],
-      ['hseInspectionDate', 'Health Safety Environment Inspection'],
     ]
 
     legacyDateFields.forEach(([field, inspectionType]) => {
@@ -464,7 +454,7 @@ describe('inspectionFormHelpers', () => {
     expect(payload.issues).toEqual(payload.inspectionIssues)
   })
 
-  it('requires a description when a General or HSE issue card has other evidence', () => {
+  it('requires a description when a General issue card has other evidence', () => {
     const generalState = getInspectionFormValidationState({
       inspectionType: 'General Inspection',
       inspectedAt: '2026-07-05T10:00',
@@ -482,25 +472,6 @@ describe('inspectionFormHelpers', () => {
       photos: [],
     })
 
-    const hseState = getInspectionFormValidationState({
-      inspectionType: 'Health Safety Environment Inspection',
-      inspectedAt: '2026-07-05T10:00',
-      mainLocation: 'Manjung Hub',
-      subLocation: 'Reception',
-      description: 'HSE observation completed.',
-      hseSelections: ['area-condition'],
-      hseAreaConditionRemarks: 'Area checked.',
-      inspectionIssues: [
-        {
-          id: 'issue-2',
-          description: '',
-          actionRequired: '',
-          photos: [{ id: 'photo-2', description: 'Issue evidence' }],
-        },
-      ],
-      photos: [],
-    })
-
     expect(generalState.inspectionIssues).toEqual(
       expect.objectContaining({
         errorCount: 1,
@@ -508,21 +479,22 @@ describe('inspectionFormHelpers', () => {
       }),
     )
     expect(generalState.errorCount).toBeGreaterThanOrEqual(1)
-    expect(hseState.inspectionIssues).toEqual(
-      expect.objectContaining({
-        errorCount: 1,
-        firstTarget: { field: 'inspectionIssues', issueId: 'issue-2' },
-      }),
-    )
   })
 
-  it('only treats legacy issues arrays as separate issue cards for General and HSE forms', () => {
+  it('only treats issue arrays as separate finding cards for General Inspection', () => {
     expect(
       normalizeInspectionForm({
-        inspectionType: 'Health Safety Environment Inspection',
+        inspectionType: 'General Inspection',
         issues: [{ id: 'issue-1', description: 'Loose cable.' }],
       }).inspectionIssues,
     ).toEqual([expect.objectContaining({ id: 'issue-1', description: 'Loose cable.' })])
+
+    expect(
+      normalizeInspectionForm({
+        inspectionType: 'Health Safety Environment Inspection',
+        issues: [{ id: 'old-hse-issue', description: 'Do not restore old HSE findings.' }],
+      }).inspectionIssues,
+    ).toEqual([])
 
     expect(
       normalizeInspectionForm({
@@ -969,56 +941,44 @@ describe('inspectionFormHelpers', () => {
     })
   })
 
-  it('normalizes and validates HSE area-satisfactory and finding outcomes', () => {
-    expect(toggleHseSelection(['unsafeAct', 'environmental'], 'Area Satisfactory')).toEqual([
-      'areaSatisfactory',
-    ])
-    expect(toggleHseSelection(['areaSatisfactory'], 'Unsafe Condition')).toEqual([
-      'unsafeCondition',
-    ])
-
-    const incompleteArea = getInspectionFormMissingFields({
+  it('normalizes and validates the current single-observation HSE payload', () => {
+    const incompleteObservation = getInspectionFormMissingFields({
       mainLocation: 'Zone 1',
+      selectedLocation: 'Zone 1',
       inspectionType: 'Health Safety Environment Inspection',
-      hseInspectedBy: 'Inspector A',
-      hseInspectionDate: '2026-06-29',
-      hseSelections: ['areaSatisfactory'],
+      inspectedAt: '2026-06-29T09:30',
+      hsePayloadVersion: 2,
+      hseSelections: [],
+      photos: [],
     })
-    expect(incompleteArea).toEqual(
+    expect(incompleteObservation).toEqual(
       expect.objectContaining({
         inspectionType: false,
         selectedLocation: false,
         description: false,
         photos: false,
         hseSession: false,
-        hseSelection: false,
+        hseSelection: true,
         hseDetails: true,
       }),
     )
 
-    const findingPayload = buildInspectionPayloadSnapshot({
+    const observationPayload = buildInspectionPayloadSnapshot({
       mainLocation: 'Zone 1',
+      selectedLocation: 'Zone 1',
       inspectionType: 'Health Safety Environment Inspection',
-      hseInspectedBy: 'Inspector A',
-      hseInspectionDate: '2026-06-29',
-      hseSelections: ['unsafeAct', 'unsafeCondition'],
-      hseUnsafeActDetails: 'Worker bypassed barricade.',
+      inspectedAt: '2026-06-29T09:30',
+      hsePayloadVersion: 2,
+      hseSelections: ['unsafeCondition'],
       hseUnsafeConditionDetails: 'Open trench without cover.',
-      hseSeverity: 'High',
       photos: [basePhotos[0]],
     })
 
-    expect(findingPayload.hseSelections).toEqual(['unsafeAct', 'unsafeCondition'])
-    expect(findingPayload.checklist.map((item) => item.label)).toEqual([
-      'Unsafe Act - High',
-      'Unsafe Condition - High',
-    ])
-    expect(findingPayload.description).toContain(
-      'Selected outcome(s): Unsafe Act, Unsafe Condition.',
-    )
-    expect(findingPayload.description).toContain('- Unsafe Act: Worker bypassed barricade.')
-    expect(findingPayload.description).toContain('- Unsafe Condition: Open trench without cover.')
-    expect(getInspectionFormMissingFields(findingPayload)).toEqual(
+    expect(observationPayload.hseSelections).toEqual(['unsafeCondition'])
+    expect(observationPayload.checklist.map((item) => item.label)).toEqual(['Unsafe Condition'])
+    expect(observationPayload.description).toContain('Unsafe Condition observed at Zone 1.')
+    expect(observationPayload.description).toContain('Open trench without cover.')
+    expect(getInspectionFormMissingFields(observationPayload)).toEqual(
       expect.objectContaining({
         hseSession: false,
         hseSelection: false,
@@ -1028,53 +988,54 @@ describe('inspectionFormHelpers', () => {
   })
 
   it('returns exact HSE validation targets while preserving missing-field booleans', () => {
-    const areaState = getInspectionFormValidationState({
+    const selectionState = getInspectionFormValidationState({
       mainLocation: 'Zone 1',
+      selectedLocation: 'Zone 1',
       inspectionType: 'Health Safety Environment Inspection',
-      hseInspectedBy: 'Inspector A',
-      hseInspectionDate: '2026-06-29',
-      hseSelections: ['areaSatisfactory'],
+      inspectedAt: '2026-06-29T09:30',
+      hsePayloadVersion: 2,
+      hseSelections: [],
+      photos: [],
     })
 
-    expect(areaState.missing).toEqual(
+    expect(selectionState.missing).toEqual(
       expect.objectContaining({
         hseSession: false,
-        hseSelection: false,
+        hseSelection: true,
         hseDetails: true,
       }),
     )
-    expect(areaState.firstTarget).toEqual({
-      field: 'hseDetails',
-      detailKey: 'hseAreaConditionRemarks',
-    })
-    expect(areaState.hse.missingFields).toEqual({ hseAreaConditionRemarks: true })
-
-    const findingState = getInspectionFormValidationState({
-      mainLocation: 'Zone 1',
-      inspectionType: 'Health Safety Environment Inspection',
-      hseInspectedBy: 'Inspector A',
-      hseInspectionDate: '2026-06-29',
-      hseSelections: ['unsafeAct', 'environmental'],
-      hseUnsafeActDetails: '',
-      hseEnvironmentalDetails: '',
-    })
-
-    expect(findingState.missing).toEqual(
-      expect.objectContaining({
-        hseSession: false,
-        hseSelection: false,
-        hseDetails: true,
-      }),
-    )
-    expect(findingState.hse.missingFields).toEqual({
-      hseSeverity: true,
-      hseUnsafeActDetails: true,
-      hseEnvironmentalDetails: true,
+    expect(selectionState.firstTarget).toEqual({ field: 'hseSelection' })
+    expect(selectionState.hse.missingFields).toEqual({
+      hseSelection: true,
       hsePhotoEvidence: true,
     })
-    expect(findingState.firstTarget).toEqual({
+
+    const descriptionState = getInspectionFormValidationState({
+      mainLocation: 'Zone 1',
+      selectedLocation: 'Zone 1',
+      inspectionType: 'Health Safety Environment Inspection',
+      inspectedAt: '2026-06-29T09:30',
+      hsePayloadVersion: 2,
+      hseSelections: ['unsafeAct'],
+      hseUnsafeActDetails: '',
+      photos: [],
+    })
+
+    expect(descriptionState.missing).toEqual(
+      expect.objectContaining({
+        hseSession: false,
+        hseSelection: false,
+        hseDetails: true,
+      }),
+    )
+    expect(descriptionState.hse.missingFields).toEqual({
+      hseUnsafeActDetails: true,
+      hsePhotoEvidence: true,
+    })
+    expect(descriptionState.firstTarget).toEqual({
       field: 'hseDetails',
-      detailKey: 'hseSeverity',
+      detailKey: 'hseUnsafeActDetails',
     })
   })
 

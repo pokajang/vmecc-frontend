@@ -28,10 +28,8 @@ export {
   HSE_INSPECTION_TYPE,
   HSE_SELECTION_OPTIONS,
   HSE_SELECTION_VALUES,
-  HSE_SEVERITY_OPTIONS,
   getHseCheckSummary,
   normalizeHseFormFields,
-  toggleHseSelection,
 } from '../types/hse/helpers'
 export {
   HYDRAULIC_CHECK_FIELDS,

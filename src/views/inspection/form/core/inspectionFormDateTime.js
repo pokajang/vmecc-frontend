@@ -48,8 +48,6 @@ export const deriveInspectedAt = (source = {}) => {
       source.high_angle_inspection_date ||
       source.scbaInspectionDate ||
       source.scba_inspection_date ||
-      source.hseInspectionDate ||
-      source.hse_inspection_date ||
       '',
   )
 }

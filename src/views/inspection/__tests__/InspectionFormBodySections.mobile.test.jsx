@@ -13,7 +13,6 @@ vi.mock('src/services/api/aiHelperApi', () => ({
 
 import InspectionFormBodySections from '../form/components/InspectionFormBodySections'
 import { INSPECTION_REPORT_EVIDENCE_COPY } from '../inspectionReportEvidenceCopy'
-import { HseEditSection } from '../types/hse/section'
 import {
   CONTINUATION_LABELS,
   CONTINUATION_SCAN_LABEL,
@@ -1046,60 +1045,6 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
     expect(within(panel).getByRole('button', { name: 'Cancel' })).toBeTruthy()
   })
 
-  it('uses the canonical translator contract for legacy HSE generic findings', async () => {
-    const form = {
-      inspectionType: 'Health Safety Environment Inspection',
-      hsePayloadVersion: 0,
-      zone: '1',
-      mainLocation: 'Manjung Hub',
-      subLocation: 'Reception',
-      inspectionIssues: [],
-      photos: [],
-    }
-    streamAiHelperMessage.mockImplementationOnce(async (_payload, handlers) => {
-      handlers.onDone?.({ embedded_result: { text: 'The access route was obstructed.' } })
-    })
-
-    renderBodySections({
-      form,
-      getLatestForm: vi.fn(() => form),
-      isStructuredInspectionForm: true,
-      location: {
-        selectedMainLocationTitle: 'Manjung Hub',
-        subLocationOptions: [{ value: 'Reception', title: 'Reception' }],
-      },
-      mainLocation: 'Manjung Hub',
-      selectedType: 'Health Safety Environment Inspection',
-      selectedTypeDefinition: {
-        key: 'health-safety-environment-inspection',
-        payloadVersion: 2,
-        supportsGenericFindings: false,
-        usesZoneLocationFlow: true,
-      },
-      StructuredEditSection: () => <div>Legacy HSE fields</div>,
-      updateForm: vi.fn(),
-      zone: '1',
-    })
-
-    fireEvent.click(screen.getByRole('button', { name: 'Add finding' }))
-    fireEvent.change(screen.getByLabelText('Describe finding'), {
-      target: { value: 'laluan masuk kena block' },
-    })
-
-    await act(async () => {
-      fireEvent.click(screen.getAllByRole('button', { name: 'AI translate' })[0])
-    })
-
-    expect(streamAiHelperMessage).toHaveBeenCalledTimes(1)
-    expect(streamAiHelperMessage.mock.calls[0][0].page_context.params).toEqual({
-      inspection_type: 'Health Safety Environment Inspection',
-      zone: '1',
-      main_area: 'Manjung Hub',
-      location: 'Reception',
-    })
-    expect(screen.getByText('The access route was obstructed.')).toBeTruthy()
-  })
-
   it('hides stale AI suggestions when the translated field is edited', async () => {
     const form = {
       inspectionType: 'General Inspection',
@@ -1821,120 +1766,5 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
     expect(requestInspectionIssuePhotoUpload).not.toHaveBeenCalled()
     expect(onSaveDraft).not.toHaveBeenCalled()
     expect(updateForm).not.toHaveBeenCalled()
-  })
-
-  it('discards staged HSE evidence photos when the mobile observation drawer is cancelled', async () => {
-    setMobileViewport()
-    const onSaveHseObservationDraft = vi.fn()
-    const onUploadGeneralPhoto = vi.fn()
-    const form = {
-      hseSelections: ['unsafeAct'],
-      hseSeverity: 'High',
-      hseUnsafeActDetails: 'Unsafe work at height.',
-      photos: [],
-    }
-
-    render(
-      <HseEditSection
-        form={form}
-        handlers={{
-          onSaveHseObservationDraft,
-          onUploadGeneralPhoto,
-        }}
-      />,
-    )
-
-    fireEvent.click(screen.getByText('Unsafe Act - High'))
-    fireEvent.click(screen.getByText('Upload HSE photo'))
-
-    expect(onUploadGeneralPhoto).toHaveBeenCalledWith('Unsafe Act', {
-      rootPhotos: [],
-      onAddPhotos: expect.any(Function),
-    })
-
-    await act(async () => {
-      onUploadGeneralPhoto.mock.calls[0][1].onAddPhotos([
-        {
-          id: 'hse-photo-1',
-          fileName: 'hse.jpg',
-          url: 'data:image/png;base64,QUFB',
-          description: 'Unsafe act evidence.',
-        },
-      ])
-    })
-
-    expect(screen.getByText('1 HSE photo ready to save')).toBeTruthy()
-
-    fireEvent.click(screen.getByText('Cancel'))
-
-    expect(onSaveHseObservationDraft).not.toHaveBeenCalled()
-
-    fireEvent.click(screen.getByText('Unsafe Act - High'))
-
-    expect(screen.getByText('0 HSE photos attached')).toBeTruthy()
-    expect(screen.queryByText('1 HSE photo ready to save')).toBeNull()
-  })
-
-  it('commits staged HSE evidence photos with the mobile observation drawer save', async () => {
-    setMobileViewport()
-    const onSaveHseObservationDraft = vi.fn(() => ({ saved: true }))
-    const onTakeGeneralPhoto = vi.fn()
-    const existingPhoto = {
-      id: 'existing-hse-photo',
-      fileName: 'existing.jpg',
-      url: 'data:image/png;base64,QUFB',
-    }
-    const addedPhoto = {
-      id: 'hse-photo-2',
-      fileName: 'hse-2.jpg',
-      url: 'data:image/png;base64,QkJC',
-      description: 'Saved HSE evidence.',
-    }
-    const form = {
-      hseSelections: ['unsafeAct'],
-      hseSeverity: 'High',
-      hseUnsafeActDetails: 'Unsafe work at height.',
-      photos: [existingPhoto],
-    }
-
-    render(
-      <HseEditSection
-        form={form}
-        handlers={{
-          onSaveHseObservationDraft,
-          onTakeGeneralPhoto,
-        }}
-      />,
-    )
-
-    fireEvent.click(screen.getByText('Unsafe Act - High'))
-    expect(screen.getByText('1 HSE photo attached')).toBeTruthy()
-
-    fireEvent.click(screen.getByText('Take HSE photo'))
-
-    expect(onTakeGeneralPhoto).toHaveBeenCalledWith('Unsafe Act', {
-      rootPhotos: [existingPhoto],
-      onAddPhotos: expect.any(Function),
-    })
-
-    await act(async () => {
-      onTakeGeneralPhoto.mock.calls[0][1].onAddPhotos([addedPhoto])
-    })
-
-    expect(screen.getByText('2 HSE photos ready to save')).toBeTruthy()
-
-    fireEvent.click(screen.getByText('Save'))
-
-    expect(onSaveHseObservationDraft).toHaveBeenCalledWith(
-      expect.objectContaining({
-        hseSelections: ['unsafeAct'],
-        hseSeverity: 'High',
-        hseUnsafeActDetails: 'Unsafe work at height.',
-        photos: [
-          expect.objectContaining({ id: 'existing-hse-photo' }),
-          expect.objectContaining({ id: 'hse-photo-2', description: 'Saved HSE evidence.' }),
-        ],
-      }),
-    )
   })
 })

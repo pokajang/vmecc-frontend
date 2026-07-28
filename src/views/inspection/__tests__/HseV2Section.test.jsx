@@ -2,7 +2,7 @@
 import React, { useState } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { HseVersionedEditSection } from '../types/hse/v2Section'
+import { HseEditSection } from '../types/hse/v2Section'
 import {
   buildHseDescription,
   getHseMissingFields,
@@ -33,7 +33,7 @@ const Harness = () => {
     onTakeGeneralPhoto: vi.fn(),
     onUploadGeneralPhoto: vi.fn(),
   }
-  return <HseVersionedEditSection form={form} handlers={handlers} />
+  return <HseEditSection form={form} handlers={handlers} />
 }
 
 afterEach(cleanup)

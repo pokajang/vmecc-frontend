@@ -58,8 +58,12 @@ describe('pending submission summary', () => {
             zone: '1',
             mainLocation: 'Canteen',
             subLocation: 'Kitchen',
-            hseSelections: ['areaSatisfactory'],
-            hseAreaConditionRemarks: 'Area clean.',
+            selectedLocation: 'Zone 1 > Canteen > Kitchen',
+            inspectedAt: '2026-07-14T09:30',
+            hsePayloadVersion: 2,
+            hseSelections: ['unsafeCondition'],
+            hseUnsafeConditionDetails: 'Trip hazard beside the kitchen entrance.',
+            photos: [{ id: 'hse-photo-1', url: 'managed://hse-photo-1' }],
           },
         },
       },
@@ -677,7 +681,7 @@ describe('pending submission summary', () => {
     )
   })
 
-  it('shows HSE finding cards in pending submissions even without a structured HSE outcome', () => {
+  it('does not restore old HSE generic finding cards into pending submissions', () => {
     const summary = buildPendingSubmissionSummary({
       form: {
         inspectionType: 'Health Safety Environment Inspection',
@@ -692,32 +696,7 @@ describe('pending submission summary', () => {
     const hse = summary.items.find(
       (item) => item.inspectionType === 'Health Safety Environment Inspection',
     )
-    expect(hse).toEqual(
-      expect.objectContaining({
-        status: 'needs_attention',
-        metrics: expect.objectContaining({
-          count: 1,
-          checkedCount: 1,
-          defectCount: 1,
-        }),
-        groups: [
-          expect.objectContaining({
-            label: 'Slip hazard near sink.',
-            mainLocation: 'Canteen',
-            subLocation: 'Kitchen',
-            status: 'Issue',
-          }),
-        ],
-      }),
-    )
-    expect(hse?.blockers).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          key: 'hseSelection',
-          message: 'Required inspection details are incomplete.',
-        }),
-      ]),
-    )
+    expect(hse).toBeUndefined()
   })
 
   it('uses saved finding location context instead of the current form location', () => {
@@ -751,15 +730,19 @@ describe('pending submission summary', () => {
     ])
   })
 
-  it('summarizes structured HSE observation and HSE finding cards together', () => {
+  it('summarizes only the current structured HSE observation', () => {
     const summary = buildPendingSubmissionSummary({
       form: {
         inspectionType: 'Health Safety Environment Inspection',
         zone: '1',
         mainLocation: 'Canteen',
         subLocation: 'Kitchen',
-        hseSelections: ['areaSatisfactory'],
-        hseAreaConditionRemarks: 'Area clean.',
+        selectedLocation: 'Zone 1 > Canteen > Kitchen',
+        inspectedAt: '2026-07-14T09:30',
+        hsePayloadVersion: 2,
+        hseSelections: ['unsafeCondition'],
+        hseUnsafeConditionDetails: 'Minor trip hazard logged.',
+        photos: [{ id: 'hse-photo-1', url: 'managed://hse-photo-1' }],
         inspectionIssues: [{ id: 'hse-issue-1', description: 'Minor trip hazard logged.' }],
       },
       draftSyncState: { status: 'synced' },
@@ -772,14 +755,11 @@ describe('pending submission summary', () => {
       expect.objectContaining({
         status: 'ready',
         metrics: expect.objectContaining({
-          count: 2,
-          checkedCount: 2,
+          count: 1,
+          checkedCount: 1,
           defectCount: 1,
         }),
-        groups: expect.arrayContaining([
-          expect.objectContaining({ label: 'Area satisfactory', status: 'Recorded' }),
-          expect.objectContaining({ label: 'Minor trip hazard logged.', status: 'Issue' }),
-        ]),
+        groups: [expect.objectContaining({ label: 'Unsafe Condition', status: 'Recorded' })],
       }),
     )
   })

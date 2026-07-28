@@ -6,7 +6,6 @@ import {
   getFrtCheckSummary,
   getHydraulicCheckSummary,
   HYDRAULIC_CHECK_FIELDS,
-  toggleHseSelection,
   toggleInspectionChecklistItem,
 } from './inspectionFormHelpers'
 import {
@@ -336,28 +335,9 @@ const useInspectionCheckActions = ({ form, getLatestForm, mainLocation, updateFo
     })
   }
 
-  const updateHseSessionMeta = (field, nextValue) => {
-    if (!['hseInspectionDate'].includes(field)) return
-    updateForm({
-      ...form,
-      [field]: String(nextValue || '').trim(),
-    })
-  }
-
   const updateHseField = (field, nextValue) => {
     if (
-      ![
-        'hseAreaConditionRemarks',
-        'hseUnsafeActDetails',
-        'hseUnsafeConditionDetails',
-        'hseEnvironmentalDetails',
-        'hseSeverity',
-        'hseImmediateAction',
-        'hseCorrectiveAction',
-        'hseResponsiblePerson',
-        'hseTargetDate',
-        'hseRemarks',
-      ].includes(field)
+      !['hseUnsafeActDetails', 'hseUnsafeConditionDetails', 'hseImmediateAction'].includes(field)
     ) {
       return
     }
@@ -371,33 +351,12 @@ const useInspectionCheckActions = ({ form, getLatestForm, mainLocation, updateFo
   }
 
   const toggleHseObservationSelection = (selection) => {
-    const isLeanHse = Number(form.hsePayloadVersion || 0) === 2
     updateForm({
       ...form,
-      hseSelections: isLeanHse
-        ? form.hseSelections.includes(selection)
-          ? []
-          : [selection]
-        : toggleHseSelection(form.hseSelections, selection),
-      ...(isLeanHse
-        ? {
-            hseUnsafeActDetails: selection === 'unsafeAct' ? form.hseUnsafeActDetails : '',
-            hseUnsafeConditionDetails:
-              selection === 'unsafeCondition' ? form.hseUnsafeConditionDetails : '',
-          }
-        : {}),
-      ...(selection === 'areaSatisfactory'
-        ? {
-            hseUnsafeActDetails: '',
-            hseUnsafeConditionDetails: '',
-            hseEnvironmentalDetails: '',
-            hseSeverity: '',
-            hseImmediateAction: '',
-            hseCorrectiveAction: '',
-            hseResponsiblePerson: '',
-            hseTargetDate: '',
-          }
-        : { hseAreaConditionRemarks: '' }),
+      hseSelections: form.hseSelections.includes(selection) ? [] : [selection],
+      hseUnsafeActDetails: selection === 'unsafeAct' ? form.hseUnsafeActDetails : '',
+      hseUnsafeConditionDetails:
+        selection === 'unsafeCondition' ? form.hseUnsafeConditionDetails : '',
     })
   }
 
@@ -489,7 +448,6 @@ const useInspectionCheckActions = ({ form, getLatestForm, mainLocation, updateFo
     updateHighAngleCheck,
     updateHighAngleSessionMeta,
     updateHseField,
-    updateHseSessionMeta,
     updateHydraulicCheck,
     updateScbaSessionMeta,
   }

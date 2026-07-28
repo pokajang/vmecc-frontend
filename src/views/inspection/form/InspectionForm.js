@@ -79,8 +79,6 @@ const INSPECTION_TIMESTAMP_FIELDS = [
   'high_angle_inspection_date',
   'scbaInspectionDate',
   'scba_inspection_date',
-  'hseInspectionDate',
-  'hse_inspection_date',
 ]
 
 const SETUP_RESET_INSPECTION_DATE_FIELDS = [
@@ -91,7 +89,6 @@ const SETUP_RESET_INSPECTION_DATE_FIELDS = [
   'frtInspectionDate',
   'highAngleInspectionDate',
   'scbaInspectionDate',
-  'hseInspectionDate',
 ]
 
 const hasInspectionTimestampField = (value = {}) =>

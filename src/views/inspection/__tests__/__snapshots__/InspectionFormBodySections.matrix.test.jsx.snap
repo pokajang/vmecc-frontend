@@ -198,8 +198,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     <div
       class="small fw-semibold text-body-secondary"
     >
-      Next 
-      location
+      Next location
     </div>
     <div
       class="inspection-next-location-options d-flex flex-wrap gap-2"
@@ -332,8 +331,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     <div
       class="small fw-semibold text-body-secondary"
     >
-      Next 
-      location
+      Next location
     </div>
     <div
       class="inspection-next-location-options d-flex flex-wrap gap-2"
@@ -612,8 +610,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     <div
       class="small fw-semibold text-body-secondary"
     >
-      Next 
-      location
+      Next location
     </div>
     <div
       class="inspection-next-location-options d-flex flex-wrap gap-2"
@@ -730,8 +727,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     <div
       class="small fw-semibold text-body-secondary"
     >
-      Next 
-      location
+      Next location
     </div>
     <div
       class="inspection-next-location-options d-flex flex-wrap gap-2"
@@ -994,8 +990,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     <div
       class="small fw-semibold text-body-secondary"
     >
-      Next 
-      compartment
+      Next compartment
     </div>
     <div
       class="inspection-next-location-options d-flex flex-wrap gap-2"
@@ -1112,8 +1107,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     <div
       class="small fw-semibold text-body-secondary"
     >
-      Next 
-      compartment
+      Next compartment
     </div>
     <div
       class="inspection-next-location-options d-flex flex-wrap gap-2"
@@ -1623,256 +1617,16 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     </div>
   </div>
   <div
-    class="inspection-form-section d-grid gap-3"
-  >
-    <div
-      class="d-flex flex-wrap align-items-center justify-content-between gap-2"
-    >
-      <div>
-        <div
-          class="d-flex flex-wrap align-items-center gap-2"
-        >
-          <label
-            class="form-label fw-semibold text-muted mb-0"
-          >
-            Findings
-          </label>
-        </div>
-        <div
-          class="small text-body-secondary"
-        >
-          Record one finding at a time. Add photos if needed.
-        </div>
-      </div>
-      <button
-        aria-label="Add finding"
-        class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
-        type="button"
-      >
-        <svg
-          aria-hidden="true"
-          class="lucide lucide-plus me-1 align-text-bottom"
-          fill="none"
-          height="13"
-          stroke="currentColor"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          viewBox="0 0 24 24"
-          width="13"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M5 12h14"
-          />
-          <path
-            d="M12 5v14"
-          />
-        </svg>
-        Add finding
-      </button>
-    </div>
-    <div
-      class="rounded-3 border bg-light-subtle p-3 text-body-secondary"
-    >
-      No findings added.
-    </div>
-  </div>
-  <div
-    class="card inspection-general-evidence-card"
-  >
-    <div
-      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
-    >
-      <div
-        class="fw-semibold"
-      >
-        Additional report evidence
-      </div>
-      <div
-        class="d-flex align-items-center gap-2"
-      >
-        <button
-          aria-label="Take photo"
-          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
-          type="button"
-        >
-          <svg
-            aria-hidden="true"
-            class="lucide lucide-camera me-0 me-sm-1 align-text-bottom"
-            fill="none"
-            height="13"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            width="13"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
-            />
-            <circle
-              cx="12"
-              cy="13"
-              r="3"
-            />
-          </svg>
-          <span
-            class="d-none d-sm-inline"
-          >
-            Take photo
-          </span>
-        </button>
-        <button
-          aria-label="Upload photo"
-          class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
-          type="button"
-        >
-          <svg
-            aria-hidden="true"
-            class="lucide lucide-upload me-0 me-sm-1 align-text-bottom"
-            fill="none"
-            height="13"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            width="13"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M12 3v12"
-            />
-            <path
-              d="m17 8-5-5-5 5"
-            />
-            <path
-              d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
-            />
-          </svg>
-          <span
-            class="d-none d-sm-inline"
-          >
-            Upload photo
-          </span>
-        </button>
-      </div>
-    </div>
-    <div
-      class="card-body inspection-general-evidence-card-body d-grid gap-3"
-    >
-      <div
-        class="small text-body-secondary"
-      >
-        Optional. Use this only for photos or remarks that apply to the whole inspection/location, not a specific finding or equipment item.
-      </div>
-      <div
-        class="d-grid gap-1"
-      >
-        <label
-          class="form-label small fw-semibold text-muted mb-0"
-        >
-          Additional report remarks
-        </label>
-        <textarea
-          aria-label="Additional report remarks"
-          class="form-control"
-          maxlength="2000"
-          placeholder="Optional remarks for the whole inspection/location."
-          rows="3"
-        />
-      </div>
-      <div
-        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.75rem;"
-      >
-        <div
-          class="rounded-3 border border-light-subtle p-2 d-grid gap-2"
-        >
-          <div
-            class="workflow-photo-preview workflow-photo-preview--uncropped"
-          >
-            <img
-              alt="Inspection photo"
-              class="workflow-photo-preview__image"
-              decoding="async"
-              loading="lazy"
-              src="data:image/png;base64,AA=="
-            />
-          </div>
-          <div
-            class="small text-truncate"
-          >
-            Photo
-          </div>
-          <div
-            class="d-grid gap-2"
-          >
-            <textarea
-              aria-label="Photo description"
-              class="form-control"
-              placeholder="Describe this photo"
-              rows="2"
-            />
-          </div>
-          <button
-            class="btn btn-outline-danger btn-sm d-inline-flex align-items-center justify-content-center gap-1"
-            type="button"
-          >
-            <svg
-              aria-hidden="true"
-              class="lucide lucide-trash2 lucide-trash-2"
-              fill="none"
-              height="14"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              viewBox="0 0 24 24"
-              width="14"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M10 11v6"
-              />
-              <path
-                d="M14 11v6"
-              />
-              <path
-                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"
-              />
-              <path
-                d="M3 6h18"
-              />
-              <path
-                d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
-              />
-            </svg>
-            Remove
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
       class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
     >
-      <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
-      >
-        Cannot continue to review: set the inspection date and time; select Area Satisfactory or at least one HSE finding.
-      </div>
       <button
-        class="btn btn-outline-secondary"
+        class="btn btn-primary"
         type="button"
       >
-        Save Draft
+        Submit Report
       </button>
     </div>
   </div>
@@ -1885,19 +1639,13 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       role="group"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; select Area Satisfactory or at least one HSE finding."
-      >
-        Cannot continue to review: set the inspection date and time; select Area Satisfactory or at least one HSE finding.
-      </div>
-      <div
         class="action-row-thumb-actions"
       >
         <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          class="btn btn-primary inspection-form-sticky-review-btn"
           type="button"
         >
-          Save Draft
+          Submit Report
         </button>
       </div>
     </div>
@@ -1923,110 +1671,16 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     </div>
   </div>
   <div
-    class="inspection-form-section d-grid gap-3"
-  >
-    <div
-      class="d-flex flex-wrap align-items-center justify-content-between gap-2"
-    >
-      <div>
-        <div
-          class="d-flex flex-wrap align-items-center gap-2"
-        >
-          <label
-            class="form-label fw-semibold text-muted mb-0"
-          >
-            Findings
-          </label>
-        </div>
-        <div
-          class="small text-body-secondary"
-        >
-          Record one finding at a time. Add photos if needed.
-        </div>
-      </div>
-      <button
-        aria-label="Add finding"
-        class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
-        type="button"
-      >
-        <svg
-          aria-hidden="true"
-          class="lucide lucide-plus me-1 align-text-bottom"
-          fill="none"
-          height="13"
-          stroke="currentColor"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          viewBox="0 0 24 24"
-          width="13"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M5 12h14"
-          />
-          <path
-            d="M12 5v14"
-          />
-        </svg>
-        Add finding
-      </button>
-    </div>
-    <div
-      class="rounded-3 border bg-light-subtle p-3 text-body-secondary"
-    >
-      No findings added.
-    </div>
-  </div>
-  <div
-    class="inspection-general-evidence-mobile-compact d-grid gap-2"
-  >
-    <button
-      aria-label="Add report evidence (1)"
-      class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
-      type="button"
-    >
-      <svg
-        aria-hidden="true"
-        class="lucide lucide-plus me-1 align-text-bottom"
-        fill="none"
-        height="13"
-        stroke="currentColor"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="2"
-        viewBox="0 0 24 24"
-        width="13"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M5 12h14"
-        />
-        <path
-          d="M12 5v14"
-        />
-      </svg>
-      Add report evidence (1)
-    </button>
-    <div />
-  </div>
-  <div
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
       class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
     >
-      <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
-      >
-        Cannot continue to review: set the inspection date and time; select Area Satisfactory or at least one HSE finding.
-      </div>
       <button
-        class="btn btn-outline-secondary"
+        class="btn btn-primary"
         type="button"
       >
-        Save Draft
+        Submit Report
       </button>
     </div>
   </div>
@@ -2039,19 +1693,13 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       role="group"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; select Area Satisfactory or at least one HSE finding."
-      >
-        Cannot continue to review: set the inspection date and time; select Area Satisfactory or at least one HSE finding.
-      </div>
-      <div
         class="action-row-thumb-actions"
       >
         <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
+          class="btn btn-primary inspection-form-sticky-review-btn"
           type="button"
         >
-          Save Draft
+          Submit Report
         </button>
       </div>
     </div>
@@ -2260,8 +1908,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     <div
       class="small fw-semibold text-body-secondary"
     >
-      Next 
-      kit
+      Next kit
     </div>
     <div
       class="inspection-next-location-options d-flex flex-wrap gap-2"
@@ -2378,8 +2025,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     <div
       class="small fw-semibold text-body-secondary"
     >
-      Next 
-      kit
+      Next kit
     </div>
     <div
       class="inspection-next-location-options d-flex flex-wrap gap-2"
@@ -2642,8 +2288,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     <div
       class="small fw-semibold text-body-secondary"
     >
-      Next 
-      location
+      Next location
     </div>
     <div
       class="inspection-next-location-options d-flex flex-wrap gap-2"
@@ -2760,8 +2405,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     <div
       class="small fw-semibold text-body-secondary"
     >
-      Next 
-      location
+      Next location
     </div>
     <div
       class="inspection-next-location-options d-flex flex-wrap gap-2"
@@ -3024,8 +2668,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     <div
       class="small fw-semibold text-body-secondary"
     >
-      Next 
-      location
+      Next location
     </div>
     <div
       class="inspection-next-location-options d-flex flex-wrap gap-2"
@@ -3142,8 +2785,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     <div
       class="small fw-semibold text-body-secondary"
     >
-      Next 
-      location
+      Next location
     </div>
     <div
       class="inspection-next-location-options d-flex flex-wrap gap-2"
@@ -4487,176 +4129,6 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     </div>
   </div>
   <div
-    class="inspection-form-section d-grid gap-3"
-  >
-    <div
-      class="d-flex flex-wrap align-items-center justify-content-between gap-2"
-    >
-      <div>
-        <div
-          class="d-flex flex-wrap align-items-center gap-2"
-        >
-          <label
-            class="form-label fw-semibold text-muted mb-0"
-          >
-            Findings
-          </label>
-        </div>
-        <div
-          class="small text-body-secondary"
-        >
-          Record one finding at a time. Add photos if needed.
-        </div>
-      </div>
-      <button
-        aria-label="Add finding"
-        class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
-        type="button"
-      >
-        <svg
-          aria-hidden="true"
-          class="lucide lucide-plus me-1 align-text-bottom"
-          fill="none"
-          height="13"
-          stroke="currentColor"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          viewBox="0 0 24 24"
-          width="13"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M5 12h14"
-          />
-          <path
-            d="M12 5v14"
-          />
-        </svg>
-        Add finding
-      </button>
-    </div>
-    <div
-      class="rounded-3 border bg-light-subtle p-3 text-body-secondary"
-    >
-      No findings added.
-    </div>
-  </div>
-  <div
-    class="card inspection-general-evidence-card"
-  >
-    <div
-      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
-    >
-      <div
-        class="fw-semibold"
-      >
-        Additional report evidence
-      </div>
-      <div
-        class="d-flex align-items-center gap-2"
-      >
-        <button
-          aria-label="Take photo"
-          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center px-3  inspection-take-photo-btn px-2 px-sm-2"
-          type="button"
-        >
-          <svg
-            aria-hidden="true"
-            class="lucide lucide-camera me-0 me-sm-1 align-text-bottom"
-            fill="none"
-            height="13"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            width="13"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z"
-            />
-            <circle
-              cx="12"
-              cy="13"
-              r="3"
-            />
-          </svg>
-          <span
-            class="d-none d-sm-inline"
-          >
-            Take photo
-          </span>
-        </button>
-        <button
-          aria-label="Upload photo"
-          class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
-          type="button"
-        >
-          <svg
-            aria-hidden="true"
-            class="lucide lucide-upload me-0 me-sm-1 align-text-bottom"
-            fill="none"
-            height="13"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            viewBox="0 0 24 24"
-            width="13"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M12 3v12"
-            />
-            <path
-              d="m17 8-5-5-5 5"
-            />
-            <path
-              d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
-            />
-          </svg>
-          <span
-            class="d-none d-sm-inline"
-          >
-            Upload photo
-          </span>
-        </button>
-      </div>
-    </div>
-    <div
-      class="card-body inspection-general-evidence-card-body d-grid gap-3"
-    >
-      <div
-        class="small text-body-secondary"
-      >
-        Optional. Use this only for photos or remarks that apply to the whole inspection/location, not a specific finding or equipment item.
-      </div>
-      <div
-        class="d-grid gap-1"
-      >
-        <label
-          class="form-label small fw-semibold text-muted mb-0"
-        >
-          Additional report remarks
-        </label>
-        <textarea
-          aria-label="Additional report remarks"
-          class="form-control"
-          maxlength="2000"
-          placeholder="Optional remarks for the whole inspection/location."
-          rows="3"
-        />
-      </div>
-      <div
-        class="text-body-secondary"
-      >
-        No additional report photos added.
-      </div>
-    </div>
-  </div>
-  <div
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
@@ -4666,7 +4138,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
         aria-live="polite"
         class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
       >
-        Cannot continue to review: set the inspection date and time; select Area Satisfactory or at least one HSE finding.
+        Cannot continue to review: complete the required HSE observation details.
       </div>
       <button
         class="btn btn-outline-secondary"
@@ -4686,9 +4158,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     >
       <div
         class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; select Area Satisfactory or at least one HSE finding."
+        title="Cannot continue to review: complete the required HSE observation details."
       >
-        Cannot continue to review: set the inspection date and time; select Area Satisfactory or at least one HSE finding.
+        Cannot continue to review: complete the required HSE observation details.
       </div>
       <div
         class="action-row-thumb-actions"
@@ -4723,94 +4195,6 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     </div>
   </div>
   <div
-    class="inspection-form-section d-grid gap-3"
-  >
-    <div
-      class="d-flex flex-wrap align-items-center justify-content-between gap-2"
-    >
-      <div>
-        <div
-          class="d-flex flex-wrap align-items-center gap-2"
-        >
-          <label
-            class="form-label fw-semibold text-muted mb-0"
-          >
-            Findings
-          </label>
-        </div>
-        <div
-          class="small text-body-secondary"
-        >
-          Record one finding at a time. Add photos if needed.
-        </div>
-      </div>
-      <button
-        aria-label="Add finding"
-        class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
-        type="button"
-      >
-        <svg
-          aria-hidden="true"
-          class="lucide lucide-plus me-1 align-text-bottom"
-          fill="none"
-          height="13"
-          stroke="currentColor"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          viewBox="0 0 24 24"
-          width="13"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M5 12h14"
-          />
-          <path
-            d="M12 5v14"
-          />
-        </svg>
-        Add finding
-      </button>
-    </div>
-    <div
-      class="rounded-3 border bg-light-subtle p-3 text-body-secondary"
-    >
-      No findings added.
-    </div>
-  </div>
-  <div
-    class="inspection-general-evidence-mobile-compact d-grid gap-2"
-  >
-    <button
-      aria-label="Add report evidence"
-      class="btn btn-sm create-action-button create-action-button--inline text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
-      type="button"
-    >
-      <svg
-        aria-hidden="true"
-        class="lucide lucide-plus me-1 align-text-bottom"
-        fill="none"
-        height="13"
-        stroke="currentColor"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="2"
-        viewBox="0 0 24 24"
-        width="13"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M5 12h14"
-        />
-        <path
-          d="M12 5v14"
-        />
-      </svg>
-      Add report evidence
-    </button>
-    <div />
-  </div>
-  <div
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
@@ -4820,7 +4204,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
         aria-live="polite"
         class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
       >
-        Cannot continue to review: set the inspection date and time; select Area Satisfactory or at least one HSE finding.
+        Cannot continue to review: complete the required HSE observation details.
       </div>
       <button
         class="btn btn-outline-secondary"
@@ -4840,9 +4224,9 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     >
       <div
         class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; select Area Satisfactory or at least one HSE finding."
+        title="Cannot continue to review: complete the required HSE observation details."
       >
-        Cannot continue to review: set the inspection date and time; select Area Satisfactory or at least one HSE finding.
+        Cannot continue to review: complete the required HSE observation details.
       </div>
       <div
         class="action-row-thumb-actions"

@@ -1,3 +1,5 @@
+import { getInspectionTypeDefinition } from './inspectionTypeRegistry'
+
 export const MOBILE_HOME_RECENT_RECORD_LIMIT = 3
 
 export const trackInspectionDraftSyncTask = (taskRef, task) => {
@@ -80,12 +82,17 @@ export const buildTypedInspectionWorkspaceForm = ({
   defaultInspectionForm,
   getDefaultInspectionDateTime,
   normalizeInspectionForm,
-}) =>
-  normalizeInspectionForm({
+}) => {
+  const normalizedType = String(inspectionType || '').trim()
+  const definition = getInspectionTypeDefinition(normalizedType)
+
+  return normalizeInspectionForm({
     ...defaultInspectionForm,
-    inspectionType: String(inspectionType || '').trim(),
+    ...(definition?.initialFormState || {}),
+    inspectionType: normalizedType,
     inspectedAt: getDefaultInspectionDateTime(),
   })
+}
 
 export const buildInspectionReviewContext = ({
   activeSection,

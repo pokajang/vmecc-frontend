@@ -10,15 +10,9 @@ import {
   normalizeHseFormFields,
 } from './helpers'
 import { createZoneLocationDetailContextFields } from '../detailConfigHelpers'
-import { HseReadOnlySection } from './section'
-import { HseVersionedEditSection } from './v2Section'
+import { HseEditSection, HseReadOnlySection } from './v2Section'
 import { INSPECTION_REPORT_EVIDENCE_COPY } from '../../inspectionReportEvidenceCopy'
 import { buildHseDetailFindingItems, renderHseDetailFindingContent } from './detail'
-import featureFlags from 'src/config/featureFlags'
-
-const initialHseFormState = featureFlags.inspectionHseV2Enabled
-  ? HSE_FORM_DEFAULTS
-  : { ...HSE_FORM_DEFAULTS, hsePayloadVersion: 0 }
 
 const hseInspectionDefinition = {
   key: 'health-safety-environment-inspection',
@@ -42,14 +36,14 @@ const hseInspectionDefinition = {
   fieldRefKey: 'hseObservation',
   photoEvidenceTitle: INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle,
   missingFieldKeys: ['hseSelection', 'hseDetails'],
-  initialFormState: initialHseFormState,
+  initialFormState: HSE_FORM_DEFAULTS,
   isInspectionType: isHseInspectionType,
   getSummary: getHseCheckSummary,
   getMissingFields: getHseMissingFields,
   buildChecklist: buildHseChecklist,
   buildDescription: buildHseDescription,
   normalizeChecks: normalizeHseFormFields,
-  EditSection: HseVersionedEditSection,
+  EditSection: HseEditSection,
   ReadOnlySection: HseReadOnlySection,
   detailContextFields: createZoneLocationDetailContextFields({
     typeLabel: 'Health Safety Environment',
