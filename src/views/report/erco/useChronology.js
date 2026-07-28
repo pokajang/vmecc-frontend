@@ -7,7 +7,6 @@ import {
   resolveNextChronologyTime,
   addMinutesToTime,
   parseTimeToMinutes,
-  reorderRows,
   buildPreMobRowsFromStart,
   buildManualRowFromStart,
   isChronologySequenceOutOfOrder,
@@ -105,20 +104,16 @@ export const useChronology = ({ form, setForm, pushToast }) => {
       String(form.incidentTime || '').trim() ||
       '',
   )
-  const [draggingRowId, setDraggingRowId] = useState(null)
-  const [dragOverRowId, setDragOverRowId] = useState(null)
   const [draggingEventRowId, setDraggingEventRowId] = useState(null)
   const [dragOverEventRowId, setDragOverEventRowId] = useState(null)
   const [hoveredEventRowId, setHoveredEventRowId] = useState(null)
   const [focusedEventRowId, setFocusedEventRowId] = useState(null)
   const [swappedRowIds, setSwappedRowIds] = useState([])
-  const [swapEffectScope, setSwapEffectScope] = useState('row')
   const [canUndo, setCanUndo] = useState(false)
   const swapEffectTimerRef = useRef(null)
   const undoTimerRef = useRef(null)
   const snapshotRef = useRef(null)
   const eventFieldRefs = useRef({})
-  const rowContainerRefs = useRef({})
 
   const chronologyRows = useMemo(
     () => (Array.isArray(form.chronology) ? form.chronology : []),
@@ -227,26 +222,15 @@ export const useChronology = ({ form, setForm, pushToast }) => {
     updateChronologyRows((rows) => rows.filter((row) => row.id !== rowId))
   }
 
-  const triggerSwapEffect = (scope, affectedRowIds) => {
+  const triggerSwapEffect = (affectedRowIds) => {
     if (swapEffectTimerRef.current) {
       window.clearTimeout(swapEffectTimerRef.current)
     }
-    setSwapEffectScope(scope)
     setSwappedRowIds(affectedRowIds)
     swapEffectTimerRef.current = window.setTimeout(() => {
       setSwappedRowIds([])
-      setSwapEffectScope('row')
       swapEffectTimerRef.current = null
     }, 320)
-  }
-
-  const moveChronologyRow = (fromIndex, toIndex) => {
-    if (fromIndex === toIndex) return
-    const fromRowId = chronologyRows[fromIndex]?.id
-    const toRowId = chronologyRows[toIndex]?.id
-    triggerSwapEffect('row', [fromRowId, toRowId].filter(Boolean))
-    snapshotChronology()
-    updateChronologyRows((rows) => reorderRows(rows, fromIndex, toIndex))
   }
 
   const sortChronologyByTime = () => {
@@ -260,7 +244,7 @@ export const useChronology = ({ form, setForm, pushToast }) => {
     if (fromIndex === toIndex) return
     const fromRowId = chronologyRows[fromIndex]?.id
     const toRowId = chronologyRows[toIndex]?.id
-    triggerSwapEffect('event', [fromRowId, toRowId].filter(Boolean))
+    triggerSwapEffect([fromRowId, toRowId].filter(Boolean))
     snapshotChronology()
     updateChronologyRows((rows) => {
       const safeRows = Array.isArray(rows) ? [...rows] : []
@@ -287,64 +271,6 @@ export const useChronology = ({ form, setForm, pushToast }) => {
   }
 
   // --- Pointer-based drag handlers ---
-
-  const handleRowGripPointerDown = (e, rowId) => {
-    e.preventDefault()
-    const rows = chronologyRows
-    const fromIndex = rows.findIndex((r) => r.id === rowId)
-    const rowEl = rowContainerRefs.current[rowId]
-    if (!rowEl || fromIndex < 0) return
-
-    const ghost = createDragGhost(rowEl, e.clientX, e.clientY)
-    document.body.style.userSelect = 'none'
-    setDraggingRowId(rowId)
-    applySlideTransforms(rowContainerRefs.current, rows, fromIndex, fromIndex)
-
-    let currentToIndex = fromIndex
-
-    const onMove = (moveEvent) => {
-      ghost.el.style.left = `${moveEvent.clientX - ghost.offsetX}px`
-      ghost.el.style.top = `${moveEvent.clientY - ghost.offsetY}px`
-      const targetId = findClosestId(rowContainerRefs.current, moveEvent.clientY)
-      if (!targetId) return
-      const targetIndex = rows.findIndex((r) => r.id === targetId)
-      if (targetIndex < 0 || targetIndex === currentToIndex) return
-      currentToIndex = targetIndex
-      setDragOverRowId(targetId)
-      applySlideTransforms(rowContainerRefs.current, rows, fromIndex, targetIndex)
-    }
-
-    const cleanup = () => {
-      window.removeEventListener('pointermove', onMove)
-      window.removeEventListener('pointerup', onUp)
-      window.removeEventListener('pointercancel', onCancel)
-      ghost.el.remove()
-      document.body.style.userSelect = ''
-    }
-
-    const onUp = () => {
-      cleanup()
-      if (currentToIndex !== fromIndex) moveChronologyRow(fromIndex, currentToIndex)
-      window.requestAnimationFrame(() =>
-        window.requestAnimationFrame(() => {
-          clearSlideTransforms(rowContainerRefs.current)
-          setDraggingRowId(null)
-          setDragOverRowId(null)
-        }),
-      )
-    }
-
-    const onCancel = () => {
-      cleanup()
-      clearSlideTransforms(rowContainerRefs.current)
-      setDraggingRowId(null)
-      setDragOverRowId(null)
-    }
-
-    window.addEventListener('pointermove', onMove)
-    window.addEventListener('pointerup', onUp)
-    window.addEventListener('pointercancel', onCancel)
-  }
 
   const handleEventGripPointerDown = (e, rowId) => {
     e.preventDefault()
@@ -607,8 +533,6 @@ export const useChronology = ({ form, setForm, pushToast }) => {
     isChronologyOutOfOrder,
 
     // Drag state (read — setters are controlled internally by pointer handlers)
-    draggingRowId,
-    dragOverRowId,
     draggingEventRowId,
     dragOverEventRowId,
     hoveredEventRowId,
@@ -616,11 +540,9 @@ export const useChronology = ({ form, setForm, pushToast }) => {
     focusedEventRowId,
     setFocusedEventRowId,
     swappedRowIds,
-    swapEffectScope,
 
     // Refs
     eventFieldRefs,
-    rowContainerRefs,
 
     // Row modal (mobile)
     rowModal,
@@ -651,12 +573,10 @@ export const useChronology = ({ form, setForm, pushToast }) => {
     updateChronologyRow,
     addChronologyRowAfter,
     removeChronologyRow,
-    moveChronologyRow,
     moveChronologyEventPayload,
     sortChronologyByTime,
 
     // Drag entry points (pointer-based)
-    handleRowGripPointerDown,
     handleEventGripPointerDown,
 
     // Chronology actions
