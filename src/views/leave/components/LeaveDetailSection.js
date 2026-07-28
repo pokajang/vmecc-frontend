@@ -69,6 +69,14 @@ const LeaveDetailSection = ({
                   value: selectedRecord.nextActionRole || '-',
                 },
                 {
+                  label: 'Workflow Scope',
+                  value: selectedRecord.workflowTeamName || 'Organization-wide',
+                },
+                {
+                  label: 'Applicant Role',
+                  value: selectedRecord.workflowApplicantRole || '-',
+                },
+                {
                   label: 'Next Action',
                   value: selectedRecordPendingActionHint ? (
                     <span className="fw-semibold">{selectedRecordPendingActionHint}</span>

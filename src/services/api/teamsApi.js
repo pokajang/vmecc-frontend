@@ -44,6 +44,42 @@ export const uploadTeamImage = (id, file) => {
   return apiRequest(`/teams/${id}/image`, { method: 'POST', body: formData })
 }
 
+// Temporary cross-team duty coverage
+export const fetchDutyCoverage = (params = {}) => {
+  const query = new URLSearchParams()
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') query.append(key, value)
+  })
+
+  return apiRequest(`/duty-coverage${query.toString() ? `?${query.toString()}` : ''}`)
+}
+
+export const createDutyCoverage = (payload) =>
+  apiRequest('/duty-coverage', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+
+export const updateDutyCoverage = (id, payload) =>
+  apiRequest(`/duty-coverage/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  })
+
+export const cancelDutyCoverage = (id, reason) =>
+  apiRequest(`/duty-coverage/${id}/cancel`, {
+    method: 'POST',
+    body: JSON.stringify({ reason }),
+  })
+
+export const createTeamRoleTransfer = (userId, payload) =>
+  apiRequest(`/users/${userId}/team-role-transfer`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+
+export const fetchTeamRoleTransferOptions = () => apiRequest('/team-role-transfers/options')
+
 // Rosters
 export const fetchRosters = (params = {}) => {
   const query = new URLSearchParams()

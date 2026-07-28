@@ -26,6 +26,7 @@ import useDashboardActionQueue from './hooks/useDashboardActionQueue'
 import { PERIOD_OPTIONS, resolvePeriodLabel } from './components/DashboardHeader'
 import DashboardAnalyticsDisclosure from './components/DashboardAnalyticsDisclosure'
 import { MODULE_ACCENTS } from './utils/chartDefaults'
+import { reportContextLabel } from './utils/reportContext'
 import {
   PayrollKpiTiles,
   PayrollOperationsCard,
@@ -186,7 +187,13 @@ const DashboardActionQueue = ({ items, loading, error, onRetry }) => {
                     <span className="dashboard-action-queue__item-copy">
                       <span className="dashboard-action-queue__item-label">{item.label}</span>
                       <span className="dashboard-action-queue__item-module text-capitalize">
-                        {item.module}
+                        {item.teamName ||
+                        item.actingRole ||
+                        item.role ||
+                        item.scopeLabel ||
+                        item.routingSource
+                          ? `${item.module} · ${reportContextLabel(item)}`
+                          : item.module}
                       </span>
                     </span>
                   </span>
@@ -525,8 +532,8 @@ const Dashboard = () => {
       <DashboardModuleSlot moduleKey="reports" isVisible={canViewReportsSection}>
         {canViewReportsSection && (
           <ModuleSectionHeader
-            title="Reports"
-            subtext="ERCO, drill, and fitness test submissions"
+            title="Reports & Inspections"
+            subtext="Role-aware review, approval, and submission activity"
             accentColor={MODULE_ACCENTS.reports.base}
           >
             <DashboardModuleCardGuard

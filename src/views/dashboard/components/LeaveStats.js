@@ -4,16 +4,19 @@ import { CCard, CCardBody, CCardHeader, CCol } from '@coreui/react'
 import DashboardEmptyState from './DashboardEmptyState'
 import DashboardMetricList from './DashboardMetricList'
 import { DashboardActivityChart, DashboardBreakdownRows } from './DashboardCharts'
+import WorkflowStatsContexts from './WorkflowStatsContexts'
 
 export const LeaveKpiTiles = ({ stats }) => (
   <CCol xs={12}>
     <DashboardMetricList
+      title={stats?.scope?.label}
       metrics={[
         {
           key: 'pending-approvals',
           value: stats?.pendingApprovals ?? 0,
           label: 'pending approvals',
           tone: 'warning',
+          to: '/staff/leave-management/leaves?status=Pending',
         },
         {
           key: 'approved-days',
@@ -33,9 +36,11 @@ export const LeaveKpiTiles = ({ stats }) => (
           value: stats?.staffWithPendingRequests ?? 0,
           label: 'pending leave requests',
           tone: 'warning',
+          to: '/staff/leave-management/leaves?status=Pending',
         },
       ]}
     />
+    <WorkflowStatsContexts contexts={stats?.contexts} ariaLabel="Leave actions by team and role" />
   </CCol>
 )
 
@@ -87,6 +92,8 @@ const leaveStatsShape = {
     PropTypes.shape({ month: PropTypes.string, count: PropTypes.number }),
   ),
   byTeam: PropTypes.arrayOf(PropTypes.shape({ team: PropTypes.string, count: PropTypes.number })),
+  scope: PropTypes.shape({ key: PropTypes.string, label: PropTypes.string }),
+  contexts: PropTypes.arrayOf(PropTypes.object),
 }
 
 LeaveKpiTiles.propTypes = { stats: PropTypes.shape(leaveStatsShape) }

@@ -21,6 +21,9 @@ const useReportRecords = ({
   draftRows = [],
   actionFilter = '',
   initialStatusFilter = 'All',
+  teamFilter = null,
+  dateFromFilter = '',
+  dateToFilter = '',
 }) => {
   const [records, setRecords] = useState([])
   const [search, setSearch] = useState('')
@@ -50,6 +53,9 @@ const useReportRecords = ({
             scope: actionFilter ? 'actionable' : recordScope,
             action: actionFilter,
             status: !actionFilter && initialStatusFilter !== 'All' ? initialStatusFilter : '',
+            teamId: teamFilter,
+            dateFrom: dateFromFilter,
+            dateTo: dateToFilter,
           })
         : loadReportRecords(userId).filter(
             (row) =>
@@ -78,6 +84,9 @@ const useReportRecords = ({
               scope: actionFilter ? 'actionable' : recordScope,
               action: actionFilter,
               status: !actionFilter && initialStatusFilter !== 'All' ? initialStatusFilter : '',
+              teamId: teamFilter,
+              dateFrom: dateFromFilter,
+              dateTo: dateToFilter,
             })
           : loadReportRecords(userId).filter(
               (row) =>
@@ -99,10 +108,13 @@ const useReportRecords = ({
   }, [
     actionFilter,
     apiEnabledForType,
+    dateFromFilter,
+    dateToFilter,
     initialStatusFilter,
     recordScope,
     reportTypeSlug,
     shouldRunBackfill,
+    teamFilter,
     userId,
   ])
 
@@ -144,9 +156,9 @@ const useReportRecords = ({
   }, [draftRows, records, reportTypeSlug])
 
   const scopedRecords = useMemo(() => {
-    if (recordScope !== 'mine') return recordsInScope
+    if (actionFilter || recordScope !== 'mine') return recordsInScope
     return recordsInScope.filter((row) => isReportRecordMine(row, user))
-  }, [recordScope, recordsInScope, user])
+  }, [actionFilter, recordScope, recordsInScope, user])
 
   const submittedRecordsInScope = useMemo(
     () => scopedRecords.filter((row) => row?.recordKind !== 'draft'),

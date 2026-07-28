@@ -50,6 +50,11 @@ const normalizeRecord = (row) => ({
   workflowSnapshot:
     row?.workflowSnapshot && typeof row.workflowSnapshot === 'object' ? row.workflowSnapshot : null,
   workflowStage: String(row?.workflowStage || 'review'),
+  workflowTeamId: row?.workflowTeamId ?? null,
+  workflowTeamName: String(row?.workflowTeamName || ''),
+  workflowApplicantRole: String(row?.workflowApplicantRole || ''),
+  workflowRoutingSource: String(row?.workflowRoutingSource || ''),
+  dutyCoverageAssignmentId: row?.dutyCoverageAssignmentId ?? null,
   nextActionRole: row?.nextActionRole ? String(row.nextActionRole) : null,
   applicantRoles: Array.isArray(row?.applicantRoles) ? row.applicantRoles : [],
   approvalHistory: Array.isArray(row?.approvalHistory) ? row.approvalHistory : [],

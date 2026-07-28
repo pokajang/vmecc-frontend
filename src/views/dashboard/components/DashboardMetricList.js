@@ -1,6 +1,7 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import { CListGroup, CListGroupItem } from '@coreui/react'
+import { Link } from 'react-router-dom'
 
 const DashboardMetricList = ({ title, metrics, className = '' }) => (
   <section
@@ -10,7 +11,17 @@ const DashboardMetricList = ({ title, metrics, className = '' }) => (
     {title && <h4 className="dashboard-metric-list__title">{title}</h4>}
     <CListGroup className="dashboard-metric-list__items">
       {metrics.map((metric) => (
-        <CListGroupItem key={metric.key} className="dashboard-metric-list__item">
+        <CListGroupItem
+          as={metric.to ? Link : undefined}
+          to={metric.to}
+          key={metric.key}
+          className={`dashboard-metric-list__item ${
+            metric.to ? 'dashboard-metric-list__item--link text-decoration-none' : ''
+          }`.trim()}
+          aria-label={
+            metric.to ? `${metric.value} ${metric.label}. View matching records.` : undefined
+          }
+        >
           <span
             aria-hidden="true"
             className={`dashboard-metric-list__tone dashboard-metric-list__tone--${
@@ -46,6 +57,7 @@ DashboardMetricList.propTypes = {
       label: PropTypes.string.isRequired,
       detail: PropTypes.string,
       tone: PropTypes.oneOf(['primary', 'warning', 'danger', 'success', 'muted']),
+      to: PropTypes.string,
     }),
   ).isRequired,
 }

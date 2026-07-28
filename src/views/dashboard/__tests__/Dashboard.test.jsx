@@ -68,7 +68,11 @@ let dashboardActionQueue = {
       action: 'review',
       label: 'Inspections pending your review',
       count: 3,
-      to: '/inspection?scope=actionable&action=review',
+      teamName: 'Alpha Team',
+      actingRole: 'Assistant Incident Commander',
+      actingRoleCode: 'AIC',
+      assignmentSource: 'temporary_coverage',
+      to: '/inspection?scope=actionable&action=review&team_id=8',
     },
   ],
 }
@@ -176,7 +180,11 @@ const resetDefaults = () => {
         action: 'review',
         label: 'Inspections pending your review',
         count: 3,
-        to: '/inspection?scope=actionable&action=review',
+        teamName: 'Alpha Team',
+        actingRole: 'Assistant Incident Commander',
+        actingRoleCode: 'AIC',
+        assignmentSource: 'temporary_coverage',
+        to: '/inspection?scope=actionable&action=review&team_id=8',
       },
     ],
   }
@@ -205,6 +213,7 @@ it('renders a global period control and the personalized action queue', () => {
   expect(screen.getByText('Action Queue')).toBeTruthy()
   expect(screen.getByText('Leave requests pending your review')).toBeTruthy()
   expect(screen.getByText('Inspections pending your review')).toBeTruthy()
+  expect(screen.getByText('inspection · Alpha Team · Acting AIC · Temporary coverage')).toBeTruthy()
   expect(
     screen
       .getAllByRole('link')
@@ -213,7 +222,10 @@ it('renders a global period control and the personalized action queue', () => {
   expect(
     screen
       .getAllByRole('link')
-      .some((link) => link.getAttribute('href') === '/inspection?scope=actionable&action=review'),
+      .some(
+        (link) =>
+          link.getAttribute('href') === '/inspection?scope=actionable&action=review&team_id=8',
+      ),
   ).toBe(true)
   expect(screen.getByTestId('dashboard-module-payroll').getAttribute('data-visible')).toBe(
     'visible',

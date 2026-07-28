@@ -17,11 +17,14 @@ import CreateActionButton from 'src/components/CreateActionButton'
 import ModulePageHeader from 'src/components/ModulePageHeader'
 import { hasPermission } from 'src/utils/authz'
 import { resolveTeamScheduleStatusMap } from './components/teamScheduleStatus'
+import DutyCoveragePanel from './components/DutyCoveragePanel'
+import TeamRoleTransferPanel from './components/TeamRoleTransferPanel'
 
 const TeamDetails = () => {
   const authUser = useSelector((state) => state.authUser)
   const canViewTeams = hasPermission(authUser, 'teams.view')
   const canManageTeams = hasPermission(authUser, 'teams.manage')
+  const canTransferRoles = hasPermission(authUser, 'roles.assign')
 
   const [teams, setTeams] = useState([])
   const [loading, setLoading] = useState(true)
@@ -199,6 +202,12 @@ const TeamDetails = () => {
           </CCard>
         </CCol>
       </CRow>
+      {canManageTeams && !loading && !membersLoading && (
+        <DutyCoveragePanel teams={teams} memberOptions={members} onChanged={loadPageData} />
+      )}
+      {canTransferRoles && !loading && !membersLoading && (
+        <TeamRoleTransferPanel teams={teams} onChanged={loadPageData} />
+      )}
       <CreateTeamModal
         visible={showCreate}
         existingTeams={teams.map((t) => t.name)}

@@ -50,6 +50,11 @@ describe('WorkflowNotifications', () => {
           createdAt: '2026-06-12T08:00:00.000Z',
           unread: true,
           actionRequiredForViewer: true,
+          metadata: {
+            workflowTeamName: 'Alpha Team',
+            nextActionRole: 'Assistant Incident Commander',
+            workflowRoutingSource: 'temporary_coverage',
+          },
           payload: { id: 'LV-1' },
         },
         {
@@ -84,6 +89,9 @@ describe('WorkflowNotifications', () => {
       true,
     )
     expect(document.querySelector('.notification-item-dot')).toBeNull()
+    expect(
+      screen.getByText('Alpha Team · Acting Assistant Incident Commander · Temporary coverage'),
+    ).toBeTruthy()
 
     fireEvent.click(screen.getByText('Leave needs approval'))
 

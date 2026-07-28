@@ -121,6 +121,14 @@ const OvertimeManagement = () => {
     const action = String(new URLSearchParams(location.search).get('action') || '').toLowerCase()
     return ['review', 'recommend', 'approve'].includes(action) ? action : ''
   }, [location.search])
+  const actionQueueTeamId = useMemo(() => {
+    const value = Number(new URLSearchParams(location.search).get('team_id') || 0)
+    return Number.isInteger(value) && value > 0 ? value : null
+  }, [location.search])
+  const actionQueueStatus = useMemo(
+    () => String(new URLSearchParams(location.search).get('status') || 'All'),
+    [location.search],
+  )
 
   const toaster = useRef()
   const [toast, addToast] = useState(null)
@@ -136,7 +144,7 @@ const OvertimeManagement = () => {
   const overtimeRequestRef = useRef(0)
 
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('All')
+  const [statusFilter, setStatusFilter] = useState(actionQueueStatus)
   const [overtimeTypeFilter, setOvertimeTypeFilter] = useState('All')
   const [teamFilter, setTeamFilter] = useState('All')
   const [period, setPeriod] = useState('all')
@@ -144,6 +152,11 @@ const OvertimeManagement = () => {
   const [rowsToShow, setRowsToShow] = useState(DEFAULT_ROWS_TO_SHOW)
   const [page, setPage] = useState(1)
   const [isBulkOvertimeSubmitting, setIsBulkOvertimeSubmitting] = useState(false)
+
+  useEffect(() => {
+    setStatusFilter(actionQueueStatus)
+    setPage(1)
+  }, [actionQueueStatus])
 
   const pushToast = useCallback((message, { title, color = 'light', delay = 6000 } = {}) => {
     addToast(
@@ -189,6 +202,7 @@ const OvertimeManagement = () => {
         page,
         per_page: rowsToShow,
         action: actionQueueAction || undefined,
+        team_id: actionQueueTeamId || undefined,
       }
 
       const requestId = overtimeRequestRef.current + 1
@@ -231,6 +245,7 @@ const OvertimeManagement = () => {
     [
       isHrUser,
       actionQueueAction,
+      actionQueueTeamId,
       overtimeTypeFilter,
       page,
       period,

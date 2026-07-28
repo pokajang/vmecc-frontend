@@ -96,6 +96,17 @@ const InspectionModule = () => {
     const status = String(new URLSearchParams(location.search).get('status') || '')
     return status === 'Rejected' ? status : 'All'
   }, [location.search])
+  const actionQueueTeam = useMemo(() => {
+    const teamId = Number(new URLSearchParams(location.search).get('team_id') || 0)
+    return Number.isInteger(teamId) && teamId > 0 ? teamId : null
+  }, [location.search])
+  const dashboardPeriod = useMemo(() => {
+    const params = new URLSearchParams(location.search)
+    return {
+      dateFrom: String(params.get('date_from') || ''),
+      dateTo: String(params.get('date_to') || ''),
+    }
+  }, [location.search])
 
   const pushToast = useCallback((message, { title, color = 'light', delay = 5000 } = {}) => {
     setFeedback((current) => ({
@@ -184,6 +195,9 @@ const InspectionModule = () => {
     draftRows: draftRecordRows,
     actionFilter: actionQueueAction,
     initialStatusFilter: actionQueueStatus,
+    teamFilter: actionQueueTeam,
+    dateFromFilter: dashboardPeriod.dateFrom,
+    dateToFilter: dashboardPeriod.dateTo,
   })
 
   useEffect(() => {

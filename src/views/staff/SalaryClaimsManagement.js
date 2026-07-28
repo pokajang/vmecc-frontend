@@ -74,6 +74,20 @@ const SalaryClaimsManagement = () => {
     const action = String(new URLSearchParams(location.search).get('action') || '').toLowerCase()
     return ['check', 'review', 'approve', 'mark_paid'].includes(action) ? action : ''
   }, [location.search])
+  const actionQueueStatus = useMemo(() => {
+    const status = String(new URLSearchParams(location.search).get('status') || '')
+    return ['Pending', 'Approved', 'Paid', 'Rejected', 'Cancelled'].includes(status)
+      ? status
+      : 'All'
+  }, [location.search])
+  const actionQueueClaimType = useMemo(() => {
+    const type = String(new URLSearchParams(location.search).get('type') || '').toLowerCase()
+    return ['salary', 'expense', 'other'].includes(type) ? type : 'All'
+  }, [location.search])
+  const includeSalaryClaims = useMemo(
+    () => new URLSearchParams(location.search).get('include_salary') === '1',
+    [location.search],
+  )
 
   const isClaimDetailRoute =
     location.pathname.startsWith('/staff/salary-claims/') && Boolean(claimId)
@@ -177,6 +191,9 @@ const SalaryClaimsManagement = () => {
     allOvertimeRecords: hydration.allOvertimeRecords,
     staffDirectory: hydration.staffDirectory,
     assignmentRows: combinedAssignmentRows,
+    initialClaimTypeFilter: actionQueueClaimType,
+    initialStatusFilter: actionQueueStatus,
+    includeSalaryClaims,
     selectedClaimKeys: pageState.selectedClaimKeys,
     selectedClaimItemId: pageState.selectedClaimItemId,
   })

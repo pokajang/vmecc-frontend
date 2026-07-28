@@ -14,6 +14,8 @@ export const EVENT_LABELS = {
   reviewed: 'Reviewed',
   recommended: 'Recommended',
   approved: 'Approved',
+  paid: 'Paid',
+  payment_reopened: 'Payment Reopened',
   rejected: 'Rejected',
   cancelled: 'Cancelled',
   allocation_updated: 'Allocation Updated',

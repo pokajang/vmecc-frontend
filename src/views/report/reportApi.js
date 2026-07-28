@@ -112,6 +112,9 @@ export const fetchReportRecords = async (options = {}) => {
   if (options?.scope) query.set('scope', String(options.scope))
   if (options?.action) query.set('action', String(options.action))
   if (options?.status) query.set('status', String(options.status))
+  if (Number(options?.teamId || 0) > 0) query.set('team_id', String(options.teamId))
+  if (options?.dateFrom) query.set('date_from', String(options.dateFrom))
+  if (options?.dateTo) query.set('date_to', String(options.dateTo))
   const path = query.toString() ? `/reports?${query.toString()}` : '/reports'
   const response = await apiRequest(path)
   const rows = Array.isArray(response?.data) ? response.data : []

@@ -3,6 +3,32 @@ import { Eye, Trash2 } from 'lucide-react'
 import { formatDateTime } from './notificationUtils'
 import { getModuleLabel, getEventLabel } from './notificationConstants'
 
+const ROUTING_SOURCE_LABELS = {
+  temporary_coverage: 'Temporary coverage',
+  role_assignment: 'Permanent assignment',
+  legacy_role: 'Legacy role assignment',
+  legacy_team: 'Legacy team assignment',
+  organization: 'Organization-wide role',
+  fallback: 'Fallback assignment',
+}
+
+const workflowContextLabel = (item = {}) => {
+  const metadata = item.metadata || {}
+  const team = String(metadata.workflowTeamName || '').trim()
+  const role = String(metadata.nextActionRole || metadata.workflowApplicantRole || '').trim()
+  const source = String(metadata.workflowRoutingSource || '').trim()
+
+  if (!team && !role && !source) return ''
+
+  return [
+    team || 'Organization-wide',
+    source === 'temporary_coverage' && role ? `Acting ${role}` : role,
+    ROUTING_SOURCE_LABELS[source] || '',
+  ]
+    .filter(Boolean)
+    .join(' · ')
+}
+
 const WorkflowNotificationCard = ({ item, onClick, onDelete, onMarkRead }) => {
   if (!item) return null
 
@@ -10,6 +36,7 @@ const WorkflowNotificationCard = ({ item, onClick, onDelete, onMarkRead }) => {
   const eventLabel = getEventLabel(item)
   const summary =
     String(item.message || item.title || '').trim() || `${moduleLabel} ${eventLabel || 'update'}`
+  const contextLabel = workflowContextLabel(item)
 
   const handleDelete = (e) => {
     e.stopPropagation()
@@ -31,6 +58,7 @@ const WorkflowNotificationCard = ({ item, onClick, onDelete, onMarkRead }) => {
           {item.actionRequiredForViewer && (
             <span className="notification-item-action-chip">Action required</span>
           )}
+          {contextLabel && <span className="notification-item-meta">{contextLabel}</span>}
           <span className="notification-item-meta">
             {moduleLabel}
             {eventLabel ? ` - ${eventLabel}` : ''}

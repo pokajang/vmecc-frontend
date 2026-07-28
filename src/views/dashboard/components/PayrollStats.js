@@ -4,6 +4,7 @@ import { CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/react'
 import DashboardEmptyState from './DashboardEmptyState'
 import DashboardMetricList from './DashboardMetricList'
 import { DashboardActivityChart, DashboardBreakdownRows } from './DashboardCharts'
+import WorkflowStatsContexts from './WorkflowStatsContexts'
 
 const formatMyr = (value) =>
   new Intl.NumberFormat('en-MY', {
@@ -25,12 +26,14 @@ const STATUS_ROWS = [
 export const PayrollKpiTiles = ({ stats }) => (
   <CCol xs={12}>
     <DashboardMetricList
+      title={stats?.scope?.label}
       metrics={[
         {
           key: 'pending-approvals',
           value: stats?.pendingApprovals ?? 0,
           label: 'pending approvals',
           tone: 'warning',
+          to: '/staff/salary-claims/claims?status=Pending&include_salary=1',
         },
         {
           key: 'awaiting-payment',
@@ -38,6 +41,7 @@ export const PayrollKpiTiles = ({ stats }) => (
           label: 'awaiting payment',
           detail: formatMyr(stats?.approvedUnpaidTotalMyr),
           tone: 'warning',
+          to: '/staff/salary-claims/salary?action=mark_paid',
         },
         {
           key: 'incomplete-contracts',
@@ -50,6 +54,10 @@ export const PayrollKpiTiles = ({ stats }) => (
           label: 'staff with open claims',
         },
       ]}
+    />
+    <WorkflowStatsContexts
+      contexts={stats?.contexts}
+      ariaLabel="Payroll actions by role and scope"
     />
   </CCol>
 )
@@ -166,6 +174,8 @@ const payrollStatsShape = {
     other: PropTypes.number,
   }),
   byStatus: PropTypes.objectOf(PropTypes.number),
+  scope: PropTypes.shape({ key: PropTypes.string, label: PropTypes.string }),
+  contexts: PropTypes.arrayOf(PropTypes.object),
 }
 
 PayrollKpiTiles.propTypes = { stats: PropTypes.shape(payrollStatsShape) }

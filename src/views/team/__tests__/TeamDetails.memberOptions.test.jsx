@@ -7,20 +7,34 @@ import { legacy_createStore as createStore } from 'redux'
 import { MemoryRouter } from 'react-router-dom'
 import TeamDetails from '../TeamDetails'
 
-const { fetchTeams, fetchTeamMemberOptions, fetchShiftWindows, fetchRosters, createTeam } =
-  vi.hoisted(() => ({
-    fetchTeams: vi.fn(),
-    fetchTeamMemberOptions: vi.fn(),
-    fetchShiftWindows: vi.fn(),
-    fetchRosters: vi.fn(),
-    createTeam: vi.fn(),
-  }))
+const {
+  fetchTeams,
+  fetchTeamMemberOptions,
+  fetchShiftWindows,
+  fetchRosters,
+  fetchDutyCoverage,
+  createDutyCoverage,
+  cancelDutyCoverage,
+  createTeam,
+} = vi.hoisted(() => ({
+  fetchTeams: vi.fn(),
+  fetchTeamMemberOptions: vi.fn(),
+  fetchShiftWindows: vi.fn(),
+  fetchRosters: vi.fn(),
+  fetchDutyCoverage: vi.fn(),
+  createDutyCoverage: vi.fn(),
+  cancelDutyCoverage: vi.fn(),
+  createTeam: vi.fn(),
+}))
 
 vi.mock('src/services/apiClient', () => ({
   fetchTeams: (...args) => fetchTeams(...args),
   fetchTeamMemberOptions: (...args) => fetchTeamMemberOptions(...args),
   fetchShiftWindows: (...args) => fetchShiftWindows(...args),
   fetchRosters: (...args) => fetchRosters(...args),
+  fetchDutyCoverage: (...args) => fetchDutyCoverage(...args),
+  createDutyCoverage: (...args) => createDutyCoverage(...args),
+  cancelDutyCoverage: (...args) => cancelDutyCoverage(...args),
   createTeam: (...args) => createTeam(...args),
 }))
 
@@ -44,6 +58,7 @@ describe('TeamDetails member option loading', () => {
     fetchTeams.mockResolvedValue({ data: [] })
     fetchShiftWindows.mockResolvedValue({ data: {} })
     fetchRosters.mockResolvedValue({ data: [] })
+    fetchDutyCoverage.mockResolvedValue({ data: [] })
     fetchTeamMemberOptions.mockResolvedValue({ data: [] })
   })
 

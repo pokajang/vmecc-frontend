@@ -34,7 +34,7 @@ export const DASHBOARD_VISIBILITY_ROWS = [
   {
     key: 'reports',
     permission: DASHBOARD_SECTION_PERMISSIONS.reports,
-    title: 'Reports',
-    description: 'ERCO, Drill, and Fitness Test dashboard summary section.',
+    title: 'Reports & Inspections',
+    description: 'Inspection, ERCO, Drill, and Fitness Test workflow and activity summary.',
   },
 ]

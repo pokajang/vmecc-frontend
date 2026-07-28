@@ -28,6 +28,8 @@ export default function useLeaveManagementDataActions({
   isHrUser,
   holidayYearFilter,
   actionFilter = '',
+  statusFilter = 'All',
+  teamId = null,
 }) {
   const [assignmentRows, setAssignmentRows] = useState([])
   const [allLeaveRecords, setAllLeaveRecords] = useState([])
@@ -67,7 +69,11 @@ export default function useLeaveManagementDataActions({
     async ({ showWarningToast = true } = {}) => {
       setIsLeaveRecordsLoading(true)
       try {
-        const result = await loadAllLeaveRecords(actionFilter ? { action: actionFilter } : {})
+        const result = await loadAllLeaveRecords({
+          ...(actionFilter ? { action: actionFilter } : {}),
+          ...(statusFilter && statusFilter !== 'All' ? { status: statusFilter } : {}),
+          ...(teamId ? { team_id: teamId } : {}),
+        })
         setAllLeaveRecords(Array.isArray(result?.data) ? result.data : [])
         return result
       } catch {
@@ -82,7 +88,7 @@ export default function useLeaveManagementDataActions({
         setIsLeaveRecordsLoading(false)
       }
     },
-    [actionFilter, pushToast],
+    [actionFilter, pushToast, statusFilter, teamId],
   )
 
   const hydrateHolidaysFromApi = useCallback(async () => {

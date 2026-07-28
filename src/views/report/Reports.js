@@ -103,6 +103,17 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
     const status = String(new URLSearchParams(location.search).get('status') || '')
     return status === 'Rejected' ? status : 'All'
   }, [location.search])
+  const actionQueueTeam = useMemo(() => {
+    const teamId = Number(new URLSearchParams(location.search).get('team_id') || 0)
+    return Number.isInteger(teamId) && teamId > 0 ? teamId : null
+  }, [location.search])
+  const dashboardPeriod = useMemo(() => {
+    const params = new URLSearchParams(location.search)
+    return {
+      dateFrom: String(params.get('date_from') || ''),
+      dateTo: String(params.get('date_to') || ''),
+    }
+  }, [location.search])
   const { activeDraftRows, setActiveDraftRows } = useActiveReportDraftRows({
     activeFormSlug,
     draftVersion,
@@ -154,6 +165,9 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
     draftRows: activeDraftRows,
     actionFilter: actionQueueAction,
     initialStatusFilter: actionQueueStatus,
+    teamFilter: actionQueueTeam,
+    dateFromFilter: dashboardPeriod.dateFrom,
+    dateToFilter: dashboardPeriod.dateTo,
   })
   const nextReportSequence = useMemo(() => {
     if (isLoading) return null

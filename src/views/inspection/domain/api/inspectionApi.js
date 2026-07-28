@@ -120,7 +120,14 @@ const toPayload = (row) => {
 
 export const isInspectionApiEnabled = () => INSPECTION_API_ENABLED
 
-export const fetchInspectionRecords = async ({ scope = 'mine', action = '', status = '' } = {}) => {
+export const fetchInspectionRecords = async ({
+  scope = 'mine',
+  action = '',
+  status = '',
+  teamId = null,
+  dateFrom = '',
+  dateTo = '',
+} = {}) => {
   assertInspectionPersistenceAvailable()
   if (!INSPECTION_API_ENABLED) return []
   const params = new URLSearchParams({ reportType: INSPECTION_TYPE })
@@ -130,6 +137,9 @@ export const fetchInspectionRecords = async ({ scope = 'mine', action = '', stat
   if (normalizedScope) params.set('scope', normalizedScope)
   if (action) params.set('action', String(action))
   if (status) params.set('status', String(status))
+  if (Number(teamId || 0) > 0) params.set('team_id', String(teamId))
+  if (dateFrom) params.set('date_from', String(dateFrom))
+  if (dateTo) params.set('date_to', String(dateTo))
   const response = await apiRequest(`/reports?${params.toString()}`)
   const rows = normalizeReportRecords(Array.isArray(response?.data) ? response.data : [])
   return rows.filter((row) => normalizeInspectionTypeSlug(row?.reportType) === INSPECTION_TYPE)

@@ -4,6 +4,7 @@ import { CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/react'
 import DashboardEmptyState from './DashboardEmptyState'
 import DashboardMetricList from './DashboardMetricList'
 import { DashboardActivityChart, DashboardBreakdownRows } from './DashboardCharts'
+import WorkflowStatsContexts from './WorkflowStatsContexts'
 
 const OT_STATUS_ROWS = [
   { key: 'pending', label: 'Pending', tone: 'warning' },
@@ -15,12 +16,14 @@ const OT_STATUS_ROWS = [
 export const OvertimeKpiTiles = ({ stats }) => (
   <CCol xs={12}>
     <DashboardMetricList
+      title={stats?.scope?.label}
       metrics={[
         {
           key: 'pending-approvals',
           value: stats?.pendingApprovals ?? 0,
           label: 'pending approvals',
           tone: 'warning',
+          to: '/staff/overtime-management/records?status=Pending',
         },
         {
           key: 'approved-hours',
@@ -38,8 +41,13 @@ export const OvertimeKpiTiles = ({ stats }) => (
           key: 'submitted',
           value: stats?.submittedThisPeriod ?? 0,
           label: 'submitted requests',
+          to: '/staff/overtime-management/records',
         },
       ]}
+    />
+    <WorkflowStatsContexts
+      contexts={stats?.contexts}
+      ariaLabel="Overtime actions by team and role"
     />
   </CCol>
 )
@@ -168,6 +176,8 @@ const overtimeStatsShape = {
   }),
   byStatus: PropTypes.objectOf(PropTypes.number),
   byTeam: PropTypes.arrayOf(PropTypes.shape({ team: PropTypes.string, count: PropTypes.number })),
+  scope: PropTypes.shape({ key: PropTypes.string, label: PropTypes.string }),
+  contexts: PropTypes.arrayOf(PropTypes.object),
 }
 
 OvertimeKpiTiles.propTypes = { stats: PropTypes.shape(overtimeStatsShape) }

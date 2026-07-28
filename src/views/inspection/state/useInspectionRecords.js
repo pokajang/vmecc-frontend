@@ -58,6 +58,9 @@ const useInspectionRecords = ({
   draftRows = [],
   actionFilter = '',
   initialStatusFilter = 'All',
+  teamFilter = null,
+  dateFromFilter = '',
+  dateToFilter = '',
 }) => {
   const [records, setRecords] = useState([])
   const [recordScope, setRecordScope] = useState('mine')
@@ -90,6 +93,9 @@ const useInspectionRecords = ({
               scope: actionFilter ? 'actionable' : recordScope,
               action: actionFilter,
               status: !actionFilter && initialStatusFilter !== 'All' ? initialStatusFilter : '',
+              teamId: teamFilter,
+              dateFrom: dateFromFilter,
+              dateTo: dateToFilter,
             })
           : loadInspectionRecordsForScope({ userId, scope: recordScope })
         if (signal.cancelled) return
@@ -101,7 +107,16 @@ const useInspectionRecords = ({
         if (!signal.cancelled) setIsLoading(false)
       }
     },
-    [actionFilter, apiEnabledForInspection, initialStatusFilter, recordScope, userId],
+    [
+      actionFilter,
+      apiEnabledForInspection,
+      dateFromFilter,
+      dateToFilter,
+      initialStatusFilter,
+      recordScope,
+      teamFilter,
+      userId,
+    ],
   )
 
   const reloadRecords = useCallback(() => loadRows(), [loadRows])
@@ -171,11 +186,11 @@ const useInspectionRecords = ({
   )
 
   const recordsInScope = useMemo(() => {
-    if (recordScope === 'all') {
+    if (actionFilter || recordScope === 'all') {
       return allRecordsWithDrafts.filter((row) => row?.recordKind !== 'queued')
     }
     return allRecordsWithDrafts.filter((row) => isMineRecord(row, userIdentitySet))
-  }, [allRecordsWithDrafts, recordScope, userIdentitySet])
+  }, [actionFilter, allRecordsWithDrafts, recordScope, userIdentitySet])
 
   const filteredRecords = useMemo(() => {
     let next = [...recordsInScope]

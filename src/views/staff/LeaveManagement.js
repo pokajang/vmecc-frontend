@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CBadge, CContainer, CToaster } from '@coreui/react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useSelector } from 'react-redux'
@@ -56,6 +56,14 @@ const LeaveManagement = () => {
     const action = String(new URLSearchParams(location.search).get('action') || '').toLowerCase()
     return ['review', 'recommend', 'approve'].includes(action) ? action : ''
   }, [location.search])
+  const actionQueueTeamId = useMemo(() => {
+    const value = Number(new URLSearchParams(location.search).get('team_id') || 0)
+    return Number.isInteger(value) && value > 0 ? value : null
+  }, [location.search])
+  const actionQueueStatus = useMemo(
+    () => String(new URLSearchParams(location.search).get('status') || 'All'),
+    [location.search],
+  )
 
   const toaster = useRef()
   const [isBulkLeaveSubmitting, setIsBulkLeaveSubmitting] = useState(false)
@@ -93,6 +101,10 @@ const LeaveManagement = () => {
     clearHolidayFilters,
   } = useLeaveAdminData()
 
+  useEffect(() => {
+    setStatusFilter(actionQueueStatus)
+  }, [actionQueueStatus, setStatusFilter])
+
   const {
     assignmentRows,
     allLeaveRecords,
@@ -113,6 +125,8 @@ const LeaveManagement = () => {
     isHrUser,
     holidayYearFilter,
     actionFilter: actionQueueAction,
+    statusFilter,
+    teamId: actionQueueTeamId,
   })
 
   const { loading: staffDirectoryLoading, optionsAll: staffDirectory } = useStaffDirectory({

@@ -46,6 +46,14 @@ const OvertimeDetailSection = ({
                 { label: 'Duration', value: formatDuration(selectedRecord.durationMinutes) },
                 { label: 'Current Status', value: selectedRecord.status || '-' },
                 { label: 'Current Action Owner', value: selectedRecord.nextActionRole || '-' },
+                {
+                  label: 'Workflow Scope',
+                  value: selectedRecord.workflowTeamName || 'Organization-wide',
+                },
+                {
+                  label: 'Applicant Role',
+                  value: selectedRecord.workflowApplicantRole || '-',
+                },
                 { label: 'Next Action', value: selectedRecordPendingActionHint || '-' },
                 { label: 'Applied On', value: formatDate(selectedRecord.appliedAt) },
                 { label: 'Reason', value: selectedRecord.reason || '-' },

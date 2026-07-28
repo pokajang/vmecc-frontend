@@ -42,6 +42,9 @@ const useSalaryClaimsDerived = ({
   allOvertimeRecords,
   staffDirectory,
   assignmentRows,
+  initialClaimTypeFilter,
+  initialStatusFilter,
+  includeSalaryClaims,
   selectedClaimKeys,
   selectedClaimItemId,
 }) => {
@@ -115,6 +118,9 @@ const useSalaryClaimsDerived = ({
     claimRows,
     adminOvertimeRows,
     assignmentRows,
+    initialClaimTypeFilter,
+    initialStatusFilter,
+    includeSalaryClaims,
   })
 
   const {

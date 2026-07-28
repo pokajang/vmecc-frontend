@@ -87,6 +87,15 @@ export const mapOvertimeApiRowToUi = (row = {}, ownerUserId = '') => ({
   team: String(row.team || '').trim(),
   workflowSnapshot: row.workflow_snapshot || row.workflowSnapshot || null,
   workflowStage: String(row.workflow_stage || row.workflowStage || 'review').trim() || 'review',
+  workflowTeamId: row.workflow_team_id ?? row.workflowTeamId ?? null,
+  workflowTeamName: String(row.workflow_team_name || row.workflowTeamName || '').trim(),
+  workflowApplicantRole: String(
+    row.workflow_applicant_role || row.workflowApplicantRole || '',
+  ).trim(),
+  workflowRoutingSource: String(
+    row.workflow_routing_source || row.workflowRoutingSource || '',
+  ).trim(),
+  dutyCoverageAssignmentId: row.duty_coverage_assignment_id ?? row.dutyCoverageAssignmentId ?? null,
   nextActionRole:
     row.next_action_role === null || row.next_action_role === undefined
       ? (row.nextActionRole ?? null)

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import useTableRows from 'src/hooks/useTableRows'
 import { filterOvertimeRecords } from '../../leave-management/utils'
 import {
@@ -9,10 +9,17 @@ import {
   toTypeLabel,
 } from '../utils'
 
-const useClaimsAdminData = ({ claimRows = [], adminOvertimeRows = [], assignmentRows = [] }) => {
+const useClaimsAdminData = ({
+  claimRows = [],
+  adminOvertimeRows = [],
+  assignmentRows = [],
+  initialClaimTypeFilter = 'All',
+  initialStatusFilter = 'All',
+  includeSalaryClaims = false,
+}) => {
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('All')
-  const [typeFilter, setTypeFilter] = useState('All')
+  const [statusFilter, setStatusFilter] = useState(initialStatusFilter)
+  const [typeFilter, setTypeFilter] = useState(initialClaimTypeFilter)
   const [period, setPeriod] = useState('all')
   const [sort, setSort] = useState('submittedAt:desc')
 
@@ -35,18 +42,28 @@ const useClaimsAdminData = ({ claimRows = [], adminOvertimeRows = [], assignment
     () => claimRows.filter((row) => String(row?.type || '').trim() !== 'salary'),
     [claimRows],
   )
-  const effectiveClaimTypeFilter = typeFilter === 'salary' ? 'All' : typeFilter
+  const displayedClaimRows = includeSalaryClaims ? claimRows : nonSalaryClaimRows
+  const effectiveClaimTypeFilter =
+    typeFilter === 'salary' && !includeSalaryClaims ? 'All' : typeFilter
+
+  useEffect(() => {
+    setStatusFilter(initialStatusFilter)
+  }, [initialStatusFilter])
+
+  useEffect(() => {
+    setTypeFilter(initialClaimTypeFilter)
+  }, [initialClaimTypeFilter])
 
   const filteredClaimRows = useMemo(
     () =>
-      filterClaimRows(nonSalaryClaimRows, {
+      filterClaimRows(displayedClaimRows, {
         search,
         statusFilter,
         typeFilter: effectiveClaimTypeFilter,
         period,
         sort,
       }),
-    [effectiveClaimTypeFilter, nonSalaryClaimRows, period, search, sort, statusFilter],
+    [displayedClaimRows, effectiveClaimTypeFilter, period, search, sort, statusFilter],
   )
 
   const filteredSalaryRows = useMemo(
@@ -107,14 +124,14 @@ const useClaimsAdminData = ({ claimRows = [], adminOvertimeRows = [], assignment
 
   const claimTypeOptions = useMemo(
     () =>
-      buildOptionsFromUnique(nonSalaryClaimRows, 'type', 'All claim types', (value) =>
+      buildOptionsFromUnique(displayedClaimRows, 'type', 'All claim types', (value) =>
         toTypeLabel(value),
       ),
-    [nonSalaryClaimRows],
+    [displayedClaimRows],
   )
   const claimStatusOptions = useMemo(
-    () => buildOptionsFromUnique(nonSalaryClaimRows, 'status', 'All status'),
-    [nonSalaryClaimRows],
+    () => buildOptionsFromUnique(displayedClaimRows, 'status', 'All status'),
+    [displayedClaimRows],
   )
   const salaryStatusOptions = useMemo(
     () =>
