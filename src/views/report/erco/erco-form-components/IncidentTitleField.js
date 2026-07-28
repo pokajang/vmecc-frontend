@@ -89,7 +89,7 @@ const IncidentTitleField = ({
           maxHeight: '320px',
           overflowY: 'auto',
           scrollbarWidth: 'thin',
-          scrollbarColor: 'rgba(129, 137, 151, 0.9) transparent',
+          scrollbarColor: 'var(--vmecc-scrollbar-thumb) var(--vmecc-scrollbar-track)',
         }),
         control: (base, state) => ({
           ...base,
