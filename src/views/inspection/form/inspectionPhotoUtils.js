@@ -13,9 +13,10 @@ import {
   reportPhotoFailureMessage,
   uploadReportPhotosSequentially,
 } from 'src/services/api/reportMediaApi'
+import { prepareInspectionPhotoFile } from './inspectionPhotoPreparation'
 
 const MAX_PHOTO_BYTES = 1.5 * 1024 * 1024
-const MAX_PHOTO_COUNT = 10
+export const INSPECTION_MAX_PHOTO_COUNT = 10
 const MAX_TOTAL_PHOTO_BYTES = 12 * 1024 * 1024
 
 const FAILURE_TITLES = {
@@ -37,6 +38,10 @@ const FAILURE_TITLES = {
   upload_busy: 'Upload already in progress',
   storage_unavailable: 'Photo storage unavailable',
   storage_quota_exceeded: 'Temporary photo storage full',
+  storage_write_failed: 'Photo storage failed',
+  thumbnail_write_failed: 'Photo preview storage failed',
+  storage_verification_failed: 'Photo verification failed',
+  attachment_failed: 'Photo attachment failed',
 }
 
 const FAILURE_COLORS = {
@@ -58,6 +63,10 @@ const FAILURE_COLORS = {
   upload_busy: 'warning',
   storage_unavailable: 'danger',
   storage_quota_exceeded: 'warning',
+  storage_write_failed: 'danger',
+  thumbnail_write_failed: 'danger',
+  storage_verification_failed: 'danger',
+  attachment_failed: 'danger',
 }
 
 const DEFAULT_FAILURE_MESSAGES = {
@@ -84,6 +93,10 @@ const DEFAULT_FAILURE_MESSAGES = {
   storage_unavailable: 'Photo storage is temporarily unavailable. Try again later.',
   storage_quota_exceeded:
     'Temporary photo storage is full. Remove unused attachments or try again after cleanup.',
+  storage_write_failed: 'The photo could not be saved. Try again.',
+  thumbnail_write_failed: 'The photo preview could not be saved. Try again.',
+  storage_verification_failed: 'The saved photo could not be verified. Try again.',
+  attachment_failed: 'The photo uploaded but could not be attached to this inspection check.',
 }
 
 const CAMERA_MANUAL_FALLBACK_EXCLUDED_CODES = new Set([
@@ -303,6 +316,9 @@ export const prepareInspectionPhotoUploads = async ({
   signal,
   onProgress,
   onRetry,
+  batchId,
+  uploadItems = [],
+  onItemState,
   additionalCurrentPhotos = [],
 }) => {
   const photoFiles = Array.from(files || [])
@@ -321,10 +337,23 @@ export const prepareInspectionPhotoUploads = async ({
     collectInspectionPhotos(form),
     Array.isArray(additionalCurrentPhotos) ? additionalCurrentPhotos : [],
   )
-  const remainingPhotoSlots = Math.max(0, MAX_PHOTO_COUNT - allCurrentPhotos.length)
+  const remainingPhotoSlots = Math.max(0, INSPECTION_MAX_PHOTO_COUNT - allCurrentPhotos.length)
   if (remainingPhotoSlots === 0) {
-    notifyFailureOnce(
-      buildPhotoFailure('max_photo_count', `You can upload up to ${MAX_PHOTO_COUNT} photos.`),
+    const failure = buildPhotoFailure(
+      'max_photo_count',
+      `You can upload up to ${INSPECTION_MAX_PHOTO_COUNT} photos.`,
+    )
+    notifyFailureOnce(failure)
+    photoFiles.forEach((file, index) =>
+      onItemState?.({
+        batchId,
+        clientUploadId: uploadItems[index]?.clientUploadId,
+        index,
+        count: photoFiles.length,
+        fileName: String(file?.name || ''),
+        status: 'failed',
+        failure,
+      }),
     )
     return null
   }
@@ -336,22 +365,53 @@ export const prepareInspectionPhotoUploads = async ({
   let remainingTotalBytes = Math.max(0, MAX_TOTAL_PHOTO_BYTES - existingTotalBytes)
   const normalizedDefaultDescription = String(defaultDescription || '').trim()
   const nextPhotos = []
-  const selectedFiles = photoFiles.slice(0, remainingPhotoSlots).filter((file) => {
+  const selectedRows = photoFiles.slice(0, remainingPhotoSlots).flatMap((file, index) => {
     const failure = classifyValidationFailure(file, isCameraUpload)
-    if (failure) notifyFailureOnce(failure)
-    return !failure
+    if (failure) {
+      notifyFailureOnce(failure)
+      onItemState?.({
+        batchId,
+        clientUploadId: uploadItems[index]?.clientUploadId,
+        index,
+        count: photoFiles.length,
+        fileName: String(file?.name || ''),
+        status: 'failed',
+        failure,
+      })
+      return []
+    }
+    return [{ file, uploadItem: uploadItems[index] }]
   })
-  if (photoFiles.length > remainingPhotoSlots)
-    notifyFailureOnce(
-      buildPhotoFailure('max_photo_count', `You can upload up to ${MAX_PHOTO_COUNT} photos.`),
+  if (photoFiles.length > remainingPhotoSlots) {
+    const failure = buildPhotoFailure(
+      'max_photo_count',
+      `You can upload up to ${INSPECTION_MAX_PHOTO_COUNT} photos.`,
     )
+    notifyFailureOnce(failure)
+    photoFiles.slice(remainingPhotoSlots).forEach((file, offset) => {
+      const index = remainingPhotoSlots + offset
+      onItemState?.({
+        batchId,
+        clientUploadId: uploadItems[index]?.clientUploadId,
+        index,
+        count: photoFiles.length,
+        fileName: String(file?.name || ''),
+        status: 'failed',
+        failure,
+      })
+    })
+  }
   const uploaded = await uploadReportPhotosSequentially({
-    files: selectedFiles,
+    files: selectedRows.map((row) => row.file),
     module: 'inspection',
     source: isCameraUpload ? 'camera' : 'upload',
+    batchId,
+    uploadItems: selectedRows.map((row) => row.uploadItem),
     signal,
     onProgress,
     onRetry,
+    onItemState,
+    prepareFile: isCameraUpload ? undefined : prepareInspectionPhotoFile,
     onFailure: (failure) =>
       notifyFailureOnce(
         buildPhotoFailure(
@@ -363,11 +423,17 @@ export const prepareInspectionPhotoUploads = async ({
   for (const photo of uploaded) {
     if (photo.sizeBytes > MAX_PHOTO_BYTES || photo.sizeBytes > remainingTotalBytes) {
       await deleteReportMedia(photo.mediaId)
-      notifyFailureOnce(
-        buildPhotoFailure(
-          photo.sizeBytes > MAX_PHOTO_BYTES ? 'compressed_too_large' : 'total_size_exceeded',
-        ),
+      const failure = buildPhotoFailure(
+        photo.sizeBytes > MAX_PHOTO_BYTES ? 'compressed_too_large' : 'total_size_exceeded',
       )
+      notifyFailureOnce(failure)
+      onItemState?.({
+        batchId,
+        clientUploadId: photo.uploadId,
+        status: 'failed',
+        failure,
+        percent: 0,
+      })
       continue
     }
     remainingTotalBytes -= photo.sizeBytes

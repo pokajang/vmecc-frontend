@@ -1,5 +1,5 @@
 import React from 'react'
-import { CAlert, CButton, CSpinner } from '@coreui/react'
+import { CAlert, CButton } from '@coreui/react'
 import { Upload } from 'lucide-react'
 import { formatCameraDiagnosticsLines } from 'src/utils/cameraDiagnostics'
 import InspectionFormBodySections from './InspectionFormBodySections'
@@ -7,6 +7,7 @@ import InspectionCameraCapture from './InspectionCameraCapture'
 import InspectionFormManagerModals from './InspectionFormManagerModals'
 import InspectionFormModals from './InspectionFormModals'
 import InspectionFormSetupSections from './InspectionFormSetupSections'
+import InspectionPhotoUploadQueueStatus from './InspectionPhotoUploadQueueStatus'
 
 const getLocationEntityLabel = (location) =>
   location.isEditingZone
@@ -60,7 +61,10 @@ const InspectionFormShell = ({
     closeInAppCamera,
     handleInAppCameraCapture,
     isPhotoProcessing,
-    photoUploadProgress,
+    photoUploadQueue,
+    clearCompletedPhotoUploads,
+    removePhotoUploadQueueItem,
+    retryPhotoUpload,
     handlePhotoSelect,
     cameraUploadFallback,
     clearCameraUploadFallback,
@@ -92,24 +96,12 @@ const InspectionFormShell = ({
           onUploadPhoto={() => requestUploadFromCameraFallback?.()}
         />
       ) : null}
-      {isPhotoProcessing ? (
-        <div
-          className="inspection-photo-upload-status rounded-3 border bg-body shadow-sm d-flex align-items-center gap-2 p-3"
-          role="status"
-          aria-live="polite"
-        >
-          <CSpinner size="sm" aria-hidden="true" />
-          <div className="small">
-            <div className="fw-semibold">
-              {photoUploadProgress?.retrying ? 'Retrying photo upload' : 'Preparing your photo'}
-            </div>
-            <div className="text-body-secondary">
-              {Number(photoUploadProgress?.percent || 0)}% complete. The photo will appear in this
-              check when ready.
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <InspectionPhotoUploadQueueStatus
+        items={photoUploadQueue}
+        onClearCompleted={clearCompletedPhotoUploads}
+        onRemoveItem={removePhotoUploadQueueItem}
+        onRetryItem={retryPhotoUpload}
+      />
 
       <InspectionFormManagerModals
         {...catalogManagers}

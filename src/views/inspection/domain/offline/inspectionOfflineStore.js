@@ -81,6 +81,8 @@ export const offlineStoreKeys = {
   workspace: (userId) => `workspace:${String(userId || 'unknown')}`,
   draft: (userId) => `draft:${String(userId || 'unknown')}`,
   queue: (userId) => `queue:${String(userId || 'unknown')}`,
+  photoUploads: (userId, scopeKey) =>
+    `photo-uploads:${String(userId || 'unknown')}:${String(scopeKey || 'new')}`,
   feOperations: (userId, sessionUid) =>
     `fe-operations:${String(userId || 'unknown')}:${String(sessionUid || 'unknown')}`,
 }

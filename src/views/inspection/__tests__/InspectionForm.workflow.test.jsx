@@ -12,6 +12,9 @@ const typeManagerModalMock = vi.hoisted(() => ({
 }))
 
 const reportMediaApiMock = vi.hoisted(() => ({
+  createReportMediaUploadId: vi.fn(
+    () => `test-upload-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+  ),
   deleteReportMedia: vi.fn(async () => true),
   getReportPhotoBytes: vi.fn((photo = {}) => Number(photo.sizeBytes || photo.size || 1)),
   reportPhotoFailureMessage: vi.fn(
@@ -71,6 +74,7 @@ vi.mock('../domain/api/inspectionSessionApi', () => inspectionSessionApiMock)
 
 vi.mock('src/services/api/reportMediaApi', () => ({
   CAMERA_SOURCE_MAX_BYTES: 30 * 1024 * 1024,
+  createReportMediaUploadId: reportMediaApiMock.createReportMediaUploadId,
   deleteReportMedia: reportMediaApiMock.deleteReportMedia,
   getReportPhotoBytes: reportMediaApiMock.getReportPhotoBytes,
   reportPhotoFailureMessage: reportMediaApiMock.reportPhotoFailureMessage,

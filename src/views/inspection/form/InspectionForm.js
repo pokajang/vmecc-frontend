@@ -1771,6 +1771,15 @@ const InspectionForm = ({
     updateHighAngleCheck: checkActions.updateHighAngleCheck,
     updateHydraulicCheck: checkActions.updateHydraulicCheck,
     updateScbaGroupedCheck: scbaRuntime.updateScbaGroupedCheck,
+    userId: user?.id,
+    uploadScopeKey: String(
+      value?.draftId ||
+        value?.draft_id ||
+        value?.reportUid ||
+        value?.report_uid ||
+        value?.id ||
+        'new',
+    ),
   })
 
   const reviewRequest = useInspectionReviewRequest({
@@ -1784,7 +1793,7 @@ const InspectionForm = ({
     hydraulicChecksRef,
     inspectedAtRef,
     inspectionTypeRef,
-    isPhotoProcessing: photoRuntime.isPhotoProcessing,
+    isPhotoProcessing: photoRuntime.isPhotoProcessing || photoRuntime.hasUnresolvedPhotoUploads,
     draftSyncState,
     pendingOperationCount:
       fireExtinguisherSessionSync.pendingRetryCount + fireExtinguisherSessionSync.activeSyncCount,

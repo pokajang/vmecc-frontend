@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import useInspectionUnsavedChangesGuard from 'src/views/inspection/state/useInspectionUnsavedChangesGuard'
-import { deleteReportMedia } from 'src/services/api/reportMediaApi'
+import { createReportMediaUploadId, deleteReportMedia } from 'src/services/api/reportMediaApi'
 import {
   clearPendingCameraOperation,
   getInterruptedCameraFallback,
@@ -12,14 +12,57 @@ import { buildCameraDiagnostics, inspectCameraEnvironment } from 'src/utils/came
 import { supportsInAppInspectionCamera } from './inspectionCameraCaptureUtils'
 import {
   applyPhotoCaptionById,
+  collectInspectionPhotos,
   getRowPhotoList,
+  INSPECTION_MAX_PHOTO_COUNT,
   isCameraFailureToRetry,
+  mergeInspectionPhotoLists,
   prepareInspectionPhotoUploads,
   normalizePhotoFailure,
   removePhotoById,
   updatePhotoDescriptionById,
 } from './inspectionPhotoUtils'
 import { createGroupedRowPhotoHandlers, createRowPhotoHandlers } from './inspectionRowPhotoActions'
+import {
+  loadInspectionPhotoUploadQueue,
+  saveInspectionPhotoUploadQueue,
+} from './inspectionPhotoUploadStore'
+
+const ACTIVE_PHOTO_UPLOAD_STATES = new Set([
+  'selected',
+  'preparing',
+  'queued',
+  'uploading',
+  'server_processing',
+  'attaching',
+  'retry_waiting',
+])
+
+const createPhotoUploadQueueItems = ({
+  files,
+  batchId,
+  source,
+  uploadTarget,
+  existingItems = [],
+}) =>
+  Array.from(files || []).map((file, index) => {
+    const existing = existingItems[index]
+    return {
+      batchId,
+      clientUploadId: existing?.clientUploadId || createReportMediaUploadId(),
+      index,
+      count: files.length,
+      file,
+      fileName: String(file?.name || `Photo ${index + 1}`),
+      mimeType: String(file?.type || ''),
+      sizeBytes: Number(file?.size || 0),
+      source,
+      status: 'selected',
+      percent: 0,
+      failure: null,
+      uploadTarget,
+    }
+  })
 
 const useInspectionFormPhotos = ({
   appendInspectionText,
@@ -38,6 +81,8 @@ const useInspectionFormPhotos = ({
   updateHighAngleCheck,
   updateHydraulicCheck,
   updateScbaGroupedCheck,
+  userId,
+  uploadScopeKey = 'new',
 }) => {
   const uploadInputRef = useRef(null)
   const cameraInputRef = useRef(null)
@@ -54,11 +99,40 @@ const useInspectionFormPhotos = ({
     () => interruptedCameraFallbackRef.current,
   )
   const [isPhotoProcessing, setIsPhotoProcessing] = useState(false)
+  const [isPhotoQueueHydrated, setIsPhotoQueueHydrated] = useState(false)
+  const [photoUploadQueue, setPhotoUploadQueue] = useState([])
+  const photoUploadQueueRef = useRef([])
+  const setPhotoUploadQueueState = useCallback((update) => {
+    setPhotoUploadQueue((current) => {
+      const next = typeof update === 'function' ? update(current) : update
+      photoUploadQueueRef.current = next
+      return next
+    })
+  }, [])
+  const updatePhotoUploadQueueItem = useCallback(
+    ({ clientUploadId, ...patch }) => {
+      const identity = String(clientUploadId || '').trim()
+      if (!identity) return
+      setPhotoUploadQueueState((current) =>
+        current.map((item) =>
+          String(item.clientUploadId || '') === identity ? { ...item, ...patch } : item,
+        ),
+      )
+    },
+    [setPhotoUploadQueueState],
+  )
+  const hasUnresolvedPhotoUploads = photoUploadQueue.some(
+    (item) => ACTIVE_PHOTO_UPLOAD_STATES.has(item.status) || item.status === 'failed',
+  )
   useInspectionUnsavedChangesGuard(
-    useCallback(() => isPhotoProcessing, [isPhotoProcessing]),
+    useCallback(
+      () => isPhotoProcessing || hasUnresolvedPhotoUploads,
+      [hasUnresolvedPhotoUploads, isPhotoProcessing],
+    ),
     {
       id: 'inspection-photo-processing',
-      message: 'A photo is still processing. Wait for it to finish before updating VMECC.',
+      message:
+        'One or more photos are still uploading or need attention. Finish or remove them before updating VMECC.',
     },
   )
   const [photoUploadProgress, setPhotoUploadProgress] = useState(null)
@@ -77,6 +151,40 @@ const useInspectionFormPhotos = ({
       clearPendingCameraOperation()
     }
   }, [])
+  useEffect(() => {
+    let cancelled = false
+    void loadInspectionPhotoUploadQueue({ userId, scopeKey: uploadScopeKey })
+      .then((recoveredItems) => {
+        if (cancelled) return
+        if (recoveredItems.length) {
+          setPhotoUploadQueueState((current) => {
+            const currentIds = new Set(current.map((item) => item.clientUploadId))
+            return [
+              ...recoveredItems.filter((item) => !currentIds.has(item.clientUploadId)),
+              ...current,
+            ]
+          })
+        }
+        setIsPhotoQueueHydrated(true)
+      })
+      .catch(() => {
+        setIsPhotoQueueHydrated(true)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [setPhotoUploadQueueState, uploadScopeKey, userId])
+  useEffect(() => {
+    if (!isPhotoQueueHydrated) return undefined
+    const timerId = setTimeout(() => {
+      void saveInspectionPhotoUploadQueue({
+        userId,
+        scopeKey: uploadScopeKey,
+        items: photoUploadQueueRef.current,
+      })
+    }, 300)
+    return () => clearTimeout(timerId)
+  }, [isPhotoQueueHydrated, photoUploadQueue, uploadScopeKey, userId])
   const CAMERA_FALLBACK_ERROR_TITLES = {
     low_memory:
       'Camera processing failed due to low memory. Upload the photo manually to continue.',
@@ -131,11 +239,21 @@ const useInspectionFormPhotos = ({
   }
 
   const notifyPhotosAdded = (uploadTarget, photosKey, photos, context = {}) => {
+    const addedPhotos = Array.isArray(context.addedPhotos) ? context.addedPhotos : []
+    addedPhotos.forEach((photo) =>
+      updatePhotoUploadQueueItem({
+        clientUploadId: photo?.uploadId,
+        status: 'uploaded',
+        percent: 100,
+        photo,
+        failure: null,
+      }),
+    )
     if (typeof uploadTarget?.onAfterAddPhotos !== 'function') return
     const payload = {
       photosKey,
       photos: Array.isArray(photos) ? photos : [],
-      addedPhotos: context.addedPhotos || [],
+      addedPhotos,
       row: context.row,
       sectionKey: context.sectionKey,
     }
@@ -162,9 +280,41 @@ const useInspectionFormPhotos = ({
       return
     }
     const nextTarget = target || { kind: 'root' }
+    const latestForm = typeof getLatestForm === 'function' ? getLatestForm() : form
+    const currentPhotos = mergeInspectionPhotoLists(
+      collectInspectionPhotos(latestForm),
+      Array.isArray(nextTarget?.currentPhotos) ? nextTarget.currentPhotos : [],
+      Array.isArray(nextTarget?.rootPhotos) ? nextTarget.rootPhotos : [],
+    )
+    const reservedQueueSlots = photoUploadQueueRef.current.filter(
+      (item) => item.status === 'failed' || ACTIVE_PHOTO_UPLOAD_STATES.has(item.status),
+    ).length
+    const remainingPhotoSlots = Math.max(
+      0,
+      INSPECTION_MAX_PHOTO_COUNT - currentPhotos.length - reservedQueueSlots,
+    )
+    if (remainingPhotoSlots === 0) {
+      pushToast?.(
+        `This inspection already contains ${INSPECTION_MAX_PHOTO_COUNT} photos. Remove one before adding another.`,
+        {
+          title: 'Photo limit reached',
+          color: 'warning',
+        },
+      )
+      return
+    }
     photoUploadTargetRef.current = nextTarget
     clearCameraUploadFallback()
     const isExplicitUpload = inputRef === uploadInputRef
+    if (isExplicitUpload && remainingPhotoSlots < INSPECTION_MAX_PHOTO_COUNT) {
+      pushToast?.(
+        `You can add ${remainingPhotoSlots} more photo${remainingPhotoSlots === 1 ? '' : 's'} to this inspection.`,
+        {
+          title: 'Inspection photo capacity',
+          color: 'info',
+        },
+      )
+    }
     const canUseInAppCamera =
       !isExplicitUpload && !isLikelyEmbeddedBrowser() && supportsInAppInspectionCamera()
     activePhotoInputRef.current = canUseInAppCamera ? 'camera' : 'upload'
@@ -211,6 +361,33 @@ const useInspectionFormPhotos = ({
 
     const uploadTarget = context.uploadTarget || photoUploadTargetRef.current || { kind: 'root' }
     const source = context.source || activePhotoInputRef.current
+    const batchId = context.batchId || createReportMediaUploadId()
+    const uploadItems = createPhotoUploadQueueItems({
+      files,
+      batchId,
+      source,
+      uploadTarget,
+      existingItems: context.uploadItems,
+    })
+    if (context.reuseQueueItems) {
+      uploadItems.forEach((item) =>
+        updatePhotoUploadQueueItem({
+          clientUploadId: item.clientUploadId,
+          ...item,
+          status: 'selected',
+          failure: null,
+          percent: 0,
+        }),
+      )
+    } else {
+      setPhotoUploadQueueState((current) => [...current, ...uploadItems])
+    }
+    uploadItems.forEach((item) =>
+      updatePhotoUploadQueueItem({
+        clientUploadId: item.clientUploadId,
+        status: 'preparing',
+      }),
+    )
     if (source === 'camera') markPendingCameraUploadStarted('inspection')
     const currentForm = typeof getLatestForm === 'function' ? getLatestForm() : form
     const currentFormForUpload = Array.isArray(uploadTarget?.rootPhotos)
@@ -243,6 +420,9 @@ const useInspectionFormPhotos = ({
         signal: abortController.signal,
         onProgress: (progress) => setPhotoUploadProgress({ ...progress, retrying: false }),
         onRetry: (progress) => setPhotoUploadProgress({ ...progress, percent: 0, retrying: true }),
+        batchId,
+        uploadItems,
+        onItemState: updatePhotoUploadQueueItem,
         additionalCurrentPhotos: uploadTarget?.currentPhotos,
       })
       if (selectionSequence !== photoSelectionSequenceRef.current) {
@@ -257,6 +437,19 @@ const useInspectionFormPhotos = ({
         code: 'unexpected_error',
         message: String(error?.message || '').trim() || 'Camera capture failed.',
       }
+      uploadItems.forEach((item) => {
+        const currentItem = photoUploadQueueRef.current.find(
+          (candidate) => candidate.clientUploadId === item.clientUploadId,
+        )
+        if (currentItem && ACTIVE_PHOTO_UPLOAD_STATES.has(currentItem.status)) {
+          updatePhotoUploadQueueItem({
+            clientUploadId: item.clientUploadId,
+            status: 'failed',
+            failure: lastFailure,
+            percent: 0,
+          })
+        }
+      })
       hadRetryableFailure = true
     } finally {
       if (selectionSequence === photoSelectionSequenceRef.current) {
@@ -505,6 +698,17 @@ const useInspectionFormPhotos = ({
       .catch(async (error) => {
         const uncommittedPhotos = photoCommitUploadsRef.current
         photoCommitUploadsRef.current = []
+        uncommittedPhotos.forEach((photo) =>
+          updatePhotoUploadQueueItem({
+            clientUploadId: photo?.uploadId,
+            status: 'failed',
+            percent: 0,
+            failure: {
+              code: 'attachment_failed',
+              message: 'The photo uploaded but could not be attached to this inspection check.',
+            },
+          }),
+        )
         await Promise.allSettled(
           uncommittedPhotos
             .filter((photo) => photo?.mediaId)
@@ -522,6 +726,46 @@ const useInspectionFormPhotos = ({
           },
         )
       })
+
+  const retryPhotoUpload = (clientUploadId) => {
+    if (photoProcessingRef.current) {
+      pushToast?.('Wait for the current photo upload to finish before retrying.', {
+        title: 'Photo upload in progress',
+        color: 'info',
+      })
+      return
+    }
+    const item = photoUploadQueueRef.current.find(
+      (candidate) => String(candidate.clientUploadId || '') === String(clientUploadId || ''),
+    )
+    if (!item?.file || item.status !== 'failed') return
+    return handlePhotoSelect(
+      { target: { files: [item.file], value: '' } },
+      {
+        uploadTarget: item.uploadTarget,
+        source: item.source,
+        batchId: item.batchId,
+        uploadItems: [item],
+        reuseQueueItems: true,
+      },
+    )
+  }
+
+  const removePhotoUploadQueueItem = (clientUploadId) => {
+    const identity = String(clientUploadId || '')
+    setPhotoUploadQueueState((current) =>
+      current.filter((item) => {
+        if (String(item.clientUploadId || '') !== identity) return true
+        return ACTIVE_PHOTO_UPLOAD_STATES.has(item.status)
+      }),
+    )
+  }
+
+  const clearCompletedPhotoUploads = () => {
+    setPhotoUploadQueueState((current) =>
+      current.filter((item) => item.status !== 'uploaded' && item.status !== 'cancelled'),
+    )
+  }
 
   const handleInAppCameraCapture = (file) => {
     const uploadTarget = cameraUploadTargetRef.current ||
@@ -746,10 +990,15 @@ const useInspectionFormPhotos = ({
     closeInAppCamera,
     handleInAppCameraCapture,
     cameraUploadFallback,
+    clearCompletedPhotoUploads,
     isPhotoProcessing,
+    hasUnresolvedPhotoUploads,
+    photoUploadQueue,
     photoUploadProgress,
     clearCameraUploadFallback,
     requestUploadFromCameraFallback,
+    removePhotoUploadQueueItem,
+    retryPhotoUpload,
     updateErAuxPhotoDescription: (...args) => erAuxPhotoHandlers.updatePhotoDescription(...args),
     updateFireExtinguisherPhotoDescription: (...args) =>
       fireExtinguisherPhotoHandlers.updatePhotoDescription(...args),

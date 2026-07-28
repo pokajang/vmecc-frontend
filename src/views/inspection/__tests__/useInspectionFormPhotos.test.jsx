@@ -61,6 +61,92 @@ afterEach(() => {
 })
 
 describe('useInspectionFormPhotos', () => {
+  it('tracks every image in a five-file batch and retains partial successes', async () => {
+    const prepare = await import('../form/inspectionPhotoUtils')
+    const updateForm = vi.fn()
+    prepare.prepareInspectionPhotoUploads.mockImplementationOnce(
+      async ({ uploadItems, onItemState }) => {
+        const successfulItems = uploadItems.filter((_, index) => ![1, 3].includes(index))
+        uploadItems.forEach((item, index) => {
+          if ([1, 3].includes(index)) {
+            onItemState({
+              clientUploadId: item.clientUploadId,
+              status: 'failed',
+              percent: 0,
+              failure: {
+                code: 'image_decode_failed',
+                message: `${item.fileName} could not be decoded.`,
+              },
+            })
+            return
+          }
+          onItemState({
+            clientUploadId: item.clientUploadId,
+            status: 'attaching',
+            percent: 100,
+          })
+        })
+        return successfulItems.map((item) => ({
+          id: item.clientUploadId,
+          uploadId: item.clientUploadId,
+          mediaId: `media-${item.clientUploadId}`,
+          fileName: item.fileName,
+          url: `/report-media/media-${item.clientUploadId}`,
+        }))
+      },
+    )
+    const { result } = renderHook(() =>
+      useInspectionFormPhotos({
+        appendInspectionText: noop,
+        createPhotoId: () => 'photo-id',
+        defaultHighAnglePhotosKey: 'photos',
+        form: { photos: [] },
+        getLatestForm: () => ({ photos: [] }),
+        getScbaExistingCheck: () => null,
+        getScbaFieldEvidenceKeys: () => ({ photosKey: 'photos' }),
+        pushToast: noop,
+        updateErAuxCheck: noop,
+        updateFireExtinguisherCheck: noop,
+        updateForm,
+        updateFrtCheck: noop,
+        updateHighAngleCheck: noop,
+        updateHydraulicCheck: noop,
+        updateScbaGroupedCheck: noop,
+      }),
+    )
+    const files = Array.from(
+      { length: 5 },
+      (_, index) =>
+        new File([`photo-${index + 1}`], `photo-${index + 1}.jpg`, {
+          type: 'image/jpeg',
+        }),
+    )
+
+    act(() => {
+      result.current.requestRootPhotoUpload(result.current.uploadInputRef)
+    })
+    await act(async () => {
+      await result.current.handlePhotoSelect({ target: { files, value: '' } })
+    })
+
+    expect(result.current.photoUploadQueue).toHaveLength(5)
+    expect(
+      result.current.photoUploadQueue.filter((item) => item.status === 'uploaded'),
+    ).toHaveLength(3)
+    expect(result.current.photoUploadQueue.filter((item) => item.status === 'failed')).toHaveLength(
+      2,
+    )
+    expect(updateForm).toHaveBeenCalledWith(
+      expect.objectContaining({
+        photos: expect.arrayContaining([
+          expect.objectContaining({ fileName: 'photo-1.jpg' }),
+          expect.objectContaining({ fileName: 'photo-3.jpg' }),
+          expect.objectContaining({ fileName: 'photo-5.jpg' }),
+        ]),
+      }),
+    )
+  })
+
   it('starts finding photos with a blank description even when the caller supplies a label', async () => {
     const prepare = await import('../form/inspectionPhotoUtils')
     const onAddPhotos = vi.fn()

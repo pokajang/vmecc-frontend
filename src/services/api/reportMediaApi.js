@@ -24,7 +24,7 @@ const HTTP_FAILURE_CODES = new Map([
   [429, 'rate_limited'],
   [507, 'storage_unavailable'],
 ])
-const createUploadId = () => {
+export const createReportMediaUploadId = () => {
   if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID()
   if (!globalThis.crypto?.getRandomValues) {
     throw new Error('Secure upload identifiers are unavailable in this browser.')
@@ -116,10 +116,10 @@ const uploadWithRetry = async (options, attempt = 0, csrfRetried = false) => {
     }
     if (
       (RETRYABLE_STATUSES.has(Number(error?.status || 0)) || error?.code === 'upload_busy') &&
-      attempt < 1
+      attempt < 2
     ) {
       options.onRetry?.(attempt + 1)
-      await waitForRetry(650 + Math.floor(Math.random() * 250), options.signal)
+      await waitForRetry(650 * 2 ** attempt + Math.floor(Math.random() * 250), options.signal)
       return uploadWithRetry(options, attempt + 1, csrfRetried)
     }
     throw error
@@ -146,6 +146,9 @@ export const reportPhotoFailureMessage = (code, fileName = '') => {
     rate_limited: 'Too many photo uploads. Wait briefly and retry.',
     storage_unavailable: 'Photo storage is temporarily unavailable. Try again later.',
     storage_quota_exceeded: 'Temporary photo storage is full. Remove unused photos and retry.',
+    storage_write_failed: 'The photo could not be saved. Try again.',
+    thumbnail_write_failed: 'The photo preview could not be saved. Try again.',
+    storage_verification_failed: 'The saved photo could not be verified. Try again.',
     upload_busy: 'Another photo is still being processed. Wait briefly and retry.',
     thumbnail_failed: 'The server could not create a safe photo preview. Retry the upload.',
     network_error: 'Photo upload failed because the server could not be reached.',
@@ -178,7 +181,8 @@ export const uploadReportPhoto = async ({
   onProgress,
   onRetry,
   contextKey = '',
-  uploadId = createUploadId(),
+  batchId = '',
+  uploadId = createReportMediaUploadId(),
 } = {}) => {
   const validationCode = validateReportPhotoFile(file, source)
   if (validationCode) {
@@ -190,7 +194,13 @@ export const uploadReportPhoto = async ({
     const response = await uploadWithRetry({
       endpoint: '/report-media',
       file,
-      fields: { module, source, upload_id: uploadId, context_key: contextKey },
+      fields: {
+        module,
+        source,
+        upload_id: uploadId,
+        context_key: contextKey,
+        ...(batchId ? { batch_id: batchId } : {}),
+      },
       signal,
       onProgress,
       onRetry,
@@ -244,7 +254,7 @@ export const uploadLeaveAttachmentFile = async ({
   signal,
   onProgress,
   onRetry,
-  uploadId = createUploadId(),
+  uploadId = createReportMediaUploadId(),
 } = {}) => {
   const response = await uploadWithRetry({
     endpoint: '/leave/attachments',
@@ -261,8 +271,12 @@ export const uploadReportPhotosSequentially = async ({
   files,
   module,
   source,
+  batchId = createReportMediaUploadId(),
+  uploadItems = [],
+  prepareFile,
   signal,
   onFailure,
+  onItemState,
   onProgress,
   onRetry,
 }) => {
@@ -270,25 +284,59 @@ export const uploadReportPhotosSequentially = async ({
   const rows = Array.from(files || [])
   for (let index = 0; index < rows.length; index += 1) {
     if (signal?.aborted) throw new DOMException('Upload cancelled', 'AbortError')
-    const file = rows[index]
+    const originalFile = rows[index]
+    const clientUploadId =
+      String(uploadItems[index]?.clientUploadId || '').trim() || createReportMediaUploadId()
+    const notifyItemState = (status, patch = {}) =>
+      onItemState?.({
+        batchId,
+        clientUploadId,
+        index,
+        count: rows.length,
+        fileName: String(originalFile?.name || ''),
+        status,
+        ...patch,
+      })
     try {
-      photos.push(
-        await uploadReportPhoto({
-          file,
-          module,
-          source,
-          signal,
-          onProgress: (percent) => onProgress?.({ index, count: rows.length, percent }),
-          onRetry: () => onRetry?.({ index, count: rows.length }),
-        }),
-      )
+      const file =
+        typeof prepareFile === 'function'
+          ? await prepareFile(originalFile, {
+              signal,
+              batchId,
+              clientUploadId,
+              index,
+              count: rows.length,
+              onState: ({ status, ...patch }) => notifyItemState(status, patch),
+            })
+          : originalFile
+      notifyItemState('uploading', { percent: 0 })
+      const photo = await uploadReportPhoto({
+        file,
+        module,
+        source,
+        signal,
+        batchId,
+        uploadId: clientUploadId,
+        onProgress: (percent) => {
+          notifyItemState(percent >= 100 ? 'server_processing' : 'uploading', { percent })
+          onProgress?.({ index, count: rows.length, percent, clientUploadId, batchId })
+        },
+        onRetry: () => {
+          notifyItemState('retry_waiting', { percent: 0 })
+          onRetry?.({ index, count: rows.length, clientUploadId, batchId })
+        },
+      })
+      photos.push(photo)
+      notifyItemState('attaching', { percent: 100, photo })
     } catch (error) {
       if (error?.name === 'AbortError') throw error
-      onFailure?.({
+      const failure = {
         code: classifyReportPhotoFailure(error),
         message: error.message,
-        fileName: file?.name,
-      })
+        fileName: originalFile?.name,
+      }
+      notifyItemState('failed', { failure, percent: 0 })
+      onFailure?.({ ...failure, batchId, clientUploadId, index })
     }
   }
   return photos
