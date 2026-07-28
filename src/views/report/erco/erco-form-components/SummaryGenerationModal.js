@@ -42,9 +42,7 @@ const SummaryGenerationModal = ({
     <div className="d-grid gap-3">
       {stage === 'confirm' ? (
         <div className="text-body-secondary">
-          {isImproveMode
-            ? 'Ask AI will improve the wording of your current summary using this ERCO form only. Review it before applying.'
-            : 'Ensure you have completed chronology and other inputs. Ask AI will generate a draft from your current ERCO form data for review before applying.'}
+          AI drafts from this report only. Review before applying.
         </div>
       ) : null}
 
@@ -57,9 +55,6 @@ const SummaryGenerationModal = ({
 
       {stage === 'preview' ? (
         <>
-          <div className="text-body-secondary">
-            Review generated output before applying it to the summary field.
-          </div>
           <div className="d-grid gap-2">
             <div className="fw-semibold">Current Summary</div>
             <CFormTextarea rows={4} aria-label="Current summary" value={currentSummary} readOnly />

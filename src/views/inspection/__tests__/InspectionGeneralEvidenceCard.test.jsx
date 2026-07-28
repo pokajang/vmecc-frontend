@@ -39,6 +39,7 @@ describe('InspectionGeneralEvidenceCard', () => {
         compactOnMobile
         stageDrawerPhotos
         compactActionLabel={INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel}
+        compactPopulatedActionLabel={INSPECTION_REPORT_EVIDENCE_COPY.mobilePopulatedActionLabel}
         drawerDescription={INSPECTION_REPORT_EVIDENCE_COPY.helperText}
         emptyMessage={INSPECTION_REPORT_EVIDENCE_COPY.emptyPhotosMessage}
       />,
@@ -60,6 +61,69 @@ describe('InspectionGeneralEvidenceCard', () => {
     ).toBeNull()
     expect(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.helperText)).toBeTruthy()
     expect(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.emptyPhotosMessage)).toBeTruthy()
+  })
+
+  it('provides a clear Done action for immediate-draft photo drawers', async () => {
+    setMobileViewport()
+
+    render(
+      <InspectionGeneralEvidenceCard
+        title="Finding Photos"
+        photos={[
+          {
+            id: 'finding-photo-1',
+            fileName: 'finding.jpg',
+            url: 'data:image/jpeg;base64,abc',
+          },
+        ]}
+        compactOnMobile
+        compactActionLabel="Add finding photos"
+        drawerDoneMessage="Save the finding to keep these photos."
+        onChangePhotoDescription={vi.fn()}
+        onRemovePhoto={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(screen.getByText('Add finding photos (1)'))
+
+    expect(screen.getByText('1 photo attached')).toBeTruthy()
+    expect(screen.getByText('Save the finding to keep these photos.')).toBeTruthy()
+    expect(screen.getByText('Photo 1 of 1')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Done with Finding Photos' })).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Done with Finding Photos' }))
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+    expect(screen.getByText('Add finding photos (1)')).toBeTruthy()
+  })
+
+  it('keeps a staged report photo drawer open while uploads are unresolved', () => {
+    setMobileViewport()
+
+    render(
+      <InspectionGeneralEvidenceCard
+        title="Inspection Photos"
+        photos={[]}
+        compactOnMobile
+        stageDrawerPhotos
+        uploadsPending
+        onTakePhoto={vi.fn()}
+        onUploadPhoto={vi.fn()}
+        onSavePhotos={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(screen.getByText('Add photos (optional)'))
+
+    expect(screen.getByText('Photos are still uploading')).toBeTruthy()
+    expect(
+      screen.getByText('Keep this drawer open. Retry or remove any failed upload before saving.'),
+    ).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Close Inspection Photos' }).disabled).toBe(true)
+    expect(screen.getByRole('button', { name: 'Take photo' }).disabled).toBe(true)
+    expect(screen.getByRole('button', { name: 'Upload photo' }).disabled).toBe(true)
+    expect(screen.getByRole('button', { name: 'Reset' }).disabled).toBe(true)
+    expect(screen.getByRole('button', { name: 'Save photos' }).disabled).toBe(true)
   })
 
   it('keeps the existing card presentation outside compact mobile mode', () => {
@@ -130,6 +194,7 @@ describe('InspectionGeneralEvidenceCard', () => {
           compactOnMobile
           stageDrawerPhotos
           compactActionLabel={INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel}
+          compactPopulatedActionLabel={INSPECTION_REPORT_EVIDENCE_COPY.mobilePopulatedActionLabel}
           drawerDescription={INSPECTION_REPORT_EVIDENCE_COPY.helperText}
           emptyMessage={INSPECTION_REPORT_EVIDENCE_COPY.emptyPhotosMessage}
           onUploadPhoto={(options) => options?.onAddPhotos?.([stagedPhoto])}
@@ -146,7 +211,7 @@ describe('InspectionGeneralEvidenceCard', () => {
     expect(screen.getByText('evidence.jpg')).toBeTruthy()
     expect(screen.getByText('1 photo ready to save')).toBeTruthy()
     expect(
-      screen.queryByText(`${INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel} (1)`),
+      screen.queryByText(`${INSPECTION_REPORT_EVIDENCE_COPY.mobilePopulatedActionLabel} (1)`),
     ).toBeNull()
 
     fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
@@ -158,7 +223,7 @@ describe('InspectionGeneralEvidenceCard', () => {
 
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     expect(
-      screen.getByText(`${INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel} (1)`),
+      screen.getByText(`${INSPECTION_REPORT_EVIDENCE_COPY.mobilePopulatedActionLabel} (1)`),
     ).toBeTruthy()
   })
 
@@ -177,6 +242,7 @@ describe('InspectionGeneralEvidenceCard', () => {
         compactOnMobile
         stageDrawerPhotos
         compactActionLabel={INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel}
+        compactPopulatedActionLabel={INSPECTION_REPORT_EVIDENCE_COPY.mobilePopulatedActionLabel}
         emptyMessage={INSPECTION_REPORT_EVIDENCE_COPY.emptyPhotosMessage}
         onUploadPhoto={(options) => options?.onAddPhotos?.([stagedPhoto])}
         onSavePhotos={vi.fn()}
@@ -216,7 +282,7 @@ describe('InspectionGeneralEvidenceCard', () => {
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     expect(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel)).toBeTruthy()
     expect(
-      screen.queryByText(`${INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel} (1)`),
+      screen.queryByText(`${INSPECTION_REPORT_EVIDENCE_COPY.mobilePopulatedActionLabel} (1)`),
     ).toBeNull()
 
     fireEvent.click(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel))
@@ -247,28 +313,34 @@ describe('InspectionGeneralEvidenceCard', () => {
         compactOnMobile
         stageDrawerPhotos
         compactActionLabel={INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel}
+        compactPopulatedActionLabel={INSPECTION_REPORT_EVIDENCE_COPY.mobilePopulatedActionLabel}
         emptyMessage={INSPECTION_REPORT_EVIDENCE_COPY.emptyPhotosMessage}
         onUploadPhoto={(options) => options?.onAddPhotos?.([stagedPhoto])}
         onSavePhotos={vi.fn()}
       />,
     )
 
-    fireEvent.click(screen.getByText(`${INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel} (1)`))
-    fireEvent.change(screen.getByDisplayValue('Saved description'), {
+    fireEvent.click(
+      screen.getByText(`${INSPECTION_REPORT_EVIDENCE_COPY.mobilePopulatedActionLabel} (1)`),
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Edit description for Photo 1' }))
+    fireEvent.change(screen.getByLabelText('Description for Photo 1'), {
       target: { value: 'Edited unsaved description' },
     })
     fireEvent.click(screen.getByRole('button', { name: 'Upload photo' }))
 
     expect(screen.getByText('staged.jpg')).toBeTruthy()
     expect(screen.getByDisplayValue('Edited unsaved description')).toBeTruthy()
-    expect(screen.getByDisplayValue('Staged description')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Edit description for Photo 2' }))
+    expect(screen.getByLabelText('Description for Photo 2').value).toBe('Staged description')
 
     fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
 
     expect(screen.queryByText('staged.jpg')).toBeNull()
     expect(screen.queryByDisplayValue('Staged description')).toBeNull()
     expect(screen.queryByDisplayValue('Edited unsaved description')).toBeNull()
-    expect(screen.getByDisplayValue('Saved description')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Edit description for Photo 1' }))
+    expect(screen.getByLabelText('Description for Photo 1').value).toBe('Saved description')
     expect(screen.getByText('1 photo attached to this report')).toBeTruthy()
   })
 })

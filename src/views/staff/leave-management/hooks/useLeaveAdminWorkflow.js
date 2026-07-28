@@ -575,7 +575,7 @@ const useLeaveAdminWorkflow = ({
               ? 'recommend'
               : 'approve'
       if (!row?.serverId || !ownerUserId) {
-        pushToast('This overtime record is not linked to a backend entry.', {
+        pushToast('This overtime record is unavailable for workflow action. Refresh and retry.', {
           title: 'Action unavailable',
           color: 'warning',
         })

@@ -258,10 +258,7 @@ const AuditLogs = () => {
 
   return (
     <CContainer fluid data-testid="audit-module">
-      <ModulePageHeader
-        title="Audit Logs"
-        subtitle="Review administrative activity, security events, and operational changes."
-      />
+      <ModulePageHeader title="Audit Logs" />
       <CCard className="mb-4" data-testid="audit-records-card">
         <CCardHeader>Activity Records</CCardHeader>
         <CCardBody>

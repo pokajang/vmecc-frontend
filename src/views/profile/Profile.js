@@ -29,10 +29,7 @@ const Profile = () => {
 
   return (
     <CContainer fluid data-testid="profile-module">
-      <ModulePageHeader
-        title="Profile"
-        subtitle="Manage your personal, employment, and account security information."
-      />
+      <ModulePageHeader title="Profile" />
       <div data-testid="profile-nav">
         <RouteNavTabs
           navigate={navigate}

@@ -71,7 +71,7 @@ const useSalaryAssignmentRatesState = ({ user, pushToast }) => {
   const saveStatutoryRates = useCallback(async () => {
     if (isStatutoryRatesSaving) return false
     if (!statutoryRatesFeatureEnabled) {
-      pushToast('Salary statutory rates API is not enabled in this environment.', {
+      pushToast('Salary statutory rates are unavailable.', {
         title: 'Feature disabled',
         color: 'warning',
       })

@@ -218,10 +218,6 @@ const DashboardVisibilityMatrix = () => {
                 ? 'Dashboard Visibility Role Editor'
                 : 'Dashboard Visibility Matrix'}
             </div>
-            <div className="small text-muted">
-              This is a filtered view of the same role permission matrix for dashboard sections
-              only.
-            </div>
           </div>
           <div className="d-flex align-items-center gap-2">
             {editMode ? (

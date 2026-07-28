@@ -123,8 +123,7 @@ const SalaryAssignmentFormPage = ({ vm, handlers }) => {
 
               {!isReadOnly && willOverwriteExistingAssignment && (
                 <div className="rounded-3 border border-warning bg-warning bg-opacity-10 p-3">
-                  This employee already has a salary assignment, existing pay components were loaded
-                  and this update will overwrite it.
+                  Saving will replace this employee&apos;s current salary assignment.
                 </div>
               )}
             </>

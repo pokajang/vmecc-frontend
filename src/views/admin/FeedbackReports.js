@@ -167,10 +167,7 @@ const FeedbackReports = () => {
 
   return (
     <CContainer fluid data-testid="feedback-reports-module">
-      <ModulePageHeader
-        title="Feedback Reports"
-        subtitle="Review and triage submitted user feedback and bug reports."
-      />
+      <ModulePageHeader title="Feedback Reports" />
 
       <CCard className="mb-4" data-testid="feedback-reports-records">
         <CCardBody>

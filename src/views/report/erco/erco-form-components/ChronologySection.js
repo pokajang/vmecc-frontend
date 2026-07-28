@@ -335,10 +335,6 @@ const ChronologySection = ({
               <ChronologyRow key={row.id} row={row} idx={idx} {...chronologyRowProps} />
             ))}
           </div>
-
-          <div className="small text-body-secondary d-none d-md-block">
-            Tip: While editing an Event / Action field, press Enter to add the next event row.
-          </div>
         </>
       )}
 

@@ -28,8 +28,7 @@ const PdfKnowledgeForm = ({
       aria-label="Upload reference PDF"
     />
     <div className="ai-helper-knowledge__hint">
-      This PDF is stored as a view-only reference document. Ask AI does not ingest, OCR, or learn
-      from the uploaded file.
+      View-only. Ask AI does not read or learn from this PDF.
     </div>
     <CFormLabel
       className="ai-helper-knowledge__field-label mt-2"
@@ -46,9 +45,6 @@ const PdfKnowledgeForm = ({
       disabled={knowledgeUploading}
       aria-label="Document title"
     />
-    <div className="ai-helper-knowledge__hint">
-      Use a short name that helps users recognize the document later.
-    </div>
     <CFormLabel
       className="ai-helper-knowledge__field-label mt-2"
       htmlFor="ai-helper-knowledge-visibility"
@@ -66,8 +62,7 @@ const PdfKnowledgeForm = ({
       <option value="shared">Everyone</option>
     </CFormSelect>
     <div className="ai-helper-knowledge__hint">
-      Personal documents are visible only to you. Shared documents are visible to other signed-in
-      users in the reference library.
+      Personal is visible only to you; Everyone is shared with signed-in users.
     </div>
     <CFormLabel
       className="ai-helper-knowledge__field-label mt-2"

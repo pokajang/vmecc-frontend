@@ -52,15 +52,21 @@ const OvertimeSectionCard = ({
         <>
           {overtimeBaseMode === OVERTIME_BASE_HOUR_MODES.AUTO_STATUTORY &&
             overtimeAutoHourlyBaseRate !== null && (
-              <div className="small text-info">
-                {`Using statutory hourly base rate (RM/hour): (${formatCurrency(salaryBasic)} / ${overtimeMonthlyDivisor} days) / ${overtimePreviewHoursPerDay} hours/day = ${formatCurrency(overtimeAutoHourlyBaseRate)}.`}
-              </div>
+              <details className="small text-body-secondary">
+                <summary>Hourly rate calculation</summary>
+                <div className="mt-1">
+                  {`(${formatCurrency(salaryBasic)} / ${overtimeMonthlyDivisor} days) / ${overtimePreviewHoursPerDay} hours/day = ${formatCurrency(overtimeAutoHourlyBaseRate)}/hour.`}
+                </div>
+              </details>
             )}
           {overtimeBaseMode === OVERTIME_BASE_HOUR_MODES.MONTH_DAYS_DIVISION && (
-            <div className="small text-info">
-              Month days division mode enabled. Hourly base uses calendar days of each overtime
-              record month: (basic salary / days in month) / normal hours/day.
-            </div>
+            <details className="small text-body-secondary">
+              <summary>Hourly rate calculation</summary>
+              <div className="mt-1">
+                Basic salary divided by calendar days in the overtime month, then by normal
+                hours/day.
+              </div>
+            </details>
           )}
           {overtimeHourlySourceSummary.missing > 0 && (
             <div className="small text-warning">
@@ -113,7 +119,12 @@ const OvertimeSectionCard = ({
                       </CTableRow>
                       <CTableRow>
                         <CTableDataCell colSpan={8} className="small text-body-secondary">
-                          {`Detail: Hourly base = (${formatCurrency(salaryBasic)} / ${row.monthlyDivisorUsed || '-'} days) / ${row.normalHoursPerDay} h/day = ${formatCurrency(row.hourlyBaseRate)}/h. Payout = ${row.durationHours} h x ${formatCurrency(row.hourlyBaseRate)}/h x ${row.multiplier}x = ${formatCurrency(row.calculatedPayout)}${row.isApproved ? '' : ' (not approved, payout used is RM 0.00).'}`}
+                          <details>
+                            <summary>Calculation details</summary>
+                            <div className="mt-1">
+                              {`Hourly base = (${formatCurrency(salaryBasic)} / ${row.monthlyDivisorUsed || '-'} days) / ${row.normalHoursPerDay} h/day = ${formatCurrency(row.hourlyBaseRate)}/h. Payout = ${row.durationHours} h x ${formatCurrency(row.hourlyBaseRate)}/h x ${row.multiplier}x = ${formatCurrency(row.calculatedPayout)}${row.isApproved ? '' : ' (not approved, payout used is RM 0.00).'}`}
+                            </div>
+                          </details>
                         </CTableDataCell>
                       </CTableRow>
                     </React.Fragment>

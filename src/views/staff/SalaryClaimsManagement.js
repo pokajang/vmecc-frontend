@@ -582,12 +582,6 @@ const SalaryClaimsManagement = () => {
         <>
           <ModulePageHeader
             title={isSalarySettingsRoute ? 'Payroll Configuration' : 'Payroll Records'}
-            subtitle="Review payroll claims, manage salary records, configure pay settings, and maintain workflow rules."
-            mobileSubtitle={
-              isSalarySettingsRoute
-                ? 'Assignments, rates, and workflow rules.'
-                : 'Salary and claim records.'
-            }
           />
           <div
             data-testid={

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { INSPECTION_REPORT_EVIDENCE_COPY } from '../../src/views/inspection/inspectionReportEvidenceCopy.js'
 import { installAppShellApiStubs } from './support/app-shell-stubs'
 
 const apiBaseUrl = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
@@ -61,7 +62,12 @@ test('inspection mobile controls preserve touch comfort, wrapping, and narrow-wi
     .evaluate((element) => element.scrollWidth <= element.clientWidth + 1)
   expect(previewFits).toBe(true)
 
-  await inspectionCase.getByRole('button', { name: /^Add report evidence/i }).click()
+  await inspectionCase
+    .getByRole('button', {
+      name: `${INSPECTION_REPORT_EVIDENCE_COPY.mobilePopulatedActionLabel} (1)`,
+      exact: true,
+    })
+    .click()
   const drawer = page.locator('.offcanvas.show').last()
   await expect(drawer).toBeVisible()
   await expectComfortableTargets(drawer.locator('.mobile-bottom-drawer__close'))

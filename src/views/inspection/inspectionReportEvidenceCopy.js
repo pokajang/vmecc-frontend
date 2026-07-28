@@ -1,10 +1,11 @@
 export const INSPECTION_REPORT_EVIDENCE_COPY = {
-  sectionTitle: 'Additional report evidence',
-  mobileActionLabel: 'Add report evidence',
-  photoActionLabel: 'Add report photos',
-  remarksLabel: 'Additional report remarks',
-  remarksPlaceholder: 'Optional remarks for the whole inspection/location.',
+  sectionTitle: 'General photos and remarks',
+  mobileActionLabel: 'Add general photos (optional)',
+  mobilePopulatedActionLabel: 'General photos',
+  photoActionLabel: 'Add general photos',
+  remarksLabel: 'General report remarks (optional)',
+  remarksPlaceholder: 'Optional remarks that apply to the inspection as a whole.',
   helperText:
-    'Optional. Use this only for photos or remarks that apply to the whole inspection/location, not a specific finding or equipment item.',
-  emptyPhotosMessage: 'No additional report photos added.',
+    'These photos apply to the inspection as a whole and will appear in the General photos and remarks section of the report. Add issue-specific photos to the relevant finding or equipment item instead.',
+  emptyPhotosMessage: 'No general photos added.',
 }

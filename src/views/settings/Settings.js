@@ -155,11 +155,7 @@ const Settings = () => {
 
   return (
     <CContainer fluid data-testid="settings-module">
-      <ModulePageHeader
-        title="Settings"
-        subtitle="Maintain system controls, role permissions, and dashboard visibility rules."
-        mobileSubtitle="System access, modules, and visibility."
-      />
+      <ModulePageHeader title="Settings" />
 
       <div data-testid="settings-nav">
         <RouteNavTabs
@@ -204,7 +200,7 @@ const Settings = () => {
                 <div>
                   <div className="fw-semibold">System Maintenance Mode</div>
                   <div className="small text-muted">
-                    When enabled, users enter grace period first, then maintenance lock is enforced.
+                    Users receive a grace period before maintenance lock.
                   </div>
                 </div>
                 <div className="d-flex align-items-start gap-2 flex-wrap justify-content-end">

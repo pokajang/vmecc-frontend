@@ -761,11 +761,19 @@ const useInspectionFormPhotos = ({
     )
   }
 
-  const clearCompletedPhotoUploads = () => {
-    setPhotoUploadQueueState((current) =>
-      current.filter((item) => item.status !== 'uploaded' && item.status !== 'cancelled'),
-    )
-  }
+  const dismissCompletedPhotoUploadBatch = useCallback(
+    (batchId) => {
+      const identity = String(batchId || '').trim()
+      setPhotoUploadQueueState((current) =>
+        current.filter((item) => {
+          const itemBatchId = String(item?.batchId || 'legacy-upload-batch')
+          if (identity && itemBatchId !== identity) return true
+          return item.status !== 'uploaded' && item.status !== 'cancelled'
+        }),
+      )
+    },
+    [setPhotoUploadQueueState],
+  )
 
   const handleInAppCameraCapture = (file) => {
     const uploadTarget = cameraUploadTargetRef.current ||
@@ -990,7 +998,7 @@ const useInspectionFormPhotos = ({
     closeInAppCamera,
     handleInAppCameraCapture,
     cameraUploadFallback,
-    clearCompletedPhotoUploads,
+    dismissCompletedPhotoUploadBatch,
     isPhotoProcessing,
     hasUnresolvedPhotoUploads,
     photoUploadQueue,

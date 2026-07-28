@@ -336,10 +336,7 @@ const AiHelperKnowledge = () => {
 
   return (
     <CContainer fluid data-testid="ai-helper-knowledge-module">
-      <ModulePageHeader
-        title="Ask AI Knowledge"
-        subtitle="Review shared guidance before it is used by Ask AI."
-      />
+      <ModulePageHeader title="Ask AI Knowledge" />
 
       <AiHelperKnowledgeDiagnosticsCard
         diagnostics={diagnostics}

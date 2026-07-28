@@ -74,16 +74,15 @@ const ClaimSubmissionEditorCard = ({
               ))}
             </CFormSelect>
           </CCol>
-          <CCol xs={12}>
-            <div className="small rounded-2 border px-3 py-2 text-body-secondary bg-light">
-              {schema.helperText}
-            </div>
-          </CCol>
+          {!isExceptionalClaim && schema.helperText ? (
+            <CCol xs={12}>
+              <div className="small text-body-secondary">{schema.helperText}</div>
+            </CCol>
+          ) : null}
           {isExceptionalClaim && (
             <CCol xs={12}>
-              <div className="small rounded-2 border border-warning-subtle px-3 py-2 text-body-secondary bg-warning bg-opacity-10">
-                Exceptional claims are for approved policy exceptions only. Do not use this form for
-                salary incentives/allowances or normal operating expenses.
+              <div className="small rounded-2 border border-warning-subtle px-3 py-2 text-warning-emphasis bg-warning bg-opacity-10">
+                For approved policy exceptions only. Approval evidence is required.
               </div>
             </CCol>
           )}
@@ -254,17 +253,29 @@ const ClaimSubmissionEditorCard = ({
               accept={PAYROLL_ATTACHMENT_ACCEPT}
               onChange={(e) => onAttachmentChange(e.target.files?.[0] || null)}
             />
-            <div className="small text-body-secondary mt-1">
-              {draftItem.attachmentName
-                ? `Attached: ${draftItem.attachmentName}${
-                    draftItem.attachmentUploadState === 'uploading'
-                      ? ' (Uploading...)'
-                      : draftItem.attachmentUploadState === 'failed' || draftItem.needsReattach
-                        ? ' (Reattach required)'
-                        : ''
-                  }`
-                : `${schema.attachmentHint} Accepted: PDF, JPG, JPEG, PNG up to ${PAYROLL_ATTACHMENT_MAX_SIZE_MB} MB.`}
-            </div>
+            {draftItem.attachmentName ? (
+              <div className="small text-body-secondary mt-1">
+                {`Attached: ${draftItem.attachmentName}${
+                  draftItem.attachmentUploadState === 'uploading'
+                    ? ' (Uploading...)'
+                    : draftItem.attachmentUploadState === 'failed' || draftItem.needsReattach
+                      ? ' (Reattach required)'
+                      : ''
+                }`}
+              </div>
+            ) : (
+              <>
+                <div className="small text-body-secondary mt-1">
+                  PDF, JPG or PNG up to {PAYROLL_ATTACHMENT_MAX_SIZE_MB} MB.
+                </div>
+                {schema.attachmentHint ? (
+                  <details className="small text-body-secondary mt-1">
+                    <summary>Evidence required</summary>
+                    <div className="mt-1">{schema.attachmentHint}</div>
+                  </details>
+                ) : null}
+              </>
+            )}
             {draftItem.attachmentError ? (
               <div className="small text-danger mt-1">{draftItem.attachmentError}</div>
             ) : null}

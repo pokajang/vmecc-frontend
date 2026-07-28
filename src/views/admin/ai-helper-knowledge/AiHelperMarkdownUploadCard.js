@@ -56,8 +56,7 @@ const AiHelperMarkdownUploadCard = ({ onUploaded = () => {} }) => {
       <CCardHeader>Private AI Knowledge Upload</CCardHeader>
       <CCardBody>
         <p className="small text-body-secondary">
-          Markdown uploaded here is used internally by Ask AI. It is not listed, previewed, or
-          downloadable in the user-facing reference document library.
+          Internal Ask AI content. It won&apos;t appear in the reference document library.
         </p>
         {error ? <CAlert color="danger">{error}</CAlert> : null}
         {notice ? <CAlert color="success">{notice}</CAlert> : null}

@@ -371,9 +371,6 @@ const DrillSetupStep = ({
               ariaLabel="Exercise categories"
               testIdPrefix="drill-category"
             />
-            <div className="small text-body-secondary">
-              Select every emergency response category exercised by this drill.
-            </div>
             {Array.isArray(form.exerciseCategories) && form.exerciseCategories.length > 0 ? (
               <div className="report-setup-confirm-row">
                 <CButton

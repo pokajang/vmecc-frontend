@@ -185,7 +185,9 @@ export const ReportBasicPathSummary = ({ title, description, mobileSummary, item
   <div className="report-basic-path-card rounded-3 border bg-body p-3 d-grid gap-2">
     <div className="fw-semibold">{title}</div>
     <div className="small text-body-secondary d-md-none">{mobileSummary || '-'}</div>
-    <div className="small text-body-secondary d-none d-md-block">{description}</div>
+    {description ? (
+      <div className="small text-body-secondary d-none d-md-block">{description}</div>
+    ) : null}
     <div className="row g-2 small">
       {items.map((item) => (
         <div key={item.label} className={item.fullWidth ? 'col-12' : 'col-6 col-md-3'}>

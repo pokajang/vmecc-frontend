@@ -61,7 +61,7 @@ const OvertimeApplySection = ({
   const canRenderFreshTypeSelector =
     !isOvertimeTypeDerived && !overtimeTypeConfirmed && !isResumeEditMode
 
-  const renderTypeCards = ({ showDescriptions = true } = {}) => {
+  const renderTypeCards = () => {
     if (overtimeTypeOptions.length === 0) {
       return (
         <div className="rounded-3 border p-3 bg-light text-body-secondary">
@@ -76,7 +76,7 @@ const OvertimeApplySection = ({
         value={overtimeType}
         onChange={(nextType) => onSelectOvertimeType(nextType)}
         fallbackIcon={Clock3}
-        showDescription={showDescriptions}
+        showDescription={false}
         variant="standard"
         columns={{ xs: 12, md: 4, lg: 4 }}
         rowClassName="g-2 g-md-3"
@@ -89,11 +89,11 @@ const OvertimeApplySection = ({
   if (canRenderFreshTypeSelector) {
     return (
       <div className="d-grid gap-4" data-testid="overtime-type-selection">
-        <div className="fw-semibold">Choose Overtime Type</div>
+        <div className="fw-semibold">Overtime type</div>
         {fieldErrors.overtimeType ? (
           <div className="small text-danger">{fieldErrors.overtimeType}</div>
         ) : null}
-        {renderTypeCards({ showDescriptions: true })}
+        {renderTypeCards()}
         {overtimeTypeOptions.length > 0 ? (
           <FormActionGroup mobileBehavior="sticky" ariaLabel="Overtime type actions">
             <CButton color="light" onClick={onBack}>
@@ -123,8 +123,8 @@ const OvertimeApplySection = ({
         <CCol xs={12}>
           {isResumeEditMode && !isOvertimeTypeDerived ? (
             <div>
-              <div className="small text-body-secondary mb-2">Application Type</div>
-              {renderTypeCards({ showDescriptions: true })}
+              <div className="fw-semibold mb-2">Overtime type</div>
+              {renderTypeCards()}
               {fieldErrors.overtimeType ? (
                 <div className="small text-danger mt-2">{fieldErrors.overtimeType}</div>
               ) : null}
@@ -139,14 +139,9 @@ const OvertimeApplySection = ({
                   <Clock3 size={20} />
                 </div>
                 <div className="flex-grow-1" style={{ minWidth: 0 }}>
-                  <div className="small text-body-secondary mb-1">Application Type</div>
                   <div className="fw-semibold">
                     {selectedOvertimeTypeOption?.title || 'Overtime Claim'}
                   </div>
-                  <p className="mb-0 mt-1">
-                    {selectedOvertimeTypeOption?.description ||
-                      'Record approved overtime hours with a clear time window and work justification.'}
-                  </p>
                 </div>
                 {!isOvertimeTypeDerived ? (
                   <CButton

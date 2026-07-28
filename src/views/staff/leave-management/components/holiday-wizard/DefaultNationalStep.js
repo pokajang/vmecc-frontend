@@ -5,8 +5,7 @@ const DefaultNationalStep = ({ rows, dispatch }) => (
   <div className="d-grid gap-2">
     <div className="fw-semibold mb-2">National Holidays</div>
     <div className="text-body-secondary small mb-1">
-      Select which national holidays apply and confirm their dates. Nothing is saved until final
-      step.
+      Select applicable national holidays. Nothing is saved until the final step.
     </div>
     <CRow className="g-2">
       <CCol md={1} className="small text-body-secondary fw-semibold text-center">

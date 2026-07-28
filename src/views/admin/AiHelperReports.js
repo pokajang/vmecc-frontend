@@ -167,10 +167,7 @@ const AiHelperReports = () => {
 
   return (
     <CContainer fluid data-testid="ai-helper-reports-module">
-      <ModulePageHeader
-        title="Ask AI Reports"
-        subtitle="Review user reports for Ask AI responses and triage follow-up."
-      />
+      <ModulePageHeader title="Ask AI Reports" />
 
       <CCard className="mb-4" data-testid="ai-helper-reports-records">
         <CCardBody>

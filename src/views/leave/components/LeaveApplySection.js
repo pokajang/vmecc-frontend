@@ -91,9 +91,7 @@ const LeaveApplySection = ({
                   {SelectedLeaveIcon ? <SelectedLeaveIcon size={20} /> : null}
                 </div>
                 <div className="flex-grow-1" style={{ minWidth: 0 }}>
-                  <div className="small text-body-secondary mb-1">Application Type</div>
                   <div className="fw-semibold">{selectedLeaveTypeOption?.title || leaveType}</div>
-                  <p className="mb-0 mt-1">{selectedLeaveTypeOption?.description || ''}</p>
                 </div>
                 <CButton
                   type="button"
@@ -136,7 +134,7 @@ const LeaveApplySection = ({
               )}
               {leaveType === 'Other Leave' && (
                 <div className="small text-muted mt-2">
-                  Non-statutory leave requires HR/HQ review and additional justification.
+                  Requires HR/HQ review and written justification.
                 </div>
               )}
             </div>

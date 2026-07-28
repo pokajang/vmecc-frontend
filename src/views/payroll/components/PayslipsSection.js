@@ -289,7 +289,7 @@ const PayslipsSection = ({
           </CAlert>
         )}
         <p className="text-body-secondary">
-          Payslip details are composed from approved payroll claims and salary assignment records.
+          Payslips include approved payroll claims and salary assignments.
         </p>
         <div className="d-md-none d-grid gap-3">
           {isLoading ? (

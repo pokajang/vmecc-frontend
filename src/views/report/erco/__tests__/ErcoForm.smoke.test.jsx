@@ -454,7 +454,7 @@ describe('ERCO step smoke flow', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Check report with AI/i }))
     await waitFor(() => expect(screen.getByText('Check Report with AI')).toBeTruthy())
-    expect(screen.getByText(/does not block submission/i)).toBeTruthy()
+    expect(screen.getByText(/without changing or blocking the report/i)).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Check Report' }))
 
     await waitFor(() => {

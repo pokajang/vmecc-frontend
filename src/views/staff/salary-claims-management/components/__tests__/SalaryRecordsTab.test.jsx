@@ -123,7 +123,7 @@ describe('SalaryRecordsTab contract-incomplete UI', () => {
       handlers: { canBulkActOnSalaryClaim: () => false },
     })
 
-    expect(screen.getByText(/contain incomplete backend contract fields/i)).toBeTruthy()
+    expect(screen.getByText(/have missing payroll details/i)).toBeTruthy()
     expect(document.querySelector('.list-group')).toBeTruthy()
     expect(document.querySelector('.list-group-item')).toBeTruthy()
     expect(screen.getByText('Partial total')).toBeTruthy()

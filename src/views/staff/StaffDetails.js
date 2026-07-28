@@ -282,7 +282,6 @@ const StaffDetails = () => {
     <CContainer fluid data-testid="staff-directory-module">
       <ModulePageHeader
         title="Staff Directory"
-        subtitle="Review staff profiles, employment status, roles, teams, and contact details."
         actions={refreshing ? <Loader size={14} className="icon-spin" /> : null}
       />
       <CRow>

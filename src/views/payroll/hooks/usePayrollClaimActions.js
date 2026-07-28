@@ -22,6 +22,8 @@ import {
 const buildActionIdempotencyKey = (action, claimOrId) =>
   `payroll:${action}:${String(claimOrId?.id || claimOrId?.serverId || claimOrId || '').trim() || Date.now()}`
 
+const isSameClaimId = (lhs, rhs) => String(lhs ?? '') === String(rhs ?? '')
+
 const usePayrollClaimActions = ({
   userId,
   claimId,
@@ -40,7 +42,6 @@ const usePayrollClaimActions = ({
   const [deleteModalVisible, setDeleteModalVisible] = useState(false)
   const [deleteBlockedTarget, setDeleteBlockedTarget] = useState(null)
   const [deleteBlockedModalVisible, setDeleteBlockedModalVisible] = useState(false)
-
   const openClaim = (claim) => {
     if (!claim?.id) return
     if (claim.isDraft) {
@@ -245,7 +246,7 @@ const usePayrollClaimActions = ({
       return
     }
     if (!cancelTarget?.serverId) {
-      pushToast('Unable to cancel claim. Backend record id is missing.', {
+      pushToast('This claim is unavailable for cancellation. Refresh and retry.', {
         title: 'Cancel failed',
         color: 'danger',
       })
@@ -265,7 +266,7 @@ const usePayrollClaimActions = ({
           color: 'warning',
         })
       } else {
-        pushToast('Unable to cancel claim. API request failed.', {
+        pushToast('Unable to cancel claim. Please retry.', {
           title: 'Cancel failed',
           color: 'danger',
         })
@@ -308,7 +309,7 @@ const usePayrollClaimActions = ({
     }
     if (!deleteTarget.isDraft) {
       if (!deleteTarget?.serverId) {
-        pushToast(`Unable to delete claim ${deleteTarget.id}. Backend record id is missing.`, {
+        pushToast(`Claim ${deleteTarget.id} is unavailable for deletion. Refresh and retry.`, {
           title: 'Delete failed',
           color: 'danger',
         })
@@ -320,7 +321,7 @@ const usePayrollClaimActions = ({
         idempotencyKey: buildActionIdempotencyKey('delete-claim', deleteTarget),
       })
       if (!apiResult?.ok) {
-        pushToast(`Unable to delete claim ${deleteTarget.id}. API request failed.`, {
+        pushToast(`Unable to delete claim ${deleteTarget.id}. Please retry.`, {
           title: 'Delete failed',
           color: 'danger',
         })
@@ -361,7 +362,7 @@ const usePayrollClaimActions = ({
         },
       )
       if (!apiDraftDelete?.ok) {
-        pushToast(`Unable to delete claim ${deleteTarget.id}. API request failed.`, {
+        pushToast(`Unable to delete claim ${deleteTarget.id}. Please retry.`, {
           title: 'Delete failed',
           color: 'danger',
         })
@@ -369,7 +370,7 @@ const usePayrollClaimActions = ({
       }
     }
     await refreshClaimRows()
-    if (claimId === deleteTarget.id) {
+    if (isSameClaimId(claimId, deleteTarget.id)) {
       navigate('/payroll')
     }
     pushToast(`Claim ${deleteTarget.id} deleted.`, { title: 'Deleted', color: 'danger' })

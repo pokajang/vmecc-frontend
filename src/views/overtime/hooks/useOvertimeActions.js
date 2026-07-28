@@ -12,6 +12,8 @@ import { normalizeOvertimeDraftPayload, buildFormSnapshot } from '../domain/over
 import { OT_INELIGIBLE_MESSAGE } from '../domain/overtimeWorkflowDomain'
 import { validateOvertimeSubmission } from '../domain/overtimeValidation'
 
+const isSameOvertimeRecordId = (lhs, rhs) => String(lhs ?? '') === String(rhs ?? '')
+
 const useOvertimeActions = ({
   userId,
   overtimeRecords,
@@ -165,7 +167,9 @@ const useOvertimeActions = ({
     setIsSubmittingClaim(true)
     try {
       const existingRecord = submitPreview.editingRecordId
-        ? overtimeRecords.find((record) => record.id === submitPreview.editingRecordId)
+        ? overtimeRecords.find((record) =>
+            isSameOvertimeRecordId(record.id, submitPreview.editingRecordId),
+          )
         : null
       const nextRecord = {
         ...(existingRecord || {}),
@@ -211,7 +215,7 @@ const useOvertimeActions = ({
             color: 'warning',
           })
         } else {
-          pushToast('Unable to submit overtime. API request failed.', {
+          pushToast('Unable to submit overtime. Please retry.', {
             title: 'Submit failed',
             color: 'danger',
           })
@@ -220,7 +224,8 @@ const useOvertimeActions = ({
       }
       const nextRecords = existingRecord
         ? overtimeRecords.map((record) =>
-            record.id === existingRecord.id || record.id === persistedRecord.id
+            isSameOvertimeRecordId(record.id, existingRecord.id) ||
+            isSameOvertimeRecordId(record.id, persistedRecord.id)
               ? persistedRecord
               : record,
           )
@@ -410,7 +415,7 @@ const useOvertimeActions = ({
       return
     }
     if (!cancelPreviewRecord?.serverId) {
-      pushToast('Unable to cancel overtime. Backend record id is missing.', {
+      pushToast('This overtime claim is unavailable for cancellation. Refresh and retry.', {
         title: 'Cancel failed',
         color: 'danger',
       })
@@ -424,7 +429,7 @@ const useOvertimeActions = ({
       pushToast(
         apiResult?.code === 'OT_VERSION_CONFLICT'
           ? 'This overtime claim changed. Refresh records before cancelling it.'
-          : 'Unable to cancel overtime. API request failed.',
+          : 'Unable to cancel overtime. Please retry.',
         {
           title: 'Cancel failed',
           color: 'danger',
@@ -488,7 +493,7 @@ const useOvertimeActions = ({
       return
     }
     if (!deletePreviewRecord?.serverId) {
-      pushToast('Unable to delete overtime. Backend record id is missing.', {
+      pushToast('This overtime claim is unavailable for deletion. Refresh and retry.', {
         title: 'Delete failed',
         color: 'danger',
       })
@@ -502,7 +507,7 @@ const useOvertimeActions = ({
       pushToast(
         apiResult?.code === 'OT_VERSION_CONFLICT'
           ? 'This overtime claim changed. Refresh records before deleting it.'
-          : 'Unable to delete overtime. API request failed.',
+          : 'Unable to delete overtime. Please retry.',
         {
           title: 'Delete failed',
           color: 'danger',

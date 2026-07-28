@@ -49,9 +49,6 @@ const DrillPostAnalysisStep = ({
 
   return (
     <div className="d-grid gap-4">
-      <div className="small text-body-secondary">
-        Record lessons and supporting evidence. These sections and photographs are optional.
-      </div>
       <section
         data-drill-field="postIncidentAnalysis"
         aria-invalid={Boolean(fieldErrors?.postIncidentAnalysis) || undefined}
@@ -119,7 +116,7 @@ const DrillPostAnalysisStep = ({
           onBeforeCameraOpen={() => onSaveDraft({ silentSuccess: true })}
           allowCapture={false}
           onProcessingChange={onPhotoProcessingChange}
-          emptyMessage="No exercise photos added. Photos are optional."
+          emptyMessage="No photos."
           descriptionMaxLength={DRILL_FIELD_LIMITS.listItem}
         />
       </section>

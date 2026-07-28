@@ -483,7 +483,10 @@ describe('FireExtinguisherEditSection', () => {
     expect(photoDrawer).toBeTruthy()
     expect(screen.getAllByRole('dialog')).toHaveLength(2)
 
-    fireEvent.change(within(photoDrawer).getByLabelText('Photo description'), {
+    fireEvent.click(
+      within(photoDrawer).getByRole('button', { name: 'Edit description for Photo 1' }),
+    )
+    fireEvent.change(within(photoDrawer).getByLabelText('Description for Photo 1'), {
       target: { value: 'Damage beside the pressure gauge.' },
     })
     fireEvent.click(within(photoDrawer).getByRole('button', { name: 'Save' }))

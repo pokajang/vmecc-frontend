@@ -48,6 +48,16 @@ const REVIEW_ACTION_LABEL = 'Continue to Review'
 const REVIEW_UPDATE_ACTION_LABEL = 'Continue to Review Updates'
 
 const AI_TRANSLATE_FIELDS = ['description', 'actionRequired']
+const UNRESOLVED_PHOTO_UPLOAD_STATES = new Set([
+  'selected',
+  'preparing',
+  'queued',
+  'uploading',
+  'server_processing',
+  'attaching',
+  'retry_waiting',
+  'failed',
+])
 
 const createAiFieldState = () => ({
   stage: 'idle',
@@ -546,29 +556,39 @@ const InspectionFormPhotoEvidence = ({
   onSavePhotos,
   onTakePhoto,
   onUploadPhoto,
+  photoUploadQueue = [],
   photosRef,
-}) => (
-  <InspectionGeneralEvidenceCard
-    cardRef={photosRef}
-    title={INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle}
-    photos={form.photos}
-    remarks={form.reportRemarks}
-    fieldError={fieldErrors.photos}
-    compactOnMobile={isStructuredInspectionForm || isGeneralInspectionForm}
-    stageDrawerPhotos={isStructuredInspectionForm || isGeneralInspectionForm}
-    compactActionLabel={INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel}
-    drawerDescription={INSPECTION_REPORT_EVIDENCE_COPY.helperText}
-    emptyMessage={INSPECTION_REPORT_EVIDENCE_COPY.emptyPhotosMessage}
-    remarksLabel={INSPECTION_REPORT_EVIDENCE_COPY.remarksLabel}
-    remarksPlaceholder={INSPECTION_REPORT_EVIDENCE_COPY.remarksPlaceholder}
-    onTakePhoto={onTakePhoto}
-    onUploadPhoto={onUploadPhoto}
-    onRemovePhoto={onRemovePhoto}
-    onChangePhotoDescription={onChangePhotoDescription}
-    onChangeRemarks={onChangeReportRemarks}
-    onSavePhotos={onSavePhotos}
-  />
-)
+}) => {
+  const hasUnresolvedRootPhotoUploads = photoUploadQueue.some(
+    (item) =>
+      item?.uploadTarget?.kind === 'root' && UNRESOLVED_PHOTO_UPLOAD_STATES.has(item?.status),
+  )
+
+  return (
+    <InspectionGeneralEvidenceCard
+      cardRef={photosRef}
+      title={INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle}
+      photos={form.photos}
+      remarks={form.reportRemarks}
+      fieldError={fieldErrors.photos}
+      compactOnMobile={isStructuredInspectionForm || isGeneralInspectionForm}
+      stageDrawerPhotos={isStructuredInspectionForm || isGeneralInspectionForm}
+      uploadsPending={hasUnresolvedRootPhotoUploads}
+      compactActionLabel={INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel}
+      compactPopulatedActionLabel={INSPECTION_REPORT_EVIDENCE_COPY.mobilePopulatedActionLabel}
+      drawerDescription={INSPECTION_REPORT_EVIDENCE_COPY.helperText}
+      emptyMessage={INSPECTION_REPORT_EVIDENCE_COPY.emptyPhotosMessage}
+      remarksLabel={INSPECTION_REPORT_EVIDENCE_COPY.remarksLabel}
+      remarksPlaceholder={INSPECTION_REPORT_EVIDENCE_COPY.remarksPlaceholder}
+      onTakePhoto={onTakePhoto}
+      onUploadPhoto={onUploadPhoto}
+      onRemovePhoto={onRemovePhoto}
+      onChangePhotoDescription={onChangePhotoDescription}
+      onChangeRemarks={onChangeReportRemarks}
+      onSavePhotos={onSavePhotos}
+    />
+  )
+}
 
 const InspectionFindingsSection = ({
   form,
@@ -576,6 +596,7 @@ const InspectionFindingsSection = ({
   getLatestForm,
   onSaveInspectionFindingDraft,
   onSaveDraft,
+  photoUploadQueue = [],
   requestInspectionIssuePhotoUpload,
   updateForm,
   uploadInputRef,
@@ -588,6 +609,19 @@ const InspectionFindingsSection = ({
   const [savingAction, setSavingAction] = useState('')
   const [aiFieldStates, setAiFieldStates] = useState(createAiFieldStates)
   const aiTranslateAbortRefs = useRef({})
+  const editorIssueId = String(editor?.issue?.id || '').trim()
+  const unresolvedEditorPhotoUploads = editorIssueId
+    ? photoUploadQueue.filter(
+        (item) =>
+          item?.uploadTarget?.kind === 'inspectionIssue' &&
+          String(item?.uploadTarget?.issueId || '').trim() === editorIssueId &&
+          UNRESOLVED_PHOTO_UPLOAD_STATES.has(item?.status),
+      )
+    : []
+  const hasUnresolvedEditorPhotoUploads = unresolvedEditorPhotoUploads.length > 0
+  const hasFailedEditorPhotoUploads = unresolvedEditorPhotoUploads.some(
+    (item) => item?.status === 'failed',
+  )
 
   useEffect(
     () => () => {
@@ -708,6 +742,14 @@ const InspectionFindingsSection = ({
   }
   const saveEditor = async () => {
     if (!editor || savingAction) return
+    if (hasUnresolvedEditorPhotoUploads) {
+      setEditorError(
+        hasFailedEditorPhotoUploads
+          ? 'Retry or remove failed photo uploads before saving this finding.'
+          : 'Wait for all photos to finish uploading before saving this finding.',
+      )
+      return
+    }
     const description = String(editor.issue.description || '').trim()
     if (!description) {
       setEditorError('Describe the finding before saving.')
@@ -761,7 +803,7 @@ const InspectionFindingsSection = ({
     }
   }
   const cancelEditor = () => {
-    if (savingAction === 'editor') return
+    if (savingAction === 'editor' || hasUnresolvedEditorPhotoUploads) return
     resetAllAiFieldStates()
     setEditor(null)
     setEditorError('')
@@ -1035,11 +1077,8 @@ const InspectionFindingsSection = ({
 
     return (
       <div className="inspection-finding-editor d-grid gap-3">
-        <div className="rounded-3 border bg-light-subtle p-3 d-grid gap-2">
-          <div className="small text-body-secondary">
-            You can write in Bahasa Melayu, English, or mixed language. AI will prepare English text
-            for your review before it is used.
-          </div>
+        <div className="small text-body-secondary">
+          Write in BM or English. Review AI translation before saving.
         </div>
         <div className="d-grid gap-2">
           <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
@@ -1074,8 +1113,9 @@ const InspectionFindingsSection = ({
           photos={editor.issue.photos}
           compactOnMobile
           compactActionLabel="Add finding photos"
-          drawerDescription="Optional. Attach photos that belong to this finding only."
-          emptyMessage="No finding photos added."
+          drawerDescription="Photos for this finding only."
+          drawerDoneMessage="Save the finding to keep these photos."
+          emptyMessage="No photos."
           onTakePhoto={(options) =>
             requestInspectionIssuePhotoUpload?.(
               {
@@ -1107,12 +1147,19 @@ const InspectionFindingsSection = ({
           }
         />
         {editorError ? <FormFieldError>{editorError}</FormFieldError> : null}
+        {hasUnresolvedEditorPhotoUploads ? (
+          <div className="small text-warning-emphasis" role="status" aria-live="polite">
+            {hasFailedEditorPhotoUploads
+              ? 'Retry or remove failed photo uploads before saving or closing this finding.'
+              : 'Photos are still uploading. Keep this finding open until they finish.'}
+          </div>
+        ) : null}
         <div className="d-flex flex-wrap justify-content-end gap-2">
           <CButton
             type="button"
             color="secondary"
             variant="outline"
-            disabled={savingAction === 'editor'}
+            disabled={savingAction === 'editor' || hasUnresolvedEditorPhotoUploads}
             onClick={cancelEditor}
           >
             Cancel
@@ -1120,7 +1167,7 @@ const InspectionFindingsSection = ({
           <CButton
             type="button"
             color="primary"
-            disabled={savingAction === 'editor'}
+            disabled={savingAction === 'editor' || hasUnresolvedEditorPhotoUploads}
             onClick={saveEditor}
           >
             {savingAction === 'editor' ? 'Saving...' : 'Save'}
@@ -1133,27 +1180,28 @@ const InspectionFindingsSection = ({
   return (
     <div className="inspection-form-section d-grid gap-3">
       <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
-        <div>
-          <div className="d-flex flex-wrap align-items-center gap-2">
-            <CFormLabel className="fw-semibold text-muted mb-0">Findings</CFormLabel>
-          </div>
-          <div className="small text-body-secondary">
-            Record one finding at a time. Add photos if needed.
-          </div>
-        </div>
-        <CreateActionButton
-          label="Add finding"
-          className="inspection-compact-action-btn"
-          disabled={Boolean(editor) || Boolean(savingAction)}
-          onClick={startCreate}
-        />
+        <CFormLabel className="fw-semibold text-muted mb-0">Findings</CFormLabel>
+        {issues.length > 0 ? (
+          <CreateActionButton
+            label="Add finding"
+            className="inspection-compact-action-btn"
+            disabled={Boolean(editor) || Boolean(savingAction)}
+            onClick={startCreate}
+          />
+        ) : null}
       </div>
 
       {deleteError ? <FormFieldError>{deleteError}</FormFieldError> : null}
 
       {issues.length === 0 ? (
-        <div className="rounded-3 border bg-light-subtle p-3 text-body-secondary">
-          No findings added.
+        <div className="rounded-3 border bg-light-subtle p-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <span className="text-body-secondary">No findings.</span>
+          <CreateActionButton
+            label="Add finding"
+            className="inspection-compact-action-btn"
+            disabled={Boolean(editor) || Boolean(savingAction)}
+            onClick={startCreate}
+          />
         </div>
       ) : (
         <div className="d-grid gap-3">
@@ -1226,6 +1274,7 @@ const InspectionFindingsSection = ({
         visible={Boolean(editor)}
         title={editor?.mode === 'edit' ? 'Edit finding' : 'Add finding'}
         bodyClassName="inspection-equipment-detail-drawer-shell"
+        closeDisabled={hasUnresolvedEditorPhotoUploads}
         onClose={cancelEditor}
       >
         <div className="inspection-mobile-detail-drawer-body inspection-equipment-detail-drawer-body d-grid">
@@ -1258,6 +1307,7 @@ const InspectionFormBodySections = ({
   onRequestReview,
   onRetryDraftSync,
   onSaveDraft,
+  photoUploadQueue = [],
   photosRef,
   removePhoto,
   requestInspectionIssuePhotoUpload,
@@ -1519,6 +1569,7 @@ const InspectionFormBodySections = ({
       }
       onTakePhoto={(options) => requestRootPhotoUpload(cameraInputRef, '', options)}
       onUploadPhoto={(options) => requestRootPhotoUpload(uploadInputRef, '', options)}
+      photoUploadQueue={photoUploadQueue}
       photosRef={photosRef}
     />
   )
@@ -1530,6 +1581,7 @@ const InspectionFormBodySections = ({
       getLatestForm={getLatestForm}
       onSaveInspectionFindingDraft={structuredSectionHandlers?.onSaveInspectionFindingDraft}
       onSaveDraft={onSaveDraft}
+      photoUploadQueue={photoUploadQueue}
       requestInspectionIssuePhotoUpload={requestInspectionIssuePhotoUpload}
       updateForm={updateForm}
       uploadInputRef={uploadInputRef}

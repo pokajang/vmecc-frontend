@@ -137,7 +137,7 @@ const AssignmentCreateModal = ({
           </div>
         ) : (
           <div className="rounded-3 border bg-light p-3 mt-3 text-body-secondary">
-            Select a staff member to assign leave entitlement for the selected year.
+            Assign leave entitlement for the selected year.
           </div>
         )}
 

@@ -395,8 +395,8 @@ const OvertimeRateSettingsTab = ({ vm, handlers }) => {
               {normalHoursStrategy === OVERTIME_NORMAL_HOURS_STRATEGIES.ROLE_BASED && (
                 <div className="d-grid gap-2">
                   <div className="small text-body-secondary">
-                    Select roles that need custom normal hours/day. Only selected roles will show
-                    input fields. Unselected roles fallback to statutory 8h.
+                    Select roles that use custom normal hours/day. Other roles use the statutory 8
+                    hours.
                   </div>
                   <div className="d-flex flex-wrap gap-2">
                     {ROLE_OPTIONS.map((role) => {

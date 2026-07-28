@@ -215,8 +215,7 @@ const InspectionWorkflowRules = () => {
             <div>
               <div className="fw-semibold">TRT - AIC Review - IC Approval</div>
               <div className="small text-body-secondary">
-                Inspection submitters cannot review or approve their own records. Same-team AICs
-                review when available; IC is the fallback reviewer and final approver.
+                No self-review. Same-team AIC reviews; IC is fallback and final approver.
               </div>
             </div>
             <CRow className="g-3">

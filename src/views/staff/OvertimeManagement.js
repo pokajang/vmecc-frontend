@@ -235,7 +235,7 @@ const OvertimeManagement = () => {
 
       setIsRecordsLoading(false)
       if (showWarningToast && !result?.ok) {
-        pushToast('Unable to load overtime records from API for admin view. Please retry.', {
+        pushToast('Unable to load overtime records. Please retry.', {
           title: 'Data warning',
           color: 'warning',
         })
@@ -701,11 +701,7 @@ const OvertimeManagement = () => {
 
       {!isDetailRoute ? (
         <>
-          <ModulePageHeader
-            title="Staff Overtime Management"
-            subtitle="Review overtime records, process workflow decisions, and maintain overtime rules."
-            mobileSubtitle="Review overtime and maintain rules."
-          />
+          <ModulePageHeader title="Staff Overtime Management" />
 
           <div data-testid="overtime-management-nav">
             <RouteNavTabs

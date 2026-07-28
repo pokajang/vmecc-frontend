@@ -34,7 +34,7 @@ const ReportPhotoSection = ({
   onBeforeCameraOpen,
   onProcessingChange,
   title = 'Photographs',
-  emptyMessage = 'No photos added. Photos are optional.',
+  emptyMessage = 'No photos.',
   captureLabel = 'Capture photo',
   uploadLabel = 'Upload photo',
   descriptionMaxLength,

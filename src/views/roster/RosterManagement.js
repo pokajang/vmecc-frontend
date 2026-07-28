@@ -192,15 +192,7 @@ const ScheduleTab = ({
 
   return (
     <>
-      <ModulePageHeader
-        title="Roster Schedule"
-        subtitle={
-          scopeLabel
-            ? `Manage team assignments for ${scopeLabel}.`
-            : 'Manage roster assignments by date and shift.'
-        }
-        actions={readModeActions}
-      />
+      <ModulePageHeader title="Roster Schedule" subtitle={scopeLabel} actions={readModeActions} />
       <CCard className="mb-4" data-testid="roster-management-schedule">
         <CCardHeader className="d-flex flex-wrap align-items-center justify-content-between gap-2">
           <div className="d-flex flex-wrap align-items-center gap-2">
@@ -438,11 +430,7 @@ const RosterManagement = () => {
 
   return (
     <CContainer fluid data-testid="roster-management-module">
-      <ModulePageHeader
-        title="Roster Management"
-        subtitle="Review published coverage and manage roster assignments by shift."
-        mobileSubtitle="Coverage and roster assignments."
-      />
+      <ModulePageHeader title="Roster Management" />
       <div data-testid="roster-management-nav">
         <RouteNavTabs
           currentPath={resolvedTab}

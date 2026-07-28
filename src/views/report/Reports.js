@@ -612,7 +612,6 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
     >
       <ModulePageHeader
         title={pageTitle}
-        subtitle={isWorkFirstReport ? '' : 'Review records, manage drafts, and submit new reports.'}
         actions={
           <>
             {showMobileBack ? (

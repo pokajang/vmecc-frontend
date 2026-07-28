@@ -215,7 +215,6 @@ const TeamView = () => {
     <CContainer fluid data-testid="team-directory-module">
       <ModulePageHeader
         title={team.name || 'Team Detail'}
-        subtitle="Review team members, roles, and roster status."
         actions={
           canManageTeams ? (
             <CButton
