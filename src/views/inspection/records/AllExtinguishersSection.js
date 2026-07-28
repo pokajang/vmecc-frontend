@@ -1375,8 +1375,7 @@ const HistoricalRecordDetail = ({ detail, record, onViewPhotos }) => {
 
       {record.detailUnavailable ? (
         <CAlert color="info" className="mb-0">
-          Detailed criteria for this historical report will be available after the backend history
-          endpoint is wired.
+          Detailed criteria aren&apos;t available for this historical report.
         </CAlert>
       ) : null}
 

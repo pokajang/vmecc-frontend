@@ -8,19 +8,19 @@ export const LEAVE_TYPE_OPTIONS = [
   {
     value: 'Annual Leave',
     title: 'Annual Leave',
-    description: 'Planned leave for rest, personal matters, or vacation.',
+    description: '',
     icon: CalendarDays,
   },
   {
     value: 'Medical Leave',
     title: 'Medical Leave',
-    description: 'Leave for illness, treatment, or medically advised recovery.',
+    description: '',
     icon: Clock,
   },
   {
     value: 'Emergency Leave',
     title: 'Emergency Leave',
-    description: 'Urgent leave needed for sudden personal or family situations.',
+    description: '',
     icon: Bell,
   },
   {
@@ -32,13 +32,13 @@ export const LEAVE_TYPE_OPTIONS = [
   {
     value: 'Maternity Leave',
     title: 'Maternity Leave',
-    description: 'Leave related to childbirth and postnatal recovery.',
+    description: '',
     icon: Heart,
   },
   {
     value: 'Paternity Leave',
     title: 'Paternity Leave',
-    description: 'Leave for eligible fathers around childbirth.',
+    description: '',
     icon: Users,
   },
   {
@@ -61,7 +61,7 @@ export const getLeaveTypeOption = (value) =>
 const LeaveTypeSelection = ({ selectedType, onSelect, onContinue, onBack = () => {} }) => {
   return (
     <div className="d-grid gap-4" data-testid="leave-type-selection">
-      <div className="fw-semibold">Choose Leave Type</div>
+      <div className="fw-semibold">Leave type</div>
       <IconOptionGrid
         options={LEAVE_TYPE_OPTIONS}
         value={selectedType}

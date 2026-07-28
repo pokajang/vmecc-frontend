@@ -63,11 +63,14 @@ test.describe('inspection report-level evidence', () => {
 
     await section
       .getByRole('button', {
-        name: new RegExp(`^${INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel}`, 'i'),
+        name: `${INSPECTION_REPORT_EVIDENCE_COPY.mobilePopulatedActionLabel} (1)`,
+        exact: true,
       })
       .click()
 
-    const reportDrawer = page.locator('.offcanvas.show').last()
+    const reportDrawer = page.getByRole('dialog', {
+      name: INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle,
+    })
     await expect(reportDrawer).toBeVisible()
     await expect(
       reportDrawer.getByText(INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle, { exact: true }),
@@ -87,8 +90,20 @@ test.describe('inspection report-level evidence', () => {
     await expect(reportDrawer).toBeHidden()
 
     await section.getByText('Add finding', { exact: true }).click()
-    const findingDrawer = page.locator('.offcanvas.show').last()
+    const findingDrawer = page.getByRole('dialog', { name: 'Add finding' })
     await expect(findingDrawer).toBeVisible()
     await expect(findingDrawer.getByText('Add finding photos', { exact: true })).toBeVisible()
+
+    await findingDrawer.getByText('Add finding photos', { exact: true }).click()
+    const findingPhotosDrawer = page.getByRole('dialog', { name: 'Finding Photos' })
+    await expect(findingPhotosDrawer.getByText('Finding Photos', { exact: true })).toBeVisible()
+    await expect(findingPhotosDrawer.getByText('0 photos attached', { exact: true })).toBeVisible()
+    await expect(
+      findingPhotosDrawer.getByRole('button', { name: 'Done with Finding Photos' }),
+    ).toBeVisible()
+
+    await findingPhotosDrawer.getByRole('button', { name: 'Done with Finding Photos' }).click()
+    await expect(findingPhotosDrawer).toBeHidden()
+    await expect(findingDrawer).toBeVisible()
   })
 })

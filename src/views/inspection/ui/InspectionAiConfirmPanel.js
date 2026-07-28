@@ -193,8 +193,7 @@ const InspectionAiConfirmPanel = ({
         </div>
         {!isPromotedSecondary ? (
           <CAlert color="warning" dismissible className="mb-0">
-            The analysis and prefilled fields below are AI-generated and may be inaccurate. Please
-            review all selections.
+            AI-generated details may be inaccurate. Review all selections.
           </CAlert>
         ) : null}
 
@@ -213,9 +212,6 @@ const InspectionAiConfirmPanel = ({
           <div className="d-flex flex-wrap justify-content-between align-items-start gap-2">
             <div>
               <div className="fw-semibold text-muted">Editable AI Summary</div>
-              <div className="small text-body-secondary">
-                Accept the suggested summary for the common path, or edit the details before review.
-              </div>
             </div>
             <div className="d-flex flex-wrap gap-2">
               <CButton
@@ -269,9 +265,6 @@ const InspectionAiConfirmPanel = ({
           />
           <details className="rounded-3 border bg-body p-3">
             <summary className="fw-semibold text-muted">Custom type management</summary>
-            <div className="small text-body-secondary mt-2">
-              Add or edit inspection templates without interrupting the primary review path.
-            </div>
             <CreateActionButton
               label="Add type"
               className="inspection-compact-action-btn mt-2"

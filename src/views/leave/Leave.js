@@ -365,8 +365,6 @@ const Leave = () => {
     <CContainer fluid data-testid="leave-module">
       <ModulePageHeader
         title="Leave"
-        subtitle="Track leave balances, review requests, and submit new leave applications."
-        mobileSubtitle="Balances, requests, and new applications."
         actions={
           activeSection === 'new-leave' ? null : (
             <div data-testid="leave-new-action">

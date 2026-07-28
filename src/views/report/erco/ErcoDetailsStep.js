@@ -522,7 +522,7 @@ const ErcoDetailsStep = ({
 
       <ReportBasicPathSummary
         title="Basic Report Path"
-        description="Complete the report title and incident summary first. Chronology and operational audit details remain available below when needed."
+        description=""
         mobileSummary={basicPathMobileSummary}
         items={[
           { label: 'Type', value: String(form.incidentType || '').trim() || '-' },

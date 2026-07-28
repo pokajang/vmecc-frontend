@@ -32,6 +32,16 @@ describe('managed report photo rendering', () => {
     expect(image.getAttribute('src')).toBe(managedPhoto.url)
   })
 
+  it('loads the full image first when requested and falls back to the thumbnail', () => {
+    render(<ReportPhotoImage photo={managedPhoto} preferFullSize alt="Full evidence photo" />)
+    const image = screen.getByRole('img', { name: 'Full evidence photo' })
+
+    expect(image.getAttribute('src')).toBe(managedPhoto.url)
+
+    fireEvent.error(image)
+    expect(image.getAttribute('src')).toBe(managedPhoto.thumbnailUrl)
+  })
+
   it('preserves managed references through inspection and ERCO normalization', () => {
     expect(normalizePhotos([managedPhoto])[0]).toEqual(expect.objectContaining(managedPhoto))
 

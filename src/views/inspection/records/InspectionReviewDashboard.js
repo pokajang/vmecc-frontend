@@ -13,6 +13,7 @@ import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import { ReportPhotoImage } from 'src/components/report-workflow/ReportViewComponents'
 import useMediaQuery from 'src/hooks/useMediaQuery'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
+import { INSPECTION_REPORT_EVIDENCE_COPY } from '../inspectionReportEvidenceCopy'
 import { buildInspectionReviewDashboardItems } from './inspectionReviewDashboardAdapter'
 
 const RETRYABLE_SYNC_BLOCKERS = new Set(['draft-sync-failed', 'fire-extinguisher-session-sync'])
@@ -372,7 +373,7 @@ const InspectionReviewDetailDrawer = ({ item, visible, onClose }) => {
       {reportRemarks || reportPhotoCount > 0 ? (
         <section className="inspection-review-detail-section">
           <h3 className="inspection-review-detail-section__title h6 mb-0">
-            Additional report evidence
+            {INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle}
             {reportPhotoCount > 0 ? ` (${reportPhotoCount})` : ''}
           </h3>
           {reportRemarks ? (

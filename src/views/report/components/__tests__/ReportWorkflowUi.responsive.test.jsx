@@ -3,7 +3,7 @@ import React from 'react'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { REPORT_MOBILE_QUERY } from '../../hooks/useReportIsMobile'
-import { ReportChronologySection } from '../ReportWorkflowUi'
+import { ReportBasicPathSummary, ReportChronologySection } from '../ReportWorkflowUi'
 
 const setViewport = (width) => {
   Object.defineProperty(window, 'innerWidth', {
@@ -103,5 +103,21 @@ describe('ReportChronologySection responsive editor', () => {
     expect(screen.getByLabelText('Time').value).toBe('09:00')
     expect(screen.getByLabelText('Event / Action').value).toBe('Exercise started')
     expect(screen.getByRole('button', { name: 'Add Row' })).toBeTruthy()
+  })
+})
+
+describe('ReportBasicPathSummary', () => {
+  it('does not render an empty desktop description row', () => {
+    const { container } = render(
+      <ReportBasicPathSummary
+        title="Basic Report Path"
+        description=""
+        mobileSummary="Summary"
+        items={[{ label: 'Location', value: 'Plant 1' }]}
+      />,
+    )
+
+    expect(container.querySelector('.d-none.d-md-block')).toBeNull()
+    expect(screen.getByText('Plant 1')).toBeTruthy()
   })
 })

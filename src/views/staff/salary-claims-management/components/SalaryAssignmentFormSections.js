@@ -378,8 +378,7 @@ export const SalaryAssignmentPayComponentsCard = ({
       </div>
       {!statutoryRatesFeatureEnabled && (
         <div className="small text-body-secondary mt-2">
-          Statutory rate feature is disabled in this environment. EPF, PERKESO, and SIP are set to
-          0.00 until the backend feature is enabled.
+          Statutory rates are unavailable. EPF, PERKESO, and SIP currently use 0.00.
         </div>
       )}
     </CCardBody>

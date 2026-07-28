@@ -98,8 +98,7 @@ const ClaimDetailView = ({ vm, handlers }) => {
 
           {isSalaryClaim && selectedClaim?.salaryContractIncomplete === true && (
             <CAlert color="warning" className="mb-0">
-              Salary financial breakdown is unavailable because backend returned incomplete salary
-              contract data
+              Salary breakdown is unavailable because required details are missing
               {Array.isArray(selectedClaim?.salaryContractMissingFields) &&
               selectedClaim.salaryContractMissingFields.length > 0
                 ? ` (missing: ${selectedClaim.salaryContractMissingFields.join(', ')}).`

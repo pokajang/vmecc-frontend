@@ -18,6 +18,7 @@ import {
   appendInspectionText,
   INSPECTION_PHOTO_CAPTION_CHIPS,
 } from 'src/views/inspection/inspectionFormHelpers'
+import InspectionDrawerPhotoGallery from './InspectionDrawerPhotoGallery'
 
 export const FormFieldError = ({ children, className = '', ...props }) =>
   children ? (
@@ -52,7 +53,22 @@ export const PhotoGallery = ({
   showDescriptionInput = true,
   fullWidth = false,
   showCaptionChips = true,
+  presentation = 'default',
 }) => {
+  if (presentation === 'drawer-editor' && !readOnly) {
+    return (
+      <InspectionDrawerPhotoGallery
+        photos={photos}
+        onRemove={onRemove}
+        onChangeDescription={onChangeDescription}
+        onApplyCaption={onApplyCaption}
+        captionOptions={showCaptionChips ? INSPECTION_PHOTO_CAPTION_CHIPS : []}
+        emptyMessage={emptyMessage}
+        showDescriptionInput={showDescriptionInput}
+      />
+    )
+  }
+
   const visiblePhotos = dedupePhotos(photos)
   if (!visiblePhotos.length) {
     const message = String(emptyMessage || '').trim()
@@ -247,6 +263,7 @@ const InspectionPhotoViewerModalContent = ({ viewer, onClose }) => {
       <PhotoGallery
         photos={visiblePhotos}
         readOnly={viewer?.readOnly === true}
+        presentation={useMobileDrawer && viewer?.readOnly !== true ? 'drawer-editor' : 'default'}
         showDescriptionInput={viewer?.showDescriptionInput !== false}
         fullWidth
         showCaptionChips={viewer?.showCaptionChips === true}

@@ -61,8 +61,8 @@ describe('ClaimTypeSelection', () => {
       />,
     )
 
-    const periodDescriptions = screen.getAllByText('Claim period')
-    const firstPeriodCard = periodDescriptions[0].closest('[role="radio"]')
+    const firstPeriod = buildClaimPeriodOptions(2)[0]
+    const firstPeriodCard = screen.getByTestId(`claim-period-${firstPeriod.value}`)
     fireEvent.click(firstPeriodCard)
 
     expect(onPeriodChange).toHaveBeenCalledTimes(1)

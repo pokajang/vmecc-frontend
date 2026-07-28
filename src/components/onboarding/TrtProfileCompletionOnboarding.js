@@ -441,10 +441,6 @@ const ProfileCompletionOnboarding = () => {
                 Hi, {firstName}, let&apos;s complete a few things before you start using this
                 system.
               </h4>
-              <p className="mb-0 text-body-secondary">
-                This only takes a moment and keeps your contact and emergency details available when
-                needed.
-              </p>
             </div>
             <MissingSummary missingByGroup={completeness.missingByGroup} />
           </>

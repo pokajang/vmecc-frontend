@@ -44,8 +44,7 @@ const ErcoAiReviewModal = ({
     <div className="d-grid gap-3">
       {stage === 'confirm' ? (
         <div className="text-body-secondary">
-          AI can check for possible missing or unclear ERCO report information. This does not block
-          submission and will not change your report.
+          Checks for missing or unclear details without changing or blocking the report.
         </div>
       ) : null}
 

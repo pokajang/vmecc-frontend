@@ -223,9 +223,12 @@ export const InspectionGeneralEvidenceCard = ({
   fieldError = false,
   compactOnMobile = false,
   stageDrawerPhotos = false,
+  uploadsPending = false,
   drawerDescription = '',
+  drawerDoneMessage = '',
   emptyMessage = 'No photos yet. Upload photos to continue.',
   compactActionLabel = 'Add photos (optional)',
+  compactPopulatedActionLabel = compactActionLabel,
   remarksLabel = '',
   remarksPlaceholder = '',
   onTakePhoto,
@@ -251,6 +254,7 @@ export const InspectionGeneralEvidenceCard = ({
   const showRemarks = Boolean(remarksLabel && (readOnly ? hasRemarks : true))
   const showCompactMobile = compactOnMobile && useMobileDrawer && !readOnly
   const useStagedDrawer = showCompactMobile && stageDrawerPhotos
+  const drawerPhotoCount = useStagedDrawer ? draftPhotoCount : photoCount
   const savedPhotoSignature = getPhotoSignature(savedPhotos)
   const draftPhotoSignature = getPhotoSignature(draftPhotos)
   const hasDraftChanges = draftPhotoSignature !== savedPhotoSignature
@@ -293,6 +297,7 @@ export const InspectionGeneralEvidenceCard = ({
   }
 
   const handleDrawerClose = () => {
+    if (useStagedDrawer && uploadsPending) return
     if (useStagedDrawer && hasDraftChanges) {
       setConfirmCloseDraftPhotos(true)
       return
@@ -302,10 +307,12 @@ export const InspectionGeneralEvidenceCard = ({
   }
 
   const handleResetDraftPhotos = () => {
+    if (uploadsPending) return
     setDraftPhotos(clonePhotoList(drawerBaselinePhotos))
   }
 
   const handleSaveDraftPhotos = () => {
+    if (uploadsPending) return
     if (typeof onSavePhotos === 'function') onSavePhotos(draftPhotos)
     setConfirmCloseDraftPhotos(false)
     setDrawerOpen(false)
@@ -338,6 +345,7 @@ export const InspectionGeneralEvidenceCard = ({
         color="primary"
         size="sm"
         className="inspection-general-evidence-drawer-action d-inline-flex align-items-center justify-content-center gap-1"
+        disabled={uploadsPending}
         onClick={() => (useStagedDrawer ? onTakePhoto?.(getDraftUploadOptions()) : onTakePhoto?.())}
       >
         <Camera size={14} aria-hidden="true" />
@@ -349,6 +357,7 @@ export const InspectionGeneralEvidenceCard = ({
         variant="outline"
         size="sm"
         className="inspection-general-evidence-drawer-action d-inline-flex align-items-center justify-content-center gap-1"
+        disabled={uploadsPending}
         onClick={() =>
           useStagedDrawer ? onUploadPhoto?.(getDraftUploadOptions()) : onUploadPhoto?.()
         }
@@ -364,6 +373,7 @@ export const InspectionGeneralEvidenceCard = ({
       <PhotoGallery
         photos={photos}
         readOnly={readOnly}
+        presentation={showCompactMobile ? 'drawer-editor' : 'default'}
         onRemove={onRemovePhoto}
         onChangeDescription={onChangePhotoDescription}
         emptyMessage={emptyMessage}
@@ -397,7 +407,9 @@ export const InspectionGeneralEvidenceCard = ({
     return (
       <div ref={cardRef} className="inspection-general-evidence-mobile-compact d-grid gap-2">
         <CreateActionButton
-          label={`${compactActionLabel}${photoCount ? ` (${photoCount})` : ''}`}
+          label={`${
+            photoCount ? compactPopulatedActionLabel : compactActionLabel
+          }${photoCount ? ` (${photoCount})` : ''}`}
           className="inspection-compact-action-btn justify-self-start"
           onClick={() => {
             if (useStagedDrawer) {
@@ -411,6 +423,7 @@ export const InspectionGeneralEvidenceCard = ({
         <MobileBottomDrawer
           visible={drawerOpen}
           title={title}
+          closeDisabled={useStagedDrawer && uploadsPending}
           onClose={useStagedDrawer ? handleDrawerClose : () => setDrawerOpen(false)}
         >
           <div className="inspection-general-evidence-drawer-body d-grid gap-3">
@@ -424,6 +437,7 @@ export const InspectionGeneralEvidenceCard = ({
                 <PhotoGallery
                   photos={draftPhotos}
                   readOnly={readOnly}
+                  presentation="drawer-editor"
                   fullWidth
                   onRemove={removeDraftPhoto}
                   onChangeDescription={updateDraftPhotoDescription}
@@ -437,36 +451,64 @@ export const InspectionGeneralEvidenceCard = ({
               <div className="inspection-general-evidence-drawer-gallery">{gallery}</div>
             )}
           </div>
-          {useStagedDrawer ? (
-            <div className="inspection-general-evidence-drawer-footer mobile-bottom-drawer__footer">
-              <div className="inspection-general-evidence-drawer-footer__status small text-body-secondary">
-                {hasDraftChanges
-                  ? `${draftPhotoCount} ${draftPhotoCount === 1 ? 'photo' : 'photos'} ready to save`
-                  : `${photoCount} ${photoCount === 1 ? 'photo' : 'photos'} attached to this report`}
+          <div className="inspection-general-evidence-drawer-footer mobile-bottom-drawer__footer">
+            <div className="inspection-general-evidence-drawer-footer__status">
+              <div className="small fw-semibold">
+                {useStagedDrawer && uploadsPending
+                  ? 'Photos are still uploading'
+                  : useStagedDrawer
+                    ? hasDraftChanges
+                      ? `${draftPhotoCount} ${draftPhotoCount === 1 ? 'photo' : 'photos'} ready to save`
+                      : `${photoCount} ${photoCount === 1 ? 'photo' : 'photos'} attached to this report`
+                    : `${drawerPhotoCount} ${drawerPhotoCount === 1 ? 'photo' : 'photos'} attached`}
               </div>
-              <div className="inspection-general-evidence-drawer-footer__actions d-flex gap-2">
-                <CButton
-                  type="button"
-                  color="secondary"
-                  variant="outline"
-                  size="sm"
-                  disabled={!hasDraftChanges}
-                  onClick={handleResetDraftPhotos}
-                >
-                  Reset
-                </CButton>
+              {useStagedDrawer && uploadsPending ? (
+                <div className="small text-warning-emphasis mt-1" role="status" aria-live="polite">
+                  Keep this drawer open. Retry or remove any failed upload before saving.
+                </div>
+              ) : null}
+              {!useStagedDrawer && drawerDoneMessage ? (
+                <div className="small text-body-secondary mt-1">{drawerDoneMessage}</div>
+              ) : null}
+            </div>
+            <div className="inspection-general-evidence-drawer-footer__actions d-flex gap-2">
+              {useStagedDrawer ? (
+                <>
+                  <CButton
+                    type="button"
+                    color="secondary"
+                    variant="outline"
+                    size="sm"
+                    disabled={uploadsPending || !hasDraftChanges}
+                    onClick={handleResetDraftPhotos}
+                  >
+                    Reset
+                  </CButton>
+                  <CButton
+                    type="button"
+                    color="primary"
+                    size="sm"
+                    disabled={
+                      uploadsPending || !hasDraftChanges || typeof onSavePhotos !== 'function'
+                    }
+                    onClick={handleSaveDraftPhotos}
+                  >
+                    Save photos
+                  </CButton>
+                </>
+              ) : (
                 <CButton
                   type="button"
                   color="primary"
                   size="sm"
-                  disabled={!hasDraftChanges || typeof onSavePhotos !== 'function'}
-                  onClick={handleSaveDraftPhotos}
+                  aria-label={`Done with ${title}`}
+                  onClick={() => setDrawerOpen(false)}
                 >
-                  Save photos
+                  Done
                 </CButton>
-              </div>
+              )}
             </div>
-          ) : null}
+          </div>
         </MobileBottomDrawer>
         {useStagedDrawer ? (
           <ActionConfirmModal

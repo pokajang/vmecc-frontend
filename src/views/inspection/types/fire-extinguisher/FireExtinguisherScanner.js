@@ -37,7 +37,7 @@ const SCAN_INVALID_HINT_WINDOW_MS = 12000
 const MANUAL_SERIAL_SUGGESTION_LIMIT = 8
 const MIN_MANUAL_SERIAL_QUERY_LENGTH = 2
 const MANUAL_SERIAL_SEARCH_DEBOUNCE_MS = 250
-const SCAN_UNSUCCESSFUL_HINT = 'QR code unsucessful. Insert code below.'
+const SCAN_UNSUCCESSFUL_HINT = 'QR code unsuccessful. Enter the code below.'
 const SCANNER_TITLE = 'Search FE by Serial Number'
 const SCANNER_FORMATS = [
   BarcodeFormat?.QR_CODE,
@@ -995,7 +995,7 @@ const FireExtinguisherScanner = ({
       ) : null}
       {showReadyHint ? (
         <div className="small text-body-secondary">
-          Tap Start camera to request camera access, or enter the FE serial number below.
+          Start the camera or enter the FE serial number.
         </div>
       ) : null}
       <div className="d-grid gap-2">

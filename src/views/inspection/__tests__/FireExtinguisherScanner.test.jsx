@@ -107,11 +107,7 @@ describe('FireExtinguisherScanner', () => {
   it('starts camera only after Start camera is clicked', async () => {
     render(<FireExtinguisherScanner visible onClose={vi.fn()} onScan={vi.fn()} />)
 
-    expect(
-      screen.getByText(
-        'Tap Start camera to request camera access, or enter the FE serial number below.',
-      ),
-    ).toBeTruthy()
+    expect(screen.getByText('Start the camera or enter the FE serial number.')).toBeTruthy()
     expect(getUserMedia).not.toHaveBeenCalled()
 
     fireEvent.click(screen.getByRole('button', { name: 'Start camera' }))
@@ -258,7 +254,7 @@ describe('FireExtinguisherScanner', () => {
     render(<FireExtinguisherScanner visible onClose={vi.fn()} onScan={onScan} />)
     fireEvent.click(screen.getByRole('button', { name: 'Start camera' }))
 
-    expect(await screen.findByText('QR code unsucessful. Insert code below.')).toBeTruthy()
+    expect(await screen.findByText('QR code unsuccessful. Enter the code below.')).toBeTruthy()
     expect(onScan).not.toHaveBeenCalled()
   })
 
@@ -622,7 +618,9 @@ describe('FireExtinguisherScanner', () => {
       window.setTimeout(resolve, 4100)
     })
 
-    expect(screen.getAllByText('QR code unsucessful. Insert code below.').length).toBeGreaterThan(0)
+    expect(
+      screen.getAllByText('QR code unsuccessful. Enter the code below.').length,
+    ).toBeGreaterThan(0)
     expect(container.querySelector('video')).toBeNull()
   })
 

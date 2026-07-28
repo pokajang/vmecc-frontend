@@ -211,8 +211,7 @@ const DrillPersonnelStep = ({
   return (
     <div className="d-grid gap-4">
       <div className="small text-body-secondary">
-        Select participating members and assign their role in the exercise. Personnel are optional
-        for this frontend stage and can be completed when known.
+        Optional — select participants and exercise roles.
       </div>
       {loading ? <TableLoader message="Loading roster members..." /> : null}
       {loadMessage ? <CAlert color="warning">{loadMessage}</CAlert> : null}

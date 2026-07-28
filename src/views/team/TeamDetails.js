@@ -111,8 +111,6 @@ const TeamDetails = () => {
     <CContainer fluid data-testid="team-directory-module">
       <ModulePageHeader
         title="Team Directory"
-        subtitle="Review operational teams, members, and current roster coverage."
-        mobileSubtitle="Teams, members, and roster coverage."
         actions={
           canManageTeams ? (
             <CreateActionButton

@@ -482,9 +482,8 @@ const SalaryRecordsTab = ({ vm, handlers }) => {
         >
           {contractIncompleteCount > 0 && (
             <CAlert color="warning" className="mb-3 py-2">
-              {contractIncompleteCount} salary record{contractIncompleteCount === 1 ? '' : 's'}{' '}
-              contain incomplete backend contract fields. Group totals are shown as partial totals
-              for complete records only.
+              {contractIncompleteCount} salary record{contractIncompleteCount === 1 ? '' : 's'} have
+              missing payroll details. Group totals include complete records only.
             </CAlert>
           )}
           {selectedVisibleCount > 0 && (

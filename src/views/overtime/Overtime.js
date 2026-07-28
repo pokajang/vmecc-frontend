@@ -590,8 +590,6 @@ const Overtime = () => {
     <CContainer fluid data-testid="overtime-module">
       <ModulePageHeader
         title="Overtime"
-        subtitle="Review overtime records, resume drafts, and submit new overtime requests."
-        mobileSubtitle="Records, drafts, and new requests."
         actions={
           activeSection === 'new-overtime' ? null : (
             <div data-testid="overtime-new-action">

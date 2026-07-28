@@ -340,8 +340,7 @@ export const RolePermissionRoleEditor = ({
 export const RolePermissionLegend = () => (
   <div className="pt-2 mt-2 border-top text-muted small">
     <Lock size={11} className="me-1 align-text-bottom" />
-    System Administrator always has all permissions and cannot be edited. &nbsp;Changes take effect
-    immediately for active sessions.
+    System Administrator permissions are locked. Changes apply immediately.
     <span
       className="ms-2"
       style={{

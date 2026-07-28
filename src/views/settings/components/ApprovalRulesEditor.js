@@ -86,10 +86,7 @@ const ApprovalRulesEditor = ({
 
       <div className="border rounded-3 p-3 d-grid gap-2">
         <div className="fw-semibold">Workflow Presets</div>
-        <div className="small text-muted">
-          Presets update the editor fields only; saved data still uses the current workflow rule
-          shape.
-        </div>
+        <div className="small text-muted">Presets fill the fields. Save to apply.</div>
         <div className="d-flex flex-wrap gap-2">
           <CButton
             size="sm"

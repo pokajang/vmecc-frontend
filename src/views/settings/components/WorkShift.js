@@ -172,7 +172,6 @@ const BuiltinShifts = () => {
         />
       </CCardHeader>
       <CCardBody>
-        <p className="text-muted mb-3">Define start/end times for normal, day, and night shifts.</p>
         {error && <div className="text-danger small mb-3">{error}</div>}
         {statusMessage && <div className="text-success small mb-3">{statusMessage}</div>}
         <MobileRecordList sections={mobileShiftSections} variant="list-group" />
@@ -370,7 +369,6 @@ const CustomShifts = () => {
           </span>
         </CCardHeader>
         <CCardBody>
-          <p className="text-muted mb-3">Add custom shift types beyond normal, day, and night.</p>
           {error && <div className="text-danger small mb-3">{error}</div>}
           {loading && <TableLoader />}
           {!loading && shifts.length === 0 && (

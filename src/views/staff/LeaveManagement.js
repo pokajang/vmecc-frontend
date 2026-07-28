@@ -321,13 +321,7 @@ const LeaveManagement = () => {
   return (
     <CContainer fluid data-testid="leave-management-module">
       <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
-      {!isDetailSection ? (
-        <ModulePageHeader
-          title="Staff Leave Management"
-          subtitle="Review leave records, assign leave entitlements, manage holidays, and maintain leave workflow rules."
-          mobileSubtitle="Review leave, entitlements, and holidays."
-        />
-      ) : null}
+      {!isDetailSection ? <ModulePageHeader title="Staff Leave Management" /> : null}
       <LeaveWorkflowActionModal
         visible={workflowModalState.visible}
         record={workflowModalState.record}

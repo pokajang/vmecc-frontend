@@ -92,9 +92,7 @@ const CreateStaffForm = ({
             Add
           </CButton>
         </div>
-        <p className="small text-muted mb-2">
-          Add one or more assignments. Site and client-site roles require a team.
-        </p>
+        <p className="small text-muted mb-2">Site and client-site roles require a team.</p>
 
         <div className="d-grid gap-2">
           {roleAssignments.map((assignment, index) => {

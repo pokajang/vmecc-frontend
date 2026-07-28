@@ -66,6 +66,7 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
         mainLocation=""
         onRequestReview={vi.fn()}
         onSaveDraft={vi.fn()}
+        photoUploadQueue={[]}
         photosRef={createRef()}
         removePhoto={vi.fn()}
         requestRootPhotoUpload={vi.fn()}
@@ -839,9 +840,7 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Add finding' }))
     expect(
-      screen.getByText(
-        'You can write in Bahasa Melayu, English, or mixed language. AI will prepare English text for your review before it is used.',
-      ),
+      screen.getByText('Write in BM or English. Review AI translation before saving.'),
     ).toBeTruthy()
     expect(
       screen.getAllByRole('button', { name: 'AI translate' }).map((button) => button.disabled),
@@ -1236,7 +1235,7 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
 
     expect(updateForm).not.toHaveBeenCalled()
     expect(screen.getAllByText('Add finding').length).toBeGreaterThan(1)
-    expect(screen.getByText('No findings added.')).toBeTruthy()
+    expect(screen.getByText('No findings.')).toBeTruthy()
     expect(screen.getByLabelText('Describe finding')).toBeTruthy()
 
     fireEvent.click(screen.getByText('Save'))
@@ -1487,7 +1486,7 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Add finding' }))
     expect(screen.getAllByText('Add finding').length).toBeGreaterThan(1)
-    expect(screen.getByText('No findings added.')).toBeTruthy()
+    expect(screen.getByText('No findings.')).toBeTruthy()
     fireEvent.change(screen.getByLabelText('Describe finding'), {
       target: { value: 'Unsaved finding.' },
     })
@@ -1495,7 +1494,7 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
 
     expect(updateForm).not.toHaveBeenCalled()
     expect(onSaveDraft).not.toHaveBeenCalled()
-    expect(screen.getByText('No findings added.')).toBeTruthy()
+    expect(screen.getByText('No findings.')).toBeTruthy()
 
     fireEvent.click(screen.getByRole('button', { name: 'Add finding' }))
     expect(screen.getAllByText('Add finding').length).toBeGreaterThan(1)
@@ -1605,20 +1604,80 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
       requestInspectionIssuePhotoUpload.mock.calls[0][0].onAddPhotos([
         {
           id: 'unsaved-finding-photo',
+          fileName: 'finding.jpg',
           url: 'data:image/png;base64,QUFB',
           description: 'Unsaved finding photo.',
         },
       ])
     })
 
+    expect(screen.getByText('Photo 1 of 1')).toBeTruthy()
+    expect(screen.getByText('Description added')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Done with Finding Photos' }))
     expect(screen.getByText('Add finding photos (1)')).toBeTruthy()
 
     fireEvent.click(screen.getByText('Cancel'))
 
     expect(onSaveDraft).not.toHaveBeenCalled()
     expect(updateForm).not.toHaveBeenCalled()
-    expect(screen.getByText('No findings added.')).toBeTruthy()
+    expect(screen.getByText('No findings.')).toBeTruthy()
     expect(screen.queryByText('Unsaved finding photo.')).toBeNull()
+  })
+
+  it('keeps a finding open until its photo uploads are resolved', () => {
+    setMobileViewport()
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(1234)
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.5)
+    const issueId = `issue-1234-${(0.5).toString(36).slice(2, 8)}`
+
+    try {
+      renderBodySections({
+        form: {
+          inspectionType: 'General Inspection',
+          zone: '1',
+          mainLocation: 'Manjung Hub',
+          subLocation: 'Reception',
+          inspectionIssues: [],
+          photos: [],
+        },
+        getLatestForm: vi.fn(() => ({
+          inspectionType: 'General Inspection',
+          zone: '1',
+          mainLocation: 'Manjung Hub',
+          subLocation: 'Reception',
+          inspectionIssues: [],
+          photos: [],
+        })),
+        isFullInspectionForm: true,
+        location: {
+          selectedMainLocationTitle: 'Manjung Hub',
+          subLocationOptions: [{ value: 'Reception', title: 'Reception' }],
+        },
+        mainLocation: 'Manjung Hub',
+        photoUploadQueue: [
+          {
+            clientUploadId: 'upload-1',
+            status: 'uploading',
+            uploadTarget: { kind: 'inspectionIssue', issueId },
+          },
+        ],
+        selectedType: 'General Inspection',
+        selectedTypeDefinition: { usesZoneLocationFlow: true },
+        zone: '1',
+      })
+
+      fireEvent.click(screen.getByRole('button', { name: 'Add finding' }))
+
+      expect(
+        screen.getByText('Photos are still uploading. Keep this finding open until they finish.'),
+      ).toBeTruthy()
+      expect(screen.getByRole('button', { name: 'Close Add finding' }).disabled).toBe(true)
+      expect(screen.getByRole('button', { name: 'Cancel' }).disabled).toBe(true)
+      expect(screen.getByRole('button', { name: 'Save' }).disabled).toBe(true)
+    } finally {
+      nowSpy.mockRestore()
+      randomSpy.mockRestore()
+    }
   })
 
   it('keeps the finding editor open when draft persistence fails', async () => {
@@ -1762,7 +1821,7 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
 
     expect(screen.getByText('HSE fields')).toBeTruthy()
     expect(screen.queryByText('1. Oil spill near walkway.')).toBeNull()
-    expect(screen.queryByText('Add report evidence')).toBeNull()
+    expect(screen.queryByText(INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel)).toBeNull()
     expect(requestInspectionIssuePhotoUpload).not.toHaveBeenCalled()
     expect(onSaveDraft).not.toHaveBeenCalled()
     expect(updateForm).not.toHaveBeenCalled()

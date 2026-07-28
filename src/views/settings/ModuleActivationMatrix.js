@@ -273,8 +273,7 @@ const ModuleActivationMatrix = () => {
         <div>
           <div className="fw-semibold">Module Activation</div>
           <div className="small text-body-secondary">
-            Disable product modules without changing role permissions. Child modules inherit parent
-            availability.
+            Turning off a parent also disables its child modules.
           </div>
         </div>
         <CButton color="primary" size="sm" disabled={!hasChanges || saving} onClick={save}>
@@ -288,10 +287,7 @@ const ModuleActivationMatrix = () => {
       </div>
 
       {moduleActivation?.forceAllEnabled && (
-        <CAlert color="warning">
-          Emergency override is active. All modules are currently forced on by environment
-          configuration.
-        </CAlert>
+        <CAlert color="warning">Emergency override is active. All modules are forced on.</CAlert>
       )}
 
       {error && <CAlert color="danger">{error}</CAlert>}

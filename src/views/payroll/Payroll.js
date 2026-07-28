@@ -262,8 +262,6 @@ const Payroll = () => {
     <CContainer fluid data-testid="payroll-module">
       <ModulePageHeader
         title="Payroll"
-        subtitle="Review claim records, payslips, and submit new salary or expense claims."
-        mobileSubtitle="Claims, payslips, and new submissions."
         actions={
           activeSection.startsWith('new-claim') ? null : (
             <div data-testid={activeSection === 'claims' ? 'payroll-new-claim-action' : undefined}>

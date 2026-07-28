@@ -59,7 +59,7 @@ describe('OvertimeApplySection', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByText('Choose Overtime Type')).toBeTruthy()
+    expect(screen.getByText('Overtime type')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Continue' })).toBeTruthy()
     expect(screen.queryByLabelText('Reason / Work Done')).toBeNull()
   })

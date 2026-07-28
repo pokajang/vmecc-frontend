@@ -62,7 +62,7 @@ const InspectionFormShell = ({
     handleInAppCameraCapture,
     isPhotoProcessing,
     photoUploadQueue,
-    clearCompletedPhotoUploads,
+    dismissCompletedPhotoUploadBatch,
     removePhotoUploadQueueItem,
     retryPhotoUpload,
     handlePhotoSelect,
@@ -98,7 +98,7 @@ const InspectionFormShell = ({
       ) : null}
       <InspectionPhotoUploadQueueStatus
         items={photoUploadQueue}
-        onClearCompleted={clearCompletedPhotoUploads}
+        onDismissCompletedBatch={dismissCompletedPhotoUploadBatch}
         onRemoveItem={removePhotoUploadQueueItem}
         onRetryItem={retryPhotoUpload}
       />
@@ -295,6 +295,7 @@ const InspectionFormShell = ({
             onRequestReview={reviewRequest.requestReview}
             onRetryDraftSync={onRetryDraftSync}
             onSaveDraft={onSaveDraft}
+            photoUploadQueue={photoUploadQueue}
             photosRef={refs.photosRef}
             removePhoto={removePhoto}
             requestInspectionIssuePhotoUpload={requestInspectionIssuePhotoUpload}

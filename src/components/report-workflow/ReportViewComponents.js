@@ -23,11 +23,17 @@ export const ReportPhotoImage = ({
 }) => {
   const { width: widthProp, height: heightProp, ...imageProps } = props
   const fullUrl = String(photo?.url || '')
-  const previewUrl = preferFullSize
-    ? fullUrl
-    : String(photo?.thumbnailUrl || photo?.thumbnail_url || fullUrl)
-  const [failedPreviewUrl, setFailedPreviewUrl] = useState('')
-  const source = previewUrl && failedPreviewUrl !== previewUrl ? previewUrl : fullUrl
+  const thumbnailUrl = String(photo?.thumbnailUrl || photo?.thumbnail_url || '')
+  const preferredUrl = preferFullSize ? fullUrl || thumbnailUrl : thumbnailUrl || fullUrl
+  const fallbackUrl = preferFullSize ? thumbnailUrl : fullUrl
+  const [failedPreferredUrl, setFailedPreferredUrl] = useState('')
+  const canUseFallback = Boolean(fallbackUrl && fallbackUrl !== preferredUrl)
+  const source =
+    preferredUrl && failedPreferredUrl !== preferredUrl
+      ? preferredUrl
+      : canUseFallback
+        ? fallbackUrl
+        : ''
   const sourceWidth = Number(
     preferFullSize ? photo?.width : photo?.thumbnailWidth || photo?.thumbnail_width || photo?.width,
   )
@@ -49,15 +55,24 @@ export const ReportPhotoImage = ({
       decoding="async"
       onLoad={onLoad}
       onError={() => {
-        if (source !== fullUrl && fullUrl) setFailedPreviewUrl(previewUrl)
+        if (source === preferredUrl && canUseFallback) setFailedPreferredUrl(preferredUrl)
         else onFinalError?.()
       }}
     />
   )
 }
 
-export const PhotoPreview = ({ photo, alt = 'Inspection photo', className = '' }) => {
-  const [hasError, setHasError] = useState(!photo?.url)
+export const PhotoPreview = ({
+  photo,
+  alt = 'Inspection photo',
+  className = '',
+  preferFullSize = false,
+}) => {
+  const fullUrl = String(photo?.url || '')
+  const thumbnailUrl = String(photo?.thumbnailUrl || photo?.thumbnail_url || '')
+  const sourceKey = `${fullUrl}\u0000${thumbnailUrl}`
+  const [failedSourceKey, setFailedSourceKey] = useState('')
+  const hasError = (!fullUrl && !thumbnailUrl) || failedSourceKey === sourceKey
 
   return (
     <div
@@ -72,13 +87,16 @@ export const PhotoPreview = ({ photo, alt = 'Inspection photo', className = '' }
       {!hasError ? (
         <ReportPhotoImage
           photo={photo}
-          alt={photo.fileName || alt}
+          preferFullSize={preferFullSize}
+          alt={preferFullSize ? alt : photo.fileName || alt}
           className="workflow-photo-preview__image"
           onLoad={(event) => {
             const image = event.currentTarget
-            if (image.naturalWidth <= 2 && image.naturalHeight <= 2) setHasError(true)
+            if (image.naturalWidth <= 2 && image.naturalHeight <= 2) {
+              setFailedSourceKey(sourceKey)
+            }
           }}
-          onFinalError={() => setHasError(true)}
+          onFinalError={() => setFailedSourceKey(sourceKey)}
         />
       ) : (
         <div className="workflow-photo-preview__fallback">Preview unavailable</div>

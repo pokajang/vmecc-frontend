@@ -3,6 +3,7 @@ import React from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { InspectionReviewView } from '../app/InspectionModuleSections'
+import { INSPECTION_REPORT_EVIDENCE_COPY } from '../inspectionReportEvidenceCopy'
 
 afterEach(() => {
   cleanup()
@@ -362,7 +363,7 @@ describe('InspectionReviewView pending submissions', () => {
 
     const photoLink = screen.getByRole('button', { name: 'Inspection photos (1 total)' })
     expect(photoLink).toBeTruthy()
-    expect(screen.getByText('Additional report evidence (1)')).toBeTruthy()
+    expect(screen.getByText(`${INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle} (1)`)).toBeTruthy()
     expect(screen.getByText('general.jpg')).toBeTruthy()
     expect(screen.getByText('General location evidence')).toBeTruthy()
     expect(screen.queryByText('physical.jpg')).toBeNull()

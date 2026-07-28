@@ -136,9 +136,11 @@ const DrillDetailsStep = ({
             <Plus size={14} className="me-1" /> Add objective
           </CButton>
         </div>
-        <div className="small text-body-secondary">
-          {objectives.length}/{DRILL_FIELD_LIMITS.objectives} objectives
-        </div>
+        {objectives.length >= DRILL_FIELD_LIMITS.objectives - 1 ? (
+          <div className="small text-body-secondary">
+            {objectives.length}/{DRILL_FIELD_LIMITS.objectives} objectives
+          </div>
+        ) : null}
         {fieldErrors.exerciseObjectives ? (
           <CAlert color="danger" className="mb-0 py-2">
             {fieldErrors.exerciseObjectives}
@@ -199,9 +201,11 @@ const DrillDetailsStep = ({
             <Plus size={14} className="me-1" /> Add reference
           </CButton>
         </div>
-        <div className="small text-body-secondary">
-          {erpReferences.length}/{DRILL_FIELD_LIMITS.erpReferences} references
-        </div>
+        {erpReferences.length >= DRILL_FIELD_LIMITS.erpReferences - 1 ? (
+          <div className="small text-body-secondary">
+            {erpReferences.length}/{DRILL_FIELD_LIMITS.erpReferences} references
+          </div>
+        ) : null}
         {fieldErrors.erpReferences ? (
           <CAlert color="danger" className="mb-0 py-2">
             {fieldErrors.erpReferences}

@@ -40,7 +40,7 @@ const FitnessTestFormStep = ({
       <ReportMobileContextPanel title="Test Context" items={contextItems} />
       <ReportBasicPathSummary
         title="Basic Report Path"
-        description="Complete the test details and summary first. Activity chronology remains available below when needed."
+        description=""
         mobileSummary={`${form.incidentType || '-'} - ${form.location || '-'} - ${chronologyCount} chronology row${chronologyCount === 1 ? '' : 's'}`}
         items={contextItems}
       />
@@ -91,7 +91,7 @@ const FitnessTestFormStep = ({
           pushToast={pushToast}
           allowCapture={false}
           onProcessingChange={onPhotoProcessingChange}
-          emptyMessage="No fitness test photos added. Photos are optional."
+          emptyMessage="No photos."
           descriptionMaxLength={2000}
         />
       </div>

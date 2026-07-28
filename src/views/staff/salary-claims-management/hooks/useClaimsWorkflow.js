@@ -126,7 +126,7 @@ const useClaimsWorkflow = ({
               : 'approve'
       if (!claimRow?.serverId || !ownerUserId) {
         if (!silent) {
-          pushToast('This claim is not linked to a backend record yet.', {
+          pushToast('This claim is unavailable for workflow action. Refresh and retry.', {
             title: 'Action unavailable',
             color: 'warning',
           })

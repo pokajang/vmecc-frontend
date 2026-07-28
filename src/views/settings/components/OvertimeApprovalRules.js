@@ -280,9 +280,6 @@ const OvertimeApprovalRules = () => {
           />
         </CCardHeader>
         <CCardBody className="d-grid gap-3">
-          <p className="text-muted mb-0">
-            Configure which overtime types applicants can choose during overtime application.
-          </p>
           {typeStatusMessage ? <div className="text-success small">{typeStatusMessage}</div> : null}
           {typeError ? <div className="text-danger small">{typeError}</div> : null}
 

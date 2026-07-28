@@ -50,11 +50,9 @@ const ClaimTypeSelection = ({
   return (
     <div className="d-grid gap-4" data-testid="payroll-claim-type-selection">
       <div>
-        <div className="fw-semibold">Choose Claim Type</div>
+        <div className="fw-semibold">Claim type</div>
         {typeLocked && (
-          <div className="small text-body-secondary mt-1">
-            Claim type is locked for this draft. You can still change claim month.
-          </div>
+          <div className="small text-body-secondary mt-1">Claim type is locked for this draft.</div>
         )}
       </div>
       <IconOptionGrid
@@ -71,7 +69,7 @@ const ClaimTypeSelection = ({
 
       {selectedType && (
         <div className="d-grid gap-2">
-          <div className="fw-semibold">Choose Claim Month</div>
+          <div className="fw-semibold">Claim month</div>
           {isSalaryType && (
             <div className="small text-body-secondary">
               Salary claim can be submitted once per payroll month.
@@ -87,7 +85,7 @@ const ClaimTypeSelection = ({
               description:
                 isSalaryType && salaryPeriodLocks?.[option.value]
                   ? salaryPeriodLocks[option.value]
-                  : 'Claim period',
+                  : '',
               icon: Calendar,
               disabled: isSalaryType && Boolean(salaryPeriodLocks?.[option.value]),
             }))}

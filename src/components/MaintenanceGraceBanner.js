@@ -34,7 +34,7 @@ const MaintenanceGraceBanner = () => {
     <CAlert color="warning" className="rounded-0 mb-0 border-start-0 border-end-0">
       <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
         <span className="small fw-semibold">
-          The system is going for maintenance mode. Please save your work before lock.
+          Maintenance starts soon. Save your work before the system locks.
         </span>
         <span className="small fw-bold">Starts in {formatCountdown(remainingMs)}</span>
       </div>

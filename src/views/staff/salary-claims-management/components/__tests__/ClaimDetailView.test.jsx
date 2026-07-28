@@ -63,7 +63,7 @@ describe('ClaimDetailView salary contract warning', () => {
     )
 
     expect(
-      screen.getByText(/Salary financial breakdown is unavailable because backend returned/i),
+      screen.getByText(/Salary breakdown is unavailable because required details are missing/i),
     ).toBeTruthy()
     expect(screen.queryByText('Salary Claim (View Only)')).toBeNull()
   })

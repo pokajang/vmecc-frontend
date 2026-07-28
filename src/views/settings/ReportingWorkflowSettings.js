@@ -36,7 +36,7 @@ const ReportingWorkflowSettings = () => {
       setReportingRules(result?.data || { modules: {} })
       setLoading(false)
       if (!result?.ok) {
-        setError('Loaded defaults because reporting workflow settings API is unavailable.')
+        setError('Saved workflow settings are unavailable. Showing defaults.')
       }
     }
     load()
@@ -102,10 +102,7 @@ const ReportingWorkflowSettings = () => {
       data-testid="reporting-settings-module"
     >
       <div className="reporting-workflow-settings__shell">
-        <ModulePageHeader
-          title="Reporting Workflow"
-          subtitle="Configure reporting workflow policies across inspection and other report modules."
-        />
+        <ModulePageHeader title="Reporting Workflow" />
 
         <div className="reporting-workflow-settings__nav" data-testid="reporting-settings-nav">
           <RouteNavTabs

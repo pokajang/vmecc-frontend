@@ -112,8 +112,8 @@ const MedicalSection = ({ medical = {} }) => {
           dismissible
           onClose={() => setShowNotice(false)}
         >
-          <strong>Notice:</strong> Declaring accurate medical info helps us arrange better welfare,
-          safety, and health support at work.
+          <strong>Notice:</strong> Accurate medical information helps us provide appropriate
+          emergency support.
         </CAlert>
         {status.message && (
           <div className={`text-${status.type === 'danger' ? 'danger' : 'success'} small`}>

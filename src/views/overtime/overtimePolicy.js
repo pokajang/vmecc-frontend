@@ -15,17 +15,17 @@ export const OVERTIME_TYPE_OPTIONS = [
   {
     value: 'weekday',
     title: 'Weekday Overtime',
-    description: 'Overtime worked on regular weekdays.',
+    description: '',
   },
   {
     value: 'weekend',
     title: 'Weekend Overtime',
-    description: 'Overtime worked on weekends.',
+    description: '',
   },
   {
     value: 'publicHoliday',
     title: 'Public Holiday Overtime',
-    description: 'Overtime worked on public holidays.',
+    description: '',
   },
 ]
 

@@ -119,9 +119,6 @@ const TeamRoleTransferPanel = ({ teams, onChanged }) => {
       <CCard className="mb-4" data-testid="team-role-transfer-panel">
         <CCardHeader>
           <div className="fw-semibold">Permanent team transfer</div>
-          <div className="small text-body-secondary mt-1">
-            Move an AIC or TRT assignment and hand over outstanding workflow actions atomically.
-          </div>
         </CCardHeader>
         <CCardBody>
           {error && <CAlert color="danger">{error}</CAlert>}
@@ -203,8 +200,8 @@ const TeamRoleTransferPanel = ({ teams, onChanged }) => {
                 to <strong>{targetTeam.name}</strong> as {selected.role}?
               </p>
               <p className="mb-0 text-body-secondary">
-                Existing reports keep their original team. Pending actions will be reassigned to an
-                eligible replacement, or the transfer will be cancelled without changes.
+                Existing reports keep their team. Pending actions move to an eligible replacement;
+                otherwise, nothing changes.
               </p>
             </>
           )}
