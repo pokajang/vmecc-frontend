@@ -1,4 +1,3 @@
-import { useId } from 'react'
 import {
   CAlert,
   CButton,
@@ -11,75 +10,11 @@ import {
 } from '@coreui/react'
 
 import { buildAiHelperDocumentFileUrl } from 'src/services/apiClient'
-import {
-  formatFileSize,
-  formatKnowledgeDate,
-  knowledgeEntryName,
-  KNOWLEDGE_READER_TAB_METADATA,
-  KNOWLEDGE_READER_TAB_ORIGINAL,
-} from './constants'
+import { formatFileSize, formatKnowledgeDate, knowledgeEntryName } from './constants'
 
-const KnowledgeReaderModal = ({
-  activeTab,
-  readerHasOriginal,
-  detail,
-  error,
-  loading,
-  pdfError,
-  pdfLoading,
-  pdfUrl,
-  open,
-  onClose,
-  onTabChange,
-}) => {
-  const readerId = useId()
-  const hasOriginal = Boolean(readerHasOriginal ?? detail?.original_available)
-  const fileUrl = detail?.id ? buildAiHelperDocumentFileUrl(detail.id) : ''
-  const tabs = [
-    ...(hasOriginal ? [{ value: KNOWLEDGE_READER_TAB_ORIGINAL, label: 'Original PDF' }] : []),
-    { value: KNOWLEDGE_READER_TAB_METADATA, label: 'Metadata' },
-  ]
-  const selectedTab = tabs.some((tab) => tab.value === activeTab) ? activeTab : tabs[0]?.value
-
-  const handleTabKeyDown = (event, index) => {
-    let nextIndex = null
-    if (event.key === 'ArrowRight') nextIndex = (index + 1) % tabs.length
-    if (event.key === 'ArrowLeft') nextIndex = (index - 1 + tabs.length) % tabs.length
-    if (event.key === 'Home') nextIndex = 0
-    if (event.key === 'End') nextIndex = tabs.length - 1
-    if (nextIndex === null) return
-
-    event.preventDefault()
-    event.currentTarget.parentElement?.querySelectorAll('[role="tab"]')?.[nextIndex]?.focus()
-    onTabChange(tabs[nextIndex].value)
-  }
-
-  const renderOriginal = () => {
-    if (pdfLoading) {
-      return (
-        <div className="ai-helper-knowledge-reader__empty">
-          <CSpinner size="sm" className="me-2" />
-          Loading original PDF...
-        </div>
-      )
-    }
-    if (pdfError) return <CAlert color="danger">{pdfError}</CAlert>
-    if (!pdfUrl) {
-      return (
-        <div className="ai-helper-knowledge-reader__empty">
-          The original PDF preview is not available.
-        </div>
-      )
-    }
-
-    return (
-      <iframe
-        className="ai-helper-knowledge-reader__frame"
-        src={pdfUrl}
-        title={knowledgeEntryName(detail)}
-      />
-    )
-  }
+const KnowledgeReaderModal = ({ detail, error, loading, open, onClose }) => {
+  const fileUrl =
+    detail?.id && detail?.original_available ? buildAiHelperDocumentFileUrl(detail.id) : ''
 
   const renderMetadata = () => (
     <div className="ai-helper-knowledge-reader__meta-grid">
@@ -135,43 +70,14 @@ const KnowledgeReaderModal = ({
           <CAlert color="danger">{error}</CAlert>
         ) : detail ? (
           <>
-            <div className="ai-helper-knowledge-reader__toolbar">
-              <div
-                className="ai-helper-knowledge-reader__tabs"
-                role="tablist"
-                aria-label="Reader tabs"
-              >
-                {tabs.map((tab, index) => (
-                  <button
-                    id={`${readerId}-tab-${tab.value}`}
-                    key={tab.value}
-                    type="button"
-                    className={selectedTab === tab.value ? 'active' : ''}
-                    onClick={() => onTabChange(tab.value)}
-                    onKeyDown={(event) => handleTabKeyDown(event, index)}
-                    role="tab"
-                    aria-selected={selectedTab === tab.value}
-                    aria-controls={`${readerId}-panel-${tab.value}`}
-                    tabIndex={selectedTab === tab.value ? 0 : -1}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-              {selectedTab === KNOWLEDGE_READER_TAB_ORIGINAL && hasOriginal ? (
-                <a href={fileUrl} target="_blank" rel="noopener noreferrer">
+            {fileUrl ? (
+              <div className="ai-helper-knowledge-reader__toolbar">
+                <CButton color="primary" href={fileUrl} target="_blank" rel="noopener noreferrer">
                   Open PDF in new tab
-                </a>
-              ) : null}
-            </div>
-            <div
-              id={`${readerId}-panel-${selectedTab}`}
-              className="ai-helper-knowledge-reader__content"
-              role="tabpanel"
-              aria-labelledby={`${readerId}-tab-${selectedTab}`}
-            >
-              {selectedTab === KNOWLEDGE_READER_TAB_ORIGINAL ? renderOriginal() : renderMetadata()}
-            </div>
+                </CButton>
+              </div>
+            ) : null}
+            <div className="ai-helper-knowledge-reader__content">{renderMetadata()}</div>
           </>
         ) : (
           <div className="ai-helper-knowledge-reader__empty">Document details are unavailable.</div>

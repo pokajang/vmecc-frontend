@@ -1,11 +1,10 @@
 // @vitest-environment jsdom
-import { act, renderHook, waitFor } from '@testing-library/react'
+import { act, renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const api = vi.hoisted(() => ({
   deleteAiHelperDocument: vi.fn(),
   fetchAiHelperDocumentDetail: vi.fn(),
-  fetchAiHelperDocumentFileBlob: vi.fn(),
   fetchAiHelperDocuments: vi.fn(),
   uploadAiHelperDocument: vi.fn(),
 }))
@@ -18,8 +17,6 @@ describe('useAiHelperKnowledge', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     api.fetchAiHelperDocuments.mockResolvedValue({ data: [] })
-    global.URL.createObjectURL = vi.fn(() => 'blob:http://localhost/document-preview')
-    global.URL.revokeObjectURL = vi.fn()
   })
 
   it('loads the reference document library', async () => {
@@ -67,19 +64,15 @@ describe('useAiHelperKnowledge', () => {
     expect(result.current.knowledgeEntries[0].id).toBe(8)
   })
 
-  it('opens the original PDF without requesting Markdown or extracted text', async () => {
+  it('opens document details without downloading the PDF', async () => {
     api.fetchAiHelperDocumentDetail.mockResolvedValue({
       data: { id: 11, title: 'Plan', source_mime: 'application/pdf', original_available: true },
     })
-    api.fetchAiHelperDocumentFileBlob.mockResolvedValue(
-      new Blob(['%PDF-1.4'], { type: 'application/pdf' }),
-    )
     const { result } = renderHook(() => useAiHelperKnowledge({ authUser: { id: 7 } }))
 
     await act(async () => result.current.openKnowledgeReader(11))
-    await waitFor(() => expect(result.current.knowledgeReaderPdfUrl).toBeTruthy())
 
     expect(api.fetchAiHelperDocumentDetail).toHaveBeenCalledWith(11)
-    expect(api.fetchAiHelperDocumentFileBlob).toHaveBeenCalledWith(11)
+    expect(result.current.selectedKnowledgeDetail).toMatchObject({ id: 11, title: 'Plan' })
   })
 })

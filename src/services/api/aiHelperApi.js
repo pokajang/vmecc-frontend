@@ -31,38 +31,6 @@ export const fetchAiHelperDocumentDetail = (documentId) =>
 export const buildAiHelperDocumentFileUrl = (documentId) =>
   buildApiUrl(`/ai-helper/documents/${encodeURIComponent(documentId)}/file`)
 
-const buildKnowledgeFileRequestError = async (response) => {
-  let payload = null
-  const contentType = response.headers.get('content-type') || ''
-  try {
-    payload = contentType.includes('application/json')
-      ? await response.json()
-      : await response.text()
-  } catch {
-    payload = null
-  }
-
-  const error = new Error(payload?.message || 'Request failed')
-  error.status = response.status
-  error.payload = payload
-  return error
-}
-
-export const fetchAiHelperDocumentFileBlob = async (documentId) => {
-  const response = await fetchWithCsrfRetry(buildAiHelperDocumentFileUrl(documentId), {
-    method: 'GET',
-    headers: {
-      Accept: 'application/pdf, application/octet-stream, */*',
-    },
-  })
-
-  if (!response.ok) {
-    throw await buildKnowledgeFileRequestError(response)
-  }
-
-  return response.blob()
-}
-
 export const uploadAiHelperDocument = (formData) =>
   apiRequest('/ai-helper/documents', {
     method: 'POST',

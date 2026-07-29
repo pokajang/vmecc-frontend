@@ -3,16 +3,10 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   deleteAiHelperDocument,
   fetchAiHelperDocumentDetail,
-  fetchAiHelperDocumentFileBlob,
   fetchAiHelperDocuments,
   uploadAiHelperDocument,
 } from 'src/services/apiClient'
-import {
-  isAiHelperListFresh,
-  KNOWLEDGE_READER_TAB_ORIGINAL,
-  KNOWLEDGE_VIEW_UPLOAD,
-  safeAiHelperError,
-} from './constants'
+import { isAiHelperListFresh, KNOWLEDGE_VIEW_UPLOAD, safeAiHelperError } from './constants'
 
 const isKnowledgeEntry = (value) =>
   Boolean(value && typeof value === 'object' && !Array.isArray(value) && value.id != null)
@@ -55,16 +49,11 @@ const useAiHelperKnowledge = ({ authUser }) => {
   const [knowledgeReaderOpen, setKnowledgeReaderOpen] = useState(false)
   const [knowledgeReaderLoading, setKnowledgeReaderLoading] = useState(false)
   const [knowledgeReaderError, setKnowledgeReaderError] = useState(null)
-  const [knowledgeReaderTab, setKnowledgeReaderTab] = useState(KNOWLEDGE_READER_TAB_ORIGINAL)
   const [selectedKnowledgeId, setSelectedKnowledgeId] = useState(null)
   const [selectedKnowledgeDetail, setSelectedKnowledgeDetail] = useState(null)
-  const [knowledgeReaderPdfUrl, setKnowledgeReaderPdfUrl] = useState('')
-  const [knowledgeReaderPdfLoading, setKnowledgeReaderPdfLoading] = useState(false)
-  const [knowledgeReaderPdfError, setKnowledgeReaderPdfError] = useState(null)
   const knowledgeListRequestRef = useRef(null)
   const knowledgeListRequestIdRef = useRef(0)
   const knowledgeReaderRequestRef = useRef(0)
-  const knowledgeReaderPdfUrlRef = useRef('')
   const authUserIdRef = useRef(null)
 
   useEffect(() => {
@@ -83,35 +72,9 @@ const useAiHelperKnowledge = ({ authUser }) => {
     setKnowledgeReaderOpen(false)
     setKnowledgeReaderLoading(false)
     setKnowledgeReaderError(null)
-    setKnowledgeReaderTab(KNOWLEDGE_READER_TAB_ORIGINAL)
     setSelectedKnowledgeId(null)
     setSelectedKnowledgeDetail(null)
-    if (
-      knowledgeReaderPdfUrlRef.current &&
-      typeof URL !== 'undefined' &&
-      typeof URL.revokeObjectURL === 'function'
-    ) {
-      URL.revokeObjectURL(knowledgeReaderPdfUrlRef.current)
-    }
-    knowledgeReaderPdfUrlRef.current = ''
-    setKnowledgeReaderPdfUrl('')
-    setKnowledgeReaderPdfLoading(false)
-    setKnowledgeReaderPdfError(null)
   }, [authUserId])
-
-  useEffect(
-    () => () => {
-      if (
-        knowledgeReaderPdfUrlRef.current &&
-        typeof URL !== 'undefined' &&
-        typeof URL.revokeObjectURL === 'function'
-      ) {
-        URL.revokeObjectURL(knowledgeReaderPdfUrlRef.current)
-      }
-      knowledgeReaderPdfUrlRef.current = ''
-    },
-    [],
-  )
 
   const loadKnowledge = useCallback(
     ({ force = false, showError = true, background = false } = {}) => {
@@ -153,106 +116,41 @@ const useAiHelperKnowledge = ({ authUser }) => {
     [authUserId, knowledgeLastLoadedAt, knowledgeLoaded],
   )
 
-  const setKnowledgeReaderPdfObjectUrl = useCallback((nextUrl) => {
-    const previousUrl = knowledgeReaderPdfUrlRef.current
-    if (
-      previousUrl &&
-      previousUrl !== nextUrl &&
-      typeof URL !== 'undefined' &&
-      typeof URL.revokeObjectURL === 'function'
-    ) {
-      URL.revokeObjectURL(previousUrl)
-    }
-
-    knowledgeReaderPdfUrlRef.current = nextUrl || ''
-    setKnowledgeReaderPdfUrl(nextUrl || '')
-  }, [])
-
   const closeKnowledgeReader = useCallback(() => {
     knowledgeReaderRequestRef.current += 1
     setKnowledgeReaderOpen(false)
     setKnowledgeReaderLoading(false)
     setKnowledgeReaderError(null)
-    setKnowledgeReaderTab(KNOWLEDGE_READER_TAB_ORIGINAL)
     setSelectedKnowledgeId(null)
     setSelectedKnowledgeDetail(null)
-    setKnowledgeReaderPdfObjectUrl('')
-    setKnowledgeReaderPdfLoading(false)
-    setKnowledgeReaderPdfError(null)
-  }, [setKnowledgeReaderPdfObjectUrl])
+  }, [])
 
-  const loadPdfSource = useCallback(
-    async (knowledgeId, requestId) => {
-      setKnowledgeReaderPdfLoading(true)
-      setKnowledgeReaderPdfError(null)
-      setKnowledgeReaderPdfObjectUrl('')
+  const openKnowledgeReader = useCallback(async (knowledgeId) => {
+    if (!knowledgeId) return
 
-      try {
-        const blob = await fetchAiHelperDocumentFileBlob(knowledgeId)
-        if (knowledgeReaderRequestRef.current !== requestId) return
-        if (typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function') {
-          throw new Error('PDF preview is not supported in this browser.')
-        }
+    const requestId = knowledgeReaderRequestRef.current + 1
+    knowledgeReaderRequestRef.current = requestId
+    setKnowledgeDeleteTarget(null)
+    setKnowledgeReaderOpen(true)
+    setKnowledgeReaderLoading(true)
+    setKnowledgeReaderError(null)
+    setSelectedKnowledgeId(knowledgeId)
+    setSelectedKnowledgeDetail(null)
 
-        const objectUrl = URL.createObjectURL(blob)
-        if (knowledgeReaderRequestRef.current !== requestId) {
-          if (typeof URL.revokeObjectURL === 'function') {
-            URL.revokeObjectURL(objectUrl)
-          }
-          return
-        }
+    try {
+      const response = await fetchAiHelperDocumentDetail(knowledgeId)
+      if (knowledgeReaderRequestRef.current !== requestId) return
+      const detail = knowledgeEntryFromResponse(response, 'Knowledge details are unavailable.')
 
-        setKnowledgeReaderPdfObjectUrl(objectUrl)
-      } catch (error) {
-        if (knowledgeReaderRequestRef.current !== requestId) return
-        setKnowledgeReaderPdfError(
-          safeAiHelperError(error, 'Could not load the original PDF file.'),
-        )
-      } finally {
-        if (knowledgeReaderRequestRef.current !== requestId) return
-        setKnowledgeReaderPdfLoading(false)
-      }
-    },
-    [setKnowledgeReaderPdfObjectUrl],
-  )
-
-  const openKnowledgeReader = useCallback(
-    async (knowledgeId) => {
-      if (!knowledgeId) return
-
-      const requestId = knowledgeReaderRequestRef.current + 1
-      knowledgeReaderRequestRef.current = requestId
-      setKnowledgeDeleteTarget(null)
-      setKnowledgeReaderOpen(true)
-      setKnowledgeReaderLoading(true)
-      setKnowledgeReaderError(null)
-      setKnowledgeReaderTab(KNOWLEDGE_READER_TAB_ORIGINAL)
-      setSelectedKnowledgeId(knowledgeId)
-      setSelectedKnowledgeDetail(null)
-      setKnowledgeReaderPdfObjectUrl('')
-      setKnowledgeReaderPdfLoading(false)
-      setKnowledgeReaderPdfError(null)
-
-      try {
-        const response = await fetchAiHelperDocumentDetail(knowledgeId)
-        if (knowledgeReaderRequestRef.current !== requestId) return
-        const detail = knowledgeEntryFromResponse(response, 'Knowledge details are unavailable.')
-
-        setSelectedKnowledgeDetail(detail)
-        setKnowledgeReaderTab(KNOWLEDGE_READER_TAB_ORIGINAL)
-        if (detail.original_available) {
-          await loadPdfSource(knowledgeId, requestId)
-        }
-      } catch (error) {
-        if (knowledgeReaderRequestRef.current !== requestId) return
-        setKnowledgeReaderError(safeAiHelperError(error, 'Could not load this knowledge source.'))
-      } finally {
-        if (knowledgeReaderRequestRef.current !== requestId) return
-        setKnowledgeReaderLoading(false)
-      }
-    },
-    [loadPdfSource, setKnowledgeReaderPdfObjectUrl],
-  )
+      setSelectedKnowledgeDetail(detail)
+    } catch (error) {
+      if (knowledgeReaderRequestRef.current !== requestId) return
+      setKnowledgeReaderError(safeAiHelperError(error, 'Could not load this knowledge source.'))
+    } finally {
+      if (knowledgeReaderRequestRef.current !== requestId) return
+      setKnowledgeReaderLoading(false)
+    }
+  }, [])
 
   const handleKnowledgeFileChange = useCallback(
     (event) => {
@@ -363,12 +261,7 @@ const useAiHelperKnowledge = ({ authUser }) => {
     handleKnowledgeFileChange,
     knowledgeReaderError,
     knowledgeReaderLoading,
-    knowledgeReaderPdfError,
-    knowledgeReaderPdfLoading,
-    knowledgeReaderPdfUrl,
     knowledgeReaderOpen,
-    knowledgeReaderTab,
-    knowledgeReaderHasOriginal: Boolean(selectedKnowledgeDetail?.original_available),
     loadKnowledge,
     openKnowledgeReader,
     selectedKnowledgeDetail,
@@ -379,7 +272,6 @@ const useAiHelperKnowledge = ({ authUser }) => {
     setKnowledgeTitle,
     setKnowledgeView,
     setKnowledgeVisibility,
-    setKnowledgeReaderTab,
     uploadKnowledge,
   }
 }

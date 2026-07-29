@@ -342,12 +342,7 @@ const AiHelperPanel = () => {
           knowledgeLoading={knowledge.knowledgeLoading}
           knowledgeReaderError={knowledge.knowledgeReaderError}
           knowledgeReaderLoading={knowledge.knowledgeReaderLoading}
-          knowledgeReaderPdfError={knowledge.knowledgeReaderPdfError}
-          knowledgeReaderPdfLoading={knowledge.knowledgeReaderPdfLoading}
-          knowledgeReaderPdfUrl={knowledge.knowledgeReaderPdfUrl}
-          knowledgeReaderHasOriginal={knowledge.knowledgeReaderHasOriginal}
           knowledgeReaderOpen={knowledge.knowledgeReaderOpen}
-          knowledgeReaderTab={knowledge.knowledgeReaderTab}
           knowledgeTitle={knowledge.knowledgeTitle}
           knowledgeUpdatingId={knowledge.knowledgeUpdatingId}
           knowledgeUploading={knowledge.knowledgeUploading}
@@ -361,7 +356,6 @@ const AiHelperPanel = () => {
           onKnowledgeErrorChange={knowledge.setKnowledgeError}
           onKnowledgeFileChange={knowledge.handleKnowledgeFileChange}
           onKnowledgeReaderClose={knowledge.closeKnowledgeReader}
-          onKnowledgeReaderTabChange={knowledge.setKnowledgeReaderTab}
           onKnowledgeTitleChange={knowledge.setKnowledgeTitle}
           onKnowledgeViewChange={knowledge.setKnowledgeView}
           onKnowledgeVisibilityChange={knowledge.setKnowledgeVisibility}

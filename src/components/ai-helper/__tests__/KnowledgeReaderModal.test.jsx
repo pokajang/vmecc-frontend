@@ -1,9 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, render, screen } from '@testing-library/react'
 
 import KnowledgeReaderModal from '../KnowledgeReaderModal'
-import { KNOWLEDGE_READER_TAB_METADATA, KNOWLEDGE_READER_TAB_ORIGINAL } from '../constants'
 
 afterEach(cleanup)
 
@@ -20,57 +19,24 @@ const detail = {
 
 describe('KnowledgeReaderModal', () => {
   it('renders the document loading state', () => {
-    render(
-      <KnowledgeReaderModal
-        activeTab={KNOWLEDGE_READER_TAB_ORIGINAL}
-        loading
-        open
-        onClose={vi.fn()}
-        onTabChange={vi.fn()}
-      />,
-    )
+    render(<KnowledgeReaderModal loading open onClose={vi.fn()} />)
 
     expect(screen.getByText('Loading document...')).toBeTruthy()
   })
 
-  it('renders only the original PDF and metadata tabs', () => {
-    render(
-      <KnowledgeReaderModal
-        activeTab={KNOWLEDGE_READER_TAB_ORIGINAL}
-        detail={detail}
-        loading={false}
-        pdfLoading={false}
-        pdfUrl="blob:http://localhost/pdf-preview"
-        open
-        onClose={vi.fn()}
-        onTabChange={vi.fn()}
-      />,
-    )
+  it('renders metadata and an external PDF action without an inline preview', () => {
+    render(<KnowledgeReaderModal detail={detail} loading={false} open onClose={vi.fn()} />)
 
-    expect(screen.getByTitle('Emergency plan').getAttribute('src')).toBe(
-      'blob:http://localhost/pdf-preview',
-    )
-    expect(screen.getByRole('tab', { name: 'Original PDF' })).toBeTruthy()
-    expect(screen.getByRole('tab', { name: 'Metadata' })).toBeTruthy()
-    expect(screen.queryByText('Extracted text')).toBeNull()
-    expect(screen.queryByText('Rendered')).toBeNull()
+    const openPdf = screen.getByRole('link', { name: 'Open PDF in new tab' })
+    expect(openPdf.getAttribute('target')).toBe('_blank')
+    expect(openPdf.getAttribute('rel')).toBe('noopener noreferrer')
+    expect(screen.getByText('emergency-plan.pdf')).toBeTruthy()
+    expect(document.querySelector('iframe')).toBeNull()
   })
 
   it('states that the PDF is not ingested by Ask AI', () => {
-    const onTabChange = vi.fn()
-    render(
-      <KnowledgeReaderModal
-        activeTab={KNOWLEDGE_READER_TAB_METADATA}
-        detail={detail}
-        loading={false}
-        open
-        onClose={vi.fn()}
-        onTabChange={onTabChange}
-      />,
-    )
+    render(<KnowledgeReaderModal detail={detail} loading={false} open onClose={vi.fn()} />)
 
     expect(screen.getByText(/not ingested by Ask AI/i)).toBeTruthy()
-    fireEvent.click(screen.getByRole('tab', { name: 'Original PDF' }))
-    expect(onTabChange).toHaveBeenCalledWith(KNOWLEDGE_READER_TAB_ORIGINAL)
   })
 })

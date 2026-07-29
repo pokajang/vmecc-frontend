@@ -19,12 +19,7 @@ const KnowledgeView = ({
   knowledgeLoading,
   knowledgeReaderError,
   knowledgeReaderLoading,
-  knowledgeReaderPdfError,
-  knowledgeReaderPdfLoading,
-  knowledgeReaderPdfUrl,
-  knowledgeReaderHasOriginal,
   knowledgeReaderOpen,
-  knowledgeReaderTab,
   knowledgeTitle,
   knowledgeUpdatingId,
   knowledgeUploading,
@@ -38,7 +33,6 @@ const KnowledgeView = ({
   onKnowledgeErrorChange,
   onKnowledgeFileChange,
   onKnowledgeReaderClose,
-  onKnowledgeReaderTabChange,
   onKnowledgeTitleChange,
   onKnowledgeViewChange,
   onKnowledgeVisibilityChange,
@@ -126,17 +120,11 @@ const KnowledgeView = ({
       </div>
 
       <KnowledgeReaderModal
-        activeTab={knowledgeReaderTab}
-        readerHasOriginal={knowledgeReaderHasOriginal}
         detail={selectedKnowledgeDetail}
         error={knowledgeReaderError}
         loading={knowledgeReaderLoading}
-        pdfError={knowledgeReaderPdfError}
-        pdfLoading={knowledgeReaderPdfLoading}
-        pdfUrl={knowledgeReaderPdfUrl}
         open={knowledgeReaderOpen}
         onClose={onKnowledgeReaderClose}
-        onTabChange={onKnowledgeReaderTabChange}
       />
     </div>
   )
