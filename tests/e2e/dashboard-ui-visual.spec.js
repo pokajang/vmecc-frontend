@@ -244,15 +244,15 @@ const expectTypographyContract = async (page, { mobile = false } = {}) => {
 
   const title = page.getByRole('heading', { name: 'Dashboard Overview' })
   await expect(title).toHaveCSS('font-weight', '700')
-  await expect(title).toHaveCSS('font-size', mobile ? '26.4px' : '25.2px')
+  await expect(title).toHaveCSS('font-size', mobile ? '22px' : '24px')
   await expect(page.locator('.dashboard-overview__description')).toHaveCSS('font-weight', '500')
 
   if (mobile) {
     await expect(page.locator('.dashboard-metric-list__summary').first()).toHaveCSS(
       'font-size',
-      '19.2px',
+      '16px',
     )
-    await expect(page.locator('.app-bottom-nav-label').first()).toHaveCSS('font-size', '15.6px')
+    await expect(page.locator('.app-bottom-nav-label').first()).toHaveCSS('font-size', '13px')
     await expect(page.locator('.app-bottom-nav-label').first()).toHaveCSS('font-weight', '600')
     const overflowingBottomNavLabels = await page
       .locator('.app-bottom-nav-label')
@@ -387,7 +387,7 @@ test('dashboard has a usable desktop and mobile composition', async ({ page }, t
   await expect(menuDialog).toBeVisible()
   await expect(menuDialog.locator('.mobile-overlay-shell-title-text')).toHaveCSS(
     'font-size',
-    '21.6px',
+    '20px',
   )
   await expect(menuDialog.locator('.mobile-overlay-shell-title-text')).toHaveCSS(
     'font-weight',
@@ -395,7 +395,7 @@ test('dashboard has a usable desktop and mobile composition', async ({ page }, t
   )
   await expect(menuDialog.locator('.mobile-overlay-item-label').first()).toHaveCSS(
     'font-size',
-    '19.2px',
+    '16px',
   )
   await expect(menuDialog.locator('.mobile-overlay-item-label').first()).toHaveCSS(
     'font-weight',

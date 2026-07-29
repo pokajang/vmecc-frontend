@@ -81,7 +81,7 @@ const HighAngleStatusInline = ({ workflowState, hasRetainedEvidence = false }) =
     <span className="inspection-fire-extinguisher-status-inline d-inline-flex flex-wrap align-items-center gap-2 small">
       <span
         className={`d-inline-flex align-items-center gap-1 ${
-          isComplete ? 'text-muted' : 'text-body-tertiary'
+          isComplete ? 'text-muted' : 'text-body-secondary'
         }`}
         aria-label={completionLabel}
         title={completionLabel}

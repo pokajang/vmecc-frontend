@@ -19,6 +19,7 @@ import { resolveImageUrl } from './components/teamImageUtils'
 import { getRoleBadge } from './components/teamRoleUtils'
 import { resolveTeamScheduleStatus } from './components/teamScheduleStatus'
 import { hasPermission, hasScopedPermission } from 'src/utils/authz'
+import { getAvatarColors } from 'src/utils/avatarColors'
 
 const formatDuration = (startStr, endStr) => {
   const start = startStr ? new Date(startStr) : null
@@ -34,18 +35,6 @@ const formatDuration = (startStr, endStr) => {
   if (months) parts.push(`${months}m`)
   if (days || !parts.length) parts.push(`${days}d`)
   return parts.join(' ')
-}
-
-const AVATAR_COLORS = {
-  a: { bg: '#eef2ff', text: '#4338ca' },
-  b: { bg: '#ecfdf5', text: '#059669' },
-  c: { bg: '#fffbeb', text: '#d97706' },
-  d: { bg: '#fff1f2', text: '#e11d48' },
-}
-
-const getAvatarColors = (name) => {
-  const key = (name || '').trim().toLowerCase().charAt(0)
-  return AVATAR_COLORS[key] || { bg: '#f1f5f9', text: '#475569' }
 }
 
 const TeamView = () => {

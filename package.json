@@ -16,6 +16,7 @@
     "build": "vite build",
     "audit:system-inventory": "node scripts/generate-system-qa-inventory.mjs",
     "audit:staff-hardcoded": "node scripts/audit-hardcoded-staff.mjs",
+    "audit:contrast": "node scripts/audit-text-contrast.mjs",
     "audit:typography": "node scripts/audit-typography.mjs",
     "test:payroll-hook-order": "node scripts/test-payroll-hook-order.mjs",
     "test:payroll-hook-runtime": "vitest run src/views/payroll/__tests__/Payroll.hook-order.test.jsx --environment jsdom",

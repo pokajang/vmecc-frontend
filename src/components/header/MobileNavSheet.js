@@ -166,7 +166,7 @@ const MobileNavSheet = ({
                   ) : null
                 }
                 trailing={
-                  item.href ? <ExternalLink size={14} className="text-body-tertiary" /> : null
+                  item.href ? <ExternalLink size={14} className="text-body-secondary" /> : null
                 }
               />
             )

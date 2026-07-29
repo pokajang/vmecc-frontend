@@ -113,7 +113,7 @@ export const printRosterSchedule = ({
     .data-col { font-size: 8px; font-weight: 500; height: 22px; }
     .today { background: #eff6ff !important; }
     .today .dow, .today .dnum { color: #1d4ed8; }
-    .weekend { background: #f9fafb; color: #9ca3af; }
+    .weekend { background: #f9fafb; color: #6b7280; }
     .draft-cell { background: #fef9c3 !important; }
     .draft-dot { color: #ca8a04; font-size: 6px; margin-left: 1px; vertical-align: super; }
     @page { size: A3 landscape; margin: 10mm; }

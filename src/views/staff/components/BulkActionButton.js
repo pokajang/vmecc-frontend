@@ -36,7 +36,7 @@ const BulkActionButton = ({
   return (
     <CButton
       size={size}
-      className={`${intentConfig.className} px-2 py-1 border-0 bg-transparent shadow-none ${disabled ? 'opacity-50' : ''} ${className}`.trim()}
+      className={`bulk-action-button ${intentConfig.className} px-2 py-1 border-0 bg-transparent shadow-none ${disabled ? 'bulk-action-button--disabled' : ''} ${className}`.trim()}
       style={disabled ? DISABLED_STYLE : undefined}
       onClick={disabled ? undefined : onClick}
       disabled={disabled}

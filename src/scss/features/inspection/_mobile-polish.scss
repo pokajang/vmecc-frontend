@@ -10,6 +10,14 @@
     --inspection-mobile-control-gap: 0.5rem;
   }
 
+  .inspection-module-page,
+  .inspection-mobile-section {
+    --vmecc-text-body: 1.0625rem;
+    --vmecc-text-label: 1rem;
+    --vmecc-text-meta: 0.9375rem;
+    --vmecc-text-caption: 0.8125rem;
+  }
+
   .inspection-module-page {
     min-width: 0;
   }
@@ -38,7 +46,7 @@
   .inspection-mobile-section-title {
     margin: 0;
     color: var(--cui-body-color);
-    font-size: 1.0625rem;
+    font-size: var(--vmecc-text-section-title);
     font-weight: var(--vmecc-weight-bold);
     line-height: var(--vmecc-leading-compact);
   }
@@ -236,7 +244,7 @@
   .inspection-check-label,
   .inspection-hydraulic-check-label,
   .inspection-module-page .form-label {
-    font-size: var(--vmecc-text-meta);
+    font-size: var(--vmecc-text-label);
     line-height: 1.35;
   }
 
@@ -274,7 +282,7 @@
   }
 
   .inspection-module-page .form-control::placeholder {
-    color: var(--cui-tertiary-color);
+    color: var(--vmecc-fg-placeholder);
     opacity: 1;
   }
 
@@ -393,7 +401,7 @@
   }
 
   .inspection-mobile-setup-drawer__title {
-    font-size: 1.0625rem;
+    font-size: var(--vmecc-text-section-title);
     line-height: 1.3;
   }
 
@@ -435,7 +443,7 @@
   }
 
   .inspection-review-title {
-    font-size: 1.0625rem;
+    font-size: var(--vmecc-text-section-title);
   }
 
   .inspection-review-section__title,

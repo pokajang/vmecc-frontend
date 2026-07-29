@@ -3,14 +3,10 @@ body {
 }
 
 html {
-  font-size: 16.8px;
+  font-size: 100%;
 }
 
 @media (max-width: 767.98px) {
-  html {
-    font-size: 19.2px;
-  }
-
   .form-control,
   .form-select,
   .form-control-plaintext,
@@ -29,15 +25,24 @@ html {
 }
 
 :root {
-  --vmecc-focus-ring: 0 0 0 0.16rem rgba(0, 126, 122, 0.28);
+  --vmecc-fg-strong: var(--cui-emphasis-color);
+  --vmecc-fg-default: var(--cui-body-color);
+  --vmecc-fg-supporting: var(--cui-secondary-color);
+  --vmecc-fg-placeholder: var(--cui-secondary-color);
+  --vmecc-fg-disabled: var(--cui-secondary-color);
+  --vmecc-control-border: var(--cui-secondary-color);
+  --vmecc-focus-indicator: #007e7a;
+  --vmecc-focus-ring:
+    0 0 0 0.125rem var(--cui-body-bg), 0 0 0 0.3125rem var(--vmecc-focus-indicator);
   --vmecc-radius-control: 0.375rem;
   --vmecc-radius-card: 0.5rem;
   --vmecc-radius-overlay: 0.875rem;
   --vmecc-radius-pill: 999px;
   --vmecc-shadow-card: 0 0.25rem 0.9rem rgba(15, 23, 42, 0.06);
   --vmecc-shadow-overlay: 0 0.75rem 2rem rgba(15, 23, 42, 0.18);
-  --vmecc-touch-target: 2.75rem;
+  --vmecc-touch-target: max(2.75rem, 44px);
   --vmecc-primary-soft: rgba(0, 126, 122, 0.1);
+  --vmecc-primary-on-soft: #006966;
   --vmecc-scrollbar-size: 6px;
   --vmecc-scrollbar-track: transparent;
   --vmecc-scrollbar-thumb: color-mix(in srgb, var(--cui-secondary-color) 42%, transparent);
@@ -49,9 +54,14 @@ html {
   --vmecc-status-success-bg: #d1fae5;
   --vmecc-status-success-text: #065f46;
   --vmecc-status-danger-bg: #fde8e8;
-  --vmecc-status-danger-text: #991b1b;
   --vmecc-status-muted-bg: var(--cui-secondary-bg);
   --vmecc-status-muted-text: var(--cui-secondary-color);
+  --vmecc-status-info-text: #005e87;
+  --vmecc-status-warning-text: #764705;
+  --vmecc-status-danger-text: #9f241d;
+  --vmecc-status-danger-solid: #9f241d;
+  --vmecc-status-info-bg: #e0f2fe;
+  --vmecc-status-solid-text: #080a0c;
   --mobile-overlay-nav-height: 64px;
   --mobile-overlay-side-gap: 10px;
   --mobile-overlay-bottom-gap: 8px;
@@ -74,6 +84,22 @@ html {
   --mobile-overlay-danger-bg: #dc2626;
   --mobile-overlay-danger-bg-hover: #b91c1c;
   --mobile-overlay-danger-text: #ffffff;
+}
+
+[data-coreui-theme='dark'] {
+  --vmecc-focus-indicator: #66c7c4;
+  --vmecc-primary-soft: rgba(102, 199, 196, 0.16);
+  --vmecc-primary-on-soft: #8bd8d5;
+  --vmecc-status-draft-bg: #4a3a0c;
+  --vmecc-status-draft-text: #f6d67a;
+  --vmecc-status-success-bg: #123d2f;
+  --vmecc-status-success-text: #87dfb3;
+  --vmecc-status-danger-bg: #4b2020;
+  --vmecc-status-danger-text: #ffaaa4;
+  --vmecc-status-danger-solid: #b8322a;
+  --vmecc-status-info-bg: #12384a;
+  --vmecc-status-info-text: #8ed7ff;
+  --vmecc-status-warning-text: #f6d27f;
 }
 
 .btn:focus-visible,
@@ -131,6 +157,136 @@ html {
 
 .back-button {
   background-color: var(--vmecc-primary-soft);
+  color: var(--vmecc-primary-on-soft);
+}
+
+.btn.btn-outline-light {
+  --cui-btn-color: var(--vmecc-fg-default);
+  --cui-btn-bg: var(--cui-body-bg);
+  --cui-btn-border-color: var(--vmecc-control-border);
+  --cui-btn-hover-color: var(--vmecc-fg-strong);
+  --cui-btn-hover-bg: var(--cui-tertiary-bg);
+  --cui-btn-hover-border-color: var(--vmecc-primary-on-soft);
+  --cui-btn-focus-shadow-rgb: 0, 126, 122;
+  --cui-btn-active-color: var(--vmecc-fg-strong);
+  --cui-btn-active-bg: var(--cui-tertiary-bg);
+  --cui-btn-active-border-color: var(--vmecc-primary-on-soft);
+  --cui-btn-disabled-color: var(--vmecc-fg-disabled);
+  --cui-btn-disabled-bg: var(--cui-secondary-bg);
+  --cui-btn-disabled-border-color: var(--cui-border-color);
+}
+
+.btn.btn-outline-primary {
+  --cui-btn-color: var(--vmecc-primary-on-soft);
+  --cui-btn-border-color: var(--vmecc-primary-on-soft);
+  --cui-btn-hover-color: var(--vmecc-primary-on-soft);
+  --cui-btn-hover-bg: var(--vmecc-primary-soft);
+  --cui-btn-hover-border-color: var(--vmecc-primary-on-soft);
+  --cui-btn-active-color: var(--vmecc-primary-on-soft);
+  --cui-btn-active-bg: var(--vmecc-primary-soft);
+  --cui-btn-active-border-color: var(--vmecc-primary-on-soft);
+  --cui-btn-disabled-color: var(--vmecc-fg-disabled);
+  --cui-btn-disabled-bg: var(--cui-secondary-bg);
+  --cui-btn-disabled-border-color: var(--cui-border-color);
+}
+
+.btn.btn-outline-success {
+  --cui-btn-color: var(--vmecc-status-success-text);
+  --cui-btn-border-color: var(--vmecc-status-success-text);
+  --cui-btn-hover-color: var(--vmecc-status-success-text);
+  --cui-btn-hover-bg: var(--vmecc-status-success-bg);
+  --cui-btn-hover-border-color: var(--vmecc-status-success-text);
+  --cui-btn-active-color: var(--vmecc-status-success-text);
+  --cui-btn-active-bg: var(--vmecc-status-success-bg);
+  --cui-btn-active-border-color: var(--vmecc-status-success-text);
+}
+
+.btn.btn-outline-info {
+  --cui-btn-color: var(--vmecc-status-info-text);
+  --cui-btn-border-color: var(--vmecc-status-info-text);
+  --cui-btn-hover-color: var(--vmecc-status-info-text);
+  --cui-btn-hover-bg: var(--vmecc-status-info-bg);
+  --cui-btn-hover-border-color: var(--vmecc-status-info-text);
+  --cui-btn-active-color: var(--vmecc-status-info-text);
+  --cui-btn-active-bg: var(--vmecc-status-info-bg);
+  --cui-btn-active-border-color: var(--vmecc-status-info-text);
+}
+
+.btn.btn-outline-warning {
+  --cui-btn-color: var(--vmecc-status-warning-text);
+  --cui-btn-border-color: var(--vmecc-status-warning-text);
+  --cui-btn-hover-color: var(--vmecc-status-warning-text);
+  --cui-btn-hover-bg: var(--vmecc-status-draft-bg);
+  --cui-btn-hover-border-color: var(--vmecc-status-warning-text);
+  --cui-btn-active-color: var(--vmecc-status-warning-text);
+  --cui-btn-active-bg: var(--vmecc-status-draft-bg);
+  --cui-btn-active-border-color: var(--vmecc-status-warning-text);
+}
+
+.btn.btn-outline-danger {
+  --cui-btn-color: var(--vmecc-status-danger-text);
+  --cui-btn-border-color: var(--vmecc-status-danger-text);
+  --cui-btn-hover-color: var(--vmecc-status-danger-text);
+  --cui-btn-hover-bg: var(--vmecc-status-danger-bg);
+  --cui-btn-hover-border-color: var(--vmecc-status-danger-text);
+  --cui-btn-active-color: var(--vmecc-status-danger-text);
+  --cui-btn-active-bg: var(--vmecc-status-danger-bg);
+  --cui-btn-active-border-color: var(--vmecc-status-danger-text);
+}
+
+.vmecc-choice-button.btn-primary {
+  --cui-btn-color: #ffffff;
+  --cui-btn-hover-color: #ffffff;
+  --cui-btn-active-color: #ffffff;
+}
+
+.text-success {
+  color: var(--vmecc-status-success-text) !important;
+}
+
+.text-primary {
+  color: var(--vmecc-primary-on-soft) !important;
+}
+
+.text-info {
+  color: var(--vmecc-status-info-text) !important;
+}
+
+.text-warning {
+  color: var(--vmecc-status-warning-text) !important;
+}
+
+.text-danger {
+  color: var(--vmecc-status-danger-text) !important;
+}
+
+.badge.bg-success,
+.badge.bg-info,
+.badge.bg-warning,
+.badge.bg-danger {
+  color: var(--vmecc-status-solid-text);
+}
+
+.invalid-feedback {
+  color: var(--vmecc-status-danger-text);
+}
+
+.valid-feedback {
+  color: var(--vmecc-status-success-text);
+}
+
+// Semibold/strong copy is a label or heading in this UI. Keep muted color for
+// supporting copy, but never let a primary label inherit it accidentally.
+.fw-semibold.text-muted,
+.fw-bold.text-muted,
+.form-label.text-muted {
+  color: var(--vmecc-fg-default) !important;
+}
+
+.create-action-button--disabled,
+.bulk-action-button--disabled {
+  color: var(--vmecc-fg-disabled) !important;
+  opacity: 1 !important;
 }
 
 .module-nav-link {

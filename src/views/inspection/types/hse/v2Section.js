@@ -22,8 +22,10 @@ export const HseEditSection = (props) => {
     <CCard className="inspection-check-card">
       <CCardBody className="d-grid gap-4">
         <div className="d-grid gap-2" data-hse-field="hseSelection">
-          <div className="fw-semibold">What did you observe?</div>
-          <div className="row g-2">
+          <div id="hse-observation-type-label" className="fw-semibold">
+            What did you observe?
+          </div>
+          <div className="row g-2" role="radiogroup" aria-labelledby="hse-observation-type-label">
             {HSE_SELECTION_OPTIONS.map((option) => {
               const selected = selection === option.value
               return (
@@ -32,11 +34,15 @@ export const HseEditSection = (props) => {
                     type="button"
                     color={selected ? 'primary' : 'light'}
                     variant={selected ? undefined : 'outline'}
-                    className="w-100 h-100 rounded-3 text-start"
+                    className="vmecc-choice-button inspection-hse-choice-btn w-100 h-100 rounded-3 text-start"
+                    role="radio"
+                    aria-checked={selected}
                     onClick={() => handlers.onToggleHseSelection?.(option.value)}
                   >
                     <div className="fw-semibold">{option.label}</div>
-                    <div className="small opacity-75">{option.description}</div>
+                    <div className="inspection-hse-choice-btn__description small">
+                      {option.description}
+                    </div>
                   </CButton>
                 </div>
               )

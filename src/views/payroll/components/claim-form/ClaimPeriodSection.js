@@ -47,7 +47,7 @@ const ClaimPeriodSection = ({
                     isActive
                       ? 'border-primary bg-primary bg-opacity-10'
                       : 'border-light-subtle bg-body'
-                  } ${!shouldShowSingle && isDisabled ? 'opacity-75' : ''}`}
+                  } ${!shouldShowSingle && isDisabled ? 'text-body-secondary' : ''}`}
                   style={{
                     cursor: shouldShowSingle ? 'default' : isDisabled ? 'not-allowed' : 'pointer',
                     minHeight: 56,

@@ -115,7 +115,7 @@ export const InspectionMobileSelectorButtonGrid = ({
               color={isSelected ? 'primary' : 'light'}
               variant={isSelected ? undefined : 'outline'}
               className={buildClassName(
-                'inspection-mobile-selector-btn d-flex align-items-center w-100 text-start justify-content-start gap-2 rounded-3',
+                'vmecc-choice-button inspection-mobile-selector-btn d-flex align-items-center w-100 text-start justify-content-start gap-2 rounded-3',
                 isSelected ? 'inspection-mobile-selector-btn--selected' : '',
               )}
               disabled={isDisabled}

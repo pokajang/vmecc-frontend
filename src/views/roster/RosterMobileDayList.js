@@ -2,18 +2,7 @@ import React, { useState } from 'react'
 import { CButton } from '@coreui/react'
 import MobileRecordList from 'src/components/MobileRecordList'
 import RosterMobileDayEditor from './RosterMobileDayEditor'
-
-const AVATAR_COLORS = {
-  a: { bg: '#eef2ff', text: '#4338ca' },
-  b: { bg: '#ecfdf5', text: '#059669' },
-  c: { bg: '#fffbeb', text: '#d97706' },
-  d: { bg: '#fff1f2', text: '#e11d48' },
-}
-
-const getAvatarColors = (name) => {
-  const key = (name || '').trim().toLowerCase().charAt(0)
-  return AVATAR_COLORS[key] || { bg: '#f1f5f9', text: '#475569' }
-}
+import { getAvatarColors } from 'src/utils/avatarColors'
 
 const getShiftDefs = (allShifts) =>
   allShifts.length

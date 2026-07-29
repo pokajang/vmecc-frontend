@@ -2,18 +2,7 @@ import { Pencil } from 'lucide-react'
 import StatusPill from './StatusPill'
 import { resolveImageUrl } from './teamImageUtils'
 import { getRoleBadge, mapRoleLabel } from './teamRoleUtils'
-
-const AVATAR_COLORS = {
-  a: { bg: '#eef2ff', text: '#4338ca' }, // indigo
-  b: { bg: '#ecfdf5', text: '#059669' }, // emerald
-  c: { bg: '#fffbeb', text: '#d97706' }, // amber
-  d: { bg: '#fff1f2', text: '#e11d48' }, // rose
-}
-
-const getAvatarColors = (name) => {
-  const key = (name || '').trim().toLowerCase().charAt(0)
-  return AVATAR_COLORS[key] || { bg: '#f1f5f9', text: '#475569' } // slate fallback
-}
+import { getAvatarColors } from 'src/utils/avatarColors'
 
 const TeamCard = ({ team, status, onView, onEdit, canEdit = true }) => {
   const badgeLabel = status || 'Unscheduled'

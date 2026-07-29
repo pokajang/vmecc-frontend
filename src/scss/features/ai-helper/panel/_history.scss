@@ -24,7 +24,9 @@
 
   &:disabled {
     cursor: not-allowed;
-    opacity: 0.55;
+    color: var(--vmecc-fg-disabled);
+    background: var(--cui-secondary-bg);
+    opacity: 1;
   }
 
   &:focus-visible {
@@ -48,7 +50,7 @@
 }
 
 .ai-helper-history__list--refreshing {
-  opacity: 0.72;
+  cursor: progress;
 }
 
 .ai-helper-history__loading-inline {
@@ -156,7 +158,9 @@
 
   &:disabled {
     cursor: not-allowed;
-    opacity: 0.6;
+    color: var(--vmecc-fg-disabled);
+    background: var(--cui-secondary-bg);
+    opacity: 1;
   }
 }
 

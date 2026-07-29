@@ -347,4 +347,45 @@ test.describe('Drill Upgrade UI V1', () => {
     )
     await expectNoHorizontalOverflow(page)
   })
+
+  test('keeps restored mobile setup feedback and summary rows compact', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await installApiStubs(page)
+    await page.goto(`${baseUrl}/report/drill/new/setup`)
+
+    const feedback = page.getByRole('status')
+    const setup = page.getByTestId('drill-report-setup-ready')
+    const environmentLabel = setup
+      .locator('.mobile-setup-summary__label')
+      .filter({ hasText: /^Environment$/ })
+
+    await expect(feedback).toContainText('Saved draft restored')
+    await expect(environmentLabel).toBeVisible()
+
+    const layout = await page.evaluate(() => {
+      const feedbackElement = document.querySelector('[role="status"]')
+      const setupElement = document.querySelector('[data-testid="drill-report-setup-ready"]')
+      const environmentElement = [
+        ...document.querySelectorAll('.mobile-setup-summary__label'),
+      ].find((element) => element.textContent.trim() === 'Environment')
+      const feedbackRect = feedbackElement.getBoundingClientRect()
+      const setupRect = setupElement.getBoundingClientRect()
+      const environmentStyle = getComputedStyle(environmentElement)
+      return {
+        feedbackGap: setupRect.top - feedbackRect.bottom,
+        firstContentGap:
+          setupElement.querySelector('.report-setup-grid').getBoundingClientRect().top -
+          setupRect.top,
+        environmentHeight: environmentElement.getBoundingClientRect().height,
+        environmentLineHeight: Number.parseFloat(environmentStyle.lineHeight),
+        environmentWhiteSpace: environmentStyle.whiteSpace,
+      }
+    })
+
+    expect(layout.feedbackGap).toBeLessThanOrEqual(32)
+    expect(layout.firstContentGap).toBeLessThanOrEqual(1)
+    expect(layout.environmentHeight).toBeLessThanOrEqual(layout.environmentLineHeight * 1.25)
+    expect(layout.environmentWhiteSpace).toBe('nowrap')
+    await expectNoHorizontalOverflow(page)
+  })
 })

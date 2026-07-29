@@ -323,7 +323,6 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       </svg>
       General photos (1)
     </button>
-    <div />
   </div>
   <div
     class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
@@ -719,7 +718,6 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       </svg>
       General photos (1)
     </button>
-    <div />
   </div>
   <div
     class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
@@ -1099,7 +1097,6 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       </svg>
       General photos (1)
     </button>
-    <div />
   </div>
   <div
     class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
@@ -1534,7 +1531,6 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       </svg>
       General photos (1)
     </button>
-    <div />
   </div>
   <div
     class="d-grid gap-2 d-none d-md-grid"
@@ -2003,7 +1999,6 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       </svg>
       General photos (1)
     </button>
-    <div />
   </div>
   <div
     class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
@@ -2383,7 +2378,6 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       </svg>
       General photos (1)
     </button>
-    <div />
   </div>
   <div
     class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
@@ -2763,7 +2757,6 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       </svg>
       General photos (1)
     </button>
-    <div />
   </div>
   <div
     class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
@@ -3108,7 +3101,6 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       </svg>
       Add general photos (optional)
     </button>
-    <div />
   </div>
   <div
     class="d-grid gap-2 d-none d-md-grid"
@@ -3402,7 +3394,6 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       </svg>
       Add general photos (optional)
     </button>
-    <div />
   </div>
   <div
     class="d-grid gap-2 d-none d-md-grid"
@@ -3680,7 +3671,6 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       </svg>
       Add general photos (optional)
     </button>
-    <div />
   </div>
   <div
     class="d-grid gap-2 d-none d-md-grid"
@@ -4032,7 +4022,6 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       </svg>
       Add general photos (optional)
     </button>
-    <div />
   </div>
   <div
     class="d-grid gap-2 d-none d-md-grid"
@@ -4442,7 +4431,6 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       </svg>
       Add general photos (optional)
     </button>
-    <div />
   </div>
   <div
     class="d-grid gap-2 d-none d-md-grid"
@@ -4720,7 +4708,6 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       </svg>
       Add general photos (optional)
     </button>
-    <div />
   </div>
   <div
     class="d-grid gap-2 d-none d-md-grid"
@@ -4998,7 +4985,6 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       </svg>
       Add general photos (optional)
     </button>
-    <div />
   </div>
   <div
     class="d-grid gap-2 d-none d-md-grid"
@@ -5292,7 +5278,6 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
       </svg>
       Add general photos (optional)
     </button>
-    <div />
   </div>
   <div
     class="d-grid gap-2 d-none d-md-grid"
@@ -5698,7 +5683,6 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
       </svg>
       Add general photos (optional)
     </button>
-    <div />
   </div>
   <div
     class="d-grid gap-2 d-none d-md-grid"
@@ -5976,7 +5960,6 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
       </svg>
       Add general photos (optional)
     </button>
-    <div />
   </div>
   <div
     class="d-grid gap-2 d-none d-md-grid"
@@ -6254,7 +6237,6 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
       </svg>
       Add general photos (optional)
     </button>
-    <div />
   </div>
   <div
     class="d-grid gap-2 d-none d-md-grid"

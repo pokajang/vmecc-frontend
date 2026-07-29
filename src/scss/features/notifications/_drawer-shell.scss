@@ -82,8 +82,8 @@
 .notification-drawer-count {
   font-size: var(--vmecc-text-caption);
   font-weight: var(--vmecc-weight-bold);
-  background: #e9ecef;
-  color: #495057;
+  background: var(--cui-secondary-bg);
+  color: var(--vmecc-fg-strong);
   border-radius: 10px;
   padding: 1px 7px;
 }
@@ -107,7 +107,7 @@
   cursor: pointer;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.06);
-    color: var(--cui-body-color);
+    background: var(--cui-secondary-bg);
+    color: var(--vmecc-fg-default);
   }
 }

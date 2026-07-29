@@ -203,7 +203,7 @@ const InspectionCameraCapture = ({
             color="secondary"
             variant="outline"
             size="sm"
-            className="ms-auto d-inline-flex align-items-center gap-2 opacity-75 border-0 text-body-secondary"
+            className="ms-auto d-inline-flex align-items-center gap-2 border-0 text-body-secondary"
             onClick={handleUploadPhoto}
             disabled={isCapturing}
           >

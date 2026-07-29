@@ -35,16 +35,16 @@
 
   &:hover,
   &:focus {
-    color: var(--cui-primary);
-    background-color: rgba(0, 126, 122, 0.06);
+    color: var(--vmecc-primary-on-soft);
+    background-color: var(--vmecc-primary-soft);
     outline: none;
   }
 
   &.active,
   &[data-active='true'],
   &[aria-current='page'] {
-    color: var(--cui-primary);
-    background-color: rgba(0, 126, 122, 0.1);
+    color: var(--vmecc-primary-on-soft);
+    background-color: var(--vmecc-primary-soft);
   }
 
   // Strip dropdown toggle's own nav-link padding so it fits the slot

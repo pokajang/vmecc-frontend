@@ -5,17 +5,7 @@ import StatusPill from 'src/views/team/components/StatusPill'
 import { resolveImageUrl } from 'src/views/team/components/teamImageUtils'
 import TableLoader from 'src/components/TableLoader'
 import { exportWorkbook } from 'src/utils/exportXlsx'
-
-const AVATAR_COLORS = {
-  a: { bg: '#eef2ff', text: '#4338ca' },
-  b: { bg: '#ecfdf5', text: '#059669' },
-  c: { bg: '#fffbeb', text: '#d97706' },
-  d: { bg: '#fff1f2', text: '#e11d48' },
-}
-const getAvatarColors = (name) => {
-  const key = (name || '').trim().toLowerCase().charAt(0)
-  return AVATAR_COLORS[key] || { bg: '#f1f5f9', text: '#475569' }
-}
+import { getAvatarColors } from 'src/utils/avatarColors'
 
 // ─── Team stat card ───────────────────────────────────────────────────────────
 

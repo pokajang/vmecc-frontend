@@ -52,7 +52,7 @@ const FireExtinguisherInspectionStatusInline = ({ row, defectCount = 0, workflow
     >
       <span
         className={`d-inline-flex align-items-center gap-1 ${
-          isComplete ? 'text-muted' : 'text-body-tertiary'
+          isComplete ? 'text-muted' : 'text-body-secondary'
         }`}
         aria-label={completionLabel}
         title={completionLabel}

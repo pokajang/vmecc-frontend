@@ -28,6 +28,22 @@ afterEach(() => {
 })
 
 describe('ActionConfirmModal', () => {
+  it('does not leave a layout wrapper when a mobile confirmation is initially closed', () => {
+    setMobileViewport()
+    const { container } = render(
+      <ActionConfirmModal
+        visible={false}
+        mobileDrawer
+        title="Delete Equipment"
+        message="Delete this equipment?"
+        onClose={vi.fn()}
+        onConfirm={vi.fn()}
+      />,
+    )
+
+    expect(container.firstChild).toBeNull()
+  })
+
   it('uses a mobile bottom drawer when requested on compact screens', () => {
     setMobileViewport()
     const onConfirm = vi.fn()

@@ -65,7 +65,7 @@ const RecordCard = ({ item = {}, className = '', variant = 'card' }) => {
         >
           <div className="record-card__main min-w-0 flex-grow-1" style={{ minWidth: 0 }}>
             {item.eyebrow ? (
-              <div className="record-card-eyebrow vmecc-caption text-body-tertiary mb-1">
+              <div className="record-card-eyebrow vmecc-caption text-body-secondary mb-1">
                 {item.eyebrow}
               </div>
             ) : null}

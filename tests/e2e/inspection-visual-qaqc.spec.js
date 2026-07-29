@@ -13,7 +13,7 @@ const json = (route, body) =>
   route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
 
 const installApiStubs = async (page) => {
-  await page.route('**:8000/api/**', (route) => {
+  await page.route('**/api/**', (route) => {
     const path = new URL(route.request().url()).pathname.replace(/^\/api/, '')
 
     if (path === '/auth/session') {
@@ -56,6 +56,61 @@ const expectNoHorizontalOverflow = async (locator) => {
       })),
   }))
   expect(metrics.scrollWidth, JSON.stringify(metrics)).toBeLessThanOrEqual(metrics.clientWidth + 1)
+}
+
+const measureControlContrast = (element, selector) => {
+  const parseColor = (value) => {
+    const channels = value.match(/[\d.]+/g)?.map(Number) || []
+    return {
+      red: channels[0] || 0,
+      green: channels[1] || 0,
+      blue: channels[2] || 0,
+      alpha: channels.length > 3 ? channels[3] : 1,
+    }
+  }
+  const blend = (foreground, background) => ({
+    red: foreground.red * foreground.alpha + background.red * (1 - foreground.alpha),
+    green: foreground.green * foreground.alpha + background.green * (1 - foreground.alpha),
+    blue: foreground.blue * foreground.alpha + background.blue * (1 - foreground.alpha),
+    alpha: 1,
+  })
+  const effectiveBackground = (node) => {
+    let current = node
+    let result = { red: 255, green: 255, blue: 255, alpha: 1 }
+    const layers = []
+    while (current) {
+      const color = parseColor(getComputedStyle(current).backgroundColor)
+      if (color.alpha > 0) layers.push(color)
+      if (color.alpha === 1) break
+      current = current.parentElement
+    }
+    for (const layer of layers.reverse()) result = blend(layer, result)
+    return result
+  }
+  const luminance = ({ red, green, blue }) =>
+    [red, green, blue]
+      .map((channel) => channel / 255)
+      .map((channel) => (channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4))
+      .reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0)
+  const ratio = (foreground, background) => {
+    const values = [luminance(foreground), luminance(background)].sort((a, b) => b - a)
+    return (values[0] + 0.05) / (values[1] + 0.05)
+  }
+
+  return [...element.querySelectorAll(selector)].map((control) => {
+    const style = getComputedStyle(control)
+    const background = effectiveBackground(control)
+    const parentBackground = effectiveBackground(control.parentElement)
+    return {
+      label: control.textContent.trim(),
+      checked: control.getAttribute('aria-checked'),
+      color: style.color,
+      backgroundColor: style.backgroundColor,
+      parentBackgroundColor: getComputedStyle(control.parentElement).backgroundColor,
+      text: ratio(parseColor(style.color), background),
+      border: ratio(parseColor(style.borderTopColor), parentBackground),
+    }
+  })
 }
 
 const cases = [
@@ -105,6 +160,22 @@ const cases = [
     height: 1024,
     viewport: 'desktop',
     state: 'missing-required',
+    type: 'health-safety-environment-inspection',
+  },
+  {
+    name: 'hse-missing-required-mobile',
+    width: 390,
+    height: 844,
+    viewport: 'mobile',
+    state: 'missing-required',
+    type: 'health-safety-environment-inspection',
+  },
+  {
+    name: 'hse-complete-mobile',
+    width: 390,
+    height: 844,
+    viewport: 'mobile',
+    state: 'complete-with-next-location',
     type: 'health-safety-environment-inspection',
   },
   {
@@ -195,7 +266,46 @@ test('inspection matrix remains legible and overflow-safe across representative 
       unlabeledFields: [],
     })
 
+    if (auditCase.type === 'health-safety-environment-inspection') {
+      const choiceContrast = await inspectionCase.evaluate(
+        measureControlContrast,
+        '.inspection-hse-choice-btn',
+      )
+      expect(choiceContrast).toHaveLength(2)
+      if (auditCase.state === 'missing-required') {
+        expect(choiceContrast.every(({ checked }) => checked === 'false')).toBe(true)
+      } else {
+        expect(choiceContrast.some(({ checked }) => checked === 'true')).toBe(true)
+        expect(choiceContrast.some(({ checked }) => checked === 'false')).toBe(true)
+      }
+      expect(
+        choiceContrast.filter(({ text }) => text < 4.5),
+        JSON.stringify(choiceContrast),
+      ).toEqual([])
+      expect(
+        choiceContrast.filter(({ border }) => border < 3),
+        JSON.stringify(choiceContrast),
+      ).toEqual([])
+    }
+
     if (auditCase.viewport === 'mobile') {
+      const fieldTypography = await inspectionCase.evaluate((element) => {
+        const style = getComputedStyle(element)
+        const remValue = (property) => Number.parseFloat(style.getPropertyValue(property))
+        return {
+          body: remValue('--vmecc-text-body'),
+          label: remValue('--vmecc-text-label'),
+          meta: remValue('--vmecc-text-meta'),
+          caption: remValue('--vmecc-text-caption'),
+        }
+      })
+      expect(fieldTypography).toEqual({
+        body: 1.0625,
+        label: 1,
+        meta: 0.9375,
+        caption: 0.8125,
+      })
+
       const actionTargets = inspectionCase.locator(
         '.inspection-form-actions .btn, .inspection-form-inline-actions .btn, .inspection-next-location-btn',
       )
@@ -247,6 +357,50 @@ test('inspection matrix remains legible and overflow-safe across representative 
       path: testInfo.outputPath(`${auditCase.name}.png`),
     })
   }
+
+  await page.evaluate(() => {
+    const fixture = document.createElement('div')
+    fixture.dataset.testid = 'outline-contrast-fixture'
+    fixture.style.cssText =
+      'position: fixed; inset: 1rem auto auto 1rem; display: flex; gap: 0.5rem; padding: 1rem; background: var(--cui-body-bg); z-index: 2000;'
+    fixture.innerHTML = ['light', 'primary', 'success', 'info', 'warning', 'danger']
+      .map(
+        (color) =>
+          `<button type="button" class="btn btn-outline-${color}">${color} action</button>`,
+      )
+      .join('')
+    fixture.querySelectorAll('.btn').forEach((button) => {
+      button.style.transition = 'none'
+    })
+    document.body.append(fixture)
+  })
+  const outlineFixture = page.getByTestId('outline-contrast-fixture')
+  const originalTheme = await page.evaluate(() =>
+    document.documentElement.getAttribute('data-coreui-theme'),
+  )
+  for (const theme of ['light', 'dark']) {
+    await page.evaluate(
+      (nextTheme) => document.documentElement.setAttribute('data-coreui-theme', nextTheme),
+      theme,
+    )
+    const contrasts = await outlineFixture.evaluate(measureControlContrast, '.btn')
+    expect(
+      contrasts.filter(({ text }) => text < 4.5),
+      `${theme}: ${JSON.stringify(contrasts)}`,
+    ).toEqual([])
+    expect(
+      contrasts.filter(({ border }) => border < 3),
+      `${theme}: ${JSON.stringify(contrasts)}`,
+    ).toEqual([])
+  }
+  await outlineFixture.evaluate((element) => element.remove())
+  await page.evaluate((theme) => {
+    if (theme === null) {
+      document.documentElement.removeAttribute('data-coreui-theme')
+      return
+    }
+    document.documentElement.setAttribute('data-coreui-theme', theme)
+  }, originalTheme)
 
   expect(pageErrors).toEqual([])
 })

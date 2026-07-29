@@ -26,7 +26,10 @@
   background: var(--cui-body-bg);
   color: var(--cui-body-color);
   cursor: pointer;
-  transition: border-color 120ms ease, background-color 120ms ease, box-shadow 120ms ease;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease,
+    box-shadow 120ms ease;
 }
 
 .fire-extinguisher-export-card:hover {
@@ -45,7 +48,9 @@
 
 .fire-extinguisher-export-card.is-disabled {
   cursor: not-allowed;
-  opacity: 0.65;
+  border-color: var(--cui-border-color);
+  background: var(--cui-secondary-bg);
+  color: var(--vmecc-fg-disabled);
 }
 
 .fire-extinguisher-export-card__check {

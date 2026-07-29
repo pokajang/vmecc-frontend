@@ -85,7 +85,7 @@ const RowActions = ({
                     key={item.key || item.label}
                     as="button"
                     type="button"
-                    className={`${disabled ? 'text-body-secondary opacity-75' : 'cursor-pointer'} ${
+                    className={`${disabled ? 'text-body-secondary' : 'cursor-pointer'} ${
                       item.className || ''
                     }`.trim()}
                     style={{

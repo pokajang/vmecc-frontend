@@ -3,7 +3,7 @@
 @include media-breakpoint-down(md) {
   .mobile-setup-summary {
     display: grid;
-    grid-template-columns: minmax(4.5rem, 5.25rem) minmax(0, 1fr) auto;
+    grid-template-columns: minmax(5.5rem, 6.25rem) minmax(0, 1fr) auto;
     align-items: center;
     width: 100%;
     min-width: 0;
@@ -40,7 +40,8 @@
     font-size: var(--vmecc-text-meta);
     font-weight: var(--vmecc-weight-medium);
     line-height: var(--vmecc-leading-compact);
-    overflow-wrap: anywhere;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .mobile-setup-summary__value {
@@ -154,7 +155,7 @@
 @media (max-width: 359.98px) {
   .mobile-setup-summary,
   .hse-mobile-observation-card {
-    grid-template-columns: minmax(4rem, 4.5rem) minmax(0, 1fr) auto;
+    grid-template-columns: minmax(5rem, 5.5rem) minmax(0, 1fr) auto;
     padding-left: 0.6rem;
     column-gap: 0.35rem;
   }

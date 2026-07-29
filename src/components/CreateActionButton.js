@@ -24,7 +24,7 @@ const CreateActionButton = ({
   const resolvedAriaLabel = ariaLabel || label || undefined
   const isPagePrimary = normalizedImportance === 'page-primary'
   const isSectionPrimary = normalizedImportance === 'section-primary'
-  const disabledClassName = disabled ? 'opacity-50' : ''
+  const disabledClassName = disabled ? 'create-action-button--disabled' : ''
   const importanceClassName = `create-action-button--${normalizedImportance}`
   const buttonClassName = isPagePrimary
     ? `create-action-button ${importanceClassName} d-inline-flex align-items-center px-3 ${disabledClassName} ${className}`.trim()

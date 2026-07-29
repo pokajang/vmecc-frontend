@@ -227,12 +227,10 @@
 
 .inspection-hse-choice-btn {
   min-height: 3.4rem;
-  border-color: var(--cui-border-color);
-  color: var(--cui-body-color);
 }
 
-.inspection-hse-choice-btn.btn-light {
-  background: var(--cui-body-bg);
+.inspection-hse-choice-btn__description {
+  color: inherit;
 }
 
 @media (max-width: 575.98px) {

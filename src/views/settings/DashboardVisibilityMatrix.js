@@ -279,6 +279,8 @@ const DashboardVisibilityMatrix = () => {
                 <CButton
                   color={viewMode === VIEW_MODE_ROLE ? 'primary' : 'light'}
                   variant={viewMode === VIEW_MODE_ROLE ? undefined : 'outline'}
+                  className="vmecc-choice-button"
+                  aria-pressed={viewMode === VIEW_MODE_ROLE}
                   onClick={() => setViewMode(VIEW_MODE_ROLE)}
                 >
                   Role editor
@@ -286,6 +288,8 @@ const DashboardVisibilityMatrix = () => {
                 <CButton
                   color={viewMode === VIEW_MODE_MATRIX ? 'primary' : 'light'}
                   variant={viewMode === VIEW_MODE_MATRIX ? undefined : 'outline'}
+                  className="vmecc-choice-button"
+                  aria-pressed={viewMode === VIEW_MODE_MATRIX}
                   onClick={() => setViewMode(VIEW_MODE_MATRIX)}
                 >
                   Matrix

@@ -31,6 +31,7 @@ const SalaryAssignmentStepNav = ({ activeStep, setActiveStep, stepState, steps }
           type="button"
           color={isActive ? 'primary' : state.complete ? 'success' : 'light'}
           variant={isActive ? undefined : 'outline'}
+          className="vmecc-choice-button"
           disabled={!state.available}
           aria-current={isActive ? 'step' : undefined}
           onClick={() => setActiveStep(step.key)}

@@ -295,6 +295,24 @@ const InspectionUxMatrixPage = () => {
         <div className="inspection-ux-matrix-grid">
           {visibleEntries.map(({ definition, state }) => {
             const { props, expectation } = buildInspectionBodyCase(definition, state)
+            const isHse = definition.key === 'health-safety-environment-inspection'
+            const previewForm =
+              isHse && state === 'missing-required'
+                ? {
+                    ...props.form,
+                    hseSelections: [],
+                    hseUnsafeActDetails: '',
+                    hseUnsafeConditionDetails: '',
+                  }
+                : props.form
+            const previewProps = isHse
+              ? {
+                  ...props,
+                  form: previewForm,
+                  structuredDisplayForm: previewForm,
+                  StructuredEditSection: definition.EditSection,
+                }
+              : props
             return (
               <CCard
                 key={`${definition.key}:${state}:${viewport}`}
@@ -322,7 +340,7 @@ const InspectionUxMatrixPage = () => {
                 </div>
                 <div className="inspection-ux-matrix-preview">
                   <div className="inspection-ux-matrix-preview-shell" data-viewport={viewport}>
-                    <InspectionFormBodySections {...props} />
+                    <InspectionFormBodySections {...previewProps} />
                   </div>
                 </div>
               </CCard>

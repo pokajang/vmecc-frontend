@@ -90,6 +90,8 @@ const ChatList = ({
               size="sm"
               color={quickFilter === filter.key ? 'primary' : 'light'}
               variant={quickFilter === filter.key ? undefined : 'outline'}
+              className="vmecc-choice-button"
+              aria-pressed={quickFilter === filter.key}
               onClick={() => setQuickFilter(filter.key)}
             >
               {filter.label}

@@ -36,22 +36,21 @@ const ActionConfirmModal = ({
 
   if (mobileDrawer && useMobileDrawer) {
     return (
-      <div {...(testId ? { 'data-testid': testId } : {})}>
-        <MobileBottomDrawer
-          visible={visible}
-          title={title}
-          className="mobile-bottom-drawer--confirm"
-          onClose={handleClose}
-          closeDisabled={cancelDisabled}
-        >
-          <div className="inspection-mobile-detail-drawer-body inspection-equipment-detail-drawer-body d-grid">
-            <div>{message}</div>
-          </div>
-          <div className="mobile-bottom-drawer__footer d-flex align-items-center justify-content-end gap-2">
-            {actions}
-          </div>
-        </MobileBottomDrawer>
-      </div>
+      <MobileBottomDrawer
+        visible={visible}
+        title={title}
+        className="mobile-bottom-drawer--confirm"
+        onClose={handleClose}
+        closeDisabled={cancelDisabled}
+        {...(testId ? { 'data-testid': testId } : {})}
+      >
+        <div className="inspection-mobile-detail-drawer-body inspection-equipment-detail-drawer-body d-grid">
+          <div>{message}</div>
+        </div>
+        <div className="mobile-bottom-drawer__footer d-flex align-items-center justify-content-end gap-2">
+          {actions}
+        </div>
+      </MobileBottomDrawer>
     )
   }
 

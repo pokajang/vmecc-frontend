@@ -48,14 +48,14 @@
   }
 
   &:focus-visible {
-    outline: 3px solid color-mix(in srgb, var(--cui-primary) 28%, transparent);
-    outline-offset: 2px;
+    outline: 0;
+    box-shadow: var(--vmecc-focus-ring);
   }
 
   &:disabled {
-    color: var(--cui-secondary-color);
+    color: var(--vmecc-fg-disabled);
     cursor: default;
-    opacity: 0.62;
+    opacity: 1;
   }
 }
 
@@ -85,8 +85,8 @@
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid rgba(220, 38, 38, 0.2);
-  background: #fff7f7;
+  border-bottom: 1px solid var(--vmecc-status-danger-text);
+  background: var(--vmecc-status-danger-bg);
 }
 
 .notification-drawer-inline-confirm__copy {
@@ -95,15 +95,15 @@
   flex-direction: column;
   gap: 0.1rem;
   font-size: var(--vmecc-text-meta);
-  color: #7f1d1d;
+  color: var(--vmecc-status-danger-text);
 
   strong {
     font-size: var(--vmecc-text-body);
-    color: #991b1b;
+    color: var(--vmecc-status-danger-text);
   }
 
   span {
-    color: #9f3a3a;
+    color: var(--vmecc-status-danger-text);
   }
 }
 
@@ -115,25 +115,27 @@
 }
 
 .notification-drawer-inline-confirm__btn {
-  border: 1px solid rgba(15, 23, 42, 0.18);
+  border: 1px solid var(--cui-border-color);
   border-radius: 0.35rem;
   background: var(--cui-body-bg);
-  color: #334155;
+  color: var(--vmecc-fg-default);
   font-size: var(--vmecc-text-meta);
   font-weight: var(--vmecc-weight-semibold);
   line-height: var(--vmecc-leading-compact);
   padding: 0.38rem 0.55rem;
 
   &:disabled {
-    opacity: 0.65;
+    color: var(--vmecc-fg-disabled);
+    background: var(--cui-secondary-bg);
+    opacity: 1;
     cursor: not-allowed;
   }
 }
 
 .notification-drawer-inline-confirm__btn--danger {
-  border-color: #dc2626;
-  background: #dc2626;
-  color: #ffffff;
+  border-color: var(--vmecc-status-danger-solid);
+  background: var(--vmecc-status-danger-solid);
+  color: #fff;
 }
 
 @media (max-width: 430px) {
@@ -160,8 +162,8 @@
   font-weight: var(--vmecc-weight-bold);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #6c757d;
-  background: #f8f9fa;
+  color: var(--vmecc-fg-default);
+  background: var(--cui-tertiary-bg);
   border-bottom: 1px solid var(--cui-border-color);
 }
 
@@ -182,8 +184,8 @@
   font-size: var(--vmecc-text-meta);
   font-weight: var(--vmecc-weight-bold);
   text-transform: uppercase;
-  color: #495057;
-  background: #f8f9fa;
+  color: var(--vmecc-fg-default);
+  background: var(--cui-tertiary-bg);
   border-bottom: 1px solid var(--cui-border-color);
 }
 
@@ -195,8 +197,8 @@
   min-height: 1.5rem;
   padding: 0 0.4rem;
   border-radius: 999px;
-  color: #0f172a;
-  background: #e9ecef;
+  color: var(--vmecc-fg-strong);
+  background: var(--cui-secondary-bg);
 }
 
 // Single notification row
@@ -216,7 +218,7 @@
   }
 
   &.unread {
-    background: #f0fafa;
+    background: var(--vmecc-primary-soft);
 
     &:hover {
       background: rgba(0, 126, 122, 0.08);
@@ -281,9 +283,9 @@
   font-weight: var(--vmecc-weight-bold);
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #92400e;
-  background: #fef3c7;
-  border: 1px solid #fde68a;
+  color: var(--vmecc-status-warning-text);
+  background: var(--vmecc-status-draft-bg);
+  border: 1px solid currentColor;
   border-radius: 4px;
   padding: 1px 6px;
   line-height: 1.6;
@@ -308,19 +310,19 @@
   padding: 0 0.5rem;
 
   &:hover {
-    color: var(--cui-primary);
+    color: var(--vmecc-primary-on-soft);
   }
 
   &:focus-visible {
     opacity: 1;
-    outline: 2px solid var(--cui-primary);
+    outline: 2px solid var(--vmecc-focus-indicator);
     outline-offset: -2px;
     border-radius: 3px;
   }
 
   &--delete:hover,
   &--delete:focus-visible {
-    color: #dc3545;
+    color: var(--vmecc-status-danger-text);
   }
 
   @media (pointer: coarse) {
@@ -329,7 +331,7 @@
 }
 
 .notification-drawer-action-btn--danger {
-  color: #dc3545 !important;
+  color: var(--vmecc-status-danger-text) !important;
 
   &:disabled {
     color: var(--cui-secondary-color) !important;
@@ -388,7 +390,7 @@
       font-size: var(--vmecc-text-meta);
       font-weight: var(--vmecc-weight-bold);
       letter-spacing: 0.03em;
-      color: #475569;
+      color: var(--vmecc-fg-default);
       border-bottom: 0;
       background: transparent;
     }
@@ -412,7 +414,7 @@
     }
 
     .notification-item.unread {
-      background: #f0fafa;
+      background: var(--vmecc-primary-soft);
     }
 
     .notification-item-main {

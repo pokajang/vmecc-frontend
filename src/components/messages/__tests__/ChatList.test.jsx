@@ -58,7 +58,11 @@ describe('ChatList', () => {
     expect(screen.getByText('Asha')).toBeTruthy()
     expect(screen.getByText('Ben')).toBeTruthy()
 
-    fireEvent.click(screen.getByText('Unread'))
+    const unreadFilter = screen.getByRole('button', { name: 'Unread' })
+    expect(unreadFilter.classList.contains('vmecc-choice-button')).toBe(true)
+    expect(unreadFilter.getAttribute('aria-pressed')).toBe('false')
+    fireEvent.click(unreadFilter)
+    expect(unreadFilter.getAttribute('aria-pressed')).toBe('true')
     expect(screen.getByText('Asha')).toBeTruthy()
     expect(screen.queryByText('Ben')).toBeNull()
 
