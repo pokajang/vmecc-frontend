@@ -284,6 +284,9 @@ const formatDateTime = (value) => {
 }
 
 const getReportCount = (row = {}) => Number(row.reportCount ?? row.duplicateCount ?? 0) || 0
+const getBarcodeDuplicateCount = (row = {}) =>
+  Number(row.barcodeDuplicateCount ?? row.locatorDuplicateCount ?? 0) || 0
+const getIdLocNoDuplicateCount = (row = {}) => Number(row.idLocNoDuplicateCount ?? 0) || 0
 
 const getOpenIssueCount = (row = {}) =>
   Number(row.openIssueCount ?? row.open_issue_count ?? row.issueCount ?? 0) || 0
@@ -425,7 +428,10 @@ const filterRows = ({
     ) {
       return false
     }
-    if (duplicateScope === 'locator' && Number(row.locatorDuplicateCount || 0) <= 1) {
+    if (duplicateScope === 'locator' && getBarcodeDuplicateCount(row) <= 1) {
+      return false
+    }
+    if (duplicateScope === 'id-loc' && getIdLocNoDuplicateCount(row) <= 1) {
       return false
     }
     return true
@@ -447,9 +453,10 @@ const sortRows = (rows, sort) => {
     return next.sort((a, b) => getReportCount(b) - getReportCount(a))
   }
   if (sort === 'locator-duplicates') {
-    return next.sort(
-      (a, b) => Number(b.locatorDuplicateCount || 0) - Number(a.locatorDuplicateCount || 0),
-    )
+    return next.sort((a, b) => getBarcodeDuplicateCount(b) - getBarcodeDuplicateCount(a))
+  }
+  if (sort === 'id-loc-duplicates') {
+    return next.sort((a, b) => getIdLocNoDuplicateCount(b) - getIdLocNoDuplicateCount(a))
   }
   return next.sort((a, b) => {
     const zoneDiff = getZoneSortValue(a.zone) - getZoneSortValue(b.zone)
@@ -468,7 +475,8 @@ const getSummary = (rows) => ({
   notInspected: rows.filter((row) => !row.latestInspectionAt).length,
   issues: rows.filter((row) => getOpenIssueCount(row) > 0).length,
   duplicates: rows.filter((row) => getReportCount(row) > 1).length,
-  locatorDuplicates: rows.filter((row) => Number(row.locatorDuplicateCount || 0) > 1).length,
+  barcodeDuplicates: rows.filter((row) => getBarcodeDuplicateCount(row) > 1).length,
+  idLocNoDuplicates: rows.filter((row) => getIdLocNoDuplicateCount(row) > 1).length,
   expired: rows.filter((row) => getCertificationStatus(row) === 'expired').length,
 })
 
@@ -2333,7 +2341,8 @@ const AllExtinguishersSection = ({
               { value: 'days-left', label: 'Days left' },
               { value: 'issues', label: 'Issues first' },
               { value: 'duplicates', label: 'Reports first' },
-              { value: 'locator-duplicates', label: 'Duplicate S/N first' },
+              { value: 'locator-duplicates', label: 'Duplicate barcode first' },
+              { value: 'id-loc-duplicates', label: 'Duplicate ID Loc No. first' },
             ],
           },
           {
@@ -2609,8 +2618,8 @@ const AllExtinguishersSection = ({
         isActive={monthlyComplianceFilter === 'repeat_check'}
       />
       <SummaryItem
-        label="Duplicate S/N"
-        value={summary.locatorDuplicates}
+        label="Duplicate barcode"
+        value={summary.barcodeDuplicates ?? summary.locatorDuplicates ?? 0}
         tone="warning"
         onClick={() => {
           const nextScope = duplicateScope === 'locator' ? 'all' : 'locator'
@@ -2621,6 +2630,20 @@ const AllExtinguishersSection = ({
           }
         }}
         isActive={duplicateScope === 'locator'}
+      />
+      <SummaryItem
+        label="Duplicate ID Loc No."
+        value={summary.idLocNoDuplicates ?? 0}
+        tone="warning"
+        onClick={() => {
+          const nextScope = duplicateScope === 'id-loc' ? 'all' : 'id-loc'
+          resetToFirstPage()
+          setDuplicateScope(nextScope)
+          if (nextScope === 'id-loc') {
+            setSort('id-loc-duplicates')
+          }
+        }}
+        isActive={duplicateScope === 'id-loc'}
       />
       <SummaryItem
         label="Expired"

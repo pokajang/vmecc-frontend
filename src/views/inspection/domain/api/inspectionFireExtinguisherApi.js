@@ -403,8 +403,24 @@ const normalizeCoverageRow = (row = {}) => {
     issueCount: Number(row.issueCount ?? row.issue_count ?? 0) || 0,
     evidenceCount: Number(row.evidenceCount ?? row.evidence_count ?? 0) || 0,
     reportCount,
+    barcodeDuplicateCount:
+      Number(
+        row.barcodeDuplicateCount ??
+          row.barcode_duplicate_count ??
+          row.locatorDuplicateCount ??
+          row.locator_duplicate_count ??
+          0,
+      ) || 0,
     locatorDuplicateCount:
-      Number(row.locatorDuplicateCount ?? row.locator_duplicate_count ?? 0) || 0,
+      Number(
+        row.barcodeDuplicateCount ??
+          row.barcode_duplicate_count ??
+          row.locatorDuplicateCount ??
+          row.locator_duplicate_count ??
+          0,
+      ) || 0,
+    idLocNoDuplicateCount:
+      Number(row.idLocNoDuplicateCount ?? row.id_loc_no_duplicate_count ?? 0) || 0,
     repeatCount: Number(row.repeatCount ?? row.repeat_count ?? Math.max(0, reportCount - 1)) || 0,
     duplicateCount: reportCount,
     latestReportId: String(row.latestReportId || row.latest_report_id || ''),

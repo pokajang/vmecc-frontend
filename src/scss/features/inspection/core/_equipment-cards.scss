@@ -124,6 +124,21 @@
   min-width: 0;
 }
 
+.fire-extinguisher-location-field__add {
+  min-height: 1.75rem;
+  font-size: var(--vmecc-text-caption);
+  text-decoration: none;
+}
+
+.fire-extinguisher-location-create-panel {
+  display: grid;
+  gap: 0.85rem;
+  padding: 0.85rem;
+  border: 1px solid var(--cui-border-color);
+  border-radius: var(--cui-border-radius-lg);
+  background: var(--cui-tertiary-bg);
+}
+
 .fire-extinguisher-draft-form,
 .fire-extinguisher-staged-card {
   border: 1px solid var(--cui-border-color);

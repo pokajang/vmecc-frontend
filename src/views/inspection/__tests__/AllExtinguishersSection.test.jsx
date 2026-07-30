@@ -164,6 +164,14 @@ const selectStandardLocation = async (container) => {
 }
 
 describe('AllExtinguishersSection', () => {
+  it('shows separate barcode and ID location duplicate statistics', () => {
+    render(<AllExtinguishersSection rows={ALL_EXTINGUISHERS_DEMO_ROWS} />)
+
+    expect(screen.getAllByRole('button', { name: /Duplicate barcode/i })).toHaveLength(2)
+    expect(screen.getAllByRole('button', { name: /Duplicate ID Loc No\./i })).toHaveLength(2)
+    expect(screen.queryByText('Duplicate S/N')).toBeNull()
+  })
+
   it('keeps the explicit add action inside the catalogue container and opens the drawer', () => {
     const onRequestCreate = vi.fn()
 
@@ -433,6 +441,82 @@ describe('AllExtinguishersSection', () => {
     expect(within(drawer).getAllByText('Zone 1').length).toBeGreaterThan(0)
     expect(within(drawer).getAllByText('Canteen').length).toBeGreaterThan(0)
     expect(within(drawer).getAllByText('Dry Store').length).toBeGreaterThan(0)
+  })
+
+  it('provides explicit creation actions for all three location levels', async () => {
+    render(
+      <AllExtinguishersSection
+        rows={ALL_EXTINGUISHERS_DEMO_ROWS}
+        isCreateOpen
+        onRequestCreate={vi.fn()}
+        onRequestCloseCreate={vi.fn()}
+      />,
+    )
+
+    const drawer = screen.getByRole('dialog', { name: 'Add Fire Extinguisher' })
+    await waitFor(() => expect(fetchSiteLocationHierarchy).toHaveBeenCalledOnce())
+
+    expect(within(drawer).getByRole('button', { name: 'Add new main location' }).disabled).toBe(
+      true,
+    )
+    expect(within(drawer).getByRole('button', { name: 'Add new sub-location' }).disabled).toBe(true)
+
+    fireEvent.click(within(drawer).getByRole('button', { name: 'Add new zone' }))
+    fireEvent.change(within(drawer).getByLabelText('Zone name'), {
+      target: { value: 'Zone 7' },
+    })
+    fireEvent.click(within(drawer).getByRole('button', { name: 'Add zone' }))
+
+    await waitFor(() =>
+      expect(createSiteLocationNode).toHaveBeenNthCalledWith(1, {
+        level: 'zone',
+        parentId: null,
+        name: 'Zone 7',
+      }),
+    )
+    await waitFor(() =>
+      expect(within(drawer).getByRole('button', { name: 'Add new main location' }).disabled).toBe(
+        false,
+      ),
+    )
+
+    fireEvent.click(within(drawer).getByRole('button', { name: 'Add new main location' }))
+    expect(within(drawer).getByText(/^Under Zone 7\./)).toBeTruthy()
+    fireEvent.change(within(drawer).getByLabelText('Main location name'), {
+      target: { value: 'Tank Farm' },
+    })
+    fireEvent.click(within(drawer).getByRole('button', { name: 'Add main location' }))
+
+    await waitFor(() =>
+      expect(createSiteLocationNode).toHaveBeenNthCalledWith(2, {
+        level: 'area',
+        parentId: 'new-zone-Zone 7',
+        name: 'Tank Farm',
+      }),
+    )
+    await waitFor(() =>
+      expect(within(drawer).getByRole('button', { name: 'Add new sub-location' }).disabled).toBe(
+        false,
+      ),
+    )
+
+    fireEvent.click(within(drawer).getByRole('button', { name: 'Add new sub-location' }))
+    expect(within(drawer).getByText(/^Under Tank Farm\./)).toBeTruthy()
+    fireEvent.change(within(drawer).getByLabelText('Sub-location name'), {
+      target: { value: 'Pump Room' },
+    })
+    fireEvent.click(within(drawer).getByRole('button', { name: 'Add sub-location' }))
+
+    await waitFor(() =>
+      expect(createSiteLocationNode).toHaveBeenNthCalledWith(3, {
+        level: 'location',
+        parentId: 'new-area-Tank Farm',
+        name: 'Pump Room',
+      }),
+    )
+    expect(
+      await within(drawer).findByText('Sub-location "Pump Room" was added and selected.'),
+    ).toBeTruthy()
   })
 
   it('requires explicit confirmation before creating a duplicate locator', async () => {

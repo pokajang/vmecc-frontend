@@ -1,99 +1,13 @@
-import React, { useMemo, useState } from 'react'
-import { CButton, CFormInput, CFormLabel } from '@coreui/react'
-import CreatableSelect from 'react-select/creatable'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { CButton } from '@coreui/react'
 
 import { resolveSiteLocation } from '../domain/locations/siteLocationHierarchy'
+import FireExtinguisherLocationCreatePanel from './FireExtinguisherLocationCreatePanel'
+import FireExtinguisherLocationSelect from './FireExtinguisherLocationSelect'
 
 const text = (value) => String(value || '').trim()
 const toOptions = (rows = []) =>
   rows.map((row) => ({ value: row.name, label: row.displayName || row.name, node: row }))
-
-const selectStyles = {
-  control: (base, state) => ({
-    ...base,
-    minHeight: '31px',
-    borderColor: state.isFocused ? 'var(--cui-primary)' : 'var(--cui-border-color)',
-    boxShadow: state.isFocused ? '0 0 0 0.16rem rgba(0, 126, 122, 0.12)' : 'none',
-    '&:hover': { borderColor: state.isFocused ? 'var(--cui-primary)' : 'var(--cui-border-color)' },
-  }),
-  valueContainer: (base) => ({ ...base, padding: '0 0.55rem' }),
-  input: (base) => ({ ...base, margin: 0, padding: 0 }),
-  indicatorsContainer: (base) => ({ ...base, minHeight: '29px' }),
-  menuPortal: (base) => ({ ...base, zIndex: 1100 }),
-}
-
-const LocationSelect = ({
-  id,
-  step,
-  label,
-  value,
-  options,
-  placeholder,
-  createLabel,
-  emptyMessage = 'No registered location found',
-  isLoading,
-  isDisabled = false,
-  onChange,
-  onCreate,
-}) => {
-  const [inputValue, setInputValue] = useState('')
-  const selected =
-    options.find(
-      (option) =>
-        option.node?.id === value?.id ||
-        (!value?.id && text(option.node?.name).toLowerCase() === text(value?.name).toLowerCase()),
-    ) || null
-
-  const create = async (name) => {
-    try {
-      await onCreate(name)
-      setInputValue('')
-    } catch {
-      setInputValue(name)
-    }
-  }
-
-  return (
-    <div className="fire-extinguisher-location-field">
-      <div className="d-flex align-items-center gap-1 mb-1">
-        <span aria-hidden="true" className="small text-body-secondary">
-          {step}.
-        </span>
-        <CFormLabel htmlFor={id} className="mb-0">
-          {label}
-        </CFormLabel>
-      </div>
-      {isDisabled ? (
-        <CFormInput id={id} size="sm" disabled placeholder={placeholder} aria-label={label} />
-      ) : (
-        <CreatableSelect
-          inputId={id}
-          classNamePrefix="fire-extinguisher-location-select"
-          value={selected}
-          inputValue={inputValue}
-          options={options}
-          isSearchable
-          isClearable
-          isLoading={isLoading}
-          placeholder={placeholder}
-          formatCreateLabel={(input) => createLabel(input)}
-          noOptionsMessage={() => emptyMessage}
-          onInputChange={(next, action) => {
-            if (action.action === 'input-change') setInputValue(next)
-          }}
-          onChange={(option) => {
-            setInputValue('')
-            onChange(option?.node || null)
-          }}
-          onCreateOption={create}
-          menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
-          menuPosition="fixed"
-          styles={selectStyles}
-        />
-      )}
-    </div>
-  )
-}
 
 const FireExtinguisherSharedLocationFields = ({
   value,
@@ -110,6 +24,10 @@ const FireExtinguisherSharedLocationFields = ({
 }) => {
   const [mutationLevel, setMutationLevel] = useState('')
   const [mutationError, setMutationError] = useState('')
+  const [creationLevel, setCreationLevel] = useState('')
+  const [creationName, setCreationName] = useState('')
+  const [creationStatus, setCreationStatus] = useState('')
+  const creationInputRef = useRef(null)
   const selectedZone = useMemo(
     () => resolveSiteLocation(hierarchy, value.zoneId || value.zone, 'zone'),
     [hierarchy, value.zone, value.zoneId],
@@ -132,8 +50,43 @@ const FireExtinguisherSharedLocationFields = ({
       ),
     [selectedArea, value.subLocation, value.subLocationId],
   )
+  const creationConfig = useMemo(() => {
+    if (creationLevel === 'zone') {
+      return {
+        title: 'Add new zone',
+        inputLabel: 'Zone name',
+        submitLabel: 'Add zone',
+        context: '',
+      }
+    }
+    if (creationLevel === 'area') {
+      return {
+        title: 'Add new main location',
+        inputLabel: 'Main location name',
+        submitLabel: 'Add main location',
+        context: selectedZone ? `Under ${selectedZone.displayName || selectedZone.name}` : '',
+      }
+    }
+    if (creationLevel === 'location') {
+      return {
+        title: 'Add new sub-location',
+        inputLabel: 'Sub-location name',
+        submitLabel: 'Add sub-location',
+        context: selectedArea ? `Under ${selectedArea.displayName || selectedArea.name}` : '',
+      }
+    }
+    return null
+  }, [creationLevel, selectedArea, selectedZone])
 
-  const change = (zone, area, location) =>
+  useEffect(() => {
+    if (creationConfig) creationInputRef.current?.focus()
+  }, [creationConfig])
+
+  const change = (zone, area, location) => {
+    setCreationLevel('')
+    setCreationName('')
+    setCreationStatus('')
+    setMutationError('')
     onChange({
       zone: zone?.name || '',
       zoneId: zone?.id || '',
@@ -142,6 +95,7 @@ const FireExtinguisherSharedLocationFields = ({
       subLocation: location?.name || '',
       subLocationId: location?.id || '',
     })
+  }
 
   const create = async (level, name, action) => {
     setMutationLevel(level)
@@ -152,11 +106,54 @@ const FireExtinguisherSharedLocationFields = ({
       if (level === 'zone') change(node, null, null)
       if (level === 'area') change(selectedZone, node, null)
       if (level === 'location') change(selectedZone, selectedArea, node)
+      return result
     } catch (creationError) {
       setMutationError(creationError?.message || `Unable to add this ${level}.`)
       throw creationError
     } finally {
       setMutationLevel('')
+    }
+  }
+
+  const openCreation = (level) => {
+    setCreationLevel(level)
+    setCreationName('')
+    setMutationError('')
+    setCreationStatus('')
+  }
+
+  const cancelCreation = () => {
+    if (mutationLevel) return
+    setCreationLevel('')
+    setCreationName('')
+    setMutationError('')
+  }
+
+  const submitCreation = async (event) => {
+    event.preventDefault()
+    const name = text(creationName)
+    if (!creationConfig || !name || mutationLevel) return
+
+    const level = creationLevel
+    const action =
+      level === 'zone'
+        ? createZone
+        : level === 'area'
+          ? (payload) => createArea(selectedZone.id, payload)
+          : (payload) => createLocation(selectedArea.id, payload)
+
+    try {
+      const result = await create(level, name, action)
+      const label = level === 'zone' ? 'Zone' : level === 'area' ? 'Main location' : 'Sub-location'
+      setCreationStatus(
+        result.created === false
+          ? `${label} "${name}" already existed and was selected.`
+          : `${label} "${name}" was added and selected.`,
+      )
+      setCreationLevel('')
+      setCreationName('')
+    } catch {
+      creationInputRef.current?.focus()
     }
   }
 
@@ -169,7 +166,7 @@ const FireExtinguisherSharedLocationFields = ({
         Select in order: Zone, then Main Location, then Sub-location.
       </div>
       <div className="fire-extinguisher-drawer-location-grid">
-        <LocationSelect
+        <FireExtinguisherLocationSelect
           id="fire-extinguisher-zone"
           step={1}
           label="Zone"
@@ -180,15 +177,19 @@ const FireExtinguisherSharedLocationFields = ({
           isLoading={isLoading || mutationLevel === 'zone'}
           onChange={(zone) => change(zone, null, null)}
           onCreate={(name) => create('zone', name, createZone)}
+          onAdd={() => openCreation('zone')}
+          addAriaLabel="Add new zone"
         />
-        <LocationSelect
+        <FireExtinguisherLocationSelect
           id="fire-extinguisher-main-location"
           step={2}
           label="Main Location"
           value={selectedArea}
           options={toOptions(selectedZone?.children)}
           placeholder={selectedZone ? 'Search or enter main location' : 'Select a zone first'}
-          createLabel={(input) => `+ Add new area "${input}" under ${selectedZone?.displayName}`}
+          createLabel={(input) =>
+            `+ Add new main location "${input}" under ${selectedZone?.displayName}`
+          }
           emptyMessage={selectedZone ? 'No registered main location found' : 'Select a zone first'}
           isLoading={isLoading || mutationLevel === 'area'}
           isDisabled={!selectedZone}
@@ -196,8 +197,10 @@ const FireExtinguisherSharedLocationFields = ({
           onCreate={(name) =>
             create('area', name, (payload) => createArea(selectedZone.id, payload))
           }
+          onAdd={() => openCreation('area')}
+          addAriaLabel="Add new main location"
         />
-        <LocationSelect
+        <FireExtinguisherLocationSelect
           id="fire-extinguisher-sub-location"
           step={3}
           label="Sub-location"
@@ -207,7 +210,7 @@ const FireExtinguisherSharedLocationFields = ({
             selectedArea ? 'Search or enter sub-location' : 'Select a main location first'
           }
           createLabel={(input) =>
-            `+ Add new location "${input}" under ${selectedArea?.displayName}`
+            `+ Add new sub-location "${input}" under ${selectedArea?.displayName}`
           }
           emptyMessage={
             selectedArea ? 'No registered sub-location found' : 'Select a main location first'
@@ -218,8 +221,25 @@ const FireExtinguisherSharedLocationFields = ({
           onCreate={(name) =>
             create('location', name, (payload) => createLocation(selectedArea.id, payload))
           }
+          onAdd={() => openCreation('location')}
+          addAriaLabel="Add new sub-location"
         />
       </div>
+      {creationConfig ? (
+        <FireExtinguisherLocationCreatePanel
+          config={creationConfig}
+          name={creationName}
+          error={mutationError}
+          isSubmitting={Boolean(mutationLevel)}
+          inputRef={creationInputRef}
+          onNameChange={(name) => {
+            setCreationName(name)
+            setMutationError('')
+          }}
+          onCancel={cancelCreation}
+          onSubmit={submitCreation}
+        />
+      ) : null}
       <div className="small text-body-secondary">
         {stagedCount > 0
           ? `Changing this location will update all ${stagedCount} staged ${stagedCount === 1 ? 'extinguisher' : 'extinguishers'}.`
@@ -235,7 +255,16 @@ const FireExtinguisherSharedLocationFields = ({
           ) : null}
         </div>
       ) : null}
-      {mutationError ? <div className="small text-danger">{mutationError}</div> : null}
+      {creationStatus ? (
+        <div className="small text-success" role="status">
+          {creationStatus}
+        </div>
+      ) : null}
+      {!creationConfig && mutationError ? (
+        <div className="small text-danger" role="alert">
+          {mutationError}
+        </div>
+      ) : null}
       {error ? <div className="small text-danger">{error}</div> : null}
     </section>
   )
