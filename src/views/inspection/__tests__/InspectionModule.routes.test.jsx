@@ -234,13 +234,15 @@ vi.mock('../app/InspectionMobileHome', () => ({
       <button type="button" onClick={onViewRecords}>
         View records
       </button>
-      <button
-        type="button"
-        data-testid="inspection-all-extinguishers"
-        onClick={onViewExtinguishers}
-      >
-        Open extinguisher catalogue
-      </button>
+      {onViewExtinguishers ? (
+        <button
+          type="button"
+          data-testid="inspection-all-extinguishers"
+          onClick={onViewExtinguishers}
+        >
+          Open extinguisher catalogue
+        </button>
+      ) : null}
     </section>
   ),
 }))
@@ -709,16 +711,12 @@ describe('InspectionModule route family', () => {
     )
   })
 
-  it('exposes the extinguisher catalogue from the mobile inspection home', async () => {
+  it('keeps the extinguisher catalogue out of the focused mobile inspection home', () => {
     setViewportWidth(390)
     renderModule('/inspection')
 
-    fireEvent.click(screen.getByTestId('inspection-all-extinguishers'))
-
-    await waitFor(() =>
-      expect(screen.getByTestId('location-path').textContent).toBe('/inspection/all-extinguishers'),
-    )
-    expect(screen.getByTestId('all-extinguishers-section-mobile')).toBeTruthy()
+    expect(screen.queryByTestId('inspection-all-extinguishers')).toBeNull()
+    expect(screen.getByTestId('location-path').textContent).toBe('/inspection')
   })
 
   it.each(['/inspection/all-extinguishers', '/inspection/all-extinguishers/new'])(

@@ -51,7 +51,13 @@ const toBlockedReason = (...values) => {
   return ''
 }
 
-const toActionCapability = (value, fallbackEnabled = true, fallbackBlockedReason = '') => {
+const UNKNOWN_CAPABILITY_REASON = 'Action unavailable until permissions are confirmed.'
+
+const toActionCapability = (
+  value,
+  fallbackEnabled = false,
+  fallbackBlockedReason = UNKNOWN_CAPABILITY_REASON,
+) => {
   if (value && typeof value === 'object' && !Array.isArray(value)) {
     const enabled =
       value.enabled === undefined || value.enabled === null
@@ -105,19 +111,31 @@ const resolveRowActionPermissions = (row = {}) => {
   )
 
   return {
-    edit: toActionCapability(source.edit, true, editFallbackReason),
-    cancel: toActionCapability(source.cancel, true, cancelFallbackReason),
-    delete: toActionCapability(source.delete, true, deleteFallbackReason),
-    downloadAttachment: toActionCapability(
-      source.downloadAttachment || source.download_attachment || source.download,
-      true,
-      downloadFallbackReason,
+    edit: toActionCapability(source.edit, false, editFallbackReason || UNKNOWN_CAPABILITY_REASON),
+    cancel: toActionCapability(
+      source.cancel,
+      false,
+      cancelFallbackReason || UNKNOWN_CAPABILITY_REASON,
     ),
-    markPaid: toActionCapability(source.markPaid || source.mark_paid, true, markPaidFallbackReason),
+    delete: toActionCapability(
+      source.delete,
+      false,
+      deleteFallbackReason || UNKNOWN_CAPABILITY_REASON,
+    ),
+    downloadAttachment: toActionCapability(
+      source.downloadAttachment ?? source.download_attachment ?? source.download,
+      false,
+      downloadFallbackReason || UNKNOWN_CAPABILITY_REASON,
+    ),
+    markPaid: toActionCapability(
+      source.markPaid ?? source.mark_paid,
+      false,
+      markPaidFallbackReason || UNKNOWN_CAPABILITY_REASON,
+    ),
     unmarkPaid: toActionCapability(
-      source.unmarkPaid || source.unmark_paid,
-      true,
-      unmarkPaidFallbackReason,
+      source.unmarkPaid ?? source.unmark_paid,
+      false,
+      unmarkPaidFallbackReason || UNKNOWN_CAPABILITY_REASON,
     ),
   }
 }
@@ -202,7 +220,13 @@ export const toUiClaimRow = (row = {}) => {
   return {
     id: String(row.display_id || row.id || '').trim(),
     serverId: row?.id ?? null,
+    publicId: String(row.public_id || row.publicId || '').trim(),
     ownerId: String(row.owner_id || row.user_id || row.ownerUserId || '').trim(),
+    recordKey: String(
+      row.record_key ||
+        row.recordKey ||
+        `${row.owner_id || row.user_id || row.ownerUserId || ''}::${row.id || ''}`,
+    ).trim(),
     ownerLabel: resolveOwnerLabel(row),
     type,
     category: typeLabel,
@@ -392,7 +416,6 @@ export const toApiPayload = (row = {}) => {
     attachment_mime_type: sanitizeText(row.attachmentMimeType, MAX_MIME_LENGTH),
     attachment_size_bytes: sanitizeAttachmentSize(row.attachmentSizeBytes),
     attachment_id: sanitizeAttachmentId(row.attachmentId),
-    payroll_snapshot: row.payrollSnapshot || null,
     ...(row?.version ? { expected_version: row.version } : {}),
     items: Array.isArray(row.items)
       ? row.items.map((item) => ({
@@ -429,18 +452,6 @@ export const toApiPayload = (row = {}) => {
           attachment_size_bytes: sanitizeAttachmentSize(item?.attachmentSizeBytes),
         }))
       : [],
-  }
-
-  if (claimType === 'salary') {
-    payload.payroll_baseline_confirmed = Boolean(row.payrollBaselineConfirmed)
-    payload.adjustments_total = sanitizeNumeric(row.adjustmentsTotal, 0)
-    payload.approved_overtime_payout = sanitizeNumeric(row.approvedOvertimePayout, 0)
-    payload.projected_net_payout = sanitizeNumeric(row.projectedNetPayout, 0)
-    payload.overtime_rows = Array.isArray(row.overtimeRows) ? row.overtimeRows : []
-    payload.overtime_rate_snapshot =
-      row.overtimeRateSnapshot && typeof row.overtimeRateSnapshot === 'object'
-        ? row.overtimeRateSnapshot
-        : null
   }
 
   return payload

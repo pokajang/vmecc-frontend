@@ -13,7 +13,7 @@ const json = (route, body) =>
   route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
 
 const installApiStubs = async (page) => {
-  await page.route('**/api/**', (route) => {
+  await page.route('**:8000/api/**', (route) => {
     const path = new URL(route.request().url()).pathname.replace(/^\/api/, '')
 
     if (path === '/auth/session') {
@@ -103,7 +103,9 @@ const measureControlContrast = (element, selector) => {
     const parentBackground = effectiveBackground(control.parentElement)
     return {
       label: control.textContent.trim(),
-      checked: control.getAttribute('aria-checked'),
+      checked:
+        control.getAttribute('aria-checked') ??
+        (control.control ? String(control.control.checked) : undefined),
       color: style.color,
       backgroundColor: style.backgroundColor,
       parentBackgroundColor: getComputedStyle(control.parentElement).backgroundColor,

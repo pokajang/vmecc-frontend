@@ -80,7 +80,7 @@ const useDrillTypeManager = ({ userId, selectedType, updateSetupField, pushToast
         toggleOption: {
           value: DRILL_TYPE_TOGGLE_VALUE,
           title: showAllDrillTypes ? 'Show less' : 'Show more',
-          description: showAllDrillTypes ? 'Hide extra drill types.' : 'View all drill types.',
+          description: '',
           icon: showAllDrillTypes ? ChevronUp : ChevronDown,
         },
       }),

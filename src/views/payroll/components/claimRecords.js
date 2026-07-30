@@ -1,4 +1,7 @@
-﻿const SCHEMA_VERSION = 1
+﻿import { getPayrollVolatileStorage } from 'src/services/payrollPrivacy'
+
+const SCHEMA_VERSION = 1
+const payrollVolatileStorage = getPayrollVolatileStorage()
 
 const CLAIM_RECORDS_BASE_KEY = 'vmecc_claim_records'
 const CLAIM_DRAFTS_BASE_KEY = 'vmecc_claim_drafts'
@@ -67,7 +70,7 @@ const writeStoredRows = (key, rows) => {
     data: Array.isArray(rows) ? rows : [],
   }
   try {
-    localStorage.setItem(key, JSON.stringify(payload))
+    payrollVolatileStorage.setItem(key, JSON.stringify(payload))
     return true
   } catch {
     return false
@@ -76,7 +79,7 @@ const writeStoredRows = (key, rows) => {
 
 const loadRowsFromKey = (key, normalizeRow = (row) => row) => {
   try {
-    const decoded = decodeStoredRows(localStorage.getItem(key))
+    const decoded = decodeStoredRows(payrollVolatileStorage.getItem(key))
     if (decoded.rows === null) return []
 
     const normalizedRows = decoded.rows
@@ -394,13 +397,13 @@ export const loadClaimDrafts = (userId) => {
   loadClaimDraftEntries(userId, 'salary').forEach((entry) => pushDraft(entry, 'salary'))
   loadClaimDraftEntries(userId, 'other').forEach((entry) => pushDraft(entry, 'other'))
 
-  const legacyExpenseRaw = localStorage.getItem(expenseKeyLegacy)
+  const legacyExpenseRaw = payrollVolatileStorage.getItem(expenseKeyLegacy)
   if (legacyExpenseRaw) {
     const legacyExpense = parseLegacyDraftPayload(legacyExpenseRaw)
     pushDraft(legacyExpense, 'expense')
   }
 
-  const legacySalaryRaw = localStorage.getItem(salaryKeyLegacy)
+  const legacySalaryRaw = payrollVolatileStorage.getItem(salaryKeyLegacy)
   if (legacySalaryRaw) {
     const legacySalary = parseLegacyDraftPayload(legacySalaryRaw)
     pushDraft(legacySalary, 'salary')

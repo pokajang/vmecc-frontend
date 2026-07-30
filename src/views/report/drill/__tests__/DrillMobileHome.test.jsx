@@ -89,9 +89,9 @@ describe('DrillMobileHome', () => {
   it('renders work-first drill type selection before draft and recent records', () => {
     render(<DrillMobileHome {...buildProps()} />)
 
-    const typeHeading = screen.getByText('Choose Type')
+    const typeHeading = screen.getByText('Choose type')
     const draftHeading = screen.getByText('Continue Draft')
-    const recentHeading = screen.getByText('Recent Records')
+    const recentHeading = screen.getByText('Recent records')
 
     expect(typeHeading.compareDocumentPosition(draftHeading)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
     expect(draftHeading.compareDocumentPosition(recentHeading)).toBe(
@@ -104,9 +104,9 @@ describe('DrillMobileHome', () => {
   it('uses the shared inspection-style mobile landing hooks', () => {
     const { container } = render(<DrillMobileHome {...buildProps()} />)
 
-    expect(container.querySelector('.inspection-mobile-home')).toBeTruthy()
-    expect(container.querySelector('.inspection-mobile-home__type-grid')).toBeTruthy()
-    expect(container.querySelector('.inspection-mobile-home__records-toolbar')).toBeTruthy()
+    expect(container.querySelector('.mobile-workflow-home')).toBeTruthy()
+    expect(container.querySelector('.mobile-workflow-home__type-list')).toBeTruthy()
+    expect(container.querySelector('.mobile-workflow-home__records-toolbar')).toBeTruthy()
   })
 
   it('shows only the first draft and caps recent records on the landing page', () => {
@@ -196,7 +196,9 @@ describe('DrillMobileHome', () => {
     fireEvent.click(screen.getByText('Continue Draft'))
     expect(props.onContinueDraft).toHaveBeenCalledWith(props.draftRows[0])
 
-    const recentCard = screen.getByRole('button', { name: /Rescue Drill/i })
+    const recentCard = screen.getByRole('button', {
+      name: 'Open drill record Rescue Drill Main plant summary',
+    })
     fireEvent.click(recentCard)
     expect(props.onOpenRecord).toHaveBeenCalledWith(props.recentRecords[0])
 

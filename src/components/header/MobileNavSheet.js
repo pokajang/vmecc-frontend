@@ -187,66 +187,72 @@ const MobileNavSheet = ({
         )}
       </div>
 
-      {canQuickActions && (
-        <MobileOverlaySection className={sectionClassName}>Quick Actions</MobileOverlaySection>
-      )}
-      {canQuickActions && (
-        <div className={actionGridClassName}>
-          {canClaim && (
-            <MobileOverlayItem
-              onClick={() => onNavigate({ to: '/payroll/claims/new' })}
-              icon={<FilePlus2 size={16} />}
-              label="New Claim"
-            />
-          )}
-          {canLeave && (
-            <MobileOverlayItem
-              onClick={() => onNavigate({ to: '/leave/new' })}
-              icon={<CalendarPlus size={16} />}
-              label="Apply Leave"
-            />
-          )}
-          {canOvertime && (
-            <MobileOverlayItem
-              onClick={() => onNavigate({ to: '/overtime/new' })}
-              icon={<ClockPlus size={16} />}
-              label="Apply Overtime"
-            />
-          )}
-        </div>
-      )}
-
-      {canMyRecords && (
-        <MobileOverlaySection className={sectionClassName}>My Records</MobileOverlaySection>
-      )}
-      {canMyRecords && (
-        <div className={actionGridClassName}>
-          {canClaim && (
-            <MobileOverlayItem
-              onClick={() => onNavigate({ to: '/payroll' })}
-              icon={<ReceiptText size={16} />}
-              label="Payroll Records"
-            />
-          )}
-          {canLeave && (
-            <MobileOverlayItem
-              onClick={() => onNavigate({ to: '/leave' })}
-              icon={<CalendarCheck size={16} />}
-              label="Leave Records"
-            />
-          )}
-          {canOvertime && (
-            <MobileOverlayItem
-              onClick={() => onNavigate({ to: '/overtime' })}
-              icon={<History size={16} />}
-              label="Overtime Records"
-            />
-          )}
-        </div>
-      )}
-
-      <MobileOverlaySection className={sectionClassName}>Account</MobileOverlaySection>
       <div className={actionGridClassName}>
+        {canQuickActions && (
+          <MobileOverlaySection className={sectionClassName} span>
+            Quick Actions
+          </MobileOverlaySection>
+        )}
+        {canQuickActions && (
+          <>
+            {canClaim && (
+              <MobileOverlayItem
+                onClick={() => onNavigate({ to: '/payroll/claims/new' })}
+                icon={<FilePlus2 size={16} />}
+                label="New Claim"
+              />
+            )}
+            {canLeave && (
+              <MobileOverlayItem
+                onClick={() => onNavigate({ to: '/leave/new' })}
+                icon={<CalendarPlus size={16} />}
+                label="Apply Leave"
+              />
+            )}
+            {canOvertime && (
+              <MobileOverlayItem
+                onClick={() => onNavigate({ to: '/overtime/new' })}
+                icon={<ClockPlus size={16} />}
+                label="Apply Overtime"
+              />
+            )}
+          </>
+        )}
+
+        {canMyRecords && (
+          <MobileOverlaySection className={sectionClassName} span>
+            My Records
+          </MobileOverlaySection>
+        )}
+        {canMyRecords && (
+          <>
+            {canClaim && (
+              <MobileOverlayItem
+                onClick={() => onNavigate({ to: '/payroll' })}
+                icon={<ReceiptText size={16} />}
+                label="Payroll Records"
+              />
+            )}
+            {canLeave && (
+              <MobileOverlayItem
+                onClick={() => onNavigate({ to: '/leave' })}
+                icon={<CalendarCheck size={16} />}
+                label="Leave Records"
+              />
+            )}
+            {canOvertime && (
+              <MobileOverlayItem
+                onClick={() => onNavigate({ to: '/overtime' })}
+                icon={<History size={16} />}
+                label="Overtime Records"
+              />
+            )}
+          </>
+        )}
+
+        <MobileOverlaySection className={sectionClassName} span>
+          Account
+        </MobileOverlaySection>
         <MobileOverlayItem
           onClick={() => onNavigate({ to: '/profile' })}
           icon={<User size={16} />}
@@ -258,18 +264,20 @@ const MobileNavSheet = ({
           label="Settings"
         />
         <MobileOverlayItem onClick={onReportIssue} icon={<Flag size={16} />} label="Report Issue" />
-      </div>
 
-      <MobileOverlaySection className={sectionClassName}>Session</MobileOverlaySection>
-      <div className="mobile-nav-sheet-inline-actions">
-        <MobileOverlayItem
-          onClick={onLogout}
-          disabled={isLoggingOut}
-          icon={<LogOut size={16} />}
-          label={isLoggingOut ? 'Signing out...' : 'Log out'}
-          danger
-          inline
-        />
+        <MobileOverlaySection className={sectionClassName} span>
+          Session
+        </MobileOverlaySection>
+        <div className="mobile-nav-sheet-inline-actions mobile-nav-sheet-span-2">
+          <MobileOverlayItem
+            onClick={onLogout}
+            disabled={isLoggingOut}
+            icon={<LogOut size={16} />}
+            label={isLoggingOut ? 'Signing out...' : 'Log out'}
+            danger
+            inline
+          />
+        </div>
       </div>
     </>
   )

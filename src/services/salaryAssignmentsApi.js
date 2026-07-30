@@ -20,6 +20,8 @@ const toUiAssignmentRow = (row = {}) => ({
   id: String(row?.reference_id || row?.id || '').trim(),
   referenceId: String(row?.reference_id || '').trim(),
   serverId: row?.id ?? null,
+  publicId: String(row?.public_id || '').trim(),
+  version: Number(row?.version || 1) || 1,
   employeeId: String(row?.employee_user_id || '').trim(),
   employee: String(row?.employee || '').trim(),
   email: String(row?.email || '')
@@ -63,6 +65,7 @@ const toApiAssignmentPayload = (row = {}) => ({
   employee_contributions: row?.employeeContributions || {},
   employer_contributions: row?.employerContributions || {},
   notes_history: Array.isArray(row?.notesHistory) ? row.notesHistory : [],
+  ...(row?.version ? { expected_version: Number(row.version) } : {}),
 })
 
 const toUiDraftRecord = (row = {}) => ({
@@ -161,14 +164,14 @@ export const upsertSalaryAssignmentApiFirst = async (userId, row, existingServer
   }
 }
 
-export const deleteSalaryAssignmentApiFirst = async (assignmentId) => {
+export const deleteSalaryAssignmentApiFirst = async (assignmentId, expectedVersion) => {
   if (!featureFlags.salaryAssignmentsApiWritesPrimary) {
     return { ok: false, source: 'api', error: new Error('API writes disabled by feature flag') }
   }
   const serverId = toNumber(assignmentId)
   if (!serverId) return { ok: false, source: 'api', error: new Error('Missing assignment id') }
   try {
-    const result = await deleteSalaryAssignmentApi(serverId)
+    const result = await deleteSalaryAssignmentApi(serverId, expectedVersion)
     const history = result?.history ? toUiAssignmentHistoryRow(result.history) : null
     return { ok: true, source: 'api', history }
   } catch (error) {

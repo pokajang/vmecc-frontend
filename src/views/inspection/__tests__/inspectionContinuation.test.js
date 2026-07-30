@@ -75,6 +75,29 @@ describe('inspectionContinuation', () => {
     ).toBeNull()
   })
 
+  it('resolves fire extinguisher zone, main location, and sub-location from a path-only record', () => {
+    const prompt = buildInspectionContinuationPrompt({
+      record: {
+        incidentType: 'Fire Extinguisher Inspection',
+        locationPath: ['Zone 1', 'Canteen', 'Canteen'],
+      },
+    })
+
+    expect(prompt).toEqual(
+      expect.objectContaining({
+        title: 'Continue this area?',
+        currentLocation: 'Canteen',
+      }),
+    )
+    expect(prompt.options).toEqual([
+      expect.objectContaining({
+        value: 'Dry Store',
+        zone: '1',
+        mainLocation: 'Canteen',
+      }),
+    ])
+  })
+
   it('builds a clean continuation form for the selected next location', () => {
     expect(
       buildInspectionContinuationForm({

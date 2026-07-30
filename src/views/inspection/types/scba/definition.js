@@ -23,7 +23,7 @@ const scbaInspectionDefinition = {
   key: 'scba-inspection',
   inspectionType: SCBA_INSPECTION_TYPE,
   title: 'SCBA',
-  description: 'SCBA back plate, cylinder, and face mask condition checks.',
+  description: 'Inspect SCBA back plates, cylinders, and face masks.',
   iconKey: 'Gauge',
   icon: Gauge,
   implemented: true,

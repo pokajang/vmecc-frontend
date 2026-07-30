@@ -14,6 +14,7 @@ import {
   getHighAngleRetainedEvidenceRows,
 } from 'src/views/inspection/types/high-angle/helpers'
 import { EvidenceBlock, FormFieldError, InspectionPhotoActionRow } from './InspectionDisplayShared'
+import InspectionStatusSegment from './patterns/InspectionStatusSegment'
 
 const text = (value) => String(value || '').trim()
 
@@ -43,34 +44,23 @@ export const getHighAngleWorkflowState = (row = {}) => {
   }
 }
 
-const HighAngleStatusSegment = ({ value, onChange, readOnly = false }) => (
-  <div className="inspection-hydraulic-status-group d-flex flex-nowrap justify-content-start gap-2 vmecc-scroll-x pb-1">
-    {HIGH_ANGLE_STATUS_OPTIONS.map((option) =>
-      readOnly ? (
-        <span
-          key={option.value}
-          className={`inspection-hydraulic-status-btn btn btn-sm ${
-            value === option.value ? 'btn-primary' : 'btn-outline-secondary'
-          } pe-none`.trim()}
-          aria-current={value === option.value ? 'true' : undefined}
-        >
-          {option.label}
-        </span>
-      ) : (
-        <CButton
-          key={option.value}
-          type="button"
-          color={value === option.value ? 'primary' : 'secondary'}
-          variant={value === option.value ? undefined : 'outline'}
-          size="sm"
-          className="inspection-hydraulic-status-btn"
-          onClick={() => onChange(option.value)}
-        >
-          {option.label}
-        </CButton>
-      ),
-    )}
-  </div>
+const HighAngleStatusSegment = ({
+  value,
+  onChange,
+  readOnly = false,
+  invalid = false,
+  describedBy,
+}) => (
+  <InspectionStatusSegment
+    ariaLabel="Condition"
+    showLabel={false}
+    value={value}
+    options={HIGH_ANGLE_STATUS_OPTIONS}
+    onChange={onChange}
+    readOnly={readOnly}
+    invalid={invalid}
+    describedBy={describedBy}
+  />
 )
 
 const HighAngleStatusInline = ({ workflowState, hasRetainedEvidence = false }) => {
@@ -170,6 +160,8 @@ export const HighAngleInspectionRowDetails = ({
         currentPhotos: conditionPhotos,
       }),
     )
+  const missingCondition = remarksError && !text(row.condition)
+  const conditionErrorId = `${bodyId}-condition-error`
 
   return readOnly ? (
     <>
@@ -232,12 +224,17 @@ export const HighAngleInspectionRowDetails = ({
         </CFormLabel>
         <HighAngleStatusSegment
           value={row.condition}
+          invalid={missingCondition}
+          describedBy={missingCondition ? conditionErrorId : undefined}
           onChange={(nextValue) =>
             onUpdateCheck?.(sourceRow, {
               condition: nextValue,
             })
           }
         />
+        <FormFieldError id={conditionErrorId}>
+          {missingCondition ? 'Condition is required.' : ''}
+        </FormFieldError>
       </div>
       {hasIssue ? (
         <div className="inspection-hydraulic-defect-evidence rounded-3 border bg-light-subtle p-2 d-grid gap-2">

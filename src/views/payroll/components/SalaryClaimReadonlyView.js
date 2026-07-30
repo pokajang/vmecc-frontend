@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import {
-  CBadge,
+  CButton,
   CCard,
   CCardBody,
   CCardHeader,
@@ -92,17 +92,16 @@ const SalaryClaimReadonlyView = ({ claim, formatCurrency, formatDate }) => {
               </div>
               <div className="d-flex align-items-center gap-2">
                 {item.attachmentName ? (
-                  <CBadge
-                    as="button"
+                  <CButton
                     type="button"
                     color="light"
-                    className="text-body-secondary"
-                    style={{ cursor: 'pointer' }}
-                    title="Preview attachment"
+                    size="sm"
+                    className="workflow-attachment-action text-body-secondary"
+                    aria-label={`Preview ${item.attachmentName}`}
                     onClick={() => openAttachmentPreview(item, source)}
                   >
                     {truncateAttachmentLabel(item.attachmentName)}
-                  </CBadge>
+                  </CButton>
                 ) : null}
                 <span className="fw-semibold">{formatCurrency(item.signedAmount)}</span>
               </div>
@@ -297,17 +296,16 @@ const SalaryClaimReadonlyView = ({ claim, formatCurrency, formatDate }) => {
                           </span>
                         )}
                         {item.attachmentName && (
-                          <CBadge
-                            as="button"
+                          <CButton
                             type="button"
                             color="light"
-                            className="text-body-secondary flex-shrink-0"
-                            style={{ cursor: 'pointer' }}
-                            title="Preview attachment"
+                            size="sm"
+                            className="workflow-attachment-action text-body-secondary flex-shrink-0"
+                            aria-label={`Preview ${item.attachmentName}`}
                             onClick={() => openAttachmentPreview(item, 'salary-readonly-addition')}
                           >
                             {truncateAttachmentLabel(item.attachmentName)}
-                          </CBadge>
+                          </CButton>
                         )}
                       </div>
                     </CTableDataCell>
@@ -376,17 +374,16 @@ const SalaryClaimReadonlyView = ({ claim, formatCurrency, formatDate }) => {
                           </span>
                         )}
                         {item.attachmentName && (
-                          <CBadge
-                            as="button"
+                          <CButton
                             type="button"
                             color="light"
-                            className="text-body-secondary flex-shrink-0"
-                            style={{ cursor: 'pointer' }}
-                            title="Preview attachment"
+                            size="sm"
+                            className="workflow-attachment-action text-body-secondary flex-shrink-0"
+                            aria-label={`Preview ${item.attachmentName}`}
                             onClick={() => openAttachmentPreview(item, 'salary-readonly-deduction')}
                           >
                             {truncateAttachmentLabel(item.attachmentName)}
-                          </CBadge>
+                          </CButton>
                         )}
                       </div>
                     </CTableDataCell>

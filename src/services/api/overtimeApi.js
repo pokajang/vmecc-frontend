@@ -1,13 +1,13 @@
 import { apiRequest } from './httpClient'
 
-export const fetchOvertimeRecords = (params = {}) => {
+export const fetchOvertimeRecords = (params = {}, options = {}) => {
   const query = new URLSearchParams()
   Object.entries(params).forEach(([key, value]) => {
     if (value === undefined || value === null || value === '') return
     query.append(key, value)
   })
   const path = query.toString() ? `/overtime?${query.toString()}` : '/overtime'
-  return apiRequest(path)
+  return apiRequest(path, options)
 }
 
 export const fetchOvertimeRecord = (id) => apiRequest(`/overtime/${id}`)
@@ -20,16 +20,26 @@ export const deleteOvertimeRecordApi = (id, payload = {}) =>
 export const cancelOvertimeRecord = (id, payload = {}) =>
   apiRequest(`/overtime/${id}/cancel`, { method: 'POST', body: JSON.stringify(payload) })
 
-export const fetchOvertimeDraft = () => apiRequest('/overtime/draft')
-export const saveOvertimeDraftApi = (payload) =>
-  apiRequest('/overtime/draft', { method: 'POST', body: JSON.stringify({ payload }) })
-export const clearOvertimeDraftApi = () => apiRequest('/overtime/draft', { method: 'DELETE' })
-export const fetchOvertimePolicy = () => apiRequest('/overtime/policy')
+export const fetchOvertimeDraft = (options = {}) => apiRequest('/overtime/draft', options)
+export const saveOvertimeDraftApi = (payload, expectedVersion = null) =>
+  apiRequest('/overtime/draft', {
+    method: 'POST',
+    body: JSON.stringify({
+      payload,
+      ...(expectedVersion ? { expected_version: expectedVersion } : {}),
+    }),
+  })
+export const clearOvertimeDraftApi = (expectedVersion = null) =>
+  apiRequest('/overtime/draft', {
+    method: 'DELETE',
+    body: JSON.stringify(expectedVersion ? { expected_version: expectedVersion } : {}),
+  })
+export const fetchOvertimePolicy = (options = {}) => apiRequest('/overtime/policy', options)
 export const fetchOvertimeEligibility = () => apiRequest('/overtime/eligibility')
 export const classifyOvertimeDateApi = (claimDate) =>
   apiRequest(`/overtime/classify-date?claim_date=${encodeURIComponent(String(claimDate || ''))}`)
 
-export const fetchStaffOvertimeRecords = (params = {}) => {
+export const fetchStaffOvertimeRecords = (params = {}, options = {}) => {
   const query = new URLSearchParams()
   Object.entries(params).forEach(([key, value]) => {
     if (value === undefined || value === null || value === '') return
@@ -38,11 +48,13 @@ export const fetchStaffOvertimeRecords = (params = {}) => {
   const path = query.toString()
     ? `/staff/overtime/records?${query.toString()}`
     : '/staff/overtime/records'
-  return apiRequest(path)
+  return apiRequest(path, options)
 }
 
-export const fetchStaffOvertimeRecord = (ownerId, recordId) =>
-  apiRequest(`/staff/overtime/records/${ownerId}/${recordId}`)
+export const fetchStaffOvertimeRecord = (ownerId, recordId, options = {}) =>
+  apiRequest(`/staff/overtime/records/${ownerId}/${recordId}`, options)
+export const fetchStaffOvertimeRecordByPublicId = (publicId, options = {}) =>
+  apiRequest(`/staff/overtime/record/${encodeURIComponent(String(publicId || ''))}`, options)
 export const reviewStaffOvertimeRecord = (ownerId, recordId, payload = {}) =>
   apiRequest(`/staff/overtime/records/${ownerId}/${recordId}/review`, {
     method: 'POST',

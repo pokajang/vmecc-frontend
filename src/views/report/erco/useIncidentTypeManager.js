@@ -101,9 +101,7 @@ const useIncidentTypeManager = ({ userId, selectedType, updateSetupField, pushTo
         toggleOption: {
           value: INCIDENT_TYPE_TOGGLE_VALUE,
           title: showAllIncidentTypes ? 'Show less' : 'Show more',
-          description: showAllIncidentTypes
-            ? 'Hide extra incident types.'
-            : 'View all incident types.',
+          description: '',
           icon: showAllIncidentTypes ? ChevronUp : ChevronDown,
         },
       }),

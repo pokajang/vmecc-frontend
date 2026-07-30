@@ -2,7 +2,8 @@ import React from 'react'
 import { CButton, CFormInput } from '@coreui/react'
 import { ChevronDown, ChevronUp, ClipboardCheck } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
-import IconOptionGrid from 'src/components/IconOptionGrid'
+import MobileChoiceList from 'src/components/report-workflow/MobileChoiceList'
+import ResponsiveChoiceSelector from 'src/components/report-workflow/ResponsiveChoiceSelector'
 import TypeManagerModal from 'src/components/report-workflow/TypeManagerModal'
 import { uid } from '../../utils'
 import ReportPhotoSection from '../../shared/emergency-report/ReportPhotoSection'
@@ -317,13 +318,22 @@ const PostIncidentAnalysisSection = ({
           <div className="fw-semibold">{meta.title}</div>
           <CreateActionButton label={meta.addLabel} onClick={() => openAddModal(key)} />
         </div>
-        <IconOptionGrid
+        <ResponsiveChoiceSelector
+          isMobile={isMobile}
           options={options}
           value={selectedRows}
           onChange={(optionValue) => toggleOption(key, optionValue)}
+          selectionMode="multi"
+          ariaLabel={meta.title}
+          toggleValue={
+            options.some((option) => option?.value === SHOW_MORE_VALUE)
+              ? SHOW_MORE_VALUE
+              : options.some((option) => option?.value === SHOW_LESS_VALUE)
+                ? SHOW_LESS_VALUE
+                : ''
+          }
           variant="compact"
           columns={sectionColumns}
-          showDescription
           cardProps={(option, isSelected) => {
             if (option?.value === SHOW_MORE_VALUE || option?.value === SHOW_LESS_VALUE) {
               return {
@@ -385,6 +395,34 @@ const PostIncidentAnalysisSection = ({
     const allOptions = Array.from(mergedMap.values())
     const hasMore = !showAll && allOptions.length > visibleLimit
     const options = showAll ? allOptions : allOptions.slice(0, visibleLimit)
+
+    if (isMobile) {
+      return (
+        <div key={key} className="d-grid gap-2">
+          <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div className="fw-semibold">{meta.title}</div>
+            <CreateActionButton label={meta.addLabel} onClick={() => openAddModal(key)} />
+          </div>
+          <MobileChoiceList
+            mode="multiple"
+            ariaLabel={meta.title}
+            options={options}
+            value={selectedRows}
+            onChange={(optionValue) => toggleOption(key, optionValue)}
+            footerAction={
+              hasMore || showAll
+                ? {
+                    label: hasMore ? 'Show all' : 'Show less',
+                    expanded: showAll,
+                    icon: hasMore ? <ChevronDown size={15} /> : <ChevronUp size={15} />,
+                    onClick: () => setShowAllBySection((prev) => ({ ...prev, [key]: !showAll })),
+                  }
+                : null
+            }
+          />
+        </div>
+      )
+    }
 
     return (
       <div key={key} className="d-grid gap-2">
@@ -460,7 +498,7 @@ const PostIncidentAnalysisSection = ({
       error={fieldErrors.postIncidentPhotos}
       descriptionMaxLength={2000}
       onProcessingChange={onPhotoProcessingChange}
-      emptyMessage="No incident photographs uploaded yet."
+      emptyMessage=""
     />
   )
 

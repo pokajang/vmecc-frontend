@@ -20,18 +20,54 @@ import { FITNESS_FIELD_LIMITS } from './constants'
 import {
   fitnessResultLabel,
   flattenFitnessParticipants,
-  formatFitnessDuration,
   getProficiencyCheckpointSummary,
 } from './fitnessFormDomain'
+import FitnessParticipantResultSummary from './FitnessParticipantResultSummary'
 import FitnessStageActions from './FitnessStageActions'
 import FitnessCheckpointControls from './FitnessCheckpointControls'
 import FitnessShiftDateTools from './FitnessShiftDateTools'
+import { validateFitnessResults } from './validation'
 
 const ResultBadge = ({ value }) => (
   <CBadge color={value === 'pass' ? 'success' : value === 'failed' ? 'danger' : 'secondary'}>
     {fitnessResultLabel(value)}
   </CBadge>
 )
+
+const participantResultIssues = (participant) => {
+  const issues = []
+  const age = Number(participant.ageSnapshot)
+  if (!Number.isInteger(age) || age < 18 || age > 100) issues.push('age (18–100)')
+
+  const fitnessFields = [
+    ['sitUps', 'sit-ups'],
+    ['jumpingJacks', 'jumping jacks'],
+    ['pushUps', 'push-ups'],
+  ]
+  fitnessFields.forEach(([field, label]) => {
+    if (
+      participant.fitness?.[field] === '' ||
+      !Number.isFinite(Number(participant.fitness?.[field]))
+    ) {
+      issues.push(label)
+    }
+  })
+  if (!participant.fitness?.testedOn) issues.push('fitness test date')
+
+  const checkpointSummary = getProficiencyCheckpointSummary(participant.proficiency)
+  Object.entries(checkpointSummary.completion).forEach(([checkpoint, complete]) => {
+    if (!complete) issues.push(checkpoint.toUpperCase())
+  })
+  if (
+    participant.proficiency?.durationSeconds === '' ||
+    !Number.isFinite(Number(participant.proficiency?.durationSeconds)) ||
+    Number(participant.proficiency?.durationSeconds) <= 0
+  ) {
+    issues.push('combined time')
+  }
+  if (!participant.proficiency?.testedOn) issues.push('proficiency test date')
+  return issues
+}
 
 const ResultInputs = ({ participant, mode, update, prefix }) =>
   mode === 'fitness' ? (
@@ -102,6 +138,8 @@ const FitnessTestFormStep = ({
   saveLabel,
   draftStatus,
   pushToast,
+  incompleteOnly = false,
+  onShowAllResults,
   photoProcessing = false,
   onPhotoProcessingChange,
 }) => {
@@ -111,27 +149,38 @@ const FitnessTestFormStep = ({
   const drawerAgeRef = useRef(null)
   const drawerTargetId = drawerTarget?.id
   const participants = useMemo(() => flattenFitnessParticipants(form), [form])
+  const visibleParticipants = useMemo(
+    () =>
+      incompleteOnly
+        ? participants.filter((participant) => participantResultIssues(participant).length)
+        : participants,
+    [incompleteOnly, participants],
+  )
   const participantGroups = useMemo(
     () =>
       form.shiftGroups
         .map((group) => ({
           ...group,
-          participants: participants.filter((participant) => participant.groupId === group.id),
+          participants: visibleParticipants.filter(
+            (participant) => participant.groupId === group.id,
+          ),
         }))
         .filter((group) => group.participants.length),
-    [form.shiftGroups, participants],
+    [form.shiftGroups, visibleParticipants],
   )
   const update = (participant, patch) => {
     updateParticipant(participant.groupId, participant.id, patch)
-    clearError('results')
   }
   const shiftDateKey = (groupId) => `${mode}:${groupId}`
   const applyDateToShift = (groupId) => {
     const testedOn = shiftDates[shiftDateKey(groupId)] || ''
     if (!testedOn) return
     applyShiftTestDate?.(groupId, mode, testedOn)
-    clearError('results')
   }
+
+  useEffect(() => {
+    if (fieldErrors.results && validateFitnessResults(form).isValid) clearError('results')
+  }, [clearError, fieldErrors.results, form])
 
   useEffect(() => {
     if (!drawerTargetId) return undefined
@@ -143,11 +192,11 @@ const FitnessTestFormStep = ({
     <div className="mb-3 d-grid gap-4" data-fitness-test-field="results">
       <section className="d-grid gap-3">
         <div className="d-flex flex-wrap align-items-start justify-content-between gap-2">
-          <div>
-            <h3 className="h6 mb-1">Participant results</h3>
-            <p className="small text-body-secondary mb-0">
-              Pass/fail is calculated automatically from the approved protocol.
-            </p>
+          <div className="d-flex align-items-center gap-2">
+            <h3 className="h6 mb-0">Participant results</h3>
+            <CBadge color="light" className="border text-body-secondary">
+              Auto-calculated
+            </CBadge>
           </div>
           <CButtonGroup role="group" aria-label="Assessment result type">
             <CButton
@@ -170,8 +219,21 @@ const FitnessTestFormStep = ({
             </CButton>
           </CButtonGroup>
         </div>
-        {fieldErrors.results ? <CAlert color="danger">{fieldErrors.results}</CAlert> : null}
-
+        {incompleteOnly ? (
+          <CAlert
+            color={visibleParticipants.length ? 'info' : 'success'}
+            className="mb-0 d-flex flex-wrap align-items-center justify-content-between gap-2"
+          >
+            <span>
+              {visibleParticipants.length
+                ? `Showing ${visibleParticipants.length} participant${visibleParticipants.length === 1 ? '' : 's'} with incomplete fields.`
+                : 'All incomplete participant fields are resolved.'}
+            </span>
+            <CButton type="button" color="light" size="sm" onClick={onShowAllResults}>
+              Show all
+            </CButton>
+          </CAlert>
+        ) : null}
         <div className="table-responsive d-none d-md-block">
           <CTable align="middle" bordered small>
             <CTableHead>
@@ -219,11 +281,17 @@ const FitnessTestFormStep = ({
                   </CTableRow>
                   {group.participants.map((participant) => {
                     const assessment = participant[mode]
+                    const issues = fieldErrors.results ? participantResultIssues(participant) : []
                     return (
-                      <CTableRow key={participant.id}>
+                      <CTableRow key={participant.id} aria-invalid={issues.length > 0 || undefined}>
                         <CTableHeaderCell scope="row">
                           <div>{participant.name}</div>
                           <div className="small text-body-secondary">{participant.shift}</div>
+                          {issues.length ? (
+                            <div className="small text-danger mt-1" role="alert">
+                              Needs: {issues.join(', ')}
+                            </div>
+                          ) : null}
                         </CTableHeaderCell>
                         <CTableDataCell style={{ minWidth: 90 }}>
                           <CFormInput
@@ -319,10 +387,12 @@ const FitnessTestFormStep = ({
               </div>
               {group.participants.map((participant) => {
                 const assessment = participant[mode]
+                const issues = fieldErrors.results ? participantResultIssues(participant) : []
                 return (
                   <div
                     key={participant.id}
                     className="fitness-result-card border-top pt-3 d-grid gap-2"
+                    aria-invalid={issues.length > 0 || undefined}
                   >
                     <div className="d-flex justify-content-between align-items-start gap-2">
                       <div>
@@ -330,6 +400,11 @@ const FitnessTestFormStep = ({
                         <div className="small text-body-secondary">
                           Age {participant.ageSnapshot || '--'}
                         </div>
+                        {issues.length ? (
+                          <div className="small text-danger mt-1" role="alert">
+                            Needs: {issues.join(', ')}
+                          </div>
+                        ) : null}
                       </div>
                       <CButton
                         type="button"
@@ -341,12 +416,8 @@ const FitnessTestFormStep = ({
                         <Pencil size={16} />
                       </CButton>
                     </div>
-                    <div className="d-flex justify-content-between align-items-center small gap-2">
-                      <span>
-                        {mode === 'fitness'
-                          ? `${assessment.sitUps || '--'} / ${assessment.jumpingJacks || '--'} / ${assessment.pushUps || '--'}`
-                          : `${getProficiencyCheckpointSummary(assessment).completed}/6 CP · ${formatFitnessDuration(assessment.durationSeconds)}`}
-                      </span>
+                    <div className="d-flex justify-content-between align-items-end gap-3">
+                      <FitnessParticipantResultSummary assessment={assessment} mode={mode} />
                       <ResultBadge value={assessment.result} />
                     </div>
                   </div>
@@ -365,7 +436,7 @@ const FitnessTestFormStep = ({
         pushToast={pushToast}
         allowCapture={false}
         onProcessingChange={onPhotoProcessingChange}
-        emptyMessage="No photos."
+        emptyMessage=""
         descriptionMaxLength={2000}
       />
 
@@ -389,6 +460,11 @@ const FitnessTestFormStep = ({
       >
         {drawerTarget ? (
           <div className="fitness-result-drawer d-grid gap-3">
+            {fieldErrors.results && participantResultIssues(drawerTarget).length ? (
+              <CAlert color="danger" className="mb-0">
+                Needs: {participantResultIssues(drawerTarget).join(', ')}
+              </CAlert>
+            ) : null}
             <div>
               <CFormLabel htmlFor="fitness-mobile-age">Age</CFormLabel>
               <CFormInput

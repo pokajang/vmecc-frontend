@@ -49,13 +49,15 @@ test('inspection mobile controls preserve touch comfort, wrapping, and narrow-wi
 
   await expectComfortableTargets(inspectionCase.locator('.inspection-next-location-btn'))
   await expectComfortableTargets(inspectionCase.locator('.inspection-compact-action-btn'))
-  await expectComfortableTargets(inspectionCase.locator('.inspection-form-inline-actions .btn'))
-
-  const validationMessage = inspectionCase.locator(
-    '.inspection-form-inline-actions-row-status, .action-row-thumb-status',
+  await expectComfortableTargets(
+    inspectionCase.locator('.workflow-stage-actions__group .btn:visible'),
   )
-  await expect(validationMessage).toBeVisible()
-  await expect(validationMessage).toHaveCSS('white-space', 'normal')
+
+  const actionGroup = inspectionCase.locator('.workflow-stage-actions__group:visible')
+  await expect(actionGroup).toBeVisible()
+  expect(
+    await actionGroup.evaluate((element) => element.scrollWidth <= element.clientWidth + 1),
+  ).toBe(true)
 
   const previewFits = await inspectionCase
     .locator('.inspection-ux-matrix-preview-shell')
@@ -90,27 +92,41 @@ test('resetting inspection type restores the fresh, overflow-safe picker', async
 
   const typePicker = page.getByRole('radiogroup')
   const initialTypeCount = await typePicker.getByRole('radio').count()
-  const showMore = typePicker.getByRole('radio', { name: /Show more/i })
+  await expectComfortableTargets(typePicker.getByRole('radio'))
+  await expect(typePicker.locator('..')).toHaveCSS('border-top-style', 'solid')
+  const showMore = page.getByRole('button', { name: /Show more/i })
   if (await showMore.count()) {
     await showMore.click()
   }
 
-  const selectableType = typePicker
-    .getByRole('radio')
-    .filter({ hasNotText: /Show (more|less)/i })
-    .first()
+  const selectableType = typePicker.getByRole('radio').first()
   await selectableType.click()
 
-  const summary = page.getByRole('group', { name: 'Type' })
+  const summary = page.getByRole('list', { name: 'Inspection setup summary' })
   await expect(summary).toBeVisible()
-  await expectComfortableTargets(summary.getByRole('button'))
-  await expect(summary).toHaveCSS('border-top-style', 'none')
+  const typeRow = summary.getByRole('button', { name: /Edit type:/i })
+  await expectComfortableTargets(typeRow)
+  await expect(summary).toHaveCSS('border-top-style', 'solid')
+  await expect(summary.locator('.mobile-setup-summary-list__item').first()).toHaveCSS(
+    'background-color',
+    'rgba(0, 0, 0, 0)',
+  )
 
-  await summary.getByRole('button', { name: 'Reset type' }).click()
+  await typeRow.click()
+  const drawer = page.locator('.offcanvas.show').last()
+  await expect(drawer).toBeVisible()
+  await drawer.getByRole('button', { name: 'Clear type', exact: true }).click()
 
   const restoredPicker = page.getByRole('radiogroup')
   await expect(restoredPicker).toBeVisible()
   expect(await restoredPicker.getByRole('radio').count()).toBe(initialTypeCount)
+
+  await page.setViewportSize({ width: 767, height: 900 })
+  const wideMobileMetrics = await restoredPicker.evaluate((element) => ({
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+  }))
+  expect(wideMobileMetrics.scrollWidth).toBeLessThanOrEqual(wideMobileMetrics.clientWidth + 1)
 
   await page.setViewportSize({ width: 320, height: 700 })
   const pickerMetrics = await restoredPicker.evaluate((element) => ({

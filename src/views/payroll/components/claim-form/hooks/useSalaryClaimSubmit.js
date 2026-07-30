@@ -1,4 +1,5 @@
 import { useCallback } from 'react'
+import { getPayrollVolatileStorage } from 'src/services/payrollPrivacy'
 import {
   clearPayrollDraftRetryEntry,
   clearPayrollDraftRetryEntriesByType,
@@ -92,7 +93,11 @@ const useSalaryClaimSubmit = ({
       )
       return
     }
-    const submissionKey = generateSubmissionKey('salary', user?.id)
+    const submissionKey = generateSubmissionKey(
+      'salary',
+      user?.id,
+      activeDraftId || draftPayload?.id || sourceClaimId,
+    )
     setIsSubmittingClaim(true)
     try {
       const overtimeRateSnapshot = {
@@ -134,6 +139,7 @@ const useSalaryClaimSubmit = ({
       }))
       const primaryAttachment = resolvedItems.find((item) => item.attachmentName) || null
       const baseRecordPayload = {
+        version: Number(draftPayload?.sourceVersion || 0) || null,
         period: periodLabel,
         periodValue: headerPeriod,
         category:
@@ -257,7 +263,7 @@ const useSalaryClaimSubmit = ({
         }),
       )
       try {
-        localStorage.removeItem(localAutosaveKey)
+        getPayrollVolatileStorage().removeItem(localAutosaveKey)
       } catch {
         // ignore storage errors
       }

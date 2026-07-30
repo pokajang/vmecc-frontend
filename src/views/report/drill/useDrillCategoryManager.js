@@ -63,7 +63,7 @@ const useDrillCategoryManager = ({ userId, selectedCategories, updateSetupField,
         toggleOption: {
           value: DRILL_CATEGORY_TOGGLE_VALUE,
           title: showAllCategories ? 'Show less' : 'Show more',
-          description: showAllCategories ? 'Hide extra categories.' : 'View all categories.',
+          description: '',
           icon: showAllCategories ? ChevronUp : ChevronDown,
         },
       }),

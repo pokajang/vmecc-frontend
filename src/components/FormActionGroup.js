@@ -74,7 +74,12 @@ const FormActionGroup = ({
         style={containerStyle}
       >
         {isCompactSticky && statusMessage ? (
-          <div className="action-row-thumb-status text-body-secondary" title={statusMessage}>
+          <div
+            className="action-row-thumb-status text-body-secondary"
+            title={statusMessage}
+            role="status"
+            aria-live="polite"
+          >
             {statusMessage}
           </div>
         ) : null}

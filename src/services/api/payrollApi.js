@@ -10,6 +10,9 @@ export const fetchPayrollClaims = (params = {}) => {
   return apiRequest(path)
 }
 
+export const fetchPayrollSalaryBaseline = (period, options = {}) =>
+  apiRequest(`/payroll/salary-baseline?period=${encodeURIComponent(String(period || ''))}`, options)
+
 export const fetchPayrollPayslips = (params = {}) => {
   const query = new URLSearchParams()
   Object.entries(params).forEach(([key, value]) => {
@@ -29,6 +32,7 @@ export const downloadPayrollPayslip = async (id) => {
   }
   const response = await fetch(buildUrl(`/payroll/payslips/${numericId}/download`), {
     method: 'GET',
+    cache: 'no-store',
     credentials: 'include',
     headers: {
       Accept: '*/*',
@@ -74,8 +78,12 @@ export const updatePayrollClaim = (id, payload, options = {}) =>
     body: JSON.stringify(payload || {}),
     ...options,
   })
-export const deletePayrollClaimApi = (id, options = {}) =>
-  apiRequest(`/payroll/claims/${id}`, { method: 'DELETE', ...options })
+export const deletePayrollClaimApi = (id, payload = {}, options = {}) =>
+  apiRequest(`/payroll/claims/${id}`, {
+    method: 'DELETE',
+    body: JSON.stringify(payload),
+    ...options,
+  })
 export const cancelPayrollClaim = (id, payload = {}, options = {}) =>
   apiRequest(`/payroll/claims/${id}/cancel`, {
     method: 'POST',

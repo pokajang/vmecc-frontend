@@ -21,11 +21,13 @@ const getLocationEntityLabel = (location) =>
           : 'Main Location'
 
 const InspectionFormShell = ({
+  catalogErrors = {},
   catalogManagers,
   checkActions,
   draftStatus,
   onResolveDraftConflict,
   onRetryDraftSync,
+  onRetryCatalogs,
   fieldErrors,
   fireExtinguisherAreaRows,
   isLoadingEquipmentRows,
@@ -75,6 +77,7 @@ const InspectionFormShell = ({
     updatePhotoDescription,
     uploadInputRef,
   } = photoRuntime
+  const catalogErrorMessages = [...new Set(Object.values(catalogErrors).filter(Boolean))]
 
   return (
     <>
@@ -102,6 +105,29 @@ const InspectionFormShell = ({
         onRemoveItem={removePhotoUploadQueueItem}
         onRetryItem={retryPhotoUpload}
       />
+      {catalogErrorMessages.length > 0 ? (
+        <CAlert color="warning" className="mx-3 mx-md-4 mt-3" role="alert">
+          <div className="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2">
+            <div>
+              <div className="fw-semibold">Some inspection equipment may be unavailable.</div>
+              {catalogErrorMessages.map((message) => (
+                <div key={message} className="small">
+                  {message}
+                </div>
+              ))}
+            </div>
+            <CButton
+              type="button"
+              color="warning"
+              variant="outline"
+              size="sm"
+              onClick={onRetryCatalogs}
+            >
+              Retry
+            </CButton>
+          </div>
+        </CAlert>
+      ) : null}
 
       <InspectionFormManagerModals
         {...catalogManagers}
@@ -293,6 +319,16 @@ const InspectionFormShell = ({
             location={location}
             mainLocation={setup.mainLocation}
             onRequestReview={reviewRequest.requestReview}
+            onRequestLocationSetup={() => {
+              const target = refs.selectedLocationRef?.current
+              target?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
+              window.setTimeout(() => {
+                const editLocationAction =
+                  target?.querySelector?.('button[aria-label^="Edit Location"]') ||
+                  target?.querySelector?.('button, input, [tabindex]')
+                editLocationAction?.focus?.()
+              }, 100)
+            }}
             onRetryDraftSync={onRetryDraftSync}
             onSaveDraft={onSaveDraft}
             photoUploadQueue={photoUploadQueue}

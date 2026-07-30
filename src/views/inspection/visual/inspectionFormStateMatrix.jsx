@@ -2,8 +2,8 @@ import React, { createRef } from 'react'
 import { INSPECTION_TYPE_DEFINITIONS } from '../app/inspectionTypeRegistry'
 import {
   CONTINUATION_LABELS,
-  PARTIAL_STATE_PROMPTS,
   getContinuationLabel,
+  PARTIAL_STATE_PROMPTS,
 } from '../inspectionFormUiTokens'
 
 const noop = () => {}
@@ -20,15 +20,16 @@ export const INSPECTION_BODY_VIEWPORTS = ['desktop', 'mobile']
 export const NEXT_LABELS = Object.values(CONTINUATION_LABELS)
 
 export const UI_CLASSES = {
-  actions: 'inspection-form-actions',
-  inlineActions: 'inspection-form-inline-actions',
-  inlineActionSpacer: 'inspection-form-inline-actions-spacer',
+  actions: 'workflow-stage-actions',
+  inlineActions: 'workflow-stage-actions__group',
+  inlineActionSpacer: 'action-row-thumb-spacer',
   nextLocationCard: 'inspection-next-location-card',
   nextLocationOptions: 'inspection-next-location-options',
 }
 
 export const EVIDENCE_CLASSES = [
   'inspection-general-evidence-card',
+  'inspection-general-evidence-section',
   'inspection-general-evidence-mobile-compact',
 ]
 

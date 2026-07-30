@@ -67,4 +67,74 @@ describe('ClaimDetailView salary contract warning', () => {
     ).toBeTruthy()
     expect(screen.queryByText('Salary Claim (View Only)')).toBeNull()
   })
+
+  it('keeps claim-item detail and attachment actions as separate accessible controls', () => {
+    render(
+      <MemoryRouter>
+        <ClaimDetailView
+          vm={{
+            selectedClaim: {
+              id: 'CLM-501',
+              type: 'expense',
+              status: 'Pending',
+              period: 'April 2026',
+              approvalHistory: [],
+            },
+            selectedClaimTypeMeta: { label: 'Expense Claim', icon: () => null },
+            statusColorMap: {},
+            submittedClaimItems: [
+              {
+                id: 'item-1',
+                title: 'Travel expense',
+                note: 'Site visit',
+                amount: 25,
+                attachmentName: 'private-receipt.pdf',
+              },
+            ],
+            selectedClaimItem: null,
+            isItemDetailsVisible: false,
+            selectedClaimItemDetails: [],
+            submittedTotalLabel: 'Total',
+            submittedDisplayTotal: 'RM 25.00',
+            claimHistoryEntries: [],
+            claimWorkflowState: {
+              nextRole: 'Checker',
+              stageLabel: 'Check',
+              pending: true,
+              canRespond: false,
+              approveActionLabel: 'Check',
+            },
+            selectedClaimActions: {
+              download: { key: 'download', label: 'Download', disabled: false },
+              reject: { key: 'reject', label: 'Reject', disabled: true },
+              primaryWorkflowAction: {
+                key: 'primary-workflow',
+                label: 'Check',
+                disabled: true,
+              },
+            },
+            truncateAttachmentLabel: (value) => value,
+            formatDate: (value) => value || '-',
+            formatDateTime: (value) => value || '-',
+            formatCurrency: (value) => `RM ${Number(value || 0).toFixed(2)}`,
+          }}
+          handlers={{
+            onBack: vi.fn(),
+            onSelectClaimItem: vi.fn(),
+            onCloseItemDetails: vi.fn(),
+            onOpenAttachmentPreview: vi.fn(),
+            onTriggerClaimAction: vi.fn(),
+            renderItemDetailsField: () => null,
+          }}
+        />
+      </MemoryRouter>,
+    )
+
+    const openAction = screen.getByRole('button', { name: 'Open claim item Travel expense' })
+    const attachmentAction = screen.getByRole('button', {
+      name: 'Preview private-receipt.pdf',
+    })
+    expect(openAction.contains(attachmentAction)).toBe(false)
+    expect(document.querySelector('[role="button"] button')).toBeNull()
+  })
 })

@@ -105,7 +105,7 @@ export const buildWorkflowNotificationDeepLink = ({
       if (actionRequiredForViewer && id) {
         return `/staff/set-salary/assignment/${encodeURIComponent(id)}/view`
       }
-      return `/staff/set-salary/set-salary?assignmentId=${encodeURIComponent(routeKey)}`
+      return '/payroll/claims/new/salary'
     }
 
     if (
@@ -152,9 +152,7 @@ export const buildWorkflowNotificationDeepLink = ({
     if (actionRequiredForViewer && id) {
       return `/staff/set-salary/assignment/${encodeURIComponent(id)}/view`
     }
-    return id
-      ? `/staff/set-salary/set-salary?assignmentId=${encodeURIComponent(id)}`
-      : '/staff/set-salary/set-salary'
+    return '/payroll/claims/new/salary'
   }
 
   if (['salary', 'expense', 'exceptional'].includes(normalizedModule)) {
@@ -183,6 +181,7 @@ export const toWorkflowNotificationPayload = (event = {}) => {
   const reportType = normalizeText(event?.reportType || event?.metadata?.reportType).toLowerCase()
   const reportUid = normalizeText(event?.reportUid || event?.metadata?.reportUid)
   const actionRequiredForViewer = Boolean(event?.actionRequiredForViewer)
+  const serverDeepLink = normalizeText(event?.deepLink || event?.deep_link)
   const read = deriveReadState(event)
 
   return {
@@ -199,16 +198,18 @@ export const toWorkflowNotificationPayload = (event = {}) => {
     unread: !read,
     actionRequired: Boolean(event?.actionRequired),
     actionRequiredForViewer,
-    deepLink: buildWorkflowNotificationDeepLink({
-      module,
-      recordType,
-      detailRouteKey,
-      recordDisplayId,
-      recordId,
-      ownerUserId,
-      actionRequiredForViewer,
-      reportType,
-      reportUid,
-    }),
+    deepLink:
+      serverDeepLink ||
+      buildWorkflowNotificationDeepLink({
+        module,
+        recordType,
+        detailRouteKey,
+        recordDisplayId,
+        recordId,
+        ownerUserId,
+        actionRequiredForViewer,
+        reportType,
+        reportUid,
+      }),
   }
 }

@@ -953,7 +953,6 @@ const FireExtinguisherScanner = ({
     handleManualValueSelect(value)
   }
 
-  const shouldShowReadyHint = manualSearchQuery.length === 0
   const showScannerPreview = phase === 'preflight' || phase === 'requesting' || phase === 'scanning'
   const noMatchMessage =
     manualSearchQuery.length >= MIN_MANUAL_SERIAL_QUERY_LENGTH &&
@@ -968,7 +967,6 @@ const FireExtinguisherScanner = ({
 
   const showScanningSpinner =
     phase === 'preflight' || phase === 'requesting' || phase === 'image_decode'
-  const showReadyHint = phase === 'ready'
   const showScanningHint = phase === 'scanning'
   const showStartButton = phase === 'ready' || phase === 'error' || phase === 'idle'
   const currentAlertColor =
@@ -991,11 +989,6 @@ const FireExtinguisherScanner = ({
             playsInline
             aria-label="Fire extinguisher scanner camera preview"
           />
-        </div>
-      ) : null}
-      {showReadyHint ? (
-        <div className="small text-body-secondary">
-          Start the camera or enter the FE serial number.
         </div>
       ) : null}
       <div className="d-grid gap-2">
@@ -1076,11 +1069,6 @@ const FireExtinguisherScanner = ({
             </div>
           ) : null}
         </div>
-        {shouldShowReadyHint ? (
-          <div className="small text-body-secondary mt-1">
-            Start typing to select from stored S/N values.
-          </div>
-        ) : null}
         {searchPromptMessage ? (
           <div className="small text-body-secondary mt-1">{searchPromptMessage}</div>
         ) : null}

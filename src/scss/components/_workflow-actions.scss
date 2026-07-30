@@ -1,0 +1,30 @@
+.workflow-stage-actions {
+  display: grid;
+  gap: var(--workflow-control-gap);
+  margin-block-start: var(--workflow-section-gap);
+}
+
+.workflow-stage-actions__group {
+  gap: var(--workflow-control-gap);
+}
+
+.workflow-stage-actions__status {
+  color: var(--vmecc-fg-supporting);
+  font-size: var(--vmecc-text-meta);
+  line-height: var(--vmecc-leading-compact);
+}
+
+.workflow-stage-actions__leading {
+  display: grid;
+  gap: var(--workflow-control-gap);
+}
+
+.workflow-stage-actions .btn {
+  min-height: var(--workflow-control-height);
+}
+
+@media (min-width: 768px) {
+  .workflow-stage-actions__group.action-row-thumb {
+    width: 100%;
+  }
+}

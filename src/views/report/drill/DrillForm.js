@@ -41,7 +41,6 @@ const SAVE_MESSAGES = {
   dirty: 'Unsaved changes',
   saving: 'Saving draft...',
   saved: 'Draft saved',
-  failed: 'Draft save failed. Your changes remain unsaved.',
 }
 
 const DrillForm = ({
@@ -66,13 +65,16 @@ const DrillForm = ({
 }) => {
   const navigate = useNavigate()
   const location = useLocation()
+  const initialDrillFormSeed = reviewReturnRecord || editingDraftSeed || initialFormSeed || null
   const draftLoadedRef = useRef(false)
-  const initialSeedAppliedRef = useRef(false)
-  const editSeedAppliedRef = useRef('')
-  const reviewSeedAppliedRef = useRef(false)
+  const initialSeedAppliedRef = useRef(Boolean(initialFormSeed))
+  const editSeedAppliedRef = useRef(
+    editingDraftSeed && editingRecord?.id ? String(editingRecord.id).trim() : '',
+  )
+  const reviewSeedAppliedRef = useRef(Boolean(reviewReturnRecord))
   const formRef = useRef(null)
   const saveLockRef = useRef(false)
-  const originalSeedRef = useRef(null)
+  const originalSeedRef = useRef(editingDraftSeed ? normalizeDrillForm(editingDraftSeed) : null)
   const draftSeedRef = useRef(null)
   const draftIdRef = useRef('')
   const draftVersionRef = useRef(0)
@@ -87,6 +89,7 @@ const DrillForm = ({
   const [photoProcessing, setPhotoProcessing] = useState(false)
   const [hasDraftSeed, setHasDraftSeed] = useState(false)
   const [editViewMode, setEditViewMode] = useState(preferSavedEditDraft ? 'draft' : 'original')
+  const [formHydrationVersion, setFormHydrationVersion] = useState(0)
 
   const {
     form,
@@ -99,10 +102,22 @@ const DrillForm = ({
     updateChronology,
     removeChronology,
     moveChronology,
-  } = useDrillForm()
+  } = useDrillForm(initialDrillFormSeed)
+  const lastFormSignatureRef = useRef(signature(form))
   useEffect(() => {
     formRef.current = form
   }, [form])
+
+  useEffect(() => {
+    const nextSignature = signature(form)
+    if (nextSignature === lastFormSignatureRef.current) return
+    lastFormSignatureRef.current = nextSignature
+    if (saveState !== 'failed' && !saveLockRef.current && !photoProcessing) {
+      const timer = window.setTimeout(() => setBlockerMessage(''), 0)
+      return () => window.clearTimeout(timer)
+    }
+    return undefined
+  }, [form, photoProcessing, saveState])
 
   const focusDrillField = useCallback((field) => {
     if (!field || typeof document === 'undefined') return false
@@ -169,6 +184,7 @@ const DrillForm = ({
       draftSeedRef.current = normalized
       setHasDraftSeed(true)
       setSaveState('saved')
+      setFormHydrationVersion((prev) => prev + 1)
       onDirtyChange(false)
     },
   })
@@ -236,12 +252,10 @@ const DrillForm = ({
     if (!saved) {
       saveLockRef.current = false
       setSaveState('failed')
-      setBlockerMessage('Draft could not be saved to the server. Check your connection and retry.')
+      setBlockerMessage(
+        'Draft could not be saved to the server. Check your connection, then use Save Draft to retry.',
+      )
       onDirtyChange(true)
-      pushToast('Draft could not be saved to the server. Your form remains open and unsaved.', {
-        title: 'Draft save failed',
-        color: 'danger',
-      })
       return false
     }
 
@@ -339,6 +353,7 @@ const DrillForm = ({
   const loadSeed = (seed, mode) => {
     if (!seed) return
     setForm(normalizeDrillForm(seed))
+    setFormHydrationVersion((prev) => prev + 1)
     setEditViewMode(mode)
     setBlockerMessage('')
   }
@@ -351,8 +366,8 @@ const DrillForm = ({
     onSaveDraft: saveDraft,
     saveLabel,
     draftStatus:
-      saveState === 'saving' || saveState === 'failed'
-        ? SAVE_MESSAGES[saveState]
+      saveState === 'saving'
+        ? SAVE_MESSAGES.saving
         : isDirty
           ? SAVE_MESSAGES.dirty
           : lastSavedSignature
@@ -393,6 +408,7 @@ const DrillForm = ({
       <form onSubmit={(event) => event.preventDefault()}>
         {activeSection === 'setup' ? (
           <DrillSetupStep
+            key={`drill-setup-${formHydrationVersion}`}
             user={user}
             form={form}
             setForm={setForm}
@@ -404,8 +420,8 @@ const DrillForm = ({
             onSaveDraft={saveDraft}
             saveLabel={saveLabel}
             draftStatus={
-              saveState === 'saving' || saveState === 'failed'
-                ? SAVE_MESSAGES[saveState]
+              saveState === 'saving'
+                ? SAVE_MESSAGES.saving
                 : isDirty
                   ? SAVE_MESSAGES.dirty
                   : lastSavedSignature
@@ -478,7 +494,12 @@ const DrillForm = ({
               void requestReview()
             }}
             photoProcessing={photoProcessing}
-            onPhotoProcessingChange={setPhotoProcessing}
+            onPhotoProcessingChange={(isProcessing) => {
+              setPhotoProcessing(isProcessing)
+              if (!isProcessing) {
+                setBlockerMessage((current) => (/photo upload/i.test(current) ? '' : current))
+              }
+            }}
           />
         ) : null}
       </form>

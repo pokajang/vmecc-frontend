@@ -1,5 +1,6 @@
 import React from 'react'
-import FormActionGroup from 'src/components/FormActionGroup'
+import WorkflowStageActions from 'src/components/report-workflow/WorkflowStageActions'
+import WorkflowSetupField from 'src/components/report-workflow/WorkflowSetupField'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import MobileSetupSummaryRow from 'src/components/report-workflow/MobileSetupSummaryRow'
 import {
@@ -38,50 +39,17 @@ export const ReportSetupSummaryRow = ({
 }) => {
   const isMobile = useReportIsMobile()
   if (!isMobile && !showDesktop) return null
-  const desktopValue = [value, secondaryValue].filter(Boolean).join(' ')
 
   if (!isMobile) {
     return (
-      <div
-        className="report-setup-summary-row report-setup-summary-row--desktop rounded-3 border border-primary bg-primary bg-opacity-10"
-        role="group"
-        aria-label={label}
-      >
-        <span className="report-setup-summary-row__section-label small text-muted">{label}</span>
-        <span className="report-setup-summary-row__value fw-semibold">
-          <span className="text-truncate w-100">{desktopValue || '--'}</span>
-        </span>
-        <span className="report-setup-summary-row__actions d-inline-flex align-items-center gap-1">
-          {typeof onReset === 'function' ? (
-            <CButton
-              type="button"
-              color="primary"
-              variant="ghost"
-              size="sm"
-              className="report-setup-summary-row__reset p-1 border-0 shadow-none"
-              aria-label={`Reset ${label}`}
-              title={`Reset ${label}`}
-              onClick={onReset}
-            >
-              <RotateCcw size={15} />
-            </CButton>
-          ) : null}
-          {typeof onEdit === 'function' ? (
-            <CButton
-              type="button"
-              color="primary"
-              variant="ghost"
-              size="sm"
-              className="report-setup-summary-row__edit p-1 border-0 shadow-none"
-              aria-label={`Edit ${label}`}
-              title={`Edit ${label}`}
-              onClick={onEdit}
-            >
-              <Pencil size={15} />
-            </CButton>
-          ) : null}
-        </span>
-      </div>
+      <WorkflowSetupField
+        label={label}
+        value={value || '--'}
+        secondaryValue={secondaryValue}
+        onEdit={onEdit}
+        onReset={onReset}
+        className="report-setup-summary-row report-setup-summary-row--desktop"
+      />
     )
   }
 
@@ -108,40 +76,17 @@ export const ReportMobileActionGroup = ({
   primaryType = 'button',
   statusMessage = '',
 }) => (
-  <FormActionGroup
-    className="inspection-form-inline-actions report-setup-actions"
-    mobileThumb={false}
-    leading={
-      statusMessage ? (
-        <div className="inspection-draft-status small text-body-secondary">{statusMessage}</div>
-      ) : null
-    }
-    ariaLabel="Report form actions"
-  >
-    {typeof onSaveDraft === 'function' ? (
-      <CButton
-        type="button"
-        color="secondary"
-        variant="outline"
-        size="sm"
-        className="report-setup-actions__button"
-        disabled={saveDisabled}
-        onClick={() => onSaveDraft()}
-      >
-        {saveLabel}
-      </CButton>
-    ) : null}
-    <CButton
-      type={primaryType}
-      color="primary"
-      size="sm"
-      className="report-setup-actions__button"
-      disabled={primaryDisabled}
-      onClick={onPrimary}
-    >
-      {primaryLabel}
-    </CButton>
-  </FormActionGroup>
+  <WorkflowStageActions
+    className="report-setup-actions"
+    onSaveDraft={onSaveDraft}
+    onPrimary={onPrimary}
+    saveLabel={saveLabel}
+    primaryLabel={primaryLabel}
+    saveDisabled={saveDisabled}
+    primaryDisabled={primaryDisabled}
+    primaryType={primaryType}
+    statusMessage={statusMessage}
+  />
 )
 
 export const ReportSetupActions = ({
@@ -161,25 +106,6 @@ export const ReportSetupActions = ({
     statusMessage={statusMessage}
   />
 )
-
-export const ReportMobileContextPanel = ({ title = 'Context', items = [] }) => {
-  const isMobile = useReportIsMobile()
-  if (!isMobile) return null
-
-  return (
-    <div className="report-mobile-context d-md-none rounded-3 border bg-body">
-      <div className="report-mobile-context__title fw-semibold">{title}</div>
-      <div className="report-mobile-context__grid">
-        {items.map((item) => (
-          <div key={item.label} className="report-mobile-context__item">
-            <div className="report-mobile-context__label">{item.label}</div>
-            <div className="report-mobile-context__value">{item.value || '--'}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
 
 export const ReportBasicPathSummary = ({ title, description, mobileSummary, items = [] }) => (
   <div className="report-basic-path-card rounded-3 border bg-body p-3 d-grid gap-2">

@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { uid } from '../utils'
 import { DRILL_FIELD_LIMITS } from './constants'
-import { defaultDrillForm } from './utils'
+import { defaultDrillForm, normalizeDrillForm } from './utils'
 
-const useDrillForm = () => {
-  const [form, setForm] = useState(defaultDrillForm)
+const useDrillForm = (initialFormSeed = null) => {
+  const [form, setForm] = useState(() =>
+    initialFormSeed ? normalizeDrillForm(initialFormSeed) : defaultDrillForm(),
+  )
   const [fieldErrors, setFieldErrors] = useState({})
   const [setupFieldErrors, setSetupFieldErrors] = useState({})
 

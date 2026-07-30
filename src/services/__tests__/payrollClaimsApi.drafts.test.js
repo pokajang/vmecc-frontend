@@ -1,5 +1,6 @@
 /* @vitest-environment jsdom */
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { activatePayrollIdentity, getPayrollVolatileStorage } from 'src/services/payrollPrivacy'
 
 vi.mock('src/config/featureFlags', () => ({
   default: {
@@ -58,9 +59,11 @@ describe('payrollClaimsApi draft reliability helpers', () => {
         key: (index) => Array.from(store.keys())[index] || null,
       },
     })
+    activatePayrollIdentity('3')
+    getPayrollVolatileStorage().clear()
   })
 
-  it('includes source draft fields in submit payload', async () => {
+  it('includes source draft fields but excludes client-authored salary calculations', async () => {
     createPayrollClaim.mockResolvedValue({
       data: {
         id: 99,
@@ -87,17 +90,20 @@ describe('payrollClaimsApi draft reliability helpers', () => {
     })
 
     expect(createPayrollClaim).toHaveBeenCalledTimes(1)
-    expect(createPayrollClaim).toHaveBeenCalledWith(
+    const [payload, options] = createPayrollClaim.mock.calls[0]
+    expect(payload).toEqual(
       expect.objectContaining({
         source_draft_id: 'DRAFT-SALARY-20260419',
         source_draft_type: 'salary',
-        payroll_baseline_confirmed: true,
-        adjustments_total: 250,
-        approved_overtime_payout: 120,
-        projected_net_payout: 4120,
-        overtime_rows: [{ overtimeId: 'OT-1', payablePayout: 120 }],
-        overtime_rate_snapshot: { weekdayMultiplier: 1.5 },
       }),
+    )
+    expect(payload).not.toHaveProperty('payroll_baseline_confirmed')
+    expect(payload).not.toHaveProperty('adjustments_total')
+    expect(payload).not.toHaveProperty('approved_overtime_payout')
+    expect(payload).not.toHaveProperty('projected_net_payout')
+    expect(payload).not.toHaveProperty('overtime_rows')
+    expect(payload).not.toHaveProperty('overtime_rate_snapshot')
+    expect(options).toEqual(
       expect.objectContaining({
         headers: expect.objectContaining({
           'X-Idempotency-Key': expect.any(String),
@@ -106,7 +112,7 @@ describe('payrollClaimsApi draft reliability helpers', () => {
     )
   })
 
-  it('includes strict salary fields for update payload as well', async () => {
+  it('excludes client-authored salary calculations from update payloads', async () => {
     updatePayrollClaim.mockResolvedValue({
       data: {
         id: 108,
@@ -120,6 +126,7 @@ describe('payrollClaimsApi draft reliability helpers', () => {
     await submitMyPayrollClaimApiFirst(
       {
         type: 'salary',
+        version: 4,
         period: 'April 2026',
         periodValue: '2026-04',
         payrollBaselineConfirmed: false,
@@ -133,16 +140,15 @@ describe('payrollClaimsApi draft reliability helpers', () => {
       108,
     )
 
-    expect(updatePayrollClaim).toHaveBeenCalledWith(
-      108,
-      expect.objectContaining({
-        payroll_baseline_confirmed: false,
-        adjustments_total: 0,
-        approved_overtime_payout: 0,
-        projected_net_payout: 3800,
-        overtime_rows: [],
-        overtime_rate_snapshot: null,
-      }),
+    const [, payload, options] = updatePayrollClaim.mock.calls[0]
+    expect(payload.expected_version).toBe(4)
+    expect(payload).not.toHaveProperty('payroll_baseline_confirmed')
+    expect(payload).not.toHaveProperty('adjustments_total')
+    expect(payload).not.toHaveProperty('approved_overtime_payout')
+    expect(payload).not.toHaveProperty('projected_net_payout')
+    expect(payload).not.toHaveProperty('overtime_rows')
+    expect(payload).not.toHaveProperty('overtime_rate_snapshot')
+    expect(options).toEqual(
       expect.objectContaining({
         headers: expect.objectContaining({
           'X-Idempotency-Key': expect.any(String),
@@ -309,7 +315,7 @@ describe('payrollClaimsApi draft reliability helpers', () => {
   })
 
   it('loads local autosave drafts as local-only entries', async () => {
-    localStorage.setItem(
+    getPayrollVolatileStorage().setItem(
       'payroll-claim-autosave:3:salary',
       JSON.stringify({
         id: 'DRAFT-SALARY-20260419',

@@ -46,10 +46,10 @@ export const getInspectionValidationReasons = (validationState = {}) => {
 export const buildInspectionValidationStatusMessage = (validationState = {}) => {
   const reasons = getInspectionValidationReasons(validationState)
   if (reasons.length === 0) {
-    return validationState?.errorCount > 0
-      ? 'Cannot continue to review: complete the highlighted inspection items.'
-      : ''
+    return validationState?.errorCount > 0 ? 'Some inspection items need attention.' : ''
   }
 
-  return `Cannot continue to review: ${reasons.join('; ')}.`
+  const [firstReason] = reasons
+  const countLabel = `${reasons.length} item${reasons.length === 1 ? '' : 's'} need attention.`
+  return `${countLabel} First: ${firstReason.charAt(0).toUpperCase()}${firstReason.slice(1)}.`
 }

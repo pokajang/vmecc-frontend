@@ -189,7 +189,85 @@ const ApprovalRulesEditor = ({
               </CButton>
             ) : null}
           </div>
-          <div className="rounded-3 border overflow-hidden">
+          <div className="d-grid gap-3 d-md-none">
+            {policy.rules.map((rule, ruleIndex) => (
+              <section
+                key={`mobile-${rule.id}`}
+                className="border rounded-3 p-3 d-grid gap-3 bg-body"
+                aria-labelledby={`approval-rule-${rule.id}-title`}
+              >
+                <div className="d-flex align-items-center justify-content-between gap-2">
+                  <h3 id={`approval-rule-${rule.id}-title`} className="h6 mb-0">
+                    Rule {ruleIndex + 1}
+                  </h3>
+                  <CFormCheck
+                    id={`mobile-rule-${rule.id}-active`}
+                    label="Active"
+                    checked={rule.active !== false}
+                    onChange={(event) => setRuleField?.(rule.id, 'active', event.target.checked)}
+                    disabled={!editMode || loading}
+                  />
+                </div>
+                <div>
+                  <CFormLabel htmlFor={`mobile-rule-${rule.id}-applicant`}>
+                    Applicant Role
+                  </CFormLabel>
+                  <CFormSelect
+                    id={`mobile-rule-${rule.id}-applicant`}
+                    value={rule.applicantRole}
+                    onChange={(event) =>
+                      setRuleField?.(rule.id, 'applicantRole', event.target.value)
+                    }
+                    disabled={!editMode || loading}
+                  >
+                    <option value="">Select role</option>
+                    {sortedRoles.map((option) => (
+                      <option
+                        key={`${rule.id}-mobile-applicant-${option.value}`}
+                        value={option.value}
+                      >
+                        {option.label}
+                      </option>
+                    ))}
+                  </CFormSelect>
+                </div>
+                {stageFields.map((stage) => (
+                  <div key={`mobile-${rule.id}-${stage.key}`}>
+                    <CFormLabel htmlFor={`mobile-rule-${rule.id}-${stage.key}`}>
+                      {stage.label}
+                    </CFormLabel>
+                    <CFormSelect
+                      id={`mobile-rule-${rule.id}-${stage.key}`}
+                      value={rule[stage.key] || ''}
+                      onChange={(event) => setRuleField?.(rule.id, stage.key, event.target.value)}
+                      disabled={!editMode || loading}
+                    >
+                      {getStageOptions(stageRoleOptions, stage.key, sortedRoles).map((option) => (
+                        <option
+                          key={`${rule.id}-mobile-${stage.key}-${option.value}`}
+                          value={option.value}
+                        >
+                          {option.label}
+                        </option>
+                      ))}
+                    </CFormSelect>
+                  </div>
+                ))}
+                {editMode ? (
+                  <CButton
+                    color="danger"
+                    variant="outline"
+                    disabled={loading || policy.rules.length <= 1}
+                    onClick={() => removeRule?.(rule.id)}
+                  >
+                    <Trash2 size={14} className="me-1" aria-hidden="true" />
+                    Remove rule
+                  </CButton>
+                ) : null}
+              </section>
+            ))}
+          </div>
+          <div className="d-none d-md-block rounded-3 border overflow-hidden">
             <CTable align="middle" className="mb-0" responsive>
               <CTableHead color="light">
                 <CTableRow>
@@ -266,7 +344,8 @@ const ApprovalRulesEditor = ({
                           disabled={loading || policy.rules.length <= 1}
                           onClick={() => removeRule?.(rule.id)}
                         >
-                          <Trash2 size={14} />
+                          <Trash2 size={14} aria-hidden="true" />
+                          <span className="visually-hidden">Remove rule</span>
                         </CButton>
                       ) : (
                         <span className="text-body-secondary small">-</span>

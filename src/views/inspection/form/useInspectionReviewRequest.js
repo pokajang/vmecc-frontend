@@ -103,20 +103,25 @@ const useInspectionReviewRequest = ({
         sessionState,
         permanentFailureCount,
       })
-      if (!isInspectionFormValid(currentForm) || !readiness.isReadyToReview) {
+      const formIsValid = isInspectionFormValid(currentForm)
+      if (!formIsValid || !readiness.isReadyToReview) {
         setValidationState(nextValidationState)
         setFieldErrors(nextValidationState.missing)
-        if (!isInspectionFormValid(currentForm)) {
+        if (!formIsValid) {
           focusFirstMissingInspectionField({
             currentForm,
             validation: nextValidationState,
             fieldRefs: focusFieldRefs,
           })
+        } else {
+          pushToast(
+            readiness.blockers[0]?.message || 'The inspection cannot be reviewed right now.',
+            {
+              title: 'Review unavailable',
+              color: 'warning',
+            },
+          )
         }
-        pushToast(readiness.blockers[0]?.message || 'Complete the inspection form before review.', {
-          title: 'Review blocked',
-          color: 'warning',
-        })
         return
       }
       setValidationState(null)

@@ -1,12 +1,13 @@
 import React from 'react'
-import { CAlert, CBadge, CButton, CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/react'
+import { CAlert, CButton, CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/react'
 import { Calendar, Download, X } from 'lucide-react'
 import ApprovalGates from 'src/components/ApprovalGates'
 import AuditHistoryPanel from 'src/components/AuditHistoryPanel'
-import BackButton from 'src/components/BackButton'
 import CreateActionButton from 'src/components/CreateActionButton'
+import ResponsiveKeyValueList from 'src/components/workflow/ResponsiveKeyValueList'
+import WorkflowDetailActions from 'src/components/workflow/WorkflowDetailActions'
+import WorkflowDetailHeader from 'src/components/workflow/WorkflowDetailHeader'
 import SalaryClaimReadonlyView from '../../../payroll/components/SalaryClaimReadonlyView'
-import { activateOnEnterOrSpace } from 'src/utils/uiAccessibility'
 
 const CLAIM_GATES = [
   { action: 'Checked', label: 'Checked' },
@@ -45,8 +46,15 @@ const ClaimDetailView = ({ vm, handlers }) => {
 
   return (
     <div className="d-grid gap-3" data-testid="salary-claims-management-detail">
+      <WorkflowDetailHeader
+        title={selectedClaim ? `${selectedClaimTypeMeta.label} Claim` : 'Claim Details'}
+        subtitle={selectedClaim?.id ? `Claim ID: ${selectedClaim.id}` : ''}
+        status={selectedClaim?.status}
+        statusColor={statusColorMap[selectedClaim?.status] || 'secondary'}
+        onBack={onBack}
+        backLabel="Back to claims"
+      />
       <div className="d-flex flex-wrap align-items-center gap-2">
-        <BackButton onClick={onBack} label="Back to claims" />
         {selectedClaim?.status && (
           <ApprovalGates
             gates={CLAIM_GATES}
@@ -54,9 +62,6 @@ const ClaimDetailView = ({ vm, handlers }) => {
             isCancelled={selectedClaim.status === 'Cancelled'}
             direction="horizontal"
           />
-        )}
-        {selectedClaim?.id && (
-          <span className="text-body-secondary small">Claim ID: {selectedClaim.id}</span>
         )}
       </div>
 
@@ -109,6 +114,7 @@ const ClaimDetailView = ({ vm, handlers }) => {
 
           {isSalaryClaim && selectedClaim?.salaryContractIncomplete !== true ? (
             <SalaryClaimReadonlyView
+              key={`${selectedClaim.userId || selectedClaim.ownerId || selectedClaim.employeeId || 'unknown'}::${selectedClaim.id || 'unknown'}`}
               claim={selectedClaim}
               formatCurrency={formatCurrency}
               formatDate={formatDate}
@@ -126,18 +132,18 @@ const ClaimDetailView = ({ vm, handlers }) => {
                           className={`d-flex align-items-start gap-3 border-bottom pb-3 ${
                             selectedClaimItem?.id === item.id ? 'bg-light rounded px-2 pt-2' : ''
                           }`}
-                          role="button"
-                          tabIndex={0}
-                          aria-label={`Open claim item ${item.title || item.id}`}
-                          style={{ cursor: 'pointer' }}
-                          onClick={() => onSelectClaimItem(item.id)}
-                          onKeyDown={(event) =>
-                            activateOnEnterOrSpace(event, () => onSelectClaimItem(item.id))
-                          }
                         >
                           <div className="flex-grow-1">
                             <div className="d-flex align-items-center flex-wrap gap-2">
-                              <span className="fw-semibold">{item.title}</span>
+                              <CButton
+                                type="button"
+                                color="link"
+                                className="workflow-item-action p-0 text-start fw-semibold text-decoration-none"
+                                aria-label={`Open claim item ${item.title || item.id}`}
+                                onClick={() => onSelectClaimItem(item.id)}
+                              >
+                                {item.title}
+                              </CButton>
                               {item.date && (
                                 <span className="small text-body-secondary">
                                   {formatDate(item.date)}
@@ -147,17 +153,17 @@ const ClaimDetailView = ({ vm, handlers }) => {
                             <div className="small text-body-secondary mt-1 d-flex align-items-center flex-wrap gap-2">
                               <span>{item.note || 'No additional notes for this item.'}</span>
                               {item.attachmentName && (
-                                <CBadge
+                                <CButton
                                   color="light"
-                                  className="text-body-secondary"
-                                  style={{ cursor: 'pointer' }}
-                                  onClick={(event) => {
-                                    event.stopPropagation()
+                                  size="sm"
+                                  className="workflow-attachment-action text-body-secondary"
+                                  aria-label={`Preview ${item.attachmentName}`}
+                                  onClick={() => {
                                     onOpenAttachmentPreview(item.attachmentName, item, 'item-list')
                                   }}
                                 >
                                   {truncateAttachmentLabel(item.attachmentName)}
-                                </CBadge>
+                                </CButton>
                               )}
                             </div>
                           </div>
@@ -197,10 +203,11 @@ const ClaimDetailView = ({ vm, handlers }) => {
                               return renderItemDetailsField(
                                 key,
                                 'Attachment',
-                                <CBadge
+                                <CButton
                                   color="light"
-                                  className="text-body-secondary"
-                                  style={{ cursor: 'pointer' }}
+                                  size="sm"
+                                  className="workflow-attachment-action text-body-secondary"
+                                  aria-label={`Preview ${selectedClaimItem.attachmentName}`}
                                   onClick={() =>
                                     onOpenAttachmentPreview(
                                       selectedClaimItem.attachmentName,
@@ -210,7 +217,7 @@ const ClaimDetailView = ({ vm, handlers }) => {
                                   }
                                 >
                                   {truncateAttachmentLabel(selectedClaimItem.attachmentName)}
-                                </CBadge>,
+                                </CButton>,
                               )
                             }
                             return renderItemDetailsField(key, entry.label, entry.value)
@@ -227,20 +234,21 @@ const ClaimDetailView = ({ vm, handlers }) => {
           <CCard>
             <CCardHeader>Workflow State</CCardHeader>
             <CCardBody>
-              <div className="d-grid gap-1">
-                <div className="d-flex justify-content-between align-items-start gap-3">
-                  <span className="text-body-secondary">Current Status</span>
-                  <span className="text-end">{selectedClaim.status || '-'}</span>
-                </div>
-                <div className="d-flex justify-content-between align-items-start gap-3">
-                  <span className="text-body-secondary">Current Action Owner</span>
-                  <span className="text-end">{claimWorkflowState.nextRole || '-'}</span>
-                </div>
-                <div className="d-flex justify-content-between align-items-start gap-3">
-                  <span className="text-body-secondary">Next Action</span>
-                  <span className="text-end">{claimWorkflowState.stageLabel || '-'}</span>
-                </div>
-              </div>
+              <ResponsiveKeyValueList
+                items={[
+                  { key: 'status', label: 'Current Status', value: selectedClaim.status || '-' },
+                  {
+                    key: 'owner',
+                    label: 'Current Action Owner',
+                    value: claimWorkflowState.nextRole || '-',
+                  },
+                  {
+                    key: 'action',
+                    label: 'Next Action',
+                    value: claimWorkflowState.stageLabel || '-',
+                  },
+                ]}
+              />
             </CCardBody>
           </CCard>
 
@@ -251,35 +259,35 @@ const ClaimDetailView = ({ vm, handlers }) => {
             formatDateTime={formatDateTime}
           />
 
-          <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2">
-            <div className="small text-body-secondary">
-              {claimWorkflowState.pending
+          <WorkflowDetailActions
+            statusMessage={
+              claimWorkflowState.pending
                 ? claimWorkflowState.canRespond
                   ? `You can ${claimWorkflowState.approveActionLabel.toLowerCase()} this claim.`
                   : claimWorkflowState.nextRole
                     ? `Pending ${claimWorkflowState.stageLabel} by ${claimWorkflowState.nextRole}.`
                     : `Pending ${claimWorkflowState.stageLabel}.`
-                : 'Workflow completed.'}
-            </div>
-            <div className="d-flex flex-column flex-md-row justify-content-end gap-2">
-              <CButton
-                color="light"
-                onClick={() =>
-                  onTriggerClaimAction(selectedClaim, selectedClaimActions.download.key)
-                }
-                disabled={selectedClaimActions.download.disabled}
-              >
-                <Download size={14} className="me-1 align-text-bottom" />
-                {selectedClaimActions.download.label}
-              </CButton>
+                : 'Workflow completed.'
+            }
+          >
+            <CButton
+              color="light"
+              onClick={() => onTriggerClaimAction(selectedClaim, selectedClaimActions.download.key)}
+              disabled={selectedClaimActions.download.disabled}
+            >
+              <Download size={14} className="me-1 align-text-bottom" aria-hidden="true" />
+              {selectedClaimActions.download.label}
+            </CButton>
+            {!selectedClaimActions.reject.disabled ? (
               <CButton
                 color="danger"
                 variant="outline"
                 onClick={() => onTriggerClaimAction(selectedClaim, selectedClaimActions.reject.key)}
-                disabled={selectedClaimActions.reject.disabled}
               >
                 {selectedClaimActions.reject.label}
               </CButton>
+            ) : null}
+            {!selectedClaimActions.primaryWorkflowAction.disabled ? (
               <CButton
                 color="primary"
                 onClick={() =>
@@ -288,12 +296,11 @@ const ClaimDetailView = ({ vm, handlers }) => {
                     selectedClaimActions.primaryWorkflowAction.key,
                   )
                 }
-                disabled={selectedClaimActions.primaryWorkflowAction.disabled}
               >
                 {selectedClaimActions.primaryWorkflowAction.label}
               </CButton>
-            </div>
-          </div>
+            ) : null}
+          </WorkflowDetailActions>
         </>
       )}
     </div>

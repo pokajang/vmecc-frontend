@@ -1,0 +1,68 @@
+.workflow-setup-field {
+  display: grid;
+  gap: var(--workflow-control-gap);
+}
+
+.workflow-setup-field__header,
+.workflow-setup-field__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--workflow-field-gap);
+}
+
+.workflow-setup-field__summary {
+  min-height: 3rem;
+  padding: 0.5rem 0.625rem 0.5rem 0.75rem;
+  border: 1px solid var(--cui-border-color);
+  border-radius: var(--vmecc-radius-card);
+  background: var(--vmecc-primary-soft);
+}
+
+.workflow-setup-field__copy {
+  display: grid;
+  gap: var(--workflow-summary-row-gap);
+  min-width: 0;
+}
+
+.workflow-setup-field__label {
+  margin: 0;
+  color: var(--vmecc-fg-supporting);
+  font-size: var(--vmecc-text-meta);
+  font-weight: var(--vmecc-weight-semibold);
+  line-height: var(--vmecc-leading-compact);
+}
+
+.workflow-setup-field__value {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--vmecc-fg-strong);
+  font-size: var(--vmecc-text-body);
+  font-weight: var(--vmecc-weight-semibold);
+}
+
+.workflow-setup-field__meta {
+  color: var(--vmecc-fg-supporting);
+  font-size: var(--vmecc-text-meta);
+  font-weight: var(--vmecc-weight-body);
+}
+
+.workflow-setup-field__actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.125rem;
+}
+
+.workflow-setup-field__actions .btn {
+  display: inline-flex;
+  width: var(--workflow-control-height);
+  height: var(--workflow-control-height);
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.workflow-setup-field__error {
+  color: var(--vmecc-status-danger-text);
+  font-size: var(--vmecc-text-meta);
+}

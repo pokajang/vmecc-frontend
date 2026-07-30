@@ -116,7 +116,6 @@ export const InspectionRecordsView = ({
             setQueueDetailsOpen(true)
           }}
           onViewRecords={() => setShowMobileRecords(true)}
-          onViewExtinguishers={() => navigate(`${reportBasePath}/all-extinguishers`)}
           onRetryQueue={() => syncQueuedSubmissions({ silent: false, force: true })}
         />
       ) : null}

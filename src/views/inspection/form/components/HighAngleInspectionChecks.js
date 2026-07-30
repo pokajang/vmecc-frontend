@@ -589,7 +589,7 @@ export const HighAngleInspectionChecks = ({
             !readOnly ? (
               <RowActions
                 iconSize={16}
-                hitArea={32}
+                hitArea={44}
                 toggleAriaLabel={`High angle actions for ${mobileDetailRow.equipment || 'Equipment'}`}
                 items={[
                   typeof onResetCheck === 'function'

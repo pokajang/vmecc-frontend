@@ -1,4 +1,5 @@
 import { useCallback } from 'react'
+import { getPayrollVolatileStorage } from 'src/services/payrollPrivacy'
 import {
   clearPayrollDraftRetryEntry,
   clearPayrollDraftRetryEntriesByType,
@@ -147,7 +148,7 @@ const useClaimSubmissionActions = ({
     setLeaveModalVisible(false)
     pendingLeaveActionRef.current = null
     try {
-      localStorage.removeItem(localAutosaveKey)
+      getPayrollVolatileStorage().removeItem(localAutosaveKey)
     } catch {}
     if (pendingAction) {
       pendingAction()
@@ -259,10 +260,15 @@ const useClaimSubmissionActions = ({
       )
       return
     }
-    const submissionKey = generateSubmissionKey(claimType, user?.id)
+    const submissionKey = generateSubmissionKey(
+      claimType,
+      user?.id,
+      activeDraftId || draftPayload?.id || sourceClaimId,
+    )
     setIsSubmittingClaim(true)
     try {
       const baseRecordPayload = {
+        version: Number(draftPayload?.sourceVersion || 0) || null,
         period: periodLabel,
         periodValue: header.period,
         category:
@@ -371,7 +377,7 @@ const useClaimSubmissionActions = ({
         }),
       )
       try {
-        localStorage.removeItem(localAutosaveKey)
+        getPayrollVolatileStorage().removeItem(localAutosaveKey)
       } catch {}
     } finally {
       setIsSubmittingClaim(false)

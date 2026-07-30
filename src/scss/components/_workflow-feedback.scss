@@ -1,0 +1,44 @@
+.workflow-inline-feedback {
+  border-radius: var(--vmecc-radius-card);
+}
+
+.workflow-inline-feedback__content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--workflow-field-gap);
+}
+
+.workflow-inline-feedback__copy {
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.workflow-inline-feedback__title {
+  font-weight: var(--vmecc-weight-semibold);
+}
+
+.workflow-inline-feedback__message {
+  line-height: var(--vmecc-leading-compact);
+}
+
+.workflow-inline-feedback__action {
+  flex: 0 0 auto;
+}
+
+.workflow-inline-feedback--compact {
+  padding: 0.625rem 0.75rem;
+}
+
+@media (max-width: 575.98px) {
+  .workflow-inline-feedback__content {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .workflow-inline-feedback__action {
+    align-self: flex-start;
+    min-height: var(--workflow-control-height);
+  }
+}

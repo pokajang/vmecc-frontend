@@ -3,6 +3,7 @@ import { CAlert, CButton, CFormInput, CFormTextarea } from '@coreui/react'
 import { Camera, Trash2 } from 'lucide-react'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import CreateActionButton from 'src/components/CreateActionButton'
+import PhotoEditorGallery from 'src/components/report-workflow/PhotoEditorGallery'
 import { ReportPhotoImage } from 'src/components/report-workflow/ReportViewComponents'
 import {
   deleteReportMedia,
@@ -21,7 +22,7 @@ import {
   subscribeToCameraReturn,
 } from 'src/utils/cameraRecovery'
 import { uid } from '../../utils'
-import { REPORT_MOBILE_QUERY } from '../../hooks/useReportIsMobile'
+import useReportIsMobile, { REPORT_MOBILE_QUERY } from '../../hooks/useReportIsMobile'
 
 const PHOTO_ACCEPT =
   '.jpg,.jpeg,.png,.webp,.heic,.heif,image/jpeg,image/png,image/webp,image/heic,image/heif'
@@ -46,6 +47,8 @@ const ReportPhotoSection = ({
   const uploadRef = React.useRef(null)
   const abortRef = React.useRef(null)
   const operationRef = React.useRef(0)
+  const onProcessingChangeRef = React.useRef(onProcessingChange)
+  const isMobile = useReportIsMobile()
   const [processing, setProcessing] = React.useState(false)
   const [progress, setProgress] = React.useState(null)
   const [fallback, setFallback] = React.useState(() =>
@@ -55,20 +58,20 @@ const ReportPhotoSection = ({
 
   const rows = Array.isArray(photos) ? photos : []
   const uploadedCount = rows.filter((photo) => String(photo?.url || '').trim()).length
-  const setProcessingState = React.useCallback(
-    (next) => {
-      setProcessing(next)
-      onProcessingChange?.(next)
-    },
-    [onProcessingChange],
-  )
+  React.useEffect(() => {
+    onProcessingChangeRef.current = onProcessingChange
+  }, [onProcessingChange])
+  const setProcessingState = React.useCallback((next) => {
+    setProcessing(next)
+    onProcessingChangeRef.current?.(next)
+  }, [])
 
   React.useEffect(
     () => () => {
       abortRef.current?.abort()
-      onProcessingChange?.(false)
+      onProcessingChangeRef.current?.(false)
     },
-    [onProcessingChange],
+    [],
   )
   React.useEffect(() => {
     if (!allowCapture) return undefined
@@ -189,6 +192,10 @@ const ReportPhotoSection = ({
     void deleteReportMedia(target.mediaId)
   }
 
+  const updatePhotoDescription = (targetPhoto, description) => {
+    onChange?.(rows.map((photo) => (photo === targetPhoto ? { ...photo, description } : photo)))
+  }
+
   return (
     <section
       className="d-grid gap-2"
@@ -304,50 +311,52 @@ const ReportPhotoSection = ({
         </div>
       ) : null}
       {rows.length ? (
-        <div className="row g-3">
-          {rows.map((photo, index) => (
-            <div key={photo.id || `${photo.fileName}-${index}`} className="col-12 col-md-6">
-              <div className="rounded-3 border p-2 d-grid gap-2 h-100">
-                <ReportPhotoImage
-                  photo={photo}
-                  alt={photo.description || photo.fileName || `Report photo ${index + 1}`}
-                  className="report-photo-editor__image"
-                />
-                <CFormTextarea
-                  size="sm"
-                  rows={2}
-                  maxLength={descriptionMaxLength}
-                  aria-label={`Description for ${photo.fileName || `photo ${index + 1}`}`}
-                  value={String(photo.description || '')}
-                  placeholder="Describe this photo (optional)"
-                  onChange={(event) =>
-                    onChange?.(
-                      rows.map((row) =>
-                        String(row?.id) === String(photo.id)
-                          ? { ...row, description: event.target.value }
-                          : row,
-                      ),
-                    )
-                  }
-                />
-                <CButton
-                  type="button"
-                  color="danger"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setRemoveTarget(photo)}
-                >
-                  <Trash2 size={14} className="me-1" /> Remove
-                </CButton>
+        isMobile ? (
+          <PhotoEditorGallery
+            photos={rows}
+            descriptionMaxLength={descriptionMaxLength}
+            onChangeDescription={updatePhotoDescription}
+            onRemove={(photo) => setRemoveTarget(photo)}
+            emptyMessage={emptyMessage}
+          />
+        ) : (
+          <div className="row g-3">
+            {rows.map((photo, index) => (
+              <div key={photo.id || `${photo.fileName}-${index}`} className="col-12 col-md-6">
+                <div className="rounded-3 border p-2 d-grid gap-2 h-100">
+                  <ReportPhotoImage
+                    photo={photo}
+                    alt={photo.description || photo.fileName || `Report photo ${index + 1}`}
+                    className="report-photo-editor__image"
+                  />
+                  <CFormTextarea
+                    size="sm"
+                    rows={2}
+                    maxLength={descriptionMaxLength}
+                    aria-label={`Description for ${photo.fileName || `photo ${index + 1}`}`}
+                    value={String(photo.description || '')}
+                    placeholder="Describe this photo (optional)"
+                    onChange={(event) => updatePhotoDescription(photo, event.target.value)}
+                  />
+                  <CButton
+                    type="button"
+                    color="danger"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setRemoveTarget(photo)}
+                  >
+                    <Trash2 size={14} className="me-1" /> Remove
+                  </CButton>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      ) : (
+            ))}
+          </div>
+        )
+      ) : emptyMessage ? (
         <div className="rounded-3 border bg-light-subtle p-3 text-body-secondary">
           {emptyMessage}
         </div>
-      )}
+      ) : null}
     </section>
   )
 }

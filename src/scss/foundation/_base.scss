@@ -41,6 +41,12 @@ html {
   --vmecc-shadow-card: 0 0.25rem 0.9rem rgba(15, 23, 42, 0.06);
   --vmecc-shadow-overlay: 0 0.75rem 2rem rgba(15, 23, 42, 0.18);
   --vmecc-touch-target: max(2.75rem, 44px);
+  --workflow-control-height: var(--vmecc-touch-target);
+  --workflow-control-gap: 0.5rem;
+  --workflow-field-gap: 0.75rem;
+  --workflow-section-gap: 1.25rem;
+  --workflow-surface-padding: 0.75rem;
+  --workflow-summary-row-gap: 0.125rem;
   --vmecc-primary-soft: rgba(0, 126, 122, 0.1);
   --vmecc-primary-on-soft: #006966;
   --vmecc-scrollbar-size: 6px;

@@ -63,7 +63,7 @@ const useLocationTypeManager = ({ userId, selectedLocations, updateSetupField, p
         toggleOption: {
           value: LOCATION_TOGGLE_VALUE,
           title: showAllLocationTypes ? 'Show less' : 'Show more',
-          description: showAllLocationTypes ? 'Hide extra areas.' : 'View all areas.',
+          description: '',
           icon: showAllLocationTypes ? ChevronUp : ChevronDown,
         },
       }),

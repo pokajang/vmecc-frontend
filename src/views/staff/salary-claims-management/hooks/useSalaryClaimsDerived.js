@@ -251,7 +251,11 @@ const useSalaryClaimsDerived = ({
         ) || null
       )
     }
-    return claimRows.find((row) => row.id === claimId) || null
+    return (
+      claimRows.find(
+        (row) => String(row.publicId || '') === decoded || String(row.recordKey || '') === decoded,
+      ) || null
+    )
   }, [claimId, claimRows])
 
   const decodedOvertimeRouteKey = useMemo(

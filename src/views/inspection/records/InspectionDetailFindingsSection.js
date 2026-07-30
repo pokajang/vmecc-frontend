@@ -51,12 +51,13 @@ const InspectionDetailFindingsSection = ({
   items = [],
   renderItemContent = null,
   fallbackContent = null,
+  emptyMessage = '',
 }) => {
   const visibleItems = Array.isArray(items) ? items.filter(Boolean) : []
   const hasItems = visibleItems.length > 0
   const hasFallback = Boolean(fallbackContent)
 
-  if (!hasItems && !hasFallback) return null
+  if (!hasItems && !hasFallback && !text(emptyMessage)) return null
 
   return (
     <section className="inspection-form-section d-grid gap-3">
@@ -96,6 +97,9 @@ const InspectionDetailFindingsSection = ({
         </CAccordion>
       ) : null}
       {!hasItems && hasFallback ? fallbackContent : null}
+      {!hasItems && !hasFallback && text(emptyMessage) ? (
+        <div className="inspection-inset text-body-secondary">{emptyMessage}</div>
+      ) : null}
     </section>
   )
 }

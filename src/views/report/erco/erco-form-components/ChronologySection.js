@@ -49,6 +49,8 @@ const ChronologySection = ({
   handleSaveResponseStartTime,
   handleCancelResponseStartTimeEdit,
   handleSetResponseStartTime,
+  handleUseIncidentTime,
+  incidentTime,
   isChronologyOutOfOrder,
   sortChronologyByTime,
   chronologyRows,
@@ -216,16 +218,17 @@ const ChronologySection = ({
                 />
               </div>
             ) : (
-              <EditControls
-                editMode={false}
-                loading={false}
-                onEdit={handleSetResponseStartTime}
-                editLabel="Set Chronology Start Time"
-              />
+              <div className="d-flex flex-wrap gap-2">
+                {incidentTime ? (
+                  <CButton color="primary" variant="outline" onClick={handleUseIncidentTime}>
+                    Use incident time · {incidentTime}
+                  </CButton>
+                ) : null}
+                <CButton color="light" onClick={handleSetResponseStartTime}>
+                  Set {incidentTime ? 'different ' : ''}start time
+                </CButton>
+              </div>
             )}
-          </div>
-          <div className="small text-body-secondary">
-            Usually same as incident time unless response started later.
           </div>
         </div>
       ) : (

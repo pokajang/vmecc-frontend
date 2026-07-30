@@ -1,9 +1,16 @@
 import React, { useState } from 'react'
 import { CCard, CCardBody, CCol, CRow } from '@coreui/react'
 
-export const DetailField = ({ label, children, xs = 12, md = 4 }) => (
+export const DetailField = ({ label, children, xs = 12, md = 4, mobileLayout = 'stacked' }) => (
   <CCol xs={xs} md={md}>
-    <div className="workflow-detail-field">
+    <div
+      className={[
+        'workflow-detail-field',
+        mobileLayout === 'inline' ? 'workflow-detail-field--mobile-inline' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
       <div className="workflow-detail-field__label">{label}</div>
       <div className="workflow-detail-field__value">{children}</div>
     </div>

@@ -267,7 +267,18 @@ const OvertimeApplySection = ({
         </CRow>
       </div>
 
-      <FormActionGroup className="mt-4" data-testid="overtime-draft-panel" mobileBehavior="in-flow">
+      <FormActionGroup
+        className="mt-4"
+        data-testid="overtime-draft-panel"
+        mobileBehavior="compact-sticky"
+        statusMessage={
+          isDraftSaving
+            ? 'Saving draft…'
+            : isSubmittingClaim
+              ? 'Submitting request…'
+              : 'Draft ready'
+        }
+      >
         <CButton
           color="secondary"
           variant="outline"

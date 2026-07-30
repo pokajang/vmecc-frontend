@@ -150,11 +150,13 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
       mainLocation: 'Office',
       selectedTypeDefinition: { usesZoneLocationFlow: true },
       selectedType: 'General Inspection',
+      validationStatusMessage:
+        '1 item needs attention. First: Add and complete at least one finding.',
       zone: '1',
     })
 
     expect(
-      screen.getAllByText('Cannot continue to review: add and complete at least one finding.')
+      screen.getAllByText('1 item needs attention. First: Add and complete at least one finding.')
         .length,
     ).toBeGreaterThan(0)
   })
@@ -182,6 +184,7 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
   })
 
   it('hides General Inspection body sections until zone, main area, and location are selected', () => {
+    setMobileViewport()
     const baseForm = {
       inspectionType: 'General Inspection',
       description: '',
@@ -276,6 +279,7 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
   })
 
   it('does not render Fire Extinguisher checks before a location is selected', () => {
+    setMobileViewport()
     const StructuredEditSection = vi.fn(() => <div>Fire extinguisher rows mounted</div>)
     const baseProps = {
       isFireExtinguisherCatalogInspectionForm: true,

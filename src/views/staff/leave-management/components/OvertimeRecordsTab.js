@@ -232,16 +232,18 @@ const OvertimeRecordsTab = (props) => {
   )
 
   const renderMobileGroupSelect = ({ id, ariaLabel, eligibleKeys = [], allSelected = false }) => (
-    <CFormCheck
-      id={id}
-      aria-label={ariaLabel}
-      disabled={eligibleKeys.length === 0}
-      checked={allSelected}
-      onChange={() => toggleGroupSelection(eligibleKeys, allSelected)}
-      onClick={(event) => event.stopPropagation()}
-      onMouseDown={(event) => event.stopPropagation()}
-      onKeyDown={(event) => event.stopPropagation()}
-    />
+    <span className="workflow-group-selection d-inline-flex align-items-center">
+      <CFormCheck
+        id={id}
+        aria-label={ariaLabel}
+        disabled={eligibleKeys.length === 0}
+        checked={allSelected}
+        onChange={() => toggleGroupSelection(eligibleKeys, allSelected)}
+        onClick={(event) => event.stopPropagation()}
+        onMouseDown={(event) => event.stopPropagation()}
+        onKeyDown={(event) => event.stopPropagation()}
+      />
+    </span>
   )
 
   const buildMobileRecordItem = (row) => {
@@ -380,6 +382,7 @@ const OvertimeRecordsTab = (props) => {
             {selectedVisibleCount > 0 ? (
               <BulkSelectionActionBar
                 label={`${selectedVisibleCount} overtime record${selectedVisibleCount === 1 ? '' : 's'} selected`}
+                mobileSticky
                 actions={
                   <>
                     <BulkActionButton
@@ -461,7 +464,7 @@ const OvertimeRecordsTab = (props) => {
                           <CTableRow key={userGroup.key} className="table-light">
                             <CTableDataCell colSpan={9} className="fw-semibold text-body-secondary">
                               <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                                <div className="d-flex flex-wrap align-items-center gap-2">
+                                <div className="workflow-group-selection d-flex flex-wrap align-items-center gap-2">
                                   <CFormCheck
                                     id={`ot-group-select-${toWorkflowTestIdToken(userGroup.key)}`}
                                     aria-label={`Select actionable overtime records for ${monthGroup.label || 'Unknown period'} | ${userGroup.ownerLabel || 'Unknown'}`}

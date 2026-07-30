@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { CAlert, CButton } from '@coreui/react'
+import WorkflowInlineFeedback from 'src/components/report-workflow/WorkflowInlineFeedback'
 import { useLocation, useNavigate } from 'react-router-dom'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import {
@@ -218,9 +219,7 @@ const ErcoForm = ({
     return () => window.clearTimeout(timerId)
   }, [form, onDirtyChange])
 
-  const displayDraftStatus = draftStatus.includes('failed')
-    ? draftStatus
-    : draftDirtyStatus || draftStatus
+  const displayDraftStatus = draftStatus.includes('failed') ? '' : draftDirtyStatus || draftStatus
 
   useEffect(() => {
     const editId = String(editingRecord?.id || '').trim()
@@ -434,11 +433,7 @@ const ErcoForm = ({
     }
     if (!saved) {
       setDraftDirtyStatus('')
-      setDraftStatus('Draft save failed. Retry required.')
-      pushToast('Unable to save the draft to the server. Please retry after reconnecting.', {
-        title: 'Draft save failed',
-        color: 'danger',
-      })
+      setDraftStatus('Draft save failed. Use Save Draft to retry.')
       return
     }
     if (!silentSuccess) {
@@ -489,10 +484,6 @@ const ErcoForm = ({
     if (!result.isValid) {
       const { field } = firstErcoError(result.errors)
       setPendingFocusField(field)
-      pushToast('Complete all setup selections before continuing.', {
-        title: 'Setup incomplete',
-        color: 'warning',
-      })
       return false
     }
     return true
@@ -507,10 +498,6 @@ const ErcoForm = ({
       const { field, stage } = firstErcoError(result.errors)
       setPendingFocusField(field)
       if (stage !== activeSection) navigateToSection(stage)
-      pushToast('Review the highlighted items before continuing to report review.', {
-        title: 'Validation error',
-        color: 'danger',
-      })
       return false
     }
     return true
@@ -522,10 +509,6 @@ const ErcoForm = ({
     if (!result.isValid) {
       const { field } = firstErcoError(result.errors)
       setPendingFocusField(field)
-      pushToast('Complete details, chronology, and summary before continuing.', {
-        title: 'Details incomplete',
-        color: 'warning',
-      })
       return false
     }
     return true
@@ -539,10 +522,6 @@ const ErcoForm = ({
     }
     setRespondingTeamError(result.errors.respondingAttendance)
     setPendingFocusField('respondingAttendance')
-    pushToast('Tick at least one responding member before continuing.', {
-      title: 'Attendance required',
-      color: 'warning',
-    })
     return false
   }
 
@@ -657,6 +636,13 @@ const ErcoForm = ({
           requestReview()
         }}
       >
+        {draftStatus.includes('failed') ? (
+          <WorkflowInlineFeedback
+            kind="error"
+            message={draftStatus}
+            action={{ label: 'Retry save', onAction: () => saveDraft() }}
+          />
+        ) : null}
         <ErcoValidationSummary errors={activeSectionErrors} onSelectField={focusErcoField} />
         {activeSection === 'setup' ? (
           <ErcoSetupStep

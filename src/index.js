@@ -6,6 +6,9 @@ import 'core-js'
 import App from './App'
 import store from './store'
 import { registerAppServiceWorker } from './services/serviceWorkerRegistration'
+import { purgeLegacyPayrollBrowserData } from './services/payrollPrivacy'
+
+purgeLegacyPayrollBrowserData()
 
 createRoot(document.getElementById('root')).render(
   <Provider store={store}>

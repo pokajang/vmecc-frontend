@@ -29,8 +29,11 @@ export const updateSalaryAssignmentApi = (id, payload) =>
     method: 'PUT',
     body: JSON.stringify(payload || {}),
   })
-export const deleteSalaryAssignmentApi = (id) =>
-  apiRequest(`/staff/salary-assignments/${id}`, { method: 'DELETE' })
+export const deleteSalaryAssignmentApi = (id, expectedVersion) =>
+  apiRequest(`/staff/salary-assignments/${id}`, {
+    method: 'DELETE',
+    body: JSON.stringify({ expected_version: Number(expectedVersion) || 0 }),
+  })
 
 export const fetchSalaryAssignmentDraftsApi = () => apiRequest('/staff/salary-assignments/drafts')
 export const createSalaryAssignmentDraftApi = (payload) =>

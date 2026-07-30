@@ -1,0 +1,146 @@
+@use '../tools/coreui-tools' as *;
+
+.workflow-module-page {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.workflow-detail-header,
+.workflow-detail-header > *,
+.workflow-detail-header__actions {
+  min-width: 0;
+}
+
+.responsive-key-value-list {
+  gap: 0;
+}
+
+.responsive-key-value-list__row {
+  display: grid;
+  grid-template-columns: minmax(9rem, 0.8fr) minmax(0, 1.2fr);
+  gap: 1rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--cui-border-color);
+}
+
+.responsive-key-value-list__row:last-child {
+  border-bottom: 0;
+}
+
+.responsive-key-value-list__value {
+  text-align: end;
+}
+
+.responsive-financial-breakdown__title {
+  border-bottom: 1px solid var(--cui-border-color);
+  background: var(--cui-tertiary-bg);
+  color: var(--cui-body-color);
+  font-size: var(--vmecc-text-label);
+  font-weight: var(--vmecc-weight-bold);
+}
+
+.responsive-financial-breakdown__row {
+  border-bottom: 1px solid var(--cui-border-color);
+}
+
+.responsive-financial-breakdown__row:last-child {
+  border-bottom: 0;
+}
+
+.responsive-financial-breakdown__row--emphasis {
+  background: var(--cui-tertiary-bg);
+}
+
+.responsive-financial-breakdown__row--positive .responsive-financial-breakdown__value {
+  color: var(--vmecc-status-success-text);
+}
+
+.responsive-financial-breakdown__row--negative .responsive-financial-breakdown__value {
+  color: var(--vmecc-status-danger-text);
+}
+
+.responsive-financial-breakdown__value {
+  min-width: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+@include media-breakpoint-down(md) {
+  .data-table-footer {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr);
+    justify-content: stretch !important;
+    width: 100%;
+  }
+
+  .data-table-footer > [aria-live='polite'] {
+    text-align: end;
+  }
+
+  .data-table-footer > [role='group'] {
+    grid-column: 1 / -1;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    width: 100%;
+  }
+
+  .workflow-module-page {
+    --vmecc-text-body: 1.0625rem;
+    --vmecc-text-label: 1rem;
+    --vmecc-text-meta: 0.9375rem;
+    --vmecc-text-caption: 0.8125rem;
+
+    display: grid;
+    align-content: start;
+    overflow-x: hidden;
+    overflow-x: clip;
+  }
+
+  .workflow-module-page .module-page-header {
+    flex-wrap: nowrap;
+    width: 100%;
+    min-height: 44px;
+    gap: 0.75rem;
+    overflow: hidden;
+  }
+
+  .workflow-module-page .module-page-header__title {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .workflow-module-page .module-page-header__actions {
+    flex: 0 0 auto;
+    margin-left: auto;
+  }
+
+  .workflow-detail-header {
+    align-items: flex-start;
+  }
+
+  .workflow-detail-header__actions {
+    width: 100%;
+  }
+
+  .responsive-key-value-list__row {
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+    padding: 0.65rem 0;
+  }
+
+  .responsive-key-value-list__value {
+    text-align: start;
+  }
+
+  .workflow-mobile-disclosure {
+    border: 1px solid var(--cui-border-color);
+    border-radius: var(--cui-border-radius-lg);
+    background: var(--cui-body-bg);
+  }
+
+  .workflow-mobile-disclosure > summary {
+    min-height: 44px;
+    padding: 0.75rem;
+    font-weight: var(--vmecc-weight-semibold);
+    cursor: pointer;
+  }
+}

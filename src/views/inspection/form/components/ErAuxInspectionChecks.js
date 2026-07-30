@@ -32,43 +32,29 @@ import {
   InspectionElementValidationBadges,
 } from './InspectionElementUi'
 import InspectionResetConfirmDrawer from './InspectionResetConfirmDrawer'
+import InspectionStatusSegment from './patterns/InspectionStatusSegment'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import { isInspectionIssueStatus } from '../../domain/inspectionStatusSemantics'
 
 const cloneRow = (row) => (row ? JSON.parse(JSON.stringify(row)) : null)
 const getRowSignature = (row) => JSON.stringify(row || {})
 
-const ErAuxConditionSegment = ({ value, onChange, readOnly = false }) => (
-  <div className="inspection-hydraulic-check-row inspection-hydraulic-check-row--stacked d-grid gap-2">
-    <div className="inspection-hydraulic-check-label small fw-semibold text-muted">Condition</div>
-    <div className="inspection-hydraulic-status-group d-flex flex-nowrap justify-content-start gap-2 vmecc-scroll-x pb-1">
-      {ER_AUX_CONDITION_OPTIONS.map((option) =>
-        readOnly ? (
-          <span
-            key={option.value}
-            className={`inspection-hydraulic-status-btn btn btn-sm ${
-              value === option.value ? 'btn-primary' : 'btn-outline-secondary'
-            } pe-none`.trim()}
-            aria-current={value === option.value ? 'true' : undefined}
-          >
-            {option.label}
-          </span>
-        ) : (
-          <CButton
-            key={option.value}
-            type="button"
-            color={value === option.value ? 'primary' : 'secondary'}
-            variant={value === option.value ? undefined : 'outline'}
-            size="sm"
-            className="inspection-hydraulic-status-btn"
-            onClick={() => onChange(option.value)}
-          >
-            {option.label}
-          </CButton>
-        ),
-      )}
-    </div>
-  </div>
+const ErAuxConditionSegment = ({
+  value,
+  onChange,
+  readOnly = false,
+  invalid = false,
+  describedBy,
+}) => (
+  <InspectionStatusSegment
+    label="Condition"
+    value={value}
+    options={ER_AUX_CONDITION_OPTIONS}
+    onChange={onChange}
+    readOnly={readOnly}
+    invalid={invalid}
+    describedBy={describedBy}
+  />
 )
 
 const ErAuxQuantityRow = ({ value, onChange, readOnly = false }) => (
@@ -288,10 +274,12 @@ const ErAuxEquipmentCheckDetails = ({
       <div data-inspection-er-aux-detail-key="condition">
         <ErAuxConditionSegment
           value={row.condition}
+          invalid={fieldError && missingCondition}
+          describedBy={fieldError && missingCondition ? `${row.id}-condition-error` : undefined}
           onChange={(nextValue) => onUpdateCheck?.(row, { condition: nextValue })}
         />
         {fieldError && missingCondition ? (
-          <FormFieldError>Condition is required.</FormFieldError>
+          <FormFieldError id={`${row.id}-condition-error`}>Condition is required.</FormFieldError>
         ) : null}
       </div>
       {isDefect ? (
@@ -748,7 +736,7 @@ export const ErAuxEquipmentChecks = ({
             !readOnly ? (
               <RowActions
                 iconSize={16}
-                hitArea={32}
+                hitArea={44}
                 toggleAriaLabel={`Equipment actions for ${mobileDetailRow.equipment || 'Equipment'}`}
                 items={[
                   typeof onResetCheck === 'function'

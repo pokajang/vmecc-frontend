@@ -4,6 +4,7 @@ import {
   deletePayrollClaimDraftApi,
 } from '../apiClient'
 import featureFlags from 'src/config/featureFlags'
+import { getPayrollVolatileStorage } from 'src/services/payrollPrivacy'
 import { buildIdempotencyKey } from './mappers'
 
 const normalizeDraftType = (type) => {
@@ -24,7 +25,7 @@ const LOCAL_AUTOSAVE_KEY_PREFIX = 'payroll-claim-autosave'
 const LOCAL_RETRY_QUEUE_KEY_PREFIX = 'payroll-claim-autosave-retry'
 
 const getStorage = () => {
-  const storage = globalThis?.localStorage
+  const storage = getPayrollVolatileStorage()
   if (!storage) return null
   if (
     typeof storage.getItem !== 'function' ||

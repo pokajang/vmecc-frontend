@@ -61,6 +61,8 @@ const useInspectionCatalogRows = ({
   const [isLoadingFireTruckRows, setIsLoadingFireTruckRows] = useState(false)
   const [scbaCatalogSections, setScbaCatalogSections] = useState([])
   const [isLoadingScbaCatalogSections, setIsLoadingScbaCatalogSections] = useState(false)
+  const [catalogErrors, setCatalogErrors] = useState({})
+  const [catalogRefreshKey, setCatalogRefreshKey] = useState(0)
   const scbaInjectionRefs = useRef({
     getLatestForm,
     normalizeScbaCustomSections,
@@ -80,6 +82,7 @@ const useInspectionCatalogRows = ({
   useEffect(() => {
     if (!isEquipmentCatalogInspectionForm || !mainLocation) {
       return deferEffectState(() => {
+        setCatalogErrors((current) => ({ ...current, equipment: '' }))
         clearRows(setEquipmentRows)
         setIsLoadingEquipmentRows(false)
       })
@@ -89,6 +92,7 @@ const useInspectionCatalogRows = ({
     const cached = loadCachedInspectionEquipmentCatalog(selectedType, mainLocation)
     const cancelCachedState = deferEffectState(() => {
       if (!active) return
+      setCatalogErrors((current) => ({ ...current, equipment: '' }))
       setEquipmentRows(cached)
       setIsLoadingEquipmentRows(true)
     })
@@ -102,6 +106,12 @@ const useInspectionCatalogRows = ({
       .catch(() => {
         if (!active) return
         setEquipmentRows(cached)
+        setCatalogErrors((current) => ({
+          ...current,
+          equipment: cached.length
+            ? 'The live equipment catalog could not be refreshed. Showing saved equipment.'
+            : 'The equipment catalog could not be loaded.',
+        }))
       })
       .finally(() => {
         if (!active) return
@@ -112,11 +122,12 @@ const useInspectionCatalogRows = ({
       active = false
       cancelCachedState()
     }
-  }, [isEquipmentCatalogInspectionForm, mainLocation, selectedType])
+  }, [catalogRefreshKey, isEquipmentCatalogInspectionForm, mainLocation, selectedType])
 
   useEffect(() => {
     if (!isFireExtinguisherCatalogInspectionForm || !zone || !mainLocation) {
       return deferEffectState(() => {
+        setCatalogErrors((current) => ({ ...current, fireExtinguisherArea: '' }))
         clearRows(setFireExtinguisherAreaRows)
         setIsLoadingFireExtinguisherAreaRows(false)
       })
@@ -126,6 +137,7 @@ const useInspectionCatalogRows = ({
     const cached = loadCachedFireExtinguisherCatalog(zone, mainLocation, '')
     const cancelCachedState = deferEffectState(() => {
       if (!active) return
+      setCatalogErrors((current) => ({ ...current, fireExtinguisherArea: '' }))
       setFireExtinguisherAreaRows(cached)
       setIsLoadingFireExtinguisherAreaRows(true)
     })
@@ -139,6 +151,12 @@ const useInspectionCatalogRows = ({
       .catch(() => {
         if (!active) return
         setFireExtinguisherAreaRows(cached)
+        setCatalogErrors((current) => ({
+          ...current,
+          fireExtinguisherArea: cached.length
+            ? 'The live fire extinguisher catalog could not be refreshed. Showing saved equipment.'
+            : 'The fire extinguisher catalog could not be loaded.',
+        }))
       })
       .finally(() => {
         if (!active) return
@@ -149,11 +167,12 @@ const useInspectionCatalogRows = ({
       active = false
       cancelCachedState()
     }
-  }, [isFireExtinguisherCatalogInspectionForm, mainLocation, zone])
+  }, [catalogRefreshKey, isFireExtinguisherCatalogInspectionForm, mainLocation, zone])
 
   useEffect(() => {
     if (!isFireExtinguisherCatalogInspectionForm || !zone || !mainLocation) {
       return deferEffectState(() => {
+        setCatalogErrors((current) => ({ ...current, fireExtinguisherLocation: '' }))
         clearRows(setFireExtinguisherRows)
         setIsLoadingFireExtinguisherLocationRows(false)
       })
@@ -161,6 +180,7 @@ const useInspectionCatalogRows = ({
 
     if (!subLocation) {
       return deferEffectState(() => {
+        setCatalogErrors((current) => ({ ...current, fireExtinguisherLocation: '' }))
         clearRows(setFireExtinguisherRows)
         setIsLoadingFireExtinguisherLocationRows(false)
       })
@@ -170,6 +190,7 @@ const useInspectionCatalogRows = ({
     const cached = loadCachedFireExtinguisherCatalog(zone, mainLocation, subLocation)
     const cancelCachedState = deferEffectState(() => {
       if (!active) return
+      setCatalogErrors((current) => ({ ...current, fireExtinguisherLocation: '' }))
       setFireExtinguisherRows(cached)
       setIsLoadingFireExtinguisherLocationRows(true)
     })
@@ -183,6 +204,12 @@ const useInspectionCatalogRows = ({
       .catch(() => {
         if (!active) return
         setFireExtinguisherRows(cached)
+        setCatalogErrors((current) => ({
+          ...current,
+          fireExtinguisherLocation: cached.length
+            ? 'The live location catalog could not be refreshed. Showing saved equipment.'
+            : 'Equipment for this location could not be loaded.',
+        }))
       })
       .finally(() => {
         if (!active) return
@@ -193,11 +220,12 @@ const useInspectionCatalogRows = ({
       active = false
       cancelCachedState()
     }
-  }, [isFireExtinguisherCatalogInspectionForm, mainLocation, subLocation, zone])
+  }, [catalogRefreshKey, isFireExtinguisherCatalogInspectionForm, mainLocation, subLocation, zone])
 
   useEffect(() => {
     if (!isFireTruckCatalogInspectionForm) {
       return deferEffectState(() => {
+        setCatalogErrors((current) => ({ ...current, fireTruck: '' }))
         clearRows(setFireTruckRows)
         setIsLoadingFireTruckRows(false)
       })
@@ -208,6 +236,7 @@ const useInspectionCatalogRows = ({
     const cached = loadCachedFireTruckCatalog()
     const cancelCachedState = deferEffectState(() => {
       if (!active) return
+      setCatalogErrors((current) => ({ ...current, fireTruck: '' }))
       setFireTruckRows(cached.length > 0 ? cached : fallback)
       setIsLoadingFireTruckRows(true)
     })
@@ -222,6 +251,12 @@ const useInspectionCatalogRows = ({
       .catch(() => {
         if (!active) return
         setFireTruckRows(cached.length > 0 ? cached : fallback)
+        setCatalogErrors((current) => ({
+          ...current,
+          fireTruck: cached.length
+            ? 'The live fire truck catalog could not be refreshed. Showing saved trucks.'
+            : 'The fire truck catalog could not be loaded. Showing the default truck.',
+        }))
       })
       .finally(() => {
         if (!active) return
@@ -232,12 +267,13 @@ const useInspectionCatalogRows = ({
       active = false
       cancelCachedState()
     }
-  }, [isFireTruckCatalogInspectionForm])
+  }, [catalogRefreshKey, isFireTruckCatalogInspectionForm])
 
   useEffect(() => {
     if (!isScbaInspectionForm || !mainLocation) {
       scbaCatalogInjectedRef.current = ''
       return deferEffectState(() => {
+        setCatalogErrors((current) => ({ ...current, scba: '' }))
         clearRows(setScbaCatalogSections)
         setIsLoadingScbaCatalogSections(false)
       })
@@ -247,6 +283,7 @@ const useInspectionCatalogRows = ({
     const cached = loadCachedScbaCatalog()
     const cancelCachedState = deferEffectState(() => {
       if (!active) return
+      setCatalogErrors((current) => ({ ...current, scba: '' }))
       setScbaCatalogSections(cached)
       setIsLoadingScbaCatalogSections(true)
     })
@@ -291,6 +328,12 @@ const useInspectionCatalogRows = ({
       .catch(() => {
         if (!active) return
         setScbaCatalogSections(cached)
+        setCatalogErrors((current) => ({
+          ...current,
+          scba: cached.length
+            ? 'The live SCBA catalog could not be refreshed. Showing saved equipment.'
+            : 'The SCBA catalog could not be loaded.',
+        }))
       })
       .finally(() => {
         if (!active) return
@@ -301,10 +344,11 @@ const useInspectionCatalogRows = ({
       active = false
       cancelCachedState()
     }
-  }, [isScbaInspectionForm, mainLocation, scbaCatalogInjectedRef, selectedType])
+  }, [catalogRefreshKey, isScbaInspectionForm, mainLocation, scbaCatalogInjectedRef, selectedType])
 
   return {
     equipmentRows,
+    catalogErrors,
     fireExtinguisherAreaRows,
     fireExtinguisherRows,
     fireTruckRows,
@@ -320,6 +364,7 @@ const useInspectionCatalogRows = ({
     setFireExtinguisherRows,
     setFireTruckRows,
     setScbaCatalogSections,
+    retryCatalogs: () => setCatalogRefreshKey((current) => current + 1),
   }
 }
 

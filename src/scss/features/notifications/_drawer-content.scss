@@ -438,7 +438,7 @@
     }
 
     .notification-item-action-chip {
-      display: none;
+      display: inline-flex;
       border-radius: 999px;
       font-size: var(--vmecc-text-caption);
       line-height: 1.4;

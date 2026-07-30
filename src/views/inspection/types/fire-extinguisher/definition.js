@@ -25,8 +25,7 @@ const fireExtinguisherInspectionDefinition = {
   key: 'fire-extinguisher-inspection',
   inspectionType: FIRE_EXTINGUISHER_INSPECTION_TYPE,
   title: 'Fire Extinguisher',
-  description:
-    'Extinguisher location, certification, physical, signage, box, and operational checks.',
+  description: 'Inspect extinguisher location, certification, condition, signage, and operation.',
   iconKey: 'Flame',
   icon: Flame,
   implemented: true,

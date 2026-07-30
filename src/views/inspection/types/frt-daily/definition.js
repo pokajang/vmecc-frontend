@@ -23,8 +23,7 @@ const frtDailyInspectionDefinition = {
   key: 'frt-daily-inspection',
   inspectionType: FRT_DAILY_INSPECTION_TYPE,
   title: 'Fire Truck Daily Readiness',
-  description:
-    'Truck-first daily readiness roster and one-off checks with seeded rows and required readings.',
+  description: 'Inspect daily truck readiness and scheduled equipment checks.',
   iconKey: 'Truck',
   icon: Truck,
   implemented: true,

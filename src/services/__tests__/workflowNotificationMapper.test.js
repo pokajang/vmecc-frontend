@@ -24,6 +24,17 @@ describe('workflowNotificationMapper', () => {
     expect(payload.deepLink).toBe('/payroll/claims/SC-2026-009')
   })
 
+  it('preserves the viewer-authorized deep link resolved by the backend', () => {
+    const payload = toWorkflowNotificationPayload({
+      module: 'salary',
+      recordType: 'salary_assignment',
+      recordId: '77',
+      deepLink: '/staff/set-salary/assignment/77/view',
+    })
+
+    expect(payload.deepLink).toBe('/staff/set-salary/assignment/77/view')
+  })
+
   it('treats backend read aliases as read notifications', () => {
     const fromReadAt = toWorkflowNotificationPayload({
       module: 'overtime',
@@ -97,7 +108,7 @@ describe('workflowNotificationMapper', () => {
       recordId: '77',
       actionRequiredForViewer: false,
     })
-    expect(ownerPath).toBe('/staff/set-salary/set-salary?assignmentId=77')
+    expect(ownerPath).toBe('/payroll/claims/new/salary')
   })
 
   it('routes inspection reports to the inspection detail screen', () => {

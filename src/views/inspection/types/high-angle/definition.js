@@ -20,7 +20,7 @@ const highAngleInspectionDefinition = {
   key: 'high-angle-rescue-equipment-inspection',
   inspectionType: HIGH_ANGLE_RESCUE_EQUIPMENT_INSPECTION_TYPE,
   title: 'High Angle Rescue Equipment',
-  description: 'Workbook-backed rescue kit checks with fixed quantity, condition, and remarks.',
+  description: 'Inspect rescue kit inventory and equipment condition.',
   iconKey: 'HardHat',
   icon: HardHat,
   implemented: true,

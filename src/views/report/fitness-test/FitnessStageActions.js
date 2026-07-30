@@ -1,6 +1,5 @@
 import React from 'react'
-import { DetailsStepActions } from '../erco/erco-form-components'
-import { ReportMobileActionGroup } from '../components/ReportWorkflowUi'
+import WorkflowStageActions from 'src/components/report-workflow/WorkflowStageActions'
 
 const FitnessStageActions = ({
   onBack,
@@ -12,33 +11,17 @@ const FitnessStageActions = ({
   primaryType = 'button',
   disabled = false,
 }) => (
-  <>
-    <div className="d-none d-md-block">
-      <DetailsStepActions
-        onBack={onBack}
-        onSaveDraft={onSaveDraft}
-        saveLabel={saveLabel}
-        primaryLabel={continueLabel}
-        primaryType={primaryType}
-        onPrimary={primaryType === 'button' ? onContinue : undefined}
-        statusMessage={statusMessage}
-        saveDisabled={disabled}
-        primaryDisabled={disabled}
-      />
-    </div>
-    <div className="d-md-none">
-      <ReportMobileActionGroup
-        onSaveDraft={onSaveDraft}
-        onPrimary={onContinue}
-        saveLabel={saveLabel}
-        primaryLabel={continueLabel}
-        primaryType={primaryType}
-        statusMessage={statusMessage}
-        saveDisabled={disabled}
-        primaryDisabled={disabled}
-      />
-    </div>
-  </>
+  <WorkflowStageActions
+    onBack={onBack}
+    onSaveDraft={onSaveDraft}
+    onPrimary={onContinue}
+    saveLabel={saveLabel}
+    primaryLabel={continueLabel}
+    primaryType={primaryType}
+    statusMessage={statusMessage}
+    saveDisabled={disabled}
+    primaryDisabled={disabled}
+  />
 )
 
 export default FitnessStageActions

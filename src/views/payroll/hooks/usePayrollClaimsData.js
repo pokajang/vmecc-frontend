@@ -8,6 +8,7 @@ import {
   loadMyPayrollPayslipsApiFirst,
   downloadMyPayrollPayslipApiFirst,
 } from 'src/services/payrollClaimsApi'
+import { createPayrollRequestContext } from 'src/services/payrollPrivacy'
 import { CLAIM_TYPE_META } from '../payrollConstants'
 import {
   DRAFT_TYPE_ORDER,
@@ -47,10 +48,12 @@ const usePayrollClaimsData = ({
 
   const [claimRecords, setClaimRecords] = useState([])
   const [draftEntriesById, setDraftEntriesById] = useState({})
+  const [hydratedClaimsUserId, setHydratedClaimsUserId] = useState('')
   const [isClaimsLoading, setIsClaimsLoading] = useState(true)
   const [claimsError, setClaimsError] = useState('')
   const [claimsFilterNowMs, setClaimsFilterNowMs] = useState(() => Date.now())
   const [payslipRows, setPayslipRows] = useState([])
+  const [hydratedPayslipsUserId, setHydratedPayslipsUserId] = useState('')
   const [isPayslipsLoading, setIsPayslipsLoading] = useState(false)
   const [payslipsError, setPayslipsError] = useState('')
   const claimsRefreshInFlightRef = useRef(false)
@@ -111,10 +114,12 @@ const usePayrollClaimsData = ({
 
   const refreshClaimRows = useCallback(async () => {
     if (!userId || claimsRefreshInFlightRef.current) return
+    const requestContext = createPayrollRequestContext(userId)
     claimsRefreshInFlightRef.current = true
     try {
       await flushPayrollDraftRetryQueue(userId)
       const { hasDraftError, draftRows, draftMap } = await loadDraftRows()
+      if (!requestContext.isCurrent()) return
       if (hasDraftError) {
         pushToastOnce('drafts', 'Unable to load payroll drafts from API. Please retry.', {
           title: 'Draft load failed',
@@ -124,6 +129,7 @@ const usePayrollClaimsData = ({
         resetToastOnceKey('drafts')
       }
       const result = await loadMyPayrollClaimsApiFirst(userId)
+      if (!requestContext.isCurrent()) return
       if (!result?.ok) {
         setClaimsError('Unable to load payroll claims from API. Please retry.')
         pushToastOnce('claims', 'Unable to load payroll claims from API. Please retry.', {
@@ -142,18 +148,21 @@ const usePayrollClaimsData = ({
         : []
       setDraftEntriesById(draftMap)
       setClaimRecords(mergeClaimRows(draftRows, records))
+      setHydratedClaimsUserId(String(userId))
     } finally {
       claimsRefreshInFlightRef.current = false
+      requestContext.release()
     }
   }, [loadDraftRows, mergeClaimRows, pushToastOnce, resetToastOnceKey, userId])
 
   useEffect(() => {
-    let active = true
+    const requestContext = createPayrollRequestContext(userId)
+    setClaimRecords([])
+    setDraftEntriesById({})
+    setClaimsError('')
     const hydrateClaims = async () => {
       if (!userId) {
-        setClaimRecords([])
-        setDraftEntriesById({})
-        setClaimsError('')
+        setHydratedClaimsUserId('')
         setIsClaimsLoading(false)
         return
       }
@@ -161,7 +170,7 @@ const usePayrollClaimsData = ({
       await flushPayrollDraftRetryQueue(userId)
       const { hasDraftError, draftRows, draftMap } = await loadDraftRows()
       const result = await loadMyPayrollClaimsApiFirst(userId)
-      if (!active) return
+      if (!requestContext.isCurrent()) return
       if (hasDraftError) {
         pushToastOnce('drafts', 'Unable to load payroll drafts from API. Please retry.', {
           title: 'Draft load failed',
@@ -188,12 +197,11 @@ const usePayrollClaimsData = ({
         : []
       setDraftEntriesById(draftMap)
       setClaimRecords(mergeClaimRows(draftRows, records))
+      setHydratedClaimsUserId(String(userId))
       setIsClaimsLoading(false)
     }
-    hydrateClaims()
-    return () => {
-      active = false
-    }
+    void hydrateClaims().finally(requestContext.release)
+    return requestContext.abort
   }, [activeSection, loadDraftRows, mergeClaimRows, pushToastOnce, resetToastOnceKey, userId])
 
   useEffect(() => {
@@ -253,22 +261,25 @@ const usePayrollClaimsData = ({
   }, [period])
 
   useEffect(() => {
-    let active = true
+    const requestContext = createPayrollRequestContext(userId)
     const hydratePayslips = async () => {
       if (activeSection !== 'payslips') return
       if (!userId) {
         setPayslipRows([])
+        setHydratedPayslipsUserId('')
         setPayslipsError('')
         setIsPayslipsLoading(false)
         return
       }
       setIsPayslipsLoading(true)
       setPayslipsError('')
+      setPayslipRows([])
       const result = await loadMyPayrollPayslipsApiFirst()
-      if (!active) return
+      if (!requestContext.isCurrent()) return
       if (!result?.ok) {
         setPayslipsError('Unable to load payslips from API. Please retry.')
         setPayslipRows([])
+        setHydratedPayslipsUserId(String(userId))
         pushToastOnce('payslips', 'Unable to load payslips from API. Please retry.', {
           title: 'Load failed',
           color: 'danger',
@@ -277,19 +288,33 @@ const usePayrollClaimsData = ({
         return
       }
       setPayslipRows(Array.isArray(result?.data) ? result.data : [])
+      setHydratedPayslipsUserId(String(userId))
       resetToastOnceKey('payslips')
       setIsPayslipsLoading(false)
     }
-    hydratePayslips()
-    return () => {
-      active = false
-    }
+    void hydratePayslips().finally(requestContext.release)
+    return requestContext.abort
   }, [activeSection, pushToastOnce, resetToastOnceKey, userId])
+
+  const hasCurrentClaimsIdentity = Boolean(userId) && String(userId) === hydratedClaimsUserId
+  const hasCurrentPayslipsIdentity = Boolean(userId) && String(userId) === hydratedPayslipsUserId
+  const currentClaimRecords = useMemo(
+    () => (hasCurrentClaimsIdentity ? claimRecords : []),
+    [claimRecords, hasCurrentClaimsIdentity],
+  )
+  const currentDraftEntriesById = useMemo(
+    () => (hasCurrentClaimsIdentity ? draftEntriesById : {}),
+    [draftEntriesById, hasCurrentClaimsIdentity],
+  )
+  const currentPayslipRows = useMemo(
+    () => (hasCurrentPayslipsIdentity ? payslipRows : []),
+    [hasCurrentPayslipsIdentity, payslipRows],
+  )
 
   const filteredClaims = useMemo(() => {
     const term = search.trim().toLowerCase()
     const [sortField, sortDir] = sort.split(':')
-    let next = [...claimRecords]
+    let next = [...currentClaimRecords]
 
     if (term) {
       next = next.filter((claim) => {
@@ -371,14 +396,14 @@ const usePayrollClaimsData = ({
       return compareWithinMonth(a, b)
     })
     return next
-  }, [categoryFilter, claimRecords, claimsFilterNowMs, period, search, sort, statusFilter])
+  }, [categoryFilter, claimsFilterNowMs, currentClaimRecords, period, search, sort, statusFilter])
 
   const { rowsToShow, setRowsToShow, visibleRows } = useTableRows(filteredClaims)
   const selectedClaim = useMemo(() => {
-    const matches = claimRecords.filter((claim) => claim.id === claimId)
+    const matches = currentClaimRecords.filter((claim) => claim.id === claimId)
     if (matches.length === 0) return null
     return matches.find((claim) => !claim?.isDraft) || matches[0]
-  }, [claimId, claimRecords])
+  }, [claimId, currentClaimRecords])
   const selectedClaimTypeMeta = useMemo(() => {
     if (!selectedClaim) return CLAIM_TYPE_META.expense
     return CLAIM_TYPE_META[selectedClaim.type] || CLAIM_TYPE_META.expense
@@ -442,7 +467,7 @@ const usePayrollClaimsData = ({
       { value: 'All', label: 'All claim types' },
       ...Array.from(
         new Set(
-          claimRecords
+          currentClaimRecords
             .map((claim) => String(claim?.category || '').trim())
             .filter((category) => category.length > 0),
         ),
@@ -451,7 +476,7 @@ const usePayrollClaimsData = ({
         label: category,
       })),
     ],
-    [claimRecords],
+    [currentClaimRecords],
   )
 
   const statusOptions = useMemo(
@@ -459,7 +484,7 @@ const usePayrollClaimsData = ({
       { value: 'All', label: 'All status' },
       ...Array.from(
         new Set(
-          claimRecords
+          currentClaimRecords
             .map((claim) => String(claim?.status || '').trim())
             .filter((status) => status.length > 0),
         ),
@@ -468,7 +493,7 @@ const usePayrollClaimsData = ({
         label: status,
       })),
     ],
-    [claimRecords],
+    [currentClaimRecords],
   )
 
   const downloadPayslip = useCallback(
@@ -513,12 +538,15 @@ const usePayrollClaimsData = ({
   )
 
   return {
-    claimRecords,
-    draftEntriesById,
-    isClaimsLoading,
+    claimRecords: currentClaimRecords,
+    draftEntriesById: currentDraftEntriesById,
+    isClaimsLoading: Boolean(userId) && !hasCurrentClaimsIdentity ? true : isClaimsLoading,
     claimsError,
-    payslipRows,
-    isPayslipsLoading,
+    payslipRows: currentPayslipRows,
+    isPayslipsLoading:
+      activeSection === 'payslips' && Boolean(userId) && !hasCurrentPayslipsIdentity
+        ? true
+        : isPayslipsLoading,
     payslipsError,
     filteredClaims,
     rowsToShow,

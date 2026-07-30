@@ -34,15 +34,6 @@
     line-height: var(--vmecc-leading-heading);
   }
 
-  .inspection-mobile-home {
-    gap: var(--inspection-mobile-section-gap) !important;
-  }
-
-  .inspection-mobile-home__section {
-    gap: 0.75rem !important;
-    margin-bottom: 0 !important;
-  }
-
   .inspection-mobile-section-title {
     margin: 0;
     color: var(--cui-body-color);
@@ -51,35 +42,7 @@
     line-height: var(--vmecc-leading-compact);
   }
 
-  .inspection-mobile-home__section-header {
-    min-height: var(--inspection-mobile-control-height);
-  }
-
-  .inspection-mobile-home__type-grid {
-    row-gap: 0.6rem !important;
-  }
-
-  .inspection-mobile-home__type-grid .inspection-option-card {
-    min-height: 3.5rem;
-    padding: 0.6rem 0.75rem !important;
-    border-color: var(--cui-border-color) !important;
-    border-radius: var(--vmecc-radius-card, 0.5rem) !important;
-    background: var(--cui-body-bg) !important;
-    color: var(--cui-body-color);
-    box-shadow: none;
-  }
-
-  .inspection-mobile-home__type-grid .inspection-option-card:active {
-    background: var(--cui-tertiary-bg) !important;
-  }
-
-  .inspection-mobile-home__type-grid .inspection-option-card[aria-pressed='true'],
-  .inspection-mobile-home__type-grid .inspection-option-card[aria-checked='true'] {
-    border-color: rgba(var(--cui-primary-rgb), 0.55) !important;
-    background: rgba(var(--cui-primary-rgb), 0.08) !important;
-  }
-
-  .inspection-mobile-home__equipment-btn {
+  .inspection-mobile-equipment-btn {
     min-height: 3rem;
     padding: 0.7rem 0.85rem;
     border-color: var(--cui-border-color);
@@ -88,19 +51,8 @@
     font-weight: 600;
   }
 
-  .inspection-mobile-home__equipment-btn:active {
+  .inspection-mobile-equipment-btn:active {
     background: var(--cui-tertiary-bg);
-  }
-
-  .inspection-mobile-home .inspection-draft-card {
-    border-left-color: var(--cui-warning) !important;
-    border-radius: var(--vmecc-radius-card, 0.5rem) !important;
-  }
-
-  .inspection-draft-card__summary,
-  .inspection-draft-card__date {
-    white-space: normal;
-    overflow-wrap: anywhere;
   }
 
   .inspection-queue-banner {
@@ -121,33 +73,17 @@
     margin: 0 !important;
   }
 
-  .inspection-mobile-home__records-toolbar {
-    gap: 0.65rem !important;
-  }
-
-  .inspection-mobile-home__records-toolbar .workflow-scope-segmented,
-  .inspection-mobile-home__records-toolbar .inspection-scope-segmented {
-    flex: 1 1 auto;
-  }
-
-  .inspection-mobile-home__records-toolbar .inspection-view-all-btn {
-    flex: 0 0 auto;
-  }
-
-  .inspection-mobile-home .record-card__compact-row,
   .inspection-mobile-section .record-card__compact-row {
     min-height: var(--inspection-mobile-control-height);
     align-items: center !important;
   }
 
-  .inspection-mobile-home .record-card__title,
   .inspection-mobile-section .record-card__title {
     font-size: var(--vmecc-text-card-title);
     font-weight: var(--vmecc-weight-semibold);
     line-height: var(--vmecc-leading-compact);
   }
 
-  .inspection-mobile-home .record-card__subtitle,
   .inspection-mobile-section .record-card__subtitle {
     margin-top: 0.2rem !important;
     font-size: var(--vmecc-text-meta);
@@ -160,8 +96,6 @@
   .inspection-module-page .inspection-header-back-btn,
   .inspection-module-page .inspection-view-all-btn,
   .inspection-module-page .inspection-compact-action-btn,
-  .inspection-mobile-home .inspection-view-all-btn,
-  .inspection-mobile-home .inspection-compact-action-btn,
   .inspection-module-page .inspection-next-location-btn,
   .inspection-module-page .inspection-check-status-btn,
   .inspection-module-page .inspection-hydraulic-status-btn,
@@ -170,7 +104,7 @@
   .inspection-module-page .inspection-side-panel__icon-btn,
   .inspection-module-page .inspection-fire-extinguisher-drawer-title-action,
   .inspection-module-page .fire-extinguisher-staged-actions .btn,
-  .inspection-module-page .inspection-form-actions .btn,
+  .inspection-module-page .workflow-stage-actions .btn,
   .inspection-detail-drawer__close,
   .inspection-mobile-setup-drawer__close,
   .inspection-mobile-selector-chip__edit,
@@ -181,9 +115,7 @@
 
   .inspection-module-page .inspection-header-back-btn,
   .inspection-module-page .inspection-view-all-btn,
-  .inspection-module-page .inspection-compact-action-btn,
-  .inspection-mobile-home .inspection-view-all-btn,
-  .inspection-mobile-home .inspection-compact-action-btn {
+  .inspection-module-page .inspection-compact-action-btn {
     padding: 0.55rem 0.75rem;
     font-size: var(--vmecc-text-meta);
     line-height: 1.2;
@@ -191,8 +123,6 @@
 
   .inspection-module-page .workflow-scope-segmented,
   .inspection-module-page .inspection-scope-segmented,
-  .inspection-mobile-home .workflow-scope-segmented,
-  .inspection-mobile-home .inspection-scope-segmented,
   .inspection-mobile-section .workflow-scope-segmented,
   .inspection-mobile-section .inspection-scope-segmented {
     min-height: var(--inspection-mobile-control-height);
@@ -201,8 +131,6 @@
 
   .inspection-module-page .workflow-scope-segment,
   .inspection-module-page .inspection-scope-segment,
-  .inspection-mobile-home .workflow-scope-segment,
-  .inspection-mobile-home .inspection-scope-segment,
   .inspection-mobile-section .workflow-scope-segment,
   .inspection-mobile-section .inspection-scope-segment {
     min-height: calc(var(--inspection-mobile-control-height) - 6px);
@@ -349,16 +277,15 @@
     font-size: var(--vmecc-text-caption);
   }
 
-  .inspection-form-inline-actions .btn {
+  .workflow-stage-actions .btn {
     min-height: var(--inspection-mobile-control-height) !important;
     padding: 0.55rem 0.75rem;
     font-size: var(--vmecc-text-meta);
     white-space: normal;
   }
 
-  .inspection-form-inline-actions-row-status,
   .inspection-form-sticky-message,
-  .inspection-form-inline-actions .action-row-thumb-status {
+  .workflow-stage-actions .action-row-thumb-status {
     width: 100%;
     max-width: 100%;
     overflow: visible;
@@ -370,11 +297,11 @@
     overflow-wrap: anywhere;
   }
 
-  .inspection-form-inline-actions {
+  .workflow-stage-actions {
     margin-top: 0.85rem !important;
   }
 
-  .inspection-form-inline-actions-row {
+  .workflow-stage-actions__group {
     gap: var(--inspection-mobile-control-gap) !important;
   }
 
@@ -420,7 +347,7 @@
 
   .inspection-detail-field,
   .workflow-detail-field {
-    gap: 0.75rem;
+    gap: 0.15rem;
     padding-block: 0.2rem;
   }
 
@@ -432,8 +359,16 @@
 
   .inspection-detail-field__value,
   .workflow-detail-field__value {
-    max-width: 62%;
+    max-width: none;
     line-height: 1.4;
+  }
+
+  .workflow-detail-field--mobile-inline {
+    gap: 0.75rem;
+  }
+
+  .workflow-detail-field--mobile-inline .workflow-detail-field__value {
+    max-width: 62%;
   }
 
   .inspection-review-hero,
@@ -487,20 +422,6 @@
 @media (max-width: 359.98px) {
   .inspection-queue-banner__actions {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .inspection-mobile-home__records-toolbar {
-    align-items: stretch !important;
-  }
-
-  .inspection-mobile-home__records-toolbar .workflow-scope-segmented,
-  .inspection-mobile-home__records-toolbar .inspection-scope-segmented,
-  .inspection-mobile-home__records-toolbar .inspection-view-all-btn {
-    width: 100%;
-  }
-
-  .inspection-mobile-home__records-toolbar .inspection-view-all-btn {
-    justify-content: center;
   }
 }
 

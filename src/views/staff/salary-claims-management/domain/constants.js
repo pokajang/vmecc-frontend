@@ -3,7 +3,6 @@ import {
   OVERTIME_WORKFLOW_DECLARATION_LABEL,
 } from '../../shared/workflowDeclarations'
 
-export const CLAIM_RECORDS_KEY = 'vmecc_claim_records'
 export const OVERTIME_RATE_SETTINGS_KEY = 'vmecc_overtime_rate_settings'
 export const SALARY_STATUTORY_RATES_KEY = 'vmecc_salary_statutory_rates'
 export const OVERTIME_ROUTE_KEY_SEPARATOR = '::'

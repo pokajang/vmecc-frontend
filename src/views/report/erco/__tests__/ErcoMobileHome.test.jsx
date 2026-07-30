@@ -94,7 +94,7 @@ describe('ErcoMobileHome', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('radio', { name: /Fire/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Fire' }))
     expect(onSelectType).toHaveBeenCalledWith('Fire')
 
     expect(screen.getAllByText('Continue Draft')).toHaveLength(1)
@@ -132,11 +132,11 @@ describe('ErcoMobileHome', () => {
       />,
     )
 
-    expect(screen.getByText('Choose Type')).toBeTruthy()
-    expect(container.querySelector('.inspection-mobile-home')).toBeTruthy()
-    expect(container.querySelector('.inspection-mobile-home__type-grid')).toBeTruthy()
-    expect(container.querySelector('.inspection-mobile-home__records-toolbar')).toBeTruthy()
-    expect(container.querySelector('.inspection-view-all-btn')).toBeTruthy()
+    expect(screen.getByText('Choose type')).toBeTruthy()
+    expect(container.querySelector('.mobile-workflow-home')).toBeTruthy()
+    expect(container.querySelector('.mobile-workflow-home__type-list')).toBeTruthy()
+    expect(container.querySelector('.mobile-workflow-home__records-toolbar')).toBeTruthy()
+    expect(container.querySelector('.mobile-workflow-home__view-all')).toBeTruthy()
     expect(screen.getByText('No records yet.')).toBeTruthy()
   })
 

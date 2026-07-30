@@ -11,8 +11,8 @@ import {
 } from '@coreui/react'
 import { Plus, Trash2 } from 'lucide-react'
 import { uid } from '../utils'
-import { ReportMobileContextPanel } from '../components/ReportWorkflowUi'
 import { DRILL_FIELD_LIMITS } from './constants'
+import DrillContextSummary from './DrillContextSummary'
 import DrillStageActions from './DrillStageActions'
 
 const DrillDetailsStep = ({
@@ -57,18 +57,7 @@ const DrillDetailsStep = ({
 
   return (
     <div className="d-grid gap-4">
-      <ReportMobileContextPanel
-        title="Drill Context"
-        items={[
-          { label: 'Type', value: form.incidentType },
-          { label: 'Location', value: form.location },
-          { label: 'Date', value: form.reportDate },
-          {
-            label: 'Personnel',
-            value: `${(form.respondingAttendance || []).filter((row) => row?.present).length} selected`,
-          },
-        ]}
-      />
+      <DrillContextSummary form={form} />
 
       <div data-drill-field="details" aria-invalid={Boolean(fieldErrors.details) || undefined}>
         <CFormLabel htmlFor="drill-exercise-title" className="fw-semibold">

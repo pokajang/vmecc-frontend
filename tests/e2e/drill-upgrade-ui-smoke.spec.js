@@ -1,4 +1,5 @@
 const { expect, test } = require('@playwright/test')
+const { createSmokePng } = require('./support/smoke-image')
 
 const baseUrl = process.env.VMECC_E2E_BASE_URL || 'http://localhost:3000'
 
@@ -62,7 +63,18 @@ const user = {
 }
 
 const json = (route, body, status = 200) =>
-  route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) })
+  route.fulfill({
+    status,
+    contentType: 'application/json',
+    headers: {
+      'Access-Control-Allow-Origin': baseUrl,
+      'Access-Control-Allow-Credentials': 'true',
+      'Access-Control-Allow-Headers':
+        'Accept, Content-Type, X-CSRF-Token, X-Client-Id, X-Client-Mode',
+      'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+    },
+    body: JSON.stringify(body),
+  })
 
 const installApiStubs = async (page, initialDraft = draftPayload) => {
   let serverDraft = initialDraft
@@ -89,6 +101,7 @@ const installApiStubs = async (page, initialDraft = draftPayload) => {
       return json(route, { data: { enabled: false, phase: 'off', message: '' } })
     }
     if (path === '/reports/draft' && method === 'GET') {
+      if (!serverDraft) return json(route, { data: null })
       return json(route, {
         data: {
           id: 1,
@@ -143,6 +156,10 @@ const installApiStubs = async (page, initialDraft = draftPayload) => {
       return route.fulfill({
         status: 200,
         contentType: 'image/gif',
+        headers: {
+          'Access-Control-Allow-Origin': baseUrl,
+          'Access-Control-Allow-Credentials': 'true',
+        },
         body: Buffer.from(transparentPixel.split(',')[1], 'base64'),
       })
     }
@@ -209,6 +226,45 @@ const stressDraftPayload = {
 }
 
 test.describe('Drill Upgrade UI V1', () => {
+  test('carries a mobile home type selection into setup without asking again', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await installApiStubs(page, null)
+    await page.goto(`${baseUrl}/report/drill`)
+
+    const mobileHome = page.getByTestId('drill-report-mobile-home')
+    await expect(mobileHome).toBeVisible()
+    await mobileHome.getByRole('button', { name: /Evacuation Drill/i }).click()
+
+    await expect(page).toHaveURL(/\/report\/drill\/new\/setup/)
+    const setup = page.getByTestId('drill-report-setup-ready')
+    const summary = setup.getByRole('list', { name: 'Drill setup summary' })
+    await expect(summary.getByRole('button', { name: 'Edit Type' })).toContainText(
+      'Evacuation Drill',
+    )
+    await expect(setup.getByText('Choose Drill Type', { exact: true })).toHaveCount(0)
+    await expect(setup.getByText('Confirm Drill Type', { exact: true })).toHaveCount(0)
+
+    const categoryPicker = setup.getByRole('group', { name: 'Exercise categories' })
+    expect(
+      await categoryPicker.locator(':scope > .mobile-choice-list__item').count(),
+    ).toBeGreaterThan(0)
+    await expectNoHorizontalOverflow(page)
+  })
+
+  test('keeps a partially restored mobile setup type-first until a type is selected', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await installApiStubs(page, { ...draftPayload, incidentType: '' })
+    await page.goto(`${baseUrl}/report/drill/new/setup`)
+
+    const setup = page.getByTestId('drill-report-setup-ready')
+    await expect(setup.getByText('Choose Drill Type', { exact: true })).toBeVisible()
+    await expect(setup.getByRole('list', { name: 'Drill setup summary' })).toHaveCount(0)
+    await expect(setup.getByText('Environment', { exact: true })).toHaveCount(0)
+    await expectNoHorizontalOverflow(page)
+  })
+
   for (const viewport of responsiveViewports) {
     test(`completes the five ${viewport.name} stages and enters the shared review route`, async ({
       page,
@@ -218,15 +274,23 @@ test.describe('Drill Upgrade UI V1', () => {
       await page.goto(`${baseUrl}/report/drill/new/setup`)
 
       await expect(page.getByTestId('drill-report-setup-ready')).toBeVisible()
-      await expect(page.getByRole('button', { name: /^Fire/ })).toHaveAttribute(
-        'aria-pressed',
-        'true',
-      )
-      await expect(page.getByRole('button', { name: /^Rescue/ })).toHaveAttribute(
-        'aria-pressed',
-        'true',
-      )
-      await expect(page.getByRole('button', { name: 'Add category' })).toBeVisible()
+      const categorySummary =
+        viewport.size.width < 768
+          ? page
+              .getByRole('list', { name: 'Drill setup summary' })
+              .getByRole('button', { name: 'Edit Exercise Categories' })
+          : page.getByRole('group', { name: 'Exercise Categories' })
+      await expect(categorySummary).toContainText('Fire')
+      await expect(categorySummary).toContainText('Rescue')
+      if (viewport.size.width < 768) {
+        await expect(
+          page
+            .getByRole('list', { name: 'Drill setup summary' })
+            .locator('.mobile-setup-summary-list__item'),
+        ).toHaveCount(5)
+      }
+      await expect(page.getByText('Choose Drill Type', { exact: true })).toHaveCount(0)
+      await expect(page.getByText('Confirm Drill Type', { exact: true })).toHaveCount(0)
       await expectNoHorizontalOverflow(page)
 
       await page.getByRole('button', { name: 'Continue' }).click()
@@ -278,8 +342,11 @@ test.describe('Drill Upgrade UI V1', () => {
     await page.goto(`${baseUrl}/report/drill/new/analysis`)
 
     const photoSection = page.getByRole('region', { name: 'Exercise photographs' })
-    await expect(photoSection.locator('img')).toHaveCount(10)
-    await expect(photoSection.getByRole('textbox')).toHaveCount(10)
+    const photoList = photoSection.getByRole('list', { name: '10 photos attached' })
+    await expect(photoList.getByRole('listitem')).toHaveCount(10)
+    await expect(photoList.getByRole('button', { name: /Edit description for Photo/ })).toHaveCount(
+      10,
+    )
     await expectNoHorizontalOverflow(page)
 
     await page.getByRole('button', { name: 'Review & Submit' }).click()
@@ -293,22 +360,27 @@ test.describe('Drill Upgrade UI V1', () => {
     await expectNoHorizontalOverflow(page)
   })
 
-  test('keeps the Drill session and photo after a simulated camera return', async ({ page }) => {
+  test('keeps the Drill session and photo after a simulated file-picker return', async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await installApiStubs(page)
     await page.goto(`${baseUrl}/report/drill/new/analysis`)
 
-    await page.getByLabel('Take drill report photo').setInputFiles({
+    await page.getByLabel('Upload drill report photos').setInputFiles({
       name: 'camera-return.jpg',
-      mimeType: 'image/jpeg',
-      buffer: Buffer.from([0xff, 0xd8, 0xff, 0xd9]),
+      mimeType: 'image/png',
+      buffer: createSmokePng('drill-camera-return'),
     })
 
+    const photoSection = page.getByRole('region', { name: 'Exercise photographs' })
+    await expect(photoSection.getByText('camera-return.jpg')).toBeVisible()
+    await photoSection.getByRole('button', { name: 'Edit description for Photo 1' }).click()
     await expect(
-      page.getByRole('textbox', { name: 'Description for camera-return.jpg' }),
+      photoSection.getByRole('textbox', { name: 'Description for Photo 1' }),
     ).toBeVisible()
     await expect(page).toHaveURL(/\/report\/drill\/new\/analysis/)
-    await expect(page.getByRole('region', { name: 'Exercise photographs' })).toBeVisible()
+    await expect(photoSection).toBeVisible()
     await expectNoHorizontalOverflow(page)
 
     await page.getByRole('button', { name: 'Review & Submit' }).click()
@@ -324,6 +396,7 @@ test.describe('Drill Upgrade UI V1', () => {
     await installApiStubs(page)
     await page.goto(`${baseUrl}/report/drill/new/setup`)
 
+    await page.getByRole('button', { name: 'Edit Exercise Categories' }).click()
     await page.getByRole('button', { name: 'Add category' }).click()
     const manager = page.getByTestId('drill-report-category-manager-modal')
     await expect(manager).toBeVisible()
@@ -341,9 +414,8 @@ test.describe('Drill Upgrade UI V1', () => {
     await page.getByRole('button', { name: 'Save Draft' }).click()
     await page.reload()
 
-    await expect(page.getByRole('button', { name: /^Medical Response/ })).toHaveAttribute(
-      'aria-pressed',
-      'true',
+    await expect(page.getByRole('group', { name: 'Exercise Categories' })).toContainText(
+      'Medical Response',
     )
     await expectNoHorizontalOverflow(page)
   })
@@ -353,20 +425,22 @@ test.describe('Drill Upgrade UI V1', () => {
     await installApiStubs(page)
     await page.goto(`${baseUrl}/report/drill/new/setup`)
 
-    const feedback = page.getByRole('status')
+    const feedback = page.getByRole('status').filter({ hasText: 'Draft loaded: Saved draft' })
     const setup = page.getByTestId('drill-report-setup-ready')
     const environmentLabel = setup
-      .locator('.mobile-setup-summary__label')
+      .locator('.mobile-setup-summary-list__label')
       .filter({ hasText: /^Environment$/ })
 
-    await expect(feedback).toContainText('Saved draft restored')
+    await expect(feedback).toContainText('Draft loaded: Saved draft')
     await expect(environmentLabel).toBeVisible()
 
     const layout = await page.evaluate(() => {
-      const feedbackElement = document.querySelector('[role="status"]')
+      const feedbackElement = [...document.querySelectorAll('[role="status"]')].find((element) =>
+        element.textContent.includes('Draft loaded: Saved draft'),
+      )
       const setupElement = document.querySelector('[data-testid="drill-report-setup-ready"]')
       const environmentElement = [
-        ...document.querySelectorAll('.mobile-setup-summary__label'),
+        ...document.querySelectorAll('.mobile-setup-summary-list__label'),
       ].find((element) => element.textContent.trim() === 'Environment')
       const feedbackRect = feedbackElement.getBoundingClientRect()
       const setupRect = setupElement.getBoundingClientRect()
@@ -378,14 +452,12 @@ test.describe('Drill Upgrade UI V1', () => {
           setupRect.top,
         environmentHeight: environmentElement.getBoundingClientRect().height,
         environmentLineHeight: Number.parseFloat(environmentStyle.lineHeight),
-        environmentWhiteSpace: environmentStyle.whiteSpace,
       }
     })
 
     expect(layout.feedbackGap).toBeLessThanOrEqual(32)
     expect(layout.firstContentGap).toBeLessThanOrEqual(1)
     expect(layout.environmentHeight).toBeLessThanOrEqual(layout.environmentLineHeight * 1.25)
-    expect(layout.environmentWhiteSpace).toBe('nowrap')
     await expectNoHorizontalOverflow(page)
   })
 })

@@ -4,7 +4,7 @@ import { X } from 'lucide-react'
 import IconOptionGrid from 'src/components/IconOptionGrid'
 import {
   InspectionMobileCollapsedSelectorRow,
-  InspectionMobileSelectorButtonGrid,
+  InspectionMobileChoiceList,
 } from './InspectionSetupSelectorControls'
 
 export const INSPECTION_LOCATION_SEARCH_THRESHOLD = 12
@@ -140,13 +140,15 @@ const InspectionLocationOptionPicker = ({
 
       {isCompactViewport ? (
         displayedOptions.length > 0 ? (
-          <InspectionMobileSelectorButtonGrid
+          <InspectionMobileChoiceList
             options={displayedOptions}
             value={value}
             onChange={handleOptionChange}
-            columns={columns}
             getOptionKey={getOptionKey}
             testIdPrefix={testIdPrefix}
+            toggleValue={toggleValue}
+            ariaLabel={ariaLabel || sectionLabel}
+            showDescription={showDescription}
           />
         ) : (
           emptyState

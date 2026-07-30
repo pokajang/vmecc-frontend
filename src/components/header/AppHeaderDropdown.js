@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom'
 import ButtonLoader from 'src/components/ButtonLoader'
 import { logoutRequest } from 'src/services/apiClient'
 import { getPrimaryRoleLabel, hasPermission } from 'src/utils/authz'
+import { clearPayrollSensitiveState } from 'src/services/payrollPrivacy'
 
 const AppHeaderDropdown = ({
   placement = 'bottom-end',
@@ -37,6 +38,7 @@ const AppHeaderDropdown = ({
     } catch (error) {
       console.error('Failed to log out', error)
     } finally {
+      clearPayrollSensitiveState()
       setVisible(false)
       dispatch({
         type: 'set',

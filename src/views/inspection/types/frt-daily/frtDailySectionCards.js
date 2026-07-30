@@ -31,6 +31,7 @@ import {
   InspectionPhotoActionRow,
   InspectionPhotoEvidenceSummary,
 } from 'src/views/inspection/form/components/InspectionDisplayShared'
+import InspectionStatusSegment from 'src/views/inspection/form/components/patterns/InspectionStatusSegment'
 
 const getFrtRowId = (row = {}) => String(row?.id || row?.equipment || row?.rowNumber || '')
 const cloneRow = (row) => (row ? JSON.parse(JSON.stringify(row)) : null)
@@ -125,12 +126,12 @@ const FrtValidationBadges = ({ missingStatusKeys = [], missingRemarkKeys = [] })
   return (
     <>
       {missingCount > 0 ? (
-        <CBadge color="warning" className="d-none d-md-inline-flex">
+        <CBadge color="warning" className="d-inline-flex">
           {missingCount} missing
         </CBadge>
       ) : null}
       {missingRemarkKeys.length > 0 ? (
-        <span className="badge rounded-pill text-bg-danger d-none d-md-inline-flex align-items-center">
+        <span className="badge rounded-pill text-bg-danger d-inline-flex align-items-center">
           Needs evidence
         </span>
       ) : null}
@@ -138,34 +139,24 @@ const FrtValidationBadges = ({ missingStatusKeys = [], missingRemarkKeys = [] })
   )
 }
 
-const FrtStatusSegment = ({ options, value, onChange, readOnly = false }) => (
-  <div className="inspection-hydraulic-status-group d-flex flex-nowrap justify-content-start gap-2 vmecc-scroll-x pb-1">
-    {options.map((option) =>
-      readOnly ? (
-        <span
-          key={option.value}
-          className={`inspection-hydraulic-status-btn btn btn-sm ${
-            value === option.value ? 'btn-primary' : 'btn-outline-secondary'
-          } pe-none`.trim()}
-          aria-current={value === option.value ? 'true' : undefined}
-        >
-          {option.label}
-        </span>
-      ) : (
-        <CButton
-          key={option.value}
-          type="button"
-          color={value === option.value ? 'primary' : 'secondary'}
-          variant={value === option.value ? undefined : 'outline'}
-          size="sm"
-          className="inspection-hydraulic-status-btn"
-          onClick={() => onChange(option.value)}
-        >
-          {option.label}
-        </CButton>
-      ),
-    )}
-  </div>
+const FrtStatusSegment = ({
+  options,
+  value,
+  onChange,
+  readOnly = false,
+  invalid = false,
+  describedBy,
+}) => (
+  <InspectionStatusSegment
+    ariaLabel="Status"
+    showLabel={false}
+    value={value}
+    options={options}
+    onChange={onChange}
+    readOnly={readOnly}
+    invalid={invalid}
+    describedBy={describedBy}
+  />
 )
 
 const FrtIssueEvidence = ({
@@ -368,6 +359,8 @@ export const FrtDailyRowDetails = ({
               <FrtStatusSegment
                 options={FRT_DAILY_STATUS_OPTIONS}
                 value={row.status}
+                invalid={missingStatus}
+                describedBy={missingStatus ? `${row.id}-status-error` : undefined}
                 onChange={(nextValue) => onUpdateCheck?.(row, { status: nextValue })}
               />
             </div>
@@ -404,7 +397,9 @@ export const FrtDailyRowDetails = ({
         onChangePhotoDescription={onChangePhotoDescription}
         onApplyPhotoCaption={onApplyPhotoCaption}
       />
-      <FormFieldError>{missingStatus ? 'Status is required.' : ''}</FormFieldError>
+      <FormFieldError id={`${row.id}-status-error`}>
+        {missingStatus ? 'Status is required.' : ''}
+      </FormFieldError>
     </>
   )
 }
@@ -462,6 +457,8 @@ export const FrtOneOffRowDetails = ({
         <FrtStatusSegment
           options={FRT_ONE_OFF_STATUS_OPTIONS}
           value={row.condition}
+          invalid={missingCondition}
+          describedBy={missingCondition ? `${row.id}-condition-error` : undefined}
           onChange={(nextValue) => onUpdateCheck?.(row, { condition: nextValue })}
         />
       </div>
@@ -495,7 +492,9 @@ export const FrtOneOffRowDetails = ({
         onChangePhotoDescription={onChangePhotoDescription}
         onApplyPhotoCaption={onApplyPhotoCaption}
       />
-      <FormFieldError>{missingCondition ? 'Condition is required.' : ''}</FormFieldError>
+      <FormFieldError id={`${row.id}-condition-error`}>
+        {missingCondition ? 'Condition is required.' : ''}
+      </FormFieldError>
     </>
   )
 }
@@ -885,7 +884,7 @@ const FrtSectionCards = ({
             !readOnly ? (
               <RowActions
                 iconSize={16}
-                hitArea={32}
+                hitArea={44}
                 toggleAriaLabel={`Truck readiness actions for ${
                   mobileDetail.row.equipment || 'row'
                 }`}

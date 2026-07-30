@@ -1,0 +1,107 @@
+.inspection-section {
+  min-width: 0;
+}
+
+.inspection-section-heading__title {
+  color: var(--cui-body-color);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.inspection-section-heading__description {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.inspection-inset {
+  min-width: 0;
+  padding: 0.85rem;
+  border: 1px solid var(--cui-border-color);
+  border-radius: var(--cui-border-radius);
+  background: var(--cui-tertiary-bg);
+}
+
+.inspection-inset--danger {
+  border-color: var(--cui-danger-border-subtle);
+  background: var(--cui-danger-bg-subtle);
+}
+
+.inspection-evidence--inline,
+.inspection-evidence--inset {
+  min-width: 0;
+}
+
+.inspection-evidence--inset {
+  padding: 0.85rem;
+  border: 1px solid var(--cui-border-color);
+  border-radius: var(--cui-border-radius);
+  background: var(--cui-tertiary-bg);
+}
+
+.inspection-hse-choice-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.5rem;
+}
+
+.inspection-hse-choice-grid .btn {
+  min-width: 0;
+}
+
+.inspection-hse-choice-input:focus-visible + .inspection-hse-choice-btn {
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem rgba(var(--cui-primary-rgb), 0.25);
+}
+
+.inspection-status-segment {
+  min-width: 0;
+}
+
+.inspection-status-field__readonly {
+  display: flex;
+  align-items: center;
+  min-height: 2rem;
+}
+
+.inspection-review-status-pill--warning {
+  color: var(--cui-warning-text-emphasis);
+  border-color: var(--cui-warning-border-subtle);
+  background: var(--cui-warning-bg-subtle);
+}
+
+.inspection-entity-card__toggle {
+  min-width: 0;
+  flex: 1 1 auto;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+}
+
+.inspection-entity-card__toggle:focus-visible {
+  border-radius: var(--cui-border-radius-sm);
+  outline: 2px solid var(--cui-primary);
+  outline-offset: 3px;
+}
+
+.inspection-entity-card__chevron {
+  flex: 0 0 auto;
+  transition: transform 150ms ease;
+}
+
+.inspection-entity-card__chevron--expanded {
+  transform: rotate(180deg);
+}
+
+.inspection-finding-card {
+  border-radius: var(--cui-border-radius);
+}
+
+@media (min-width: 768px) {
+  .inspection-hse-choice-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

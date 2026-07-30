@@ -21,6 +21,7 @@ import {
 } from '@coreui/react'
 import { Pencil } from 'lucide-react'
 import EditControls from 'src/components/EditControls'
+import ResponsiveFinancialBreakdown from 'src/components/workflow/ResponsiveFinancialBreakdown'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import useOvertimeRateSettingsController from '../hooks/useOvertimeRateSettingsController'
 import { OVERTIME_BASE_HOUR_MODES, OVERTIME_NORMAL_HOURS_STRATEGIES } from '../utils'
@@ -564,43 +565,25 @@ const OvertimeRateSettingsTab = ({ vm, handlers }) => {
         <CCardHeader>Sample Calculation</CCardHeader>
         <CCardBody className="d-grid gap-2">
           {sampleOvertimeBreakdown.available ? (
-            <div className="rounded-3 shadow-sm overflow-hidden bg-body">
-              <CTable align="middle" className="mb-0" responsive>
-                <CTableHead color="light">
-                  <CTableRow>
-                    <CTableHeaderCell className="text-center" style={{ width: '56px' }}>
-                      #
-                    </CTableHeaderCell>
-                    <CTableHeaderCell>Item</CTableHeaderCell>
-                    <CTableHeaderCell>Formula</CTableHeaderCell>
-                    <CTableHeaderCell className="text-end">Result</CTableHeaderCell>
-                  </CTableRow>
-                </CTableHead>
-                <CTableBody>
-                  <CTableRow>
-                    <CTableDataCell className="text-center text-body-secondary">1</CTableDataCell>
-                    <CTableDataCell>Sample Basic Salary</CTableDataCell>
-                    <CTableDataCell>-</CTableDataCell>
-                    <CTableDataCell className="text-end">
-                      <div className="d-inline-flex align-items-center gap-2">
-                        <CButton
-                          type="button"
-                          color="link"
-                          size="sm"
-                          className="p-0 text-primary d-inline-flex align-items-center justify-content-center"
-                          title="Edit sample basic salary (UI only)"
-                          onClick={() => setIsSampleBasicSalaryEditing((prev) => !prev)}
-                        >
-                          <Pencil size={13} />
-                        </CButton>
-                        {isSampleBasicSalaryEditing ? (
+            <>
+              <ResponsiveFinancialBreakdown
+                ariaLabel="Sample overtime calculation"
+                sections={[
+                  {
+                    key: 'sample-calculation',
+                    title: 'Calculation Breakdown',
+                    items: [
+                      {
+                        key: 'sample-salary',
+                        label: 'Sample Basic Salary',
+                        value: isSampleBasicSalaryEditing ? (
                           <CFormInput
-                            id="ot-sample-basic-salary-inline"
+                            id="ot-sample-basic-salary-mobile"
+                            aria-label="Sample basic salary"
                             type="number"
                             min="0"
                             step="0.01"
                             value={sampleBasicSalaryInput}
-                            style={{ width: 140 }}
                             autoFocus
                             onBlur={() => setIsSampleBasicSalaryEditing(false)}
                             onChange={(event) => setSampleBasicSalaryInput(event.target.value)}
@@ -611,68 +594,167 @@ const OvertimeRateSettingsTab = ({ vm, handlers }) => {
                             }}
                           />
                         ) : (
-                          <span>{formatMoney(sampleOvertimeBreakdown.sampleBasicSalary)}</span>
-                        )}
-                      </div>
-                    </CTableDataCell>
-                  </CTableRow>
-                  <CTableRow>
-                    <CTableDataCell className="text-center text-body-secondary">2</CTableDataCell>
-                    <CTableDataCell>Hourly Base Rate</CTableDataCell>
-                    <CTableDataCell>
-                      {sampleOvertimeBreakdown.mode === OVERTIME_BASE_HOUR_MODES.MONTH_DAYS_DIVISION
-                        ? `(${sampleOvertimeBreakdown.sampleBasicSalary.toFixed(2)} / ${SAMPLE_MONTH_DAYS}) / ${sampleOvertimeBreakdown.hoursPerDay}`
-                        : `(${sampleOvertimeBreakdown.sampleBasicSalary.toFixed(2)} / ${sampleOvertimeBreakdown.divisor}) / ${sampleOvertimeBreakdown.hoursPerDay}`}
-                      {sampleOvertimeBreakdown.strategy ===
-                      OVERTIME_NORMAL_HOURS_STRATEGIES.STATUTORY_8H
-                        ? ' (statutory 8h)'
-                        : sampleOvertimeBreakdown.strategy ===
-                            OVERTIME_NORMAL_HOURS_STRATEGIES.GLOBAL
-                          ? ' (global hours/day)'
-                          : ' (role-based default hours/day)'}
-                    </CTableDataCell>
-                    <CTableDataCell className="text-end">
-                      {formatMoney(sampleOvertimeBreakdown.hourlyBase)}
-                    </CTableDataCell>
-                  </CTableRow>
-                  <CTableRow>
-                    <CTableDataCell className="text-center text-body-secondary">3</CTableDataCell>
-                    <CTableDataCell>OT Type: Weekday ({SAMPLE_OVERTIME_HOURS}h)</CTableDataCell>
-                    <CTableDataCell>
-                      {SAMPLE_OVERTIME_HOURS}h x RM {sampleOvertimeBreakdown.hourlyBase.toFixed(2)}
-                      /h x {sampleOvertimeBreakdown.weekday}x
-                    </CTableDataCell>
-                    <CTableDataCell className="text-end">
-                      {formatMoney(sampleOvertimeBreakdown.weekdayPayout)}
-                    </CTableDataCell>
-                  </CTableRow>
-                  <CTableRow>
-                    <CTableDataCell className="text-center text-body-secondary">4</CTableDataCell>
-                    <CTableDataCell>OT Type: Weekend ({SAMPLE_OVERTIME_HOURS}h)</CTableDataCell>
-                    <CTableDataCell>
-                      {SAMPLE_OVERTIME_HOURS}h x RM {sampleOvertimeBreakdown.hourlyBase.toFixed(2)}
-                      /h x {sampleOvertimeBreakdown.weekend}x
-                    </CTableDataCell>
-                    <CTableDataCell className="text-end">
-                      {formatMoney(sampleOvertimeBreakdown.weekendPayout)}
-                    </CTableDataCell>
-                  </CTableRow>
-                  <CTableRow>
-                    <CTableDataCell className="text-center text-body-secondary">5</CTableDataCell>
-                    <CTableDataCell>
-                      OT Type: Public Holiday ({SAMPLE_OVERTIME_HOURS}h)
-                    </CTableDataCell>
-                    <CTableDataCell>
-                      {SAMPLE_OVERTIME_HOURS}h x RM {sampleOvertimeBreakdown.hourlyBase.toFixed(2)}
-                      /h x {sampleOvertimeBreakdown.holiday}x
-                    </CTableDataCell>
-                    <CTableDataCell className="text-end">
-                      {formatMoney(sampleOvertimeBreakdown.holidayPayout)}
-                    </CTableDataCell>
-                  </CTableRow>
-                </CTableBody>
-              </CTable>
-            </div>
+                          formatMoney(sampleOvertimeBreakdown.sampleBasicSalary)
+                        ),
+                        actions: !isSampleBasicSalaryEditing ? (
+                          <CButton
+                            type="button"
+                            color="light"
+                            size="sm"
+                            className="workflow-attachment-action d-inline-flex align-items-center gap-2"
+                            onClick={() => setIsSampleBasicSalaryEditing(true)}
+                          >
+                            <Pencil size={14} aria-hidden="true" />
+                            Edit sample salary
+                          </CButton>
+                        ) : null,
+                      },
+                      {
+                        key: 'hourly-base',
+                        label: 'Hourly Base Rate',
+                        value: formatMoney(sampleOvertimeBreakdown.hourlyBase),
+                        detail:
+                          sampleOvertimeBreakdown.mode ===
+                          OVERTIME_BASE_HOUR_MODES.MONTH_DAYS_DIVISION
+                            ? `(${sampleOvertimeBreakdown.sampleBasicSalary.toFixed(2)} / ${SAMPLE_MONTH_DAYS}) / ${sampleOvertimeBreakdown.hoursPerDay}`
+                            : `(${sampleOvertimeBreakdown.sampleBasicSalary.toFixed(2)} / ${sampleOvertimeBreakdown.divisor}) / ${sampleOvertimeBreakdown.hoursPerDay}`,
+                      },
+                      {
+                        key: 'weekday',
+                        label: `Weekday (${SAMPLE_OVERTIME_HOURS}h)`,
+                        value: formatMoney(sampleOvertimeBreakdown.weekdayPayout),
+                        detail: `${SAMPLE_OVERTIME_HOURS}h × RM ${sampleOvertimeBreakdown.hourlyBase.toFixed(2)}/h × ${sampleOvertimeBreakdown.weekday}x`,
+                      },
+                      {
+                        key: 'weekend',
+                        label: `Weekend (${SAMPLE_OVERTIME_HOURS}h)`,
+                        value: formatMoney(sampleOvertimeBreakdown.weekendPayout),
+                        detail: `${SAMPLE_OVERTIME_HOURS}h × RM ${sampleOvertimeBreakdown.hourlyBase.toFixed(2)}/h × ${sampleOvertimeBreakdown.weekend}x`,
+                      },
+                      {
+                        key: 'holiday',
+                        label: `Public Holiday (${SAMPLE_OVERTIME_HOURS}h)`,
+                        value: formatMoney(sampleOvertimeBreakdown.holidayPayout),
+                        detail: `${SAMPLE_OVERTIME_HOURS}h × RM ${sampleOvertimeBreakdown.hourlyBase.toFixed(2)}/h × ${sampleOvertimeBreakdown.holiday}x`,
+                      },
+                    ],
+                  },
+                ]}
+              />
+              <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-body">
+                <CTable align="middle" className="mb-0" responsive>
+                  <CTableHead color="light">
+                    <CTableRow>
+                      <CTableHeaderCell className="text-center" style={{ width: '56px' }}>
+                        #
+                      </CTableHeaderCell>
+                      <CTableHeaderCell>Item</CTableHeaderCell>
+                      <CTableHeaderCell>Formula</CTableHeaderCell>
+                      <CTableHeaderCell className="text-end">Result</CTableHeaderCell>
+                    </CTableRow>
+                  </CTableHead>
+                  <CTableBody>
+                    <CTableRow>
+                      <CTableDataCell className="text-center text-body-secondary">1</CTableDataCell>
+                      <CTableDataCell>Sample Basic Salary</CTableDataCell>
+                      <CTableDataCell>-</CTableDataCell>
+                      <CTableDataCell className="text-end">
+                        <div className="d-inline-flex align-items-center gap-2">
+                          <CButton
+                            type="button"
+                            color="link"
+                            size="sm"
+                            className="p-0 text-primary d-inline-flex align-items-center justify-content-center"
+                            title="Edit sample basic salary (UI only)"
+                            onClick={() => setIsSampleBasicSalaryEditing((prev) => !prev)}
+                          >
+                            <Pencil size={13} />
+                          </CButton>
+                          {isSampleBasicSalaryEditing ? (
+                            <CFormInput
+                              id="ot-sample-basic-salary-inline"
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={sampleBasicSalaryInput}
+                              style={{ width: 140 }}
+                              autoFocus
+                              onBlur={() => setIsSampleBasicSalaryEditing(false)}
+                              onChange={(event) => setSampleBasicSalaryInput(event.target.value)}
+                              onKeyDown={(event) => {
+                                if (event.key === 'Enter' || event.key === 'Escape') {
+                                  setIsSampleBasicSalaryEditing(false)
+                                }
+                              }}
+                            />
+                          ) : (
+                            <span>{formatMoney(sampleOvertimeBreakdown.sampleBasicSalary)}</span>
+                          )}
+                        </div>
+                      </CTableDataCell>
+                    </CTableRow>
+                    <CTableRow>
+                      <CTableDataCell className="text-center text-body-secondary">2</CTableDataCell>
+                      <CTableDataCell>Hourly Base Rate</CTableDataCell>
+                      <CTableDataCell>
+                        {sampleOvertimeBreakdown.mode ===
+                        OVERTIME_BASE_HOUR_MODES.MONTH_DAYS_DIVISION
+                          ? `(${sampleOvertimeBreakdown.sampleBasicSalary.toFixed(2)} / ${SAMPLE_MONTH_DAYS}) / ${sampleOvertimeBreakdown.hoursPerDay}`
+                          : `(${sampleOvertimeBreakdown.sampleBasicSalary.toFixed(2)} / ${sampleOvertimeBreakdown.divisor}) / ${sampleOvertimeBreakdown.hoursPerDay}`}
+                        {sampleOvertimeBreakdown.strategy ===
+                        OVERTIME_NORMAL_HOURS_STRATEGIES.STATUTORY_8H
+                          ? ' (statutory 8h)'
+                          : sampleOvertimeBreakdown.strategy ===
+                              OVERTIME_NORMAL_HOURS_STRATEGIES.GLOBAL
+                            ? ' (global hours/day)'
+                            : ' (role-based default hours/day)'}
+                      </CTableDataCell>
+                      <CTableDataCell className="text-end">
+                        {formatMoney(sampleOvertimeBreakdown.hourlyBase)}
+                      </CTableDataCell>
+                    </CTableRow>
+                    <CTableRow>
+                      <CTableDataCell className="text-center text-body-secondary">3</CTableDataCell>
+                      <CTableDataCell>OT Type: Weekday ({SAMPLE_OVERTIME_HOURS}h)</CTableDataCell>
+                      <CTableDataCell>
+                        {SAMPLE_OVERTIME_HOURS}h x RM{' '}
+                        {sampleOvertimeBreakdown.hourlyBase.toFixed(2)}
+                        /h x {sampleOvertimeBreakdown.weekday}x
+                      </CTableDataCell>
+                      <CTableDataCell className="text-end">
+                        {formatMoney(sampleOvertimeBreakdown.weekdayPayout)}
+                      </CTableDataCell>
+                    </CTableRow>
+                    <CTableRow>
+                      <CTableDataCell className="text-center text-body-secondary">4</CTableDataCell>
+                      <CTableDataCell>OT Type: Weekend ({SAMPLE_OVERTIME_HOURS}h)</CTableDataCell>
+                      <CTableDataCell>
+                        {SAMPLE_OVERTIME_HOURS}h x RM{' '}
+                        {sampleOvertimeBreakdown.hourlyBase.toFixed(2)}
+                        /h x {sampleOvertimeBreakdown.weekend}x
+                      </CTableDataCell>
+                      <CTableDataCell className="text-end">
+                        {formatMoney(sampleOvertimeBreakdown.weekendPayout)}
+                      </CTableDataCell>
+                    </CTableRow>
+                    <CTableRow>
+                      <CTableDataCell className="text-center text-body-secondary">5</CTableDataCell>
+                      <CTableDataCell>
+                        OT Type: Public Holiday ({SAMPLE_OVERTIME_HOURS}h)
+                      </CTableDataCell>
+                      <CTableDataCell>
+                        {SAMPLE_OVERTIME_HOURS}h x RM{' '}
+                        {sampleOvertimeBreakdown.hourlyBase.toFixed(2)}
+                        /h x {sampleOvertimeBreakdown.holiday}x
+                      </CTableDataCell>
+                      <CTableDataCell className="text-end">
+                        {formatMoney(sampleOvertimeBreakdown.holidayPayout)}
+                      </CTableDataCell>
+                    </CTableRow>
+                  </CTableBody>
+                </CTable>
+              </div>
+            </>
           ) : (
             <div className="text-warning">{sampleOvertimeBreakdown.message}</div>
           )}

@@ -83,7 +83,8 @@ const useAssignmentRowActions = ({
         })
         return
       }
-      navigate(`${SET_SALARY_BASE}/assignment/${encodeURIComponent(row.id)}/edit`)
+      const routeKey = String(row?.publicId || row.id).trim()
+      navigate(`${SET_SALARY_BASE}/assignment/${encodeURIComponent(routeKey)}/edit`)
     },
     [navigate],
   )
@@ -97,7 +98,8 @@ const useAssignmentRowActions = ({
         })
         return
       }
-      navigate(`${SET_SALARY_BASE}/assignment/${encodeURIComponent(row.id)}/view`)
+      const routeKey = String(row?.publicId || row.id).trim()
+      navigate(`${SET_SALARY_BASE}/assignment/${encodeURIComponent(routeKey)}/view`)
     },
     [navigate],
   )
@@ -141,7 +143,9 @@ const useAssignmentRowActions = ({
     const isDraft = String(assignmentDeleteTarget?.status || '') === ASSIGNMENT_DRAFT_STATUS
     const ok = isDraft
       ? await removeAssignmentDraft(assignmentDeleteTarget.id)
-      : await removeAssignmentRow(assignmentDeleteTarget.id, { actorName })
+      : await removeAssignmentRow(assignmentDeleteTarget.publicId || assignmentDeleteTarget.id, {
+          actorName,
+        })
     if (!ok) {
       pushToast('Unable to delete assignment.', {
         title: 'Delete failed',

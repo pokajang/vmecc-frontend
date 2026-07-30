@@ -142,9 +142,11 @@ export const deleteMyPayrollClaimApiFirst = async (serverId, options = {}) => {
   try {
     const idempotencyKey =
       options?.idempotencyKey || buildIdempotencyKey('payroll-claim-delete', [serverId])
-    await deletePayrollClaimApi(serverId, {
-      headers: { 'X-Idempotency-Key': idempotencyKey },
-    })
+    await deletePayrollClaimApi(
+      serverId,
+      { expected_version: options?.expectedVersion },
+      { headers: { 'X-Idempotency-Key': idempotencyKey } },
+    )
     return { ok: true, source: 'api' }
   } catch (error) {
     return { ok: false, source: 'api', error, currentData: toConflictData(error) }

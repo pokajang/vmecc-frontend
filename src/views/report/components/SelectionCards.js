@@ -8,6 +8,7 @@ const SelectionCards = ({
   selectedValue,
   onSelect,
   cols = { xs: 12, md: 6 },
+  showDescriptions = true,
 }) => (
   <div className="d-grid gap-2">
     <div className="fw-semibold text-muted">{label}</div>
@@ -24,7 +25,7 @@ const SelectionCards = ({
               selected={isSelected}
               variant="compact"
               className="report-option-card"
-              showDescription={Boolean(option.description)}
+              showDescription={showDescriptions && Boolean(option.description)}
               role="button"
               onSelect={() => onSelect(option.value)}
             />

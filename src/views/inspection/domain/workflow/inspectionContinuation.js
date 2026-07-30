@@ -42,13 +42,18 @@ const getRecordMainLocation = (record = {}) => {
 
   const path = Array.isArray(record?.locationPath) ? record.locationPath : record?.location_path
   if (Array.isArray(path)) {
-    const first = String(path[0] || '').trim()
-    if (first) return first
+    const mainPathPart = String((path.length >= 2 ? path[1] : path[0]) || '').trim()
+    if (mainPathPart) return mainPathPart
   }
 
   const location = String(record?.selectedLocation || record?.location || '').trim()
   if (!location) return ''
-  return location.includes('>') ? location.split('>')[0].trim() : location
+  if (!location.includes('>')) return location
+  const parts = location
+    .split('>')
+    .map((part) => part.trim())
+    .filter(Boolean)
+  return parts.length >= 2 ? parts[1] : parts[0] || ''
 }
 
 const getRecordZone = (record = {}) => {

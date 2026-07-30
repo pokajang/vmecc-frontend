@@ -222,6 +222,9 @@ export const InspectionGeneralEvidenceCard = ({
   readOnly = false,
   fieldError = false,
   compactOnMobile = false,
+  unframed = false,
+  presentation = 'card',
+  showTitle = true,
   stageDrawerPhotos = false,
   uploadsPending = false,
   drawerDescription = '',
@@ -258,6 +261,19 @@ export const InspectionGeneralEvidenceCard = ({
   const savedPhotoSignature = getPhotoSignature(savedPhotos)
   const draftPhotoSignature = getPhotoSignature(draftPhotos)
   const hasDraftChanges = draftPhotoSignature !== savedPhotoSignature
+  const showDrawerFooter = useStagedDrawer
+    ? uploadsPending || hasDraftChanges || photoCount > 0 || draftPhotoCount > 0
+    : drawerPhotoCount > 0
+  const drawerFooterStatus = useStagedDrawer
+    ? uploadsPending
+      ? 'Photos are still uploading'
+      : hasDraftChanges
+        ? draftPhotoCount > 0
+          ? `${draftPhotoCount} ${draftPhotoCount === 1 ? 'photo' : 'photos'} ready to save`
+          : 'Photo removal ready to save'
+        : `${photoCount} ${photoCount === 1 ? 'photo' : 'photos'} attached to this report`
+    : `${drawerPhotoCount} ${drawerPhotoCount === 1 ? 'photo' : 'photos'} attached`
+  const resolvedPresentation = unframed ? 'inline' : presentation
 
   const addDraftPhotos = (nextPhotos = []) => {
     const additions = Array.isArray(nextPhotos) ? nextPhotos.filter(Boolean) : []
@@ -451,64 +467,63 @@ export const InspectionGeneralEvidenceCard = ({
               <div className="inspection-general-evidence-drawer-gallery">{gallery}</div>
             )}
           </div>
-          <div className="inspection-general-evidence-drawer-footer mobile-bottom-drawer__footer">
-            <div className="inspection-general-evidence-drawer-footer__status">
-              <div className="small fw-semibold">
-                {useStagedDrawer && uploadsPending
-                  ? 'Photos are still uploading'
-                  : useStagedDrawer
-                    ? hasDraftChanges
-                      ? `${draftPhotoCount} ${draftPhotoCount === 1 ? 'photo' : 'photos'} ready to save`
-                      : `${photoCount} ${photoCount === 1 ? 'photo' : 'photos'} attached to this report`
-                    : `${drawerPhotoCount} ${drawerPhotoCount === 1 ? 'photo' : 'photos'} attached`}
+          {showDrawerFooter ? (
+            <div className="inspection-general-evidence-drawer-footer mobile-bottom-drawer__footer">
+              <div
+                className="inspection-general-evidence-drawer-footer__status"
+                role="status"
+                aria-live="polite"
+              >
+                <div className="small fw-semibold">{drawerFooterStatus}</div>
+                {useStagedDrawer && uploadsPending ? (
+                  <div className="small text-warning-emphasis mt-1">
+                    Keep this drawer open. Retry or remove any failed upload before saving.
+                  </div>
+                ) : null}
+                {!useStagedDrawer && drawerDoneMessage ? (
+                  <div className="small text-body-secondary mt-1">{drawerDoneMessage}</div>
+                ) : null}
               </div>
-              {useStagedDrawer && uploadsPending ? (
-                <div className="small text-warning-emphasis mt-1" role="status" aria-live="polite">
-                  Keep this drawer open. Retry or remove any failed upload before saving.
-                </div>
-              ) : null}
-              {!useStagedDrawer && drawerDoneMessage ? (
-                <div className="small text-body-secondary mt-1">{drawerDoneMessage}</div>
-              ) : null}
-            </div>
-            <div className="inspection-general-evidence-drawer-footer__actions d-flex gap-2">
-              {useStagedDrawer ? (
-                <>
-                  <CButton
-                    type="button"
-                    color="secondary"
-                    variant="outline"
-                    size="sm"
-                    disabled={uploadsPending || !hasDraftChanges}
-                    onClick={handleResetDraftPhotos}
-                  >
-                    Reset
-                  </CButton>
+              <div className="inspection-general-evidence-drawer-footer__actions d-flex gap-2">
+                {useStagedDrawer ? (
+                  <>
+                    <CButton
+                      type="button"
+                      color="secondary"
+                      variant="outline"
+                      size="sm"
+                      disabled={uploadsPending || !hasDraftChanges}
+                      onClick={handleResetDraftPhotos}
+                    >
+                      Reset
+                    </CButton>
+                    <CButton
+                      type="button"
+                      color="primary"
+                      size="sm"
+                      disabled={
+                        uploadsPending || !hasDraftChanges || typeof onSavePhotos !== 'function'
+                      }
+                      onClick={handleSaveDraftPhotos}
+                    >
+                      Save photos
+                    </CButton>
+                  </>
+                ) : (
                   <CButton
                     type="button"
                     color="primary"
                     size="sm"
-                    disabled={
-                      uploadsPending || !hasDraftChanges || typeof onSavePhotos !== 'function'
-                    }
-                    onClick={handleSaveDraftPhotos}
+                    className="inspection-general-evidence-drawer-done"
+                    aria-label={`Done with ${title}`}
+                    onClick={() => setDrawerOpen(false)}
                   >
-                    Save photos
+                    Done
                   </CButton>
-                </>
-              ) : (
-                <CButton
-                  type="button"
-                  color="primary"
-                  size="sm"
-                  aria-label={`Done with ${title}`}
-                  onClick={() => setDrawerOpen(false)}
-                >
-                  Done
-                </CButton>
-              )}
+                )}
+              </div>
             </div>
-          </div>
+          ) : null}
         </MobileBottomDrawer>
         {useStagedDrawer ? (
           <ActionConfirmModal
@@ -530,10 +545,37 @@ export const InspectionGeneralEvidenceCard = ({
     )
   }
 
+  if (resolvedPresentation !== 'card') {
+    return (
+      <div
+        ref={cardRef}
+        className={`inspection-general-evidence-section inspection-evidence--${
+          resolvedPresentation === 'inset' ? 'inset' : 'inline'
+        } d-grid gap-3`}
+      >
+        <div
+          className={`flex-wrap justify-content-between align-items-center gap-2 ${
+            showTitle || !readOnly ? 'd-flex' : 'd-none'
+          }`}
+        >
+          {showTitle ? <div className="fw-semibold">{title}</div> : null}
+          {!readOnly ? actions : null}
+        </div>
+        <div className="d-grid gap-3">
+          {drawerDescription && !readOnly ? (
+            <div className="small text-body-secondary">{drawerDescription}</div>
+          ) : null}
+          {remarksField}
+          {gallery}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <CCard className="inspection-general-evidence-card" ref={cardRef}>
       <CCardHeader className="inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <div className="fw-semibold">{title}</div>
+        {showTitle ? <div className="fw-semibold">{title}</div> : null}
         {!readOnly ? actions : null}
       </CCardHeader>
       <CCardBody className="inspection-general-evidence-card-body d-grid gap-3">

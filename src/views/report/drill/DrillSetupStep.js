@@ -1,27 +1,29 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { CButton, CAlert, CCol, CFormFeedback, CFormInput, CFormLabel, CRow } from '@coreui/react'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import CreateActionButton from 'src/components/CreateActionButton'
-import IconOptionGrid from 'src/components/IconOptionGrid'
+import MobileChoiceList from 'src/components/report-workflow/MobileChoiceList'
+import MobileSetupSelectorDrawer from 'src/components/report-workflow/MobileSetupSelectorDrawer'
+import MobileSetupSummaryList from 'src/components/report-workflow/MobileSetupSummaryList'
+import ResponsiveChoiceSelector from 'src/components/report-workflow/ResponsiveChoiceSelector'
 import TypeManagerModal from 'src/components/report-workflow/TypeManagerModal'
+import { MOBILE_TYPE_TOGGLE_CARD_PROPS } from 'src/components/report-workflow/mobile-home'
 import { DRILL_ENVIRONMENT_OPTIONS } from './constants'
 import SelectionCards from '../components/SelectionCards'
 import { ReportSetupActions, ReportSetupSummaryRow } from '../components/ReportWorkflowUi'
-import { REPORT_MOBILE_QUERY } from '../hooks/useReportIsMobile'
+import useReportIsMobile, { REPORT_MOBILE_QUERY } from '../hooks/useReportIsMobile'
 import useDrillCategoryManager, { DRILL_CATEGORY_TOGGLE_VALUE } from './useDrillCategoryManager'
 import useDrillTypeManager, { DRILL_TYPE_TOGGLE_VALUE } from './useDrillTypeManager'
 import useDrillLocationManager, { DRILL_LOCATION_TOGGLE_VALUE } from './useDrillLocationManager'
 import { recordDrillTypeUsage } from './typeUsageStorage'
 
 const TOGGLE_CARD_PROPS = {
-  style: {
-    backgroundColor: 'var(--cui-light-bg-subtle, #f8f9fa)',
-    borderColor: 'var(--cui-border-color, #d8dbe0)',
-    borderStyle: 'dashed',
-  },
-  className: 'report-option-card text-primary',
-  iconContainerClassName: 'bg-body text-primary',
-  titleClassName: 'fw-semibold text-primary',
+  ...MOBILE_TYPE_TOGGLE_CARD_PROPS,
+  className: `report-option-card ${MOBILE_TYPE_TOGGLE_CARD_PROPS.className}`,
+}
+
+const MOBILE_SETUP_DRAWERS = {
+  type: 'type',
 }
 
 const DrillSetupStep = ({
@@ -39,6 +41,7 @@ const DrillSetupStep = ({
   draftStatus = '',
   blockerMessage = '',
 }) => {
+  const isMobile = useReportIsMobile()
   const [isEditingType, setIsEditingType] = useState(() => !String(form.incidentType || '').trim())
   const [isEditingEnvironment, setIsEditingEnvironment] = useState(
     () => !String(form.weather || '').trim(),
@@ -55,13 +58,16 @@ const DrillSetupStep = ({
   const [deleteTypeTarget, setDeleteTypeTarget] = useState(null)
   const [deleteCategoryTarget, setDeleteCategoryTarget] = useState(null)
   const [deleteLocationTarget, setDeleteLocationTarget] = useState(null)
+  const [activeMobileSetupDrawer, setActiveMobileSetupDrawer] = useState('')
+  const [returnMobileSetupDrawer, setReturnMobileSetupDrawer] = useState('')
 
   const updateSetupField = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }))
     setSetupFieldErrors((prev) => ({ ...prev, [field]: undefined }))
   }
 
-  const showTypePicker = isEditingType || !String(form.incidentType || '').trim()
+  const hasType = Boolean(String(form.incidentType || '').trim())
+  const showTypePicker = !hasType || (!isMobile && isEditingType)
   const showEnvironmentPicker = isEditingEnvironment || !String(form.weather || '').trim()
   const showLocationPicker = isEditingLocation || !String(form.location || '').trim()
   const showDateTimePicker =
@@ -86,12 +92,112 @@ const DrillSetupStep = ({
     updateSetupField,
     pushToast,
   })
+  const mobileSetupChildDrawerVisible = drillType.showAddTypeModal
+
+  useEffect(() => {
+    if (!isMobile || !returnMobileSetupDrawer || mobileSetupChildDrawerVisible) return
+    const timer = window.setTimeout(() => {
+      setActiveMobileSetupDrawer(returnMobileSetupDrawer)
+      setReturnMobileSetupDrawer('')
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [isMobile, mobileSetupChildDrawerVisible, returnMobileSetupDrawer])
+
+  const openTypeEditor = () => {
+    if (isMobile) {
+      setActiveMobileSetupDrawer(MOBILE_SETUP_DRAWERS.type)
+      return
+    }
+    setIsEditingType(true)
+  }
+
+  const resetTypeSelection = () => {
+    drillType.setShowAllDrillTypes(false)
+    updateSetupField('incidentType', '')
+    setIsEditingType(true)
+    setActiveMobileSetupDrawer('')
+  }
+
+  const selectDrillType = (nextValue, { closeMobileDrawer = false } = {}) => {
+    if (nextValue === DRILL_TYPE_TOGGLE_VALUE) {
+      drillType.setShowAllDrillTypes((prev) => !prev)
+      return
+    }
+    drillType.setShowAllDrillTypes(false)
+    const value = String(nextValue || '').trim()
+    updateSetupField('incidentType', value)
+    recordDrillTypeUsage(user?.id, value)
+    setIsEditingType(false)
+    if (closeMobileDrawer) setActiveMobileSetupDrawer('')
+  }
+
+  const openTypeManagerFromDrawer = () => {
+    setReturnMobileSetupDrawer(MOBILE_SETUP_DRAWERS.type)
+    setActiveMobileSetupDrawer('')
+    drillType.openAddModal()
+  }
+
   const categorySummary = (Array.isArray(form.exerciseCategories) ? form.exerciseCategories : [])
     .map(
       (value) =>
         drillCategory.categoryOptions.find((option) => option.value === value)?.title || value,
     )
     .join(', ')
+  const mobileSetupSummaryItems =
+    isMobile && hasType
+      ? [
+          hasType && !isEditingType
+            ? {
+                key: 'type',
+                label: 'Type',
+                value: form.incidentType,
+                editLabel: 'Edit Type',
+                onEdit: openTypeEditor,
+              }
+            : null,
+          Array.isArray(form.exerciseCategories) &&
+          form.exerciseCategories.length > 0 &&
+          !isEditingCategories
+            ? {
+                key: 'categories',
+                label: 'Exercise Categories',
+                value: categorySummary,
+                editLabel: 'Edit Exercise Categories',
+                onEdit: () => setIsEditingCategories(true),
+              }
+            : null,
+          form.weather && !showEnvironmentPicker
+            ? {
+                key: 'environment',
+                label: 'Environment',
+                value: form.weather,
+                editLabel: 'Edit Environment',
+                onEdit: () => setIsEditingEnvironment(true),
+              }
+            : null,
+          form.location && !showLocationPicker
+            ? {
+                key: 'location',
+                label: 'Location',
+                value: form.location,
+                editLabel: 'Edit Location',
+                onEdit: () => setIsEditingLocation(true),
+              }
+            : null,
+          form.reportDate && form.reportTime && !showDateTimePicker
+            ? {
+                key: 'datetime',
+                label: 'Date & Time',
+                value: form.reportDate,
+                secondaryValue: `${form.reportTime}${
+                  form.reportIssuanceDate ? ` · Issued ${form.reportIssuanceDate}` : ''
+                }`,
+                editLabel: 'Edit Date & Time',
+                onEdit: () => setIsEditingDateTime(true),
+              }
+            : null,
+        ].filter(Boolean)
+      : []
 
   return (
     <div className="mb-3 d-grid gap-4" data-testid="drill-report-setup-ready">
@@ -256,316 +362,382 @@ const DrillSetupStep = ({
         showRowIcon={false}
       />
 
+      <MobileSetupSelectorDrawer
+        visible={isMobile && activeMobileSetupDrawer === MOBILE_SETUP_DRAWERS.type}
+        title="Change Drill Type"
+        headerAction={
+          <CreateActionButton
+            label="Add type"
+            className="inspection-compact-action-btn"
+            onClick={openTypeManagerFromDrawer}
+          />
+        }
+        onClose={() => setActiveMobileSetupDrawer('')}
+      >
+        <div className="d-grid gap-3">
+          <ResponsiveChoiceSelector
+            isMobile
+            options={drillType.visibleTypeOptions}
+            value={form.incidentType}
+            onChange={(nextValue) => selectDrillType(nextValue, { closeMobileDrawer: true })}
+            variant="compact"
+            showDescription
+            toggleValue={DRILL_TYPE_TOGGLE_VALUE}
+            columns={{ xs: 12 }}
+            cardProps={(option) =>
+              option?.value === DRILL_TYPE_TOGGLE_VALUE
+                ? TOGGLE_CARD_PROPS
+                : { className: 'report-option-card' }
+            }
+            ariaLabel="Change drill type"
+          />
+          <CButton
+            type="button"
+            color="secondary"
+            variant="outline"
+            size="sm"
+            onClick={resetTypeSelection}
+          >
+            Clear type
+          </CButton>
+        </div>
+      </MobileSetupSelectorDrawer>
+
       <div className="report-setup-grid mobile-setup-picker d-grid gap-4">
-        <div className="d-grid gap-3" data-drill-field="incidentType">
+        {mobileSetupSummaryItems.length > 0 ? (
+          <MobileSetupSummaryList ariaLabel="Drill setup summary" items={mobileSetupSummaryItems} />
+        ) : null}
+        <div
+          className={`d-grid gap-3 ${!showTypePicker ? 'd-none d-md-grid' : ''}`.trim()}
+          data-drill-field="incidentType"
+        >
           {!showTypePicker ? (
-            <>
+            !isMobile ? (
               <ReportSetupSummaryRow
                 label="Type"
                 value={form.incidentType}
                 showDesktop
-                onEdit={() => setIsEditingType(true)}
-                onReset={() => {
-                  drillType.setShowAllDrillTypes(false)
-                  updateSetupField('incidentType', '')
-                  setIsEditingType(true)
-                }}
+                onEdit={openTypeEditor}
+                onReset={resetTypeSelection}
               />
-            </>
+            ) : null
           ) : (
             <>
               <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <div className="fw-semibold text-muted">Choose Drill Type</div>
                 <CreateActionButton label="Add type" onClick={drillType.openAddModal} />
               </div>
-              <IconOptionGrid
+              <ResponsiveChoiceSelector
+                isMobile={isMobile}
                 options={drillType.visibleTypeOptions}
                 value={form.incidentType}
-                onChange={(nextValue) => {
-                  if (nextValue === DRILL_TYPE_TOGGLE_VALUE) {
-                    drillType.setShowAllDrillTypes((prev) => !prev)
-                    return
-                  }
-                  drillType.setShowAllDrillTypes(false)
-                  const value = String(nextValue || '').trim()
-                  updateSetupField('incidentType', value)
-                  recordDrillTypeUsage(user?.id, value)
-                  setIsEditingType(false)
-                }}
+                onChange={selectDrillType}
                 variant="compact"
                 showDescription
-                columns={{ xs: 6, md: 3 }}
+                toggleValue={DRILL_TYPE_TOGGLE_VALUE}
+                columns={{ xs: 12, md: 3 }}
                 cardProps={(option) =>
                   option?.value === DRILL_TYPE_TOGGLE_VALUE
                     ? TOGGLE_CARD_PROPS
                     : { className: 'report-option-card' }
                 }
+                ariaLabel="Choose drill type"
               />
-              {form.incidentType ? (
-                <div className="report-setup-confirm-row">
-                  <CButton
-                    type="button"
-                    color="secondary"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsEditingType(false)}
-                  >
-                    Confirm Drill Type
-                  </CButton>
-                </div>
-              ) : null}
             </>
           )}
         </div>
-        {Array.isArray(form.exerciseCategories) &&
-        form.exerciseCategories.length > 0 &&
-        !isEditingCategories ? (
-          <ReportSetupSummaryRow
-            label="Exercise Categories"
-            value={categorySummary}
-            showDesktop
-            onEdit={() => setIsEditingCategories(true)}
-            onReset={() => {
-              drillCategory.setShowAllCategories(false)
-              updateSetupField('exerciseCategories', [])
-              setIsEditingCategories(true)
-            }}
-          />
-        ) : (
-          <div className="d-grid gap-2" role="group" aria-labelledby="drill-category-title">
-            <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
-              <div id="drill-category-title" className="fw-semibold text-muted">
-                Exercise Categories (optional)
-              </div>
-              <CreateActionButton label="Add category" onClick={drillCategory.openAddModal} />
-            </div>
-            <IconOptionGrid
-              options={drillCategory.visibleCategoryOptions}
-              value={Array.isArray(form.exerciseCategories) ? form.exerciseCategories : []}
-              onChange={(nextValue) => {
-                if (nextValue === DRILL_CATEGORY_TOGGLE_VALUE) {
-                  drillCategory.setShowAllCategories((prev) => !prev)
-                  return
-                }
-                setForm((prev) => {
-                  const current = Array.isArray(prev.exerciseCategories)
-                    ? prev.exerciseCategories
-                    : []
-                  return {
-                    ...prev,
-                    exerciseCategories: current.includes(nextValue)
-                      ? current.filter((value) => value !== nextValue)
-                      : [...current, nextValue],
+        {!isMobile || hasType ? (
+          <>
+            {Array.isArray(form.exerciseCategories) &&
+            form.exerciseCategories.length > 0 &&
+            !isEditingCategories ? (
+              !isMobile ? (
+                <ReportSetupSummaryRow
+                  label="Exercise Categories"
+                  value={categorySummary}
+                  showDesktop
+                  onEdit={() => setIsEditingCategories(true)}
+                  onReset={() => {
+                    drillCategory.setShowAllCategories(false)
+                    updateSetupField('exerciseCategories', [])
+                    setIsEditingCategories(true)
+                  }}
+                />
+              ) : null
+            ) : (
+              <div className="d-grid gap-2" role="group" aria-labelledby="drill-category-title">
+                <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                  <div id="drill-category-title" className="fw-semibold text-muted">
+                    Exercise Categories (optional)
+                  </div>
+                  <CreateActionButton label="Add category" onClick={drillCategory.openAddModal} />
+                </div>
+                <ResponsiveChoiceSelector
+                  isMobile={isMobile}
+                  options={drillCategory.visibleCategoryOptions}
+                  value={Array.isArray(form.exerciseCategories) ? form.exerciseCategories : []}
+                  onChange={(nextValue) => {
+                    if (nextValue === DRILL_CATEGORY_TOGGLE_VALUE) {
+                      drillCategory.setShowAllCategories((prev) => !prev)
+                      return
+                    }
+                    setForm((prev) => {
+                      const current = Array.isArray(prev.exerciseCategories)
+                        ? prev.exerciseCategories
+                        : []
+                      return {
+                        ...prev,
+                        exerciseCategories: current.includes(nextValue)
+                          ? current.filter((value) => value !== nextValue)
+                          : [...current, nextValue],
+                      }
+                    })
+                  }}
+                  variant="compact"
+                  toggleValue={DRILL_CATEGORY_TOGGLE_VALUE}
+                  columns={{ xs: 12, md: 3 }}
+                  cardProps={(option) =>
+                    option?.value === DRILL_CATEGORY_TOGGLE_VALUE
+                      ? TOGGLE_CARD_PROPS
+                      : { className: 'report-option-card' }
                   }
-                })
-              }}
-              variant="compact"
-              showDescription
-              columns={{ xs: 6, md: 3 }}
-              cardProps={(option) =>
-                option?.value === DRILL_CATEGORY_TOGGLE_VALUE
-                  ? TOGGLE_CARD_PROPS
-                  : { className: 'report-option-card' }
-              }
-              selectionMode="multi"
-              ariaLabel="Exercise categories"
-              testIdPrefix="drill-category"
-            />
-            {Array.isArray(form.exerciseCategories) && form.exerciseCategories.length > 0 ? (
-              <div className="report-setup-confirm-row">
-                <CButton
-                  type="button"
-                  color="secondary"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsEditingCategories(false)}
-                >
-                  Confirm Categories
-                </CButton>
+                  selectionMode="multi"
+                  ariaLabel="Exercise categories"
+                  testIdPrefix="drill-category"
+                />
+                {Array.isArray(form.exerciseCategories) && form.exerciseCategories.length > 0 ? (
+                  <div className="report-setup-confirm-row">
+                    <CButton
+                      type="button"
+                      color="secondary"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditingCategories(false)}
+                    >
+                      Done
+                    </CButton>
+                  </div>
+                ) : null}
               </div>
-            ) : null}
-          </div>
-        )}
-        <div
-          data-drill-field="weather"
-          aria-invalid={Boolean(setupFieldErrors.weather) || undefined}
-        >
-          {form.weather && !showEnvironmentPicker ? (
-            <ReportSetupSummaryRow
-              label="Environment"
-              value={form.weather}
-              showDesktop
-              onEdit={() => setIsEditingEnvironment(true)}
-              onReset={() => {
-                updateSetupField('weather', '')
-                setIsEditingEnvironment(true)
-              }}
-            />
-          ) : null}
-          <div className={form.weather && !showEnvironmentPicker ? 'd-none' : ''}>
-            <SelectionCards
-              label="Choose Environment / Condition"
-              options={DRILL_ENVIRONMENT_OPTIONS}
-              selectedValue={form.weather}
-              onSelect={(value) => {
-                updateSetupField('weather', value)
-                setIsEditingEnvironment(false)
-              }}
-              cols={{ xs: 6, md: 4 }}
-            />
-          </div>
-        </div>
-        <div
-          data-drill-field="location"
-          aria-invalid={Boolean(setupFieldErrors.location) || undefined}
-        >
-          {form.location && !showLocationPicker ? (
-            <ReportSetupSummaryRow
-              label="Location"
-              value={form.location}
-              showDesktop
-              onEdit={() => setIsEditingLocation(true)}
-              onReset={() => {
-                drillLocation.setShowAllDrillLocations(false)
-                updateSetupField('location', '')
-                setIsEditingLocation(true)
-              }}
-            />
-          ) : null}
-          <div className={form.location && !showLocationPicker ? 'd-none' : 'd-grid gap-3'}>
-            <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
-              <div className="fw-semibold text-muted">Choose Drill Location</div>
-              <CreateActionButton label="Add location" onClick={drillLocation.openAddModal} />
+            )}
+            <div
+              className={form.weather && !showEnvironmentPicker ? 'd-none d-md-block' : undefined}
+              data-drill-field="weather"
+              aria-invalid={Boolean(setupFieldErrors.weather) || undefined}
+            >
+              {form.weather && !showEnvironmentPicker ? (
+                !isMobile ? (
+                  <ReportSetupSummaryRow
+                    label="Environment"
+                    value={form.weather}
+                    showDesktop
+                    onEdit={() => setIsEditingEnvironment(true)}
+                    onReset={() => {
+                      updateSetupField('weather', '')
+                      setIsEditingEnvironment(true)
+                    }}
+                  />
+                ) : null
+              ) : null}
+              <div className={form.weather && !showEnvironmentPicker ? 'd-none' : ''}>
+                {isMobile ? (
+                  <div className="d-grid gap-2">
+                    <div className="fw-semibold text-muted">Choose Environment / Condition</div>
+                    <MobileChoiceList
+                      mode="single"
+                      ariaLabel="Choose environment or condition"
+                      options={DRILL_ENVIRONMENT_OPTIONS}
+                      value={form.weather}
+                      onChange={(value) => {
+                        updateSetupField('weather', value)
+                        setIsEditingEnvironment(false)
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <SelectionCards
+                    label="Choose Environment / Condition"
+                    options={DRILL_ENVIRONMENT_OPTIONS}
+                    selectedValue={form.weather}
+                    showDescriptions={false}
+                    onSelect={(value) => {
+                      updateSetupField('weather', value)
+                      setIsEditingEnvironment(false)
+                    }}
+                    cols={{ xs: 12, md: 4 }}
+                  />
+                )}
+              </div>
             </div>
-            <IconOptionGrid
-              options={drillLocation.visibleTypeOptions}
-              value={form.location}
-              onChange={(nextValue) => {
-                if (nextValue === DRILL_LOCATION_TOGGLE_VALUE) {
-                  drillLocation.setShowAllDrillLocations((prev) => !prev)
-                  return
-                }
-                drillLocation.setShowAllDrillLocations(false)
-                updateSetupField('location', String(nextValue || '').trim())
-                setIsEditingLocation(false)
-              }}
-              variant="compact"
-              showDescription
-              columns={{ xs: 6, md: 3 }}
-              cardProps={(option) =>
-                option?.value === DRILL_LOCATION_TOGGLE_VALUE
-                  ? TOGGLE_CARD_PROPS
-                  : { className: 'report-option-card', showDescription: true }
-              }
-            />
-          </div>
-        </div>
-        <div
-          data-drill-field="reportDate"
-          aria-invalid={
-            Boolean(setupFieldErrors.reportDate || setupFieldErrors.reportTime) || undefined
-          }
-        >
-          {form.reportDate && form.reportTime && !showDateTimePicker ? (
-            <ReportSetupSummaryRow
-              label="Date & Time"
-              value={form.reportDate}
-              secondaryValue={`${form.reportTime}${
-                form.reportIssuanceDate ? ` · Issued ${form.reportIssuanceDate}` : ''
-              }`}
-              showDesktop
-              onEdit={() => setIsEditingDateTime(true)}
-              onReset={() => {
-                updateSetupField('reportDate', '')
-                updateSetupField('reportTime', '')
-                setIsEditingDateTime(true)
-              }}
-            />
-          ) : null}
-          <div
-            className={
-              form.reportDate && form.reportTime && !showDateTimePicker ? 'd-none' : 'd-grid gap-3'
-            }
-          >
-            <SelectionCards
-              label="Choose Drill Date"
-              options={datePresetOptions}
-              selectedValue={form.reportDate}
-              onSelect={(value) => updateSetupField('reportDate', value)}
-              cols={{ xs: 6, md: 6 }}
-            />
-            <CRow className="g-2">
-              <CCol xs={12} md={4}>
-                <CFormLabel htmlFor="drill-report-date">Custom drill date</CFormLabel>
-                <CFormInput
-                  id="drill-report-date"
-                  type="date"
-                  value={form.reportDate}
-                  invalid={Boolean(setupFieldErrors.reportDate)}
-                  onChange={(event) => updateSetupField('reportDate', event.target.value)}
+            <div
+              className={form.location && !showLocationPicker ? 'd-none d-md-block' : undefined}
+              data-drill-field="location"
+              aria-invalid={Boolean(setupFieldErrors.location) || undefined}
+            >
+              {form.location && !showLocationPicker ? (
+                !isMobile ? (
+                  <ReportSetupSummaryRow
+                    label="Location"
+                    value={form.location}
+                    showDesktop
+                    onEdit={() => setIsEditingLocation(true)}
+                    onReset={() => {
+                      drillLocation.setShowAllDrillLocations(false)
+                      updateSetupField('location', '')
+                      setIsEditingLocation(true)
+                    }}
+                  />
+                ) : null
+              ) : null}
+              <div className={form.location && !showLocationPicker ? 'd-none' : 'd-grid gap-3'}>
+                <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                  <div className="fw-semibold text-muted">Choose Drill Location</div>
+                  <CreateActionButton label="Add location" onClick={drillLocation.openAddModal} />
+                </div>
+                <ResponsiveChoiceSelector
+                  isMobile={isMobile}
+                  options={drillLocation.visibleTypeOptions}
+                  value={form.location}
+                  onChange={(nextValue) => {
+                    if (nextValue === DRILL_LOCATION_TOGGLE_VALUE) {
+                      drillLocation.setShowAllDrillLocations((prev) => !prev)
+                      return
+                    }
+                    drillLocation.setShowAllDrillLocations(false)
+                    updateSetupField('location', String(nextValue || '').trim())
+                    setIsEditingLocation(false)
+                  }}
+                  variant="compact"
+                  showDescription
+                  toggleValue={DRILL_LOCATION_TOGGLE_VALUE}
+                  columns={{ xs: 12, md: 3 }}
+                  cardProps={(option) =>
+                    option?.value === DRILL_LOCATION_TOGGLE_VALUE
+                      ? TOGGLE_CARD_PROPS
+                      : { className: 'report-option-card', showDescription: true }
+                  }
                 />
-                <CFormFeedback invalid>{setupFieldErrors.reportDate}</CFormFeedback>
-              </CCol>
-            </CRow>
-            <CRow className="g-2">
-              <CCol xs={12} md={4}>
-                <CFormLabel htmlFor="drill-report-issuance-date">
-                  Report issuance date (optional)
-                </CFormLabel>
-                <CFormInput
-                  id="drill-report-issuance-date"
-                  type="date"
-                  value={form.reportIssuanceDate || ''}
-                  onChange={(event) => updateSetupField('reportIssuanceDate', event.target.value)}
-                />
-              </CCol>
-            </CRow>
-            <SelectionCards
-              label="Choose Start Time"
-              options={timePresetOptions}
-              selectedValue={form.reportTime}
-              onSelect={(value) => updateSetupField('reportTime', value)}
-              cols={{ xs: 6, md: 3 }}
-            />
-            <CRow className="g-2">
-              <CCol xs={12} md={4}>
-                <CFormLabel htmlFor="drill-report-time">Custom start time</CFormLabel>
-                <CFormInput
-                  id="drill-report-time"
-                  type="time"
-                  value={form.reportTime}
-                  invalid={Boolean(setupFieldErrors.reportTime)}
-                  onChange={(event) => updateSetupField('reportTime', event.target.value)}
-                />
-                <CFormFeedback invalid>{setupFieldErrors.reportTime}</CFormFeedback>
-              </CCol>
-            </CRow>
-            {form.reportDate && form.reportTime ? (
-              <div className="report-setup-confirm-row">
-                <CButton
-                  type="button"
-                  color="secondary"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsEditingDateTime(false)}
-                >
-                  Confirm Date & Time
-                </CButton>
               </div>
+            </div>
+            <div
+              className={
+                form.reportDate && form.reportTime && !showDateTimePicker
+                  ? 'd-none d-md-block'
+                  : undefined
+              }
+              data-drill-field="reportDate"
+              aria-invalid={
+                Boolean(setupFieldErrors.reportDate || setupFieldErrors.reportTime) || undefined
+              }
+            >
+              {form.reportDate && form.reportTime && !showDateTimePicker ? (
+                !isMobile ? (
+                  <ReportSetupSummaryRow
+                    label="Date & Time"
+                    value={form.reportDate}
+                    secondaryValue={`${form.reportTime}${
+                      form.reportIssuanceDate ? ` · Issued ${form.reportIssuanceDate}` : ''
+                    }`}
+                    showDesktop
+                    onEdit={() => setIsEditingDateTime(true)}
+                    onReset={() => {
+                      updateSetupField('reportDate', '')
+                      updateSetupField('reportTime', '')
+                      setIsEditingDateTime(true)
+                    }}
+                  />
+                ) : null
+              ) : null}
+              <div
+                className={
+                  form.reportDate && form.reportTime && !showDateTimePicker
+                    ? 'd-none'
+                    : 'd-grid gap-3'
+                }
+              >
+                <SelectionCards
+                  label="Choose Drill Date"
+                  options={datePresetOptions}
+                  selectedValue={form.reportDate}
+                  onSelect={(value) => updateSetupField('reportDate', value)}
+                  cols={{ xs: 12, md: 6 }}
+                />
+                <CRow className="g-2">
+                  <CCol xs={12} md={4}>
+                    <CFormLabel htmlFor="drill-report-date">Custom drill date</CFormLabel>
+                    <CFormInput
+                      id="drill-report-date"
+                      type="date"
+                      value={form.reportDate}
+                      invalid={Boolean(setupFieldErrors.reportDate)}
+                      onChange={(event) => updateSetupField('reportDate', event.target.value)}
+                    />
+                    <CFormFeedback invalid>{setupFieldErrors.reportDate}</CFormFeedback>
+                  </CCol>
+                </CRow>
+                <CRow className="g-2">
+                  <CCol xs={12} md={4}>
+                    <CFormLabel htmlFor="drill-report-issuance-date">
+                      Report issuance date (optional)
+                    </CFormLabel>
+                    <CFormInput
+                      id="drill-report-issuance-date"
+                      type="date"
+                      value={form.reportIssuanceDate || ''}
+                      onChange={(event) =>
+                        updateSetupField('reportIssuanceDate', event.target.value)
+                      }
+                    />
+                  </CCol>
+                </CRow>
+                <SelectionCards
+                  label="Choose Start Time"
+                  options={timePresetOptions}
+                  selectedValue={form.reportTime}
+                  onSelect={(value) => updateSetupField('reportTime', value)}
+                  cols={{ xs: 12, md: 3 }}
+                />
+                <CRow className="g-2">
+                  <CCol xs={12} md={4}>
+                    <CFormLabel htmlFor="drill-report-time">Custom start time</CFormLabel>
+                    <CFormInput
+                      id="drill-report-time"
+                      type="time"
+                      value={form.reportTime}
+                      invalid={Boolean(setupFieldErrors.reportTime)}
+                      onChange={(event) => updateSetupField('reportTime', event.target.value)}
+                    />
+                    <CFormFeedback invalid>{setupFieldErrors.reportTime}</CFormFeedback>
+                  </CCol>
+                </CRow>
+                {form.reportDate && form.reportTime ? (
+                  <div className="report-setup-confirm-row">
+                    <CButton
+                      type="button"
+                      color="secondary"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditingDateTime(false)}
+                    >
+                      Confirm Date & Time
+                    </CButton>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+            {blockerMessage ? (
+              <CAlert color="danger" className="mb-0" role="alert">
+                {blockerMessage}
+              </CAlert>
             ) : null}
-          </div>
-        </div>
-        {blockerMessage ? (
-          <CAlert color="danger" className="mb-0" role="alert">
-            {blockerMessage}
-          </CAlert>
+            <ReportSetupActions
+              onSaveDraft={onSaveDraft}
+              onContinue={onContinue}
+              saveLabel={saveLabel}
+              statusMessage={draftStatus}
+            />
+          </>
         ) : null}
-        <ReportSetupActions
-          onSaveDraft={onSaveDraft}
-          onContinue={onContinue}
-          saveLabel={saveLabel}
-          statusMessage={draftStatus}
-        />
       </div>
     </div>
   )

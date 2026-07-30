@@ -440,8 +440,9 @@ const useSalaryClaimsActions = ({
 
   const openClaimDetail = useCallback(
     (row, sourceTab = 'salaryRecords') => {
-      if (!row?.id) return
-      navigate(`/staff/salary-claims/claim/${encodeURIComponent(row.id)}`, {
+      const routeKey = String(row?.recordKey || '').trim()
+      if (!routeKey) return
+      navigate(`/staff/salary-claims/claim/${encodeURIComponent(routeKey)}`, {
         state: { tab: sourceTab },
       })
     },

@@ -8,12 +8,8 @@ import {
   safeAiHelperError,
 } from 'src/components/ai-helper/constants'
 import { streamAiHelperMessage } from 'src/services/api/aiHelperApi'
-import {
-  ReportBasicPathSummary,
-  ReportMobileActionGroup,
-  ReportMobileContextPanel,
-} from '../components/ReportWorkflowUi'
-import { formatErcoLocation, resolveRespondingTeamLabel } from './utils'
+import { ReportMobileActionGroup } from '../components/ReportWorkflowUi'
+import { resolveRespondingTeamLabel } from './utils'
 import { sortResponders } from './chronologyUtils'
 import {
   buildErcoAiContext,
@@ -108,8 +104,6 @@ const ErcoDetailsStep = ({
     .filter(Boolean)
   const respondersSummaryValue =
     selectedResponderNames.length === 0 ? 'None selected' : selectedResponderNames.join(', ')
-  const respondersCount = selectedResponderNames.length
-
   const {
     chronologyRows,
     hasPreMobRows,
@@ -146,6 +140,7 @@ const ErcoDetailsStep = ({
     handleAddDemobRows,
     handleResetChronology,
     handleSetResponseStartTime,
+    handleUseIncidentTime,
     handleSaveResponseStartTime,
     handleCancelResponseStartTimeEdit,
     applyStartMode,
@@ -160,26 +155,6 @@ const ErcoDetailsStep = ({
     setRowModalDraft,
     commitRowModal,
   } = useChronology({ form, setForm, pushToast })
-  const chronologyCount = chronologyRows.length
-  const dateTimeLabel = `${String(form.incidentDate || '').trim() || '--'} ${String(
-    form.incidentTime || '',
-  ).trim()}`.trim()
-  const basicPathMobileSummary = `${
-    [String(form.incidentType || '').trim(), formatErcoLocation(form.location), teamLabel]
-      .filter(Boolean)
-      .join(' - ') || '-'
-  } - ${chronologyCount} chronology row${chronologyCount === 1 ? '' : 's'} - ${respondersCount} responder${respondersCount === 1 ? '' : 's'}`
-
-  const incidentSummaryItems = [
-    { label: 'Incident Type', value: String(form.incidentType || '').trim() || '--' },
-    { label: 'Weather', value: String(form.weather || '').trim() || '--' },
-    { label: 'Area', value: formatErcoLocation(form.location) || '--' },
-    { label: 'Incident Date', value: String(form.incidentDate || '').trim() || '--' },
-    { label: 'Incident Time', value: String(form.incidentTime || '').trim() || '--' },
-    { label: 'Responding Team', value: teamLabel },
-    { label: 'Responding Members', value: respondersSummaryValue, fullWidth: true },
-  ]
-
   const { incidentTitleOptions, incidentTitleValueOption } = useIncidentTitleSuggestions({
     userId,
     form,
@@ -470,7 +445,6 @@ const ErcoDetailsStep = ({
           if (titleManager.addTitleError) titleManager.setAddTitleError('')
         }}
         namePlaceholder="e.g. Wild Boar Sighting"
-        nameHint="Use a general title only. Area/zone will be auto-filled from Incident Summary."
         showDescriptionField={false}
         error={titleManager.addTitleError}
         editingKey={titleManager.editingTitleKey}
@@ -500,38 +474,7 @@ const ErcoDetailsStep = ({
         <CAlert color="danger">{fieldErrors.respondingAttendance}</CAlert>
       ) : null}
 
-      {isMobile ? (
-        <ReportMobileContextPanel
-          title="Incident Context"
-          items={[
-            { label: 'Type', value: String(form.incidentType || '').trim() || '--' },
-            { label: 'Area', value: formatErcoLocation(form.location) || '--' },
-            { label: 'Date & Time', value: dateTimeLabel },
-            { label: 'Team', value: teamLabel || '--' },
-            { label: 'Responders', value: `${respondersCount} selected` },
-            { label: 'Chronology', value: `${chronologyCount} rows` },
-          ]}
-        />
-      ) : (
-        <IncidentSummaryPanel
-          teamLabel={teamLabel}
-          shiftLabel={shiftLabel}
-          incidentSummaryItems={incidentSummaryItems}
-        />
-      )}
-
-      <ReportBasicPathSummary
-        title="Basic Report Path"
-        description=""
-        mobileSummary={basicPathMobileSummary}
-        items={[
-          { label: 'Type', value: String(form.incidentType || '').trim() || '-' },
-          { label: 'Location', value: formatErcoLocation(form.location) || '-' },
-          { label: 'Team', value: teamLabel || '-' },
-          { label: 'Chronology', value: `${chronologyCount} rows` },
-          { label: 'Responders', value: respondersSummaryValue || '-', fullWidth: true },
-        ]}
-      />
+      <IncidentSummaryPanel form={form} />
 
       <IncidentTitleField
         fieldError={fieldErrors.details}
@@ -572,6 +515,8 @@ const ErcoDetailsStep = ({
             handleSaveResponseStartTime={handleSaveResponseStartTime}
             handleCancelResponseStartTimeEdit={handleCancelResponseStartTimeEdit}
             handleSetResponseStartTime={handleSetResponseStartTime}
+            handleUseIncidentTime={handleUseIncidentTime}
+            incidentTime={form.incidentTime}
             isChronologyOutOfOrder={isChronologyOutOfOrder}
             sortChronologyByTime={sortChronologyByTime}
             chronologyRows={chronologyRows}

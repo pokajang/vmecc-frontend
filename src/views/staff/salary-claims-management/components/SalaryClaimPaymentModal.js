@@ -1,15 +1,6 @@
 import React from 'react'
-import {
-  CButton,
-  CFormInput,
-  CFormLabel,
-  CFormTextarea,
-  CModal,
-  CModalBody,
-  CModalFooter,
-  CModalHeader,
-  CModalTitle,
-} from '@coreui/react'
+import { CButton, CFormInput, CFormLabel, CFormTextarea } from '@coreui/react'
+import ResponsiveWorkflowActionDialog from 'src/components/workflow/ResponsiveWorkflowActionDialog'
 import BulkSelectionSummaryPreview from './BulkSelectionSummaryPreview'
 
 const SalaryClaimPaymentModal = ({
@@ -42,101 +33,104 @@ const SalaryClaimPaymentModal = ({
       ? 'Unmark selected'
       : 'Unmark paid'
 
-  return (
-    <CModal
-      visible={visible}
-      alignment="center"
-      onClose={() => {
-        if (!isSubmitting) onClose()
-      }}
-    >
-      <CModalHeader>
-        <CModalTitle>{title}</CModalTitle>
-      </CModalHeader>
-      <CModalBody className="d-grid gap-3">
-        {scope === 'bulk' ? (
-          <BulkSelectionSummaryPreview
-            summary={summary || { count: selectedCount, sampleItems: [], remainingCount: 0 }}
-            showTotal={isMarkMode}
-            totalLabel="Total payable"
-          />
-        ) : (
-          <div className="text-body-secondary">
-            Claim: <strong>{record?.id || '-'}</strong>
-          </div>
-        )}
+  const body = (
+    <>
+      {scope === 'bulk' ? (
+        <BulkSelectionSummaryPreview
+          summary={summary || { count: selectedCount, sampleItems: [], remainingCount: 0 }}
+          showTotal={isMarkMode}
+          totalLabel="Total payable"
+        />
+      ) : (
+        <div className="text-body-secondary">
+          Claim: <strong>{record?.id || '-'}</strong>
+        </div>
+      )}
 
-        {isMarkMode ? (
-          <>
-            <div>
-              <CFormLabel htmlFor="salary-mark-paid-date">Payment date</CFormLabel>
-              <CFormInput
-                id="salary-mark-paid-date"
-                type="date"
-                invalid={Boolean(errors.paymentDate)}
-                aria-describedby={errors.paymentDate ? 'salary-mark-paid-date-error' : undefined}
-                value={values.paymentDate || ''}
-                onChange={(event) => onChange('paymentDate', event.target.value)}
-              />
-              {errors.paymentDate ? (
-                <div id="salary-mark-paid-date-error" className="text-danger small mt-1">
-                  {errors.paymentDate}
-                </div>
-              ) : null}
-            </div>
-            <div>
-              <CFormLabel htmlFor="salary-mark-paid-reference">
-                Payment reference (optional)
-              </CFormLabel>
-              <CFormInput
-                id="salary-mark-paid-reference"
-                value={values.paymentReference || ''}
-                onChange={(event) => onChange('paymentReference', event.target.value)}
-                placeholder="Bank transfer ref / voucher no."
-              />
-            </div>
-            <div>
-              <CFormLabel htmlFor="salary-mark-paid-note">Payment note (optional)</CFormLabel>
-              <CFormTextarea
-                id="salary-mark-paid-note"
-                rows={3}
-                value={values.paymentNote || ''}
-                onChange={(event) => onChange('paymentNote', event.target.value)}
-              />
-            </div>
-          </>
-        ) : (
+      {isMarkMode ? (
+        <>
           <div>
-            <CFormLabel htmlFor="salary-unmark-paid-reason">Reason</CFormLabel>
-            <CFormTextarea
-              id="salary-unmark-paid-reason"
-              rows={4}
-              invalid={Boolean(errors.reason)}
-              aria-describedby={errors.reason ? 'salary-unmark-paid-reason-error' : undefined}
-              value={values.reason || ''}
-              onChange={(event) => onChange('reason', event.target.value)}
+            <CFormLabel htmlFor="salary-mark-paid-date">Payment date</CFormLabel>
+            <CFormInput
+              id="salary-mark-paid-date"
+              type="date"
+              invalid={Boolean(errors.paymentDate)}
+              aria-describedby={errors.paymentDate ? 'salary-mark-paid-date-error' : undefined}
+              value={values.paymentDate || ''}
+              onChange={(event) => onChange('paymentDate', event.target.value)}
             />
-            {errors.reason ? (
-              <div id="salary-unmark-paid-reason-error" className="text-danger small mt-1">
-                {errors.reason}
+            {errors.paymentDate ? (
+              <div id="salary-mark-paid-date-error" className="text-danger small mt-1">
+                {errors.paymentDate}
               </div>
             ) : null}
           </div>
-        )}
-      </CModalBody>
-      <CModalFooter>
-        <CButton color="secondary" variant="outline" onClick={onClose} disabled={isSubmitting}>
-          Cancel
-        </CButton>
-        <CButton
-          color={isMarkMode ? 'success' : 'warning'}
-          onClick={onSubmit}
-          disabled={isSubmitting}
-        >
-          {actionLabel}
-        </CButton>
-      </CModalFooter>
-    </CModal>
+          <div>
+            <CFormLabel htmlFor="salary-mark-paid-reference">
+              Payment reference (optional)
+            </CFormLabel>
+            <CFormInput
+              id="salary-mark-paid-reference"
+              value={values.paymentReference || ''}
+              onChange={(event) => onChange('paymentReference', event.target.value)}
+              placeholder="Bank transfer ref / voucher no."
+            />
+          </div>
+          <div>
+            <CFormLabel htmlFor="salary-mark-paid-note">Payment note (optional)</CFormLabel>
+            <CFormTextarea
+              id="salary-mark-paid-note"
+              rows={3}
+              value={values.paymentNote || ''}
+              onChange={(event) => onChange('paymentNote', event.target.value)}
+            />
+          </div>
+        </>
+      ) : (
+        <div>
+          <CFormLabel htmlFor="salary-unmark-paid-reason">Reason</CFormLabel>
+          <CFormTextarea
+            id="salary-unmark-paid-reason"
+            rows={4}
+            invalid={Boolean(errors.reason)}
+            aria-describedby={errors.reason ? 'salary-unmark-paid-reason-error' : undefined}
+            value={values.reason || ''}
+            onChange={(event) => onChange('reason', event.target.value)}
+          />
+          {errors.reason ? (
+            <div id="salary-unmark-paid-reason-error" className="text-danger small mt-1">
+              {errors.reason}
+            </div>
+          ) : null}
+        </div>
+      )}
+    </>
+  )
+  const footer = (
+    <>
+      <CButton color="secondary" variant="outline" onClick={onClose} disabled={isSubmitting}>
+        Cancel
+      </CButton>
+      <CButton
+        color={isMarkMode ? 'success' : 'warning'}
+        onClick={onSubmit}
+        disabled={isSubmitting}
+      >
+        {actionLabel}
+      </CButton>
+    </>
+  )
+
+  return (
+    <ResponsiveWorkflowActionDialog
+      visible={visible}
+      title={title}
+      body={body}
+      footer={footer}
+      onClose={onClose}
+      closeDisabled={isSubmitting}
+      className="salary-payment-modal"
+    />
   )
 }
 

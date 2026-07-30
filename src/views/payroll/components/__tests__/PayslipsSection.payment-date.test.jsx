@@ -200,5 +200,8 @@ describe('PayslipsSection payment date label', () => {
     expect(handleDownload).not.toHaveBeenCalled()
     expect(within(card).queryByText('Net Pay Summary')).toBeNull()
     expect(screen.getByText('Payroll profile is incomplete.')).toBeTruthy()
+
+    fireEvent.click(screen.getByText('Close', { selector: 'button' }))
+    expect(screen.queryByText('Payroll profile is incomplete.')).toBeNull()
   })
 })

@@ -128,7 +128,7 @@ const ClaimRecordsTab = ({ vm, handlers }) => {
       return {
         key: `mobile-claim-${periodGroup.key}-${ownerGroup.key}`,
         label: (
-          <span className="d-inline-flex align-items-center gap-2">
+          <span className="workflow-group-selection d-inline-flex align-items-center gap-2">
             <CFormCheck
               id={`mobile-claim-group-select-${ownerGroup.key}`}
               aria-label={`Select actionable claims for ${periodGroup.periodLabel || 'Unknown period'} | ${ownerGroup.ownerLabel || 'Unknown'}`}
@@ -155,6 +155,7 @@ const ClaimRecordsTab = ({ vm, handlers }) => {
     selectedVisibleCount > 0 ? (
       <BulkSelectionActionBar
         label={`${selectedVisibleCount} claim${selectedVisibleCount === 1 ? '' : 's'} selected`}
+        mobileSticky
         actions={
           <>
             <BulkActionButton label="Clear selection" intent="neutral" onClick={clearSelection} />
@@ -222,7 +223,7 @@ const ClaimRecordsTab = ({ vm, handlers }) => {
                   <CTableRow key={`claim-owner-${ownerGroup.key}`} className="table-light">
                     <CTableDataCell colSpan={10} className="fw-semibold text-body-secondary">
                       <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                        <div className="d-flex flex-wrap align-items-center gap-2">
+                        <div className="workflow-group-selection d-flex flex-wrap align-items-center gap-2">
                           <CFormCheck
                             id={`group-select-${ownerGroup.key}`}
                             aria-label={`Select actionable claims for ${periodGroup.periodLabel || 'Unknown period'} | ${ownerGroup.ownerLabel || 'Unknown'}`}

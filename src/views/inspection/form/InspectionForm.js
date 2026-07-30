@@ -553,6 +553,7 @@ const InspectionForm = ({
     )
 
   const {
+    catalogErrors,
     equipmentRows,
     fireExtinguisherAreaRows,
     fireExtinguisherRows,
@@ -563,6 +564,7 @@ const InspectionForm = ({
     isLoadingFireTruckRows,
     isLoadingScbaCatalogSections,
     scbaCatalogSections,
+    retryCatalogs,
     setEquipmentRows,
     setFireExtinguisherRows,
     setFireTruckRows,
@@ -1874,6 +1876,7 @@ const InspectionForm = ({
   return (
     <>
       <InspectionFormShell
+        catalogErrors={catalogErrors}
         catalogManagers={{
           ...catalogManagers,
           equipmentModalOptions,
@@ -1891,6 +1894,7 @@ const InspectionForm = ({
         }
         isLoadingFireTruckRows={isLoadingFireTruckRows}
         isLoadingScbaCatalogSections={isLoadingScbaCatalogSections}
+        onRetryCatalogs={retryCatalogs}
         fireTruckOptions={fireTruckOptions}
         form={form}
         getLatestForm={getLatestForm}

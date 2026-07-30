@@ -1,10 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { CAlert, CButton } from '@coreui/react'
+import { CAlert } from '@coreui/react'
+import WorkflowInlineFeedback from 'src/components/report-workflow/WorkflowInlineFeedback'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { loadReportDraftRow, saveReportDraft } from '../reportStorage'
 import useReportDraft from '../hooks/useReportDraft'
 import { resetReportViewport, scrollToFirstError } from '../utils'
 import FitnessStageHeader from './FitnessStageHeader'
+import FitnessContextSummary from './FitnessContextSummary'
 import FitnessTestFormStep from './FitnessTestFormStep'
 import FitnessTestPersonnelStep from './FitnessTestPersonnelStep'
 import FitnessTestSetupStep from './FitnessTestSetupStep'
@@ -37,7 +39,6 @@ const SAVE_MESSAGES = {
   dirty: 'Unsaved changes',
   saving: 'Saving draft...',
   saved: 'Draft saved',
-  failed: 'Draft save failed. Retry required.',
 }
 
 const FitnessTestForm = ({
@@ -73,6 +74,7 @@ const FitnessTestForm = ({
   const [saveState, setSaveState] = useState('idle')
   const [blockerMessage, setBlockerMessage] = useState('')
   const [photoProcessing, setPhotoProcessing] = useState(false)
+  const [showIncompleteResultsOnly, setShowIncompleteResultsOnly] = useState(false)
   const {
     form,
     setForm,
@@ -198,11 +200,9 @@ const FitnessTestForm = ({
       return true
     } catch {
       setSaveState('failed')
-      setBlockerMessage('The draft could not be saved. Your changes remain in this form.')
-      pushToast('Unable to save the draft to the server. Please retry after reconnecting.', {
-        title: 'Draft save failed',
-        color: 'danger',
-      })
+      setBlockerMessage(
+        'The draft could not be saved. Your changes remain in this form; use Retry save when ready.',
+      )
       return false
     } finally {
       saveLockRef.current = false
@@ -216,12 +216,9 @@ const FitnessTestForm = ({
       const firstError = firstFitnessTestError(validation.errors)
       focusField(firstError.field)
       scrollToFirstError()
-      pushToast('Complete the required information before continuing.', {
-        title: 'Step incomplete',
-        color: 'warning',
-      })
       return
     }
+    setBlockerMessage('')
     setForm((current) => ({ ...current, workflowStep: nextStep }))
     setActiveStep(nextStep)
     navigateToStep(nextStep)
@@ -236,10 +233,7 @@ const FitnessTestForm = ({
 
   const requestReview = () => {
     if (photoProcessing) {
-      pushToast('Wait for the photo upload to finish before reviewing the report.', {
-        title: 'Photo upload in progress',
-        color: 'warning',
-      })
+      setBlockerMessage('Wait for the photo upload to finish before reviewing the report.')
       return
     }
     const validation = validateFitnessTestForm(form)
@@ -249,12 +243,9 @@ const FitnessTestForm = ({
       setActiveStep(firstError.stage)
       navigateToStep(firstError.stage)
       window.setTimeout(() => focusField(firstError.field), 80)
-      pushToast('Complete all required results and signoff fields before review.', {
-        title: 'Report incomplete',
-        color: 'danger',
-      })
       return
     }
+    setBlockerMessage('')
     const nextRecord = buildFitnessTestRecord({
       form,
       reportTypeSlug,
@@ -289,7 +280,7 @@ const FitnessTestForm = ({
     clearError,
     onSaveDraft: saveDraft,
     saveLabel,
-    draftStatus: SAVE_MESSAGES[saveState],
+    draftStatus: saveState === 'failed' ? '' : SAVE_MESSAGES[saveState],
     pushToast,
   }
 
@@ -308,17 +299,18 @@ const FitnessTestForm = ({
         </CAlert>
       ) : null}
       {blockerMessage ? (
-        <CAlert
-          color="warning"
-          className="d-flex flex-wrap align-items-center justify-content-between gap-2"
-        >
-          <span>{blockerMessage}</span>
-          <CButton type="button" color="warning" variant="outline" onClick={() => saveDraft()}>
-            Retry save
-          </CButton>
-        </CAlert>
+        <WorkflowInlineFeedback
+          kind={saveState === 'failed' ? 'error' : 'warning'}
+          message={blockerMessage}
+          action={
+            saveState === 'failed'
+              ? { label: 'Retry save', onAction: () => saveDraft() }
+              : undefined
+          }
+        />
       ) : null}
       <FitnessStageHeader activeStep={activeStep} />
+      {activeStep !== 'period' ? <FitnessContextSummary form={form} /> : null}
       {activeStep === 'period' ? (
         <FitnessTestSetupStep
           {...common}
@@ -340,8 +332,15 @@ const FitnessTestForm = ({
           setForm={setForm}
           updateParticipant={updateParticipant}
           applyShiftTestDate={applyShiftTestDate}
+          incompleteOnly={showIncompleteResultsOnly}
+          onShowAllResults={() => setShowIncompleteResultsOnly(false)}
           photoProcessing={photoProcessing}
-          onPhotoProcessingChange={setPhotoProcessing}
+          onPhotoProcessingChange={(isProcessing) => {
+            setPhotoProcessing(isProcessing)
+            if (!isProcessing) {
+              setBlockerMessage((current) => (/photo upload/i.test(current) ? '' : current))
+            }
+          }}
           onBack={() => returnToStep('personnel')}
           onContinue={() => goToStep('signoff')}
         />
@@ -353,6 +352,10 @@ const FitnessTestForm = ({
           setForm={setForm}
           setShiftAssessor={setShiftAssessor}
           onBack={() => returnToStep('results')}
+          onReviewIncomplete={() => {
+            setShowIncompleteResultsOnly(true)
+            returnToStep('results')
+          }}
           submitLabel={editingRecord ? 'Review & Update' : 'Review & Submit'}
         />
       ) : null}

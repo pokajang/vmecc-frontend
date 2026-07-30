@@ -220,6 +220,7 @@ export const buildSubmittedClaimEditPayload = (claim) => {
   const sourcePayload = {
     sourceClaimId: claim.id,
     sourceServerId: claim.serverId || null,
+    sourceVersion: Number(claim.version || 0) || null,
   }
 
   if (type === 'salary') {

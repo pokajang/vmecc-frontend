@@ -1,8 +1,9 @@
 import React from 'react'
-import { CAlert, CButton, CFormInput } from '@coreui/react'
-import { Plus, Trash2 } from 'lucide-react'
+import { CAlert } from '@coreui/react'
+import RepeatableTextList from 'src/components/report-workflow/RepeatableTextList'
 import ReportPhotoSection from '../shared/emergency-report/ReportPhotoSection'
 import { DRILL_FIELD_LIMITS } from './constants'
+import DrillContextSummary from './DrillContextSummary'
 import DrillStageActions from './DrillStageActions'
 
 const LISTS = [
@@ -49,6 +50,8 @@ const DrillPostAnalysisStep = ({
 
   return (
     <div className="d-grid gap-4">
+      <DrillContextSummary form={form} includeTitle />
+
       <section
         data-drill-field="postIncidentAnalysis"
         aria-invalid={Boolean(fieldErrors?.postIncidentAnalysis) || undefined}
@@ -61,49 +64,22 @@ const DrillPostAnalysisStep = ({
         {LISTS.map((section) => {
           const rows = Array.isArray(analysis[section.key]) ? analysis[section.key] : ['']
           return (
-            <section key={section.key} className="d-grid gap-2" aria-labelledby={section.key}>
-              <div className="d-flex justify-content-between align-items-center gap-2">
-                <div id={section.key} className="fw-semibold">
-                  {section.label}
-                  <span className="ms-2 small text-body-secondary fw-normal">
-                    {rows.length}/{DRILL_FIELD_LIMITS.analysisRows}
-                  </span>
-                </div>
-                <CButton
-                  type="button"
-                  color="light"
-                  size="sm"
-                  disabled={rows.length >= DRILL_FIELD_LIMITS.analysisRows}
-                  onClick={() => updateAnalysis({ [section.key]: [...rows, ''] })}
-                >
-                  <Plus size={14} className="me-1" /> Add
-                </CButton>
-              </div>
-              {rows.map((row, index) => (
-                <div key={`${section.key}-${index}`} className="d-flex gap-2">
-                  <CFormInput
-                    aria-label={`${section.label} entry ${index + 1}`}
-                    maxLength={DRILL_FIELD_LIMITS.listItem}
-                    value={row || ''}
-                    placeholder={section.placeholder}
-                    onChange={(event) => updateRow(section.key, index, event.target.value)}
-                  />
-                  <CButton
-                    type="button"
-                    color="light"
-                    aria-label={`Remove ${section.label} entry ${index + 1}`}
-                    disabled={rows.length <= 1}
-                    onClick={() =>
-                      updateAnalysis({
-                        [section.key]: rows.filter((_, rowIndex) => rowIndex !== index),
-                      })
-                    }
-                  >
-                    <Trash2 size={16} />
-                  </CButton>
-                </div>
-              ))}
-            </section>
+            <RepeatableTextList
+              key={section.key}
+              id={section.key}
+              label={section.label}
+              rows={rows}
+              maxRows={DRILL_FIELD_LIMITS.analysisRows}
+              maxLength={DRILL_FIELD_LIMITS.listItem}
+              placeholder={section.placeholder}
+              onAdd={() => updateAnalysis({ [section.key]: [...rows, ''] })}
+              onChange={(index, value) => updateRow(section.key, index, value)}
+              onRemove={(index) =>
+                updateAnalysis({
+                  [section.key]: rows.filter((_, rowIndex) => rowIndex !== index),
+                })
+              }
+            />
           )
         })}
 
@@ -116,7 +92,7 @@ const DrillPostAnalysisStep = ({
           onBeforeCameraOpen={() => onSaveDraft({ silentSuccess: true })}
           allowCapture={false}
           onProcessingChange={onPhotoProcessingChange}
-          emptyMessage="No photos."
+          emptyMessage=""
           descriptionMaxLength={DRILL_FIELD_LIMITS.listItem}
         />
       </section>

@@ -81,8 +81,12 @@ const selectableControls = [
 ]
 for (const [relativePath, label] of selectableControls) {
   const source = await readFile(path.join(sourceRoot, relativePath), 'utf8')
-  if (!source.includes('vmecc-choice-button')) {
-    violations.push(`${path.join('src', relativePath)}: ${label} must use vmecc-choice-button`)
+  const usesChoiceControl =
+    source.includes('vmecc-choice-button') || source.includes('<MobileChoiceList')
+  if (!usesChoiceControl) {
+    violations.push(
+      `${path.join('src', relativePath)}: ${label} must use vmecc-choice-button or MobileChoiceList`,
+    )
   }
 }
 
@@ -90,7 +94,10 @@ const hseSource = await readFile(
   path.join(sourceRoot, 'views', 'inspection', 'types', 'hse', 'v2Section.js'),
   'utf8',
 )
-for (const contract of ['role="radiogroup"', 'role="radio"', 'aria-checked={selected}']) {
+const hseChoiceContracts = hseSource.includes('type="radio"')
+  ? ['role="radiogroup"', 'type="radio"', 'checked={selected}']
+  : ['role="radiogroup"', 'role="radio"', 'aria-checked={selected}']
+for (const contract of hseChoiceContracts) {
   if (!hseSource.includes(contract)) {
     violations.push(`src/views/inspection/types/hse/v2Section.js: missing ${contract}`)
   }

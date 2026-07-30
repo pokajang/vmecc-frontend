@@ -33,6 +33,8 @@ const AttachmentPreviewModal = ({
             type="button"
             color="light"
             size="sm"
+            className="workflow-attachment-action"
+            aria-label="Zoom out"
             onClick={() => onZoomChange(attachmentPreviewZoom - 0.25)}
           >
             -
@@ -44,11 +46,19 @@ const AttachmentPreviewModal = ({
             type="button"
             color="light"
             size="sm"
+            className="workflow-attachment-action"
+            aria-label="Zoom in"
             onClick={() => onZoomChange(attachmentPreviewZoom + 0.25)}
           >
             +
           </CButton>
-          <CButton type="button" color="light" size="sm" onClick={() => onZoomChange(1)}>
+          <CButton
+            type="button"
+            color="light"
+            size="sm"
+            className="workflow-attachment-action"
+            onClick={() => onZoomChange(1)}
+          >
             Reset
           </CButton>
         </div>
@@ -88,7 +98,7 @@ const AttachmentPreviewModal = ({
           href={attachmentPreviewUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="btn btn-light"
+          className="btn btn-light workflow-attachment-action d-inline-flex align-items-center"
         >
           Open in new tab
         </a>
@@ -98,6 +108,8 @@ const AttachmentPreviewModal = ({
       </CButton>
     </>
   )
+
+  if (!visible) return null
 
   if (isMobileDrawer) {
     return (

@@ -15,6 +15,11 @@ import AppUpdateBanner from './components/AppUpdateBanner'
 import { getPendingCameraOperation } from './utils/cameraRecovery'
 import useSystemMaintenanceMonitor from './hooks/useSystemMaintenanceMonitor'
 import { normalizeSystemMaintenanceSetting } from './views/settings/systemMaintenanceStorage'
+import {
+  activatePayrollIdentity,
+  clearPayrollSensitiveState,
+  PAYROLL_SESSION_CLEARED_EVENT,
+} from './services/payrollPrivacy'
 
 // Containers
 const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))
@@ -78,95 +83,116 @@ const App = () => {
   const systemMaintenanceHydrated = useSelector((state) => state.systemMaintenanceHydrated)
   const systemMaintenanceLoadError = useSelector((state) => state.systemMaintenanceLoadError)
   const systemMaintenanceRef = useRef(systemMaintenance)
-  const sessionCheckInFlightRef = useRef(false)
+  const sessionCheckInFlightRef = useRef(null)
   const sessionRetryTimersRef = useRef(new Set())
 
   useEffect(() => {
     systemMaintenanceRef.current = systemMaintenance
   }, [systemMaintenance])
 
+  useEffect(() => {
+    activatePayrollIdentity(authStatus === 'authenticated' ? authUser?.id : null)
+  }, [authStatus, authUser?.id])
+
+  useEffect(() => {
+    const handleSensitiveSessionCleared = () => {
+      dispatch({ type: 'set', authStatus: 'anonymous', authUser: null, authError: null })
+    }
+    window.addEventListener(PAYROLL_SESSION_CLEARED_EVENT, handleSensitiveSessionCleared)
+    return () =>
+      window.removeEventListener(PAYROLL_SESSION_CLEARED_EVENT, handleSensitiveSessionCleared)
+  }, [dispatch])
+
   const loadSession = useCallback(
-    async ({ silent = false, isActive = () => true, signal = null, retryCount = 0 } = {}) => {
-      if (sessionCheckInFlightRef.current) return false
-      sessionCheckInFlightRef.current = true
-      const { controller, cleanup: cleanupAbortLink } = createLinkedAbortController(signal)
+    ({ silent = false, isActive = () => true, signal = null, retryCount = 0 } = {}) => {
+      if (sessionCheckInFlightRef.current) return sessionCheckInFlightRef.current
 
-      if (!silent && isActive()) {
-        dispatch({ type: 'set', authStatus: 'checking', authError: null })
-      }
+      let sessionPromise
+      sessionPromise = (async () => {
+        const { controller, cleanup: cleanupAbortLink } = createLinkedAbortController(signal)
 
-      try {
-        const session = await withTimeout(
-          fetchSession({ signal: controller.signal }),
-          AUTH_BOOTSTRAP_TIMEOUT_MS,
-          'Session bootstrap timed out.',
-          () => controller.abort(),
-        )
-        if (!isActive()) {
+        if (!silent && isActive()) {
+          dispatch({ type: 'set', authStatus: 'checking', authError: null })
+        }
+
+        try {
+          const session = await withTimeout(
+            fetchSession({ signal: controller.signal }),
+            AUTH_BOOTSTRAP_TIMEOUT_MS,
+            'Session bootstrap timed out.',
+            () => controller.abort(),
+          )
+          if (!isActive()) {
+            return false
+          }
+          dispatch({
+            type: 'set',
+            authStatus: 'authenticated',
+            authUser: session?.user || session,
+            authError: null,
+          })
+
+          // Module activation data is not required to enter the app shell.
+          // Load it separately so route bootstrap remains bounded and resilient
+          // to transient module-service issues.
+          void (async () => {
+            try {
+              const moduleActivationRaw = await fetchModuleActivation()
+              if (!isActive()) return
+              const moduleActivation = normalizeModuleActivationPayload(moduleActivationRaw)
+              dispatch({
+                type: 'set',
+                ...(moduleActivation ? { moduleActivation } : {}),
+              })
+            } catch {
+              // keep existing activation fallback behavior on failure
+            }
+          })()
+
+          return true
+        } catch (error) {
+          const status = Number(error?.status || 0)
+          const isTransient =
+            !status || status >= 500 || String(error?.message || '').includes('timed out')
+          const shouldRetryCameraSession =
+            status === 401 && Boolean(getPendingCameraOperation()) && retryCount < 1
+          if (isActive() && (status === 401 || !silent)) {
+            if (shouldRetryCameraSession) {
+              dispatch({ type: 'set', authStatus: 'checking', authError: null })
+            } else {
+              dispatch({
+                type: 'set',
+                authStatus: isTransient ? 'temporarily_unavailable' : 'anonymous',
+                ...(isTransient ? {} : { authUser: null }),
+                authError:
+                  status === 401
+                    ? null
+                    : status >= 500 ||
+                        String(error?.message || '').includes('Session bootstrap timed out.')
+                      ? 'Unable to connect to server.'
+                      : error?.message || 'Unable to initialize session.',
+              })
+            }
+          }
+          if ((isTransient || shouldRetryCameraSession) && retryCount < 1 && !signal?.aborted) {
+            const retryTimer = setTimeout(() => {
+              sessionRetryTimersRef.current.delete(retryTimer)
+              if (signal?.aborted) return
+              void loadSession({ silent, isActive, signal, retryCount: retryCount + 1 })
+            }, 750)
+            sessionRetryTimersRef.current.add(retryTimer)
+          }
           return false
-        }
-        dispatch({
-          type: 'set',
-          authStatus: 'authenticated',
-          authUser: session?.user || session,
-          authError: null,
-        })
-
-        // Module activation data is not required to enter the app shell.
-        // Load it separately so route bootstrap remains bounded and resilient
-        // to transient module-service issues.
-        void (async () => {
-          try {
-            const moduleActivationRaw = await fetchModuleActivation()
-            if (!isActive()) return
-            const moduleActivation = normalizeModuleActivationPayload(moduleActivationRaw)
-            dispatch({
-              type: 'set',
-              ...(moduleActivation ? { moduleActivation } : {}),
-            })
-          } catch {
-            // keep existing activation fallback behavior on failure
-          }
-        })()
-
-        return true
-      } catch (error) {
-        const status = Number(error?.status || 0)
-        const isTransient =
-          !status || status >= 500 || String(error?.message || '').includes('timed out')
-        const shouldRetryCameraSession =
-          status === 401 && Boolean(getPendingCameraOperation()) && retryCount < 1
-        if (isActive() && !silent) {
-          if (shouldRetryCameraSession) {
-            dispatch({ type: 'set', authStatus: 'checking', authError: null })
-          } else {
-            dispatch({
-              type: 'set',
-              authStatus: isTransient ? 'temporarily_unavailable' : 'anonymous',
-              ...(isTransient ? {} : { authUser: null }),
-              authError:
-                status === 401
-                  ? null
-                  : status >= 500 ||
-                      String(error?.message || '').includes('Session bootstrap timed out.')
-                    ? 'Unable to connect to server.'
-                    : error?.message || 'Unable to initialize session.',
-            })
+        } finally {
+          cleanupAbortLink()
+          if (sessionCheckInFlightRef.current === sessionPromise) {
+            sessionCheckInFlightRef.current = null
           }
         }
-        if ((isTransient || shouldRetryCameraSession) && retryCount < 1 && !signal?.aborted) {
-          const retryTimer = setTimeout(() => {
-            sessionRetryTimersRef.current.delete(retryTimer)
-            if (signal?.aborted) return
-            void loadSession({ silent, isActive, signal, retryCount: retryCount + 1 })
-          }, 750)
-          sessionRetryTimersRef.current.add(retryTimer)
-        }
-        return false
-      } finally {
-        cleanupAbortLink()
-        sessionCheckInFlightRef.current = false
-      }
+      })()
+
+      sessionCheckInFlightRef.current = sessionPromise
+      return sessionPromise
     },
     [dispatch],
   )
@@ -295,6 +321,46 @@ const App = () => {
   }, [authStatus, loadSession])
 
   useEffect(() => {
+    if (authStatus !== 'authenticated') return undefined
+    const controllers = new Set()
+
+    const revalidateAuthenticatedSession = (event) => {
+      if (event?.type === 'pageshow' && event?.persisted) {
+        clearPayrollSensitiveState({ broadcast: false })
+        dispatch({ type: 'set', authStatus: 'checking', authUser: null, authError: null })
+        void (async () => {
+          const restored = await loadSession({ silent: false })
+          if (!restored) {
+            await loadSession({ silent: false })
+          }
+        })()
+        return
+      } else if (document.visibilityState && document.visibilityState !== 'visible') {
+        return
+      }
+
+      const controller = new AbortController()
+      controllers.add(controller)
+      void loadSession({
+        silent: event?.type !== 'pageshow' || event?.persisted !== true,
+        signal: controller.signal,
+      }).finally(() => controllers.delete(controller))
+    }
+
+    window.addEventListener('focus', revalidateAuthenticatedSession)
+    window.addEventListener('pageshow', revalidateAuthenticatedSession)
+    document.addEventListener('visibilitychange', revalidateAuthenticatedSession)
+
+    return () => {
+      window.removeEventListener('focus', revalidateAuthenticatedSession)
+      window.removeEventListener('pageshow', revalidateAuthenticatedSession)
+      document.removeEventListener('visibilitychange', revalidateAuthenticatedSession)
+      controllers.forEach((controller) => controller.abort())
+      controllers.clear()
+    }
+  }, [authStatus, dispatch, loadSession])
+
+  useEffect(() => {
     const handleMaintenanceEvent = (event) => {
       const payload = event?.detail
       const current = systemMaintenanceRef.current || {}
@@ -406,7 +472,13 @@ const App = () => {
             <Route exact path="/403" name="Page 403" element={<Page403 />} />
             <Route exact path="/404" name="Page 404" element={<Page404 />} />
             <Route exact path="/500" name="Page 500" element={<Page500 />} />
-            <Route path="*" name="Home" element={renderPrivateRoute(<DefaultLayout />)} />
+            <Route
+              path="*"
+              name="Home"
+              element={renderPrivateRoute(
+                <DefaultLayout key={`authenticated-user-${String(authUser?.id || '')}`} />,
+              )}
+            />
           </Routes>
         </Suspense>
       </NavigationGuardProvider>

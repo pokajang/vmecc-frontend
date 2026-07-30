@@ -35,6 +35,8 @@ const NotificationDrawer = ({
     }
   }, [isMobileOverlay, open])
 
+  if (!open) return null
+
   if (isMobileOverlay) {
     return (
       <MobileOverlayShell

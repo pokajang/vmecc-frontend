@@ -1,0 +1,79 @@
+.workflow-roster-group {
+  display: grid;
+  gap: var(--workflow-field-gap);
+  padding: var(--workflow-surface-padding);
+  border: 1px solid var(--cui-border-color);
+  border-radius: var(--vmecc-radius-card);
+  background: var(--cui-body-bg);
+}
+
+.workflow-roster-group__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--workflow-control-gap);
+}
+
+.workflow-roster-group__copy {
+  display: grid;
+  gap: var(--workflow-summary-row-gap);
+}
+
+.workflow-roster-group__title {
+  margin: 0;
+  color: var(--vmecc-fg-strong);
+  font-size: var(--vmecc-text-card-title);
+  font-weight: var(--vmecc-weight-semibold);
+}
+
+.workflow-roster-group__count {
+  color: var(--vmecc-fg-supporting);
+  font-size: var(--vmecc-text-meta);
+}
+
+.workflow-roster-group__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.workflow-roster-group__body,
+.workflow-repeatable-list,
+.workflow-repeatable-list__rows {
+  display: grid;
+  gap: var(--workflow-control-gap);
+}
+
+.workflow-repeatable-list__header,
+.workflow-repeatable-list__row {
+  display: flex;
+  align-items: center;
+  gap: var(--workflow-control-gap);
+}
+
+.workflow-repeatable-list__header {
+  justify-content: space-between;
+}
+
+.workflow-repeatable-list__title {
+  color: var(--vmecc-fg-strong);
+  font-weight: var(--vmecc-weight-semibold);
+}
+
+.workflow-repeatable-list__count {
+  margin-inline-start: 0.5rem;
+  color: var(--vmecc-fg-supporting);
+  font-size: var(--vmecc-text-meta);
+  font-weight: var(--vmecc-weight-body);
+}
+
+.workflow-repeatable-list__row .form-control {
+  min-width: 0;
+}
+
+.workflow-repeatable-list__row .btn {
+  flex: 0 0 auto;
+  min-width: var(--workflow-control-height);
+  min-height: var(--workflow-control-height);
+}

@@ -11,6 +11,7 @@ import {
 } from '@coreui/react'
 import { Camera, Trash2 } from 'lucide-react'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
+import PhotoEditorGallery from 'src/components/report-workflow/PhotoEditorGallery'
 import { PhotoPreview } from 'src/components/report-workflow/ReportViewComponents'
 import useMediaQuery from 'src/hooks/useMediaQuery'
 import { dedupePhotos } from 'src/views/inspection/inspectionSharedUtils'
@@ -18,14 +19,9 @@ import {
   appendInspectionText,
   INSPECTION_PHOTO_CAPTION_CHIPS,
 } from 'src/views/inspection/inspectionFormHelpers'
-import InspectionDrawerPhotoGallery from './InspectionDrawerPhotoGallery'
+import InspectionFieldError from './patterns/InspectionFieldError'
 
-export const FormFieldError = ({ children, className = '', ...props }) =>
-  children ? (
-    <div className={`inspection-field-error text-danger small mt-2 ${className}`.trim()} {...props}>
-      {children}
-    </div>
-  ) : null
+export const FormFieldError = InspectionFieldError
 
 export const ChipButton = ({ children, onClick, className = '' }) => (
   <button
@@ -57,11 +53,17 @@ export const PhotoGallery = ({
 }) => {
   if (presentation === 'drawer-editor' && !readOnly) {
     return (
-      <InspectionDrawerPhotoGallery
+      <PhotoEditorGallery
         photos={photos}
-        onRemove={onRemove}
-        onChangeDescription={onChangeDescription}
-        onApplyCaption={onApplyCaption}
+        onRemove={onRemove ? (photo) => onRemove(photo.id) : undefined}
+        onChangeDescription={
+          onChangeDescription
+            ? (photo, description) => onChangeDescription(photo.id, description)
+            : undefined
+        }
+        onApplyCaption={
+          onApplyCaption ? (photo, caption) => onApplyCaption(photo.id, caption) : undefined
+        }
         captionOptions={showCaptionChips ? INSPECTION_PHOTO_CAPTION_CHIPS : []}
         emptyMessage={emptyMessage}
         showDescriptionInput={showDescriptionInput}

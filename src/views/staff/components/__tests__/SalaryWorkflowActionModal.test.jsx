@@ -27,6 +27,25 @@ const baseProps = {
 }
 
 describe('SalaryWorkflowActionModal', () => {
+  it('does not retain sensitive claim content in the document while closed', () => {
+    render(
+      <SalaryWorkflowActionModal
+        {...baseProps}
+        visible={false}
+        record={{
+          id: 'PRIVATE-CLAIM-ID',
+          ownerLabel: 'Private employee',
+          type: 'salary',
+          projectedNetPayout: 9876,
+        }}
+      />,
+    )
+
+    expect(screen.queryByText('PRIVATE-CLAIM-ID')).toBeNull()
+    expect(screen.queryByText('Private employee')).toBeNull()
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
   it('uses salary projected net payout as workflow amount and renders salary breakdown', () => {
     render(
       <SalaryWorkflowActionModal

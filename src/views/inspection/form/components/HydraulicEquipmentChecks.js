@@ -352,7 +352,7 @@ export const HydraulicEquipmentChecks = ({
             !readOnly ? (
               <RowActions
                 iconSize={16}
-                hitArea={32}
+                hitArea={44}
                 toggleAriaLabel={`Equipment actions for ${mobileDetailRow.equipment || 'Equipment'}`}
                 items={[
                   typeof onResetCheck === 'function'

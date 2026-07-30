@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { CAlert, CButton, CFormCheck, CFormInput, CFormLabel, CFormSelect } from '@coreui/react'
 import { Plus, Trash2 } from 'lucide-react'
 import TableLoader from 'src/components/TableLoader'
+import WorkflowRosterGroup from 'src/components/report-workflow/WorkflowRosterGroup'
 import { fetchRosters, fetchShiftWindows, fetchTeams } from 'src/services/apiClient'
 import { uid } from '../utils'
 import { DRILL_EXERCISE_ROLE_OPTIONS, DRILL_FIELD_LIMITS } from './constants'
@@ -210,9 +211,6 @@ const DrillPersonnelStep = ({
 
   return (
     <div className="d-grid gap-4">
-      <div className="small text-body-secondary">
-        Optional — select participants and exercise roles.
-      </div>
       {loading ? <TableLoader message="Loading roster members..." /> : null}
       {loadMessage ? <CAlert color="warning">{loadMessage}</CAlert> : null}
       {fieldErrors?.respondingAttendance ? (
@@ -222,8 +220,11 @@ const DrillPersonnelStep = ({
       <section className="d-grid gap-3" data-drill-field="respondingAttendance">
         {!loading
           ? groups.map(([teamName, members]) => (
-              <section key={teamName} className="rounded-3 border p-3 d-grid gap-3">
-                <div className="fw-semibold">{teamName}</div>
+              <WorkflowRosterGroup
+                key={teamName}
+                title={teamName}
+                countLabel={`${members.filter((member) => member.present !== false).length} selected`}
+              >
                 {members.map((member) => (
                   <div
                     key={member.memberKey}
@@ -273,7 +274,7 @@ const DrillPersonnelStep = ({
                     ) : null}
                   </div>
                 ))}
-              </section>
+              </WorkflowRosterGroup>
             ))
           : null}
 

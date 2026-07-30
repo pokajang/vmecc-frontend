@@ -80,13 +80,13 @@ describe('FitnessTestPersonnelStep', () => {
     })
     render(<Harness />)
 
-    await waitFor(() => expect(screen.getByText('2 selected')).toBeTruthy())
+    await waitFor(() => expect(screen.getByText('2 included')).toBeTruthy())
     const formAfterLoad = JSON.parse(screen.getByTestId('fitness-form-state').textContent)
     expect(formAfterLoad.shiftGroups.map((group) => group.shift)).toEqual(['Alpha', 'Delta'])
 
     const alphaMembers = screen.getByRole('group', { name: 'Alpha members' })
     fireEvent.click(within(alphaMembers).getByRole('button', { name: /Alpha Member/i }))
-    await waitFor(() => expect(screen.getByText('1 selected')).toBeTruthy())
+    await waitFor(() => expect(screen.getByText('1 included')).toBeTruthy())
     const formAfterExclusion = JSON.parse(screen.getByTestId('fitness-form-state').textContent)
     expect(formAfterExclusion.excludedMemberKeys).toContain('user-a1')
     expect(formAfterExclusion.shiftGroups.map((group) => group.shift)).toEqual(['Delta'])
@@ -109,7 +109,7 @@ describe('FitnessTestPersonnelStep', () => {
     ).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
 
-    await waitFor(() => expect(screen.getByText('1 selected')).toBeTruthy())
+    await waitFor(() => expect(screen.getByText('1 included')).toBeTruthy())
     expect(screen.getByRole('button', { name: 'Include all Alpha members' }).disabled).toBe(true)
     expect(screen.getByRole('button', { name: 'Exclude all Alpha members' }).disabled).toBe(false)
     expect(apiMocks.fetchTeams).toHaveBeenCalledTimes(2)

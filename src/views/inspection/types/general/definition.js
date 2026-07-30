@@ -16,7 +16,7 @@ const generalInspectionDefinition = {
   key: 'general-inspection',
   inspectionType: GENERAL_INSPECTION_TYPE,
   title: 'General Inspection',
-  description: 'General condition, access, housekeeping, hazard, and compliance notes.',
+  description: 'Inspect site condition, access, housekeeping, hazards, and compliance.',
   iconKey: 'ClipboardCheck',
   icon: ClipboardCheck,
   implemented: true,

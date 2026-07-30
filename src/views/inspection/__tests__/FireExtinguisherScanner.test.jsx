@@ -107,7 +107,8 @@ describe('FireExtinguisherScanner', () => {
   it('starts camera only after Start camera is clicked', async () => {
     render(<FireExtinguisherScanner visible onClose={vi.fn()} onScan={vi.fn()} />)
 
-    expect(screen.getByText('Start the camera or enter the FE serial number.')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Start camera' })).toBeTruthy()
+    expect(screen.getByLabelText('Enter fire extinguisher code manually')).toBeTruthy()
     expect(getUserMedia).not.toHaveBeenCalled()
 
     fireEvent.click(screen.getByRole('button', { name: 'Start camera' }))
@@ -275,7 +276,7 @@ describe('FireExtinguisherScanner', () => {
     const input = screen.getByPlaceholderText('Type FE serial, unit no, or last 4-6 digits')
     fireEvent.focus(input)
 
-    expect(screen.getByText('Start typing to select from stored S/N values.')).toBeTruthy()
+    expect(screen.queryByText(/stored S\/N values/i)).toBeNull()
     expect(screen.queryByRole('button', { name: 'EE072021Z047268' })).toBeNull()
 
     fireEvent.change(input, { target: { value: 'EE' } })

@@ -1,0 +1,373 @@
+@use '../tools/coreui-tools' as *;
+
+// Shared mobile home layout for inspection and operational report workflows.
+@include media-breakpoint-down(md) {
+  .mobile-workflow-home {
+    --mobile-workflow-control-height: max(2.75rem, 44px);
+    --mobile-workflow-section-gap: 1.25rem;
+    --mobile-workflow-control-gap: 0.5rem;
+    --vmecc-text-body: 1.0625rem;
+    --vmecc-text-label: 1rem;
+    --vmecc-text-meta: 0.9375rem;
+    --vmecc-text-caption: 0.8125rem;
+
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    gap: var(--mobile-workflow-section-gap) !important;
+    overflow-x: hidden;
+    overflow-x: clip;
+  }
+
+  .mobile-workflow-home__section {
+    display: grid;
+    min-width: 0;
+    max-width: 100%;
+    gap: 0.75rem;
+    margin: 0;
+  }
+
+  .mobile-workflow-home__section-title {
+    margin: 0;
+    color: var(--cui-body-color);
+    font-size: var(--vmecc-text-section-title);
+    font-weight: var(--vmecc-weight-bold);
+    line-height: var(--vmecc-leading-compact);
+  }
+
+  .mobile-workflow-home__section-header {
+    display: flex;
+    min-width: 0;
+    min-height: var(--mobile-workflow-control-height);
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--mobile-workflow-control-gap);
+  }
+
+  .mobile-workflow-home__view-all {
+    width: auto;
+    white-space: nowrap;
+    justify-content: center;
+  }
+
+  .mobile-workflow-home__compact-action,
+  .mobile-workflow-home__view-all {
+    flex: 0 0 auto;
+    min-width: var(--mobile-workflow-control-height);
+    min-height: var(--mobile-workflow-control-height) !important;
+    padding: 0.55rem 0.75rem;
+    font-size: var(--vmecc-text-meta);
+    line-height: 1.2;
+  }
+
+  .mobile-workflow-draft-card__delete {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  .mobile-workflow-draft-card,
+  .mobile-workflow-draft-card__grid,
+  .mobile-workflow-draft-card__open {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .mobile-workflow-draft-card {
+    padding-bottom: 0.75rem !important;
+  }
+
+  .mobile-workflow-home .mobile-workflow-draft-card {
+    border-color: transparent !important;
+    border-left: 3px solid var(--cui-warning) !important;
+    background: var(--cui-warning-bg-subtle, #fff7e6) !important;
+    box-shadow: 0 0.25rem 0.9rem rgba(15, 23, 42, 0.06);
+  }
+
+  .mobile-workflow-draft-card__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+  }
+
+  .mobile-workflow-draft-card__open {
+    display: grid;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    color: inherit;
+    background: transparent;
+    font: inherit;
+    text-align: left;
+  }
+
+  .mobile-workflow-draft-card__open:focus-visible {
+    border-radius: var(--vmecc-radius-card, 0.5rem);
+    outline: 2px solid var(--vmecc-focus-indicator);
+    outline-offset: 3px;
+  }
+
+  .mobile-workflow-draft-card__eyebrow {
+    display: block;
+    margin-bottom: 0.25rem;
+    color: var(--cui-warning-text-emphasis, #92400e);
+    font-size: var(--vmecc-text-caption);
+    font-weight: 700;
+    line-height: 1.15;
+  }
+
+  .mobile-workflow-draft-card__action {
+    color: var(--cui-body-color);
+    font-weight: var(--vmecc-weight-semibold);
+  }
+
+  .mobile-workflow-draft-card__summary {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .mobile-workflow-draft-card__summary-detail {
+    min-width: 0;
+  }
+
+  .mobile-workflow-draft-card__meta {
+    display: grid;
+    justify-items: end;
+    align-content: center;
+    gap: 0.15rem;
+    max-width: 6.75rem;
+    min-width: 0;
+    text-align: right;
+  }
+
+  .mobile-workflow-draft-card__date {
+    display: block;
+    margin-top: 0.35rem;
+    overflow: hidden;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  .inspection-module-page {
+    display: grid;
+    align-content: start;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: hidden;
+    overflow-x: clip;
+  }
+
+  .inspection-module-page .module-page-header,
+  .inspection-module-page .module-page-header__title,
+  .inspection-module-page .module-page-header__actions,
+  .mobile-workflow-home .mobile-record-list,
+  .mobile-workflow-home .mobile-record-list__section,
+  .mobile-workflow-home .mobile-record-list__group,
+  .mobile-workflow-home .list-group,
+  .mobile-workflow-home .list-group-item,
+  .mobile-workflow-home .record-card,
+  .mobile-workflow-home .record-card__compact-row,
+  .mobile-workflow-home .record-card__main,
+  .mobile-workflow-home .record-card__meta,
+  .inspection-mobile-section,
+  .inspection-mobile-section > *,
+  .inspection-mobile-section .mobile-record-list,
+  .inspection-mobile-section .mobile-record-list__section,
+  .inspection-mobile-section .mobile-record-list__group,
+  .inspection-mobile-section .row,
+  .inspection-mobile-section .list-group,
+  .inspection-mobile-section .list-group-item,
+  .inspection-mobile-section .record-card,
+  .inspection-mobile-section .record-card__compact-row,
+  .inspection-mobile-section .record-card__main,
+  .inspection-mobile-section .record-card__meta {
+    box-sizing: border-box;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .inspection-module-page .module-page-header {
+    flex-wrap: nowrap;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .inspection-module-page .module-page-header__title {
+    flex: 1 1 auto;
+  }
+
+  .inspection-module-page .module-page-header__actions {
+    flex: 0 0 auto;
+    margin-left: auto;
+  }
+
+  .inspection-mobile-section {
+    width: 100%;
+    overflow-x: hidden;
+    overflow-x: clip;
+  }
+
+  .mobile-workflow-home .list-group,
+  .inspection-mobile-section .list-group {
+    width: 100%;
+  }
+
+  .mobile-workflow-home .mobile-record-list,
+  .mobile-workflow-home .mobile-record-list__section,
+  .mobile-workflow-home .mobile-record-list__group,
+  .mobile-workflow-home .record-card,
+  .inspection-mobile-section .mobile-record-list,
+  .inspection-mobile-section .mobile-record-list__section,
+  .inspection-mobile-section .mobile-record-list__group,
+  .inspection-mobile-section .record-card {
+    width: 100%;
+  }
+
+  .mobile-workflow-home .list-group-item,
+  .inspection-mobile-section .list-group-item {
+    overflow: hidden;
+  }
+
+  .mobile-workflow-home .record-card__compact-row,
+  .inspection-mobile-section .record-card__compact-row {
+    min-height: var(--mobile-workflow-control-height);
+    align-items: center !important;
+    width: 100%;
+  }
+
+  .mobile-workflow-home .record-card__main,
+  .inspection-mobile-section .record-card__main {
+    flex: 1 1 0;
+    overflow: hidden;
+  }
+
+  .mobile-workflow-home .record-card__meta,
+  .inspection-mobile-section .record-card__meta {
+    flex: 0 1 auto;
+    align-items: flex-start !important;
+  }
+
+  .mobile-workflow-home .record-card__title,
+  .mobile-workflow-home .record-card__subtitle,
+  .inspection-mobile-section .record-card__title,
+  .inspection-mobile-section .record-card__subtitle {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .mobile-workflow-home .record-card__title {
+    font-size: var(--vmecc-text-card-title);
+    font-weight: var(--vmecc-weight-semibold);
+    line-height: var(--vmecc-leading-compact);
+  }
+
+  .mobile-workflow-home .record-card__subtitle,
+  .inspection-mobile-section .record-card__subtitle {
+    display: -webkit-box;
+    margin-top: 0.2rem !important;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    font-size: var(--vmecc-text-meta);
+    font-weight: var(--vmecc-weight-medium);
+    line-height: var(--vmecc-leading-compact);
+    text-overflow: ellipsis;
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .inspection-mobile-section .inspection-mobile-kebab {
+    margin-left: auto;
+    margin-right: -1rem;
+  }
+
+  .inspection-mobile-section .inspection-records-filter-row {
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-inline: 0;
+    --cui-gutter-x: 0;
+  }
+
+  .inspection-mobile-section .inspection-records-filter-row > :first-child {
+    flex: 1 1 auto;
+    padding-left: 0;
+  }
+
+  .inspection-mobile-section .inspection-records-filter-row > :last-child {
+    flex: 0 0 auto;
+    margin-left: auto;
+    padding-right: 0;
+  }
+
+  .mobile-workflow-home__draft-list {
+    width: calc(100% - 0.5rem);
+    margin-inline: 0.25rem;
+  }
+
+  .mobile-workflow-home .mobile-workflow-home__draft-list {
+    border-color: transparent !important;
+  }
+
+  .mobile-workflow-home__records-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.65rem;
+  }
+
+  .mobile-workflow-home__records-toolbar .workflow-scope-segmented,
+  .mobile-workflow-home__records-toolbar .inspection-scope-segmented {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: var(--mobile-workflow-control-height);
+    padding: 2px;
+  }
+
+  .mobile-workflow-home__records-toolbar .mobile-workflow-home__view-all {
+    flex: 0 0 auto;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mobile-workflow-home .workflow-scope-segment,
+  .mobile-workflow-home .inspection-scope-segment {
+    min-height: calc(var(--mobile-workflow-control-height) - 6px);
+    padding: 0.45rem 0.75rem;
+    font-size: var(--vmecc-text-meta);
+    font-weight: var(--vmecc-weight-semibold);
+  }
+
+  .inspection-mobile-section {
+    display: grid;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 359.98px) {
+  .mobile-workflow-home__records-toolbar {
+    align-items: stretch;
+  }
+
+  .mobile-workflow-home__records-toolbar .workflow-scope-segmented,
+  .mobile-workflow-home__records-toolbar .inspection-scope-segmented,
+  .mobile-workflow-home__records-toolbar .mobile-workflow-home__view-all {
+    width: 100%;
+  }
+
+  .mobile-workflow-home__records-toolbar .mobile-workflow-home__view-all {
+    justify-content: center;
+  }
+}

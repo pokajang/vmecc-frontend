@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { getPayrollVolatileStorage } from 'src/services/payrollPrivacy'
 import { parseTimestamp } from '../utils/claimFormUtils'
 import {
   createClaimItem,
@@ -47,7 +48,7 @@ const useClaimSubmissionHydration = ({
     hasHydratedDraftRef.current = true
     let recovered = null
     try {
-      const raw = localStorage.getItem(localAutosaveKey)
+      const raw = getPayrollVolatileStorage().getItem(localAutosaveKey)
       recovered = raw ? JSON.parse(raw) : null
     } catch {
       recovered = null

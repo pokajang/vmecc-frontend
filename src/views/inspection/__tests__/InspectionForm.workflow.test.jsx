@@ -1141,10 +1141,10 @@ describe('InspectionForm workflow', () => {
     expect(screen.getByText('ADO-001')).toBeTruthy()
     expect(screen.queryByText('FE Physical Condition')).toBeNull()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Open' }))
+    fireEvent.click(screen.getByRole('button', { name: /^ADO-001/i }))
     expect(screen.getByText('FE Physical Condition')).toBeTruthy()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Collapse' }))
+    fireEvent.click(screen.getByRole('button', { name: /^ADO-001/i }))
     expect(screen.queryByText('FE Physical Condition')).toBeNull()
   })
 
@@ -1228,7 +1228,7 @@ describe('InspectionForm workflow', () => {
     expect(screen.getAllByText('FE Physical Condition')).toHaveLength(1)
 
     const secondRow = document.querySelector('[data-fire-extinguisher-row-id="fe:2"]')
-    fireEvent.click(within(secondRow).getByRole('button', { name: 'Open' }))
+    fireEvent.click(within(secondRow).getByRole('button', { name: /^ADO-002/i }))
 
     expect(screen.getAllByText('FE Physical Condition')).toHaveLength(1)
     expect(within(secondRow).getByText('FE Physical Condition')).toBeTruthy()
@@ -1775,9 +1775,11 @@ describe('InspectionForm workflow', () => {
     ).toBe('3')
     expect(screen.queryByText('Actual field coming soon')).toBeNull()
     expect(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle)).toBeTruthy()
-    expect(screen.getAllByRole('button', { name: 'Continue to Review' })[0].disabled).toBe(true)
-    expect(screen.getAllByText(/Cannot continue to review:.*ER Aux/i).length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Save Draft').length).toBeGreaterThan(0)
+    expect(
+      screen
+        .getAllByRole('button', { name: 'Continue to Review' })
+        .some((button) => !button.disabled),
+    ).toBe(true)
   })
 
   it('sends completed ER Aux subset rows to the Continue to Review flow', () => {
@@ -1891,8 +1893,7 @@ describe('InspectionForm workflow', () => {
     expect(screen.getByText('LOCKER 01')).toBeTruthy()
     expect(screen.getAllByText('LOCKER 01').length).toBeGreaterThan(0)
     expect(screen.queryByText('Actual field coming soon')).toBeNull()
-    expect(screen.queryByRole('button', { name: 'Continue to Review' })).toBeNull()
-    expect(screen.getAllByText('Save Draft').length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('button', { name: 'Continue to Review' }).length).toBeGreaterThan(0)
   })
 
   it('continues a completed FRT compartment by updating only the sub-location', async () => {
@@ -1995,7 +1996,7 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    fireEvent.click(screen.getByLabelText('Edit Type'))
+    fireEvent.click(screen.getByRole('button', { name: /Edit type:/i }))
     fireEvent.click(await screen.findByText('ER Aux Equipment Inspection'))
 
     await waitFor(() => {
@@ -2069,7 +2070,8 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Reset type' }))
+    fireEvent.click(screen.getByRole('button', { name: /Edit type:/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Clear type' }))
 
     const resetForm = onChange.mock.calls[onChange.mock.calls.length - 1]?.[0]
     expect(resetForm).toEqual(
@@ -2140,7 +2142,7 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    fireEvent.click(screen.getByLabelText('Edit Type'))
+    fireEvent.click(screen.getByRole('button', { name: /Edit type:/i }))
     fireEvent.click(await screen.findByText('Hydraulic Rescue Tools Inspection'))
 
     const hydraulicForm = onChange.mock.calls[onChange.mock.calls.length - 1]?.[0]
@@ -2152,7 +2154,7 @@ describe('InspectionForm workflow', () => {
     )
 
     rerender(<InspectionForm {...baseProps} onChange={onChange} value={hydraulicForm} />)
-    fireEvent.click(screen.getByLabelText('Edit Type'))
+    fireEvent.click(screen.getByRole('button', { name: /Edit type:/i }))
     fireEvent.click(await screen.findByText('ER Aux Equipment Inspection'))
 
     await waitFor(() => {
@@ -2189,7 +2191,8 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Reset date and time' }))
+    fireEvent.click(screen.getByRole('button', { name: /Edit date and time:/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Clear date and time' }))
 
     const latestForm = onChange.mock.calls[onChange.mock.calls.length - 1]?.[0]
     expect(latestForm).toEqual(
@@ -2235,8 +2238,7 @@ describe('InspectionForm workflow', () => {
     expect(screen.queryByText('Hydraulic Pump Motor 2')).toBeNull()
     expect(screen.getAllByText('FRT').length).toBeGreaterThan(0)
     expect(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle)).toBeTruthy()
-    expect(screen.queryByRole('button', { name: 'Continue to Review' })).toBeNull()
-    expect(screen.getAllByText('Save Draft').length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('button', { name: 'Continue to Review' }).length).toBeGreaterThan(0)
   })
 
   it('shows Store hydraulic equipment cards for the selected Store location', () => {
@@ -2323,8 +2325,7 @@ describe('InspectionForm workflow', () => {
     await openScbaGroup('Face Mask')
     expect(screen.getByText('Drager 02')).toBeTruthy()
     expect(screen.queryByText('Actual field coming soon')).toBeNull()
-    expect(screen.queryByRole('button', { name: 'Continue to Review' })).toBeNull()
-    expect(screen.getAllByText('Save Draft').length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('button', { name: 'Continue to Review' }).length).toBeGreaterThan(0)
   })
 
   it('shows custom SCBA section check labels after adding a section without items', async () => {
@@ -2495,7 +2496,8 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Reset Main Location' }))
+    fireEvent.click(screen.getByRole('button', { name: /Edit Main Location:/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Clear main location' }))
 
     expect(onChange).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -2543,7 +2545,8 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Reset Main Location' }))
+    fireEvent.click(screen.getByRole('button', { name: /Edit Main Location:/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Clear main location' }))
 
     const latestForm = onChange.mock.calls[onChange.mock.calls.length - 1]?.[0]
     expect(latestForm).toEqual(
@@ -2606,7 +2609,8 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Reset Main Location' }))
+    fireEvent.click(screen.getByRole('button', { name: /Edit Main Location:/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Clear main location' }))
 
     const latestForm = onChange.mock.calls[onChange.mock.calls.length - 1]?.[0]
     expect(latestForm).toEqual(
@@ -3328,7 +3332,7 @@ describe('InspectionForm workflow', () => {
     )
   })
 
-  it('shows disabled Continue to Review for incomplete ER Aux rows', () => {
+  it('blocks Continue to Review for incomplete ER Aux rows', async () => {
     const onRequestReview = vi.fn()
     render(
       <InspectionForm
@@ -3360,12 +3364,18 @@ describe('InspectionForm workflow', () => {
       />,
     )
 
-    expect(screen.getAllByRole('button', { name: 'Continue to Review' })[0].disabled).toBe(true)
-    expect(screen.getAllByText(/Cannot continue to review:.*ER Aux/i).length).toBeGreaterThan(0)
+    const reviewButton = screen
+      .getAllByRole('button', { name: 'Continue to Review' })
+      .find((button) => !button.disabled)
+    expect(reviewButton).toBeTruthy()
+    fireEvent.click(reviewButton)
+    await waitFor(() =>
+      expect(screen.getAllByText(/items? need attention/i).length).toBeGreaterThan(0),
+    )
     expect(onRequestReview).not.toHaveBeenCalled()
   })
 
-  it('shows disabled Continue to Review Updates for incomplete ER Aux rows in edit mode', () => {
+  it('blocks Continue to Review Updates for incomplete ER Aux rows in edit mode', async () => {
     const onRequestReview = vi.fn()
     render(
       <InspectionForm
@@ -3399,11 +3409,14 @@ describe('InspectionForm workflow', () => {
     )
 
     expect(screen.queryByRole('button', { name: 'Continue to Review' })).toBeNull()
-    expect(screen.getAllByRole('button', { name: 'Continue to Review Updates' })[0].disabled).toBe(
-      true,
+    const reviewButton = screen
+      .getAllByRole('button', { name: 'Continue to Review Updates' })
+      .find((button) => !button.disabled)
+    expect(reviewButton).toBeTruthy()
+    fireEvent.click(reviewButton)
+    await waitFor(() =>
+      expect(screen.getAllByText(/items? need attention/i).length).toBeGreaterThan(0),
     )
-    expect(screen.getAllByText(/Cannot continue to review:.*ER Aux/i).length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Save Update Draft').length).toBeGreaterThan(0)
     expect(onRequestReview).not.toHaveBeenCalled()
   })
 
@@ -3680,7 +3693,7 @@ describe('InspectionForm workflow', () => {
     )
 
     expect(screen.getByPlaceholderText('Function Test N/A reason')).toBeTruthy()
-    expect(screen.queryByRole('button', { name: 'Continue to Review' })).toBeNull()
+    expect(screen.getAllByRole('button', { name: 'Continue to Review' }).length).toBeGreaterThan(0)
     expect(onRequestReview).not.toHaveBeenCalled()
     onRequestReview.mockClear()
 
@@ -3793,7 +3806,7 @@ describe('InspectionForm workflow', () => {
     expect(screen.getByPlaceholderText('Physical Condition defect remarks')).toBeTruthy()
     expect(screen.getByPlaceholderText('No Leakage defect remarks')).toBeTruthy()
     expect(screen.getAllByText('Add photo (optional)').length).toBeGreaterThanOrEqual(2)
-    expect(screen.queryByRole('button', { name: 'Continue to Review' })).toBeNull()
+    expect(screen.getAllByRole('button', { name: 'Continue to Review' }).length).toBeGreaterThan(0)
     expect(onRequestReview).not.toHaveBeenCalled()
     onRequestReview.mockClear()
     expect(screen.queryByText('Upload at least one inspection photo.')).toBeNull()
@@ -3891,7 +3904,7 @@ describe('InspectionForm workflow', () => {
 
     expect(screen.queryByText('HSE Observation')).toBeNull()
     expect(screen.queryByText('Checks')).toBeNull()
-    expect(screen.queryByRole('button', { name: 'Continue to Review' })).toBeNull()
+    expect(screen.getAllByRole('button', { name: 'Continue to Review' }).length).toBeGreaterThan(0)
   })
 
   it('keeps the environment camera input available for take photo', () => {

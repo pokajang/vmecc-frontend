@@ -556,7 +556,7 @@ const FireExtinguisherListView = ({
             !mobileDetailReadOnly && typeof handlers.onResetCheck === 'function' ? (
               <RowActions
                 iconSize={16}
-                hitArea={32}
+                hitArea={44}
                 toggleAriaLabel={`Extinguisher actions for ${getFireExtinguisherRowTitle(
                   mobileDraftRow || mobileDetailRow,
                 )}`}

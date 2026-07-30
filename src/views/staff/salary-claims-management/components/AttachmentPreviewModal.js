@@ -101,6 +101,17 @@ const AttachmentPreviewModal = ({ visible, attachment, onClose }) => {
     downloadAttachmentPayload(payload, payload.attachmentName || 'attachment')
   }, [attachmentId, payload])
 
+  const handleClose = useCallback(() => {
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current)
+      objectUrlRef.current = ''
+    }
+    setPreviewUrl('')
+    setPreviewMimeType('')
+    setPreviewAttachmentId(0)
+    onClose?.()
+  }, [onClose])
+
   const isMobileDrawer = useMediaQuery('(max-width: 575.98px)')
 
   const body = (
@@ -146,18 +157,25 @@ const AttachmentPreviewModal = ({ visible, attachment, onClose }) => {
   )
   const actions = (
     <>
-      <CButton color="light" onClick={onClose}>
+      <CButton color="light" className="workflow-attachment-action" onClick={handleClose}>
         Close
       </CButton>
-      <CButton color="primary" onClick={handleDownload} disabled={!canDownload}>
+      <CButton
+        color="primary"
+        className="workflow-attachment-action"
+        onClick={handleDownload}
+        disabled={!canDownload}
+      >
         Download
       </CButton>
     </>
   )
 
+  if (!visible) return null
+
   if (isMobileDrawer) {
     return (
-      <MobileBottomDrawer visible={visible} title="Attachment Preview" onClose={onClose}>
+      <MobileBottomDrawer visible={visible} title="Attachment Preview" onClose={handleClose}>
         <div className="inspection-mobile-detail-drawer-body inspection-equipment-detail-drawer-body d-grid gap-3">
           {body}
         </div>
@@ -169,7 +187,7 @@ const AttachmentPreviewModal = ({ visible, attachment, onClose }) => {
   }
 
   return (
-    <CModal size="lg" visible={visible} alignment="center" onClose={onClose}>
+    <CModal size="lg" visible={visible} alignment="center" onClose={handleClose}>
       <CModalHeader>
         <CModalTitle>Attachment preview</CModalTitle>
       </CModalHeader>

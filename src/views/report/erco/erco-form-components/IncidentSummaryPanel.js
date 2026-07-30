@@ -1,52 +1,66 @@
 import React from 'react'
-import { CBadge, CCol, CRow } from '@coreui/react'
+import WorkflowSummaryList from 'src/components/report-workflow/WorkflowSummaryList'
+import { formatDateTime } from 'src/views/report/utils'
+import { sortResponders } from '../chronologyUtils'
+import { formatErcoLocation, resolveRespondingTeamLabel } from '../utils'
 
-const IncidentSummaryPanel = ({ teamLabel, shiftLabel, incidentSummaryItems }) => (
-  <div className="d-grid gap-2" style={{ minWidth: 0 }}>
-    <div className="d-flex align-items-center justify-content-between gap-2">
-      <div className="fw-semibold flex-shrink-0">Incident Summary</div>
-      <div className="d-flex align-items-center gap-2 flex-wrap" style={{ minWidth: 0 }}>
-        <CBadge
-          color="light"
-          className="border text-body-secondary d-inline-flex align-items-center gap-1"
-          style={{ maxWidth: '100%', minWidth: 0 }}
-          title={`Team on Shift During Incident: ${teamLabel}`}
-        >
-          <span className="flex-shrink-0">Team:</span>
-          <span className="text-truncate" style={{ minWidth: 0 }}>
-            {teamLabel}
-          </span>
-        </CBadge>
-        {shiftLabel ? (
-          <CBadge
-            color="light"
-            className="border text-body-secondary text-truncate"
-            style={{ maxWidth: '100%' }}
-          >
-            Shift: {shiftLabel}
-          </CBadge>
-        ) : null}
-      </div>
-    </div>
-    <div className="erco-incident-summary-panel rounded-3 border p-3 p-md-4">
-      <CRow className="g-3">
-        {incidentSummaryItems.map((item) => (
-          <CCol key={item.label} xs={item.fullWidth ? 12 : 6} md={item.fullWidth ? 12 : undefined}>
-            <div className="erco-incident-summary-panel__field">
-              <div className="small text-body-secondary">{item.label}</div>
-              <div
-                className={item.fullWidth ? 'fw-semibold' : 'fw-semibold text-truncate'}
-                style={{ minWidth: 0, overflowWrap: item.fullWidth ? 'anywhere' : undefined }}
-                title={item.fullWidth ? item.value : undefined}
-              >
-                {item.value}
-              </div>
-            </div>
-          </CCol>
-        ))}
-      </CRow>
-    </div>
-  </div>
+const EMPTY_VALUE = '--'
+
+export const buildIncidentSummaryItems = (form = {}) => {
+  const attendanceRows = Array.isArray(form.respondingAttendance) ? form.respondingAttendance : []
+  const responderNames = sortResponders(attendanceRows)
+    .filter((row) => row?.present)
+    .map((row) => String(row?.name || '').trim())
+    .filter(Boolean)
+  const teamLabel = resolveRespondingTeamLabel(form.respondingTeamName, attendanceRows)
+  const shiftLabel = String(form.respondingTeamShift || '').trim()
+
+  return [
+    {
+      key: 'incident-type',
+      label: 'Incident Type',
+      value: String(form.incidentType || '').trim() || EMPTY_VALUE,
+    },
+    {
+      key: 'area',
+      label: 'Area',
+      value: formatErcoLocation(form.location) || EMPTY_VALUE,
+    },
+    {
+      key: 'weather',
+      label: 'Weather',
+      value: String(form.weather || '').trim() || EMPTY_VALUE,
+    },
+    {
+      key: 'date-time',
+      label: 'Date & Time',
+      value: formatDateTime(
+        String(form.incidentDate || form.reportDate || '').trim(),
+        String(form.incidentTime || form.reportTime || '').trim(),
+      ),
+    },
+    {
+      key: 'responding-team',
+      label: 'Responding Team',
+      value: teamLabel,
+      meta: shiftLabel,
+      fullWidth: true,
+    },
+    {
+      key: 'responding-members',
+      label: 'Responding Members',
+      value: responderNames.length > 0 ? responderNames.join(', ') : 'None selected',
+      fullWidth: true,
+    },
+  ]
+}
+
+const IncidentSummaryPanel = ({ form }) => (
+  <WorkflowSummaryList
+    title="Incident Summary"
+    items={buildIncidentSummaryItems(form)}
+    variant="detail"
+  />
 )
 
 export default IncidentSummaryPanel

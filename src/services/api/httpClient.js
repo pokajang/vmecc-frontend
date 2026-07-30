@@ -95,6 +95,23 @@ export const getClientMode = () => {
 const isUnsafeMethod = (method) =>
   !['GET', 'HEAD', 'OPTIONS'].includes(String(method).toUpperCase())
 
+const isSensitiveRequest = (url) => {
+  const pathname = new URL(url, globalThis.location?.origin || 'http://localhost').pathname
+  return (
+    pathname.includes('/payroll/') ||
+    pathname.includes('/overtime') ||
+    pathname.includes('/auth/') ||
+    pathname.includes('/workflow/attachments') ||
+    pathname.includes('/workflow/notifications') ||
+    pathname.includes('/stats') ||
+    pathname.includes('/dashboard/action-queue') ||
+    pathname.includes('/staff/salary-claims/') ||
+    pathname.includes('/staff/salary-assignments') ||
+    pathname.includes('/settings/salary') ||
+    pathname.includes('/settings/payroll')
+  )
+}
+
 const hasHeader = (headers, targetName) =>
   Object.keys(headers || {}).some((name) => name.toLowerCase() === targetName.toLowerCase())
 
@@ -119,6 +136,7 @@ const requestHeaders = (options = {}) => {
 export const refreshCsrfToken = async () => {
   const response = await fetch(buildUrl('/auth/session'), {
     method: 'GET',
+    cache: 'no-store',
     credentials: 'include',
     headers: {
       Accept: 'application/json',
@@ -146,6 +164,7 @@ export const fetchWithCsrfRetry = async (url, options = {}, retried = false) => 
   const response = await fetch(url, {
     ...fetchOptions,
     method,
+    ...(isSensitiveRequest(url) ? { cache: 'no-store' } : {}),
     credentials: 'include',
     headers: requestHeaders({ ...options, method }),
   })

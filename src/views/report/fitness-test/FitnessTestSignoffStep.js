@@ -10,18 +10,10 @@ import {
 } from '@coreui/react'
 import StaffSelect from 'src/components/staff/StaffSelect'
 import { fetchTeams } from 'src/services/apiClient'
+import FitnessCompletionSummary from './FitnessCompletionSummary'
 import { getFitnessCompletionSummary } from './fitnessFormDomain'
 import { normalizeFitnessTeams } from './fitnessTeamDomain'
 import FitnessStageActions from './FitnessStageActions'
-
-const Metric = ({ label, value }) => (
-  <CCol xs={6} md={3}>
-    <div className="rounded-3 border p-3 h-100">
-      <div className="small text-body-secondary">{label}</div>
-      <div className="fs-5 fw-semibold">{value}</div>
-    </div>
-  </CCol>
-)
 
 const FitnessTestSignoffStep = ({
   form,
@@ -31,6 +23,7 @@ const FitnessTestSignoffStep = ({
   setForm,
   setShiftAssessor,
   onBack,
+  onReviewIncomplete,
   onSaveDraft,
   saveLabel,
   submitLabel,
@@ -77,33 +70,30 @@ const FitnessTestSignoffStep = ({
       new Map(staffOptions.map((option) => [String(option.name).trim().toLowerCase(), option.key])),
     [staffOptions],
   )
+  const updateAssessor = (groupId, assessor) => {
+    setShiftAssessor(groupId, assessor)
+    const allAssessorsComplete = form.shiftGroups.every((group) => {
+      if (!group.participants.length) return true
+      const name = group.id === groupId ? assessor?.name : group.assessor?.name
+      return Boolean(String(name || '').trim())
+    })
+    if (allAssessorsComplete) clearError('assessors')
+  }
+
   return (
     <div className="mb-3 d-grid gap-4">
       <section className="d-grid gap-3" aria-labelledby="fitness-completion-title">
-        <div>
-          <h3 id="fitness-completion-title" className="h6 mb-1">
-            Completion summary
-          </h3>
-          <p className="small text-body-secondary mb-0">
-            Check the calculated results before sending the report for review.
-          </p>
-        </div>
-        <CRow className="g-2">
-          <Metric label="Personnel" value={summary.participants} />
-          <Metric label="Passed assessments" value={summary.passedAssessments} />
-          <Metric label="Failed assessments" value={summary.failedAssessments} />
-          <Metric label="Incomplete" value={summary.incompleteAssessments} />
-        </CRow>
+        <h3 id="fitness-completion-title" className="h6 mb-0">
+          Completion summary
+        </h3>
+        <FitnessCompletionSummary
+          summary={summary}
+          onReviewIncomplete={summary.incompleteAssessments ? onReviewIncomplete : undefined}
+        />
       </section>
 
       <section className="d-grid gap-3" data-fitness-test-field="assessors">
-        <div>
-          <h3 className="h6 mb-1">Shift assessors</h3>
-          <p className="small text-body-secondary mb-0">
-            Record the assessor responsible for each participating shift.
-          </p>
-        </div>
-        {fieldErrors.assessors ? <CAlert color="danger">{fieldErrors.assessors}</CAlert> : null}
+        <h3 className="h6 mb-0">Shift assessors</h3>
         {staffError ? <CAlert color="warning">{staffError}</CAlert> : null}
         <CRow className="g-3">
           {form.shiftGroups.map((group) => {
@@ -117,53 +107,67 @@ const FitnessTestSignoffStep = ({
             const isExternal =
               externalAssessors[group.id] ??
               (!staffLoading && Boolean(group.assessor?.name) && !selectedKey)
+            const assessorMissing =
+              Boolean(fieldErrors.assessors) &&
+              Boolean(group.participants.length) &&
+              !String(group.assessor?.name || '').trim()
+            const errorId = `fitness-assessor-${group.id}-error`
             return (
               <CCol key={group.id} xs={12} md={6}>
-                <CFormLabel htmlFor={`fitness-assessor-${group.id}`}>
-                  {group.shift} assessor
-                </CFormLabel>
-                {isExternal ? (
-                  <CFormInput
-                    id={`fitness-assessor-${group.id}`}
-                    maxLength={190}
-                    value={group.assessor?.name || ''}
-                    placeholder="Enter external assessor name"
+                <div
+                  role="group"
+                  aria-invalid={assessorMissing || undefined}
+                  aria-describedby={assessorMissing ? errorId : undefined}
+                >
+                  <CFormLabel htmlFor={`fitness-assessor-${group.id}`}>
+                    {group.shift} assessor
+                  </CFormLabel>
+                  {isExternal ? (
+                    <CFormInput
+                      id={`fitness-assessor-${group.id}`}
+                      maxLength={190}
+                      value={group.assessor?.name || ''}
+                      placeholder="Enter external assessor name"
+                      invalid={assessorMissing}
+                      onChange={(event) =>
+                        updateAssessor(group.id, { userId: '', name: event.target.value })
+                      }
+                    />
+                  ) : (
+                    <StaffSelect
+                      inputId={`fitness-assessor-${group.id}`}
+                      value={selectedKey}
+                      options={staffOptions}
+                      isLoading={staffLoading}
+                      placeholder="Search staff directory"
+                      onChange={(_, option) =>
+                        updateAssessor(group.id, {
+                          userId: option?.id || '',
+                          name: option?.name || '',
+                        })
+                      }
+                    />
+                  )}
+                  {assessorMissing ? (
+                    <div id={errorId} className="invalid-feedback d-block" role="alert">
+                      {group.shift} assessor is required.
+                    </div>
+                  ) : null}
+                  <CFormCheck
+                    id={`fitness-assessor-external-${group.id}`}
+                    className="mt-2"
+                    label="Assessor is external"
+                    checked={isExternal}
                     onChange={(event) => {
-                      setShiftAssessor(group.id, { userId: '', name: event.target.value })
-                      clearError('assessors')
-                    }}
-                  />
-                ) : (
-                  <StaffSelect
-                    inputId={`fitness-assessor-${group.id}`}
-                    value={selectedKey}
-                    options={staffOptions}
-                    isLoading={staffLoading}
-                    placeholder="Search staff directory"
-                    onChange={(_, option) => {
-                      setShiftAssessor(group.id, {
-                        userId: option?.id || '',
-                        name: option?.name || '',
+                      const nextExternal = event.target.checked
+                      setExternalAssessors((current) => ({ ...current, [group.id]: nextExternal }))
+                      updateAssessor(group.id, {
+                        userId: '',
+                        name: nextExternal ? group.assessor?.name || '' : '',
                       })
-                      clearError('assessors')
                     }}
                   />
-                )}
-                <CFormCheck
-                  id={`fitness-assessor-external-${group.id}`}
-                  className="mt-2"
-                  label="Assessor is external"
-                  checked={isExternal}
-                  onChange={(event) => {
-                    const nextExternal = event.target.checked
-                    setExternalAssessors((current) => ({ ...current, [group.id]: nextExternal }))
-                    setShiftAssessor(group.id, {
-                      userId: '',
-                      name: nextExternal ? group.assessor?.name || '' : '',
-                    })
-                    clearError('assessors')
-                  }}
-                />
+                </div>
               </CCol>
             )
           })}

@@ -81,4 +81,51 @@ describe('usePayrollClaimsData toast dedupe reset', () => {
     )
     expect(claimsToastsAfterSecondFailure).toHaveLength(2)
   })
+
+  it('hides the prior identity rows synchronously while the next identity hydrates', async () => {
+    let resolveNextIdentity
+    const nextIdentityRows = new Promise((resolve) => {
+      resolveNextIdentity = resolve
+    })
+    loadMyPayrollClaimsApiFirst
+      .mockResolvedValueOnce({
+        ok: true,
+        data: [{ id: 'SAL-PRIVATE-U1', type: 'salary', status: 'Pending' }],
+      })
+      .mockReturnValueOnce(nextIdentityRows)
+
+    const baseProps = {
+      activeSection: 'claims',
+      claimId: '',
+      search: '',
+      statusFilter: 'All',
+      categoryFilter: 'All',
+      period: 'all',
+      sort: 'submittedAt:desc',
+      pushToast: vi.fn(),
+    }
+    const { result, rerender } = renderHook(
+      ({ userId }) => usePayrollClaimsData({ ...baseProps, userId }),
+      { initialProps: { userId: 'u1' } },
+    )
+
+    await waitFor(() => {
+      expect(result.current.claimRecords.map((row) => row.id)).toEqual(['SAL-PRIVATE-U1'])
+    })
+
+    rerender({ userId: 'u2' })
+
+    expect(result.current.claimRecords).toEqual([])
+    expect(result.current.selectedClaim).toBeNull()
+    expect(result.current.isClaimsLoading).toBe(true)
+
+    await act(async () => {
+      resolveNextIdentity({ ok: true, data: [] })
+      await nextIdentityRows
+    })
+
+    await waitFor(() => {
+      expect(result.current.isClaimsLoading).toBe(false)
+    })
+  })
 })

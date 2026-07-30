@@ -20,7 +20,7 @@ const erAuxInspectionDefinition = {
   key: 'er-aux-equipment-inspection',
   inspectionType: ER_AUX_EQUIPMENT_INSPECTION_TYPE,
   title: 'Emergency Response Auxiliary Equipment',
-  description: 'Emergency response auxiliary equipment inventory and condition checks.',
+  description: 'Inspect emergency-response equipment inventory and condition.',
   iconKey: 'ClipboardList',
   icon: ClipboardList,
   implemented: true,

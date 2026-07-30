@@ -101,9 +101,7 @@ const useWeatherTypeManager = ({ userId, selectedWeather, updateSetupField, push
         toggleOption: {
           value: WEATHER_TOGGLE_VALUE,
           title: showAllWeatherTypes ? 'Show less' : 'Show more',
-          description: showAllWeatherTypes
-            ? 'Hide extra weather types.'
-            : 'View all weather types.',
+          description: '',
           icon: showAllWeatherTypes ? ChevronUp : ChevronDown,
         },
       }),

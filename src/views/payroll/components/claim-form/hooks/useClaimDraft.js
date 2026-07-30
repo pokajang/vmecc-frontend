@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { getPayrollVolatileStorage } from 'src/services/payrollPrivacy'
 import {
   enqueuePayrollDraftRetry,
   sanitizePayrollDraftPayloadForStorage,
@@ -64,7 +65,7 @@ const useClaimDraft = ({
     (payload) => {
       try {
         const redactedPayload = sanitizePayrollDraftPayloadForStorage(payload, draftType)
-        localStorage.setItem(
+        getPayrollVolatileStorage().setItem(
           localAutosaveKey,
           JSON.stringify({
             ...redactedPayload,
@@ -170,7 +171,7 @@ const useClaimDraft = ({
     if (suppressAutosave) return
     if (!hasUnsavedChanges) {
       try {
-        localStorage.removeItem(localAutosaveKey)
+        getPayrollVolatileStorage().removeItem(localAutosaveKey)
       } catch {
         // ignore storage errors
       }

@@ -29,6 +29,15 @@ afterEach(() => {
 })
 
 describe('InspectionGeneralEvidenceCard', () => {
+  it('supports an unframed section without the card shell', () => {
+    const { container } = render(
+      <InspectionGeneralEvidenceCard title="General photos" photos={[]} unframed />,
+    )
+
+    expect(container.querySelector('.inspection-general-evidence-section')).toBeTruthy()
+    expect(container.querySelector('.inspection-general-evidence-card')).toBeNull()
+  })
+
   it('shows structured general evidence behind a compact mobile drawer action', () => {
     setMobileViewport()
 
@@ -61,6 +70,31 @@ describe('InspectionGeneralEvidenceCard', () => {
     ).toBeNull()
     expect(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.helperText)).toBeTruthy()
     expect(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.emptyPhotosMessage)).toBeTruthy()
+    expect(document.querySelector('.inspection-general-evidence-drawer-footer')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Reset' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Save photos' })).toBeNull()
+  })
+
+  it('does not show the immediate photo drawer footer before a photo is attached', () => {
+    setMobileViewport()
+
+    render(
+      <InspectionGeneralEvidenceCard
+        title="Finding Photos"
+        photos={[]}
+        compactOnMobile
+        compactActionLabel="Add finding photos"
+        drawerDoneMessage="Save the finding to keep these photos."
+      />,
+    )
+
+    fireEvent.click(screen.getByText('Add finding photos'))
+
+    expect(screen.getByText('No photos yet. Upload photos to continue.')).toBeTruthy()
+    expect(screen.queryByText('0 photos attached')).toBeNull()
+    expect(screen.queryByText('Save the finding to keep these photos.')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Done with Finding Photos' })).toBeNull()
+    expect(document.querySelector('.inspection-general-evidence-drawer-footer')).toBeNull()
   })
 
   it('provides a clear Done action for immediate-draft photo drawers', async () => {
@@ -89,9 +123,10 @@ describe('InspectionGeneralEvidenceCard', () => {
     expect(screen.getByText('1 photo attached')).toBeTruthy()
     expect(screen.getByText('Save the finding to keep these photos.')).toBeTruthy()
     expect(screen.getByText('Photo 1 of 1')).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Done with Finding Photos' })).toBeTruthy()
+    const doneButton = screen.getByRole('button', { name: 'Done with Finding Photos' })
+    expect(doneButton.classList.contains('inspection-general-evidence-drawer-done')).toBe(true)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Done with Finding Photos' }))
+    fireEvent.click(doneButton)
 
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     expect(screen.getByText('Add finding photos (1)')).toBeTruthy()
@@ -216,7 +251,8 @@ describe('InspectionGeneralEvidenceCard', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
     expect(screen.queryByText('evidence.jpg')).toBeNull()
-    expect(screen.getByText('0 photos attached to this report')).toBeTruthy()
+    expect(screen.queryByText('0 photos attached to this report')).toBeNull()
+    expect(document.querySelector('.inspection-general-evidence-drawer-footer')).toBeNull()
 
     fireEvent.click(screen.getByRole('button', { name: 'Upload photo' }))
     fireEvent.click(screen.getByRole('button', { name: 'Save photos' }))
@@ -288,7 +324,42 @@ describe('InspectionGeneralEvidenceCard', () => {
     fireEvent.click(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel))
 
     expect(screen.queryByText('evidence.jpg')).toBeNull()
-    expect(screen.getByText('0 photos attached to this report')).toBeTruthy()
+    expect(screen.queryByText('0 photos attached to this report')).toBeNull()
+    expect(document.querySelector('.inspection-general-evidence-drawer-footer')).toBeNull()
+  })
+
+  it('keeps staged controls available when the last saved photo is removed', () => {
+    setMobileViewport()
+    const onSavePhotos = vi.fn()
+
+    render(
+      <InspectionGeneralEvidenceCard
+        title={INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle}
+        photos={[
+          {
+            id: 'saved-photo',
+            fileName: 'saved.jpg',
+            url: 'data:image/jpeg;base64,saved',
+          },
+        ]}
+        compactOnMobile
+        stageDrawerPhotos
+        compactPopulatedActionLabel={INSPECTION_REPORT_EVIDENCE_COPY.mobilePopulatedActionLabel}
+        onSavePhotos={onSavePhotos}
+      />,
+    )
+
+    fireEvent.click(
+      screen.getByText(`${INSPECTION_REPORT_EVIDENCE_COPY.mobilePopulatedActionLabel} (1)`),
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Photo 1' }))
+
+    expect(screen.getByText('Photo removal ready to save')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Reset' }).disabled).toBe(false)
+    expect(screen.getByRole('button', { name: 'Save photos' }).disabled).toBe(false)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save photos' }))
+    expect(onSavePhotos).toHaveBeenCalledWith([])
   })
 
   it('resets compact mobile drawer photos and descriptions to the drawer-open baseline', () => {

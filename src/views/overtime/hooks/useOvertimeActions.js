@@ -13,12 +13,15 @@ import { OT_INELIGIBLE_MESSAGE } from '../domain/overtimeWorkflowDomain'
 import { validateOvertimeSubmission } from '../domain/overtimeValidation'
 
 const isSameOvertimeRecordId = (lhs, rhs) => String(lhs ?? '') === String(rhs ?? '')
+const createSubmissionKey = () =>
+  globalThis.crypto?.randomUUID?.() || `ot-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`
 
 const useOvertimeActions = ({
   userId,
   overtimeRecords,
   setOvertimeRecords,
   setOvertimeDraft,
+  overtimeDraft,
   draftListRow,
   overtimeId,
   navigate,
@@ -151,6 +154,7 @@ const useOvertimeActions = ({
     isOvernight: form.isOvernight,
     durationMinutes: form.durationMinutes,
     reason: form.reason.trim(),
+    submissionKey: hasPersistedEditTarget ? null : createSubmissionKey(),
   })
 
   const handleSubmit = (event) => {
@@ -185,6 +189,7 @@ const useOvertimeActions = ({
         status: 'Pending',
         attachmentId: form.attachmentId || null,
         version: existingRecord?.version || null,
+        submissionKey: submitPreview.submissionKey,
       }
 
       let persistedRecord = nextRecord
@@ -232,7 +237,7 @@ const useOvertimeActions = ({
         : [persistedRecord, ...overtimeRecords]
 
       setOvertimeRecords(nextRecords)
-      const clearResult = await clearMyOvertimeDraftApiFirst(userId)
+      const clearResult = await clearMyOvertimeDraftApiFirst(userId, overtimeDraft?.draftVersion)
       if (!clearResult?.ok) {
         pushToast('Overtime submitted, but clearing draft cache failed on backend.', {
           title: 'Submitted with warning',
@@ -281,7 +286,11 @@ const useOvertimeActions = ({
         attachment: form.attachment || null,
         savedAt: new Date().toISOString(),
       }
-      const result = await saveMyOvertimeDraftApiFirst(userId, draftPayload)
+      const result = await saveMyOvertimeDraftApiFirst(
+        userId,
+        draftPayload,
+        overtimeDraft?.draftVersion,
+      )
       if (!result.ok) {
         if (result?.isIneligible) {
           pushToast(OT_INELIGIBLE_MESSAGE, { title: 'Overtime not applicable', color: 'warning' })
@@ -293,7 +302,7 @@ const useOvertimeActions = ({
         }
         return
       }
-      setOvertimeDraft(normalizeOvertimeDraftPayload(draftPayload))
+      setOvertimeDraft(normalizeOvertimeDraftPayload(result?.data || draftPayload))
       form.setFormBaseline(
         buildFormSnapshot({
           editingRecordId,
@@ -323,7 +332,7 @@ const useOvertimeActions = ({
     }
     setIsFormClearing(true)
     try {
-      const clearResult = await clearMyOvertimeDraftApiFirst(userId)
+      const clearResult = await clearMyOvertimeDraftApiFirst(userId, overtimeDraft?.draftVersion)
       if (!clearResult?.ok) {
         pushToast('Unable to discard linked overtime draft changes from backend. Please retry.', {
           title: 'Discard failed',
@@ -373,7 +382,7 @@ const useOvertimeActions = ({
     }
     setIsFormClearing(true)
     try {
-      const clearResult = await clearMyOvertimeDraftApiFirst(userId)
+      const clearResult = await clearMyOvertimeDraftApiFirst(userId, overtimeDraft?.draftVersion)
       if (!clearResult?.ok) {
         pushToast('Unable to clear overtime draft from backend. Please retry.', {
           title: 'Clear failed',
@@ -471,7 +480,7 @@ const useOvertimeActions = ({
   const confirmDeleteOvertime = async () => {
     if (!deletePreviewRecord?.id) return
     if (deletePreviewRecord?.isDraft) {
-      const clearResult = await clearMyOvertimeDraftApiFirst(userId)
+      const clearResult = await clearMyOvertimeDraftApiFirst(userId, overtimeDraft?.draftVersion)
       if (!clearResult?.ok) {
         pushToast('Unable to delete overtime draft from backend. Please retry.', {
           title: 'Delete failed',

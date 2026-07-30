@@ -18,6 +18,7 @@ import {
   recordToInspectionForm,
 } from '../form/inspectionFormHelpers'
 import { INSPECTION_REPORT_EVIDENCE_COPY } from '../inspectionReportEvidenceCopy'
+import InspectionContextSummary, { buildInspectionContextFields } from './InspectionContextSummary'
 
 const text = (value) => String(value || '').trim()
 
@@ -176,6 +177,7 @@ const InspectionReviewSection = ({
         selectedTypeDefinition?.checksField ? { checks: readOnlyChecks } : {},
       )
   const isGeneral = isGeneralInspectionType(r.incidentType || form.inspectionType)
+  const ownsRootEvidence = selectedTypeDefinition?.ownsRootEvidence === true
   const mainLocationLabel = formatInspectionDisplayLocationTitle(r.incidentType, form.mainLocation)
   const ReadOnlySection = selectedTypeDefinition?.ReadOnlySection || null
   const inspectedAt = formatTimestamp(form.inspectedAt || r.inspectedAt, '')
@@ -205,6 +207,12 @@ const InspectionReviewSection = ({
     0,
   )
   const detailFieldWidth = isSubmissionReview ? 6 : 3
+  const contextFields = buildInspectionContextFields({
+    status: isSubmissionReview ? null : getReviewStatusBadge(statusLabel, renderStatusBadge),
+    type: isSubmissionReview ? null : inspectionType || '--',
+    inspectedAt: inspectedAt || '--',
+    location: r.location || '--',
+  })
 
   const editButton = (
     <CButton color="light" onClick={() => reviewActions?.onBackToEdit?.()}>
@@ -304,24 +312,7 @@ const InspectionReviewSection = ({
       ) : null}
 
       <ReviewSectionBlock title="Inspection Details">
-        <CRow className="g-3">
-          {isSubmissionReview ? null : (
-            <>
-              <DetailField label="Status" xs={12} md={detailFieldWidth}>
-                {getReviewStatusBadge(statusLabel, renderStatusBadge)}
-              </DetailField>
-              <DetailField label="Type" xs={12} md={detailFieldWidth}>
-                {inspectionType || '--'}
-              </DetailField>
-            </>
-          )}
-          <DetailField label="Inspection Date/Time" xs={12} md={detailFieldWidth}>
-            {inspectedAt || '--'}
-          </DetailField>
-          <DetailField label="Location" xs={12} md={detailFieldWidth}>
-            {r.location || '--'}
-          </DetailField>
-        </CRow>
+        <InspectionContextSummary fields={contextFields} md={detailFieldWidth} />
         {!isSubmissionReview && (submittedBy || submittedAt || submittedRole) ? (
           <CRow className="g-3">
             {submittedBy ? (
@@ -362,10 +353,13 @@ const InspectionReviewSection = ({
         </ReviewSectionBlock>
       ) : null}
 
-      {(Array.isArray(form.photos) && form.photos.length > 0) || text(form.reportRemarks) ? (
+      {!ownsRootEvidence &&
+      ((Array.isArray(form.photos) && form.photos.length > 0) || text(form.reportRemarks)) ? (
         <ReviewSectionBlock title={INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle}>
           <InspectionGeneralEvidenceCard
             readOnly
+            presentation="inline"
+            showTitle={false}
             title={INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle}
             photos={form.photos}
             remarks={form.reportRemarks}
@@ -382,6 +376,7 @@ const InspectionReviewSection = ({
               <InspectionGeneralEvidenceCard
                 key={group.key}
                 readOnly
+                presentation="inset"
                 title={group.title}
                 photos={group.photos}
                 remarks=""

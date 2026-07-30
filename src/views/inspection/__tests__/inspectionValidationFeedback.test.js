@@ -16,9 +16,7 @@ describe('inspection validation feedback', () => {
           inspectionIssues: true,
         },
       }),
-    ).toBe(
-      'Cannot continue to review: set the inspection date and time; complete the inspection location; add and complete at least one finding.',
-    )
+    ).toBe('3 items need attention. First: Set the inspection date and time.')
   })
 
   it('provides type-specific reasons for structured inspection forms', () => {
@@ -47,7 +45,7 @@ describe('inspection validation feedback', () => {
 
   it('uses a clear fallback when row validation has no field-level reason', () => {
     expect(buildInspectionValidationStatusMessage({ errorCount: 1, missing: {} })).toBe(
-      'Cannot continue to review: complete the highlighted inspection items.',
+      'Some inspection items need attention.',
     )
   })
 })

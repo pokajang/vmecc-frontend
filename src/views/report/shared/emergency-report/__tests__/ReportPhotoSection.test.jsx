@@ -84,10 +84,64 @@ describe('ReportPhotoSection', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Remove' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Photo 1' }))
 
     expect(document.querySelector('.mobile-bottom-drawer')).toBeTruthy()
     expect(document.querySelector('.modal.show')).toBeNull()
+  })
+
+  it('uses progressive photo descriptions on mobile', () => {
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      configurable: true,
+      value: vi.fn((query) => ({
+        matches: query === REPORT_MOBILE_QUERY,
+        media: query,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+      })),
+    })
+    const onChange = vi.fn()
+    const photos = [
+      { id: 'one', fileName: 'one.jpg', url: '/report-media/one', description: '' },
+      {
+        id: 'two',
+        fileName: 'two.jpg',
+        url: '/report-media/two',
+        description: 'Existing description',
+      },
+    ]
+
+    render(
+      <ReportPhotoSection
+        moduleKey="erco"
+        photos={photos}
+        onChange={onChange}
+        descriptionMaxLength={2000}
+      />,
+    )
+
+    expect(screen.getByText('Photo 1 of 2')).toBeTruthy()
+    expect(screen.getByText('Description added')).toBeTruthy()
+    expect(screen.queryByRole('textbox')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit description for Photo 1' }))
+    const description = screen.getByRole('textbox', { name: 'Description for Photo 1' })
+    expect(description.getAttribute('maxlength')).toBe('2000')
+
+    fireEvent.change(description, {
+      target: { value: 'Command position\nPortrait evidence' },
+    })
+
+    expect(onChange).toHaveBeenCalledWith([
+      expect.objectContaining({
+        id: 'one',
+        description: 'Command position\nPortrait evidence',
+      }),
+      expect.objectContaining({ id: 'two', description: 'Existing description' }),
+    ])
   })
 
   it('opens the camera input synchronously without awaiting draft persistence', () => {
@@ -173,6 +227,52 @@ describe('ReportPhotoSection', () => {
 
     expect(capturedSignal.aborted).toBe(true)
     await waitFor(() => expect(screen.queryByRole('button', { name: 'Cancel upload' })).toBeNull())
+  })
+
+  it('does not cancel an active upload when the processing callback identity changes', async () => {
+    let capturedSignal = null
+    let resolveUpload
+    mediaMocks.upload.mockImplementation(
+      ({ signal }) =>
+        new Promise((resolve) => {
+          capturedSignal = signal
+          resolveUpload = resolve
+        }),
+    )
+    const onChange = vi.fn()
+    const { rerender } = render(
+      <ReportPhotoSection
+        moduleKey="drill"
+        photos={[]}
+        onChange={onChange}
+        onProcessingChange={vi.fn()}
+      />,
+    )
+    const file = new File(['photo'], 'photo.jpg', { type: 'image/jpeg' })
+    fireEvent.change(screen.getByLabelText('Upload drill report photos'), {
+      target: { files: [file] },
+    })
+    await waitFor(() => expect(capturedSignal).toBeTruthy())
+
+    rerender(
+      <ReportPhotoSection
+        moduleKey="drill"
+        photos={[]}
+        onChange={onChange}
+        onProcessingChange={vi.fn()}
+      />,
+    )
+
+    expect(capturedSignal.aborted).toBe(false)
+    resolveUpload([
+      {
+        mediaId: 'media-1',
+        fileName: 'photo.jpg',
+        url: '/report-media/media-1',
+        sizeBytes: 1200,
+      },
+    ])
+    await waitFor(() => expect(onChange).toHaveBeenCalledTimes(1))
   })
 
   it('preserves multiline photo descriptions without mutating sibling photos', () => {

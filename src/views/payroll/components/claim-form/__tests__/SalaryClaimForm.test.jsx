@@ -31,6 +31,17 @@ vi.mock('src/services/apiClient', async (importOriginal) => {
   return {
     ...actual,
     fetchOvertimeRateSettings: vi.fn(async () => ({ data: {} })),
+    fetchPayrollSalaryBaseline: vi.fn(async () => ({
+      data: {
+        salaryAssignmentPublicId: '01TESTBASELINE',
+        effectiveFrom: '2026-01-01',
+        basic: 1000,
+        allowanceTotal: 0,
+        allowances: [],
+        employeeContributions: { epf: 0, perkeso: 0, sip: 0 },
+        employerContributions: { epf: 0, perkeso: 0, sip: 0 },
+      },
+    })),
   }
 })
 
@@ -160,7 +171,7 @@ describe('SalaryClaimForm', () => {
 
     fireEvent.click(screen.getByText('Salary baseline and adjustment details'))
     await waitFor(() => {
-      expect(screen.getByText('Adjusted Gross Salary')).toBeTruthy()
+      expect(screen.getAllByText('Adjusted Gross Salary').length).toBeGreaterThan(0)
     })
 
     fireEvent.click(screen.getByText('Overtime payout details'))
@@ -191,7 +202,7 @@ describe('SalaryClaimForm', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Clear form' }))
 
     expect(screen.getByLabelText('Remarks').value).toBe('')
-    expect(screen.getByText('KEEP_THIS_SALARY_NOTE')).toBeTruthy()
+    expect(screen.getAllByText('KEEP_THIS_SALARY_NOTE').length).toBeGreaterThan(0)
   })
 
   it('shows leave guard modal for dirty salary claim edits and discards through existing back action', async () => {

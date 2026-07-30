@@ -69,10 +69,10 @@ describe('InspectionMobileHome', () => {
       />,
     )
 
-    expect(container.querySelector('.inspection-mobile-home')).toBeTruthy()
-    expect(container.querySelector('.inspection-mobile-home__type-grid')).toBeTruthy()
-    expect(container.querySelector('.inspection-mobile-home__records-toolbar')).toBeTruthy()
-    expect(container.querySelector('.inspection-view-all-btn')).toBeTruthy()
+    expect(container.querySelector('.mobile-workflow-home')).toBeTruthy()
+    expect(container.querySelector('.mobile-workflow-home__type-list')).toBeTruthy()
+    expect(container.querySelector('.mobile-workflow-home__records-toolbar')).toBeTruthy()
+    expect(container.querySelector('.mobile-workflow-home__view-all')).toBeTruthy()
   })
 
   it('renders recent records as a grouped mobile list and opens selected rows', () => {
@@ -110,6 +110,13 @@ describe('InspectionMobileHome', () => {
 
     rerender(<InspectionMobileHome {...baseProps} />)
     expect(screen.getByText('No records yet.')).toBeTruthy()
+  })
+
+  it('does not expose fire extinguisher records on the mobile home', () => {
+    render(<InspectionMobileHome {...baseProps} />)
+
+    expect(screen.queryByText('Equipment')).toBeNull()
+    expect(screen.queryByText('All Extinguishers')).toBeNull()
   })
 
   it('opens queue details without reusing the view-all records action', () => {

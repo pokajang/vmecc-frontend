@@ -41,7 +41,7 @@ const DataTableFooter = ({
 
   return (
     <div
-      className={`vmecc-meta d-flex flex-wrap justify-content-end align-items-center gap-2 text-muted mt-2 ${className}`.trim()}
+      className={`data-table-footer vmecc-meta d-flex flex-wrap justify-content-end align-items-center gap-2 text-muted mt-2 ${className}`.trim()}
     >
       {showRowsPerPage ? (
         <>
@@ -70,7 +70,7 @@ const DataTableFooter = ({
           </CFormSelect>
         </>
       ) : null}
-      <span>
+      <span aria-live="polite">
         Showing {visibleCount} of {filteredCount}
         {showFiltered ? <span className="ms-1">(filtered from {totalCount})</span> : null}
       </span>
@@ -82,7 +82,7 @@ const DataTableFooter = ({
         >
           <button
             type="button"
-            className="btn btn-sm btn-outline-secondary"
+            className="data-table-footer__page-action btn btn-sm btn-outline-secondary"
             disabled={currentPage <= 1}
             onClick={() => onPageChange(Math.max(1, currentPage - 1))}
           >
@@ -93,7 +93,7 @@ const DataTableFooter = ({
           </span>
           <button
             type="button"
-            className="btn btn-sm btn-outline-secondary"
+            className="data-table-footer__page-action btn btn-sm btn-outline-secondary"
             disabled={currentPage >= lastPage}
             onClick={() => onPageChange(Math.min(lastPage, currentPage + 1))}
           >

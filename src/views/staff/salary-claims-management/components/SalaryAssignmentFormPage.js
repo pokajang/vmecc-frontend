@@ -1,17 +1,9 @@
 import React from 'react'
-import {
-  CButton,
-  CCard,
-  CCardBody,
-  CContainer,
-  CModal,
-  CModalBody,
-  CModalFooter,
-  CModalHeader,
-  CModalTitle,
-} from '@coreui/react'
+import { CButton, CCard, CCardBody, CContainer } from '@coreui/react'
 import BackButton from 'src/components/BackButton'
 import FormActionGroup from 'src/components/FormActionGroup'
+import WorkflowDetailHeader from 'src/components/workflow/WorkflowDetailHeader'
+import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import useSalaryAssignmentFormController from '../hooks/useSalaryAssignmentFormController'
 import {
   SalaryAssignmentPayComponentsCard,
@@ -21,26 +13,29 @@ import {
 } from './SalaryAssignmentFormSections'
 
 const SalaryAssignmentStepNav = ({ activeStep, setActiveStep, stepState, steps }) => (
-  <div className="d-flex flex-wrap gap-2 mb-3" aria-label="Salary assignment steps">
-    {steps.map((step, index) => {
-      const state = stepState[step.key] || {}
-      const isActive = activeStep === step.key
-      return (
-        <CButton
-          key={step.key}
-          type="button"
-          color={isActive ? 'primary' : state.complete ? 'success' : 'light'}
-          variant={isActive ? undefined : 'outline'}
-          className="vmecc-choice-button"
-          disabled={!state.available}
-          aria-current={isActive ? 'step' : undefined}
-          onClick={() => setActiveStep(step.key)}
-        >
-          {index + 1}. {step.label}
-        </CButton>
-      )
-    })}
-  </div>
+  <nav aria-label="Salary assignment steps">
+    <ol className="list-unstyled d-flex flex-wrap gap-2 mb-3">
+      {steps.map((step, index) => {
+        const state = stepState[step.key] || {}
+        const isActive = activeStep === step.key
+        return (
+          <li key={step.key}>
+            <CButton
+              type="button"
+              color={isActive ? 'primary' : state.complete ? 'success' : 'light'}
+              variant={isActive ? undefined : 'outline'}
+              className="vmecc-choice-button workflow-step-action"
+              disabled={!state.available}
+              aria-current={isActive ? 'step' : undefined}
+              onClick={() => setActiveStep(step.key)}
+            >
+              {index + 1}. {step.label}
+            </CButton>
+          </li>
+        )
+      })}
+    </ol>
+  </nav>
 )
 
 const SalaryAssignmentFormPage = ({ vm, handlers }) => {
@@ -89,12 +84,21 @@ const SalaryAssignmentFormPage = ({ vm, handlers }) => {
   const nextStep = steps[currentStepIndex + 1] || null
 
   return (
-    <CContainer fluid data-testid="salary-claims-management-assignment-form">
-      <div className="fw-semibold mb-3">
-        {isReadOnly ? 'Salary Details' : isEditing ? 'Edit Salary' : 'Create New Salary'}
-      </div>
+    <CContainer
+      fluid
+      className="workflow-module-page"
+      data-testid="salary-claims-management-assignment-form"
+    >
+      <WorkflowDetailHeader
+        title={isReadOnly ? 'Salary Details' : isEditing ? 'Edit Salary' : 'Create New Salary'}
+        subtitle={
+          isReadOnly
+            ? 'Review the effective salary assignment and its recorded history.'
+            : 'Complete each step before reviewing and saving the assignment.'
+        }
+      />
 
-      {isEditing && !assignmentFound ? (
+      {(isEditing || isReadOnly) && !assignmentFound ? (
         <CCard>
           <CCardBody className="text-danger">
             Assignment record not found. It may have been removed.
@@ -162,13 +166,15 @@ const SalaryAssignmentFormPage = ({ vm, handlers }) => {
           )}
 
           {!isReadOnly && (
-            <div className="px-1 small text-body-secondary text-end">{autosaveSummary}</div>
+            <div className="d-none d-md-block px-1 small text-body-secondary text-end">
+              {autosaveSummary}
+            </div>
           )}
 
           {isReadOnly ? (
             <FormActionGroup
               leading={<BackButton onClick={handleBackClick} label="Back" />}
-              mobileBehavior="in-flow"
+              mobileBehavior="compact-sticky"
             >
               <CButton
                 color="primary"
@@ -179,7 +185,11 @@ const SalaryAssignmentFormPage = ({ vm, handlers }) => {
               </CButton>
             </FormActionGroup>
           ) : (
-            <FormActionGroup mobileBehavior="in-flow">
+            <FormActionGroup
+              mobileBehavior="compact-sticky"
+              statusMessage={autosaveSummary}
+              ariaLabel="Salary assignment actions"
+            >
               <CButton color="light" onClick={handleBackClick}>
                 Cancel
               </CButton>
@@ -209,30 +219,21 @@ const SalaryAssignmentFormPage = ({ vm, handlers }) => {
           )}
         </div>
       )}
-      <CModal
+      <ActionConfirmModal
         visible={submitConfirmVisible}
-        alignment="center"
         onClose={() => setSubmitConfirmVisible(false)}
-      >
-        <CModalHeader onClose={() => setSubmitConfirmVisible(false)}>
-          <CModalTitle>
-            {isEditing ? 'Confirm Salary Update' : 'Confirm Salary Assignment'}
-          </CModalTitle>
-        </CModalHeader>
-        <CModalBody>
-          {isEditing
+        onConfirm={handleConfirmSetSalary}
+        title={isEditing ? 'Confirm Salary Update' : 'Confirm Salary Assignment'}
+        message={
+          isEditing
             ? 'Apply these salary assignment changes now?'
-            : 'Set this salary assignment now?'}
-        </CModalBody>
-        <CModalFooter>
-          <CButton color="light" onClick={() => setSubmitConfirmVisible(false)}>
-            Cancel
-          </CButton>
-          <CButton color="primary" disabled={isSubmitting} onClick={handleConfirmSetSalary}>
-            {isEditing ? 'Confirm update' : 'Confirm set salary'}
-          </CButton>
-        </CModalFooter>
-      </CModal>
+            : 'Set this salary assignment now?'
+        }
+        confirmLabel={isEditing ? 'Confirm update' : 'Confirm set salary'}
+        confirmDisabled={isSubmitting}
+        cancelDisabled={isSubmitting}
+        testId="salary-assignment-confirm"
+      />
     </CContainer>
   )
 }

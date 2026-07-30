@@ -5,6 +5,7 @@ import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import ReportPhotoGallery from 'src/components/report-workflow/ReportPhotoGallery'
 import RecordDetailActions from 'src/components/report-workflow/RecordDetailActions'
 import { DetailField } from 'src/components/report-workflow/ReportViewComponents'
+import RespondingTeamSummary from 'src/components/report-workflow/RespondingTeamSummary'
 
 const ChronologyRows = ({ chronology }) => {
   const rows = (Array.isArray(chronology) ? chronology : []).filter((r) => r.time || r.action)
@@ -28,43 +29,6 @@ const ChronologyRows = ({ chronology }) => {
           </div>
         ))}
       </div>
-    </section>
-  )
-}
-
-const RespondingTeamRows = ({ respondingTeam, isDrill = false }) => {
-  if (!respondingTeam) return null
-  const attendance = Array.isArray(respondingTeam.attendance) ? respondingTeam.attendance : []
-  if (!respondingTeam.name && !respondingTeam.shift && attendance.length === 0) return null
-  return (
-    <section className="inspection-form-section d-grid gap-3">
-      <div className="fw-semibold text-muted">
-        {isDrill ? 'Exercise Personnel' : 'Responding Team'}
-      </div>
-      <CRow className="g-3">
-        <DetailField label="Team">{respondingTeam.name || '--'}</DetailField>
-        {respondingTeam.shift ? (
-          <DetailField label="Shift">{respondingTeam.shift}</DetailField>
-        ) : null}
-      </CRow>
-      {attendance.length > 0 ? (
-        <div>
-          <div className="small text-body-secondary mb-1">Attending members</div>
-          <div className="d-flex flex-wrap gap-2">
-            {attendance.map((member, i) => (
-              <CBadge
-                key={member.memberId || i}
-                color="light"
-                className="border text-body-secondary fw-normal"
-              >
-                {member.name}
-                {member.role ? ` - ${member.role}` : ''}
-                {member.exerciseRole ? ` (${member.exerciseRole})` : ''}
-              </CBadge>
-            ))}
-          </div>
-        </div>
-      ) : null}
     </section>
   )
 }
@@ -605,7 +569,7 @@ const ReportDetailSection = ({
       ) : null}
 
       {hasRespondingTeam ? (
-        <RespondingTeamRows respondingTeam={r.respondingTeam} isDrill={isDrill} />
+        <RespondingTeamSummary respondingTeam={r.respondingTeam} isDrill={isDrill} />
       ) : null}
       {hasChronology ? <ChronologyRows chronology={r.chronology} /> : null}
 

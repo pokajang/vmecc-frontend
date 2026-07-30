@@ -71,6 +71,32 @@ describe('useSalaryAssignmentState facade', () => {
     })
   })
 
+  it('does not expose the prior account assignment draft during an identity switch', () => {
+    const { result, rerender } = renderHook(
+      ({ user }) => useSalaryAssignmentState({ user, pushToast: vi.fn() }),
+      { initialProps: { user: { id: '1' } } },
+    )
+
+    act(() =>
+      result.current.openEditAssignment({
+        id: 'SCA-PRIVATE-1',
+        employeeId: '7',
+        employee: 'Private Employee',
+        effectiveFrom: '2026-06',
+        basicSalary: 9000,
+      }),
+    )
+    expect(result.current.assignmentDraft.basicSalary).toBe('9000')
+
+    rerender({ user: { id: '2' } })
+
+    expect(result.current.assignmentModalVisible).toBe(false)
+    expect(result.current.editingAssignmentId).toBeNull()
+    expect(result.current.assignmentDraft.basicSalary).toBe('')
+    expect(result.current.assignmentDraft.employee).toBe('')
+    expect(result.current.assignmentRows).toEqual([])
+  })
+
   it('rejects invalid pay component edits without updating the draft', () => {
     const pushToast = vi.fn()
     const { result } = renderHook(() => useSalaryAssignmentState({ user: { id: '1' }, pushToast }))
@@ -216,15 +242,22 @@ describe('useSalaryAssignmentState facade', () => {
 
     act(() =>
       result.current.setAssignmentRows([
-        { id: 'SCA-1', serverId: 20, employee: 'Asha', effectiveFrom: '2026-06' },
+        {
+          id: 'SCA-1',
+          publicId: '01K1B2C3D4E5F6G7H8J9K0MNPQ',
+          serverId: 20,
+          version: 3,
+          employee: 'Asha',
+          effectiveFrom: '2026-06',
+        },
       ]),
     )
     await act(async () => {
-      const deleted = await result.current.removeAssignmentRow('SCA-1')
+      const deleted = await result.current.removeAssignmentRow('01K1B2C3D4E5F6G7H8J9K0MNPQ')
       expect(deleted).toBe(true)
     })
 
-    expect(deleteSalaryAssignmentApiFirst).toHaveBeenCalledWith(20)
+    expect(deleteSalaryAssignmentApiFirst).toHaveBeenCalledWith(20, 3)
     expect(result.current.assignmentRows).toEqual([])
     expect(result.current.assignmentHistory).toEqual([
       { id: 'h-delete', at: '2026-06-10T08:00:00.000Z' },

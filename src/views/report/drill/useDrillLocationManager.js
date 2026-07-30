@@ -57,7 +57,7 @@ const useDrillLocationManager = ({ userId, selectedLocation, updateSetupField, p
         toggleOption: {
           value: DRILL_LOCATION_TOGGLE_VALUE,
           title: showAllDrillLocations ? 'Show less' : 'Show more',
-          description: showAllDrillLocations ? 'Hide extra locations.' : 'View all locations.',
+          description: '',
           icon: showAllDrillLocations ? ChevronUp : ChevronDown,
         },
       }),

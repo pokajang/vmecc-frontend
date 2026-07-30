@@ -82,4 +82,20 @@ describe('bulk salary modals', () => {
     expect(screen.getByText(/Total payable: RM 2500.00/i)).toBeTruthy()
     expect(screen.queryByText(/5 claims selected/i)).toBeNull()
   })
+
+  it('does not retain payment summary or claim identifiers while closed', () => {
+    render(
+      <SalaryClaimPaymentModal
+        visible={false}
+        mode="mark"
+        scope="single"
+        record={{ id: 'PRIVATE-PAYROLL-CLAIM' }}
+        values={{ paymentReference: 'PRIVATE-REFERENCE' }}
+      />,
+    )
+
+    expect(screen.queryByText('PRIVATE-PAYROLL-CLAIM')).toBeNull()
+    expect(screen.queryByDisplayValue('PRIVATE-REFERENCE')).toBeNull()
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
 })

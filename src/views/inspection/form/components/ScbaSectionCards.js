@@ -604,7 +604,7 @@ const ScbaSectionCards = ({
                   {section.isCustomSection ? (
                     <RowActions
                       iconSize={16}
-                      hitArea={32}
+                      hitArea={44}
                       toggleAriaLabel={`Section actions for ${
                         section.title || getScbaSectionTitle(section.key)
                       }`}
@@ -794,7 +794,7 @@ const ScbaSectionCards = ({
             !readOnly ? (
               <RowActions
                 iconSize={16}
-                hitArea={32}
+                hitArea={44}
                 toggleAriaLabel={`Item actions for ${getScbaDisplayLabel(mobileDetailRow)}`}
                 items={[
                   typeof onResetGroupedCheck === 'function'

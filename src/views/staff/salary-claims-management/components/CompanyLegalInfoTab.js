@@ -309,7 +309,11 @@ const CompanyLegalInfoTab = () => {
                 ),
               )}
               {editMode && (
-                <FormActionGroup mobileThumb={false} className="mt-2">
+                <FormActionGroup
+                  mobileBehavior="compact-sticky"
+                  statusMessage={status.loading ? 'Saving company details…' : 'Unsaved changes'}
+                  className="mt-2"
+                >
                   <CButton
                     color="secondary"
                     variant="outline"

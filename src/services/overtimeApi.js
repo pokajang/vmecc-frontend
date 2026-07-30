@@ -11,6 +11,7 @@ import {
   saveOvertimeDraftApi,
   updateOvertimeRecord,
   fetchStaffOvertimeRecords,
+  fetchStaffOvertimeRecordByPublicId,
   reviewStaffOvertimeRecord,
   recommendStaffOvertimeRecord,
   approveStaffOvertimeRecord,
@@ -65,6 +66,7 @@ const normalizeApiClockTime = (value) => {
 
 export const mapOvertimeApiRowToUi = (row = {}, ownerUserId = '') => ({
   id: String(row.display_id || row.id || '').trim(),
+  publicId: String(row.public_id || row.publicId || '').trim(),
   serverId: row?.id ?? null,
   ownerUserId: ownerUserId || String(row.owner_user_id || row.user_id || '').trim(),
   recordKey:
@@ -143,9 +145,10 @@ const toApiPayload = (row = {}) => ({
   reason: row.reason || '',
   attachment_id: row.attachmentId || null,
   expected_version: row.version || undefined,
+  submission_key: row.submissionKey || undefined,
 })
 
-export const loadMyOvertimePolicyApiFirst = async () => {
+export const loadMyOvertimePolicyApiFirst = async (options = {}) => {
   if (!featureFlags.apiOtPayrollReadsPrimary) {
     return {
       ok: false,
@@ -155,7 +158,7 @@ export const loadMyOvertimePolicyApiFirst = async () => {
     }
   }
   try {
-    const result = await fetchOvertimePolicy()
+    const result = await fetchOvertimePolicy(options)
     return { ok: true, data: result?.data || null, source: 'api' }
   } catch (error) {
     return { ok: false, data: null, source: 'api', error }
@@ -209,7 +212,7 @@ export const classifyMyOvertimeDateApiFirst = async (claimDate) => {
   }
 }
 
-export const loadMyOvertimeRecordsApiFirst = async (userId, params = {}) => {
+export const loadMyOvertimeRecordsApiFirst = async (userId, params = {}, options = {}) => {
   if (!featureFlags.apiOtPayrollReadsPrimary) {
     return {
       ok: false,
@@ -219,7 +222,7 @@ export const loadMyOvertimeRecordsApiFirst = async (userId, params = {}) => {
     }
   }
   try {
-    const result = await fetchOvertimeRecords(params)
+    const result = await fetchOvertimeRecords(params, options)
     const rows = Array.isArray(result?.data)
       ? result.data.map((row) => mapOvertimeApiRowToUi(row, userId))
       : []
@@ -274,7 +277,7 @@ export const deleteMyOvertimeApiFirst = async (serverId, version = null) => {
   }
 }
 
-export const loadMyOvertimeDraftApiFirst = async (_userId) => {
+export const loadMyOvertimeDraftApiFirst = async (_userId, options = {}) => {
   if (!featureFlags.apiOtPayrollReadsPrimary) {
     return {
       ok: false,
@@ -284,7 +287,7 @@ export const loadMyOvertimeDraftApiFirst = async (_userId) => {
     }
   }
   try {
-    const result = await fetchOvertimeDraft()
+    const result = await fetchOvertimeDraft(options)
     const payload = result?.data || null
     return { ok: true, data: payload, source: 'api' }
   } catch (error) {
@@ -292,24 +295,24 @@ export const loadMyOvertimeDraftApiFirst = async (_userId) => {
   }
 }
 
-export const saveMyOvertimeDraftApiFirst = async (_userId, payload) => {
+export const saveMyOvertimeDraftApiFirst = async (_userId, payload, expectedVersion = null) => {
   if (!featureFlags.apiOtPayrollWritesPrimary) {
     return { ok: false, source: 'api', error: new Error('API writes disabled by feature flag') }
   }
   try {
-    await saveOvertimeDraftApi(payload)
-    return { ok: true, source: 'api' }
+    const result = await saveOvertimeDraftApi(payload, expectedVersion)
+    return { ok: true, data: result?.data || null, source: 'api' }
   } catch (error) {
     return { ok: false, source: 'api', error, ...mapApiErrorMeta(error) }
   }
 }
 
-export const clearMyOvertimeDraftApiFirst = async (_userId) => {
+export const clearMyOvertimeDraftApiFirst = async (_userId, expectedVersion = null) => {
   if (!featureFlags.apiOtPayrollWritesPrimary) {
     return { ok: false, source: 'api', error: new Error('API writes disabled by feature flag') }
   }
   try {
-    await clearOvertimeDraftApi()
+    await clearOvertimeDraftApi(expectedVersion)
     return { ok: true, source: 'api' }
   } catch (error) {
     return { ok: false, source: 'api', error }
@@ -328,7 +331,7 @@ export const uploadMyOvertimeAttachmentApiFirst = async (file) => {
   }
 }
 
-export const loadStaffOvertimeRecordsApiFirst = async (params = {}) => {
+export const loadStaffOvertimeRecordsApiFirst = async (params = {}, options = {}) => {
   if (!featureFlags.apiOtPayrollReadsPrimary) {
     return {
       ok: false,
@@ -340,7 +343,7 @@ export const loadStaffOvertimeRecordsApiFirst = async (params = {}) => {
     }
   }
   try {
-    const result = await fetchStaffOvertimeRecords(params)
+    const result = await fetchStaffOvertimeRecords(params, options)
     const rows = Array.isArray(result?.data)
       ? result.data.map((row) =>
           mapOvertimeApiRowToUi(row, String(row.owner_user_id || row.user_id || '')),
@@ -355,6 +358,22 @@ export const loadStaffOvertimeRecordsApiFirst = async (params = {}) => {
     }
   } catch (error) {
     return { ok: false, data: [], meta: null, filters: null, source: 'api', error }
+  }
+}
+
+export const loadStaffOvertimeRecordByPublicId = async (publicId, options = {}) => {
+  try {
+    const result = await fetchStaffOvertimeRecordByPublicId(publicId, options)
+    return {
+      ok: true,
+      data: mapOvertimeApiRowToUi(
+        result?.data || {},
+        String(result?.data?.owner_user_id || result?.data?.user_id || ''),
+      ),
+      source: 'api',
+    }
+  } catch (error) {
+    return { ok: false, data: null, source: 'api', error }
   }
 }
 

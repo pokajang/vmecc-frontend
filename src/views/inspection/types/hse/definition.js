@@ -18,7 +18,7 @@ const hseInspectionDefinition = {
   key: 'health-safety-environment-inspection',
   inspectionType: HSE_INSPECTION_TYPE,
   title: 'Health Safety Environment',
-  description: 'Record an unsafe act or unsafe condition with a description and photo.',
+  description: 'Record an unsafe act or condition with supporting evidence.',
   iconKey: 'ShieldCheck',
   icon: ShieldCheck,
   implemented: true,

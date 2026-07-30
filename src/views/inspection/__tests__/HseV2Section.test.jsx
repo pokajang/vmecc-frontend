@@ -40,12 +40,14 @@ afterEach(cleanup)
 
 describe('HSE v2 observation flow', () => {
   it('shows only the lean field workflow and switches the owned description field', () => {
-    render(<Harness />)
+    const { container } = render(<Harness />)
 
     const choices = screen.getAllByRole('radio')
+    const unsafeActLabel = screen.getByText('Unsafe Act').closest('label')
+    expect(container.querySelector('.inspection-check-card')).toBeNull()
     expect(choices).toHaveLength(2)
-    expect(choices[0].classList.contains('vmecc-choice-button')).toBe(true)
-    expect(choices[0].getAttribute('aria-checked')).toBe('false')
+    expect(unsafeActLabel?.classList.contains('vmecc-choice-button')).toBe(true)
+    expect(choices[0].checked).toBe(false)
     expect(screen.getByText('Unsafe Act')).toBeTruthy()
     expect(screen.getByText('Unsafe Condition')).toBeTruthy()
     expect(screen.queryByText('Severity')).toBeNull()
@@ -53,7 +55,7 @@ describe('HSE v2 observation flow', () => {
     expect(screen.getByText('Immediate corrective action (optional)')).toBeTruthy()
 
     fireEvent.click(screen.getByText('Unsafe Act'))
-    expect(choices[0].getAttribute('aria-checked')).toBe('true')
+    expect(choices[0].checked).toBe(true)
     fireEvent.change(screen.getByLabelText('Observation description'), {
       target: { value: 'Worker entered a barricaded area.' },
     })

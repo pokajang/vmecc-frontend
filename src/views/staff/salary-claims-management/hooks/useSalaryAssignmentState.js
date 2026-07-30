@@ -7,6 +7,8 @@ import useAssignmentRecordsState from './salary-assignment/useAssignmentRecordsS
 import useAssignmentSubmitActions from './salary-assignment/useAssignmentSubmitActions'
 import usePayComponentsState from './salary-assignment/usePayComponentsState'
 import useSalaryAssignmentRatesState from './salary-assignment/useSalaryAssignmentRatesState'
+import { emptyAssignmentDraft } from '../utils'
+import { createEmptyPayComponentsDraft } from './salary-assignment/assignmentStateDomain'
 
 const useSalaryAssignmentState = ({ user, pushToast }) => {
   const resetPayComponentsEditRef = useRef(() => {})
@@ -36,10 +38,17 @@ const useSalaryAssignmentState = ({ user, pushToast }) => {
     resetPayComponentsEditRef.current = payComponentsState.resetPayComponentsEdit
   }, [payComponentsState.resetPayComponentsEdit])
 
+  const visibleAssignmentDraft = recordsState.hasCurrentIdentity
+    ? modalState.assignmentDraft
+    : emptyAssignmentDraft()
+  const visiblePayComponentsDraft = recordsState.hasCurrentIdentity
+    ? payComponentsState.payComponentsDraft
+    : createEmptyPayComponentsDraft()
   const activeDerivedValues = useAssignmentDerivedValues({
-    assignmentDraft: modalState.assignmentDraft,
-    payComponentsDraft: payComponentsState.payComponentsDraft,
-    payComponentsEditMode: payComponentsState.payComponentsEditMode,
+    assignmentDraft: visibleAssignmentDraft,
+    payComponentsDraft: visiblePayComponentsDraft,
+    payComponentsEditMode:
+      recordsState.hasCurrentIdentity && payComponentsState.payComponentsEditMode,
     statutoryRates: ratesState.statutoryRates,
     statutoryRatesFeatureEnabled: ratesState.statutoryRatesFeatureEnabled,
   })
@@ -95,14 +104,19 @@ const useSalaryAssignmentState = ({ user, pushToast }) => {
     isAssignmentsLoading: recordsState.isAssignmentsLoading,
     assignmentLoadError: recordsState.assignmentLoadError,
     hydrateAssignments: recordsState.hydrateAssignments,
-    assignmentModalVisible: modalState.assignmentModalVisible,
-    editingAssignmentId: modalState.editingAssignmentId,
-    activeAssignmentDraftId: modalState.activeAssignmentDraftId,
-    activeAssignmentDraftName: modalState.activeAssignmentDraftName,
-    assignmentDraft: modalState.assignmentDraft,
+    assignmentModalVisible: recordsState.hasCurrentIdentity && modalState.assignmentModalVisible,
+    editingAssignmentId: recordsState.hasCurrentIdentity ? modalState.editingAssignmentId : null,
+    activeAssignmentDraftId: recordsState.hasCurrentIdentity
+      ? modalState.activeAssignmentDraftId
+      : '',
+    activeAssignmentDraftName: recordsState.hasCurrentIdentity
+      ? modalState.activeAssignmentDraftName
+      : '',
+    assignmentDraft: visibleAssignmentDraft,
     setAssignmentDraft: modalState.setAssignmentDraft,
-    payComponentsEditMode: payComponentsState.payComponentsEditMode,
-    payComponentsDraft: payComponentsState.payComponentsDraft,
+    payComponentsEditMode:
+      recordsState.hasCurrentIdentity && payComponentsState.payComponentsEditMode,
+    payComponentsDraft: visiblePayComponentsDraft,
     openCreateAssignment: modalState.openCreateAssignment,
     openEditAssignment: modalState.openEditAssignment,
     openSavedAssignmentDraft: modalState.openSavedAssignmentDraft,

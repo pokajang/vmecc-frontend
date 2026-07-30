@@ -1,17 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import {
-  CButton,
-  CContainer,
-  CModal,
-  CModalBody,
-  CModalFooter,
-  CModalHeader,
-  CModalTitle,
-  CToast,
-  CToastBody,
-  CToastHeader,
-  CToaster,
-} from '@coreui/react'
+import { CContainer, CToast, CToastBody, CToastHeader, CToaster } from '@coreui/react'
 import { useSelector } from 'react-redux'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { hasAnyPermission, hasPermission } from 'src/utils/authz'
@@ -19,6 +7,7 @@ import { SALARY_CLAIMS_ALLOWED_PERMISSIONS } from './leave-management/data'
 import ErrorBoundary from 'src/components/ErrorBoundary'
 import ModulePageHeader from 'src/components/ModulePageHeader'
 import TableLoader from 'src/components/TableLoader'
+import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import SalaryWorkflowActionModal from './components/SalaryWorkflowActionModal'
 import ClaimDetailView from './salary-claims-management/components/ClaimDetailView'
 import ClaimRecordsTab from './salary-claims-management/components/ClaimRecordsTab'
@@ -40,6 +29,7 @@ import useSalaryClaimsDerived from './salary-claims-management/hooks/useSalaryCl
 import useSalaryClaimsActions from './salary-claims-management/hooks/useSalaryClaimsActions'
 import useSalaryClaimsViewModels from './salary-claims-management/hooks/useSalaryClaimsViewModels'
 import { useGuardedNavigate, useNavigationGuard } from 'src/contexts/NavigationGuardContext'
+import { resolveSensitiveIdentityKey } from 'src/services/payrollPrivacy'
 import {
   WORKFLOW_DECLARATION_LABEL,
   assignmentSortOptions,
@@ -54,7 +44,16 @@ import {
 } from './salary-claims-management/utils'
 import { ASSIGNMENT_DRAFT_STATUS, TAB_GROUP_BY_KEY } from './salary-claims-management/constants'
 
-const SalaryClaimsManagement = () => {
+const assignmentMatchesRouteKey = (row, routeKey) => {
+  const normalizedRouteKey = String(routeKey || '').trim()
+  if (!normalizedRouteKey) return false
+
+  return [row?.id, row?.publicId, row?.serverId, row?.referenceId].some(
+    (value) => String(value ?? '').trim() === normalizedRouteKey,
+  )
+}
+
+const SalaryClaimsManagementContent = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const guardedNavigate = useGuardedNavigate()
@@ -250,7 +249,7 @@ const SalaryClaimsManagement = () => {
       assignmentRouteInitRef.current = ''
       return
     }
-    const routeKey = location.pathname
+    const routeKey = `${String(user?.id || '')}:${location.pathname}`
     if (assignmentRouteInitRef.current === routeKey) return
     if (isAssignmentCreateRoute) {
       const routeState = location.state && typeof location.state === 'object' ? location.state : {}
@@ -261,7 +260,7 @@ const SalaryClaimsManagement = () => {
       return
     }
     if (isAssignmentEditRoute || isAssignmentViewRoute) {
-      const matched = assignmentRows.find((row) => String(row?.id || '') === assignmentId)
+      const matched = assignmentRows.find((row) => assignmentMatchesRouteKey(row, assignmentId))
       if (matched) {
         openEditAssignment(matched)
         assignmentRouteInitRef.current = routeKey
@@ -277,6 +276,7 @@ const SalaryClaimsManagement = () => {
     isAssignmentEditRoute,
     isAssignmentViewRoute,
     location.pathname,
+    user?.id,
     location.state,
     openSavedAssignmentDraft,
   ])
@@ -478,6 +478,7 @@ const SalaryClaimsManagement = () => {
   return (
     <CContainer
       fluid
+      className="workflow-module-page"
       data-testid={
         isSalarySettingsRoute ? 'salary-settings-module' : 'salary-claims-management-module'
       }
@@ -554,29 +555,20 @@ const SalaryClaimsManagement = () => {
         onClose={pageState.closeAttachmentPreview}
       />
 
-      <CModal
+      <ActionConfirmModal
         visible={actions.assignmentDeleteModalVisible}
-        alignment="center"
         onClose={actions.closeAssignmentDeleteModal}
-        data-testid="salary-claims-management-assignment-delete-modal"
-      >
-        <CModalHeader onClose={actions.closeAssignmentDeleteModal}>
-          <CModalTitle>Delete Assignment</CModalTitle>
-        </CModalHeader>
-        <CModalBody>
-          {String(actions.assignmentDeleteTarget?.status || '') === ASSIGNMENT_DRAFT_STATUS
+        onConfirm={actions.confirmDeleteAssignmentRow}
+        title="Delete Assignment"
+        message={
+          String(actions.assignmentDeleteTarget?.status || '') === ASSIGNMENT_DRAFT_STATUS
             ? 'Delete this salary assignment draft?'
-            : 'Delete this salary assignment?'}
-        </CModalBody>
-        <CModalFooter>
-          <CButton color="light" onClick={actions.closeAssignmentDeleteModal}>
-            Cancel
-          </CButton>
-          <CButton color="danger" onClick={actions.confirmDeleteAssignmentRow}>
-            Delete
-          </CButton>
-        </CModalFooter>
-      </CModal>
+            : 'Delete this salary assignment?'
+        }
+        confirmLabel="Delete"
+        confirmColor="danger"
+        testId="salary-claims-management-assignment-delete-modal"
+      />
 
       {!isClaimDetailRoute && !isAssignmentFormRoute && tabNavGroup && (
         <>
@@ -615,7 +607,7 @@ const SalaryClaimsManagement = () => {
         <SalaryAssignmentFormPage
           key={`salary-assignment-form:${isAssignmentEditRoute ? 'edit' : isAssignmentViewRoute ? 'view' : 'new'}:${assignmentId || 'new'}:${
             (!isAssignmentEditRoute && !isAssignmentViewRoute) ||
-            hydration.assignmentRows.some((row) => String(row?.id || '') === assignmentId)
+            hydration.assignmentRows.some((row) => assignmentMatchesRouteKey(row, assignmentId))
               ? 'ready'
               : 'loading'
           }`}
@@ -638,7 +630,7 @@ const SalaryClaimsManagement = () => {
             currentAssignmentId: hydration.editingAssignmentId,
             assignmentFound:
               (!isAssignmentEditRoute && !isAssignmentViewRoute) ||
-              hydration.assignmentRows.some((row) => String(row?.id || '') === assignmentId),
+              hydration.assignmentRows.some((row) => assignmentMatchesRouteKey(row, assignmentId)),
           }}
           handlers={{
             onBack: actions.backToAssignments,
@@ -694,6 +686,12 @@ const SalaryClaimsManagement = () => {
       </div>
     </CContainer>
   )
+}
+
+const SalaryClaimsManagement = () => {
+  const identityKey = useSelector((state) => resolveSensitiveIdentityKey(state.authUser))
+
+  return <SalaryClaimsManagementContent key={`staff-payroll:${identityKey}`} />
 }
 
 export default SalaryClaimsManagement

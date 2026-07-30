@@ -3,8 +3,9 @@ import { CBadge, CButton, CCard, CCardBody, CCardHeader, CCol, CRow } from '@cor
 import { Calendar, Download, Pencil } from 'lucide-react'
 import ApprovalGates from 'src/components/ApprovalGates'
 import AuditHistoryPanel from 'src/components/AuditHistoryPanel'
-import BackButton from 'src/components/BackButton'
 import { buildClaimHistoryEntries } from 'src/components/auditHistory'
+import WorkflowDetailActions from 'src/components/workflow/WorkflowDetailActions'
+import WorkflowDetailHeader from 'src/components/workflow/WorkflowDetailHeader'
 import SalaryClaimReadonlyView from './SalaryClaimReadonlyView'
 
 const CLAIM_GATES = [
@@ -60,20 +61,23 @@ const ClaimDetailSection = ({
     : []
   return (
     <div className="d-grid gap-3" data-testid="payroll-claim-detail">
-      <div className="d-flex flex-wrap align-items-center gap-2">
-        <BackButton to="/payroll" label="Back to claims" />
-        {selectedClaim?.status && (
+      <WorkflowDetailHeader
+        title={selectedClaim ? `${selectedClaimTypeMeta.label} Claim` : 'Claim Details'}
+        subtitle={selectedClaim?.id ? `Claim ID: ${selectedClaim.id}` : ''}
+        status={selectedClaim?.status || ''}
+        backTo="/payroll"
+        backLabel="Back to claims"
+      />
+      {selectedClaim?.status ? (
+        <div>
           <ApprovalGates
             gates={CLAIM_GATES}
             approvalHistory={selectedClaim.approvalHistory}
             isCancelled={selectedClaim.status === 'Cancelled'}
             direction="horizontal"
           />
-        )}
-        {selectedClaim?.id && (
-          <span className="text-body-secondary small">Claim ID: {selectedClaim.id}</span>
-        )}
-      </div>
+        </div>
+      ) : null}
 
       {!selectedClaim ? (
         <div className="text-danger">Claim record not found.</div>
@@ -113,6 +117,7 @@ const ClaimDetailSection = ({
 
           {isSalaryClaim ? (
             <SalaryClaimReadonlyView
+              key={`${selectedClaim.userId || selectedClaim.ownerId || selectedClaim.employeeId || 'unknown'}::${selectedClaim.id || 'unknown'}`}
               claim={selectedClaim}
               formatCurrency={formatCurrency}
               formatDate={formatDate}
@@ -167,7 +172,7 @@ const ClaimDetailSection = ({
             formatDateTime={formatDate}
           />
 
-          <div className="d-flex flex-column flex-md-row justify-content-end gap-2">
+          <WorkflowDetailActions ariaLabel="Claim actions">
             <CButton
               color="light"
               data-testid="payroll-claim-download-action"
@@ -203,7 +208,7 @@ const ClaimDetailSection = ({
             >
               Delete
             </CButton>
-          </div>
+          </WorkflowDetailActions>
         </>
       )}
     </div>

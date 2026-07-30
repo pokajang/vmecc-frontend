@@ -7,7 +7,15 @@ import ModulePageHeader from 'src/components/ModulePageHeader'
 import RouteNavTabs from 'src/components/RouteNavTabs'
 import { isHolidayGuidanceStaffVisibilityEnabledForUser } from 'src/config/featureFlags'
 import { fetchStaffOvertimeRecord } from 'src/services/apiClient'
-import { loadStaffOvertimeRecordsApiFirst, mapOvertimeApiRowToUi } from 'src/services/overtimeApi'
+import {
+  loadStaffOvertimeRecordByPublicId,
+  loadStaffOvertimeRecordsApiFirst,
+  mapOvertimeApiRowToUi,
+} from 'src/services/overtimeApi'
+import {
+  createPayrollRequestContext,
+  resolveSensitiveIdentityKey,
+} from 'src/services/payrollPrivacy'
 import { hasAnyPermission, hasPermission } from 'src/utils/authz'
 import {
   formatDate as formatOvertimeDate,
@@ -102,7 +110,7 @@ const resolveApiMeta = (meta = null, rows = [], perPage = DEFAULT_ROWS_TO_SHOW) 
   }
 }
 
-const OvertimeManagement = () => {
+const OvertimeManagementContent = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const { overtimeRouteKey } = useParams()
@@ -140,6 +148,7 @@ const OvertimeManagement = () => {
     overtimeType: [],
     team: [],
   })
+  const [recordsIdentityId, setRecordsIdentityId] = useState('')
   const [selectedRecordFallback, setSelectedRecordFallback] = useState(null)
   const overtimeRequestRef = useRef(0)
 
@@ -187,9 +196,14 @@ const OvertimeManagement = () => {
 
   const hydrateOvertime = useCallback(
     async ({ showWarningToast = false } = {}) => {
+      const requestContext = createPayrollRequestContext(user?.id)
       if (!isHrUser || !user?.id) {
+        setRecordsIdentityId(String(user?.id || ''))
         setAllOvertimeRecords([])
         setRecordsMeta(DEFAULT_META)
+        setRecordsFilters({ status: [], overtimeType: [], team: [] })
+        setSelectedRecordFallback(null)
+        requestContext.release()
         return { ok: false, data: [], meta: null, filters: null, source: 'api' }
       }
 
@@ -208,39 +222,49 @@ const OvertimeManagement = () => {
       const requestId = overtimeRequestRef.current + 1
       overtimeRequestRef.current = requestId
       setIsRecordsLoading(true)
-      const result = await loadStaffOvertimeRecordsApiFirst(params)
-      if (requestId !== overtimeRequestRef.current) {
-        return result
-      }
-      const nextRows = Array.isArray(result?.data) ? result.data : []
-      const nextMeta = resolveApiMeta(result?.meta, nextRows, rowsToShow)
-
-      if ((nextMeta.filteredCount || 0) > 0 && nextRows.length === 0 && page > nextMeta.lastPage) {
-        setPage(Math.max(1, nextMeta.lastPage))
-        setIsRecordsLoading(false)
-        return result
-      }
-
-      setAllOvertimeRecords(nextRows)
-      setRecordsMeta(nextMeta)
-      if (result?.filters && typeof result.filters === 'object') {
-        setRecordsFilters({
-          status: normalizeOptionList(result.filters.status),
-          overtimeType: normalizeOptionList(result.filters.overtime_type),
-          team: normalizeOptionList(result.filters.team),
+      try {
+        const result = await loadStaffOvertimeRecordsApiFirst(params, {
+          signal: requestContext.signal,
         })
-      } else {
-        setRecordsFilters((prev) => prev)
-      }
+        if (!requestContext.isCurrent() || requestId !== overtimeRequestRef.current) {
+          return result
+        }
+        const nextRows = Array.isArray(result?.data) ? result.data : []
+        const nextMeta = resolveApiMeta(result?.meta, nextRows, rowsToShow)
 
-      setIsRecordsLoading(false)
-      if (showWarningToast && !result?.ok) {
-        pushToast('Unable to load overtime records. Please retry.', {
-          title: 'Data warning',
-          color: 'warning',
-        })
+        if (
+          (nextMeta.filteredCount || 0) > 0 &&
+          nextRows.length === 0 &&
+          page > nextMeta.lastPage
+        ) {
+          setPage(Math.max(1, nextMeta.lastPage))
+          return result
+        }
+
+        setRecordsIdentityId(String(user.id))
+        setAllOvertimeRecords(nextRows)
+        setRecordsMeta(nextMeta)
+        if (result?.filters && typeof result.filters === 'object') {
+          setRecordsFilters({
+            status: normalizeOptionList(result.filters.status),
+            overtimeType: normalizeOptionList(result.filters.overtime_type),
+            team: normalizeOptionList(result.filters.team),
+          })
+        }
+
+        if (showWarningToast && !result?.ok) {
+          pushToast('Unable to load overtime records. Please retry.', {
+            title: 'Data warning',
+            color: 'warning',
+          })
+        }
+        return result
+      } finally {
+        if (requestContext.isCurrent() && requestId === overtimeRequestRef.current) {
+          setIsRecordsLoading(false)
+        }
+        requestContext.release()
       }
-      return result
     },
     [
       isHrUser,
@@ -260,15 +284,33 @@ const OvertimeManagement = () => {
 
   const hasInitialHydration = useRef(false)
   useEffect(() => {
+    overtimeRequestRef.current += 1
+    hasInitialHydration.current = false
+    const requestContext = createPayrollRequestContext(user?.id)
+    requestContext.release()
+  }, [user?.id])
+
+  useEffect(() => {
     if (!isHrUser || !user?.id) return
     const showWarningToast = !hasInitialHydration.current
     hasInitialHydration.current = true
     hydrateOvertime({ showWarningToast })
   }, [hydrateOvertime, isHrUser, user?.id])
 
+  const hasCurrentRecordsIdentity = recordsIdentityId === String(user?.id || '')
+  const currentOvertimeRecords = useMemo(
+    () => (hasCurrentRecordsIdentity ? allOvertimeRecords : []),
+    [allOvertimeRecords, hasCurrentRecordsIdentity],
+  )
+  const currentRecordsMeta = hasCurrentRecordsIdentity ? recordsMeta : DEFAULT_META
+  const currentRecordsFilters = useMemo(
+    () => (hasCurrentRecordsIdentity ? recordsFilters : { status: [], overtimeType: [], team: [] }),
+    [hasCurrentRecordsIdentity, recordsFilters],
+  )
+
   const adminOvertimeRows = useMemo(() => {
     const map = new Map()
-    ;(Array.isArray(allOvertimeRecords) ? allOvertimeRecords : []).forEach((row, index) => {
+    ;(Array.isArray(currentOvertimeRecords) ? currentOvertimeRecords : []).forEach((row, index) => {
       const ownerUserId = String(row?.ownerUserId || '').trim()
       const overtimeIdValue = String(row?.id || '').trim()
       if (!overtimeIdValue || String(row?.status || '').trim() === 'Draft') return
@@ -295,7 +337,7 @@ const OvertimeManagement = () => {
       })
     })
     return Array.from(map.values())
-  }, [allOvertimeRecords])
+  }, [currentOvertimeRecords])
 
   const filteredAdminOvertimeRows = useMemo(() => {
     const term = search.trim().toLowerCase()
@@ -320,7 +362,7 @@ const OvertimeManagement = () => {
   }, [adminOvertimeRows, search])
 
   const statusOptions = useMemo(() => {
-    const fromApi = normalizeOptionList(recordsFilters.status)
+    const fromApi = normalizeOptionList(currentRecordsFilters.status)
     if (fromApi.length > 0) {
       return [{ value: 'All', label: 'All status' }, ...fromApi]
     }
@@ -329,23 +371,23 @@ const OvertimeManagement = () => {
       { value: 'All', label: 'All status' },
       ...unique.map((value) => ({ value, label: value })),
     ]
-  }, [adminOvertimeRows, recordsFilters.status])
+  }, [adminOvertimeRows, currentRecordsFilters.status])
 
   const overtimeTypeOptions = useMemo(() => {
-    const fromApi = normalizeOptionList(recordsFilters.overtimeType)
+    const fromApi = normalizeOptionList(currentRecordsFilters.overtimeType)
     if (fromApi.length > 0) {
       return [{ value: 'All', label: 'All OT type' }, ...fromApi]
     }
     return [{ value: 'All', label: 'All OT type' }]
-  }, [recordsFilters.overtimeType])
+  }, [currentRecordsFilters.overtimeType])
 
   const teamOptions = useMemo(() => {
-    const fromApi = normalizeOptionList(recordsFilters.team)
+    const fromApi = normalizeOptionList(currentRecordsFilters.team)
     if (fromApi.length > 0) {
       return [{ value: 'All', label: 'All team' }, ...fromApi]
     }
     return [{ value: 'All', label: 'All team' }]
-  }, [recordsFilters.team])
+  }, [currentRecordsFilters.team])
 
   const decodedOvertimeRouteKey = useMemo(
     () => decodeRouteValue(overtimeRouteKey),
@@ -353,36 +395,48 @@ const OvertimeManagement = () => {
   )
 
   useEffect(() => {
-    if (!isDetailRoute || !decodedOvertimeRouteKey.includes('::')) return
-    const [ownerPart, recordPart] = decodedOvertimeRouteKey.split('::')
-    const ownerId = Number(ownerPart)
-    const recordId = Number(recordPart)
-    if (
-      !Number.isInteger(ownerId) ||
-      ownerId <= 0 ||
-      !Number.isInteger(recordId) ||
-      recordId <= 0
-    ) {
-      return
-    }
-
-    let mounted = true
+    if (!isDetailRoute || !decodedOvertimeRouteKey || !user?.id) return undefined
+    const requestContext = createPayrollRequestContext(user.id)
     const loadRecord = async () => {
       try {
-        const response = await fetchStaffOvertimeRecord(ownerId, recordId)
-        if (!mounted) return
-        const mapped = mapOvertimeApiRowToUi(response?.data || {}, String(ownerId))
+        let mapped = null
+        if (decodedOvertimeRouteKey.includes('::')) {
+          const [ownerPart, recordPart] = decodedOvertimeRouteKey.split('::')
+          const ownerId = Number(ownerPart)
+          const recordId = Number(recordPart)
+          if (
+            !Number.isInteger(ownerId) ||
+            ownerId <= 0 ||
+            !Number.isInteger(recordId) ||
+            recordId <= 0
+          ) {
+            throw new Error('Invalid overtime route key')
+          }
+          const response = await fetchStaffOvertimeRecord(ownerId, recordId, {
+            signal: requestContext.signal,
+          })
+          mapped = mapOvertimeApiRowToUi(response?.data || {}, String(ownerId))
+        } else {
+          const result = await loadStaffOvertimeRecordByPublicId(decodedOvertimeRouteKey, {
+            signal: requestContext.signal,
+          })
+          if (!result?.ok || !result?.data) throw result?.error || new Error('Record unavailable')
+          mapped = result.data
+        }
+        if (!requestContext.isCurrent()) return
         setSelectedRecordFallback({
           ...mapped,
+          requestIdentityId: String(user.id),
+          requestRouteKey: decodedOvertimeRouteKey,
           id: String(mapped?.id || '').trim(),
-          ownerUserId: String(mapped?.ownerUserId || ownerId),
-          recordKey: String(mapped?.recordKey || `${ownerId}::${recordId}`),
+          ownerUserId: String(mapped?.ownerUserId || ''),
+          recordKey: String(mapped?.recordKey || mapped?.publicId || decodedOvertimeRouteKey),
           employee: String(mapped?.employee || mapped?.submittedBy || '').trim(),
           team: String(mapped?.team || '').trim() || 'Unassigned',
           applicantRoles: normalizeRoleList(mapped?.applicantRoles || []),
         })
       } catch {
-        if (!mounted) return
+        if (!requestContext.isCurrent()) return
         setSelectedRecordFallback(null)
         pushToast('This overtime record is unavailable or you no longer have access to it.', {
           title: 'Record unavailable',
@@ -392,27 +446,35 @@ const OvertimeManagement = () => {
       }
     }
 
-    loadRecord()
-    return () => {
-      mounted = false
-    }
-  }, [decodedOvertimeRouteKey, isDetailRoute, navigate, pushToast, resolvedTabPath])
+    void loadRecord().finally(requestContext.release)
+    return requestContext.abort
+  }, [decodedOvertimeRouteKey, isDetailRoute, navigate, pushToast, resolvedTabPath, user?.id])
 
   const selectedRecord = useMemo(() => {
     if (!decodedOvertimeRouteKey) return null
+    const currentFallback =
+      selectedRecordFallback?.requestIdentityId === String(user?.id || '') &&
+      selectedRecordFallback?.requestRouteKey === decodedOvertimeRouteKey
+        ? selectedRecordFallback
+        : null
     if (decodedOvertimeRouteKey.includes('::')) {
       const fromRows =
         adminOvertimeRows.find((row) => String(row?.recordKey || '') === decodedOvertimeRouteKey) ||
         null
-      if (fromRows && selectedRecordFallback) {
-        return { ...fromRows, ...selectedRecordFallback }
+      if (fromRows && currentFallback) {
+        return { ...fromRows, ...currentFallback }
       }
-      return fromRows || selectedRecordFallback || null
+      return fromRows || currentFallback || null
     }
     return (
-      adminOvertimeRows.find((row) => String(row?.id || '') === decodedOvertimeRouteKey) || null
+      adminOvertimeRows.find(
+        (row) =>
+          String(row?.recordKey || '') === decodedOvertimeRouteKey ||
+          String(row?.publicId || '') === decodedOvertimeRouteKey ||
+          String(row?.id || '') === decodedOvertimeRouteKey,
+      ) || null
     )
-  }, [adminOvertimeRows, decodedOvertimeRouteKey, selectedRecordFallback])
+  }, [adminOvertimeRows, decodedOvertimeRouteKey, selectedRecordFallback, user?.id])
 
   const selectedRecordApprovalHistory = useMemo(() => {
     if (!selectedRecord) return []
@@ -489,6 +551,10 @@ const OvertimeManagement = () => {
     hydrateOvertime,
     pushToast,
   })
+  const selectedRecordReviewActionConfig = useMemo(
+    () => (selectedRecord ? getOvertimeReviewActionConfig(selectedRecord) : null),
+    [getOvertimeReviewActionConfig, selectedRecord],
+  )
 
   const runBulkOvertimeWorkflowAction = useCallback(
     async ({ action, rows, remarks = '', declarationChecked = false } = {}) => {
@@ -660,7 +726,7 @@ const OvertimeManagement = () => {
   }
 
   return (
-    <CContainer fluid data-testid="overtime-management-module">
+    <CContainer fluid className="workflow-module-page" data-testid="overtime-management-module">
       <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
 
       <OvertimeWorkflowActionModal
@@ -739,12 +805,12 @@ const OvertimeManagement = () => {
                 overtimeSortOptions,
                 rows: filteredAdminOvertimeRows,
                 rowsToShow,
-                currentPage: recordsMeta.page,
-                lastPage: search.trim() ? 1 : recordsMeta.lastPage,
+                currentPage: currentRecordsMeta.page,
+                lastPage: search.trim() ? 1 : currentRecordsMeta.lastPage,
                 filteredCount: search.trim()
                   ? filteredAdminOvertimeRows.length
-                  : recordsMeta.filteredCount,
-                totalCount: recordsMeta.totalCount,
+                  : currentRecordsMeta.filteredCount,
+                totalCount: currentRecordsMeta.totalCount,
                 isLoading: isRecordsLoading,
                 getStatusBadge,
                 getStatusLabel: getOvertimeWorkflowStatusLabel,
@@ -795,11 +861,32 @@ const OvertimeManagement = () => {
             formatDate={formatOvertimeDate}
             formatDateTime={formatOvertimeDateTime}
             showGuidanceMetadata={showGuidanceMetadata}
+            showPageHeader
+            reviewerActions={
+              selectedRecordReviewActionConfig
+                ? {
+                    primaryLabel: selectedRecordReviewActionConfig.approveLabel,
+                    primaryDisabled: selectedRecordReviewActionConfig.approveDisabled,
+                    rejectDisabled: selectedRecordReviewActionConfig.rejectDisabled,
+                    correctionDisabled: selectedRecordReviewActionConfig.correctionDisabled,
+                    statusMessage: selectedRecordPendingActionHint,
+                    onPrimary: approveOvertime,
+                    onReject: rejectOvertime,
+                    onCorrection: requestOvertimeCorrection,
+                  }
+                : null
+            }
           />
         </div>
       )}
     </CContainer>
   )
+}
+
+const OvertimeManagement = () => {
+  const identityKey = useSelector((state) => resolveSensitiveIdentityKey(state.authUser))
+
+  return <OvertimeManagementContent key={`staff-overtime:${identityKey}`} />
 }
 
 export default OvertimeManagement

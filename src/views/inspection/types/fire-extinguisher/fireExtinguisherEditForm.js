@@ -233,14 +233,14 @@ export const AddFireExtinguisherForm = ({
         </div>
       ) : null}
       {presentation === 'drawer' && !editableLocation && locationMetadata.length > 0 ? (
-        <div className="fire-extinguisher-drawer-location-meta">
+        <dl className="fire-extinguisher-drawer-location-meta mb-0">
           {locationMetadata.map(([label, value]) => (
             <div key={label} className="fire-extinguisher-drawer-location-meta__item">
-              <span className="fire-extinguisher-drawer-location-meta__label">{label}</span>
-              <span className="fire-extinguisher-drawer-location-meta__value">{value}</span>
+              <dt className="fire-extinguisher-drawer-location-meta__label">{label}</dt>
+              <dd className="fire-extinguisher-drawer-location-meta__value mb-0">{value}</dd>
             </div>
           ))}
-        </div>
+        </dl>
       ) : null}
       <div
         className={presentation === 'drawer' ? 'fire-extinguisher-drawer-field-grid' : 'row g-2'}

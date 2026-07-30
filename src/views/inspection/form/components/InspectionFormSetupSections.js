@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { CButton, CCard, CCardBody, CCardHeader, CFormInput } from '@coreui/react'
-import { MoreVertical, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
-import IconOptionGrid from 'src/components/IconOptionGrid'
+import IconOptionGrid, { OptionMetaLabel } from 'src/components/IconOptionGrid'
+import RowActions from 'src/components/RowActions'
 import { ACTIVE_CARD_STYLE, TOGGLE_CARD_PROPS } from 'src/views/inspection/typeOptionUtils'
 import { INCIDENT_TYPE_TOGGLE_VALUE } from 'src/views/inspection/useIncidentTypeManager'
 import { LOCATION_TOGGLE_VALUE } from 'src/views/inspection/useLocationTypeManager'
@@ -16,9 +17,10 @@ import { extractFireExtinguisherSerial } from '../../types/fire-extinguisher/loc
 import { neutralizeCompletionPresentation } from '../../types/continuationHelpers'
 import {
   InspectionMobileCollapsedSelectorRow,
+  InspectionMobileChoiceList,
   InspectionMobileSetupDrawer,
-  InspectionMobileSelectorButtonGrid,
 } from './InspectionSetupSelectorControls'
+import MobileSetupSummaryList from 'src/components/report-workflow/MobileSetupSummaryList'
 
 const MOBILE_SETUP_DRAWERS = {
   type: 'type',
@@ -34,6 +36,28 @@ const FIRE_EXTINGUISHER_ENTRY_MODES = [
   { value: 'area', title: 'By Area' },
   { value: 'scan', title: 'Serial Number' },
 ]
+
+const MobileDrawerClearAction = ({ label, onClear }) =>
+  typeof onClear === 'function' ? (
+    <CButton
+      type="button"
+      color="danger"
+      variant="ghost"
+      size="sm"
+      className="inspection-mobile-setup-drawer__clear"
+      onClick={onClear}
+    >
+      {label}
+    </CButton>
+  ) : null
+
+const assignElementRef = (ref, element) => {
+  if (typeof ref === 'function') {
+    ref(element)
+    return
+  }
+  if (ref && typeof ref === 'object') ref.current = element
+}
 
 const DESKTOP_SETUP_OPTION_COLUMNS = { xs: 6, md: 4, xl: 3 }
 
@@ -150,33 +174,8 @@ const buildSelectedTruckDetails = ({
 }
 
 const FireTruckDetailsCard = ({ truck, onEdit, onDelete }) => {
-  const [actionsOpen, setActionsOpen] = useState(false)
-  const actionsRef = useRef(null)
   const plateNo = truck ? getTruckPlate(truck) : ''
   const canDelete = Boolean(truck && getTruckId(truck))
-  const closeAndRun = (callback) => {
-    setActionsOpen(false)
-    callback?.()
-  }
-
-  useEffect(() => {
-    if (!actionsOpen) return undefined
-
-    const handlePointerDown = (event) => {
-      if (actionsRef.current?.contains(event.target)) return
-      setActionsOpen(false)
-    }
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') setActionsOpen(false)
-    }
-
-    document.addEventListener('pointerdown', handlePointerDown)
-    document.addEventListener('keydown', handleKeyDown)
-    return () => {
-      document.removeEventListener('pointerdown', handlePointerDown)
-      document.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [actionsOpen])
 
   if (!truck) return null
 
@@ -184,41 +183,22 @@ const FireTruckDetailsCard = ({ truck, onEdit, onDelete }) => {
     <CCard className="inspection-hydraulic-card inspection-check-card">
       <CCardHeader className="inspection-hydraulic-card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
         <div className="fw-semibold text-muted">Truck Details</div>
-        <div ref={actionsRef} className="inspection-fire-truck-actions">
-          <CButton
-            type="button"
-            color="link"
-            size="sm"
-            className="inspection-fire-truck-actions__toggle border-0 shadow-none text-muted d-inline-flex align-items-center justify-content-center rounded"
-            aria-label={`Truck actions for ${plateNo || 'selected truck'}`}
-            aria-expanded={actionsOpen}
-            onClick={(event) => {
-              event.stopPropagation()
-              setActionsOpen((current) => !current)
-            }}
-          >
-            <MoreVertical size={16} />
-          </CButton>
-          {actionsOpen ? (
-            <div
-              className="inspection-fire-truck-actions__menu bg-body border rounded-3 shadow"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <button type="button" className="dropdown-item" onClick={() => closeAndRun(onEdit)}>
-                Edit Truck
-              </button>
-              {canDelete ? (
-                <button
-                  type="button"
-                  className="dropdown-item text-danger"
-                  onClick={() => closeAndRun(onDelete)}
-                >
-                  Delete Truck
-                </button>
-              ) : null}
-            </div>
-          ) : null}
-        </div>
+        <RowActions
+          iconSize={16}
+          hitArea={44}
+          toggleAriaLabel={`Truck actions for ${plateNo || 'selected truck'}`}
+          items={[
+            { key: 'edit', label: 'Edit Truck', onClick: onEdit },
+            canDelete
+              ? {
+                  key: 'delete',
+                  label: 'Delete Truck',
+                  className: 'text-danger',
+                  onClick: onDelete,
+                }
+              : null,
+          ].filter(Boolean)}
+        />
       </CCardHeader>
       <CCardBody className="inspection-hydraulic-card-body">
         <div className="row g-3">
@@ -1087,12 +1067,145 @@ const InspectionFormSetupSections = ({
 
   const showFireExtinguisherEntryModeChooser =
     !selectedFireExtinguisherEntryModeOption || isEditingFireExtinguisherEntryMode
+  const showSubLocationSetup =
+    shouldShowLocationPickers &&
+    mainLocation &&
+    supportsSubLocations &&
+    (subLocationOptionsWithCounts.length > 0 || subLocation)
+  const mobileSetupSummaryItems =
+    isCompactViewport && selectedType
+      ? [
+          isMobileTypeCollapsed
+            ? {
+                key: 'type',
+                label: 'Type',
+                value: selectedTypeLabel,
+                editLabel: `Edit type: ${selectedTypeLabel}`,
+                onEdit: () => setActiveMobileSetupDrawer(MOBILE_SETUP_DRAWERS.type),
+              }
+            : null,
+          isFireExtinguisherCatalogInspectionForm &&
+          !showFireExtinguisherEntryModeChooser &&
+          selectedFireExtinguisherEntryModeOption
+            ? {
+                key: 'inspection-mode',
+                label: 'Inspection mode',
+                value: selectedFireExtinguisherEntryModeOption.title,
+                editLabel: `Edit inspection mode: ${selectedFireExtinguisherEntryModeOption.title}`,
+                extraAction:
+                  isFireExtinguisherScanMode &&
+                  typeof fireExtinguisherScan?.onOpenScanner === 'function' ? (
+                    <CButton
+                      type="button"
+                      color="primary"
+                      variant="ghost"
+                      size="sm"
+                      className="mobile-setup-summary__action p-0 border-0 shadow-none"
+                      aria-label={CONTINUATION_SCAN_LABEL}
+                      title={CONTINUATION_SCAN_LABEL}
+                      onClick={fireExtinguisherScan.onOpenScanner}
+                    >
+                      <Plus size={18} aria-hidden="true" />
+                    </CButton>
+                  ) : null,
+                onEdit: editFireExtinguisherEntryMode,
+              }
+            : null,
+          hasFireExtinguisherEntryMode && shouldShowInspectionDateTime && hasInspectedAt
+            ? {
+                key: 'inspected-at',
+                label: 'Date and time',
+                value: inspectedAtDate,
+                secondaryValue: inspectedAtTime,
+                editLabel: `Edit date and time: ${inspectedAtDate} ${inspectedAtTime}`,
+                onEdit: () => setActiveMobileSetupDrawer(MOBILE_SETUP_DRAWERS.inspectedAt),
+              }
+            : null,
+          shouldShowFireExtinguisherScanLocationSummary
+            ? {
+                key: 'scan-location',
+                label: 'Location',
+                value: isFireExtinguisherScanLookupLoading
+                  ? `Checking ${scannedFireExtinguisherLocator || 'fire extinguisher'}...`
+                  : `Unit ${scannedFireExtinguisherLocator || 'FE'} is located at ${
+                      scannedFireExtinguisherLocationSummary || 'selected location'
+                    }.`,
+              }
+            : null,
+          shouldShowLocationPickers && isPrimaryLocationCollapsed
+            ? {
+                key: 'primary-location',
+                label: primaryCollapsedLabel,
+                value: selectedPrimaryLocationLabel,
+                onEdit: () => setActiveMobileSetupDrawer(MOBILE_SETUP_DRAWERS.primaryLocation),
+              }
+            : null,
+          shouldShowLocationPickers && hasZoneLocationFlow && zone && isMainAreaCollapsed
+            ? {
+                key: 'main-area',
+                label: mainAreaCollapsedLabel,
+                value: selectedMainAreaLabel,
+                metaIconKey: shouldShowFireExtinguisherContextCount
+                  ? selectedMainAreaCountOption?.metaIconKey
+                  : '',
+                metaLabel: shouldShowFireExtinguisherContextCount ? selectedMainAreaCountLabel : '',
+                metaTone: shouldShowFireExtinguisherContextCount
+                  ? selectedMainAreaCountOption?.metaTone
+                  : '',
+                onEdit: () => setActiveMobileSetupDrawer(MOBILE_SETUP_DRAWERS.mainArea),
+              }
+            : null,
+          showSubLocationSetup && isSubLocationCollapsed
+            ? {
+                key: 'sub-location',
+                label: subLocationCollapsedLabel,
+                value: selectedSubLocationLabel,
+                metaIconKey: shouldShowFireExtinguisherContextCount
+                  ? selectedSubLocationCountOption?.metaIconKey
+                  : '',
+                metaLabel: shouldShowFireExtinguisherContextCount
+                  ? selectedSubLocationCountLabel
+                  : '',
+                metaTone: shouldShowFireExtinguisherContextCount
+                  ? selectedSubLocationCountOption?.metaTone
+                  : '',
+                onEdit: () => setActiveMobileSetupDrawer(MOBILE_SETUP_DRAWERS.subLocation),
+              }
+            : null,
+        ].filter(Boolean)
+      : []
 
   return (
     <>
+      {mobileSetupSummaryItems.length > 0 ? (
+        <div
+          className="inspection-form-section inspection-mobile-setup-summary-section"
+          ref={(element) => {
+            assignElementRef(inspectionTypeRef, element)
+            assignElementRef(inspectedAtRef, element)
+            assignElementRef(selectedLocationRef, element)
+          }}
+        >
+          <MobileSetupSummaryList
+            ariaLabel="Inspection setup summary"
+            items={mobileSetupSummaryItems.map((item) => ({
+              ...item,
+              meta: item.metaLabel ? (
+                <OptionMetaLabel
+                  iconKey={item.metaIconKey}
+                  label={item.metaLabel}
+                  tone={item.metaTone}
+                />
+              ) : null,
+            }))}
+          />
+        </div>
+      ) : null}
       <div
-        className="inspection-form-section mobile-setup-picker d-grid gap-3"
-        ref={inspectionTypeRef}
+        className={`inspection-form-section mobile-setup-picker d-grid gap-3 ${
+          isMobileTypeCollapsed ? 'd-none d-md-grid' : ''
+        }`.trim()}
+        ref={isCompactViewport ? undefined : inspectionTypeRef}
       >
         {isMobileTypeCollapsed || isDesktopTypeCollapsed ? (
           <>
@@ -1106,15 +1219,6 @@ const InspectionFormSetupSections = ({
                   onClick={() => setIsEditingType(true)}
                 />
               </div>
-            ) : null}
-            {isCompactViewport ? (
-              <InspectionMobileCollapsedSelectorRow
-                label="Type"
-                value={selectedTypeLabel}
-                resetLabel="Reset type"
-                onReset={resetTypeSelection}
-                onEdit={() => setActiveMobileSetupDrawer(MOBILE_SETUP_DRAWERS.type)}
-              />
             ) : null}
             {!isCompactViewport ? (
               <InspectionSelectedTypeCard
@@ -1145,11 +1249,12 @@ const InspectionFormSetupSections = ({
               </div>
             </div>
             {isCompactViewport ? (
-              <InspectionMobileSelectorButtonGrid
+              <InspectionMobileChoiceList
                 options={incident.visibleTypeOptions}
                 value={selectedType}
                 onChange={handleTypeChange}
-                columns={{ xs: 12, md: 3 }}
+                toggleValue={INCIDENT_TYPE_TOGGLE_VALUE}
+                ariaLabel="Choose inspection type"
               />
             ) : (
               <IconOptionGrid
@@ -1175,7 +1280,11 @@ const InspectionFormSetupSections = ({
       {selectedType ? (
         <>
           {isFireExtinguisherCatalogInspectionForm ? (
-            <div className="inspection-form-section d-grid gap-3">
+            <div
+              className={`inspection-form-section d-grid gap-3 ${
+                isCompactViewport && !showFireExtinguisherEntryModeChooser ? 'd-none d-md-grid' : ''
+              }`.trim()}
+            >
               {showFireExtinguisherEntryModeChooser ? (
                 <>
                   <div className="fw-semibold text-muted">Choose Inspection Mode</div>
@@ -1202,7 +1311,7 @@ const InspectionFormSetupSections = ({
                     })}
                   </div>
                 </>
-              ) : (
+              ) : !isCompactViewport ? (
                 <InspectionMobileCollapsedSelectorRow
                   label="Inspection mode"
                   value={selectedFireExtinguisherEntryModeOption.title}
@@ -1228,28 +1337,21 @@ const InspectionFormSetupSections = ({
                   onEdit={editFireExtinguisherEntryMode}
                   onReset={resetFireExtinguisherEntryMode}
                 />
-              )}
+              ) : null}
             </div>
           ) : null}
 
           {hasFireExtinguisherEntryMode && shouldShowInspectionDateTime ? (
-            <div className="inspection-form-section d-grid gap-3" ref={inspectedAtRef}>
+            <div
+              className={`inspection-form-section d-grid gap-3 ${
+                isCompactViewport && hasInspectedAt ? 'd-none d-md-grid' : ''
+              }`.trim()}
+              ref={isCompactViewport && hasInspectedAt ? undefined : inspectedAtRef}
+            >
               <div className="d-none d-md-block fw-semibold text-muted">
                 Date and time of inspection
               </div>
-              {hasInspectedAt ? (
-                <div className="d-md-none">
-                  <InspectionMobileCollapsedSelectorRow
-                    label="Date and time"
-                    value={inspectedAtDate}
-                    secondaryValue={inspectedAtTime}
-                    editLabel="Edit date and time"
-                    resetLabel="Reset date and time"
-                    onReset={resetInspectedAt}
-                    onEdit={() => setActiveMobileSetupDrawer(MOBILE_SETUP_DRAWERS.inspectedAt)}
-                  />
-                </div>
-              ) : (
+              {hasInspectedAt ? null : (
                 <div className="inspection-mobile-datetime-card mobile-setup-input-card rounded-3 border d-md-none">
                   <label
                     className="inspection-mobile-datetime-label small text-muted"
@@ -1289,8 +1391,13 @@ const InspectionFormSetupSections = ({
             </div>
           ) : null}
 
-          {shouldShowFireExtinguisherScanLocationSummary ? (
-            <div className="inspection-form-section d-grid gap-3" ref={selectedLocationRef}>
+          {shouldShowFireExtinguisherScanLocationSummary && !isCompactViewport ? (
+            <div
+              className={`inspection-form-section d-grid gap-3 ${
+                isCompactViewport ? 'd-none d-md-grid' : ''
+              }`.trim()}
+              ref={isCompactViewport ? undefined : selectedLocationRef}
+            >
               <InspectionMobileCollapsedSelectorRow
                 label="Location"
                 value={
@@ -1310,7 +1417,12 @@ const InspectionFormSetupSections = ({
           ) : null}
 
           {shouldShowLocationPickers ? (
-            <div className="inspection-form-section d-grid gap-3" ref={selectedLocationRef}>
+            <div
+              className={`inspection-form-section d-grid gap-3 ${
+                isPrimaryLocationCollapsed ? 'd-none d-md-grid' : ''
+              }`.trim()}
+              ref={isPrimaryLocationCollapsed ? undefined : selectedLocationRef}
+            >
               {!isPrimaryLocationCollapsed ? (
                 <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
                   <div className="fw-semibold text-muted">
@@ -1333,28 +1445,30 @@ const InspectionFormSetupSections = ({
                   ) : null}
                 </div>
               ) : null}
-              <InspectionLocationOptionPicker
-                options={primaryLocationOptions}
-                visibleOptions={desktopPrimaryLocationVisibleOptions}
-                value={primaryLocationValue}
-                sectionLabel={primaryCollapsedLabel}
-                selectedLabel={selectedPrimaryLocationLabel}
-                isCompactViewport={isCompactViewport}
-                isExpanded={!isPrimaryLocationCollapsed}
-                onRequestEdit={() =>
-                  setActiveMobileSetupDrawer(MOBILE_SETUP_DRAWERS.primaryLocation)
-                }
-                onRequestReset={resetPrimaryLocation}
-                onChange={handlePrimaryLocationChange}
-                variant={setupOptionVariant}
-                showDescription
-                columns={DESKTOP_SETUP_OPTION_COLUMNS}
-                searchPlaceholder={primaryLocationSearchPlaceholder}
-                searchAriaLabel={primaryLocationSearchAriaLabel}
-                clearSearchAriaLabel={primaryLocationClearSearchAriaLabel}
-                toggleValue={primaryLocationToggleValue}
-                cardProps={locationCardProps}
-              />
+              {!isPrimaryLocationCollapsed ? (
+                <InspectionLocationOptionPicker
+                  options={primaryLocationOptions}
+                  visibleOptions={desktopPrimaryLocationVisibleOptions}
+                  value={primaryLocationValue}
+                  sectionLabel={primaryCollapsedLabel}
+                  selectedLabel={selectedPrimaryLocationLabel}
+                  isCompactViewport={isCompactViewport}
+                  isExpanded={!isPrimaryLocationCollapsed}
+                  onRequestEdit={() =>
+                    setActiveMobileSetupDrawer(MOBILE_SETUP_DRAWERS.primaryLocation)
+                  }
+                  onRequestReset={resetPrimaryLocation}
+                  onChange={handlePrimaryLocationChange}
+                  variant={setupOptionVariant}
+                  showDescription
+                  columns={DESKTOP_SETUP_OPTION_COLUMNS}
+                  searchPlaceholder={primaryLocationSearchPlaceholder}
+                  searchAriaLabel={primaryLocationSearchAriaLabel}
+                  clearSearchAriaLabel={primaryLocationClearSearchAriaLabel}
+                  toggleValue={primaryLocationToggleValue}
+                  cardProps={locationCardProps}
+                />
+              ) : null}
               <FormFieldError>
                 {fieldErrors.selectedLocation
                   ? selectedTypeDefinition?.mainLocationErrorLabel ||
@@ -1365,7 +1479,11 @@ const InspectionFormSetupSections = ({
           ) : null}
 
           {shouldShowLocationPickers && hasZoneLocationFlow && zone ? (
-            <div className="inspection-form-section d-grid gap-3">
+            <div
+              className={`inspection-form-section d-grid gap-3 ${
+                isMainAreaCollapsed ? 'd-none d-md-grid' : ''
+              }`.trim()}
+            >
               {!isMainAreaCollapsed ? (
                 <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
                   <div className="fw-semibold text-muted">Choose Main Area</div>
@@ -1378,47 +1496,50 @@ const InspectionFormSetupSections = ({
                   ) : null}
                 </div>
               ) : null}
-              <InspectionLocationOptionPicker
-                options={areaOptionsWithCounts}
-                visibleOptions={desktopMainAreaVisibleOptions}
-                value={mainLocation}
-                sectionLabel={mainAreaCollapsedLabel}
-                selectedLabel={selectedMainAreaLabel}
-                selectedMetaIconKey={
-                  shouldShowFireExtinguisherContextCount
-                    ? selectedMainAreaCountOption?.metaIconKey
-                    : ''
-                }
-                selectedMetaLabel={
-                  shouldShowFireExtinguisherContextCount ? selectedMainAreaCountLabel : ''
-                }
-                selectedMetaTone={
-                  shouldShowFireExtinguisherContextCount
-                    ? selectedMainAreaCountOption?.metaTone
-                    : ''
-                }
-                isCompactViewport={isCompactViewport}
-                isExpanded={!isMainAreaCollapsed}
-                onRequestEdit={() => setActiveMobileSetupDrawer(MOBILE_SETUP_DRAWERS.mainArea)}
-                onRequestReset={resetMainArea}
-                onChange={handleMainAreaChange}
-                variant={setupOptionVariant}
-                showDescription
-                columns={DESKTOP_SETUP_OPTION_COLUMNS}
-                searchPlaceholder="Search main area..."
-                searchAriaLabel="Search main area"
-                clearSearchAriaLabel="Clear main area search"
-                toggleValue={LOCATION_TOGGLE_VALUE}
-                cardProps={locationCardProps}
-              />
+              {!isMainAreaCollapsed ? (
+                <InspectionLocationOptionPicker
+                  options={areaOptionsWithCounts}
+                  visibleOptions={desktopMainAreaVisibleOptions}
+                  value={mainLocation}
+                  sectionLabel={mainAreaCollapsedLabel}
+                  selectedLabel={selectedMainAreaLabel}
+                  selectedMetaIconKey={
+                    shouldShowFireExtinguisherContextCount
+                      ? selectedMainAreaCountOption?.metaIconKey
+                      : ''
+                  }
+                  selectedMetaLabel={
+                    shouldShowFireExtinguisherContextCount ? selectedMainAreaCountLabel : ''
+                  }
+                  selectedMetaTone={
+                    shouldShowFireExtinguisherContextCount
+                      ? selectedMainAreaCountOption?.metaTone
+                      : ''
+                  }
+                  isCompactViewport={isCompactViewport}
+                  isExpanded={!isMainAreaCollapsed}
+                  onRequestEdit={() => setActiveMobileSetupDrawer(MOBILE_SETUP_DRAWERS.mainArea)}
+                  onRequestReset={resetMainArea}
+                  onChange={handleMainAreaChange}
+                  variant={setupOptionVariant}
+                  showDescription
+                  columns={DESKTOP_SETUP_OPTION_COLUMNS}
+                  searchPlaceholder="Search main area..."
+                  searchAriaLabel="Search main area"
+                  clearSearchAriaLabel="Clear main area search"
+                  toggleValue={LOCATION_TOGGLE_VALUE}
+                  cardProps={locationCardProps}
+                />
+              ) : null}
             </div>
           ) : null}
 
-          {shouldShowLocationPickers &&
-          mainLocation &&
-          supportsSubLocations &&
-          (subLocationOptionsWithCounts.length > 0 || subLocation) ? (
-            <div className="inspection-form-section d-grid gap-3">
+          {showSubLocationSetup ? (
+            <div
+              className={`inspection-form-section d-grid gap-3 ${
+                isSubLocationCollapsed ? 'd-none d-md-grid' : ''
+              }`.trim()}
+            >
               {!isSubLocationCollapsed ? (
                 <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
                   <div className="fw-semibold text-muted">
@@ -1449,7 +1570,7 @@ const InspectionFormSetupSections = ({
                   ) : null}
                 </div>
               ) : null}
-              {subLocationOptionsWithCounts.length > 0 ? (
+              {subLocationOptionsWithCounts.length > 0 && !isSubLocationCollapsed ? (
                 <InspectionLocationOptionPicker
                   options={subLocationOptionsWithCounts}
                   visibleOptions={desktopSubLocationVisibleOptions}
@@ -1503,12 +1624,13 @@ const InspectionFormSetupSections = ({
             onClose={closeMobileSetupDrawer}
           >
             <div className="d-grid gap-3">
-              <InspectionMobileSelectorButtonGrid
+              <InspectionMobileChoiceList
                 options={incident.typeOptions}
                 value={selectedType}
                 onChange={handleTypeChange}
-                columns={{ xs: 12, md: 3 }}
+                ariaLabel="Change inspection type"
               />
+              <MobileDrawerClearAction label="Clear type" onClear={resetTypeSelection} />
             </div>
           </InspectionMobileSetupDrawer>
 
@@ -1539,6 +1661,7 @@ const InspectionFormSetupSections = ({
               >
                 Done
               </CButton>
+              <MobileDrawerClearAction label="Clear date and time" onClear={resetInspectedAt} />
             </div>
           </InspectionMobileSetupDrawer>
 
@@ -1573,6 +1696,10 @@ const InspectionFormSetupSections = ({
                   )
                 })}
               </div>
+              <MobileDrawerClearAction
+                label="Clear inspection mode"
+                onClear={resetFireExtinguisherEntryMode}
+              />
             </div>
           </InspectionMobileSetupDrawer>
 
@@ -1613,6 +1740,10 @@ const InspectionFormSetupSections = ({
                   onDelete={deleteSelectedFireTruck}
                 />
               ) : null}
+              <MobileDrawerClearAction
+                label={`Clear ${primaryCollapsedLabel.toLowerCase()}`}
+                onClear={resetPrimaryLocation}
+              />
             </div>
           </InspectionMobileSetupDrawer>
 
@@ -1650,6 +1781,7 @@ const InspectionFormSetupSections = ({
                 toggleValue={LOCATION_TOGGLE_VALUE}
                 cardProps={locationCardProps}
               />
+              <MobileDrawerClearAction label="Clear main area" onClear={resetMainArea} />
             </div>
           </InspectionMobileSetupDrawer>
 
@@ -1694,6 +1826,10 @@ const InspectionFormSetupSections = ({
                 clearSearchAriaLabel={subLocationPickerClearSearchAriaLabel}
                 toggleValue={LOCATION_TOGGLE_VALUE}
                 cardProps={locationCardProps}
+              />
+              <MobileDrawerClearAction
+                label={`Clear ${subLocationCollapsedLabel.toLowerCase()}`}
+                onClear={resetSubLocation}
               />
             </div>
           </InspectionMobileSetupDrawer>

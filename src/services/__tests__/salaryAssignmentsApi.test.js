@@ -21,16 +21,6 @@ vi.mock('../apiClient', () => ({
   deleteSalaryAssignmentDraftApi: vi.fn(),
 }))
 
-vi.mock('src/views/payroll/components/salaryClaimAssignmentStorage', () => ({
-  loadSalaryAssignments: vi.fn(() => []),
-  saveSalaryAssignments: vi.fn(),
-  loadSalaryAssignmentDrafts: vi.fn(() => []),
-  saveSalaryAssignmentDrafts: vi.fn(),
-  upsertSalaryAssignmentDraft: vi.fn(),
-  renameSalaryAssignmentDraft: vi.fn(),
-  deleteSalaryAssignmentDraft: vi.fn(),
-}))
-
 describe('salaryAssignmentsApi', () => {
   beforeEach(() => {
     vi.clearAllMocks()

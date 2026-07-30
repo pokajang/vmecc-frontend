@@ -8,6 +8,7 @@ import {
 import { ROLE_OPTIONS } from 'src/constants/roles'
 import { loadStaffOvertimeRecordsApiFirst } from 'src/services/overtimeApi'
 import { loadStaffPayrollClaimsApiFirst } from 'src/services/payrollClaimsApi'
+import { createPayrollRequestContext } from 'src/services/payrollPrivacy'
 import {
   DEFAULT_SALARY_WORKFLOW_RULES,
   resolveSalaryWorkflowRule,
@@ -25,8 +26,10 @@ const useSalaryClaimsHydration = ({ user, isHrUser, pushToast, actionFilter = ''
     resolveSalaryWorkflowRule(DEFAULT_SALARY_WORKFLOW_RULES),
   )
   const [claimRows, setClaimRows] = useState([])
+  const [hydratedClaimsUserId, setHydratedClaimsUserId] = useState('')
   const [isClaimsLoading, setIsClaimsLoading] = useState(true)
   const [allOvertimeRecords, setAllOvertimeRecords] = useState([])
+  const [hydratedOvertimeUserId, setHydratedOvertimeUserId] = useState('')
   const lastContractWarningFingerprintRef = useRef('')
   const { loading: staffDirectoryLoading, optionsAll: staffDirectory } = useStaffDirectory({
     enabled: Boolean(user && isHrUser),
@@ -37,50 +40,65 @@ const useSalaryClaimsHydration = ({ user, isHrUser, pushToast, actionFilter = ''
     assignmentState
 
   const hydrateClaims = useCallback(async () => {
+    const requestContext = createPayrollRequestContext(user?.id)
+    setClaimRows([])
+    if (!user?.id) {
+      setHydratedClaimsUserId('')
+      setIsClaimsLoading(false)
+      requestContext.release()
+      return
+    }
     setIsClaimsLoading(true)
-    let workflowRule = resolveSalaryWorkflowRule(DEFAULT_SALARY_WORKFLOW_RULES)
     try {
-      const workflowResult = await fetchSalaryWorkflowRules()
-      workflowRule = resolveSalaryWorkflowRule(workflowResult?.data || {})
-    } catch {
-      // Keep deterministic defaults when settings API data is unavailable.
-    }
-    setSalaryWorkflowRule(workflowRule)
+      let workflowRule = resolveSalaryWorkflowRule(DEFAULT_SALARY_WORKFLOW_RULES)
+      try {
+        const workflowResult = await fetchSalaryWorkflowRules()
+        workflowRule = resolveSalaryWorkflowRule(workflowResult?.data || {})
+      } catch {
+        // Keep deterministic defaults when settings API data is unavailable.
+      }
+      if (!requestContext.isCurrent()) return
+      setSalaryWorkflowRule(workflowRule)
 
-    const apiResult = await loadStaffPayrollClaimsApiFirst(
-      actionFilter ? { action: actionFilter } : {},
-    )
-    const rows = Array.isArray(apiResult?.data) ? apiResult.data : []
-    if (!apiResult?.ok) {
-      pushToast('Unable to load staff payroll claims from API. Please retry.', {
-        title: 'Load failed',
-        color: 'danger',
-      })
-    }
-    const normalizedRows = rows.map((row) => normalizeClaimWorkflowRecord(row, workflowRule))
-    const contractIncompleteSalaryRows = normalizedRows.filter(
-      (row) => row?.type === 'salary' && row?.salaryContractIncomplete === true,
-    )
-    if (contractIncompleteSalaryRows.length > 0) {
-      const uniqueClaimIds = Array.from(
-        new Set(
-          contractIncompleteSalaryRows.map((row) => String(row?.id || '').trim()).filter(Boolean),
-        ),
+      const apiResult = await loadStaffPayrollClaimsApiFirst(
+        actionFilter ? { action: actionFilter } : {},
       )
-      const fingerprint = `${contractIncompleteSalaryRows.length}:${uniqueClaimIds.join('|')}`
-      if (lastContractWarningFingerprintRef.current !== fingerprint) {
-        lastContractWarningFingerprintRef.current = fingerprint
-        console.warn('[SalaryClaimsHydration] Incomplete salary contract fields detected', {
-          count: contractIncompleteSalaryRows.length,
-          claimIds: uniqueClaimIds.slice(0, 10),
+      if (!requestContext.isCurrent()) return
+      const rows = Array.isArray(apiResult?.data) ? apiResult.data : []
+      if (!apiResult?.ok) {
+        pushToast('Unable to load staff payroll claims from API. Please retry.', {
+          title: 'Load failed',
+          color: 'danger',
         })
       }
-    } else {
-      lastContractWarningFingerprintRef.current = ''
+      const normalizedRows = rows.map((row) => normalizeClaimWorkflowRecord(row, workflowRule))
+      setHydratedClaimsUserId(String(user.id))
+      const contractIncompleteSalaryRows = normalizedRows.filter(
+        (row) => row?.type === 'salary' && row?.salaryContractIncomplete === true,
+      )
+      if (contractIncompleteSalaryRows.length > 0) {
+        const uniqueClaimIds = Array.from(
+          new Set(
+            contractIncompleteSalaryRows.map((row) => String(row?.id || '').trim()).filter(Boolean),
+          ),
+        )
+        const fingerprint = `${contractIncompleteSalaryRows.length}:${uniqueClaimIds.join('|')}`
+        if (lastContractWarningFingerprintRef.current !== fingerprint) {
+          lastContractWarningFingerprintRef.current = fingerprint
+          console.warn('[SalaryClaimsHydration] Incomplete salary contract fields detected', {
+            count: contractIncompleteSalaryRows.length,
+            claimIds: uniqueClaimIds.slice(0, 10),
+          })
+        }
+      } else {
+        lastContractWarningFingerprintRef.current = ''
+      }
+      setClaimRows(normalizedRows)
+    } finally {
+      if (requestContext.isCurrent()) setIsClaimsLoading(false)
+      requestContext.release()
     }
-    setClaimRows(normalizedRows)
-    setIsClaimsLoading(false)
-  }, [actionFilter, pushToast])
+  }, [actionFilter, pushToast, user?.id])
 
   const hydrateOvertimeRates = useCallback(async () => {
     let next = defaultOvertimeRateSettings()
@@ -196,36 +214,51 @@ const useSalaryClaimsHydration = ({ user, isHrUser, pushToast, actionFilter = ''
 
   const hydrateOvertime = useCallback(
     async ({ showWarningToast = false } = {}) => {
-      const result = await loadStaffOvertimeRecordsApiFirst()
-      const effectiveRows = Array.isArray(result?.data) ? result.data : []
-      setAllOvertimeRecords(effectiveRows)
+      const requestContext = createPayrollRequestContext(user?.id)
+      try {
+        if (!user?.id) {
+          setAllOvertimeRecords([])
+          setHydratedOvertimeUserId('')
+          return { ok: false, data: [] }
+        }
+        const result = await loadStaffOvertimeRecordsApiFirst()
+        if (!requestContext.isCurrent()) return result
+        const effectiveRows = Array.isArray(result?.data) ? result.data : []
+        setAllOvertimeRecords(effectiveRows)
+        setHydratedOvertimeUserId(String(user?.id || ''))
 
-      if (showWarningToast && !result?.ok) {
-        pushToast('Unable to load staff overtime records from API. Please retry.', {
-          title: 'Data warning',
-          color: 'warning',
-        })
+        if (showWarningToast && !result?.ok) {
+          pushToast('Unable to load staff overtime records from API. Please retry.', {
+            title: 'Data warning',
+            color: 'warning',
+          })
+        }
+        return result
+      } finally {
+        requestContext.release()
       }
-      return result
     },
-    [pushToast],
+    [pushToast, user?.id],
   )
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setAllOvertimeRecords([])
     hydrateClaims()
     hydrateAssignments()
     hydrateOvertime({ showWarningToast: true })
     hydrateOvertimeRates()
   }, [hydrateAssignments, hydrateClaims, hydrateOvertime, hydrateOvertimeRates])
 
+  const hasCurrentClaimsIdentity = Boolean(user?.id) && String(user.id) === hydratedClaimsUserId
+  const hasCurrentOvertimeIdentity = Boolean(user?.id) && String(user.id) === hydratedOvertimeUserId
+
   return {
     salaryWorkflowRule,
-    claimRows,
-    isClaimsLoading,
+    claimRows: hasCurrentClaimsIdentity ? claimRows : [],
+    isClaimsLoading: Boolean(user?.id) && !hasCurrentClaimsIdentity ? true : isClaimsLoading,
     setClaimRows,
     hydrateClaims,
-    allOvertimeRecords,
+    allOvertimeRecords: hasCurrentOvertimeIdentity ? allOvertimeRecords : [],
     hydrateOvertime,
     staffDirectory,
     staffDirectoryLoading,

@@ -4,6 +4,7 @@ import {
   loadMyOvertimePolicyApiFirst,
   loadMyOvertimeRecordsApiFirst,
 } from 'src/services/overtimeApi'
+import { createPayrollRequestContext } from 'src/services/payrollPrivacy'
 import { DEFAULT_OVERTIME_APPROVAL_RULES, normalizeOvertimeApprovalRules } from '../overtimePolicy'
 import { normalizeOvertimeDraftPayload } from '../domain/overtimeFormDomain'
 
@@ -23,13 +24,15 @@ const useOvertimeData = ({
   const [overtimeDraft, setOvertimeDraft] = useState(null)
   const [isOvertimeLoading, setIsOvertimeLoading] = useState(true)
   const [isApiUnavailable, setIsApiUnavailable] = useState(false)
+  const [hydratedUserId, setHydratedUserId] = useState('')
 
   useEffect(() => {
-    if (!userId) return
-    if (canUseOvertimeModule && isOvertimeEligibilityLoading) return
-    let active = true
+    if (!userId) return undefined
+    if (canUseOvertimeModule && isOvertimeEligibilityLoading) return undefined
+    const requestContext = createPayrollRequestContext(userId)
     const hydrateRows = async () => {
       if (canUseOvertimeModule && overtimeEligibilityResolved && !isOvertimeEligibleEffective) {
+        setHydratedUserId(String(userId))
         setOvertimeRecords([])
         setOvertimeDraft(null)
         setIsApiUnavailable(false)
@@ -41,12 +44,13 @@ const useOvertimeData = ({
 
       setIsOvertimeLoading(true)
       const [loadedPolicy, loadedRecords, loadedDraft] = await Promise.all([
-        loadMyOvertimePolicyApiFirst(),
-        loadMyOvertimeRecordsApiFirst(userId),
-        loadMyOvertimeDraftApiFirst(userId),
+        loadMyOvertimePolicyApiFirst({ signal: requestContext.signal }),
+        loadMyOvertimeRecordsApiFirst(userId, {}, { signal: requestContext.signal }),
+        loadMyOvertimeDraftApiFirst(userId, { signal: requestContext.signal }),
       ])
-      if (!active) return
+      if (!requestContext.isCurrent()) return
 
+      setHydratedUserId(String(userId))
       setOvertimePolicy(
         normalizeOvertimeApprovalRules(loadedPolicy?.data || DEFAULT_OVERTIME_APPROVAL_RULES),
       )
@@ -72,10 +76,8 @@ const useOvertimeData = ({
       }
     }
 
-    hydrateRows()
-    return () => {
-      active = false
-    }
+    void hydrateRows().finally(requestContext.release)
+    return requestContext.abort
   }, [
     canUseOvertimeModule,
     isOvertimeEligibilityLoading,
@@ -86,16 +88,20 @@ const useOvertimeData = ({
     userId,
   ])
 
+  const hasCurrentIdentity = String(userId || '') === hydratedUserId
+
   return {
-    overtimePolicy,
+    overtimePolicy: hasCurrentIdentity
+      ? overtimePolicy
+      : normalizeOvertimeApprovalRules(DEFAULT_OVERTIME_APPROVAL_RULES),
     setOvertimePolicy,
-    overtimeRecords,
+    overtimeRecords: hasCurrentIdentity ? overtimeRecords : [],
     setOvertimeRecords,
-    overtimeDraft,
+    overtimeDraft: hasCurrentIdentity ? overtimeDraft : null,
     setOvertimeDraft,
-    isOvertimeLoading,
+    isOvertimeLoading: userId ? !hasCurrentIdentity || isOvertimeLoading : false,
     setIsOvertimeLoading,
-    isApiUnavailable,
+    isApiUnavailable: hasCurrentIdentity ? isApiUnavailable : false,
   }
 }
 

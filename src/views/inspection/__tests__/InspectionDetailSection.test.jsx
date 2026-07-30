@@ -80,7 +80,7 @@ describe('InspectionDetailSection', () => {
     expect(screen.getByText('Findings')).toBeTruthy()
     expect(screen.getByText('1. Blocked access near Zone A.')).toBeTruthy()
     expect(screen.getByText('Clear stored items.')).toBeTruthy()
-    expect(screen.getAllByText(INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle)).toHaveLength(2)
+    expect(screen.getAllByText(INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle)).toHaveLength(1)
     expect(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.remarksLabel)).toBeTruthy()
     expect(screen.getByText('Whole area was accessible except the west stairwell.')).toBeTruthy()
     expect(screen.getByText('General evidence photo')).toBeTruthy()

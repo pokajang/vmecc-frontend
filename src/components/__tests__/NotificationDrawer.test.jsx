@@ -23,6 +23,17 @@ afterEach(() => {
 })
 
 describe('NotificationDrawer focus behavior', () => {
+  it('does not leave closed notification content in the document', () => {
+    render(
+      <NotificationDrawer open={false} onClose={vi.fn()} title="Notifications" count={0}>
+        <button type="button">Private notification action</button>
+      </NotificationDrawer>,
+    )
+
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Private notification action' })).toBeNull()
+  })
+
   it('traps focus, closes on Escape, and restores focus to the trigger', async () => {
     const handleClose = vi.fn()
     const trigger = document.createElement('button')

@@ -448,6 +448,16 @@ export const useChronology = ({ form, setForm, pushToast }) => {
     setStartTimeEditMode(true)
   }
 
+  const handleUseIncidentTime = () => {
+    const incidentTime = String(form.incidentTime || '').trim()
+    if (parseTimeToMinutes(incidentTime) === null) {
+      setStartTimeEditMode(true)
+      return
+    }
+    setResponseStartTime(incidentTime)
+    setShowStartModeModal(true)
+  }
+
   const handleSaveResponseStartTime = () => {
     if (parseTimeToMinutes(responseStartTime) === null) {
       pushToast?.('Select a valid response start time first.', {
@@ -589,6 +599,7 @@ export const useChronology = ({ form, setForm, pushToast }) => {
 
     // Response start time actions
     handleSetResponseStartTime,
+    handleUseIncidentTime,
     handleSaveResponseStartTime,
     handleCancelResponseStartTimeEdit,
     applyStartMode,

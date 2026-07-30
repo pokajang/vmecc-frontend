@@ -10,6 +10,7 @@ import ExpenseOtherClaimForm from 'src/views/payroll/components/claim-form/Expen
 import ClaimTypeSelection from 'src/views/payroll/components/claim-form/ClaimTypeSelection'
 import SalaryClaimForm from 'src/views/payroll/components/claim-form/SalaryClaimForm'
 import useOvertimeEligibility from 'src/hooks/useOvertimeEligibility'
+import { resolveSensitiveIdentityKey } from 'src/services/payrollPrivacy'
 import ClaimActionModals from './components/ClaimActionModals'
 import ClaimDetailSection from './components/ClaimDetailSection'
 import ClaimsSection from './components/ClaimsSection'
@@ -31,7 +32,7 @@ const resolveActiveSection = (pathname) => {
   return 'claims'
 }
 
-const Payroll = () => {
+const PayrollContent = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const { claimId } = useParams()
@@ -259,7 +260,7 @@ const Payroll = () => {
   }
 
   return (
-    <CContainer fluid data-testid="payroll-module">
+    <CContainer fluid className="workflow-module-page" data-testid="payroll-module">
       <ModulePageHeader
         title="Payroll"
         actions={
@@ -402,6 +403,12 @@ const Payroll = () => {
       )}
     </CContainer>
   )
+}
+
+const Payroll = () => {
+  const identityKey = useSelector((state) => resolveSensitiveIdentityKey(state.authUser))
+
+  return <PayrollContent key={`payroll:${identityKey}`} />
 }
 
 export default Payroll

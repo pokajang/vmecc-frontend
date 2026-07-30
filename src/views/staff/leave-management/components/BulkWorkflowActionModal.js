@@ -1,15 +1,6 @@
 import React from 'react'
-import {
-  CButton,
-  CFormCheck,
-  CFormLabel,
-  CFormTextarea,
-  CModal,
-  CModalBody,
-  CModalFooter,
-  CModalHeader,
-  CModalTitle,
-} from '@coreui/react'
+import { CButton, CFormCheck, CFormLabel, CFormTextarea } from '@coreui/react'
+import ResponsiveWorkflowActionDialog from 'src/components/workflow/ResponsiveWorkflowActionDialog'
 import BulkActionButton from 'src/views/staff/components/BulkActionButton'
 
 const toPluralLabel = (value = 'record') => {
@@ -45,66 +36,70 @@ const BulkWorkflowActionModal = ({
       : `Bulk ${String(actionLabel).toLowerCase()} ${pluralLabel}`
   const submitLabel = action === 'reject' ? 'Reject selected' : `${actionLabel} selected`
 
+  const handleClose = () => {
+    if (!isSubmitting) onClose?.()
+  }
+  const body = (
+    <>
+      <div className="text-body-secondary">
+        {selectedCount} {selectedCount === 1 ? singularLabel : pluralLabel} selected.
+      </div>
+      {action === 'reject' ? (
+        <>
+          <CFormLabel htmlFor="bulk-workflow-reject-remarks">Remarks</CFormLabel>
+          <CFormTextarea
+            id="bulk-workflow-reject-remarks"
+            rows={4}
+            value={remarks}
+            onChange={(event) => {
+              onRemarksChange?.(event.target.value)
+              if (rejectError && String(event.target.value || '').trim()) {
+                onClearRejectError?.()
+              }
+            }}
+          />
+          {rejectError ? <div className="text-danger small">{rejectError}</div> : null}
+        </>
+      ) : (
+        <>
+          <CFormCheck
+            id="bulk-workflow-approve-declaration"
+            label={declarationLabel}
+            checked={declarationChecked}
+            onChange={(event) => {
+              onDeclarationChange?.(event.target.checked)
+              if (event.target.checked && declarationError) {
+                onClearDeclarationError?.()
+              }
+            }}
+          />
+          {declarationError ? <div className="text-danger small">{declarationError}</div> : null}
+        </>
+      )}
+    </>
+  )
+  const footer = (
+    <>
+      <CButton color="secondary" variant="outline" onClick={onClose} disabled={isSubmitting}>
+        Cancel
+      </CButton>
+      <BulkActionButton
+        label={submitLabel}
+        intent={action === 'reject' ? 'reject' : 'approve'}
+        onClick={onSubmit}
+        disabled={isSubmitting}
+      />
+    </>
+  )
+
   return (
-    <CModal
+    <ResponsiveWorkflowActionDialog
       visible={visible}
-      alignment="center"
-      onClose={() => {
-        if (!isSubmitting) onClose?.()
-      }}
-    >
-      <CModalHeader>
-        <CModalTitle>{title}</CModalTitle>
-      </CModalHeader>
-      <CModalBody className="d-grid gap-3">
-        <div className="text-body-secondary">
-          {selectedCount} {selectedCount === 1 ? singularLabel : pluralLabel} selected.
-        </div>
-        {action === 'reject' ? (
-          <>
-            <CFormLabel htmlFor="bulk-workflow-reject-remarks">Remarks</CFormLabel>
-            <CFormTextarea
-              id="bulk-workflow-reject-remarks"
-              rows={4}
-              value={remarks}
-              onChange={(event) => {
-                onRemarksChange?.(event.target.value)
-                if (rejectError && String(event.target.value || '').trim()) {
-                  onClearRejectError?.()
-                }
-              }}
-            />
-            {rejectError ? <div className="text-danger small">{rejectError}</div> : null}
-          </>
-        ) : (
-          <>
-            <CFormCheck
-              id="bulk-workflow-approve-declaration"
-              label={declarationLabel}
-              checked={declarationChecked}
-              onChange={(event) => {
-                onDeclarationChange?.(event.target.checked)
-                if (event.target.checked && declarationError) {
-                  onClearDeclarationError?.()
-                }
-              }}
-            />
-            {declarationError ? <div className="text-danger small">{declarationError}</div> : null}
-          </>
-        )}
-      </CModalBody>
-      <CModalFooter>
-        <CButton color="secondary" variant="outline" onClick={onClose} disabled={isSubmitting}>
-          Cancel
-        </CButton>
-        <BulkActionButton
-          label={submitLabel}
-          intent={action === 'reject' ? 'reject' : 'approve'}
-          onClick={onSubmit}
-          disabled={isSubmitting}
-        />
-      </CModalFooter>
-    </CModal>
+      title={title}
+      body={body}
+      footer={footer}
+      onClose={handleClose}
+    />
   )
 }
 

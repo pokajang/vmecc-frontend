@@ -15,10 +15,10 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     </div>
   </div>
   <div
-    class="card inspection-general-evidence-card"
+    class="inspection-general-evidence-section inspection-evidence--inline d-grid gap-3"
   >
     <div
-      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+      class="flex-wrap justify-content-between align-items-center gap-2 d-flex"
     >
       <div
         class="fw-semibold"
@@ -98,7 +98,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       </div>
     </div>
     <div
-      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+      class="d-grid gap-3"
     >
       <div
         class="small text-body-secondary"
@@ -215,66 +215,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
-      <button
-        class="btn btn-primary disabled"
-        disabled=""
-        title="Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item."
-        type="button"
-      >
-        Continue to Review
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-        <button
-          class="btn btn-primary inspection-form-sticky-review-btn disabled"
-          disabled=""
-          title="Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item."
-          type="button"
-        >
-          Continue to Review
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -347,66 +333,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
-      <button
-        class="btn btn-primary disabled"
-        disabled=""
-        title="Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item."
-        type="button"
-      >
-        Continue to Review
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-        <button
-          class="btn btn-primary inspection-form-sticky-review-btn disabled"
-          disabled=""
-          title="Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item."
-          type="button"
-        >
-          Continue to Review
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -426,10 +398,10 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     </div>
   </div>
   <div
-    class="card inspection-general-evidence-card"
+    class="inspection-general-evidence-section inspection-evidence--inline d-grid gap-3"
   >
     <div
-      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+      class="flex-wrap justify-content-between align-items-center gap-2 d-flex"
     >
       <div
         class="fw-semibold"
@@ -509,7 +481,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       </div>
     </div>
     <div
-      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+      class="d-grid gap-3"
     >
       <div
         class="small text-body-secondary"
@@ -626,50 +598,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every fire extinguisher status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete every fire extinguisher status."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every fire extinguisher status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -742,50 +716,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every fire extinguisher status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete every fire extinguisher status."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every fire extinguisher status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -805,10 +781,10 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     </div>
   </div>
   <div
-    class="card inspection-general-evidence-card"
+    class="inspection-general-evidence-section inspection-evidence--inline d-grid gap-3"
   >
     <div
-      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+      class="flex-wrap justify-content-between align-items-center gap-2 d-flex"
     >
       <div
         class="fw-semibold"
@@ -888,7 +864,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       </div>
     </div>
     <div
-      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+      class="d-grid gap-3"
     >
       <div
         class="small text-body-secondary"
@@ -1005,50 +981,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every FRT daily status or reading; complete every FRT one-off condition.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete every FRT daily status or reading; complete every FRT one-off condition."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every FRT daily status or reading; complete every FRT one-off condition.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -1121,50 +1099,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every FRT daily status or reading; complete every FRT one-off condition.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete every FRT daily status or reading; complete every FRT one-off condition."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every FRT daily status or reading; complete every FRT one-off condition.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -1177,14 +1157,22 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     <div
       class="d-flex flex-wrap align-items-center justify-content-between gap-2"
     >
-      <label
-        class="form-label fw-semibold text-muted mb-0"
+      <div
+        class="inspection-section-heading d-flex flex-wrap align-items-start justify-content-between gap-2"
       >
-        Findings
-      </label>
+        <div
+          class="min-w-0"
+        >
+          <h3
+            class="inspection-section-heading__title mb-0"
+          >
+            Findings
+          </h3>
+        </div>
+      </div>
     </div>
     <div
-      class="rounded-3 border bg-light-subtle p-3 d-flex flex-wrap align-items-center justify-content-between gap-2"
+      class="inspection-inset d-flex flex-wrap align-items-center justify-content-between gap-2"
     >
       <span
         class="text-body-secondary"
@@ -1221,10 +1209,10 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     </div>
   </div>
   <div
-    class="card inspection-general-evidence-card"
+    class="inspection-general-evidence-section inspection-evidence--inline d-grid gap-3"
   >
     <div
-      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+      class="flex-wrap justify-content-between align-items-center gap-2 d-flex"
     >
       <div
         class="fw-semibold"
@@ -1304,7 +1292,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       </div>
     </div>
     <div
-      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+      class="d-grid gap-3"
     >
       <div
         class="small text-body-secondary"
@@ -1402,50 +1390,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; add and complete at least one finding.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; add and complete at least one finding."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; add and complete at least one finding.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -1458,14 +1448,22 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     <div
       class="d-flex flex-wrap align-items-center justify-content-between gap-2"
     >
-      <label
-        class="form-label fw-semibold text-muted mb-0"
+      <div
+        class="inspection-section-heading d-flex flex-wrap align-items-start justify-content-between gap-2"
       >
-        Findings
-      </label>
+        <div
+          class="min-w-0"
+        >
+          <h3
+            class="inspection-section-heading__title mb-0"
+          >
+            Findings
+          </h3>
+        </div>
+      </div>
     </div>
     <div
-      class="rounded-3 border bg-light-subtle p-3 d-flex flex-wrap align-items-center justify-content-between gap-2"
+      class="inspection-inset d-flex flex-wrap align-items-center justify-content-between gap-2"
     >
       <span
         class="text-body-secondary"
@@ -1536,50 +1534,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; add and complete at least one finding.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; add and complete at least one finding."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; add and complete at least one finding.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -1602,38 +1602,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
-      <button
-        class="btn btn-primary"
-        type="button"
+      <div
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Submit Report
-      </button>
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Submit Report
+          </button>
+        </div>
+      </div>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-actions"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        <button
-          class="btn btn-primary inspection-form-sticky-review-btn"
-          type="button"
+        <div
+          class="action-row-thumb-actions"
         >
-          Submit Report
-        </button>
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Submit Report
+          </button>
+        </div>
       </div>
+      <div
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -1656,38 +1670,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
-      <button
-        class="btn btn-primary"
-        type="button"
+      <div
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Submit Report
-      </button>
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Submit Report
+          </button>
+        </div>
+      </div>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-actions"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        <button
-          class="btn btn-primary inspection-form-sticky-review-btn"
-          type="button"
+        <div
+          class="action-row-thumb-actions"
         >
-          Submit Report
-        </button>
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Submit Report
+          </button>
+        </div>
       </div>
+      <div
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -1707,10 +1735,10 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     </div>
   </div>
   <div
-    class="card inspection-general-evidence-card"
+    class="inspection-general-evidence-section inspection-evidence--inline d-grid gap-3"
   >
     <div
-      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+      class="flex-wrap justify-content-between align-items-center gap-2 d-flex"
     >
       <div
         class="fw-semibold"
@@ -1790,7 +1818,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       </div>
     </div>
     <div
-      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+      class="d-grid gap-3"
     >
       <div
         class="small text-body-secondary"
@@ -1907,50 +1935,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every High Angle equipment condition.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete every High Angle equipment condition."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every High Angle equipment condition.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -2023,50 +2053,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every High Angle equipment condition.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete every High Angle equipment condition."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every High Angle equipment condition.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -2086,10 +2118,10 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     </div>
   </div>
   <div
-    class="card inspection-general-evidence-card"
+    class="inspection-general-evidence-section inspection-evidence--inline d-grid gap-3"
   >
     <div
-      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+      class="flex-wrap justify-content-between align-items-center gap-2 d-flex"
     >
       <div
         class="fw-semibold"
@@ -2169,7 +2201,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       </div>
     </div>
     <div
-      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+      class="d-grid gap-3"
     >
       <div
         class="small text-body-secondary"
@@ -2286,50 +2318,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every hydraulic equipment status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete every hydraulic equipment status."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every hydraulic equipment status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -2402,50 +2436,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every hydraulic equipment status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete every hydraulic equipment status."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every hydraulic equipment status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -2465,10 +2501,10 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     </div>
   </div>
   <div
-    class="card inspection-general-evidence-card"
+    class="inspection-general-evidence-section inspection-evidence--inline d-grid gap-3"
   >
     <div
-      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+      class="flex-wrap justify-content-between align-items-center gap-2 d-flex"
     >
       <div
         class="fw-semibold"
@@ -2548,7 +2584,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       </div>
     </div>
     <div
-      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+      class="d-grid gap-3"
     >
       <div
         class="small text-body-secondary"
@@ -2665,50 +2701,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every required SCBA status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete every required SCBA status."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every required SCBA status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -2781,50 +2819,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every required SCBA status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete every required SCBA status."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every required SCBA status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -2876,10 +2916,10 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     </div>
   </div>
   <div
-    class="card inspection-general-evidence-card"
+    class="inspection-general-evidence-section inspection-evidence--inline d-grid gap-3"
   >
     <div
-      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+      class="flex-wrap justify-content-between align-items-center gap-2 d-flex"
     >
       <div
         class="fw-semibold"
@@ -2959,7 +2999,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       </div>
     </div>
     <div
-      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+      class="d-grid gap-3"
     >
       <div
         class="small text-body-secondary"
@@ -2993,66 +3033,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
-      <button
-        class="btn btn-primary disabled"
-        disabled=""
-        title="Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item."
-        type="button"
-      >
-        Continue to Review
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-        <button
-          class="btn btn-primary inspection-form-sticky-review-btn disabled"
-          disabled=""
-          title="Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item."
-          type="button"
-        >
-          Continue to Review
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -3106,66 +3132,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
-      <button
-        class="btn btn-primary disabled"
-        disabled=""
-        title="Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item."
-        type="button"
-      >
-        Continue to Review
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-        <button
-          class="btn btn-primary inspection-form-sticky-review-btn disabled"
-          disabled=""
-          title="Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item."
-          type="button"
-        >
-          Continue to Review
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -3185,10 +3197,10 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     </div>
   </div>
   <div
-    class="card inspection-general-evidence-card"
+    class="inspection-general-evidence-section inspection-evidence--inline d-grid gap-3"
   >
     <div
-      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+      class="flex-wrap justify-content-between align-items-center gap-2 d-flex"
     >
       <div
         class="fw-semibold"
@@ -3268,7 +3280,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       </div>
     </div>
     <div
-      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+      class="d-grid gap-3"
     >
       <div
         class="small text-body-secondary"
@@ -3302,50 +3314,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every fire extinguisher status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete every fire extinguisher status."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every fire extinguisher status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -3399,50 +3413,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every fire extinguisher status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete every fire extinguisher status."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every fire extinguisher status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -3462,10 +3478,10 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     </div>
   </div>
   <div
-    class="card inspection-general-evidence-card"
+    class="inspection-general-evidence-section inspection-evidence--inline d-grid gap-3"
   >
     <div
-      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+      class="flex-wrap justify-content-between align-items-center gap-2 d-flex"
     >
       <div
         class="fw-semibold"
@@ -3545,7 +3561,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       </div>
     </div>
     <div
-      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+      class="d-grid gap-3"
     >
       <div
         class="small text-body-secondary"
@@ -3579,50 +3595,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every FRT daily status or reading; complete every FRT one-off condition.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete every FRT daily status or reading; complete every FRT one-off condition."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every FRT daily status or reading; complete every FRT one-off condition.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -3676,50 +3694,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every FRT daily status or reading; complete every FRT one-off condition.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete every FRT daily status or reading; complete every FRT one-off condition."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every FRT daily status or reading; complete every FRT one-off condition.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -3732,14 +3752,22 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     <div
       class="d-flex flex-wrap align-items-center justify-content-between gap-2"
     >
-      <label
-        class="form-label fw-semibold text-muted mb-0"
+      <div
+        class="inspection-section-heading d-flex flex-wrap align-items-start justify-content-between gap-2"
       >
-        Findings
-      </label>
+        <div
+          class="min-w-0"
+        >
+          <h3
+            class="inspection-section-heading__title mb-0"
+          >
+            Findings
+          </h3>
+        </div>
+      </div>
     </div>
     <div
-      class="rounded-3 border bg-light-subtle p-3 d-flex flex-wrap align-items-center justify-content-between gap-2"
+      class="inspection-inset d-flex flex-wrap align-items-center justify-content-between gap-2"
     >
       <span
         class="text-body-secondary"
@@ -3776,10 +3804,10 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     </div>
   </div>
   <div
-    class="card inspection-general-evidence-card"
+    class="inspection-general-evidence-section inspection-evidence--inline d-grid gap-3"
   >
     <div
-      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+      class="flex-wrap justify-content-between align-items-center gap-2 d-flex"
     >
       <div
         class="fw-semibold"
@@ -3859,7 +3887,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       </div>
     </div>
     <div
-      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+      class="d-grid gap-3"
     >
       <div
         class="small text-body-secondary"
@@ -3893,50 +3921,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; add and complete at least one finding.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; add and complete at least one finding."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; add and complete at least one finding.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -3949,14 +3979,22 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     <div
       class="d-flex flex-wrap align-items-center justify-content-between gap-2"
     >
-      <label
-        class="form-label fw-semibold text-muted mb-0"
+      <div
+        class="inspection-section-heading d-flex flex-wrap align-items-start justify-content-between gap-2"
       >
-        Findings
-      </label>
+        <div
+          class="min-w-0"
+        >
+          <h3
+            class="inspection-section-heading__title mb-0"
+          >
+            Findings
+          </h3>
+        </div>
+      </div>
     </div>
     <div
-      class="rounded-3 border bg-light-subtle p-3 d-flex flex-wrap align-items-center justify-content-between gap-2"
+      class="inspection-inset d-flex flex-wrap align-items-center justify-content-between gap-2"
     >
       <span
         class="text-body-secondary"
@@ -4027,50 +4065,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; add and complete at least one finding.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; add and complete at least one finding."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; add and complete at least one finding.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -4093,50 +4133,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: complete the required HSE observation details.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Submit Report
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: complete the required HSE observation details."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: complete the required HSE observation details.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Submit Report
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -4159,50 +4201,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: complete the required HSE observation details.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Submit Report
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: complete the required HSE observation details."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: complete the required HSE observation details.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Submit Report
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -4222,10 +4266,10 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     </div>
   </div>
   <div
-    class="card inspection-general-evidence-card"
+    class="inspection-general-evidence-section inspection-evidence--inline d-grid gap-3"
   >
     <div
-      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+      class="flex-wrap justify-content-between align-items-center gap-2 d-flex"
     >
       <div
         class="fw-semibold"
@@ -4305,7 +4349,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       </div>
     </div>
     <div
-      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+      class="d-grid gap-3"
     >
       <div
         class="small text-body-secondary"
@@ -4339,50 +4383,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every High Angle equipment condition.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete every High Angle equipment condition."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every High Angle equipment condition.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -4436,50 +4482,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every High Angle equipment condition.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete every High Angle equipment condition."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every High Angle equipment condition.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -4499,10 +4547,10 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     </div>
   </div>
   <div
-    class="card inspection-general-evidence-card"
+    class="inspection-general-evidence-section inspection-evidence--inline d-grid gap-3"
   >
     <div
-      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+      class="flex-wrap justify-content-between align-items-center gap-2 d-flex"
     >
       <div
         class="fw-semibold"
@@ -4582,7 +4630,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       </div>
     </div>
     <div
-      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+      class="d-grid gap-3"
     >
       <div
         class="small text-body-secondary"
@@ -4616,50 +4664,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every hydraulic equipment status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete every hydraulic equipment status."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every hydraulic equipment status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -4713,50 +4763,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every hydraulic equipment status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete every hydraulic equipment status."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every hydraulic equipment status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -4776,10 +4828,10 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     </div>
   </div>
   <div
-    class="card inspection-general-evidence-card"
+    class="inspection-general-evidence-section inspection-evidence--inline d-grid gap-3"
   >
     <div
-      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+      class="flex-wrap justify-content-between align-items-center gap-2 d-flex"
     >
       <div
         class="fw-semibold"
@@ -4859,7 +4911,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       </div>
     </div>
     <div
-      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+      class="d-grid gap-3"
     >
       <div
         class="small text-body-secondary"
@@ -4893,50 +4945,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every required SCBA status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete every required SCBA status."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every required SCBA status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -4990,50 +5044,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every required SCBA status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete every required SCBA status."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every required SCBA status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -5053,10 +5109,10 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
     </div>
   </div>
   <div
-    class="card inspection-general-evidence-card"
+    class="inspection-general-evidence-section inspection-evidence--inline d-grid gap-3"
   >
     <div
-      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+      class="flex-wrap justify-content-between align-items-center gap-2 d-flex"
     >
       <div
         class="fw-semibold"
@@ -5136,7 +5192,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
       </div>
     </div>
     <div
-      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+      class="d-grid gap-3"
     >
       <div
         class="small text-body-secondary"
@@ -5170,66 +5226,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
-      <button
-        class="btn btn-primary disabled"
-        disabled=""
-        title="Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item."
-        type="button"
-      >
-        Continue to Review
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-        <button
-          class="btn btn-primary inspection-form-sticky-review-btn disabled"
-          disabled=""
-          title="Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item."
-          type="button"
-        >
-          Continue to Review
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -5283,66 +5325,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
-      <button
-        class="btn btn-primary disabled"
-        disabled=""
-        title="Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item."
-        type="button"
-      >
-        Continue to Review
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-        <button
-          class="btn btn-primary inspection-form-sticky-review-btn disabled"
-          disabled=""
-          title="Cannot continue to review: set the inspection date and time; complete the quantity and condition for every ER Aux item."
-          type="button"
-        >
-          Continue to Review
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -5353,9 +5381,19 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
     class="inspection-form-section inspection-form-body-start"
   >
     <div
-      class="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 text-body-secondary"
+      class="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 d-flex flex-wrap align-items-center justify-content-between gap-3"
     >
-      Choose a location to load fire extinguishers.
+      <div
+        class="fw-semibold"
+      >
+        No extinguisher location selected
+      </div>
+      <button
+        class="btn btn-outline-primary"
+        type="button"
+      >
+        Choose location
+      </button>
     </div>
   </div>
 </div>
@@ -5367,9 +5405,19 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
     class="inspection-form-section inspection-form-body-start"
   >
     <div
-      class="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 text-body-secondary"
+      class="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 d-flex flex-wrap align-items-center justify-content-between gap-3"
     >
-      Choose a location to load fire extinguishers.
+      <div
+        class="fw-semibold"
+      >
+        No extinguisher location selected
+      </div>
+      <button
+        class="btn btn-outline-primary"
+        type="button"
+      >
+        Choose location
+      </button>
     </div>
   </div>
 </div>
@@ -5381,9 +5429,19 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
     class="inspection-form-section inspection-form-body-start"
   >
     <div
-      class="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 text-body-secondary"
+      class="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 d-flex flex-wrap align-items-center justify-content-between gap-3"
     >
-      Choose a compartment to load fire truck readiness items.
+      <div
+        class="fw-semibold"
+      >
+        No compartment selected
+      </div>
+      <button
+        class="btn btn-outline-primary"
+        type="button"
+      >
+        Choose compartment
+      </button>
     </div>
   </div>
 </div>
@@ -5395,9 +5453,19 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
     class="inspection-form-section inspection-form-body-start"
   >
     <div
-      class="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 text-body-secondary"
+      class="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 d-flex flex-wrap align-items-center justify-content-between gap-3"
     >
-      Choose a compartment to load fire truck readiness items.
+      <div
+        class="fw-semibold"
+      >
+        No compartment selected
+      </div>
+      <button
+        class="btn btn-outline-primary"
+        type="button"
+      >
+        Choose compartment
+      </button>
     </div>
   </div>
 </div>
@@ -5409,9 +5477,21 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
     class="inspection-form-section inspection-form-body-start"
   >
     <div
-      class="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 text-body-secondary"
+      class="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 d-flex flex-wrap align-items-center justify-content-between gap-3"
     >
-      Choose a location to continue inspection.
+      <div>
+        <div
+          class="fw-semibold"
+        >
+          No location selected
+        </div>
+      </div>
+      <button
+        class="btn btn-outline-primary"
+        type="button"
+      >
+        Choose location
+      </button>
     </div>
   </div>
 </div>
@@ -5423,9 +5503,21 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
     class="inspection-form-section inspection-form-body-start"
   >
     <div
-      class="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 text-body-secondary"
+      class="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 d-flex flex-wrap align-items-center justify-content-between gap-3"
     >
-      Choose a location to continue inspection.
+      <div>
+        <div
+          class="fw-semibold"
+        >
+          No location selected
+        </div>
+      </div>
+      <button
+        class="btn btn-outline-primary"
+        type="button"
+      >
+        Choose location
+      </button>
     </div>
   </div>
 </div>
@@ -5437,9 +5529,21 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
     class="inspection-form-section inspection-form-body-start"
   >
     <div
-      class="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 text-body-secondary"
+      class="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 d-flex flex-wrap align-items-center justify-content-between gap-3"
     >
-      Choose a location to continue inspection.
+      <div>
+        <div
+          class="fw-semibold"
+        >
+          No location selected
+        </div>
+      </div>
+      <button
+        class="btn btn-outline-primary"
+        type="button"
+      >
+        Choose location
+      </button>
     </div>
   </div>
 </div>
@@ -5451,9 +5555,21 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
     class="inspection-form-section inspection-form-body-start"
   >
     <div
-      class="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 text-body-secondary"
+      class="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 d-flex flex-wrap align-items-center justify-content-between gap-3"
     >
-      Choose a location to continue inspection.
+      <div>
+        <div
+          class="fw-semibold"
+        >
+          No location selected
+        </div>
+      </div>
+      <button
+        class="btn btn-outline-primary"
+        type="button"
+      >
+        Choose location
+      </button>
     </div>
   </div>
 </div>
@@ -5474,10 +5590,10 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
     </div>
   </div>
   <div
-    class="card inspection-general-evidence-card"
+    class="inspection-general-evidence-section inspection-evidence--inline d-grid gap-3"
   >
     <div
-      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+      class="flex-wrap justify-content-between align-items-center gap-2 d-flex"
     >
       <div
         class="fw-semibold"
@@ -5557,7 +5673,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
       </div>
     </div>
     <div
-      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+      class="d-grid gap-3"
     >
       <div
         class="small text-body-secondary"
@@ -5591,50 +5707,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every High Angle equipment condition.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete every High Angle equipment condition."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every High Angle equipment condition.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -5688,50 +5806,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every High Angle equipment condition.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete every High Angle equipment condition."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every High Angle equipment condition.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -5751,10 +5871,10 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
     </div>
   </div>
   <div
-    class="card inspection-general-evidence-card"
+    class="inspection-general-evidence-section inspection-evidence--inline d-grid gap-3"
   >
     <div
-      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+      class="flex-wrap justify-content-between align-items-center gap-2 d-flex"
     >
       <div
         class="fw-semibold"
@@ -5834,7 +5954,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
       </div>
     </div>
     <div
-      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+      class="d-grid gap-3"
     >
       <div
         class="small text-body-secondary"
@@ -5868,50 +5988,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every hydraulic equipment status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete every hydraulic equipment status."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every hydraulic equipment status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -5965,50 +6087,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every hydraulic equipment status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete every hydraulic equipment status."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every hydraulic equipment status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -6028,10 +6152,10 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
     </div>
   </div>
   <div
-    class="card inspection-general-evidence-card"
+    class="inspection-general-evidence-section inspection-evidence--inline d-grid gap-3"
   >
     <div
-      class="card-header inspection-general-evidence-card-header d-flex flex-wrap justify-content-between align-items-center gap-2"
+      class="flex-wrap justify-content-between align-items-center gap-2 d-flex"
     >
       <div
         class="fw-semibold"
@@ -6111,7 +6235,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
       </div>
     </div>
     <div
-      class="card-body inspection-general-evidence-card-body d-grid gap-3"
+      class="d-grid gap-3"
     >
       <div
         class="small text-body-secondary"
@@ -6145,50 +6269,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every required SCBA status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete every required SCBA status."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every required SCBA status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;
@@ -6242,50 +6368,52 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
     class="d-grid gap-2 d-none d-md-grid"
   >
     <div
-      class="inspection-form-actions d-flex flex-column flex-sm-row justify-content-end gap-2"
+      class="workflow-stage-actions"
     >
       <div
-        aria-live="polite"
-        class="inspection-draft-status small text-body-secondary me-sm-auto align-self-sm-center"
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every required SCBA status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
-      <button
-        class="btn btn-outline-secondary"
-        type="button"
-      >
-        Save Draft
-      </button>
     </div>
   </div>
   <div
     class="d-grid gap-2 d-md-none"
   >
     <div
-      aria-label="Form actions"
-      class="action-row-thumb action-row-thumb--compact-sticky inspection-form-inline-actions"
-      role="group"
+      class="workflow-stage-actions"
     >
       <div
-        class="action-row-thumb-status text-body-secondary"
-        title="Cannot continue to review: set the inspection date and time; complete every required SCBA status."
+        aria-label="Inspection form actions"
+        class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
+        role="group"
       >
-        Cannot continue to review: set the inspection date and time; complete every required SCBA status.
+        <div
+          class="action-row-thumb-actions"
+        >
+          <button
+            class="btn btn-primary"
+            type="button"
+          >
+            Continue to Review
+          </button>
+        </div>
       </div>
       <div
-        class="action-row-thumb-actions"
-      >
-        <button
-          class="btn btn-outline-secondary inspection-form-sticky-draft-btn"
-          type="button"
-        >
-          Save Draft
-        </button>
-      </div>
+        class="action-row-thumb-spacer action-row-thumb-spacer--compact d-md-none"
+      />
     </div>
-    <div
-      class="action-row-thumb-spacer action-row-thumb-spacer--compact inspection-form-inline-actions-spacer d-md-none"
-    />
   </div>
 </div>
 `;

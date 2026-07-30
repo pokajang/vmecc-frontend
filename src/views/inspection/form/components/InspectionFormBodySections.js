@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { CButton, CCard, CFormLabel, CFormTextarea } from '@coreui/react'
 import { Sparkles } from 'lucide-react'
-import FormActionGroup from 'src/components/FormActionGroup'
 import CreateActionButton from 'src/components/CreateActionButton'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import RowActions from 'src/components/RowActions'
@@ -22,8 +21,6 @@ import {
   INSPECTION_FINDING_EMBEDDED_TASK,
   parseTranslatedFindingField,
 } from '../inspectionFindingAiAssist'
-import { getInspectionReviewReadiness } from '../inspectionReviewReadiness'
-import { buildInspectionValidationStatusMessage } from '../inspectionValidationFeedback'
 import {
   getFireExtinguisherRowValidation,
   isFireExtinguisherSessionCompletedRow,
@@ -32,10 +29,12 @@ import { neutralizeCompletionPresentation } from '../../types/continuationHelper
 import { INSPECTION_REPORT_EVIDENCE_COPY } from '../../inspectionReportEvidenceCopy'
 import {
   CONTINUATION_SCAN_LABEL,
-  PARTIAL_STATE_PROMPTS,
   getContinuationLabel,
+  PARTIAL_STATE_PROMPTS,
 } from '../../inspectionFormUiTokens'
 import { FormFieldError, InspectionGeneralEvidenceCard } from './InspectionFormDisplaySections'
+import { InspectionFormActions, InspectionFormDraftOnlyActions } from './InspectionFormActions'
+import { InspectionSectionHeading } from './patterns'
 import InspectionLocationOptionPicker from './InspectionLocationOptionPicker'
 
 const AI_BUTTON_STYLE = {
@@ -43,9 +42,6 @@ const AI_BUTTON_STYLE = {
   borderColor: 'rgba(0, 126, 122, 0.32)',
   color: 'rgba(0, 126, 122, 0.95)',
 }
-
-const REVIEW_ACTION_LABEL = 'Continue to Review'
-const REVIEW_UPDATE_ACTION_LABEL = 'Continue to Review Updates'
 
 const AI_TRANSLATE_FIELDS = ['description', 'actionRequired']
 const UNRESOLVED_PHOTO_UPLOAD_STATES = new Set([
@@ -145,156 +141,6 @@ const getIncompleteContinuationOptionCount = (options = [], currentLocation = ''
     seen.add(optionKey)
     return !isCompletedContinuationOption(option)
   }).length
-}
-
-const InspectionInlineActionGroup = ({ children, className = '', statusMessage = '' }) => (
-  <div
-    className={`inspection-form-inline-actions inspection-form-inline-actions--left d-grid gap-2 ${className}`.trim()}
-  >
-    <div
-      className="inspection-form-inline-actions-row d-flex flex-wrap justify-content-start gap-2"
-      role="group"
-      aria-label="Form actions"
-    >
-      {children}
-    </div>
-    {statusMessage ? (
-      <div
-        className="inspection-form-inline-actions-row-status text-body-secondary"
-        title={statusMessage}
-      >
-        {statusMessage}
-      </div>
-    ) : null}
-    <div className="inspection-form-inline-actions-spacer d-md-none" />
-  </div>
-)
-
-const InspectionFormActions = ({
-  alignLeft = false,
-  className = '',
-  draftStatus,
-  draftSyncState,
-  readiness = null,
-  leadingAction = null,
-  isMobileSticky = false,
-  isUpdateMode = false,
-  onRequestReview,
-  onRetryDraftSync,
-  sectionLabel = '',
-  submissionMode = 'review',
-  validationStatusMessage,
-  wrapperClassName = '',
-}) => {
-  const syncStatus = String(draftSyncState?.status || '').trim()
-  const syncFailed = syncStatus === 'failed'
-  const reviewLabel =
-    submissionMode === 'direct'
-      ? isUpdateMode
-        ? 'Update Report'
-        : 'Submit Report'
-      : isUpdateMode
-        ? REVIEW_UPDATE_ACTION_LABEL
-        : REVIEW_ACTION_LABEL
-  const statusClassName = `inspection-draft-status small ${
-    validationStatusMessage ? 'text-warning-emphasis' : 'text-body-secondary'
-  } ${alignLeft ? '' : 'me-sm-auto'} align-self-sm-center`.trim()
-  if (isMobileSticky) {
-    const mobileActionButtons = (
-      <>
-        {leadingAction}
-        {syncFailed ? (
-          <CButton
-            color="warning"
-            variant="outline"
-            className="inspection-form-sticky-draft-btn"
-            onClick={() => onRetryDraftSync?.()}
-          >
-            Retry Sync
-          </CButton>
-        ) : null}
-        <CButton
-          color="primary"
-          className="inspection-form-sticky-review-btn"
-          disabled={readiness?.isReadyToReview === false}
-          title={readiness?.blockers?.[0]?.message || undefined}
-          onClick={onRequestReview}
-        >
-          {reviewLabel}
-        </CButton>
-      </>
-    )
-
-    return (
-      <div className={`d-grid gap-2 ${wrapperClassName}`.trim()}>
-        {sectionLabel ? (
-          <div className="small fw-semibold text-body-secondary">{sectionLabel}</div>
-        ) : null}
-        {alignLeft ? (
-          <InspectionInlineActionGroup
-            className={className}
-            statusMessage={validationStatusMessage}
-          >
-            {mobileActionButtons}
-          </InspectionInlineActionGroup>
-        ) : (
-          <FormActionGroup
-            actionsAlign="end"
-            className={className}
-            mobileVariant="compact-sticky"
-            spacerClassName="inspection-form-inline-actions-spacer d-md-none"
-            statusMessage={validationStatusMessage}
-          >
-            {mobileActionButtons}
-          </FormActionGroup>
-        )}
-      </div>
-    )
-  }
-
-  return (
-    <div className={`d-grid gap-2 ${wrapperClassName}`.trim()}>
-      {sectionLabel ? (
-        <div className="small fw-semibold text-body-secondary">{sectionLabel}</div>
-      ) : null}
-      <div
-        className={[
-          'inspection-form-actions',
-          alignLeft ? 'inspection-form-actions--left' : '',
-          'd-flex flex-column flex-sm-row',
-          alignLeft ? 'justify-content-start' : 'justify-content-end',
-          'gap-2',
-          className,
-        ]
-          .filter(Boolean)
-          .join(' ')}
-      >
-        {validationStatusMessage ? (
-          <div className={statusClassName} role="alert">
-            {validationStatusMessage}
-          </div>
-        ) : draftStatus ? (
-          <div className={statusClassName} aria-live="polite">
-            {draftStatus}
-          </div>
-        ) : null}
-        {leadingAction}
-        {syncFailed ? (
-          <CButton color="warning" variant="outline" onClick={() => onRetryDraftSync?.()}>
-            Retry Sync
-          </CButton>
-        ) : null}
-        <CButton
-          color="primary"
-          disabled={readiness?.isReadyToReview === false}
-          title={readiness?.blockers?.[0]?.message || undefined}
-          onClick={onRequestReview}
-        >
-          {reviewLabel}
-        </CButton>
-      </div>
-    </div>
-  )
 }
 
 const InspectionNextLocationCard = ({ continueAction = null, onContinueToLocation }) => {
@@ -408,133 +254,6 @@ const InspectionNextLocationCard = ({ continueAction = null, onContinueToLocatio
   )
 }
 
-const InspectionFormDraftOnlyActions = ({
-  alignLeft = false,
-  className = '',
-  disabledReviewMessage = '',
-  draftStatus,
-  draftSyncState,
-  getLatestForm,
-  leadingAction = null,
-  isMobileSticky = false,
-  isUpdateMode = false,
-  onRetryDraftSync,
-  onSaveDraft,
-  sectionLabel = '',
-  statusMessage = '',
-  wrapperClassName = '',
-}) => {
-  const syncFailed = String(draftSyncState?.status || '').trim() === 'failed'
-  const saveLabel = isUpdateMode ? 'Save Update Draft' : 'Save Draft'
-  const reviewLabel = isUpdateMode ? REVIEW_UPDATE_ACTION_LABEL : REVIEW_ACTION_LABEL
-  const showDisabledReview = Boolean(disabledReviewMessage)
-  const statusClassName = `inspection-draft-status small text-body-secondary ${
-    alignLeft ? '' : 'me-sm-auto'
-  } align-self-sm-center`.trim()
-  if (isMobileSticky) {
-    const mobileActionButtons = (
-      <>
-        {leadingAction}
-        <CButton
-          color="secondary"
-          variant="outline"
-          className="inspection-form-sticky-draft-btn"
-          onClick={() => onSaveDraft?.(getLatestForm())}
-        >
-          {saveLabel}
-        </CButton>
-        {showDisabledReview ? (
-          <CButton
-            color="primary"
-            className="inspection-form-sticky-review-btn"
-            disabled
-            title={disabledReviewMessage}
-          >
-            {reviewLabel}
-          </CButton>
-        ) : null}
-        {syncFailed ? (
-          <CButton
-            color="warning"
-            variant="outline"
-            className="inspection-form-sticky-draft-btn"
-            onClick={() => onRetryDraftSync?.()}
-          >
-            Retry Sync
-          </CButton>
-        ) : null}
-      </>
-    )
-
-    return (
-      <div className={`d-grid gap-2 ${wrapperClassName}`.trim()}>
-        {sectionLabel ? (
-          <div className="small fw-semibold text-body-secondary">{sectionLabel}</div>
-        ) : null}
-        {alignLeft ? (
-          <InspectionInlineActionGroup
-            className={className}
-            statusMessage={disabledReviewMessage || statusMessage}
-          >
-            {mobileActionButtons}
-          </InspectionInlineActionGroup>
-        ) : (
-          <FormActionGroup
-            actionsAlign="end"
-            className={className}
-            mobileVariant="compact-sticky"
-            spacerClassName="inspection-form-inline-actions-spacer d-md-none"
-            statusMessage={disabledReviewMessage || statusMessage}
-          >
-            {mobileActionButtons}
-          </FormActionGroup>
-        )}
-      </div>
-    )
-  }
-
-  return (
-    <div className={`d-grid gap-2 ${wrapperClassName}`.trim()}>
-      {sectionLabel ? (
-        <div className="small fw-semibold text-body-secondary">{sectionLabel}</div>
-      ) : null}
-      <div
-        className={[
-          'inspection-form-actions',
-          alignLeft ? 'inspection-form-actions--left' : '',
-          'd-flex flex-column flex-sm-row',
-          alignLeft ? 'justify-content-start' : 'justify-content-end',
-          'gap-2',
-          className,
-        ]
-          .filter(Boolean)
-          .join(' ')}
-      >
-        <div className={statusClassName} aria-live="polite">
-          {disabledReviewMessage ||
-            statusMessage ||
-            draftStatus ||
-            'This inspection type can be saved as draft only.'}
-        </div>
-        {leadingAction}
-        <CButton color="secondary" variant="outline" onClick={() => onSaveDraft?.(getLatestForm())}>
-          {saveLabel}
-        </CButton>
-        {showDisabledReview ? (
-          <CButton color="primary" disabled title={disabledReviewMessage}>
-            {reviewLabel}
-          </CButton>
-        ) : null}
-        {syncFailed ? (
-          <CButton color="warning" variant="outline" onClick={() => onRetryDraftSync?.()}>
-            Retry Sync
-          </CButton>
-        ) : null}
-      </div>
-    </div>
-  )
-}
-
 const InspectionScanAnotherFireExtinguisherAction = ({ onScanAnother }) => {
   if (typeof onScanAnother !== 'function') return null
 
@@ -572,6 +291,7 @@ const InspectionFormPhotoEvidence = ({
       remarks={form.reportRemarks}
       fieldError={fieldErrors.photos}
       compactOnMobile={isStructuredInspectionForm || isGeneralInspectionForm}
+      presentation="inline"
       stageDrawerPhotos={isStructuredInspectionForm || isGeneralInspectionForm}
       uploadsPending={hasUnresolvedRootPhotoUploads}
       compactActionLabel={INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel}
@@ -1111,6 +831,7 @@ const InspectionFindingsSection = ({
         <InspectionGeneralEvidenceCard
           title="Finding Photos"
           photos={editor.issue.photos}
+          presentation="inset"
           compactOnMobile
           compactActionLabel="Add finding photos"
           drawerDescription="Photos for this finding only."
@@ -1180,7 +901,7 @@ const InspectionFindingsSection = ({
   return (
     <div className="inspection-form-section d-grid gap-3">
       <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
-        <CFormLabel className="fw-semibold text-muted mb-0">Findings</CFormLabel>
+        <InspectionSectionHeading title="Findings" />
         {issues.length > 0 ? (
           <CreateActionButton
             label="Add finding"
@@ -1194,7 +915,7 @@ const InspectionFindingsSection = ({
       {deleteError ? <FormFieldError>{deleteError}</FormFieldError> : null}
 
       {issues.length === 0 ? (
-        <div className="rounded-3 border bg-light-subtle p-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <div className="inspection-inset d-flex flex-wrap align-items-center justify-content-between gap-2">
           <span className="text-body-secondary">No findings.</span>
           <CreateActionButton
             label="Add finding"
@@ -1304,6 +1025,7 @@ const InspectionFormBodySections = ({
   isUpdateMode = false,
   location,
   mainLocation,
+  onRequestLocationSetup,
   onRequestReview,
   onRetryDraftSync,
   onSaveDraft,
@@ -1434,9 +1156,6 @@ const InspectionFormBodySections = ({
     String(form.fireExtinguisherFocusedAssetKey || '').trim() &&
     isCurrentFireExtinguisherLocationComplete &&
     typeof fireExtinguisherScan?.onOpenScanner === 'function'
-  const showBlockedReviewAction =
-    selectedTypeDefinition?.key === 'er-aux-equipment-inspection' ||
-    selectedTypeDefinition?.inspectionType === 'ER Aux Equipment Inspection'
   const renderActions = (className = '', isMobileSticky = false, wrapperClassName = '') => (
     <InspectionFormActions
       alignLeft={Boolean(nextStepAction)}
@@ -1504,48 +1223,13 @@ const InspectionFormBodySections = ({
       wrapperClassName={wrapperClassName}
     />
   )
-  const hasPrimaryActions =
-    (isFullInspectionForm && hasCompletedZoneLocationSelection) ||
-    (isStructuredInspectionForm &&
-      mainLocation &&
-      hasStructuredLocationSelection &&
-      hasCompletedZoneLocationSelection &&
-      StructuredEditSection)
-  const reviewReadiness = getInspectionReviewReadiness({
-    form,
-    hasInspectionBody: hasPrimaryActions,
-    selectedTypeDefinition,
-    showComingSoonNotice,
-  })
-  const blockedReviewMessage = !reviewReadiness.canReview
-    ? buildInspectionValidationStatusMessage(reviewReadiness.validationState) ||
-      'Cannot continue to review: complete the required inspection items.'
-    : ''
   const nextStepAction = renderScanAnotherFireExtinguisherAction()
-  const renderReviewOrDraftActions = (desktopClassName, mobileClassName) =>
-    reviewReadiness.canReview ? (
-      <>
-        {renderActions('', false, desktopClassName)}
-        {renderActions(mobileClassName, true, 'd-md-none')}
-      </>
-    ) : (
-      <>
-        {renderDraftOnlyActions(
-          '',
-          false,
-          blockedReviewMessage,
-          showBlockedReviewAction ? blockedReviewMessage : '',
-          desktopClassName,
-        )}
-        {renderDraftOnlyActions(
-          mobileClassName,
-          true,
-          blockedReviewMessage,
-          showBlockedReviewAction ? blockedReviewMessage : '',
-          'd-md-none',
-        )}
-      </>
-    )
+  const renderReviewOrDraftActions = (desktopClassName) => (
+    <>
+      {renderActions('', false, desktopClassName)}
+      {renderActions('', true, 'd-md-none')}
+    </>
+  )
 
   const renderPhotoEvidence = () => (
     <InspectionFormPhotoEvidence
@@ -1598,7 +1282,7 @@ const InspectionFormBodySections = ({
           {renderPhotoEvidence()}
           {renderNextLocationCard()}
 
-          {renderReviewOrDraftActions('d-none d-md-grid', 'inspection-form-inline-actions')}
+          {renderReviewOrDraftActions('d-none d-md-grid')}
         </>
       ) : null}
 
@@ -1655,30 +1339,56 @@ const InspectionFormBodySections = ({
 
           {renderNextLocationCard()}
 
-          {renderReviewOrDraftActions('d-none d-md-grid', 'inspection-form-inline-actions')}
+          {renderReviewOrDraftActions('d-none d-md-grid')}
         </>
       ) : null}
 
       {shouldPromptForZoneLocationCompletion ? (
         <div className="inspection-form-section inspection-form-body-start">
-          <div className="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 text-body-secondary">
-            {PARTIAL_STATE_PROMPTS.locationFlow}
+          <div className="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+              <div className="fw-semibold">{PARTIAL_STATE_PROMPTS.locationFlow}</div>
+            </div>
+            <CButton
+              type="button"
+              color="primary"
+              variant="outline"
+              onClick={onRequestLocationSetup}
+            >
+              Choose location
+            </CButton>
           </div>
         </div>
       ) : null}
 
       {shouldPromptForFireTruckCompartment ? (
         <div className="inspection-form-section inspection-form-body-start">
-          <div className="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 text-body-secondary">
-            {PARTIAL_STATE_PROMPTS.fireTruckFlow}
+          <div className="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div className="fw-semibold">{PARTIAL_STATE_PROMPTS.fireTruckFlow}</div>
+            <CButton
+              type="button"
+              color="primary"
+              variant="outline"
+              onClick={onRequestLocationSetup}
+            >
+              Choose compartment
+            </CButton>
           </div>
         </div>
       ) : null}
 
       {shouldPromptForFireExtinguisherLocation ? (
         <div className="inspection-form-section inspection-form-body-start">
-          <div className="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 text-body-secondary">
-            {PARTIAL_STATE_PROMPTS.fireExtinguisherFlow}
+          <div className="inspection-fire-extinguisher-location-prompt rounded-3 border bg-light-subtle p-3 d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div className="fw-semibold">{PARTIAL_STATE_PROMPTS.fireExtinguisherFlow}</div>
+            <CButton
+              type="button"
+              color="primary"
+              variant="outline"
+              onClick={onRequestLocationSetup}
+            >
+              Choose location
+            </CButton>
           </div>
         </div>
       ) : null}
@@ -1689,7 +1399,7 @@ const InspectionFormBodySections = ({
             Actual field coming soon
           </div>
           {renderDraftOnlyActions('', false, '', '', 'd-none d-md-grid')}
-          {renderDraftOnlyActions('inspection-form-inline-actions', true, '', '', 'd-md-none')}
+          {renderDraftOnlyActions('', true, '', '', 'd-md-none')}
         </>
       ) : null}
     </>

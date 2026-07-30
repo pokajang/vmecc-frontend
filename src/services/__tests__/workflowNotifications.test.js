@@ -47,7 +47,7 @@ describe('buildWorkflowNotificationDetailPath', () => {
         detailRouteKey: '45',
       },
     })
-    expect(ownerPath).toBe('/staff/set-salary/set-salary?assignmentId=45')
+    expect(ownerPath).toBe('/payroll/claims/new/salary')
   })
 
   it.each([

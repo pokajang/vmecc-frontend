@@ -74,7 +74,7 @@ const WorkflowNotificationCard = ({ item, onClick, onDelete, onMarkRead }) => {
           onClick={handleMarkRead}
           aria-label="Mark as read"
         >
-          <Eye size={13} />
+          <Eye size={13} aria-hidden="true" />
         </button>
       )}
       <button
@@ -83,7 +83,7 @@ const WorkflowNotificationCard = ({ item, onClick, onDelete, onMarkRead }) => {
         onClick={handleDelete}
         aria-label="Delete notification"
       >
-        <Trash2 size={13} />
+        <Trash2 size={13} aria-hidden="true" />
       </button>
     </div>
   )

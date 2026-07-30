@@ -319,6 +319,7 @@ const usePayrollClaimActions = ({
       }
       const apiResult = await deleteMyPayrollClaimApiFirst(deleteTarget.serverId, {
         idempotencyKey: buildActionIdempotencyKey('delete-claim', deleteTarget),
+        expectedVersion: deleteTarget.version,
       })
       if (!apiResult?.ok) {
         pushToast(`Unable to delete claim ${deleteTarget.id}. Please retry.`, {

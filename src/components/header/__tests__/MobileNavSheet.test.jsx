@@ -57,6 +57,12 @@ it('renders quick actions before my records in the mobile account sheet', () => 
   expect(myRecords.compareDocumentPosition(account)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
   expect(account.compareDocumentPosition(session)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
 
+  const sharedActionGrid = quickActions.parentElement
+  expect(sharedActionGrid.classList.contains('mobile-nav-sheet-action-grid-menu')).toBe(true)
+  expect(myRecords.parentElement).toBe(sharedActionGrid)
+  expect(account.parentElement).toBe(sharedActionGrid)
+  expect(session.parentElement).toBe(sharedActionGrid)
+
   expect(screen.getByRole('button', { name: /New Claim/ })).toBeTruthy()
   expect(screen.getByRole('button', { name: /Apply Leave/ })).toBeTruthy()
   expect(screen.getByRole('button', { name: /Payroll Records/ })).toBeTruthy()

@@ -195,10 +195,16 @@ const proceedToDetailsStep = async () => {
   render(<ErcoStepHarness />)
   fireEvent.click(screen.getByText('Continue'))
   await waitFor(() => expect(screen.getByText('On-Scene Responders')).toBeTruthy())
+  expect(
+    screen
+      .getByRole('region', { name: 'Incident Summary' })
+      .querySelectorAll('.workflow-summary__item'),
+  ).toHaveLength(6)
   fireEvent.click(screen.getByText('Continue'))
   await waitFor(() =>
     expect(screen.getByLabelText('Event / Action for chronology row 1')).toBeTruthy(),
   )
+  expect(screen.getByRole('region', { name: 'Incident Summary' })).toBeTruthy()
 }
 
 const renderDetailsStep = ({ seed = {} } = {}) => {
@@ -498,13 +504,17 @@ describe('ERCO mobile setup polish', () => {
   it('renders completed mobile setup groups as summaries and reopens one for editing', async () => {
     renderSetupStep({ mobile: true })
 
+    const summary = screen.getByLabelText('ERCO setup summary')
+    expect(summary.querySelectorAll('.mobile-setup-summary-list__item')).toHaveLength(4)
     expect(screen.getByText('Incident Type')).toBeTruthy()
     expect(screen.getByText('Weather')).toBeTruthy()
     expect(screen.getByText('Area')).toBeTruthy()
     expect(screen.getByText('Date & Time')).toBeTruthy()
+    expect(document.querySelector('.mobile-setup-summary')).toBeNull()
 
     fireEvent.click(screen.getByRole('button', { name: 'Edit Incident Type' }))
     expect(screen.getByText('Choose Incident Type')).toBeTruthy()
+    expect(summary.querySelectorAll('.mobile-setup-summary-list__item')).toHaveLength(3)
   })
 
   it('keeps area open for multi-select on mobile until Confirm Areas is tapped', async () => {
@@ -595,7 +605,7 @@ describe('ERCO post-analysis mobile polish', () => {
     })
 
     fireEvent.click(screen.getByRole('button', { name: /Photos\s*0 photos/i }))
-    expect(screen.getByText('No incident photographs uploaded yet.')).toBeTruthy()
+    expect(screen.getByText('Incident photographs')).toBeTruthy()
 
     fireEvent.click(screen.getByRole('button', { name: /Strengths\s*1 selected/i }))
     expect(screen.getByText('KPI Response Time')).toBeTruthy()

@@ -1,5 +1,6 @@
 import React from 'react'
 import { CBadge, CButton, CCard, CCardBody, CCardHeader } from '@coreui/react'
+import { ChevronDown } from 'lucide-react'
 import RowActions from 'src/components/RowActions'
 
 export const buildInspectionElementActions = ({
@@ -78,6 +79,7 @@ export const InspectionElementCard = ({
   const visibleHelperLines = (Array.isArray(helperLines) ? helperLines : [helperLines]).filter(
     Boolean,
   )
+  const SummaryComponent = canToggle ? 'button' : 'div'
 
   return (
     <CCard
@@ -92,77 +94,66 @@ export const InspectionElementCard = ({
         className={`inspection-hydraulic-card-header inspection-fire-extinguisher-card-header d-flex flex-wrap align-items-center justify-content-between gap-2 ${
           headerClassName || ''
         }`.trim()}
-        role={canToggle ? 'button' : undefined}
-        tabIndex={canToggle ? 0 : undefined}
-        aria-expanded={canToggle ? expanded : undefined}
-        aria-controls={canToggle ? bodyId : undefined}
-        onClick={(event) => {
-          if (!canToggle || shouldIgnoreInspectionElementToggle(event)) return
-          onToggle()
-        }}
-        onKeyDown={(event) => {
-          if (!canToggle || shouldIgnoreInspectionElementToggle(event)) return
-          if (event.key !== 'Enter' && event.key !== ' ') return
-          event.preventDefault()
-          onToggle()
-        }}
       >
-        <div
-          className="d-grid gap-1 inspection-fire-extinguisher-card-summary flex-grow-1"
+        <SummaryComponent
+          type={canToggle ? 'button' : undefined}
+          className={`d-flex align-items-center gap-2 inspection-fire-extinguisher-card-summary ${
+            canToggle ? 'inspection-entity-card__toggle' : 'flex-grow-1'
+          }`}
           style={{ minWidth: 0 }}
+          aria-expanded={canToggle ? expanded : undefined}
+          aria-controls={canToggle ? bodyId : undefined}
+          onClick={canToggle ? onToggle : undefined}
         >
-          <div className="d-flex flex-wrap align-items-center gap-2">
-            <div className="fw-semibold text-break inspection-fire-extinguisher-card-title">
-              {title}
+          <div className="d-grid gap-1 flex-grow-1 min-w-0">
+            <div className="d-flex flex-wrap align-items-center gap-2">
+              <div className="fw-semibold text-break inspection-fire-extinguisher-card-title">
+                {title}
+              </div>
+              {status}
+              {badges}
             </div>
-            {status}
-            {badges}
+            {hasSeparateMobileMeta && meta ? (
+              <div className="small text-body-secondary text-break d-none d-md-block">{meta}</div>
+            ) : null}
+            {!hasSeparateMobileMeta && meta ? (
+              <div className="small text-body-secondary text-break inspection-fire-extinguisher-card-mobile-line">
+                {meta}
+              </div>
+            ) : null}
+            {hasSeparateMobileMeta && mobileMeta ? (
+              <div className="small text-body-secondary d-md-none inspection-fire-extinguisher-card-mobile-line">
+                {mobileMeta}
+              </div>
+            ) : null}
+            {visibleHelperLines.map((line, index) => (
+              <div
+                key={typeof line === 'string' ? line : index}
+                className="small text-body-secondary text-break inspection-fire-extinguisher-card-mobile-line"
+              >
+                {line}
+              </div>
+            ))}
           </div>
-          {hasSeparateMobileMeta && meta ? (
-            <div className="small text-body-secondary text-break d-none d-md-block">{meta}</div>
+          {canToggle ? (
+            <ChevronDown
+              size={18}
+              className={`inspection-entity-card__chevron ${
+                expanded ? 'inspection-entity-card__chevron--expanded' : ''
+              }`}
+              aria-hidden="true"
+            />
           ) : null}
-          {!hasSeparateMobileMeta && meta ? (
-            <div className="small text-body-secondary text-break inspection-fire-extinguisher-card-mobile-line">
-              {meta}
-            </div>
-          ) : null}
-          {hasSeparateMobileMeta && mobileMeta ? (
-            <div className="small text-body-secondary d-md-none inspection-fire-extinguisher-card-mobile-line">
-              {mobileMeta}
-            </div>
-          ) : null}
-          {visibleHelperLines.map((line, index) => (
-            <div
-              key={typeof line === 'string' ? line : index}
-              className="small text-body-secondary text-break inspection-fire-extinguisher-card-mobile-line"
-            >
-              {line}
-            </div>
-          ))}
-        </div>
+        </SummaryComponent>
         {!readOnly ? (
           <div
             className="d-flex flex-wrap align-items-center justify-content-end gap-1 flex-shrink-0 inspection-fire-extinguisher-card-actions"
             data-prevent-card-toggle="true"
           >
-            {canToggle ? (
-              <CButton
-                type="button"
-                color="secondary"
-                variant="outline"
-                size="sm"
-                className="inspection-compact-action-btn d-none d-md-inline-flex"
-                aria-expanded={expanded}
-                aria-controls={bodyId}
-                onClick={onToggle}
-              >
-                {expanded ? 'Collapse' : 'Open'}
-              </CButton>
-            ) : null}
             {actions.length > 0 ? (
               <RowActions
                 iconSize={16}
-                hitArea={32}
+                hitArea={44}
                 toggleAriaLabel={actionLabel}
                 items={actions}
               />
@@ -182,12 +173,12 @@ export const InspectionElementCard = ({
 export const InspectionElementValidationBadges = ({ missingCount = 0, needsEvidence = false }) => (
   <>
     {missingCount > 0 ? (
-      <CBadge color="warning" className="d-none d-md-inline-flex">
+      <CBadge color="warning" className="d-inline-flex">
         {missingCount} missing
       </CBadge>
     ) : null}
     {needsEvidence ? (
-      <span className="badge rounded-pill text-bg-danger d-none d-md-inline-flex align-items-center">
+      <span className="badge rounded-pill text-bg-danger d-inline-flex align-items-center">
         Needs evidence
       </span>
     ) : null}

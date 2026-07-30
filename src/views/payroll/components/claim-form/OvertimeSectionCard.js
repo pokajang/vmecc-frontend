@@ -11,6 +11,7 @@ import {
   CTableRow,
 } from '@coreui/react'
 import TableLoader from 'src/components/TableLoader'
+import ResponsiveFinancialBreakdown from 'src/components/workflow/ResponsiveFinancialBreakdown'
 import { OVERTIME_BASE_HOUR_MODES } from 'src/views/staff/salary-claims-management/utils'
 import { formatCurrency, formatDate } from './utils/claimFormUtils'
 
@@ -79,83 +80,144 @@ const OvertimeSectionCard = ({
               No overtime records found for this payroll month.
             </div>
           ) : (
-            <div className="rounded-3 shadow-sm overflow-hidden bg-body">
-              <CTable align="middle" className="mb-0" responsive>
-                <CTableHead color="light">
-                  <CTableRow>
-                    <CTableHeaderCell className="text-center" style={{ width: '56px' }}>
-                      #
-                    </CTableHeaderCell>
-                    <CTableHeaderCell>Overtime ID</CTableHeaderCell>
-                    <CTableHeaderCell>Type</CTableHeaderCell>
-                    <CTableHeaderCell>Date</CTableHeaderCell>
-                    <CTableHeaderCell>Duration</CTableHeaderCell>
-                    <CTableHeaderCell>Status</CTableHeaderCell>
-                    <CTableHeaderCell className="text-end">Rate</CTableHeaderCell>
-                    <CTableHeaderCell className="text-end">Payout Used</CTableHeaderCell>
-                  </CTableRow>
-                </CTableHead>
-                <CTableBody>
-                  {overtimeRowsForPeriod.map((row, index) => (
-                    <React.Fragment key={row.id}>
-                      <CTableRow>
-                        <CTableDataCell className="text-center text-body-secondary">
-                          {index + 1}
-                        </CTableDataCell>
-                        <CTableDataCell className="fw-semibold">{row.overtimeId}</CTableDataCell>
-                        <CTableDataCell>{row.overtimeTypeLabel}</CTableDataCell>
-                        <CTableDataCell>{formatDate(row.claimDate)}</CTableDataCell>
-                        <CTableDataCell>
-                          {row.durationLabel}
-                          <span className="small text-body-secondary ms-1">
-                            ({row.durationHours}h)
-                          </span>
-                        </CTableDataCell>
-                        <CTableDataCell>{row.statusLabel || row.status || '-'}</CTableDataCell>
-                        <CTableDataCell className="text-end">{row.multiplier}x</CTableDataCell>
-                        <CTableDataCell className="text-end fw-semibold">
-                          {formatCurrency(row.payablePayout)}
-                        </CTableDataCell>
-                      </CTableRow>
-                      <CTableRow>
-                        <CTableDataCell colSpan={8} className="small text-body-secondary">
-                          <details>
-                            <summary>Calculation details</summary>
-                            <div className="mt-1">
-                              {`Hourly base = (${formatCurrency(salaryBasic)} / ${row.monthlyDivisorUsed || '-'} days) / ${row.normalHoursPerDay} h/day = ${formatCurrency(row.hourlyBaseRate)}/h. Payout = ${row.durationHours} h x ${formatCurrency(row.hourlyBaseRate)}/h x ${row.multiplier}x = ${formatCurrency(row.calculatedPayout)}${row.isApproved ? '' : ' (not approved, payout used is RM 0.00).'}`}
-                            </div>
-                          </details>
-                        </CTableDataCell>
-                      </CTableRow>
-                    </React.Fragment>
-                  ))}
-                  <CTableRow className="table-light">
-                    <CTableDataCell colSpan={7} className="fw-semibold">
-                      Total OT Hours (All Status)
-                    </CTableDataCell>
-                    <CTableDataCell className="text-end fw-semibold">
-                      {overtimeTotals.totalHoursAll}h
-                    </CTableDataCell>
-                  </CTableRow>
-                  <CTableRow className="table-light">
-                    <CTableDataCell colSpan={7} className="fw-semibold">
-                      Total OT Hours (Approved)
-                    </CTableDataCell>
-                    <CTableDataCell className="text-end fw-semibold">
-                      {overtimeTotals.totalHoursApproved}h
-                    </CTableDataCell>
-                  </CTableRow>
-                  <CTableRow className="table-light">
-                    <CTableDataCell colSpan={7} className="fw-semibold">
-                      Total OT Payout (Approved)
-                    </CTableDataCell>
-                    <CTableDataCell className="text-end fw-semibold">
-                      {formatCurrency(overtimeTotals.totalPayoutApproved)}
-                    </CTableDataCell>
-                  </CTableRow>
-                </CTableBody>
-              </CTable>
-            </div>
+            <>
+              <ResponsiveFinancialBreakdown
+                ariaLabel="Overtime records and payout breakdown"
+                sections={[
+                  ...overtimeRowsForPeriod.map((row) => ({
+                    key: row.id,
+                    title: row.overtimeId,
+                    items: [
+                      { key: 'type', label: 'Type', value: row.overtimeTypeLabel },
+                      { key: 'date', label: 'Date', value: formatDate(row.claimDate) },
+                      {
+                        key: 'duration',
+                        label: 'Duration',
+                        value: `${row.durationLabel} (${row.durationHours}h)`,
+                      },
+                      {
+                        key: 'status',
+                        label: 'Status',
+                        value: row.statusLabel || row.status || '-',
+                      },
+                      { key: 'rate', label: 'Rate', value: `${row.multiplier}x` },
+                      {
+                        key: 'payout',
+                        label: 'Payout Used',
+                        value: formatCurrency(row.payablePayout),
+                        emphasis: true,
+                        detail: `Hourly base = (${formatCurrency(salaryBasic)} / ${
+                          row.monthlyDivisorUsed || '-'
+                        } days) / ${row.normalHoursPerDay} h/day = ${formatCurrency(
+                          row.hourlyBaseRate,
+                        )}/h. Calculated payout: ${formatCurrency(row.calculatedPayout)}${
+                          row.isApproved ? '' : '; not approved, so payout used is MYR 0.00'
+                        }.`,
+                      },
+                    ],
+                  })),
+                  {
+                    key: 'overtime-totals',
+                    title: 'Overtime Totals',
+                    items: [
+                      {
+                        key: 'all-hours',
+                        label: 'Total OT Hours (All Status)',
+                        value: `${overtimeTotals.totalHoursAll}h`,
+                      },
+                      {
+                        key: 'approved-hours',
+                        label: 'Total OT Hours (Approved)',
+                        value: `${overtimeTotals.totalHoursApproved}h`,
+                      },
+                      {
+                        key: 'approved-payout',
+                        label: 'Total OT Payout (Approved)',
+                        value: formatCurrency(overtimeTotals.totalPayoutApproved),
+                        emphasis: true,
+                      },
+                    ],
+                  },
+                ]}
+              />
+              <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-body">
+                <CTable align="middle" className="mb-0" responsive>
+                  <CTableHead color="light">
+                    <CTableRow>
+                      <CTableHeaderCell className="text-center" style={{ width: '56px' }}>
+                        #
+                      </CTableHeaderCell>
+                      <CTableHeaderCell>Overtime ID</CTableHeaderCell>
+                      <CTableHeaderCell>Type</CTableHeaderCell>
+                      <CTableHeaderCell>Date</CTableHeaderCell>
+                      <CTableHeaderCell>Duration</CTableHeaderCell>
+                      <CTableHeaderCell>Status</CTableHeaderCell>
+                      <CTableHeaderCell className="text-end">Rate</CTableHeaderCell>
+                      <CTableHeaderCell className="text-end">Payout Used</CTableHeaderCell>
+                    </CTableRow>
+                  </CTableHead>
+                  <CTableBody>
+                    {overtimeRowsForPeriod.map((row, index) => (
+                      <React.Fragment key={row.id}>
+                        <CTableRow>
+                          <CTableDataCell className="text-center text-body-secondary">
+                            {index + 1}
+                          </CTableDataCell>
+                          <CTableDataCell className="fw-semibold">{row.overtimeId}</CTableDataCell>
+                          <CTableDataCell>{row.overtimeTypeLabel}</CTableDataCell>
+                          <CTableDataCell>{formatDate(row.claimDate)}</CTableDataCell>
+                          <CTableDataCell>
+                            {row.durationLabel}
+                            <span className="small text-body-secondary ms-1">
+                              ({row.durationHours}h)
+                            </span>
+                          </CTableDataCell>
+                          <CTableDataCell>{row.statusLabel || row.status || '-'}</CTableDataCell>
+                          <CTableDataCell className="text-end">{row.multiplier}x</CTableDataCell>
+                          <CTableDataCell className="text-end fw-semibold">
+                            {formatCurrency(row.payablePayout)}
+                          </CTableDataCell>
+                        </CTableRow>
+                        <CTableRow>
+                          <CTableDataCell colSpan={8} className="small text-body-secondary">
+                            <details>
+                              <summary>Calculation details</summary>
+                              <div className="mt-1">
+                                {`Hourly base = (${formatCurrency(salaryBasic)} / ${row.monthlyDivisorUsed || '-'} days) / ${row.normalHoursPerDay} h/day = ${formatCurrency(row.hourlyBaseRate)}/h. Payout = ${row.durationHours} h x ${formatCurrency(row.hourlyBaseRate)}/h x ${row.multiplier}x = ${formatCurrency(row.calculatedPayout)}${row.isApproved ? '' : ' (not approved, payout used is RM 0.00).'}`}
+                              </div>
+                            </details>
+                          </CTableDataCell>
+                        </CTableRow>
+                      </React.Fragment>
+                    ))}
+                    <CTableRow className="table-light">
+                      <CTableDataCell colSpan={7} className="fw-semibold">
+                        Total OT Hours (All Status)
+                      </CTableDataCell>
+                      <CTableDataCell className="text-end fw-semibold">
+                        {overtimeTotals.totalHoursAll}h
+                      </CTableDataCell>
+                    </CTableRow>
+                    <CTableRow className="table-light">
+                      <CTableDataCell colSpan={7} className="fw-semibold">
+                        Total OT Hours (Approved)
+                      </CTableDataCell>
+                      <CTableDataCell className="text-end fw-semibold">
+                        {overtimeTotals.totalHoursApproved}h
+                      </CTableDataCell>
+                    </CTableRow>
+                    <CTableRow className="table-light">
+                      <CTableDataCell colSpan={7} className="fw-semibold">
+                        Total OT Payout (Approved)
+                      </CTableDataCell>
+                      <CTableDataCell className="text-end fw-semibold">
+                        {formatCurrency(overtimeTotals.totalPayoutApproved)}
+                      </CTableDataCell>
+                    </CTableRow>
+                  </CTableBody>
+                </CTable>
+              </div>
+            </>
           )}
         </>
       )}

@@ -16,6 +16,7 @@ import {
 import { INSPECTION_REPORT_EVIDENCE_COPY } from '../inspectionReportEvidenceCopy'
 import InspectionDetailActionBar from './InspectionDetailActionBar'
 import InspectionDetailFindingsSection from './InspectionDetailFindingsSection'
+import InspectionContextSummary from './InspectionContextSummary'
 
 const text = (value) => String(value || '').trim()
 
@@ -268,26 +269,6 @@ const InspectionRecordMeta = ({
   )
 }
 
-const InspectionContextSection = ({ fields = [] }) => {
-  const visibleFields = (Array.isArray(fields) ? fields : []).filter(
-    (field) => field && text(field.label) && text(field.value),
-  )
-  if (visibleFields.length === 0) return null
-
-  return (
-    <section className="inspection-form-section d-grid gap-3">
-      <div className="fw-semibold text-muted">Inspection Context</div>
-      <CRow className="g-3">
-        {visibleFields.map((field) => (
-          <DetailField key={field.key || field.label} label={field.label} xs={12} md={4}>
-            {field.value}
-          </DetailField>
-        ))}
-      </CRow>
-    </section>
-  )
-}
-
 const buildFallbackFindingsContent = (form = {}, record = {}) => {
   const description = text(form.description || record.description)
   const checklistItems = getSelectedChecklistItems(form.checklist || record.checklist)
@@ -345,6 +326,10 @@ const InspectionDetailSection = ({
   const form = withStructuredDetailFallbacks(recordToInspectionForm(record), record)
   const selectedType = text(form.inspectionType || record.incidentType)
   const selectedTypeDefinition = getInspectionTypeDefinitionForDetail(selectedType, form, record)
+  const ownsRootEvidence = selectedTypeDefinition?.ownsRootEvidence === true
+  const showEmptyFindings =
+    selectedTypeDefinition?.key === 'general-inspection' ||
+    selectedTypeDefinition?.key === 'health-safety-environment-inspection'
   const dateTime = formatDateTime(
     record.incidentDate || record.reportDate,
     record.incidentTime || record.reportTime,
@@ -432,7 +417,10 @@ const InspectionDetailSection = ({
           renderStatusBadge={customStatusRenderer}
         />
 
-        <InspectionContextSection fields={detailContextFields} />
+        <section className="inspection-form-section d-grid gap-3">
+          <div className="fw-semibold text-muted">Inspection Context</div>
+          <InspectionContextSummary fields={detailContextFields} />
+        </section>
 
         <InspectionDetailFindingsSection
           sectionTitle="Inspection Findings"
@@ -451,21 +439,22 @@ const InspectionDetailSection = ({
             }) || null
           }
           fallbackContent={fallbackFindingsContent}
+          emptyMessage={showEmptyFindings ? 'No inspection findings were recorded.' : ''}
         />
 
-        <section className="inspection-form-section d-grid gap-3">
-          <div className="fw-semibold text-muted">
-            {INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle}
-          </div>
-          <InspectionGeneralEvidenceCard
-            readOnly
-            title={INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle}
-            photos={form.photos}
-            remarks={form.reportRemarks}
-            emptyMessage={INSPECTION_REPORT_EVIDENCE_COPY.emptyPhotosMessage}
-            remarksLabel={INSPECTION_REPORT_EVIDENCE_COPY.remarksLabel}
-          />
-        </section>
+        {!ownsRootEvidence ? (
+          <section className="inspection-form-section d-grid gap-3">
+            <InspectionGeneralEvidenceCard
+              readOnly
+              presentation="inline"
+              title={INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle}
+              photos={form.photos}
+              remarks={form.reportRemarks}
+              emptyMessage={INSPECTION_REPORT_EVIDENCE_COPY.emptyPhotosMessage}
+              remarksLabel={INSPECTION_REPORT_EVIDENCE_COPY.remarksLabel}
+            />
+          </section>
+        ) : null}
 
         <InspectionDetailActionBar
           mode="mobile"

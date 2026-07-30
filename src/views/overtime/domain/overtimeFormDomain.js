@@ -11,6 +11,7 @@ export const normalizeOvertimeDraftPayload = (draft = null) => {
   const sourceRecordId = String(draft.sourceRecordId || '').trim()
   const sourceRecordServerId = String(draft.sourceRecordServerId || '').trim()
   return {
+    draftVersion: Number(draft.draftVersion || 0) || null,
     overtimeType: normalizeOvertimeType(draft.overtimeType || 'weekday'),
     overtimeTypeConfirmed: Boolean(draft.overtimeTypeConfirmed),
     claimDate: String(draft.claimDate || ''),

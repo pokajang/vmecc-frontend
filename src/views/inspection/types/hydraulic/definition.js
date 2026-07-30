@@ -22,7 +22,7 @@ const hydraulicInspectionDefinition = {
   key: 'hydraulic-rescue-tools-inspection',
   inspectionType: HYDRAULIC_RESCUE_TOOLS_INSPECTION_TYPE,
   title: 'Hydraulic Rescue Tools',
-  description: 'Hydraulic tool physical, mechanical, leakage, function, and defect checks.',
+  description: 'Inspect hydraulic tool condition, leaks, operation, and defects.',
   iconKey: 'Wrench',
   icon: Wrench,
   implemented: true,

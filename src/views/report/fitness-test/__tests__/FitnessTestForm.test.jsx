@@ -55,21 +55,69 @@ const renderForm = (formProps) =>
     </MemoryRouter>,
   )
 
+const mockMobileViewport = () => {
+  Object.defineProperty(window, 'innerWidth', {
+    configurable: true,
+    value: 375,
+  })
+  Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
+    value: vi.fn((query) => ({
+      matches: query === '(max-width: 767.98px)',
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+    })),
+  })
+}
+
 beforeEach(() => {
   window.HTMLElement.prototype.scrollIntoView = vi.fn()
   storageMocks.loadRow.mockReset().mockResolvedValue(null)
   storageMocks.save.mockReset().mockResolvedValue({ draftId: 'draft-1', version: 1 })
 })
-afterEach(cleanup)
+afterEach(() => {
+  cleanup()
+  delete window.matchMedia
+  Object.defineProperty(window, 'innerWidth', {
+    configurable: true,
+    value: 1024,
+  })
+})
 
 describe('FitnessTestForm', () => {
   it('starts with the ERCO-style reporting period and protocol instead of generic setup', () => {
     renderForm(props())
     expect(screen.getByLabelText('Reporting month')).toBeTruthy()
-    expect(screen.getByText('Assessment protocol')).toBeTruthy()
+    expect(screen.getByText('View assessment protocol')).toBeTruthy()
     expect(screen.queryByText('Choose Fitness Test Type')).toBeNull()
     expect(screen.queryByRole('button', { name: 'Reset' })).toBeNull()
     expect(screen.queryByText(/Chronology/i)).toBeNull()
+  })
+
+  it('uses the shared mobile setup list for its fixed type and completed reporting period', () => {
+    mockMobileViewport()
+    renderForm(props({ initialFormSeed: { reportingMonth: '2026-06' } }))
+
+    const summary = screen.getByLabelText('Fitness Test setup summary')
+    expect(summary.querySelectorAll('.mobile-setup-summary-list__item')).toHaveLength(2)
+    expect(screen.getByText('Monthly Physical Test')).toBeTruthy()
+    expect(screen.getByText('2026-06')).toBeTruthy()
+    expect(screen.queryByLabelText('Reporting month')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Reporting Period' }))
+    expect(screen.getByLabelText('Reporting month').value).toBe('2026-06')
+    expect(summary.querySelectorAll('.mobile-setup-summary-list__item')).toHaveLength(1)
+
+    fireEvent.change(screen.getByLabelText('Reporting month'), {
+      target: { value: '2026-07' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }))
+
+    expect(screen.queryByLabelText('Reporting month')).toBeNull()
+    expect(screen.getByText('2026-07')).toBeTruthy()
   })
 
   it('reviews a complete shift-grouped report with calculated results', async () => {

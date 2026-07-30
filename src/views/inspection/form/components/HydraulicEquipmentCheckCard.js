@@ -19,43 +19,25 @@ import {
   InspectionPhotoActionRow,
   InspectionPhotoEvidenceSummary,
 } from './InspectionDisplayShared'
+import InspectionStatusSegment from './patterns/InspectionStatusSegment'
 
-const HydraulicStatusSegment = ({ field, value, onChange, readOnly = false }) => (
-  <div className="inspection-hydraulic-check-row inspection-hydraulic-check-row--stacked d-grid gap-2">
-    <div className="inspection-hydraulic-check-label small fw-semibold text-muted">
-      {field.label}
-    </div>
-    <div className="inspection-hydraulic-status-group d-flex flex-nowrap justify-content-start gap-2 vmecc-scroll-x pb-1">
-      {HYDRAULIC_CHECK_STATUS_OPTIONS.map((option) => {
-        const isSelected = value === option.value
-        const className = `inspection-hydraulic-status-btn btn btn-sm ${
-          isSelected ? 'btn-primary' : 'btn-outline-secondary'
-        } ${readOnly ? 'pe-none' : ''}`.trim()
-
-        return readOnly ? (
-          <span
-            key={option.value}
-            className={className}
-            aria-current={isSelected ? 'true' : undefined}
-          >
-            {option.label}
-          </span>
-        ) : (
-          <CButton
-            key={option.value}
-            type="button"
-            color={isSelected ? 'primary' : 'secondary'}
-            variant={isSelected ? undefined : 'outline'}
-            size="sm"
-            className="inspection-hydraulic-status-btn"
-            onClick={() => onChange(option.value)}
-          >
-            {option.label}
-          </CButton>
-        )
-      })}
-    </div>
-  </div>
+const HydraulicStatusSegment = ({
+  field,
+  value,
+  onChange,
+  readOnly = false,
+  invalid = false,
+  describedBy,
+}) => (
+  <InspectionStatusSegment
+    label={field.label}
+    value={value}
+    options={HYDRAULIC_CHECK_STATUS_OPTIONS}
+    onChange={onChange}
+    readOnly={readOnly}
+    invalid={invalid}
+    describedBy={describedBy}
+  />
 )
 
 const getHydraulicWorkflowState = (row = {}) => {
@@ -168,6 +150,8 @@ export const HydraulicEquipmentCheckDetails = ({
         )
         const isMissingRemark = isDefect && !defectRemarks.trim()
         const isMissingNaReason = isNotApplicable && !defectRemarks.trim()
+        const isMissingStatus = remarksError && !String(current[field.key] || '').trim()
+        const statusErrorId = `${row.id}-${field.key}-status-error`
         const openDefectPhotoViewer = (photos = defectPhotos) =>
           setPhotoViewer({
             title: `${row.equipment} - ${field.label} defect photos`,
@@ -201,8 +185,13 @@ export const HydraulicEquipmentCheckDetails = ({
               field={field}
               value={current[field.key]}
               readOnly={readOnly}
+              invalid={isMissingStatus}
+              describedBy={isMissingStatus ? statusErrorId : undefined}
               onChange={(nextValue) => onUpdateCheck(row, { [field.key]: nextValue })}
             />
+            <FormFieldError id={statusErrorId}>
+              {isMissingStatus ? `${field.label} status is required.` : ''}
+            </FormFieldError>
             {isDefect ? (
               readOnly ? (
                 <EvidenceBlock

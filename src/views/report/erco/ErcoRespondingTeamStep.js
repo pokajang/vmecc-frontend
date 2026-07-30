@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { CAlert, CBadge, CCol, CFormCheck, CRow } from '@coreui/react'
+import { CAlert, CBadge, CFormCheck } from '@coreui/react'
 import { ChevronDown, Users } from 'lucide-react'
-import IconOptionGrid from 'src/components/IconOptionGrid'
+import ResponsiveChoiceSelector from 'src/components/report-workflow/ResponsiveChoiceSelector'
 import TableLoader from 'src/components/TableLoader'
 import { fetchRosters, fetchShiftWindows, fetchTeams } from 'src/services/apiClient'
 import { ReportMobileActionGroup } from '../components/ReportWorkflowUi'
-import { DetailsStepActions } from './erco-form-components'
+import { DetailsStepActions, IncidentSummaryPanel } from './erco-form-components'
 import useIsMobile from './erco-form-components/useIsMobile'
-import { formatErcoLocation, resolveRespondingTeamLabel } from './utils'
+import { resolveRespondingTeamLabel } from './utils'
 
 const ACTIVE_CARD_BG = 'rgba(0, 126, 122, 0.2)'
 const ACTIVE_CARD_BORDER = 'rgba(0, 126, 122, 0.45)'
@@ -434,33 +434,6 @@ const ErcoRespondingTeamStep = ({
   }
   const teamLabel = resolveRespondingTeamLabel(form.respondingTeamName, attendanceRows)
   const shiftLabel = String(form.respondingTeamShift || '').trim()
-  const incidentDateValue = String(form?.incidentDate || form?.reportDate || '').trim() || '--'
-  const incidentTimeValue = String(form?.incidentTime || form?.reportTime || '').trim() || '--'
-  const incidentSummaryItems = useMemo(
-    () => [
-      {
-        label: 'Incident Type',
-        value: String(form?.incidentType || '').trim() || '--',
-      },
-      {
-        label: 'Weather',
-        value: String(form?.weather || '').trim() || '--',
-      },
-      {
-        label: 'Area',
-        value: formatErcoLocation(form?.location) || '--',
-      },
-      {
-        label: 'Incident Date',
-        value: incidentDateValue,
-      },
-      {
-        label: 'Incident Time',
-        value: incidentTimeValue,
-      },
-    ],
-    [form?.incidentType, form?.weather, form?.location, incidentDateValue, incidentTimeValue],
-  )
 
   return (
     <div className="mb-3 d-grid gap-3">
@@ -469,19 +442,7 @@ const ErcoRespondingTeamStep = ({
         data-erco-field="respondingAttendance"
         aria-invalid={Boolean(errorMessage) || undefined}
       >
-        <div className="d-grid gap-2">
-          <div className="fw-semibold">Incident Summary</div>
-          <div className="rounded-3 border p-3 p-md-4">
-            <CRow className="g-3">
-              {incidentSummaryItems.map((item) => (
-                <CCol key={item.label} xs={6} md>
-                  <div className="small text-body-secondary">{item.label}</div>
-                  <div className="fw-semibold">{item.value}</div>
-                </CCol>
-              ))}
-            </CRow>
-          </div>
-        </div>
+        <IncidentSummaryPanel form={form} />
         <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3">
           <div>
             <div className="fw-semibold">On-Scene Responders</div>
@@ -567,10 +528,13 @@ const ErcoRespondingTeamStep = ({
                       </div>
                       {isExpanded ? (
                         <div id={panelId} className="erco-team-accordion__body">
-                          <IconOptionGrid
+                          <ResponsiveChoiceSelector
+                            isMobile={isMobile}
                             options={buildMemberOptions(group.rows)}
                             value={selectedMemberKeys}
                             onChange={toggleMember}
+                            selectionMode="multi"
+                            ariaLabel={`${group.teamName} responding members`}
                             variant="compact"
                             showDescription
                             columns={resolveMemberColumns(group.rows.length)}
@@ -601,10 +565,13 @@ const ErcoRespondingTeamStep = ({
             ))}
           </div>
         ) : (
-          <IconOptionGrid
+          <ResponsiveChoiceSelector
+            isMobile={isMobile}
             options={memberOptions}
             value={selectedMemberKeys}
             onChange={toggleMember}
+            selectionMode="multi"
+            ariaLabel="Responding team members"
             variant="compact"
             showDescription
             columns={resolveMemberColumns(memberOptions.length)}

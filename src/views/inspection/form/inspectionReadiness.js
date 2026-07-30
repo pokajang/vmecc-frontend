@@ -67,7 +67,6 @@ export const buildInspectionReadiness = ({
   }
 
   const reviewBlockingKeys = new Set([
-    'local-validation',
     'media-processing',
     'unsaved-photo-drawer',
     'version-conflict',

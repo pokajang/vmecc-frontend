@@ -56,11 +56,17 @@ export const formatSyncTime = (value) => {
   })
 }
 
-export const generateSubmissionKey = (type = 'expense', userId = '') => {
+export const generateSubmissionKey = (type = 'expense', userId = '', stableScope = '') => {
   const normalizedType = String(type || 'expense')
     .trim()
     .toLowerCase()
   const normalizedUser = String(userId || 'anon').trim() || 'anon'
+  const normalizedScope = String(stableScope || '')
+    .trim()
+    .replace(/[^a-zA-Z0-9._:-]/g, '-')
+  if (normalizedScope) {
+    return `${normalizedType}:${normalizedUser}:${normalizedScope}`.slice(0, 190)
+  }
   const randomPart =
     typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
       ? crypto.randomUUID()

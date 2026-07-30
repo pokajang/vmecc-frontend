@@ -5,11 +5,6 @@ import {
   CCard,
   CCardBody,
   CCardHeader,
-  CModal,
-  CModalBody,
-  CModalFooter,
-  CModalHeader,
-  CModalTitle,
   CTable,
   CTableBody,
   CTableDataCell,
@@ -22,6 +17,7 @@ import ApprovalGates from 'src/components/ApprovalGates'
 import MobileRecordList from 'src/components/MobileRecordList'
 import RowActions from 'src/components/RowActions'
 import TableLoader from 'src/components/TableLoader'
+import ResponsiveWorkflowActionDialog from 'src/components/workflow/ResponsiveWorkflowActionDialog'
 import {
   buildPayrollBreakdown,
   formatAdjustmentItems,
@@ -729,44 +725,44 @@ const PayslipsSection = ({
           </CTable>
         </div>
       </CCardBody>
-      <CModal
+      <ResponsiveWorkflowActionDialog
         visible={Boolean(downloadNoticeRow)}
         onClose={() => setDownloadNoticeRow(null)}
-        alignment="center"
-      >
-        <CModalHeader>
-          <CModalTitle>Download unavailable</CModalTitle>
-        </CModalHeader>
-        <CModalBody>
-          <div className="text-body-secondary">
-            {downloadNoticeRow?.downloadReason ||
-              'Payslip download is currently unavailable for this record.'}
-          </div>
-          {isProfileIncomplete ? (
-            <div className="mt-2">
-              {missingFieldsLabel
-                ? `Missing profile fields: ${missingFieldsLabel}.`
-                : 'Please complete your profile before downloading the payslip.'}
+        title="Download unavailable"
+        body={
+          <>
+            <div className="text-body-secondary">
+              {downloadNoticeRow?.downloadReason ||
+                'Payslip download is currently unavailable for this record.'}
             </div>
-          ) : null}
-        </CModalBody>
-        <CModalFooter>
-          <CButton color="secondary" variant="outline" onClick={() => setDownloadNoticeRow(null)}>
-            Close
-          </CButton>
-          {isProfileIncomplete ? (
-            <CButton
-              color="primary"
-              onClick={() => {
-                setDownloadNoticeRow(null)
-                navigate('/profile')
-              }}
-            >
-              Complete Profile
+            {isProfileIncomplete ? (
+              <div className="mt-2">
+                {missingFieldsLabel
+                  ? `Missing profile fields: ${missingFieldsLabel}.`
+                  : 'Please complete your profile before downloading the payslip.'}
+              </div>
+            ) : null}
+          </>
+        }
+        footer={
+          <>
+            <CButton color="secondary" variant="outline" onClick={() => setDownloadNoticeRow(null)}>
+              Close
             </CButton>
-          ) : null}
-        </CModalFooter>
-      </CModal>
+            {isProfileIncomplete ? (
+              <CButton
+                color="primary"
+                onClick={() => {
+                  setDownloadNoticeRow(null)
+                  navigate('/profile')
+                }}
+              >
+                Complete Profile
+              </CButton>
+            ) : null}
+          </>
+        }
+      />
     </CCard>
   )
 }

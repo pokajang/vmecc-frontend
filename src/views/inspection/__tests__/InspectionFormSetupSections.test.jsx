@@ -163,13 +163,14 @@ describe('InspectionFormSetupSections', () => {
     expect(setIsEditingType).toHaveBeenCalledWith(false)
   })
 
-  it('shows the mobile show-less toggle icon while choosing type inline', () => {
+  it('keeps the mobile show-less action outside the type radio group', () => {
     mockCompactViewport(true)
 
     render(<InspectionFormSetupSections {...baseProps} />)
 
-    expect(screen.getByText('Show less')).toBeTruthy()
-    expect(screen.getByLabelText('Show less icon')).toBeTruthy()
+    const showLess = screen.getByRole('button', { name: 'Show less' })
+    expect(showLess.getAttribute('aria-expanded')).toBe('true')
+    expect(screen.getAllByRole('radio')).toHaveLength(2)
   })
 
   it('shows all inspection types on desktop without mobile toggle affordances', () => {
@@ -207,7 +208,7 @@ describe('InspectionFormSetupSections', () => {
     expect(screen.getByText('General Inspection')).toBeTruthy()
     expect(screen.queryByText('Choose Type')).toBeNull()
 
-    fireEvent.click(screen.getByLabelText('Edit Type'))
+    fireEvent.click(screen.getByRole('button', { name: /Edit type:/i }))
 
     expect(screen.getByText('Change Type')).toBeTruthy()
     expect(screen.getByText('SCBA')).toBeTruthy()
@@ -248,7 +249,8 @@ describe('InspectionFormSetupSections', () => {
       />,
     )
 
-    fireEvent.click(screen.getByLabelText('Reset type'))
+    fireEvent.click(screen.getByRole('button', { name: /Edit type:/i }))
+    fireEvent.click(screen.getByText('Clear type'))
 
     expect(updateInspectionType).toHaveBeenCalledWith('')
     expect(setIsEditingType).toHaveBeenCalledWith(false)
@@ -285,11 +287,12 @@ describe('InspectionFormSetupSections', () => {
     expect(screen.getByText('Main Location')).toBeTruthy()
     expect(screen.getByText('ASIC')).toBeTruthy()
 
-    fireEvent.click(screen.getByLabelText('Reset type'))
+    fireEvent.click(screen.getByRole('button', { name: /Edit type:/i }))
+    fireEvent.click(screen.getByText('Clear type'))
 
     expect(screen.getByText('Choose Type')).toBeTruthy()
     const typePicker = screen.getByRole('radiogroup')
-    expect(typePicker.classList.contains('inspection-mobile-selector-grid')).toBe(true)
+    expect(typePicker.classList.contains('mobile-choice-list__options')).toBe(true)
     expect(typePicker.closest('.mobile-setup-picker')).toBeTruthy()
     expect(screen.queryByText('Date and time')).toBeNull()
     expect(screen.queryByText('Choose Main Location')).toBeNull()
@@ -327,7 +330,7 @@ describe('InspectionFormSetupSections', () => {
 
     render(<Wrapper />)
 
-    fireEvent.click(screen.getByLabelText('Edit Type'))
+    fireEvent.click(screen.getByRole('button', { name: /Edit type:/i }))
     expect(screen.getByText('Change Type')).toBeTruthy()
 
     fireEvent.click(screen.getByText('Add type'))
@@ -357,7 +360,7 @@ describe('InspectionFormSetupSections', () => {
     expect(screen.getByText('2026-07-05')).toBeTruthy()
     expect(screen.getByText('14:27')).toBeTruthy()
 
-    fireEvent.click(screen.getByLabelText('Edit date and time'))
+    fireEvent.click(screen.getByRole('button', { name: /Edit date and time:/i }))
 
     expect(screen.getByText('Change Date and time')).toBeTruthy()
 
@@ -373,7 +376,7 @@ describe('InspectionFormSetupSections', () => {
     expect(document.body.style.overflow).toBe('')
   })
 
-  it('resets the selected mobile date and time from the collapsed row', () => {
+  it('clears the selected mobile date and time from its edit drawer', () => {
     mockCompactViewport(true)
     const updateInspectedAt = vi.fn()
 
@@ -387,7 +390,8 @@ describe('InspectionFormSetupSections', () => {
       />,
     )
 
-    fireEvent.click(screen.getByLabelText('Reset date and time'))
+    fireEvent.click(screen.getByRole('button', { name: /Edit date and time:/i }))
+    fireEvent.click(screen.getByText('Clear date and time'))
 
     expect(updateInspectedAt).toHaveBeenCalledWith('')
   })
@@ -431,7 +435,7 @@ describe('InspectionFormSetupSections', () => {
       />,
     )
 
-    fireEvent.click(screen.getByLabelText('Edit Zone'))
+    fireEvent.click(screen.getByRole('button', { name: /Edit Zone:/i }))
 
     expect(screen.getByText('Change Zone')).toBeTruthy()
     expect(screen.getByText('2 areas')).toBeTruthy()
@@ -479,7 +483,8 @@ describe('InspectionFormSetupSections', () => {
       />,
     )
 
-    fireEvent.click(screen.getByLabelText('Reset Zone'))
+    fireEvent.click(screen.getByRole('button', { name: /Edit Zone:/i }))
+    fireEvent.click(screen.getByText('Clear zone'))
 
     expect(location.setZone).toHaveBeenCalledWith('')
     expect(location.setMainLocation).not.toHaveBeenCalled()
@@ -520,7 +525,8 @@ describe('InspectionFormSetupSections', () => {
       />,
     )
 
-    fireEvent.click(screen.getByLabelText('Reset Main Area'))
+    fireEvent.click(screen.getByRole('button', { name: /Edit Main Area:/i }))
+    fireEvent.click(screen.getByText('Clear main area'))
 
     expect(location.setMainLocation).toHaveBeenCalledWith('')
     expect(location.setSubLocation).not.toHaveBeenCalled()
@@ -560,7 +566,8 @@ describe('InspectionFormSetupSections', () => {
       />,
     )
 
-    fireEvent.click(screen.getByLabelText('Reset Location'))
+    fireEvent.click(screen.getByRole('button', { name: /Edit Location:/i }))
+    fireEvent.click(screen.getByText('Clear location'))
 
     expect(location.setSubLocation).toHaveBeenCalledWith('')
   })
@@ -756,7 +763,7 @@ describe('InspectionFormSetupSections', () => {
 
     expect(screen.getByText('Choose Location')).toBeTruthy()
     expect(
-      within(screen.getByRole('group', { name: 'Main Area' })).getByText('2 locations'),
+      within(screen.getByRole('button', { name: /Edit Main Area:/i })).getByText('2 locations'),
     ).toBeTruthy()
   })
 
@@ -811,7 +818,9 @@ describe('InspectionFormSetupSections', () => {
       />,
     )
 
-    expect(within(screen.getByRole('group', { name: 'Location' })).getByText('1 FE')).toBeTruthy()
+    expect(
+      within(screen.getByRole('button', { name: /Edit Location:/i })).getByText('1 FE'),
+    ).toBeTruthy()
   })
 
   it('keeps neutral main-area counts visible when one area is selected', async () => {
@@ -851,7 +860,7 @@ describe('InspectionFormSetupSections', () => {
       />,
     )
 
-    fireEvent.click(screen.getByLabelText('Edit Main Area'))
+    fireEvent.click(screen.getByRole('button', { name: /Edit Main Area:/i }))
 
     await waitFor(() => expect(screen.getByText('Change Main Area')).toBeTruthy())
     expect(screen.getByText('13 locations')).toBeTruthy()
@@ -1125,7 +1134,7 @@ describe('InspectionFormSetupSections', () => {
       />,
     )
 
-    fireEvent.click(screen.getByLabelText('Edit Zone'))
+    fireEvent.click(screen.getByRole('button', { name: /Edit Zone:/i }))
 
     expect(screen.getByText('Zone 2')).toBeTruthy()
     expect(screen.getByText('Zone 3')).toBeTruthy()
@@ -1244,7 +1253,7 @@ describe('InspectionFormSetupSections', () => {
 
     render(<Wrapper />)
 
-    fireEvent.click(screen.getByLabelText('Edit Zone'))
+    fireEvent.click(screen.getByRole('button', { name: /Edit Zone:/i }))
     expect(screen.getByText('Change Zone')).toBeTruthy()
 
     fireEvent.click(screen.getByText('Add zone'))

@@ -2,9 +2,11 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { CAlert, CBadge, CButton } from '@coreui/react'
 import { Trash2, Users } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
-import IconOptionGrid from 'src/components/IconOptionGrid'
+import ResponsiveChoiceSelector from 'src/components/report-workflow/ResponsiveChoiceSelector'
+import WorkflowRosterGroup from 'src/components/report-workflow/WorkflowRosterGroup'
 import TableLoader from 'src/components/TableLoader'
 import { fetchTeams } from 'src/services/apiClient'
+import useReportIsMobile from '../hooks/useReportIsMobile'
 import { uid } from '../utils'
 import { FITNESS_FIELD_LIMITS } from './constants'
 import { createFitnessParticipant, flattenFitnessParticipants } from './fitnessFormDomain'
@@ -33,6 +35,7 @@ const FitnessTestPersonnelStep = ({
   draftStatus,
   pushToast,
 }) => {
+  const isMobile = useReportIsMobile()
   const [teams, setTeams] = useState([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
@@ -181,15 +184,13 @@ const FitnessTestPersonnelStep = ({
     <div className="mb-3 d-grid gap-4">
       <section className="d-grid gap-3" data-fitness-test-field="shiftGroups">
         <div className="d-flex flex-wrap align-items-start justify-content-between gap-2">
-          <div>
-            <h3 className="h6 mb-1">Select participating personnel</h3>
-            <p className="small text-body-secondary mb-0">
-              Active team members are included automatically. Exclude only those not participating.
-            </p>
-          </div>
+          <h3 className="h6 mb-0">Participating personnel</h3>
           <div className="d-flex align-items-center gap-2">
+            {!loading && !loadError && teams.length ? (
+              <CBadge color="success">Active roster included</CBadge>
+            ) : null}
             <CBadge color="light" className="border text-body-secondary">
-              {selectedCount} selected
+              {selectedCount} included
             </CBadge>
             <CreateActionButton
               label="Add participant"
@@ -248,43 +249,18 @@ const FitnessTestPersonnelStep = ({
             selectedKeys.has(fitnessMemberKey(member)),
           ).length
           return (
-            <section
+            <WorkflowRosterGroup
               key={team.id || team.name}
-              className="fitness-personnel-card rounded-3 border p-3 d-grid gap-3"
+              title={team.name}
+              countLabel={`${includedCount} of ${team.members.length} included`}
+              onIncludeAll={() => setTeamIncluded(team, true)}
+              onExcludeAll={() => setTeamIncluded(team, false)}
+              includeDisabled={includedCount === team.members.length}
+              excludeDisabled={includedCount === 0}
+              className="fitness-personnel-card"
             >
-              <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                <div>
-                  <div className="fw-semibold">{team.name}</div>
-                  <div className="small text-body-secondary">
-                    {includedCount} of {team.members.length} included
-                  </div>
-                </div>
-                <div className="d-flex gap-2">
-                  <CButton
-                    type="button"
-                    color="link"
-                    size="sm"
-                    className="fitness-team-bulk-action"
-                    disabled={includedCount === team.members.length}
-                    aria-label={`Include all ${team.name} members`}
-                    onClick={() => setTeamIncluded(team, true)}
-                  >
-                    Include all
-                  </CButton>
-                  <CButton
-                    type="button"
-                    color="link"
-                    size="sm"
-                    className="fitness-team-bulk-action text-body-secondary"
-                    disabled={includedCount === 0}
-                    aria-label={`Exclude all ${team.name} members`}
-                    onClick={() => setTeamIncluded(team, false)}
-                  >
-                    Exclude all
-                  </CButton>
-                </div>
-              </div>
-              <IconOptionGrid
+              <ResponsiveChoiceSelector
+                isMobile={isMobile}
                 options={team.members.map((member) => ({
                   value: fitnessMemberKey(member),
                   title: member.name,
@@ -304,7 +280,7 @@ const FitnessTestPersonnelStep = ({
                 showDescription
                 ariaLabel={`${team.name} members`}
               />
-            </section>
+            </WorkflowRosterGroup>
           )
         })}
         {manualParticipants.length ? (
@@ -316,15 +292,13 @@ const FitnessTestPersonnelStep = ({
               Added participants
             </div>
             {manualParticipants.map((participant) => (
-              <div
-                key={participant.id}
-                className="d-flex align-items-center justify-content-between gap-2 border-top pt-2"
-              >
-                <div style={{ minWidth: 0 }}>
-                  <div className="fw-semibold text-truncate">{participant.name}</div>
-                  <div className="small text-body-secondary">
-                    {participant.shift} - {participant.role || 'Participant'} - Age{' '}
-                    {participant.ageSnapshot}
+              <div key={participant.id} className="fitness-manual-participant border-top pt-2">
+                <div className="fitness-manual-participant__copy">
+                  <div className="fw-semibold">{participant.name}</div>
+                  <div className="fitness-manual-participant__meta small text-body-secondary">
+                    <span>{participant.shift}</span>
+                    <span>{participant.role || 'Participant'}</span>
+                    <span>Age {participant.ageSnapshot}</span>
                   </div>
                 </div>
                 <CButton

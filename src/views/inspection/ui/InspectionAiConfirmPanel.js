@@ -2,9 +2,10 @@ import React, { useCallback, useState } from 'react'
 import { CAlert, CButton } from '@coreui/react'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import CreateActionButton from 'src/components/CreateActionButton'
-import IconOptionGrid from 'src/components/IconOptionGrid'
+import ResponsiveChoiceSelector from 'src/components/report-workflow/ResponsiveChoiceSelector'
 import TypeManagerModal from 'src/components/report-workflow/TypeManagerModal'
 import { ReportPhotoImage } from 'src/components/report-workflow/ReportViewComponents'
+import useMediaQuery from 'src/hooks/useMediaQuery'
 import { recordTypeUsage } from './typeUsageStorage'
 import { ACTIVE_CARD_STYLE, TOGGLE_CARD_PROPS } from './typeOptionUtils'
 import useIncidentTypeManager, { INCIDENT_TYPE_TOGGLE_VALUE } from './useIncidentTypeManager'
@@ -29,6 +30,7 @@ const InspectionAiConfirmPanel = ({
   onSaveDraft,
   onReset,
 }) => {
+  const isMobile = useMediaQuery('(max-width: 767.98px)')
   const [confirmedType, setConfirmedType] = useState(aiResult.detectedType || '')
   const [confirmedLocation, setConfirmedLocation] = useState(initialLocation)
   const [summaryAccepted, setSummaryAccepted] = useState(false)
@@ -245,7 +247,8 @@ const InspectionAiConfirmPanel = ({
         {/* Inspection type */}
         <div className="d-grid gap-2">
           <div className="fw-semibold text-muted">Choose Type</div>
-          <IconOptionGrid
+          <ResponsiveChoiceSelector
+            isMobile={isMobile}
             options={incident.visibleTypeOptions}
             value={confirmedType}
             onChange={(value) => {
@@ -257,6 +260,8 @@ const InspectionAiConfirmPanel = ({
               setConfirmedType(value)
             }}
             variant="compact"
+            toggleValue={INCIDENT_TYPE_TOGGLE_VALUE}
+            ariaLabel="Choose inspection type"
             columns={{ xs: 6, md: 3 }}
             cardProps={(option, isSelected) => {
               if (option?.value === INCIDENT_TYPE_TOGGLE_VALUE) return TOGGLE_CARD_PROPS

@@ -1,6 +1,4 @@
 import { resolvePeriodValue } from '../helpers/grouping'
-import { CLAIM_RECORDS_KEY } from './constants'
-import { parseStoredArray } from './storage'
 import { parseAmount } from './money'
 import { toSortableDate } from './formatters'
 
@@ -47,32 +45,6 @@ export const buildOptionsFromUnique = (rows, key, allLabel, formatter = (value) 
     label: formatter(value),
   })),
 ]
-
-export const loadSharedClaimRows = () => {
-  try {
-    const keys = Object.keys(localStorage).filter(
-      (key) => key === CLAIM_RECORDS_KEY || key.startsWith(`${CLAIM_RECORDS_KEY}_`),
-    )
-    const merged = []
-    keys.forEach((key) => {
-      const ownerId = key.startsWith(`${CLAIM_RECORDS_KEY}_`)
-        ? key.slice(`${CLAIM_RECORDS_KEY}_`.length)
-        : ''
-      const rows = parseStoredArray(localStorage.getItem(key))
-      rows.forEach((row) => {
-        merged.push({
-          ...row,
-          ownerId,
-          ownerLabel:
-            row?.submittedBy || row?.updatedBy || (ownerId ? `User ${ownerId}` : 'Unknown'),
-        })
-      })
-    })
-    return merged
-  } catch {
-    return []
-  }
-}
 
 export const filterClaimRows = (rows, { search, statusFilter, typeFilter, period, sort }) => {
   const term = search.trim().toLowerCase()

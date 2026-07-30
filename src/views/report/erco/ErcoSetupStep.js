@@ -2,8 +2,9 @@ import React, { useMemo, useState } from 'react'
 import { CButton, CCol, CFormInput, CRow } from '@coreui/react'
 import CreateActionButton from 'src/components/CreateActionButton'
 import IconOptionCard from 'src/components/IconOptionCard'
-import IconOptionGrid from 'src/components/IconOptionGrid'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
+import ResponsiveChoiceSelector from 'src/components/report-workflow/ResponsiveChoiceSelector'
+import MobileSetupSummaryList from 'src/components/report-workflow/MobileSetupSummaryList'
 import TypeManagerModal from 'src/components/report-workflow/TypeManagerModal'
 import { ReportMobileActionGroup, ReportSetupSummaryRow } from '../components/ReportWorkflowUi'
 import { DetailsStepActions } from './erco-form-components'
@@ -254,6 +255,8 @@ const ErcoSetupStep = ({
     isMobile
       ? effectiveMobileGroup === group
       : !completion[group] || desktopEditGroup === group || setupGroupHasError(group)
+  const setupGroupClassName = (group, gap = 2) =>
+    `d-grid gap-${gap}${isMobile && !shouldShowSetupEditor(group) ? ' d-none' : ''}`
 
   const handleContinueClick = () => {
     if (isMobile) {
@@ -314,7 +317,7 @@ const ErcoSetupStep = ({
   }
 
   const renderSetupSummary = (group, label, value, secondaryValue = '') => {
-    if (!completion[group] || shouldShowSetupEditor(group)) return null
+    if (isMobile || !completion[group] || shouldShowSetupEditor(group)) return null
     return (
       <ReportSetupSummaryRow
         label={label}
@@ -326,6 +329,42 @@ const ErcoSetupStep = ({
       />
     )
   }
+  const setupSummaryDefinitions = [
+    {
+      group: 'incident',
+      label: 'Incident Type',
+      value: selectedIncidentOption?.label || form.incidentType,
+    },
+    {
+      group: 'weather',
+      label: 'Weather',
+      value: selectedWeatherOption?.label || selectedWeatherOption?.title || form.weather,
+    },
+    {
+      group: 'area',
+      label: 'Area',
+      value:
+        selectedLocationLabels.length === 1
+          ? selectedLocationLabels[0]
+          : `${selectedLocationLabels.length} areas selected`,
+    },
+    {
+      group: 'datetime',
+      label: 'Date & Time',
+      value: form.incidentDate || '--',
+      secondaryValue: form.incidentTime,
+    },
+  ]
+  const mobileSetupSummaryItems = isMobile
+    ? setupSummaryDefinitions
+        .filter(({ group }) => completion[group] && !shouldShowSetupEditor(group))
+        .map(({ group, ...item }) => ({
+          ...item,
+          key: group,
+          editLabel: `Edit ${item.label}`,
+          onEdit: () => openMobileGroup(group),
+        }))
+    : []
 
   return (
     <div className="mb-3 d-grid gap-4" data-testid="erco-report-setup-ready">
@@ -453,8 +492,11 @@ const ErcoSetupStep = ({
       />
 
       <div className="erco-mobile-setup-grid mobile-setup-picker d-grid gap-4">
+        {mobileSetupSummaryItems.length > 0 ? (
+          <MobileSetupSummaryList ariaLabel="ERCO setup summary" items={mobileSetupSummaryItems} />
+        ) : null}
         <div
-          className="d-grid gap-2"
+          className={setupGroupClassName('incident')}
           data-erco-field="incidentType"
           aria-invalid={Boolean(setupFieldErrors.incidentType) || undefined}
         >
@@ -476,7 +518,8 @@ const ErcoSetupStep = ({
                   onClick={incident.openAddModal}
                 />
               </div>
-              <IconOptionGrid
+              <ResponsiveChoiceSelector
+                isMobile={isMobile}
                 options={incident.visibleTypeOptions}
                 value={form.incidentType}
                 onChange={(value) => {
@@ -493,6 +536,8 @@ const ErcoSetupStep = ({
                   setActiveMobileGroup('weather')
                 }}
                 variant="compact"
+                toggleValue={INCIDENT_TYPE_TOGGLE_VALUE}
+                ariaLabel="Choose incident type"
                 columns={{ xs: 12, md: 3 }}
                 cardProps={(option, isSelected) => {
                   if (option?.value === INCIDENT_TYPE_TOGGLE_VALUE) {
@@ -527,7 +572,7 @@ const ErcoSetupStep = ({
         </div>
 
         <div
-          className="d-grid gap-2"
+          className={setupGroupClassName('weather')}
           data-erco-field="weather"
           aria-invalid={Boolean(setupFieldErrors.weather) || undefined}
         >
@@ -549,7 +594,8 @@ const ErcoSetupStep = ({
                   onClick={weather.openAddModal}
                 />
               </div>
-              <IconOptionGrid
+              <ResponsiveChoiceSelector
+                isMobile={isMobile}
                 options={weather.visibleTypeOptions}
                 value={form.weather}
                 onChange={(value) => {
@@ -566,6 +612,8 @@ const ErcoSetupStep = ({
                   setActiveMobileGroup('area')
                 }}
                 variant="compact"
+                toggleValue={WEATHER_TOGGLE_VALUE}
+                ariaLabel="Choose weather"
                 columns={{ xs: 12, md: 3 }}
                 cardProps={(option, isSelected) => {
                   if (option?.value === WEATHER_TOGGLE_VALUE) {
@@ -600,7 +648,7 @@ const ErcoSetupStep = ({
         </div>
 
         <div
-          className="d-grid gap-2"
+          className={setupGroupClassName('area')}
           data-erco-field="location"
           aria-invalid={Boolean(setupFieldErrors.location) || undefined}
         >
@@ -632,7 +680,8 @@ const ErcoSetupStep = ({
                   />
                 </div>
               </div>
-              <IconOptionGrid
+              <ResponsiveChoiceSelector
+                isMobile={isMobile}
                 options={location.visibleTypeOptions}
                 value={selectedLocations}
                 onChange={(value) => {
@@ -652,6 +701,9 @@ const ErcoSetupStep = ({
                   setActiveMobileGroup('area')
                 }}
                 variant="compact"
+                selectionMode="multi"
+                toggleValue={LOCATION_TOGGLE_VALUE}
+                ariaLabel="Choose areas"
                 showDescription
                 columns={{ xs: 12, md: 3 }}
                 cardProps={(option) => {
@@ -702,7 +754,7 @@ const ErcoSetupStep = ({
           ) : null}
         </div>
 
-        <div className="d-grid gap-4">
+        <div className={setupGroupClassName('datetime', 4)}>
           {renderSetupSummary(
             'datetime',
             'Date & Time',
@@ -721,10 +773,8 @@ const ErcoSetupStep = ({
                     <CCol key={String(option?.value || option?.title || '')} xs={6} md={3}>
                       <IconOptionCard
                         title={option?.title || String(option?.value || '')}
-                        description={option?.description || ''}
                         selected={form.incidentDate === option?.value}
                         icon={null}
-                        showDescription
                         variant="compact"
                         bodyClassName="d-flex align-items-start"
                         paddingClassName="p-3"

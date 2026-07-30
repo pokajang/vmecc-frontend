@@ -18,6 +18,7 @@ import { isHolidayGuidanceOvertimeEnabledForUser } from 'src/config/featureFlags
 import { hasPermission, isSystemAdministrator } from 'src/utils/authz'
 import useTableRows from 'src/hooks/useTableRows'
 import useOvertimeEligibility from 'src/hooks/useOvertimeEligibility'
+import { resolveSensitiveIdentityKey } from 'src/services/payrollPrivacy'
 import { overtimeSortOptions, statusColorMap } from './constants'
 import {
   APPLICANT_OVERTIME_EDIT_LOCK_REASON,
@@ -50,7 +51,7 @@ const getStatusBadge = (status, label = status) => (
   <CBadge color={statusColorMap[status] || 'secondary'}>{label || '-'}</CBadge>
 )
 
-const Overtime = () => {
+const OvertimeContent = () => {
   const overtimeTypeDerivedMode = false
   const location = useLocation()
   const navigate = useNavigate()
@@ -510,6 +511,7 @@ const Overtime = () => {
     overtimeRecords,
     setOvertimeRecords,
     setOvertimeDraft,
+    overtimeDraft,
     draftListRow,
     overtimeId,
     navigate,
@@ -587,7 +589,7 @@ const Overtime = () => {
   }
 
   return (
-    <CContainer fluid data-testid="overtime-module">
+    <CContainer fluid className="workflow-module-page" data-testid="overtime-module">
       <ModulePageHeader
         title="Overtime"
         actions={
@@ -707,6 +709,7 @@ const Overtime = () => {
             getScheduleLabel={getScheduleLabel}
             formatDate={formatDate}
             formatDateTime={formatDateTime}
+            showPageHeader
             canEdit={Boolean(selectedRecord && canApplicantEditOvertimeRecord(selectedRecord))}
             canCancel={
               Boolean(selectedRecord) &&
@@ -769,6 +772,12 @@ const Overtime = () => {
       ) : null}
     </CContainer>
   )
+}
+
+const Overtime = () => {
+  const identityKey = useSelector((state) => resolveSensitiveIdentityKey(state.authUser))
+
+  return <OvertimeContent key={`overtime:${identityKey}`} />
 }
 
 export default Overtime

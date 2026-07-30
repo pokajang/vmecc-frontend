@@ -105,7 +105,7 @@ const useAssignmentSubmitActions = ({
 
       const apiUpsertResult = await upsertSalaryAssignmentApiFirst(
         user?.id,
-        nextRow,
+        { ...nextRow, version: targetRow?.version || null },
         targetRow?.serverId || targetRow?.id || null,
       )
       if (!apiUpsertResult?.ok || !apiUpsertResult?.data) {

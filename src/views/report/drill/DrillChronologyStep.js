@@ -1,7 +1,8 @@
 import React from 'react'
 import { CAlert } from '@coreui/react'
-import { ReportChronologySection, ReportMobileContextPanel } from '../components/ReportWorkflowUi'
+import { ReportChronologySection } from '../components/ReportWorkflowUi'
 import { DRILL_FIELD_LIMITS } from './constants'
+import DrillContextSummary from './DrillContextSummary'
 import DrillStageActions from './DrillStageActions'
 
 const hasOutOfOrderTime = (rows) => {
@@ -60,15 +61,7 @@ const DrillChronologyStep = ({
 
   return (
     <div className="d-grid gap-3">
-      <ReportMobileContextPanel
-        title="Drill Context"
-        items={[
-          { label: 'Type', value: form.incidentType },
-          { label: 'Location', value: form.location },
-          { label: 'Start', value: [form.reportDate, form.reportTime].filter(Boolean).join(' ') },
-          { label: 'Title', value: form.exerciseTitle || form.details },
-        ]}
-      />
+      <DrillContextSummary form={form} includeTitle />
       <div
         data-drill-field="chronology"
         aria-invalid={Boolean(fieldErrors.chronology) || undefined}

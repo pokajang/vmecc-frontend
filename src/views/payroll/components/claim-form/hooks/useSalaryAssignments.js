@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { loadSalaryAssignmentsApiFirst } from 'src/services/salaryAssignmentsApi'
+import { fetchPayrollSalaryBaseline } from 'src/services/apiClient'
+import { createPayrollRequestContext } from 'src/services/payrollPrivacy'
 import {
   buildAssignedSalarySnapshot,
   getItemSummaryText,
@@ -14,33 +15,56 @@ const useSalaryAssignments = ({ user, period, savedItems, pushToast }) => {
   const [isSalaryAssignmentsLoading, setIsSalaryAssignmentsLoading] = useState(false)
 
   useEffect(() => {
-    let active = true
+    const requestContext = createPayrollRequestContext(user?.id)
     const hydrateSalaryAssignments = async () => {
-      if (!user?.id) {
+      if (!user?.id || !/^\d{4}-\d{2}$/.test(String(period || ''))) {
         setSalaryAssignments([])
         setIsSalaryAssignmentsLoading(false)
         return
       }
+      setSalaryAssignments([])
       setIsSalaryAssignmentsLoading(true)
-      const result = await loadSalaryAssignmentsApiFirst(user.id)
-      if (!active) return
-      if (!result?.ok) {
+      try {
+        const result = await fetchPayrollSalaryBaseline(period, {
+          signal: requestContext.signal,
+          cache: 'no-store',
+        })
+        if (!requestContext.isCurrent()) return
+        const baseline = result?.data
+        setSalaryAssignments(
+          baseline
+            ? [
+                {
+                  id: baseline.salaryAssignmentPublicId,
+                  employeeId: String(user.id),
+                  employee: String(user.name || ''),
+                  email: String(user.email || ''),
+                  status: 'Active',
+                  effectiveFrom: baseline.effectiveFrom,
+                  basicSalary: Number(baseline.basic || 0),
+                  fixedAllowances: Number(baseline.allowanceTotal || 0),
+                  allowances: Array.isArray(baseline.allowances) ? baseline.allowances : [],
+                  employeeContributions: baseline.employeeContributions || {},
+                  employerContributions: baseline.employerContributions || {},
+                  serverAuthoritative: true,
+                },
+              ]
+            : [],
+        )
+      } catch {
+        if (!requestContext.isCurrent()) return
         pushToast('Unable to load salary assignment baseline from API. Please retry.', {
           title: 'Salary baseline unavailable',
           color: 'danger',
         })
         setSalaryAssignments([])
-        setIsSalaryAssignmentsLoading(false)
-        return
+      } finally {
+        if (requestContext.isCurrent()) setIsSalaryAssignmentsLoading(false)
       }
-      setSalaryAssignments(Array.isArray(result?.data) ? result.data : [])
-      setIsSalaryAssignmentsLoading(false)
     }
-    hydrateSalaryAssignments()
-    return () => {
-      active = false
-    }
-  }, [pushToast, user?.id])
+    void hydrateSalaryAssignments().finally(requestContext.release)
+    return requestContext.abort
+  }, [period, pushToast, user?.email, user?.id, user?.name])
 
   const totalAmount = useMemo(
     () => roundMoney(savedItems.reduce((sum, item) => sum + getSignedAdjustmentAmount(item), 0)),

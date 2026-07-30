@@ -9,6 +9,14 @@
   .create-action-button,
   .edit-controls__action,
   .back-button,
+  .module-nav-link,
+  .data-table-footer__page-size,
+  .data-table-footer__page-action,
+  .workflow-group-selection,
+  .workflow-group-selection .form-check-input,
+  .workflow-attachment-action,
+  .workflow-item-action,
+  .workflow-step-action,
   .table-filter-trigger,
   .pwa-install-banner__dismiss,
   .dropdown-toggle[aria-label='Row actions'] {
@@ -16,8 +24,20 @@
     min-height: 44px;
   }
 
+  .workflow-group-selection {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+  }
+
+  .workflow-group-selection .form-check-input {
+    flex: 0 0 auto;
+    margin: 0;
+  }
+
   .action-row-thumb.action-row-thumb--compact-sticky .btn {
-    min-height: 36px;
+    min-height: 44px;
   }
 
   .notification-drawer-action-btn,

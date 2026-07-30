@@ -14,6 +14,7 @@ import {
 import FormActionGroup from 'src/components/FormActionGroup'
 import ReportPhotoGallery from 'src/components/report-workflow/ReportPhotoGallery'
 import { DetailField } from 'src/components/report-workflow/ReportViewComponents'
+import RespondingTeamSummary from 'src/components/report-workflow/RespondingTeamSummary'
 import { getProficiencyCheckpointSummary } from '../fitness-test/fitnessFormDomain'
 
 const text = (value) => String(value || '').trim()
@@ -62,40 +63,6 @@ const ChronologyRows = ({ chronology, onEdit }) => {
           </div>
         ))}
       </div>
-    </ReviewSectionBlock>
-  )
-}
-
-const RespondingTeamRows = ({ respondingTeam, isDrill = false, onEdit }) => {
-  if (!respondingTeam) return null
-  const attendance = Array.isArray(respondingTeam.attendance) ? respondingTeam.attendance : []
-  if (!text(respondingTeam.name) && !text(respondingTeam.shift) && attendance.length === 0) {
-    return null
-  }
-
-  return (
-    <ReviewSectionBlock title={isDrill ? 'Exercise Personnel' : 'Responding Team'} onEdit={onEdit}>
-      <CRow className="g-3">
-        <DetailField label="Team">{respondingTeam.name || '--'}</DetailField>
-        {respondingTeam.shift ? (
-          <DetailField label="Shift">{respondingTeam.shift}</DetailField>
-        ) : null}
-      </CRow>
-      {attendance.length > 0 ? (
-        <div className="d-flex flex-wrap gap-2">
-          {attendance.map((member, index) => (
-            <CBadge
-              key={member.memberId || index}
-              color="light"
-              className="border text-body-secondary fw-normal"
-            >
-              {member.name}
-              {member.role ? ` - ${member.role}` : ''}
-              {member.exerciseRole ? ` (${member.exerciseRole})` : ''}
-            </CBadge>
-          ))}
-        </div>
-      ) : null}
     </ReviewSectionBlock>
   )
 }
@@ -515,12 +482,13 @@ const ReportReviewSection = ({
       ) : null}
 
       {!isFitness ? (
-        <RespondingTeamRows
+        <RespondingTeamSummary
           respondingTeam={r.respondingTeam}
           isDrill={isDrill}
           onEdit={
             isDrill ? () => editSection('personnel') : isErco ? () => editSection('team') : null
           }
+          variant="review"
         />
       ) : null}
       {!isFitness ? (

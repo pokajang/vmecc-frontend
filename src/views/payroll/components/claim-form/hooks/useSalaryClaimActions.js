@@ -1,4 +1,5 @@
 import { useCallback } from 'react'
+import { getPayrollVolatileStorage } from 'src/services/payrollPrivacy'
 import {
   createSalaryItem,
   normalizeItem,
@@ -157,7 +158,7 @@ const useSalaryClaimActions = ({
     setLeaveModalVisible(false)
     pendingLeaveActionRef.current = null
     try {
-      localStorage.removeItem(localAutosaveKey)
+      getPayrollVolatileStorage().removeItem(localAutosaveKey)
     } catch {
       // ignore storage errors
     }

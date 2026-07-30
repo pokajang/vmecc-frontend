@@ -69,7 +69,6 @@ describe('InspectionLocationOptionPicker', () => {
 
     expect(screen.getByPlaceholderText('Search main location...')).toBeTruthy()
     expect(screen.getByText('Show more')).toBeTruthy()
-    expect(screen.getByLabelText('Show more icon')).toBeTruthy()
     expect(screen.queryByText('Location 14')).toBeNull()
 
     fireEvent.change(screen.getByLabelText('Search main location'), {
