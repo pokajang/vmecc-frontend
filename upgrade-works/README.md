@@ -9,10 +9,10 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | Item | Status |
 | --- | --- |
 | Working branch | `codex/frontend-upgrade-stage-1` |
-| Current stage | Stage 1 local implementation authorized |
+| Current stage | Stage 1 Days 1–2 locally completed |
 | Gate decision | **Open for local-only Stage 1; blocked for staging/production promotion** |
-| Application/tooling changes started | Yes; Node.js runtime policy pinned |
-| Next planned implementation | Day 1 — capture and repair ESLint configuration |
+| Application/tooling changes started | Yes; implementation checkpoint `b1b0804` |
+| Next planned implementation | Day 3 — production headers and source configuration |
 
 ## Document Register
 
@@ -20,6 +20,7 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | --- | --- | --- |
 | [Frontend upgrade plan](./FRONTEND_UPGRADE_PLAN_2026-08-03.md) | Hardened 90-day implementation plan, quality gates, rollback controls, and stage criteria | Draft for owner approval |
 | [Preflight record](./FRONTEND_UPGRADE_PREFLIGHT_2026-08-03.md) | Repository, toolchain, artifact, environment, CI, service, and safety-gate baseline | Completed; blocking actions open |
+| [Stage 1 execution record](./FRONTEND_UPGRADE_STAGE_1_EXECUTION_2026-08-03.md) | Day 1 lint repair, Day 2 correctness fixes, validation evidence, rollback, and residual risks | Days 1–2 locally completed; promotion blocked |
 
 ## Completed Work
 
@@ -34,6 +35,10 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 - Received repository-owner authorization to begin local-only Stage 1 work while keeping staging and production promotion blocked.
 - Committed the programme documentation checkpoint as `3bfb03b`.
 - Initially tested Node.js `22.23.1`, then corrected the repository and CI policy to Node.js `24.16.0` after clean install exposed `@zxing/library@0.23.0` requiring Node.js 24 or newer.
+- Repaired ESLint so JavaScript, React, Hooks, accessibility, tests, scripts, and service-worker contexts enforce the intended rules.
+- Fixed all blocking undefined, unreachable, React, accessibility, and JavaScript recommended-rule findings without autofix.
+- Added focused regression coverage and passed 312 test files / 1,706 tests under the final Node.js runtime.
+- Passed the clean install, lint, repository audits, and isolated production build at implementation revision `b1b0804`.
 
 ## Open Preflight Actions
 
@@ -45,13 +50,12 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 
 ## Next Work
 
-After the preflight gate opens:
+Continue with the locally reviewable Day 3 work while promotion remains blocked:
 
-1. Capture the effective ESLint configuration for each runtime context.
-2. Run corrected rules without autofix and classify real defects versus configuration false positives.
-3. Repair the ESLint flat configuration.
-4. Fix confirmed undefined identifiers and unreachable code in focused changes.
-5. Add regression tests for every corrected runtime path.
+1. Correct and test production Permissions Policy and CSP source configuration.
+2. Remove silent production API fallback behavior and validate required production configuration.
+3. Preserve a configuration-only rollback diff.
+4. Defer deployed-origin and physical-device claims until approved staging, owners, and devices are available.
 
 ## File Naming
 
