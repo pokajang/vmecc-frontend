@@ -24,3 +24,8 @@ npm run serve
 ```
 
 The production build is written to `build/`.
+
+## Frontend Upgrade Works
+
+The staged frontend quality and reliability upgrade programme is tracked in
+[upgrade-works/README.md](./upgrade-works/README.md).
