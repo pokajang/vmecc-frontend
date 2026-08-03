@@ -45,6 +45,17 @@ beforeEach(() => {
 })
 
 describe('Login remember me', () => {
+  it('uses a bundled same-origin Google sign-in icon', () => {
+    renderLogin()
+
+    const googleButton = screen.getByRole('button', { name: /continue with google/i })
+    const googleIcon = googleButton.querySelector('img')
+
+    expect(googleIcon).toBeTruthy()
+    expect(googleIcon.getAttribute('src')).not.toMatch(/^https?:\/\//i)
+    expect(googleIcon.getAttribute('aria-hidden')).toBe('true')
+  })
+
   it('defaults checked and sends remember true for password login', async () => {
     renderLogin()
 

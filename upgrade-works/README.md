@@ -9,10 +9,10 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | Item | Status |
 | --- | --- |
 | Working branch | `codex/frontend-upgrade-stage-1` |
-| Current stage | Stage 1 Days 1–2 locally completed |
+| Current stage | Stage 1 Days 1–3 locally completed |
 | Gate decision | **Open for local-only Stage 1; blocked for staging/production promotion** |
 | Application/tooling changes started | Yes; implementation checkpoint `b1b0804` |
-| Next planned implementation | Day 3 — production headers and source configuration |
+| Next planned implementation | Day 4 — required CI quality gates |
 
 ## Document Register
 
@@ -22,6 +22,7 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | [Preflight record](./FRONTEND_UPGRADE_PREFLIGHT_2026-08-03.md) | Repository, toolchain, artifact, environment, CI, service, and safety-gate baseline | Completed; blocking actions open |
 | [Stage 1 execution record](./FRONTEND_UPGRADE_STAGE_1_EXECUTION_2026-08-03.md) | Day 1 lint repair, Day 2 correctness fixes, validation evidence, rollback, and residual risks | Days 1–2 locally completed; promotion blocked |
 | [Stage 1 compatibility audit](./FRONTEND_UPGRADE_STAGE_1_AUDIT_2026-08-03.md) | Post-implementation diff review, functional-compatibility tests, full validation, and residual risks | Locally verified; promotion blocked |
+| [Stage 1 Day 3 execution record](./FRONTEND_UPGRADE_STAGE_1_DAY_3_EXECUTION_2026-08-03.md) | Production headers, bundled Google icon, fail-closed production API configuration, validation, and rollback | Locally completed; deployment qualification blocked |
 
 ## Completed Work
 
@@ -42,6 +43,8 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 - Passed the clean install, lint, repository audits, and isolated production build at implementation revision `b1b0804`.
 - Audited the complete Stage 1 implementation diff for accidental behavior changes; no application-code regression was confirmed.
 - Added five compatibility tests and passed 314 test files / 1,711 tests, all static audits, and a second isolated production build.
+- Synchronized the security-header sources, limited camera to the application origin, kept unrelated capabilities disabled, and removed the remote Google icon CSP dependency.
+- Removed the silent production localhost API fallback, added fail-closed production build validation and a production-configuration audit, and passed 315 test files / 1,728 tests.
 
 ## Open Preflight Actions
 
@@ -53,12 +56,12 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 
 ## Next Work
 
-Continue with the locally reviewable Day 3 work while promotion remains blocked:
+Continue with the locally reviewable Day 4 work while promotion remains blocked:
 
-1. Correct and test production Permissions Policy and CSP source configuration.
-2. Remove silent production API fallback behavior and validate required production configuration.
-3. Preserve a configuration-only rollback diff.
-4. Defer deployed-origin and physical-device claims until approved staging, owners, and devices are available.
+1. Add standard `npm test`, disposable `build:check`, and aggregate local validation commands.
+2. Expand GitHub Actions into named lint, test, audit, build, and vulnerability-reporting checks.
+3. Preserve failed-run diagnostics without writing to the tracked `build/` directory.
+4. Defer required-check and branch-protection claims until hosted CI and repository settings are verified.
 
 ## File Naming
 

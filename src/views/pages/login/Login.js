@@ -19,6 +19,7 @@ import { cilLockLocked, cilLowVision, cilShieldAlt, cilUser } from '@coreui/icon
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import logoSvg from 'src/assets/brand/logo.svg'
+import googleSvg from 'src/assets/brand/google.svg'
 import ButtonLoader from 'src/components/ButtonLoader'
 import { fetchGoogleAuthUrl, fetchModuleActivation, loginRequest } from 'src/services/apiClient'
 import { normalizeModuleActivationPayload } from 'src/utils/modules'
@@ -289,13 +290,7 @@ const Login = () => {
                     onClick={handleGoogleSignIn}
                     className="d-flex align-items-center justify-content-center gap-2"
                   >
-                    <img
-                      src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                      alt=""
-                      width="18"
-                      height="18"
-                      aria-hidden="true"
-                    />
+                    <img src={googleSvg} alt="" width="18" height="18" aria-hidden="true" />
                     {isGoogleLoading ? (
                       <ButtonLoader label="Redirecting..." />
                     ) : (

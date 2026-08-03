@@ -21,6 +21,7 @@
     "audit:staff-hardcoded": "node scripts/audit-hardcoded-staff.mjs",
     "audit:contrast": "node scripts/audit-text-contrast.mjs",
     "audit:typography": "node scripts/audit-typography.mjs",
+    "audit:production-config": "node scripts/audit-production-config.mjs",
     "test:payroll-hook-order": "node scripts/test-payroll-hook-order.mjs",
     "test:payroll-hook-runtime": "vitest run src/views/payroll/__tests__/Payroll.hook-order.test.jsx --environment jsdom",
     "test:e2e:smoke": "playwright test tests/e2e/smoke.spec.js --config=playwright.config.mjs",

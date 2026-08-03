@@ -1,11 +1,9 @@
-const normalizeBaseUrl = (url) => {
-  if (!url) {
-    return ''
-  }
-  return url.endsWith('/') ? url.slice(0, -1) : url
-}
+import { resolveApiBaseUrl } from '../../../config/apiEnvironment.mjs'
 
-const API_BASE_URL = normalizeBaseUrl(import.meta.env.VITE_API_URL || 'http://localhost:8000/api')
+const API_BASE_URL = resolveApiBaseUrl({
+  configuredUrl: import.meta.env.VITE_API_URL,
+  isDevelopment: import.meta.env.DEV,
+})
 export const SYSTEM_MAINTENANCE_EVENT = 'vmecc:system-maintenance'
 
 let csrfToken = null
