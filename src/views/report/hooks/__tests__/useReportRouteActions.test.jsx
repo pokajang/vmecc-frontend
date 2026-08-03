@@ -4,6 +4,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import useReportRouteActions from '../useReportRouteActions'
 import { clearReportDraft, deleteErcoDraft, deleteReportDraft } from '../../reportStorage'
 
+const workflowMocks = vi.hoisted(() => ({
+  setWorkflowDeclarationError: vi.fn(),
+  setWorkflowRejectError: vi.fn(),
+}))
+
 vi.mock('../../reportStorage', () => ({
   clearReportDraft: vi.fn(async () => true),
   createErcoDraft: vi.fn(),
@@ -30,6 +35,8 @@ vi.mock('../useReportWorkflowActions', () => ({
     closeWorkflowActionModal: vi.fn(),
     isActionBusy: false,
     setWorkflowDeclarationChecked: vi.fn(),
+    setWorkflowDeclarationError: workflowMocks.setWorkflowDeclarationError,
+    setWorkflowRejectError: workflowMocks.setWorkflowRejectError,
     setWorkflowRemarks: vi.fn(),
     submitWorkflowAction: vi.fn(),
     transitionApprove: vi.fn(),
@@ -69,6 +76,15 @@ const baseProps = (overrides = {}) => ({
 
 describe('useReportRouteActions', () => {
   beforeEach(() => vi.clearAllMocks())
+
+  it('exposes workflow validation-error setters to the report route', () => {
+    const { result } = renderHook(() => useReportRouteActions(baseProps()))
+
+    expect(result.current.setWorkflowDeclarationError).toBe(
+      workflowMocks.setWorkflowDeclarationError,
+    )
+    expect(result.current.setWorkflowRejectError).toBe(workflowMocks.setWorkflowRejectError)
+  })
 
   it('submits one ERCO record without passing sibling reports to bulk persistence', async () => {
     const sibling = {

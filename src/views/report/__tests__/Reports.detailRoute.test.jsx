@@ -10,6 +10,8 @@ const mocks = vi.hoisted(() => ({
   useReportRecords: vi.fn(),
   useReportRouteActions: vi.fn(),
   setActiveDraftRows: vi.fn(),
+  setWorkflowDeclarationError: vi.fn(),
+  setWorkflowRejectError: vi.fn(),
 }))
 
 vi.mock('react-redux', () => ({
@@ -120,7 +122,20 @@ vi.mock('src/views/shared/ActionConfirmModal', () => ({
 }))
 
 vi.mock('../components/ReportWorkflowActionModal', () => ({
-  default: () => null,
+  default: ({ visible, onRemarksChange, onDeclarationChange }) =>
+    visible ? (
+      <section role="dialog" aria-label="Workflow action">
+        <textarea
+          aria-label="Workflow remarks"
+          onChange={(event) => onRemarksChange(event.target.value)}
+        />
+        <input
+          aria-label="Workflow declaration"
+          type="checkbox"
+          onChange={(event) => onDeclarationChange(event.target.checked)}
+        />
+      </section>
+    ) : null,
 }))
 
 const ercoRecord = {
@@ -196,6 +211,8 @@ const buildRouteActions = (overrides = {}) => ({
   setShowDraftChoice: vi.fn(),
   setShowEditDraftChoice: vi.fn(),
   setWorkflowDeclarationChecked: vi.fn(),
+  setWorkflowDeclarationError: mocks.setWorkflowDeclarationError,
+  setWorkflowRejectError: mocks.setWorkflowRejectError,
   setWorkflowRemarks: vi.fn(),
   showDiscard: false,
   showDraftChoice: false,
@@ -230,6 +247,8 @@ beforeEach(() => {
   mocks.useReportRecords.mockReset()
   mocks.useReportRouteActions.mockReset()
   mocks.setActiveDraftRows.mockReset()
+  mocks.setWorkflowDeclarationError.mockReset()
+  mocks.setWorkflowRejectError.mockReset()
 
   mocks.useReportRecords.mockReturnValue(buildRecordsState())
   mocks.useReportRouteActions.mockReturnValue(buildRouteActions())
@@ -359,5 +378,35 @@ describe('Reports direct detail route loading', () => {
 
     expect(removeDraft).not.toHaveBeenCalled()
     expect(pendingAction).toHaveBeenCalled()
+  })
+
+  it('clears workflow validation errors when the user corrects the modal inputs', () => {
+    const setWorkflowRemarks = vi.fn()
+    const setWorkflowDeclarationChecked = vi.fn()
+    mocks.useReportRouteActions.mockReturnValue(
+      buildRouteActions({
+        setWorkflowRemarks,
+        setWorkflowDeclarationChecked,
+        workflowActionState: {
+          visible: true,
+          actionType: 'reject',
+          record: ercoRecord,
+        },
+        workflowDeclarationError: 'Confirmation is required.',
+        workflowRejectError: 'Remarks are required.',
+      }),
+    )
+
+    renderReportsRoute('/report/erco')
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow remarks' }), {
+      target: { value: 'Corrected rejection reason' },
+    })
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Workflow declaration' }))
+
+    expect(setWorkflowRemarks).toHaveBeenCalledWith('Corrected rejection reason')
+    expect(mocks.setWorkflowRejectError).toHaveBeenCalledWith('')
+    expect(setWorkflowDeclarationChecked).toHaveBeenCalledWith(true)
+    expect(mocks.setWorkflowDeclarationError).toHaveBeenCalledWith('')
   })
 })
