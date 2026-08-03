@@ -21,8 +21,7 @@ Promotion-blocking findings:
 5. The committed `build/version.json` identifies commit `eb1d792b6788`, one commit behind current source `59b427d0ab60`.
 6. No VMECC backend is listening on the expected local port `8000`.
 7. Port `3000` is occupied by an unrelated `ulearn` PHP development server, not VMECC.
-8. Local validation currently uses Node.js 24 while CI uses Node.js 22; Node.js 22 has been selected for pinning but is not yet enforced by the repository.
-9. The upgrade plan and this preflight record are not yet committed or reviewed.
+8. The active shell remains on Node.js 24; the repository and CI are now pinned to Node.js 22.23.1, but the baseline has not yet been reproduced under that runtime.
 
 ## 2. Repository Baseline
 
@@ -36,16 +35,16 @@ Promotion-blocking findings:
 | Source commit date | `2026-07-30T12:25:28+08:00` | Recorded |
 | Source commit subject | `Improve extinguisher duplicate and location controls` | Recorded |
 | Tracked source modifications | None | Verified |
-| In-scope documentation changes | Root README link plus the `upgrade-works/` index, plan, and this preflight record | Must be reviewed/committed before implementation |
+| Documentation checkpoint | Commit `3bfb03bb100332c744970ff8908579da686e1ad5` | Committed before tooling/application changes |
 | Unrelated local changes | None reported by Git | Verified |
 
-The worktree is scope-clean but not Git-clean because the root README now links to the intentionally untracked `upgrade-works/` documents. No application, tooling configuration, dependency, test, or build source has been modified during preflight.
+The preflight documentation was committed before tooling/application changes. No application, dependency, test, or generated build source was modified during preflight.
 
 ## 3. Toolchain Baseline
 
 | Tool | Local version | Repository/CI expectation | Status |
 | --- | --- | --- | --- |
-| Node.js | `24.16.0` | README permits Node 22 LTS or newer; CI uses Node 22 | Compatible range, not identical to CI |
+| Node.js | `24.16.0` active shell | `.nvmrc`, `package.json`, README, and CI pin `22.23.1` | Policy pinned; validation under pinned runtime pending |
 | npm | `11.13.0` | No root engine or package-manager pin | Unpinned |
 | Git | `2.54.0.windows.1` | Not pinned | Recorded |
 | Vite | `7.3.6` | Lockfile installation | Recorded |
@@ -53,7 +52,7 @@ The worktree is scope-clean but not Git-clean because the root README now links 
 | ESLint | `9.39.1` | Lockfile installation | Recorded |
 | Playwright | `1.61.1` | Lockfile installation | Recorded |
 
-No `.nvmrc`, `.node-version`, `.tool-versions`, Volta configuration, or root `package.json` engine declaration was found. Reproducible local/CI validation requires an explicit runtime policy before CI hardening is considered complete.
+Preflight found no runtime-version file or root engine declaration. Stage 1 added `.nvmrc`, `engines.node: 22.x`, and an exact CI setup version of `22.23.1`. The current shell remains on Node.js 24, so the final Stage 1 validation must also be executed under the pinned Node.js 22 runtime.
 
 ## 4. Package Integrity Baseline
 

@@ -11,8 +11,8 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | Working branch | `codex/frontend-upgrade-stage-1` |
 | Current stage | Stage 1 local implementation authorized |
 | Gate decision | **Open for local-only Stage 1; blocked for staging/production promotion** |
-| Application/tooling changes started | Not yet; documentation checkpoint in progress |
-| Next planned implementation | Day 1 — repair ESLint configuration |
+| Application/tooling changes started | Yes; Node.js runtime policy pinned |
+| Next planned implementation | Day 1 — capture and repair ESLint configuration |
 
 ## Document Register
 
@@ -32,7 +32,8 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 - Identified the preflight blockers that must be resolved before Day 1 implementation.
 - Confirmed that no application, tooling, dependency, test, or generated build source was changed during preflight.
 - Received repository-owner authorization to begin local-only Stage 1 work while keeping staging and production promotion blocked.
-- Selected Node.js 22 as the runtime to pin for local/CI parity.
+- Committed the programme documentation checkpoint as `3bfb03b`.
+- Pinned the repository and CI runtime policy to Node.js `22.23.1` for local/CI parity.
 
 ## Open Preflight Actions
 
@@ -41,7 +42,6 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 3. Identify approved staging frontend/backend origins and isolated test-data procedures.
 4. Confirm the currently deployed build ID or designate another last-known-good artifact.
 5. Execute and record a staging rollback drill.
-6. Review and commit the programme documentation checkpoint.
 
 ## Next Work
 

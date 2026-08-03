@@ -4,7 +4,7 @@ React/Vite frontend for the VMECC application.
 
 ## Requirements
 
-- Node.js 22 LTS or newer
+- Node.js 22.23.1 LTS (see `.nvmrc`)
 - npm
 
 ## Setup

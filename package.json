@@ -12,6 +12,9 @@
   },
   "license": "MIT",
   "author": "VMECC",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "build": "vite build",
     "audit:system-inventory": "node scripts/generate-system-qa-inventory.mjs",
