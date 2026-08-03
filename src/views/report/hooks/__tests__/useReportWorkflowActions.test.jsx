@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
-import { renderHook } from '@testing-library/react'
+import { act, renderHook } from '@testing-library/react'
 import useReportWorkflowActions from '../useReportWorkflowActions'
 
 vi.mock('../../reportApi', () => ({
@@ -36,5 +36,17 @@ describe('useReportWorkflowActions', () => {
     expect(result.current.canApproveRecord({ status: 'Reviewed' })).toBe(true)
     expect(result.current.canRejectRecord({ status: 'Reviewed' })).toBe(true)
     expect(result.current.canReviewRecord({ status: 'Draft' })).toBe(false)
+  })
+
+  it('exposes workflow validation setters to route consumers', () => {
+    const { result } = renderActions()
+
+    act(() => {
+      result.current.setWorkflowRejectError('Remarks are required.')
+      result.current.setWorkflowDeclarationError('Confirm the declaration.')
+    })
+
+    expect(result.current.workflowRejectError).toBe('Remarks are required.')
+    expect(result.current.workflowDeclarationError).toBe('Confirm the declaration.')
   })
 })

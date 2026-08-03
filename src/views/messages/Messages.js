@@ -120,16 +120,6 @@ const Messages = () => {
     setFirstUnreadId(null)
     setError(null)
     setSendError(null)
-    // On logout (authUser?.id is now undefined/null), wipe the previous user's
-    // draft storage so a subsequent user on the same browser cannot read them.
-    if (!authUser?.id && draftsStorageKeyRef.current) {
-      try {
-        localStorage.removeItem(draftsStorageKeyRef.current)
-      } catch {
-        // ignore — storage unavailable
-      }
-      draftsStorageKeyRef.current = null
-    }
   }, [authUser?.id])
 
   const loadThreadMessages = useCallback(

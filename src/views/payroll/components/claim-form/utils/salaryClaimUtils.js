@@ -424,8 +424,8 @@ export const getItemSummaryText = (item) => {
 export const hasDraftContent = (value = {}) => {
   if (!value || typeof value !== 'object') return false
   if (String(value?.period || '').trim()) return true
-  if (Boolean(value?.periodConfirmed)) return true
-  if (Boolean(value?.payrollBaselineConfirmed)) return true
+  if (value?.periodConfirmed) return true
+  if (value?.payrollBaselineConfirmed) return true
   if (Array.isArray(value?.savedItems) && value.savedItems.length > 0) return true
   const draftItem = value?.draftItem && typeof value.draftItem === 'object' ? value.draftItem : null
   if (!draftItem) return false

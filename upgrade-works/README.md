@@ -33,7 +33,7 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 - Confirmed that no application, tooling, dependency, test, or generated build source was changed during preflight.
 - Received repository-owner authorization to begin local-only Stage 1 work while keeping staging and production promotion blocked.
 - Committed the programme documentation checkpoint as `3bfb03b`.
-- Pinned the repository and CI runtime policy to Node.js `22.23.1` for local/CI parity.
+- Initially tested Node.js `22.23.1`, then corrected the repository and CI policy to Node.js `24.16.0` after clean install exposed `@zxing/library@0.23.0` requiring Node.js 24 or newer.
 
 ## Open Preflight Actions
 

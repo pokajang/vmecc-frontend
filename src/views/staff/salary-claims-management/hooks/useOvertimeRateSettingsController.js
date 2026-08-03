@@ -314,6 +314,7 @@ const useOvertimeRateSettingsController = ({
     isBaseEditing,
     setIsBaseEditing,
     baseError,
+    setBaseError,
     sampleBasicSalaryInput,
     setSampleBasicSalaryInput,
     isSampleBasicSalaryEditing,

@@ -713,7 +713,7 @@ const OvertimeContent = () => {
             canEdit={Boolean(selectedRecord && canApplicantEditOvertimeRecord(selectedRecord))}
             canCancel={
               Boolean(selectedRecord) &&
-              !Boolean(selectedRecord?.isDraft) &&
+              !selectedRecord?.isDraft &&
               String(selectedRecord?.status || '') !== 'Cancelled'
             }
             canDelete={

@@ -104,4 +104,24 @@ describe('OvertimeApplySection', () => {
     expect(document.querySelector('.action-row-thumb--compact-sticky')).toBeTruthy()
     expect(document.querySelector('.action-row-thumb-spacer--compact')).toBeTruthy()
   })
+
+  it('renders the overnight confirmation control on cross-day requests', () => {
+    render(
+      <MemoryRouter>
+        <OvertimeApplySection
+          {...baseProps}
+          overtimeTypeConfirmed
+          isOvernight
+          isOvernightConfirmed={false}
+          onOvernightConfirmationChange={vi.fn()}
+        />
+      </MemoryRouter>,
+    )
+
+    expect(
+      screen.getByRole('checkbox', {
+        name: 'I confirm this overtime ends on the next day.',
+      }),
+    ).toBeTruthy()
+  })
 })

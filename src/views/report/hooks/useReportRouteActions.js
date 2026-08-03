@@ -108,6 +108,8 @@ const useReportRouteActions = ({
     workflowDeclarationError,
     workflowRejectError,
     workflowRemarks,
+    setWorkflowDeclarationError,
+    setWorkflowRejectError,
   } = useReportWorkflowActions({ navigate, pushToast, reloadRecords, reportBasePath })
 
   useEffect(() => {
@@ -938,6 +940,8 @@ const useReportRouteActions = ({
     workflowDeclarationError,
     workflowRejectError,
     workflowRemarks,
+    setWorkflowDeclarationError,
+    setWorkflowRejectError,
   }
 }
 

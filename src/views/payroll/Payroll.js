@@ -183,7 +183,7 @@ const PayrollContent = () => {
     const exemptClaimId = String(claimDraftPayload?.sourceClaimId || '').trim()
     claimRecords.forEach((claim) => {
       if (String(claim?.type || '').trim() !== 'salary') return
-      if (Boolean(claim?.isDraft)) return
+      if (claim?.isDraft) return
       if (String(claim?.status || '').trim() === 'Cancelled') return
       const claimId = String(claim?.id || '').trim()
       if (exemptClaimId && claimId === exemptClaimId) return
@@ -198,7 +198,7 @@ const PayrollContent = () => {
       }
       const existingClaimId =
         String(existing)
-          .match(/\(([^ï¿½\)]+)/)?.[1]
+          .match(/\(([^•)]+)/)?.[1]
           ?.trim() || ''
       if (!existingClaimId && claimId) {
         locks[periodValueResolved] = reason
@@ -226,7 +226,7 @@ const PayrollContent = () => {
       onDeleteClaim: deleteClaim,
       canCancelClaim:
         Boolean(selectedClaim) &&
-        !Boolean(selectedClaim?.isDraft) &&
+        !selectedClaim?.isDraft &&
         !['Approved', 'Paid', 'Rejected', 'Cancelled'].includes(
           String(selectedClaim?.status || '').trim(),
         ),

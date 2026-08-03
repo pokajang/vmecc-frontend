@@ -143,7 +143,7 @@ const useClaimDraft = ({
 
   useEffect(() => {
     if (!hasUnsavedChanges) return undefined
-    if (process.env.NODE_ENV !== 'production') return undefined
+    if (!import.meta.env.PROD) return undefined
     const handleBeforeUnload = (event) => {
       event.preventDefault()
       event.returnValue = ''

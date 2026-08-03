@@ -72,8 +72,8 @@ const InspectionStatusSegment = ({
           role="group"
           aria-label={labelId ? undefined : accessibleLabel}
           aria-labelledby={labelId}
-          aria-invalid={invalid || undefined}
           aria-describedby={describedBy || undefined}
+          data-invalid={invalid || undefined}
         >
           {normalizedOptions.map((option) => {
             const selectedOption = text(option.value) === text(value)

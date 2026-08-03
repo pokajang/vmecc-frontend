@@ -75,7 +75,7 @@ export const getSystemMaintenancePollDelay = ({
 
 const maintenanceStateKey = (setting = {}) =>
   [
-    Boolean(setting?.enabled) ? '1' : '0',
+    setting?.enabled ? '1' : '0',
     String(setting?.phase || ''),
     String(setting?.graceEndsAt || ''),
     String(setting?.updatedAt || ''),

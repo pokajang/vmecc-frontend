@@ -483,8 +483,6 @@ const useFireExtinguisherSessionSync = ({
           refreshProgressContext()
           return { __failed: true, assetKey, operationId, error: nextError }
         }
-        refreshProgressContext()
-        return null
       } finally {
         syncingKeysRef.current.delete(assetKey)
         setActiveSyncCount(syncingKeysRef.current.size)

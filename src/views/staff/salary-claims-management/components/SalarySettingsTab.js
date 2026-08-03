@@ -83,6 +83,7 @@ const AssignmentPreviewRow = memo(
     </CTableRow>
   ),
 )
+AssignmentPreviewRow.displayName = 'AssignmentPreviewRow'
 
 const AssignmentTableRow = memo(
   ({
@@ -162,6 +163,7 @@ const AssignmentTableRow = memo(
     )
   },
 )
+AssignmentTableRow.displayName = 'AssignmentTableRow'
 
 const SalarySettingsTab = ({ vm, handlers }) => {
   const {

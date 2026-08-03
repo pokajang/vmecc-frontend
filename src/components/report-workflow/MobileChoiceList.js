@@ -54,9 +54,7 @@ const MobileChoiceList = ({
   const resolvedMode = ['action', 'single', 'multiple'].includes(mode) ? mode : 'single'
   const isSingle = resolvedMode === 'single'
   const isMultiple = resolvedMode === 'multiple'
-  const firstEnabledIndex = visibleOptions.findIndex(
-    (option) => !disabled && !Boolean(option?.disabled),
-  )
+  const firstEnabledIndex = visibleOptions.findIndex((option) => !disabled && !option?.disabled)
   const selectedIndex = isSingle
     ? visibleOptions.findIndex((option) => isSelectedValue(value, option?.value, resolvedMode))
     : -1

@@ -28,7 +28,7 @@ const WorkflowSetupField = ({
       className={['workflow-setup-field', className].filter(Boolean).join(' ')}
       aria-labelledby={fieldId}
       aria-describedby={errorId}
-      aria-invalid={Boolean(error) || undefined}
+      data-invalid={Boolean(error) || undefined}
     >
       {showEditor ? (
         <>

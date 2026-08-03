@@ -56,7 +56,7 @@ export const downloadPayrollPayslip = async (id) => {
 
   const blob = await response.blob()
   const contentDisposition = response.headers.get('content-disposition') || ''
-  const filenameMatch = /filename\*?=(?:UTF-8''|")?([^\";]+)/i.exec(contentDisposition)
+  const filenameMatch = /filename\*?=(?:UTF-8''|")?([^";]+)/i.exec(contentDisposition)
   const filename = filenameMatch ? decodeURIComponent(filenameMatch[1]) : ''
   return {
     blob,

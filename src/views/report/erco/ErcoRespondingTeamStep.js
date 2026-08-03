@@ -390,16 +390,14 @@ const ErcoRespondingTeamStep = ({
     const key = normalizeKey(value)
     if (!key) return
     const selectedRow = attendanceRows.find((member) => normalizeKey(member?.memberKey) === key)
-    const willSelect = !Boolean(selectedRow?.present)
+    const willSelect = !selectedRow?.present
     setForm((prev) => ({
       ...prev,
       respondingAttendance: (Array.isArray(prev.respondingAttendance)
         ? prev.respondingAttendance
         : []
       ).map((member) =>
-        normalizeKey(member?.memberKey) === key
-          ? { ...member, present: !Boolean(member?.present) }
-          : member,
+        normalizeKey(member?.memberKey) === key ? { ...member, present: !member?.present } : member,
       ),
     }))
     if (clearError) clearError()

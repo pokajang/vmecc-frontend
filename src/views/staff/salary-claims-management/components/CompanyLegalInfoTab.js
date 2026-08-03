@@ -83,8 +83,9 @@ const CompanyLegalInfoTab = () => {
         type: 'danger',
       })
     } finally {
-      if (!isMountedRef.current) return
-      setIsLoading(false)
+      if (isMountedRef.current) {
+        setIsLoading(false)
+      }
     }
   }, [setStatus])
 

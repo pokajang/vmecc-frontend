@@ -7,13 +7,13 @@ import AiHelperHeader from '../AiHelperHeader'
 vi.mock('@coreui/react', () => ({
   CDropdown: ({ children }) => <div>{children}</div>,
   CDropdownItem: ({ active, children, ...props }) => (
-    <button aria-current={active ? 'true' : undefined} {...props}>
+    <button type="button" aria-current={active ? 'true' : undefined} {...props}>
       {children}
     </button>
   ),
   CDropdownMenu: ({ children }) => <div>{children}</div>,
   CDropdownToggle: ({ caret, children, ...props }) => (
-    <button data-caret={caret} {...props}>
+    <button type="button" data-caret={caret} {...props}>
       {children}
     </button>
   ),

@@ -21,7 +21,7 @@ Promotion-blocking findings:
 5. The committed `build/version.json` identifies commit `eb1d792b6788`, one commit behind current source `59b427d0ab60`.
 6. No VMECC backend is listening on the expected local port `8000`.
 7. Port `3000` is occupied by an unrelated `ulearn` PHP development server, not VMECC.
-8. The active shell remains on Node.js 24; the repository and CI are now pinned to Node.js 22.23.1, but the baseline has not yet been reproduced under that runtime.
+8. Preflight found CI on Node.js 22 while the active shell used Node.js 24. Stage 1 clean-install evidence later confirmed a transitive dependency requires Node.js 24 or newer, so the repository and CI policy was corrected to Node.js 24.16.0.
 
 ## 2. Repository Baseline
 
@@ -44,7 +44,7 @@ The preflight documentation was committed before tooling/application changes. No
 
 | Tool | Local version | Repository/CI expectation | Status |
 | --- | --- | --- | --- |
-| Node.js | `24.16.0` active shell | `.nvmrc`, `package.json`, README, and CI pin `22.23.1` | Policy pinned; validation under pinned runtime pending |
+| Node.js | `24.16.0` active shell | `.nvmrc`, `package.json`, README, and CI pin `24.16.0` | Policy aligned with dependency engine requirements |
 | npm | `11.13.0` | No root engine or package-manager pin | Unpinned |
 | Git | `2.54.0.windows.1` | Not pinned | Recorded |
 | Vite | `7.3.6` | Lockfile installation | Recorded |
@@ -52,7 +52,7 @@ The preflight documentation was committed before tooling/application changes. No
 | ESLint | `9.39.1` | Lockfile installation | Recorded |
 | Playwright | `1.61.1` | Lockfile installation | Recorded |
 
-Preflight found no runtime-version file or root engine declaration. Stage 1 added `.nvmrc`, `engines.node: 22.x`, and an exact CI setup version of `22.23.1`. The current shell remains on Node.js 24, so the final Stage 1 validation must also be executed under the pinned Node.js 22 runtime.
+Preflight found no runtime-version file or root engine declaration. Stage 1 initially selected Node.js 22 for CI parity, but `npm ci` showed that `@zxing/library@0.23.0` requires Node.js 24 or newer. The policy was therefore corrected to `.nvmrc` and CI version `24.16.0` with `engines.node: 24.x`; final Stage 1 validation uses that exact runtime.
 
 ## 4. Package Integrity Baseline
 
@@ -187,7 +187,7 @@ These results are evidence for planning and regression comparison. They are not 
 Local-only Day 1 is authorized under these conditions:
 
 1. Work remains on `codex/frontend-upgrade-stage-1`; no direct push to `main` is authorized.
-2. Node.js 22 is the selected runtime policy for local/CI parity.
+2. Node.js 24.16.0 is the selected runtime policy for local/CI and dependency-engine parity.
 3. Work is limited to the frontend repository and the locally executable Stage 1 scope.
 4. No staging, production, shared backend, external provider, or live account may be mutated.
 5. Documentation is committed separately before tooling/application changes.

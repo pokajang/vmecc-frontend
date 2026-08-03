@@ -185,6 +185,8 @@ const useReportWorkflowActions = ({ navigate, pushToast, reloadRecords, reportBa
     workflowDeclarationError,
     workflowRejectError,
     workflowRemarks,
+    setWorkflowDeclarationError,
+    setWorkflowRejectError,
   }
 }
 

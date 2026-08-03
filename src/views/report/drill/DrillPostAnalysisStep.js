@@ -54,7 +54,7 @@ const DrillPostAnalysisStep = ({
 
       <section
         data-drill-field="postIncidentAnalysis"
-        aria-invalid={Boolean(fieldErrors?.postIncidentAnalysis) || undefined}
+        data-invalid={Boolean(fieldErrors?.postIncidentAnalysis) || undefined}
       >
         {fieldErrors?.postIncidentAnalysis ? (
           <CAlert color="danger" className="mb-0">

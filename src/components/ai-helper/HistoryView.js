@@ -78,7 +78,7 @@ const HistoryView = ({
                     aria-label={`Delete ${item.title || 'this chat'} confirmation`}
                   >
                     <div>
-                      Delete "<span>{item.title || 'this chat'}</span>"?
+                      Delete “<span>{item.title || 'this chat'}</span>”?
                     </div>
                     <div className="ai-helper-history-confirm__actions">
                       <button type="button" onClick={onCancelDelete} disabled={deletingThread}>

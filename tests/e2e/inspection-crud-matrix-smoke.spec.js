@@ -693,6 +693,8 @@ const deleteReport = (api, report, csrfToken, reportUid) =>
 const pdfFilenameFromDisposition = (contentDisposition, reportUid, version) => {
   const match = String(contentDisposition || '').match(/filename="?([^";]+)"?/i)
   const filename = match?.[1] || `${reportUid || 'inspection-report'}-v${version || 'latest'}.pdf`
+  // Control characters are intentionally stripped because Windows filenames forbid them.
+  // eslint-disable-next-line no-control-regex
   return filename.replace(/[<>:"/\\|?*\x00-\x1f]+/g, '-')
 }
 

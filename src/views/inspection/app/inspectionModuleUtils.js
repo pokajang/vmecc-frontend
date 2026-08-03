@@ -35,6 +35,8 @@ export const formatHomeDate = (value, fallback = '--') => {
 const sanitizeFilenameSegment = (value, fallback = 'report') => {
   const cleaned = String(value || '')
     .trim()
+    // Control characters are intentionally stripped because Windows filenames forbid them.
+    // eslint-disable-next-line no-control-regex
     .replace(/[<>:"/\\|?*\x00-\x1F]/g, ' ')
     .replace(/\s+/g, ' ')
     .replace(/[. ]+$/g, '')

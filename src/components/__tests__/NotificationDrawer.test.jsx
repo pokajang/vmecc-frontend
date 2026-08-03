@@ -56,6 +56,7 @@ describe('NotificationDrawer focus behavior', () => {
     await waitFor(() =>
       expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Close' })),
     )
+    expect(screen.getByRole('button', { name: 'Close' }).getAttribute('type')).toBe('button')
 
     screen.getByRole('button', { name: 'First action' }).focus()
     fireEvent.keyDown(document, { key: 'Tab' })

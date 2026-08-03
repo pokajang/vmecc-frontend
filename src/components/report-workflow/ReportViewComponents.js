@@ -23,6 +23,7 @@ export const SectionHeading = ({ children }) => (
 
 export const ReportPhotoImage = ({
   photo,
+  alt = '',
   preferFullSize = false,
   onFinalError,
   onLoad,
@@ -55,6 +56,7 @@ export const ReportPhotoImage = ({
   return (
     <img
       {...imageProps}
+      alt={alt}
       src={source}
       width={widthProp ?? (sourceWidth > 0 ? sourceWidth : undefined)}
       height={heightProp ?? (sourceHeight > 0 ? sourceHeight : undefined)}

@@ -123,8 +123,8 @@ export const sanitizePayrollDraftPayloadForStorage = (payload = {}, draftType = 
 const hasLocalDraftContent = (payload = {}) => {
   if (!payload || typeof payload !== 'object') return false
   if (String(payload?.period || '').trim()) return true
-  if (Boolean(payload?.periodConfirmed)) return true
-  if (Boolean(payload?.payrollBaselineConfirmed)) return true
+  if (payload?.periodConfirmed) return true
+  if (payload?.payrollBaselineConfirmed) return true
   if (Array.isArray(payload?.savedItems) && payload.savedItems.length > 0) return true
   const draftItem =
     payload?.draftItem && typeof payload.draftItem === 'object' ? payload.draftItem : null

@@ -101,7 +101,7 @@ const DrillDetailsStep = ({
         className="d-grid gap-2"
         aria-labelledby="drill-objectives-title"
         data-drill-field="exerciseObjectives"
-        aria-invalid={Boolean(fieldErrors.exerciseObjectives) || undefined}
+        data-invalid={Boolean(fieldErrors.exerciseObjectives) || undefined}
       >
         <div className="d-flex justify-content-between align-items-center gap-2">
           <div id="drill-objectives-title" className="fw-semibold">
@@ -166,7 +166,7 @@ const DrillDetailsStep = ({
         className="d-grid gap-2"
         aria-labelledby="drill-erp-title"
         data-drill-field="erpReferences"
-        aria-invalid={Boolean(fieldErrors.erpReferences) || undefined}
+        data-invalid={Boolean(fieldErrors.erpReferences) || undefined}
       >
         <div className="d-flex justify-content-between align-items-center gap-2">
           <div id="drill-erp-title" className="fw-semibold">

@@ -53,6 +53,7 @@ const OvertimeRateSettingsTab = ({ vm, handlers }) => {
     isBaseEditing,
     setIsBaseEditing,
     baseError,
+    setBaseError,
     sampleBasicSalaryInput,
     setSampleBasicSalaryInput,
     isSampleBasicSalaryEditing,

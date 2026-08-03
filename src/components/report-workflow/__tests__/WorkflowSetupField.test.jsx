@@ -36,9 +36,10 @@ describe('WorkflowSetupField', () => {
       </WorkflowSetupField>,
     )
 
-    expect(screen.getByRole('alert').textContent).toContain('Choose a location')
-    expect(screen.getByRole('region', { name: 'Location' }).getAttribute('aria-invalid')).toBe(
-      'true',
-    )
+    const alert = screen.getByRole('alert')
+    const region = screen.getByRole('region', { name: 'Location' })
+    expect(alert.textContent).toContain('Choose a location')
+    expect(region.getAttribute('data-invalid')).toBe('true')
+    expect(region.getAttribute('aria-describedby')).toBe(alert.id)
   })
 })

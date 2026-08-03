@@ -147,8 +147,9 @@ const useAiHelperKnowledge = ({ authUser }) => {
       if (knowledgeReaderRequestRef.current !== requestId) return
       setKnowledgeReaderError(safeAiHelperError(error, 'Could not load this knowledge source.'))
     } finally {
-      if (knowledgeReaderRequestRef.current !== requestId) return
-      setKnowledgeReaderLoading(false)
+      if (knowledgeReaderRequestRef.current === requestId) {
+        setKnowledgeReaderLoading(false)
+      }
     }
   }, [])
 

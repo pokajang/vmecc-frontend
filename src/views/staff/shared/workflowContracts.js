@@ -36,7 +36,7 @@ export const toWorkflowActionCapability = ({
 } = {}) => ({
   key: String(key || ''),
   label: String(label || ''),
-  enabled: !Boolean(disabled),
+  enabled: !disabled,
   blockedReason: disabled ? String(disabledReason || '').trim() : '',
 })
 

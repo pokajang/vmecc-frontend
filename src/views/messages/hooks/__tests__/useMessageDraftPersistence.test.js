@@ -50,4 +50,19 @@ describe('useMessageDraftPersistence', () => {
       12: 'Next draft',
     })
   })
+
+  it('removes the previous user draft storage when the user signs out', async () => {
+    localStorage.setItem('vmecc_message_drafts_7', JSON.stringify({ 12: 'Private draft' }))
+    const { rerender } = renderHook(
+      ({ authUserId }) => useMessageDraftPersistence({ authUserId }),
+      { initialProps: { authUserId: 7 } },
+    )
+
+    await act(async () => {
+      rerender({ authUserId: null })
+    })
+
+    expect(localStorage.removeItem).toHaveBeenCalledWith('vmecc_message_drafts_7')
+    expect(localStorage.getItem('vmecc_message_drafts_7')).toBeNull()
+  })
 })

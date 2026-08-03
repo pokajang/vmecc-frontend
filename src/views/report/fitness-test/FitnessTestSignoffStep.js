@@ -116,8 +116,8 @@ const FitnessTestSignoffStep = ({
               <CCol key={group.id} xs={12} md={6}>
                 <div
                   role="group"
-                  aria-invalid={assessorMissing || undefined}
                   aria-describedby={assessorMissing ? errorId : undefined}
+                  data-invalid={assessorMissing || undefined}
                 >
                   <CFormLabel htmlFor={`fitness-assessor-${group.id}`}>
                     {group.shift} assessor

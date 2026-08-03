@@ -233,6 +233,8 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
     setShowDraftChoice,
     setShowEditDraftChoice,
     setWorkflowDeclarationChecked,
+    setWorkflowDeclarationError,
+    setWorkflowRejectError,
     setWorkflowRemarks,
     showDiscard,
     showDraftChoice,

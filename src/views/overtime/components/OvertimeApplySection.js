@@ -3,6 +3,7 @@ import {
   CButton,
   CCol,
   CForm,
+  CFormCheck,
   CFormFeedback,
   CFormInput,
   CFormLabel,

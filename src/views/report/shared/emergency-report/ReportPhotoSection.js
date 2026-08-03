@@ -200,7 +200,7 @@ const ReportPhotoSection = ({
     <section
       className="d-grid gap-2"
       aria-label={title}
-      aria-invalid={Boolean(error) || undefined}
+      data-invalid={Boolean(error) || undefined}
       data-erco-field={moduleKey === 'erco' ? 'postIncidentPhotos' : undefined}
     >
       <ActionConfirmModal

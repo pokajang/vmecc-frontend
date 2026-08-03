@@ -85,6 +85,7 @@ const NotificationDrawer = ({
             )}
           </span>
           <button
+            type="button"
             ref={closeButtonRef}
             className="notification-drawer-close"
             onClick={onClose}

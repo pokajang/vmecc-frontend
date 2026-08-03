@@ -10,5 +10,5 @@ export const shouldShowMaintenancePage = ({
   isSystemAdministratorFn = () => false,
 } = {}) => {
   if (!isEnforcedPhase(setting)) return false
-  return !Boolean(isSystemAdministratorFn(authUser))
+  return !isSystemAdministratorFn(authUser)
 }
