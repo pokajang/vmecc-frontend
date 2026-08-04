@@ -9,10 +9,10 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | Item | Status |
 | --- | --- |
 | Working branch | `codex/frontend-upgrade-stage-1` |
-| Current stage | Stage 2 Days 7–10 completed; Stage 3 Days 11–13 confirmation foundation authorized |
-| Gate decision | **Open for the bounded local confirmation foundation and one Staff canary; deployment remains outside scope** |
-| Application/tooling changes started | Yes; latest implementation checkpoint `4cff7bd` |
-| Next planned implementation | Day 11 — add the canonical confirmation component behind the existing shared path |
+| Current stage | Stage 3 Days 11–13 completed locally; Days 14–16 Holidays pilot next |
+| Gate decision | **Confirmation foundation passed; open for the bounded local Holidays pilot; deployment remains outside scope** |
+| Application/tooling changes started | Yes; latest implementation checkpoint `1a612a0` |
+| Next planned implementation | Day 14 — characterize `HolidaysTab` before its responsive collection migration |
 
 ## Document Register
 
@@ -26,8 +26,9 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | [GitHub Actions cost exception](./FRONTEND_UPGRADE_GITHUB_ACTIONS_EXCEPTION_2026-08-04.md) | Owner decision, disabled-workflow mechanism, compensating controls, restoration, and review deadline | Locally disabled; remote confirmation required |
 | [Stage 1 Day 5 execution record](./FRONTEND_UPGRADE_STAGE_1_DAY_5_EXECUTION_2026-08-04.md) | Compatible transitive advisory patches, React Router applicability decision, fail-closed exception control, validation, and rollback | Locally completed; exception review due 2026-09-04 |
 | [Component reuse audit](./FRONTEND_COMPONENT_REUSE_AUDIT_2026-08-04.md) | Day 6 component catalogue, import evidence, overlap analysis, false-positive controls, and Day 7 candidate backlog | Completed; no application changes |
-| [Component reuse execution plan](./FRONTEND_COMPONENT_REUSE_EXECUTION_PLAN_2026-08-04.md) | Detailed Days 8–13 task cards plus the bounded Days 7–20 gates, pilot sequencing, validation, and rollback controls | In progress; Days 11–13 authorized |
+| [Component reuse execution plan](./FRONTEND_COMPONENT_REUSE_EXECUTION_PLAN_2026-08-04.md) | Detailed Days 8–13 task cards plus the bounded Days 7–20 gates, pilot sequencing, validation, and rollback controls | In progress; Days 11–13 complete, Days 14–16 next |
 | [Component reuse pattern matrix](./FRONTEND_COMPONENT_REUSE_PATTERN_MATRIX_2026-08-04.md) | Days 7–10 evidence, style ownership, approved contracts, selected pilots, tests, and rollback boundaries | Stage 2 completed |
+| [Stage 3 component reuse execution record](./FRONTEND_COMPONENT_REUSE_STAGE_3_EXECUTION_2026-08-04.md) | Days 11–13 canonical confirmation foundation, Staff canary, validation evidence, residual risks, and rollback | Days 11–13 passed locally |
 
 ## Completed Work
 
@@ -64,6 +65,8 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 - Completed the Day 7 pattern matrix: eight candidate families dispositioned, all six responsive-list candidates classified, unused-code removal conditions recorded, and speculative confirmation variants rejected.
 - Expanded the active execution plan with detailed Days 8–13 inputs, task sequences, decisions, acceptance gates, validation commands, commit boundaries, stop conditions, and rollback controls.
 - Completed Days 8–10: mapped style ownership, approved three bounded component contracts, selected `StaffActionModals` as the confirmation canary, and selected Holidays/Overtime as the collection pilots.
+- Completed Days 11–13: established canonical `ActionConfirmModal` ownership, preserved all 31 shared-path importers, moved generic confirmation drawer styles out of Inspection ownership, and migrated only the Staff terminate/rehire canary.
+- Passed the Days 11–13 gate with changed-file quality checks, a production build, and 6 focused test files / 21 tests; four `UserConfirmModal` importers and 18 render instances remain intentionally unchanged.
 
 ## Deferred Release-Only Actions
 
@@ -77,12 +80,12 @@ These actions remain valid but do not block local component-quality work. Reopen
 
 ## Next Work
 
-Continue with Stage 3 Days 11–13 as defined in the [component reuse execution plan](./FRONTEND_COMPONENT_REUSE_EXECUTION_PLAN_2026-08-04.md):
+Continue with Stage 3 Days 14–16 as defined in the [component reuse execution plan](./FRONTEND_COMPONENT_REUSE_EXECUTION_PLAN_2026-08-04.md):
 
-1. Add canonical `src/components/ActionConfirmModal.js` while preserving the old shared import path.
-2. Add narrowly scoped generic drawer/confirmation styles with no intended visual change.
-3. Add focused contract and compatibility tests.
-4. Migrate only `StaffActionModals` as the first User-family canary.
+1. Characterize `HolidaysTab` loading, empty, mobile, desktop, footer, and interaction behavior.
+2. Make only the approved `ResponsiveRecordCollection` contract adjustment required by the pilot.
+3. Migrate Holidays while preserving filters, grouping, row actions, details, pagination, and wizard behavior.
+4. Remove only pilot duplication proven obsolete after focused tests pass.
 
 ## File Naming
 

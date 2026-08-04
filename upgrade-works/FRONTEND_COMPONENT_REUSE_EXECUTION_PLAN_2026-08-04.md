@@ -5,7 +5,7 @@
 **Baseline revision:** `0bc64a4`  
 **Parent plan:** `FRONTEND_UPGRADE_PLAN_2026-08-03.md`, Revision 2  
 **Scope:** Stage 2 Days 7–10 and Stage 3 Days 11–20  
-**Status:** In progress — Stage 2 Days 7–10 complete; Days 11–13 authorized  
+**Status:** In progress — Stage 2 and Stage 3 Days 11–13 complete; Days 14–16 next  
 **Authorization boundary:** Local, behavior-preserving frontend work only; no deployment, backend, API-contract, permission, persistence, or workflow changes
 
 ## 1. Purpose
@@ -454,6 +454,8 @@ The exact source edits depend on the Day 9 decisions. The sequence below is auth
 ### Days 11–13 — Shared Foundation Batch
 
 Preferred batch: canonical confirmation shell.
+
+Status: **completed locally on 2026-08-04**. The gate passed at revisions `8838d7e`, `4e7ec65`, and `1a612a0`; see the [Stage 3 execution record](./FRONTEND_COMPONENT_REUSE_STAGE_3_EXECUTION_2026-08-04.md) for the implementation, validation, compatibility, residual-risk, and rollback evidence.
 
 ### Day 11 — Baseline and Canonical Component
 
