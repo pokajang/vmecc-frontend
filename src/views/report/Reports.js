@@ -13,11 +13,12 @@ import {
 } from '@coreui/react'
 import { useSelector } from 'react-redux'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import { hasPermission } from 'src/utils/authz'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import CreateActionButton from 'src/components/CreateActionButton'
 import InlineFeedbackMessage from 'src/components/InlineFeedbackMessage'
+import MobileModuleBackAction from 'src/components/MobileModuleBackAction'
 import ModuleNavTabs from 'src/components/ModuleNavTabs'
 import ModulePageHeader from 'src/components/ModulePageHeader'
 import TableLoader from 'src/components/TableLoader'
@@ -617,17 +618,10 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
         actions={
           <>
             {showMobileBack ? (
-              <CButton
-                type="button"
-                color="secondary"
-                variant="outline"
-                size="sm"
-                className="inspection-header-back-btn inspection-compact-action-btn d-md-none d-inline-flex align-items-center gap-1"
+              <MobileModuleBackAction
+                className="inspection-header-back-btn inspection-compact-action-btn"
                 onClick={handleMobileBack}
-              >
-                <ArrowLeft size={14} />
-                Back
-              </CButton>
+              />
             ) : null}
             {isCreateSection ? null : (
               <CreateActionButton

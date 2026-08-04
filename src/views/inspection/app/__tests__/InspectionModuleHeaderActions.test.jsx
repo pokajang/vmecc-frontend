@@ -45,6 +45,7 @@ describe('InspectionModuleHeaderActions', () => {
 
     fireEvent.click(backButton)
     expect(onMobileBack).toHaveBeenCalledTimes(1)
+    expect(onMobileBack.mock.calls[0][0]?.type).toBe('click')
   })
 
   it('keeps Back before the primary action and hides that action in create sections', () => {

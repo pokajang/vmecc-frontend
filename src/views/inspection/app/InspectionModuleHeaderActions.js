@@ -1,7 +1,6 @@
 import React from 'react'
-import { CButton } from '@coreui/react'
-import { ArrowLeft } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
+import MobileModuleBackAction from 'src/components/MobileModuleBackAction'
 
 const InspectionModuleHeaderActions = ({
   showMobileBackAction,
@@ -12,16 +11,10 @@ const InspectionModuleHeaderActions = ({
 }) => (
   <>
     {showMobileBackAction ? (
-      <CButton
-        color="secondary"
-        variant="outline"
-        size="sm"
-        className="inspection-header-back-btn inspection-compact-action-btn d-md-none d-inline-flex align-items-center gap-1"
+      <MobileModuleBackAction
+        className="inspection-header-back-btn inspection-compact-action-btn"
         onClick={onMobileBack}
-      >
-        <ArrowLeft size={14} />
-        Back
-      </CButton>
+      />
     ) : null}
     {!isCreateSection && canConduct ? (
       <CreateActionButton
