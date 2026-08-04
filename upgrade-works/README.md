@@ -9,10 +9,10 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | Item                                | Status                                                                                                                            |
 | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | Working branch                      | `codex/frontend-upgrade-stage-1`                                                                                                  |
-| Current stage                       | Stage 3 Days 11–20 completed locally; Stage 4 Days 21–24 next                                                                     |
+| Current stage                       | Stage 3 complete; Stage 4 Days 21–24 structure/navigation plan ready                                                              |
 | Gate decision                       | **Stage 3 confirmation foundation and both collection pilots passed the full local checkpoint; deployment remains outside scope** |
 | Application/tooling changes started | Yes; latest implementation checkpoint `c3dc083`                                                                                   |
-| Next planned implementation         | Stage 4 Days 21–24 — inventory and bound structure/navigation consolidation before source edits                                   |
+| Next planned implementation         | Stage 4 Day 21 — refresh structure/navigation usage evidence and classify every apparent bypass                                   |
 
 ## Document Register
 
@@ -29,6 +29,7 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | [Component reuse execution plan](./FRONTEND_COMPONENT_REUSE_EXECUTION_PLAN_2026-08-04.md)              | Detailed Days 8–13 task cards plus the bounded Days 7–20 gates, pilot sequencing, validation, and rollback controls                                  | Completed locally; Days 7–20 passed                 |
 | [Component reuse pattern matrix](./FRONTEND_COMPONENT_REUSE_PATTERN_MATRIX_2026-08-04.md)              | Days 7–10 evidence, style ownership, approved contracts, selected pilots, tests, and rollback boundaries                                             | Stage 2 completed                                   |
 | [Stage 3 component reuse execution record](./FRONTEND_COMPONENT_REUSE_STAGE_3_EXECUTION_2026-08-04.md) | Days 11–20 confirmation foundation, Staff canary, Holidays and Overtime pilots, full checkpoint, residual risks, and rollback                        | Stage 3 passed locally                              |
+| [Stage 4 structure/navigation plan](./FRONTEND_COMPONENT_REUSE_STAGE_4_PLAN_2026-08-04.md)             | Detailed Days 21–24 inventory, contract review, pilot gate, proportional validation, stop conditions, and rollback boundaries                        | Planned; source work not started                    |
 
 ## Completed Work
 
@@ -73,6 +74,7 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 - Completed Days 17–19: characterized `OvertimeRecordsTab`, migrated only its manual responsive collection shell, preserved selection/grouping/workflow composition, and added no workflow-specific shared prop.
 - Passed the Overtime pilot with 8 pre-migration direct tests and 5 files / 38 focused final tests covering responsive action parity, keyboard access, footer behavior, security integration, and shared states.
 - Completed the Day 20 checkpoint with full lint, 318 files / 1,753 tests, all seven applicable local audits, a 6,492-module production build, generated-output cleanup, import searches, and a full Stage 3 boundary review.
+- Prepared the bounded Stage 4 Days 21–24 structure/navigation plan with preliminary usage evidence, explicit false-abstraction exclusions, a maximum pilot boundary, proportional validation, and rollback controls.
 
 ## Deferred Release-Only Actions
 
@@ -86,7 +88,7 @@ These actions remain valid but do not block local component-quality work. Reopen
 
 ## Next Work
 
-Begin Stage 4 Days 21–24 as defined in the [frontend upgrade plan](./FRONTEND_UPGRADE_PLAN_2026-08-03.md):
+Begin Stage 4 Days 21–24 as defined in the [Stage 4 structure/navigation plan](./FRONTEND_COMPONENT_REUSE_STAGE_4_PLAN_2026-08-04.md):
 
 1. Refresh the inventory of applicable page headers, breadcrumbs, tabs, and back-navigation implementations.
 2. Separate true shared structure from route-, permission-, or unsaved-change-specific behavior.
