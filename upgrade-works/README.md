@@ -6,13 +6,13 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 
 ## Current Status
 
-| Item                                | Status                                                                                          |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------- |
-| Working branch                      | `codex/frontend-upgrade-stage-1`                                                                |
-| Current stage                       | Stage 4 Days 33–36 forms/dialogs plan ready; source work not started                            |
-| Gate decision                       | **Days 29–32 passed; Days 33–36 bounded planning gate ready; deployment remains outside scope** |
-| Application/tooling changes started | Yes; latest committed implementation checkpoint `cbf90c5`                                       |
-| Next planned implementation         | Stage 4 Day 33 — refresh forms/dialogs evidence and characterize the exact ERCO pair            |
+| Item                                | Status                                                                                        |
+| ----------------------------------- | --------------------------------------------------------------------------------------------- |
+| Working branch                      | `codex/frontend-upgrade-stage-1`                                                              |
+| Current stage                       | Stage 4 completed locally through Day 36; Stage 5 Days 37–39 planning is next                 |
+| Gate decision                       | **Stage 4 passed; Stage 5 cleanup may be planned; deployment remains outside scope**          |
+| Application/tooling changes started | Yes; latest committed implementation checkpoint `dedef52`                                     |
+| Next planned implementation         | Write the bounded Stage 5 Days 37–39 unreferenced-code and compatibility-wrapper cleanup plan |
 
 ## Document Register
 
@@ -35,7 +35,8 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | [Stage 4 data-list/standard-state execution](./FRONTEND_COMPONENT_REUSE_STAGE_4_DATA_LISTS_EXECUTION_2026-08-04.md)    | Final dispositions, Work Shift collection migration, characterization, validation evidence, exceptions, and rollback boundary                           | Days 25–28 passed locally                           |
 | [Stage 4 actions/status/workflow plan](./FRONTEND_COMPONENT_REUSE_STAGE_4_ACTIONS_STATUS_PLAN_2026-08-04.md)           | Detailed Days 29–32 inventory, semantic-ownership review, feature-local pilot gate, proportional validation, stop conditions, and rollback controls     | Days 29–32 passed locally                           |
 | [Stage 4 actions/status/workflow execution](./FRONTEND_COMPONENT_REUSE_STAGE_4_ACTIONS_STATUS_EXECUTION_2026-08-04.md) | Final dispositions, role-assignment action extraction, characterization, validation evidence, exceptions, and rollback boundary                         | Days 29–32 passed locally                           |
-| [Stage 4 forms/dialogs plan](./FRONTEND_COMPONENT_REUSE_STAGE_4_FORMS_DIALOGS_PLAN_2026-08-04.md)                      | Detailed Days 33–36 form/dialog inventory, ERCO pilot gate, focus and dismissal checks, full Stage 4 checkpoint, stop conditions, and rollback controls | Planned; source work not started                    |
+| [Stage 4 forms/dialogs plan](./FRONTEND_COMPONENT_REUSE_STAGE_4_FORMS_DIALOGS_PLAN_2026-08-04.md)                      | Detailed Days 33–36 form/dialog inventory, ERCO pilot gate, focus and dismissal checks, full Stage 4 checkpoint, stop conditions, and rollback controls | Days 33–36 passed locally                           |
+| [Stage 4 forms/dialogs execution](./FRONTEND_COMPONENT_REUSE_STAGE_4_FORMS_DIALOGS_EXECUTION_2026-08-04.md)            | Final dispositions, ERCO responsive-shell extraction, characterization, full Stage 4 validation, cumulative boundary, and rollback                      | Stage 4 passed locally                              |
 
 ## Completed Work
 
@@ -97,6 +98,10 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 - Passed the Days 29–32 checkpoint with changed-file quality checks, 5 focused files / 31 tests, a 6,494-module production build, guarded generated-output cleanup, boundary searches, and diff checks.
 - Prepared the bounded Stage 4 Days 33–36 forms/dialogs plan from 60 production `CModal` files, established shared-contract adoption, explicit false-abstraction exclusions, and an exact two-component ERCO responsive-shell candidate.
 - Set the Day 36 exit gate to full lint, the complete unit suite, applicable repository audits, production build, guarded output cleanup, and a cumulative Stage 4 boundary review.
+- Completed the Days 33–36 inventory and retained domain forms, validation, confirmation wrappers, workflow dialogs, attachment previews, auth flows, and lifecycle modals where their contracts differ.
+- Added untouched-source characterization for the exact ERCO chronology-initialization and PreMob-mode responsive shells, including breakpoint, modal/drawer classes, action type/order, event forwarding, form safety, Escape dismissal, and focus restoration.
+- Extracted only those duplicate branches into feature-local `ErcoResponsiveActionModal`, preserving each consumer's title, body, buttons, colors, callbacks, and chronology state.
+- Passed the Day 36 and full Stage 4 checkpoint with full lint, 324 files / 1,779 tests, all applicable local audits, a 6,495-module production build, guarded cleanup, and the cumulative Stage 4 diff review.
 
 ## Deferred Release-Only Actions
 
@@ -110,12 +115,12 @@ These actions remain valid but do not block local component-quality work. Reopen
 
 ## Next Work
 
-Begin Stage 4 Days 33–36 under the [forms/dialogs plan](./FRONTEND_COMPONENT_REUSE_STAGE_4_FORMS_DIALOGS_PLAN_2026-08-04.md):
+Prepare Stage 5 Days 37–39 as a bounded cleanup plan:
 
-1. Regenerate production form/dialog counts and record final candidate dispositions.
-2. Characterize `ChronologyStartModeModal` and `PreMobModeModal` on untouched source at both sides of the ERCO breakpoint.
-3. Approve extraction only if shell, focus, dismissal, button type/order, callbacks, and form safety are identical.
-4. Keep the source batch within the approved ERCO pair and finish with the full Stage 4 checkpoint.
+1. Inventory compatibility wrappers, duplicate components, styles, exports, and imports that Stage 2–4 may have superseded.
+2. Prove each deletion candidate has no runtime, lazy, test, barrel, or documentation consumer before changing source.
+3. Retain adapters that still have consumers and document their exact removal condition.
+4. Separate removals into independently reversible commits and avoid unrelated formatting or naming cleanup.
 
 ## File Naming
 

@@ -8,7 +8,7 @@
 **Parent plan:** `FRONTEND_UPGRADE_PLAN_2026-08-03.md`, Revision 2  
 **Prior checkpoint:** `FRONTEND_COMPONENT_REUSE_STAGE_4_ACTIONS_STATUS_EXECUTION_2026-08-04.md`  
 **Scope:** Stage 4 Days 33–36 — forms and dialogs only  
-**Status:** Planned; Days 33–36 application source work has not started  
+**Status:** Completed locally on 2026-08-04; all Days 33–36 and Stage 4 gates passed  
 **Authorization boundary:** Local, behavior-preserving frontend work only; no deployment, GitHub Actions, backend, API, route-definition, permission, persistence, dependency, business validation, submitted-value, status-definition, workflow-transition, or global-style changes
 
 ## 1. Purpose
@@ -232,6 +232,8 @@ For each plausible candidate, capture:
 
 Day 33 passes only when visual similarities are separated from validation, payload, workflow, focus, and dismissal contracts. The ERCO pair remains provisional until untouched-source tests prove every fixed shell invariant.
 
+**Result:** Passed. Production counts matched the planning snapshot, all reviewed candidates received a final disposition, and the ERCO pair remained the only exact presentation candidate.
+
 ## 10. Day 34 — Contract Review and Pilot Approval
 
 ### Task 34.1 — Audit shared tests
@@ -263,6 +265,8 @@ Approve source work only if the wrapper needs exactly the five props in Section 
 ### Day 34 gate
 
 Day 34 passes when exact shell equivalence is proven and the feature-local wrapper is smaller and clearer than the duplicate branches. A documented no-change result is a valid pass.
+
+**Result:** Passed. Breakpoint, mobile classes, desktop flags, shell order, close behavior, button type/order, callback behavior, form safety, Escape dismissal, and focus restoration were proved equivalent without requiring a variant or global primitive change.
 
 ## 11. Day 35 — Untouched Characterization and Bounded Implementation
 
@@ -308,6 +312,8 @@ If the Day 34 gate passes:
 ### Day 35 gate
 
 Day 35 passes only when one feature-local shell replaces the exact pair, both responsive and interaction contracts remain protected, and all titles, bodies, actions, callbacks, and ERCO state ownership stay in their consumers.
+
+**Result:** Passed. Untouched characterization revision `fdc4441` preceded implementation revision `dedef52`; the implementation stayed within three production files and passed 5 focused files / 68 tests.
 
 ## 12. Day 36 — Full Stage 4 Checkpoint
 
@@ -385,6 +391,8 @@ Days 33–36 and Stage 4 pass only when:
 - full lint, complete unit tests, applicable audits, and production build pass
 - cumulative Stage 4 diff and generated output are clean
 - the execution record and programme trackers are current
+
+**Result:** Passed. Full lint, 324 files / 1,779 tests, all applicable repository audits, the 6,495-module production build, guarded cleanup, and cumulative Stage 4 boundary review passed. See the [Days 33–36 execution record](./FRONTEND_COMPONENT_REUSE_STAGE_4_FORMS_DIALOGS_EXECUTION_2026-08-04.md).
 
 ## 13. Approved File Boundary
 
