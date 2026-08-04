@@ -1,10 +1,8 @@
 import React from 'react'
-import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
-import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
-import useIsMobile from './useIsMobile'
+import { CButton } from '@coreui/react'
+import ErcoResponsiveActionModal from './ErcoResponsiveActionModal'
 
 const ChronologyStartModeModal = ({ visible, responseStartTime, onClose, onManual, onPremob }) => {
-  const isMobileDrawer = useIsMobile()
   const body = (
     <>
       Response start time is set to <strong>{responseStartTime}</strong>. Choose how to begin
@@ -25,27 +23,14 @@ const ChronologyStartModeModal = ({ visible, responseStartTime, onClose, onManua
     </>
   )
 
-  if (isMobileDrawer) {
-    return (
-      <MobileBottomDrawer visible={visible} title="Initialize Chronology" onClose={onClose}>
-        <div className="inspection-mobile-detail-drawer-body inspection-equipment-detail-drawer-body">
-          {body}
-        </div>
-        <div className="mobile-bottom-drawer__footer d-flex flex-wrap align-items-center justify-content-end gap-2">
-          {actions}
-        </div>
-      </MobileBottomDrawer>
-    )
-  }
-
   return (
-    <CModal alignment="center" visible={visible} onClose={onClose} fullscreen="sm" scrollable>
-      <CModalHeader>
-        <CModalTitle>Initialize Chronology</CModalTitle>
-      </CModalHeader>
-      <CModalBody>{body}</CModalBody>
-      <CModalFooter>{actions}</CModalFooter>
-    </CModal>
+    <ErcoResponsiveActionModal
+      visible={visible}
+      title="Initialize Chronology"
+      body={body}
+      actions={actions}
+      onClose={onClose}
+    />
   )
 }
 

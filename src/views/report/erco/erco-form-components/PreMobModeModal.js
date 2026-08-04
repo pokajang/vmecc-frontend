@@ -1,10 +1,8 @@
 import React from 'react'
-import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
-import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
-import useIsMobile from './useIsMobile'
+import { CButton } from '@coreui/react'
+import ErcoResponsiveActionModal from './ErcoResponsiveActionModal'
 
 const PreMobModeModal = ({ visible, onClose, onAppend, onReplace }) => {
-  const isMobileDrawer = useIsMobile()
   const body = 'Current chronology already has events. Choose how to apply PreMob rows.'
   const actions = (
     <>
@@ -20,27 +18,14 @@ const PreMobModeModal = ({ visible, onClose, onAppend, onReplace }) => {
     </>
   )
 
-  if (isMobileDrawer) {
-    return (
-      <MobileBottomDrawer visible={visible} title="Add PreMob Events" onClose={onClose}>
-        <div className="inspection-mobile-detail-drawer-body inspection-equipment-detail-drawer-body">
-          {body}
-        </div>
-        <div className="mobile-bottom-drawer__footer d-flex flex-wrap align-items-center justify-content-end gap-2">
-          {actions}
-        </div>
-      </MobileBottomDrawer>
-    )
-  }
-
   return (
-    <CModal alignment="center" visible={visible} onClose={onClose} fullscreen="sm" scrollable>
-      <CModalHeader>
-        <CModalTitle>Add PreMob Events</CModalTitle>
-      </CModalHeader>
-      <CModalBody>{body}</CModalBody>
-      <CModalFooter>{actions}</CModalFooter>
-    </CModal>
+    <ErcoResponsiveActionModal
+      visible={visible}
+      title="Add PreMob Events"
+      body={body}
+      actions={actions}
+      onClose={onClose}
+    />
   )
 }
 
