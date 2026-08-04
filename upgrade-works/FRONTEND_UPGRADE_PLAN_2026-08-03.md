@@ -420,6 +420,8 @@ Roll out by pattern family, not by rewriting entire modules. The audit determine
 - Retain adapters that still have consumers and give each one a removal condition.
 - Avoid unrelated formatting or naming cleanup.
 
+**Status (2026-08-04): Detailed plan ready; cleanup source work not started.** Approved candidates are zero-runtime-use `AppBreadcrumb`, `DocsLink`, and the dormant `PwaInstallBanner` surface. Active PWA install behavior and compatibility adapters remain protected. Execution boundary: `FRONTEND_COMPONENT_REUSE_STAGE_5_CLEANUP_PLAN_2026-08-04.md`.
+
 ## Day 40 — Consistency Review
 
 ### Work
@@ -572,12 +574,12 @@ When paused, keep or restore the domain implementation, document the reason, and
 
 ## 16. Stage Record
 
-| Stage                                   | Status                                | Evidence                                                                                                                                                         | Decision                                                                     |
-| --------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Stage 1 — foundation                    | Locally completed; hosted CI deferred | Existing Stage 1 records in `upgrade-works/`                                                                                                                     | Preserve as baseline                                                         |
-| Stage 2 — reuse audit                   | Completed through Day 10              | `FRONTEND_COMPONENT_REUSE_AUDIT_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_EXECUTION_PLAN_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_PATTERN_MATRIX_2026-08-04.md` | Three contracts approved; Staff canary and Holidays/Overtime pilots selected |
-| Stage 3 — shared foundations and pilots | Completed locally through Day 20      | `FRONTEND_COMPONENT_REUSE_STAGE_3_EXECUTION_2026-08-04.md`                                                                                                       | Preserve passing foundation and pilot boundaries                             |
-| Stage 4 — pattern rollout               | Completed locally through Day 36      | `FRONTEND_COMPONENT_REUSE_STAGE_4_FORMS_DIALOGS_EXECUTION_2026-08-04.md`                                                                                         | Preserve passing pattern boundaries; proceed to bounded Stage 5 cleanup      |
-| Stage 5 — cleanup and handover          | Not started                           | Final adoption summary required                                                                                                                                  | Pending rollout                                                              |
+| Stage                                   | Status                                 | Evidence                                                                                                                                                         | Decision                                                                     |
+| --------------------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Stage 1 — foundation                    | Locally completed; hosted CI deferred  | Existing Stage 1 records in `upgrade-works/`                                                                                                                     | Preserve as baseline                                                         |
+| Stage 2 — reuse audit                   | Completed through Day 10               | `FRONTEND_COMPONENT_REUSE_AUDIT_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_EXECUTION_PLAN_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_PATTERN_MATRIX_2026-08-04.md` | Three contracts approved; Staff canary and Holidays/Overtime pilots selected |
+| Stage 3 — shared foundations and pilots | Completed locally through Day 20       | `FRONTEND_COMPONENT_REUSE_STAGE_3_EXECUTION_2026-08-04.md`                                                                                                       | Preserve passing foundation and pilot boundaries                             |
+| Stage 4 — pattern rollout               | Completed locally through Day 36       | `FRONTEND_COMPONENT_REUSE_STAGE_4_FORMS_DIALOGS_EXECUTION_2026-08-04.md`                                                                                         | Preserve passing pattern boundaries; proceed to bounded Stage 5 cleanup      |
+| Stage 5 — cleanup and handover          | Days 37–39 planned; source not started | `FRONTEND_COMPONENT_REUSE_STAGE_5_CLEANUP_PLAN_2026-08-04.md`                                                                                                    | Begin reference-proof cleanup gate                                           |
 
 Revision 2 authorizes local frontend audit and behavior-preserving component consolidation. It does not authorize deployment, backend changes, production-data access, or silent business-workflow changes.

@@ -6,13 +6,13 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 
 ## Current Status
 
-| Item                                | Status                                                                                        |
-| ----------------------------------- | --------------------------------------------------------------------------------------------- |
-| Working branch                      | `codex/frontend-upgrade-stage-1`                                                              |
-| Current stage                       | Stage 4 completed locally through Day 36; Stage 5 Days 37–39 planning is next                 |
-| Gate decision                       | **Stage 4 passed; Stage 5 cleanup may be planned; deployment remains outside scope**          |
-| Application/tooling changes started | Yes; latest committed implementation checkpoint `dedef52`                                     |
-| Next planned implementation         | Write the bounded Stage 5 Days 37–39 unreferenced-code and compatibility-wrapper cleanup plan |
+| Item                                | Status                                                                                      |
+| ----------------------------------- | ------------------------------------------------------------------------------------------- |
+| Working branch                      | `codex/frontend-upgrade-stage-1`                                                            |
+| Current stage                       | Stage 5 Days 37–39 cleanup plan ready; source work not started                              |
+| Gate decision                       | **Stage 4 passed; reference-proof cleanup gate ready; deployment remains outside scope**    |
+| Application/tooling changes started | Yes; latest committed implementation checkpoint `dedef52`                                   |
+| Next planned implementation         | Day 37 — repeat reference proof, then remove only the approved zero-use template components |
 
 ## Document Register
 
@@ -37,6 +37,7 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | [Stage 4 actions/status/workflow execution](./FRONTEND_COMPONENT_REUSE_STAGE_4_ACTIONS_STATUS_EXECUTION_2026-08-04.md) | Final dispositions, role-assignment action extraction, characterization, validation evidence, exceptions, and rollback boundary                         | Days 29–32 passed locally                           |
 | [Stage 4 forms/dialogs plan](./FRONTEND_COMPONENT_REUSE_STAGE_4_FORMS_DIALOGS_PLAN_2026-08-04.md)                      | Detailed Days 33–36 form/dialog inventory, ERCO pilot gate, focus and dismissal checks, full Stage 4 checkpoint, stop conditions, and rollback controls | Days 33–36 passed locally                           |
 | [Stage 4 forms/dialogs execution](./FRONTEND_COMPONENT_REUSE_STAGE_4_FORMS_DIALOGS_EXECUTION_2026-08-04.md)            | Final dispositions, ERCO responsive-shell extraction, characterization, full Stage 4 validation, cumulative boundary, and rollback                      | Stage 4 passed locally                              |
+| [Stage 5 cleanup plan](./FRONTEND_COMPONENT_REUSE_STAGE_5_CLEANUP_PLAN_2026-08-04.md)                                  | Detailed Days 37–39 zero-use proof, approved template/PWA cleanup, retained-adapter conditions, validation, stop controls, and rollback                 | Planned; source work not started                    |
 
 ## Completed Work
 
@@ -102,6 +103,7 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 - Added untouched-source characterization for the exact ERCO chronology-initialization and PreMob-mode responsive shells, including breakpoint, modal/drawer classes, action type/order, event forwarding, form safety, Escape dismissal, and focus restoration.
 - Extracted only those duplicate branches into feature-local `ErcoResponsiveActionModal`, preserving each consumer's title, body, buttons, colors, callbacks, and chronology state.
 - Passed the Day 36 and full Stage 4 checkpoint with full lint, 324 files / 1,779 tests, all applicable local audits, a 6,495-module production build, guarded cleanup, and the cumulative Stage 4 diff review.
+- Prepared the bounded Stage 5 Days 37–39 cleanup plan with reproducible zero-runtime-use proof for `AppBreadcrumb`, `DocsLink`, and the dormant PWA banner surface, while retaining active adapters and install behavior.
 
 ## Deferred Release-Only Actions
 
@@ -115,12 +117,12 @@ These actions remain valid but do not block local component-quality work. Reopen
 
 ## Next Work
 
-Prepare Stage 5 Days 37–39 as a bounded cleanup plan:
+Begin Stage 5 Days 37–39 under the [cleanup plan](./FRONTEND_COMPONENT_REUSE_STAGE_5_CLEANUP_PLAN_2026-08-04.md):
 
-1. Inventory compatibility wrappers, duplicate components, styles, exports, and imports that Stage 2–4 may have superseded.
-2. Prove each deletion candidate has no runtime, lazy, test, barrel, or documentation consumer before changing source.
-3. Retain adapters that still have consumers and document their exact removal condition.
-4. Separate removals into independently reversible commits and avoid unrelated formatting or naming cleanup.
+1. Repeat exact reference proof at the committed planning boundary.
+2. Remove the two unused CoreUI template components and their barrel entries in an independent commit.
+3. Remove only the dormant PWA banner API/tests/styles while preserving active header/sidebar installation.
+4. Finish with full lint, focused PWA regressions, affected audits, production build, and guarded cleanup.
 
 ## File Naming
 
