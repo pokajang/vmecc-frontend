@@ -320,6 +320,8 @@ Status: **completed locally on 2026-08-04**. The canonical confirmation foundati
 
 ## Days 14–16 — Pilot Module One
 
+Status: **completed locally on 2026-08-04**. `HolidaysTab` passed its responsive-collection migration gate with behavior characterization and an independently reversible commit.
+
 ### Work
 
 - Migrate the straightforward pilot module to the approved shared patterns.

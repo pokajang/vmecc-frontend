@@ -4,8 +4,8 @@
 **Application:** `vmecc-frontend`  
 **Branch:** `codex/frontend-upgrade-stage-1`  
 **Stage 2 checkpoint:** `a195e9f`  
-**Scope completed:** Stage 3 Days 11–13 — canonical confirmation foundation and Staff canary  
-**Gate result:** Passed locally  
+**Scope completed:** Stage 3 Days 11–16 — confirmation foundation, Staff canary, and Holidays pilot  
+**Gate result:** Days 11–16 passed locally  
 **Post-implementation audit:** Passed with one preventive hardening fix at `38a659a`  
 **Deployment status:** Not requested; no deployment performed
 
@@ -15,7 +15,7 @@ Days 11–13 established one application-wide canonical plain confirmation compo
 
 No backend, API, route, permission, persistence, dependency, data-fetching, caller-state, or workflow implementation changed. The role-assignment and staff-message modals were not modified. Generated production-build output was used only for validation and was restored afterward.
 
-The foundation gate passed. Stage 3 may proceed to the Days 14–16 `HolidaysTab` collection pilot after its current behavior is characterized.
+The confirmation foundation and first collection pilot gates passed. Stage 3 may proceed to the Days 17–19 `OvertimeRecordsTab` pilot.
 
 ## 2. Checkpoints
 
@@ -25,6 +25,9 @@ The foundation gate passed. Stage 3 may proceed to the Days 14–16 `HolidaysTab
 | `4e7ec65` | Staff terminate/rehire canary migration and direct consumer tests                                |
 | `1a612a0` | Additional locked-mobile-action contract coverage                                                |
 | `38a659a` | Post-implementation touch-target hardening and enabled-dismissal parity tests                    |
+| `076febf` | Approved `ResponsiveRecordCollection.loadingMessage` contract and focused tests                  |
+| `6292abd` | Holidays responsive-collection pilot and behavior characterization                               |
+| `f16eb0d` | Reduced-motion loader rule ordering correction                                                   |
 
 These boundaries allow the Staff canary to be rolled back independently without removing the canonical component used by the 31 existing shared-path importers.
 
@@ -207,12 +210,12 @@ Do not delete `src/views/shared/ActionConfirmModal.js` while its 31 production i
 
 ## 10. Next Authorized Work
 
-Begin Days 14–16 with `HolidaysTab` only:
+Begin Days 17–19 with `OvertimeRecordsTab` only:
 
-1. Reconfirm its current imports, render structure, states, callbacks, responsive behavior, and direct tests.
-2. Add characterization for loading, standard empty, mobile list, desktop table, and footer behavior before changing source.
-3. Add the approved `loadingMessage` forwarding to `ResponsiveRecordCollection` only when the pilot requires it.
-4. Migrate Holidays without changing filters, grouping, row keyboard behavior, details, pagination, wizard behavior, permissions, or data operations.
+1. Reconfirm filtering, grouping, totals, selection, bulk actions, pagination, row actions, workflow-modal placement, and direct tests.
+2. Characterize desktop and mobile action availability plus keyboard row access before source changes.
+3. Migrate only the approved responsive collection shell; keep overtime calculations, workflow rules, permissions, and persistence local.
+4. Reassess the collection contract if the workflow-sensitive pilot exposes a real semantic difference.
 5. Remove only duplicates made obsolete by the passing pilot.
 
 ## 11. Post-Implementation Audit
@@ -279,3 +282,97 @@ The complete suite emitted three non-failing jsdom notices for unsupported pseud
 ### 11.7 Functional compatibility conclusion
 
 The upgrade preserves the pre-stage confirmation functionality for ordinary users and callers. The only intentional runtime correction remains the approved cancellation lock during an in-progress action: a locked confirmation can no longer disappear through an internal primitive dismissal while its caller state remains busy. Enabled dismissal, confirm actions, responsive access, wording, colors, callbacks, and Staff workflow ownership remain intact.
+
+## 12. Days 14–16 — Holidays Collection Pilot
+
+### 12.1 Pre-migration characterization
+
+The focused pre-change baseline passed with 2 files / 28 tests. `HolidaysTab` initially had five direct tests, primarily covering the wizard, row click, edit, and delete behavior.
+
+Before source migration, its direct suite was expanded and passed 10/10 against the manual implementation. The characterization protects:
+
+- loading before empty/content branches
+- exact filtered-empty wording
+- mobile list-group and desktop table availability
+- year grouping and record rendering
+- footer counts, rows-to-show value, and change callback
+- desktop Enter and Space row activation
+- mobile record opening
+- exact edit/delete handlers
+- holiday details and wizard behavior
+
+The new shared-contract suite was run before implementation and failed only on the intentionally absent `loadingMessage` forwarding; its other three cases passed.
+
+### 12.2 Shared contract adjustment
+
+Revision `076febf` added only the approved `loadingMessage` prop to `ResponsiveRecordCollection` and forwards it to `TableLoader`. Omitting the prop continues to use `TableLoader`'s existing default.
+
+Focused contract coverage now protects:
+
+- loading precedence over empty and content
+- custom and default loading messages
+- string empty states through `PageState`
+- caller-supplied element empty states
+- child, mobile, desktop, and footer ordering
+- mobile variant forwarding
+- function and element desktop render forms
+
+No loading-height prop, table behavior, domain state, or consumer-specific mode was added.
+
+### 12.3 Holidays migration
+
+Revision `6292abd` replaced only the manual loading/empty/mobile/desktop/footer branch in `HolidaysTab` with `ResponsiveRecordCollection`.
+
+Preserved unchanged:
+
+- `TableFilters` configuration and callbacks
+- holiday filtering, sorting, grouping, and visible-row inputs
+- desktop columns, row semantics, and keyboard handlers
+- mobile fields, labels, open action, Edit, and Delete
+- `DataTableFooter` props and pagination-size callback
+- detail and create/edit modal placement
+- saving, deletion, wizard payloads, errors, and summary callback
+- permissions and all caller-owned data operations
+
+Removed as proven local duplication:
+
+- direct `MobileRecordList` import
+- direct `TableLoader` import
+- the local ternary that manually selected loading, empty, or responsive content
+
+The empty-state wording is unchanged. Its presentation intentionally changes from a one-line muted message to the approved standard `PageState` empty treatment with the existing 160-pixel collection-state height. This is the documented consistency correction approved during Stage 2.
+
+### 12.4 Reduced-motion correction
+
+Revision `f16eb0d` moved the existing reduced-motion `.icon-spin` override from `foundation/_base.scss` to immediately after the animation shorthand in `layout/_shell.scss`.
+
+Normal animation remains `vmecc-spin 0.9s linear infinite`. Under `prefers-reduced-motion: reduce`, the existing 1.8-second stepped timing now wins in the compiled cascade as intended. No component markup or loading-state business behavior changed.
+
+### 12.5 Validation and boundary audit
+
+| Validation                                       | Result                                             |
+| ------------------------------------------------ | -------------------------------------------------- |
+| Pre-change shared/Holidays baseline              | 2 files / 28 tests passed                          |
+| Pre-migration expanded Holidays characterization | 1 file / 10 tests passed                           |
+| Final shared primitive and Holidays regression   | 3 files / 37 tests passed                          |
+| Changed JavaScript/JSX ESLint                    | Passed                                             |
+| Changed-file formatting and diff check           | Passed                                             |
+| Compiled reduced-motion rule order               | Base animation followed by reduced-motion override |
+| Production build                                 | Passed; 6,492 modules transformed                  |
+| Generated build diff                             | Restored; none committed                           |
+
+Post-migration searches confirmed 14 production `ResponsiveRecordCollection` importers, including Holidays. No adjacent Leave Management tab, API, route, permission, persistence, dependency, or generated build file entered the pilot commits.
+
+The production build retained the previously recorded mixed static/dynamic notification import notice and large-chunk advisories.
+
+### 12.6 Pilot gate and rollback
+
+The Days 14–16 pilot gate is **passed locally**. No confirmed business-function regression was found, and the shared API remained smaller than the manual composition it replaced.
+
+Rollback remains layered:
+
+1. Revert `6292abd` to restore only the Holidays manual composition.
+2. Revert `f16eb0d` independently if the reduced-motion ordering correction must be withdrawn.
+3. Retain `076febf` while any consumer adopts `loadingMessage`; otherwise it can be reverted independently because its omitted-prop behavior is compatible.
+
+Full lint and the complete unit suite remain reserved for the Day 20 checkpoint after the second pilot, as required by the proportional-validation plan.

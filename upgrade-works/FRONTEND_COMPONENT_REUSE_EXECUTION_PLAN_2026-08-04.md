@@ -5,7 +5,7 @@
 **Baseline revision:** `0bc64a4`  
 **Parent plan:** `FRONTEND_UPGRADE_PLAN_2026-08-03.md`, Revision 2  
 **Scope:** Stage 2 Days 7–10 and Stage 3 Days 11–20  
-**Status:** In progress — Stage 2 and Stage 3 Days 11–13 complete; Days 14–16 next  
+**Status:** In progress — Stage 2 and Stage 3 Days 11–16 complete; Days 17–19 next  
 **Authorization boundary:** Local, behavior-preserving frontend work only; no deployment, backend, API-contract, permission, persistence, or workflow changes
 
 ## 1. Purpose
@@ -583,6 +583,8 @@ Do not combine canonical relocation, all consumer import rewrites, `UserConfirmM
 Stop if the component starts accepting user-, payroll-, inspection-, or workflow-specific props.
 
 ### Days 14–16 — Pilot 1: Straightforward Migration
+
+Status: **completed locally on 2026-08-04**. The Holidays pilot passed at revisions `076febf`, `6292abd`, and `f16eb0d`; see the [Stage 3 execution record](./FRONTEND_COMPONENT_REUSE_STAGE_3_EXECUTION_2026-08-04.md).
 
 Migrate the selected low-risk consumer to the approved component contract.
 
