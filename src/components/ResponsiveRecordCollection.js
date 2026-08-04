@@ -5,6 +5,7 @@ import TableLoader from './TableLoader'
 
 const ResponsiveRecordCollection = ({
   isLoading = false,
+  loadingMessage,
   isEmpty = false,
   emptyMessage = null,
   mobileSections = [],
@@ -13,7 +14,7 @@ const ResponsiveRecordCollection = ({
   footer = null,
   children = null,
 }) => {
-  if (isLoading) return <TableLoader />
+  if (isLoading) return <TableLoader message={loadingMessage} />
   if (isEmpty) {
     if (React.isValidElement(emptyMessage)) return emptyMessage
     return <PageState variant="empty" message={emptyMessage || 'No records found.'} />
