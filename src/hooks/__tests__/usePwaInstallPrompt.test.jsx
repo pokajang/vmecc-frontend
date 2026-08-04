@@ -3,12 +3,7 @@ import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 
-import usePwaInstallPrompt, {
-  PWA_INSTALL_DISMISSED_KEY,
-  PwaInstallProvider,
-} from '../usePwaInstallPrompt'
-
-const storageState = new Map()
+import usePwaInstallPrompt, { PwaInstallProvider } from '../usePwaInstallPrompt'
 
 const setNavigatorValue = (key, value) => {
   Object.defineProperty(window.navigator, key, {
@@ -51,26 +46,20 @@ const configureEnvironment = ({
 const Harness = () => {
   const {
     canNativeInstall,
-    dismissBanner,
     isInstalled,
     openInstallExperience,
     platformVariant,
-    showBanner,
     showNavInstallItem,
   } = usePwaInstallPrompt()
 
   return (
     <>
       <div data-testid="platform">{platformVariant}</div>
-      <div data-testid="show-banner">{String(showBanner)}</div>
       <div data-testid="show-nav">{String(showNavInstallItem)}</div>
       <div data-testid="native-install">{String(canNativeInstall)}</div>
       <div data-testid="installed">{String(isInstalled)}</div>
       <button type="button" onClick={() => void openInstallExperience()}>
         Open install
-      </button>
-      <button type="button" onClick={dismissBanner}>
-        Dismiss banner
       </button>
     </>
   )
@@ -83,33 +72,12 @@ const renderHarness = () =>
     </PwaInstallProvider>,
   )
 
-const clearDismissed = () => {
-  storageState.delete(PWA_INSTALL_DISMISSED_KEY)
-}
-
 afterEach(() => {
   cleanup()
-  clearDismissed()
 })
 
 beforeEach(() => {
-  Object.defineProperty(window, 'localStorage', {
-    configurable: true,
-    value: {
-      getItem: vi.fn((key) => (storageState.has(key) ? storageState.get(key) : null)),
-      setItem: vi.fn((key, value) => {
-        storageState.set(key, String(value))
-      }),
-      removeItem: vi.fn((key) => {
-        storageState.delete(key)
-      }),
-      clear: vi.fn(() => {
-        storageState.clear()
-      }),
-    },
-  })
   configureEnvironment()
-  clearDismissed()
 })
 
 describe('usePwaInstallPrompt', () => {
@@ -177,7 +145,6 @@ describe('usePwaInstallPrompt', () => {
     renderHarness()
 
     expect(screen.getByTestId('platform').textContent).toBe('desktop')
-    expect(screen.getByTestId('show-banner').textContent).toBe('false')
     fireEvent.click(screen.getByRole('button', { name: 'Open install' }))
 
     expect(
@@ -188,28 +155,14 @@ describe('usePwaInstallPrompt', () => {
     expect(screen.getByText(/install icon in the address bar/i)).toBeTruthy()
   })
 
-  it('hides only the banner when dismissed, while keeping the nav item available', async () => {
+  it('hides the nav item after appinstalled', async () => {
     renderHarness()
 
-    expect(screen.getByTestId('show-banner').textContent).toBe('true')
-    expect(screen.getByTestId('show-nav').textContent).toBe('true')
-
-    fireEvent.click(screen.getByRole('button', { name: 'Dismiss banner' }))
-
-    await waitFor(() => expect(screen.getByTestId('show-banner').textContent).toBe('false'))
-    expect(screen.getByTestId('show-nav').textContent).toBe('true')
-  })
-
-  it('hides both banner and nav item after appinstalled', async () => {
-    renderHarness()
-
-    expect(screen.getByTestId('show-banner').textContent).toBe('true')
     expect(screen.getByTestId('show-nav').textContent).toBe('true')
 
     window.dispatchEvent(new Event('appinstalled'))
 
     await waitFor(() => expect(screen.getByTestId('installed').textContent).toBe('true'))
-    expect(screen.getByTestId('show-banner').textContent).toBe('false')
     expect(screen.getByTestId('show-nav').textContent).toBe('false')
   })
 })

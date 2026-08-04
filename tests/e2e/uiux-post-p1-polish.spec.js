@@ -73,7 +73,6 @@ test.describe('Post-P1 UI/UX polish', () => {
       expect(box?.height || 0).toBeGreaterThanOrEqual(44)
     }
 
-    await expect(page.locator('.pwa-install-banner')).toHaveCount(0)
     await expectNoHorizontalOverflow(page)
     await context.close()
   })

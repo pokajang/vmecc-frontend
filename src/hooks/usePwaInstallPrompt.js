@@ -3,8 +3,6 @@ import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } 
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import useMediaQuery from 'src/hooks/useMediaQuery'
 
-export const PWA_INSTALL_DISMISSED_KEY = 'vmecc-pwa-install-dismissed'
-
 const PwaInstallContext = createContext(null)
 
 const getNavigator = () => (typeof window === 'undefined' ? null : window.navigator)
@@ -44,26 +42,6 @@ const getPlatformVariant = () => {
   return 'desktop'
 }
 
-const readDismissed = () => {
-  if (typeof localStorage === 'undefined') return false
-
-  try {
-    return localStorage.getItem(PWA_INSTALL_DISMISSED_KEY) === '1'
-  } catch {
-    return false
-  }
-}
-
-const writeDismissed = () => {
-  if (typeof localStorage === 'undefined') return
-
-  try {
-    localStorage.setItem(PWA_INSTALL_DISMISSED_KEY, '1')
-  } catch {
-    // Non-fatal. The prompt can remain visible if storage is unavailable.
-  }
-}
-
 const INSTALL_MODAL_COPY = {
   ios: {
     intro:
@@ -100,16 +78,13 @@ const INSTALL_MODAL_COPY = {
 
 export const PwaInstallProvider = ({ children }) => {
   const [deferredPrompt, setDeferredPrompt] = useState(null)
-  const [dismissed, setDismissed] = useState(readDismissed)
   const [isInstalled, setIsInstalled] = useState(isRunningStandalone)
-  const [isMobileLike, setIsMobileLike] = useState(isMobileLikeDevice)
   const [platformVariant, setPlatformVariant] = useState(getPlatformVariant)
   const [installModalVisible, setInstallModalVisible] = useState(false)
 
   useEffect(() => {
     const refreshDeviceState = () => {
       setIsInstalled(isRunningStandalone())
-      setIsMobileLike(isMobileLikeDevice())
       setPlatformVariant(getPlatformVariant())
     }
 
@@ -138,7 +113,6 @@ export const PwaInstallProvider = ({ children }) => {
   }, [])
 
   const canNativeInstall = Boolean(deferredPrompt) && !isInstalled
-  const showBanner = !isInstalled && isMobileLike && !dismissed
   const showNavInstallItem = !isInstalled
 
   const openInstallExperience = useCallback(async () => {
@@ -161,11 +135,6 @@ export const PwaInstallProvider = ({ children }) => {
     return result || null
   }, [deferredPrompt, isInstalled])
 
-  const dismissBanner = useCallback(() => {
-    writeDismissed()
-    setDismissed(true)
-  }, [])
-
   const closeInstallExperience = useCallback(() => {
     setInstallModalVisible(false)
   }, [])
@@ -178,20 +147,16 @@ export const PwaInstallProvider = ({ children }) => {
       isInstalled,
       canNativeInstall,
       platformVariant,
-      showBanner,
       showNavInstallItem,
       openInstallExperience,
-      dismissBanner,
       closeInstallExperience,
     }),
     [
       canNativeInstall,
       closeInstallExperience,
-      dismissBanner,
       isInstalled,
       openInstallExperience,
       platformVariant,
-      showBanner,
       showNavInstallItem,
     ],
   )
