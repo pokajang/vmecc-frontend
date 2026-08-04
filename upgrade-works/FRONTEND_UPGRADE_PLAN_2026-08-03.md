@@ -1,879 +1,567 @@
 # VMECC Frontend Upgrade Plan
 
-**Document date:** 2026-08-03  
+**Original document date:** 2026-08-03  
+**Current revision date:** 2026-08-04  
+**Plan version:** 2.0  
 **Application:** `vmecc-frontend`  
 **Document home:** `upgrade-works/`  
-**Plan horizon:** 90 days  
-**Document status:** Draft for owner approval  
-**Safety revision:** 1.1  
-**Primary goal:** Improve frontend correctness, delivery confidence, accessibility, performance, maintainability, and production observability without disrupting working business workflows.
+**Document status:** Active — reprioritized after Stage 1  
+**Primary goal:** Improve frontend code quality, consistency, and maintainability by consolidating repeated implementations into well-scoped reusable components and patterns without changing existing business behavior.
 
-## 1. Purpose
+## 1. Revision Decision
 
-This plan converts the frontend code-quality audit findings into a staged delivery programme. Work is ordered so that unreliable engineering signals and production-impacting defects are addressed first, followed by test, performance, accessibility, and operational improvements, and then longer-term architecture modernization.
+Revision 2 replaces the unexecuted post-Stage-1 roadmap from Revision 1.1. Git history preserves the original plan.
 
-This is an engineering-quality upgrade. It is not a visual redesign or a feature expansion unless a small user-interface change is required to correct accessibility, error handling, performance, or production behavior.
+Stage 1 established a trustworthy local baseline through lint repair, confirmed correctness fixes, production-configuration hardening, dependency triage, and regression testing. That work remains valid. The owner has clarified that the next priority is application-level implementation quality: reuse existing components consistently, extract genuinely repeated patterns, reduce avoidable duplication, and make applicable modules look and behave coherently.
 
-### 1.1 Scope boundaries
+The following Revision 1.1 priorities are therefore deferred unless a concrete need makes them relevant:
 
-- This plan authorizes changes only within the frontend repository and its documented frontend build, test, and deployment configuration.
-- Backend code, database schemas, production data, infrastructure, CDN configuration, external monitoring projects, branch protection, and live server settings require their respective owners and normal change authorization.
-- A frontend task that reveals a backend or infrastructure dependency must create and link a separately owned change; it must not expand scope silently.
-- The programme must not alter business approval rules, statutory calculations, payroll outcomes, role permissions, retention obligations, or report/inspection semantics without product, domain-owner, and backend approval.
-- Existing feature work and emergency production fixes take precedence when formally declared; programme changes must rebase and revalidate rather than overwrite them.
+- broad CI and hosting-process expansion
+- blanket coverage or typing programmes
+- observability-platform adoption
+- performance work without a measured user-facing problem
+- large state-management or storage migrations
+- production deployment qualification before an actual release is requested
 
-## 2. Current Baseline
+These topics are not rejected. They are removed from the immediate critical path so that the programme addresses the owner's primary concern.
 
-The following baseline was recorded during the 2026-08-03 audit:
+## 2. Scope and Outcomes
 
-| Area | Baseline |
+### 2.1 In scope
+
+- Inventory existing shared components, hooks, utilities, styles, and repeated module implementations.
+- Identify patterns that have the same user purpose and substantially the same behavior.
+- Improve existing shared components before creating competing replacements.
+- Extract new shared components only when their reusable contract is clear.
+- Consolidate spacing, typography, status presentation, actions, states, and responsive behavior in applicable modules.
+- Migrate modules incrementally while preserving routes, permissions, API payloads, calculations, persistence, and workflow order.
+- Remove superseded duplicate code after all intended consumers have migrated.
+- Add focused tests around shared contracts and behavior-sensitive module integrations.
+- Record legitimate domain-specific exceptions instead of forcing false uniformity.
+
+### 2.2 Out of scope unless separately approved
+
+- A wholesale visual redesign or new branding exercise
+- New business features or workflow changes
+- Backend, API, database, permission, payroll, report, or inspection-semantic changes
+- Replacing CoreUI or introducing another UI framework
+- A repository-wide rewrite, mass rename, formatting pass, or CSS reset
+- React Router, state-library, form-library, or other major dependency migration
+- Abstracting code solely to reduce line count
+- Deploying to staging or production
+
+### 2.3 Target outcomes
+
+By the end of this plan:
+
+- Repeated frontend patterns are catalogued with their consumers and differences.
+- Shared components have clear responsibilities, predictable props, and documented variants.
+- Applicable modules use the same component for the same user-facing purpose.
+- Page structure, actions, filters, tables, status indicators, form feedback, modal behavior, and standard states are visibly coherent.
+- Domain-specific behavior remains local when sharing would create excessive flags or hidden branching.
+- Duplicate implementations removed by a migration are no longer imported or styled.
+- Accessibility and responsive behavior are part of each shared contract.
+- Existing application functionality remains unchanged unless a separate behavior change is explicitly approved.
+- Validation effort is proportionate to the change rather than repeated mechanically.
+
+## 3. Current Foundation
+
+### 3.1 Completed Stage 1 work
+
+| Work | Status |
 | --- | --- |
-| Source size | Approximately 243,000 lines and 1,298 source files |
-| Unit tests | 311 files and 1,702 tests passing |
-| Full unit-test duration | Approximately 5 minutes 38 seconds with file parallelism disabled |
-| E2E specifications | 32 Playwright specification files |
-| E2E module inventory | 50/50 modules mapped; 45 mapped, 5 partial, 0 qualified |
-| Production build | Passing, with several chunks above the 500 KB warning threshold |
-| Largest JavaScript chunk | Inspection page at approximately 1,025 KB minified |
-| Entry JavaScript chunk | Approximately 597 KB minified |
-| Global CSS | Approximately 540 KB minified |
-| Production module size | 69 files over 500 lines; 5 files over 1,000 lines |
-| CI enforcement | Build only; lint, tests, audits, coverage, and E2E are not required |
-| Static typing | No TypeScript or `checkJs` enforcement |
-| Dependency audit | Two high-severity entries from one React Router RSC advisory |
-| Repository status | Clean before and after the audit |
+| ESLint correctness and React/accessibility enforcement | Completed locally |
+| Confirmed runtime defect repairs and compatibility tests | Completed locally |
+| Production header, local asset, and API configuration hardening | Completed locally |
+| GitHub-hosted automation | Deferred by owner to avoid hosted cost |
+| Compatible dependency advisory patches | Completed locally |
+| React Router RSC advisory disposition | Time-bounded exception; review due 2026-09-04 |
+| Full regression baseline | 315 test files / 1,728 tests passing |
+| Production build baseline | Passing; existing size warnings recorded |
 
-## 3. Programme Principles
+Stage 1 is a foundation, not the template for the amount of ceremony required for every component refactor.
 
-1. Correct production-impacting behavior before performing structural refactors.
-2. Make quality signals trustworthy before treating a green check as evidence of readiness.
-3. Introduce stricter rules incrementally and record temporary exceptions instead of disabling entire rule categories.
-4. Preserve existing API contracts, authorization behavior, PWA behavior, and business workflows unless a change is explicitly approved.
-5. Every change must include verification proportionate to its operational risk.
-6. Backend authorization remains authoritative; frontend permission checks provide user experience and defense in depth.
-7. Performance work must be measured against recorded bundle and runtime baselines.
-8. Accessibility work must be validated through automated checks and keyboard/browser testing.
+### 3.2 Existing reuse candidates
 
-## 4. Target Outcomes
+The repository already contains shared building blocks that must be assessed before anything new is introduced. Initial candidates include:
 
-By the end of the programme:
+- Structure and navigation: `ModulePageHeader`, `ModuleNavTabs`, `RouteNavTabs`, `BackButton`, `AppBreadcrumb`
+- Data display: `TableFilters`, `TableLoader`, `DataTableFooter`, `SortableTableHeader`, `GroupedTableHeader`, `ResponsiveRecordCollection`
+- Actions and feedback: `CreateActionButton`, `FormActionGroup`, `ButtonLoader`, `ActionConfirmModal`
+- Status and workflow: `RecordStateBadge`, `WorkflowStatusSummary`, `WorkflowDetailHeader`, `ResponsiveWorkflowActionDialog`
+- Responsive detail presentation: `ResponsiveKeyValueList`, `ResponsiveFinancialBreakdown`
+- Shared status definitions: `statusPresentation.js` and domain-specific status helpers
 
-- ESLint reliably detects core JavaScript, React, Hooks, and accessibility problems.
-- Known undefined identifiers, unreachable code, and deployment-header conflicts are resolved.
-- Pull requests cannot merge unless required lint, test, audit, and build gates pass.
-- Unit coverage is measured and protected by agreed thresholds.
-- Critical workflows have qualified E2E evidence.
-- Initial and high-use route bundles have documented performance budgets.
-- Production frontend errors are observable and correlated with releases.
-- New code is typed, while high-risk existing modules enter an incremental typing programme.
-- Large feature modules have clearer domain, state, data, and rendering boundaries.
-- Browser-persisted data has documented ownership, versioning, retention, and cleanup rules.
-- Production deployment artifacts are reproducible and generated by an explicit release process.
+This list is a discovery starting point, not an instruction to use every component everywhere.
 
-## 5. Mandatory Execution Safety Controls
+## 4. Reuse and Consistency Principles
 
-These controls apply to every stage and override schedule pressure. A stage may move later; it must not bypass a safety gate to remain on its target date.
+1. **Reuse before creation.** Search for an existing component, hook, utility, or style contract before adding another.
+2. **Semantics before appearance.** Components should be shared because they serve the same purpose and behavior, not merely because they look similar today.
+3. **Prefer composition.** Build small focused parts that can be composed; avoid one universal component with many unrelated modes.
+4. **Keep domain rules local.** Calculations, permissions, status transitions, validation rules, and API mapping stay in their domain unless the rule is truly common.
+5. **Preserve behavior.** Refactoring must not silently change labels, routes, workflow order, request shapes, error handling, focus behavior, or responsive availability.
+6. **Use explicit variants.** A small named variant is acceptable when the semantic difference is stable. Boolean-prop combinations that create hidden component modes are not.
+7. **Migrate before deleting.** Keep the existing implementation until intended consumers pass their migration checks.
+8. **Consistency includes states.** Loading, empty, error, disabled, read-only, permission-denied, and success behavior matter as much as the normal state.
+9. **Accessibility is contractual.** Labels, keyboard operation, focus, dialog semantics, status meaning, and touch targets belong in the shared component contract.
+10. **Responsive behavior is contractual.** A shared component must define what remains visible and actionable on supported viewport sizes.
+11. **Do not chase arbitrary metrics.** Fewer files or lines are not success if the resulting API is harder to understand or change.
+12. **Leave good duplication alone.** Two implementations may remain separate when their behavior, ownership, or expected evolution differs materially.
 
-### 5.1 Schedule interpretation
+## 5. Component Boundaries
 
-- Day ranges are sequencing windows, not permission to merge incomplete work.
-- A later stage must not begin when it depends on an unmet earlier-stage exit criterion.
-- Independent research or test preparation may run in parallel, but production-affecting implementations must follow the stated dependency order.
-- The engineering owner must revise dates when staffing, backend availability, device access, or release windows make the original schedule unsafe.
+Use four layers to decide ownership:
 
-### 5.2 Preflight gate before Day 1
+| Layer | Responsibility | Examples |
+| --- | --- | --- |
+| Foundation | Design tokens and low-level presentation rules | spacing, typography, colors, radii, focus, control sizing |
+| Shared primitives | Small stable application-wide behaviors | loaders, state badges, action groups, confirmation shell |
+| Shared composites | Repeatable page or workflow patterns | page header, filters, responsive record collection, detail header |
+| Domain components | Business-specific rendering and interaction | salary claim calculations, inspection steps, leave transitions |
 
-Before implementation begins:
+A component should move upward only when its lower-level consumers share a stable contract.
 
-1. Assign an engineering owner, QA owner, operations/deployment owner, and decision maker for each production release.
-2. Confirm branch protection and prohibit direct pushes to `main` for programme work.
-3. Record the source revision, lockfile checksum, Node/npm versions, environment-variable names, deployed build ID, and deployed response headers.
-4. Archive or otherwise retain the last known-good deployable artifact and its matching `version.json`, `index.html`, service worker, and hashed assets.
-5. Verify and document a rollback procedure in the staging environment.
-6. Capture baseline validation results and bundle outputs from a clean checkout.
-7. Confirm that the working tree is clean before each work item. Existing unrelated changes must be preserved and excluded from programme commits.
-8. Confirm the non-production backend, test accounts, test data, supported browsers, and required physical devices are available.
-9. Create an evidence location outside the Vite-watched source tree for logs, screenshots, traces, coverage, and build reports.
-10. Record known flaky tests and existing production incidents so they are not misattributed to upgrade work.
+### 5.1 Extraction threshold
 
-If the last known-good artifact or rollback procedure cannot be verified, production-affecting work is blocked even when source-level tests pass.
+Promote a pattern to shared ownership when at least one condition is met:
 
-### 5.3 Change-unit rules
+- three or more implementations have the same purpose and materially equivalent behavior
+- two high-use implementations clearly need the same contract and are likely to remain aligned
+- an existing shared component already represents the pattern but consumers have diverged unnecessarily
+- a correctness, accessibility, or responsive fix should be enforced once for all applicable consumers
 
-- Use small pull requests with one primary risk domain: tooling, runtime defect, security header, dependency, performance, accessibility, telemetry, typing, state, storage, or deployment.
-- Do not combine behavior changes with large formatting, rename, generated-artifact, or file-movement changes.
-- Do not mix a dependency major-version upgrade with unrelated refactoring.
-- Avoid repository-wide lint autofix or formatting in the same pull request as correctness fixes.
-- Every pull request must identify affected workflows, validation evidence, deployment impact, rollback method, and any temporary exceptions.
-- Review generated files separately from source changes.
-- Use feature flags or compatibility adapters for changes that cannot be safely deployed atomically with all consumers.
+Do not extract when:
 
-### 5.4 Environment and data protections
+- similarity is only visual
+- the proposed API needs many consumer-specific flags, render branches, or exceptions
+- business rules would move into a generic UI component
+- only one stable consumer exists and no imminent second consumer is identified
+- the abstraction makes the call site harder to understand than the local implementation
 
-- Development and CI validation must not target production APIs, storage, accounts, email recipients, notification channels, or monitoring projects.
-- Destructive, workflow-transition, upload, payroll, user-management, permission, and notification E2E tests are prohibited against production.
-- E2E mutation is allowed only on an explicitly approved non-production origin with isolated fixtures, a unique run ID, and verified cleanup.
-- Tests must fail closed when the target origin is absent, ambiguous, or outside the allowlist.
-- Test credentials must be injected at runtime and scoped to the test environment. They must not be reusable production credentials.
-- Never copy production payroll, salary, claim, attachment, health, incident, or identity data into CI fixtures.
-- Logs, screenshots, videos, traces, and telemetry must be treated as potentially sensitive and retained according to an approved policy.
+### 5.2 Shared-component contract
 
-### 5.5 Validation and promotion path
+Before broad migration, define:
 
-Production-affecting changes must follow this promotion path:
+- intended purpose and supported consumers
+- required and optional props
+- named variants and their semantics
+- normal, loading, empty, error, disabled, read-only, and permission states as applicable
+- keyboard, focus, accessible-name, and announcement behavior
+- mobile and desktop behavior
+- extension points and deliberately unsupported customization
+- focused tests and migration examples
 
-1. Focused local test for the changed behavior.
-2. Full applicable local validation from a clean worktree.
-3. Required CI checks on the exact commit.
-4. Staging deployment using the intended production artifact process.
-5. Staging smoke, security-header, PWA, accessibility, and affected-workflow verification.
-6. Named go/no-go approval.
-7. Controlled production deployment within an agreed observation window.
-8. Post-deployment smoke checks and monitoring review.
+### 5.3 Placement and naming
 
-Do not rebuild between approval and deployment. Promote the exact artifact that passed staging unless an emergency process explicitly requires and records a new build.
+- Put a component in `src/components/` only when it has a stable cross-domain purpose.
+- Keep reusable components that belong to one business area inside that domain's component or shared directory.
+- Prefer names that describe user purpose, such as `ActionConfirmModal` or `ModulePageHeader`; avoid vague containers such as `CommonComponent`, `ReusableForm`, or `GenericWrapper`.
+- Do not create a barrel export solely for a migration. Follow an existing export convention and check for circular dependencies before introducing one.
+- Keep presentation components independent of API clients, global stores, permission decisions, and domain calculations.
 
-### 5.6 Rollback requirements
+## 6. Right-Sized Validation
 
-Every production-affecting pull request or release must document:
+Validation follows risk. It is not necessary to run every available check after every small presentational edit.
 
-- the last known-good build ID and source revision
-- the exact rollback artifact or configuration
-- whether rollback affects service-worker caches, browser storage, API compatibility, or database-backed state
-- a rollback decision owner
-- observable rollback triggers
-- post-rollback verification steps
+| Change type | Required during development | Required at batch checkpoint |
+| --- | --- | --- |
+| Documentation or inventory only | Link/path and diff check | None beyond document review |
+| Token or presentational primitive | Lint for changed files; focused component tests | Affected module tests; production build when CSS/build output changes materially |
+| Shared interactive component | Focused component tests including keyboard/state behavior; affected consumer tests | Full lint and full unit suite after the migration batch |
+| Module migration with no intended behavior change | Existing tests for that module and shared component | Full suite at the end of the pattern family or stage |
+| Hook, state, API, permission, routing, or persistence change | Characterization and affected integration tests | Full lint, audits, unit suite, and production build |
+| Release candidate | Stage-level validation plus the separate release checklist | Deployment approval is outside this plan |
 
-Rollback must restore a complete asset set. Never roll back only `index.html`, only the service worker, or only selected hashed chunks.
+Additional rules:
 
-### 5.7 Stop-work and rollback triggers
+- Run the smallest test set that can detect a mistake while iterating.
+- Run the complete unit suite once per meaningful migration batch, not after each consumer file.
+- Run the production build when exports, lazy imports, CSS entry points, asset behavior, or a stage checkpoint changes.
+- Existing unrelated warnings do not block a refactor unless the change worsens them.
+- Do not weaken or delete tests merely to make a migration pass.
+- A visual difference is acceptable only when it is the documented consistency correction and does not alter workflow meaning.
 
-Stop promotion or initiate rollback when any of the following occurs and cannot be explained as a pre-existing, accepted condition:
+## 7. Working Method
 
-- authentication, authorization, logout, or session restoration regresses
-- payroll, salary, claim, report, inspection, attachment, or message data crosses user boundaries
-- camera, upload, offline sync, PWA update, or core navigation becomes unavailable on a supported device
-- CSP, CSRF, HSTS, frame protection, or sensitive-request cache controls are weakened unexpectedly
-- a deployment produces mixed build IDs, missing chunks, repeated reloads, or a service-worker update loop
-- error rate, failed requests, or critical workflow abandonment exceeds the agreed threshold
-- test automation targets an unapproved origin or creates unscoped records
-- a storage migration loses, misattributes, or cannot safely read existing user data
-- rollback cannot be completed with the verified artifact and procedure
+Each pattern family follows the same lean sequence:
 
-### 5.8 Exception management
+1. Inventory implementations and consumers.
+2. Compare purpose, behavior, states, accessibility, responsive behavior, and domain differences.
+3. Choose one of four dispositions: reuse as-is, improve existing shared component, extract a new shared component, or keep domain-specific.
+4. Capture current behavior with focused tests when coverage is insufficient.
+5. Define the smallest stable shared contract.
+6. Migrate one representative consumer.
+7. Review the result before expanding to the next consumer.
+8. Migrate the remaining approved consumers in a bounded batch.
+9. Remove superseded imports, styles, wrappers, and dead code.
+10. Run the batch-level validation and record the outcome.
 
-- Every rule, vulnerability, coverage, performance, accessibility, or test exception requires an owner, technical justification, affected scope, compensating control, approval, expiry date, and tracking reference.
-- Exceptions must be narrow. Repository-wide ignores require explicit engineering-owner approval.
-- Expired exceptions fail the relevant quality gate until renewed or removed.
-- A passing gate achieved by raising a limit, excluding a failing path, or deleting a test is not an improvement unless the change is independently justified and approved.
+One pattern family should normally be isolated from unrelated refactors. A module may be touched by several batches over time; it does not need a big-bang rewrite.
+
+Shared-component editing safeguards:
+
+- Capture the complete import/consumer list before changing an existing shared component.
+- Preserve existing default behavior until every current consumer has been reviewed.
+- Prefer adding a clearly named compatible variant, migrating consumers, and then simplifying over silently changing a default for all consumers.
+- Keep event timing, callback arguments, disabled/loading behavior, HTML semantics, and focus behavior stable unless the approved contract says otherwise.
+- Scope styles to the component or an existing semantic class; avoid new broad selectors that can leak into unrelated modules.
+- After migration, search again for old imports, duplicate class names, and direct implementations before deleting anything.
+
+## 8. Day-Staged Implementation Plan
+
+Day numbers are sequencing guides, not mandatory calendar deadlines. Work may pause for product changes or unresolved behavioral differences.
+
+# Stage 1 — Foundation Already Completed
+
+## Days 1–5 — Correctness and Local Confidence
+
+Status: **completed locally**, except hosted GitHub automation was explicitly deferred.
+
+The completed records in `upgrade-works/` remain the evidence for this stage. The former Days 6–7 release-readiness expansion is superseded by Revision 2 and moved to the release-only checklist in Section 11.
+
+### Stage 1 carry-forward rules
+
+- Preserve the corrected lint and test baseline.
+- Continue the React Router exception check until resolved or formally renewed.
+- Do not reopen deployment work unless an actual release is being prepared.
+- Treat existing compatibility tests as protection for component migrations.
 
 ---
 
-# Stage 1 — Days 1–7: Correctness and Delivery Safety
+# Stage 2 — Days 6–10: Reuse and Consistency Audit
 
-## Stage Objective
-
-Restore trust in frontend quality signals, remove confirmed runtime defects, correct production deployment conflicts, and make core validation mandatory in CI.
-
-## Day 1 — Repair ESLint Configuration
+## Day 6 — Component and Usage Inventory
 
 ### Work
 
-- Add the official ESLint JavaScript recommended configuration.
-- Correctly merge, rather than overwrite, React recommended, React JSX runtime, and React Hooks rules.
-- Register the React plugin using the expected `react` namespace.
-- Add explicit service-worker build-placeholder globals.
-- Enable at minimum:
-  - `no-undef`
-  - `no-unreachable`
-  - `no-constant-condition` with appropriate loop handling
-  - `react/jsx-key`
-  - `react/no-unknown-property`
-  - `react/jsx-no-target-blank`
-  - `react/button-has-type`
-  - React Hooks recommended rules
-- Add `eslint-plugin-jsx-a11y`, but initially enable only high-confidence rules that do not create an unmanageable migration backlog.
-- Scope browser, Node.js, test, and service-worker globals separately.
-- Ensure source files, test files, scripts, and configuration files use appropriate lint environments.
+- Catalogue components under `src/components/` and meaningful shared areas under `src/views/**/shared/`.
+- Record import counts and representative consumers.
+- Identify components with overlapping names or responsibilities.
+- Identify components that exist but are bypassed by local copies.
+- Do not modify application behavior during inventory.
 
-### Migration approach
+### Deliverable
 
-- Treat `no-undef` and `no-unreachable` as blocking immediately.
-- Record the initial `no-unused-vars` backlog and introduce it through a controlled warning-to-error migration.
-- Do not use broad file-wide disables. Every exception must identify the rule and reason.
-- Capture the effective ESLint configuration for a representative browser component, Node script, test file, and service-worker file.
-- Run the first corrected lint without `--fix`, save the findings, and separate genuine defects from environment/configuration false positives.
-- Apply automated fixes only to reviewed files and inspect the resulting diff before commit.
-- Do not lower Prettier, Hooks, or existing audit enforcement to make new rules pass.
-- Introduce debt-heavy rules through a ratchet: prevent new violations while reducing an explicitly recorded baseline.
+Create `upgrade-works/FRONTEND_COMPONENT_REUSE_AUDIT_2026-08-04.md` with a component catalogue and evidence-based candidate list.
 
-### Acceptance criteria
-
-- Effective ESLint configuration shows core JavaScript and React correctness rules.
-- `npm run lint` fails when a deliberate undefined variable is introduced in a temporary verification fixture.
-- Service-worker template placeholders do not generate false-positive `no-undef` errors.
-- Existing source passes all newly designated blocking rules.
-
-## Day 2 — Fix Confirmed Runtime Defects
+## Day 7 — Repeated Pattern Matrix
 
 ### Work
 
-- Correct the undefined `draftsStorageKeyRef` usage in the message draft cleanup workflow.
-- Correct or expose the required workflow error-reset actions used by the report action modal.
-- Correct the undefined `setBaseError` usage in overtime-rate settings.
-- Remove or restructure the unreachable extinguisher synchronization block.
-- Add focused regression tests for each corrected path.
-- Add an explicit `type="button"` to non-submit buttons identified by the React rule probe.
-- Resolve each runtime defect in a focused pull request or clearly separated commit so that it can be reverted independently.
-- Confirm the intended state owner before exposing or duplicating a missing setter; do not add local state merely to silence `no-undef`.
-- Limit logout cleanup to the authenticated user's documented message-draft key. Never clear all localStorage as a shortcut.
+- Map repeated patterns across modules.
+- Compare their semantics, states, responsive behavior, accessibility, and styling.
+- Rank each pattern by reuse value, migration risk, and number of consumers.
+- Record a disposition for apparent duplication that should remain separate.
 
-### Required regression scenarios
+The matrix must record: pattern purpose, current implementations, consumer modules, behavioral differences, state differences, responsive/accessibility differences, proposed owner, disposition, migration risk, affected tests, and removal candidates.
 
-- Logging out removes or isolates the previous user's saved message draft without throwing.
-- Editing rejection remarks clears the visible rejection error.
-- Checking the report declaration clears its validation error.
-- Entering base-hour edit mode clears the correct overtime-rate error state.
-- Failed extinguisher synchronization updates progress exactly once and releases active-sync state.
+### Priority pattern families
 
-### Acceptance criteria
+1. Page headers, breadcrumbs, tabs, and back navigation
+2. Primary, secondary, destructive, and create actions
+3. Tables, sorting, filters, pagination, loaders, and mobile record collections
+4. Status badges, workflow summaries, and state presentation
+5. Loading, empty, error, disabled, read-only, and permission states
+6. Confirmation dialogs, action dialogs, and modal shells
+7. Form layout, labels, validation messages, submit/discard controls, and field spacing
+8. Responsive detail and key-value presentation
 
-- No production `no-undef` or `no-unreachable` errors remain.
-- Focused regression tests cover all corrected behaviors.
-- Full unit suite remains green.
-
-## Day 3 — Correct Production Headers and Configuration
+## Day 8 — Foundation and Style-Source Audit
 
 ### Work
 
-- Change the deployed camera Permissions Policy from `camera=()` to the narrow approved policy, normally `camera=(self)`.
-- Keep microphone, geolocation, payment, and USB disabled unless a documented product requirement exists.
-- Bundle the Google sign-in icon locally so it complies with the existing CSP.
-- Verify that CSP, HSTS, frame denial, MIME sniffing, and referrer protections remain active.
-- Remove the silent production fallback to `http://localhost:8000/api`.
-- Add build-time validation for required production environment variables.
-- Document that all `VITE_*` variables are public and must never contain secrets.
-- Verify which layer actually serves each header in staging and production, including Apache, reverse proxy, CDN, and application middleware, so duplicate or conflicting headers are not introduced.
-- Keep the localhost API fallback only in an explicit development-mode path; tests must supply their API origin rather than inheriting production configuration.
-- Prepare the previous header set as a configuration-only rollback and record the expected header diff before deployment.
-- Do not add `*`, broad third-party origins, or `'unsafe-eval'` to resolve CSP or Permissions Policy failures.
+- Identify existing SCSS variables, semantic classes, and hardcoded values used by the priority patterns.
+- Locate conflicting spacing, typography, color, radius, and control-size definitions.
+- Decide which existing source should become canonical.
+- Avoid a wholesale CSS rewrite or token system replacement.
 
-### Required deployment tests
-
-- Confirm the actual production/staging response contains the intended Permissions Policy.
-- Open in-app inspection camera capture on at least one Android Chromium device and one iOS Safari device where available.
-- Confirm the Google sign-in icon loads without a CSP violation.
-- Confirm missing production API configuration fails clearly during build or startup.
-
-### Acceptance criteria
-
-- Camera access is permitted only for the application origin.
-- No CSP console error occurs for the Google sign-in asset.
-- Production cannot silently point to a developer localhost API.
-
-## Day 4 — Establish Required CI Quality Gates
-
-> **2026-08-04 execution decision:** Hosted GitHub Actions work is disabled in repository configuration and deferred by repository-owner decision to avoid current CI charges. Remote disablement still requires GitHub UI/default-branch confirmation. This is an approved programme deviation, not a passed gate. See `FRONTEND_UPGRADE_GITHUB_ACTIONS_EXCEPTION_2026-08-04.md`; the CI-related Stage 1 exit criterion remains open.
+## Day 9 — Shared Contract Decisions
 
 ### Work
 
-- Expand GitHub Actions into separate or clearly named checks for:
-  - dependency installation with `npm ci`
-  - corrected ESLint
-  - unit tests
-  - contrast audit
-  - typography audit
-  - hardcoded-staff audit
-  - E2E module inventory contract
-  - production build
-  - dependency vulnerability reporting
-- Add a standard `npm test` script.
-- Add a `build:check` script that writes only to a disposable ignored directory, leaving the deployable `build/` tree untouched.
-- Add a single documented `npm run validate` or equivalent command for local pre-push verification.
-- Set realistic timeouts and preserve diagnostic output on failure.
-- Make the required checks branch-protection candidates.
-- Build into a temporary CI output directory so routine validation does not alter committed production artifacts.
-- Grant CI workflows the minimum required repository permissions and do not expose secrets to untrusted pull-request code.
-- Pin third-party actions according to the repository's supply-chain policy and review action updates separately.
-- Introduce new checks in reporting mode long enough to verify reliability, then mark the agreed gates required in the same stage. Reporting mode must have a named end date.
-- Keep vulnerability severity separate from applicability and exploitability. A scanner finding may block release, require remediation, or receive a time-bounded exception; it must not be silently ignored.
-- Do not overwrite or commit `build/` during ordinary pull-request validation.
+- Select the first two or three high-confidence pattern families.
+- Define their intended contracts and consumers.
+- Identify adapters needed for incremental migration.
+- Define focused test coverage and rollback boundaries.
 
-### Acceptance criteria
-
-- A pull request cannot report success when lint or unit tests fail.
-- Audit-script failures are visible as named CI failures.
-- Build artifacts and test reports can be downloaded from failed CI runs where appropriate.
-- Local and CI validation commands are documented in the README.
-
-## Day 5 — Dependency Advisory Triage
+## Day 10 — Audit Review and Implementation Backlog
 
 ### Work
 
-- Review the React Router advisory against the actual BrowserRouter SPA architecture.
-- Record why RSC-specific exposure is or is not applicable.
-- Identify the safest compatible patched-version path.
-- Run route, authentication, navigation-guard, and lazy-loading regression tests before any router upgrade.
-- Configure automated dependency-update pull requests.
-- Define rules for vulnerability exceptions, including owner, justification, expiry date, and review date.
-- Never run or accept `npm audit fix --force` without separately reviewing every direct and transitive version change.
-- Do not downgrade React Router solely because the audit tool presents an older version as the automatic fix.
-- Change one high-risk dependency family at a time and retain the previous lockfile and artifact for rollback.
-- Disable automatic merge for major versions and security updates that alter runtime routing, authentication, build, test, or PWA dependencies.
-- Verify the advisory using the vendor advisory and the installed dependency tree, not severity text alone.
-
-### Acceptance criteria
-
-- The current React Router advisory has a documented disposition.
-- No vulnerability is silently ignored.
-- Dependency update automation is enabled or an equivalent scheduled process exists.
-
-## Days 6–7 — Stabilization and Stage 1 Release
-
-### Work
-
-- Run the complete validation suite from a clean checkout.
-- Execute targeted browser checks for login, navigation, messages, report workflow, overtime settings, inspection camera, and PWA update behavior.
-- Verify production build and deployed security headers.
-- Review all new ESLint exceptions.
-- Update the engineering README and troubleshooting notes.
-- Prepare a Stage 1 release note with changes, risks, rollback steps, and known deferred items.
-- Deploy Stage 1 to staging first and use the exact approved artifact for production.
-- Schedule an observation period that covers login, one authenticated navigation, one safe write workflow, camera availability, and PWA update behavior.
-- Do not combine Stage 1 release deployment with unrelated backend, database, server, or CDN changes unless the coordinated dependency is documented and jointly reversible.
-
-### Stage 1 exit criteria
-
-- Corrected lint passes and enforces core correctness rules.
-- All confirmed undefined identifiers and unreachable code are resolved.
-- Unit suite passes.
-- Required audit scripts pass.
-- Production build passes.
-- CI includes mandatory lint, test, audit, and build checks.
-- Camera and CSP deployment conflicts are verified fixed.
-- React Router advisory has a documented resolution or time-bounded exception.
-- Stage 1 rollback evidence and the exact release artifact are recorded.
-- The named approvers have made a go/no-go decision and no stop-work trigger remains active.
-
----
-
-# Stage 2 — Days 8–28: Test Confidence, Performance, Accessibility, and Observability
-
-## Stage Objective
-
-Convert the existing test and audit investment into measurable release confidence, reduce high-impact loading costs, establish accessibility enforcement, and make production failures visible.
-
-## Days 8–12 — Test Architecture and Coverage
-
-### Work
-
-- Add Vitest coverage instrumentation and publish HTML, JSON, and CI summaries.
-- Separate Node-only domain tests from jsdom component tests.
-- Identify tests that genuinely require serial execution.
-- Re-enable safe file parallelism by test group or CI shard.
-- Establish fast, standard, and full validation tiers.
-- Track the slowest files and reduce unnecessary global setup.
-- Remove jsdom warnings or document unavoidable library limitations.
-- Change test execution settings one variable at a time and compare pass rate, duration, memory use, and flakiness with the baseline.
-- Run newly parallelized groups repeatedly before making them required; shared browser storage, fake timers, global mocks, and singleton modules must be isolated first.
-- Preserve deterministic serial groups with an owner and reason rather than forcing parallelism everywhere.
-- Keep coverage collection separate from the normal fast tier when instrumentation cost would damage local feedback.
-
-### Initial coverage policy
-
-- Establish the first baseline before choosing thresholds.
-- Set repository-level minimums that the current code can pass.
-- Apply stronger thresholds to new or materially changed modules.
-- Require focused tests for critical payroll, permissions, reports, inspection sync, authentication, and storage migrations.
-- Prevent coverage from decreasing without an approved explanation.
-- Do not increase coverage by excluding critical production paths, replacing meaningful assertions with snapshots, or testing implementation details only.
-- Review branch coverage separately for authorization, error, retry, cleanup, migration, and rollback paths.
-
-### Acceptance criteria
-
-- Coverage is generated in CI.
-- A documented fast test tier completes within an agreed developer-feedback budget.
-- The full unit suite is materially faster than the 5 minute 38 second baseline or is safely sharded in CI.
-- Coverage thresholds are enforced.
-
-## Days 13–17 — Bundle and Runtime Performance
-
-### Work
-
-- Add a bundle-analysis report and record chunk composition.
-- Add warning and failure budgets for entry, route, and CSS assets.
-- Remove the static `WorkflowNotifications` import that defeats route lazy loading.
-- Split inspection code by workflow and capability where safe:
-  - scanner and barcode support
-  - photo editor and camera capture
-  - review and detail views
-  - extinguisher catalogue and bulk management
-  - specialized inspection types
-- Lazy-load charting, heavy report editors, and large secondary modals at their point of use.
-- Review whether the complete `core-js` import is required.
-- Remove `optimizeDeps.force: true` unless a documented dependency defect requires it.
-- Review font subsets and large team imagery.
-- Measure key routes on a mid-range mobile profile and constrained network.
-- Capture the dependency graph before defining manual chunks; avoid creating circular chunks, duplicated vendors, or a large universal vendor bundle.
-- Verify deep links, back/forward navigation, preload behavior, chunk-load error recovery, and authenticated route transitions after every split.
-- Test an upgrade from the previously deployed service worker and build, not only a fresh installation.
-- Keep the previous generation of hashed assets available through the agreed client-update window so open tabs do not receive missing chunks.
-- Do not raise Vite's warning limit merely to make the build green.
-
-### Performance targets
-
-- No new route chunk may exceed the agreed budget without review.
-- Reduce the approximately 1,025 KB inspection chunk substantially, with a first target below 700 KB minified and a later target below 500 KB where practical.
-- Reduce the initial entry chunk below its approximately 597 KB baseline.
-- Preserve functional lazy-loading and offline behavior.
-
-### Acceptance criteria
-
-- CI reports bundle sizes and fails on material regressions.
-- The build emits no unexplained ineffective-dynamic-import warning.
-- Critical-route interaction and loading behavior is unchanged or improved.
-- PWA update and offline-shell tests remain green.
-
-## Days 18–21 — Accessibility Enforcement
-
-### Work
-
-- Complete `eslint-plugin-jsx-a11y` rollout.
-- Add axe checks to representative pages and reusable modal/drawer components.
-- Audit keyboard operation and focus restoration for:
-  - navigation drawers
-  - notification overlays
-  - message lightbox
-  - report workflow modals
-  - inspection selectors and camera UI
-  - large tables and mobile record cards
-- Confirm explicit labels, descriptions, errors, and `aria-describedby` relationships in critical forms.
-- Verify destructive confirmations and async status announcements.
-- Test narrow and wide layouts at 200% zoom.
-- Verify reduced-motion behavior.
-- Prefer native semantic elements and established component primitives; do not add ARIA roles to imitate behavior that a native element already provides.
-- Test with keyboard and at least one screen-reader/browser combination for critical workflows; automated axe results alone are insufficient.
-- Preserve visible focus and error text while addressing layout concerns.
-- Treat accessibility fixes that change workflow order, focus, or modal dismissal as behavior changes requiring regression tests.
-
-### Acceptance criteria
-
-- No critical or serious axe violations exist in the agreed representative suite.
-- All critical workflows are operable by keyboard.
-- Modal and drawer focus enters, stays within, and returns correctly.
-- Icon-only controls have accessible names and appropriate tooltips.
-- Accessibility checks run in CI.
-
-## Days 22–24 — Production Observability
-
-### Work
-
-- Integrate an approved frontend error-monitoring platform.
-- Connect release identifiers to the existing application version/build metadata.
-- Upload source maps securely without exposing them as public production assets unless approved.
-- Redact credentials, salary data, attachments, personal identifiers, and report contents from telemetry.
-- Capture route, build, browser, device class, network state, and safe error context.
-- Add specific monitoring for:
-  - chunk-load failures
-  - authentication bootstrap failures
-  - PWA update failures
-  - inspection camera startup failures
-  - offline synchronization conflicts
-  - report-media upload failures
-- Define alert ownership and severity thresholds.
-- Complete a telemetry data-flow and privacy review before enabling production capture.
-- Use an allowlist for captured context. Do not send arbitrary component props, Redux state, API payloads, form values, attachment metadata, or browser-storage contents.
-- Configure separate development, staging, and production monitoring projects or environments.
-- Add a kill switch or rapid configuration path for disabling a noisy or sensitive event source.
-- Test source-map upload and symbolication in staging; do not publish private source maps through the application web root.
-- Tune alerts in staging and use conservative initial sampling to prevent an alert storm or unexpected cost.
-
-### Acceptance criteria
-
-- A controlled frontend exception appears in the monitoring platform with the correct release ID.
-- Source-mapped stack traces identify the source module.
-- Telemetry contains no prohibited personal or payroll information.
-- Production-error ownership and response expectations are documented.
-
-## Days 25–28 — Critical E2E Qualification and Documentation
-
-### Work
-
-- Add a managed frontend `webServer` or equivalent reproducible startup process to Playwright.
-- Provide an isolated backend/test-data setup for CI.
-- Replace committed default passwords with CI secrets or ephemeral generated fixtures.
-- Qualify the first critical module set:
-  - authentication and session restoration
-  - users and role permissions
-  - system maintenance
-  - payroll/claims access control
-  - report workflow actions
-  - inspection create/save/sync
-- Require positive, negative, workflow, and artifact evidence for qualified modules.
-- Update the README with architecture, validation tiers, E2E setup, environment variables, deployment, PWA behavior, and troubleshooting.
-- Enforce an origin allowlist before global setup, authentication, or fixture creation. Abort the run before mutation when validation fails.
-- Mark created records with the unique run ID and clean up only records belonging to that run.
-- Make cleanup idempotent and execute it after success, failure, and interruption where possible.
-- Do not run destructive workflows concurrently against shared fixtures.
-- Prevent traces, screenshots, videos, and HTML reports containing sensitive values from becoming public CI artifacts.
-- Require a human-controlled, separately approved procedure for any read-only production smoke check; the normal E2E suite must remain unable to target production.
+- Review the catalogue for false abstractions and missing consumers.
+- Convert approved candidates into ordered migration batches.
+- Estimate risk using low, medium, or high—not speculative hour precision.
+- Choose two representative pilot modules: one straightforward and one with responsive or workflow complexity.
 
 ### Stage 2 exit criteria
 
-- Coverage and accessibility checks run in CI.
-- Unit-test execution has a documented and improved feedback budget.
-- Bundle budgets are enforced and the largest chunks have been reduced.
-- Production error monitoring is operational.
-- At least the agreed critical module set is marked `qualified`, not merely `mapped`.
-- No reusable test account password is embedded in test source.
-- PWA upgrade and rollback are verified from the previously deployed build as well as from a clean browser profile.
-- E2E qualification evidence confirms that only approved non-production origins and run-scoped fixtures were used.
-- Stage 2 rollback evidence and go/no-go decision are recorded.
+- Existing shared components and their usage are catalogued.
+- Priority duplication is supported by concrete file/consumer evidence.
+- Every candidate has a disposition and rationale.
+- Initial component contracts do not contain domain-specific business logic.
+- Pilot modules and targeted regression tests are identified.
+- No application source was changed merely to complete the audit.
 
 ---
 
-# Stage 3 — Days 29–90: Architecture and Maintainability Modernization
+# Stage 3 — Days 11–20: Shared Foundations and Pilot Migrations
 
-## Stage Objective
-
-Reduce long-term regression risk by introducing type safety, explicit state boundaries, smaller feature modules, governed browser persistence, and a reproducible release process.
-
-## Days 29–40 — Incremental Type Safety
+## Days 11–13 — Improve Existing Shared Components
 
 ### Work
 
-- Introduce a TypeScript or `checkJs` configuration without requiring immediate full conversion.
-- Type the following boundaries first:
-  - HTTP request options and normalized errors
-  - session and authenticated-user payloads
-  - permission and role models
-  - route metadata
-  - module activation state
-  - report and inspection identifiers
-  - payroll money and statutory calculation inputs
-- Add runtime schemas for critical backend responses.
-- Evaluate OpenAPI-generated types if the backend specification is reliable.
-- Require new shared utilities, services, and domain modules to be typed.
-- Define conventions for nullability, identifiers, date strings, money, and API error payloads.
-- Separate type-only changes from runtime transformations whenever possible.
-- Add types at module boundaries before converting large UI files.
-- Introduce strict runtime rejection of backend payloads only after staging observation confirms the schema; until then, log sanitized discrepancies and preserve a controlled compatibility path.
-- Never coerce or default salary, money, permission, status, or identifier values merely to satisfy a type.
-- Keep generated types reproducible and reviewed; a generated diff must not silently change endpoint behavior.
+- Start with existing components that already approximate the approved contracts.
+- Normalize prop names, variants, standard states, accessibility, and responsive behavior only where needed.
+- Preserve compatibility through wrappers or deprecated aliases when a direct cutover would create a large risky diff.
+- Add focused tests for the shared contract.
 
-### Acceptance criteria
-
-- New high-risk domain and service code is type-checked.
-- Critical API responses fail predictably when their shape is invalid.
-- Type checking is a required CI gate.
-- No broad `any` or `@ts-ignore` policy is introduced.
-
-## Days 41–50 — State and Data-Flow Boundaries
+## Days 14–16 — Pilot Module One
 
 ### Work
 
-- Replace the generic Redux root-level `set` action with explicit actions or slices.
-- Separate authentication, shell UI, module activation, maintenance, and AI-helper state.
-- Document which state belongs in:
-  - server responses
-  - URL parameters
-  - shared application state
-  - feature-local reducers
-  - browser persistence
-- Standardize async request states and cancellation behavior.
-- Review duplicated fetch/loading/error patterns and decide whether a server-state library is justified.
-- Add state-transition tests for critical workflows.
-- Migrate one state domain at a time behind compatibility selectors or adapters.
-- Do not run two writable sources of truth for the same state without an explicit synchronization and removal plan.
-- Preserve session bootstrap, account switching, maintenance mode, and module activation semantics during migration.
-- Do not introduce a new state or server-state library until a decision record documents the problem, alternatives, bundle cost, migration plan, and rollback.
+- Migrate the straightforward pilot module to the approved shared patterns.
+- Keep data fetching, permissions, routes, API calls, and business rules unchanged.
+- Remove local duplicates only after the migrated module tests pass.
+- Review whether the component API became simpler or accumulated consumer-specific conditions.
 
-### Acceptance criteria
-
-- Arbitrary root-state keys cannot be introduced by a generic action.
-- Critical state transitions use explicit names and tests.
-- Server state and persistent browser state have documented ownership.
-
-## Days 51–70 — Refactor Oversized Modules
-
-### Priority modules
-
-1. `AllExtinguishersSection.js`
-2. `InspectionForm.js`
-3. `InspectionFormSetupSections.js`
-4. `InspectionFormBodySections.js`
-5. `FireExtinguisherScanner.js`
-6. Other files over 500 lines that change frequently or have high defect density
-
-### Refactoring method
-
-- Add characterization tests before moving behavior.
-- Identify domain, data, state, orchestration, and rendering responsibilities.
-- Extract pure domain functions first.
-- Move workflow transitions into reducers or explicit state machines where helpful.
-- Keep API and persistence adapters outside view components.
-- Extract presentational sections only when their inputs and outputs are clear.
-- Avoid generic abstraction until a pattern repeats across multiple features.
-- Preserve public component and route behavior during each incremental extraction.
-- Refactor one workflow slice at a time and keep each pull request reviewable.
-- Do not change validation rules, authorization decisions, persistence formats, API payloads, or user-facing workflow order under the label of refactoring.
-- Compare render behavior, API calls, storage writes, bundle output, and key interaction timings before and after each extraction.
-- Retain a straightforward revert path until the extracted module passes staging qualification.
-
-### Governance
-
-- Add a warning threshold for production files over 400–500 lines.
-- Require justification for new files over the threshold.
-- Add complexity limits for new or substantially modified functions.
-- Document approved exceptions for legacy modules under active decomposition.
-
-### Acceptance criteria
-
-- The five largest production modules are reduced into coherent, tested units.
-- No single replacement module simply inherits the previous complexity.
-- Regression coverage exists for moved workflows.
-- Build, unit, E2E, performance, and accessibility baselines do not regress.
-
-## Days 71–80 — Browser Storage Governance
+## Days 17–19 — Pilot Module Two
 
 ### Work
 
-- Inventory all localStorage, sessionStorage, IndexedDB, Cache Storage, and object-URL usage.
-- Assign an owner, data classification, schema version, retention period, and cleanup event to every persistent key.
-- Centralize key naming and safe JSON parsing.
-- Define logout, account-switch, expiry, and migration behavior.
-- Ensure payroll, salary, claim, attachment, message, incident, and report data follow stricter retention rules.
-- Add quota and corruption recovery behavior.
-- Test storage migrations across at least the previous supported application version.
-- Confirm service-worker caches never persist API or user-specific responses.
-- Use a two-phase migration where data matters: read the old format, write the new version, verify the new value, and remove the old value only after successful verification and an agreed compatibility period.
-- Make migrations idempotent, scoped to a named key/version, and safe to resume after interruption.
-- Never use `localStorage.clear()`, `sessionStorage.clear()`, broad IndexedDB deletion, or broad Cache Storage deletion as a migration shortcut.
-- Preserve downgrade compatibility or explicitly block rollback before a destructive schema change is released.
-- Test account switching, logout, expired sessions, private browsing, disabled storage, quota exhaustion, corrupt JSON, and an older open tab.
-- Obtain privacy and workflow-owner approval before extending retention or moving sensitive data into a more persistent store.
+- Migrate the responsive or workflow-oriented pilot module.
+- Validate mobile/desktop availability, keyboard interaction, modal focus, and all standard states relevant to that module.
+- Reassess the shared contract if the second consumer exposes a real semantic difference.
+- Split or keep a domain component when a generic contract would become misleading.
 
-### Acceptance criteria
-
-- Persistent keys are documented and versioned.
-- Account switching cannot expose the previous user's data.
-- Sensitive data has explicit cleanup and retention tests.
-- Storage corruption and quota exhaustion fail safely.
-
-## Days 81–86 — Reproducible Build and Release Process
+## Day 20 — Pilot Checkpoint
 
 ### Work
 
-- Decide whether compiled `build/` artifacts should remain version-controlled.
-- Preferred approach: generate immutable deployment artifacts in CI and deploy the approved artifact.
-- If cPanel constraints require committed artifacts:
-  - automate their generation in a release-only workflow
-  - use a fixed build ID supplied by CI
-  - separate source-review commits from generated release commits
-  - verify the generated tree matches the approved source revision
-- Add artifact integrity metadata.
-- Define rollback and cache-invalidation procedures.
-- Confirm version metadata, service worker, HTML, and hashed assets are deployed atomically.
-- Generate artifacts from a clean, immutable source revision and lockfile using recorded tool versions.
-- Compare checksums between the approved staging artifact and the production artifact.
-- Keep at least the currently deployed and immediately previous complete artifact sets during the rollback window.
-- Upload new hashed assets before switching HTML or service-worker pointers; remove old assets only after the supported client-update window.
-- Prevent two release processes from publishing to the same destination concurrently.
-- Test rollback with an already-open tab, a fresh navigation, and an installed PWA.
-
-### Acceptance criteria
-
-- Routine developer builds do not create unexplained repository changes.
-- The deployed artifact is traceable to a source revision and CI run.
-- Rollback restores a complete compatible asset and service-worker set.
-
-## Days 87–90 — Final Qualification and Handover
-
-### Work
-
-- Re-run the full code-quality audit against the original baseline.
-- Compare source complexity, test duration, coverage, E2E qualification, bundle size, accessibility, dependency status, and production error rates.
-- Close or formally transfer deferred findings with owners and target dates.
-- Perform cross-browser and physical-device qualification of critical workflows.
-- Prepare operational, developer, deployment, and rollback documentation.
-- Obtain engineering, product-owner, HSE/workflow-owner, and operations sign-off where applicable.
-- Have a reviewer who did not lead the relevant implementation verify final evidence for security headers, data isolation, PWA upgrade/rollback, and critical E2E qualification.
-- Confirm that temporary flags, compatibility adapters, warning-only gates, test accounts, and exceptions have an owner and removal date.
+- Run full lint, the complete unit suite, relevant audits, and the production build.
+- Compare module behavior before and after migration.
+- Record accepted visual consistency changes and any remaining exceptions.
+- Decide which pattern families are ready for wider rollout.
 
 ### Stage 3 exit criteria
 
-- Type checking protects agreed critical boundaries.
-- Shared state uses explicit actions and ownership.
-- Priority oversized modules are materially decomposed.
-- Browser storage follows documented governance.
-- Release artifacts are reproducible and traceable.
-- Critical modules have qualified E2E evidence.
-- Final metrics show no regression against Stage 1 and Stage 2 quality gates.
-- Temporary compatibility paths, feature flags, exceptions, and warning-only gates are removed or have approved owners and expiry dates.
-- Stage 3 handover, rollback evidence, and go/no-go decision are recorded.
+- At least two representative modules use the approved shared patterns.
+- Shared components have focused tests and clear contracts.
+- Pilot migrations have no confirmed business-function regression.
+- No shared component has become a multi-domain controller.
+- Superseded pilot code and styles are removed or have an explicit temporary adapter.
+- Full checkpoint validation passes.
 
 ---
 
-# 6. Required Quality Gates
+# Stage 4 — Days 21–36: Pattern-Family Rollout
 
-The final CI pipeline should provide independently visible results for:
+Roll out by pattern family, not by rewriting entire modules. The audit determines the exact order.
 
-1. Dependency installation and lockfile integrity
-2. Core JavaScript and React lint
-3. Accessibility lint
-4. Type checking
-5. Fast unit tests
-6. Full unit/integration tests
-7. Coverage thresholds
-8. Contrast and typography contracts
-9. Hardcoded-data audits
-10. E2E module inventory contract
-11. Critical Playwright workflows
-12. Production build
-13. Bundle-size budgets
-14. Dependency vulnerability review
-15. Deployment artifact integrity
+## Days 21–24 — Structure and Navigation
 
-## Quality-gate change controls
+- Consolidate applicable page headers, breadcrumbs, tabs, and back-navigation patterns.
+- Keep route definitions, destination rules, permission filtering, and unsaved-change guards unchanged.
+- Verify long titles, action wrapping, mobile navigation, and hidden/disabled states.
 
-- Changes to a gate, threshold, ignore pattern, timeout, test selection, or failure policy require normal code review.
-- Do not weaken a gate in the same pull request that introduces the violation unless an approved exception is attached.
-- A gate must fail closed when its configuration is missing or malformed.
-- Required gates must run on the exact commit proposed for merge.
-- Canceled, skipped, warning-only, or neutral results do not count as passing required gates.
-- Flaky checks must be fixed or isolated with an owner and expiry; automatic retries must not conceal the first failure.
-- CI scripts must avoid writing to tracked source or `build/` paths during pull-request validation.
-- Security scanners must preserve their raw report even when applicability policy determines the final release decision.
+## Days 25–28 — Data Lists and Standard States
 
-## Recommended local commands
+- Consolidate applicable filters, sorting headers, loaders, pagination, responsive record collections, and empty/error states.
+- Preserve query semantics, default filters, row actions, privacy restrictions, and mobile-accessible actions.
+- Do not force specialized report, payroll, or inspection grids into a generic table when their interaction model differs.
 
-The exact scripts may change during implementation, but the intended developer interface is:
+## Days 29–32 — Actions, Status, and Workflow Presentation
 
-```bash
-npm ci
-npm run lint
-npm run typecheck
-npm test
-npm run test:coverage
-npm run audit:contrast
-npm run audit:typography
-npm run audit:staff-hardcoded
-npm run test:e2e:coverage-contract
-npm run build:check
-npm run validate
-```
+- Consolidate applicable action groups, create buttons, button loading states, state badges, and workflow summaries.
+- Use centralized semantic status presentation where the same status means the same thing.
+- Keep domain-specific status definitions separate when labels, colors, permissions, or transitions differ.
 
-`build:check` must write to a disposable, ignored validation directory. The deployable `build/` directory must be produced only by the documented release workflow. Run `npm ci` only in a clean or disposable environment because it replaces the installed dependency tree.
+## Days 33–36 — Forms and Dialogs
 
-# 7. Definition of Done for Individual Work Items
+- Consolidate applicable form layout, validation feedback, submit/discard actions, confirmation dialogs, and modal shells.
+- Preserve validation rules, submitted values, confirmation wording with legal/business meaning, and destructive-action safeguards.
+- Verify focus entry, focus return, Escape behavior, loading locks, double-submit prevention, and mobile layout.
 
-A work item is complete only when:
+### Stage 4 exit criteria
 
-- The implementation is scoped to the approved objective.
-- Relevant unit and integration tests are added or updated.
-- Accessibility behavior is verified for affected interactions.
-- Loading, empty, error, success, disabled, and permission states are considered where applicable.
-- Mobile and desktop behavior is checked when UI is affected.
-- Security and privacy implications are reviewed for API, storage, authentication, payroll, report, or attachment changes.
-- Lint, type check, tests, audits, and build pass.
-- Documentation is updated.
-- Rollback impact is understood for production-sensitive changes.
-- The diff contains no unrelated source, dependency, environment, test-fixture, or generated-artifact changes.
-- No validation threshold, ignore, or test was weakened solely to obtain a pass.
-- Non-production validation used approved origins and data.
-- The implementation has an identified owner for post-deployment observation.
-- A production-sensitive change has staging evidence and a tested or previously verified rollback path.
+- Approved consumers use the shared pattern for the same purpose.
+- Migrated modules expose coherent normal and non-happy-path states.
+- Local duplicates are removed when no longer needed.
+- Exceptions are documented with semantic reasons, not preference alone.
+- Each pattern-family batch passes its targeted tests.
+- Full lint, unit suite, and production build pass at the stage checkpoint.
 
-# 8. Risks and Controls
+---
 
-| Risk | Control |
-| --- | --- |
-| Enabling all lint rules at once creates excessive noise | Introduce blocking correctness rules first and stage debt-oriented rules |
-| Refactors alter complex business workflows | Add characterization tests and deliver small behavior-preserving changes |
-| Bundle splitting breaks PWA offline behavior | Include service-worker and offline-shell regression tests in every performance change |
-| Camera header changes broaden permissions | Permit only `self` and verify actual response headers |
-| Telemetry exposes sensitive data | Apply field allowlists, redaction, sampling, and privacy review |
-| Type migration stalls feature delivery | Type boundaries and new code first; avoid a big-bang conversion |
-| Parallel tests reveal shared-state flakiness | Isolate global state and retain serial execution only for documented cases |
-| E2E tests mutate shared environments | Use controlled origins, isolated fixtures, run IDs, and cleanup procedures |
-| Generated deployment artifacts create review noise | Generate and attest artifacts in a release workflow |
-| A lint migration changes thousands of files | Start without autofix, ratchet debt, and separate mechanical changes from behavior fixes |
-| Dependency remediation introduces a breaking downgrade or major upgrade | Review the advisory and dependency graph; prohibit unreviewed forced fixes |
-| Coverage targets reward low-value tests or exclusions | Review critical branch coverage and prohibit unjustified exclusions |
-| Bundle splitting causes missing chunks for open clients | Retain complete prior assets and test old-client-to-new-service-worker upgrades |
-| Monitoring leaks personal, payroll, or report data | Capture only allowlisted context and test redaction before production enablement |
-| Runtime schema validation rejects valid legacy API responses | Observe sanitized discrepancies in staging before enforcing strict rejection |
-| State migration creates two writable sources of truth | Migrate one domain at a time with explicit compatibility and removal rules |
-| Browser-storage migration destroys recoverable data | Use idempotent two-phase migrations and never clear broad storage containers |
-| A release deploys a mixed PWA asset set | Promote one immutable artifact atomically and verify build IDs after deployment |
-| Quality gates become permanently warning-only | Give every temporary non-blocking gate an owner and conversion deadline |
-| Schedule pressure bypasses an exit criterion | Allow dates to move; require documented go/no-go approval for every stage |
+# Stage 5 — Days 37–42: Cleanup, Measurement, and Handover
 
-# 9. Rollback and Recovery Matrix
+## Days 37–39 — Remove Superseded Implementations
 
-Each implementation pull request must refine the applicable row with its exact artifact, command, owner, and verification evidence.
+### Work
 
-| Change area | Preferred rollback unit | Special recovery check |
-| --- | --- | --- |
-| ESLint or CI configuration | Revert the focused configuration commit | Confirm previous required checks still run and do not silently skip source files |
-| Runtime defect fix | Revert the focused code/test commit | Re-run the affected workflow and confirm no stored data requires repair |
-| Security headers | Restore the previous reviewed server/CDN configuration | Verify camera, CSP, HSTS, framing, referrer, and API connectivity headers from the deployed origin |
-| Dependency update | Restore the previous `package.json` and lockfile, then rebuild the complete artifact | Exercise routing, authentication, PWA, and affected library workflows |
-| Bundle splitting | Redeploy the previous complete HTML, service worker, and hashed-asset set | Test an open tab, fresh navigation, deep link, and installed PWA |
-| Accessibility interaction | Revert the focused component/style change | Recheck keyboard focus, dismissal, screen-reader name, and pointer operation |
-| Monitoring | Disable through the approved kill switch or restore the previous configuration | Confirm event capture stops without suppressing application errors |
-| Type/runtime schema | Disable strict enforcement through the approved compatibility path or revert | Confirm valid legacy responses remain readable and no data was transformed |
-| State migration | Restore the previous state implementation through the compatibility adapter | Verify session, maintenance, module activation, and account switching |
-| Browser-storage migration | Re-enable old-format reads; do not delete new or old data during rollback | Verify both previous and current clients can start without cross-user disclosure |
-| Deployment process | Redeploy the last known-good immutable artifact | Confirm build ID consistency, asset availability, cache behavior, and post-rollback smoke checks |
+- Remove unused duplicate components, styles, exports, wrappers, and imports created obsolete by the migrations.
+- Confirm candidates are unreferenced before deletion.
+- Retain adapters that still have consumers and give each one a removal condition.
+- Avoid unrelated formatting or naming cleanup.
 
-# 10. Reporting Cadence
+## Day 40 — Consistency Review
 
-- **Daily during Days 1–7:** blockers, defects closed, validation status, and deployment risks.
-- **Twice weekly during Days 8–28:** coverage, runtime, bundle, accessibility, and E2E qualification progress.
-- **Weekly during Days 29–90:** architecture milestones, migration risk, metric trend, and deferred debt.
-- **End of each stage:** formal exit review against the documented acceptance criteria.
+### Work
 
-# 11. Programme Completion Metrics
+- Review representative migrated modules at supported desktop and mobile sizes.
+- Compare headers, spacing, actions, filters, tables/cards, statuses, states, forms, and dialogs.
+- Correct inconsistencies through the shared source when all consumers should change.
+- Correct a domain consumer locally when the difference is intentional.
 
-Final success should be reported using at least:
+## Day 41 — Final Code-Quality Checkpoint
 
-- Blocking lint errors and approved exceptions
-- Unit/integration test count and pass rate
-- Unit-test duration by tier
-- Statement, branch, function, and line coverage
-- Number of qualified critical E2E modules
-- Entry, largest route, and CSS bundle sizes
-- Accessibility violation count by severity
-- Number of production files over 500 and 1,000 lines
-- Type-checked production-file percentage
-- Open production dependency advisories and dispositions
-- Frontend production error rate by release
-- Camera, upload, offline-sync, and chunk-load failure rates
-- Deployment rollback and artifact-traceability test outcome
-- Number and age of temporary exceptions, warning-only gates, compatibility adapters, and feature flags
-- Post-deployment error and rollback-trigger review for each stage
+### Work
 
-# 12. Approval Record
+- Run full lint, unit tests, applicable audits, and production build.
+- Review the final diff for behavior changes, dead code, broadened component APIs, and CSS leakage.
+- Confirm no major dependency or business-logic change entered the programme accidentally.
 
-| Role | Name | Decision | Date |
+## Day 42 — Completion Record
+
+### Work
+
+- Publish the final component catalogue and adoption matrix.
+- Record completed migrations, retained exceptions, deferred candidates, adapters, and remaining duplication.
+- Provide concise guidance for adding or selecting components in future feature work.
+- Prepare a release-impact summary without performing deployment qualification unless a release is requested.
+
+### Stage 5 exit criteria
+
+- The component catalogue reflects the final repository state.
+- Reuse improvements are traceable to concrete consumers.
+- Removed duplication is confirmed unreferenced.
+- Retained variants have documented semantic justification.
+- Migrated workflows retain functional compatibility.
+- Final local validation passes.
+- Future contributors have a clear reuse-first decision path.
+
+## 9. Prioritization Method
+
+Score candidates using simple evidence rather than an arbitrary weighted formula:
+
+| Factor | Low | Medium | High |
 | --- | --- | --- | --- |
-| Engineering owner |  |  |  |
-| Product owner |  |  |  |
-| Backend/API owner |  |  |  |
-| Operations/deployment owner |  |  |  |
-| QA owner |  |  |  |
-| Security/privacy reviewer |  |  |  |
-| Accessibility reviewer |  |  |  |
+| Repetition | One or two local cases | Three related cases | Many modules or frequent reimplementation |
+| User-visible inconsistency | Minor or rarely seen | Noticeable in a workflow | Common, confusing, or accessibility-impacting |
+| Contract clarity | Consumers differ substantially | Shared core with bounded variants | Same purpose and behavior |
+| Migration risk | Presentation only | Interactive but well tested | Business-critical, stateful, or weakly tested |
 
-Approval of this plan does not approve every production deployment. Each stage requires a separate go/no-go decision for the exact release candidate and artifact.
+Prioritize high repetition, high contract clarity, and meaningful visible inconsistency. Pilot medium-risk consumers before high-risk consumers. Defer unclear contracts.
 
-## Stage Gate Decision Record
+## 10. Documentation and Change Control
 
-Leave a stage open when any required field is blank or any mandatory exit criterion lacks evidence.
+Durable records belong in `upgrade-works/`. Avoid creating a new document for every small component edit.
 
-| Stage | Candidate source revision | Build ID/artifact checksum | CI evidence | Staging evidence | Rollback verified | Decision and approvers | Date |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Stage 1 |  |  |  |  |  |  |  |
-| Stage 2 |  |  |  |  |  |  |  |
-| Stage 3 |  |  |  |  |  |  |  |
+Required records:
+
+- the active plan: this file
+- component reuse audit and catalogue
+- one execution record per completed stage or substantial migration batch
+- final adoption and exception summary
+- release checklist only when a release is requested
+
+Implementation controls:
+
+- Keep one primary pattern family per commit where practical.
+- Preserve unrelated user changes in a dirty worktree.
+- Do not mix a behavior change into a refactor without identifying it explicitly.
+- Do not install a new UI, CSS, state, form, or testing dependency without a separate decision.
+- Record any temporary compatibility wrapper with its consumers and removal condition.
+- Update the catalogue when a new shared component is introduced or an old one is retired.
+
+## 11. Release and cPanel Checklist — Deferred Until Needed
+
+The following checks are intentionally not part of daily component work. Run them only when preparing an actual staging or production release:
+
+- confirm whether the app is hosted at the domain root or a subdirectory
+- generate one complete build from the approved revision and lockfile
+- upload only the build artifact, including the hidden `.htaccess`
+- confirm cPanel/Apache permits required rewrite and header directives
+- verify deep-link refresh, HTTPS redirect, API connectivity, response headers, and service-worker scope on the deployed origin
+- avoid mixing old and new `index.html`, `service-worker.js`, `version.json`, and hashed assets
+- retain the previous complete artifact and verify the rollback method
+- perform production-data or destructive workflow checks only with separately approved procedures
+
+This checklist protects a release without allowing hosting concerns to dominate code-quality implementation.
+
+## 12. Rollback for Component Migrations
+
+Preferred rollback unit: the focused pattern-family or consumer-migration commit.
+
+Before removing an old implementation:
+
+1. Confirm all intended imports have migrated.
+2. Confirm focused shared-component tests pass.
+3. Confirm affected module tests pass.
+4. Confirm no required domain behavior moved into the shared layer.
+
+If a regression is found:
+
+- revert the affected consumer migration or pattern-family commit
+- restore the previous local implementation when other consumers must retain the new shared version
+- do not roll back unrelated completed pattern families
+- re-run the focused tests for the shared component and affected module
+- check for stored-data impact only if the change unexpectedly touched state or persistence
+
+## 13. Definition of Done
+
+A component-reuse work item is complete when:
+
+- the repeated pattern and intended consumers are identified
+- the chosen shared or domain-specific disposition is justified
+- the component contract is smaller and clearer than the duplicated implementations it replaces
+- applicable standard, responsive, and accessibility states are handled
+- business logic, routing, permissions, API contracts, and persistence remain unchanged unless separately approved
+- focused component and affected-module tests pass
+- superseded code is removed or tracked behind a temporary adapter
+- the diff contains no unrelated dependency, generated artifact, formatting, or feature changes
+- the component catalogue or migration record is updated
+- the validation level matches Section 6
+
+## 14. Programme Measures
+
+Report outcomes without turning metrics into targets that encourage poor abstractions:
+
+- number of repeated pattern families reviewed
+- number of existing shared components reused or improved
+- number of new shared components introduced, with consumer count
+- number of consumer implementations migrated
+- number of duplicate components/styles removed
+- number of temporary adapters and their remaining consumers
+- number of deliberate domain-specific exceptions
+- migrated modules with consistent loading, empty, error, disabled, and responsive states
+- focused and full regression results
+- confirmed functional regressions introduced and corrected
+
+Lines of code, component count, and generic-code percentage may be reported as context but are not success criteria.
+
+## 15. Stop and Reassess Conditions
+
+Pause a migration batch when:
+
+- the shared API requires growing consumer-specific flags or branches
+- two consumers reveal materially different semantics
+- tests expose an undocumented business behavior
+- the refactor would change an API payload, calculation, permission, route, persistence format, or workflow order
+- a responsive or accessibility correction would remove an existing user capability
+- completing the migration requires a major dependency or framework change
+- the working diff becomes too broad to attribute regressions confidently
+
+When paused, keep or restore the domain implementation, document the reason, and split any separately valuable behavior change into its own decision.
+
+## 16. Stage Record
+
+| Stage | Status | Evidence | Decision |
+| --- | --- | --- | --- |
+| Stage 1 — foundation | Locally completed; hosted CI deferred | Existing Stage 1 records in `upgrade-works/` | Preserve as baseline |
+| Stage 2 — reuse audit | Not started | Component catalogue and pattern matrix required | Next stage |
+| Stage 3 — shared foundations and pilots | Not started | Pilot execution record required | Pending Stage 2 |
+| Stage 4 — pattern rollout | Not started | Pattern-family migration records required | Pending pilot review |
+| Stage 5 — cleanup and handover | Not started | Final adoption summary required | Pending rollout |
+
+Revision 2 authorizes local frontend audit and behavior-preserving component consolidation. It does not authorize deployment, backend changes, production-data access, or silent business-workflow changes.

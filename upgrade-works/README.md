@@ -1,6 +1,6 @@
 # Frontend Upgrade Works
 
-This directory is the durable index for the VMECC frontend quality, reliability, performance, accessibility, security, and maintainability upgrade programme.
+This directory is the durable index for the VMECC frontend code-quality, component-reuse, consistency, and maintainability upgrade programme. Release and hosting controls are retained as deferred safeguards rather than the programme's daily focus.
 
 Application source, generated builds, temporary logs, screenshots, traces, and browser-test artifacts do not belong in this directory.
 
@@ -9,16 +9,16 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | Item | Status |
 | --- | --- |
 | Working branch | `codex/frontend-upgrade-stage-1` |
-| Current stage | Stage 1 Days 1–3 and Day 5 locally completed; Day 4 hosted CI deferred |
-| Gate decision | **Open for local-only Stage 1; blocked for staging/production promotion** |
-| Application/tooling changes started | Yes; implementation checkpoint `b1b0804` |
-| Next planned implementation | Days 6–7 — local stabilization and release-readiness evidence; promotion remains blocked |
+| Current stage | Stage 1 foundation locally completed; Stage 2 reuse and consistency audit next |
+| Gate decision | **Open for local behavior-preserving component work; deployment is outside the current scope** |
+| Application/tooling changes started | Yes; latest implementation checkpoint `4cff7bd` |
+| Next planned implementation | Day 6 — inventory existing components, consumers, overlaps, and bypassed shared patterns |
 
 ## Document Register
 
 | Document | Purpose | Status |
 | --- | --- | --- |
-| [Frontend upgrade plan](./FRONTEND_UPGRADE_PLAN_2026-08-03.md) | Hardened 90-day implementation plan, quality gates, rollback controls, and stage criteria | Draft for owner approval |
+| [Frontend upgrade plan](./FRONTEND_UPGRADE_PLAN_2026-08-03.md) | Active Revision 2 plan for reuse-first component consolidation, consistent module implementation, proportional validation, and behavior preservation | Active; reprioritized 2026-08-04 |
 | [Preflight record](./FRONTEND_UPGRADE_PREFLIGHT_2026-08-03.md) | Repository, toolchain, artifact, environment, CI, service, and safety-gate baseline | Completed; blocking actions open |
 | [Stage 1 execution record](./FRONTEND_UPGRADE_STAGE_1_EXECUTION_2026-08-03.md) | Day 1 lint repair, Day 2 correctness fixes, validation evidence, rollback, and residual risks | Days 1–2 locally completed; promotion blocked |
 | [Stage 1 compatibility audit](./FRONTEND_UPGRADE_STAGE_1_AUDIT_2026-08-03.md) | Post-implementation diff review, functional-compatibility tests, full validation, and residual risks | Locally verified; promotion blocked |
@@ -31,7 +31,7 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 ### 2026-08-03
 
 - Completed the frontend code-quality audit.
-- Created and hardened the 90-day frontend upgrade plan.
+- Created and hardened the original frontend upgrade plan, which Git history retains as Revision 1.1.
 - Created the dedicated local branch `codex/frontend-upgrade-stage-1`.
 - Captured the repository, toolchain, package, build, environment-name, security-header, CI, and local-service baselines.
 - Identified the preflight blockers that must be resolved before Day 1 implementation.
@@ -55,8 +55,11 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 - Patched the compatible development-only `brace-expansion` and `undici` advisories without forcing or downgrading any direct dependency.
 - Documented the React Router RSC-only advisory as not applicable to the current declarative BrowserRouter SPA, with a fail-closed local audit and mandatory review on 2026-09-04.
 - Reconfirmed compatibility with 315 test files / 1,728 tests, lint, all local audits, clean install, targeted route/auth/guard tests, and an isolated production build.
+- Replaced the unexecuted post-Stage-1 roadmap with Revision 2, prioritizing component reuse, duplication reduction, module consistency, behavior-preserving migration, and proportionate validation.
 
-## Open Preflight Actions
+## Deferred Release-Only Actions
+
+These actions remain valid but do not block local component-quality work. Reopen them only when preparing a staging or production release.
 
 1. Record named QA, operations/deployment, security/privacy, and production release decision owners.
 2. Verify GitHub branch protection and required-check policy.
@@ -66,12 +69,12 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 
 ## Next Work
 
-Continue with the locally reviewable Days 6–7 stabilization work while promotion remains blocked:
+Continue with Stage 2's reuse and consistency audit:
 
-1. Re-run the complete validation suite from the final Day 5 commit and prepare the Stage 1 release record.
-2. Execute browser flows that can be proved locally without real credentials or destructive writes.
-3. Inventory the staging-only browser, security-header, exact-artifact, and rollback checks that remain blocked by missing origins, owners, isolated data, and deployment evidence.
-4. Keep `npm audit` and `npm run audit:router-advisory` in every validation set; the router exception must be reviewed no later than 2026-09-04.
+1. Catalogue existing shared components and representative consumers.
+2. Identify repeated implementations, overlapping responsibilities, and modules that bypass an existing shared component.
+3. Compare semantics and behavior before recommending extraction or consolidation.
+4. Produce the component reuse audit and an ordered, evidence-based migration backlog without changing application behavior.
 
 ## File Naming
 
