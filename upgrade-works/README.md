@@ -9,10 +9,10 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | Item | Status |
 | --- | --- |
 | Working branch | `codex/frontend-upgrade-stage-1` |
-| Current stage | Stage 1 foundation locally completed; Stage 2 reuse and consistency audit next |
+| Current stage | Stage 1 foundation completed; Stage 2 Day 6 component inventory completed |
 | Gate decision | **Open for local behavior-preserving component work; deployment is outside the current scope** |
 | Application/tooling changes started | Yes; latest implementation checkpoint `4cff7bd` |
-| Next planned implementation | Day 6 — inventory existing components, consumers, overlaps, and bypassed shared patterns |
+| Next planned implementation | Day 7 — compare repeated patterns and assign reuse, improve, extract, or keep-domain-specific dispositions |
 
 ## Document Register
 
@@ -25,6 +25,7 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | [Stage 1 Day 3 execution record](./FRONTEND_UPGRADE_STAGE_1_DAY_3_EXECUTION_2026-08-03.md) | Production headers, bundled Google icon, fail-closed production API configuration, validation, and rollback | Locally completed; deployment qualification blocked |
 | [GitHub Actions cost exception](./FRONTEND_UPGRADE_GITHUB_ACTIONS_EXCEPTION_2026-08-04.md) | Owner decision, disabled-workflow mechanism, compensating controls, restoration, and review deadline | Locally disabled; remote confirmation required |
 | [Stage 1 Day 5 execution record](./FRONTEND_UPGRADE_STAGE_1_DAY_5_EXECUTION_2026-08-04.md) | Compatible transitive advisory patches, React Router applicability decision, fail-closed exception control, validation, and rollback | Locally completed; exception review due 2026-09-04 |
+| [Component reuse audit](./FRONTEND_COMPONENT_REUSE_AUDIT_2026-08-04.md) | Day 6 component catalogue, import evidence, overlap analysis, false-positive controls, and Day 7 candidate backlog | Completed; no application changes |
 
 ## Completed Work
 
@@ -56,6 +57,7 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 - Documented the React Router RSC-only advisory as not applicable to the current declarative BrowserRouter SPA, with a fail-closed local audit and mandatory review on 2026-09-04.
 - Reconfirmed compatibility with 315 test files / 1,728 tests, lint, all local audits, clean install, targeted route/auth/guard tests, and an isolated production build.
 - Replaced the unexecuted post-Stage-1 roadmap with Revision 2, prioritizing component reuse, duplication reduction, module consistency, behavior-preserving migration, and proportionate validation.
+- Completed the Day 6 component reuse inventory: 124 production component files catalogued, usage measured, false duplication separated from compatibility façades, and candidate families ordered for Day 7.
 
 ## Deferred Release-Only Actions
 
@@ -69,12 +71,12 @@ These actions remain valid but do not block local component-quality work. Reopen
 
 ## Next Work
 
-Continue with Stage 2's reuse and consistency audit:
+Continue with Stage 2 Day 7's repeated-pattern matrix:
 
-1. Catalogue existing shared components and representative consumers.
-2. Identify repeated implementations, overlapping responsibilities, and modules that bypass an existing shared component.
-3. Compare semantics and behavior before recommending extraction or consolidation.
-4. Produce the component reuse audit and an ordered, evidence-based migration backlog without changing application behavior.
+1. Compare the confirmation-shell implementations and define the canonical contract boundary.
+2. Compare the six manual responsive record-list shells against `ResponsiveRecordCollection`.
+3. Separate equivalent page/collection states from inline and domain-specific messages.
+4. Confirm zero-import components and complete the disposition matrix before changing application behavior.
 
 ## File Naming
 
