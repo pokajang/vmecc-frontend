@@ -86,7 +86,7 @@
 
   .mobile-bottom-drawer__close {
     min-width: var(--vmecc-touch-target);
-    min-height: var(--vmecc-touch-target);
+    min-height: var(--vmecc-touch-target) !important;
   }
 
   .mobile-bottom-drawer__body {

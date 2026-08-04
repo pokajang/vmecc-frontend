@@ -91,6 +91,36 @@ describe('ActionConfirmModal canonical contract', () => {
     expect(screen.getByRole('dialog')).toBeTruthy()
   })
 
+  it.each(['header close', 'Escape', 'backdrop'])(
+    'preserves enabled desktop dismissal through %s',
+    async (dismissalPath) => {
+      setViewportMatch()
+      const onClose = vi.fn()
+
+      render(
+        <ActionConfirmModal
+          visible
+          mobileDrawer={false}
+          title="Archive record"
+          message="Archive this record?"
+          onClose={onClose}
+          onConfirm={vi.fn()}
+        />,
+      )
+
+      const dialog = await screen.findByRole('dialog')
+      if (dismissalPath === 'header close') {
+        fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }))
+      } else if (dismissalPath === 'Escape') {
+        fireEvent.keyDown(document, { key: 'Escape', code: 'Escape' })
+      } else {
+        fireEvent.mouseUp(dialog)
+      }
+
+      await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1))
+    },
+  )
+
   it('uses only the canonical confirmation body class in the mobile composition', async () => {
     setViewportMatch('(max-width: 575.98px)')
     const onClose = vi.fn()
@@ -117,9 +147,10 @@ describe('ActionConfirmModal canonical contract', () => {
 
     fireEvent.click(within(drawer).getByRole('button', { name: 'Delete' }))
     fireEvent.click(within(drawer).getByRole('button', { name: 'Cancel' }))
+    fireEvent.click(within(drawer).getByRole('button', { name: 'Close Delete equipment' }))
 
     expect(onConfirm).toHaveBeenCalledTimes(1)
-    expect(onClose).toHaveBeenCalledTimes(1)
+    expect(onClose).toHaveBeenCalledTimes(2)
   })
 
   it('locks mobile confirm and dismissal controls when both actions are disabled', async () => {
