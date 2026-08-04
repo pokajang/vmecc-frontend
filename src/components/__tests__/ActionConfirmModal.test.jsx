@@ -122,6 +122,42 @@ describe('ActionConfirmModal canonical contract', () => {
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 
+  it('locks mobile confirm and dismissal controls when both actions are disabled', async () => {
+    setViewportMatch('(max-width: 575.98px)')
+    const onClose = vi.fn()
+    const onConfirm = vi.fn()
+
+    render(
+      <ActionConfirmModal
+        visible
+        title="Deleting equipment"
+        message="Please wait."
+        confirmLabel="Deleting..."
+        confirmDisabled
+        cancelDisabled
+        onClose={onClose}
+        onConfirm={onConfirm}
+      />,
+    )
+
+    const drawer = await screen.findByRole('dialog', { name: 'Deleting equipment' })
+    const closeButton = within(drawer).getByRole('button', { name: 'Close Deleting equipment' })
+    const cancelButton = within(drawer).getByRole('button', { name: 'Cancel' })
+    const confirmButton = within(drawer).getByRole('button', { name: 'Deleting...' })
+
+    expect(closeButton.disabled).toBe(true)
+    expect(cancelButton.disabled).toBe(true)
+    expect(confirmButton.disabled).toBe(true)
+
+    fireEvent.keyDown(drawer, { key: 'Escape', code: 'Escape' })
+    fireEvent.click(closeButton)
+    fireEvent.click(cancelButton)
+    fireEvent.click(confirmButton)
+
+    expect(onClose).not.toHaveBeenCalled()
+    expect(onConfirm).not.toHaveBeenCalled()
+  })
+
   it('honors a caller-provided mobile breakpoint', async () => {
     const mobileDrawerQuery = '(max-width: 767.98px)'
     setViewportMatch(mobileDrawerQuery)
