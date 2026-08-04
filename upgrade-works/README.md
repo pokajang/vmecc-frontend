@@ -6,13 +6,13 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 
 ## Current Status
 
-| Item                                | Status                                                                              |
-| ----------------------------------- | ----------------------------------------------------------------------------------- |
-| Working branch                      | `codex/frontend-upgrade-stage-1`                                                    |
-| Current stage                       | Stage 4 Days 25–28 complete; Days 29–32 actions/status/workflow presentation next   |
-| Gate decision                       | **Data-list/standard-state batch passed locally; deployment remains outside scope** |
-| Application/tooling changes started | Yes; latest committed implementation checkpoint `0596fcb`                           |
-| Next planned implementation         | Write the bounded Stage 4 Days 29–32 actions/status/workflow-presentation plan      |
+| Item                                | Status                                                                                          |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Working branch                      | `codex/frontend-upgrade-stage-1`                                                                |
+| Current stage                       | Stage 4 Days 29–32 actions/status/workflow plan ready; source work not started                  |
+| Gate decision                       | **Days 25–28 passed; Days 29–32 bounded planning gate ready; deployment remains outside scope** |
+| Application/tooling changes started | Yes; latest committed implementation checkpoint `0596fcb`                                       |
+| Next planned implementation         | Stage 4 Day 29 — inventory action, loading, status, confirmation, and workflow presentation     |
 
 ## Document Register
 
@@ -33,6 +33,7 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | [Stage 4 structure/navigation execution](./FRONTEND_COMPONENT_REUSE_STAGE_4_EXECUTION_2026-08-04.md)                | Final dispositions, compact mobile Back extraction, characterization, validation evidence, exceptions, and rollback boundary                         | Days 21–24 passed locally                           |
 | [Stage 4 data-list/standard-state plan](./FRONTEND_COMPONENT_REUSE_STAGE_4_DATA_LISTS_PLAN_2026-08-04.md)           | Detailed Days 25–28 inventory, state-machine review, pilot selection, proportional validation, stop conditions, and rollback controls                | Days 25–28 passed locally                           |
 | [Stage 4 data-list/standard-state execution](./FRONTEND_COMPONENT_REUSE_STAGE_4_DATA_LISTS_EXECUTION_2026-08-04.md) | Final dispositions, Work Shift collection migration, characterization, validation evidence, exceptions, and rollback boundary                        | Days 25–28 passed locally                           |
+| [Stage 4 actions/status/workflow plan](./FRONTEND_COMPONENT_REUSE_STAGE_4_ACTIONS_STATUS_PLAN_2026-08-04.md)        | Detailed Days 29–32 inventory, semantic-ownership review, feature-local pilot gate, proportional validation, stop conditions, and rollback controls  | Planned; source work not started                    |
 
 ## Completed Work
 
@@ -87,6 +88,7 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 - Added untouched-source characterization for Custom Shifts loading, empty, error, responsive order, and Edit/Delete dialog behavior.
 - Migrated only the Custom Shifts collection shell to `ResponsiveRecordCollection`, preserving its API, state, callbacks, table, mobile cards, messages, actions, classes, and document order.
 - Passed the Days 25–28 checkpoint with changed-file quality checks, 3 files / 33 focused tests, a 6,493-module production build, boundary searches, diff checks, and generated-output cleanup.
+- Prepared the bounded Stage 4 Days 29–32 actions/status/workflow plan with current adoption evidence, semantic false-positive controls, a feature-local role-assignment pilot candidate, and proportional validation.
 
 ## Deferred Release-Only Actions
 
@@ -100,12 +102,12 @@ These actions remain valid but do not block local component-quality work. Reopen
 
 ## Next Work
 
-Prepare Stage 4 Days 29–32 as defined in the active [frontend upgrade plan](./FRONTEND_UPGRADE_PLAN_2026-08-03.md):
+Begin Stage 4 Days 29–32 as defined in the [actions/status/workflow plan](./FRONTEND_COMPONENT_REUSE_STAGE_4_ACTIONS_STATUS_PLAN_2026-08-04.md):
 
-1. Inventory action groups, create buttons, button loading states, state badges, and workflow summaries.
-2. Separate equivalent presentation contracts from permission, transition, approval, and domain-status behavior.
-3. Select only bounded representative consumers and add characterization before source changes.
-4. Preserve status meaning, disabled reasons, action order, permissions, workflow transitions, and mobile access.
+1. Regenerate production usage and manual-bypass evidence for actions, loading controls, statuses, confirmations, and workflow presentation.
+2. Classify status and workflow ownership before considering any shared presentation change.
+3. Characterize the exact Create Staff/Manage User Roles Add Assignment pair before source edits.
+4. Approve the feature-local extraction only if type, event, disabled, form, and accessibility behavior are identical.
 
 ## File Naming
 
