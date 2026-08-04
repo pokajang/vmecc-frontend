@@ -4,9 +4,9 @@
 **Application:** `vmecc-frontend`  
 **Branch:** `codex/frontend-upgrade-stage-1`  
 **Stage 2 checkpoint:** `a195e9f`  
-**Scope completed:** Stage 3 Days 11–16 — confirmation foundation, Staff canary, and Holidays pilot  
-**Gate result:** Days 11–16 passed locally  
-**Post-implementation audit:** Passed with one preventive hardening fix at `38a659a`  
+**Scope completed:** Stage 3 Days 11–20 — confirmation foundation, Staff canary, Holidays pilot, Overtime pilot, and full checkpoint  
+**Gate result:** Stage 3 passed locally  
+**Post-implementation audit:** Passed; the confirmation batch included one preventive hardening fix at `38a659a`, and the full Stage 3 boundary review found no further correction  
 **Deployment status:** Not requested; no deployment performed
 
 ## 1. Outcome
@@ -15,7 +15,7 @@ Days 11–13 established one application-wide canonical plain confirmation compo
 
 No backend, API, route, permission, persistence, dependency, data-fetching, caller-state, or workflow implementation changed. The role-assignment and staff-message modals were not modified. Generated production-build output was used only for validation and was restored afterward.
 
-The confirmation foundation and first collection pilot gates passed. Stage 3 may proceed to the Days 17–19 `OvertimeRecordsTab` pilot.
+The confirmation foundation, both collection pilots, and the Day 20 full checkpoint passed. Stage 3 is complete locally and the next bounded work is Stage 4 Days 21–24 structure and navigation.
 
 ## 2. Checkpoints
 
@@ -28,6 +28,8 @@ The confirmation foundation and first collection pilot gates passed. Stage 3 may
 | `076febf` | Approved `ResponsiveRecordCollection.loadingMessage` contract and focused tests                  |
 | `6292abd` | Holidays responsive-collection pilot and behavior characterization                               |
 | `f16eb0d` | Reduced-motion loader rule ordering correction                                                   |
+| `5f93713` | Overtime pre-migration characterization                                                          |
+| `c3dc083` | Overtime responsive-collection pilot                                                             |
 
 These boundaries allow the Staff canary to be rolled back independently without removing the canonical component used by the 31 existing shared-path importers.
 
@@ -205,12 +207,12 @@ Do not delete `src/views/shared/ActionConfirmModal.js` while its 31 production i
 - `MobileBottomDrawer` still emits Inspection compatibility aliases. Their removal requires a separate audit of all drawer consumers.
 - Four importers and 18 render instances still use `UserConfirmModal`; they require individual characterization before migration.
 - Automated DOM tests and a successful Sass build protect structure and behavior, but they are not pixel-diff tests. Any broader future drawer-style cleanup should include representative visual review.
-- Full lint and the complete unit suite remain scheduled for the Day 20 pilot checkpoint, following the proportional-validation plan.
+- The full lint and complete unit suite scheduled for Day 20 subsequently passed; see Section 14.
 - The existing production chunk-size advisories remain unrelated performance backlog.
 
-## 10. Next Authorized Work
+## 10. Pre-Overtime Next-Work Decision (Completed)
 
-Begin Days 17–19 with `OvertimeRecordsTab` only:
+The bounded next-work decision before the second pilot was to proceed with `OvertimeRecordsTab` only:
 
 1. Reconfirm filtering, grouping, totals, selection, bulk actions, pagination, row actions, workflow-modal placement, and direct tests.
 2. Characterize desktop and mobile action availability plus keyboard row access before source changes.
@@ -375,4 +377,125 @@ Rollback remains layered:
 2. Revert `f16eb0d` independently if the reduced-motion ordering correction must be withdrawn.
 3. Retain `076febf` while any consumer adopts `loadingMessage`; otherwise it can be reverted independently because its omitted-prop behavior is compatible.
 
-Full lint and the complete unit suite remain reserved for the Day 20 checkpoint after the second pilot, as required by the proportional-validation plan.
+Full lint and the complete unit suite were run at the Day 20 checkpoint after the second pilot, as required by the proportional-validation plan.
+
+## 13. Days 17–19 — Overtime Collection Pilot
+
+### 13.1 Pre-migration characterization
+
+The initial focused baseline passed 5 files / 35 tests across the Overtime tab, Overtime security integration, shared responsive collection, state primitives, and table footer.
+
+Revision `5f93713` then expanded the direct Overtime suite and passed 8/8 tests against the untouched manual implementation. The added characterization protects:
+
+- loading precedence over filtered-empty and loaded content
+- exact filtered-empty wording
+- mobile list-group and desktop table availability
+- footer visible, filtered, and total counts
+- rows-to-show callback behavior
+- complete Review, Reject, and Request correction action availability on both mobile and desktop
+- exact action-handler arguments without accidental row opening
+- desktop Enter and Space row activation plus mobile record opening
+
+The existing tests continue to protect month/user grouping, per-type totals, workflow status presentation, pagination, and the grouped-selection bulk approval flow through its declaration modal.
+
+### 13.2 Overtime migration
+
+Revision `c3dc083` replaced only the manual loading/empty/mobile/desktop/footer branch in `OvertimeRecordsTab` with `ResponsiveRecordCollection`.
+
+The existing shared contract was sufficient. No Overtime-, workflow-, selection-, grouping-, or modal-specific prop was added. Runtime composition remains:
+
+1. selected-record action bar
+2. mobile record list
+3. desktop table
+4. table footer
+5. bulk workflow action modal
+
+Preserved unchanged:
+
+- search, period, status, type, team, and sort filters and callbacks
+- month/user grouping, type-duration totals, and row numbering
+- grouped and individual selection behavior
+- Review, Reject, Request correction, and detail-opening handlers
+- desktop row semantics and keyboard activation
+- mobile sections, group selection, fields, workflow summaries, and row actions
+- footer counts, pagination, and rows-to-show callback
+- bulk action modal props, declaration, remarks, submission, and error handling
+- all caller-owned calculations, workflow rules, permissions, persistence, and data operations
+
+Removed as proven local duplication:
+
+- direct `MobileRecordList` import
+- direct `TableLoader` import
+- the local ternary that manually selected loading, empty, or responsive content
+
+The filtered-empty wording remains `No overtime records match the current filters.` Its presentation now uses the same approved standard `PageState` empty treatment as the Holidays pilot. No other intentional runtime difference was accepted.
+
+### 13.3 Focused validation and boundary audit
+
+| Validation                                       | Result                    |
+| ------------------------------------------------ | ------------------------- |
+| Initial focused pre-change baseline              | 5 files / 35 tests passed |
+| Expanded pre-migration Overtime characterization | 1 file / 8 tests passed   |
+| Final Overtime/shared/security/footer regression | 5 files / 38 tests passed |
+| Changed JavaScript/JSX ESLint and formatting     | Passed                    |
+| Pilot diff and obsolete-import search            | Passed                    |
+
+The initial JSX composition was corrected before behavioral validation when the parser found an extra brace. Focused lint then exposed React Compiler warnings caused by passing the large desktop table as a pre-created JSX value. Using the component's existing `renderDesktop` callback contract resolved the warnings without suppressions or behavior changes.
+
+Post-migration searches confirm that `OvertimeRecordsTab` imports `ResponsiveRecordCollection` and no longer directly imports `MobileRecordList` or `TableLoader`. There are now 16 production files importing the shared collection. Remaining direct mobile-list and loader consumers were inventoried, not mass-migrated.
+
+### 13.4 Pilot gate and rollback
+
+The Days 17–19 pilot gate is **passed locally**. No confirmed filtering, grouping, selection, bulk-action, row-action, pagination, responsive-access, keyboard, privacy, permission, calculation, persistence, or workflow regression was found.
+
+Rollback remains independent:
+
+1. Revert `c3dc083` to restore only the Overtime manual composition.
+2. Revert `5f93713` only if the added characterization itself is unsuitable; it has no production effect.
+3. Retain the shared collection and Holidays pilot when rolling back Overtime.
+
+## 14. Day 20 — Full Stage 3 Checkpoint
+
+### 14.1 Validation evidence
+
+| Validation                     | Result                                                                                                                                           |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Full repository ESLint         | Passed                                                                                                                                           |
+| Complete unit suite            | 318 files / 1,753 tests passed                                                                                                                   |
+| System QA inventory            | Generated in ignored `.codex-run`; 98 frontend routes, 321 backend routes, 50 modules, 706 views, 125 components                                 |
+| Hardcoded staff audit          | Passed; no hardcoded staff literals                                                                                                              |
+| Contrast audit                 | Passed                                                                                                                                           |
+| Typography audit               | Passed; existing declaration and legacy-reference inventory retained                                                                             |
+| Production configuration audit | Passed                                                                                                                                           |
+| React Router advisory audit    | Passed; existing exception remains valid through 2026-09-03                                                                                      |
+| Payroll hook-order check       | Passed                                                                                                                                           |
+| Production build               | Passed; 6,492 modules transformed in 11.83 seconds                                                                                               |
+| Generated build output         | Tracked files restored; dry-run reviewed; only newly generated hashed assets removed; no build diff remains                                      |
+| Full Stage 3 diff check        | Passed; no whitespace errors or backend, API, route, dependency, lockfile, GitHub workflow, or generated-build file entered the Stage 3 boundary |
+
+The complete unit suite emitted three non-failing jsdom notices for unsupported pseudo-element `getComputedStyle`; all assertions passed. The production build retained the existing mixed static/dynamic notification import notice and large-chunk advisories.
+
+### 14.2 Stage 3 exit decision
+
+Stage 3 is **complete locally** because:
+
+- the canonical confirmation and responsive collection contracts have focused tests
+- the Staff canary plus Holidays and Overtime representative consumers are migrated
+- both pilots removed only proven manual composition duplicates
+- no confirmed route, permission, API, calculation, persistence, privacy, or workflow behavior changed
+- the shared contracts did not acquire domain-controller responsibilities
+- compatibility paths and remaining consumers are explicitly recorded
+- focused and full checkpoint validation passed
+- rollback commits are isolated and documented
+
+No staging, production, hosted GitHub Action, or deployment operation was performed.
+
+## 15. Residual Risks and Next Authorized Work
+
+- Automated DOM and build checks do not replace a future release-specific browser/UAT pass; no release is currently requested.
+- The existing notification chunking and large-bundle advisories remain performance backlog and are unrelated to these pilots.
+- Four production importers and 18 instances remain on `UserConfirmModal`; migrate only after individual characterization.
+- Direct `MobileRecordList` and `TableLoader` consumers remain for later family-by-family assessment; their presence is not proof that every consumer should use `ResponsiveRecordCollection`.
+- `MobileBottomDrawer` still emits Inspection compatibility aliases; remove them only after all consumers are audited.
+
+The next authorized plan boundary is Stage 4 Days 21–24: inventory and consolidate applicable page headers, breadcrumbs, tabs, and back-navigation patterns while preserving routes, permissions, destinations, unsaved-change guards, and responsive behavior.

@@ -6,29 +6,29 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 
 ## Current Status
 
-| Item | Status |
-| --- | --- |
-| Working branch | `codex/frontend-upgrade-stage-1` |
-| Current stage | Stage 3 Days 11–16 completed locally; Days 17–19 Overtime pilot next |
-| Gate decision | **Confirmation foundation and Holidays pilot passed; open for the bounded local Overtime pilot; deployment remains outside scope** |
-| Application/tooling changes started | Yes; latest implementation checkpoint `f16eb0d` |
-| Next planned implementation | Day 17 — characterize `OvertimeRecordsTab` before its responsive collection migration |
+| Item                                | Status                                                                                                                            |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Working branch                      | `codex/frontend-upgrade-stage-1`                                                                                                  |
+| Current stage                       | Stage 3 Days 11–20 completed locally; Stage 4 Days 21–24 next                                                                     |
+| Gate decision                       | **Stage 3 confirmation foundation and both collection pilots passed the full local checkpoint; deployment remains outside scope** |
+| Application/tooling changes started | Yes; latest implementation checkpoint `c3dc083`                                                                                   |
+| Next planned implementation         | Stage 4 Days 21–24 — inventory and bound structure/navigation consolidation before source edits                                   |
 
 ## Document Register
 
-| Document | Purpose | Status |
-| --- | --- | --- |
-| [Frontend upgrade plan](./FRONTEND_UPGRADE_PLAN_2026-08-03.md) | Active Revision 2 plan for reuse-first component consolidation, consistent module implementation, proportional validation, and behavior preservation | Active; reprioritized 2026-08-04 |
-| [Preflight record](./FRONTEND_UPGRADE_PREFLIGHT_2026-08-03.md) | Repository, toolchain, artifact, environment, CI, service, and safety-gate baseline | Completed; blocking actions open |
-| [Stage 1 execution record](./FRONTEND_UPGRADE_STAGE_1_EXECUTION_2026-08-03.md) | Day 1 lint repair, Day 2 correctness fixes, validation evidence, rollback, and residual risks | Days 1–2 locally completed; promotion blocked |
-| [Stage 1 compatibility audit](./FRONTEND_UPGRADE_STAGE_1_AUDIT_2026-08-03.md) | Post-implementation diff review, functional-compatibility tests, full validation, and residual risks | Locally verified; promotion blocked |
-| [Stage 1 Day 3 execution record](./FRONTEND_UPGRADE_STAGE_1_DAY_3_EXECUTION_2026-08-03.md) | Production headers, bundled Google icon, fail-closed production API configuration, validation, and rollback | Locally completed; deployment qualification blocked |
-| [GitHub Actions cost exception](./FRONTEND_UPGRADE_GITHUB_ACTIONS_EXCEPTION_2026-08-04.md) | Owner decision, disabled-workflow mechanism, compensating controls, restoration, and review deadline | Locally disabled; remote confirmation required |
-| [Stage 1 Day 5 execution record](./FRONTEND_UPGRADE_STAGE_1_DAY_5_EXECUTION_2026-08-04.md) | Compatible transitive advisory patches, React Router applicability decision, fail-closed exception control, validation, and rollback | Locally completed; exception review due 2026-09-04 |
-| [Component reuse audit](./FRONTEND_COMPONENT_REUSE_AUDIT_2026-08-04.md) | Day 6 component catalogue, import evidence, overlap analysis, false-positive controls, and Day 7 candidate backlog | Completed; no application changes |
-| [Component reuse execution plan](./FRONTEND_COMPONENT_REUSE_EXECUTION_PLAN_2026-08-04.md) | Detailed Days 8–13 task cards plus the bounded Days 7–20 gates, pilot sequencing, validation, and rollback controls | In progress; Days 11–16 complete, Days 17–19 next |
-| [Component reuse pattern matrix](./FRONTEND_COMPONENT_REUSE_PATTERN_MATRIX_2026-08-04.md) | Days 7–10 evidence, style ownership, approved contracts, selected pilots, tests, and rollback boundaries | Stage 2 completed |
-| [Stage 3 component reuse execution record](./FRONTEND_COMPONENT_REUSE_STAGE_3_EXECUTION_2026-08-04.md) | Days 11–16 confirmation foundation, Staff canary, Holidays pilot, validation evidence, residual risks, and rollback | Days 11–16 passed locally |
+| Document                                                                                               | Purpose                                                                                                                                              | Status                                              |
+| ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| [Frontend upgrade plan](./FRONTEND_UPGRADE_PLAN_2026-08-03.md)                                         | Active Revision 2 plan for reuse-first component consolidation, consistent module implementation, proportional validation, and behavior preservation | Active; reprioritized 2026-08-04                    |
+| [Preflight record](./FRONTEND_UPGRADE_PREFLIGHT_2026-08-03.md)                                         | Repository, toolchain, artifact, environment, CI, service, and safety-gate baseline                                                                  | Completed; blocking actions open                    |
+| [Stage 1 execution record](./FRONTEND_UPGRADE_STAGE_1_EXECUTION_2026-08-03.md)                         | Day 1 lint repair, Day 2 correctness fixes, validation evidence, rollback, and residual risks                                                        | Days 1–2 locally completed; promotion blocked       |
+| [Stage 1 compatibility audit](./FRONTEND_UPGRADE_STAGE_1_AUDIT_2026-08-03.md)                          | Post-implementation diff review, functional-compatibility tests, full validation, and residual risks                                                 | Locally verified; promotion blocked                 |
+| [Stage 1 Day 3 execution record](./FRONTEND_UPGRADE_STAGE_1_DAY_3_EXECUTION_2026-08-03.md)             | Production headers, bundled Google icon, fail-closed production API configuration, validation, and rollback                                          | Locally completed; deployment qualification blocked |
+| [GitHub Actions cost exception](./FRONTEND_UPGRADE_GITHUB_ACTIONS_EXCEPTION_2026-08-04.md)             | Owner decision, disabled-workflow mechanism, compensating controls, restoration, and review deadline                                                 | Locally disabled; remote confirmation required      |
+| [Stage 1 Day 5 execution record](./FRONTEND_UPGRADE_STAGE_1_DAY_5_EXECUTION_2026-08-04.md)             | Compatible transitive advisory patches, React Router applicability decision, fail-closed exception control, validation, and rollback                 | Locally completed; exception review due 2026-09-04  |
+| [Component reuse audit](./FRONTEND_COMPONENT_REUSE_AUDIT_2026-08-04.md)                                | Day 6 component catalogue, import evidence, overlap analysis, false-positive controls, and Day 7 candidate backlog                                   | Completed; no application changes                   |
+| [Component reuse execution plan](./FRONTEND_COMPONENT_REUSE_EXECUTION_PLAN_2026-08-04.md)              | Detailed Days 8–13 task cards plus the bounded Days 7–20 gates, pilot sequencing, validation, and rollback controls                                  | Completed locally; Days 7–20 passed                 |
+| [Component reuse pattern matrix](./FRONTEND_COMPONENT_REUSE_PATTERN_MATRIX_2026-08-04.md)              | Days 7–10 evidence, style ownership, approved contracts, selected pilots, tests, and rollback boundaries                                             | Stage 2 completed                                   |
+| [Stage 3 component reuse execution record](./FRONTEND_COMPONENT_REUSE_STAGE_3_EXECUTION_2026-08-04.md) | Days 11–20 confirmation foundation, Staff canary, Holidays and Overtime pilots, full checkpoint, residual risks, and rollback                        | Stage 3 passed locally                              |
 
 ## Completed Work
 
@@ -70,6 +70,9 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 - Re-audited Days 11–13 against `a195e9f`, hardened the generic close-control touch target, and passed full lint, the pre-fix complete 317-file / 1,738-test suite, the post-fix 6-file / 24-test regression, compiled selector parity, and a production build.
 - Completed Days 14–16: added the bounded `loadingMessage` contract, migrated `HolidaysTab` to `ResponsiveRecordCollection`, removed its direct mobile-list/loader branch, and corrected reduced-motion loader rule ordering.
 - Passed the Holidays pilot with 10 pre-migration characterization tests, 37 final focused tests, changed-file quality checks, compiled motion-rule verification, and a production build.
+- Completed Days 17–19: characterized `OvertimeRecordsTab`, migrated only its manual responsive collection shell, preserved selection/grouping/workflow composition, and added no workflow-specific shared prop.
+- Passed the Overtime pilot with 8 pre-migration direct tests and 5 files / 38 focused final tests covering responsive action parity, keyboard access, footer behavior, security integration, and shared states.
+- Completed the Day 20 checkpoint with full lint, 318 files / 1,753 tests, all seven applicable local audits, a 6,492-module production build, generated-output cleanup, import searches, and a full Stage 3 boundary review.
 
 ## Deferred Release-Only Actions
 
@@ -83,12 +86,12 @@ These actions remain valid but do not block local component-quality work. Reopen
 
 ## Next Work
 
-Continue with Stage 3 Days 17–19 as defined in the [component reuse execution plan](./FRONTEND_COMPONENT_REUSE_EXECUTION_PLAN_2026-08-04.md):
+Begin Stage 4 Days 21–24 as defined in the [frontend upgrade plan](./FRONTEND_UPGRADE_PLAN_2026-08-03.md):
 
-1. Characterize `OvertimeRecordsTab` grouping, totals, selection, bulk actions, pagination, row actions, and workflow-modal placement.
-2. Verify desktop/mobile action availability and keyboard access before migration.
-3. Migrate only the responsive collection shell while keeping overtime calculations, workflow rules, permissions, and persistence local.
-4. Reassess the shared contract before adding any workflow-specific option.
+1. Refresh the inventory of applicable page headers, breadcrumbs, tabs, and back-navigation implementations.
+2. Separate true shared structure from route-, permission-, or unsaved-change-specific behavior.
+3. Select bounded representative consumers and add characterization before source changes.
+4. Approve compatibility and rollback boundaries before consolidating any implementation.
 
 ## File Naming
 

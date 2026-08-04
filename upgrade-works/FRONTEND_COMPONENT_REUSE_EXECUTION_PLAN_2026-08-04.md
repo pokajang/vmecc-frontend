@@ -5,7 +5,7 @@
 **Baseline revision:** `0bc64a4`  
 **Parent plan:** `FRONTEND_UPGRADE_PLAN_2026-08-03.md`, Revision 2  
 **Scope:** Stage 2 Days 7–10 and Stage 3 Days 11–20  
-**Status:** In progress — Stage 2 and Stage 3 Days 11–16 complete; Days 17–19 next  
+**Status:** Completed locally — Stage 2 and Stage 3 Days 11–20 passed; Stage 4 planning is next  
 **Authorization boundary:** Local, behavior-preserving frontend work only; no deployment, backend, API-contract, permission, persistence, or workflow changes
 
 ## 1. Purpose
@@ -67,9 +67,9 @@ The following remain explicit non-goals:
 
 Create only the durable records needed to trace decisions and completed batches:
 
-| Deliverable | Timing | Purpose |
-| --- | --- | --- |
-| `FRONTEND_COMPONENT_REUSE_PATTERN_MATRIX_2026-08-04.md` | Days 7–10 | Evidence, dispositions, contracts, selected pilots, and deferrals |
+| Deliverable                                                | Timing     | Purpose                                                                               |
+| ---------------------------------------------------------- | ---------- | ------------------------------------------------------------------------------------- |
+| `FRONTEND_COMPONENT_REUSE_PATTERN_MATRIX_2026-08-04.md`    | Days 7–10  | Evidence, dispositions, contracts, selected pilots, and deferrals                     |
 | `FRONTEND_COMPONENT_REUSE_STAGE_3_EXECUTION_2026-08-04.md` | Days 11–20 | Changed files, compatibility notes, tests, removals, rollback, and checkpoint outcome |
 
 Do not create a separate document for every day or minor component edit. Update the matrix while Stage 2 is active and the execution record while Stage 3 is active.
@@ -276,15 +276,15 @@ Contract rejection is a valid outcome. Keep implementations separate if consumer
 
 Review and either approve or narrow this proposed contract:
 
-| Concern | Proposed contract |
-| --- | --- |
-| Purpose | Plain cancel/confirm action prompt only |
-| Required behavior | Controlled visibility, title/message, cancel then confirm actions, guarded close, responsive modal/drawer |
-| Candidate props | `visible`, `title`, `message`, `confirmLabel`, `confirmColor`, `cancelLabel`, `confirmDisabled`, `cancelDisabled`, `mobileDrawer`, `mobileDrawerQuery`, `testId`, `bodyTestId`, `onClose`, `onConfirm` |
-| Content | `message` accepts text or a React node but the component does not interpret it |
-| Responsive behavior | Centered modal above the phone breakpoint; `MobileBottomDrawer` below it when enabled |
-| Unsupported | API calls, permission checks, loading state ownership, workflow declarations, arbitrary portals, z-index control, and domain-specific styling |
-| Compatibility | Old `src/views/shared/ActionConfirmModal` path re-exports the canonical component; `UserConfirmModal` remains until its consumers migrate |
+| Concern             | Proposed contract                                                                                                                                                                                      |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Purpose             | Plain cancel/confirm action prompt only                                                                                                                                                                |
+| Required behavior   | Controlled visibility, title/message, cancel then confirm actions, guarded close, responsive modal/drawer                                                                                              |
+| Candidate props     | `visible`, `title`, `message`, `confirmLabel`, `confirmColor`, `cancelLabel`, `confirmDisabled`, `cancelDisabled`, `mobileDrawer`, `mobileDrawerQuery`, `testId`, `bodyTestId`, `onClose`, `onConfirm` |
+| Content             | `message` accepts text or a React node but the component does not interpret it                                                                                                                         |
+| Responsive behavior | Centered modal above the phone breakpoint; `MobileBottomDrawer` below it when enabled                                                                                                                  |
+| Unsupported         | API calls, permission checks, loading state ownership, workflow declarations, arbitrary portals, z-index control, and domain-specific styling                                                          |
+| Compatibility       | Old `src/views/shared/ActionConfirmModal` path re-exports the canonical component; `UserConfirmModal` remains until its consumers migrate                                                              |
 
 Explicitly decide:
 
@@ -600,6 +600,8 @@ Do not broaden the migration to adjacent modules simply because they are in the 
 
 ### Days 17–19 — Pilot 2: Responsive or Workflow-Sensitive Migration
 
+Status: **completed locally on 2026-08-04**. Overtime characterization and migration passed at revisions `5f93713` and `c3dc083`; see the [Stage 3 execution record](./FRONTEND_COMPONENT_REUSE_STAGE_3_EXECUTION_2026-08-04.md).
+
 Migrate the selected responsive record consumer only if its Day 7 disposition is “reuse as-is” or “improve existing” with a bounded contract.
 
 Required checks:
@@ -613,6 +615,8 @@ Required checks:
 If the pilot needs consumer-specific flags or render branches beyond the approved contract, restore the prior composition and record it as an intentional domain implementation.
 
 ### Day 20 — Full Checkpoint
+
+Status: **completed locally on 2026-08-04**. Full lint, 318 files / 1,753 tests, all applicable local audits, the production build, cleanup searches, and the Stage 3 boundary review passed.
 
 Run and record:
 
@@ -639,13 +643,13 @@ Stage 3 is complete only when:
 
 ## 7. Validation Matrix
 
-| Work item | During implementation | Batch completion |
-| --- | --- | --- |
-| Pattern matrix and contract decisions | Link, path, import-count, and diff checks | Stage 2 exit review |
-| Confirmation foundation | Focused component tests; lint changed files | Affected consumer tests |
-| Straightforward pilot | Shared component and direct consumer tests | Import/style cleanup search |
-| Responsive pilot | `ResponsiveRecordCollection` and direct module tests | Desktop/mobile behavior review |
-| Day 20 checkpoint | Full lint and unit suite | Audits and production build |
+| Work item                             | During implementation                                | Batch completion               |
+| ------------------------------------- | ---------------------------------------------------- | ------------------------------ |
+| Pattern matrix and contract decisions | Link, path, import-count, and diff checks            | Stage 2 exit review            |
+| Confirmation foundation               | Focused component tests; lint changed files          | Affected consumer tests        |
+| Straightforward pilot                 | Shared component and direct consumer tests           | Import/style cleanup search    |
+| Responsive pilot                      | `ResponsiveRecordCollection` and direct module tests | Desktop/mobile behavior review |
+| Day 20 checkpoint                     | Full lint and unit suite                             | Audits and production build    |
 
 Existing likely regression anchors include:
 
@@ -680,4 +684,4 @@ For a regression:
 
 ## 9. Immediate Next Action
 
-Begin Day 11 at the approved Stage 2 exit boundary: establish the focused confirmation baseline, add the canonical component behind the existing shared import path, and apply only the generic styles approved in the pattern matrix.
+Close this Days 7–20 execution plan at its passing Stage 3 boundary. The next work should begin from the parent plan's Stage 4 Days 21–24 structure-and-navigation batch: refresh the usage inventory, choose bounded representative consumers, characterize route/navigation behavior, and approve contracts before editing source.

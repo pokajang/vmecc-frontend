@@ -68,16 +68,16 @@ By the end of this plan:
 
 ### 3.1 Completed Stage 1 work
 
-| Work | Status |
-| --- | --- |
-| ESLint correctness and React/accessibility enforcement | Completed locally |
-| Confirmed runtime defect repairs and compatibility tests | Completed locally |
-| Production header, local asset, and API configuration hardening | Completed locally |
-| GitHub-hosted automation | Deferred by owner to avoid hosted cost |
-| Compatible dependency advisory patches | Completed locally |
-| React Router RSC advisory disposition | Time-bounded exception; review due 2026-09-04 |
-| Full regression baseline | 315 test files / 1,728 tests passing |
-| Production build baseline | Passing; existing size warnings recorded |
+| Work                                                            | Status                                        |
+| --------------------------------------------------------------- | --------------------------------------------- |
+| ESLint correctness and React/accessibility enforcement          | Completed locally                             |
+| Confirmed runtime defect repairs and compatibility tests        | Completed locally                             |
+| Production header, local asset, and API configuration hardening | Completed locally                             |
+| GitHub-hosted automation                                        | Deferred by owner to avoid hosted cost        |
+| Compatible dependency advisory patches                          | Completed locally                             |
+| React Router RSC advisory disposition                           | Time-bounded exception; review due 2026-09-04 |
+| Full regression baseline                                        | 315 test files / 1,728 tests passing          |
+| Production build baseline                                       | Passing; existing size warnings recorded      |
 
 Stage 1 is a foundation, not the template for the amount of ceremony required for every component refactor.
 
@@ -113,12 +113,12 @@ This list is a discovery starting point, not an instruction to use every compone
 
 Use four layers to decide ownership:
 
-| Layer | Responsibility | Examples |
-| --- | --- | --- |
-| Foundation | Design tokens and low-level presentation rules | spacing, typography, colors, radii, focus, control sizing |
-| Shared primitives | Small stable application-wide behaviors | loaders, state badges, action groups, confirmation shell |
-| Shared composites | Repeatable page or workflow patterns | page header, filters, responsive record collection, detail header |
-| Domain components | Business-specific rendering and interaction | salary claim calculations, inspection steps, leave transitions |
+| Layer             | Responsibility                                 | Examples                                                          |
+| ----------------- | ---------------------------------------------- | ----------------------------------------------------------------- |
+| Foundation        | Design tokens and low-level presentation rules | spacing, typography, colors, radii, focus, control sizing         |
+| Shared primitives | Small stable application-wide behaviors        | loaders, state badges, action groups, confirmation shell          |
+| Shared composites | Repeatable page or workflow patterns           | page header, filters, responsive record collection, detail header |
+| Domain components | Business-specific rendering and interaction    | salary claim calculations, inspection steps, leave transitions    |
 
 A component should move upward only when its lower-level consumers share a stable contract.
 
@@ -164,14 +164,14 @@ Before broad migration, define:
 
 Validation follows risk. It is not necessary to run every available check after every small presentational edit.
 
-| Change type | Required during development | Required at batch checkpoint |
-| --- | --- | --- |
-| Documentation or inventory only | Link/path and diff check | None beyond document review |
-| Token or presentational primitive | Lint for changed files; focused component tests | Affected module tests; production build when CSS/build output changes materially |
-| Shared interactive component | Focused component tests including keyboard/state behavior; affected consumer tests | Full lint and full unit suite after the migration batch |
-| Module migration with no intended behavior change | Existing tests for that module and shared component | Full suite at the end of the pattern family or stage |
-| Hook, state, API, permission, routing, or persistence change | Characterization and affected integration tests | Full lint, audits, unit suite, and production build |
-| Release candidate | Stage-level validation plus the separate release checklist | Deployment approval is outside this plan |
+| Change type                                                  | Required during development                                                        | Required at batch checkpoint                                                     |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Documentation or inventory only                              | Link/path and diff check                                                           | None beyond document review                                                      |
+| Token or presentational primitive                            | Lint for changed files; focused component tests                                    | Affected module tests; production build when CSS/build output changes materially |
+| Shared interactive component                                 | Focused component tests including keyboard/state behavior; affected consumer tests | Full lint and full unit suite after the migration batch                          |
+| Module migration with no intended behavior change            | Existing tests for that module and shared component                                | Full suite at the end of the pattern family or stage                             |
+| Hook, state, API, permission, routing, or persistence change | Characterization and affected integration tests                                    | Full lint, audits, unit suite, and production build                              |
+| Release candidate                                            | Stage-level validation plus the separate release checklist                         | Deployment approval is outside this plan                                         |
 
 Additional rules:
 
@@ -331,6 +331,8 @@ Status: **completed locally on 2026-08-04**. `HolidaysTab` passed its responsive
 
 ## Days 17–19 — Pilot Module Two
 
+Status: **completed locally on 2026-08-04**. `OvertimeRecordsTab` passed pre-migration characterization, responsive-collection migration, focused regression, and boundary review without a new workflow-specific shared prop.
+
 ### Work
 
 - Migrate the responsive or workflow-oriented pilot module.
@@ -339,6 +341,8 @@ Status: **completed locally on 2026-08-04**. `HolidaysTab` passed its responsive
 - Split or keep a domain component when a generic contract would become misleading.
 
 ## Day 20 — Pilot Checkpoint
+
+Status: **completed locally on 2026-08-04**. Full lint, 318 files / 1,753 tests, applicable repository audits, production build, generated-output cleanup, import searches, and the complete Stage 3 diff review passed. See the [Stage 3 execution record](./FRONTEND_COMPONENT_REUSE_STAGE_3_EXECUTION_2026-08-04.md).
 
 ### Work
 
@@ -448,12 +452,12 @@ Roll out by pattern family, not by rewriting entire modules. The audit determine
 
 Score candidates using simple evidence rather than an arbitrary weighted formula:
 
-| Factor | Low | Medium | High |
-| --- | --- | --- | --- |
-| Repetition | One or two local cases | Three related cases | Many modules or frequent reimplementation |
-| User-visible inconsistency | Minor or rarely seen | Noticeable in a workflow | Common, confusing, or accessibility-impacting |
-| Contract clarity | Consumers differ substantially | Shared core with bounded variants | Same purpose and behavior |
-| Migration risk | Presentation only | Interactive but well tested | Business-critical, stateful, or weakly tested |
+| Factor                     | Low                            | Medium                            | High                                          |
+| -------------------------- | ------------------------------ | --------------------------------- | --------------------------------------------- |
+| Repetition                 | One or two local cases         | Three related cases               | Many modules or frequent reimplementation     |
+| User-visible inconsistency | Minor or rarely seen           | Noticeable in a workflow          | Common, confusing, or accessibility-impacting |
+| Contract clarity           | Consumers differ substantially | Shared core with bounded variants | Same purpose and behavior                     |
+| Migration risk             | Presentation only              | Interactive but well tested       | Business-critical, stateful, or weakly tested |
 
 Prioritize high repetition, high contract clarity, and meaningful visible inconsistency. Pilot medium-risk consumers before high-risk consumers. Defer unclear contracts.
 
@@ -560,12 +564,12 @@ When paused, keep or restore the domain implementation, document the reason, and
 
 ## 16. Stage Record
 
-| Stage | Status | Evidence | Decision |
-| --- | --- | --- | --- |
-| Stage 1 — foundation | Locally completed; hosted CI deferred | Existing Stage 1 records in `upgrade-works/` | Preserve as baseline |
-| Stage 2 — reuse audit | Completed through Day 10 | `FRONTEND_COMPONENT_REUSE_AUDIT_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_EXECUTION_PLAN_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_PATTERN_MATRIX_2026-08-04.md` | Three contracts approved; Staff canary and Holidays/Overtime pilots selected |
-| Stage 3 — shared foundations and pilots | Authorized; source not yet changed | Pilot execution record required | Begin Days 11–13 confirmation foundation within the frozen boundary |
-| Stage 4 — pattern rollout | Not started | Pattern-family migration records required | Pending pilot review |
-| Stage 5 — cleanup and handover | Not started | Final adoption summary required | Pending rollout |
+| Stage                                   | Status                                | Evidence                                                                                                                                                         | Decision                                                                     |
+| --------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Stage 1 — foundation                    | Locally completed; hosted CI deferred | Existing Stage 1 records in `upgrade-works/`                                                                                                                     | Preserve as baseline                                                         |
+| Stage 2 — reuse audit                   | Completed through Day 10              | `FRONTEND_COMPONENT_REUSE_AUDIT_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_EXECUTION_PLAN_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_PATTERN_MATRIX_2026-08-04.md` | Three contracts approved; Staff canary and Holidays/Overtime pilots selected |
+| Stage 3 — shared foundations and pilots | Completed locally through Day 20      | `FRONTEND_COMPONENT_REUSE_STAGE_3_EXECUTION_2026-08-04.md`                                                                                                       | Preserve passing foundation and pilot boundaries                             |
+| Stage 4 — pattern rollout               | Not started                           | Pattern-family migration records required                                                                                                                        | Begin Days 21–24 planning and characterization                               |
+| Stage 5 — cleanup and handover          | Not started                           | Final adoption summary required                                                                                                                                  | Pending rollout                                                              |
 
 Revision 2 authorizes local frontend audit and behavior-preserving component consolidation. It does not authorize deployment, backend changes, production-data access, or silent business-workflow changes.
