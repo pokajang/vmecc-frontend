@@ -361,6 +361,30 @@ describe('Reports direct detail route loading', () => {
     expect(screen.queryByText('ERCO-API')).toBeNull()
   })
 
+  it('preserves the compact mobile Back action and returns detail to the mobile home', async () => {
+    mocks.useReportRecords.mockReturnValue(
+      buildRecordsState({
+        records: [ercoRecord],
+        selectedRecord: ercoRecord,
+      }),
+    )
+
+    renderReportsRoute()
+
+    const backButton = screen.getByRole('button', { name: 'Back' })
+    expect(backButton.type).toBe('button')
+    expect(backButton.className).toContain('btn-outline-secondary')
+    expect(backButton.className).toContain('inspection-header-back-btn')
+    expect(backButton.className).toContain('inspection-compact-action-btn')
+    expect(backButton.className).toContain('d-md-none')
+    expect(backButton.className).toContain('d-inline-flex')
+    expect(backButton.querySelector('.lucide-arrow-left')?.getAttribute('width')).toBe('14')
+
+    fireEvent.click(backButton)
+
+    await waitFor(() => expect(screen.getByTestId('erco-mobile-home')).toBeTruthy())
+  })
+
   it('discarding dirty form changes does not delete the saved draft', () => {
     const pendingAction = vi.fn()
     const removeDraft = vi.fn()
