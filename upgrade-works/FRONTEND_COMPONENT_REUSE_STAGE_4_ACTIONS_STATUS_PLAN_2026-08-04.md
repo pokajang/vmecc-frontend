@@ -7,7 +7,7 @@
 **Parent plan:** `FRONTEND_UPGRADE_PLAN_2026-08-03.md`, Revision 2  
 **Prior checkpoint:** `FRONTEND_COMPONENT_REUSE_STAGE_4_DATA_LISTS_EXECUTION_2026-08-04.md`  
 **Scope:** Stage 4 Days 29–32 — actions, status, and workflow presentation only  
-**Status:** Planned; Days 29–32 application source work has not started  
+**Status:** Completed locally on 2026-08-04; all Days 29–32 gates passed  
 **Authorization boundary:** Local, behavior-preserving frontend work only; no deployment, GitHub Actions, backend, API, route-definition, permission, persistence, dependency, status-definition, or workflow-transition changes
 
 ## 1. Purpose
@@ -236,6 +236,8 @@ For statuses, additionally record vocabulary, normalization, fallback, color/ico
 
 Day 29 passes when candidates are classified by purpose and semantic ownership, not by common labels, Plus icons, badge shapes, or colors.
 
+**Result:** Passed. The production inventory was regenerated, the exact Create Staff/Manage User Roles assignment pair was selected, and unrelated Plus controls, loading controls, statuses, workflows, and confirmation wrappers received explicit retain or defer dispositions.
+
 ## 9. Day 30 — Contract Review and Pilot Approval
 
 ### Task 30.1 — Audit shared tests
@@ -282,6 +284,8 @@ The component contract should contain only label, disabled state, click callback
 
 Source work may begin only when both consumers are behaviorally equivalent and the feature-local component is clearer than duplicating the button. If equivalence fails, perform no action migration and record the difference.
 
+**Result:** Passed. Untouched-source characterization proved identical effective button type, presentation, event forwarding, disabled behavior, and form safety. The caller label was the only intentional variation. A feature-local contract was approved; the global `CreateActionButton` remained unchanged.
+
 ## 10. Day 31 — Characterization and Bounded Implementation
 
 ### Task 31.1 — Establish the untouched baseline
@@ -320,6 +324,8 @@ Implementation rules:
 ### Day 31 gate
 
 Day 31 passes only when the pair uses one smaller feature-local presentation contract, both consumer behaviors remain protected, and no role-assignment business logic moves.
+
+**Result:** Passed. Characterization revision `de4528a` preceded implementation revision `cbf90c5`. `RoleAssignmentAddButton` now owns only the fixed presentation used by the two consumers; role assignment state, validation, callbacks, loading ownership, modal/form behavior, and persistence remain local.
 
 ## 11. Day 32 — Pattern-Family Checkpoint
 
@@ -390,6 +396,8 @@ The Days 29–32 batch passes when:
 - required validation passes
 - generated output and worktree are clean
 - the execution record is complete
+
+**Result:** Passed. Changed-file quality checks, 5 focused files / 31 tests, boundary searches, diff checks, a 6,494-module production build, and guarded generated-output cleanup passed. See the [Days 29–32 execution record](./FRONTEND_COMPONENT_REUSE_STAGE_4_ACTIONS_STATUS_EXECUTION_2026-08-04.md).
 
 ## 12. Stop Conditions
 
