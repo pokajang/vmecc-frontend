@@ -18,10 +18,9 @@ import {
 } from '@coreui/react'
 import CreateActionButton from 'src/components/CreateActionButton'
 import DataTableFooter from 'src/components/DataTableFooter'
-import MobileRecordList from 'src/components/MobileRecordList'
+import ResponsiveRecordCollection from 'src/components/ResponsiveRecordCollection'
 import RowActions from 'src/components/RowActions'
 import TableFilters from 'src/components/TableFilters'
-import TableLoader from 'src/components/TableLoader'
 import { formatLocalDate, parseLocalDateValue } from 'src/utils/localDate'
 import HolidayCreateModal from './HolidayCreateModal'
 import { activateOnEnterOrSpace } from 'src/utils/uiAccessibility'
@@ -371,13 +370,13 @@ const HolidaysTab = ({
           clearColMd="auto"
         />
 
-        {isLoading ? (
-          <TableLoader />
-        ) : filteredHolidays.length === 0 ? (
-          <div className="text-body-secondary">No holidays match the current filters.</div>
-        ) : (
-          <>
-            <MobileRecordList sections={mobileHolidaySections} variant="list-group" />
+        <ResponsiveRecordCollection
+          isLoading={isLoading}
+          isEmpty={filteredHolidays.length === 0}
+          emptyMessage="No holidays match the current filters."
+          mobileSections={mobileHolidaySections}
+          mobileVariant="list-group"
+          renderDesktop={
             <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-body">
               <CTable align="middle" className="mb-0" hover responsive>
                 <CTableHead color="light">
@@ -447,14 +446,16 @@ const HolidaysTab = ({
                 </CTableBody>
               </CTable>
             </div>
+          }
+          footer={
             <DataTableFooter
               rowsToShow={holidayRowsToShow}
               onRowsToShowChange={setHolidayRowsToShow}
               filteredCount={filteredHolidays.length}
               totalCount={totalCount}
             />
-          </>
-        )}
+          }
+        />
       </CCardBody>
     </CCard>
   )

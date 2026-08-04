@@ -17,7 +17,18 @@ vi.mock('src/components/TableFilters', () => ({
 }))
 
 vi.mock('src/components/DataTableFooter', () => ({
-  default: () => <div data-testid="table-footer" />,
+  default: ({ rowsToShow, onRowsToShowChange, filteredCount, totalCount }) => (
+    <div
+      data-testid="table-footer"
+      data-rows-to-show={rowsToShow}
+      data-filtered-count={filteredCount}
+      data-total-count={totalCount}
+    >
+      <button type="button" onClick={() => onRowsToShowChange('all')}>
+        Show all test rows
+      </button>
+    </div>
+  ),
 }))
 
 vi.mock('src/components/TableLoader', () => ({
@@ -62,7 +73,82 @@ const buildProps = (overrides = {}) => ({
   ...overrides,
 })
 
+const holidayRow = {
+  id: 'hdy-1',
+  name: 'National Day',
+  date: '2026-08-31',
+  scope: 'National',
+  state: 'All States',
+}
+
 describe('HolidaysTab', () => {
+  it('preserves loading and filtered-empty precedence', () => {
+    const { rerender } = render(<HolidaysTab {...buildProps({ isLoading: true })} />)
+
+    expect(screen.getByTestId('table-loader')).toBeTruthy()
+    expect(screen.queryByText('No holidays match the current filters.')).toBeNull()
+    expect(screen.queryByTestId('table-footer')).toBeNull()
+    expect(document.querySelector('.list-group')).toBeNull()
+    expect(document.querySelector('table')).toBeNull()
+
+    rerender(<HolidaysTab {...buildProps()} />)
+
+    expect(screen.queryByTestId('table-loader')).toBeNull()
+    expect(screen.getByText('No holidays match the current filters.')).toBeTruthy()
+    expect(screen.queryByTestId('table-footer')).toBeNull()
+    expect(document.querySelector('.list-group')).toBeNull()
+    expect(document.querySelector('table')).toBeNull()
+  })
+
+  it('preserves mobile, desktop, grouping, and footer behavior for loaded records', () => {
+    const setHolidayRowsToShow = vi.fn()
+    const props = buildProps({
+      filteredHolidays: [holidayRow],
+      visibleHolidayRows: [holidayRow],
+      holidayRowsToShow: 10,
+      setHolidayRowsToShow,
+      totalCount: 4,
+    })
+
+    render(<HolidaysTab {...props} />)
+
+    expect(document.querySelector('.list-group')).toBeTruthy()
+    expect(document.querySelector('.d-none.d-md-block table')).toBeTruthy()
+    expect(screen.getAllByText('2026').length).toBeGreaterThanOrEqual(2)
+    expect(screen.getAllByText('National Day').length).toBeGreaterThanOrEqual(2)
+
+    const footer = screen.getByTestId('table-footer')
+    expect(footer.getAttribute('data-rows-to-show')).toBe('10')
+    expect(footer.getAttribute('data-filtered-count')).toBe('1')
+    expect(footer.getAttribute('data-total-count')).toBe('4')
+    fireEvent.click(screen.getByRole('button', { name: 'Show all test rows' }))
+    expect(setHolidayRowsToShow).toHaveBeenCalledWith('all')
+  })
+
+  it.each(['Enter', ' '])('opens holiday details from a desktop row with %s', (key) => {
+    const props = buildProps({
+      filteredHolidays: [holidayRow],
+      visibleHolidayRows: [holidayRow],
+      totalCount: 1,
+    })
+    render(<HolidaysTab {...props} />)
+
+    fireEvent.keyDown(screen.getByRole('row', { name: /Open holiday National Day/ }), { key })
+    expect(screen.getByText('Holiday details')).toBeTruthy()
+  })
+
+  it('opens holiday details from the mobile record action', () => {
+    const props = buildProps({
+      filteredHolidays: [holidayRow],
+      visibleHolidayRows: [holidayRow],
+      totalCount: 1,
+    })
+    render(<HolidaysTab {...props} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open holiday National Day' }))
+    expect(screen.getByText('Holiday details')).toBeTruthy()
+  })
+
   it('saves wizard nationals and additional holidays together on final confirm', async () => {
     const props = buildProps()
     render(<HolidaysTab {...props} />)
@@ -129,13 +215,7 @@ describe('HolidaysTab', () => {
   })
 
   it('opens holiday details when a table row is clicked', () => {
-    const row = {
-      id: 'hdy-1',
-      name: 'National Day',
-      date: '2026-08-31',
-      scope: 'National',
-      state: 'All States',
-    }
+    const row = holidayRow
     const props = buildProps({
       filteredHolidays: [row],
       visibleHolidayRows: [row],
@@ -149,13 +229,7 @@ describe('HolidaysTab', () => {
   })
 
   it('keeps single holiday edit mode for table RowActions edit action', () => {
-    const row = {
-      id: 'hdy-1',
-      name: 'National Day',
-      date: '2026-08-31',
-      scope: 'National',
-      state: 'All States',
-    }
+    const row = holidayRow
     const props = buildProps({
       filteredHolidays: [row],
       visibleHolidayRows: [row],
@@ -169,13 +243,7 @@ describe('HolidaysTab', () => {
   })
 
   it('calls onDeleteHoliday when delete button is clicked', async () => {
-    const row = {
-      id: 'hdy-1',
-      name: 'National Day',
-      date: '2026-08-31',
-      scope: 'National',
-      state: 'All States',
-    }
+    const row = holidayRow
     const props = buildProps({
       filteredHolidays: [row],
       visibleHolidayRows: [row],
