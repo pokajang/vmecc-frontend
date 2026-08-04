@@ -6,13 +6,13 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 
 ## Current Status
 
-| Item                                | Status                                                                                      |
-| ----------------------------------- | ------------------------------------------------------------------------------------------- |
-| Working branch                      | `codex/frontend-upgrade-stage-1`                                                            |
-| Current stage                       | Stage 5 Days 37–39 cleanup plan ready; source work not started                              |
-| Gate decision                       | **Stage 4 passed; reference-proof cleanup gate ready; deployment remains outside scope**    |
-| Application/tooling changes started | Yes; latest committed implementation checkpoint `dedef52`                                   |
-| Next planned implementation         | Day 37 — repeat reference proof, then remove only the approved zero-use template components |
+| Item                                | Status                                                                                            |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Working branch                      | `codex/frontend-upgrade-stage-1`                                                                  |
+| Current stage                       | Stage 5 completed locally through Day 39; Day 40 planning is next                                 |
+| Gate decision                       | **Days 37–39 passed; Day 40 consistency review may be planned; deployment remains outside scope** |
+| Application/tooling changes started | Yes; latest committed implementation checkpoint `cbe48bf`                                         |
+| Next planned implementation         | Write the bounded Day 40 consistency-review plan                                                  |
 
 ## Document Register
 
@@ -37,7 +37,8 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | [Stage 4 actions/status/workflow execution](./FRONTEND_COMPONENT_REUSE_STAGE_4_ACTIONS_STATUS_EXECUTION_2026-08-04.md) | Final dispositions, role-assignment action extraction, characterization, validation evidence, exceptions, and rollback boundary                         | Days 29–32 passed locally                           |
 | [Stage 4 forms/dialogs plan](./FRONTEND_COMPONENT_REUSE_STAGE_4_FORMS_DIALOGS_PLAN_2026-08-04.md)                      | Detailed Days 33–36 form/dialog inventory, ERCO pilot gate, focus and dismissal checks, full Stage 4 checkpoint, stop conditions, and rollback controls | Days 33–36 passed locally                           |
 | [Stage 4 forms/dialogs execution](./FRONTEND_COMPONENT_REUSE_STAGE_4_FORMS_DIALOGS_EXECUTION_2026-08-04.md)            | Final dispositions, ERCO responsive-shell extraction, characterization, full Stage 4 validation, cumulative boundary, and rollback                      | Stage 4 passed locally                              |
-| [Stage 5 cleanup plan](./FRONTEND_COMPONENT_REUSE_STAGE_5_CLEANUP_PLAN_2026-08-04.md)                                  | Detailed Days 37–39 zero-use proof, approved template/PWA cleanup, retained-adapter conditions, validation, stop controls, and rollback                 | Planned; source work not started                    |
+| [Stage 5 cleanup plan](./FRONTEND_COMPONENT_REUSE_STAGE_5_CLEANUP_PLAN_2026-08-04.md)                                  | Detailed Days 37–39 zero-use proof, approved template/PWA cleanup, retained-adapter conditions, validation, stop controls, and rollback                 | Days 37–39 passed locally                           |
+| [Stage 5 cleanup execution](./FRONTEND_COMPONENT_REUSE_STAGE_5_CLEANUP_EXECUTION_2026-08-04.md)                        | Final reference proof, exact deletions, retained adapters, active PWA protections, validation, build cleanup, boundary, and rollback                    | Days 37–39 passed locally                           |
 
 ## Completed Work
 
@@ -104,6 +105,8 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 - Extracted only those duplicate branches into feature-local `ErcoResponsiveActionModal`, preserving each consumer's title, body, buttons, colors, callbacks, and chronology state.
 - Passed the Day 36 and full Stage 4 checkpoint with full lint, 324 files / 1,779 tests, all applicable local audits, a 6,495-module production build, guarded cleanup, and the cumulative Stage 4 diff review.
 - Prepared the bounded Stage 5 Days 37–39 cleanup plan with reproducible zero-runtime-use proof for `AppBreadcrumb`, `DocsLink`, and the dormant PWA banner surface, while retaining active adapters and install behavior.
+- Completed Days 37–39 by removing only those three unmounted components and their exclusive barrel, hook, test, selector, and E2E residue in two independently reversible commits.
+- Preserved active PWA installation and every compatibility surface with consumers; passed full lint, 3 files / 9 retained PWA tests, affected audits, a 6,493-module production build, guarded cleanup, and the exact implementation boundary.
 
 ## Deferred Release-Only Actions
 
@@ -117,12 +120,12 @@ These actions remain valid but do not block local component-quality work. Reopen
 
 ## Next Work
 
-Begin Stage 5 Days 37–39 under the [cleanup plan](./FRONTEND_COMPONENT_REUSE_STAGE_5_CLEANUP_PLAN_2026-08-04.md):
+Write the bounded Day 40 consistency-review plan:
 
-1. Repeat exact reference proof at the committed planning boundary.
-2. Remove the two unused CoreUI template components and their barrel entries in an independent commit.
-3. Remove only the dormant PWA banner API/tests/styles while preserving active header/sidebar installation.
-4. Finish with full lint, focused PWA regressions, affected audits, production build, and guarded cleanup.
+1. Select representative migrated modules and explicit desktop/mobile viewports.
+2. Define evidence capture for headers, spacing, actions, filters, responsive collections, states, forms, and dialogs.
+3. Separate shared-source inconsistencies from intentional domain differences before authorizing changes.
+4. Set focused regression, accessibility, boundary, production-build, and rollback gates proportionate to any approved corrections.
 
 ## File Naming
 

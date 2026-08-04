@@ -7,7 +7,9 @@
 **Parent plan:** `FRONTEND_UPGRADE_PLAN_2026-08-03.md`, Revision 2  
 **Prior checkpoint:** `FRONTEND_COMPONENT_REUSE_STAGE_4_FORMS_DIALOGS_EXECUTION_2026-08-04.md`  
 **Scope:** Stage 5 Days 37–39 — removal of proven superseded or dormant frontend implementations  
-**Status:** Planned; cleanup source work has not started  
+**Status:** Completed locally through Day 39  
+**Plan commit:** `3c0189e`  
+**Execution record:** `FRONTEND_COMPONENT_REUSE_STAGE_5_CLEANUP_EXECUTION_2026-08-04.md`  
 **Authorization boundary:** Local frontend cleanup only; no deployment, GitHub Actions, backend, API, route-definition, permission, persistence, dependency, product-feature addition, business validation, status, workflow, or broad redesign changes
 
 ## 1. Purpose
@@ -369,3 +371,16 @@ Days 37–39 are complete when:
 ## 16. Next Boundary
 
 After the Day 39 gate passes, Day 40 may begin a representative consistency review at supported desktop and mobile sizes. Day 40 corrections require their own evidence and must not reopen deleted dormant features without a product decision.
+
+## 17. Execution Result
+
+Days 37–39 passed locally on 2026-08-04.
+
+- `AppBreadcrumb` and `DocsLink` were removed with their four barrel lines in `5aae471`.
+- The unmounted `PwaInstallBanner`, its direct suite, exclusive selectors, banner-only hook state/API, and obsolete E2E absence assertion were removed in `cbe48bf`.
+- The active PWA provider, native prompt, installed-state handling, platform instructions, responsive modal/drawer, and header/sidebar install entries remain.
+- Full lint, 3 retained PWA files / 9 tests, contrast audit, typography audit, and a 6,493-module production build passed.
+- Guarded build cleanup and the approved/forbidden boundary checks passed; the worktree was clean before documentation closeout.
+- No retained compatibility facade, adapter, alias, route, API/service, permission, persistence, workflow, dependency, GitHub Actions, or generated build source changed.
+
+The detailed proof, exact boundary, retained-adapter conditions, validation results, and rollback points are in the execution record named above. Day 40 is the next programme step.
