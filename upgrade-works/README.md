@@ -11,7 +11,7 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | Working branch | `codex/frontend-upgrade-stage-1` |
 | Current stage | Stage 3 Days 11–13 completed locally; Days 14–16 Holidays pilot next |
 | Gate decision | **Confirmation foundation passed; open for the bounded local Holidays pilot; deployment remains outside scope** |
-| Application/tooling changes started | Yes; latest implementation checkpoint `1a612a0` |
+| Application/tooling changes started | Yes; latest audited implementation checkpoint `38a659a` |
 | Next planned implementation | Day 14 — characterize `HolidaysTab` before its responsive collection migration |
 
 ## Document Register
@@ -67,6 +67,7 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 - Completed Days 8–10: mapped style ownership, approved three bounded component contracts, selected `StaffActionModals` as the confirmation canary, and selected Holidays/Overtime as the collection pilots.
 - Completed Days 11–13: established canonical `ActionConfirmModal` ownership, preserved all 31 shared-path importers, moved generic confirmation drawer styles out of Inspection ownership, and migrated only the Staff terminate/rehire canary.
 - Passed the Days 11–13 gate with changed-file quality checks, a production build, and 6 focused test files / 21 tests; four `UserConfirmModal` importers and 18 render instances remain intentionally unchanged.
+- Re-audited Days 11–13 against `a195e9f`, hardened the generic close-control touch target, and passed full lint, the pre-fix complete 317-file / 1,738-test suite, the post-fix 6-file / 24-test regression, compiled selector parity, and a production build.
 
 ## Deferred Release-Only Actions
 

@@ -6,6 +6,7 @@
 **Stage 2 checkpoint:** `a195e9f`  
 **Scope completed:** Stage 3 Days 11–13 — canonical confirmation foundation and Staff canary  
 **Gate result:** Passed locally  
+**Post-implementation audit:** Passed with one preventive hardening fix at `38a659a`  
 **Deployment status:** Not requested; no deployment performed
 
 ## 1. Outcome
@@ -23,6 +24,7 @@ The foundation gate passed. Stage 3 may proceed to the Days 14–16 `HolidaysTab
 | `8838d7e` | Canonical `ActionConfirmModal`, old-path compatibility, shared drawer styles, and contract tests |
 | `4e7ec65` | Staff terminate/rehire canary migration and direct consumer tests                                |
 | `1a612a0` | Additional locked-mobile-action contract coverage                                                |
+| `38a659a` | Post-implementation touch-target hardening and enabled-dismissal parity tests                    |
 
 These boundaries allow the Staff canary to be rolled back independently without removing the canonical component used by the 31 existing shared-path importers.
 
@@ -212,3 +214,68 @@ Begin Days 14–16 with `HolidaysTab` only:
 3. Add the approved `loadingMessage` forwarding to `ResponsiveRecordCollection` only when the pilot requires it.
 4. Migrate Holidays without changing filters, grouping, row keyboard behavior, details, pagination, wizard behavior, permissions, or data operations.
 5. Remove only duplicates made obsolete by the passing pilot.
+
+## 11. Post-Implementation Audit
+
+### 11.1 Audit scope and result
+
+The completed Days 11–13 work was re-audited on 2026-08-04 against the approved Stage 2 checkpoint `a195e9f`. The audit reviewed the full implementation diff, old and new confirmation behavior, all production component call sites, compiled CSS ownership, focused regression behavior, the complete repository unit suite, lint, and the production build.
+
+Result: **passed after one preventive style hardening fix**. No confirmed application-function regression was found.
+
+### 11.2 Finding and correction
+
+The generic `.mobile-bottom-drawer__close` mobile rule used the correct shared 44-pixel touch-target value but initially omitted the `!important` priority present in the retained Inspection compatibility selector.
+
+Current application rendering was not affected because `MobileBottomDrawer` still emits both generic and Inspection compatibility classes, and the later Inspection selector continued to supply the identical minimum height with `!important`. However, leaving the generic contract weaker could cause a future regression when Inspection aliases are eventually removed.
+
+Revision `38a659a` corrected the generic rule and added explicit enabled-dismissal regression coverage. The fix does not change the current computed size; it makes shared ownership independently preserve the existing behavior.
+
+### 11.3 Consumer and contract audit
+
+- 31 production files continue importing through `src/views/shared/ActionConfirmModal`.
+- Including the Staff canary, 51 production `ActionConfirmModal` render instances were parsed and checked.
+- Every instance uses only the 13 approved canonical props; no spread or unsupported customization was found.
+- Four production importers and 18 render instances remain on `UserConfirmModal`, unchanged.
+- No API, route, permission, persistence, dependency, caller-state, or workflow file entered the Days 11–13 implementation diff.
+- The canonical source contains no Inspection-named class.
+
+### 11.4 Behavior parity coverage
+
+The canonical tests now explicitly prove both sides of the dismissal contract:
+
+- when cancellation is enabled, Cancel, desktop header close, desktop Escape, desktop backdrop, and mobile close remain available
+- when cancellation is disabled, desktop and mobile dismissal paths remain locked
+- confirm callbacks, colors, labels, responsive selection, root identifiers, accessible names, and mobile focus return remain protected
+
+The Staff tests continue protecting the exact terminate/rehire wording, fallback copy, callbacks, colors, identifiers, disabled states, and desktop/mobile access.
+
+### 11.5 Compiled style parity
+
+Baseline and upgraded `style.scss` were compiled independently and parsed selector-by-selector.
+
+Results:
+
+- all eight retained Inspection drawer/detail selectors matched their baseline declarations and media contexts
+- both moved generic selectors—confirmation z-index and drawer-footer spacing—matched the baseline exactly
+- the canonical generic close control independently retained the shared 44-pixel minimum width and `!important` minimum height
+- no retained or moved selector mismatch remained after the fix
+
+The temporary detached baseline worktree and compiled comparison files were removed after the audit.
+
+### 11.6 Final validation evidence
+
+| Validation                                                    | Result                            |
+| ------------------------------------------------------------- | --------------------------------- |
+| Full repository ESLint                                        | Passed                            |
+| Focused confirmation/Staff/User/drawer regression             | 6 files / 24 tests passed         |
+| Complete unit suite before the preventive CSS-only correction | 317 files / 1,738 tests passed    |
+| Production build                                              | Passed; 6,492 modules transformed |
+| Generated build diff                                          | Restored; none committed          |
+| Worktree after audit checkpoint                               | Clean                             |
+
+The complete suite emitted three non-failing jsdom notices for unsupported pseudo-element `getComputedStyle`; no test failed. After the CSS-only correction and test additions, the affected 24-test regression set, compiled selector comparison, and production build all passed. The production build retained the previously recorded mixed static/dynamic notification import notice and large-chunk advisories.
+
+### 11.7 Functional compatibility conclusion
+
+The upgrade preserves the pre-stage confirmation functionality for ordinary users and callers. The only intentional runtime correction remains the approved cancellation lock during an in-progress action: a locked confirmation can no longer disappear through an internal primitive dismissal while its caller state remains busy. Enabled dismissal, confirm actions, responsive access, wording, colors, callbacks, and Staff workflow ownership remain intact.
