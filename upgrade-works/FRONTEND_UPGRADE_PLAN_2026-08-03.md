@@ -559,7 +559,7 @@ When paused, keep or restore the domain implementation, document the reason, and
 | Stage | Status | Evidence | Decision |
 | --- | --- | --- | --- |
 | Stage 1 — foundation | Locally completed; hosted CI deferred | Existing Stage 1 records in `upgrade-works/` | Preserve as baseline |
-| Stage 2 — reuse audit | In progress; Day 6 catalogue complete | `FRONTEND_COMPONENT_REUSE_AUDIT_2026-08-04.md` | Proceed to Day 7 pattern matrix |
+| Stage 2 — reuse audit | In progress; Day 6 catalogue complete and Days 7–20 execution plan ready | `FRONTEND_COMPONENT_REUSE_AUDIT_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_EXECUTION_PLAN_2026-08-04.md` | Proceed to Day 7 pattern matrix; application source remains gated |
 | Stage 3 — shared foundations and pilots | Not started | Pilot execution record required | Pending Stage 2 |
 | Stage 4 — pattern rollout | Not started | Pattern-family migration records required | Pending pilot review |
 | Stage 5 — cleanup and handover | Not started | Final adoption summary required | Pending rollout |

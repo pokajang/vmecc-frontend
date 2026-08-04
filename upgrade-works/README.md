@@ -9,10 +9,10 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | Item | Status |
 | --- | --- |
 | Working branch | `codex/frontend-upgrade-stage-1` |
-| Current stage | Stage 1 foundation completed; Stage 2 Day 6 component inventory completed |
+| Current stage | Stage 1 foundation completed; Stage 2 Day 6 inventory completed and Days 7–20 execution plan ready |
 | Gate decision | **Open for local behavior-preserving component work; deployment is outside the current scope** |
 | Application/tooling changes started | Yes; latest implementation checkpoint `4cff7bd` |
-| Next planned implementation | Day 7 — compare repeated patterns and assign reuse, improve, extract, or keep-domain-specific dispositions |
+| Next planned implementation | Day 7 — create the evidence-backed pattern matrix; no application source changes until the Stage 2 exit gate |
 
 ## Document Register
 
@@ -26,6 +26,7 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | [GitHub Actions cost exception](./FRONTEND_UPGRADE_GITHUB_ACTIONS_EXCEPTION_2026-08-04.md) | Owner decision, disabled-workflow mechanism, compensating controls, restoration, and review deadline | Locally disabled; remote confirmation required |
 | [Stage 1 Day 5 execution record](./FRONTEND_UPGRADE_STAGE_1_DAY_5_EXECUTION_2026-08-04.md) | Compatible transitive advisory patches, React Router applicability decision, fail-closed exception control, validation, and rollback | Locally completed; exception review due 2026-09-04 |
 | [Component reuse audit](./FRONTEND_COMPONENT_REUSE_AUDIT_2026-08-04.md) | Day 6 component catalogue, import evidence, overlap analysis, false-positive controls, and Day 7 candidate backlog | Completed; no application changes |
+| [Component reuse execution plan](./FRONTEND_COMPONENT_REUSE_EXECUTION_PLAN_2026-08-04.md) | Bounded Days 7–20 tasks, decision gates, pilot sequencing, validation, and rollback controls | Ready for execution |
 
 ## Completed Work
 
@@ -58,6 +59,7 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 - Reconfirmed compatibility with 315 test files / 1,728 tests, lint, all local audits, clean install, targeted route/auth/guard tests, and an isolated production build.
 - Replaced the unexecuted post-Stage-1 roadmap with Revision 2, prioritizing component reuse, duplication reduction, module consistency, behavior-preserving migration, and proportionate validation.
 - Completed the Day 6 component reuse inventory: 124 production component files catalogued, usage measured, false duplication separated from compatibility façades, and candidate families ordered for Day 7.
+- Created the bounded Days 7–20 component-reuse execution plan with decision-before-code gates, two pilot migrations, proportionate validation, and rollback boundaries.
 
 ## Deferred Release-Only Actions
 
@@ -71,12 +73,12 @@ These actions remain valid but do not block local component-quality work. Reopen
 
 ## Next Work
 
-Continue with Stage 2 Day 7's repeated-pattern matrix:
+Continue with Stage 2 Day 7 as defined in the [component reuse execution plan](./FRONTEND_COMPONENT_REUSE_EXECUTION_PLAN_2026-08-04.md):
 
 1. Compare the confirmation-shell implementations and define the canonical contract boundary.
 2. Compare the six manual responsive record-list shells against `ResponsiveRecordCollection`.
 3. Separate equivalent page/collection states from inline and domain-specific messages.
-4. Confirm zero-import components and complete the disposition matrix before changing application behavior.
+4. Confirm zero-import components and complete the disposition matrix before changing application source.
 
 ## File Naming
 
