@@ -5,7 +5,7 @@
 **Baseline revision:** `3962e29`  
 **Parent plan:** `FRONTEND_COMPONENT_REUSE_EXECUTION_PLAN_2026-08-04.md`  
 **Stage:** Stage 2 Day 7  
-**Status:** Day 7 analysis complete; Day 8 style-source audit pending  
+**Status:** Stage 2 Days 7–10 complete; Stage 3 foundation authorized  
 **Change boundary:** Documentation and read-only source analysis only; no application source changed
 
 ## 1. Purpose and Method
@@ -30,7 +30,7 @@ Disposition terms:
 | ---: | --- | --- | --- | --- | --- | --- | --- |
 | 1 | Plain action confirmation | `ActionConfirmModal`: 31 production importers / 49 render instances; `UserConfirmModal`: 5 importers / 20 instances | `src/components/ActionConfirmModal.js` | Improve existing and relocate through compatibility paths | High | Medium | Audit generic modal/drawer styles, then approve canonical contract |
 | 2 | Responsive record collection | 13 production consumers already use the shared component; five live manual compositions repeat the same shell | `src/components/ResponsiveRecordCollection.js` | Reuse as-is for four consumers; consider one generic loading-message improvement for one consumer | High | Medium | Confirm style sources and select one low-risk and one complex pilot |
-| 3 | Page/collection loading and empty states | `PageState` is the foundation; `TableLoader` has 38 production importers; manual collection empties remain | `PageState` through `ResponsiveRecordCollection` | Reuse existing components; no new state component or compact variant | Medium–high | Low–medium | Define which migration visuals intentionally become the standard state |
+| 3 | Page/collection loading and empty states | `PageState` is the foundation; `TableLoader` has 38 production importers; manual collection empties remain | `PageState` through `ResponsiveRecordCollection` | Reuse existing components; no new state component or compact variant | Medium–high | Low–medium | Apply during the selected collection pilots |
 | 4 | Dormant component cleanup | Five production components have no production importer; one Dashboard default export is unused | Existing domain/shared owners | Four safe-removal candidates, one helper split, one product decision | Medium | Low, except PWA decision | Keep cleanup separate from component migrations |
 | 5 | Attachment preview presentation | Two implementations serve four production importers and share modal/drawer presentation but not controllers | Domain-owned controllers; possible attachment-specific shell later | Defer shared-shell extraction | Medium | Medium | Revisit after confirmation/collection pilots |
 | 6 | Create-action semantics | `CreateActionButton` has 51 production importers; remaining plus icons are mostly inline add controls or informational | Existing `CreateActionButton` plus local inline controls | Reuse as-is; no forced migrations identified | Low incremental | Low | No Stage 3 batch |
@@ -160,7 +160,7 @@ Rollback boundary: one consumer migration per commit. A failed consumer returns 
 
 | Component | Responsibility | Current evidence |
 | --- | --- | --- |
-| `PageState` | Loading, empty, and error presentation with title/message/action support | 8 production incoming files; used by app/session, page errors, lists, and shared collection primitives |
+| `PageState` | Loading, empty, and error presentation with title/message/action support | 9 production incoming files in the Day 8 recount; used by app/session, page errors, lists, and shared collection primitives |
 | `TableLoader` | Standard collection/table loading state | 38 production importers; composes `PageState` |
 | `ResponsiveRecordCollection` | Loading/empty precedence for responsive collections | 13 production consumers; composes both foundations |
 
@@ -282,4 +282,237 @@ The Day 8 output should be added to this file. It must identify canonical existi
 - Known accessibility, responsive, styling, test, compatibility, and rollback boundaries are recorded.
 - No application source, test, stylesheet, dependency, build output, or configuration file changed.
 
-Day 7 is complete. Stage 2 remains active because the Day 8 style-source audit, Day 9 contract approval, and Day 10 pilot gate are still pending.
+At the Day 7 checkpoint, Stage 2 remained active because the Day 8 style-source audit, Day 9 contract approval, and Day 10 pilot gate were still pending. Sections 13–15 record their subsequent completion.
+
+## 13. Day 8 — Focused Style-Source Audit
+
+### 13.1 Baseline reconciliation
+
+| Item | Day 8 evidence |
+| --- | --- |
+| Documentation revision at start | `bb64da2` |
+| Unchanged application tree reference | `a0cd8ed`; no application source changed in Days 6–7 |
+| `ActionConfirmModal` production importers | 31 |
+| `UserConfirmModal` production importers | 5 |
+| `ResponsiveRecordCollection` production importers | 13 |
+| `MobileRecordList` production importers | 15 |
+| `PageState` production importers | 9 |
+| `TableLoader` production importers | 38 |
+
+The fresh `PageState` import list contains nine files. The Day 7 text inherited the Day 6 count of eight; the matrix is corrected above. No source change caused the difference.
+
+### 13.2 Confirmation and mobile-drawer style map
+
+| Selector/source | Current purpose and computed behavior | Consumers/ownership | Decision |
+| --- | --- | --- | --- |
+| `.offcanvas-bottom.inspection-mobile-setup-drawer` in Inspection `_setup-drawers.scss` | Auto height, base maximum `min(82dvh, 640px)`, 16-pixel top radius | Applied to every `MobileBottomDrawer` because the shared component adds the Inspection alias | Add equivalent generic `.offcanvas-bottom.mobile-bottom-drawer`; retain alias temporarily |
+| `.inspection-mobile-setup-drawer__header` | Flex header, base padding/gap | Applied to every drawer header through an alias | Add generic `.mobile-bottom-drawer__header`; retain alias |
+| `.inspection-mobile-setup-drawer__title`, `__title-row`, `__actions`, `__close`, `__body` | Title typography, action layout, 36-pixel base close control, scrollable padded body | Shared component emits both generic and Inspection classes | Add generic selectors in component SCSS; aliases stay until a broad drawer audit |
+| later Inspection `_mobile-polish.scss` overrides | At CoreUI `md` and below: max height `min(88dvh, 44rem)`, 60-pixel header, revised padding/border/type/body, 44-pixel close target | Unscoped aliases cause these Inspection refinements to affect all 48 production `MobileBottomDrawer` importers | Encode the same values generically to preserve current behavior; do not remove aliases in this batch |
+| `.offcanvas.mobile-bottom-drawer--confirm` | Confirmation drawer z-index `1210` | Generic name stored in Inspection SCSS | Move ownership to component SCSS with no value change |
+| `.mobile-bottom-drawer__footer` | One-rem top margin | Broad cross-domain usage; generic name stored in Inspection SCSS | Move ownership to component SCSS with no value change |
+| `.inspection-equipment-detail-drawer-body` | `1.35rem` grid gap | Explicitly used by both confirmation components and many domain drawers | Replace only the canonical confirmation's explicit use with `.action-confirm-modal__body { gap: 1.35rem; }` |
+| global focus rules in `foundation/_base.scss` | Focus ring for buttons and role buttons | Correct application-wide ownership | Keep unchanged |
+
+Canonical style source approved for the foundation batch: `src/scss/components/_mobile-bottom-drawer.scss`, loaded with the other component styles before feature-specific Inspection styles.
+
+The first implementation batch will:
+
+- add the generic drawer selectors with values matching the current final cascade
+- move the already-generic confirm z-index and footer rules out of Inspection ownership
+- add `.action-confirm-modal__body`
+- leave Inspection aliases in `MobileBottomDrawer` and their declarations temporarily
+
+This two-phase approach avoids changing all 48 drawer importers while removing the new canonical confirmation component's direct dependency on Inspection body classes. Expected confirmation visual delta: none.
+
+Removal condition for the aliases: a later bounded `MobileBottomDrawer` batch must inventory all 48 importers, verify Inspection-specific fields and setup controls, then remove aliases and duplicate declarations together. It is not part of Days 11–13.
+
+### 13.3 Responsive collection style map
+
+| Concern | Evidence | Decision |
+| --- | --- | --- |
+| Mobile visibility | `MobileRecordList` owns `d-md-none` | Keep; canonical switch is CoreUI `md` (`767.98px`) |
+| Desktop visibility | All five live manual consumers use `d-none d-md-block` or `d-none d-md-flex` | Keep consumer-owned desktop composition at the same breakpoint |
+| Mobile list spacing | Component utilities provide grid gaps; list-group border/radius is local to `MobileRecordList` | Keep; no shared SCSS required |
+| Record-card refinements | Scoped under `.mobile-workflow-home` and `.inspection-mobile-section` | Keep context-specific; do not make them global |
+| Desktop table shell | Repeated `rounded-3 shadow-sm overflow-hidden bg-body` utilities | Keep explicit; no universal table-shell component or selector |
+| Footer base width | `.data-table-footer__page-size` is in `foundation/_base.scss` | Move later to a footer component stylesheet when the collection pilot begins |
+| Footer mobile layout | Generic `.data-table-footer` selectors are stored in `_workflow-module.scss` and apply globally at `md` | Move later to the same footer component stylesheet without value changes |
+| Footer touch targets | Generic selectors in `_touch-targets.scss` | Correct shared ownership; keep |
+
+No responsive collection CSS change is required for the confirmation foundation. The later collection pilot may relocate footer rules, but it must not change the breakpoint or introduce a table shell.
+
+### 13.4 Page-state style map
+
+- `PageState` uses CoreUI/utilities and an inline `minHeight`; it has no leaking feature selector.
+- Loading has `role="status"` and `aria-live="polite"`; error uses CoreUI alert with `role="alert"`; initial empty state correctly has no forced live announcement.
+- Default collection height remains 160 pixels. No compact variant has sufficient evidence.
+- `.icon-spin` is shared by `PageState`, `ButtonLoader`, profile loaders, chat, AI helper, and headers; it is a global motion utility, not a PageState-only selector.
+- The animation shorthand is declared later in `layout/_shell.scss` than the reduced-motion duration/timing override in `foundation/_base.scss`. With equal specificity, the later shorthand can override the earlier reduced-motion values.
+
+Disposition: keep the PageState contract unchanged. Correct `.icon-spin` rule ordering in the later collection/state batch by co-locating the animation and reduced-motion override. Do not mix this broader global loader change into the confirmation commit.
+
+### 13.5 Day 8 acceptance result
+
+- Cross-domain selectors for all three priority families have owners.
+- Generic and Inspection-specific behavior is separated.
+- The proposed confirmation styles preserve the current final cascade.
+- Responsive collection and PageState changes are deferred to their own pattern batch.
+- No reset, token redesign, universal table shell, or broad selector is proposed.
+- Day 8 changed documentation only.
+
+Day 8 gate: **passed**.
+
+## 14. Day 9 — Approved Contracts
+
+### 14.1 Contract A — Canonical action confirmation
+
+Status: **approved**.
+
+| Contract area | Decision |
+| --- | --- |
+| Canonical file | `src/components/ActionConfirmModal.js` |
+| Purpose | Controlled plain cancel/confirm prompt; no form or business controller |
+| Props | `visible`, `title`, `message`, `confirmLabel`, `confirmColor`, `cancelLabel`, `confirmDisabled`, `cancelDisabled`, `mobileDrawer`, `mobileDrawerQuery`, `testId`, `onClose`, `onConfirm` |
+| Defaults | Preserve the current `ActionConfirmModal` defaults, including enabled mobile drawer and phone query |
+| Content | `message` accepts text or a React node; the component does not inspect it |
+| Busy behavior | Caller changes labels and disabled flags; no `isLoading` prop |
+| Test identifier | `testId` belongs on the root modal/drawer; identifier values remain stable even where the old User component placed them on the header |
+| Mobile | `MobileBottomDrawer` below the configured query when enabled; otherwise centered CoreUI modal |
+| Accessibility | Primitive-provided dialog/drawer semantics, accessible title/close label, disabled close guard, and focus return |
+| Styling | Generic `mobile-bottom-drawer` and `action-confirm-modal` classes; no explicit Inspection body class |
+| Unsupported | `bodyTestId`, arbitrary `className`/`style`, z-index/portal control, workflow declarations, permissions, API calls, and domain props |
+
+`bodyTestId` is rejected because no production caller uses it. `zIndex`, `style`, and `className` are rejected because no `UserConfirmModal` production caller uses them. Unsupported legacy props remain isolated in the old User component until its consumers migrate; they are not silently accepted by the canonical API.
+
+Compatibility and migration:
+
+- `src/views/shared/ActionConfirmModal.js` becomes a re-export, preserving all 31 import paths.
+- `UserConfirmModal` remains unchanged during the foundation commit.
+- One User-family canary imports the canonical component directly on Day 13.
+- Remaining User-family consumers migrate individually in later commits.
+
+Required tests: closed state, desktop modal, default/custom mobile drawer, string/React-node message, both callbacks, disabled confirm, disabled cancel/close paths, stable root test ID, accessible names, focus return, old-path import, and no explicit Inspection class.
+
+### 14.2 Contract B — Responsive record collection
+
+Status: **approved for later pilots**.
+
+- Preserve the current compositional props and ordering.
+- Add `loadingMessage` with the same default as `TableLoader` when the first collection pilot begins.
+- Do not add `loadingMinHeight`; no current consumer requires it through the collection contract.
+- String empty messages render through `PageState`.
+- Action-bearing/custom empties are supplied as an explicit `PageState` element.
+- Consumer overlay modals stay outside the collection.
+- Desktop-only view controls belong inside `renderDesktop` when order matters.
+- Filters, sorting, selection, grouping, tables, API errors, retry logic, permissions, and workflows remain consumer-owned.
+
+Required tests: loading/empty precedence, string and element empties, child/mobile/desktop/footer order, variant forwarding, and `loadingMessage` forwarding.
+
+### 14.3 Contract C — Page and collection states
+
+Status: **approved without a new component**.
+
+- Reuse `PageState` and `TableLoader`.
+- Preserve the 160-pixel default for full collection states.
+- A different height must be explicit at the `PageState`/`TableLoader` call site.
+- Use `PageState.action` for action-bearing empty states.
+- Keep dashboard cards, chat/contact lists, histories, modals, validation, toasts, camera/scanner, and inline operation states local.
+- Record the switch from a one-line empty message to `PageState` as an approved consistency change in each collection pilot.
+- Repair global `.icon-spin` reduced-motion ordering in the collection/state batch, not the confirmation batch.
+
+### 14.4 Day 9 acceptance result
+
+- No contract contains a domain prop or business rule.
+- Confirmation has one responsive mode controlled by an existing generic option.
+- Unsupported behavior and adapter boundaries are explicit.
+- Mobile, accessibility, test, and rollback requirements are recorded.
+- Attachment, create-action, status, and compatibility-façade candidates remain deferred.
+
+Day 9 gate: **passed**.
+
+## 15. Day 10 — Pilot and Backlog Freeze
+
+### 15.1 Abstraction challenge result
+
+The three contracts remain smaller than the implementations they replace. No representative consumer requires permission, API, grouping, selection, or workflow knowledge in the shared layer. `SalarySettingsTab` remains deferred because it lacks direct characterization and has custom loading/error/empty/history behavior.
+
+### 15.2 Selected confirmation canary
+
+Selected: `src/components/staff/StaffActionModals.js`.
+
+Why:
+
+- only two plain confirmations
+- pure presentation component with no data fetching or routing
+- exercises destructive and positive confirm colors
+- exercises stable `testId` values
+- isolated direct characterization tests can cover exact props and callbacks
+
+Protected behavior:
+
+- “Terminate Staff” and “Rehire Staff” wording
+- Terminate/Rehire labels and danger/success colors
+- action-updating and missing-user disabled locks
+- close and confirm callbacks
+- `staff-directory-terminate-modal` and `staff-directory-rehire-modal` identifiers
+- mobile and desktop availability
+
+Excluded: `UserRoleModal`, `StaffMessageModal`, caller state, API functions, permissions, and all other `UserConfirmModal` consumers.
+
+### 15.3 Selected collection pilots
+
+Pilot 1, Days 14–16: `HolidaysTab`.
+
+- Lowest structural risk and direct tests.
+- Add characterization for loading, standard empty state, mobile list, desktop table, and footer before migration.
+- Preserve filters, grouping, row keyboard opening, Edit/Delete actions, details, pagination, and holiday wizard behavior.
+
+Pilot 2, Days 17–19: `OvertimeRecordsTab`.
+
+- Strong direct coverage for grouped totals, workflow status, pagination, bulk actions, and keyboard opening.
+- Preserve selection, month/user groups, row actions, mobile action availability, workflow modal placement, and page counts.
+
+Deferred: `LeaveRecordsSection`, `AssignmentsTab`, and `SalarySettingsTab`. They remain later backlog items after both pilots validate the contract.
+
+### 15.4 Frozen Days 11–13 source/test boundary
+
+Allowed source/style files:
+
+- new `src/components/ActionConfirmModal.js`
+- compatibility `src/views/shared/ActionConfirmModal.js`
+- new `src/scss/components/_mobile-bottom-drawer.scss`
+- `src/scss/features/inspection/core/_setup-drawers.scss` only for moving already-generic rules
+- `src/scss/style.scss` only for the new component stylesheet entry
+- selected canary `src/components/staff/StaffActionModals.js`
+
+Allowed tests:
+
+- canonical confirmation tests under `src/components/__tests__/`
+- a minimal old-path compatibility test under the existing shared test area, if needed
+- a direct Staff action-modal test under `src/components/staff/__tests__/`
+
+Explicitly excluded:
+
+- `UserConfirmModal` implementation or its other four importers
+- responsive collection, PageState, TableLoader, and loader-motion source changes
+- unused component deletion
+- attachment, status, create-action, compatibility-façade, dependency, route, API, permission, and persistence work
+
+Commit boundaries:
+
+1. Stage 2 matrix/decision checkpoint
+2. canonical component, old-path compatibility, generic styles, and focused tests
+3. Staff canary migration and its tests
+4. execution-record update after validation
+
+### 15.5 Stage 2 exit result
+
+- Every candidate has a disposition.
+- Three approved contracts contain no business logic.
+- Mobile, accessibility, state, test, style, and rollback boundaries are explicit.
+- Canary and both pilots are named.
+- Cleanup candidates retain explicit removal conditions.
+- Stage 2 changed documentation only.
+
+Stage 2 exit gate: **passed**. Days 11–13 local source work is authorized within Section 15.4 only.
