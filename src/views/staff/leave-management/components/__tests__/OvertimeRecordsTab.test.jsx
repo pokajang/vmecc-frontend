@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
 import React from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import OvertimeRecordsTab from '../OvertimeRecordsTab'
 
 afterEach(() => {
   cleanup()
+  vi.clearAllMocks()
 })
 
 vi.mock('src/components/RowActions', () => ({
@@ -108,6 +109,75 @@ const baseHandlers = {
 }
 
 describe('OvertimeRecordsTab', () => {
+  it('preserves loading and filtered-empty precedence', () => {
+    const { rerender } = render(
+      <OvertimeRecordsTab
+        vm={{ ...baseVm, isLoading: true, rows: [], filteredCount: 0 }}
+        handlers={baseHandlers}
+      />,
+    )
+
+    expect(screen.getByRole('status').textContent).toContain('Loading')
+    expect(screen.queryByText('No overtime records match the current filters.')).toBeNull()
+    expect(document.querySelector('.mobile-record-list')).toBeNull()
+    expect(document.querySelector('.d-none.d-md-block table')).toBeNull()
+    expect(screen.queryByLabelText('Rows per page')).toBeNull()
+
+    rerender(
+      <OvertimeRecordsTab
+        vm={{ ...baseVm, isLoading: false, rows: [], filteredCount: 0 }}
+        handlers={baseHandlers}
+      />,
+    )
+
+    expect(screen.queryByRole('status')).toBeNull()
+    expect(screen.getByText('No overtime records match the current filters.')).toBeTruthy()
+    expect(document.querySelector('.mobile-record-list')).toBeNull()
+    expect(document.querySelector('.d-none.d-md-block table')).toBeNull()
+    expect(screen.queryByLabelText('Rows per page')).toBeNull()
+  })
+
+  it('preserves mobile, desktop, footer-count, and page-size behavior', () => {
+    const handlers = { ...baseHandlers, setRowsToShow: vi.fn() }
+    render(<OvertimeRecordsTab vm={baseVm} handlers={handlers} />)
+
+    expect(document.querySelector('.mobile-record-list.list-group')).toBeNull()
+    expect(document.querySelector('.mobile-record-list .list-group')).toBeTruthy()
+    expect(document.querySelector('.d-none.d-md-block table')).toBeTruthy()
+    expect(screen.getByText('Showing 2 of 8')).toBeTruthy()
+    expect(screen.getByText('(filtered from 20)')).toBeTruthy()
+
+    fireEvent.change(screen.getByLabelText('Rows per page'), { target: { value: '10' } })
+    expect(handlers.setRowsToShow).toHaveBeenCalledWith(10)
+  })
+
+  it('keeps every workflow row action available on mobile and desktop', () => {
+    const handlers = {
+      ...baseHandlers,
+      approveOvertime: vi.fn(),
+      rejectOvertime: vi.fn(),
+      requestOvertimeCorrection: vi.fn(),
+      openOvertimeDetail: vi.fn(),
+    }
+    render(<OvertimeRecordsTab vm={baseVm} handlers={handlers} />)
+
+    const mobileList = document.querySelector('.mobile-record-list')
+    const desktopTable = document.querySelector('.d-none.d-md-block table')
+    for (const label of ['Review', 'Reject', 'Request correction']) {
+      expect(within(mobileList).getAllByRole('button', { name: label })).toHaveLength(rows.length)
+      expect(within(desktopTable).getAllByRole('button', { name: label })).toHaveLength(rows.length)
+    }
+
+    fireEvent.click(within(mobileList).getAllByRole('button', { name: 'Review' })[0])
+    fireEvent.click(within(desktopTable).getAllByRole('button', { name: 'Reject' })[0])
+    fireEvent.click(within(mobileList).getAllByRole('button', { name: 'Request correction' })[0])
+
+    expect(handlers.approveOvertime).toHaveBeenCalledWith(rows[0])
+    expect(handlers.rejectOvertime).toHaveBeenCalledWith(rows[0])
+    expect(handlers.requestOvertimeCorrection).toHaveBeenCalledWith(rows[0])
+    expect(handlers.openOvertimeDetail).not.toHaveBeenCalled()
+  })
+
   it('renders month and user grouped headers with per-type totals and type column', () => {
     render(<OvertimeRecordsTab vm={baseVm} handlers={baseHandlers} />)
 
@@ -179,13 +249,16 @@ describe('OvertimeRecordsTab', () => {
     }
     render(<OvertimeRecordsTab vm={baseVm} handlers={handlers} />)
 
-    fireEvent.keyDown(screen.getAllByRole('button', { name: /Open overtime record/i })[0], {
-      key: 'Enter',
-    })
-    expect(handlers.openOvertimeDetail).toHaveBeenCalledTimes(1)
+    const desktopRow = document.querySelector('tr[aria-label="Open overtime record OT-2026-001"]')
+    fireEvent.keyDown(desktopRow, { key: 'Enter' })
+    fireEvent.keyDown(desktopRow, { key: ' ' })
+    expect(handlers.openOvertimeDetail).toHaveBeenCalledTimes(2)
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Open overtime record OT-2026-001' })[0])
+    expect(handlers.openOvertimeDetail).toHaveBeenCalledTimes(3)
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Review' })[0])
     expect(handlers.approveOvertime).toHaveBeenCalledTimes(1)
-    expect(handlers.openOvertimeDetail).toHaveBeenCalledTimes(1)
+    expect(handlers.openOvertimeDetail).toHaveBeenCalledTimes(3)
   })
 })
