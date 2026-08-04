@@ -273,6 +273,8 @@ Restore trust in frontend quality signals, remove confirmed runtime defects, cor
 
 ## Day 4 — Establish Required CI Quality Gates
 
+> **2026-08-04 execution decision:** Hosted GitHub Actions work is disabled in repository configuration and deferred by repository-owner decision to avoid current CI charges. Remote disablement still requires GitHub UI/default-branch confirmation. This is an approved programme deviation, not a passed gate. See `FRONTEND_UPGRADE_GITHUB_ACTIONS_EXCEPTION_2026-08-04.md`; the CI-related Stage 1 exit criterion remains open.
+
 ### Work
 
 - Expand GitHub Actions into separate or clearly named checks for:

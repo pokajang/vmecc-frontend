@@ -1,3 +1,5 @@
+# Disabled on 2026-08-04 by repository-owner decision to avoid hosted GitHub Actions cost.
+# Restore this file under .github/workflows/ only after hosted CI spending is approved.
 name: Frontend CI
 
 on:

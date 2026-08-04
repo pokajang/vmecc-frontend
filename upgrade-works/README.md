@@ -9,10 +9,10 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | Item | Status |
 | --- | --- |
 | Working branch | `codex/frontend-upgrade-stage-1` |
-| Current stage | Stage 1 Days 1–3 locally completed |
+| Current stage | Stage 1 Days 1–3 locally completed; Day 4 hosted CI deferred |
 | Gate decision | **Open for local-only Stage 1; blocked for staging/production promotion** |
 | Application/tooling changes started | Yes; implementation checkpoint `b1b0804` |
-| Next planned implementation | Day 4 — required CI quality gates |
+| Next planned implementation | Day 5 — dependency advisory triage using local evidence |
 
 ## Document Register
 
@@ -23,6 +23,7 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | [Stage 1 execution record](./FRONTEND_UPGRADE_STAGE_1_EXECUTION_2026-08-03.md) | Day 1 lint repair, Day 2 correctness fixes, validation evidence, rollback, and residual risks | Days 1–2 locally completed; promotion blocked |
 | [Stage 1 compatibility audit](./FRONTEND_UPGRADE_STAGE_1_AUDIT_2026-08-03.md) | Post-implementation diff review, functional-compatibility tests, full validation, and residual risks | Locally verified; promotion blocked |
 | [Stage 1 Day 3 execution record](./FRONTEND_UPGRADE_STAGE_1_DAY_3_EXECUTION_2026-08-03.md) | Production headers, bundled Google icon, fail-closed production API configuration, validation, and rollback | Locally completed; deployment qualification blocked |
+| [GitHub Actions cost exception](./FRONTEND_UPGRADE_GITHUB_ACTIONS_EXCEPTION_2026-08-04.md) | Owner decision, disabled-workflow mechanism, compensating controls, restoration, and review deadline | Locally disabled; remote confirmation required |
 
 ## Completed Work
 
@@ -46,6 +47,11 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 - Synchronized the security-header sources, limited camera to the application origin, kept unrelated capabilities disabled, and removed the remote Google icon CSP dependency.
 - Removed the silent production localhost API fallback, added fail-closed production build validation and a production-configuration audit, and passed 315 test files / 1,728 tests.
 
+### 2026-08-04
+
+- Disabled GitHub Actions in repository configuration by moving the workflow outside `.github/workflows/`; remote workflow disablement still requires GitHub UI/default-branch confirmation.
+- Recorded Day 4 as deferred rather than passed; local validation remains the compensating control and Stage 1 promotion remains blocked.
+
 ## Open Preflight Actions
 
 1. Record named QA, operations/deployment, security/privacy, and production release decision owners.
@@ -56,12 +62,12 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 
 ## Next Work
 
-Continue with the locally reviewable Day 4 work while promotion remains blocked:
+Continue with the locally reviewable Day 5 work while promotion remains blocked:
 
-1. Add standard `npm test`, disposable `build:check`, and aggregate local validation commands.
-2. Expand GitHub Actions into named lint, test, audit, build, and vulnerability-reporting checks.
-3. Preserve failed-run diagnostics without writing to the tracked `build/` directory.
-4. Defer required-check and branch-protection claims until hosted CI and repository settings are verified.
+1. Review the React Router advisory against the actual BrowserRouter SPA architecture.
+2. Identify the safest compatible patched-version path without using `npm audit fix --force` or an unreviewed downgrade.
+3. Run routing, authentication, navigation-guard, and lazy-loading regressions before any dependency change.
+4. Establish a documented local dependency-review schedule instead of automated update pull requests while hosted automation is deferred.
 
 ## File Naming
 
