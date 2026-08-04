@@ -22,7 +22,7 @@ import { Pencil, Trash2 } from 'lucide-react'
 import EditControls from 'src/components/EditControls'
 import CreateActionButton from 'src/components/CreateActionButton'
 import MobileRecordList from 'src/components/MobileRecordList'
-import TableLoader from 'src/components/TableLoader'
+import ResponsiveRecordCollection from 'src/components/ResponsiveRecordCollection'
 import {
   fetchShiftWindows,
   saveShiftWindows,
@@ -370,69 +370,65 @@ const CustomShifts = () => {
         </CCardHeader>
         <CCardBody>
           {error && <div className="text-danger small mb-3">{error}</div>}
-          {loading && <TableLoader />}
-          {!loading && shifts.length === 0 && (
-            <div className="text-muted small">No custom shifts defined yet.</div>
-          )}
-          {!loading && shifts.length > 0 && (
-            <>
-              <div className="rounded-3 shadow-sm overflow-hidden bg-body d-none d-md-block">
-                <CTable align="middle" className="mb-0" hover responsive>
-                  <CTableHead color="light">
-                    <CTableRow>
-                      <CTableHeaderCell className="text-center" style={{ width: 56 }}>
-                        #
-                      </CTableHeaderCell>
-                      <CTableHeaderCell>Name</CTableHeaderCell>
-                      <CTableHeaderCell>Start</CTableHeaderCell>
-                      <CTableHeaderCell>End</CTableHeaderCell>
-                      <CTableHeaderCell
-                        className="table-sticky-action-cell"
-                        style={{ width: 80 }}
-                      />
+          <ResponsiveRecordCollection
+            isLoading={loading}
+            isEmpty={shifts.length === 0}
+            emptyMessage={<div className="text-muted small">No custom shifts defined yet.</div>}
+            mobileSections={mobileCustomShiftSections}
+            mobileVariant="list-group"
+          >
+            <div className="rounded-3 shadow-sm overflow-hidden bg-body d-none d-md-block">
+              <CTable align="middle" className="mb-0" hover responsive>
+                <CTableHead color="light">
+                  <CTableRow>
+                    <CTableHeaderCell className="text-center" style={{ width: 56 }}>
+                      #
+                    </CTableHeaderCell>
+                    <CTableHeaderCell>Name</CTableHeaderCell>
+                    <CTableHeaderCell>Start</CTableHeaderCell>
+                    <CTableHeaderCell>End</CTableHeaderCell>
+                    <CTableHeaderCell className="table-sticky-action-cell" style={{ width: 80 }} />
+                  </CTableRow>
+                </CTableHead>
+                <CTableBody>
+                  {shifts.map((shift, index) => (
+                    <CTableRow key={shift.id}>
+                      <CTableDataCell className="text-center text-muted">
+                        {index + 1}
+                      </CTableDataCell>
+                      <CTableDataCell>{shift.name}</CTableDataCell>
+                      <CTableDataCell>{shift.start}</CTableDataCell>
+                      <CTableDataCell>{shift.end}</CTableDataCell>
+                      <CTableDataCell className="table-sticky-action-cell text-center align-middle">
+                        <div className="d-flex gap-1 justify-content-end">
+                          <CButton
+                            size="sm"
+                            color="link"
+                            className="text-muted p-1"
+                            onClick={() => openEdit(shift)}
+                            title={`Edit ${shift.name}`}
+                            aria-label={`Edit ${shift.name}`}
+                          >
+                            <Pencil size={14} />
+                          </CButton>
+                          <CButton
+                            size="sm"
+                            color="link"
+                            className="text-danger p-1"
+                            onClick={() => confirmDelete(shift)}
+                            title={`Delete ${shift.name}`}
+                            aria-label={`Delete ${shift.name}`}
+                          >
+                            <Trash2 size={14} />
+                          </CButton>
+                        </div>
+                      </CTableDataCell>
                     </CTableRow>
-                  </CTableHead>
-                  <CTableBody>
-                    {shifts.map((shift, index) => (
-                      <CTableRow key={shift.id}>
-                        <CTableDataCell className="text-center text-muted">
-                          {index + 1}
-                        </CTableDataCell>
-                        <CTableDataCell>{shift.name}</CTableDataCell>
-                        <CTableDataCell>{shift.start}</CTableDataCell>
-                        <CTableDataCell>{shift.end}</CTableDataCell>
-                        <CTableDataCell className="table-sticky-action-cell text-center align-middle">
-                          <div className="d-flex gap-1 justify-content-end">
-                            <CButton
-                              size="sm"
-                              color="link"
-                              className="text-muted p-1"
-                              onClick={() => openEdit(shift)}
-                              title={`Edit ${shift.name}`}
-                              aria-label={`Edit ${shift.name}`}
-                            >
-                              <Pencil size={14} />
-                            </CButton>
-                            <CButton
-                              size="sm"
-                              color="link"
-                              className="text-danger p-1"
-                              onClick={() => confirmDelete(shift)}
-                              title={`Delete ${shift.name}`}
-                              aria-label={`Delete ${shift.name}`}
-                            >
-                              <Trash2 size={14} />
-                            </CButton>
-                          </div>
-                        </CTableDataCell>
-                      </CTableRow>
-                    ))}
-                  </CTableBody>
-                </CTable>
-              </div>
-              <MobileRecordList sections={mobileCustomShiftSections} variant="list-group" />
-            </>
-          )}
+                  ))}
+                </CTableBody>
+              </CTable>
+            </div>
+          </ResponsiveRecordCollection>
         </CCardBody>
       </CCard>
 
