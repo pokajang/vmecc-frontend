@@ -1,5 +1,5 @@
 import React from 'react'
-import UserConfirmModal from 'src/components/users/UserConfirmModal'
+import ActionConfirmModal from 'src/components/ActionConfirmModal'
 import UserRoleModal from 'src/components/users/UserRoleModal'
 import StaffMessageModal from 'src/components/staff/StaffMessageModal'
 
@@ -40,7 +40,7 @@ const StaffActionModals = ({
       loading={actionUpdating}
     />
 
-    <UserConfirmModal
+    <ActionConfirmModal
       visible={confirmTerminateOpen}
       title="Terminate Staff"
       message={`Terminate ${actionUser?.name || 'this staff member'}? This will remove access and mark the staff as terminated.`}
@@ -53,7 +53,7 @@ const StaffActionModals = ({
       cancelDisabled={actionUpdating}
     />
 
-    <UserConfirmModal
+    <ActionConfirmModal
       visible={confirmRehireOpen}
       title="Rehire Staff"
       message={`Rehire ${actionUser?.name || 'this staff member'} and restore system access?`}
