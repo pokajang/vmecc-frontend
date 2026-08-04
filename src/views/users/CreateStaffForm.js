@@ -9,8 +9,9 @@ import {
   CFormSelect,
   CRow,
 } from '@coreui/react'
-import { Plus, Trash2 } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import ButtonLoader from 'src/components/ButtonLoader'
+import RoleAssignmentAddButton from 'src/components/users/RoleAssignmentAddButton'
 import { ROLE_OPTIONS, ROLE_SCOPE_MAP } from 'src/constants/roles'
 import { getLocalDateInputValue } from 'src/utils/localDate'
 
@@ -80,17 +81,11 @@ const CreateStaffForm = ({
       <div className="mb-4">
         <div className="d-flex justify-content-between align-items-center mb-2">
           <div className="form-label mb-0">Role assignments</div>
-          <CButton
-            type="button"
-            size="sm"
-            color="secondary"
-            variant="outline"
+          <RoleAssignmentAddButton
+            label="Add"
             disabled={submitStatus.loading}
             onClick={onAddAssignment}
-          >
-            <Plus size={14} className="me-1" />
-            Add
-          </CButton>
+          />
         </div>
         <p className="small text-muted mb-2">Site and client-site roles require a team.</p>
 

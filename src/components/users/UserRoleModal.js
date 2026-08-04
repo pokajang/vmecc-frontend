@@ -12,7 +12,8 @@ import {
   CModalTitle,
   CRow,
 } from '@coreui/react'
-import { Plus, Trash2 } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
+import RoleAssignmentAddButton from 'src/components/users/RoleAssignmentAddButton'
 import { roles, roleScopeMap } from 'src/views/users/CreateStaffForm'
 
 const UserRoleModal = ({
@@ -34,16 +35,7 @@ const UserRoleModal = ({
       </CModalHeader>
       <CModalBody>
         <div className="d-flex justify-content-end mb-2">
-          <CButton
-            color="secondary"
-            size="sm"
-            variant="outline"
-            disabled={loading}
-            onClick={onAddAssignment}
-          >
-            <Plus size={14} className="me-1" />
-            Add assignment
-          </CButton>
+          <RoleAssignmentAddButton disabled={loading} onClick={onAddAssignment} />
         </div>
 
         <div className="d-grid gap-2">
