@@ -7,7 +7,7 @@
 **Parent plan:** `FRONTEND_UPGRADE_PLAN_2026-08-03.md`, Revision 2  
 **Prior checkpoint:** `FRONTEND_COMPONENT_REUSE_STAGE_4_EXECUTION_2026-08-04.md`  
 **Scope:** Stage 4 Days 25–28 — data lists and standard states only  
-**Status:** Planned; Days 25–28 application source work has not started  
+**Status:** Days 25–28 completed and passed locally; see the execution record  
 **Authorization boundary:** Local, behavior-preserving frontend work only; no deployment, GitHub Actions, backend, API, route-definition, permission, persistence, dependency, or workflow changes
 
 ## 1. Purpose
@@ -246,6 +246,8 @@ The durable execution record must list every manual candidate and disposition. T
 
 Day 25 passes when every candidate is classified by behavior rather than component names or visual resemblance. Documentation-only work requires formatting, link, path, and diff checks; it does not require the unit suite or production build.
 
+**Result:** Passed on 2026-08-04. The refreshed evidence retained specialized candidates and selected only the Work Shift custom-shift collection for contract review.
+
 ## 9. Day 26 — Contract Review and Pilot Approval
 
 ### Task 26.1 — Audit shared-contract coverage
@@ -301,6 +303,8 @@ Source work may begin only when:
 
 If no candidate passes, record a no-change result and proceed directly to the Day 28 documentation gate.
 
+**Result:** Passed on 2026-08-04. `ResponsiveRecordCollection` could preserve the custom-shift state machine and desktop/mobile order without a shared contract change.
+
 ## 10. Day 27 — Characterization and Bounded Implementation
 
 ### Task 27.1 — Establish the untouched baseline
@@ -355,6 +359,8 @@ After implementation:
 ### Day 27 gate
 
 Day 27 passes only when the source is smaller and clearer, the shared contract remains generic, all characterized behavior passes, and no business or data-control responsibility moves into the shared layer.
+
+**Result:** Passed on 2026-08-04. Characterization revision `05aefa2` preceded implementation revision `0596fcb`; 3 files / 33 focused tests passed before and after migration.
 
 ## 11. Day 28 — Pattern-Family Checkpoint
 
@@ -438,6 +444,8 @@ The Days 25–28 batch passes when:
 - all required validation passes
 - generated output and the worktree are clean
 - the execution record is complete
+
+**Result:** Passed on 2026-08-04. Changed-file quality checks, 3 files / 33 focused tests, and the 6,493-module production build passed. See `FRONTEND_COMPONENT_REUSE_STAGE_4_DATA_LISTS_EXECUTION_2026-08-04.md`.
 
 ## 12. Stop Conditions
 

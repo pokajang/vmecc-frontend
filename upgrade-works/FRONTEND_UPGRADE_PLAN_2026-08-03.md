@@ -380,7 +380,7 @@ Roll out by pattern family, not by rewriting entire modules. The audit determine
 - Preserve query semantics, default filters, row actions, privacy restrictions, and mobile-accessible actions.
 - Do not force specialized report, payroll, or inspection grids into a generic table when their interaction model differs.
 
-**Status (2026-08-04): Detailed plan ready; source work not started.** Execution boundary: `FRONTEND_COMPONENT_REUSE_STAGE_4_DATA_LISTS_PLAN_2026-08-04.md`.
+**Status (2026-08-04): Completed locally.** The Custom Shifts collection now reuses `ResponsiveRecordCollection` without changing shared defaults or business behavior. Focused validation and the production build passed. Evidence: `FRONTEND_COMPONENT_REUSE_STAGE_4_DATA_LISTS_EXECUTION_2026-08-04.md`.
 
 ## Days 29–32 — Actions, Status, and Workflow Presentation
 
@@ -568,12 +568,12 @@ When paused, keep or restore the domain implementation, document the reason, and
 
 ## 16. Stage Record
 
-| Stage                                   | Status                                 | Evidence                                                                                                                                                         | Decision                                                                     |
-| --------------------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Stage 1 — foundation                    | Locally completed; hosted CI deferred  | Existing Stage 1 records in `upgrade-works/`                                                                                                                     | Preserve as baseline                                                         |
-| Stage 2 — reuse audit                   | Completed through Day 10               | `FRONTEND_COMPONENT_REUSE_AUDIT_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_EXECUTION_PLAN_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_PATTERN_MATRIX_2026-08-04.md` | Three contracts approved; Staff canary and Holidays/Overtime pilots selected |
-| Stage 3 — shared foundations and pilots | Completed locally through Day 20       | `FRONTEND_COMPONENT_REUSE_STAGE_3_EXECUTION_2026-08-04.md`                                                                                                       | Preserve passing foundation and pilot boundaries                             |
-| Stage 4 — pattern rollout               | Days 25–28 planned; source not started | `FRONTEND_COMPONENT_REUSE_STAGE_4_EXECUTION_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_STAGE_4_DATA_LISTS_PLAN_2026-08-04.md`                                     | Begin Day 25 list/state inventory                                            |
-| Stage 5 — cleanup and handover          | Not started                            | Final adoption summary required                                                                                                                                  | Pending rollout                                                              |
+| Stage                                   | Status                                | Evidence                                                                                                                                                         | Decision                                                                     |
+| --------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Stage 1 — foundation                    | Locally completed; hosted CI deferred | Existing Stage 1 records in `upgrade-works/`                                                                                                                     | Preserve as baseline                                                         |
+| Stage 2 — reuse audit                   | Completed through Day 10              | `FRONTEND_COMPONENT_REUSE_AUDIT_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_EXECUTION_PLAN_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_PATTERN_MATRIX_2026-08-04.md` | Three contracts approved; Staff canary and Holidays/Overtime pilots selected |
+| Stage 3 — shared foundations and pilots | Completed locally through Day 20      | `FRONTEND_COMPONENT_REUSE_STAGE_3_EXECUTION_2026-08-04.md`                                                                                                       | Preserve passing foundation and pilot boundaries                             |
+| Stage 4 — pattern rollout               | Days 25–28 completed; Days 29–32 next | `FRONTEND_COMPONENT_REUSE_STAGE_4_DATA_LISTS_PLAN_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_STAGE_4_DATA_LISTS_EXECUTION_2026-08-04.md`                          | Plan actions, status, and workflow-presentation batch                        |
+| Stage 5 — cleanup and handover          | Not started                           | Final adoption summary required                                                                                                                                  | Pending rollout                                                              |
 
 Revision 2 authorizes local frontend audit and behavior-preserving component consolidation. It does not authorize deployment, backend changes, production-data access, or silent business-workflow changes.

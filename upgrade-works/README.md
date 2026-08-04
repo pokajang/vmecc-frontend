@@ -6,32 +6,33 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 
 ## Current Status
 
-| Item                                | Status                                                                                            |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Working branch                      | `codex/frontend-upgrade-stage-1`                                                                  |
-| Current stage                       | Stage 4 Days 25–28 data-list/standard-state plan ready; source work not started                   |
-| Gate decision                       | **Days 21–24 passed; Days 25–28 bounded planning gate ready; deployment remains outside scope**   |
-| Application/tooling changes started | Yes; latest committed implementation checkpoint `4d48c18`                                         |
-| Next planned implementation         | Stage 4 Day 25 — inventory data-list, filter, loader, pagination, empty, and error-state patterns |
+| Item                                | Status                                                                              |
+| ----------------------------------- | ----------------------------------------------------------------------------------- |
+| Working branch                      | `codex/frontend-upgrade-stage-1`                                                    |
+| Current stage                       | Stage 4 Days 25–28 complete; Days 29–32 actions/status/workflow presentation next   |
+| Gate decision                       | **Data-list/standard-state batch passed locally; deployment remains outside scope** |
+| Application/tooling changes started | Yes; latest committed implementation checkpoint `0596fcb`                           |
+| Next planned implementation         | Write the bounded Stage 4 Days 29–32 actions/status/workflow-presentation plan      |
 
 ## Document Register
 
-| Document                                                                                                  | Purpose                                                                                                                                              | Status                                              |
-| --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| [Frontend upgrade plan](./FRONTEND_UPGRADE_PLAN_2026-08-03.md)                                            | Active Revision 2 plan for reuse-first component consolidation, consistent module implementation, proportional validation, and behavior preservation | Active; reprioritized 2026-08-04                    |
-| [Preflight record](./FRONTEND_UPGRADE_PREFLIGHT_2026-08-03.md)                                            | Repository, toolchain, artifact, environment, CI, service, and safety-gate baseline                                                                  | Completed; blocking actions open                    |
-| [Stage 1 execution record](./FRONTEND_UPGRADE_STAGE_1_EXECUTION_2026-08-03.md)                            | Day 1 lint repair, Day 2 correctness fixes, validation evidence, rollback, and residual risks                                                        | Days 1–2 locally completed; promotion blocked       |
-| [Stage 1 compatibility audit](./FRONTEND_UPGRADE_STAGE_1_AUDIT_2026-08-03.md)                             | Post-implementation diff review, functional-compatibility tests, full validation, and residual risks                                                 | Locally verified; promotion blocked                 |
-| [Stage 1 Day 3 execution record](./FRONTEND_UPGRADE_STAGE_1_DAY_3_EXECUTION_2026-08-03.md)                | Production headers, bundled Google icon, fail-closed production API configuration, validation, and rollback                                          | Locally completed; deployment qualification blocked |
-| [GitHub Actions cost exception](./FRONTEND_UPGRADE_GITHUB_ACTIONS_EXCEPTION_2026-08-04.md)                | Owner decision, disabled-workflow mechanism, compensating controls, restoration, and review deadline                                                 | Locally disabled; remote confirmation required      |
-| [Stage 1 Day 5 execution record](./FRONTEND_UPGRADE_STAGE_1_DAY_5_EXECUTION_2026-08-04.md)                | Compatible transitive advisory patches, React Router applicability decision, fail-closed exception control, validation, and rollback                 | Locally completed; exception review due 2026-09-04  |
-| [Component reuse audit](./FRONTEND_COMPONENT_REUSE_AUDIT_2026-08-04.md)                                   | Day 6 component catalogue, import evidence, overlap analysis, false-positive controls, and Day 7 candidate backlog                                   | Completed; no application changes                   |
-| [Component reuse execution plan](./FRONTEND_COMPONENT_REUSE_EXECUTION_PLAN_2026-08-04.md)                 | Detailed Days 8–13 task cards plus the bounded Days 7–20 gates, pilot sequencing, validation, and rollback controls                                  | Completed locally; Days 7–20 passed                 |
-| [Component reuse pattern matrix](./FRONTEND_COMPONENT_REUSE_PATTERN_MATRIX_2026-08-04.md)                 | Days 7–10 evidence, style ownership, approved contracts, selected pilots, tests, and rollback boundaries                                             | Stage 2 completed                                   |
-| [Stage 3 component reuse execution record](./FRONTEND_COMPONENT_REUSE_STAGE_3_EXECUTION_2026-08-04.md)    | Days 11–20 confirmation foundation, Staff canary, Holidays and Overtime pilots, full checkpoint, residual risks, and rollback                        | Stage 3 passed locally                              |
-| [Stage 4 structure/navigation plan](./FRONTEND_COMPONENT_REUSE_STAGE_4_PLAN_2026-08-04.md)                | Detailed Days 21–24 inventory, contract review, pilot gate, proportional validation, stop conditions, and rollback boundaries                        | Days 21–24 passed locally                           |
-| [Stage 4 structure/navigation execution](./FRONTEND_COMPONENT_REUSE_STAGE_4_EXECUTION_2026-08-04.md)      | Final dispositions, compact mobile Back extraction, characterization, validation evidence, exceptions, and rollback boundary                         | Days 21–24 passed locally                           |
-| [Stage 4 data-list/standard-state plan](./FRONTEND_COMPONENT_REUSE_STAGE_4_DATA_LISTS_PLAN_2026-08-04.md) | Detailed Days 25–28 inventory, state-machine review, pilot selection, proportional validation, stop conditions, and rollback controls                | Planned; source work not started                    |
+| Document                                                                                                            | Purpose                                                                                                                                              | Status                                              |
+| ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| [Frontend upgrade plan](./FRONTEND_UPGRADE_PLAN_2026-08-03.md)                                                      | Active Revision 2 plan for reuse-first component consolidation, consistent module implementation, proportional validation, and behavior preservation | Active; reprioritized 2026-08-04                    |
+| [Preflight record](./FRONTEND_UPGRADE_PREFLIGHT_2026-08-03.md)                                                      | Repository, toolchain, artifact, environment, CI, service, and safety-gate baseline                                                                  | Completed; blocking actions open                    |
+| [Stage 1 execution record](./FRONTEND_UPGRADE_STAGE_1_EXECUTION_2026-08-03.md)                                      | Day 1 lint repair, Day 2 correctness fixes, validation evidence, rollback, and residual risks                                                        | Days 1–2 locally completed; promotion blocked       |
+| [Stage 1 compatibility audit](./FRONTEND_UPGRADE_STAGE_1_AUDIT_2026-08-03.md)                                       | Post-implementation diff review, functional-compatibility tests, full validation, and residual risks                                                 | Locally verified; promotion blocked                 |
+| [Stage 1 Day 3 execution record](./FRONTEND_UPGRADE_STAGE_1_DAY_3_EXECUTION_2026-08-03.md)                          | Production headers, bundled Google icon, fail-closed production API configuration, validation, and rollback                                          | Locally completed; deployment qualification blocked |
+| [GitHub Actions cost exception](./FRONTEND_UPGRADE_GITHUB_ACTIONS_EXCEPTION_2026-08-04.md)                          | Owner decision, disabled-workflow mechanism, compensating controls, restoration, and review deadline                                                 | Locally disabled; remote confirmation required      |
+| [Stage 1 Day 5 execution record](./FRONTEND_UPGRADE_STAGE_1_DAY_5_EXECUTION_2026-08-04.md)                          | Compatible transitive advisory patches, React Router applicability decision, fail-closed exception control, validation, and rollback                 | Locally completed; exception review due 2026-09-04  |
+| [Component reuse audit](./FRONTEND_COMPONENT_REUSE_AUDIT_2026-08-04.md)                                             | Day 6 component catalogue, import evidence, overlap analysis, false-positive controls, and Day 7 candidate backlog                                   | Completed; no application changes                   |
+| [Component reuse execution plan](./FRONTEND_COMPONENT_REUSE_EXECUTION_PLAN_2026-08-04.md)                           | Detailed Days 8–13 task cards plus the bounded Days 7–20 gates, pilot sequencing, validation, and rollback controls                                  | Completed locally; Days 7–20 passed                 |
+| [Component reuse pattern matrix](./FRONTEND_COMPONENT_REUSE_PATTERN_MATRIX_2026-08-04.md)                           | Days 7–10 evidence, style ownership, approved contracts, selected pilots, tests, and rollback boundaries                                             | Stage 2 completed                                   |
+| [Stage 3 component reuse execution record](./FRONTEND_COMPONENT_REUSE_STAGE_3_EXECUTION_2026-08-04.md)              | Days 11–20 confirmation foundation, Staff canary, Holidays and Overtime pilots, full checkpoint, residual risks, and rollback                        | Stage 3 passed locally                              |
+| [Stage 4 structure/navigation plan](./FRONTEND_COMPONENT_REUSE_STAGE_4_PLAN_2026-08-04.md)                          | Detailed Days 21–24 inventory, contract review, pilot gate, proportional validation, stop conditions, and rollback boundaries                        | Days 21–24 passed locally                           |
+| [Stage 4 structure/navigation execution](./FRONTEND_COMPONENT_REUSE_STAGE_4_EXECUTION_2026-08-04.md)                | Final dispositions, compact mobile Back extraction, characterization, validation evidence, exceptions, and rollback boundary                         | Days 21–24 passed locally                           |
+| [Stage 4 data-list/standard-state plan](./FRONTEND_COMPONENT_REUSE_STAGE_4_DATA_LISTS_PLAN_2026-08-04.md)           | Detailed Days 25–28 inventory, state-machine review, pilot selection, proportional validation, stop conditions, and rollback controls                | Days 25–28 passed locally                           |
+| [Stage 4 data-list/standard-state execution](./FRONTEND_COMPONENT_REUSE_STAGE_4_DATA_LISTS_EXECUTION_2026-08-04.md) | Final dispositions, Work Shift collection migration, characterization, validation evidence, exceptions, and rollback boundary                        | Days 25–28 passed locally                           |
 
 ## Completed Work
 
@@ -82,6 +83,10 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 - Extracted the exact duplicated Reports/Inspection compact mobile Back presentation into `MobileModuleBackAction` while keeping both handlers, guards, visibility rules, route choices, and state transitions local.
 - Passed the Days 21–24 checkpoint with full lint, 321 test files / 1,762 tests, a 6,493-module production build, boundary searches, diff checks, and generated-output cleanup.
 - Prepared the bounded Stage 4 Days 25–28 data-list and standard-state plan using current primitive adoption, manual-composition candidates, proportional validation, and explicit exclusions for specialized data/workflow views.
+- Completed the Days 25–28 inventory and retained specialized Login Records filters, Leave, Payroll, Inspection, roster, workflow, and context-specific state implementations.
+- Added untouched-source characterization for Custom Shifts loading, empty, error, responsive order, and Edit/Delete dialog behavior.
+- Migrated only the Custom Shifts collection shell to `ResponsiveRecordCollection`, preserving its API, state, callbacks, table, mobile cards, messages, actions, classes, and document order.
+- Passed the Days 25–28 checkpoint with changed-file quality checks, 3 files / 33 focused tests, a 6,493-module production build, boundary searches, diff checks, and generated-output cleanup.
 
 ## Deferred Release-Only Actions
 
@@ -95,12 +100,12 @@ These actions remain valid but do not block local component-quality work. Reopen
 
 ## Next Work
 
-Begin Stage 4 Days 25–28 as defined in the [data-list and standard-state plan](./FRONTEND_COMPONENT_REUSE_STAGE_4_DATA_LISTS_PLAN_2026-08-04.md):
+Prepare Stage 4 Days 29–32 as defined in the active [frontend upgrade plan](./FRONTEND_UPGRADE_PLAN_2026-08-03.md):
 
-1. Inventory direct data-list, filter, loader, pagination, responsive collection, empty-state, and error-state implementations.
-2. Separate equivalent presentation shells from specialized report, payroll, inspection, selection, grouping, privacy, and workflow behavior.
-3. Select only evidence-backed representative consumers and add characterization before source changes.
-4. Preserve query semantics, default filters, row actions, privacy restrictions, and mobile-accessible actions.
+1. Inventory action groups, create buttons, button loading states, state badges, and workflow summaries.
+2. Separate equivalent presentation contracts from permission, transition, approval, and domain-status behavior.
+3. Select only bounded representative consumers and add characterization before source changes.
+4. Preserve status meaning, disabled reasons, action order, permissions, workflow transitions, and mobile access.
 
 ## File Naming
 
