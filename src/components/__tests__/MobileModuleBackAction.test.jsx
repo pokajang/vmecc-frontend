@@ -35,7 +35,7 @@ describe('MobileModuleBackAction', () => {
     expect(onClick.mock.calls[0][0]?.type).toBe('click')
   })
 
-  it('supports caller-owned labels, sizes, icon sizes, classes, and button state', () => {
+  it('supports caller-owned content and state without weakening its fixed presentation', () => {
     render(
       <MobileModuleBackAction
         label="Return to records"
@@ -43,11 +43,18 @@ describe('MobileModuleBackAction', () => {
         iconSize={18}
         className="consumer-action"
         disabled
+        type="submit"
+        color="danger"
+        variant="ghost"
         onClick={vi.fn()}
       />,
     )
 
     const button = screen.getByRole('button', { name: 'Return to records' })
+    expect(button.type).toBe('button')
+    expect(button.className).toContain('btn-outline-secondary')
+    expect(button.className).not.toContain('btn-danger')
+    expect(button.className).not.toContain('btn-ghost')
     expect(button.className).toContain('btn-lg')
     expect(button.className).toContain('consumer-action')
     expect(button.disabled).toBe(true)

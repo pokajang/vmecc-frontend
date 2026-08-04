@@ -11,13 +11,13 @@ const MobileModuleBackAction = ({
   ...buttonProps
 }) => (
   <CButton
+    {...buttonProps}
     type="button"
     color="secondary"
     variant="outline"
     size={size}
     className={`d-md-none d-inline-flex align-items-center gap-1 ${className}`.trim()}
     onClick={onClick}
-    {...buttonProps}
   >
     <ArrowLeft size={iconSize} />
     {label}
