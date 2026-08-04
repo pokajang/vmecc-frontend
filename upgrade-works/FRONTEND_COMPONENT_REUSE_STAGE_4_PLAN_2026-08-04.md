@@ -6,7 +6,7 @@
 **Starting revision:** `ab293a9`  
 **Parent plan:** `FRONTEND_UPGRADE_PLAN_2026-08-03.md`, Revision 2  
 **Scope:** Stage 4 Days 21–24 — structure and navigation only  
-**Status:** Planned; application source work has not started  
+**Status:** Days 21–24 completed and passed locally; see the execution record  
 **Authorization boundary:** Local, behavior-preserving frontend work only; no deployment, backend, API, route-definition, permission, persistence, dependency, or workflow changes
 
 ## 1. Purpose
@@ -191,6 +191,8 @@ For every outlier, record:
 
 Day 21 passes when the file lists and dispositions are complete enough that no candidate is selected merely by filename, icon, or visual resemblance. Documentation-only Day 21 work requires link, path, formatting, and diff checks; it does not require the full unit suite or production build.
 
+**Result:** Passed on 2026-08-04. The inventory confirmed strong existing header/tab adoption and selected only the exact Reports/Inspection compact mobile Back pair.
+
 ## 8. Day 22 — Contract Review and Pilot Approval
 
 ### Task 22.1 — Audit shared contract tests
@@ -241,6 +243,8 @@ Source work may begin only when:
 - route, permission, guard, and state ownership remain in callers
 - the intended shared contract contains no domain term
 - the rollback can restore only the selected consumers
+
+**Result:** Passed on 2026-08-04. `BackButton` was deliberately left unchanged; a smaller event-forwarding mobile presentation contract was approved for exactly two consumers.
 
 ## 9. Day 23 — Characterization and Bounded Implementation
 
@@ -294,6 +298,8 @@ After implementation:
 ### Day 23 gate
 
 Day 23 passes only when the source diff is smaller and clearer than the duplicate it replaces, all behavior-sensitive tests pass, and no new domain controller has been created.
+
+**Result:** Passed on 2026-08-04. Characterization revision `3672584` preceded implementation revision `ae5cfe2`; handlers and navigation ownership remained local.
 
 ## 10. Day 24 — Pattern-Family Checkpoint
 
@@ -366,6 +372,8 @@ The Days 21–24 batch passes when:
 - all required validation passes
 - generated output is clean
 - the execution record is complete
+
+**Result:** Passed on 2026-08-04. Full lint, 321 test files / 1,762 tests, and the 6,493-module production build passed. See `FRONTEND_COMPONENT_REUSE_STAGE_4_EXECUTION_2026-08-04.md`.
 
 ## 11. Stop Conditions
 

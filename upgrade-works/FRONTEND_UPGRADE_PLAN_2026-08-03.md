@@ -372,6 +372,8 @@ Roll out by pattern family, not by rewriting entire modules. The audit determine
 - Keep route definitions, destination rules, permission filtering, and unsaved-change guards unchanged.
 - Verify long titles, action wrapping, mobile navigation, and hidden/disabled states.
 
+**Status (2026-08-04): Completed locally.** Existing header and tab adoption was retained, intentional exceptions were documented, and the duplicate Reports/Inspection compact mobile Back presentation was extracted without moving route or handler behavior. Full lint, 321 test files / 1,762 tests, and the production build passed. Evidence: `FRONTEND_COMPONENT_REUSE_STAGE_4_EXECUTION_2026-08-04.md`.
+
 ## Days 25–28 — Data Lists and Standard States
 
 - Consolidate applicable filters, sorting headers, loaders, pagination, responsive record collections, and empty/error states.
@@ -564,12 +566,12 @@ When paused, keep or restore the domain implementation, document the reason, and
 
 ## 16. Stage Record
 
-| Stage                                   | Status                                 | Evidence                                                                                                                                                         | Decision                                                                     |
-| --------------------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Stage 1 — foundation                    | Locally completed; hosted CI deferred  | Existing Stage 1 records in `upgrade-works/`                                                                                                                     | Preserve as baseline                                                         |
-| Stage 2 — reuse audit                   | Completed through Day 10               | `FRONTEND_COMPONENT_REUSE_AUDIT_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_EXECUTION_PLAN_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_PATTERN_MATRIX_2026-08-04.md` | Three contracts approved; Staff canary and Holidays/Overtime pilots selected |
-| Stage 3 — shared foundations and pilots | Completed locally through Day 20       | `FRONTEND_COMPONENT_REUSE_STAGE_3_EXECUTION_2026-08-04.md`                                                                                                       | Preserve passing foundation and pilot boundaries                             |
-| Stage 4 — pattern rollout               | Days 21–24 planned; source not started | `FRONTEND_COMPONENT_REUSE_STAGE_4_PLAN_2026-08-04.md`                                                                                                            | Begin Day 21 inventory and behavior classification                           |
-| Stage 5 — cleanup and handover          | Not started                            | Final adoption summary required                                                                                                                                  | Pending rollout                                                              |
+| Stage                                   | Status                                | Evidence                                                                                                                                                         | Decision                                                                     |
+| --------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Stage 1 — foundation                    | Locally completed; hosted CI deferred | Existing Stage 1 records in `upgrade-works/`                                                                                                                     | Preserve as baseline                                                         |
+| Stage 2 — reuse audit                   | Completed through Day 10              | `FRONTEND_COMPONENT_REUSE_AUDIT_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_EXECUTION_PLAN_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_PATTERN_MATRIX_2026-08-04.md` | Three contracts approved; Staff canary and Holidays/Overtime pilots selected |
+| Stage 3 — shared foundations and pilots | Completed locally through Day 20      | `FRONTEND_COMPONENT_REUSE_STAGE_3_EXECUTION_2026-08-04.md`                                                                                                       | Preserve passing foundation and pilot boundaries                             |
+| Stage 4 — pattern rollout               | Days 21–24 completed; Days 25–28 next | `FRONTEND_COMPONENT_REUSE_STAGE_4_PLAN_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_STAGE_4_EXECUTION_2026-08-04.md`                                                | Begin data-list and standard-state inventory                                 |
+| Stage 5 — cleanup and handover          | Not started                           | Final adoption summary required                                                                                                                                  | Pending rollout                                                              |
 
 Revision 2 authorizes local frontend audit and behavior-preserving component consolidation. It does not authorize deployment, backend changes, production-data access, or silent business-workflow changes.
