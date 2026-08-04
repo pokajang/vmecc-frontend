@@ -15,12 +15,11 @@ import ApprovalGates from 'src/components/ApprovalGates'
 import BulkSelectionActionBar from 'src/components/BulkSelectionActionBar'
 import DataTableFooter from 'src/components/DataTableFooter'
 import GroupedTableHeaderRow, { UserGroupLabel } from 'src/components/GroupedTableHeader'
-import MobileRecordList from 'src/components/MobileRecordList'
+import ResponsiveRecordCollection from 'src/components/ResponsiveRecordCollection'
 import TypeDurationSummaryChips from 'src/views/overtime/components/TypeDurationSummaryChips'
 import RowActionCell from 'src/components/RowActionCell'
 import RowActions from 'src/components/RowActions'
 import TableFilters from 'src/components/TableFilters'
-import TableLoader from 'src/components/TableLoader'
 import WorkflowStatusSummary from 'src/components/WorkflowStatusSummary'
 import BulkActionButton from 'src/views/staff/components/BulkActionButton'
 import BulkWorkflowActionModal from './BulkWorkflowActionModal'
@@ -373,38 +372,13 @@ const OvertimeRecordsTab = (props) => {
           />
         </div>
 
-        {isLoading ? (
-          <TableLoader />
-        ) : Number(filteredCount || 0) === 0 ? (
-          <div className="text-body-secondary">No overtime records match the current filters.</div>
-        ) : (
-          <>
-            {selectedVisibleCount > 0 ? (
-              <BulkSelectionActionBar
-                label={`${selectedVisibleCount} overtime record${selectedVisibleCount === 1 ? '' : 's'} selected`}
-                mobileSticky
-                actions={
-                  <>
-                    <BulkActionButton
-                      label="Clear selection"
-                      intent="neutral"
-                      onClick={clearSelection}
-                    />
-                    <BulkActionButton
-                      label="Reject selected"
-                      intent="reject"
-                      onClick={() => openBulkModal('reject')}
-                    />
-                    <BulkActionButton
-                      label={`${selectedApproveActionLabel} selected`}
-                      intent="approve"
-                      onClick={() => openBulkModal('approve')}
-                    />
-                  </>
-                }
-              />
-            ) : null}
-            <MobileRecordList sections={mobileRecordSections} variant="list-group" />
+        <ResponsiveRecordCollection
+          isLoading={isLoading}
+          isEmpty={Number(filteredCount || 0) === 0}
+          emptyMessage="No overtime records match the current filters."
+          mobileSections={mobileRecordSections}
+          mobileVariant="list-group"
+          renderDesktop={() => (
             <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-body">
               <CTable align="middle" className="mb-0" hover responsive>
                 <CTableHead color="light">
@@ -552,37 +526,67 @@ const OvertimeRecordsTab = (props) => {
                 </CTableBody>
               </CTable>
             </div>
-            <DataTableFooter
-              rowsToShow={rowsToShow}
-              onRowsToShowChange={setRowsToShow}
-              filteredCount={Number(filteredCount || 0)}
-              totalCount={Number(totalCount || 0)}
-              visibleCount={rows.length}
-              currentPage={Number(currentPage || 1)}
-              lastPage={Number(lastPage || 1)}
-              onPageChange={typeof setPage === 'function' ? setPage : null}
+          )}
+          footer={
+            <>
+              <DataTableFooter
+                rowsToShow={rowsToShow}
+                onRowsToShowChange={setRowsToShow}
+                filteredCount={Number(filteredCount || 0)}
+                totalCount={Number(totalCount || 0)}
+                visibleCount={rows.length}
+                currentPage={Number(currentPage || 1)}
+                lastPage={Number(lastPage || 1)}
+                onPageChange={typeof setPage === 'function' ? setPage : null}
+              />
+              <BulkWorkflowActionModal
+                visible={bulkActionState.visible}
+                action={bulkActionState.action}
+                actionLabel={selectedApproveActionLabel}
+                entityLabel="overtime record"
+                selectedCount={selectedVisibleCount}
+                remarks={bulkRemarks}
+                declarationChecked={bulkDeclarationChecked}
+                declarationLabel="I confirm these selected overtime workflow actions are accurate and authorized."
+                declarationError={bulkDeclarationError}
+                rejectError={bulkRejectError}
+                isSubmitting={isBulkSubmitting}
+                onClose={closeBulkModal}
+                onSubmit={submitBulkModal}
+                onRemarksChange={setBulkRemarks}
+                onDeclarationChange={setBulkDeclarationChecked}
+                onClearRejectError={() => setBulkRejectError('')}
+                onClearDeclarationError={() => setBulkDeclarationError('')}
+              />
+            </>
+          }
+        >
+          {selectedVisibleCount > 0 ? (
+            <BulkSelectionActionBar
+              label={`${selectedVisibleCount} overtime record${selectedVisibleCount === 1 ? '' : 's'} selected`}
+              mobileSticky
+              actions={
+                <>
+                  <BulkActionButton
+                    label="Clear selection"
+                    intent="neutral"
+                    onClick={clearSelection}
+                  />
+                  <BulkActionButton
+                    label="Reject selected"
+                    intent="reject"
+                    onClick={() => openBulkModal('reject')}
+                  />
+                  <BulkActionButton
+                    label={`${selectedApproveActionLabel} selected`}
+                    intent="approve"
+                    onClick={() => openBulkModal('approve')}
+                  />
+                </>
+              }
             />
-            <BulkWorkflowActionModal
-              visible={bulkActionState.visible}
-              action={bulkActionState.action}
-              actionLabel={selectedApproveActionLabel}
-              entityLabel="overtime record"
-              selectedCount={selectedVisibleCount}
-              remarks={bulkRemarks}
-              declarationChecked={bulkDeclarationChecked}
-              declarationLabel="I confirm these selected overtime workflow actions are accurate and authorized."
-              declarationError={bulkDeclarationError}
-              rejectError={bulkRejectError}
-              isSubmitting={isBulkSubmitting}
-              onClose={closeBulkModal}
-              onSubmit={submitBulkModal}
-              onRemarksChange={setBulkRemarks}
-              onDeclarationChange={setBulkDeclarationChecked}
-              onClearRejectError={() => setBulkRejectError('')}
-              onClearDeclarationError={() => setBulkDeclarationError('')}
-            />
-          </>
-        )}
+          ) : null}
+        </ResponsiveRecordCollection>
       </CCardBody>
     </CCard>
   )
