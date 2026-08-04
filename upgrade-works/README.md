@@ -9,10 +9,10 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | Item | Status |
 | --- | --- |
 | Working branch | `codex/frontend-upgrade-stage-1` |
-| Current stage | Stage 1 Days 1–3 locally completed; Day 4 hosted CI deferred |
+| Current stage | Stage 1 Days 1–3 and Day 5 locally completed; Day 4 hosted CI deferred |
 | Gate decision | **Open for local-only Stage 1; blocked for staging/production promotion** |
 | Application/tooling changes started | Yes; implementation checkpoint `b1b0804` |
-| Next planned implementation | Day 5 — dependency advisory triage using local evidence |
+| Next planned implementation | Days 6–7 — local stabilization and release-readiness evidence; promotion remains blocked |
 
 ## Document Register
 
@@ -24,6 +24,7 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | [Stage 1 compatibility audit](./FRONTEND_UPGRADE_STAGE_1_AUDIT_2026-08-03.md) | Post-implementation diff review, functional-compatibility tests, full validation, and residual risks | Locally verified; promotion blocked |
 | [Stage 1 Day 3 execution record](./FRONTEND_UPGRADE_STAGE_1_DAY_3_EXECUTION_2026-08-03.md) | Production headers, bundled Google icon, fail-closed production API configuration, validation, and rollback | Locally completed; deployment qualification blocked |
 | [GitHub Actions cost exception](./FRONTEND_UPGRADE_GITHUB_ACTIONS_EXCEPTION_2026-08-04.md) | Owner decision, disabled-workflow mechanism, compensating controls, restoration, and review deadline | Locally disabled; remote confirmation required |
+| [Stage 1 Day 5 execution record](./FRONTEND_UPGRADE_STAGE_1_DAY_5_EXECUTION_2026-08-04.md) | Compatible transitive advisory patches, React Router applicability decision, fail-closed exception control, validation, and rollback | Locally completed; exception review due 2026-09-04 |
 
 ## Completed Work
 
@@ -51,6 +52,9 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 
 - Disabled GitHub Actions in repository configuration by moving the workflow outside `.github/workflows/`; remote workflow disablement still requires GitHub UI/default-branch confirmation.
 - Recorded Day 4 as deferred rather than passed; local validation remains the compensating control and Stage 1 promotion remains blocked.
+- Patched the compatible development-only `brace-expansion` and `undici` advisories without forcing or downgrading any direct dependency.
+- Documented the React Router RSC-only advisory as not applicable to the current declarative BrowserRouter SPA, with a fail-closed local audit and mandatory review on 2026-09-04.
+- Reconfirmed compatibility with 315 test files / 1,728 tests, lint, all local audits, clean install, targeted route/auth/guard tests, and an isolated production build.
 
 ## Open Preflight Actions
 
@@ -62,12 +66,12 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 
 ## Next Work
 
-Continue with the locally reviewable Day 5 work while promotion remains blocked:
+Continue with the locally reviewable Days 6–7 stabilization work while promotion remains blocked:
 
-1. Review the React Router advisory against the actual BrowserRouter SPA architecture.
-2. Identify the safest compatible patched-version path without using `npm audit fix --force` or an unreviewed downgrade.
-3. Run routing, authentication, navigation-guard, and lazy-loading regressions before any dependency change.
-4. Establish a documented local dependency-review schedule instead of automated update pull requests while hosted automation is deferred.
+1. Re-run the complete validation suite from the final Day 5 commit and prepare the Stage 1 release record.
+2. Execute browser flows that can be proved locally without real credentials or destructive writes.
+3. Inventory the staging-only browser, security-header, exact-artifact, and rollback checks that remain blocked by missing origins, owners, isolated data, and deployment evidence.
+4. Keep `npm audit` and `npm run audit:router-advisory` in every validation set; the router exception must be reviewed no later than 2026-09-04.
 
 ## File Naming
 
