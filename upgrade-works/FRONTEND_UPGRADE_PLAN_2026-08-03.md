@@ -396,6 +396,8 @@ Roll out by pattern family, not by rewriting entire modules. The audit determine
 - Preserve validation rules, submitted values, confirmation wording with legal/business meaning, and destructive-action safeguards.
 - Verify focus entry, focus return, Escape behavior, loading locks, double-submit prevention, and mobile layout.
 
+**Status (2026-08-04): Detailed plan ready; source work not started.** The provisional pilot is the exact ERCO `ChronologyStartModeModal`/`PreMobModeModal` responsive shell pair. Source work remains gated by untouched characterization. Execution boundary: `FRONTEND_COMPONENT_REUSE_STAGE_4_FORMS_DIALOGS_PLAN_2026-08-04.md`.
+
 ### Stage 4 exit criteria
 
 - Approved consumers use the shared pattern for the same purpose.
@@ -570,12 +572,12 @@ When paused, keep or restore the domain implementation, document the reason, and
 
 ## 16. Stage Record
 
-| Stage                                   | Status                                        | Evidence                                                                                                                                                         | Decision                                                                     |
-| --------------------------------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Stage 1 — foundation                    | Locally completed; hosted CI deferred         | Existing Stage 1 records in `upgrade-works/`                                                                                                                     | Preserve as baseline                                                         |
-| Stage 2 — reuse audit                   | Completed through Day 10                      | `FRONTEND_COMPONENT_REUSE_AUDIT_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_EXECUTION_PLAN_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_PATTERN_MATRIX_2026-08-04.md` | Three contracts approved; Staff canary and Holidays/Overtime pilots selected |
-| Stage 3 — shared foundations and pilots | Completed locally through Day 20              | `FRONTEND_COMPONENT_REUSE_STAGE_3_EXECUTION_2026-08-04.md`                                                                                                       | Preserve passing foundation and pilot boundaries                             |
-| Stage 4 — pattern rollout               | Completed through Days 29–32; Days 33–36 next | `FRONTEND_COMPONENT_REUSE_STAGE_4_DATA_LISTS_EXECUTION_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_STAGE_4_ACTIONS_STATUS_EXECUTION_2026-08-04.md`                 | Prepare the bounded forms-and-dialogs batch                                  |
-| Stage 5 — cleanup and handover          | Not started                                   | Final adoption summary required                                                                                                                                  | Pending rollout                                                              |
+| Stage                                   | Status                                 | Evidence                                                                                                                                                         | Decision                                                                     |
+| --------------------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Stage 1 — foundation                    | Locally completed; hosted CI deferred  | Existing Stage 1 records in `upgrade-works/`                                                                                                                     | Preserve as baseline                                                         |
+| Stage 2 — reuse audit                   | Completed through Day 10               | `FRONTEND_COMPONENT_REUSE_AUDIT_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_EXECUTION_PLAN_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_PATTERN_MATRIX_2026-08-04.md` | Three contracts approved; Staff canary and Holidays/Overtime pilots selected |
+| Stage 3 — shared foundations and pilots | Completed locally through Day 20       | `FRONTEND_COMPONENT_REUSE_STAGE_3_EXECUTION_2026-08-04.md`                                                                                                       | Preserve passing foundation and pilot boundaries                             |
+| Stage 4 — pattern rollout               | Days 33–36 planned; source not started | `FRONTEND_COMPONENT_REUSE_STAGE_4_ACTIONS_STATUS_EXECUTION_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_STAGE_4_FORMS_DIALOGS_PLAN_2026-08-04.md`                   | Begin Day 33 forms/dialogs inventory and characterization gate               |
+| Stage 5 — cleanup and handover          | Not started                            | Final adoption summary required                                                                                                                                  | Pending rollout                                                              |
 
 Revision 2 authorizes local frontend audit and behavior-preserving component consolidation. It does not authorize deployment, backend changes, production-data access, or silent business-workflow changes.
