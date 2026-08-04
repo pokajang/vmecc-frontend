@@ -308,13 +308,6 @@ html {
   width: 6.5rem;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .icon-spin {
-    animation-duration: 1.8s;
-    animation-timing-function: steps(8, end);
-  }
-}
-
 .workflow-status-summary {
   max-width: 18rem;
 }
