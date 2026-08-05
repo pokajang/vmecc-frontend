@@ -6,13 +6,13 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 
 ## Current Status
 
-| Item                                | Status                                                                                              |
-| ----------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Working branch                      | `codex/frontend-upgrade-stage-1`                                                                    |
-| Current stage                       | Stage 5 Day 42 completion and handover plan ready for execution                                     |
-| Gate decision                       | **Day 41 passed; Day 42 is documentation-only and authorizes no further refactoring**               |
-| Application/tooling changes started | Yes; latest committed implementation checkpoint is `a6bbadf`                                        |
-| Next planned implementation         | No implementation planned; derive the Day 42 catalogue and handover from the final repository state |
+| Item                                | Status                                                                             |
+| ----------------------------------- | ---------------------------------------------------------------------------------- |
+| Working branch                      | `codex/frontend-upgrade-stage-1`                                                   |
+| Current stage                       | Stages 1–5 and Days 1–42 completed locally; release qualification remains separate |
+| Gate decision                       | **Component-quality programme closed locally; no scheduled upgrade day remains**   |
+| Application/tooling changes started | Completed; final runtime implementation checkpoint is `a6bbadf`                    |
+| Next planned implementation         | None; reopen only for a concrete defect, approved maintenance batch, or release    |
 
 ## Document Register
 
@@ -43,7 +43,9 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | [Stage 5 consistency execution](./FRONTEND_COMPONENT_REUSE_STAGE_5_CONSISTENCY_EXECUTION_2026-08-05.md)                | Five-family dispositions, responsive evidence, Family C corrections, fixture blocker, validation, cleanup, boundary, and rollback                       | Day 40 passed locally                               |
 | [Stage 5 final checkpoint plan](./FRONTEND_COMPONENT_REUSE_STAGE_5_FINAL_CHECKPOINT_PLAN_2026-08-05.md)                | Day 41 cumulative architecture review, complete local gates, audit applicability, correction controls, build cleanup, and rollback                      | Day 41 passed locally                               |
 | [Stage 5 final checkpoint execution](./FRONTEND_COMPONENT_REUSE_STAGE_5_FINAL_CHECKPOINT_EXECUTION_2026-08-05.md)      | Final architecture/behavior audit, full local gates, applicability decisions, build cleanup, advisories, residual risks, and Day 42 handover            | Day 41 passed locally                               |
-| [Stage 5 completion/handover plan](./FRONTEND_COMPONENT_REUSE_STAGE_5_COMPLETION_PLAN_2026-08-05.md)                   | Day 42 repository-derived catalogue, adoption matrix, adapter/exception register, contributor guidance, release impact, closure controls, and rollback  | Ready for execution                                 |
+| [Stage 5 completion/handover plan](./FRONTEND_COMPONENT_REUSE_STAGE_5_COMPLETION_PLAN_2026-08-05.md)                   | Day 42 repository-derived catalogue, adoption matrix, adapter/exception register, contributor guidance, release impact, closure controls, and rollback  | Day 42 passed locally                               |
+| [Final component reuse catalogue](./FRONTEND_COMPONENT_REUSE_CATALOGUE_2026-08-05.md)                                  | Current shared-component registry, resolved consumer counts, adoption contracts, adapters, exceptions, removed surfaces, and reuse-first guidance       | Final repository-derived reference                  |
+| [Stage 5 completion/handover execution](./FRONTEND_COMPONENT_REUSE_STAGE_5_COMPLETION_EXECUTION_2026-08-05.md)         | Programme outcomes, final inventory, validation inheritance, rollback, residual risks, shared-cPanel release impact, and maintenance handover           | Programme completed locally                         |
 
 ## Completed Work
 
@@ -121,6 +123,10 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 - Passed repository-wide Prettier, full ESLint, 323 test files / 1,776 tests, all six applicable read-only audits, and the 6,493-module production build.
 - Restored tracked build output, validated and removed only 111 previewed untracked build entries, and confirmed a clean generated-output boundary.
 - Prepared the documentation-only Day 42 completion plan for a repository-derived catalogue, concrete adoption matrix, adapter/exception register, reuse-first contributor guide, and shared-cPanel handover.
+- Published the final catalogue: 124 production component-area JS/JSX modules, 106 component files, 15 support modules, three barrels, and zero component without a resolved production importer.
+- Recorded final adoption, active adapter removal conditions, intentional domain exceptions, removed-surface proof, and reuse-first contributor rules.
+- Closed Stages 1–5 and Days 1–42 locally without changing runtime code after `a6bbadf`; retained `c2b5ff5` as the final code-validation checkpoint.
+- Published the shared-cPanel release-impact handover while keeping deployment, authenticated E2E, production approval, and hosted GitHub checks explicitly unqualified.
 
 ## Deferred Release-Only Actions
 
@@ -134,12 +140,14 @@ These actions remain valid but do not block local component-quality work. Reopen
 
 ## Next Work
 
-Execute the [Day 42 completion and handover plan](./FRONTEND_COMPONENT_REUSE_STAGE_5_COMPLETION_PLAN_2026-08-05.md):
+The component-quality programme is locally complete. Use the [final catalogue](./FRONTEND_COMPONENT_REUSE_CATALOGUE_2026-08-05.md) for future component decisions and the [completion handover](./FRONTEND_COMPONENT_REUSE_STAGE_5_COMPLETION_EXECUTION_2026-08-05.md) for residual risks and release boundaries.
 
-1. Derive the final component catalogue and production adoption matrix from current imports and consumers.
-2. Record retained domain exceptions, compatibility adapters, removed surfaces, and deferred candidates with explicit conditions.
-3. Write concise reuse-first guidance for future frontend changes.
-4. Publish the programme completion and release-impact handover without performing deployment or release qualification.
+Reopen work only for:
+
+1. a concrete code-quality defect or measured maintenance need
+2. an explicitly bounded adapter migration or component-contract change
+3. an approved performance/E2E improvement plan
+4. a separately authorized staging or production release
 
 ## File Naming
 

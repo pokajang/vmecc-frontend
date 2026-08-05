@@ -1,11 +1,11 @@
 # VMECC Frontend Upgrade Plan
 
 **Original document date:** 2026-08-03  
-**Current revision date:** 2026-08-04  
+**Current revision date:** 2026-08-05  
 **Plan version:** 2.0  
 **Application:** `vmecc-frontend`  
 **Document home:** `upgrade-works/`  
-**Document status:** Active — reprioritized after Stage 1  
+**Document status:** Completed locally through Day 42; release qualification deferred  
 **Primary goal:** Improve frontend code quality, consistency, and maintainability by consolidating repeated implementations into well-scoped reusable components and patterns without changing existing business behavior.
 
 ## 1. Revision Decision
@@ -452,7 +452,7 @@ Roll out by pattern family, not by rewriting entire modules. The audit determine
 - Provide concise guidance for adding or selecting components in future feature work.
 - Prepare a release-impact summary without performing deployment qualification unless a release is requested.
 
-**Status (2026-08-05): Detailed completion and handover plan ready.** Day 42 will derive the final catalogue, adoption matrix, adapter/exception register, reuse-first contributor guide, programme completion record, and shared-cPanel release-impact summary from the clean `c2b5ff5` checkpoint. It is documentation-only and does not authorize further refactoring or deployment. Plan: `FRONTEND_COMPONENT_REUSE_STAGE_5_COMPLETION_PLAN_2026-08-05.md`.
+**Status (2026-08-05): Completed locally without an application change.** The final repository-derived catalogue records 106 active component files, zero zero-consumer component, concrete adoption, adapter removal conditions, semantic exceptions, contributor guidance, and shared-cPanel release boundaries. The completion record closes the programme while preserving deployment and authenticated E2E as separate work. Plan: `FRONTEND_COMPONENT_REUSE_STAGE_5_COMPLETION_PLAN_2026-08-05.md`. Catalogue: `FRONTEND_COMPONENT_REUSE_CATALOGUE_2026-08-05.md`. Evidence: `FRONTEND_COMPONENT_REUSE_STAGE_5_COMPLETION_EXECUTION_2026-08-05.md`.
 
 ### Stage 5 exit criteria
 
@@ -586,6 +586,6 @@ When paused, keep or restore the domain implementation, document the reason, and
 | Stage 2 — reuse audit                   | Completed through Day 10              | `FRONTEND_COMPONENT_REUSE_AUDIT_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_EXECUTION_PLAN_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_PATTERN_MATRIX_2026-08-04.md` | Three contracts approved; Staff canary and Holidays/Overtime pilots selected |
 | Stage 3 — shared foundations and pilots | Completed locally through Day 20      | `FRONTEND_COMPONENT_REUSE_STAGE_3_EXECUTION_2026-08-04.md`                                                                                                       | Preserve passing foundation and pilot boundaries                             |
 | Stage 4 — pattern rollout               | Completed locally through Day 36      | `FRONTEND_COMPONENT_REUSE_STAGE_4_FORMS_DIALOGS_EXECUTION_2026-08-04.md`                                                                                         | Preserve passing pattern boundaries; proceed to bounded Stage 5 cleanup      |
-| Stage 5 — cleanup and handover          | Day 42 completion plan ready          | `FRONTEND_COMPONENT_REUSE_STAGE_5_COMPLETION_PLAN_2026-08-05.md`                                                                                                 | Execute the documentation-only catalogue and handover gate                   |
+| Stage 5 — cleanup and handover          | Completed locally through Day 42      | `FRONTEND_COMPONENT_REUSE_CATALOGUE_2026-08-05.md`; `FRONTEND_COMPONENT_REUSE_STAGE_5_COMPLETION_EXECUTION_2026-08-05.md`                                        | Programme closed locally; reopen only for a concrete defect or release       |
 
-Revision 2 authorizes local frontend audit and behavior-preserving component consolidation. It does not authorize deployment, backend changes, production-data access, or silent business-workflow changes.
+Revision 2 is complete locally. It did not authorize or perform deployment, backend changes, production-data access, or silent business-workflow changes. Release qualification remains separate.
