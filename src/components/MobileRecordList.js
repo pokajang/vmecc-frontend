@@ -16,6 +16,7 @@ const MobileRecordList = ({ sections = [], emptyMessage = null, variant = 'card'
       {visibleSections.map((section) => (
         <section
           key={section.key || section.label || 'records'}
+          style={{ minWidth: 0 }}
           className={
             section.variant === 'list-group' || variant === 'list-group'
               ? 'mobile-record-list__section'

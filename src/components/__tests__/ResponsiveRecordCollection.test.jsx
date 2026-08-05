@@ -95,4 +95,27 @@ describe('ResponsiveRecordCollection contract', () => {
     expect(document.querySelector('.list-group')).toBeTruthy()
     expect(renderDesktop).toHaveBeenCalledTimes(1)
   })
+
+  it('allows long mobile list-group content to shrink within the collection width', () => {
+    const { container } = render(
+      <ResponsiveRecordCollection
+        mobileSections={[
+          {
+            key: 'records',
+            items: [
+              {
+                key: 'REC-1',
+                title: 'An unusually long user-provided record title that must stay contained',
+                status: 'Pending review by a long-named operational role',
+              },
+            ],
+          },
+        ]}
+        mobileVariant="list-group"
+      />,
+    )
+
+    const mobileSection = container.querySelector('.mobile-record-list__section')
+    expect(mobileSection.style.minWidth).toBe('0px')
+  })
 })
