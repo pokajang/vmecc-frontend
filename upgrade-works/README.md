@@ -9,8 +9,8 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | Item                                | Status                                                                                               |
 | ----------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | Working branch                      | `codex/frontend-upgrade-stage-1`                                                                     |
-| Current stage                       | Stage 5 completed locally through Day 40; Day 41 final code-quality checkpoint is next               |
-| Gate decision                       | **Day 40 passed; four families retained, two bounded Family C corrections completed**                |
+| Current stage                       | Stage 5 Day 41 final code-quality checkpoint planned and ready for execution                         |
+| Gate decision                       | **Day 40 passed; run the complete local validation and cumulative architecture gate**                |
 | Application/tooling changes started | Yes; latest committed implementation checkpoint is `a6bbadf`                                         |
 | Next planned implementation         | No new feature implementation; run the Day 41 cross-repository validation and cumulative diff review |
 
@@ -41,6 +41,7 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | [Stage 5 cleanup execution](./FRONTEND_COMPONENT_REUSE_STAGE_5_CLEANUP_EXECUTION_2026-08-04.md)                        | Final reference proof, exact deletions, retained adapters, active PWA protections, validation, build cleanup, boundary, and rollback                    | Days 37–39 passed locally                           |
 | [Stage 5 consistency plan](./FRONTEND_COMPONENT_REUSE_STAGE_5_CONSISTENCY_PLAN_2026-08-05.md)                          | Detailed Day 40 real-user journeys, representative consumers, viewport/state matrix, evidence rubric, bounded corrections, validation, and rollback     | Day 40 passed locally                               |
 | [Stage 5 consistency execution](./FRONTEND_COMPONENT_REUSE_STAGE_5_CONSISTENCY_EXECUTION_2026-08-05.md)                | Five-family dispositions, responsive evidence, Family C corrections, fixture blocker, validation, cleanup, boundary, and rollback                       | Day 40 passed locally                               |
+| [Stage 5 final checkpoint plan](./FRONTEND_COMPONENT_REUSE_STAGE_5_FINAL_CHECKPOINT_PLAN_2026-08-05.md)                | Day 41 cumulative architecture review, complete local gates, audit applicability, correction controls, build cleanup, and rollback                      | Ready for execution                                 |
 
 ## Completed Work
 
@@ -113,6 +114,7 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 - Completed the Day 40 consistency review: retained four coherent families, fixed mobile record intrinsic-width overflow, and routed Custom Shifts through the standard shared empty-state presentation.
 - Passed changed-file formatting and lint, 15 focused files / 105 tests, representative breakpoint/theme checks, a 6,493-module production build, generated-output cleanup, and the exact implementation boundary.
 - Recorded authenticated browser journeys as fixture-blocked by the unavailable local PostgreSQL service rather than treating them as either a frontend pass or failure.
+- Prepared the bounded Day 41 final-checkpoint plan with the cumulative `2425780..HEAD` comparison, complete local quality gates, explicit audit applicability, evidence-before-correction controls, and guarded build cleanup.
 
 ## Deferred Release-Only Actions
 
@@ -126,7 +128,7 @@ These actions remain valid but do not block local component-quality work. Reopen
 
 ## Next Work
 
-Run Day 41 from the completed [Day 40 execution checkpoint](./FRONTEND_COMPONENT_REUSE_STAGE_5_CONSISTENCY_EXECUTION_2026-08-05.md):
+Execute the [Day 41 final-checkpoint plan](./FRONTEND_COMPONENT_REUSE_STAGE_5_FINAL_CHECKPOINT_PLAN_2026-08-05.md):
 
 1. Run full repository lint and the complete unit suite.
 2. Run only applicable repository audits and one final production build with guarded cleanup.
