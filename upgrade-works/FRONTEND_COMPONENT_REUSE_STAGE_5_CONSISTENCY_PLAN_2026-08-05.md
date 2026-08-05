@@ -7,7 +7,7 @@
 **Parent plan:** `FRONTEND_UPGRADE_PLAN_2026-08-03.md`, Revision 2  
 **Prior checkpoint:** `FRONTEND_COMPONENT_REUSE_STAGE_5_CLEANUP_EXECUTION_2026-08-04.md`  
 **Scope:** Stage 5 Day 40 — representative desktop/mobile consistency review and evidence-backed corrections  
-**Status:** Planned; Day 40 application source work has not started  
+**Status:** Execution in progress; bounded Family C correction ledger approved  
 **Authorization boundary:** Local frontend review and behavior-preserving corrections only; no deployment, GitHub Actions, backend, API contract, route-definition, permission, persistence, dependency, business validation, status, workflow, or broad redesign changes
 
 ## 1. Purpose
@@ -481,6 +481,31 @@ Relevant existing SCSS may be read across `src/scss/`. A stylesheet may enter th
 Only existing E2E cases whose implementation has first been inspected and confirmed read-only may be executed. Do not run CRUD, submission, approval, lifecycle, or settings-mutation browser workflows merely because they already exist. Do not add or expand a permanent browser suite unless a confirmed correction cannot be protected proportionately by existing unit/integration coverage. Any application, test, SCSS, or E2E file outside this boundary requires stopping and amending the plan before editing.
 
 Durable records under `upgrade-works/` are separately allowed.
+
+### Execution amendment — 2026-08-05
+
+The read-only static/browser evidence gate identified one reproducible shared containment defect and one consumer-local state inconsistency in Family C. Before application editing, the approved boundary is amended to add:
+
+```text
+src/components/MobileRecordList.js
+```
+
+Verified evidence:
+
+- a list-group mobile record with realistic long title/status content expanded the document by 301px at a 320px viewport and 231px at 390px
+- removing status and actions did not eliminate the overflow; a long user-defined title alone reproduced it
+- computed layout showed `.mobile-record-list` constrained to the available width while `.mobile-record-list__section` retained its intrinsic `min-width: auto` and expanded beyond it
+- temporarily applying `min-width: 0` to the section reduced document overflow to zero without changing its content order or public API
+- `WorkShift` supplies a custom React element as `emptyMessage`, bypassing the standard `PageState` used by the representative Holidays and Overtime consumers
+
+Approved corrections:
+
+1. add only intrinsic-width containment to the section rendered by `MobileRecordList`
+2. protect that contract in the already-approved `ResponsiveRecordCollection` test suite
+3. pass the Custom Shifts empty copy as a string so the existing shared `PageState` owns its presentation
+4. strengthen the already-approved `WorkShift` suite to distinguish the standard empty presentation
+
+No `MobileRecordList` prop, item shape, ordering, action, breakpoint, or consumer callback may change. `RecordCard`, all other consumers, shared status semantics, and E2E data remain outside this correction.
 
 ## 12. Explicitly Out of Scope
 

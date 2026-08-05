@@ -6,13 +6,13 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 
 ## Current Status
 
-| Item                                | Status                                                                                              |
-| ----------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Working branch                      | `codex/frontend-upgrade-stage-1`                                                                    |
-| Current stage                       | Stage 5 Day 40 detailed consistency-review plan ready; review execution has not started             |
-| Gate decision                       | **Days 37–39 passed; bounded Day 40 review may begin; deployment remains outside scope**            |
-| Application/tooling changes started | Yes; latest committed implementation checkpoint remains `cbe48bf`                                   |
-| Next planned implementation         | Execute the Day 40 evidence matrix, classify findings, then apply only approved bounded corrections |
+| Item                                | Status                                                                                                   |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Working branch                      | `codex/frontend-upgrade-stage-1`                                                                         |
+| Current stage                       | Stage 5 Day 40 consistency review in progress; bounded Family C correction ledger approved               |
+| Gate decision                       | **Four families need no change; two Family C corrections may proceed; deployment remains outside scope** |
+| Application/tooling changes started | Yes; latest committed implementation checkpoint remains `cbe48bf`                                        |
+| Next planned implementation         | Add focused characterization, then correct mobile-list containment and Custom Shifts empty state         |
 
 ## Document Register
 

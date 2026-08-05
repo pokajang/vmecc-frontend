@@ -431,7 +431,7 @@ Roll out by pattern family, not by rewriting entire modules. The audit determine
 - Correct inconsistencies through the shared source when all consumers should change.
 - Correct a domain consumer locally when the difference is intentional.
 
-**Status (2026-08-05): Detailed plan ready; review execution and application corrections have not started.** The review is limited to the five component families changed in Stages 3–4, representative real-user journeys, primary desktop/mobile modes, targeted breakpoint probes, evidence-based classification, and proportional correction gates. Execution boundary: `FRONTEND_COMPONENT_REUSE_STAGE_5_CONSISTENCY_PLAN_2026-08-05.md`.
+**Status (2026-08-05): Execution in progress; bounded Family C correction ledger approved.** Static review, 14 direct suites / 81 tests, and deterministic breakpoint/theme fixtures passed for the unchanged contracts. Authenticated journeys are fixture-blocked by the local PostgreSQL service being unavailable. The review reproduced mobile record intrinsic-width overflow and a Custom Shifts empty-state inconsistency; the amended boundary authorizes only those two corrections. Execution boundary: `FRONTEND_COMPONENT_REUSE_STAGE_5_CONSISTENCY_PLAN_2026-08-05.md`.
 
 ## Day 41 — Final Code-Quality Checkpoint
 
