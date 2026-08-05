@@ -373,7 +373,7 @@ const CustomShifts = () => {
           <ResponsiveRecordCollection
             isLoading={loading}
             isEmpty={shifts.length === 0}
-            emptyMessage={<div className="text-muted small">No custom shifts defined yet.</div>}
+            emptyMessage="No custom shifts defined yet."
             mobileSections={mobileCustomShiftSections}
             mobileVariant="list-group"
           >

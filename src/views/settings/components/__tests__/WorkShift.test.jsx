@@ -72,7 +72,8 @@ it('renders the exact custom-shift empty state without record collections', asyn
 
   render(<WorkShift />)
 
-  await waitFor(() => expect(screen.getByText('No custom shifts defined yet.')).toBeTruthy())
+  const emptyMessage = await screen.findByText('No custom shifts defined yet.')
+  expect(emptyMessage.parentElement.style.minHeight).toBe('160px')
   const customShiftsCard = screen.getByTestId('shift-settings-custom')
   expect(customShiftsCard.querySelector('table')).toBeNull()
   expect(customShiftsCard.querySelector('.mobile-record-list')).toBeNull()
