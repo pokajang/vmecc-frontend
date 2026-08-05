@@ -441,7 +441,7 @@ Roll out by pattern family, not by rewriting entire modules. The audit determine
 - Review the final diff for behavior changes, dead code, broadened component APIs, and CSS leakage.
 - Confirm no major dependency or business-logic change entered the programme accidentally.
 
-**Status (2026-08-05): Detailed execution plan ready.** The checkpoint freezes `10e5d11`, compares the cumulative reuse programme from `2425780`, runs complete local lint/unit/build gates and applicable read-only audits, and permits only evidence-backed behavior-preserving corrections after a written boundary amendment. Plan: `FRONTEND_COMPONENT_REUSE_STAGE_5_FINAL_CHECKPOINT_PLAN_2026-08-05.md`.
+**Status (2026-08-05): Completed locally without an application correction.** Cumulative architecture and behavior review, repository-wide Prettier, full ESLint, 323 test files / 1,776 tests, six applicable read-only audits, a 6,493-module production build, guarded cleanup, and forbidden-boundary checks passed. Plan: `FRONTEND_COMPONENT_REUSE_STAGE_5_FINAL_CHECKPOINT_PLAN_2026-08-05.md`. Evidence: `FRONTEND_COMPONENT_REUSE_STAGE_5_FINAL_CHECKPOINT_EXECUTION_2026-08-05.md`.
 
 ## Day 42 — Completion Record
 
@@ -584,6 +584,6 @@ When paused, keep or restore the domain implementation, document the reason, and
 | Stage 2 — reuse audit                   | Completed through Day 10              | `FRONTEND_COMPONENT_REUSE_AUDIT_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_EXECUTION_PLAN_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_PATTERN_MATRIX_2026-08-04.md` | Three contracts approved; Staff canary and Holidays/Overtime pilots selected |
 | Stage 3 — shared foundations and pilots | Completed locally through Day 20      | `FRONTEND_COMPONENT_REUSE_STAGE_3_EXECUTION_2026-08-04.md`                                                                                                       | Preserve passing foundation and pilot boundaries                             |
 | Stage 4 — pattern rollout               | Completed locally through Day 36      | `FRONTEND_COMPONENT_REUSE_STAGE_4_FORMS_DIALOGS_EXECUTION_2026-08-04.md`                                                                                         | Preserve passing pattern boundaries; proceed to bounded Stage 5 cleanup      |
-| Stage 5 — cleanup and handover          | Day 41 detailed checkpoint ready      | `FRONTEND_COMPONENT_REUSE_STAGE_5_FINAL_CHECKPOINT_PLAN_2026-08-05.md`                                                                                           | Execute the final local validation and cumulative diff gate                  |
+| Stage 5 — cleanup and handover          | Completed locally through Day 41      | `FRONTEND_COMPONENT_REUSE_STAGE_5_FINAL_CHECKPOINT_EXECUTION_2026-08-05.md`                                                                                      | Prepare the Day 42 catalogue and completion handover                         |
 
 Revision 2 authorizes local frontend audit and behavior-preserving component consolidation. It does not authorize deployment, backend changes, production-data access, or silent business-workflow changes.

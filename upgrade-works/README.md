@@ -6,13 +6,13 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 
 ## Current Status
 
-| Item                                | Status                                                                                               |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Working branch                      | `codex/frontend-upgrade-stage-1`                                                                     |
-| Current stage                       | Stage 5 Day 41 final code-quality checkpoint planned and ready for execution                         |
-| Gate decision                       | **Day 40 passed; run the complete local validation and cumulative architecture gate**                |
-| Application/tooling changes started | Yes; latest committed implementation checkpoint is `a6bbadf`                                         |
-| Next planned implementation         | No new feature implementation; run the Day 41 cross-repository validation and cumulative diff review |
+| Item                                | Status                                                                                              |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Working branch                      | `codex/frontend-upgrade-stage-1`                                                                    |
+| Current stage                       | Stage 5 completed locally through Day 41; Day 42 catalogue and handover are next                    |
+| Gate decision                       | **Day 41 passed without an application correction; repository is ready for final documentation**    |
+| Application/tooling changes started | Yes; latest committed implementation checkpoint is `a6bbadf`                                        |
+| Next planned implementation         | No implementation planned; derive the Day 42 catalogue and handover from the final repository state |
 
 ## Document Register
 
@@ -41,7 +41,8 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | [Stage 5 cleanup execution](./FRONTEND_COMPONENT_REUSE_STAGE_5_CLEANUP_EXECUTION_2026-08-04.md)                        | Final reference proof, exact deletions, retained adapters, active PWA protections, validation, build cleanup, boundary, and rollback                    | Days 37–39 passed locally                           |
 | [Stage 5 consistency plan](./FRONTEND_COMPONENT_REUSE_STAGE_5_CONSISTENCY_PLAN_2026-08-05.md)                          | Detailed Day 40 real-user journeys, representative consumers, viewport/state matrix, evidence rubric, bounded corrections, validation, and rollback     | Day 40 passed locally                               |
 | [Stage 5 consistency execution](./FRONTEND_COMPONENT_REUSE_STAGE_5_CONSISTENCY_EXECUTION_2026-08-05.md)                | Five-family dispositions, responsive evidence, Family C corrections, fixture blocker, validation, cleanup, boundary, and rollback                       | Day 40 passed locally                               |
-| [Stage 5 final checkpoint plan](./FRONTEND_COMPONENT_REUSE_STAGE_5_FINAL_CHECKPOINT_PLAN_2026-08-05.md)                | Day 41 cumulative architecture review, complete local gates, audit applicability, correction controls, build cleanup, and rollback                      | Ready for execution                                 |
+| [Stage 5 final checkpoint plan](./FRONTEND_COMPONENT_REUSE_STAGE_5_FINAL_CHECKPOINT_PLAN_2026-08-05.md)                | Day 41 cumulative architecture review, complete local gates, audit applicability, correction controls, build cleanup, and rollback                      | Day 41 passed locally                               |
+| [Stage 5 final checkpoint execution](./FRONTEND_COMPONENT_REUSE_STAGE_5_FINAL_CHECKPOINT_EXECUTION_2026-08-05.md)      | Final architecture/behavior audit, full local gates, applicability decisions, build cleanup, advisories, residual risks, and Day 42 handover            | Day 41 passed locally                               |
 
 ## Completed Work
 
@@ -115,6 +116,9 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 - Passed changed-file formatting and lint, 15 focused files / 105 tests, representative breakpoint/theme checks, a 6,493-module production build, generated-output cleanup, and the exact implementation boundary.
 - Recorded authenticated browser journeys as fixture-blocked by the unavailable local PostgreSQL service rather than treating them as either a frontend pass or failure.
 - Prepared the bounded Day 41 final-checkpoint plan with the cumulative `2425780..HEAD` comparison, complete local quality gates, explicit audit applicability, evidence-before-correction controls, and guarded build cleanup.
+- Completed the Day 41 cumulative architecture and behavior-preservation review without finding an evidence-backed correction candidate.
+- Passed repository-wide Prettier, full ESLint, 323 test files / 1,776 tests, all six applicable read-only audits, and the 6,493-module production build.
+- Restored tracked build output, validated and removed only 111 previewed untracked build entries, and confirmed a clean generated-output boundary.
 
 ## Deferred Release-Only Actions
 
@@ -128,12 +132,12 @@ These actions remain valid but do not block local component-quality work. Reopen
 
 ## Next Work
 
-Execute the [Day 41 final-checkpoint plan](./FRONTEND_COMPONENT_REUSE_STAGE_5_FINAL_CHECKPOINT_PLAN_2026-08-05.md):
+Prepare Day 42 from the completed [Day 41 checkpoint](./FRONTEND_COMPONENT_REUSE_STAGE_5_FINAL_CHECKPOINT_EXECUTION_2026-08-05.md):
 
-1. Run full repository lint and the complete unit suite.
-2. Run only applicable repository audits and one final production build with guarded cleanup.
-3. Review the cumulative programme diff for behavior changes, dead code, broadened APIs, CSS leakage, and forbidden boundaries.
-4. Record the final checkpoint and independently actionable residual risks before preparing the Day 42 catalogue/handover.
+1. Derive the final component catalogue and production adoption matrix from current imports and consumers.
+2. Record retained domain exceptions, compatibility adapters, removed surfaces, and deferred candidates with explicit conditions.
+3. Write concise reuse-first guidance for future frontend changes.
+4. Publish the programme completion and release-impact handover without performing deployment or release qualification.
 
 ## File Naming
 
