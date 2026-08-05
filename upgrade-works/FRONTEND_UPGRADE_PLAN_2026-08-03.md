@@ -452,6 +452,8 @@ Roll out by pattern family, not by rewriting entire modules. The audit determine
 - Provide concise guidance for adding or selecting components in future feature work.
 - Prepare a release-impact summary without performing deployment qualification unless a release is requested.
 
+**Status (2026-08-05): Detailed completion and handover plan ready.** Day 42 will derive the final catalogue, adoption matrix, adapter/exception register, reuse-first contributor guide, programme completion record, and shared-cPanel release-impact summary from the clean `c2b5ff5` checkpoint. It is documentation-only and does not authorize further refactoring or deployment. Plan: `FRONTEND_COMPONENT_REUSE_STAGE_5_COMPLETION_PLAN_2026-08-05.md`.
+
 ### Stage 5 exit criteria
 
 - The component catalogue reflects the final repository state.
@@ -584,6 +586,6 @@ When paused, keep or restore the domain implementation, document the reason, and
 | Stage 2 — reuse audit                   | Completed through Day 10              | `FRONTEND_COMPONENT_REUSE_AUDIT_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_EXECUTION_PLAN_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_PATTERN_MATRIX_2026-08-04.md` | Three contracts approved; Staff canary and Holidays/Overtime pilots selected |
 | Stage 3 — shared foundations and pilots | Completed locally through Day 20      | `FRONTEND_COMPONENT_REUSE_STAGE_3_EXECUTION_2026-08-04.md`                                                                                                       | Preserve passing foundation and pilot boundaries                             |
 | Stage 4 — pattern rollout               | Completed locally through Day 36      | `FRONTEND_COMPONENT_REUSE_STAGE_4_FORMS_DIALOGS_EXECUTION_2026-08-04.md`                                                                                         | Preserve passing pattern boundaries; proceed to bounded Stage 5 cleanup      |
-| Stage 5 — cleanup and handover          | Completed locally through Day 41      | `FRONTEND_COMPONENT_REUSE_STAGE_5_FINAL_CHECKPOINT_EXECUTION_2026-08-05.md`                                                                                      | Prepare the Day 42 catalogue and completion handover                         |
+| Stage 5 — cleanup and handover          | Day 42 completion plan ready          | `FRONTEND_COMPONENT_REUSE_STAGE_5_COMPLETION_PLAN_2026-08-05.md`                                                                                                 | Execute the documentation-only catalogue and handover gate                   |
 
 Revision 2 authorizes local frontend audit and behavior-preserving component consolidation. It does not authorize deployment, backend changes, production-data access, or silent business-workflow changes.

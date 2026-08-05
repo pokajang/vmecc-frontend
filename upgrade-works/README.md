@@ -9,8 +9,8 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | Item                                | Status                                                                                              |
 | ----------------------------------- | --------------------------------------------------------------------------------------------------- |
 | Working branch                      | `codex/frontend-upgrade-stage-1`                                                                    |
-| Current stage                       | Stage 5 completed locally through Day 41; Day 42 catalogue and handover are next                    |
-| Gate decision                       | **Day 41 passed without an application correction; repository is ready for final documentation**    |
+| Current stage                       | Stage 5 Day 42 completion and handover plan ready for execution                                     |
+| Gate decision                       | **Day 41 passed; Day 42 is documentation-only and authorizes no further refactoring**               |
 | Application/tooling changes started | Yes; latest committed implementation checkpoint is `a6bbadf`                                        |
 | Next planned implementation         | No implementation planned; derive the Day 42 catalogue and handover from the final repository state |
 
@@ -43,6 +43,7 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | [Stage 5 consistency execution](./FRONTEND_COMPONENT_REUSE_STAGE_5_CONSISTENCY_EXECUTION_2026-08-05.md)                | Five-family dispositions, responsive evidence, Family C corrections, fixture blocker, validation, cleanup, boundary, and rollback                       | Day 40 passed locally                               |
 | [Stage 5 final checkpoint plan](./FRONTEND_COMPONENT_REUSE_STAGE_5_FINAL_CHECKPOINT_PLAN_2026-08-05.md)                | Day 41 cumulative architecture review, complete local gates, audit applicability, correction controls, build cleanup, and rollback                      | Day 41 passed locally                               |
 | [Stage 5 final checkpoint execution](./FRONTEND_COMPONENT_REUSE_STAGE_5_FINAL_CHECKPOINT_EXECUTION_2026-08-05.md)      | Final architecture/behavior audit, full local gates, applicability decisions, build cleanup, advisories, residual risks, and Day 42 handover            | Day 41 passed locally                               |
+| [Stage 5 completion/handover plan](./FRONTEND_COMPONENT_REUSE_STAGE_5_COMPLETION_PLAN_2026-08-05.md)                   | Day 42 repository-derived catalogue, adoption matrix, adapter/exception register, contributor guidance, release impact, closure controls, and rollback  | Ready for execution                                 |
 
 ## Completed Work
 
@@ -119,6 +120,7 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 - Completed the Day 41 cumulative architecture and behavior-preservation review without finding an evidence-backed correction candidate.
 - Passed repository-wide Prettier, full ESLint, 323 test files / 1,776 tests, all six applicable read-only audits, and the 6,493-module production build.
 - Restored tracked build output, validated and removed only 111 previewed untracked build entries, and confirmed a clean generated-output boundary.
+- Prepared the documentation-only Day 42 completion plan for a repository-derived catalogue, concrete adoption matrix, adapter/exception register, reuse-first contributor guide, and shared-cPanel handover.
 
 ## Deferred Release-Only Actions
 
@@ -132,7 +134,7 @@ These actions remain valid but do not block local component-quality work. Reopen
 
 ## Next Work
 
-Prepare Day 42 from the completed [Day 41 checkpoint](./FRONTEND_COMPONENT_REUSE_STAGE_5_FINAL_CHECKPOINT_EXECUTION_2026-08-05.md):
+Execute the [Day 42 completion and handover plan](./FRONTEND_COMPONENT_REUSE_STAGE_5_COMPLETION_PLAN_2026-08-05.md):
 
 1. Derive the final component catalogue and production adoption matrix from current imports and consumers.
 2. Record retained domain exceptions, compatibility adapters, removed surfaces, and deferred candidates with explicit conditions.
