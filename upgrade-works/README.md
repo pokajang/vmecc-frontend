@@ -6,13 +6,13 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 
 ## Current Status
 
-| Item                                | Status                                                                                            |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Working branch                      | `codex/frontend-upgrade-stage-1`                                                                  |
-| Current stage                       | Stage 5 completed locally through Day 39; Day 40 planning is next                                 |
-| Gate decision                       | **Days 37–39 passed; Day 40 consistency review may be planned; deployment remains outside scope** |
-| Application/tooling changes started | Yes; latest committed implementation checkpoint `cbe48bf`                                         |
-| Next planned implementation         | Write the bounded Day 40 consistency-review plan                                                  |
+| Item                                | Status                                                                                              |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Working branch                      | `codex/frontend-upgrade-stage-1`                                                                    |
+| Current stage                       | Stage 5 Day 40 detailed consistency-review plan ready; review execution has not started             |
+| Gate decision                       | **Days 37–39 passed; bounded Day 40 review may begin; deployment remains outside scope**            |
+| Application/tooling changes started | Yes; latest committed implementation checkpoint remains `cbe48bf`                                   |
+| Next planned implementation         | Execute the Day 40 evidence matrix, classify findings, then apply only approved bounded corrections |
 
 ## Document Register
 
@@ -39,6 +39,7 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | [Stage 4 forms/dialogs execution](./FRONTEND_COMPONENT_REUSE_STAGE_4_FORMS_DIALOGS_EXECUTION_2026-08-04.md)            | Final dispositions, ERCO responsive-shell extraction, characterization, full Stage 4 validation, cumulative boundary, and rollback                      | Stage 4 passed locally                              |
 | [Stage 5 cleanup plan](./FRONTEND_COMPONENT_REUSE_STAGE_5_CLEANUP_PLAN_2026-08-04.md)                                  | Detailed Days 37–39 zero-use proof, approved template/PWA cleanup, retained-adapter conditions, validation, stop controls, and rollback                 | Days 37–39 passed locally                           |
 | [Stage 5 cleanup execution](./FRONTEND_COMPONENT_REUSE_STAGE_5_CLEANUP_EXECUTION_2026-08-04.md)                        | Final reference proof, exact deletions, retained adapters, active PWA protections, validation, build cleanup, boundary, and rollback                    | Days 37–39 passed locally                           |
+| [Stage 5 consistency plan](./FRONTEND_COMPONENT_REUSE_STAGE_5_CONSISTENCY_PLAN_2026-08-05.md)                          | Detailed Day 40 real-user journeys, representative consumers, viewport/state matrix, evidence rubric, bounded corrections, validation, and rollback     | Planned; review execution not started               |
 
 ## Completed Work
 
@@ -107,6 +108,7 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 - Prepared the bounded Stage 5 Days 37–39 cleanup plan with reproducible zero-runtime-use proof for `AppBreadcrumb`, `DocsLink`, and the dormant PWA banner surface, while retaining active adapters and install behavior.
 - Completed Days 37–39 by removing only those three unmounted components and their exclusive barrel, hook, test, selector, and E2E residue in two independently reversible commits.
 - Preserved active PWA installation and every compatibility surface with consumers; passed full lint, 3 files / 9 retained PWA tests, affected audits, a 6,493-module production build, guarded cleanup, and the exact implementation boundary.
+- Prepared the bounded Day 40 consistency-review plan around the five component families changed in Stages 3–4, representative HR/admin/reporting journeys, primary desktop/mobile modes, targeted breakpoint probes, and evidence-before-code gates.
 
 ## Deferred Release-Only Actions
 
@@ -120,12 +122,12 @@ These actions remain valid but do not block local component-quality work. Reopen
 
 ## Next Work
 
-Write the bounded Day 40 consistency-review plan:
+Execute Day 40 under the [consistency-review plan](./FRONTEND_COMPONENT_REUSE_STAGE_5_CONSISTENCY_PLAN_2026-08-05.md):
 
-1. Select representative migrated modules and explicit desktop/mobile viewports.
-2. Define evidence capture for headers, spacing, actions, filters, responsive collections, states, forms, and dialogs.
-3. Separate shared-source inconsistencies from intentional domain differences before authorizing changes.
-4. Set focused regression, accessibility, boundary, production-build, and rollback gates proportionate to any approved corrections.
+1. Build the static shared-component/consumer consistency matrix without editing source.
+2. Walk the representative real-user journeys at the required desktop/mobile, theme, keyboard, touch, and applicable breakpoint modes.
+3. Classify verified findings as shared, consumer-local, intentional difference, deferred, or fixture-blocked before changing code.
+4. Apply only Blocker, High, or clearly bounded Medium corrections with focused characterization, proportional regression, and independent rollback.
 
 ## File Naming
 

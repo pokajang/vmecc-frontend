@@ -431,6 +431,8 @@ Roll out by pattern family, not by rewriting entire modules. The audit determine
 - Correct inconsistencies through the shared source when all consumers should change.
 - Correct a domain consumer locally when the difference is intentional.
 
+**Status (2026-08-05): Detailed plan ready; review execution and application corrections have not started.** The review is limited to the five component families changed in Stages 3–4, representative real-user journeys, primary desktop/mobile modes, targeted breakpoint probes, evidence-based classification, and proportional correction gates. Execution boundary: `FRONTEND_COMPONENT_REUSE_STAGE_5_CONSISTENCY_PLAN_2026-08-05.md`.
+
 ## Day 41 — Final Code-Quality Checkpoint
 
 ### Work
@@ -580,6 +582,6 @@ When paused, keep or restore the domain implementation, document the reason, and
 | Stage 2 — reuse audit                   | Completed through Day 10              | `FRONTEND_COMPONENT_REUSE_AUDIT_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_EXECUTION_PLAN_2026-08-04.md`; `FRONTEND_COMPONENT_REUSE_PATTERN_MATRIX_2026-08-04.md` | Three contracts approved; Staff canary and Holidays/Overtime pilots selected |
 | Stage 3 — shared foundations and pilots | Completed locally through Day 20      | `FRONTEND_COMPONENT_REUSE_STAGE_3_EXECUTION_2026-08-04.md`                                                                                                       | Preserve passing foundation and pilot boundaries                             |
 | Stage 4 — pattern rollout               | Completed locally through Day 36      | `FRONTEND_COMPONENT_REUSE_STAGE_4_FORMS_DIALOGS_EXECUTION_2026-08-04.md`                                                                                         | Preserve passing pattern boundaries; proceed to bounded Stage 5 cleanup      |
-| Stage 5 — cleanup and handover          | Completed locally through Day 39      | `FRONTEND_COMPONENT_REUSE_STAGE_5_CLEANUP_EXECUTION_2026-08-04.md`                                                                                               | Preserve cleanup boundary; plan Day 40 consistency review                    |
+| Stage 5 — cleanup and handover          | Day 40 detailed plan ready            | `FRONTEND_COMPONENT_REUSE_STAGE_5_CONSISTENCY_PLAN_2026-08-05.md`                                                                                                | Begin representative consistency-review gate                                 |
 
 Revision 2 authorizes local frontend audit and behavior-preserving component consolidation. It does not authorize deployment, backend changes, production-data access, or silent business-workflow changes.
