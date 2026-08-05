@@ -6,13 +6,13 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 
 ## Current Status
 
-| Item                                | Status                                                                                                   |
-| ----------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Working branch                      | `codex/frontend-upgrade-stage-1`                                                                         |
-| Current stage                       | Stage 5 Day 40 consistency review in progress; bounded Family C correction ledger approved               |
-| Gate decision                       | **Four families need no change; two Family C corrections may proceed; deployment remains outside scope** |
-| Application/tooling changes started | Yes; latest committed implementation checkpoint remains `cbe48bf`                                        |
-| Next planned implementation         | Add focused characterization, then correct mobile-list containment and Custom Shifts empty state         |
+| Item                                | Status                                                                                               |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Working branch                      | `codex/frontend-upgrade-stage-1`                                                                     |
+| Current stage                       | Stage 5 completed locally through Day 40; Day 41 final code-quality checkpoint is next               |
+| Gate decision                       | **Day 40 passed; four families retained, two bounded Family C corrections completed**                |
+| Application/tooling changes started | Yes; latest committed implementation checkpoint is `a6bbadf`                                         |
+| Next planned implementation         | No new feature implementation; run the Day 41 cross-repository validation and cumulative diff review |
 
 ## Document Register
 
@@ -39,7 +39,8 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | [Stage 4 forms/dialogs execution](./FRONTEND_COMPONENT_REUSE_STAGE_4_FORMS_DIALOGS_EXECUTION_2026-08-04.md)            | Final dispositions, ERCO responsive-shell extraction, characterization, full Stage 4 validation, cumulative boundary, and rollback                      | Stage 4 passed locally                              |
 | [Stage 5 cleanup plan](./FRONTEND_COMPONENT_REUSE_STAGE_5_CLEANUP_PLAN_2026-08-04.md)                                  | Detailed Days 37–39 zero-use proof, approved template/PWA cleanup, retained-adapter conditions, validation, stop controls, and rollback                 | Days 37–39 passed locally                           |
 | [Stage 5 cleanup execution](./FRONTEND_COMPONENT_REUSE_STAGE_5_CLEANUP_EXECUTION_2026-08-04.md)                        | Final reference proof, exact deletions, retained adapters, active PWA protections, validation, build cleanup, boundary, and rollback                    | Days 37–39 passed locally                           |
-| [Stage 5 consistency plan](./FRONTEND_COMPONENT_REUSE_STAGE_5_CONSISTENCY_PLAN_2026-08-05.md)                          | Detailed Day 40 real-user journeys, representative consumers, viewport/state matrix, evidence rubric, bounded corrections, validation, and rollback     | Planned; review execution not started               |
+| [Stage 5 consistency plan](./FRONTEND_COMPONENT_REUSE_STAGE_5_CONSISTENCY_PLAN_2026-08-05.md)                          | Detailed Day 40 real-user journeys, representative consumers, viewport/state matrix, evidence rubric, bounded corrections, validation, and rollback     | Day 40 passed locally                               |
+| [Stage 5 consistency execution](./FRONTEND_COMPONENT_REUSE_STAGE_5_CONSISTENCY_EXECUTION_2026-08-05.md)                | Five-family dispositions, responsive evidence, Family C corrections, fixture blocker, validation, cleanup, boundary, and rollback                       | Day 40 passed locally                               |
 
 ## Completed Work
 
@@ -109,6 +110,9 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 - Completed Days 37–39 by removing only those three unmounted components and their exclusive barrel, hook, test, selector, and E2E residue in two independently reversible commits.
 - Preserved active PWA installation and every compatibility surface with consumers; passed full lint, 3 files / 9 retained PWA tests, affected audits, a 6,493-module production build, guarded cleanup, and the exact implementation boundary.
 - Prepared the bounded Day 40 consistency-review plan around the five component families changed in Stages 3–4, representative HR/admin/reporting journeys, primary desktop/mobile modes, targeted breakpoint probes, and evidence-before-code gates.
+- Completed the Day 40 consistency review: retained four coherent families, fixed mobile record intrinsic-width overflow, and routed Custom Shifts through the standard shared empty-state presentation.
+- Passed changed-file formatting and lint, 15 focused files / 105 tests, representative breakpoint/theme checks, a 6,493-module production build, generated-output cleanup, and the exact implementation boundary.
+- Recorded authenticated browser journeys as fixture-blocked by the unavailable local PostgreSQL service rather than treating them as either a frontend pass or failure.
 
 ## Deferred Release-Only Actions
 
@@ -122,12 +126,12 @@ These actions remain valid but do not block local component-quality work. Reopen
 
 ## Next Work
 
-Execute Day 40 under the [consistency-review plan](./FRONTEND_COMPONENT_REUSE_STAGE_5_CONSISTENCY_PLAN_2026-08-05.md):
+Run Day 41 from the completed [Day 40 execution checkpoint](./FRONTEND_COMPONENT_REUSE_STAGE_5_CONSISTENCY_EXECUTION_2026-08-05.md):
 
-1. Build the static shared-component/consumer consistency matrix without editing source.
-2. Walk the representative real-user journeys at the required desktop/mobile, theme, keyboard, touch, and applicable breakpoint modes.
-3. Classify verified findings as shared, consumer-local, intentional difference, deferred, or fixture-blocked before changing code.
-4. Apply only Blocker, High, or clearly bounded Medium corrections with focused characterization, proportional regression, and independent rollback.
+1. Run full repository lint and the complete unit suite.
+2. Run only applicable repository audits and one final production build with guarded cleanup.
+3. Review the cumulative programme diff for behavior changes, dead code, broadened APIs, CSS leakage, and forbidden boundaries.
+4. Record the final checkpoint and independently actionable residual risks before preparing the Day 42 catalogue/handover.
 
 ## File Naming
 

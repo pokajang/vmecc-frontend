@@ -7,7 +7,7 @@
 **Parent plan:** `FRONTEND_UPGRADE_PLAN_2026-08-03.md`, Revision 2  
 **Prior checkpoint:** `FRONTEND_COMPONENT_REUSE_STAGE_5_CLEANUP_EXECUTION_2026-08-04.md`  
 **Scope:** Stage 5 Day 40 — representative desktop/mobile consistency review and evidence-backed corrections  
-**Status:** Execution in progress; bounded Family C correction ledger approved  
+**Status:** Completed locally; two bounded Family C corrections passed  
 **Authorization boundary:** Local frontend review and behavior-preserving corrections only; no deployment, GitHub Actions, backend, API contract, route-definition, permission, persistence, dependency, business validation, status, workflow, or broad redesign changes
 
 ## 1. Purpose
@@ -582,3 +582,14 @@ Day 40 is complete when:
 - no prohibited behavior, dependency, backend, route, API, permission, persistence, workflow, generated output, or unrelated file enters the diff
 - the execution record and programme trackers agree
 - the worktree is clean and Day 41 can start from a documented checkpoint
+
+## 17. Execution Result
+
+Day 40 completed locally on 2026-08-05. Families A, B, D, and E required no application change. The two approved Family C corrections were implemented in independent commits:
+
+- `dab6a0e` contains long mobile record content without changing the shared API or record behavior
+- `a6bbadf` routes the unchanged Custom Shifts empty copy through the standard shared empty-state presentation
+
+Changed-file formatting and lint, 15 focused files / 105 tests, the representative breakpoint/theme fixture, implementation-boundary checks, and a 6,493-module production build passed. Authenticated browser journeys remain explicitly fixture-blocked because the local PostgreSQL service was unavailable; no environment or persisted data was changed to bypass it.
+
+Full evidence, cleanup, rollback, and Day 41 handover are recorded in `FRONTEND_COMPONENT_REUSE_STAGE_5_CONSISTENCY_EXECUTION_2026-08-05.md`.
