@@ -1,0 +1,3189 @@
+{
+  "schemaVersion": 1,
+  "generatedFrom": "tests/e2e/live-uat/route-manifest.json",
+  "productionMode": "read-only",
+  "personas": [
+    "unauthenticated",
+    "trt",
+    "incidentCommander",
+    "contractManager",
+    "humanResource",
+    "finance",
+    "sysadmin"
+  ],
+  "inspectionStates": [
+    {
+      "key": "general",
+      "name": "General Inspection",
+      "states": [
+        "home",
+        "new-form",
+        "review",
+        "submitted-detail",
+        "image-evidence"
+      ]
+    },
+    {
+      "key": "hse",
+      "name": "Health Safety Environment",
+      "states": [
+        "home",
+        "new-form",
+        "review",
+        "submitted-detail",
+        "image-evidence"
+      ]
+    },
+    {
+      "key": "fire-extinguisher",
+      "name": "Fire Extinguisher",
+      "states": [
+        "home",
+        "new-form",
+        "review",
+        "submitted-detail",
+        "image-evidence"
+      ]
+    },
+    {
+      "key": "frt-daily",
+      "name": "Fire Truck Daily Readiness",
+      "states": [
+        "home",
+        "new-form",
+        "review",
+        "submitted-detail",
+        "image-evidence"
+      ]
+    },
+    {
+      "key": "hydraulic",
+      "name": "Hydraulic Rescue Tools",
+      "states": [
+        "home",
+        "new-form",
+        "review",
+        "submitted-detail",
+        "image-evidence"
+      ]
+    },
+    {
+      "key": "high-angle",
+      "name": "High Angle Rescue Equipment",
+      "states": [
+        "home",
+        "new-form",
+        "review",
+        "submitted-detail",
+        "image-evidence"
+      ]
+    },
+    {
+      "key": "er-aux",
+      "name": "Emergency Response Auxiliary Equipment",
+      "states": [
+        "home",
+        "new-form",
+        "review",
+        "submitted-detail",
+        "image-evidence"
+      ]
+    },
+    {
+      "key": "scba",
+      "name": "SCBA",
+      "states": [
+        "home",
+        "new-form",
+        "review",
+        "submitted-detail",
+        "image-evidence"
+      ]
+    }
+  ],
+  "reportStates": [
+    {
+      "key": "erco",
+      "name": "ERCO",
+      "states": [
+        "home",
+        "new-form",
+        "review",
+        "submitted-detail",
+        "image-evidence"
+      ]
+    },
+    {
+      "key": "fitness-test",
+      "name": "Fitness Test",
+      "states": [
+        "home",
+        "new-form",
+        "review",
+        "submitted-detail",
+        "image-evidence"
+      ]
+    },
+    {
+      "key": "drill",
+      "name": "Drill",
+      "states": [
+        "home",
+        "new-form",
+        "review",
+        "submitted-detail",
+        "image-evidence"
+      ]
+    }
+  ],
+  "routes": [
+    {
+      "routeId": "LIVE-UAT-001",
+      "routePattern": "/",
+      "name": "Home",
+      "moduleFamily": "dashboard",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [],
+      "routeType": "redirect",
+      "plannedStatus": "redirect-only",
+      "expectedDestination": "/dashboard",
+      "fixtureAlias": null,
+      "expectedHeading": null,
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-002",
+      "routePattern": "/403",
+      "name": "Forbidden",
+      "moduleFamily": "public",
+      "primaryPersona": "unauthenticated",
+      "secondaryPersonas": [],
+      "routeType": "public",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Forbidden",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-003",
+      "routePattern": "/404",
+      "name": "Not Found",
+      "moduleFamily": "public",
+      "primaryPersona": "unauthenticated",
+      "secondaryPersonas": [],
+      "routeType": "public",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Not Found",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-004",
+      "routePattern": "/500",
+      "name": "Server Error",
+      "moduleFamily": "public",
+      "primaryPersona": "unauthenticated",
+      "secondaryPersonas": [],
+      "routeType": "public",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Server Error",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-005",
+      "routePattern": "/admin/ai-helper-knowledge",
+      "name": "Ask AI Knowledge",
+      "moduleFamily": "administration",
+      "primaryPersona": "sysadmin",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "controlled-only",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Ask AI Knowledge",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-006",
+      "routePattern": "/admin/ai-helper-reports",
+      "name": "Ask AI Reports",
+      "moduleFamily": "administration",
+      "primaryPersona": "sysadmin",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Ask AI Reports",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-007",
+      "routePattern": "/admin/audit",
+      "name": "Audit",
+      "moduleFamily": "administration",
+      "primaryPersona": "sysadmin",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Audit",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-008",
+      "routePattern": "/admin/feedback-reports",
+      "name": "Feedback Reports",
+      "moduleFamily": "administration",
+      "primaryPersona": "sysadmin",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Feedback Reports",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-009",
+      "routePattern": "/admin/users",
+      "name": "Users",
+      "moduleFamily": "administration",
+      "primaryPersona": "sysadmin",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "controlled-only",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Users",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "search-filter",
+        "responsive-data-list"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-010",
+      "routePattern": "/admin/users/:id",
+      "name": "User Profile",
+      "moduleFamily": "administration",
+      "primaryPersona": "sysadmin",
+      "secondaryPersonas": [],
+      "routeType": "dynamic",
+      "plannedStatus": "data-blocked",
+      "expectedDestination": null,
+      "fixtureAlias": "managed-user",
+      "expectedHeading": "User Profile",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "search-filter",
+        "responsive-data-list"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-011",
+      "routePattern": "/admin/users/:id/:slug",
+      "name": "User Profile",
+      "moduleFamily": "administration",
+      "primaryPersona": "sysadmin",
+      "secondaryPersonas": [],
+      "routeType": "dynamic",
+      "plannedStatus": "data-blocked",
+      "expectedDestination": null,
+      "fixtureAlias": "managed-user",
+      "expectedHeading": "User Profile",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "search-filter",
+        "responsive-data-list"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-012",
+      "routePattern": "/dashboard",
+      "name": "Dashboard",
+      "moduleFamily": "dashboard",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Dashboard",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-013",
+      "routePattern": "/forgot-password",
+      "name": "Forgot Password",
+      "moduleFamily": "public",
+      "primaryPersona": "unauthenticated",
+      "secondaryPersonas": [],
+      "routeType": "public",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Forgot Password",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-014",
+      "routePattern": "/inspection",
+      "name": "Inspection",
+      "moduleFamily": "inspection",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [
+        "incidentCommander"
+      ],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Inspection",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "metadata-summary",
+        "workflow-status",
+        "image-gallery",
+        "mobile-actions",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-015",
+      "routePattern": "/inspection/:reportId",
+      "name": "Inspection Detail",
+      "moduleFamily": "inspection",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [
+        "incidentCommander"
+      ],
+      "routeType": "dynamic",
+      "plannedStatus": "data-blocked",
+      "expectedDestination": null,
+      "fixtureAlias": "submitted-inspection",
+      "expectedHeading": "Inspection Detail",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "metadata-summary",
+        "workflow-status",
+        "image-gallery",
+        "mobile-actions",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-016",
+      "routePattern": "/inspection/:reportId/edit",
+      "name": "Inspection Edit",
+      "moduleFamily": "inspection",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [
+        "incidentCommander"
+      ],
+      "routeType": "dynamic",
+      "plannedStatus": "controlled-only",
+      "expectedDestination": null,
+      "fixtureAlias": "submitted-inspection",
+      "expectedHeading": "Inspection Edit",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "metadata-summary",
+        "workflow-status",
+        "image-gallery",
+        "mobile-actions",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-017",
+      "routePattern": "/inspection/all-extinguishers",
+      "name": "All Extinguishers",
+      "moduleFamily": "inspection",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [
+        "incidentCommander"
+      ],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "All Extinguishers",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "metadata-summary",
+        "workflow-status",
+        "image-gallery",
+        "mobile-actions",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-018",
+      "routePattern": "/inspection/all-extinguishers/:extinguisherId",
+      "name": "Fire Extinguisher Detail",
+      "moduleFamily": "inspection",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [
+        "incidentCommander"
+      ],
+      "routeType": "dynamic",
+      "plannedStatus": "data-blocked",
+      "expectedDestination": null,
+      "fixtureAlias": "active-fire-extinguisher",
+      "expectedHeading": "Fire Extinguisher Detail",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "metadata-summary",
+        "workflow-status",
+        "image-gallery",
+        "mobile-actions",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-019",
+      "routePattern": "/inspection/all-extinguishers/new",
+      "name": "Add Fire Extinguisher",
+      "moduleFamily": "inspection",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [
+        "incidentCommander"
+      ],
+      "routeType": "static",
+      "plannedStatus": "controlled-only",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Add Fire Extinguisher",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "metadata-summary",
+        "workflow-status",
+        "image-gallery",
+        "mobile-actions",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-020",
+      "routePattern": "/inspection/new",
+      "name": "New Inspection",
+      "moduleFamily": "inspection",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [
+        "incidentCommander"
+      ],
+      "routeType": "static",
+      "plannedStatus": "controlled-only",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "New Inspection",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "metadata-summary",
+        "workflow-status",
+        "image-gallery",
+        "mobile-actions",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-021",
+      "routePattern": "/inspection/new/:newSection",
+      "name": "New Inspection Section",
+      "moduleFamily": "inspection",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [
+        "incidentCommander"
+      ],
+      "routeType": "dynamic",
+      "plannedStatus": "controlled-only",
+      "expectedDestination": null,
+      "fixtureAlias": "new-section",
+      "expectedHeading": "New Inspection Section",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "metadata-summary",
+        "workflow-status",
+        "image-gallery",
+        "mobile-actions",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-022",
+      "routePattern": "/inspection/review",
+      "name": "Inspection Review",
+      "moduleFamily": "inspection",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [
+        "incidentCommander"
+      ],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Inspection Review",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "metadata-summary",
+        "workflow-status",
+        "image-gallery",
+        "mobile-actions",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-023",
+      "routePattern": "/inspection/ux-matrix",
+      "name": "Inspection UX Matrix",
+      "moduleFamily": "inspection",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [
+        "incidentCommander"
+      ],
+      "routeType": "static",
+      "plannedStatus": "controlled-only",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Inspection UX Matrix",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "metadata-summary",
+        "workflow-status",
+        "image-gallery",
+        "mobile-actions",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-024",
+      "routePattern": "/inspection/workflow-settings",
+      "name": "Inspection Workflow Settings",
+      "moduleFamily": "inspection",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [
+        "incidentCommander"
+      ],
+      "routeType": "redirect",
+      "plannedStatus": "redirect-only",
+      "expectedDestination": "/reporting-settings/inspection",
+      "fixtureAlias": null,
+      "expectedHeading": null,
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "metadata-summary",
+        "workflow-status",
+        "image-gallery",
+        "mobile-actions",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-025",
+      "routePattern": "/leave",
+      "name": "Leave",
+      "moduleFamily": "leave-self-service",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Leave",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-026",
+      "routePattern": "/leave/:leaveId",
+      "name": "Leave Detail",
+      "moduleFamily": "leave-self-service",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [],
+      "routeType": "dynamic",
+      "plannedStatus": "data-blocked",
+      "expectedDestination": null,
+      "fixtureAlias": "leave-record",
+      "expectedHeading": "Leave Detail",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "workflow-status",
+        "workflow-actions",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-027",
+      "routePattern": "/leave/new",
+      "name": "Apply Leave",
+      "moduleFamily": "leave-self-service",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "controlled-only",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Apply Leave",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-028",
+      "routePattern": "/login",
+      "name": "Login",
+      "moduleFamily": "public",
+      "primaryPersona": "unauthenticated",
+      "secondaryPersonas": [],
+      "routeType": "public",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Login",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-029",
+      "routePattern": "/messages",
+      "name": "Messages",
+      "moduleFamily": "messages",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Messages",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-030",
+      "routePattern": "/notifications/leave",
+      "name": "Workflow Notifications",
+      "moduleFamily": "notifications",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [],
+      "routeType": "redirect",
+      "plannedStatus": "redirect-only",
+      "expectedDestination": "/notifications/workflow",
+      "fixtureAlias": null,
+      "expectedHeading": null,
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-031",
+      "routePattern": "/notifications/workflow",
+      "name": "Workflow Notifications",
+      "moduleFamily": "notifications",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Workflow Notifications",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-032",
+      "routePattern": "/overtime",
+      "name": "Overtime",
+      "moduleFamily": "overtime-self-service",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Overtime",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-033",
+      "routePattern": "/overtime/:overtimeId",
+      "name": "Overtime Detail",
+      "moduleFamily": "overtime-self-service",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [],
+      "routeType": "dynamic",
+      "plannedStatus": "data-blocked",
+      "expectedDestination": null,
+      "fixtureAlias": "overtime-record",
+      "expectedHeading": "Overtime Detail",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "workflow-status",
+        "workflow-actions",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-034",
+      "routePattern": "/overtime/new",
+      "name": "New Overtime",
+      "moduleFamily": "overtime-self-service",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "controlled-only",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "New Overtime",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-035",
+      "routePattern": "/payroll",
+      "name": "Payroll",
+      "moduleFamily": "payroll-self-service",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Payroll",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-036",
+      "routePattern": "/payroll/claims",
+      "name": "Claims",
+      "moduleFamily": "payroll-self-service",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Claims",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-037",
+      "routePattern": "/payroll/claims/:claimId",
+      "name": "Claim Detail",
+      "moduleFamily": "payroll-self-service",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [],
+      "routeType": "dynamic",
+      "plannedStatus": "data-blocked",
+      "expectedDestination": null,
+      "fixtureAlias": "payroll-claim",
+      "expectedHeading": "Claim Detail",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "workflow-status",
+        "workflow-actions",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-038",
+      "routePattern": "/payroll/claims/new",
+      "name": "New Claim",
+      "moduleFamily": "payroll-self-service",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "controlled-only",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "New Claim",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-039",
+      "routePattern": "/payroll/claims/new/expense",
+      "name": "Expense Claim",
+      "moduleFamily": "payroll-self-service",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "controlled-only",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Expense Claim",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-040",
+      "routePattern": "/payroll/claims/new/salary",
+      "name": "Salary Claim",
+      "moduleFamily": "payroll-self-service",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "controlled-only",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Salary Claim",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-041",
+      "routePattern": "/payroll/payslips",
+      "name": "Payslips",
+      "moduleFamily": "payroll-self-service",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Payslips",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-042",
+      "routePattern": "/profile",
+      "name": "Profile",
+      "moduleFamily": "profile",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Profile",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-043",
+      "routePattern": "/profile/security",
+      "name": "Security",
+      "moduleFamily": "profile",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Security",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-044",
+      "routePattern": "/register",
+      "name": "Registration Redirect",
+      "moduleFamily": "public",
+      "primaryPersona": "unauthenticated",
+      "secondaryPersonas": [],
+      "routeType": "redirect",
+      "plannedStatus": "redirect-only",
+      "expectedDestination": "/login",
+      "fixtureAlias": null,
+      "expectedHeading": null,
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-045",
+      "routePattern": "/report/:reportType",
+      "name": "Reports",
+      "moduleFamily": "reports",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [
+        "incidentCommander"
+      ],
+      "routeType": "dynamic",
+      "plannedStatus": "data-blocked",
+      "expectedDestination": null,
+      "fixtureAlias": "report-type",
+      "expectedHeading": "Reports",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "metadata-summary",
+        "workflow-status",
+        "image-gallery",
+        "mobile-actions",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": [
+        {
+          "key": "erco",
+          "routePattern": "/report/erco"
+        },
+        {
+          "key": "fitness-test",
+          "routePattern": "/report/fitness-test"
+        },
+        {
+          "key": "drill",
+          "routePattern": "/report/drill"
+        }
+      ]
+    },
+    {
+      "routeId": "LIVE-UAT-046",
+      "routePattern": "/report/:reportType/:reportId",
+      "name": "Report Detail",
+      "moduleFamily": "reports",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [
+        "incidentCommander"
+      ],
+      "routeType": "dynamic",
+      "plannedStatus": "data-blocked",
+      "expectedDestination": null,
+      "fixtureAlias": "submitted-report",
+      "expectedHeading": "Report Detail",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "metadata-summary",
+        "workflow-status",
+        "image-gallery",
+        "mobile-actions",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": [
+        {
+          "key": "erco",
+          "routePattern": "/report/erco/:reportId"
+        },
+        {
+          "key": "fitness-test",
+          "routePattern": "/report/fitness-test/:reportId"
+        },
+        {
+          "key": "drill",
+          "routePattern": "/report/drill/:reportId"
+        }
+      ]
+    },
+    {
+      "routeId": "LIVE-UAT-047",
+      "routePattern": "/report/:reportType/new",
+      "name": "New Report",
+      "moduleFamily": "reports",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [
+        "incidentCommander"
+      ],
+      "routeType": "dynamic",
+      "plannedStatus": "controlled-only",
+      "expectedDestination": null,
+      "fixtureAlias": "report-type",
+      "expectedHeading": "New Report",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "metadata-summary",
+        "workflow-status",
+        "image-gallery",
+        "mobile-actions",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": [
+        {
+          "key": "erco",
+          "routePattern": "/report/erco/new"
+        },
+        {
+          "key": "fitness-test",
+          "routePattern": "/report/fitness-test/new"
+        },
+        {
+          "key": "drill",
+          "routePattern": "/report/drill/new"
+        }
+      ]
+    },
+    {
+      "routeId": "LIVE-UAT-048",
+      "routePattern": "/report/:reportType/new/:newSection",
+      "name": "New Report Section",
+      "moduleFamily": "reports",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [
+        "incidentCommander"
+      ],
+      "routeType": "dynamic",
+      "plannedStatus": "controlled-only",
+      "expectedDestination": null,
+      "fixtureAlias": "new-section",
+      "expectedHeading": "New Report Section",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "metadata-summary",
+        "workflow-status",
+        "image-gallery",
+        "mobile-actions",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": [
+        {
+          "key": "erco",
+          "routePattern": "/report/erco/new/:newSection"
+        },
+        {
+          "key": "fitness-test",
+          "routePattern": "/report/fitness-test/new/:newSection"
+        },
+        {
+          "key": "drill",
+          "routePattern": "/report/drill/new/:newSection"
+        }
+      ]
+    },
+    {
+      "routeId": "LIVE-UAT-049",
+      "routePattern": "/report/inspection",
+      "name": "Redirect",
+      "moduleFamily": "inspection",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [
+        "incidentCommander"
+      ],
+      "routeType": "redirect",
+      "plannedStatus": "redirect-only",
+      "expectedDestination": "/inspection",
+      "fixtureAlias": null,
+      "expectedHeading": null,
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "metadata-summary",
+        "workflow-status",
+        "image-gallery",
+        "mobile-actions",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-050",
+      "routePattern": "/report/inspection/:reportId",
+      "name": "Inspection Detail Legacy",
+      "moduleFamily": "inspection",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [
+        "incidentCommander"
+      ],
+      "routeType": "redirect",
+      "plannedStatus": "redirect-only",
+      "expectedDestination": "/inspection/:reportId",
+      "fixtureAlias": "submitted-inspection",
+      "expectedHeading": null,
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "metadata-summary",
+        "workflow-status",
+        "image-gallery",
+        "mobile-actions",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-051",
+      "routePattern": "/report/inspection/new",
+      "name": "Redirect",
+      "moduleFamily": "inspection",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [
+        "incidentCommander"
+      ],
+      "routeType": "redirect",
+      "plannedStatus": "redirect-only",
+      "expectedDestination": "/inspection/new",
+      "fixtureAlias": null,
+      "expectedHeading": null,
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "metadata-summary",
+        "workflow-status",
+        "image-gallery",
+        "mobile-actions",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-052",
+      "routePattern": "/report/inspection/new/:newSection",
+      "name": "Inspection New Section Legacy",
+      "moduleFamily": "inspection",
+      "primaryPersona": "trt",
+      "secondaryPersonas": [
+        "incidentCommander"
+      ],
+      "routeType": "redirect",
+      "plannedStatus": "redirect-only",
+      "expectedDestination": "/inspection/new/:newSection",
+      "fixtureAlias": "new-section",
+      "expectedHeading": null,
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "metadata-summary",
+        "workflow-status",
+        "image-gallery",
+        "mobile-actions",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-053",
+      "routePattern": "/reporting-settings",
+      "name": "Redirect",
+      "moduleFamily": "reporting-settings",
+      "primaryPersona": "sysadmin",
+      "secondaryPersonas": [],
+      "routeType": "redirect",
+      "plannedStatus": "redirect-only",
+      "expectedDestination": "/reporting-settings/inspection",
+      "fixtureAlias": null,
+      "expectedHeading": null,
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "metadata-summary",
+        "workflow-status",
+        "image-gallery",
+        "mobile-actions",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-054",
+      "routePattern": "/reporting-settings/:moduleKey",
+      "name": "Reporting Workflow",
+      "moduleFamily": "reporting-settings",
+      "primaryPersona": "sysadmin",
+      "secondaryPersonas": [],
+      "routeType": "dynamic",
+      "plannedStatus": "data-blocked",
+      "expectedDestination": null,
+      "fixtureAlias": "reporting-module",
+      "expectedHeading": "Reporting Workflow",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "metadata-summary",
+        "workflow-status",
+        "image-gallery",
+        "mobile-actions",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-055",
+      "routePattern": "/reset-password",
+      "name": "Reset Password",
+      "moduleFamily": "public",
+      "primaryPersona": "unauthenticated",
+      "secondaryPersonas": [],
+      "routeType": "public",
+      "plannedStatus": "controlled-only",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Reset Password",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-056",
+      "routePattern": "/roster",
+      "name": "Roster Management",
+      "moduleFamily": "roster",
+      "primaryPersona": "contractManager",
+      "secondaryPersonas": [],
+      "routeType": "redirect",
+      "plannedStatus": "redirect-only",
+      "expectedDestination": "/roster/overview",
+      "fixtureAlias": null,
+      "expectedHeading": null,
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "search-filter",
+        "responsive-data-list"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-057",
+      "routePattern": "/roster/overview",
+      "name": "Overview",
+      "moduleFamily": "roster",
+      "primaryPersona": "contractManager",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Overview",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "search-filter",
+        "responsive-data-list"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-058",
+      "routePattern": "/roster/schedule",
+      "name": "Schedule",
+      "moduleFamily": "roster",
+      "primaryPersona": "contractManager",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Schedule",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "search-filter",
+        "responsive-data-list"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-059",
+      "routePattern": "/roster/shift-settings",
+      "name": "Shift Settings",
+      "moduleFamily": "roster",
+      "primaryPersona": "contractManager",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Shift Settings",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "search-filter",
+        "responsive-data-list"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-060",
+      "routePattern": "/settings",
+      "name": "Settings",
+      "moduleFamily": "settings",
+      "primaryPersona": "sysadmin",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "controlled-only",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Settings",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-061",
+      "routePattern": "/settings/dashboard-visibility",
+      "name": "Dashboard Visibility",
+      "moduleFamily": "settings",
+      "primaryPersona": "sysadmin",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "controlled-only",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Dashboard Visibility",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-062",
+      "routePattern": "/settings/inspection-workflow",
+      "name": "Reporting Workflow",
+      "moduleFamily": "settings",
+      "primaryPersona": "sysadmin",
+      "secondaryPersonas": [],
+      "routeType": "redirect",
+      "plannedStatus": "redirect-only",
+      "expectedDestination": "/reporting-settings/inspection",
+      "fixtureAlias": null,
+      "expectedHeading": null,
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-063",
+      "routePattern": "/settings/modules",
+      "name": "Module Activation",
+      "moduleFamily": "settings",
+      "primaryPersona": "sysadmin",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "controlled-only",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Module Activation",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-064",
+      "routePattern": "/settings/role-permissions",
+      "name": "Role Permissions",
+      "moduleFamily": "settings",
+      "primaryPersona": "sysadmin",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "controlled-only",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Role Permissions",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-065",
+      "routePattern": "/staff/details",
+      "name": "Staff Details",
+      "moduleFamily": "staff",
+      "primaryPersona": "humanResource",
+      "secondaryPersonas": [
+        "contractManager"
+      ],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Staff Details",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-066",
+      "routePattern": "/staff/leave",
+      "name": "Leave Management Legacy",
+      "moduleFamily": "leave-management",
+      "primaryPersona": "humanResource",
+      "secondaryPersonas": [],
+      "routeType": "redirect",
+      "plannedStatus": "redirect-only",
+      "expectedDestination": "/staff/leave-management/leaves",
+      "fixtureAlias": null,
+      "expectedHeading": null,
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-067",
+      "routePattern": "/staff/leave-management",
+      "name": "Leave Management",
+      "moduleFamily": "leave-management",
+      "primaryPersona": "humanResource",
+      "secondaryPersonas": [],
+      "routeType": "redirect",
+      "plannedStatus": "redirect-only",
+      "expectedDestination": "/staff/leave-management/leaves",
+      "fixtureAlias": null,
+      "expectedHeading": null,
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-068",
+      "routePattern": "/staff/leave-management/:legacyLeaveId",
+      "name": "Leave Record Detail Legacy",
+      "moduleFamily": "leave-management",
+      "primaryPersona": "humanResource",
+      "secondaryPersonas": [],
+      "routeType": "redirect",
+      "plannedStatus": "redirect-only",
+      "expectedDestination": "/staff/leave-management/record/:leaveId",
+      "fixtureAlias": "legacy-leave-record",
+      "expectedHeading": null,
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "workflow-status",
+        "workflow-actions",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-069",
+      "routePattern": "/staff/leave-management/leaves",
+      "name": "Leave Requests",
+      "moduleFamily": "leave-management",
+      "primaryPersona": "humanResource",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Leave Requests",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-070",
+      "routePattern": "/staff/leave-management/overtime",
+      "name": "Overtime Records",
+      "moduleFamily": "leave-management",
+      "primaryPersona": "humanResource",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Overtime Records",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-071",
+      "routePattern": "/staff/leave-management/record/:leaveId",
+      "name": "Leave Record Detail",
+      "moduleFamily": "leave-management",
+      "primaryPersona": "humanResource",
+      "secondaryPersonas": [],
+      "routeType": "dynamic",
+      "plannedStatus": "data-blocked",
+      "expectedDestination": null,
+      "fixtureAlias": "leave-record",
+      "expectedHeading": "Leave Record Detail",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "workflow-status",
+        "workflow-actions",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-072",
+      "routePattern": "/staff/leave-management/rules",
+      "name": "Leave Workflow",
+      "moduleFamily": "leave-management",
+      "primaryPersona": "humanResource",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Leave Workflow",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-073",
+      "routePattern": "/staff/leave-management/set-holidays",
+      "name": "Holidays",
+      "moduleFamily": "leave-management",
+      "primaryPersona": "humanResource",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "controlled-only",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Holidays",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-074",
+      "routePattern": "/staff/leave-management/set-leaves",
+      "name": "Leave Entitlements",
+      "moduleFamily": "leave-management",
+      "primaryPersona": "humanResource",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "controlled-only",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Leave Entitlements",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-075",
+      "routePattern": "/staff/leave/:leaveId",
+      "name": "Leave Record Detail Legacy",
+      "moduleFamily": "leave-management",
+      "primaryPersona": "humanResource",
+      "secondaryPersonas": [],
+      "routeType": "redirect",
+      "plannedStatus": "redirect-only",
+      "expectedDestination": "/staff/leave-management/record/:leaveId",
+      "fixtureAlias": "leave-record",
+      "expectedHeading": null,
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "workflow-status",
+        "workflow-actions",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-076",
+      "routePattern": "/staff/overtime-management",
+      "name": "Overtime Management",
+      "moduleFamily": "overtime-management",
+      "primaryPersona": "humanResource",
+      "secondaryPersonas": [
+        "contractManager"
+      ],
+      "routeType": "redirect",
+      "plannedStatus": "redirect-only",
+      "expectedDestination": "/staff/overtime-management/records",
+      "fixtureAlias": null,
+      "expectedHeading": null,
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-077",
+      "routePattern": "/staff/overtime-management/:legacyOvertimeRouteKey",
+      "name": "Overtime Record Detail Legacy",
+      "moduleFamily": "overtime-management",
+      "primaryPersona": "humanResource",
+      "secondaryPersonas": [
+        "contractManager"
+      ],
+      "routeType": "redirect",
+      "plannedStatus": "redirect-only",
+      "expectedDestination": "/staff/overtime-management/record/:overtimeRouteKey",
+      "fixtureAlias": "legacy-overtime-record",
+      "expectedHeading": null,
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "workflow-status",
+        "workflow-actions",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-078",
+      "routePattern": "/staff/overtime-management/record/:overtimeRouteKey",
+      "name": "Overtime Record Detail",
+      "moduleFamily": "overtime-management",
+      "primaryPersona": "humanResource",
+      "secondaryPersonas": [
+        "contractManager"
+      ],
+      "routeType": "dynamic",
+      "plannedStatus": "data-blocked",
+      "expectedDestination": null,
+      "fixtureAlias": "overtime-record",
+      "expectedHeading": "Overtime Record Detail",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "workflow-status",
+        "workflow-actions",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-079",
+      "routePattern": "/staff/overtime-management/records",
+      "name": "Overtime Records",
+      "moduleFamily": "overtime-management",
+      "primaryPersona": "humanResource",
+      "secondaryPersonas": [
+        "contractManager"
+      ],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Overtime Records",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-080",
+      "routePattern": "/staff/overtime-management/rules",
+      "name": "Overtime Rules",
+      "moduleFamily": "overtime-management",
+      "primaryPersona": "humanResource",
+      "secondaryPersonas": [
+        "contractManager"
+      ],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Overtime Rules",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-081",
+      "routePattern": "/staff/profile/:id",
+      "name": "Staff Profile",
+      "moduleFamily": "staff",
+      "primaryPersona": "humanResource",
+      "secondaryPersonas": [
+        "contractManager"
+      ],
+      "routeType": "dynamic",
+      "plannedStatus": "data-blocked",
+      "expectedDestination": null,
+      "fixtureAlias": "staff-member",
+      "expectedHeading": "Staff Profile",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-082",
+      "routePattern": "/staff/salary-claims",
+      "name": "Salary and Claims",
+      "moduleFamily": "payroll-management",
+      "primaryPersona": "finance",
+      "secondaryPersonas": [
+        "humanResource"
+      ],
+      "routeType": "redirect",
+      "plannedStatus": "redirect-only",
+      "expectedDestination": "/staff/salary-claims/salary",
+      "fixtureAlias": null,
+      "expectedHeading": null,
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions",
+        "search-filter",
+        "responsive-data-list"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-083",
+      "routePattern": "/staff/salary-claims/:legacyClaimId",
+      "name": "Salary and Claims Detail Legacy",
+      "moduleFamily": "payroll-management",
+      "primaryPersona": "finance",
+      "secondaryPersonas": [
+        "humanResource"
+      ],
+      "routeType": "redirect",
+      "plannedStatus": "redirect-only",
+      "expectedDestination": "/staff/salary-claims/claim/:claimId",
+      "fixtureAlias": "legacy-claim-record",
+      "expectedHeading": null,
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "workflow-status",
+        "workflow-actions",
+        "search-filter",
+        "responsive-data-list"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-084",
+      "routePattern": "/staff/salary-claims/assignment/:assignmentId/edit",
+      "name": "Redirect",
+      "moduleFamily": "payroll-management",
+      "primaryPersona": "finance",
+      "secondaryPersonas": [
+        "humanResource"
+      ],
+      "routeType": "redirect",
+      "plannedStatus": "redirect-only",
+      "expectedDestination": "/staff/set-salary/assignment/:assignmentId/edit",
+      "fixtureAlias": "salary-assignment",
+      "expectedHeading": null,
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "workflow-status",
+        "workflow-actions",
+        "search-filter",
+        "responsive-data-list"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-085",
+      "routePattern": "/staff/salary-claims/assignment/:assignmentId/view",
+      "name": "Redirect",
+      "moduleFamily": "payroll-management",
+      "primaryPersona": "finance",
+      "secondaryPersonas": [
+        "humanResource"
+      ],
+      "routeType": "redirect",
+      "plannedStatus": "redirect-only",
+      "expectedDestination": "/staff/set-salary/assignment/:assignmentId/view",
+      "fixtureAlias": "salary-assignment",
+      "expectedHeading": null,
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "workflow-status",
+        "workflow-actions",
+        "search-filter",
+        "responsive-data-list"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-086",
+      "routePattern": "/staff/salary-claims/assignment/new",
+      "name": "Redirect",
+      "moduleFamily": "payroll-management",
+      "primaryPersona": "finance",
+      "secondaryPersonas": [
+        "humanResource"
+      ],
+      "routeType": "redirect",
+      "plannedStatus": "redirect-only",
+      "expectedDestination": "/staff/set-salary/assignment/new",
+      "fixtureAlias": null,
+      "expectedHeading": null,
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions",
+        "search-filter",
+        "responsive-data-list"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-087",
+      "routePattern": "/staff/salary-claims/claim/:claimId",
+      "name": "Salary and Claims Detail",
+      "moduleFamily": "payroll-management",
+      "primaryPersona": "finance",
+      "secondaryPersonas": [
+        "humanResource"
+      ],
+      "routeType": "dynamic",
+      "plannedStatus": "data-blocked",
+      "expectedDestination": null,
+      "fixtureAlias": "payroll-claim",
+      "expectedHeading": "Salary and Claims Detail",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "workflow-status",
+        "workflow-actions",
+        "search-filter",
+        "responsive-data-list"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-088",
+      "routePattern": "/staff/salary-claims/claims",
+      "name": "Claim Records",
+      "moduleFamily": "payroll-management",
+      "primaryPersona": "finance",
+      "secondaryPersonas": [
+        "humanResource"
+      ],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Claim Records",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions",
+        "search-filter",
+        "responsive-data-list"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-089",
+      "routePattern": "/staff/salary-claims/company-legal",
+      "name": "Redirect",
+      "moduleFamily": "payroll-management",
+      "primaryPersona": "finance",
+      "secondaryPersonas": [
+        "humanResource"
+      ],
+      "routeType": "redirect",
+      "plannedStatus": "redirect-only",
+      "expectedDestination": "/staff/set-salary/company-legal",
+      "fixtureAlias": null,
+      "expectedHeading": null,
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions",
+        "search-filter",
+        "responsive-data-list"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-090",
+      "routePattern": "/staff/salary-claims/overtime/:overtimeRouteKey",
+      "name": "Overtime Records Detail Legacy",
+      "moduleFamily": "payroll-management",
+      "primaryPersona": "finance",
+      "secondaryPersonas": [
+        "humanResource"
+      ],
+      "routeType": "redirect",
+      "plannedStatus": "redirect-only",
+      "expectedDestination": "/staff/overtime-management/record/:overtimeRouteKey",
+      "fixtureAlias": "overtime-record",
+      "expectedHeading": null,
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "workflow-status",
+        "workflow-actions",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-091",
+      "routePattern": "/staff/salary-claims/salary",
+      "name": "Salary Records",
+      "moduleFamily": "payroll-management",
+      "primaryPersona": "finance",
+      "secondaryPersonas": [
+        "humanResource"
+      ],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Salary Records",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions",
+        "search-filter",
+        "responsive-data-list"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-092",
+      "routePattern": "/staff/salary-claims/set-ot-rate",
+      "name": "Redirect",
+      "moduleFamily": "payroll-management",
+      "primaryPersona": "finance",
+      "secondaryPersonas": [
+        "humanResource"
+      ],
+      "routeType": "redirect",
+      "plannedStatus": "redirect-only",
+      "expectedDestination": "/staff/set-salary/set-ot-rate",
+      "fixtureAlias": null,
+      "expectedHeading": null,
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions",
+        "search-filter",
+        "responsive-data-list"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-093",
+      "routePattern": "/staff/salary-claims/set-salary",
+      "name": "Redirect",
+      "moduleFamily": "payroll-management",
+      "primaryPersona": "finance",
+      "secondaryPersonas": [
+        "humanResource"
+      ],
+      "routeType": "redirect",
+      "plannedStatus": "redirect-only",
+      "expectedDestination": "/staff/set-salary/set-salary",
+      "fixtureAlias": null,
+      "expectedHeading": null,
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions",
+        "search-filter",
+        "responsive-data-list"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-094",
+      "routePattern": "/staff/salary-claims/workflow-rules",
+      "name": "Redirect",
+      "moduleFamily": "payroll-management",
+      "primaryPersona": "finance",
+      "secondaryPersonas": [
+        "humanResource"
+      ],
+      "routeType": "redirect",
+      "plannedStatus": "redirect-only",
+      "expectedDestination": "/staff/set-salary/workflow-rules",
+      "fixtureAlias": null,
+      "expectedHeading": null,
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions",
+        "search-filter",
+        "responsive-data-list"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-095",
+      "routePattern": "/staff/set-salary",
+      "name": "Redirect",
+      "moduleFamily": "payroll-management",
+      "primaryPersona": "finance",
+      "secondaryPersonas": [
+        "humanResource"
+      ],
+      "routeType": "redirect",
+      "plannedStatus": "redirect-only",
+      "expectedDestination": "/staff/set-salary/set-salary",
+      "fixtureAlias": null,
+      "expectedHeading": null,
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-096",
+      "routePattern": "/staff/set-salary/assignment/:assignmentId/edit",
+      "name": "Edit Salary Assignment",
+      "moduleFamily": "payroll-management",
+      "primaryPersona": "finance",
+      "secondaryPersonas": [
+        "humanResource"
+      ],
+      "routeType": "dynamic",
+      "plannedStatus": "controlled-only",
+      "expectedDestination": null,
+      "fixtureAlias": "salary-assignment",
+      "expectedHeading": "Edit Salary Assignment",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "workflow-status",
+        "workflow-actions"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-097",
+      "routePattern": "/staff/set-salary/assignment/:assignmentId/view",
+      "name": "View Salary Assignment",
+      "moduleFamily": "payroll-management",
+      "primaryPersona": "finance",
+      "secondaryPersonas": [
+        "humanResource"
+      ],
+      "routeType": "dynamic",
+      "plannedStatus": "controlled-only",
+      "expectedDestination": null,
+      "fixtureAlias": "salary-assignment",
+      "expectedHeading": "View Salary Assignment",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "workflow-status",
+        "workflow-actions"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-098",
+      "routePattern": "/staff/set-salary/assignment/new",
+      "name": "Create Salary Assignment",
+      "moduleFamily": "payroll-management",
+      "primaryPersona": "finance",
+      "secondaryPersonas": [
+        "humanResource"
+      ],
+      "routeType": "static",
+      "plannedStatus": "controlled-only",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Create Salary Assignment",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-099",
+      "routePattern": "/staff/set-salary/company-legal",
+      "name": "Company Information",
+      "moduleFamily": "payroll-management",
+      "primaryPersona": "finance",
+      "secondaryPersonas": [
+        "humanResource"
+      ],
+      "routeType": "static",
+      "plannedStatus": "controlled-only",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Company Information",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-100",
+      "routePattern": "/staff/set-salary/set-ot-rate",
+      "name": "Overtime Rates",
+      "moduleFamily": "payroll-management",
+      "primaryPersona": "finance",
+      "secondaryPersonas": [
+        "humanResource"
+      ],
+      "routeType": "static",
+      "plannedStatus": "controlled-only",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Overtime Rates",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-101",
+      "routePattern": "/staff/set-salary/set-salary",
+      "name": "Salary Assignments",
+      "moduleFamily": "payroll-management",
+      "primaryPersona": "finance",
+      "secondaryPersonas": [
+        "humanResource"
+      ],
+      "routeType": "static",
+      "plannedStatus": "controlled-only",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Salary Assignments",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-102",
+      "routePattern": "/staff/set-salary/workflow-rules",
+      "name": "Salary Workflow",
+      "moduleFamily": "payroll-management",
+      "primaryPersona": "finance",
+      "secondaryPersonas": [
+        "humanResource"
+      ],
+      "routeType": "static",
+      "plannedStatus": "controlled-only",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Salary Workflow",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "workflow-status",
+        "workflow-actions"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-103",
+      "routePattern": "/staff/shift-settings",
+      "name": "Shift Settings",
+      "moduleFamily": "staff",
+      "primaryPersona": "humanResource",
+      "secondaryPersonas": [
+        "contractManager"
+      ],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Shift Settings",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-104",
+      "routePattern": "/team/details",
+      "name": "Team Details",
+      "moduleFamily": "teams",
+      "primaryPersona": "contractManager",
+      "secondaryPersonas": [],
+      "routeType": "static",
+      "plannedStatus": "testable",
+      "expectedDestination": null,
+      "fixtureAlias": null,
+      "expectedHeading": "Team Details",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    },
+    {
+      "routeId": "LIVE-UAT-105",
+      "routePattern": "/team/details/:id",
+      "name": "Team View",
+      "moduleFamily": "teams",
+      "primaryPersona": "contractManager",
+      "secondaryPersonas": [],
+      "routeType": "dynamic",
+      "plannedStatus": "data-blocked",
+      "expectedDestination": null,
+      "fixtureAlias": "team",
+      "expectedHeading": "Team View",
+      "mutationRisk": "safe-interaction",
+      "interactionMode": "read-only",
+      "viewports": [
+        "mobile",
+        "desktop"
+      ],
+      "patternTags": [
+        "page-header",
+        "loading-empty-error",
+        "detail-surface",
+        "search-filter",
+        "responsive-data-list",
+        "media-consumer"
+      ],
+      "probes": []
+    }
+  ]
+}
