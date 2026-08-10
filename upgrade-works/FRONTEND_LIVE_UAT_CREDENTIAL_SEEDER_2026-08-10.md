@@ -20,11 +20,12 @@ Provide the six temporary role accounts required by the credential-gated Day 3 l
 - explicitly invoked and excluded from the normal database seeder;
 - exactly six fixed, clearly marked dummy UAT accounts;
 - no backend `.env` changes;
-- a new random 24-character password per persona, displayed once during seeding and never committed;
+- strong random credentials recorded only in the workspace-level `UAT/creds.md` outside both repositories;
+- only one-way bcrypt password hashes committed to the backend;
 - collision refusal for an existing account without the exact protected UAT marker;
 - the existing on-duty Alpha team required for TRT and Incident Commander;
 - transactional and idempotent reconciliation;
-- password rotation revokes prior sessions and tokens;
+- rerunning restores the recorded credentials and revokes prior sessions and tokens;
 - cleanup revokes access and soft-deletes only exact marked accounts;
 - neither seeder is part of `DatabaseSeeder`.
 
