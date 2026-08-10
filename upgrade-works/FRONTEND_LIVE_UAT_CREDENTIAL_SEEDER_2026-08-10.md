@@ -14,16 +14,15 @@ Provide the six temporary role accounts required by the credential-gated Day 3 l
 - `database/seeders/LiveUatUsersCleanupSeeder.php`
 - `tests/Feature/LiveUatUsersSeederTest.php`
 - `docs/LIVE_UAT_USERS.md`
-- `.env.example` variable contract
 
 ## Safety properties
 
-- disabled by default;
-- separate production opt-in;
-- exactly six environment-configured accounts;
-- passwords require at least 16 characters and are never logged;
+- explicitly invoked and excluded from the normal database seeder;
+- exactly six fixed, clearly marked dummy UAT accounts;
+- no backend `.env` changes;
+- a new random 24-character password per persona, displayed once during seeding and never committed;
 - collision refusal for an existing account without the exact protected UAT marker;
-- existing active site team required for TRT and Incident Commander;
+- the existing on-duty Alpha team required for TRT and Incident Commander;
 - transactional and idempotent reconciliation;
 - password rotation revokes prior sessions and tokens;
 - cleanup revokes access and soft-deletes only exact marked accounts;
@@ -34,7 +33,6 @@ Provide the six temporary role accounts required by the credential-gated Day 3 l
 - PHP syntax: passed.
 - Laravel Pint: passed.
 - `git diff --check`: passed.
-- Disabled-by-default execution: correctly refused before database access.
 - PostgreSQL feature execution: blocked because the configured local test PostgreSQL service is unavailable and its local data directory reports an invalid checkpoint.
 - SQLite fallback: blocked by an unrelated PostgreSQL-specific historical roster migration.
 
