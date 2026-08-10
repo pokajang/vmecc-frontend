@@ -3,6 +3,7 @@ import { CButton, CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/reac
 import ApprovalGates from 'src/components/ApprovalGates'
 import AuditHistoryPanel from 'src/components/AuditHistoryPanel'
 import BackButton from 'src/components/BackButton'
+import PageState from 'src/components/PageState'
 import ResponsiveKeyValueList from 'src/components/workflow/ResponsiveKeyValueList'
 import WorkflowDetailActions from 'src/components/workflow/WorkflowDetailActions'
 import WorkflowDetailHeader from 'src/components/workflow/WorkflowDetailHeader'
@@ -45,7 +46,7 @@ const OvertimeDetailSection = ({
       </div>
     )}
     {!selectedRecord ? (
-      <div className="text-danger">Overtime record not found.</div>
+      <PageState variant="error" message="Overtime record not found." />
     ) : (
       <CRow className="g-4">
         <CCol xs={12} md={6}>

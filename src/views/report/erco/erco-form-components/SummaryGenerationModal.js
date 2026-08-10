@@ -1,18 +1,7 @@
 import React from 'react'
-import {
-  CAlert,
-  CButton,
-  CFormTextarea,
-  CModal,
-  CModalBody,
-  CModalFooter,
-  CModalHeader,
-  CModalTitle,
-  CSpinner,
-} from '@coreui/react'
+import { CAlert, CButton, CFormTextarea, CSpinner } from '@coreui/react'
 import { Sparkles } from 'lucide-react'
-import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
-import useIsMobile from './useIsMobile'
+import ResponsiveReportDialog from 'src/components/report-workflow/ResponsiveReportDialog'
 
 const AI_BUTTON_STYLE = {
   backgroundColor: 'rgba(0, 126, 122, 0.14)',
@@ -34,7 +23,6 @@ const SummaryGenerationModal = ({
   onUseGenerated,
 }) => {
   const isImproveMode = mode === 'improve'
-  const isMobile = useIsMobile()
   const title = isImproveMode ? 'Improve Incident Summary' : 'Generate Incident Summary'
   const closeDisabled = stage === 'loading'
 
@@ -127,36 +115,18 @@ const SummaryGenerationModal = ({
     </>
   )
 
-  if (isMobile) {
-    return (
-      <MobileBottomDrawer
-        visible={visible}
-        title={title}
-        onClose={onClose}
-        closeDisabled={closeDisabled}
-      >
-        {body}
-        <div className="mobile-bottom-drawer__footer d-flex flex-wrap justify-content-end gap-2">
-          {actions}
-        </div>
-      </MobileBottomDrawer>
-    )
-  }
-
   return (
-    <CModal
-      alignment="center"
+    <ResponsiveReportDialog
       visible={visible}
+      title={title}
       onClose={closeDisabled ? undefined : onClose}
-      fullscreen="sm"
+      closeDisabled={closeDisabled}
+      footer={actions}
+      desktopFullscreen="sm"
       scrollable
     >
-      <CModalHeader>
-        <CModalTitle>{title}</CModalTitle>
-      </CModalHeader>
-      <CModalBody>{body}</CModalBody>
-      <CModalFooter>{actions}</CModalFooter>
-    </CModal>
+      {body}
+    </ResponsiveReportDialog>
   )
 }
 

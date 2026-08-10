@@ -1,19 +1,8 @@
 import React from 'react'
-import {
-  CAlert,
-  CBadge,
-  CButton,
-  CModal,
-  CModalBody,
-  CModalFooter,
-  CModalHeader,
-  CModalTitle,
-  CSpinner,
-} from '@coreui/react'
+import { CAlert, CBadge, CButton, CSpinner } from '@coreui/react'
 import { ClipboardCheck } from 'lucide-react'
-import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
+import ResponsiveReportDialog from 'src/components/report-workflow/ResponsiveReportDialog'
 import { AI_REVIEW_STATUS, normalizeReviewStatus, reviewStatusLabel } from '../aiAssist'
-import useIsMobile from './useIsMobile'
 
 const statusColor = (status) => {
   const normalized = normalizeReviewStatus(status)
@@ -32,7 +21,6 @@ const ErcoAiReviewModal = ({
   onRun,
   onRetry,
 }) => {
-  const isMobile = useIsMobile()
   const closeDisabled = stage === 'loading'
   const title = (
     <span className="d-flex align-items-center gap-2">
@@ -128,37 +116,19 @@ const ErcoAiReviewModal = ({
     </>
   )
 
-  if (isMobile) {
-    return (
-      <MobileBottomDrawer
-        visible={visible}
-        title={title}
-        aria-label="Check Report with AI"
-        onClose={onClose}
-        closeDisabled={closeDisabled}
-      >
-        {body}
-        <div className="mobile-bottom-drawer__footer d-flex flex-wrap justify-content-end gap-2">
-          {actions}
-        </div>
-      </MobileBottomDrawer>
-    )
-  }
-
   return (
-    <CModal
-      alignment="center"
+    <ResponsiveReportDialog
       visible={visible}
+      title={title}
+      ariaLabel="Check Report with AI"
       onClose={closeDisabled ? undefined : onClose}
-      fullscreen="sm"
+      closeDisabled={closeDisabled}
+      footer={actions}
+      desktopFullscreen="sm"
       scrollable
     >
-      <CModalHeader>
-        <CModalTitle>{title}</CModalTitle>
-      </CModalHeader>
-      <CModalBody>{body}</CModalBody>
-      <CModalFooter>{actions}</CModalFooter>
-    </CModal>
+      {body}
+    </ResponsiveReportDialog>
   )
 }
 

@@ -4,8 +4,7 @@ import { fileURLToPath } from 'node:url'
 
 const frontendRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const auditScriptPath = fileURLToPath(import.meta.url)
-const reviewDeadline = new Date('2026-09-04T00:00:00+08:00')
-const reviewedRouterVersion = '7.18.1'
+const minimumPatchedRouterVersion = '7.18.2'
 const excludedDirectories = new Set([
   '.codex-run',
   '.git',
@@ -39,10 +38,6 @@ const collectSourceFiles = async (directory) => {
   return files.flat()
 }
 
-if (new Date() >= reviewDeadline) {
-  fail('the exception expired on 2026-09-04; reassess GHSA-qwww-vcr4-c8h2 before proceeding.')
-}
-
 const [packageJson, packageLock, appSource, sourceFiles] = await Promise.all([
   readJson('package.json'),
   readJson('package-lock.json'),
@@ -54,17 +49,17 @@ const declaredRouterVersion = packageJson.dependencies?.['react-router-dom']
 const lockedRouterDomVersion = packageLock.packages?.['node_modules/react-router-dom']?.version
 const lockedRouterVersion = packageLock.packages?.['node_modules/react-router']?.version
 
-if (declaredRouterVersion !== reviewedRouterVersion) {
+if (declaredRouterVersion !== minimumPatchedRouterVersion) {
   fail(
-    `react-router-dom changed from the reviewed ${reviewedRouterVersion} declaration to ${declaredRouterVersion || 'missing'}; reassess the exception.`,
+    `react-router-dom must remain exactly pinned to the reviewed patched version ${minimumPatchedRouterVersion}; found ${declaredRouterVersion || 'missing'}.`,
   )
 }
 if (
-  lockedRouterDomVersion !== reviewedRouterVersion ||
-  lockedRouterVersion !== reviewedRouterVersion
+  lockedRouterDomVersion !== minimumPatchedRouterVersion ||
+  lockedRouterVersion !== minimumPatchedRouterVersion
 ) {
   fail(
-    `the locked router tree changed from ${reviewedRouterVersion} (react-router-dom=${lockedRouterDomVersion || 'missing'}, react-router=${lockedRouterVersion || 'missing'}); reassess the exception.`,
+    `the locked router tree must remain at ${minimumPatchedRouterVersion} (react-router-dom=${lockedRouterDomVersion || 'missing'}, react-router=${lockedRouterVersion || 'missing'}).`,
   )
 }
 
@@ -80,7 +75,9 @@ const forbiddenPackagePatterns = [
 ]
 for (const packageName of Object.keys(declaredPackages)) {
   if (forbiddenPackagePatterns.some((pattern) => pattern.test(packageName))) {
-    fail(`RSC/server-router dependency ${packageName} was introduced; reassess the exception.`)
+    fail(
+      `RSC/server-router dependency ${packageName} was introduced; reassess the router architecture.`,
+    )
   }
 }
 
@@ -103,18 +100,20 @@ const forbiddenSourcePatterns = [
 for (const path of sourceFiles) {
   if (/^entry\.(?:rsc|server|ssr)(?:\.[cm]?[jt]sx?)?$/.test(path.split(/[\\/]/).at(-1))) {
     fail(
-      `RSC/server entry file detected at ${relative(frontendRoot, path)}; reassess the exception.`,
+      `RSC/server entry file detected at ${relative(frontendRoot, path)}; reassess the router architecture.`,
     )
   }
   if (path === auditScriptPath) continue
   const source = await readFile(path, 'utf8')
   for (const [label, pattern] of forbiddenSourcePatterns) {
     if (pattern.test(source)) {
-      fail(`${label} detected in ${relative(frontendRoot, path)}; reassess the exception.`)
+      fail(
+        `${label} detected in ${relative(frontendRoot, path)}; reassess the router architecture.`,
+      )
     }
   }
 }
 
 console.log(
-  'React Router advisory audit passed: 7.18.1 remains locked, the app remains a declarative BrowserRouter SPA, no reviewed RSC/server-router indicators were found, and the exception is valid through 2026-09-03.',
+  'React Router advisory audit passed: patched 7.18.2 packages remain exactly locked, the app remains a declarative BrowserRouter SPA, and no reviewed RSC/server-router indicators were found.',
 )

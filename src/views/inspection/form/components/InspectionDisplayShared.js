@@ -401,11 +401,16 @@ export const ManagedCheckToolbar = ({
   search,
   onSearch,
   searchPlaceholder,
+  searchLabel,
+  searchDisabled = false,
+  onClearSearch,
+  clearSearchLabel = 'Clear inspection search',
   onNextIncomplete,
   onExpandAll,
   onCollapseAll,
   resultCount,
   totalCount,
+  idleStatus = '',
   readOnly = false,
 }) => {
   if (readOnly) return null
@@ -415,47 +420,69 @@ export const ManagedCheckToolbar = ({
       <CFormInput
         size="sm"
         className="inspection-search-input"
-        aria-label={searchPlaceholder || 'Search inspection checks'}
+        aria-label={searchLabel || searchPlaceholder || 'Search inspection checks'}
         value={search}
         placeholder={searchPlaceholder}
+        disabled={searchDisabled}
         onChange={(event) => onSearch?.(event.target.value)}
       />
       <div className="inspection-check-toolbar__actions">
-        <CButton
-          type="button"
-          color="secondary"
-          variant="outline"
-          size="sm"
-          className="inspection-compact-action-btn"
-          onClick={onNextIncomplete}
-        >
-          Next incomplete
-        </CButton>
-        <CButton
-          type="button"
-          color="secondary"
-          variant="outline"
-          size="sm"
-          className="inspection-compact-action-btn"
-          onClick={onExpandAll}
-        >
-          Expand all
-        </CButton>
-        <CButton
-          type="button"
-          color="secondary"
-          variant="outline"
-          size="sm"
-          className="inspection-compact-action-btn"
-          onClick={onCollapseAll}
-        >
-          Collapse all
-        </CButton>
+        {search && onClearSearch ? (
+          <CButton
+            type="button"
+            color="secondary"
+            variant="outline"
+            size="sm"
+            className="inspection-compact-action-btn"
+            aria-label={clearSearchLabel}
+            onClick={onClearSearch}
+          >
+            Clear
+          </CButton>
+        ) : null}
+        {onNextIncomplete ? (
+          <CButton
+            type="button"
+            color="secondary"
+            variant="outline"
+            size="sm"
+            className="inspection-compact-action-btn"
+            onClick={onNextIncomplete}
+          >
+            Next incomplete
+          </CButton>
+        ) : null}
+        {onExpandAll ? (
+          <CButton
+            type="button"
+            color="secondary"
+            variant="outline"
+            size="sm"
+            className="inspection-compact-action-btn"
+            onClick={onExpandAll}
+          >
+            Expand all
+          </CButton>
+        ) : null}
+        {onCollapseAll ? (
+          <CButton
+            type="button"
+            color="secondary"
+            variant="outline"
+            size="sm"
+            className="inspection-compact-action-btn"
+            onClick={onCollapseAll}
+          >
+            Collapse all
+          </CButton>
+        ) : null}
       </div>
       {search ? (
         <div className="small text-body-secondary">
           Showing {resultCount} of {totalCount}
         </div>
+      ) : idleStatus ? (
+        <div className="small text-body-secondary">{idleStatus}</div>
       ) : null}
     </div>
   )

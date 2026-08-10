@@ -28,6 +28,96 @@ afterEach(() => {
 })
 
 describe('HighAngleInspectionChecks mobile detail drawer', () => {
+  it('preserves selected-compartment search, all-group count, empty and clear behavior', () => {
+    render(
+      <HighAngleInspectionChecks
+        mainLocation="High Angle Rescue Kit"
+        summary={{
+          visibleGroups: [
+            {
+              key: 'locker-a',
+              title: 'Locker A',
+              rows: [
+                { id: 'row-a1', rowNumber: '1', equipment: 'Rescue Rope' },
+                { id: 'row-a2', rowNumber: '2', equipment: 'Edge Protector' },
+              ],
+            },
+            {
+              key: 'locker-b',
+              title: 'Locker B',
+              rows: [{ id: 'row-b1', rowNumber: '3', equipment: 'Rescue Harness' }],
+            },
+          ],
+        }}
+      />,
+    )
+
+    expect(screen.queryByRole('textbox', { name: 'Search high angle equipment rows' })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: /Locker A 2 items/ }))
+
+    const search = screen.getByRole('textbox', { name: 'Search high angle equipment rows' })
+    expect(search.getAttribute('placeholder')).toBe('Search high angle equipment...')
+
+    fireEvent.change(search, { target: { value: 'Edge' } })
+    expect(screen.getByText('Edge Protector')).toBeTruthy()
+    expect(screen.queryByText('Rescue Rope')).toBeNull()
+    expect(screen.getByText('Showing 1 of 3')).toBeTruthy()
+
+    fireEvent.change(search, { target: { value: 'missing equipment' } })
+    expect(screen.getByText('Showing 0 of 3')).toBeTruthy()
+    expect(screen.getByText('No high angle equipment rows match this search.')).toBeTruthy()
+
+    const clear = screen.getByRole('button', { name: 'Clear high angle equipment row search' })
+    expect(clear.getAttribute('type')).toBe('button')
+    fireEvent.click(clear)
+
+    expect(search.value).toBe('')
+    expect(screen.queryByText(/^Showing /)).toBeNull()
+    expect(
+      screen.queryByRole('button', { name: 'Clear high angle equipment row search' }),
+    ).toBeNull()
+    expect(screen.getByText('Rescue Rope')).toBeTruthy()
+    expect(screen.getByText('Edge Protector')).toBeTruthy()
+  })
+
+  it('clears stale search when switching or continuing to another compartment', () => {
+    render(
+      <HighAngleInspectionChecks
+        mainLocation="High Angle Rescue Kit"
+        summary={{
+          visibleGroups: [
+            {
+              key: 'locker-a',
+              title: 'Locker A',
+              rows: [{ id: 'row-a', equipment: 'Rescue Rope', condition: 'Good' }],
+            },
+            {
+              key: 'locker-b',
+              title: 'Locker B',
+              rows: [{ id: 'row-b', equipment: 'Rescue Harness', condition: '' }],
+            },
+          ],
+        }}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /Locker A 1 item/ }))
+    const search = screen.getByRole('textbox', { name: 'Search high angle equipment rows' })
+    fireEvent.change(search, { target: { value: 'Rope' } })
+    expect(search.value).toBe('Rope')
+
+    fireEvent.click(screen.getByRole('button', { name: /Locker B 1 item/ }))
+    expect(search.value).toBe('')
+    expect(screen.getByText('Rescue Harness')).toBeTruthy()
+
+    fireEvent.click(screen.getByRole('button', { name: /Locker A 1 item/ }))
+    fireEvent.change(search, { target: { value: 'Rope' } })
+    const lockerBButtons = screen.getAllByRole('button', { name: /Locker B/ })
+    fireEvent.click(lockerBButtons.at(-1))
+    expect(search.value).toBe('')
+    expect(screen.getByText('Rescue Harness')).toBeTruthy()
+  })
+
   it('renders optional additional info in read-only report rows', () => {
     const row = {
       id: 'high-angle:readonly',
@@ -74,6 +164,7 @@ describe('HighAngleInspectionChecks mobile detail drawer', () => {
     expect(screen.getByText('General equipment remarks')).toBeTruthy()
     expect(screen.getByText('Stored with rope bag.')).toBeTruthy()
     expect(screen.getByText('View photos')).toBeTruthy()
+    expect(screen.queryByRole('textbox', { name: 'Search high angle equipment rows' })).toBeNull()
   })
 
   it('renders high angle rows as standalone cards with subsection headings separate from metadata', () => {

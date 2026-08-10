@@ -6,7 +6,7 @@ import {
   DetailsStepActions,
   IncidentSummaryPanel,
 } from './erco-form-components'
-import useIsMobile from './erco-form-components/useIsMobile'
+import useReportIsMobile from '../hooks/useReportIsMobile'
 
 const ErcoPostAnalysisStep = ({
   form,
@@ -24,7 +24,7 @@ const ErcoPostAnalysisStep = ({
   photoProcessing = false,
   onPhotoProcessingChange,
 }) => {
-  const isMobile = useIsMobile()
+  const isMobile = useReportIsMobile()
 
   return (
     <div className="mb-3 d-grid gap-4">

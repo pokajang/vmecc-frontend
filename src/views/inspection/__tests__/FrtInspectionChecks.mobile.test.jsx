@@ -528,4 +528,43 @@ describe('FrtDailyInspectionChecks mobile detail drawer', () => {
       expect(screen.getByText('FIRE HOSE 2.5"')).toBeTruthy()
     })
   })
+
+  it('filters immediately and restores truck readiness rows from the clear action', () => {
+    const row = {
+      id: 'frt:daily:search',
+      checklistKind: 'daily',
+      rowNumber: '1',
+      rowKind: 'status',
+      equipment: 'Pump Panel',
+      quantity: '1',
+    }
+
+    render(
+      <FrtDailyInspectionChecks
+        mainLocation="FRT"
+        mainLocationLabel="AJG9555"
+        summary={buildSummary(row)}
+      />,
+    )
+
+    const search = screen.getByLabelText('Search truck readiness rows')
+    fireEvent.change(search, { target: { value: 'not-found' } })
+
+    expect(search.value).toBe('not-found')
+    expect(screen.queryByText('Pump Panel')).toBeNull()
+    expect(screen.getByText('Showing 0 of 1')).toBeTruthy()
+    expect(screen.getByText('No truck readiness rows match this search.')).toBeTruthy()
+
+    const clearSearch = screen.getByRole('button', {
+      name: 'Clear truck readiness row search',
+    })
+    expect(clearSearch.getAttribute('type')).toBe('button')
+    fireEvent.click(clearSearch)
+
+    expect(search.value).toBe('')
+    expect(screen.getByText('Pump Panel')).toBeTruthy()
+    expect(screen.queryByText('Showing 0 of 1')).toBeNull()
+    expect(screen.queryByText('No truck readiness rows match this search.')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Clear truck readiness row search' })).toBeNull()
+  })
 })

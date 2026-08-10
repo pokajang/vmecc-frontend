@@ -1,4 +1,10 @@
 import { expect, test } from '@playwright/test'
+import {
+  getControlledBrowserApiBaseUrl,
+  installControlledApiRequestGuard,
+} from './support/controlled-api-stubs'
+
+const apiBaseUrl = getControlledBrowserApiBaseUrl()
 
 const auditUser = {
   id: 903,
@@ -13,7 +19,8 @@ const json = (route, body) =>
   route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
 
 const installApiStubs = async (page) => {
-  await page.route('**:8000/api/**', (route) => {
+  await installControlledApiRequestGuard(page, apiBaseUrl)
+  await page.route(`${apiBaseUrl}/**`, (route) => {
     const path = new URL(route.request().url()).pathname.replace(/^\/api/, '')
 
     if (path === '/auth/session') {
@@ -308,9 +315,9 @@ test('inspection matrix remains legible and overflow-safe across representative 
         caption: 0.8125,
       })
 
-      const actionTargets = inspectionCase.locator(
-        '.inspection-form-actions .btn, .inspection-form-inline-actions .btn, .inspection-next-location-btn',
-      )
+      const actionTargets = inspectionCase.getByRole('button', {
+        name: /^(?:Continue to Review(?: Updates)?|Submit Report|Update Report|Save (?:Update )?Draft)$/,
+      })
       const boxes = await actionTargets.evaluateAll((elements) =>
         elements
           .filter((element) => {

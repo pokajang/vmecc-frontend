@@ -1,11 +1,11 @@
 # VMECC Frontend Upgrade Plan
 
 **Original document date:** 2026-08-03  
-**Current revision date:** 2026-08-05  
+**Current revision date:** 2026-08-10  
 **Plan version:** 2.0  
 **Application:** `vmecc-frontend`  
 **Document home:** `upgrade-works/`  
-**Document status:** Completed locally through Day 42; release qualification deferred  
+**Document status:** Completed locally through Day 61; Stages 1-6 closed and release qualification deferred  
 **Primary goal:** Improve frontend code quality, consistency, and maintainability by consolidating repeated implementations into well-scoped reusable components and patterns without changing existing business behavior.
 
 ## 1. Revision Decision
@@ -587,5 +587,6 @@ When paused, keep or restore the domain implementation, document the reason, and
 | Stage 3 — shared foundations and pilots | Completed locally through Day 20      | `FRONTEND_COMPONENT_REUSE_STAGE_3_EXECUTION_2026-08-04.md`                                                                                                       | Preserve passing foundation and pilot boundaries                             |
 | Stage 4 — pattern rollout               | Completed locally through Day 36      | `FRONTEND_COMPONENT_REUSE_STAGE_4_FORMS_DIALOGS_EXECUTION_2026-08-04.md`                                                                                         | Preserve passing pattern boundaries; proceed to bounded Stage 5 cleanup      |
 | Stage 5 — cleanup and handover          | Completed locally through Day 42      | `FRONTEND_COMPONENT_REUSE_CATALOGUE_2026-08-05.md`; `FRONTEND_COMPONENT_REUSE_STAGE_5_COMPLETION_EXECUTION_2026-08-05.md`                                        | Programme closed locally; reopen only for a concrete defect or release       |
+| Stage 6 — module consistency and reuse  | Completed locally through Day 61      | `FRONTEND_MODULE_CONSISTENCY_STAGE_6_FINAL_CHECKPOINT_EXECUTION_2026-08-10.md`                                                                                   | Stage closed locally; release qualification remains separate                 |
 
-Revision 2 is complete locally. It did not authorize or perform deployment, backend changes, production-data access, or silent business-workflow changes. Release qualification remains separate.
+Revision 2 and the approved Stage 6 extension are complete locally through Day 61. They did not authorize or perform deployment, backend changes, production-data access, or silent business-workflow changes. Release qualification remains separate.

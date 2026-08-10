@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { CButton, CFormInput } from '@coreui/react'
+import { CButton } from '@coreui/react'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import CreateActionButton from 'src/components/CreateActionButton'
 import RowActions from 'src/components/RowActions'
@@ -16,6 +16,7 @@ import {
 import {
   FormFieldError,
   InspectionPhotoViewerModal,
+  ManagedCheckToolbar,
   rowContainsSearch,
 } from './InspectionDisplayShared'
 import { InspectionElementDrawerFooter } from './InspectionElementUi'
@@ -266,36 +267,16 @@ export const HydraulicEquipmentChecks = ({
       ) : null}
 
       {!readOnly ? (
-        <div className="inspection-check-toolbar">
-          <CFormInput
-            size="sm"
-            className="inspection-search-input"
-            value={search}
-            placeholder="Search hydraulic equipment..."
-            aria-label="Search hydraulic equipment rows"
-            onChange={(event) => setSearch(event.target.value)}
-          />
-          <div className="inspection-check-toolbar__actions">
-            {search ? (
-              <CButton
-                type="button"
-                color="secondary"
-                variant="outline"
-                size="sm"
-                className="inspection-compact-action-btn"
-                aria-label="Clear hydraulic equipment row search"
-                onClick={() => setSearch('')}
-              >
-                Clear
-              </CButton>
-            ) : null}
-          </div>
-          {search ? (
-            <div className="small text-body-secondary">
-              Showing {filteredChecks.length} of {visibleChecks.length}
-            </div>
-          ) : null}
-        </div>
+        <ManagedCheckToolbar
+          search={search}
+          onSearch={setSearch}
+          searchPlaceholder="Search hydraulic equipment..."
+          searchLabel="Search hydraulic equipment rows"
+          onClearSearch={() => setSearch('')}
+          clearSearchLabel="Clear hydraulic equipment row search"
+          resultCount={filteredChecks.length}
+          totalCount={visibleChecks.length}
+        />
       ) : null}
 
       {filteredChecks.length === 0 ? (

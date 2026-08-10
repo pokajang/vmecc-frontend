@@ -25,6 +25,20 @@ const resolveBuildPath = (root, pathname) => {
   return path.join(root, 'index.html')
 }
 
+const isTransientNavigationError = (error) =>
+  /Execution context was destroyed|Cannot find context with specified id|Target page, context or browser has been closed/i.test(
+    String(error?.message || error),
+  )
+
+const evaluateAcrossNavigation = async (page, callback, transientValue = '') => {
+  try {
+    return await page.evaluate(callback)
+  } catch (error) {
+    if (isTransientNavigationError(error)) return transientValue
+    throw error
+  }
+}
+
 test('installed client moves from build A to B without clearing site data', async ({
   context,
   page,
@@ -91,7 +105,7 @@ test('installed client moves from build A to B without clearing site data', asyn
 
     await expect
       .poll(() =>
-        page.evaluate(async () => {
+        evaluateAcrossNavigation(page, async () => {
           const response = await fetch(`/version.json?t=${Date.now()}`, { cache: 'no-store' })
           return (await response.json()).buildId
         }),
@@ -99,27 +113,47 @@ test('installed client moves from build A to B without clearing site data', asyn
       .toBe('pwa-audit-build-b')
     await expect
       .poll(() =>
-        page.evaluate(async () => {
+        evaluateAcrossNavigation(page, async () => {
           const names = await caches.keys()
           return names.find((name) => name === 'vmecc-app-shell-pwa-audit-build-b') || ''
         }),
       )
       .toBe('vmecc-app-shell-pwa-audit-build-b')
     await expect
-      .poll(() => page.locator('script[type="module"][src]').getAttribute('src'))
+      .poll(async () => {
+        try {
+          return await page.locator('script[type="module"][src]').getAttribute('src')
+        } catch (error) {
+          if (isTransientNavigationError(error)) return initialEntryScript
+          throw error
+        }
+      })
       .not.toBe(initialEntryScript)
 
-    const cacheState = await page.evaluate(async () => {
-      const names = await caches.keys()
-      const unrelated = await caches.open('pwa-audit-unrelated-cache')
-      return {
-        names,
-        unrelatedValue: await (await unrelated.match('/pwa-audit-value'))?.text(),
-      }
-    })
-    expect(cacheState.names).toContain('vmecc-app-shell-pwa-audit-build-a')
-    expect(cacheState.names).toContain('vmecc-app-shell-pwa-audit-build-b')
-    expect(cacheState.unrelatedValue).toBe('preserved')
+    await expect
+      .poll(
+        () =>
+          evaluateAcrossNavigation(
+            page,
+            async () => {
+              const names = await caches.keys()
+              const unrelated = await caches.open('pwa-audit-unrelated-cache')
+              return {
+                names,
+                unrelatedValue: await (await unrelated.match('/pwa-audit-value'))?.text(),
+              }
+            },
+            null,
+          ),
+        { message: 'Expected both app-shell caches and unrelated site data after the update.' },
+      )
+      .toEqual({
+        names: expect.arrayContaining([
+          'vmecc-app-shell-pwa-audit-build-a',
+          'vmecc-app-shell-pwa-audit-build-b',
+        ]),
+        unrelatedValue: 'preserved',
+      })
   } finally {
     await new Promise((resolve, reject) =>
       server.close((error) => (error ? reject(error) : resolve())),

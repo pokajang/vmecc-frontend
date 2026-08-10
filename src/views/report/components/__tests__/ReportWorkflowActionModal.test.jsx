@@ -138,4 +138,38 @@ describe('ReportWorkflowActionModal', () => {
     fireEvent.click(submitButton)
     expect(onSubmit).toHaveBeenCalledTimes(1)
   })
+
+  it('keeps rejection and declaration errors local, described, and non-announcing', () => {
+    setViewport(1024)
+    render(
+      <ReportWorkflowActionModal
+        visible
+        actionType="reject"
+        record={baseRecord}
+        remarks=""
+        onRemarksChange={vi.fn()}
+        declarationChecked={false}
+        onDeclarationChange={vi.fn()}
+        declarationLabel="I confirm this report workflow action is accurate."
+        declarationError="Confirm responsibility before continuing."
+        rejectError="Remarks are required when rejecting."
+        renderStatusBadge={(status) => <span>{status}</span>}
+        formatDateTime={(date, time) => `${date} ${time}`}
+        onClose={vi.fn()}
+        onSubmit={vi.fn()}
+      />,
+    )
+
+    const remarks = screen.getByLabelText('Remarks (required)')
+    const remarksError = screen.getByText('Remarks are required when rejecting.')
+    const declarationError = screen.getByText('Confirm responsibility before continuing.')
+
+    expect(remarks.getAttribute('aria-describedby')).toBe('report-workflow-remarks-error')
+    expect(remarks.getAttribute('aria-invalid')).toBe('true')
+    expect(remarksError.id).toBe('report-workflow-remarks-error')
+    expect(remarksError.className).toContain('invalid-feedback')
+    expect(remarksError.getAttribute('role')).toBeNull()
+    expect(declarationError.className).toContain('invalid-feedback')
+    expect(declarationError.getAttribute('role')).toBeNull()
+  })
 })

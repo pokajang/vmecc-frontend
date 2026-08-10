@@ -1,6 +1,6 @@
 import React from 'react'
 import { CButton } from '@coreui/react'
-import ErcoResponsiveActionModal from './ErcoResponsiveActionModal'
+import ResponsiveReportDialog from 'src/components/report-workflow/ResponsiveReportDialog'
 
 const ChronologyStartModeModal = ({ visible, responseStartTime, onClose, onManual, onPremob }) => {
   const body = (
@@ -24,13 +24,17 @@ const ChronologyStartModeModal = ({ visible, responseStartTime, onClose, onManua
   )
 
   return (
-    <ErcoResponsiveActionModal
+    <ResponsiveReportDialog
       visible={visible}
       title="Initialize Chronology"
-      body={body}
-      actions={actions}
+      footer={actions}
       onClose={onClose}
-    />
+      mobileBodyClassName="inspection-mobile-detail-drawer-body inspection-equipment-detail-drawer-body"
+      desktopFullscreen="sm"
+      scrollable
+    >
+      {body}
+    </ResponsiveReportDialog>
   )
 }
 

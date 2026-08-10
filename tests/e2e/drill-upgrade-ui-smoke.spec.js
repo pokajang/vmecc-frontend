@@ -1,7 +1,12 @@
 const { expect, test } = require('@playwright/test')
+const {
+  getControlledBrowserApiBaseUrl,
+  installControlledApiRequestGuard,
+} = require('./support/controlled-api-stubs')
 const { createSmokePng } = require('./support/smoke-image')
 
 const baseUrl = process.env.VMECC_E2E_BASE_URL || 'http://localhost:3000'
+const apiBaseUrl = getControlledBrowserApiBaseUrl()
 
 const draftPayload = {
   schemaVersion: 2,
@@ -78,10 +83,10 @@ const json = (route, body, status = 200) =>
 
 const installApiStubs = async (page, initialDraft = draftPayload) => {
   let serverDraft = initialDraft
-  await page.route('**/api/**', async (route) => {
+  await installControlledApiRequestGuard(page, apiBaseUrl)
+  await page.route(`${apiBaseUrl}/**`, async (route) => {
     const request = route.request()
     const url = new URL(request.url())
-    if (!url.pathname.startsWith('/api/')) return route.continue()
     const path = url.pathname.replace(/^\/api/, '')
     const method = request.method()
 
@@ -414,9 +419,9 @@ test.describe('Drill Upgrade UI V1', () => {
     await page.getByRole('button', { name: 'Save Draft' }).click()
     await page.reload()
 
-    await expect(page.getByRole('group', { name: 'Exercise Categories' })).toContainText(
-      'Medical Response',
-    )
+    await expect(
+      page.getByRole('group', { name: 'Exercise Categories', exact: true }),
+    ).toContainText('Medical Response')
     await expectNoHorizontalOverflow(page)
   })
 

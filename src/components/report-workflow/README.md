@@ -33,3 +33,14 @@ Workflow screens are calm, operational, precise, compact, and high-trust.
 `src/components/report-workflow` owns presentation and interaction contracts. Feature modules own
 item builders, validation, API calls, form state, and domain-specific policy. Shared components must
 not import from `src/views`.
+
+## Responsive and editing contracts
+
+- `ResponsiveReportDialog` owns the report-level desktop modal/mobile drawer shell, footer layout,
+  scrolling, close locks, and the `767.98px` report breakpoint. Consumers continue to own fields,
+  focus targets, validation, actions, and busy state.
+- `WorkflowEditStateBanner` owns edit-mode presentation and optional original/draft source controls.
+  Consumers continue to own source data, hydration, dirty state, confirmation resets, and
+  persistence.
+- `src/hooks/useReportIsMobile.js` is the authoritative report breakpoint implementation. The old
+  `src/views/report/hooks/useReportIsMobile.js` path is a compatibility re-export only.

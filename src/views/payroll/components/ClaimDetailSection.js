@@ -3,6 +3,7 @@ import { CBadge, CButton, CCard, CCardBody, CCardHeader, CCol, CRow } from '@cor
 import { Calendar, Download, Pencil } from 'lucide-react'
 import ApprovalGates from 'src/components/ApprovalGates'
 import AuditHistoryPanel from 'src/components/AuditHistoryPanel'
+import PageState from 'src/components/PageState'
 import { buildClaimHistoryEntries } from 'src/components/auditHistory'
 import WorkflowDetailActions from 'src/components/workflow/WorkflowDetailActions'
 import WorkflowDetailHeader from 'src/components/workflow/WorkflowDetailHeader'
@@ -80,7 +81,7 @@ const ClaimDetailSection = ({
       ) : null}
 
       {!selectedClaim ? (
-        <div className="text-danger">Claim record not found.</div>
+        <PageState variant="error" message="Claim record not found." />
       ) : (
         <>
           <CRow className="g-3">

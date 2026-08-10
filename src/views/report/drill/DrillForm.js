@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { CAlert, CButton } from '@coreui/react'
+import WorkflowEditStateBanner from 'src/components/report-workflow/WorkflowEditStateBanner'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { loadReportDraftRow, saveReportDraft } from '../reportStorage'
 import useReportDraft from '../hooks/useReportDraft'
@@ -380,29 +380,15 @@ const DrillForm = ({
   return (
     <>
       {editingRecord ? (
-        <CAlert color="info" className="d-flex flex-wrap justify-content-between gap-2">
-          <span>
-            Editing <strong>{editingRecord.displayId}</strong>. The submitted record changes only
-            after Confirm Update.
-          </span>
-          <div className="d-flex gap-2">
-            <CButton
-              type="button"
-              color={editViewMode === 'original' ? 'primary' : 'light'}
-              onClick={() => loadSeed(originalSeedRef.current, 'original')}
-            >
-              Load Original
-            </CButton>
-            <CButton
-              type="button"
-              color={editViewMode === 'draft' ? 'primary' : 'light'}
-              disabled={!hasDraftSeed}
-              onClick={() => loadSeed(draftSeedRef.current, 'draft')}
-            >
-              Load Draft
-            </CButton>
-          </div>
-        </CAlert>
+        <WorkflowEditStateBanner
+          displayId={editingRecord.displayId}
+          sourceMode={editViewMode}
+          hasDraftSource={hasDraftSeed}
+          onLoadOriginal={() => loadSeed(originalSeedRef.current, 'original')}
+          onLoadDraft={() => loadSeed(draftSeedRef.current, 'draft')}
+        >
+          The submitted record changes only after Confirm Update.
+        </WorkflowEditStateBanner>
       ) : null}
 
       <form onSubmit={(event) => event.preventDefault()}>

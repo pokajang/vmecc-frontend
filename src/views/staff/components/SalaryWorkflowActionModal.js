@@ -1,5 +1,6 @@
 import React from 'react'
 import { CBadge, CButton, CFormCheck, CFormInput, CFormLabel } from '@coreui/react'
+import FormFieldError from 'src/components/FormFieldError'
 import ResponsiveWorkflowActionDialog from 'src/components/workflow/ResponsiveWorkflowActionDialog'
 
 const toMoneyOrNull = (value) => {
@@ -167,13 +168,12 @@ const SalaryWorkflowActionModal = ({
               onChange={(event) => onRemarksChange(event.target.value)}
               placeholder="Add your remarks"
               invalid={Boolean(rejectError)}
+              aria-invalid={Boolean(rejectError) || undefined}
               aria-required={actionType === 'reject'}
               aria-describedby={rejectError ? 'salary-workflow-remarks-error' : undefined}
             />
             {rejectError ? (
-              <div id="salary-workflow-remarks-error" className="invalid-feedback d-block">
-                {rejectError}
-              </div>
+              <FormFieldError id="salary-workflow-remarks-error">{rejectError}</FormFieldError>
             ) : (
               showRemarksHelper && (
                 <div className="small text-body-secondary mt-1">
@@ -193,7 +193,7 @@ const SalaryWorkflowActionModal = ({
               />
               {declarationRequired ? (
                 declarationError ? (
-                  <div className="invalid-feedback d-block">{declarationError}</div>
+                  <FormFieldError>{declarationError}</FormFieldError>
                 ) : (
                   <div className="small text-body-secondary mt-1">Required for this action.</div>
                 )

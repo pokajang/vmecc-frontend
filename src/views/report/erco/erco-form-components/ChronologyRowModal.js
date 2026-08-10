@@ -1,20 +1,9 @@
 import React, { useEffect, useRef } from 'react'
-import {
-  CButton,
-  CFormInput,
-  CFormLabel,
-  CModal,
-  CModalBody,
-  CModalFooter,
-  CModalHeader,
-  CModalTitle,
-} from '@coreui/react'
-import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
-import useIsMobile from './useIsMobile'
+import { CButton, CFormInput, CFormLabel } from '@coreui/react'
+import ResponsiveReportDialog from 'src/components/report-workflow/ResponsiveReportDialog'
 
 const ChronologyRowModal = ({ visible, draft, onClose, onChangeDraft, onSave, onSaveAndNext }) => {
   const isEditing = Boolean(draft?.editId)
-  const isMobile = useIsMobile()
   const actionRef = useRef(null)
 
   useEffect(() => {
@@ -70,25 +59,17 @@ const ChronologyRowModal = ({ visible, draft, onClose, onChangeDraft, onSave, on
     </>
   )
 
-  if (isMobile) {
-    return (
-      <MobileBottomDrawer visible={visible} title={title} onClose={onClose}>
-        {body}
-        <div className="mobile-bottom-drawer__footer d-flex flex-wrap justify-content-end gap-2">
-          {actions}
-        </div>
-      </MobileBottomDrawer>
-    )
-  }
-
   return (
-    <CModal visible={visible} alignment="center" onClose={onClose} fullscreen="sm" scrollable>
-      <CModalHeader>
-        <CModalTitle>{title}</CModalTitle>
-      </CModalHeader>
-      <CModalBody>{body}</CModalBody>
-      <CModalFooter>{actions}</CModalFooter>
-    </CModal>
+    <ResponsiveReportDialog
+      visible={visible}
+      title={title}
+      onClose={onClose}
+      footer={actions}
+      desktopFullscreen="sm"
+      scrollable
+    >
+      {body}
+    </ResponsiveReportDialog>
   )
 }
 

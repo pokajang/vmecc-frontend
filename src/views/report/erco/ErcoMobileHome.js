@@ -11,7 +11,7 @@ import TypeManagerModal from 'src/components/report-workflow/TypeManagerModal'
 import { formatMobileReportDate } from '../reportUiUtils'
 import { recordTypeUsage } from './typeUsageStorage'
 import useIncidentTypeManager, { INCIDENT_TYPE_TOGGLE_VALUE } from './useIncidentTypeManager'
-import { ERCO_MOBILE_QUERY } from './erco-form-components/useIsMobile'
+import { REPORT_MOBILE_QUERY } from '../hooks/useReportIsMobile'
 
 const MOBILE_HOME_RECENT_RECORD_LIMIT = 3
 
@@ -75,7 +75,7 @@ const ErcoMobileHome = ({
     >
       <ActionConfirmModal
         visible={Boolean(deleteTypeTarget)}
-        mobileDrawerQuery={ERCO_MOBILE_QUERY}
+        mobileDrawerQuery={REPORT_MOBILE_QUERY}
         testId="erco-report-type-manager-delete-modal"
         title="Delete Type"
         message={
@@ -95,7 +95,7 @@ const ErcoMobileHome = ({
       <TypeManagerModal
         visible={incident.showAddTypeModal}
         mobileDrawer
-        mobileDrawerQuery={ERCO_MOBILE_QUERY}
+        mobileDrawerQuery={REPORT_MOBILE_QUERY}
         testId="erco-report-type-manager-modal"
         onClose={incident.closeAddModal}
         editMode={incident.incidentEditMode}

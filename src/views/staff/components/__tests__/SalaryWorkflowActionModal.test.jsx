@@ -1,8 +1,10 @@
 // @vitest-environment jsdom
 import React from 'react'
-import { render, screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { cleanup, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it } from 'vitest'
 import SalaryWorkflowActionModal from '../SalaryWorkflowActionModal'
+
+afterEach(cleanup)
 
 const baseProps = {
   visible: true,
@@ -98,5 +100,40 @@ describe('SalaryWorkflowActionModal', () => {
     expect(screen.getByText('Expense Items Total')).toBeTruthy()
     expect(screen.getByText('Claimed Amount')).toBeTruthy()
     expect(screen.getByText('RM 120.00')).toBeTruthy()
+  })
+
+  it('keeps rejection and declaration errors local, described, and non-announcing', () => {
+    render(
+      <SalaryWorkflowActionModal
+        {...baseProps}
+        actionType="reject"
+        declarationChecked={false}
+        declarationError="Confirm responsibility before continuing."
+        rejectError="Remarks are required when rejecting."
+        record={{
+          id: 'CLM-2026-021',
+          ownerLabel: 'Jang',
+          type: 'expense',
+          period: 'April 2026',
+          category: 'Travel',
+          status: 'Pending',
+          amount: 120,
+          submittedAt: '2026-04-22T00:00:00.000Z',
+          items: [],
+        }}
+      />,
+    )
+
+    const remarks = screen.getByLabelText('Remarks (required)')
+    const remarksError = screen.getByText('Remarks are required when rejecting.')
+    const declarationError = screen.getByText('Confirm responsibility before continuing.')
+
+    expect(remarks.getAttribute('aria-describedby')).toBe('salary-workflow-remarks-error')
+    expect(remarks.getAttribute('aria-invalid')).toBe('true')
+    expect(remarksError.id).toBe('salary-workflow-remarks-error')
+    expect(remarksError.className).toContain('invalid-feedback')
+    expect(remarksError.getAttribute('role')).toBeNull()
+    expect(declarationError.className).toContain('invalid-feedback')
+    expect(declarationError.getAttribute('role')).toBeNull()
   })
 })

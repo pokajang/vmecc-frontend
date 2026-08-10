@@ -39,6 +39,7 @@ describe('FitnessTestPersonnelStep', () => {
     apiMocks.fetchTeams.mockResolvedValue({ data: [] })
     render(<Harness />)
     fireEvent.click(screen.getByRole('button', { name: 'Add participant' }))
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByLabelText('Name')))
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'External Member' } })
     fireEvent.change(screen.getByLabelText('Role (optional)'), { target: { value: 'Medic' } })
     fireEvent.change(screen.getByLabelText('Age'), { target: { value: '34' } })

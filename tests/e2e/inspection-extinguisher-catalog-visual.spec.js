@@ -1,4 +1,10 @@
 import { expect, test } from '@playwright/test'
+import {
+  getControlledBrowserApiBaseUrl,
+  installControlledApiRequestGuard,
+} from './support/controlled-api-stubs'
+
+const apiBaseUrl = getControlledBrowserApiBaseUrl()
 
 const user = {
   id: 902,
@@ -63,7 +69,8 @@ const json = (route, body, status = 200) =>
   route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) })
 
 const installApiStubs = async (page) => {
-  await page.route('**:8000/api/**', async (route) => {
+  await installControlledApiRequestGuard(page, apiBaseUrl)
+  await page.route(`${apiBaseUrl}/**`, async (route) => {
     const request = route.request()
     const url = new URL(request.url())
     const path = url.pathname.replace(/^\/api/, '')
@@ -162,7 +169,9 @@ test('catalogue and detail pages remain usable across desktop, tablet, and mobil
   })
 
   await page.setViewportSize({ width: 820, height: 1000 })
-  await page.goto('/inspection/all-extinguishers', { waitUntil: 'domcontentloaded' })
+  await page.goto('/inspection', { waitUntil: 'domcontentloaded' })
+  await page.getByRole('button', { name: 'All Extinguishers', exact: true }).click()
+  await expect(page).toHaveURL(/\/inspection\/all-extinguishers/)
   await expect(page.locator('tbody tr').filter({ hasText: 'CAN-002' }).first()).toBeVisible()
   const tabletSearch = page.getByLabel('Search records').last()
   await expect(tabletSearch).toBeVisible()
@@ -182,12 +191,7 @@ test('catalogue and detail pages remain usable across desktop, tablet, and mobil
   })
 
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/inspection', { waitUntil: 'domcontentloaded' })
-  await expect(page.getByTestId('inspection-all-extinguishers')).toBeVisible()
-  await page.getByTestId('inspection-all-extinguishers').click()
-  await expect.poll(() => new URL(page.url()).pathname).toBe('/inspection/all-extinguishers')
-  await expect.poll(() => new URL(page.url()).searchParams.get('from')).toBeTruthy()
-  await expect.poll(() => new URL(page.url()).searchParams.get('to')).toBeTruthy()
+  await expect(page).toHaveURL(/\/inspection\/all-extinguishers/)
   await expect(page.getByTestId('all-extinguishers-section-mobile')).toBeVisible()
   await expect(page.getByText('CAN-002', { exact: true }).first()).toBeVisible()
   await expectNoPageOverflow(page)

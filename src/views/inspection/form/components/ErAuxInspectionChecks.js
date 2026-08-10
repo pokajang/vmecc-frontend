@@ -23,6 +23,7 @@ import {
   InspectionPhotoActionRow,
   InspectionPhotoEvidenceSummary,
   InspectionPhotoViewerModal,
+  ManagedCheckToolbar,
   rowContainsSearch,
 } from './InspectionDisplayShared'
 import {
@@ -618,36 +619,16 @@ export const ErAuxEquipmentChecks = ({
       ) : null}
 
       {!readOnly && visibleChecks.length > 0 ? (
-        <div className="inspection-check-toolbar">
-          <CFormInput
-            size="sm"
-            className="inspection-search-input"
-            value={search}
-            placeholder="Search ER Aux equipment..."
-            aria-label="Search ER Aux equipment rows"
-            onChange={(event) => setSearch(event.target.value)}
-          />
-          <div className="inspection-check-toolbar__actions">
-            {search ? (
-              <CButton
-                type="button"
-                color="secondary"
-                variant="outline"
-                size="sm"
-                className="inspection-compact-action-btn"
-                aria-label="Clear ER Aux equipment row search"
-                onClick={() => setSearch('')}
-              >
-                Clear
-              </CButton>
-            ) : null}
-          </div>
-          {search ? (
-            <div className="small text-body-secondary">
-              Showing {filteredChecks.length} of {visibleChecks.length}
-            </div>
-          ) : null}
-        </div>
+        <ManagedCheckToolbar
+          search={search}
+          onSearch={setSearch}
+          searchPlaceholder="Search ER Aux equipment..."
+          searchLabel="Search ER Aux equipment rows"
+          onClearSearch={() => setSearch('')}
+          clearSearchLabel="Clear ER Aux equipment row search"
+          resultCount={filteredChecks.length}
+          totalCount={visibleChecks.length}
+        />
       ) : null}
 
       {visibleChecks.length === 0 && isLoadingRows ? (

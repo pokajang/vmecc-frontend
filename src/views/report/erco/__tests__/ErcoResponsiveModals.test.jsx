@@ -9,7 +9,7 @@ import {
   PreMobModeModal,
   SummaryGenerationModal,
 } from '../erco-form-components'
-import { ERCO_MOBILE_QUERY } from '../erco-form-components/useIsMobile'
+import { REPORT_MOBILE_QUERY } from '../../hooks/useReportIsMobile'
 
 const setViewport = (width) => {
   Object.defineProperty(window, 'innerWidth', {
@@ -21,7 +21,7 @@ const setViewport = (width) => {
     writable: true,
     configurable: true,
     value: vi.fn((query) => ({
-      matches: query === ERCO_MOBILE_QUERY && width <= 767.98,
+      matches: query === REPORT_MOBILE_QUERY && width <= 767.98,
       media: query,
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
@@ -165,7 +165,7 @@ describe('ERCO responsive modals', () => {
     expect(document.querySelector('.modal.show')).toBeTruthy()
   })
 
-  it('preserves chronology row actions inside the mobile drawer', () => {
+  it('preserves chronology row actions and initial focus inside the mobile drawer', async () => {
     setViewport(375)
     const onSave = vi.fn()
     const onSaveAndNext = vi.fn()
@@ -182,6 +182,9 @@ describe('ERCO responsive modals', () => {
     )
 
     const drawer = document.querySelector('.mobile-bottom-drawer')
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByLabelText('Event / action')),
+    )
     fireEvent.click(within(drawer).getByRole('button', { name: 'Save & add next' }))
     fireEvent.click(within(drawer).getByRole('button', { name: 'Save' }))
 

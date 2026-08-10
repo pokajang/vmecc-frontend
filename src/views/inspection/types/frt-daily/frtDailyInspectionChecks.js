@@ -15,6 +15,7 @@ import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import {
   FormFieldError,
   InspectionPhotoViewerModal,
+  ManagedCheckToolbar,
   rowContainsSearch,
 } from 'src/views/inspection/form/components/InspectionDisplayShared'
 import FrtSectionCards from './frtDailySectionCards'
@@ -324,36 +325,16 @@ export const FrtDailyInspectionChecks = ({
       ) : null}
 
       {!readOnly ? (
-        <div className="inspection-check-toolbar">
-          <CFormInput
-            size="sm"
-            className="inspection-search-input"
-            value={search}
-            placeholder="Search truck readiness rows..."
-            aria-label="Search truck readiness rows"
-            onChange={(event) => setSearch(event.target.value)}
-          />
-          <div className="inspection-check-toolbar__actions">
-            {search ? (
-              <CButton
-                type="button"
-                color="secondary"
-                variant="outline"
-                size="sm"
-                className="inspection-compact-action-btn"
-                aria-label="Clear truck readiness row search"
-                onClick={() => setSearch('')}
-              >
-                Clear
-              </CButton>
-            ) : null}
-          </div>
-          {search ? (
-            <div className="small text-body-secondary">
-              Showing {filteredRowCount} of {totalRowCount}
-            </div>
-          ) : null}
-        </div>
+        <ManagedCheckToolbar
+          search={search}
+          onSearch={setSearch}
+          searchPlaceholder="Search truck readiness rows..."
+          searchLabel="Search truck readiness rows"
+          onClearSearch={() => setSearch('')}
+          clearSearchLabel="Clear truck readiness row search"
+          resultCount={filteredRowCount}
+          totalCount={totalRowCount}
+        />
       ) : null}
 
       {filteredRowCount === 0 && totalRowCount > 0 ? (

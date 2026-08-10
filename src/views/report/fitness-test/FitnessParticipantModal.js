@@ -1,18 +1,7 @@
 import React, { useEffect, useRef } from 'react'
-import {
-  CButton,
-  CFormFeedback,
-  CFormInput,
-  CFormLabel,
-  CFormSelect,
-  CModal,
-  CModalBody,
-  CModalFooter,
-  CModalHeader,
-  CModalTitle,
-} from '@coreui/react'
-import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
-import { useReportIsMobile } from '../hooks/useReportIsMobile'
+import { CButton, CFormFeedback, CFormInput, CFormLabel, CFormSelect } from '@coreui/react'
+import ResponsiveReportDialog from 'src/components/report-workflow/ResponsiveReportDialog'
+import useReportIsMobile from 'src/hooks/useReportIsMobile'
 
 const ParticipantFields = ({ draft, setDraft, shifts, error, nameInputRef }) => {
   const update = (field, value) => setDraft((current) => ({ ...current, [field]: value }))
@@ -115,27 +104,17 @@ const FitnessParticipantModal = ({ visible, draft, setDraft, shifts, error, onCl
     </>
   )
 
-  if (isMobile) {
-    return (
-      <MobileBottomDrawer visible={visible} title="Add Participant" onClose={onClose}>
-        <div className="d-grid gap-3">
-          {fields}
-          <div className="fitness-participant-drawer__footer mobile-bottom-drawer__footer d-flex justify-content-end gap-2">
-            {actions}
-          </div>
-        </div>
-      </MobileBottomDrawer>
-    )
-  }
-
   return (
-    <CModal visible={visible} alignment="center" onClose={onClose}>
-      <CModalHeader>
-        <CModalTitle>Add Participant</CModalTitle>
-      </CModalHeader>
-      <CModalBody>{fields}</CModalBody>
-      <CModalFooter>{actions}</CModalFooter>
-    </CModal>
+    <ResponsiveReportDialog
+      visible={visible}
+      title="Add Participant"
+      onClose={onClose}
+      footer={actions}
+      mobileContentClassName="d-grid gap-3"
+      footerClassName="fitness-participant-drawer__footer"
+    >
+      {fields}
+    </ResponsiveReportDialog>
   )
 }
 

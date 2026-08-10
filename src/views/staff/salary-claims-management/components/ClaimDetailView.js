@@ -4,6 +4,7 @@ import { Calendar, Download, X } from 'lucide-react'
 import ApprovalGates from 'src/components/ApprovalGates'
 import AuditHistoryPanel from 'src/components/AuditHistoryPanel'
 import CreateActionButton from 'src/components/CreateActionButton'
+import PageState from 'src/components/PageState'
 import ResponsiveKeyValueList from 'src/components/workflow/ResponsiveKeyValueList'
 import WorkflowDetailActions from 'src/components/workflow/WorkflowDetailActions'
 import WorkflowDetailHeader from 'src/components/workflow/WorkflowDetailHeader'
@@ -66,7 +67,7 @@ const ClaimDetailView = ({ vm, handlers }) => {
       </div>
 
       {!selectedClaim ? (
-        <div className="text-danger">Claim record not found.</div>
+        <PageState variant="error" message="Claim record not found." />
       ) : (
         <>
           <CRow className="g-3">

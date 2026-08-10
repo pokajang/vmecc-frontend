@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { CButton, CFormInput } from '@coreui/react'
+import { CButton } from '@coreui/react'
 import CreateActionButton from 'src/components/CreateActionButton'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import RowActions from 'src/components/RowActions'
@@ -18,6 +18,7 @@ import {
 import {
   FormFieldError,
   InspectionPhotoViewerModal,
+  ManagedCheckToolbar,
   rowContainsSearch,
 } from './InspectionDisplayShared'
 import HighAngleInspectionRowCard, {
@@ -449,36 +450,16 @@ export const HighAngleInspectionChecks = ({
       ) : null}
 
       {showEquipmentRows && !readOnly ? (
-        <div className="inspection-check-toolbar">
-          <CFormInput
-            size="sm"
-            className="inspection-search-input"
-            value={search}
-            placeholder="Search high angle equipment..."
-            aria-label="Search high angle equipment rows"
-            onChange={(event) => setSearch(event.target.value)}
-          />
-          <div className="inspection-check-toolbar__actions">
-            {search ? (
-              <CButton
-                type="button"
-                color="secondary"
-                variant="outline"
-                size="sm"
-                className="inspection-compact-action-btn"
-                aria-label="Clear high angle equipment row search"
-                onClick={() => setSearch('')}
-              >
-                Clear
-              </CButton>
-            ) : null}
-          </div>
-          {search ? (
-            <div className="small text-body-secondary">
-              Showing {totalFilteredRows} of {totalRows}
-            </div>
-          ) : null}
-        </div>
+        <ManagedCheckToolbar
+          search={search}
+          onSearch={setSearch}
+          searchPlaceholder="Search high angle equipment..."
+          searchLabel="Search high angle equipment rows"
+          onClearSearch={() => setSearch('')}
+          clearSearchLabel="Clear high angle equipment row search"
+          resultCount={totalFilteredRows}
+          totalCount={totalRows}
+        />
       ) : null}
 
       {showEquipmentRows && filteredGroups.length > 0 ? (

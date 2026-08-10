@@ -1,13 +1,23 @@
 # VMECC Frontend Component Reuse Catalogue
 
-**Date:** 2026-08-05  
+**Date:** 2026-08-10  
 **Application:** `vmecc-frontend`  
 **Repository checkpoint:** `9db2a97`  
 **Implementation checkpoint:** `a6bbadf`  
 **Validation checkpoint:** `c2b5ff5`  
 **Programme plan:** `FRONTEND_UPGRADE_PLAN_2026-08-03.md`, Revision 2  
 **Day 42 plan:** `FRONTEND_COMPONENT_REUSE_STAGE_5_COMPLETION_PLAN_2026-08-05.md`  
-**Status:** Final repository-derived shared-component catalogue
+**Stage 6 boundary:** `f19bca8..working tree`  
+**Status:** Final repository-derived shared-component catalogue; reconciled for Stage 6 Day 61
+
+**2026-08-10 Stage 6 reconciliation:** `ResponsiveReportDialog` has seven production importers,
+`WorkflowEditStateBanner` has three, and the root `FormFieldError` has two production importers with
+four rendered error placements. `ResponsiveKeyValueList` increased from two to four production
+importers, and `PageState` increased from eight to thirteen. The feature-local
+`ErcoResponsiveActionModal` and ERCO-local `useIsMobile` were retired. The authoritative report
+breakpoint implementation now lives at `src/hooks/useReportIsMobile.js`; the old report-view path is
+a compatibility re-export. Inventory totals and importer counts below are the Day 61 working-tree
+checkpoint; the committed comparison start remains `f19bca8`.
 
 ## 1. Purpose
 
@@ -19,8 +29,8 @@ It catalogues production components under `src/components/`, the programme-appro
 
 | Inventory item                                                      | Current result |
 | ------------------------------------------------------------------- | -------------: |
-| Production JS/JSX modules under `src/components/`                   |            124 |
-| PascalCase component files                                          |            106 |
+| Production JS/JSX modules under `src/components/`                   |            127 |
+| PascalCase component files                                          |            109 |
 | Non-component support modules                                       |             15 |
 | Barrel `index.js` files                                             |              3 |
 | Component files with zero resolved production importer              |              0 |
@@ -31,17 +41,17 @@ It catalogues production components under `src/components/`, the programme-appro
 
 | Path group                        | Component files | Primary ownership                             |
 | --------------------------------- | --------------: | --------------------------------------------- |
-| `src/components/`                 |              40 | application shell and cross-domain primitives |
+| `src/components/`                 |              41 | application shell and cross-domain primitives |
 | `src/components/ai-helper/`       |              11 | AI Helper feature composition                 |
 | `src/components/header/`          |               6 | header overlays and feedback interaction      |
 | `src/components/messages/`        |               3 | messaging feature presentation                |
 | `src/components/onboarding/`      |               1 | onboarding journey presentation               |
-| `src/components/report-workflow/` |              22 | report/inspection workflow presentation       |
+| `src/components/report-workflow/` |              24 | report/inspection workflow presentation       |
 | `src/components/staff/`           |               3 | Staff feature composition                     |
 | `src/components/table-filters/`   |               3 | `TableFilters` internal presentation          |
 | `src/components/users/`           |              12 | User-management feature composition           |
 | `src/components/workflow/`        |               5 | cross-domain workflow presentation            |
-| **Total**                         |         **106** |                                               |
+| **Total**                         |         **109** |                                               |
 
 ### 2.2 Excluded support modules
 
@@ -119,6 +129,7 @@ Canonical prefix: `src/components/`.
 | `DataTableFooter.js`            |                       22 |                     1 |
 | `EditControls.js`               |                       15 |                     0 |
 | `ErrorBoundary.js`              |                        3 |                     0 |
+| `FormFieldError.js`             |                        2 |                     1 |
 | `FormActionGroup.js`            |                       15 |                     1 |
 | `GroupedTableHeader.js`         |                        8 |                     1 |
 | `IconOptionCard.js`             |                        3 |                     0 |
@@ -131,7 +142,7 @@ Canonical prefix: `src/components/`.
 | `ModuleNavTabs.js`              |                        3 |                     1 |
 | `ModulePageHeader.js`           |                       22 |                     1 |
 | `NotificationDrawer.js`         |                        1 |                     1 |
-| `PageState.js`                  |                        8 |                     0 |
+| `PageState.js`                  |                       13 |                     1 |
 | `RecordCard.js`                 |                        1 |                     1 |
 | `RecordStateBadge.js`           |                        3 |                     0 |
 | `ResponsiveRecordCollection.js` |                       16 |                     2 |
@@ -210,8 +221,10 @@ Canonical prefix: `src/components/report-workflow/`. These components share repo
 | `ReportViewComponents.js`                   |                   12 |                     1 |
 | `RespondingTeamSummary.js`                  |                    2 |                     0 |
 | `ResponsiveChoiceSelector.js`               |                    6 |                     1 |
+| `ResponsiveReportDialog.js`                 |                    7 |                     1 |
 | `TypeManagerModal.js`                       |                   10 |                     1 |
 | `WorkflowInlineFeedback.js`                 |                    3 |                     1 |
+| `WorkflowEditStateBanner.js`                |                    3 |                     1 |
 | `WorkflowRosterGroup.js`                    |                    2 |                     1 |
 | `WorkflowSetupField.js`                     |                    1 |                     1 |
 | `WorkflowStageActions.js`                   |                    5 |                     1 |
@@ -258,26 +271,30 @@ Canonical prefix: `src/components/workflow/`. These components own responsive wo
 | Component file                      | Production importers | Direct test importers |
 | ----------------------------------- | -------------------: | --------------------: |
 | `ResponsiveFinancialBreakdown.js`   |                    3 |                     1 |
-| `ResponsiveKeyValueList.js`         |                    2 |                     0 |
+| `ResponsiveKeyValueList.js`         |                    4 |                     1 |
 | `ResponsiveWorkflowActionDialog.js` |                    7 |                     0 |
 | `WorkflowDetailActions.js`          |                    3 |                     0 |
 | `WorkflowDetailHeader.js`           |                    4 |                     1 |
 
 ## 5. Programme Adoption Matrix
 
-| Family                        | Canonical source                                                          | Current production adoption                                                                                       | Shared ownership                                                                                        | Consumer ownership                                            | Direct regression evidence                                                     | Disposition                             |
-| ----------------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------ | --------------------------------------- |
-| Action confirmation           | `src/components/ActionConfirmModal.js`                                    | Staff canary plus 31 consumers through the facade                                                                 | responsive modal/drawer, action order, cancellation lock, safe dismissal                                | copy, consequence, labels/colors, callbacks, loading decision | canonical, facade, and Staff modal suites                                      | Active canonical contract               |
-| Confirmation facade           | `src/views/shared/ActionConfirmModal.js`                                  | 31 production imports across Leave, Overtime, Inspection, Reports, ERCO, and Staff salary claims                  | one-line re-export only                                                                                 | all domain behavior remains downstream                        | facade suite plus consumer suites                                              | Active compatibility adapter            |
-| Specialized user confirmation | `src/components/users/UserConfirmModal.js`                                | `ChatThread`, `UserActionModals`, `UserManagement`, `UserProfile`                                                 | portal/backdrop and custom z-index/style/body hooks                                                     | user/message actions and domain callbacks                     | active consumer suites                                                         | Intentional retained variant            |
-| Responsive record collection  | `src/components/ResponsiveRecordCollection.js`                            | 16 production importers, including Holidays, Overtime, Custom Shifts, records, audit, sessions, and salary claims | loading/empty/populated composition; mobile/desktop/footer placement                                    | queries, filtering, rows/cards, actions, pagination state     | collection suite plus Holidays, Overtime, Work Shift and other consumer suites | Active cross-domain contract            |
-| Mobile record list            | `src/components/MobileRecordList.js`                                      | 12 resolved production importers, including `ResponsiveRecordCollection`                                          | mobile section/card/list rendering and intrinsic-width containment                                      | record shape construction, status/action semantics            | `ResponsiveRecordCollection` and record-card/list consumer suites              | Active primitive                        |
-| Standard states               | `PageState`, `TableLoader`, `InlineFeedbackMessage`                       | 8, 35, and 4 resolved production importers respectively                                                           | presentation of empty/loading/inline feedback                                                           | state detection, retry, request lifecycle, domain message     | exercised directly or through collection/page consumer suites                  | Active selective contracts              |
-| Compact mobile Back           | `src/components/MobileModuleBackAction.js`                                | Reports and Inspection                                                                                            | icon, label default, button type, compact mobile-only hierarchy                                         | destination, visibility condition, handler                    | component, Reports route, and Inspection header suites                         | Active exact-pair extraction            |
-| Role-assignment Add           | `src/components/users/RoleAssignmentAddButton.js`                         | Create Staff and Manage User Roles                                                                                | icon, outline hierarchy, form-safe type, disabled forwarding                                            | role/scope rules, validation, assignment state, persistence   | component and both consumer suites                                             | Active feature-local contract           |
-| ERCO responsive action shell  | `src/views/report/erco/erco-form-components/ErcoResponsiveActionModal.js` | `ChronologyStartModeModal` and `PreMobModeModal`                                                                  | mobile drawer/desktop modal shell, layout, dismissal                                                    | title/body/actions/callbacks and chronology state transitions | `ErcoResponsiveModals.test.jsx`                                                | Active feature-local shared shell       |
-| Mobile drawer styling         | `src/scss/components/_mobile-bottom-drawer.scss`                          | `MobileBottomDrawer` and its 47 resolved production importers                                                     | general drawer dimensions, header/body/footer, confirm z-index, touch target, reduced viewport behavior | domain-specific drawer selectors remain feature-owned         | drawer/component/consumer suites and Day 40 responsive evidence                | Active shared style owner               |
-| PWA installation              | `src/hooks/usePwaInstallPrompt.js`                                        | App Header, App Sidebar, Default Layout                                                                           | install event/provider, nav affordance, install instructions modal/drawer                               | shell placement                                               | hook tests and retained PWA tests                                              | Active behavior; dormant banner removed |
+| Family                        | Canonical source                                            | Current production adoption                                                                                       | Shared ownership                                                                                        | Consumer ownership                                            | Direct regression evidence                                                     | Disposition                             |
+| ----------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------------ | --------------------------------------- |
+| Action confirmation           | `src/components/ActionConfirmModal.js`                      | Staff canary plus 31 consumers through the facade                                                                 | responsive modal/drawer, action order, cancellation lock, safe dismissal                                | copy, consequence, labels/colors, callbacks, loading decision | canonical, facade, and Staff modal suites                                      | Active canonical contract               |
+| Confirmation facade           | `src/views/shared/ActionConfirmModal.js`                    | 31 production imports across Leave, Overtime, Inspection, Reports, ERCO, and Staff salary claims                  | one-line re-export only                                                                                 | all domain behavior remains downstream                        | facade suite plus consumer suites                                              | Active compatibility adapter            |
+| Specialized user confirmation | `src/components/users/UserConfirmModal.js`                  | `ChatThread`, `UserActionModals`, `UserManagement`, `UserProfile`                                                 | portal/backdrop and custom z-index/style/body hooks                                                     | user/message actions and domain callbacks                     | active consumer suites                                                         | Intentional retained variant            |
+| Responsive record collection  | `src/components/ResponsiveRecordCollection.js`              | 16 production importers, including Holidays, Overtime, Custom Shifts, records, audit, sessions, and salary claims | loading/empty/populated composition; mobile/desktop/footer placement                                    | queries, filtering, rows/cards, actions, pagination state     | collection suite plus Holidays, Overtime, Work Shift and other consumer suites | Active cross-domain contract            |
+| Mobile record list            | `src/components/MobileRecordList.js`                        | 12 resolved production importers, including `ResponsiveRecordCollection`                                          | mobile section/card/list rendering and intrinsic-width containment                                      | record shape construction, status/action semantics            | `ResponsiveRecordCollection` and record-card/list consumer suites              | Active primitive                        |
+| Standard states               | `PageState`, `TableLoader`, `InlineFeedbackMessage`         | 13, 35, and 4 resolved production importers respectively                                                          | presentation of empty/loading/inline feedback                                                           | state detection, retry, request lifecycle, domain message     | direct state tests plus collection/page consumer suites                        | Active selective contracts              |
+| Inline field error            | `src/components/FormFieldError.js`                          | Report and Salary workflow action dialogs; four rendered error placements                                         | stable invalid-feedback presentation and ID/class forwarding                                            | validation, message, described field, and submission behavior | primitive plus both workflow-action suites and controlled browser evidence     | Active presentation primitive           |
+| Inspection check search       | feature-local `ManagedCheckToolbar`                         | Fire Extinguisher, FRT, Hydraulic, ER Aux, High Angle, and the pre-existing SCBA consumer                         | search/clear/action/status toolbar presentation                                                         | search state, visibility, filtering, reset, and row ownership | shared display plus six consumer suites and controlled browser journeys        | Active feature-local contract           |
+| Read-only metadata            | `src/components/workflow/ResponsiveKeyValueList.js`         | Overtime, Salary Claim, applicant Leave, and staff Leave                                                          | ordered responsive `dl`/`dt`/`dd` presentation and missing-value fallback                               | field selection/order, formatting, links, badges, and actions | primitive, Leave consumer, and controlled browser evidence                     | Active selective contract               |
+| Compact mobile Back           | `src/components/MobileModuleBackAction.js`                  | Reports and Inspection                                                                                            | icon, label default, button type, compact mobile-only hierarchy                                         | destination, visibility condition, handler                    | component, Reports route, and Inspection header suites                         | Active exact-pair extraction            |
+| Role-assignment Add           | `src/components/users/RoleAssignmentAddButton.js`           | Create Staff and Manage User Roles                                                                                | icon, outline hierarchy, form-safe type, disabled forwarding                                            | role/scope rules, validation, assignment state, persistence   | component and both consumer suites                                             | Active feature-local contract           |
+| Report responsive dialog      | `src/components/report-workflow/ResponsiveReportDialog.js`  | ERCO choice/chronology/AI dialogs, Fitness participant editing, and shared report workflow actions                | mobile drawer/desktop modal shell, breakpoint, layout, close lock                                       | title/body/actions/callbacks, focus, validation, and state    | canonical, ERCO, Fitness, and report workflow action suites                    | Active canonical contract               |
+| Report edit-state banner      | `src/components/report-workflow/WorkflowEditStateBanner.js` | ERCO, Drill, and Fitness Test                                                                                     | alert presentation, display ID, optional source controls                                                | source data, hydration, dirty state, and persistence          | canonical component plus three form suites                                     | Active canonical contract               |
+| Mobile drawer styling         | `src/scss/components/_mobile-bottom-drawer.scss`            | `MobileBottomDrawer` and its 47 resolved production importers                                                     | general drawer dimensions, header/body/footer, confirm z-index, touch target, reduced viewport behavior | domain-specific drawer selectors remain feature-owned         | drawer/component/consumer suites and Day 40 responsive evidence                | Active shared style owner               |
+| PWA installation              | `src/hooks/usePwaInstallPrompt.js`                          | App Header, App Sidebar, Default Layout                                                                           | install event/provider, nav affordance, install instructions modal/drawer                               | shell placement                                               | hook tests and retained PWA tests                                              | Active behavior; dormant banner removed |
 
 ### 5.1 Responsive collection consumers
 
@@ -324,15 +341,16 @@ src/views/users/user-management/components/UserManagementTableSection.js
 
 ## 7. Intentional Exceptions
 
-| Exception group                     | Why it remains separate                                                                                                                | Revisit only when                                                                        |
-| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Attachment previews                 | local selection, persisted media, evidence review, camera/gallery, and deletion workflows have different sources and recovery behavior | two or more consumers share the same data lifecycle and action contract                  |
-| Status/workflow presentation        | status labels, allowed transitions, approvals, declarations, and financial meaning differ by domain                                    | semantics and transition rules align, not merely badge appearance                        |
-| Custom headers                      | task hierarchy, tabs, counts, selectors, and navigation ownership differ                                                               | the same header inputs and responsive hierarchy repeat without domain branching          |
-| Loaders/spinners                    | button, table, section, upload, and long-running workflow feedback have different context                                              | the user-facing loading purpose and lock behavior are equivalent                         |
-| Back/navigation controls            | `BackButton`, browser/history actions, module Back, detail close, and step navigation have different destinations and placement        | destination semantics and responsive placement match the compact Reports/Inspection pair |
-| Forms/dialogs                       | validation, submitted values, destructive consequences, focus entry, and workflow sequences differ                                     | only the outer presentation repeats and all domain behavior can remain local             |
-| Feature internals with one importer | internal composition components keep large feature owners readable                                                                     | they become unused or the same contract gains an independent second consumer             |
+| Exception group                     | Why it remains separate                                                                                                                   | Revisit only when                                                                        |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Attachment previews                 | local selection, persisted media, evidence review, camera/gallery, and deletion workflows have different sources and recovery behavior    | two or more consumers share the same data lifecycle and action contract                  |
+| Status/workflow presentation        | status labels, allowed transitions, approvals, declarations, and financial meaning differ by domain                                       | semantics and transition rules align, not merely badge appearance                        |
+| Custom headers                      | task hierarchy, tabs, counts, selectors, and navigation ownership differ                                                                  | the same header inputs and responsive hierarchy repeat without domain branching          |
+| Loaders/spinners                    | button, table, section, upload, and long-running workflow feedback have different context                                                 | the user-facing loading purpose and lock behavior are equivalent                         |
+| Back/navigation controls            | `BackButton`, browser/history actions, module Back, detail close, and step navigation have different destinations and placement           | destination semantics and responsive placement match the compact Reports/Inspection pair |
+| Forms/dialogs                       | validation, submitted values, destructive consequences, focus entry, and workflow sequences differ                                        | only the outer presentation repeats and all domain behavior can remain local             |
+| Feature internals with one importer | internal composition components keep large feature owners readable                                                                        | they become unused or the same contract gains an independent second consumer             |
+| Unimported legacy feature view      | `staff/leave-management/components/RecordDetailCard.js` predates Stage 6 and has no production importer; deleting it is unrelated cleanup | a dedicated zero-use cleanup proves no route, test, barrel, or historical dependency     |
 
 Single-import structural and feature-internal components are not presumed dead. The import graph found zero PascalCase component file without a production importer.
 
@@ -421,6 +439,7 @@ PWA installation was not removed. The following remain active:
 | Authenticated E2E                    | Fixture-blocked locally          | Run only with approved backend/database identities and isolated data                   |
 | GitHub-hosted validation             | Disabled by owner cost decision  | Reopen when the owner chooses hosted CI or release governance requires it              |
 | Shared cPanel release                | Not performed                    | Use a separate staging/deployment/rollback qualification plan                          |
+| Legacy `RecordDetailCard`            | Unimported; retained exception   | Remove only through a bounded zero-use cleanup with route/test/import proof            |
 
 ## 11. Catalogue Update Rule
 

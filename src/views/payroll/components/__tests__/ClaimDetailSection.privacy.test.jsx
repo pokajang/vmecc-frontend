@@ -52,6 +52,17 @@ const props = {
 }
 
 describe('ClaimDetailSection privacy boundaries', () => {
+  it('keeps Back available and presents a missing record as a terminal alert', () => {
+    render(
+      <MemoryRouter>
+        <ClaimDetailSection {...props} selectedClaim={null} />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('button', { name: 'Back to claims' })).toBeTruthy()
+    expect(screen.getByRole('alert').textContent).toContain('Claim record not found.')
+  })
+
   it('renders the shared semantic detail header and action region', () => {
     render(
       <MemoryRouter>

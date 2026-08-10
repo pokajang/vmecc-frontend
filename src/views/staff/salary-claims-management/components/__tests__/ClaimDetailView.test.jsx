@@ -6,6 +6,24 @@ import { MemoryRouter } from 'react-router-dom'
 import ClaimDetailView from '../ClaimDetailView'
 
 describe('ClaimDetailView salary contract warning', () => {
+  it('keeps Back available and presents a missing record as a terminal alert', () => {
+    render(
+      <MemoryRouter>
+        <ClaimDetailView
+          vm={{
+            selectedClaim: null,
+            selectedClaimTypeMeta: { label: 'Claim', icon: () => null },
+            statusColorMap: {},
+          }}
+          handlers={{ onBack: vi.fn() }}
+        />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('button', { name: 'Back to claims' })).toBeTruthy()
+    expect(screen.getByRole('alert').textContent).toContain('Claim record not found.')
+  })
+
   it('shows contract warning and suppresses readonly salary breakdown when incomplete', () => {
     render(
       <MemoryRouter>

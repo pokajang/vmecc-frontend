@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { CAlert } from '@coreui/react'
+import WorkflowEditStateBanner from 'src/components/report-workflow/WorkflowEditStateBanner'
 import WorkflowInlineFeedback from 'src/components/report-workflow/WorkflowInlineFeedback'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { loadReportDraftRow, saveReportDraft } from '../reportStorage'
@@ -293,10 +293,9 @@ const FitnessTestForm = ({
       }}
     >
       {editingRecord ? (
-        <CAlert color="info">
-          Editing <strong>{editingRecord.displayId}</strong>. Changes are applied only after review
-          and update.
-        </CAlert>
+        <WorkflowEditStateBanner displayId={editingRecord.displayId}>
+          Changes are applied only after review and update.
+        </WorkflowEditStateBanner>
       ) : null}
       {blockerMessage ? (
         <WorkflowInlineFeedback

@@ -6,7 +6,7 @@ import TableLoader from 'src/components/TableLoader'
 import { fetchRosters, fetchShiftWindows, fetchTeams } from 'src/services/apiClient'
 import { ReportMobileActionGroup } from '../components/ReportWorkflowUi'
 import { DetailsStepActions, IncidentSummaryPanel } from './erco-form-components'
-import useIsMobile from './erco-form-components/useIsMobile'
+import useReportIsMobile from '../hooks/useReportIsMobile'
 import { resolveRespondingTeamLabel } from './utils'
 
 const ACTIVE_CARD_BG = 'rgba(0, 126, 122, 0.2)'
@@ -103,7 +103,7 @@ const ErcoRespondingTeamStep = ({
   draftStatus = '',
   showActions = true,
 }) => {
-  const isMobile = useIsMobile()
+  const isMobile = useReportIsMobile()
   const [isLoadingMembers, setIsLoadingMembers] = useState(false)
   const [teamLoadError, setTeamLoadError] = useState('')
   const [useGroupedFallbackView, setUseGroupedFallbackView] = useState(false)

@@ -19,7 +19,7 @@ import {
   normalizeKey,
   normalizeSection,
 } from './postIncidentAnalysisConstants'
-import useIsMobile, { ERCO_MOBILE_QUERY } from './useIsMobile'
+import useReportIsMobile, { REPORT_MOBILE_QUERY } from '../../hooks/useReportIsMobile'
 
 const MOBILE_SECTION_ORDER = [
   'strengths',
@@ -44,7 +44,7 @@ const PostIncidentAnalysisSection = ({
   onPhotoProcessingChange,
 }) => {
   const section = React.useMemo(() => normalizeSection(value), [value])
-  const isMobile = useIsMobile()
+  const isMobile = useReportIsMobile()
   const [showAllBySection, setShowAllBySection] = React.useState({
     strengths: false,
     resourcesMobilised: false,
@@ -543,7 +543,7 @@ const PostIncidentAnalysisSection = ({
       <TypeManagerModal
         visible={Boolean(addModalSectionKey)}
         mobileDrawer
-        mobileDrawerQuery={ERCO_MOBILE_QUERY}
+        mobileDrawerQuery={REPORT_MOBILE_QUERY}
         onClose={closeAddModal}
         editMode={addModalEditMode}
         onSetEditMode={setAddModalEditMode}

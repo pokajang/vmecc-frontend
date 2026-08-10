@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { CButton, CFormInput } from '@coreui/react'
+import { CButton } from '@coreui/react'
 import { Pencil } from 'lucide-react'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import CreateActionButton from 'src/components/CreateActionButton'
@@ -10,6 +10,7 @@ import { appendInspectionText } from '../../form/inspectionFormHelpers'
 import {
   FormFieldError,
   InspectionPhotoViewerModal,
+  ManagedCheckToolbar,
 } from '../../form/components/InspectionFormDisplaySections'
 import InspectionResetConfirmDrawer from '../../form/components/InspectionResetConfirmDrawer'
 import {
@@ -449,39 +450,18 @@ const FireExtinguisherListView = ({
       </div>
 
       {!readOnly && !isFocusedScanMode ? (
-        <div className="inspection-check-toolbar">
-          <CFormInput
-            size="sm"
-            className="inspection-search-input"
-            value={search}
-            placeholder="Search extinguisher ID, barcode, type, sub-location..."
-            aria-label="Search fire extinguisher rows"
-            disabled={isLoadingRows && allRows.length === 0}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-          <div className="inspection-check-toolbar__actions">
-            {search ? (
-              <CButton
-                type="button"
-                color="secondary"
-                variant="outline"
-                size="sm"
-                className="inspection-compact-action-btn"
-                aria-label="Clear fire extinguisher row search"
-                onClick={() => setSearch('')}
-              >
-                Clear
-              </CButton>
-            ) : null}
-          </div>
-          {search ? (
-            <div className="small text-body-secondary">
-              Showing {rows.length} of {allRows.length}
-            </div>
-          ) : isLoadingRows && allRows.length > 0 ? (
-            <div className="small text-body-secondary">Refreshing units...</div>
-          ) : null}
-        </div>
+        <ManagedCheckToolbar
+          search={search}
+          onSearch={setSearch}
+          searchPlaceholder="Search extinguisher ID, barcode, type, sub-location..."
+          searchLabel="Search fire extinguisher rows"
+          searchDisabled={isLoadingRows && allRows.length === 0}
+          onClearSearch={() => setSearch('')}
+          clearSearchLabel="Clear fire extinguisher row search"
+          resultCount={rows.length}
+          totalCount={allRows.length}
+          idleStatus={isLoadingRows && allRows.length > 0 ? 'Refreshing units...' : ''}
+        />
       ) : null}
 
       {showAdd || editingRow ? (

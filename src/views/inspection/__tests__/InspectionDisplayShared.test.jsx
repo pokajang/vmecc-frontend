@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import {
   InspectionPhotoViewerModal,
+  ManagedCheckToolbar,
   PhotoGallery,
   isCompactInspectionViewport,
 } from '../form/components/InspectionDisplayShared'
@@ -32,6 +33,59 @@ afterEach(() => {
 })
 
 describe('InspectionDisplayShared', () => {
+  it('composes search, clear, managed actions, counts, and idle status without changing ownership', () => {
+    const onSearch = vi.fn()
+    const onClearSearch = vi.fn()
+    const onNextIncomplete = vi.fn()
+    const onExpandAll = vi.fn()
+    const onCollapseAll = vi.fn()
+    const { rerender } = render(
+      <ManagedCheckToolbar
+        search="pump"
+        onSearch={onSearch}
+        searchPlaceholder="Search equipment..."
+        searchLabel="Search equipment rows"
+        onClearSearch={onClearSearch}
+        clearSearchLabel="Clear equipment search"
+        onNextIncomplete={onNextIncomplete}
+        onExpandAll={onExpandAll}
+        onCollapseAll={onCollapseAll}
+        resultCount={1}
+        totalCount={3}
+      />,
+    )
+
+    fireEvent.change(screen.getByLabelText('Search equipment rows'), {
+      target: { value: 'panel' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Clear equipment search' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Next incomplete' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Expand all' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse all' }))
+
+    expect(onSearch).toHaveBeenCalledWith('panel')
+    expect(onClearSearch).toHaveBeenCalledOnce()
+    expect(onNextIncomplete).toHaveBeenCalledOnce()
+    expect(onExpandAll).toHaveBeenCalledOnce()
+    expect(onCollapseAll).toHaveBeenCalledOnce()
+    expect(screen.getByText('Showing 1 of 3')).toBeTruthy()
+
+    rerender(
+      <ManagedCheckToolbar
+        search=""
+        onSearch={onSearch}
+        searchPlaceholder="Search equipment..."
+        searchLabel="Search equipment rows"
+        searchDisabled
+        idleStatus="Refreshing equipment..."
+      />,
+    )
+
+    expect(screen.getByLabelText('Search equipment rows').disabled).toBe(true)
+    expect(screen.getByText('Refreshing equipment...')).toBeTruthy()
+    expect(screen.queryByRole('button')).toBeNull()
+  })
+
   it('marks portrait and landscape previews for uncropped rendering', () => {
     const { container } = render(
       <PhotoGallery

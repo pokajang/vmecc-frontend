@@ -1,1 +1,0 @@
-import{q as a}from"./index-Du_iKl8E.js";import{e as s}from"./CTable-DOiwFuZ1.js";const t=o=>{o.stopPropagation()},r=({children:o,className:n="text-center",...e})=>a.jsx(s,{...e,className:["row-action-cell",n].filter(Boolean).join(" "),onClick:t,onMouseDown:t,onKeyDown:t,children:o});export{r as R};

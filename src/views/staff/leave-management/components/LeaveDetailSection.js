@@ -3,6 +3,8 @@ import { CBadge, CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/react
 import ApprovalGates from 'src/components/ApprovalGates'
 import AuditHistoryPanel from 'src/components/AuditHistoryPanel'
 import BackButton from 'src/components/BackButton'
+import PageState from 'src/components/PageState'
+import ResponsiveKeyValueList from 'src/components/workflow/ResponsiveKeyValueList'
 import { buildApiUrl } from 'src/services/apiClient'
 
 const resolveLeaveGates = (record) => {
@@ -40,7 +42,7 @@ const LeaveDetailSection = ({
       <BackButton onClick={onBack} label="Back" />
     </div>
     {!selectedRecord ? (
-      <div className="text-danger">Leave record not found.</div>
+      <PageState variant="error" message="Leave record not found." />
     ) : (
       <div data-testid="leave-management-detail">
         <CRow className="g-4">
@@ -48,58 +50,52 @@ const LeaveDetailSection = ({
             <CCard className="h-100">
               <CCardHeader>Leave Details</CCardHeader>
               <CCardBody>
-                {[
-                  { label: 'Leave ID', value: getDisplayLeaveId(selectedRecord) },
-                  { label: 'Leave Type', value: selectedRecord.leaveType || '-' },
-                  { label: 'Schedule', value: getScheduleLabel(selectedRecord) },
-                  { label: 'Days', value: selectedRecord.days },
-                  {
-                    label: 'Current Status',
-                    value: getStatusBadge ? (
-                      getStatusBadge(selectedRecord.status || '-', selectedRecord.status || '-')
-                    ) : (
-                      <CBadge color="secondary">{selectedRecord.status || '-'}</CBadge>
-                    ),
-                  },
-                  {
-                    label: 'Current Action Owner',
-                    value: selectedRecord.nextActionRole || '-',
-                  },
-                  {
-                    label: 'Next Action',
-                    value: selectedRecordPendingActionHint ? (
-                      <span className="fw-semibold">{selectedRecordPendingActionHint}</span>
-                    ) : (
-                      '-'
-                    ),
-                  },
-                  { label: 'Applied On', value: formatDate(selectedRecord.appliedAt) },
-                  { label: 'Coverage By', value: selectedRecord.coverBy || '-' },
-                  { label: 'Roster Impact', value: formatRosterImpact(selectedRecord) },
-                  {
-                    label: 'Evidence',
-                    value: selectedRecord.attachmentAvailable ? (
-                      <a
-                        href={buildApiUrl(`/leave/attachments/${selectedRecord.attachmentId}`)}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        {selectedRecord.attachmentName || 'View attachment'}
-                      </a>
-                    ) : (
-                      '-'
-                    ),
-                  },
-                  { label: 'Reason', value: selectedRecord.reason || '-' },
-                ].map((item) => (
-                  <div
-                    key={item.label}
-                    className="d-flex justify-content-between align-items-start gap-3 py-2"
-                  >
-                    <div className="text-body-secondary">{item.label}</div>
-                    <div className="text-end text-break">{item.value}</div>
-                  </div>
-                ))}
+                <ResponsiveKeyValueList
+                  items={[
+                    { label: 'Leave ID', value: getDisplayLeaveId(selectedRecord) },
+                    { label: 'Leave Type', value: selectedRecord.leaveType || '-' },
+                    { label: 'Schedule', value: getScheduleLabel(selectedRecord) },
+                    { label: 'Days', value: selectedRecord.days },
+                    {
+                      label: 'Current Status',
+                      value: getStatusBadge ? (
+                        getStatusBadge(selectedRecord.status || '-', selectedRecord.status || '-')
+                      ) : (
+                        <CBadge color="secondary">{selectedRecord.status || '-'}</CBadge>
+                      ),
+                    },
+                    {
+                      label: 'Current Action Owner',
+                      value: selectedRecord.nextActionRole || '-',
+                    },
+                    {
+                      label: 'Next Action',
+                      value: selectedRecordPendingActionHint ? (
+                        <span className="fw-semibold">{selectedRecordPendingActionHint}</span>
+                      ) : (
+                        '-'
+                      ),
+                    },
+                    { label: 'Applied On', value: formatDate(selectedRecord.appliedAt) },
+                    { label: 'Coverage By', value: selectedRecord.coverBy || '-' },
+                    { label: 'Roster Impact', value: formatRosterImpact(selectedRecord) },
+                    {
+                      label: 'Evidence',
+                      value: selectedRecord.attachmentAvailable ? (
+                        <a
+                          href={buildApiUrl(`/leave/attachments/${selectedRecord.attachmentId}`)}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {selectedRecord.attachmentName || 'View attachment'}
+                        </a>
+                      ) : (
+                        '-'
+                      ),
+                    },
+                    { label: 'Reason', value: selectedRecord.reason || '-' },
+                  ]}
+                />
                 <div className="d-flex justify-content-between align-items-start gap-3 py-2">
                   <div className="text-body-secondary">Status</div>
                   <div className="text-end">

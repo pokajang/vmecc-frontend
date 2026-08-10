@@ -137,6 +137,59 @@ describe('FireExtinguisherEditSection', () => {
     expect(screen.queryByText('No fire extinguishers registered for this location.')).toBeNull()
   })
 
+  it('filters immediately and restores every extinguisher when search is cleared', () => {
+    const firstRow = buildCompleteOkRow()
+    const secondRow = buildCompleteOkRow({
+      id: 'fe:second',
+      idLocNo: 'BDO-002',
+      barcodeNo: 'SECOND-BARCODE',
+    })
+
+    renderSection({
+      summary: {
+        visibleChecks: [firstRow, secondRow],
+        completedCount: 2,
+        totalCount: 2,
+        defectCount: 0,
+      },
+    })
+
+    const search = screen.getByLabelText('Search fire extinguisher rows')
+    fireEvent.change(search, { target: { value: 'BDO-002' } })
+
+    expect(search.value).toBe('BDO-002')
+    expect(screen.queryByText('ADO-001')).toBeNull()
+    expect(screen.getByText('BDO-002')).toBeTruthy()
+    expect(screen.getByText('Showing 1 of 2')).toBeTruthy()
+
+    const clearSearch = screen.getByRole('button', {
+      name: 'Clear fire extinguisher row search',
+    })
+    expect(clearSearch.getAttribute('type')).toBe('button')
+    fireEvent.click(clearSearch)
+
+    expect(search.value).toBe('')
+    expect(screen.getByText('ADO-001')).toBeTruthy()
+    expect(screen.getByText('BDO-002')).toBeTruthy()
+    expect(screen.queryByText('Showing 1 of 2')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Clear fire extinguisher row search' })).toBeNull()
+  })
+
+  it('keeps loaded extinguisher rows searchable while a refresh is in progress', () => {
+    renderSection({
+      isLoadingRows: true,
+      summary: {
+        visibleChecks: [buildCompleteOkRow()],
+        completedCount: 1,
+        totalCount: 1,
+        defectCount: 0,
+      },
+    })
+
+    expect(screen.getByLabelText('Search fire extinguisher rows').disabled).toBe(false)
+    expect(screen.getByText('Refreshing units...')).toBeTruthy()
+  })
+
   it('surfaces desktop draft status near the extinguisher list', () => {
     const row = buildCompleteOkRow()
 

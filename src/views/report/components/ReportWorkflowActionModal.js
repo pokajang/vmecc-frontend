@@ -1,18 +1,7 @@
 import React from 'react'
-import {
-  CBadge,
-  CButton,
-  CFormCheck,
-  CFormInput,
-  CFormLabel,
-  CModal,
-  CModalBody,
-  CModalFooter,
-  CModalHeader,
-  CModalTitle,
-} from '@coreui/react'
-import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
-import useReportIsMobile from '../hooks/useReportIsMobile'
+import { CBadge, CButton, CFormCheck, CFormInput, CFormLabel } from '@coreui/react'
+import FormFieldError from 'src/components/FormFieldError'
+import ResponsiveReportDialog from 'src/components/report-workflow/ResponsiveReportDialog'
 
 const ACTION_META = {
   review: { label: 'Review', color: 'primary', remarksLabel: 'Remarks (optional)' },
@@ -43,7 +32,6 @@ const ReportWorkflowActionModal = ({
   onClose,
   onSubmit,
 }) => {
-  const isMobile = useReportIsMobile()
   const action = ACTION_META[actionType] || ACTION_META.review
   const isReject = actionType === 'reject'
   const trimmedRemarks = String(remarks || '').trim()
@@ -97,13 +85,12 @@ const ReportWorkflowActionModal = ({
               onChange={(event) => onRemarksChange?.(event.target.value)}
               placeholder="Add your remarks"
               invalid={Boolean(rejectError)}
+              aria-invalid={Boolean(rejectError) || undefined}
               aria-required={isReject}
               aria-describedby={rejectError ? 'report-workflow-remarks-error' : undefined}
             />
             {rejectError ? (
-              <div id="report-workflow-remarks-error" className="invalid-feedback d-block">
-                {rejectError}
-              </div>
+              <FormFieldError id="report-workflow-remarks-error">{rejectError}</FormFieldError>
             ) : (
               showRemarksHelper && (
                 <div className="small text-body-secondary mt-1">
@@ -121,7 +108,7 @@ const ReportWorkflowActionModal = ({
               label={declarationLabel}
             />
             {declarationError ? (
-              <div className="invalid-feedback d-block">{declarationError}</div>
+              <FormFieldError>{declarationError}</FormFieldError>
             ) : (
               <div className="small text-body-secondary mt-1">Required for this action.</div>
             )}
@@ -145,30 +132,18 @@ const ReportWorkflowActionModal = ({
     </>
   )
 
-  if (isMobile) {
-    return (
-      <MobileBottomDrawer
-        visible={visible}
-        title={title}
-        className="mobile-bottom-drawer--confirm"
-        onClose={onClose}
-      >
-        {body}
-        <div className="mobile-bottom-drawer__footer d-flex flex-wrap justify-content-end gap-2">
-          {actions}
-        </div>
-      </MobileBottomDrawer>
-    )
-  }
-
   return (
-    <CModal visible={visible} onClose={onClose} alignment="center" fullscreen="sm" scrollable>
-      <CModalHeader>
-        <CModalTitle>{title}</CModalTitle>
-      </CModalHeader>
-      <CModalBody>{body}</CModalBody>
-      <CModalFooter>{actions}</CModalFooter>
-    </CModal>
+    <ResponsiveReportDialog
+      visible={visible}
+      title={title}
+      onClose={onClose}
+      footer={actions}
+      mobileClassName="mobile-bottom-drawer--confirm"
+      desktopFullscreen="sm"
+      scrollable
+    >
+      {body}
+    </ResponsiveReportDialog>
   )
 }
 

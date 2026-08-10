@@ -64,6 +64,26 @@ describe('UI debt shared primitives', () => {
     ).toContain('d-none')
   })
 
+  it('keeps long dynamic titles wrap-safe without reordering or enabling page actions', () => {
+    render(
+      <ModulePageHeader
+        title="TEAM-WITH-AN-EXCEPTIONALLY-LONG-UNBROKEN-OPERATIONAL-NAME-1234567890"
+        actions={
+          <button type="button" disabled>
+            Manage team
+          </button>
+        }
+      />,
+    )
+
+    const heading = screen.getByRole('heading', { level: 1 })
+    const action = screen.getByRole('button', { name: 'Manage team' })
+    expect(heading.className).toContain('text-break')
+    expect(heading.compareDocumentPosition(action) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(action.disabled).toBe(true)
+    expect(action.closest('.module-page-header__actions')).toBeTruthy()
+  })
+
   it('renders mobile record cards with keyboard activation and action slots', () => {
     const handleOpen = vi.fn()
 

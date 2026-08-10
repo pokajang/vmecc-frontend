@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { CAlert, CButton } from '@coreui/react'
+import WorkflowEditStateBanner from 'src/components/report-workflow/WorkflowEditStateBanner'
 import WorkflowInlineFeedback from 'src/components/report-workflow/WorkflowInlineFeedback'
 import { useLocation, useNavigate } from 'react-router-dom'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
@@ -35,7 +35,7 @@ import ErcoRespondingTeamStep from './ErcoRespondingTeamStep'
 import ErcoDetailsStep from './ErcoDetailsStep'
 import ErcoPostAnalysisStep from './ErcoPostAnalysisStep'
 import ErcoValidationSummary from './ErcoValidationSummary'
-import { ERCO_MOBILE_QUERY } from './erco-form-components/useIsMobile'
+import { REPORT_MOBILE_QUERY } from '../hooks/useReportIsMobile'
 
 const ERCO_NEW_SECTIONS = ['setup', 'team', 'form', 'analysis']
 const createDraftSignature = (form) => JSON.stringify(form || {})
@@ -558,7 +558,7 @@ const ErcoForm = ({
     <>
       <ActionConfirmModal
         visible={showReset}
-        mobileDrawerQuery={ERCO_MOBILE_QUERY}
+        mobileDrawerQuery={REPORT_MOBILE_QUERY}
         title={`Reset ${reportTypeLabel} Report`}
         message="Reset this report and clear the saved draft? This cannot be undone."
         confirmLabel="Reset"
@@ -567,59 +567,42 @@ const ErcoForm = ({
         onConfirm={clearForm}
       />
       {shouldShowEditBanner ? (
-        <CAlert
-          color="info"
-          className="d-flex flex-wrap align-items-center justify-content-between gap-2"
+        <WorkflowEditStateBanner
+          displayId={editingRecord.displayId}
+          sourceMode={editViewMode}
+          hasDraftSource={hasDraftSeed}
+          onLoadOriginal={() => {
+            const seed = originalSeedRef.current
+            if (!seed) return
+            setForm((prev) => ({
+              ...prev,
+              ...seed,
+              chronology: seed.chronology?.length ? seed.chronology : prev.chronology,
+            }))
+            setSetupConfirmed(false)
+            setRespondingTeamConfirmed(false)
+            setDetailsConfirmed(false)
+            setEditViewMode('original')
+          }}
+          onLoadDraft={() => {
+            const seed = draftSeedRef.current
+            if (!seed) return
+            setForm((prev) => ({
+              ...prev,
+              ...seed,
+              chronology: seed.chronology?.length ? seed.chronology : prev.chronology,
+            }))
+            setSetupConfirmed(Boolean(seed.setupConfirmed))
+            setRespondingTeamConfirmed(Boolean(seed.respondingTeamConfirmed))
+            setDetailsConfirmed(Boolean(seed.detailsConfirmed))
+            setEditViewMode('draft')
+          }}
         >
-          <span>
-            Editing <strong>{editingRecord.displayId}</strong>. Original data stays unchanged until
-            you click <strong>Update Report</strong>.{' '}
-            {hasDraftSeed
-              ? 'You can switch between original and saved draft values.'
-              : 'No saved edit draft yet.'}
-          </span>
-          <div className="d-flex gap-2">
-            <CButton
-              type="button"
-              color={editViewMode === 'original' ? 'primary' : 'light'}
-              onClick={() => {
-                const seed = originalSeedRef.current
-                if (!seed) return
-                setForm((prev) => ({
-                  ...prev,
-                  ...seed,
-                  chronology: seed.chronology?.length ? seed.chronology : prev.chronology,
-                }))
-                setSetupConfirmed(false)
-                setRespondingTeamConfirmed(false)
-                setDetailsConfirmed(false)
-                setEditViewMode('original')
-              }}
-            >
-              Load Original
-            </CButton>
-            <CButton
-              type="button"
-              color={editViewMode === 'draft' ? 'primary' : 'light'}
-              disabled={!hasDraftSeed}
-              onClick={() => {
-                const seed = draftSeedRef.current
-                if (!seed) return
-                setForm((prev) => ({
-                  ...prev,
-                  ...seed,
-                  chronology: seed.chronology?.length ? seed.chronology : prev.chronology,
-                }))
-                setSetupConfirmed(Boolean(seed.setupConfirmed))
-                setRespondingTeamConfirmed(Boolean(seed.respondingTeamConfirmed))
-                setDetailsConfirmed(Boolean(seed.detailsConfirmed))
-                setEditViewMode('draft')
-              }}
-            >
-              Load Draft
-            </CButton>
-          </div>
-        </CAlert>
+          Original data stays unchanged until you click <strong>Update Report</strong>.{' '}
+          {hasDraftSeed
+            ? 'You can switch between original and saved draft values.'
+            : 'No saved edit draft yet.'}
+        </WorkflowEditStateBanner>
       ) : null}
       <form
         onSubmit={(e) => {
