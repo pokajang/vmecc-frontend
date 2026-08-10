@@ -9,7 +9,7 @@
 
 The Stage 6 frontend and current backend passed the applicable local full-release gates after bounded security dependency remediation. No production, cPanel, GitHub push, hosted database, live corpus, or external email operation was performed.
 
-The frontend release boundary is represented by an intentional local commit on `main`, and the backend dependency patch is represented by its own local commit. Neither commit is pushed by this execution.
+The frontend implementation and production-build boundary is local commit `f47265b` on `main`. The backend dependency patch is local commit `c981376` on `main`. Neither repository is pushed by this execution.
 
 ## 2. Corrective Changes
 
@@ -88,4 +88,4 @@ With both local commits and the frontend fast-forward to local `main` verified, 
 4. run hosted readiness, authenticated workflow, headers, API-origin, nested-route, private-file, email, queue, camera, and rollback checks; and
 5. open production traffic only after every hosted gate passes.
 
-The damaged local Laragon PostgreSQL directory should be repaired from a known-good backup or replaced under a separate maintenance task. It is not the test cluster and was not modified by this qualification.
+The damaged local Laragon PostgreSQL directory should be repaired from a known-good backup or replaced under a separate maintenance task. A normal startup was attempted and failed; no reset, forced recovery, `pg_resetwal`, content deletion, or further use was performed. It is separate from the disposable test cluster used for qualification.

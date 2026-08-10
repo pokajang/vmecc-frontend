@@ -8,7 +8,7 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 
 | Item                                | Status                                                                                        |
 | ----------------------------------- | --------------------------------------------------------------------------------------------- |
-| Working branch                      | `codex/frontend-upgrade-stage-1`                                                              |
+| Working branch                      | `main`; locally qualified release commits are not yet pushed                                  |
 | Current stage                       | Stages 1–6 and Days 1–61 completed locally; Stage 6 closed on 2026-08-10                      |
 | Gate decision                       | **Local predeployment gates passed; push and hosted deployment remain separately authorized** |
 | Application/tooling changes started | Completed; security dependency patches and production build are locally qualified             |
