@@ -3108,11 +3108,10 @@
       "routeType": "static",
       "expectedDestination": null,
       "intendedPersonas": [
-        "human-resource",
-        "contract-manager"
+        "system-administrator"
       ],
       "requiredPermissions": [
-        "staff.overtime.manage"
+        "settings.manage"
       ],
       "fixtureAlias": null,
       "expectedHeading": "Overtime Rules",
@@ -3126,8 +3125,8 @@
         "mobile",
         "desktop"
       ],
-      "mutationRisk": "safe-interaction",
-      "plannedStatus": "testable",
+      "mutationRisk": "controlled-only",
+      "plannedStatus": "controlled-only",
       "patternTags": [
         "page-header",
         "loading-empty-error",

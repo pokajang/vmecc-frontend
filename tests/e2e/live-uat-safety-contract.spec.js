@@ -5,6 +5,7 @@ const {
   assertNoReadOnlyViolations,
   classifyLiveUatRequest,
   getPersonaCredentials,
+  getUnexpectedRouteDiagnostics,
   installReadOnlyRequestGuard,
   redactDiagnostic,
   serializeLedger,
@@ -93,5 +94,24 @@ test.describe('live UAT safety contract', () => {
       /VMECC_LIVE_UAT_TRT_EMAIL, VMECC_LIVE_UAT_TRT_PASSWORD/,
     )
     expect(() => getPersonaCredentials('unknown', {})).toThrow(/Unknown live UAT persona/)
+  })
+
+  test('permission routes suppress only their expected 403 diagnostics', () => {
+    const diagnostics = {
+      consoleErrors: [
+        'Failed to load resource: the server responded with a status of 403',
+        'Unexpected rendering failure',
+      ],
+      clientErrors: [
+        { status: 403, url: `${API_BASE_URL}/restricted` },
+        { status: 404, url: `${API_BASE_URL}/missing` },
+      ],
+    }
+
+    expect(getUnexpectedRouteDiagnostics(diagnostics, true)).toEqual({
+      consoleErrors: ['Unexpected rendering failure'],
+      clientErrors: [{ status: 404, url: `${API_BASE_URL}/missing` }],
+    })
+    expect(getUnexpectedRouteDiagnostics(diagnostics, false)).toEqual(diagnostics)
   })
 })

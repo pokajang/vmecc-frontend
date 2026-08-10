@@ -22,6 +22,7 @@ import {
 const useOvertimeAdminWorkflow = ({
   normalizedUserRoles = [],
   isSystemAdmin = false,
+  canLoadOvertimePolicy = false,
   getOvertimeApplicantRolesForRecord,
   hydrateOvertime,
   pushToast,
@@ -42,6 +43,8 @@ const useOvertimeAdminWorkflow = ({
   )
 
   useEffect(() => {
+    if (!canLoadOvertimePolicy) return undefined
+
     let alive = true
 
     const hydratePolicy = async () => {
@@ -55,7 +58,7 @@ const useOvertimeAdminWorkflow = ({
     return () => {
       alive = false
     }
-  }, [])
+  }, [canLoadOvertimePolicy])
 
   const getOvertimeReviewActionConfig = useCallback(
     (row) => {

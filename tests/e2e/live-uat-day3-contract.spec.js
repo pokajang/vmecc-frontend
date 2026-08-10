@@ -36,6 +36,16 @@ test.describe('Day 3 authenticated sweep contracts', () => {
     for (const route of schedule.routes.filter((item) => item.mutationRisk === 'controlled-only')) {
       expect(route.interactionMode).toBe('shell-only')
     }
+    expect(
+      schedule.routes.find((route) => route.routePattern === '/staff/overtime-management/rules'),
+    ).toEqual(
+      expect.objectContaining({
+        primaryPersona: 'sysadmin',
+        secondaryPersonas: [],
+        plannedStatus: 'controlled-only',
+        interactionMode: 'shell-only',
+      }),
+    )
   })
 
   test('normalizes supported response envelopes and stable route identities', () => {

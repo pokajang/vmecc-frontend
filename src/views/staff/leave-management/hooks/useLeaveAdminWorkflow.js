@@ -23,6 +23,7 @@ import { OVERTIME_WORKFLOW_DECLARATION_LABEL } from 'src/views/staff/shared/work
 const useLeaveAdminWorkflow = ({
   actorRoles = [],
   isSystemAdministrator = false,
+  canLoadOvertimePolicy = false,
   pushToast,
   refreshAllLeaveRecords,
   refreshAllOvertimeRecords = () => Promise.resolve(),
@@ -54,6 +55,8 @@ const useLeaveAdminWorkflow = ({
   )
 
   useEffect(() => {
+    if (!canLoadOvertimePolicy) return undefined
+
     let alive = true
 
     const hydratePolicy = async () => {
@@ -67,7 +70,7 @@ const useLeaveAdminWorkflow = ({
     return () => {
       alive = false
     }
-  }, [])
+  }, [canLoadOvertimePolicy])
 
   const getReviewActionConfig = useCallback(
     (row) => {

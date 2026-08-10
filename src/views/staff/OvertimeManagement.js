@@ -119,6 +119,7 @@ const OvertimeManagementContent = () => {
     () => hasAnyPermission(user, OVERTIME_MANAGEMENT_ALLOWED_PERMISSIONS),
     [user],
   )
+  const canManageOvertimeRules = useMemo(() => hasPermission(user, 'settings.manage'), [user])
   const showGuidanceMetadata = isHolidayGuidanceStaffVisibilityEnabledForUser(user)
   const actorName = useMemo(
     () => user?.name || user?.full_name || user?.email || 'System user',
@@ -187,12 +188,24 @@ const OvertimeManagementContent = () => {
     const last = parts[parts.length - 1] || ''
     return OVERTIME_TAB_BY_PATH[last] || ''
   }, [location.pathname])
-  const detailReturnTab = ['overtimeRecords', 'otRules'].includes(location.state?.tab)
+  const requestedDetailReturnTab = ['overtimeRecords', 'otRules'].includes(location.state?.tab)
     ? location.state.tab
     : DEFAULT_OVERTIME_TAB
-  const resolvedTab = isDetailRoute ? detailReturnTab : tabFromPath || DEFAULT_OVERTIME_TAB
+  const detailReturnTab =
+    requestedDetailReturnTab === 'otRules' && !canManageOvertimeRules
+      ? DEFAULT_OVERTIME_TAB
+      : requestedDetailReturnTab
+  const requestedTab = isDetailRoute ? detailReturnTab : tabFromPath || DEFAULT_OVERTIME_TAB
+  const resolvedTab =
+    requestedTab === 'otRules' && !canManageOvertimeRules ? DEFAULT_OVERTIME_TAB : requestedTab
   const resolvedTabPath =
     OVERTIME_PATH_BY_TAB[resolvedTab] || OVERTIME_PATH_BY_TAB[DEFAULT_OVERTIME_TAB]
+
+  useEffect(() => {
+    if (!isDetailRoute && tabFromPath === 'otRules' && !canManageOvertimeRules) {
+      navigate('/staff/overtime-management/records', { replace: true })
+    }
+  }, [canManageOvertimeRules, isDetailRoute, navigate, tabFromPath])
 
   const hydrateOvertime = useCallback(
     async ({ showWarningToast = false } = {}) => {
@@ -547,6 +560,7 @@ const OvertimeManagementContent = () => {
   } = useOvertimeAdminWorkflow({
     normalizedUserRoles,
     isSystemAdmin,
+    canLoadOvertimePolicy: canManageOvertimeRules,
     getOvertimeApplicantRolesForRecord,
     hydrateOvertime,
     pushToast,
@@ -780,12 +794,16 @@ const OvertimeManagementContent = () => {
                   to: 'overtimeRecords',
                   match: 'overtimeRecords',
                 },
-                {
-                  key: 'otRules',
-                  label: 'Overtime Rules',
-                  to: 'otRules',
-                  match: 'otRules',
-                },
+                ...(canManageOvertimeRules
+                  ? [
+                      {
+                        key: 'otRules',
+                        label: 'Overtime Rules',
+                        to: 'otRules',
+                        match: 'otRules',
+                      },
+                    ]
+                  : []),
               ]}
             />
           </div>
@@ -841,7 +859,7 @@ const OvertimeManagementContent = () => {
             />
           ) : null}
 
-          {resolvedTab === 'otRules' ? (
+          {resolvedTab === 'otRules' && canManageOvertimeRules ? (
             <div data-testid="overtime-management-rules">
               <OvertimeApprovalRules />
             </div>

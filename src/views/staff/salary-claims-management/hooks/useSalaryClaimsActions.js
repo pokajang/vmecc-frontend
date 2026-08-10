@@ -56,6 +56,7 @@ const useSalaryClaimsActions = ({
   setBulkDeclarationError,
   normalizedUserRoles,
   isSystemAdmin,
+  canLoadOvertimePolicy = false,
   getOvertimeApplicantRolesForRecord,
   pushToast,
   setAssignmentDraft,
@@ -487,6 +488,7 @@ const useSalaryClaimsActions = ({
   } = useOvertimeAdminWorkflow({
     normalizedUserRoles,
     isSystemAdmin,
+    canLoadOvertimePolicy,
     getOvertimeApplicantRolesForRecord,
     hydrateOvertime,
     pushToast,

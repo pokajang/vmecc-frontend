@@ -12,7 +12,7 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | Current stage                       | Stages 1–6 and Days 1–61 completed locally; Stage 6 closed on 2026-08-10                      |
 | Gate decision                       | **Local predeployment gates passed; push and hosted deployment remain separately authorized** |
 | Application/tooling changes started | Completed; security dependency patches and production build are locally qualified             |
-| Next planned implementation         | None; next boundary is reviewed `main` push followed by the hosted runbook                    |
+| Next planned implementation         | Pre-Day 4 live-UAT corrective checkpoint                                                      |
 
 ## Document Register
 
@@ -66,6 +66,7 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | [Stage 6 final checkpoint plan](./FRONTEND_MODULE_CONSISTENCY_STAGE_6_FINAL_CHECKPOINT_PLAN_2026-08-06.md)                                     | Day 61 cumulative tracked/untracked audit, full local gates, browser/build evidence, catalogue reconciliation, cleanup, and handover                        | Executed; passed locally                                |
 | [Stage 6 final checkpoint execution](./FRONTEND_MODULE_CONSISTENCY_STAGE_6_FINAL_CHECKPOINT_EXECUTION_2026-08-10.md)                           | Final ownership verdicts, catalogue counts, complete local gate and journey evidence, cleanup, residual risks, rollback, and close decision                 | Stage 6 passed and closed locally                       |
 | [Predeployment execution](./FRONTEND_PREDEPLOYMENT_EXECUTION_2026-08-10.md)                                                                    | Frontend/backend dependency remediation, isolated PostgreSQL qualification, complete local gates, release boundary, cleanup, and next-stage decision        | Local predeployment gates passed                        |
+| [Pre-Day 4 corrective plan](./FRONTEND_LIVE_UAT_PRE_DAY_4_CORRECTIVE_PLAN_2026-08-10.md)                                                        | Shared admin review queue, mobile overflow, session 429 resilience, permission-aligned staff reads, UAT hardening, and bounded handoff gates                 | Planned; implementation not started                     |
 
 ## Completed Work
 
@@ -198,6 +199,10 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 - Passed the final isolated 6,495-module production build and removed only the verified Day 61 environment, listener, build, log, and temporary PWA artifacts.
 - Closed Stage 6 locally while retaining authenticated backend, real-device camera, hosted API/header, shared-cPanel, and production rollback checks as release-only work.
 - Completed the full local predeployment runbook, remediated all npm and Composer advisories, passed 1,122 backend tests and 1,808 frontend tests, passed 32/32 controlled browser journeys, and regenerated the production frontend artifact.
+- Completed the authenticated Day 3 live route sweep across six personas and two viewports, then opened the bounded pre-Day 4 corrective checkpoint for two verified mobile overflows, session-rate-limit resilience, permission-aligned staff reads, and final UAT harness hardening.
+- Implemented the pre-Day 4 corrective source pass: shared the two admin review queues, added bounded session-429 recovery, eliminated unauthorized overtime-policy reads, aligned the Overtime Rules UAT persona/permission contract, and hardened live diagnostics.
+- Passed focused 19/19 Vitest checks, 8/8 Playwright safety/route contracts, full lint, 105/105 route and schedule audits, and a 6,496-module production build; the unrestricted Vitest corpus hit the six-minute runner ceiling without an assertion result.
+- Re-audited the corrective pass, added standard HTTP-date retry handling, cancelled stale recovery timers, narrowed expected-403 suppression, retained failure screenshots, and expanded state/permission/responsive coverage; passed 32/32 affected tests, 2/2 rendered-browser queue journeys, 9/9 UAT contracts, full lint, route audits, and production build.
 
 ## Deferred Release-Only Actions
 
@@ -211,7 +216,7 @@ These actions remain valid but do not block local component-quality work. Reopen
 
 ## Next Work
 
-The local component-quality programme is complete through Stage 6 Day 61. No further component implementation stage is scheduled. Reopen work only when repository evidence identifies a concrete reuse/consistency defect, or when the owner authorizes release qualification.
+The local component-quality programme is complete through Stage 6 Day 61. The bounded pre-Day 4 source corrections are ready to commit and deploy. Run the focused post-deployment admin-queue, overtime-permission, Staff Profile, and session-resilience checks before starting Day 4 deep-record UAT.
 
 Release qualification remains separate: authenticated staging journeys, real-device camera checks, hosted API/header and cache verification, shared-cPanel deployment/rollback, and production approval. GitHub Actions remain disabled under the recorded cost exception.
 

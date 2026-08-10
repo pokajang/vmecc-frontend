@@ -85,7 +85,7 @@
 | LIVE-UAT-077 | `/staff/overtime-management/:legacyOvertimeRouteKey` | humanResource | contractManager | redirect-only | read-only | legacy-overtime-record |
 | LIVE-UAT-078 | `/staff/overtime-management/record/:overtimeRouteKey` | humanResource | contractManager | data-blocked | read-only | overtime-record |
 | LIVE-UAT-079 | `/staff/overtime-management/records` | humanResource | contractManager | testable | read-only | - |
-| LIVE-UAT-080 | `/staff/overtime-management/rules` | humanResource | contractManager | testable | read-only | - |
+| LIVE-UAT-080 | `/staff/overtime-management/rules` | sysadmin | - | controlled-only | shell-only | - |
 | LIVE-UAT-081 | `/staff/profile/:id` | humanResource | contractManager | data-blocked | read-only | staff-member |
 | LIVE-UAT-082 | `/staff/salary-claims` | finance | humanResource | redirect-only | read-only | - |
 | LIVE-UAT-083 | `/staff/salary-claims/:legacyClaimId` | finance | humanResource | redirect-only | read-only | legacy-claim-record |

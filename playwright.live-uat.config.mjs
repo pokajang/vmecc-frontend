@@ -41,7 +41,9 @@ export default defineConfig({
   use: {
     baseURL,
     serviceWorkers: 'block',
-    trace: 'retain-on-failure',
+    // Playwright traces retain form-fill actions, so keep them disabled for
+    // credentialed production UAT. Sanitized ledgers and screenshots remain.
+    trace: 'off',
     screenshot: 'only-on-failure',
     video: 'off',
     navigationTimeout: 30_000,

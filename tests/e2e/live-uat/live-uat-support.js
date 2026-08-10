@@ -6,6 +6,8 @@ const API_BASE_URL = 'https://vmecc-api.amiosh.com/api'
 const API_ORIGIN = new URL(API_BASE_URL).origin
 const AUTH_LOGIN_URL = `${API_BASE_URL}/auth/login`
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS'])
+const API_REQUEST_INTERVAL_MS = 750
+let nextApiRequestAt = 0
 const LEDGER_STATUSES = new Set([
   'passed',
   'failed',
@@ -104,7 +106,15 @@ const installReadOnlyRequestGuard = async (context) => {
     const request = route.request()
     const classification = classifyLiveUatRequest({ url: request.url(), method: request.method() })
     if (classification.startsWith('allow-')) {
-      await route.fallback()
+      if (new URL(request.url()).origin === API_ORIGIN) {
+        const now = Date.now()
+        const scheduledAt = Math.max(now, nextApiRequestAt)
+        nextApiRequestAt = scheduledAt + API_REQUEST_INTERVAL_MS
+        if (scheduledAt > now) {
+          await new Promise((resolve) => setTimeout(resolve, scheduledAt - now))
+        }
+      }
+      await route.fallback().catch(() => {})
       return
     }
     violations.push({
@@ -167,6 +177,15 @@ const waitForApplicationReady = async (page) => {
   })
 }
 
+const waitForRouteSettled = async (page) => {
+  await page.waitForLoadState('networkidle', { timeout: 2_500 }).catch(() => {})
+  const spinner = page.locator('.icon-spin:visible').first()
+  if (await spinner.isVisible().catch(() => false)) {
+    await spinner.waitFor({ state: 'hidden', timeout: 5_000 }).catch(() => {})
+  }
+  await page.waitForTimeout(250)
+}
+
 const dismissIncidentalDialogs = async (page) => {
   for (const name of ['Install VMECC', 'Notifications']) {
     const dialog = page.getByRole('dialog', { name })
@@ -181,19 +200,38 @@ const loginPersonaThroughUi = async (page, personaKey) => {
   await page.context().clearCookies()
   await gotoApprovedRoute(page, '/login')
   await waitForApplicationReady(page)
-  await page.getByLabel('Email address').fill(credentials.email)
-  await page.getByLabel('Password', { exact: true }).fill(credentials.password)
+  const emailInput = page.getByLabel('Email address')
+  const passwordInput = page.getByLabel('Password', { exact: true })
+  await emailInput.fill(credentials.email)
+  await passwordInput.fill(credentials.password)
   await page.getByRole('button', { name: 'Sign in', exact: true }).click()
-  await page.waitForURL((url) => url.origin === FRONTEND_ORIGIN && url.pathname !== '/login')
+  try {
+    await page.waitForURL((url) => url.origin === FRONTEND_ORIGIN && url.pathname !== '/login', {
+      timeout: 45_000,
+    })
+  } catch {
+    const alertText = await page
+      .getByRole('alert')
+      .textContent()
+      .catch(() => '')
+    await emailInput.fill('').catch(() => {})
+    await passwordInput.fill('').catch(() => {})
+    throw new Error(
+      `Live UAT login failed for ${personaKey}: ${redactDiagnostic(alertText) || 'no server message'}`,
+    )
+  }
   await waitForApplicationReady(page)
+  await waitForRouteSettled(page)
   return { key: credentials.key, role: credentials.role }
 }
 
 const collectJourneyDiagnostics = (page) => {
   const diagnostics = {
     consoleErrors: [],
+    clientErrors: [],
     pageErrors: [],
     failedRequests: [],
+    rateLimitErrors: [],
     serverErrors: [],
   }
   const onConsole = (message) => {
@@ -202,7 +240,7 @@ const collectJourneyDiagnostics = (page) => {
   const onPageError = (error) => diagnostics.pageErrors.push(redactDiagnostic(error?.message))
   const onRequestFailed = (request) => {
     const errorText = request.failure()?.errorText || ''
-    if (/blockedbyclient/i.test(errorText)) return
+    if (/blockedbyclient|ERR_ABORTED|NS_BINDING_ABORTED|cancelled/i.test(errorText)) return
     diagnostics.failedRequests.push({
       method: request.method(),
       url: sanitizeRequestUrl(request.url()),
@@ -210,6 +248,18 @@ const collectJourneyDiagnostics = (page) => {
     })
   }
   const onResponse = (response) => {
+    if (response.status() === 429) {
+      diagnostics.rateLimitErrors.push({
+        status: response.status(),
+        url: sanitizeRequestUrl(response.url()),
+      })
+    }
+    if (response.status() >= 400 && response.status() < 500 && response.status() !== 429) {
+      diagnostics.clientErrors.push({
+        status: response.status(),
+        url: sanitizeRequestUrl(response.url()),
+      })
+    }
     if (response.status() < 500) return
     diagnostics.serverErrors.push({
       status: response.status(),
@@ -229,6 +279,17 @@ const collectJourneyDiagnostics = (page) => {
       page.off('requestfailed', onRequestFailed)
       page.off('response', onResponse)
     },
+  }
+}
+
+const getUnexpectedRouteDiagnostics = (diagnostics = {}, isPermissionBlocked = false) => {
+  const consoleErrors = Array.isArray(diagnostics.consoleErrors) ? diagnostics.consoleErrors : []
+  const clientErrors = Array.isArray(diagnostics.clientErrors) ? diagnostics.clientErrors : []
+  if (!isPermissionBlocked) return { consoleErrors, clientErrors }
+
+  return {
+    consoleErrors: consoleErrors.filter((message) => !/\b403\b|forbidden/i.test(message)),
+    clientErrors: clientErrors.filter((entry) => Number(entry?.status) !== 403),
   }
 }
 
@@ -313,6 +374,7 @@ module.exports = {
   collectJourneyDiagnostics,
   dismissIncidentalDialogs,
   getPersonaCredentials,
+  getUnexpectedRouteDiagnostics,
   gotoApprovedRoute,
   installReadOnlyRequestGuard,
   loginPersonaThroughUi,
@@ -322,5 +384,6 @@ module.exports = {
   sanitizeRequestUrl,
   serializeLedger,
   waitForApplicationReady,
+  waitForRouteSettled,
   writeLiveUatLedger,
 }

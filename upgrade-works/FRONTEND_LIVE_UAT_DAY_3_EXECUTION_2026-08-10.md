@@ -1,116 +1,112 @@
 # Frontend Live UAT - Day 3 Execution Report
 
 **Date:** 2026-08-10  
-**Stage:** Authenticated live route sweep  
-**Verdict:** Harness complete; authenticated production traversal blocked  
+**Stage:** Authenticated, production-safe route sweep  
+**Primary run:** `VMECC-QA-20260810-155701-d3uat3`  
+**Verdict:** Authenticated shell coverage completed; corrective work and record fixtures remain  
 **Production mutation verdict:** None attempted or permitted
 
 ## 1. Outcome
 
-The complete Day 3 route/persona schedule, credential gate, GET-only fixture discovery layer, authenticated sweep runner, and controlled safety contracts are implemented.
+All six temporary UAT personas authenticated successfully and all 12 persona/viewport schedules ran. The primary sweep produced 12 ledgers containing 324 route/persona/viewport entries.
 
-The authenticated production sweep did not run because none of the six required role credential pairs is present in the execution environment. The preflight returned exit code `2` before Playwright launched the authenticated suite. This is an intentional safety result, not a route pass and not a Day 3 completion claim.
+| Result | Entries |
+| --- | ---: |
+| Passed | 106 |
+| Controlled shell only | 88 |
+| Redirect verified | 60 |
+| Permission blocked as expected | 4 |
+| Data blocked | 64 |
+| Failed | 2 |
+| **Total** | **324** |
 
-## 2. Delivered controls
+Mobile and desktop each contributed 162 entries. No production write request was allowed by the browser guard.
 
-### 2.1 Deterministic coverage schedule
+## 2. Verified failures
 
-- Schedules all 105 canonical route patterns exactly once.
-- Assigns each route to a primary operational persona and retains meaningful secondary personas.
-- Expands generic report patterns across ERCO, Fitness Test, and Drill.
-- Carries all eight inspection subtype state contracts.
-- Marks controlled-only routes as `shell-only`.
-- Requires a fixture alias for every parameterized route.
+### 2.1 Mobile horizontal overflow
 
-Generated artifacts:
+The System Administrator mobile schedule consistently measured 39 CSS pixels of horizontal overflow on:
 
-- `tests/e2e/live-uat/day3-route-schedule.json`
-- `upgrade-works/FRONTEND_LIVE_UAT_DAY_3_ROUTE_SCHEDULE_2026-08-10.md`
+- `/admin/ai-helper-reports`;
+- `/admin/feedback-reports`.
 
-### 2.2 Credential preflight
+Both desktop routes passed. Focused run `VMECC-QA-20260810-163952-sysmob` captured route-specific screenshots and reproduced the same 39-pixel overflow on both pages.
 
-`scripts/audit-live-uat-credentials.mjs` verifies paired email/password variables for:
+The two pages use nearly duplicate review-queue implementations and the same six-item `CButtonGroup`. The unbroken status filter row exceeds the narrow viewport. This is both a responsive defect and a strong shared-component candidate.
 
-- TRT;
-- Incident Commander;
-- Contract Manager;
-- Human Resource;
-- Finance;
-- System Administrator.
+Recommended correction:
 
-It reports variable names only, never values, rejects unknown persona keys, and exits non-zero when any requested persona is unavailable.
+1. extract a shared admin review-queue shell for status filters, refresh, loading/empty state, table, and detail dialog;
+2. use the existing `ModuleNavTabs` mobile-select or horizontal-scroll contract instead of a non-wrapping button group;
+3. retain page-specific columns and detail sections through configuration or render slots;
+4. verify both routes at mobile and desktop widths.
 
-### 2.3 Read-only fixture discovery
+## 3. Additional runtime findings
 
-`tests/e2e/live-uat/live-uat-day3-support.js` provides:
+### 3.1 API throttle can appear as logout
 
-- strict relative GET requests to the allowlisted production API origin;
-- response-envelope normalization;
-- stable route-identity selection;
-- adapters for user, inspection, report, extinguisher, leave, overtime, payroll, salary-assignment, staff, and team records;
-- enumerated report type, reporting module, and new-section values;
-- structured `data-blocked` results when a safe fixture cannot be found.
+The initial unpaced attempt exhausted the API-wide 120-request-per-minute bucket. The API throttle executes before `session.auth`, so requests are keyed by IP before a user is bound. A 429 from `/auth/session` is treated by the frontend session bootstrap as a non-transient anonymous result, which returns the user to the login screen.
 
-Fixture discovery cannot create data. Resolved production IDs are written only to the run-specific evidence directory outside the repository.
+This was not a credential or session-expiry failure. The final harness spaces API reads by 750 ms and records 429 responses explicitly; the completed primary run then recorded zero rate-limit errors and no session-loss cascade.
 
-### 2.4 Authenticated route runner
+Production hardening should be handled separately: treat session-bootstrap 429 as temporary unavailability, and review whether authenticated API traffic can be limited by user rather than shared IP without weakening the limiter.
 
-`tests/e2e/live-uat/authenticated-route-sweep.live.spec.js` is ready to run each applicable route at mobile and desktop scope. It:
+### 3.2 Role-forbidden background requests
 
-- authenticates every persona independently through the visible login form;
-- visits primary and meaningful secondary role assignments;
-- expands report probes;
-- records explicit pass, blocked, redirect, controlled-only, or failure outcomes;
-- records final path, heading, primary action, overflow, console/page errors, failed requests, and 5xx responses;
-- stops a persona sweep after session loss or repeated server errors;
-- fails the test when any unaccepted route failure exists;
-- relies on the Day 2 guard to abort all business mutations.
+The primary run recorded two 403 console messages on `/staff/profile/:id` for Contract Manager and Human Resource in both viewports. Focused mobile runs confirmed that the profile eventually renders usable content, but optional/background requests still fail noisily.
 
-It opens controlled-only route shells but does not click mutating actions. It does not claim the deeper safe-interaction journeys reserved for later days.
+With the stricter spinner wait and console-error gate, a focused Contract Manager run also observed one 403 console response on each visit to the overtime-records route. The visible page rendered its valid empty state.
 
-## 3. Verification results
+Corrective action:
 
-| Gate                                    | Result                                                 |
-| --------------------------------------- | ------------------------------------------------------ |
-| Day 3 schedule generation               | Passed: 105 routes, 8 inspection types, 3 report types |
-| Day 3 schedule audit                    | Passed: 105/105, 8/8, 3/3                              |
-| Day 3 controlled contract               | Passed: 4/4                                            |
-| Existing live safety contract           | Passed: 4/4                                            |
-| E2E module inventory contract           | Passed: 50/50 modules mapped                           |
-| Live route source reconciliation        | Passed: 105/105, 8/8, 3/3                              |
-| ESLint                                  | Passed                                                 |
-| Production build                        | Passed                                                 |
-| `git diff --check` before the build     | Passed                                                 |
-| Six-persona credential preflight        | Correctly blocked: 0/6 available                       |
-| Authenticated live Playwright traversal | Not started; preflight stopped it                      |
+- identify the exact optional requests and gate them by the same permission contract used to show the page/action;
+- do not issue endpoints the current role cannot access;
+- keep a deliberate visible permission or empty state instead of relying on failed background calls;
+- rerun Contract Manager and Human Resource staff/overtime schedules after correction.
 
-The build retained existing advisory warnings about large chunks and one mixed static/dynamic notification import. No new application-source warning was introduced by the Day 3 UAT harness.
+## 4. Data-blocked coverage
 
-## 4. Credential-blocked scope
+The read-only fixture resolver could not find suitable records for 64 entries covering 21 parameterized route patterns:
 
-The following environment pairs remain required:
+- inspection detail and edit;
+- ERCO, Fitness Test, Drill, and inspection-report detail redirects;
+- leave and overtime detail routes;
+- payroll claim and salary-assignment detail/edit routes;
+- legacy staff leave, overtime, and salary-claim detail routes.
 
-- `VMECC_LIVE_UAT_TRT_EMAIL` / `VMECC_LIVE_UAT_TRT_PASSWORD`
-- `VMECC_LIVE_UAT_INCIDENT_COMMANDER_EMAIL` / `VMECC_LIVE_UAT_INCIDENT_COMMANDER_PASSWORD`
-- `VMECC_LIVE_UAT_CONTRACT_MANAGER_EMAIL` / `VMECC_LIVE_UAT_CONTRACT_MANAGER_PASSWORD`
-- `VMECC_LIVE_UAT_HUMAN_RESOURCE_EMAIL` / `VMECC_LIVE_UAT_HUMAN_RESOURCE_PASSWORD`
-- `VMECC_LIVE_UAT_FINANCE_EMAIL` / `VMECC_LIVE_UAT_FINANCE_PASSWORD`
-- `VMECC_LIVE_UAT_SYSADMIN_EMAIL` / `VMECC_LIVE_UAT_SYSADMIN_PASSWORD`
+These are not passes or application failures. The temporary personas do not own or have access to representative records required by those routes. The original inspection-detail mobile concerns therefore remain outside the completed live evidence:
 
-The live command also requires the existing explicit live flags and run ID contract from `playwright.live-uat.config.mjs`.
+- unexpected left border;
+- image nested inside additional cards/containers;
+- device filename displayed under uploaded images.
 
-## 5. Functional risk assessment
+The next data step is a deterministic, removable UAT record seeder (or an approved existing-record fixture mapping) for inspection, ERCO, Fitness Test, Drill, leave, overtime, and payroll detail states. No `.env` change is required.
 
-- No `src/` application code was changed for Day 3.
-- No API payload, route implementation, UI component, or business behavior was changed.
-- All new browser behavior is isolated to Playwright test files and scripts.
-- The production build completed successfully.
-- The live authenticated runner made no production request because the credential gate ran first.
+## 5. Harness hardening completed
 
-Therefore, this stage introduces no expected change to application functionality. The generated `build/` output was refreshed by the successful verification build and must be reviewed as a deployment artifact separately from the UAT harness.
+- removed serial failure coupling so every persona runs;
+- increased the per-persona timeout for the full schedule;
+- ignored normal browser navigation-cancellation errors;
+- added route-settle and visible-spinner waits;
+- paced API reads below the deployed production limit;
+- records 429 responses separately;
+- treats console errors as failures in subsequent runs and stores a redacted summary;
+- captures route-specific screenshots for overflow and runtime failures;
+- clears login fields before surfacing login errors;
+- disabled Playwright traces because traces retain credential-entry actions;
+- removed the earlier credential-bearing failed-run artifact.
 
-## 6. Honest readiness verdict
+Safety and schedule contracts passed 8/8 after hardening. ESLint and `git diff --check` are required again before committing the final harness changes.
 
-The tooling is ready for authenticated Day 3 execution. Day 3 itself is not complete and Day 4 deep inspection/report UAT should not be represented as evidence-backed live coverage until the six intended role sessions have run.
+## 6. Readiness verdict
 
-Once credentials are supplied through the local environment, rerun the credential audit and the live Day 3 command with the required live safety variables. Any missing production data will remain explicitly `data-blocked`; it will not be converted into a pass.
+Day 3 authenticated shell coverage is executed and evidence-backed. It is not an all-views completion verdict because 64 detail checks remain data-blocked.
+
+Proceed next with a small corrective and fixture stage:
+
+1. fix and share the duplicated admin review-queue UI;
+2. remove role-forbidden background requests;
+3. add removable representative UAT records for the blocked detail routes;
+4. run Day 4 deep inspection/report journeys, including the three user-reported image/detail issues;
+5. only then perform the repository-wide shared-component reconciliation and final regression run.

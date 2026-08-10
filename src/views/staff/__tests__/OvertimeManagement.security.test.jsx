@@ -1,14 +1,15 @@
 // @vitest-environment jsdom
 import React from 'react'
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { clearPayrollSensitiveState } from 'src/services/payrollPrivacy'
 import OvertimeManagement from '../OvertimeManagement'
 
 const testState = vi.hoisted(() => ({
   user: null,
   loadRecords: vi.fn(),
+  rulesMount: vi.fn(),
 }))
 
 vi.mock('react-redux', () => ({
@@ -17,7 +18,8 @@ vi.mock('react-redux', () => ({
 
 vi.mock('src/utils/authz', () => ({
   hasAnyPermission: () => true,
-  hasPermission: () => false,
+  hasPermission: (user, permission) =>
+    user?.permissions?.includes('*') || user?.permissions?.includes(permission),
 }))
 
 vi.mock('src/config/featureFlags', () => ({
@@ -29,9 +31,22 @@ vi.mock('src/components/auditHistory', () => ({
 }))
 
 vi.mock('src/components/ModulePageHeader', () => ({ default: () => null }))
-vi.mock('src/components/RouteNavTabs', () => ({ default: () => null }))
+vi.mock('src/components/RouteNavTabs', () => ({
+  default: ({ items }) => (
+    <nav>
+      {items.map((item) => (
+        <span key={item.key}>{item.label}</span>
+      ))}
+    </nav>
+  ),
+}))
 vi.mock('src/views/overtime/components/OvertimeDetailSection', () => ({ default: () => null }))
-vi.mock('../settings/components/OvertimeApprovalRules', () => ({ default: () => null }))
+vi.mock('src/views/settings/components/OvertimeApprovalRules', () => ({
+  default: () => {
+    testState.rulesMount()
+    return <div>Rules editor</div>
+  },
+}))
 vi.mock('../leave-management/components/OvertimeWorkflowActionModal', () => ({
   default: () => null,
 }))
@@ -88,16 +103,18 @@ const deferred = () => {
   return { promise, resolve }
 }
 
-const renderManagement = () =>
+const renderManagement = (initialEntry = '/staff/overtime-management/records') =>
   render(
-    <MemoryRouter initialEntries={['/staff/overtime-management/records']}>
+    <MemoryRouter initialEntries={[initialEntry]}>
       <Routes>
-        <Route path="/staff/overtime-management/records" element={<OvertimeManagement />} />
+        <Route path="/staff/overtime-management/:section" element={<OvertimeManagement />} />
       </Routes>
     </MemoryRouter>,
   )
 
 describe('OvertimeManagement sensitive identity boundary', () => {
+  afterEach(() => cleanup())
+
   beforeEach(() => {
     vi.clearAllMocks()
     clearPayrollSensitiveState({ broadcast: false })
@@ -152,5 +169,33 @@ describe('OvertimeManagement sensitive identity boundary', () => {
     await waitFor(() =>
       expect(screen.getByTestId('management-record-ids').textContent).toBe('OT-B'),
     )
+  })
+
+  it('hides and does not mount settings-only overtime rules for a contract manager', async () => {
+    testState.loadRecords.mockResolvedValue({ ok: true, data: [], meta: {}, filters: {} })
+
+    renderManagement('/staff/overtime-management/rules')
+
+    await waitFor(() => expect(testState.loadRecords).toHaveBeenCalled())
+    expect(screen.queryByText('Overtime Rules')).toBeNull()
+    expect(screen.queryByText('Rules editor')).toBeNull()
+    expect(testState.rulesMount).not.toHaveBeenCalled()
+    expect(screen.getAllByText('Overtime Records')).toHaveLength(1)
+  })
+
+  it('keeps the overtime rules editor available to settings managers', async () => {
+    testState.user = {
+      id: 'system-admin',
+      name: 'System Admin',
+      permissions: ['staff.overtime.manage', 'settings.manage'],
+      roles: ['System Administrator'],
+    }
+    testState.loadRecords.mockResolvedValue({ ok: true, data: [], meta: {}, filters: {} })
+
+    renderManagement('/staff/overtime-management/rules')
+
+    await waitFor(() => expect(screen.getByText('Rules editor')).toBeTruthy())
+    expect(screen.getByText('Overtime Rules')).toBeTruthy()
+    expect(testState.rulesMount).toHaveBeenCalled()
   })
 })

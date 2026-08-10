@@ -229,6 +229,7 @@ const SalaryClaimsManagementContent = () => {
     setBulkDeclarationError: pageState.setBulkDeclarationError,
     normalizedUserRoles: derived.normalizedUserRoles,
     isSystemAdmin: derived.isSystemAdmin,
+    canLoadOvertimePolicy: hasPermission(user, 'settings.manage'),
     getOvertimeApplicantRolesForRecord: derived.getOvertimeApplicantRolesForRecord,
     pushToast,
     setAssignmentDraft: hydration.setAssignmentDraft,

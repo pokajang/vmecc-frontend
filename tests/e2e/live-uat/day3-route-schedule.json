@@ -2429,17 +2429,15 @@
       "routePattern": "/staff/overtime-management/rules",
       "name": "Overtime Rules",
       "moduleFamily": "overtime-management",
-      "primaryPersona": "humanResource",
-      "secondaryPersonas": [
-        "contractManager"
-      ],
+      "primaryPersona": "sysadmin",
+      "secondaryPersonas": [],
       "routeType": "static",
-      "plannedStatus": "testable",
+      "plannedStatus": "controlled-only",
       "expectedDestination": null,
       "fixtureAlias": null,
       "expectedHeading": "Overtime Rules",
-      "mutationRisk": "safe-interaction",
-      "interactionMode": "read-only",
+      "mutationRisk": "controlled-only",
+      "interactionMode": "shell-only",
       "viewports": [
         "mobile",
         "desktop"

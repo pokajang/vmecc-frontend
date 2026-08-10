@@ -5,6 +5,7 @@ import {
   clearCsrfToken,
   getClientMode,
   getCsrfToken,
+  parseRetryAfterSeconds,
   setCsrfToken,
 } from '../api/httpClient'
 
@@ -90,5 +91,29 @@ describe('httpClient CSRF handling', () => {
     expect(fetch.mock.calls[0][0]).toContain('/auth/session')
     expect(fetch.mock.calls[1][1].headers['X-CSRF-Token']).toBe('refreshed-token')
     expect(getCsrfToken()).toBe('refreshed-token')
+  })
+
+  it('normalizes both numeric and HTTP-date Retry-After values', () => {
+    const now = Date.parse('2026-08-10T10:00:00Z')
+
+    expect(parseRetryAfterSeconds('7', now)).toBe(7)
+    expect(parseRetryAfterSeconds('2026-08-10T10:00:05Z', now)).toBe(5)
+    expect(parseRetryAfterSeconds('invalid', now)).toBeNull()
+    expect(parseRetryAfterSeconds('2026-08-10T09:59:59Z', now)).toBeNull()
+  })
+
+  it('exposes a standard Retry-After HTTP date on API errors', async () => {
+    const retryAt = new Date(Date.now() + 5000).toUTCString()
+    fetch.mockResolvedValueOnce(
+      jsonResponse(
+        { message: 'Too Many Attempts.' },
+        { status: 429, headers: { 'Retry-After': retryAt } },
+      ),
+    )
+
+    await expect(apiRequest('/auth/session')).rejects.toMatchObject({
+      status: 429,
+      retryAfter: expect.any(Number),
+    })
   })
 })

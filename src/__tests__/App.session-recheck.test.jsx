@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { Provider } from 'react-redux'
 import { legacy_createStore as createStore } from 'redux'
 
@@ -248,5 +248,75 @@ describe('App session recheck', () => {
     await waitFor(() => expect(store.getState().authStatus).toBe('temporarily_unavailable'))
     expect(screen.getByRole('alert').textContent).toContain('Unable to restore session')
     expect(screen.getByRole('button', { name: /retry session check/i })).toBeTruthy()
+  })
+
+  it('treats a rate-limited session bootstrap as temporary rather than anonymous', async () => {
+    fetchSession
+      .mockRejectedValueOnce(
+        Object.assign(new Error('Too Many Attempts.'), {
+          status: 429,
+          payload: { retry_after: 0.01 },
+        }),
+      )
+      .mockResolvedValueOnce({ user: { id: 1, email: 'user@example.test' } })
+
+    const store = renderApp()
+
+    await waitFor(() => expect(store.getState().authStatus).toBe('temporarily_unavailable'))
+    expect(store.getState().authUser).toBeNull()
+    expect(screen.getByRole('alert').textContent).toContain('Too many requests')
+    await waitFor(() => expect(store.getState().authStatus).toBe('authenticated'), {
+      timeout: 2000,
+    })
+  })
+
+  it('preserves an authenticated user when a silent session recheck is rate limited', async () => {
+    fetchSession
+      .mockResolvedValueOnce({ user: { id: 1, email: 'user@example.test' } })
+      .mockRejectedValueOnce(Object.assign(new Error('Too Many Attempts.'), { status: 429 }))
+
+    const store = renderApp()
+    await waitFor(() => expect(store.getState().authStatus).toBe('authenticated'))
+
+    window.dispatchEvent(new Event('focus'))
+
+    await waitFor(() => expect(fetchSession).toHaveBeenCalledTimes(2))
+    expect(store.getState().authStatus).toBe('authenticated')
+    expect(store.getState().authUser).toEqual({ id: 1, email: 'user@example.test' })
+  })
+
+  it('bounds automatic retries when session checks remain rate limited', async () => {
+    fetchSession.mockRejectedValue(
+      Object.assign(new Error('Too Many Attempts.'), {
+        status: 429,
+        payload: { retry_after: 0.01 },
+      }),
+    )
+
+    const store = renderApp()
+
+    await waitFor(() => expect(fetchSession).toHaveBeenCalledTimes(2), { timeout: 2000 })
+    await new Promise((resolve) => setTimeout(resolve, 900))
+    expect(fetchSession).toHaveBeenCalledTimes(2)
+    expect(store.getState().authStatus).toBe('temporarily_unavailable')
+  })
+
+  it('cancels a pending automatic retry after a successful manual recovery', async () => {
+    fetchSession
+      .mockRejectedValueOnce(
+        Object.assign(new Error('Too Many Attempts.'), {
+          status: 429,
+          payload: { retry_after: 0.01 },
+        }),
+      )
+      .mockResolvedValueOnce({ user: { id: 1, email: 'user@example.test' } })
+
+    const store = renderApp()
+    await waitFor(() => expect(store.getState().authStatus).toBe('temporarily_unavailable'))
+    fireEvent.click(screen.getByRole('button', { name: /retry session check/i }))
+    await waitFor(() => expect(store.getState().authStatus).toBe('authenticated'))
+
+    await new Promise((resolve) => setTimeout(resolve, 900))
+    expect(fetchSession).toHaveBeenCalledTimes(2)
   })
 })

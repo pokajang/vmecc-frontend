@@ -13,7 +13,7 @@
 - Canonical manifest rows: 105
 - Implemented inspection subtypes: 8
 - Report subtypes: 3
-- Planned status counts: `testable` 34, `permission-blocked` 0, `data-blocked` 15, `feature-disabled` 0, `redirect-only` 28, `controlled-only` 28
+- Planned status counts: `testable` 33, `permission-blocked` 0, `data-blocked` 15, `feature-disabled` 0, `redirect-only` 28, `controlled-only` 29
 
 `data-blocked` means a safe representative dynamic record still needs to be discovered with an authorized account. `controlled-only` means opening or completing the primary task could mutate data and belongs in the disposable local environment.
 
@@ -28,7 +28,7 @@
 | leave-self-service | 3 | tactical-response-team | `/leave`<br>`/leave/:leaveId`<br>`/leave/new` |
 | messages | 1 | authenticated-user | `/messages` |
 | notifications | 2 | authenticated-user | `/notifications/leave`<br>`/notifications/workflow` |
-| overtime-management | 5 | human-resource, contract-manager | `/staff/overtime-management`<br>`/staff/overtime-management/:legacyOvertimeRouteKey`<br>`/staff/overtime-management/record/:overtimeRouteKey`<br>`/staff/overtime-management/records`<br>`/staff/overtime-management/rules` |
+| overtime-management | 5 | human-resource, contract-manager, system-administrator | `/staff/overtime-management`<br>`/staff/overtime-management/:legacyOvertimeRouteKey`<br>`/staff/overtime-management/record/:overtimeRouteKey`<br>`/staff/overtime-management/records`<br>`/staff/overtime-management/rules` |
 | overtime-self-service | 3 | tactical-response-team | `/overtime`<br>`/overtime/:overtimeId`<br>`/overtime/new` |
 | payroll-management | 21 | finance, human-resource | `/staff/salary-claims`<br>`/staff/salary-claims/:legacyClaimId`<br>`/staff/salary-claims/assignment/:assignmentId/edit`<br>`/staff/salary-claims/assignment/:assignmentId/view`<br>`/staff/salary-claims/assignment/new`<br>`/staff/salary-claims/claim/:claimId`<br>`/staff/salary-claims/claims`<br>`/staff/salary-claims/company-legal`<br>`/staff/salary-claims/overtime/:overtimeRouteKey`<br>`/staff/salary-claims/salary`<br>`/staff/salary-claims/set-ot-rate`<br>`/staff/salary-claims/set-salary`<br>`/staff/salary-claims/workflow-rules`<br>`/staff/set-salary`<br>`/staff/set-salary/assignment/:assignmentId/edit`<br>`/staff/set-salary/assignment/:assignmentId/view`<br>`/staff/set-salary/assignment/new`<br>`/staff/set-salary/company-legal`<br>`/staff/set-salary/set-ot-rate`<br>`/staff/set-salary/set-salary`<br>`/staff/set-salary/workflow-rules` |
 | payroll-self-service | 7 | tactical-response-team | `/payroll`<br>`/payroll/claims`<br>`/payroll/claims/:claimId`<br>`/payroll/claims/new`<br>`/payroll/claims/new/expense`<br>`/payroll/claims/new/salary`<br>`/payroll/payslips` |

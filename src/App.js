@@ -33,6 +33,8 @@ const Page404 = React.lazy(() => import('./views/pages/page404/Page404'))
 const Page500 = React.lazy(() => import('./views/pages/page500/Page500'))
 const Maintenance = React.lazy(() => import('./views/pages/maintenance/Maintenance'))
 const AUTH_BOOTSTRAP_TIMEOUT_MS = 12_000
+const SESSION_RETRY_DEFAULT_MS = 750
+const SESSION_RETRY_MAX_MS = 30_000
 
 const PUBLIC_AUTH_BOOTSTRAP_PATHS = new Set(['/login', '/forgot-password', '/reset-password'])
 
@@ -70,6 +72,19 @@ const withTimeout = (promise, timeoutMs, timeoutMessage, onTimeout) => {
   })
 
   return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId))
+}
+
+const getSessionRetryDelay = (error) => {
+  const retryAfterSeconds = Number(
+    error?.retryAfter || error?.payload?.retry_after || error?.payload?.retryAfter || 0,
+  )
+  if (!Number.isFinite(retryAfterSeconds) || retryAfterSeconds <= 0) {
+    return SESSION_RETRY_DEFAULT_MS
+  }
+  return Math.min(
+    SESSION_RETRY_MAX_MS,
+    Math.max(SESSION_RETRY_DEFAULT_MS, retryAfterSeconds * 1000),
+  )
 }
 
 const App = () => {
@@ -125,6 +140,8 @@ const App = () => {
           if (!isActive()) {
             return false
           }
+          sessionRetryTimersRef.current.forEach((timer) => clearTimeout(timer))
+          sessionRetryTimersRef.current.clear()
           dispatch({
             type: 'set',
             authStatus: 'authenticated',
@@ -153,7 +170,10 @@ const App = () => {
         } catch (error) {
           const status = Number(error?.status || 0)
           const isTransient =
-            !status || status >= 500 || String(error?.message || '').includes('timed out')
+            !status ||
+            status === 429 ||
+            status >= 500 ||
+            String(error?.message || '').includes('timed out')
           const shouldRetryCameraSession =
             status === 401 && Boolean(getPendingCameraOperation()) && retryCount < 1
           if (isActive() && (status === 401 || !silent)) {
@@ -167,10 +187,12 @@ const App = () => {
                 authError:
                   status === 401
                     ? null
-                    : status >= 500 ||
-                        String(error?.message || '').includes('Session bootstrap timed out.')
-                      ? 'Unable to connect to server.'
-                      : error?.message || 'Unable to initialize session.',
+                    : status === 429
+                      ? 'Too many requests. Retrying the session check shortly.'
+                      : status >= 500 ||
+                          String(error?.message || '').includes('Session bootstrap timed out.')
+                        ? 'Unable to connect to server.'
+                        : error?.message || 'Unable to initialize session.',
               })
             }
           }
@@ -179,7 +201,7 @@ const App = () => {
               sessionRetryTimersRef.current.delete(retryTimer)
               if (signal?.aborted) return
               void loadSession({ silent, isActive, signal, retryCount: retryCount + 1 })
-            }, 750)
+            }, getSessionRetryDelay(error))
             sessionRetryTimersRef.current.add(retryTimer)
           }
           return false

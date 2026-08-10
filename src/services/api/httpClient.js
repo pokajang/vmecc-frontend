@@ -177,6 +177,19 @@ export const fetchWithCsrfRetry = async (url, options = {}, retried = false) => 
   return response
 }
 
+export const parseRetryAfterSeconds = (value, now = Date.now()) => {
+  const normalized = String(value ?? '').trim()
+  if (!normalized) return null
+
+  const seconds = Number(normalized)
+  if (Number.isFinite(seconds) && seconds > 0) return seconds
+
+  const retryAt = Date.parse(normalized)
+  if (!Number.isFinite(retryAt)) return null
+  const delaySeconds = (retryAt - now) / 1000
+  return delaySeconds > 0 ? delaySeconds : null
+}
+
 export const apiRequest = async (path, options = {}) => {
   const response = await fetchWithCsrfRetry(buildUrl(path), options)
 
@@ -199,6 +212,12 @@ export const apiRequest = async (path, options = {}) => {
     const error = new Error(payload?.message || 'Request failed')
     error.status = response.status
     error.payload = payload
+    const retryAfter =
+      parseRetryAfterSeconds(response.headers.get('retry-after')) ??
+      parseRetryAfterSeconds(payload?.retry_after ?? payload?.retryAfter)
+    if (retryAfter !== null) {
+      error.retryAfter = retryAfter
+    }
     throw error
   }
 

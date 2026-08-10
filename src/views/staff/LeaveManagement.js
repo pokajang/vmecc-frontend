@@ -234,6 +234,7 @@ const LeaveManagement = () => {
   } = useLeaveAdminWorkflow({
     actorRoles,
     isSystemAdministrator,
+    canLoadOvertimePolicy: canManageLeaveWorkflowRules,
     pushToast,
     refreshAllLeaveRecords,
     getApplicantRolesForRecord,

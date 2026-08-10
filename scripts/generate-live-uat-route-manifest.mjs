@@ -128,6 +128,7 @@ const moduleFamilyFor = (path) => {
 
 const permissionsFor = (path, family) => {
   if (path === '/inspection/workflow-settings') return ['settings.manage']
+  if (path === '/staff/overtime-management/rules') return ['settings.manage']
   if (path === '/staff/shift-settings') return ['staff.leave.manage', 'staff.salary.manage']
   if (family === 'public' || family === 'profile' || family === 'notifications') return []
   if (family === 'dashboard') return path === '/' ? [] : ['self.dashboard']
@@ -152,7 +153,8 @@ const permissionsFor = (path, family) => {
   return []
 }
 
-const personasFor = (family) => {
+const personasFor = (family, path = '') => {
+  if (path === '/staff/overtime-management/rules') return ['system-administrator']
   const map = {
     public: ['unauthenticated'],
     dashboard: ['tactical-response-team'],
@@ -236,7 +238,12 @@ const primaryTaskFor = (path, family) => {
 
 const controlledPath = (path) =>
   /\/new(?:\/|$)|\/edit$|\/settings|set-|workflow-rules|company-legal/.test(path) ||
-  ['/admin/users', '/admin/ai-helper-knowledge', '/inspection/ux-matrix'].includes(path)
+  [
+    '/admin/users',
+    '/admin/ai-helper-knowledge',
+    '/inspection/ux-matrix',
+    '/staff/overtime-management/rules',
+  ].includes(path)
 
 const buildRoute = ({ path, name, module = null, element = null, source }) => {
   const family = moduleFamilyFor(path)
@@ -269,7 +276,7 @@ const buildRoute = ({ path, name, module = null, element = null, source }) => {
     sourceComponent: element,
     routeType,
     expectedDestination,
-    intendedPersonas: personasFor(family),
+    intendedPersonas: personasFor(family, path),
     requiredPermissions: permissionsFor(path, family),
     fixtureAlias,
     expectedHeading: expectedDestination ? null : name || null,
