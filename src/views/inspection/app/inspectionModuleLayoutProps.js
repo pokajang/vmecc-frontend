@@ -11,6 +11,7 @@ export const buildInspectionDetailViewProps = ({
   openWorkflowActionModal,
   renderStatusBadge,
   reportBasePath,
+  recordsReturnPath,
   requestDeleteRecord,
   selectedRecord,
 }) => ({
@@ -26,6 +27,7 @@ export const buildInspectionDetailViewProps = ({
   openWorkflowActionModal,
   renderStatusBadge,
   reportBasePath,
+  recordsReturnPath,
   requestDeleteRecord,
   selectedRecord,
 })
@@ -182,7 +184,7 @@ export const buildInspectionRecordsViewProps = ({
   recordsInScopeCount,
   recoverLocalDraft,
   refreshOfflineHealth,
-  reportBasePath,
+  buildRecordDetailPath,
   rowsToShow,
   runGuardedAction,
   saveQueuedAsDraft,
@@ -245,7 +247,7 @@ export const buildInspectionRecordsViewProps = ({
   queuedRecordRows,
   recentRecords,
   recordScope,
-  reportBasePath,
+  buildRecordDetailPath,
   recordsInScopeCount,
   recoverLocalDraft,
   refreshOfflineHealth,

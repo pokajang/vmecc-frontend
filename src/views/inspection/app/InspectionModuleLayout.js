@@ -92,6 +92,7 @@ const InspectionModuleLayout = ({
   clearContinuationState,
   navigate,
   reportBasePath,
+  recordsReturnPath,
   feedback,
   canConduct = true,
   showExtinguisherCatalog = true,
@@ -172,7 +173,7 @@ const InspectionModuleLayout = ({
         <COffcanvas
           visible
           placement="end"
-          onHide={() => navigate(reportBasePath)}
+          onHide={() => navigate(recordsReturnPath || reportBasePath)}
           className="inspection-detail-drawer"
           backdrop
           scroll
@@ -184,7 +185,7 @@ const InspectionModuleLayout = ({
               color="link"
               className="inspection-detail-drawer__close p-1 text-body-secondary"
               aria-label="Close inspection details"
-              onClick={() => navigate(reportBasePath)}
+              onClick={() => navigate(recordsReturnPath || reportBasePath)}
             >
               <X size={18} />
             </CButton>

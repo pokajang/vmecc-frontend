@@ -65,8 +65,16 @@
   box-shadow: 0 0 0 0.12rem rgba(0, 126, 122, 0.12);
 }
 
+$inspection-detail-drawer-max-width: 58rem;
+
 .inspection-detail-drawer.offcanvas {
-  width: min(100vw, 58rem);
+  width: min(100vw, $inspection-detail-drawer-max-width);
+}
+
+@media (max-width: $inspection-detail-drawer-max-width) {
+  .inspection-detail-drawer.offcanvas {
+    border-left-width: 0;
+  }
 }
 
 .inspection-detail-drawer__header {

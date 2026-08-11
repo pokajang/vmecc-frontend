@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import useTableRows from 'src/hooks/useTableRows'
 import {
   deleteInspectionRecord,
@@ -57,13 +57,16 @@ const useInspectionRecords = ({
   reportId,
   draftRows = [],
   actionFilter = '',
+  initialRecordScope = 'mine',
   initialStatusFilter = 'All',
   teamFilter = null,
   dateFromFilter = '',
   dateToFilter = '',
 }) => {
   const [records, setRecords] = useState([])
-  const [recordScope, setRecordScope] = useState('mine')
+  const [recordScope, setRecordScope] = useState(() =>
+    initialRecordScope === 'all' ? 'all' : 'mine',
+  )
   const [search, setSearch] = useState('')
   const [period, setPeriod] = useState('all')
   const [sort, setSort] = useState('reportedAt:desc')
@@ -80,11 +83,14 @@ const useInspectionRecords = ({
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
   const [nowMs, setNowMs] = useState(() => Date.now())
+  const loadRequestRef = useRef(0)
   const apiEnabledForInspection = isInspectionApiEnabled()
 
   const loadRows = useCallback(
     async (signal = { cancelled: false }) => {
       if (!userId) return
+      const requestId = loadRequestRef.current + 1
+      loadRequestRef.current = requestId
       try {
         setIsLoading(true)
         setLoadError(null)
@@ -98,13 +104,13 @@ const useInspectionRecords = ({
               dateTo: dateToFilter,
             })
           : loadInspectionRecordsForScope({ userId, scope: recordScope })
-        if (signal.cancelled) return
+        if (signal.cancelled || requestId !== loadRequestRef.current) return
         setRecords(rows.sort(byNewest))
       } catch (error) {
-        if (signal.cancelled) return
+        if (signal.cancelled || requestId !== loadRequestRef.current) return
         setLoadError(error)
       } finally {
-        if (!signal.cancelled) setIsLoading(false)
+        if (!signal.cancelled && requestId === loadRequestRef.current) setIsLoading(false)
       }
     },
     [

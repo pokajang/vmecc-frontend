@@ -36,7 +36,6 @@ export const InspectionRecordsView = ({
   openSavedDraft,
   setDeleteTarget,
   navigate,
-  reportBasePath,
   setShowMobileRecords,
   syncQueuedSubmissions,
   search,
@@ -85,6 +84,7 @@ export const InspectionRecordsView = ({
   pushToast,
   recoverLocalDraft,
   startNew,
+  buildRecordDetailPath,
 }) => {
   const [queueDetailsOpen, setQueueDetailsOpen] = useState(false)
 
@@ -108,9 +108,7 @@ export const InspectionRecordsView = ({
           onAddType={homeIncident.openAddModal}
           onContinueDraft={() => runGuardedAction(() => openSavedDraft(activeDraftRows[0]))}
           onDeleteDraft={() => setDeleteTarget(activeDraftRows[0])}
-          onOpenRecord={(row) =>
-            row?.id ? navigate(`${reportBasePath}/${encodeURIComponent(row.id)}`) : null
-          }
+          onOpenRecord={(row) => (row?.id ? navigate(buildRecordDetailPath(row.id)) : null)}
           onViewQueueDetails={() => {
             setShowMobileRecords(true)
             setQueueDetailsOpen(true)
@@ -147,7 +145,7 @@ export const InspectionRecordsView = ({
           isLoading={isLoading}
           filteredRecords={filteredRecords}
           visibleRows={visibleRows}
-          onViewRecord={(id) => navigate(`${reportBasePath}/${encodeURIComponent(id)}`)}
+          onViewRecord={(id) => navigate(buildRecordDetailPath(id))}
           onDownloadRecord={downloadRecord}
           downloadingId={downloadingId}
           onEditRecord={editRecord}
@@ -297,6 +295,7 @@ export const InspectionDetailView = ({
   selectedRecord,
   navigate,
   reportBasePath,
+  recordsReturnPath,
   formatDateTime,
   renderStatusBadge,
   editRecord,
@@ -311,7 +310,7 @@ export const InspectionDetailView = ({
 }) => (
   <InspectionDetailSection
     selectedRecord={selectedRecord}
-    onBack={() => navigate(reportBasePath)}
+    onBack={() => navigate(recordsReturnPath || reportBasePath)}
     formatDateTime={formatDateTime}
     renderStatusBadge={renderStatusBadge}
     onEditRecord={editRecord}

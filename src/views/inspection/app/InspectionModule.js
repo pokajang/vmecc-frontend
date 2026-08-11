@@ -49,6 +49,11 @@ import { countFireExtinguisherSessionRetryQueue } from '../form/hooks/fireExting
 import { runInspectionSyncCoordinator } from '../domain/sync/inspectionSyncCoordinator'
 import useInspectionModuleFormRuntime from './useInspectionModuleFormRuntime'
 import useInspectionModuleRecordActions from './useInspectionModuleRecordActions'
+import {
+  buildInspectionDetailLocation,
+  buildInspectionRecordsLocation,
+  getInitialInspectionRecordScope,
+} from './inspectionRecordRouteContext'
 
 const InspectionModule = () => {
   const location = useLocation()
@@ -86,6 +91,11 @@ const InspectionModule = () => {
     activeSection === 'form' && /\/inspection\/[^/]+\/edit$/i.test(location.pathname)
   const routeMode = isEditRoute ? 'edit' : 'new'
   const routeRecordId = isEditRoute ? String(reportId || '').trim() : ''
+  const isDetailRoute = activeSection === 'detail' && Boolean(reportId)
+  const initialRecordScope = useMemo(
+    () => getInitialInspectionRecordScope(location.search, { isDetailRoute }),
+    [isDetailRoute, location.search],
+  )
   const actionQueueAction = useMemo(() => {
     const params = new URLSearchParams(location.search)
     if (String(params.get('scope') || '').toLowerCase() !== 'actionable') return ''
@@ -194,11 +204,33 @@ const InspectionModule = () => {
     reportId,
     draftRows: draftRecordRows,
     actionFilter: actionQueueAction,
+    initialRecordScope,
     initialStatusFilter: actionQueueStatus,
     teamFilter: actionQueueTeam,
     dateFromFilter: dashboardPeriod.dateFrom,
     dateToFilter: dashboardPeriod.dateTo,
   })
+
+  const navigationScope = actionQueueAction ? 'actionable' : recordScope
+  const recordsReturnPath = useMemo(
+    () =>
+      buildInspectionRecordsLocation({
+        basePath: reportBasePath,
+        search: location.search,
+        recordScope: navigationScope,
+      }),
+    [location.search, navigationScope],
+  )
+  const buildRecordDetailPath = useCallback(
+    (id) =>
+      buildInspectionDetailLocation({
+        basePath: reportBasePath,
+        reportId: id,
+        search: location.search,
+        recordScope: navigationScope,
+      }),
+    [location.search, navigationScope],
+  )
 
   useEffect(() => {
     reloadRecordsRef.current = reloadRecords
@@ -531,6 +563,7 @@ const InspectionModule = () => {
         openWorkflowActionModal,
         renderStatusBadge: renderInspectionStatusBadge,
         reportBasePath,
+        recordsReturnPath,
         requestDeleteRecord: setDeleteTarget,
         selectedRecord,
       })}
@@ -631,7 +664,7 @@ const InspectionModule = () => {
         queuedRecordRows,
         recentRecords,
         recordScope,
-        reportBasePath,
+        buildRecordDetailPath,
         recordsInScopeCount,
         recoverLocalDraft,
         refreshOfflineHealth,
@@ -666,6 +699,7 @@ const InspectionModule = () => {
         visibleRows,
       })}
       reportBasePath={reportBasePath}
+      recordsReturnPath={recordsReturnPath}
       reviewViewProps={buildInspectionReviewViewProps({
         backFromReview,
         buildPendingReviewRecord,

@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "expectedBuildId": "05354ecf5c85-20260811034722",
+  "personas": ["trt", "incidentCommander"],
+  "viewports": [
+    { "key": "narrow-mobile", "width": 360, "height": 800, "project": "live-mobile-chrome" },
+    { "key": "mobile", "width": 390, "height": 844, "project": "live-mobile-chrome" },
+    { "key": "tablet", "width": 768, "height": 1024, "project": "live-desktop-chrome" },
+    { "key": "desktop", "width": 1440, "height": 900, "project": "live-desktop-chrome" }
+  ],
+  "inspectionTypes": [
+    { "key": "general", "label": "General Inspection" },
+    { "key": "hse", "label": "Health Safety Environment Inspection" },
+    { "key": "fire-extinguisher", "label": "Fire Extinguisher Inspection" },
+    { "key": "hydraulic", "label": "Hydraulic Rescue Equipment Inspection" },
+    { "key": "high-angle", "label": "High Angle Rescue Equipment Inspection" },
+    { "key": "er-aux", "label": "ER Auxiliary Equipment Inspection" },
+    { "key": "scba", "label": "SCBA Inspection" },
+    { "key": "frt-daily", "label": "Fire Truck Daily Readiness Inspection" }
+  ],
+  "reportTypes": [
+    { "key": "erco", "label": "ERCO" },
+    { "key": "fitness-test", "label": "Fitness Test" },
+    { "key": "drill", "label": "Drill" }
+  ],
+  "safeRoutes": [
+    "/inspection",
+    "/inspection/all-extinguishers",
+    "/report/erco",
+    "/report/fitness-test",
+    "/report/drill"
+  ],
+  "controlledOnlyRoutes": [
+    "/inspection/new",
+    "/inspection/:reportId/edit",
+    "/report/:reportType/new"
+  ]
+}

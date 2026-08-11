@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from 'react'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import InspectionModuleLayout from '../app/InspectionModuleLayout'
 
@@ -54,5 +54,33 @@ describe('InspectionModuleLayout', () => {
     expect(status.textContent).toContain('Downloading report')
     expect(status.closest('.inspection-detail-drawer__feedback')).toBeTruthy()
     expect(screen.getAllByRole('status')).toHaveLength(1)
+  })
+
+  it('closes a detail drawer to its durable record-list context', () => {
+    const navigate = vi.fn()
+    render(
+      <InspectionModuleLayout
+        activeSection="detail"
+        clearContinuationState={vi.fn()}
+        detailViewProps={{}}
+        formViewProps={{}}
+        headerActions={null}
+        isDeleting={false}
+        isSubmitting={false}
+        modalProps={{}}
+        navigate={navigate}
+        pageTitle="Inspection"
+        recordsSectionActive
+        recordsReturnPath="/inspection?scope=all"
+        recordsViewProps={{}}
+        reportBasePath="/inspection"
+        reviewViewProps={{}}
+        runGuardedAction={vi.fn()}
+        startNew={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close inspection details' }))
+    expect(navigate).toHaveBeenCalledWith('/inspection?scope=all')
   })
 })

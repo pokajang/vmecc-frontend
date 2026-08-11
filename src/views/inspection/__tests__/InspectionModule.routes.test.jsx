@@ -390,7 +390,7 @@ vi.mock('../state/useInspectionRecords', () => ({
       isLoading: false,
       search: '',
       setSearch: vi.fn(),
-      recordScope: 'mine',
+      recordScope: options.initialRecordScope || 'mine',
       setRecordScope: vi.fn(),
       period: 'all',
       setPeriod: vi.fn(),
@@ -610,6 +610,7 @@ const LocationProbe = () => {
   return (
     <>
       <div data-testid="location-path">{location.pathname}</div>
+      <div data-testid="location-search">{location.search}</div>
       <button type="button" onClick={() => navigate(-1)}>
         Browser back
       </button>
@@ -742,6 +743,23 @@ describe('InspectionModule route family', () => {
     )
   })
 
+  it('initializes the All list from a supported scope query', () => {
+    renderModule('/inspection?scope=all')
+
+    expect(inspectionHarness.useInspectionRecords).toHaveBeenCalledWith(
+      expect.objectContaining({ initialRecordScope: 'all' }),
+    )
+  })
+
+  it('initializes a cold detail route with the server-authorized All scope', () => {
+    renderModule('/inspection/inspection-1')
+
+    expect(inspectionHarness.useInspectionRecords).toHaveBeenCalledWith(
+      expect.objectContaining({ initialRecordScope: 'all' }),
+    )
+    expect(screen.getByText('INSP-2026-001')).toBeTruthy()
+  })
+
   it('passes returned inspections to the rejected status filter', () => {
     renderModule('/inspection?status=Rejected')
 
@@ -866,6 +884,40 @@ describe('InspectionModule route family', () => {
     )
     expect(screen.getByText('Inspection detail shell')).toBeTruthy()
     expect(screen.getByText('INSP-2026-001')).toBeTruthy()
+  })
+
+  it('keeps All scope in the detail URL and close destination', async () => {
+    renderModule('/inspection?scope=all')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open INSP-2026-001' }))
+    await waitFor(() =>
+      expect(screen.getByTestId('location-path').textContent).toBe('/inspection/inspection-1'),
+    )
+    expect(screen.getByTestId('location-search').textContent).toBe('?scope=all')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close inspection details' }))
+    await waitFor(() => expect(screen.getByTestId('location-path').textContent).toBe('/inspection'))
+    expect(screen.getByTestId('location-search').textContent).toBe('?scope=all')
+  })
+
+  it('preserves approved actionable filters through detail and back navigation', async () => {
+    renderModule(
+      '/inspection?scope=actionable&action=approve&team_id=7&date_from=2026-08-01&unsafe=1',
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open INSP-2026-001' }))
+    await waitFor(() =>
+      expect(screen.getByTestId('location-path').textContent).toBe('/inspection/inspection-1'),
+    )
+    expect(screen.getByTestId('location-search').textContent).toBe(
+      '?scope=actionable&action=approve&team_id=7&date_from=2026-08-01',
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Back to records' }))
+    await waitFor(() => expect(screen.getByTestId('location-path').textContent).toBe('/inspection'))
+    expect(screen.getByTestId('location-search').textContent).toBe(
+      '?scope=actionable&action=approve&team_id=7&date_from=2026-08-01',
+    )
   })
 
   it('starts a new inspection, enters review, and returns to the new route', async () => {

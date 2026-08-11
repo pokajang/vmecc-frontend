@@ -66,7 +66,11 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 | [Stage 6 final checkpoint plan](./FRONTEND_MODULE_CONSISTENCY_STAGE_6_FINAL_CHECKPOINT_PLAN_2026-08-06.md)                                     | Day 61 cumulative tracked/untracked audit, full local gates, browser/build evidence, catalogue reconciliation, cleanup, and handover                        | Executed; passed locally                                |
 | [Stage 6 final checkpoint execution](./FRONTEND_MODULE_CONSISTENCY_STAGE_6_FINAL_CHECKPOINT_EXECUTION_2026-08-10.md)                           | Final ownership verdicts, catalogue counts, complete local gate and journey evidence, cleanup, residual risks, rollback, and close decision                 | Stage 6 passed and closed locally                       |
 | [Predeployment execution](./FRONTEND_PREDEPLOYMENT_EXECUTION_2026-08-10.md)                                                                    | Frontend/backend dependency remediation, isolated PostgreSQL qualification, complete local gates, release boundary, cleanup, and next-stage decision        | Local predeployment gates passed                        |
-| [Pre-Day 4 corrective plan](./FRONTEND_LIVE_UAT_PRE_DAY_4_CORRECTIVE_PLAN_2026-08-10.md)                                                        | Shared admin review queue, mobile overflow, session 429 resilience, permission-aligned staff reads, UAT hardening, and bounded handoff gates                 | Planned; implementation not started                     |
+| [Pre-Day 4 corrective plan](./FRONTEND_LIVE_UAT_PRE_DAY_4_CORRECTIVE_PLAN_2026-08-10.md)                                                       | Shared admin review queue, mobile overflow, session 429 resilience, permission-aligned staff reads, UAT hardening, and bounded handoff gates                | Planned; implementation not started                     |
+| [Day 4 deep-record UAT plan](./FRONTEND_LIVE_UAT_DAY_4_DEEP_RECORD_PLAN_2026-08-11.md)                                                         | Production-safe Inspection/ERCO/Fitness/Drill detail journeys, reported UI defect diagnosis, media checks, component scoring, and Day 5 decision            | Executed; HOLD before Day 5 completion                  |
+| [Day 4 deep-record UAT execution](./FRONTEND_LIVE_UAT_DAY_4_DEEP_RECORD_EXECUTION_2026-08-11.md)                                               | Live HSE/Fitness evidence, explicit data gaps, scope/refresh defect, responsive/media findings, component dispositions, and next-stage verdict              | Completed; pre-Day 5 corrective checkpoint required     |
+| [Pre-Day 5 corrective plan](./FRONTEND_LIVE_UAT_PRE_DAY_5_CORRECTIVE_PLAN_2026-08-11.md)                                                       | Inspection All-scope detail refresh/deep-link recovery, shared full-width drawer border, regression gates, deployment verification, and rollback            | Executed locally; live gate pending                     |
+| [Pre-Day 5 corrective execution](./FRONTEND_LIVE_UAT_PRE_DAY_5_CORRECTIVE_EXECUTION_2026-08-11.md)                                             | Durable Inspection route context, stale-request protection, responsive drawer correction, complete local gates, and deployment handoff                      | Local gates passed; ready to deploy and verify          |
 
 ## Completed Work
 
@@ -203,6 +207,18 @@ Application source, generated builds, temporary logs, screenshots, traces, and b
 - Implemented the pre-Day 4 corrective source pass: shared the two admin review queues, added bounded session-429 recovery, eliminated unauthorized overtime-policy reads, aligned the Overtime Rules UAT persona/permission contract, and hardened live diagnostics.
 - Passed focused 19/19 Vitest checks, 8/8 Playwright safety/route contracts, full lint, 105/105 route and schedule audits, and a 6,496-module production build; the unrestricted Vitest corpus hit the six-minute runner ceiling without an assertion result.
 - Re-audited the corrective pass, added standard HTTP-date retry handling, cancelled stale recovery timers, narrowed expected-403 suppression, retained failure screenshots, and expanded state/permission/responsive coverage; passed 32/32 affected tests, 2/2 rendered-browser queue journeys, 9/9 UAT contracts, full lint, route audits, and production build.
+- Deployed and publicly verified frontend build `54acd0e2d079-20260810102950`, then prepared the bounded authenticated post-deployment gate for admin queues, overtime permissions, Staff Profile, Overtime Rules, and session continuity before Day 4.
+- Completed the post-deployment gate across three personas and both viewports: 6/6 journeys and 24/24 route/session entries passed with zero overflow, runtime/client/server/rate-limit errors, mutation attempts, or credential leakage; issued GO for Day 4.
+
+### 2026-08-11
+
+- Executed the production-safe Day 4 deep-record UAT for TRT and Incident Commander across 360, 390, 768, and 1440 pixel widths.
+- Passed the final HSE Inspection and Fitness Test surface matrix with zero overflow or runtime/network diagnostics; retained unavailable Inspection/ERCO/Drill records as explicit data blocks.
+- Verified the full-width detail drawer's 1 px left border, source-confirmed nested read-only image framing and filename exposure, and identified the shared detail/media correction boundaries.
+- Found that Incident Commander Inspection records opened from `All` become `Report not found` on cold deep-link or refresh because route entry restores the default `Mine` scope; issued HOLD before Day 5 completion.
+- Implemented durable allow-listed Inspection detail scope, scoped close/back recovery, and stale-request protection while retaining Mine as the ordinary list default and backend authorization as the access boundary.
+- Removed the shared detail drawer's outer left divider only through the 928px full-width boundary and retained the desktop side-panel divider from 929px upward.
+- Passed 45 focused tests, 913 Inspection tests, 6/6 responsive drawer browser cases, 8/8 Day 3/4 contracts, full lint, 1,844 repository tests, and the 6,497-module production build; retained HOLD for Day 5 until the corrected build passes live HSE verification.
 
 ## Deferred Release-Only Actions
 
@@ -216,7 +232,7 @@ These actions remain valid but do not block local component-quality work. Reopen
 
 ## Next Work
 
-The local component-quality programme is complete through Stage 6 Day 61. The bounded pre-Day 4 source corrections are ready to commit and deploy. Run the focused post-deployment admin-queue, overtime-permission, Staff Profile, and session-resilience checks before starting Day 4 deep-record UAT.
+The local component-quality programme is complete through Stage 6 Day 61, Day 4 deep-record UAT is complete, and the bounded pre-Day 5 corrective source pass has passed all local gates. Deploy build `05354ecf5c85-20260811034722`, then run the hardened read-only Incident Commander/HSE gate. Begin the repo-wide media/filename inventory only after that deployed functional gate passes.
 
 Release qualification remains separate: authenticated staging journeys, real-device camera checks, hosted API/header and cache verification, shared-cPanel deployment/rollback, and production approval. GitHub Actions remain disabled under the recorded cost exception.
 
