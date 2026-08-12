@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from 'react'
 import { CButton, CModal, CModalBody, CModalHeader, CModalTitle } from '@coreui/react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { ReportPhotoImage } from './ReportViewComponents'
+import { ReportPhotoImage, resolvePhotoLabel } from './ReportViewComponents'
 
 const getPhotoLabel = (photo, index) =>
-  String(photo?.description || photo?.fileName || `Photo ${index + 1}`).trim()
+  resolvePhotoLabel({ photo, index, contextLabel: 'Report photo' })
 
 const ReportPhotoGallery = ({ photos = [], title = 'Photographs' }) => {
   const visiblePhotos = useMemo(
@@ -40,7 +40,7 @@ const ReportPhotoGallery = ({ photos = [], title = 'Photographs' }) => {
             <button
               key={photo.id || photo.mediaId || photo.url || index}
               type="button"
-              className="report-photo-gallery__card rounded-3 border overflow-hidden"
+              className="report-photo-gallery__card overflow-hidden"
               aria-label={`View photo ${index + 1}: ${label}`}
               onClick={() => setSelectedIndex(index)}
             >
@@ -81,10 +81,7 @@ const ReportPhotoGallery = ({ photos = [], title = 'Photographs' }) => {
                   className={`report-photo-viewer__image report-photo-viewer__image--${viewMode}`}
                 />
               </div>
-              <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
-                <div className="small text-body-secondary">
-                  {selectedPhoto.fileName || `Photo ${selectedIndex + 1}`}
-                </div>
+              <div className="d-flex flex-wrap justify-content-end align-items-center gap-2">
                 <div className="btn-group" role="group" aria-label="Photo size">
                   <CButton
                     type="button"

@@ -245,6 +245,34 @@ const cleanupReport = async (api, csrfToken, reportUid, report) => {
   }
 }
 
+const cleanupEquipment = async (api, csrfToken, equipmentId, report) => {
+  if (!equipmentId || !csrfToken) return
+
+  try {
+    const response = await api.delete(
+      `${apiBaseUrl}/inspection/equipment/${encodeURIComponent(equipmentId)}`,
+      {
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfToken,
+        },
+      },
+    )
+    report.cleanup.push({
+      route: `/inspection/equipment/${equipmentId}`,
+      status: response.status(),
+      ok: [200, 204, 404].includes(response.status()),
+    })
+  } catch (error) {
+    report.cleanup.push({
+      route: `/inspection/equipment/${equipmentId}`,
+      error: error?.message || String(error),
+      ok: false,
+    })
+  }
+}
+
 test.describe('ER Aux inspection prod smoke', () => {
   test('submits ER Aux equipment inspection and downloads a non-empty PDF', async ({
     page,
@@ -270,6 +298,7 @@ test.describe('ER Aux inspection prod smoke', () => {
       downloads: [],
     }
     let csrfToken = ''
+    let customEquipmentId = ''
 
     page.on('console', (message) => {
       if (message.type() !== 'error') return
@@ -340,7 +369,22 @@ test.describe('ER Aux inspection prod smoke', () => {
       await expect(addModal).toBeVisible()
       await addModal.locator('input').first().fill(customEquipmentName)
       await addModal.locator('textarea').first().fill('Smoke-created local equipment')
+      const equipmentCreatePromise = page.waitForResponse(
+        (response) => {
+          const url = new URL(response.url())
+          return (
+            url.pathname.endsWith('/api/inspection/equipment') &&
+            response.request().method() === 'POST'
+          )
+        },
+        { timeout: 30_000 },
+      )
       await addModal.getByRole('button', { name: 'Save Equipment' }).click()
+      const equipmentCreateResponse = await equipmentCreatePromise
+      expect(equipmentCreateResponse.status()).toBe(201)
+      const equipmentCreateBody = await equipmentCreateResponse.json()
+      customEquipmentId = String(equipmentCreateBody?.data?.id || '')
+      expect(customEquipmentId, 'Unable to register custom equipment for cleanup').toBeTruthy()
       await expect(addModal).toBeHidden({ timeout: 30_000 })
       await expect(page.getByText(customEquipmentName, { exact: true })).toBeVisible({
         timeout: 30_000,
@@ -362,17 +406,23 @@ test.describe('ER Aux inspection prod smoke', () => {
       await radioTetra.getByRole('button', { name: 'Defect', exact: true }).click()
       await expect(radioTetra.getByText('Defect remarks')).toBeVisible()
 
+      const defectFileName = `er-aux-defect-${suffix}.png`
+      const defectDescription = `Radio Tetra defect evidence ${suffix}`
       await setInspectionPhotoFromButton(
         radioTetra.getByRole('button', { name: 'Add photo (optional)' }),
-        `er-aux-defect-${suffix}.png`,
+        defectFileName,
       )
       const defectPhotoModal = page
         .locator('.modal.show', { hasText: 'Radio Tetra - defect photos' })
         .last()
       await expect(defectPhotoModal).toBeVisible()
       await expect(
-        defectPhotoModal.getByRole('img', { name: new RegExp(`er-aux-defect-${suffix}`, 'i') }),
+        defectPhotoModal.getByRole('img', { name: 'Inspection evidence photo 1' }),
       ).toBeVisible()
+      await expect(defectPhotoModal).not.toContainText(defectFileName)
+      await defectPhotoModal
+        .getByRole('textbox', { name: 'Photo description' })
+        .fill(defectDescription)
       await defectPhotoModal.getByRole('button', { name: 'Save' }).click()
       await expect(defectPhotoModal).toBeHidden()
       await radioTetra
@@ -384,19 +434,23 @@ test.describe('ER Aux inspection prod smoke', () => {
       await radioTetra
         .locator('[data-inspection-er-aux-detail-key="additionalNotes"] textarea')
         .fill(`Smoke additional notes ${suffix}`)
+      const additionalFileName = `er-aux-additional-${suffix}.png`
+      const additionalDescription = `Radio Tetra additional evidence ${suffix}`
       await setInspectionPhotoFromButton(
         radioTetra.locator('[data-inspection-er-aux-detail-key="additionalPhotos"] button'),
-        `er-aux-additional-${suffix}.png`,
+        additionalFileName,
       )
       const additionalPhotoModal = page
         .locator('.modal.show', { hasText: 'Radio Tetra - additional photos' })
         .last()
       await expect(additionalPhotoModal).toBeVisible()
       await expect(
-        additionalPhotoModal.getByRole('img', {
-          name: new RegExp(`er-aux-additional-${suffix}`, 'i'),
-        }),
+        additionalPhotoModal.getByRole('img', { name: 'Inspection evidence photo 1' }),
       ).toBeVisible()
+      await expect(additionalPhotoModal).not.toContainText(additionalFileName)
+      await additionalPhotoModal
+        .getByRole('textbox', { name: 'Photo description' })
+        .fill(additionalDescription)
       await additionalPhotoModal.getByRole('button', { name: 'Save' }).click()
       await expect(additionalPhotoModal).toBeHidden()
 
@@ -447,6 +501,23 @@ test.describe('ER Aux inspection prod smoke', () => {
       report.display_id = createMeta.displayId
       report.create_report = createMeta
       expect(report.report_uid, 'Unable to capture created report UID').toBeTruthy()
+      const submittedRadioTetra = createMeta.requestPayload?.payload?.erAuxChecks?.find(
+        (row) => row?.id === 'office:radio-tetra',
+      )
+      expect(submittedRadioTetra?.defectPhotos).toEqual([
+        expect.objectContaining({
+          fileName: expect.stringMatching(new RegExp(`^er-aux-defect-${suffix}\\.(jpg|jpeg|png)$`)),
+          description: defectDescription,
+        }),
+      ])
+      expect(submittedRadioTetra?.photos).toEqual([
+        expect.objectContaining({
+          fileName: expect.stringMatching(
+            new RegExp(`^er-aux-additional-${suffix}\\.(jpg|jpeg|png)$`),
+          ),
+          description: additionalDescription,
+        }),
+      ])
 
       await waitForAppReady(page, '/inspection')
       await expect(page).toHaveURL(/\/inspection(?:[/?#]|$)/)
@@ -509,11 +580,23 @@ test.describe('ER Aux inspection prod smoke', () => {
       }
       throw error
     } finally {
-      await cleanupReport(api, csrfToken, report.report_uid, report)
-      if (report.report_uid && report.cleanup.some((item) => item.ok === false)) {
+      let cleanupCsrfToken = csrfToken
+      try {
+        const session = await apiRequest(api, report, 'get', '/auth/session', {
+          expected: [200],
+          note: 'refresh csrf token for cleanup',
+        })
+        cleanupCsrfToken = session.body?.csrf_token || cleanupCsrfToken
+      } catch {
+        // Use the login token if the refresh endpoint is unavailable.
+      }
+      await cleanupReport(api, cleanupCsrfToken, report.report_uid, report)
+      await cleanupEquipment(api, cleanupCsrfToken, customEquipmentId, report)
+      if (report.cleanup.some((item) => item.ok === false)) {
         writeJsonArtifact('manual-cleanup.json', {
           report_uid: report.report_uid,
           display_id: report.display_id,
+          equipment_id: customEquipmentId,
           cleanup: report.cleanup,
         })
       }

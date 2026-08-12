@@ -379,7 +379,8 @@ test.describe('Drill Upgrade UI V1', () => {
     })
 
     const photoSection = page.getByRole('region', { name: 'Exercise photographs' })
-    await expect(photoSection.getByText('camera-return.jpg')).toBeVisible()
+    await expect(photoSection.getByRole('img', { name: 'Photo 1' })).toBeVisible()
+    await expect(photoSection.getByText('camera-return.jpg')).toHaveCount(0)
     await photoSection.getByRole('button', { name: 'Edit description for Photo 1' }).click()
     await expect(
       photoSection.getByRole('textbox', { name: 'Description for Photo 1' }),
@@ -390,7 +391,8 @@ test.describe('Drill Upgrade UI V1', () => {
 
     await page.getByRole('button', { name: 'Review & Submit' }).click()
     await expect(page).toHaveURL(/\/report\/drill\/new\/review/)
-    await expect(page.getByRole('img', { name: 'camera-return.jpg' })).toBeVisible()
+    await expect(page.getByRole('img', { name: 'Report photo 1' })).toBeVisible()
+    await expect(page.getByText('camera-return.jpg')).toHaveCount(0)
     await expectNoHorizontalOverflow(page)
   })
 

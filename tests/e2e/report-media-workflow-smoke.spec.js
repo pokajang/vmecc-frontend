@@ -198,13 +198,12 @@ const runAuthenticatedMediaFlow = async (page, moduleKey) => {
     })
     await dismissIncidentalDialogs(page)
     await waitForSetup(page, moduleKey)
-    await expect(
-      page
-        .getByText(moduleKey === 'erco' ? 'Post Incident Analysis' : 'Post-Exercise Analysis', {
-          exact: true,
-        })
-        .first(),
-    ).toBeVisible()
+    if (moduleKey === 'erco') {
+      await expect(page.getByText('Post Incident Analysis', { exact: true }).first()).toBeVisible()
+    } else {
+      await expect(page.getByRole('region', { name: 'Strengths' })).toBeVisible()
+      await expect(page.getByRole('region', { name: 'Exercise photographs' })).toBeVisible()
+    }
     if (moduleKey === 'erco') {
       await expect(page.getByRole('button', { name: 'Capture photo' })).toHaveCount(0)
     }

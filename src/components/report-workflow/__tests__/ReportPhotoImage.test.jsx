@@ -2,7 +2,12 @@
 import React from 'react'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { ReportPhotoImage } from '../ReportViewComponents'
+import {
+  PhotoPreview,
+  PhotosGrid,
+  ReportPhotoImage,
+  resolvePhotoLabel,
+} from '../ReportViewComponents'
 import { normalizePhotos } from 'src/views/inspection/form/core/inspectionFormShared'
 import { buildErcoRecord } from 'src/views/report/erco/recordFactory'
 
@@ -11,7 +16,7 @@ const managedPhoto = {
   mediaId: 'rpm_test',
   url: '/api/report-media/rpm_test',
   thumbnailUrl: '/api/report-media/rpm_test?variant=thumbnail',
-  fileName: 'camera.jpg',
+  fileName: 'DEVICE_PRIVATE_IMG_987654.jpg',
   mimeType: 'image/jpeg',
   sizeBytes: 1234,
   width: 1280,
@@ -73,5 +78,29 @@ describe('managed report photo rendering', () => {
     })
 
     expect(record.postIncidentAnalysis.photos[0]).toEqual(expect.objectContaining(managedPhoto))
+  })
+
+  it('uses caller-owned contextual labels without exposing the internal filename', () => {
+    const label = resolvePhotoLabel({
+      photo: { ...managedPhoto, description: '' },
+      index: 1,
+      contextLabel: 'Inspection evidence photo',
+    })
+    render(<PhotoPreview photo={managedPhoto} alt={label} />)
+
+    expect(screen.getByRole('img', { name: 'Inspection evidence photo 2' })).toBeTruthy()
+    expect(screen.queryByText(managedPhoto.fileName)).toBeNull()
+    expect(screen.queryByRole('img', { name: managedPhoto.fileName })).toBeNull()
+    expect(managedPhoto.fileName).toBe('DEVICE_PRIVATE_IMG_987654.jpg')
+  })
+
+  it('renders resolution evidence without a nested card or device filename', () => {
+    const { container } = render(<PhotosGrid photos={[managedPhoto]} />)
+
+    expect(screen.getByText('Uploaded Photos')).toBeTruthy()
+    expect(screen.getByRole('img', { name: 'Evidence' })).toBeTruthy()
+    expect(screen.getByText('Evidence')).toBeTruthy()
+    expect(screen.queryByText(managedPhoto.fileName)).toBeNull()
+    expect(container.querySelector('.card')).toBeNull()
   })
 })

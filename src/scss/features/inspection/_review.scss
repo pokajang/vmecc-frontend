@@ -190,15 +190,13 @@
   gap: 0.55rem;
 }
 
-.inspection-review-photo-card {
+.inspection-review-photo-item {
   min-width: 0;
-  padding: 0.45rem;
-  border: 1px solid var(--cui-border-color);
-  border-radius: 0.45rem;
-  background: var(--cui-body-bg);
+  display: grid;
+  gap: 0.35rem;
 }
 
-.inspection-review-photo-card__image {
+.inspection-review-photo-item__image {
   display: block;
   width: 100%;
   height: auto;
@@ -209,20 +207,11 @@
   background: rgba(var(--cui-secondary-rgb), 0.08);
 }
 
-.inspection-review-photo-card__name,
-.inspection-review-photo-card__description {
+.inspection-review-photo-item__description {
   overflow-wrap: anywhere;
 }
 
-.inspection-review-photo-card__name {
-  margin-top: 0.35rem;
-  color: var(--cui-body-color);
-  font-size: var(--vmecc-text-caption);
-  font-weight: 600;
-}
-
-.inspection-review-photo-card__description {
-  margin-top: 0.15rem;
+.inspection-review-photo-item__description {
   color: var(--cui-secondary-color);
   font-size: var(--vmecc-text-caption);
   line-height: 1.35;

@@ -8,12 +8,14 @@ import ReportPhotoGallery from '../ReportPhotoGallery'
 const photos = [
   {
     id: 'photo-1',
+    fileName: 'DEVICE_PRIVATE_IMG_987654.jpg',
     url: '/media/photo-1.jpg',
     thumbnailUrl: '/media/photo-1-thumbnail.jpg',
     description: 'Initial response position',
   },
   {
     id: 'photo-2',
+    fileName: 'DEVICE_PRIVATE_IMG_123456.jpg',
     url: '/media/photo-2.jpg',
     thumbnailUrl: '/media/photo-2-thumbnail.jpg',
     description: 'Recovery complete',
@@ -26,6 +28,11 @@ describe('ReportPhotoGallery', () => {
 
     expect(screen.getByAltText('Initial response position').getAttribute('src')).toBe(
       '/media/photo-1-thumbnail.jpg',
+    )
+    expect(screen.queryByText('DEVICE_PRIVATE_IMG_987654.jpg')).toBeNull()
+    expect(screen.queryByRole('img', { name: 'DEVICE_PRIVATE_IMG_987654.jpg' })).toBeNull()
+    expect(screen.getAllByRole('button', { name: /^View photo/ })[0].className).not.toContain(
+      'border',
     )
 
     fireEvent.click(
@@ -60,5 +67,18 @@ describe('ReportPhotoGallery', () => {
     expect(within(dialog).getByAltText('Recovery complete').getAttribute('src')).toBe(
       '/media/photo-2.jpg',
     )
+    expect(within(dialog).queryByText('DEVICE_PRIVATE_IMG_123456.jpg')).toBeNull()
+  })
+
+  it('uses report context when a photo has no description', () => {
+    render(
+      <ReportPhotoGallery
+        photos={[{ id: 'photo-3', fileName: 'DEVICE_PRIVATE_IMG_654321.jpg', url: '/media/3' }]}
+      />,
+    )
+
+    expect(screen.getByRole('img', { name: 'Report photo 1' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'View photo 1: Report photo 1' })).toBeTruthy()
+    expect(screen.queryByText('DEVICE_PRIVATE_IMG_654321.jpg')).toBeNull()
   })
 })

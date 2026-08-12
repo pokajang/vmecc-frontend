@@ -225,7 +225,10 @@ const expandFireExtinguisherCard = async (card) => {
       .catch(() => false)
   )
     return
-  await card.getByRole('button', { name: 'Open', exact: true }).click()
+  const disclosure = card.locator('button[aria-expanded]').first()
+  await expect(disclosure).toBeVisible()
+  await disclosure.click()
+  await expect(disclosure).toHaveAttribute('aria-expanded', 'true')
   await expect(card.getByText('FE Physical Condition')).toBeVisible()
 }
 
@@ -419,17 +422,10 @@ test.describe('Fire Extinguisher inspection prod smoke', () => {
       await page.getByText('Zone 1', { exact: true }).first().click()
       await expect(page.getByText('Choose Main Area')).toBeVisible()
       await page.getByText('Canteen', { exact: true }).first().click()
-      if (
-        await page
-          .getByText('Choose Location')
-          .isVisible()
-          .catch(() => false)
-      ) {
-        await page
-          .getByRole('radio', { name: /Canteen/i })
-          .nth(1)
-          .click()
-      }
+      await expect(page.getByText('Choose Location', { exact: true })).toBeVisible()
+      const canteenLocation = page.getByRole('radio', { name: /^Canteen \d+ FEs?$/i })
+      await canteenLocation.click()
+      await expect(canteenLocation).toBeChecked()
 
       await expect(page.getByText('Extinguishers', { exact: true })).toBeVisible()
       await expect(page.getByText('Inspection session unavailable')).toHaveCount(0)
@@ -509,16 +505,20 @@ test.describe('Fire Extinguisher inspection prod smoke', () => {
       await defectCard
         .getByPlaceholder('FE Physical Condition defect remarks')
         .fill(`Smoke FE defect remarks ${suffix}`)
+      const defectFileName = `fe-defect-${suffix}.png`
+      const defectDescription = `Fire extinguisher defect evidence ${suffix}`
       await setInspectionPhotoFromButton(
         defectCard.getByRole('button', { name: 'Add photo (optional)' }),
-        `fe-defect-${suffix}.png`,
+        defectFileName,
       )
       const photoModal = page.locator('.modal.show', { hasText: 'defect photos' }).last()
       await expect(photoModal).toBeVisible()
       await expect(
-        photoModal.getByRole('img', { name: new RegExp(`fe-defect-${suffix}`, 'i') }),
+        photoModal.getByRole('img', { name: 'Inspection evidence photo 1' }),
       ).toBeVisible()
+      await expect(photoModal).not.toContainText(defectFileName)
       await expect(photoModal.getByRole('textbox', { name: 'Photo description' })).toBeVisible()
+      await photoModal.getByRole('textbox', { name: 'Photo description' }).fill(defectDescription)
       await photoModal.getByRole('button', { name: 'Save' }).click()
       await expect(photoModal).toBeHidden()
       await expect(defectCard.getByRole('button', { name: 'View photos' })).toBeVisible()

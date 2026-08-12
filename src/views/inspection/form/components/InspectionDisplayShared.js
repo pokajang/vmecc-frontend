@@ -12,7 +12,10 @@ import {
 import { Camera, Trash2 } from 'lucide-react'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import PhotoEditorGallery from 'src/components/report-workflow/PhotoEditorGallery'
-import { PhotoPreview } from 'src/components/report-workflow/ReportViewComponents'
+import {
+  PhotoPreview,
+  resolvePhotoLabel,
+} from 'src/components/report-workflow/ReportViewComponents'
 import useMediaQuery from 'src/hooks/useMediaQuery'
 import { dedupePhotos } from 'src/views/inspection/inspectionSharedUtils'
 import {
@@ -50,6 +53,7 @@ export const PhotoGallery = ({
   fullWidth = false,
   showCaptionChips = true,
   presentation = 'default',
+  contextLabel = 'Inspection evidence photo',
 }) => {
   if (presentation === 'drawer-editor' && !readOnly) {
     return (
@@ -85,58 +89,68 @@ export const PhotoGallery = ({
         gap: '0.75rem',
       }}
     >
-      {visiblePhotos.map((photo, index) => (
-        <div
-          key={photo.id || `${photo.fileName || 'photo'}-${index}`}
-          className="rounded-3 border border-light-subtle p-2 d-grid gap-2"
-        >
-          <PhotoPreview photo={photo} className="workflow-photo-preview--uncropped" />
-          <div className="small text-truncate">{photo.fileName || 'Photo'}</div>
-          {readOnly ? (
-            String(photo?.description || '').trim() ? (
-              <div className="small text-body-secondary" style={{ whiteSpace: 'pre-wrap' }}>
-                {photo.description}
-              </div>
-            ) : null
-          ) : (
-            <>
-              {showDescriptionInput ? (
-                <div className="d-grid gap-2">
-                  <CFormTextarea
-                    rows={2}
-                    aria-label="Photo description"
-                    value={String(photo?.description || '')}
-                    placeholder="Describe this photo"
-                    onChange={(event) => onChangeDescription?.(photo.id, event.target.value)}
-                  />
-                  {showCaptionChips && onApplyCaption ? (
-                    <ChipRow className="inspection-photo-caption-chips">
-                      {INSPECTION_PHOTO_CAPTION_CHIPS.map((caption) => (
-                        <ChipButton key={caption} onClick={() => onApplyCaption(photo.id, caption)}>
-                          {caption}
-                        </ChipButton>
-                      ))}
-                    </ChipRow>
-                  ) : null}
+      {visiblePhotos.map((photo, index) => {
+        const photoLabel = resolvePhotoLabel({ photo, index, contextLabel })
+
+        return (
+          <div
+            key={photo.id || `${photo.fileName || 'photo'}-${index}`}
+            className={`inspection-photo-gallery__item${readOnly ? ' inspection-photo-gallery__item--read-only' : ''} d-grid gap-2`}
+          >
+            <PhotoPreview
+              photo={photo}
+              alt={photoLabel}
+              className="workflow-photo-preview--uncropped"
+            />
+            {readOnly ? (
+              String(photo?.description || '').trim() ? (
+                <div className="small text-body-secondary" style={{ whiteSpace: 'pre-wrap' }}>
+                  {photo.description}
                 </div>
-              ) : null}
-              {onRemove ? (
-                <CButton
-                  type="button"
-                  color="danger"
-                  variant="outline"
-                  size="sm"
-                  className="d-inline-flex align-items-center justify-content-center gap-1"
-                  onClick={() => onRemove(photo.id)}
-                >
-                  <Trash2 size={14} />
-                  Remove
-                </CButton>
-              ) : null}
-            </>
-          )}
-        </div>
-      ))}
+              ) : null
+            ) : (
+              <>
+                {showDescriptionInput ? (
+                  <div className="d-grid gap-2">
+                    <CFormTextarea
+                      rows={2}
+                      aria-label="Photo description"
+                      value={String(photo?.description || '')}
+                      placeholder="Describe this photo"
+                      onChange={(event) => onChangeDescription?.(photo.id, event.target.value)}
+                    />
+                    {showCaptionChips && onApplyCaption ? (
+                      <ChipRow className="inspection-photo-caption-chips">
+                        {INSPECTION_PHOTO_CAPTION_CHIPS.map((caption) => (
+                          <ChipButton
+                            key={caption}
+                            onClick={() => onApplyCaption(photo.id, caption)}
+                          >
+                            {caption}
+                          </ChipButton>
+                        ))}
+                      </ChipRow>
+                    ) : null}
+                  </div>
+                ) : null}
+                {onRemove ? (
+                  <CButton
+                    type="button"
+                    color="danger"
+                    variant="outline"
+                    size="sm"
+                    className="d-inline-flex align-items-center justify-content-center gap-1"
+                    onClick={() => onRemove(photo.id)}
+                  >
+                    <Trash2 size={14} />
+                    Remove
+                  </CButton>
+                ) : null}
+              </>
+            )}
+          </div>
+        )
+      })}
     </div>
   )
 }

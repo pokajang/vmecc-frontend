@@ -886,8 +886,10 @@ const useInspectionFormPhotos = ({
     })
   }
 
+  const getCurrentPhotoForm = () => (typeof getLatestForm === 'function' ? getLatestForm() : form)
+
   const getHydraulicPhotoList = (row, photosKey = 'photos') =>
-    getRowPhotoList(form.hydraulicChecks, row, photosKey)
+    getRowPhotoList(getCurrentPhotoForm().hydraulicChecks, row, photosKey)
   const hydraulicPhotoHandlers = createRowPhotoHandlers({
     getPhotos: getHydraulicPhotoList,
     updateRow: updateHydraulicCheck,
@@ -895,7 +897,7 @@ const useInspectionFormPhotos = ({
   })
 
   const getErAuxPhotoList = (row, photosKey = 'photos') =>
-    getRowPhotoList(form.erAuxChecks, row, photosKey)
+    getRowPhotoList(getCurrentPhotoForm().erAuxChecks, row, photosKey)
   const erAuxPhotoHandlers = createRowPhotoHandlers({
     getPhotos: getErAuxPhotoList,
     updateRow: updateErAuxCheck,
@@ -906,13 +908,14 @@ const useInspectionFormPhotos = ({
     const rowId = String(row?.id || '').trim()
     const checksKey =
       String(row?.checklistKind || '').trim() === 'oneOff' ? 'frtOneOffChecks' : 'frtDailyChecks'
-    const checks = Array.isArray(form[checksKey]) ? form[checksKey] : []
+    const currentForm = getCurrentPhotoForm()
+    const checks = Array.isArray(currentForm[checksKey]) ? currentForm[checksKey] : []
     const existing = checks.find((check) => String(check.id || '') === rowId)
     return Array.isArray(existing?.[photosKey]) ? existing[photosKey] : []
   }
 
   const getHighAnglePhotoList = (row, photosKey = defaultHighAnglePhotosKey) =>
-    getRowPhotoList(form.highAngleChecks, row, photosKey)
+    getRowPhotoList(getCurrentPhotoForm().highAngleChecks, row, photosKey)
   const highAnglePhotoHandlers = createRowPhotoHandlers({
     getPhotos: getHighAnglePhotoList,
     updateRow: updateHighAngleCheck,
@@ -921,7 +924,7 @@ const useInspectionFormPhotos = ({
 
   const getScbaPhotoList = (sectionKey, row, photosKey = 'photos') => {
     const rowId = String(row?.id || '').trim()
-    const existing = getScbaExistingCheck(form, sectionKey, rowId)
+    const existing = getScbaExistingCheck(getCurrentPhotoForm(), sectionKey, rowId)
     return Array.isArray(existing?.[photosKey]) ? existing[photosKey] : []
   }
   const scbaPhotoHandlers = createGroupedRowPhotoHandlers({
@@ -931,7 +934,7 @@ const useInspectionFormPhotos = ({
   })
 
   const getFireExtinguisherPhotoList = (row, photosKey = 'photos') =>
-    getRowPhotoList(form.fireExtinguisherChecks, row, photosKey)
+    getRowPhotoList(getCurrentPhotoForm().fireExtinguisherChecks, row, photosKey)
   const fireExtinguisherPhotoHandlers = createRowPhotoHandlers({
     getPhotos: getFireExtinguisherPhotoList,
     updateRow: updateFireExtinguisherCheck,

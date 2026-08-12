@@ -1,5 +1,10 @@
 import { expect, test } from '@playwright/test'
 
+const apiBaseUrl =
+  process.env.VMECC_E2E_BROWSER_API_URL ||
+  process.env.VMECC_E2E_API_URL ||
+  'http://127.0.0.1:8000/api'
+
 const user = {
   id: 901,
   name: 'Dashboard Reviewer',
@@ -117,7 +122,7 @@ const installDashboardStubs = async (page) => {
   let notificationRead = false
   let notificationsDeleted = false
 
-  await page.route('http://localhost:8000/api/**', (route) => {
+  await page.route(`${apiBaseUrl}/**`, (route) => {
     const path = new URL(route.request().url()).pathname.replace(/^\/api/, '')
     const method = route.request().method()
 

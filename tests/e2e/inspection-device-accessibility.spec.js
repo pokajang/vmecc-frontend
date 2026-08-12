@@ -1,6 +1,10 @@
 import { devices, expect, test } from '@playwright/test'
 
 const baseURL = process.env.VMECC_E2E_BASE_URL || 'http://127.0.0.1:3000'
+const apiBaseUrl =
+  process.env.VMECC_E2E_BROWSER_API_URL ||
+  process.env.VMECC_E2E_API_URL ||
+  'http://127.0.0.1:8000/api'
 
 const auditUser = {
   id: 904,
@@ -15,7 +19,7 @@ const json = (route, body) =>
   route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
 
 const installApiStubs = async (page) => {
-  await page.route('**:8000/api/**', (route) => {
+  await page.route(`${apiBaseUrl}/**`, (route) => {
     const path = new URL(route.request().url()).pathname.replace(/^\/api/, '')
 
     if (path === '/auth/session') {

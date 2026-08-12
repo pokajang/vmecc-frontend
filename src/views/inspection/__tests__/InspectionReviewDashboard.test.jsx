@@ -46,4 +46,36 @@ describe('InspectionReviewDashboard', () => {
     expect(screen.getByText('Queue General Inspection?')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Confirm Queue' })).toBeTruthy()
   })
+
+  it('shows report evidence descriptions without exposing device filenames or card chrome', () => {
+    const sentinelFileName = 'DEVICE_PRIVATE_REVIEW_EVIDENCE_987654.jpg'
+    const { container } = render(
+      <InspectionReviewDashboard
+        items={[
+          {
+            ...pendingGeneralItem,
+            form: {
+              ...pendingGeneralItem.form,
+              photos: [
+                {
+                  id: 'report-photo-1',
+                  fileName: sentinelFileName,
+                  url: 'data:image/png;base64,a',
+                  description: 'Damaged pump coupling',
+                },
+              ],
+            },
+          },
+        ]}
+        onSubmit={vi.fn()}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'View' }))
+
+    expect(screen.getByRole('img', { name: 'Damaged pump coupling' })).toBeTruthy()
+    expect(screen.getByText('Damaged pump coupling')).toBeTruthy()
+    expect(screen.queryByText(sentinelFileName)).toBeNull()
+    expect(container.querySelector('.inspection-review-photo-card')).toBeNull()
+  })
 })

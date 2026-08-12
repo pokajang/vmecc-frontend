@@ -134,8 +134,8 @@ export const classifyReportPhotoFailure = (error) => {
   return status ? HTTP_FAILURE_CODES.get(status) || 'processing_failed' : 'network_error'
 }
 
-export const reportPhotoFailureMessage = (code, fileName = '') => {
-  const label = fileName ? `"${fileName}"` : 'Selected photo'
+export const reportPhotoFailureMessage = (code) => {
+  const label = 'Selected photo'
   const messages = {
     invalid_file: `${label} is empty or invalid.`,
     unsupported_file_type: `${label} is not a supported camera image.`,
@@ -330,9 +330,10 @@ export const uploadReportPhotosSequentially = async ({
       notifyItemState('attaching', { percent: 100, photo })
     } catch (error) {
       if (error?.name === 'AbortError') throw error
+      const failureCode = classifyReportPhotoFailure(error)
       const failure = {
-        code: classifyReportPhotoFailure(error),
-        message: error.message,
+        code: failureCode,
+        message: reportPhotoFailureMessage(failureCode),
         fileName: originalFile?.name,
       }
       notifyItemState('failed', { failure, percent: 0 })

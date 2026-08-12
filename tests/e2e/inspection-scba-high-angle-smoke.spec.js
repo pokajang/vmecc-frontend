@@ -513,14 +513,18 @@ test.describe('SCBA and High Angle inspection prod smoke', () => {
       await scbaCard
         .getByPlaceholder('High Pressure Hose issue remarks')
         .fill(`Smoke SCBA hose evidence ${suffix}`)
+      const scbaFileName = `scba-issue-${suffix}.png`
+      const scbaDescription = `SCBA hose issue evidence ${suffix}`
       await setInspectionPhotoFromButton(
         scbaCard.getByRole('button', { name: 'Add photo (optional)' }).first(),
-        `scba-issue-${suffix}.png`,
+        scbaFileName,
       )
       const photoModal = page.locator('.modal.show', { hasText: 'issue photos' }).last()
       await expect(
-        photoModal.getByRole('img', { name: new RegExp(`scba-issue-${suffix}`, 'i') }),
+        photoModal.getByRole('img', { name: 'Inspection evidence photo 1' }),
       ).toBeVisible()
+      await expect(photoModal).not.toContainText(scbaFileName)
+      await photoModal.getByRole('textbox', { name: 'Photo description' }).fill(scbaDescription)
       await photoModal.getByRole('button', { name: 'Save' }).click()
       await expect(photoModal).toBeHidden()
       await expect(scbaCard.getByRole('button', { name: 'View photos' })).toBeVisible()
@@ -561,7 +565,17 @@ test.describe('SCBA and High Angle inspection prod smoke', () => {
       if (!page.isClosed()) await saveScreenshot(page, testInfo, report, 'scba-failure')
       throw error
     } finally {
-      await cleanupReport(api, csrfToken, report.report_uid, report)
+      let cleanupCsrfToken = csrfToken
+      try {
+        const session = await apiRequest(api, report, 'get', '/auth/session', {
+          expected: [200],
+          note: 'refresh csrf token for cleanup',
+        })
+        cleanupCsrfToken = session.body?.csrf_token || cleanupCsrfToken
+      } catch {
+        // Use the login token if the refresh endpoint is unavailable.
+      }
+      await cleanupReport(api, cleanupCsrfToken, report.report_uid, report)
       if (report.report_uid && report.cleanup.some((item) => item.ok === false)) {
         writeJsonArtifact('scba-manual-cleanup.json', {
           report_uid: report.report_uid,
@@ -615,30 +629,34 @@ test.describe('SCBA and High Angle inspection prod smoke', () => {
             })
             .first()
           await expect(highAngleCard).toBeVisible()
-          const openButton = highAngleCard
-            .getByRole('button', { name: 'Open', exact: true })
+          const disclosure = highAngleCard
+            .getByRole('button', { name: /^Locking Carabiner - CT - Steel - S\b/i })
             .first()
-          if (await openButton.isVisible().catch(() => false)) {
-            await openButton.click()
-          }
+          await expect(disclosure).toBeVisible()
+          await disclosure.click()
+          await expect(highAngleCard.getByRole('button', { name: 'Not Good' })).toBeVisible()
           await highAngleCard.getByRole('button', { name: 'Not Good' }).click()
           await expect(highAngleCard.getByText('Issue evidence')).toBeVisible()
           await highAngleCard
             .getByPlaceholder('Issue remarks')
             .fill(`Smoke High Angle gate evidence ${suffix}`)
+          const highAngleFileName = `high-angle-issue-${suffix}.png`
+          const highAngleDescription = `High Angle gate evidence ${suffix}`
           await setInspectionPhotoFromButton(
             highAngleCard.getByRole('button', { name: 'Add photo (optional)' }),
-            `high-angle-issue-${suffix}.png`,
+            highAngleFileName,
           )
           const highAnglePhotoModal = page
             .locator('.modal.show', { hasText: 'condition issue photos' })
             .last()
           await expect(highAnglePhotoModal).toBeVisible()
           await expect(
-            highAnglePhotoModal.getByRole('img', {
-              name: new RegExp(`high-angle-issue-${suffix}`, 'i'),
-            }),
+            highAnglePhotoModal.getByRole('img', { name: 'Inspection evidence photo 1' }),
           ).toBeVisible()
+          await expect(highAnglePhotoModal).not.toContainText(highAngleFileName)
+          await highAnglePhotoModal
+            .getByRole('textbox', { name: 'Photo description' })
+            .fill(highAngleDescription)
           await highAnglePhotoModal.getByRole('button', { name: 'Save' }).click()
           await expect(highAnglePhotoModal).toBeHidden()
           await expect(highAngleCard.getByRole('button', { name: 'View photos' })).toBeVisible()
@@ -679,7 +697,17 @@ test.describe('SCBA and High Angle inspection prod smoke', () => {
       if (!page.isClosed()) await saveScreenshot(page, testInfo, report, 'high-angle-failure')
       throw error
     } finally {
-      await cleanupReport(api, csrfToken, report.report_uid, report)
+      let cleanupCsrfToken = csrfToken
+      try {
+        const session = await apiRequest(api, report, 'get', '/auth/session', {
+          expected: [200],
+          note: 'refresh csrf token for cleanup',
+        })
+        cleanupCsrfToken = session.body?.csrf_token || cleanupCsrfToken
+      } catch {
+        // Use the login token if the refresh endpoint is unavailable.
+      }
+      await cleanupReport(api, cleanupCsrfToken, report.report_uid, report)
       if (report.report_uid && report.cleanup.some((item) => item.ok === false)) {
         writeJsonArtifact('high-angle-manual-cleanup.json', {
           report_uid: report.report_uid,

@@ -361,7 +361,8 @@ describe('InspectionDetailSection', () => {
     fireEvent.click(screen.getByRole('button', { name: 'View photos' }))
 
     expect(screen.getByText('ADO-001 - FE Physical Condition defect photos')).toBeTruthy()
-    expect(screen.getByText('dent.jpg')).toBeTruthy()
+    expect(screen.getByRole('img', { name: 'Cylinder defect' })).toBeTruthy()
+    expect(screen.queryByText('dent.jpg')).toBeNull()
     expect(document.querySelector('.modal.show')).toBeTruthy()
     expectItemizedReadOnlyFindings()
   })

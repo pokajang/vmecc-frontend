@@ -67,8 +67,8 @@
 .photo-editor-gallery .photo-editor-gallery__preview {
   width: 100%;
   padding: 0;
-  border: 1px solid var(--photo-editor-gallery-border-color);
-  background: var(--cui-tertiary-bg);
+  border: 0;
+  background: transparent;
 }
 
 .photo-editor-gallery__caption-options {

@@ -45,19 +45,18 @@ test('captures inspection mobile parity states', async ({ page }, testInfo) => {
     const section = page.locator(
       `[data-matrix-case="${typeKey}:complete-with-next-location:mobile"]`,
     )
+    const isHse = typeKey === 'health-safety-environment-inspection'
+    const evidenceActionName = isHse
+      ? /^Add observation photo/i
+      : new RegExp(`^${INSPECTION_REPORT_EVIDENCE_COPY.mobilePopulatedActionLabel}`, 'i')
+    const evidenceTitle = isHse ? 'Observation photo' : INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle
     await expect(section).toBeVisible()
     await section.screenshot({ path: path.join(outputDir, `${typeKey}-list.png`) })
 
-    await section
-      .getByRole('button', {
-        name: new RegExp(`^${INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel}`, 'i'),
-      })
-      .click()
+    await section.getByRole('button', { name: evidenceActionName }).click()
     const drawer = page.locator('.offcanvas.show').last()
     await expect(drawer).toBeVisible()
-    await expect(
-      drawer.getByText(INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle, { exact: true }),
-    ).toBeVisible()
+    await expect(drawer.getByText(evidenceTitle, { exact: true })).toBeVisible()
     await drawer.screenshot({ path: path.join(outputDir, `${typeKey}-evidence-drawer.png`) })
     await drawer.getByRole('button', { name: /Close/i }).click()
     await expect(drawer).toBeHidden()

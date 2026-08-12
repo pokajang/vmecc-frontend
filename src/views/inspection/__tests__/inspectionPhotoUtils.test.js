@@ -94,5 +94,6 @@ describe('inspection photo utilities', () => {
         code: 'low_memory',
       }),
     )
+    expect(onFailure.mock.calls.flat().join(' ')).not.toContain('large-camera-photo.jpg')
   })
 })

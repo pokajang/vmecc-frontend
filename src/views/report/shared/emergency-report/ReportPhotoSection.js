@@ -4,7 +4,10 @@ import { Camera, Trash2 } from 'lucide-react'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import CreateActionButton from 'src/components/CreateActionButton'
 import PhotoEditorGallery from 'src/components/report-workflow/PhotoEditorGallery'
-import { ReportPhotoImage } from 'src/components/report-workflow/ReportViewComponents'
+import {
+  ReportPhotoImage,
+  resolvePhotoLabel,
+} from 'src/components/report-workflow/ReportViewComponents'
 import {
   deleteReportMedia,
   getReportPhotoBytes,
@@ -143,12 +146,12 @@ const ReportPhotoSection = ({
         pushToast?.(
           failure.code === 'total_size_exceeded'
             ? 'The combined managed photo size exceeds the report limit.'
-            : reportPhotoFailureMessage(failure.code, failure.fileName),
+            : reportPhotoFailureMessage(failure.code),
           { title: 'Upload warning', color: 'warning' },
         ),
       )
       if (source === 'camera' && failures.length) {
-        setFallback(reportPhotoFailureMessage(failures[0].code, failures[0].fileName))
+        setFallback(reportPhotoFailureMessage(failures[0].code))
       }
     } catch (error) {
       if (error?.name !== 'AbortError' && source === 'camera') {
@@ -321,35 +324,38 @@ const ReportPhotoSection = ({
           />
         ) : (
           <div className="row g-3">
-            {rows.map((photo, index) => (
-              <div key={photo.id || `${photo.fileName}-${index}`} className="col-12 col-md-6">
-                <div className="rounded-3 border p-2 d-grid gap-2 h-100">
-                  <ReportPhotoImage
-                    photo={photo}
-                    alt={photo.description || photo.fileName || `Report photo ${index + 1}`}
-                    className="report-photo-editor__image"
-                  />
-                  <CFormTextarea
-                    size="sm"
-                    rows={2}
-                    maxLength={descriptionMaxLength}
-                    aria-label={`Description for ${photo.fileName || `photo ${index + 1}`}`}
-                    value={String(photo.description || '')}
-                    placeholder="Describe this photo (optional)"
-                    onChange={(event) => updatePhotoDescription(photo, event.target.value)}
-                  />
-                  <CButton
-                    type="button"
-                    color="danger"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setRemoveTarget(photo)}
-                  >
-                    <Trash2 size={14} className="me-1" /> Remove
-                  </CButton>
+            {rows.map((photo, index) => {
+              const photoKey = photo.id || `${photo.fileName}-${index}`
+              return (
+                <div key={photoKey} className="col-12 col-md-6">
+                  <div className="report-photo-editor__item d-grid gap-2 h-100">
+                    <ReportPhotoImage
+                      photo={photo}
+                      alt={resolvePhotoLabel({ photo, index, contextLabel: 'Report photo' })}
+                      className="report-photo-editor__image"
+                    />
+                    <CFormTextarea
+                      size="sm"
+                      rows={2}
+                      maxLength={descriptionMaxLength}
+                      aria-label={`Description for photo ${index + 1}`}
+                      value={String(photo.description || '')}
+                      placeholder="Describe this photo (optional)"
+                      onChange={(event) => updatePhotoDescription(photo, event.target.value)}
+                    />
+                    <CButton
+                      type="button"
+                      color="danger"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setRemoveTarget(photo)}
+                    >
+                      <Trash2 size={14} className="me-1" /> Remove
+                    </CButton>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )
       ) : emptyMessage ? (

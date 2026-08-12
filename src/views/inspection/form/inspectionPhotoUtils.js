@@ -220,8 +220,18 @@ export const normalizePhotoFailure = (failure = {}, fileName = '') => {
   const fallbackFile = asString(fileName).trim()
   const message =
     rawMessage || DEFAULT_FAILURE_MESSAGES[code] || DEFAULT_FAILURE_MESSAGES.processing_failed
-  const wrappedMessage = fallbackFile ? message.replace(/".*"/, `"${fallbackFile}"`) : message
-  return { ...failure, code, message: wrappedMessage }
+  const publicMessage = fallbackFile
+    ? message
+        .replace(
+          new RegExp(`(["'])${fallbackFile.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\1`, 'gi'),
+          'the selected photo',
+        )
+        .replace(
+          new RegExp(fallbackFile.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'),
+          'selected photo',
+        )
+    : message
+  return { ...failure, code, message: publicMessage }
 }
 
 export const buildPhotoFailure = (code, message = '') => ({
@@ -240,27 +250,23 @@ const isImageFile = (file = {}) => {
 }
 
 const classifyValidationFailure = (file = {}, isCameraUpload = false) => {
-  const fileName = asString(file?.name, 'selected file')
   if (!file || typeof file !== 'object') {
     return buildPhotoFailure('invalid_file', 'Unable to read selected file.')
   }
 
   const normalizedSize = Number(file.size)
   if (!Number.isFinite(normalizedSize) || normalizedSize <= 0) {
-    return buildPhotoFailure(
-      'invalid_file',
-      `The selected file "${fileName}" is empty or not readable.`,
-    )
+    return buildPhotoFailure('invalid_file', 'The selected photo is empty or not readable.')
   }
 
   if (!isImageFile(file)) {
-    return buildPhotoFailure('unsupported_file_type', `"${fileName}" is not an image file.`)
+    return buildPhotoFailure('unsupported_file_type', 'The selected file is not an image file.')
   }
 
   if (isCameraUpload && normalizedSize > CAMERA_SOURCE_MAX_BYTES) {
     return buildPhotoFailure(
       'file_too_large',
-      `"${fileName}" is over 30 MB. Retake it with the in-app camera or choose a smaller photo.`,
+      'The selected photo is over 30 MB. Retake it with the in-app camera or choose a smaller photo.',
     )
   }
 
@@ -414,10 +420,7 @@ export const prepareInspectionPhotoUploads = async ({
     prepareFile: isCameraUpload ? undefined : prepareInspectionPhotoFile,
     onFailure: (failure) =>
       notifyFailureOnce(
-        buildPhotoFailure(
-          failure.code,
-          failure.message || reportPhotoFailureMessage(failure.code, failure.fileName),
-        ),
+        buildPhotoFailure(failure.code, failure.message || reportPhotoFailureMessage(failure.code)),
       ),
   })
   for (const photo of uploaded) {

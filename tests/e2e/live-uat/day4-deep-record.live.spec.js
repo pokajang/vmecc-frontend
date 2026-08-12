@@ -342,6 +342,11 @@ const auditInspectionRecordViaList = async ({
       `${refreshedUrl.pathname}${refreshedUrl.search}`,
       `${moduleKey}: durable detail location`,
     ).toBe(durableDetailLocation)
+
+    await expect(
+      page.getByText(displayId, { exact: true }).first(),
+      `${moduleKey}: refreshed detail identity`,
+    ).toBeVisible({ timeout: 15_000 })
   }
   const metrics = await auditRenderedSurface(page)
   expect(

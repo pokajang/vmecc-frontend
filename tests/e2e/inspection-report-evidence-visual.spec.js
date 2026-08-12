@@ -36,21 +36,21 @@ test.describe('inspection report-level evidence', () => {
   }, testInfo) => {
     await page.setViewportSize({ width: 900, height: 900 })
     const section = await openGeneralMatrixCase(page, 'desktop')
-    const evidenceCard = section.locator('.inspection-general-evidence-card')
+    const evidenceSection = section.locator('.inspection-general-evidence-section')
 
     await expect(
-      evidenceCard.getByText(INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle, { exact: true }),
+      evidenceSection.getByText(INSPECTION_REPORT_EVIDENCE_COPY.sectionTitle, { exact: true }),
     ).toBeVisible()
     await expect(
-      evidenceCard.getByText(INSPECTION_REPORT_EVIDENCE_COPY.helperText, { exact: true }),
+      evidenceSection.getByText(INSPECTION_REPORT_EVIDENCE_COPY.helperText, { exact: true }),
     ).toBeVisible()
     await expect(
-      evidenceCard.getByLabel(INSPECTION_REPORT_EVIDENCE_COPY.remarksLabel),
+      evidenceSection.getByLabel(INSPECTION_REPORT_EVIDENCE_COPY.remarksLabel),
     ).toBeVisible()
-    await expect(evidenceCard.getByRole('button', { name: 'Take photo' })).toBeVisible()
-    await expect(evidenceCard.getByRole('button', { name: 'Upload photo' })).toBeVisible()
+    await expect(evidenceSection.getByRole('button', { name: 'Take photo' })).toBeVisible()
+    await expect(evidenceSection.getByRole('button', { name: 'Upload photo' })).toBeVisible()
 
-    await evidenceCard.screenshot({
+    await evidenceSection.screenshot({
       path: path.join(testInfo.outputDir, 'inspection-report-evidence-desktop.png'),
     })
   })
@@ -97,12 +97,13 @@ test.describe('inspection report-level evidence', () => {
     await findingDrawer.getByText('Add finding photos', { exact: true }).click()
     const findingPhotosDrawer = page.getByRole('dialog', { name: 'Finding Photos' })
     await expect(findingPhotosDrawer.getByText('Finding Photos', { exact: true })).toBeVisible()
-    await expect(findingPhotosDrawer.getByText('0 photos attached', { exact: true })).toBeVisible()
-    await expect(
-      findingPhotosDrawer.getByRole('button', { name: 'Done with Finding Photos' }),
-    ).toBeVisible()
+    await expect(findingPhotosDrawer.getByText('No photos.', { exact: true })).toBeVisible()
+    const closeFindingPhotos = findingPhotosDrawer.getByRole('button', {
+      name: 'Close Finding Photos',
+    })
+    await expect(closeFindingPhotos).toBeVisible()
 
-    await findingPhotosDrawer.getByRole('button', { name: 'Done with Finding Photos' }).click()
+    await closeFindingPhotos.click()
     await expect(findingPhotosDrawer).toBeHidden()
     await expect(findingDrawer).toBeVisible()
   })

@@ -30,7 +30,7 @@ const openHighAngleInspection = async (page) => {
 
   const typeRadio = page.getByRole('radio', { name: /High Angle Rescue Equipment/i })
   if (!(await typeRadio.isVisible().catch(() => false))) {
-    await page.getByRole('radio', { name: /Show more/i }).click()
+    await page.getByRole('button', { name: /Show more/i }).click()
   }
   await typeRadio.click()
   await page.getByRole('radio', { name: /Response Kit #1/i }).click()
@@ -65,7 +65,7 @@ test('high angle mobile drawer stages changes until save', async ({ page }) => {
 
     const row = page.locator('[data-inspection-high-angle-row-id]').first()
     await expect(row).toBeVisible()
-    await row.locator('.card-header[role="button"]').click()
+    await row.locator('.inspection-entity-card__toggle').click()
 
     let drawer = page.locator('.offcanvas.show').last()
     await expect(drawer).toBeVisible()
@@ -86,7 +86,7 @@ test('high angle mobile drawer stages changes until save', async ({ page }) => {
     await discardDrawer.getByRole('button', { name: 'Discard', exact: true }).click()
     await expect(page.locator('.offcanvas.show')).toHaveCount(0)
 
-    await row.locator('.card-header[role="button"]').click()
+    await row.locator('.inspection-entity-card__toggle').click()
     drawer = page.locator('.offcanvas.show').last()
     await drawer.getByRole('button', { name: 'Good', exact: true }).click()
     await drawer.getByRole('button', { name: 'Save', exact: true }).click()

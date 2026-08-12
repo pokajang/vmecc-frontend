@@ -174,7 +174,13 @@ describe('InspectionDisplayShared', () => {
       <InspectionPhotoViewerModal
         viewer={{
           title: 'Pump Panel photos',
-          photos: [{ id: 'photo-1', fileName: 'pump-panel.jpg', url: 'data:image/png;base64,a' }],
+          photos: [
+            {
+              id: 'photo-1',
+              fileName: 'DEVICE_PRIVATE_PUMP_PANEL_987654.jpg',
+              url: 'data:image/png;base64,a',
+            },
+          ],
           readOnly: true,
         }}
         onClose={vi.fn()}
@@ -186,7 +192,9 @@ describe('InspectionDisplayShared', () => {
     expect(document.querySelector('.modal.show')).toBeNull()
     expect(within(drawer).getByText('Pump Panel photos')).toBeTruthy()
     expect(within(drawer).getByText('1 photo')).toBeTruthy()
-    expect(within(drawer).getByText('pump-panel.jpg')).toBeTruthy()
+    expect(within(drawer).queryByText('DEVICE_PRIVATE_PUMP_PANEL_987654.jpg')).toBeNull()
+    expect(within(drawer).getByRole('img', { name: 'Inspection evidence photo 1' })).toBeTruthy()
+    expect(within(drawer).getByRole('img').closest('.border')).toBeNull()
   })
 
   it('uses the drawer editor presentation only for an editable mobile photo viewer', () => {

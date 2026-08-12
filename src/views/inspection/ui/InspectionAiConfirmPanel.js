@@ -4,11 +4,14 @@ import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import CreateActionButton from 'src/components/CreateActionButton'
 import ResponsiveChoiceSelector from 'src/components/report-workflow/ResponsiveChoiceSelector'
 import TypeManagerModal from 'src/components/report-workflow/TypeManagerModal'
-import { ReportPhotoImage } from 'src/components/report-workflow/ReportViewComponents'
+import {
+  ReportPhotoImage,
+  resolvePhotoLabel,
+} from 'src/components/report-workflow/ReportViewComponents'
 import useMediaQuery from 'src/hooks/useMediaQuery'
-import { recordTypeUsage } from './typeUsageStorage'
-import { ACTIVE_CARD_STYLE, TOGGLE_CARD_PROPS } from './typeOptionUtils'
-import useIncidentTypeManager, { INCIDENT_TYPE_TOGGLE_VALUE } from './useIncidentTypeManager'
+import { recordTypeUsage } from '../typeUsageStorage'
+import { ACTIVE_CARD_STYLE, TOGGLE_CARD_PROPS } from '../typeOptionUtils'
+import useIncidentTypeManager, { INCIDENT_TYPE_TOGGLE_VALUE } from '../useIncidentTypeManager'
 import {
   buildSecondaryOptions,
   CompletedStep,
@@ -204,10 +207,9 @@ const InspectionAiConfirmPanel = ({
           <div className="fw-semibold text-muted">{uploadedPhotoLabel}</div>
           <ReportPhotoImage
             photo={photo}
-            alt={photo.fileName}
+            alt={resolvePhotoLabel({ photo, contextLabel: 'Uploaded photo' })}
             style={{ maxHeight: 200, maxWidth: '100%', borderRadius: 8, objectFit: 'contain' }}
           />
-          <div className="text-body-secondary small mt-1">{photo.fileName}</div>
         </div>
 
         <div className="rounded-3 border bg-body p-3 d-grid gap-2">

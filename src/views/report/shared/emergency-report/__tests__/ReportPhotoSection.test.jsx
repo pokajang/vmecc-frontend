@@ -15,7 +15,7 @@ vi.mock('src/services/api/reportMediaApi', () => ({
   REPORT_PHOTO_MAX_TOTAL_BYTES: 12 * 1024 * 1024,
   deleteReportMedia: mediaMocks.remove,
   getReportPhotoBytes: (photo) => Number(photo?.sizeBytes || 0),
-  reportPhotoFailureMessage: (code, fileName = '') => `${code}:${fileName}`,
+  reportPhotoFailureMessage: (code) => `${code}:`,
   uploadReportPhotosSequentially: mediaMocks.upload,
 }))
 
@@ -199,7 +199,7 @@ describe('ReportPhotoSection', () => {
       leaseId: 'lease-1',
     })
     expect(pushToast).toHaveBeenCalledWith(
-      'invalid_file:bad.jpg',
+      'invalid_file:',
       expect.objectContaining({ title: 'Upload warning' }),
     )
     expect(uploadInput.value).toBe('')
@@ -288,9 +288,12 @@ describe('ReportPhotoSection', () => {
       />,
     )
 
-    fireEvent.change(screen.getByRole('textbox', { name: 'Description for one.jpg' }), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Description for photo 1' }), {
       target: { value: 'Command position\nPortrait evidence' },
     })
+
+    expect(screen.queryByText('one.jpg')).toBeNull()
+    expect(screen.queryByRole('img', { name: 'one.jpg' })).toBeNull()
 
     expect(onChange).toHaveBeenCalledWith([
       expect.objectContaining({ id: 'one', description: 'Command position\nPortrait evidence' }),

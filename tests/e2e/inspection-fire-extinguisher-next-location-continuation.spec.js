@@ -471,8 +471,10 @@ const expandRow = async (card) => {
     return
   }
 
-  const openButton = card.getByRole('button', { name: 'Open', exact: true })
-  await openButton.click()
+  const disclosure = card.locator('button[aria-expanded]').first()
+  await expect(disclosure).toBeVisible()
+  await disclosure.click()
+  await expect(disclosure).toHaveAttribute('aria-expanded', 'true')
   await expect(card.getByText('FE Physical Condition')).toBeVisible()
 }
 

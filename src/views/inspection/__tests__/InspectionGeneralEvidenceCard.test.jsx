@@ -243,7 +243,8 @@ describe('InspectionGeneralEvidenceCard', () => {
     fireEvent.click(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel))
     fireEvent.click(screen.getByRole('button', { name: 'Upload photo' }))
 
-    expect(screen.getByText('evidence.jpg')).toBeTruthy()
+    expect(screen.getByRole('img', { name: 'Photo 1' })).toBeTruthy()
+    expect(screen.queryByText('evidence.jpg')).toBeNull()
     expect(screen.getByText('1 photo ready to save')).toBeTruthy()
     expect(
       screen.queryByText(`${INSPECTION_REPORT_EVIDENCE_COPY.mobilePopulatedActionLabel} (1)`),
@@ -288,7 +289,8 @@ describe('InspectionGeneralEvidenceCard', () => {
     fireEvent.click(screen.getByText(INSPECTION_REPORT_EVIDENCE_COPY.mobileActionLabel))
     fireEvent.click(screen.getByRole('button', { name: 'Upload photo' }))
 
-    expect(screen.getByText('evidence.jpg')).toBeTruthy()
+    expect(screen.getByRole('img', { name: 'Photo 1' })).toBeTruthy()
+    expect(screen.queryByText('evidence.jpg')).toBeNull()
     expect(screen.getByText('1 photo ready to save')).toBeTruthy()
 
     fireEvent.click(
@@ -303,10 +305,10 @@ describe('InspectionGeneralEvidenceCard', () => {
         'You have photo changes ready to save. Save them before closing, or discard the changes.',
       ),
     ).toBeTruthy()
-    expect(screen.getByText('evidence.jpg')).toBeTruthy()
+    expect(screen.queryByText('evidence.jpg')).toBeNull()
 
     fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }))
-    expect(screen.getByText('evidence.jpg')).toBeTruthy()
+    expect(screen.getByRole('img', { name: 'Photo 1' })).toBeTruthy()
 
     fireEvent.click(
       screen.getByRole('button', {
@@ -400,14 +402,15 @@ describe('InspectionGeneralEvidenceCard', () => {
     })
     fireEvent.click(screen.getByRole('button', { name: 'Upload photo' }))
 
-    expect(screen.getByText('staged.jpg')).toBeTruthy()
+    expect(screen.getByRole('img', { name: 'Staged description' })).toBeTruthy()
+    expect(screen.queryByText('staged.jpg')).toBeNull()
     expect(screen.getByDisplayValue('Edited unsaved description')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Edit description for Photo 2' }))
     expect(screen.getByLabelText('Description for Photo 2').value).toBe('Staged description')
 
     fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
 
-    expect(screen.queryByText('staged.jpg')).toBeNull()
+    expect(screen.queryByRole('img', { name: 'Staged description' })).toBeNull()
     expect(screen.queryByDisplayValue('Staged description')).toBeNull()
     expect(screen.queryByDisplayValue('Edited unsaved description')).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Edit description for Photo 1' }))

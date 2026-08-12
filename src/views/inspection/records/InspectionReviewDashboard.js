@@ -10,7 +10,10 @@ import {
   CModalTitle,
 } from '@coreui/react'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
-import { ReportPhotoImage } from 'src/components/report-workflow/ReportViewComponents'
+import {
+  ReportPhotoImage,
+  resolvePhotoLabel,
+} from 'src/components/report-workflow/ReportViewComponents'
 import useMediaQuery from 'src/hooks/useMediaQuery'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import { INSPECTION_REPORT_EVIDENCE_COPY } from '../inspectionReportEvidenceCopy'
@@ -170,21 +173,20 @@ const InspectionReviewInlinePhotoGroups = ({ groups = [] }) => {
           <div className="inspection-review-photo-group__title">{group.title}</div>
           <div className="inspection-review-photo-group__grid">
             {group.photos.map((photo, index) => (
-              <div className="inspection-review-photo-card" key={photo.key || index}>
+              <div className="inspection-review-photo-item" key={photo.key || index}>
                 {photo.url ? (
                   <ReportPhotoImage
                     photo={photo}
-                    className="inspection-review-photo-card__image"
-                    alt={photo.description || photo.fileName || 'Inspection photo'}
+                    className="inspection-review-photo-item__image"
+                    alt={resolvePhotoLabel({
+                      photo,
+                      index,
+                      contextLabel: 'Inspection evidence photo',
+                    })}
                   />
                 ) : null}
-                {photo.fileName ? (
-                  <div className="inspection-review-photo-card__name" title={photo.fileName}>
-                    {photo.fileName}
-                  </div>
-                ) : null}
                 {photo.description ? (
-                  <div className="inspection-review-photo-card__description">
+                  <div className="inspection-review-photo-item__description">
                     {photo.description}
                   </div>
                 ) : null}

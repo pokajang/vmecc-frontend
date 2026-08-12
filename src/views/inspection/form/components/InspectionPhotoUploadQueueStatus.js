@@ -66,6 +66,16 @@ const batchDetail = ({ complete, summary }) => {
   return details.join(' · ')
 }
 
+const publicFailureMessage = (message, fileName) => {
+  const text = String(message || '').trim()
+  const privateName = String(fileName || '').trim()
+  if (!privateName) return text
+  const escapedName = privateName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return text
+    .replace(new RegExp(`(["'])${escapedName}\\1`, 'gi'), 'the selected photo')
+    .replace(new RegExp(escapedName, 'gi'), 'selected photo')
+}
+
 const InspectionPhotoUploadQueueStatus = ({
   items = [],
   onDismissCompletedBatch,
@@ -114,17 +124,16 @@ const InspectionPhotoUploadQueueStatus = ({
 
             {summary.failedItems.length > 0 ? (
               <div className="inspection-photo-upload-failures d-grid gap-2 mt-3">
-                {summary.failedItems.map((item) => {
-                  const failureMessage = String(item.failure?.message || '').trim()
+                {summary.failedItems.map((item, index) => {
+                  const positionLabel = `Photo ${index + 1}`
+                  const failureMessage = publicFailureMessage(item.failure?.message, item.fileName)
                   return (
                     <div
                       key={item.clientUploadId}
                       className="rounded-3 border bg-body p-2 d-flex align-items-start gap-2"
                     >
                       <div className="min-w-0 flex-grow-1">
-                        <div className="small fw-semibold text-truncate">
-                          {item.fileName || 'Photo'}
-                        </div>
+                        <div className="small fw-semibold">{positionLabel}</div>
                         <div className="small text-danger mt-1">
                           {failureMessage || 'This photo needs attention.'}
                         </div>
@@ -146,7 +155,7 @@ const InspectionPhotoUploadQueueStatus = ({
                           color="secondary"
                           variant="ghost"
                           size="sm"
-                          aria-label={`Remove ${item.fileName || 'photo'} from upload queue`}
+                          aria-label={`Remove ${positionLabel} from upload queue`}
                           onClick={() => onRemoveItem?.(item.clientUploadId)}
                         >
                           <X size={14} aria-hidden="true" />

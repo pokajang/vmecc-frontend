@@ -27,9 +27,11 @@ describe('InspectionPhotoUploadQueueStatus', () => {
           {
             batchId: 'batch-1',
             clientUploadId: '4',
-            fileName: 'four.jpg',
+            fileName: 'DEVICE_PRIVATE_FAILED_UPLOAD_987654.jpg',
             status: 'failed',
-            failure: { message: 'The server could not decode this photo.' },
+            failure: {
+              message: '"DEVICE_PRIVATE_FAILED_UPLOAD_987654.jpg" could not be decoded.',
+            },
           },
           { batchId: 'batch-1', clientUploadId: '5', fileName: 'five.jpg', status: 'selected' },
         ]}
@@ -39,7 +41,9 @@ describe('InspectionPhotoUploadQueueStatus', () => {
 
     expect(screen.getByText('Uploading 2 of 5 photos…')).toBeTruthy()
     expect(screen.getByText('2 in progress · 1 needs attention')).toBeTruthy()
-    expect(screen.getByText('four.jpg')).toBeTruthy()
+    expect(screen.getByText('Photo 1')).toBeTruthy()
+    expect(screen.queryByText('DEVICE_PRIVATE_FAILED_UPLOAD_987654.jpg')).toBeNull()
+    expect(screen.getByText('the selected photo could not be decoded.')).toBeTruthy()
     expect(screen.queryByText('one.jpg')).toBeNull()
     expect(screen.queryByText('three.jpg')).toBeNull()
     expect(screen.queryByRole('button', { name: /clear completed/i })).toBeNull()
@@ -102,7 +106,8 @@ describe('InspectionPhotoUploadQueueStatus', () => {
     })
 
     expect(onDismissCompletedBatch).not.toHaveBeenCalled()
-    expect(screen.getByText('failed.jpg')).toBeTruthy()
+    expect(screen.getByText('Photo 1')).toBeTruthy()
+    expect(screen.queryByText('failed.jpg')).toBeNull()
     expect(screen.getByRole('button', { name: /retry/i })).toBeTruthy()
   })
 })

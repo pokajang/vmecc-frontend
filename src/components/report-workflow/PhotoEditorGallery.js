@@ -1,7 +1,7 @@
 import React, { useEffect, useId, useRef, useState } from 'react'
 import { CButton, CFormLabel, CFormTextarea } from '@coreui/react'
 import { Pencil, Trash2 } from 'lucide-react'
-import { PhotoPreview } from './ReportViewComponents'
+import { PhotoPreview, resolvePhotoLabel } from './ReportViewComponents'
 
 const getPhotoIdentity = (photo, index) =>
   String(photo?.id || photo?.mediaId || photo?.url || photo?.fileName || `photo-${index}`)
@@ -18,6 +18,7 @@ const PhotoEditorGallery = ({
   emptyMessage = 'No photos yet. Upload photos to continue.',
   showDescriptionInput = true,
   className = '',
+  contextLabel = 'Photo',
 }) => {
   const galleryId = useId().replace(/:/g, '')
   const [editingPhotoId, setEditingPhotoId] = useState('')
@@ -58,9 +59,6 @@ const PhotoEditorGallery = ({
             <div className="photo-editor-gallery__header">
               <div className="photo-editor-gallery__title-group">
                 <div className="fw-semibold">{positionLabel}</div>
-                {photo?.fileName ? (
-                  <div className="small text-body-secondary text-truncate">{photo.fileName}</div>
-                ) : null}
                 {hasDescription && !isEditingDescription ? (
                   <div className="photo-editor-gallery__description-state small text-success">
                     Description added
@@ -161,7 +159,7 @@ const PhotoEditorGallery = ({
             <PhotoPreview
               photo={photo}
               preferFullSize
-              alt={`${positionLabel}${photo?.fileName ? `: ${photo.fileName}` : ''}`}
+              alt={resolvePhotoLabel({ photo, index, contextLabel })}
               className="workflow-photo-preview--uncropped photo-editor-gallery__preview"
             />
           </section>

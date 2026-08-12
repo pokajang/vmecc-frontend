@@ -3578,7 +3578,8 @@ describe('InspectionForm workflow', () => {
     })
 
     expect(await screen.findByText('Radio Tetra - defect photos')).toBeTruthy()
-    expect(screen.getAllByText('er-aux-defect.png').length).toBeGreaterThan(0)
+    expect(screen.getByRole('img', { name: 'Inspection evidence photo 1' })).toBeTruthy()
+    expect(screen.queryByText('er-aux-defect.png')).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Save' }))
 
     await waitFor(() => {
@@ -3608,6 +3609,28 @@ describe('InspectionForm workflow', () => {
             id: 'office:radio-tetra',
             defectPhotos: [expect.objectContaining({ fileName: 'er-aux-defect.png' })],
             photos: [expect.objectContaining({ fileName: 'er-aux-additional.png' })],
+          }),
+        ]),
+      )
+    })
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Photo description' }), {
+      target: { value: 'Additional radio evidence' },
+    })
+
+    await waitFor(() => {
+      latestForm = onChange.mock.calls[onChange.mock.calls.length - 1]?.[0]
+      expect(latestForm?.erAuxChecks).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: 'office:radio-tetra',
+            defectPhotos: [expect.objectContaining({ fileName: 'er-aux-defect.png' })],
+            photos: [
+              expect.objectContaining({
+                fileName: 'er-aux-additional.png',
+                description: 'Additional radio evidence',
+              }),
+            ],
           }),
         ]),
       )
@@ -3649,13 +3672,14 @@ describe('InspectionForm workflow', () => {
     fireEvent.click(screen.getByRole('button', { name: 'View photos' }))
     expect(await screen.findByText('Radio Tetra - defect photos')).toBeTruthy()
     expect(screen.getByText('1 photo')).toBeTruthy()
-    expect(screen.getByText('defect-photo.png')).toBeTruthy()
+    expect(screen.getByRole('img', { name: 'Inspection evidence photo 1' })).toBeTruthy()
+    expect(screen.queryByText('defect-photo.png')).toBeNull()
 
     fireEvent.click(screen.getByRole('button', { name: 'Remove' }))
 
     await waitFor(() => {
       expect(screen.getByText('0 photos')).toBeTruthy()
-      expect(screen.queryByText('defect-photo.png')).toBeNull()
+      expect(screen.queryByRole('img', { name: 'Inspection evidence photo 1' })).toBeNull()
     })
     await waitFor(() => {
       const latestForm = onChange.mock.calls[onChange.mock.calls.length - 1]?.[0]

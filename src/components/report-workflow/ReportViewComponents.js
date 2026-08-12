@@ -1,5 +1,12 @@
 import React, { useState } from 'react'
-import { CCard, CCardBody, CCol, CRow } from '@coreui/react'
+import { CCol, CRow } from '@coreui/react'
+
+export const resolvePhotoLabel = ({ photo, index = 0, contextLabel = 'Evidence photo' } = {}) => {
+  const description = String(photo?.description || '').trim()
+  if (description) return description
+  const safeContext = String(contextLabel || '').trim() || 'Evidence photo'
+  return `${safeContext} ${Number(index || 0) + 1}`
+}
 
 export const DetailField = ({ label, children, xs = 12, md = 4, mobileLayout = 'stacked' }) => (
   <CCol xs={xs} md={md}>
@@ -73,7 +80,7 @@ export const ReportPhotoImage = ({
 
 export const PhotoPreview = ({
   photo,
-  alt = 'Inspection photo',
+  alt = 'Evidence photo',
   className = '',
   preferFullSize = false,
 }) => {
@@ -97,7 +104,7 @@ export const PhotoPreview = ({
         <ReportPhotoImage
           photo={photo}
           preferFullSize={preferFullSize}
-          alt={preferFullSize ? alt : photo.fileName || alt}
+          alt={alt}
           className="workflow-photo-preview__image"
           onLoad={(event) => {
             const image = event.currentTarget
@@ -125,22 +132,21 @@ export const PhotosGrid = ({ photos }) => {
         <CRow className="g-3">
           {photos.map((photo, i) => (
             <CCol key={photo.id || i} xs={12} sm={6} md={4} lg={3}>
-              <CCard className="rounded-3 border border-light-subtle overflow-hidden h-100">
-                <PhotoPreview photo={photo} alt={`Inspection photo ${i + 1}`} />
-                <CCardBody className="p-2">
-                  {photo.fileName ? (
-                    <div className="small text-body-secondary">{photo.fileName}</div>
-                  ) : null}
-                  {String(photo.description || '').trim() ? (
-                    <div
-                      className="small text-body-secondary mt-1"
-                      style={{ whiteSpace: 'pre-wrap' }}
-                    >
-                      {photo.description}
-                    </div>
-                  ) : null}
-                </CCardBody>
-              </CCard>
+              <div className="workflow-photo-grid__item d-grid gap-2 h-100">
+                <PhotoPreview
+                  photo={photo}
+                  alt={resolvePhotoLabel({
+                    photo,
+                    index: i,
+                    contextLabel: 'Resolution evidence photo',
+                  })}
+                />
+                {String(photo.description || '').trim() ? (
+                  <div className="small text-body-secondary" style={{ whiteSpace: 'pre-wrap' }}>
+                    {photo.description}
+                  </div>
+                ) : null}
+              </div>
             </CCol>
           ))}
         </CRow>

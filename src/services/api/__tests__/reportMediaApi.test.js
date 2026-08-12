@@ -251,4 +251,12 @@ describe('report media API', () => {
     expect(classifyReportPhotoFailure({ status: 429 })).toBe('rate_limited')
     expect(reportPhotoFailureMessage('session_expired')).toContain('session expired')
   })
+
+  it('keeps device filenames out of user-facing failure messages', () => {
+    const privateName = 'DEVICE_PRIVATE_UPLOAD_987654.jpg'
+    const message = reportPhotoFailureMessage('image_decode_failed', privateName)
+
+    expect(message).toContain('Selected photo')
+    expect(message).not.toContain(privateName)
+  })
 })

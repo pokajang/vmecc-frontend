@@ -12,7 +12,7 @@ import TableLoader from 'src/components/TableLoader'
 
 // Fetches the attachment through the authenticated session so the raw URL
 // is never usable without an active cookie. Falls back to a neutral placeholder on error.
-const AttachmentImage = ({ attachmentId, originalName, localPreview, style, onClick }) => {
+const AttachmentImage = ({ attachmentId, localPreview, style, onClick }) => {
   const src = getMessageAttachmentUrl(attachmentId)
   const { blobUrl, error } = useAuthenticatedImageUrl(src, localPreview || null)
   if (error)
@@ -36,7 +36,7 @@ const AttachmentImage = ({ attachmentId, originalName, localPreview, style, onCl
   return (
     <img
       src={blobUrl}
-      alt={originalName || 'image'}
+      alt="Message image"
       className="d-block"
       style={style}
       onClick={() => onClick(blobUrl)}
@@ -220,7 +220,6 @@ const ChatThread = ({
                           {hasImage && (
                             <AttachmentImage
                               attachmentId={message.attachment.id}
-                              originalName={message.attachment.original_name}
                               localPreview={message._localPreview}
                               style={{
                                 maxWidth: 260,

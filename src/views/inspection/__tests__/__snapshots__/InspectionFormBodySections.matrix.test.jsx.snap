@@ -125,23 +125,18 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
         style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.75rem;"
       >
         <div
-          class="rounded-3 border border-light-subtle p-2 d-grid gap-2"
+          class="inspection-photo-gallery__item d-grid gap-2"
         >
           <div
             class="workflow-photo-preview workflow-photo-preview--uncropped"
           >
             <img
-              alt="Inspection photo"
+              alt="Inspection evidence photo 1"
               class="workflow-photo-preview__image"
               decoding="async"
               loading="lazy"
               src="data:image/png;base64,AA=="
             />
-          </div>
-          <div
-            class="small text-truncate"
-          >
-            Photo
           </div>
           <div
             class="d-grid gap-2"
@@ -508,23 +503,18 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
         style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.75rem;"
       >
         <div
-          class="rounded-3 border border-light-subtle p-2 d-grid gap-2"
+          class="inspection-photo-gallery__item d-grid gap-2"
         >
           <div
             class="workflow-photo-preview workflow-photo-preview--uncropped"
           >
             <img
-              alt="Inspection photo"
+              alt="Inspection evidence photo 1"
               class="workflow-photo-preview__image"
               decoding="async"
               loading="lazy"
               src="data:image/png;base64,AA=="
             />
-          </div>
-          <div
-            class="small text-truncate"
-          >
-            Photo
           </div>
           <div
             class="d-grid gap-2"
@@ -891,23 +881,18 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
         style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.75rem;"
       >
         <div
-          class="rounded-3 border border-light-subtle p-2 d-grid gap-2"
+          class="inspection-photo-gallery__item d-grid gap-2"
         >
           <div
             class="workflow-photo-preview workflow-photo-preview--uncropped"
           >
             <img
-              alt="Inspection photo"
+              alt="Inspection evidence photo 1"
               class="workflow-photo-preview__image"
               decoding="async"
               loading="lazy"
               src="data:image/png;base64,AA=="
             />
-          </div>
-          <div
-            class="small text-truncate"
-          >
-            Photo
           </div>
           <div
             class="d-grid gap-2"
@@ -1319,23 +1304,18 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
         style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.75rem;"
       >
         <div
-          class="rounded-3 border border-light-subtle p-2 d-grid gap-2"
+          class="inspection-photo-gallery__item d-grid gap-2"
         >
           <div
             class="workflow-photo-preview workflow-photo-preview--uncropped"
           >
             <img
-              alt="Inspection photo"
+              alt="Inspection evidence photo 1"
               class="workflow-photo-preview__image"
               decoding="async"
               loading="lazy"
               src="data:image/png;base64,AA=="
             />
-          </div>
-          <div
-            class="small text-truncate"
-          >
-            Photo
           </div>
           <div
             class="d-grid gap-2"
@@ -1845,23 +1825,18 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
         style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.75rem;"
       >
         <div
-          class="rounded-3 border border-light-subtle p-2 d-grid gap-2"
+          class="inspection-photo-gallery__item d-grid gap-2"
         >
           <div
             class="workflow-photo-preview workflow-photo-preview--uncropped"
           >
             <img
-              alt="Inspection photo"
+              alt="Inspection evidence photo 1"
               class="workflow-photo-preview__image"
               decoding="async"
               loading="lazy"
               src="data:image/png;base64,AA=="
             />
-          </div>
-          <div
-            class="small text-truncate"
-          >
-            Photo
           </div>
           <div
             class="d-grid gap-2"
@@ -2228,23 +2203,18 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
         style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.75rem;"
       >
         <div
-          class="rounded-3 border border-light-subtle p-2 d-grid gap-2"
+          class="inspection-photo-gallery__item d-grid gap-2"
         >
           <div
             class="workflow-photo-preview workflow-photo-preview--uncropped"
           >
             <img
-              alt="Inspection photo"
+              alt="Inspection evidence photo 1"
               class="workflow-photo-preview__image"
               decoding="async"
               loading="lazy"
               src="data:image/png;base64,AA=="
             />
-          </div>
-          <div
-            class="small text-truncate"
-          >
-            Photo
           </div>
           <div
             class="d-grid gap-2"
@@ -2611,23 +2581,18 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
         style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.75rem;"
       >
         <div
-          class="rounded-3 border border-light-subtle p-2 d-grid gap-2"
+          class="inspection-photo-gallery__item d-grid gap-2"
         >
           <div
             class="workflow-photo-preview workflow-photo-preview--uncropped"
           >
             <img
-              alt="Inspection photo"
+              alt="Inspection evidence photo 1"
               class="workflow-photo-preview__image"
               decoding="async"
               loading="lazy"
               src="data:image/png;base64,AA=="
             />
-          </div>
-          <div
-            class="small text-truncate"
-          >
-            Photo
           </div>
           <div
             class="d-grid gap-2"

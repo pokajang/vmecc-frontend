@@ -1,5 +1,11 @@
 const { expect, test } = require('@playwright/test')
 
+const apiBaseUrl =
+  process.env.VMECC_E2E_BROWSER_API_URL ||
+  process.env.VMECC_E2E_API_URL ||
+  'http://127.0.0.1:8000/api'
+const frontendOrigin = new URL(process.env.VMECC_E2E_BASE_URL || 'http://127.0.0.1:3000').origin
+
 const systemAdministrator = {
   id: 1,
   name: 'System Admin',
@@ -25,7 +31,7 @@ const queuePayload = (kind) => ({
 
 const installApiMocks = async (page) => {
   const methods = []
-  await page.route('http://localhost:8000/api/**', async (route) => {
+  await page.route(`${apiBaseUrl}/**`, async (route) => {
     const request = route.request()
     const url = new URL(request.url())
     methods.push(request.method())
@@ -43,7 +49,7 @@ const installApiMocks = async (page) => {
       status: 200,
       contentType: 'application/json',
       headers: {
-        'Access-Control-Allow-Origin': 'http://127.0.0.1:4179',
+        'Access-Control-Allow-Origin': frontendOrigin,
         'Access-Control-Allow-Credentials': 'true',
       },
       body: JSON.stringify(payload),

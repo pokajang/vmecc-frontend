@@ -9,13 +9,13 @@ afterEach(cleanup)
 const photos = [
   {
     id: 'photo-1',
-    fileName: 'command-position.jpg',
+    fileName: 'DEVICE_PRIVATE_COMMAND_POSITION_987654.jpg',
     url: '/report-media/photo-1',
     description: '',
   },
   {
     id: 'photo-2',
-    fileName: 'long-operational-evidence-file-name.jpg',
+    fileName: 'DEVICE_PRIVATE_OPERATIONAL_EVIDENCE_987654.jpg',
     url: '/report-media/photo-2',
     description: 'Crew assembled',
   },
@@ -30,6 +30,10 @@ describe('PhotoEditorGallery', () => {
     expect(screen.getByText('Photo 2 of 2')).toBeTruthy()
     expect(screen.getByText('Description added')).toBeTruthy()
     expect(screen.queryByRole('textbox')).toBeNull()
+    expect(screen.queryByText(photos[0].fileName)).toBeNull()
+    expect(screen.queryByText(photos[1].fileName)).toBeNull()
+    expect(screen.getByRole('img', { name: 'Photo 1' })).toBeTruthy()
+    expect(screen.getByRole('img', { name: 'Crew assembled' })).toBeTruthy()
 
     const editButton = screen.getByRole('button', {
       name: 'Edit description for Photo 1',
