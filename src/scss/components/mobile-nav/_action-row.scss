@@ -144,6 +144,29 @@
     gap: 0.5rem;
   }
 
+  .inspection-form-actions .action-row-thumb--compact-sticky {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: stretch !important;
+  }
+
+  .inspection-form-actions .action-row-thumb--compact-sticky .action-row-thumb-actions {
+    display: flex;
+    flex-direction: column;
+    margin-inline: 0 !important;
+  }
+
+  .inspection-form-actions .action-row-thumb--compact-sticky .action-row-thumb-actions > *,
+  .inspection-form-actions .action-row-thumb--compact-sticky .action-row-thumb-actions .btn {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+
+  .inspection-form-actions
+    .action-row-thumb--compact-sticky:has(.action-row-thumb-actions > :nth-child(2))
+    + .action-row-thumb-spacer--compact {
+    height: calc(var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 9rem);
+  }
+
   .action-row-thumb--compact-sticky .btn {
     min-height: 36px;
     padding-top: 0.35rem;

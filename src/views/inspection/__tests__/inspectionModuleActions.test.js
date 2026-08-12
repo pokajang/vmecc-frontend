@@ -52,6 +52,7 @@ const buildSubmitActionHarness = ({
   persistError,
   inspectSessionError,
   sourceDraftId = '',
+  editReportId = '',
 } = {}) => {
   const draftRecord = {
     id: 'inspection-record-1',
@@ -97,6 +98,7 @@ const buildSubmitActionHarness = ({
     isInspectionQueueableError: vi.fn((error) => Number(error?.status || 0) >= 500),
     enqueueInspectionSubmission,
     editingRecord,
+    editReportId,
     refreshQueueRows,
     onSubmitted: vi.fn(),
     sourceDraftId,
@@ -216,6 +218,7 @@ describe('submitInspectionRecordAction', () => {
 
     expect(submitInspectionSessionReport).not.toHaveBeenCalled()
     expect(persistInspectionRecord).toHaveBeenCalledWith(7, draftRecord, {
+      isUpdate: true,
       submissionKey: 'inspection-submission-key',
     })
   })
@@ -249,10 +252,26 @@ describe('submitInspectionRecordAction', () => {
     await submitInspectionRecordAction(args)
 
     expect(persistInspectionRecord).toHaveBeenCalledWith(7, draftRecord, {
+      isUpdate: false,
       submissionKey: 'inspection-submission-key',
       sourceDraftId: 'drf_inspection_resumed',
     })
     expect(args.clearInspectionDraft).toHaveBeenCalledWith(7, 'drf_inspection_resumed')
+  })
+
+  it('forces edit-route identity even when the loaded record is temporarily unavailable', async () => {
+    const { args, persistInspectionRecord } = buildSubmitActionHarness({
+      editReportId: 'report-from-route',
+      record: { id: 'new-preview-id' },
+    })
+
+    await submitInspectionRecordAction(args)
+
+    expect(persistInspectionRecord).toHaveBeenCalledWith(
+      7,
+      expect.objectContaining({ id: 'report-from-route' }),
+      expect.objectContaining({ isUpdate: true }),
+    )
   })
 
   it('surfaces an unexpected legacy FRT seeded-row validation error without implying all compartments are required', async () => {

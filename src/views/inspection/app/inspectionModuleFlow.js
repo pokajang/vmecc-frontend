@@ -123,6 +123,7 @@ export const buildInspectionReviewContext = ({
           form: sessionReviewForm,
           mode: reviewWorkspace.mode,
           editingRecord: reviewEditingRecord,
+          editRecordId: reviewWorkspace?.recordId,
           reportTypeSlug: 'inspection',
           reportTypeIdPrefix,
           sequence: nextReportSequence,

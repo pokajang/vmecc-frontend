@@ -179,7 +179,13 @@ export const loadInspectionRecordsForScope = ({ userId, scope = 'mine' }) => {
 
 const upsertInspectionRecordToApi = async (
   row,
-  { submissionKey = '', sourceDraftId = '', expectedVersion, dutyConfirmationToken = '' } = {},
+  {
+    submissionKey = '',
+    sourceDraftId = '',
+    expectedVersion,
+    dutyConfirmationToken = '',
+    isUpdate = false,
+  } = {},
 ) => {
   if (
     !row ||
@@ -191,8 +197,32 @@ const upsertInspectionRecordToApi = async (
   const reportUid = String(row?.id || '').trim()
   if (!reportUid) return false
 
-  const latestRows = await fetchInspectionRecords()
-  const latest = latestRows.find((item) => String(item?.id || '').trim() === reportUid)
+  let latest = null
+  if (isUpdate) {
+    try {
+      const response = await apiRequest(`/reports/${encodeURIComponent(reportUid)}`)
+      latest = normalizeReportRecords(response?.data ? [response.data] : [])[0] || null
+    } catch (requestError) {
+      if (Number(requestError?.status || 0) !== 404) throw requestError
+      const error = new Error(
+        'The inspection being edited no longer exists. Refresh the report list.',
+      )
+      error.code = 'inspection_update_target_missing'
+      error.status = 404
+      throw error
+    }
+    if (!latest) {
+      const error = new Error(
+        'The inspection being edited could not be loaded. Refresh the report list.',
+      )
+      error.code = 'inspection_update_target_missing'
+      error.status = 404
+      throw error
+    }
+  } else {
+    const latestRows = await fetchInspectionRecords()
+    latest = latestRows.find((item) => String(item?.id || '').trim() === reportUid) || null
+  }
   const body = {
     display_id: String(row?.displayId || row?.id || '').trim(),
     report_type: INSPECTION_TYPE,

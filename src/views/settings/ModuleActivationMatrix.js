@@ -14,6 +14,10 @@ import { useDispatch, useSelector } from 'react-redux'
 import ButtonLoader from 'src/components/ButtonLoader'
 import { fetchModuleActivation, saveModuleActivation } from 'src/services/apiClient'
 import { normalizeModuleActivationPayload } from 'src/utils/modules'
+import {
+  getModuleActivationRevision,
+  publishModuleActivation,
+} from 'src/utils/moduleActivationSync'
 
 const ROOT_KEY = '__root__'
 
@@ -179,11 +183,12 @@ const ModuleActivationMatrix = () => {
   useEffect(() => {
     let active = true
     const load = async () => {
+      const revision = getModuleActivationRevision()
       setLoading(true)
       setError(null)
       try {
         const payload = normalizeModuleActivationPayload(await fetchModuleActivation())
-        if (!active) return
+        if (!active || revision !== getModuleActivationRevision()) return
         setModuleActivation(payload)
         setConfiguredDraft(payload.configured || {})
         dispatch({ type: 'set', moduleActivation: payload })
@@ -246,6 +251,7 @@ const ModuleActivationMatrix = () => {
       setModuleActivation(payload)
       setConfiguredDraft(payload.configured || {})
       dispatch({ type: 'set', moduleActivation: payload })
+      publishModuleActivation(payload)
       setToast(
         <CToast autohide delay={3500} color="success">
           <CToastBody>Module activation settings updated.</CToastBody>
@@ -285,10 +291,6 @@ const ModuleActivationMatrix = () => {
           {!saving ? 'Save' : null}
         </CButton>
       </div>
-
-      {moduleActivation?.forceAllEnabled && (
-        <CAlert color="warning">Emergency override is active. All modules are forced on.</CAlert>
-      )}
 
       {error && <CAlert color="danger">{error}</CAlert>}
 

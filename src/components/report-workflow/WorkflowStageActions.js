@@ -19,6 +19,7 @@ const WorkflowStageActions = ({
   isSaving = false,
   saveDisabled = false,
   primaryDisabled = false,
+  primaryFirst = false,
   showPrimary = true,
   auxiliaryActions = null,
   leading = null,
@@ -52,6 +53,17 @@ const WorkflowStageActions = ({
     ) : (
       leading || statusNode
     )
+  const primaryAction = showPrimary ? (
+    <CButton
+      className="workflow-stage-actions__primary"
+      type={primaryType}
+      color="primary"
+      disabled={primaryDisabled || isSaving}
+      onClick={primaryType === 'submit' ? undefined : onPrimary}
+    >
+      {primaryLabel}
+    </CButton>
+  ) : null
 
   return (
     <div
@@ -67,6 +79,7 @@ const WorkflowStageActions = ({
         statusMessage={visibleStatus}
         ariaLabel={ariaLabel}
       >
+        {primaryFirst ? primaryAction : null}
         {typeof onBack === 'function' ? (
           <CButton type="button" color="light" onClick={onBack}>
             {backLabel}
@@ -89,16 +102,7 @@ const WorkflowStageActions = ({
             {isSaving ? 'Saving…' : saveLabel}
           </CButton>
         ) : null}
-        {showPrimary ? (
-          <CButton
-            type={primaryType}
-            color="primary"
-            disabled={primaryDisabled || isSaving}
-            onClick={primaryType === 'submit' ? undefined : onPrimary}
-          >
-            {primaryLabel}
-          </CButton>
-        ) : null}
+        {!primaryFirst ? primaryAction : null}
       </FormActionGroup>
     </div>
   )

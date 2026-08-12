@@ -183,7 +183,6 @@ const AppHeader = () => {
           registry: [],
           configured: {},
           effective: {},
-          forceAllEnabled: false,
           fallbackMode: true,
         },
       })

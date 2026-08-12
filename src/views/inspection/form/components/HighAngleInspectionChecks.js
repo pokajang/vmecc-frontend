@@ -507,6 +507,7 @@ export const HighAngleInspectionChecks = ({
                   onEditItem={onUpdateItem ? openItemModal : undefined}
                   onDeleteItem={onDeleteItem ? requestDeleteItem : undefined}
                   expanded={expanded}
+                  interactionMode={useMobileDrawer && !readOnly ? 'drawer' : 'inline'}
                   active={
                     activeRowId === rowId ||
                     mobileDetailRowId === rowId ||

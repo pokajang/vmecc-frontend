@@ -48,5 +48,24 @@ describe('WorkflowStageActions', () => {
     )
 
     expect(screen.getAllByText('Draft saved')).toHaveLength(1)
+    expect(screen.getByRole('button', { name: 'Continue' }).classList).toContain(
+      'workflow-stage-actions__primary',
+    )
+  })
+
+  it('places the primary action first when the mobile workflow requests it', () => {
+    render(
+      <WorkflowStageActions
+        primaryFirst
+        auxiliaryActions={<button type="button">Save Draft</button>}
+        onPrimary={() => {}}
+        primaryLabel="Continue to Review"
+      />,
+    )
+
+    expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual([
+      'Continue to Review',
+      'Save Draft',
+    ])
   })
 })

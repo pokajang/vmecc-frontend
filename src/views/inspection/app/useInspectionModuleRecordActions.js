@@ -32,6 +32,7 @@ const useInspectionModuleRecordActions = ({
   deleteRecord,
   deleteTarget,
   editingRecord,
+  editReportId,
   loadWorkspace,
   navigate,
   prepareContinuationPrompt,
@@ -131,6 +132,7 @@ const useInspectionModuleRecordActions = ({
         isInspectionQueueableError,
         enqueueInspectionSubmission,
         editingRecord,
+        editReportId,
         refreshQueueRows,
         sourceDraftId:
           options.clearWorkingStateOnSuccess === false ? '' : String(sourceDraftId || '').trim(),
@@ -142,6 +144,7 @@ const useInspectionModuleRecordActions = ({
     [
       clearWorkingState,
       editingRecord,
+      editReportId,
       navigate,
       prepareContinuationPrompt,
       pushToast,

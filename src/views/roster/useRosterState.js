@@ -609,9 +609,13 @@ const useRosterState = (
       const teamObj = teamsRef.current.find((t) => String(t.id) === String(teamId))
       const payload = teamObj ? { team_id: teamObj.id, team: teamObj.name } : null
       if (idx > -1) {
+        const previousShift = next[idx].shifts?.[shiftSlug] || {}
         next[idx] = {
           ...next[idx],
-          shifts: { ...next[idx].shifts, [shiftSlug]: payload },
+          shifts: {
+            ...next[idx].shifts,
+            [shiftSlug]: payload ? { ...previousShift, ...payload } : null,
+          },
         }
       } else {
         next.push({ date, shifts: { [shiftSlug]: payload } })
@@ -629,20 +633,45 @@ const useRosterState = (
     setEditMode(false)
   }
 
-  // Build entries array for save/publish: [{ date, shifts: [{ shift, team_id }] }]
-  const buildEntries = () =>
-    filtered.map((row) => ({
-      date: row.date,
-      shifts: allShifts.map((s) => ({
-        shift: s.slug,
-        team_id: row.shifts?.[s.slug]?.team_id != null ? Number(row.shifts[s.slug].team_id) : null,
-      })),
-    }))
+  // Send only changed cells. Publishing additionally includes visible draft cells,
+  // but never turns absent cells into implicit deletes.
+  const buildEntries = ({ publish = false } = {}) => {
+    const originalByDate = new Map(originalRoster.map((row) => [row.date, row]))
+    const publishable = new Set(publish ? filtered.map((row) => row.date) : [])
+
+    return roster.flatMap((row) => {
+      const original = originalByDate.get(row.date)
+      const shifts = allShifts.flatMap((shiftDefinition) => {
+        const slug = shiftDefinition.slug
+        const currentShift = row.shifts?.[slug] || null
+        const originalShift = original?.shifts?.[slug] || null
+        const currentTeamId = currentShift?.team_id != null ? Number(currentShift.team_id) : null
+        const originalTeamId = originalShift?.team_id != null ? Number(originalShift.team_id) : null
+        const changed = currentTeamId !== originalTeamId
+        const shouldPublishDraft =
+          publish &&
+          publishable.has(row.date) &&
+          currentTeamId !== null &&
+          currentShift?.status === 'draft'
+        if (!changed && !shouldPublishDraft) return []
+
+        return [
+          {
+            shift: slug,
+            team_id: currentTeamId,
+            expected_updated_at: originalShift?.updated_at || null,
+          },
+        ]
+      })
+
+      return shifts.length > 0 ? [{ date: row.date, shifts }] : []
+    })
+  }
 
   const handleSaveDraft = async () => {
     const entries = buildEntries()
     if (entries.length === 0) {
-      setStatusMessage('Nothing to save.')
+      setStatusMessage('No roster changes to save.')
       setTimeout(() => setStatusMessage(null), 2500)
       setEditMode(false)
       return
@@ -663,9 +692,9 @@ const useRosterState = (
   }
 
   const handlePublish = async () => {
-    const entries = buildEntries()
+    const entries = buildEntries({ publish: true })
     if (entries.length === 0) {
-      setStatusMessage('Nothing to publish.')
+      setStatusMessage('No draft roster changes to publish.')
       setTimeout(() => setStatusMessage(null), 2500)
       setEditMode(false)
       return

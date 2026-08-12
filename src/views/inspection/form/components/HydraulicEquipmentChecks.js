@@ -313,6 +313,7 @@ export const HydraulicEquipmentChecks = ({
                 readOnly={readOnly}
                 showBody={!useMobileDrawer || readOnly}
                 active={useMobileDrawer && mobileDetailRowId === String(row.id || '')}
+                interactionMode={useMobileDrawer && !readOnly ? 'drawer' : 'inline'}
                 onOpenDetails={
                   useMobileDrawer && !readOnly
                     ? (nextRow) => openMobileDetailDrawer(nextRow, current)

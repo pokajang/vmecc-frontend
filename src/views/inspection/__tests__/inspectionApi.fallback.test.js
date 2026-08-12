@@ -94,4 +94,59 @@ describe('inspectionApi local fallback policy', () => {
     expect(body.payload.queueId).toBeUndefined()
     expect(body.payload.description).toBe('Done')
   })
+
+  it('never creates a replacement report when an edit target is missing', async () => {
+    vi.stubEnv('VITE_REPORT_API_TYPES', '*')
+    apiRequest.mockRejectedValue(Object.assign(new Error('Not found'), { status: 404 }))
+    const { persistInspectionRecord } = await import('../inspectionApi')
+
+    await expect(
+      persistInspectionRecord(
+        'user-1',
+        {
+          id: 'missing-report',
+          reportType: 'inspection',
+          status: 'Submitted',
+        },
+        { isUpdate: true },
+      ),
+    ).rejects.toMatchObject({ code: 'inspection_update_target_missing' })
+
+    expect(apiRequest).toHaveBeenCalledTimes(1)
+    expect(apiRequest).toHaveBeenCalledWith('/reports/missing-report')
+  })
+
+  it('loads the exact report when updating an authorized cross-user record', async () => {
+    vi.stubEnv('VITE_REPORT_API_TYPES', '*')
+    apiRequest.mockImplementation(async (path) => {
+      if (path === '/reports/cross-user-report') {
+        return {
+          data: {
+            id: 'cross-user-report',
+            reportType: 'inspection',
+            version: 4,
+          },
+        }
+      }
+      return { data: { id: 'cross-user-report' } }
+    })
+    const { persistInspectionRecord } = await import('../inspectionApi')
+
+    await persistInspectionRecord(
+      'admin-user',
+      {
+        id: 'cross-user-report',
+        reportType: 'inspection',
+        status: 'Submitted',
+      },
+      { isUpdate: true },
+    )
+
+    expect(apiRequest).toHaveBeenNthCalledWith(1, '/reports/cross-user-report')
+    expect(apiRequest).toHaveBeenNthCalledWith(
+      2,
+      '/reports/cross-user-report',
+      expect.objectContaining({ method: 'PUT' }),
+    )
+  })
 })

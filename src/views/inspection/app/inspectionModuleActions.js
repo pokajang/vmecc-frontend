@@ -159,6 +159,7 @@ export const submitInspectionRecordAction = async ({
   isInspectionQueueableError,
   enqueueInspectionSubmission,
   editingRecord,
+  editReportId = '',
   refreshQueueRows,
   submitInspectionSessionReport,
   clearWorkingStateOnSuccess = true,
@@ -169,12 +170,21 @@ export const submitInspectionRecordAction = async ({
   if (submitLockRef.current) return
   submitLockRef.current = true
   setIsSubmitting(true)
-  const submissionKey = makeInspectionSubmissionKey(userId, record)
-  const inspectionSessionUid = text(record?.inspectionSessionUid || record?.inspection_session_uid)
+  const normalizedEditReportId = text(editReportId)
+  const effectiveRecord = normalizedEditReportId
+    ? { ...record, id: normalizedEditReportId }
+    : record
+  const submissionKey = makeInspectionSubmissionKey(userId, effectiveRecord)
+  const inspectionSessionUid = text(
+    effectiveRecord?.inspectionSessionUid || effectiveRecord?.inspection_session_uid,
+  )
   const editingRecordKind = text(editingRecord?.recordKind).toLowerCase()
   const hasPersistedEditingRecord =
     Boolean(text(editingRecord?.id)) && !['draft', 'queued'].includes(editingRecordKind)
-  const isUpdate = Number(record?.version || 0) > 0 || hasPersistedEditingRecord
+  const isUpdate =
+    Boolean(normalizedEditReportId) ||
+    Number(effectiveRecord?.version || 0) > 0 ||
+    hasPersistedEditingRecord
   const useSessionSubmit = Boolean(inspectionSessionUid) && !isUpdate
   const sourceDraftOptions = sourceDraftId ? { sourceDraftId } : {}
   try {
@@ -191,18 +201,22 @@ export const submitInspectionRecordAction = async ({
     const saved = useSessionSubmit
       ? await submitInspectionSessionReport?.({
           sessionUid: inspectionSessionUid,
-          displayId: record.displayId,
+          displayId: effectiveRecord.displayId,
           submissionKey,
           ...sourceDraftOptions,
-          reportRemarks: record.reportRemarks,
-          photos: record.photos,
-          inspectedAt: record.inspectedAt,
-          submittedAt: record.submittedAt,
-          sessionVersion: record.inspectionSessionVersion,
+          reportRemarks: effectiveRecord.reportRemarks,
+          photos: effectiveRecord.photos,
+          inspectedAt: effectiveRecord.inspectedAt,
+          submittedAt: effectiveRecord.submittedAt,
+          sessionVersion: effectiveRecord.inspectionSessionVersion,
         })
-      : await persistInspectionRecord(userId, record, { submissionKey, ...sourceDraftOptions })
+      : await persistInspectionRecord(userId, effectiveRecord, {
+          submissionKey,
+          isUpdate,
+          ...sourceDraftOptions,
+        })
     if (!saved) throw new Error('Unable to save this report in database/API. Please try again.')
-    const nextContinuationPrompt = prepareContinuationPrompt(record)
+    const nextContinuationPrompt = prepareContinuationPrompt(effectiveRecord)
     await reloadRecords()
     if (clearWorkingStateOnSuccess) {
       await (sourceDraftId
@@ -211,9 +225,9 @@ export const submitInspectionRecordAction = async ({
     }
     setDraftVersion((prev) => prev + 1)
     if (clearWorkingStateOnSuccess) clearWorkingState()
-    onSubmitted?.(saved, record)
+    onSubmitted?.(saved, effectiveRecord)
     pushToast(
-      `${reportTypeLabel} report ${saved.displayId || record.displayId} ${
+      `${reportTypeLabel} report ${saved.displayId || effectiveRecord.displayId} ${
         isUpdate ? 'updated' : 'submitted'
       }.`,
       {
@@ -228,7 +242,7 @@ export const submitInspectionRecordAction = async ({
       const queued = enqueueInspectionSubmission({
         userId,
         record: {
-          ...record,
+          ...effectiveRecord,
           submissionKey,
           ...(sourceDraftId ? { sourceDraftId } : {}),
         },
@@ -239,7 +253,7 @@ export const submitInspectionRecordAction = async ({
       if (queued) {
         refreshQueueRows()
         if (clearWorkingStateOnSuccess) clearWorkingState()
-        onSubmitted?.(queued, record)
+        onSubmitted?.(queued, effectiveRecord)
         pushToast('Report saved to this device and queued for sync.', {
           title: 'Queued for sync',
           color: 'warning',
@@ -248,7 +262,7 @@ export const submitInspectionRecordAction = async ({
         return
       }
     }
-    pushToast(getFriendlySubmitMessage(error, record), {
+    pushToast(getFriendlySubmitMessage(error, effectiveRecord), {
       title: 'Save failed',
       color: 'danger',
     })

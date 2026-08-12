@@ -417,6 +417,7 @@ const InspectionModule = () => {
                     String(row.id || '').trim() === String(reviewWorkspace?.recordId || '').trim(),
                 ) || editingRecord
               : null,
+          editRecordId: reviewWorkspace?.recordId,
           reportTypeSlug: 'inspection',
           reportTypeIdPrefix,
           sequence: nextReportSequence,
@@ -441,6 +442,8 @@ const InspectionModule = () => {
     deleteRecord,
     deleteTarget,
     editingRecord,
+    editReportId:
+      activeSection === 'review' ? reviewWorkspace?.recordId || '' : routeRecordId || '',
     loadWorkspace,
     navigate,
     prepareContinuationPrompt,
@@ -470,6 +473,7 @@ const InspectionModule = () => {
         form: sessionForm,
         mode: routeMode,
         editingRecord: routeMode === 'edit' ? editingRecord : null,
+        editRecordId: routeRecordId,
         reportTypeSlug: 'inspection',
         reportTypeIdPrefix,
         sequence: nextReportSequence,
@@ -481,7 +485,7 @@ const InspectionModule = () => {
     return () => {
       directSubmitRef.current = null
     }
-  }, [editingRecord, nextReportSequence, routeMode, setFormState, submit, user])
+  }, [editingRecord, nextReportSequence, routeMode, routeRecordId, setFormState, submit, user])
 
   const {
     workflowActionState,

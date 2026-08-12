@@ -682,6 +682,7 @@ const FireExtinguisherListView = ({
                 row={row}
                 readOnly={rowReadOnly}
                 expanded={expanded}
+                interactionMode={useMobileDrawer && !readOnly ? 'drawer' : 'inline'}
                 active={activeRowId === rowId}
                 missingStatusKeys={
                   validationState?.fireExtinguisher?.missingStatusesByRow?.[rowId] || []

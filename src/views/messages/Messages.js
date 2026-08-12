@@ -124,7 +124,7 @@ const Messages = () => {
 
   const loadThreadMessages = useCallback(
     async (userId) => {
-      if (!userId) return
+      if (!canLoadMessages || !userId) return
       if (threadLoadingRef.current[userId]) return // prevent concurrent fetches
       threadLoadingRef.current[userId] = true
       setThreadLoading(true)
@@ -148,12 +148,12 @@ const Messages = () => {
         if (activeUserIdRef.current === userId) setThreadLoading(false)
       }
     },
-    [authUser?.id, updateThreadCache],
+    [authUser?.id, canLoadMessages, updateThreadCache],
   )
 
   const refreshThreadMessages = useCallback(
     async (userId) => {
-      if (!userId) return
+      if (!canLoadMessages || !userId) return
       if (Date.now() < threadBackoffUntilRef.current) return
       try {
         const response = await fetchThreadMessages(userId, { limit: THREAD_LIMIT })
@@ -198,12 +198,12 @@ const Messages = () => {
         }
       }
     },
-    [authUser?.id, refresh, updateThreadCache, updateThreads],
+    [authUser?.id, canLoadMessages, refresh, updateThreadCache, updateThreads],
   )
 
   // --- Auto-select last thread on desktop ---
   useEffect(() => {
-    if (!activeThread && threads.length && !isMobile) {
+    if (canLoadMessages && !activeThread && threads.length && !isMobile) {
       const lastId = (() => {
         if (!lastThreadKey) return null
         try {
@@ -215,11 +215,11 @@ const Messages = () => {
       const preferred = threads.find((t) => String(t.user?.id) === String(lastId)) || threads[0]
       setActiveThread(preferred)
     }
-  }, [threads, activeThread, isMobile, lastThreadKey])
+  }, [canLoadMessages, threads, activeThread, isMobile, lastThreadKey])
 
   // --- Load messages when active thread changes ---
   useEffect(() => {
-    if (!activeThread?.user?.id) return
+    if (!canLoadMessages || !activeThread?.user?.id) return
     setFirstUnreadId(null)
     lastSeenMessageIdRef.current = null
     const cached = threadCacheRef.current[String(activeThread.user.id)]
@@ -254,7 +254,7 @@ const Messages = () => {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeThread?.user?.id, isMobile, mobileView])
+  }, [activeThread?.user?.id, canLoadMessages, isMobile, mobileView])
 
   // --- Restore draft when switching threads ---
   useEffect(() => {
@@ -289,6 +289,7 @@ const Messages = () => {
 
   // --- Thread message polling ---
   useEffect(() => {
+    if (!canLoadMessages) return
     if (!isVisible) return
     if (!shouldPollThread) return
     const threadTimer = setInterval(() => {
@@ -300,13 +301,14 @@ const Messages = () => {
       }
     }, 8000)
     return () => clearInterval(threadTimer)
-  }, [activeUserId, isVisible, shouldPollThread, refreshThreadMessages])
+  }, [activeUserId, canLoadMessages, isVisible, shouldPollThread, refreshThreadMessages])
 
   // --- Refresh threads on tab visibility ---
   useEffect(() => {
+    if (!canLoadMessages) return
     if (!isVisible) return
     refresh()
-  }, [isVisible, refresh])
+  }, [canLoadMessages, isVisible, refresh])
 
   const handleSelectThread = useCallback(
     (thread) => {

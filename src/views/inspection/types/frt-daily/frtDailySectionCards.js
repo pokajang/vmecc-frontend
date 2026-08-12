@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import { CBadge, CButton, CFormInput, CFormLabel, CFormTextarea } from '@coreui/react'
+import { CButton, CFormInput, CFormLabel, CFormTextarea } from '@coreui/react'
 import { CheckCircle2, Circle, TriangleAlert } from 'lucide-react'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import RowActions from 'src/components/RowActions'
@@ -120,16 +120,9 @@ const FrtInspectionStatusInline = ({ row, kind }) => {
   )
 }
 
-const FrtValidationBadges = ({ missingStatusKeys = [], missingRemarkKeys = [] }) => {
-  const missingCount = missingStatusKeys.length + missingRemarkKeys.length
-
+const FrtValidationBadges = ({ missingRemarkKeys = [] }) => {
   return (
     <>
-      {missingCount > 0 ? (
-        <CBadge color="warning" className="d-inline-flex">
-          {missingCount} missing
-        </CBadge>
-      ) : null}
       {missingRemarkKeys.length > 0 ? (
         <span className="badge rounded-pill text-bg-danger d-inline-flex align-items-center">
           Needs evidence
@@ -504,6 +497,7 @@ const FrtRowCard = ({
   kind,
   expanded = true,
   active = false,
+  interactionMode = 'inline',
   setPhotoViewer,
   readOnly = false,
   fieldErrors = {},
@@ -551,14 +545,11 @@ const FrtRowCard = ({
       title={row.equipment}
       meta={formatFrtRowMeta(row, kind)}
       status={<FrtInspectionStatusInline row={row} kind={kind} />}
-      badges={
-        <FrtValidationBadges
-          missingStatusKeys={missingStatusKeys}
-          missingRemarkKeys={missingRemarkKeys}
-        />
-      }
+      badges={<FrtValidationBadges missingRemarkKeys={missingRemarkKeys} />}
       actions={actionItems}
       actionLabel={`Truck readiness actions for ${row.equipment}`}
+      interactionMode={interactionMode}
+      openLabel={`Open ${row.equipment} inspection details`}
       expanded={expanded}
       active={active}
       readOnly={readOnly}
@@ -850,6 +841,7 @@ const FrtSectionCards = ({
                       activeRowId === rowId ||
                       initialExpandedRowId === rowId))
                 }
+                interactionMode={useMobileDrawer && !readOnly ? 'drawer' : 'inline'}
                 active={
                   activeRowId === rowId ||
                   (useMobileDrawer &&

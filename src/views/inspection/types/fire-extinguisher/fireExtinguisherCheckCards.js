@@ -77,7 +77,7 @@ const FireExtinguisherInspectionStatusInline = ({ row, defectCount = 0, workflow
   )
 }
 
-const FireExtinguisherLegacyStatusBadges = ({ missingCount, missingRemarkKeys, row }) => (
+const FireExtinguisherLegacyStatusBadges = ({ missingRemarkKeys, row }) => (
   <>
     {row.equipmentSource === 'seed' ? (
       <CBadge color="warning" className="d-none d-md-inline-flex">
@@ -87,11 +87,6 @@ const FireExtinguisherLegacyStatusBadges = ({ missingCount, missingRemarkKeys, r
     {row.equipmentSource === 'custom' ? (
       <CBadge color="info" className="d-none d-md-inline-flex">
         Custom
-      </CBadge>
-    ) : null}
-    {missingCount > 0 ? (
-      <CBadge color="warning" className="d-inline-flex">
-        {missingCount} missing
       </CBadge>
     ) : null}
     {missingRemarkKeys.length > 0 ? (
@@ -457,6 +452,7 @@ export const FireExtinguisherRowCard = ({
   readOnly = false,
   expanded = true,
   active = false,
+  interactionMode = 'inline',
   missingStatusKeys = [],
   missingRemarkKeys = [],
   onToggleExpanded,
@@ -466,7 +462,6 @@ export const FireExtinguisherRowCard = ({
   const workflowState = getFireExtinguisherRowWorkflowState(row)
   const defectCount = getFireExtinguisherDefectCount(row)
   const title = getFireExtinguisherRowTitle(row)
-  const missingCount = missingStatusKeys.length + missingRemarkKeys.length
   const bodyId = `fire-extinguisher-checks-${String(row.id || '').replace(/[^A-Za-z0-9_-]/g, '-')}`
   const toggleExpanded = () => onToggleExpanded?.(row)
   const canReset = !readOnly && typeof handlers.onResetCheck === 'function'
@@ -521,14 +516,12 @@ export const FireExtinguisherRowCard = ({
         />
       }
       badges={
-        <FireExtinguisherLegacyStatusBadges
-          missingCount={missingCount}
-          missingRemarkKeys={missingRemarkKeys}
-          row={row}
-        />
+        <FireExtinguisherLegacyStatusBadges missingRemarkKeys={missingRemarkKeys} row={row} />
       }
       actions={actionItems}
       actionLabel={`Extinguisher actions for ${title}`}
+      interactionMode={interactionMode}
+      openLabel={`Open ${title} inspection details`}
       expanded={expanded}
       active={active}
       readOnly={readOnly}

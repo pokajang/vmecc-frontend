@@ -286,6 +286,7 @@ export const buildInspectionReviewRecord = ({
   form,
   mode = 'new',
   editingRecord = null,
+  editRecordId = '',
   reportTypeSlug = 'inspection',
   reportTypeIdPrefix = 'INS',
   user,
@@ -303,7 +304,10 @@ export const buildInspectionReviewRecord = ({
 
   return {
     ...previewRecord,
-    id: String(editingRecord?.id || '').trim() || previewRecord.id,
+    id:
+      String(editingRecord?.id || '').trim() ||
+      String(editRecordId || '').trim() ||
+      previewRecord.id,
     displayId: String(editingRecord?.displayId || '').trim() || previewRecord.displayId,
     ...(editingRecord?.version !== undefined ? { version: editingRecord.version } : {}),
     ...(editingRecord?.revision !== undefined ? { revision: editingRecord.revision } : {}),

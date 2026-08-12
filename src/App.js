@@ -9,6 +9,7 @@ import { NavigationGuardProvider } from './contexts/NavigationGuardContext'
 import { fetchModuleActivation, fetchSession, SYSTEM_MAINTENANCE_EVENT } from './services/apiClient'
 import { isSystemAdministrator } from './utils/authz'
 import { normalizeModuleActivationPayload } from './utils/modules'
+import { subscribeToModuleActivation } from './utils/moduleActivationSync'
 import { shouldShowMaintenancePage } from './utils/systemMaintenance'
 import PageState from './components/PageState'
 import AppUpdateBanner from './components/AppUpdateBanner'
@@ -99,6 +100,7 @@ const App = () => {
   const systemMaintenanceLoadError = useSelector((state) => state.systemMaintenanceLoadError)
   const systemMaintenanceRef = useRef(systemMaintenance)
   const sessionCheckInFlightRef = useRef(null)
+  const moduleActivationVersionRef = useRef(0)
   const sessionRetryTimersRef = useRef(new Set())
 
   useEffect(() => {
@@ -153,9 +155,10 @@ const App = () => {
           // Load it separately so route bootstrap remains bounded and resilient
           // to transient module-service issues.
           void (async () => {
+            const version = moduleActivationVersionRef.current
             try {
               const moduleActivationRaw = await fetchModuleActivation()
-              if (!isActive()) return
+              if (!isActive() || version !== moduleActivationVersionRef.current) return
               const moduleActivation = normalizeModuleActivationPayload(moduleActivationRaw)
               dispatch({
                 type: 'set',
@@ -225,6 +228,15 @@ const App = () => {
       sessionRetryTimersRef.current.clear()
     },
     [],
+  )
+
+  useEffect(
+    () =>
+      subscribeToModuleActivation((moduleActivation) => {
+        moduleActivationVersionRef.current += 1
+        dispatch({ type: 'set', moduleActivation })
+      }),
+    [dispatch],
   )
 
   const applySystemMaintenance = useCallback(

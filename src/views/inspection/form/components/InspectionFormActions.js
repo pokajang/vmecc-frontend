@@ -57,7 +57,7 @@ export const InspectionFormActions = ({
   return (
     <ActionSection sectionLabel={sectionLabel} wrapperClassName={wrapperClassName}>
       <WorkflowStageActions
-        className={className}
+        className={['inspection-form-actions', className].filter(Boolean).join(' ')}
         actionsAlign={alignLeft ? 'start' : 'end'}
         mobileBehavior={isMobileSticky ? 'compact-sticky' : 'in-flow'}
         statusMessage={validationStatusMessage || draftStatus}
@@ -66,6 +66,7 @@ export const InspectionFormActions = ({
         onPrimary={onRequestReview}
         primaryLabel={reviewLabel}
         primaryDisabled={readiness?.isReadyToReview === false}
+        primaryFirst={isMobileSticky}
         ariaLabel="Inspection form actions"
       />
     </ActionSection>
@@ -93,7 +94,7 @@ export const InspectionFormDraftOnlyActions = ({
   return (
     <ActionSection sectionLabel={sectionLabel} wrapperClassName={wrapperClassName}>
       <WorkflowStageActions
-        className={className}
+        className={['inspection-form-actions', className].filter(Boolean).join(' ')}
         actionsAlign={alignLeft ? 'start' : 'end'}
         mobileBehavior={isMobileSticky ? 'compact-sticky' : 'in-flow'}
         statusMessage={
@@ -109,6 +110,7 @@ export const InspectionFormDraftOnlyActions = ({
         showPrimary={Boolean(disabledReviewMessage)}
         primaryLabel={reviewLabel}
         primaryDisabled
+        primaryFirst={isMobileSticky}
         ariaLabel="Inspection draft actions"
       />
     </ActionSection>

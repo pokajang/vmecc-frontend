@@ -268,7 +268,12 @@ export const isInspectionQueueableError = (error) => {
   const code = String(error?.code || error?.payload?.code || '')
     .trim()
     .toLowerCase()
-  if (code.startsWith('duty_') || code.startsWith('inspection_policy_')) return false
+  if (
+    code.startsWith('duty_') ||
+    code.startsWith('inspection_policy_') ||
+    code.startsWith('inspection_update_')
+  )
+    return false
   const status = Number(error?.status || 0)
   if (!status) return true
   if ([400, 401, 403, 404, 409, 413, 419, 422].includes(status)) return false
@@ -391,7 +396,10 @@ export const syncInspectionQueue = async ({
         }
       }
       const syncOptions = { submissionKey: item.submissionKey }
-      if (item.operation === 'update') syncOptions.expectedVersion = item.baseVersion
+      if (item.operation === 'update') {
+        syncOptions.expectedVersion = item.baseVersion
+        syncOptions.isUpdate = true
+      }
       const saved = await persistInspectionRecord(userId, item.record, syncOptions)
       if (!saved) throw new Error('Unable to sync queued inspection.')
       if (String(item.record?.sourceDraftId || item.record?.source_draft_id || '').trim()) {

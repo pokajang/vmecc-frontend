@@ -33,7 +33,6 @@ export const normalizeModuleActivationPayload = (payload) => {
     registry: Array.isArray(data.registry) ? data.registry : [],
     configured: data.configured && typeof data.configured === 'object' ? data.configured : {},
     effective: data.effective && typeof data.effective === 'object' ? data.effective : {},
-    forceAllEnabled: data.forceAllEnabled === true,
     fallbackMode: data.fallbackMode !== false,
   }
 }

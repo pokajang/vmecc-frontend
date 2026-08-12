@@ -349,6 +349,7 @@ const HighAngleInspectionRowCard = ({
   active = false,
   expanded = true,
   onToggleExpanded,
+  interactionMode = 'inline',
 }) => {
   const hasIssue = text(row.condition) === 'Not Good'
   const hasRetainedEvidence = getHighAngleRetainedEvidenceRows([row]).length > 0
@@ -388,10 +389,7 @@ const HighAngleInspectionRowCard = ({
               Retained evidence
             </span>
           ) : null}
-          <InspectionElementValidationBadges
-            missingCount={workflowState.missingCount}
-            needsEvidence={workflowState.needsEvidence}
-          />
+          <InspectionElementValidationBadges needsEvidence={workflowState.needsEvidence} />
         </>
       }
       helperLines={
@@ -401,6 +399,8 @@ const HighAngleInspectionRowCard = ({
       }
       actions={actionItems}
       actionLabel={`High angle actions for ${row.equipment || 'Equipment'}`}
+      interactionMode={interactionMode}
+      openLabel={`Open ${row.equipment || 'equipment'} inspection details`}
       expanded={expanded}
       active={active}
       readOnly={readOnly}

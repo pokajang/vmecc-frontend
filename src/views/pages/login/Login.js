@@ -23,6 +23,10 @@ import googleSvg from 'src/assets/brand/google.svg'
 import ButtonLoader from 'src/components/ButtonLoader'
 import { fetchGoogleAuthUrl, fetchModuleActivation, loginRequest } from 'src/services/apiClient'
 import { normalizeModuleActivationPayload } from 'src/utils/modules'
+import {
+  getModuleActivationRevision,
+  publishModuleActivation,
+} from 'src/utils/moduleActivationSync'
 import { isGracePhase } from 'src/utils/systemMaintenance'
 
 const toRemainingMs = (iso) => {
@@ -85,10 +89,12 @@ const Login = () => {
       })
       navigate('/', { replace: true })
       void (async () => {
+        const revision = getModuleActivationRevision()
         try {
           const moduleActivation = normalizeModuleActivationPayload(await fetchModuleActivation())
-          if (moduleActivation) {
+          if (moduleActivation && revision === getModuleActivationRevision()) {
             dispatch({ type: 'set', moduleActivation })
+            publishModuleActivation(moduleActivation)
           }
         } catch {
           // Keep the default module activation fallback after sign-in.

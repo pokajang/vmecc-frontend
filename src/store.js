@@ -22,7 +22,6 @@ const initialState = {
     registry: [],
     configured: {},
     effective: {},
-    forceAllEnabled: false,
     fallbackMode: true,
   },
   systemMaintenance: {

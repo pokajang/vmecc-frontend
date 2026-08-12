@@ -97,7 +97,6 @@ const installApiStubs = async (page, initialDraft = draftPayload) => {
           registry: [],
           configured: {},
           effective: {},
-          forceAllEnabled: false,
           fallbackMode: true,
         },
       })

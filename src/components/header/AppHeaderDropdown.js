@@ -49,7 +49,6 @@ const AppHeaderDropdown = ({
           registry: [],
           configured: {},
           effective: {},
-          forceAllEnabled: false,
           fallbackMode: true,
         },
       })

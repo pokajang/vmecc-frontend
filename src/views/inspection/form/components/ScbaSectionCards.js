@@ -736,7 +736,6 @@ const ScbaSectionCards = ({
                               </span>
                             ) : null}
                             <InspectionElementValidationBadges
-                              missingCount={workflowState.missingCount}
                               needsEvidence={workflowState.needsEvidence}
                             />
                           </>
@@ -748,6 +747,8 @@ const ScbaSectionCards = ({
                         }
                         actions={itemActions}
                         actionLabel={`Item actions for ${getScbaDisplayLabel(row)}`}
+                        interactionMode={useMobileDrawer && !readOnly ? 'drawer' : 'inline'}
+                        openLabel={`Open ${getScbaDisplayLabel(row)} inspection details`}
                         expanded={!useMobileDrawer || readOnly}
                         active={isMobileActive}
                         readOnly={readOnly}

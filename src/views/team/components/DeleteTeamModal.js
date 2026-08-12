@@ -18,7 +18,7 @@ const DeleteTeamModalContent = ({ visible, team, onClose, onDeleted }) => {
   const [error, setError] = useState(null)
 
   const activeCount = (team?.members || []).length
-  const allChecked = checks.members && checks.naming && checks.irreversible
+  const allChecked = activeCount === 0 && checks.members && checks.naming && checks.irreversible
 
   const toggle = (key) => setChecks((prev) => ({ ...prev, [key]: !prev[key] }))
 
@@ -34,11 +34,22 @@ const DeleteTeamModalContent = ({ visible, team, onClose, onDeleted }) => {
     setDeleting(true)
     setError(null)
     try {
-      await deleteTeam(team.id)
+      await deleteTeam(team.id, {
+        confirm_name: team.name,
+        expected_updated_at: team.updated_at,
+      })
       setChecks({ members: false, naming: false, irreversible: false })
       onDeleted?.(team.id)
     } catch (err) {
-      setError(err.payload?.message || 'Unable to delete team. Please try again.')
+      const dependencyCounts = Object.entries(err.payload?.dependencies || {})
+        .filter(([, count]) => Number(count) > 0)
+        .map(([key, count]) => `${key.replaceAll('_', ' ')}: ${count}`)
+        .join(', ')
+      setError(
+        dependencyCounts
+          ? `${err.payload?.message || 'This team cannot be deleted.'} ${dependencyCounts}.`
+          : err.payload?.message || 'Unable to delete team. Please try again.',
+      )
       setDeleting(false)
     }
   }
@@ -52,11 +63,11 @@ const DeleteTeamModalContent = ({ visible, team, onClose, onDeleted }) => {
       <CModalBody data-testid="team-directory-delete-modal">
         {activeCount > 0 && (
           <CAlert color="warning" className="mb-3">
-            This team has{' '}
+            Deletion is blocked while this team has{' '}
             <strong>
               {activeCount} active {activeCount === 1 ? 'member' : 'members'}
-            </strong>{' '}
-            who will be notified.
+            </strong>
+            . Remove or transfer the assignments first.
           </CAlert>
         )}
 
@@ -71,8 +82,8 @@ const DeleteTeamModalContent = ({ visible, team, onClose, onDeleted }) => {
             onChange={() => toggle('members')}
             label={
               activeCount > 0
-                ? `${activeCount} active ${activeCount === 1 ? 'member' : 'members'} will be unassigned from this team and notified by email.`
-                : 'All team member records will be permanently removed.'
+                ? `Remove or transfer the ${activeCount} active ${activeCount === 1 ? 'member' : 'members'} before deleting this team.`
+                : 'The team has no member records or operational dependencies.'
             }
           />
           <CFormCheck

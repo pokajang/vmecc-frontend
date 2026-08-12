@@ -639,6 +639,21 @@ describe('inspectionFormHelpers', () => {
     expect(reviewRecord.revision).toBe(2)
   })
 
+  it('preserves route edit identity before the record list finishes loading', () => {
+    const reviewRecord = buildInspectionReviewRecord({
+      form: baseForm,
+      mode: 'edit',
+      editingRecord: null,
+      editRecordId: 'report-route-identity',
+      reportTypeSlug: 'inspection',
+      reportTypeIdPrefix: 'INS',
+      sequence: 3,
+      user: { name: 'Inspector' },
+    })
+
+    expect(reviewRecord.id).toBe('report-route-identity')
+  })
+
   it.each([
     'Fire Extinguisher Inspection',
     'General Inspection',

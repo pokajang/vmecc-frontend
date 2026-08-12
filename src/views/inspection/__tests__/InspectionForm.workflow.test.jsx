@@ -1141,10 +1141,10 @@ describe('InspectionForm workflow', () => {
     expect(screen.getByText('ADO-001')).toBeTruthy()
     expect(screen.queryByText('FE Physical Condition')).toBeNull()
 
-    fireEvent.click(screen.getByRole('button', { name: /^ADO-001/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^Open ADO-001 inspection details$/i }))
     expect(screen.getByText('FE Physical Condition')).toBeTruthy()
 
-    fireEvent.click(screen.getByRole('button', { name: /^ADO-001/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^Close ADO-001 inspection details$/i }))
     expect(screen.queryByText('FE Physical Condition')).toBeNull()
   })
 
@@ -1228,7 +1228,11 @@ describe('InspectionForm workflow', () => {
     expect(screen.getAllByText('FE Physical Condition')).toHaveLength(1)
 
     const secondRow = document.querySelector('[data-fire-extinguisher-row-id="fe:2"]')
-    fireEvent.click(within(secondRow).getByRole('button', { name: /^ADO-002/i }))
+    fireEvent.click(
+      within(secondRow).getByRole('button', {
+        name: /^Open ADO-002 inspection details$/i,
+      }),
+    )
 
     expect(screen.getAllByText('FE Physical Condition')).toHaveLength(1)
     expect(within(secondRow).getByText('FE Physical Condition')).toBeTruthy()

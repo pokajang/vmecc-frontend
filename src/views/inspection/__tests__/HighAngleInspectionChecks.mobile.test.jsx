@@ -529,6 +529,7 @@ describe('HighAngleInspectionChecks mobile detail drawer', () => {
     )
 
     fireEvent.click(screen.getByText('Locker A - Top shelf'))
+    fireEvent.click(screen.getByRole('button', { name: 'Open Edge Protector inspection details' }))
     fireEvent.click(screen.getByRole('button', { name: 'High angle actions for Edge Protector' }))
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
 

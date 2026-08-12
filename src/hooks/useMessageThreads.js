@@ -6,8 +6,9 @@ import { logError } from 'src/services/logger'
 
 const BASE_INTERVAL = 10000
 const MAX_BACKOFF = 60000
+const IDLE_TIMEOUT = 5 * 60 * 1000
+const IDLE_EVENTS = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click']
 
-// Errors that warrant exponential backoff — server overload, auth loss, network down
 const shouldBackoff = (err) => {
   if (!err) return false
   const status = err?.status
@@ -16,18 +17,16 @@ const shouldBackoff = (err) => {
   return false
 }
 
-let state = {
-  data: [],
-  loading: false,
-  error: null,
-}
+const isModuleDisabledError = (err) =>
+  err?.status === 403 &&
+  /module is disabled/i.test(String(err?.payload?.message || err?.message || ''))
 
-const IDLE_TIMEOUT = 5 * 60 * 1000 // 5 minutes
-const IDLE_EVENTS = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click']
-
-let subscribers = new Set()
+let state = { data: [], loading: false, error: null }
+let subscribers = new Map()
+let subscriberId = 0
 let timerId = null
 let inFlight = null
+let activeRequestController = null
 let authUserId = null
 let isVisible = true
 let isIdle = false
@@ -35,16 +34,45 @@ let idleTimerId = null
 let visibilityAttached = false
 let idleAttached = false
 let lifecycleAttached = false
+let visibilityHandler = null
+let lifecycleHandler = null
 let isPageUnloading = false
 let backoffMs = 0
+let moduleBlocked = false
+let leaderCleanup = null
 
-const notify = () => {
-  subscribers.forEach((listener) => listener(state))
-}
-
+const notify = () => subscribers.forEach(({ listener }) => listener(state))
 const setState = (patch) => {
   state = { ...state, ...patch }
   notify()
+}
+
+const hasEnabledSubscribers = () => subscribers.size > 0 && Boolean(authUserId) && !moduleBlocked
+
+const stopPolling = () => {
+  if (timerId) {
+    clearTimeout(timerId)
+    timerId = null
+  }
+}
+
+const abortRequest = () => {
+  activeRequestController?.abort()
+  activeRequestController = null
+}
+
+const schedulePoll = (delay) => {
+  stopPolling()
+  if (!hasEnabledSubscribers()) return
+  timerId = setTimeout(async () => {
+    if (!hasEnabledSubscribers()) return
+    if (!isVisible || isIdle || !getIsLeader()) {
+      schedulePoll(BASE_INTERVAL)
+      return
+    }
+    await fetchThreads({ silent: true })
+    schedulePoll(BASE_INTERVAL + backoffMs)
+  }, delay)
 }
 
 const resetIdleTimer = () => {
@@ -61,78 +89,78 @@ const resetIdleTimer = () => {
 const ensureIdleListener = () => {
   if (idleAttached || typeof document === 'undefined') return
   idleAttached = true
-  IDLE_EVENTS.forEach((evt) => document.addEventListener(evt, resetIdleTimer, { passive: true }))
+  IDLE_EVENTS.forEach((event) =>
+    document.addEventListener(event, resetIdleTimer, { passive: true }),
+  )
   resetIdleTimer()
 }
 
 const ensureVisibilityListener = () => {
   if (visibilityAttached || typeof document === 'undefined') return
-  const handleVisibility = () => {
+  visibilityAttached = true
+  visibilityHandler = () => {
     isVisible = !document.hidden
     if (isVisible) {
       resetIdleTimer()
       schedulePoll(0)
     }
   }
-  visibilityAttached = true
-  document.addEventListener('visibilitychange', handleVisibility)
-  handleVisibility()
+  document.addEventListener('visibilitychange', visibilityHandler)
+  isVisible = !document.hidden
 }
 
 const ensureLifecycleListener = () => {
   if (lifecycleAttached || typeof window === 'undefined') return
   lifecycleAttached = true
-  window.addEventListener('pagehide', () => {
+  isPageUnloading = false
+  lifecycleHandler = () => {
     isPageUnloading = true
-  })
-  window.addEventListener('beforeunload', () => {
-    isPageUnloading = true
-  })
+    abortRequest()
+  }
+  window.addEventListener('pagehide', lifecycleHandler)
+  window.addEventListener('beforeunload', lifecycleHandler)
+}
+
+const detachListeners = () => {
+  if (typeof document !== 'undefined') {
+    if (visibilityHandler) document.removeEventListener('visibilitychange', visibilityHandler)
+    IDLE_EVENTS.forEach((event) => document.removeEventListener(event, resetIdleTimer))
+  }
+  if (typeof window !== 'undefined' && lifecycleHandler) {
+    window.removeEventListener('pagehide', lifecycleHandler)
+    window.removeEventListener('beforeunload', lifecycleHandler)
+  }
+  if (idleTimerId) clearTimeout(idleTimerId)
+  idleTimerId = null
+  visibilityAttached = false
+  idleAttached = false
+  lifecycleAttached = false
+  visibilityHandler = null
+  lifecycleHandler = null
 }
 
 const isUnloadFetchFailure = (err) =>
   isPageUnloading && !err?.status && (err instanceof TypeError || err?.message === 'Network Error')
 
-const isModuleDisabledError = (err) =>
-  err?.status === 403 &&
-  /module is disabled/i.test(String(err?.payload?.message || err?.message || ''))
-
-const stopPolling = () => {
-  if (timerId) {
-    clearTimeout(timerId)
-    timerId = null
-  }
-}
-
-const schedulePoll = (delay) => {
-  stopPolling()
-  timerId = setTimeout(async () => {
-    if (!subscribers.size) return
-    if (!isVisible || isIdle || !getIsLeader()) {
-      schedulePoll(BASE_INTERVAL)
-      return
-    }
-    await fetchThreads({ silent: true })
-    schedulePoll(BASE_INTERVAL + backoffMs)
-  }, delay)
-}
-
 const fetchThreads = async ({ silent = false } = {}) => {
-  if (inFlight || !authUserId) return inFlight
-  if (!silent && state.data.length === 0) {
-    setState({ loading: true, error: null })
-  }
-  inFlight = fetchMessageThreads({ limit: 300 })
+  if (inFlight || !hasEnabledSubscribers()) return inFlight
+  if (!silent && state.data.length === 0) setState({ loading: true, error: null })
+
+  const controller = new AbortController()
+  activeRequestController = controller
+  inFlight = fetchMessageThreads({ limit: 300 }, { signal: controller.signal })
     .then((response) => {
+      if (!hasEnabledSubscribers()) return
       backoffMs = 0
       const data = response?.data || []
       setState({ data, loading: false, error: null })
       broadcastThreads(data)
     })
     .catch((err) => {
-      if (isUnloadFetchFailure(err)) return
+      if (controller.signal.aborted || isUnloadFetchFailure(err)) return
       if (isModuleDisabledError(err)) {
-        backoffMs = MAX_BACKOFF
+        moduleBlocked = true
+        stopPolling()
         setState({ data: [], loading: false, error: null })
         broadcastThreads([])
         return
@@ -140,7 +168,6 @@ const fetchThreads = async ({ silent = false } = {}) => {
       if (shouldBackoff(err)) {
         backoffMs = Math.min(backoffMs ? backoffMs * 2 : 15000, MAX_BACKOFF)
       }
-      // Log every poll failure so ops can detect systemic API issues without user reports
       if (err?.status !== 401) {
         logError('[useMessageThreads] fetchThreads failed', err, { status: err?.status })
       }
@@ -149,60 +176,61 @@ const fetchThreads = async ({ silent = false } = {}) => {
       }
     })
     .finally(() => {
+      if (activeRequestController === controller) activeRequestController = null
       inFlight = null
     })
   return inFlight
 }
 
-const setAuthUserId = (nextId) => {
-  if (authUserId === nextId) return
-  authUserId = nextId
-  backoffMs = 0 // reset backoff on every user change so a new session is never penalised for a prior one
-  if (!authUserId) {
-    setState({ data: [], loading: false, error: null })
-    stopPolling()
-    return
-  }
+const syncAuthUser = () => {
+  const nextAuthUserId = subscribers.values().next().value?.userId || null
+  if (authUserId === nextAuthUserId) return
+  authUserId = nextAuthUserId
+  backoffMs = 0
+  moduleBlocked = false
+  stopPolling()
+  abortRequest()
   setState({ data: [], loading: false, error: null })
-  fetchThreads({ silent: false })
+}
+
+const startPollingForLeader = () => {
+  if (!hasEnabledSubscribers() || !getIsLeader()) return
+  void fetchThreads({ silent: false })
   schedulePoll(BASE_INTERVAL)
 }
 
-let leaderCleanup = null
-
-const subscribe = (listener) => {
-  subscribers.add(listener)
+const subscribe = (listener, userId) => {
+  const id = ++subscriberId
+  const wasEmpty = subscribers.size === 0
+  subscribers.set(id, { listener, userId })
+  syncAuthUser()
   ensureLifecycleListener()
   ensureVisibilityListener()
   ensureIdleListener()
   listener(state)
-  if (subscribers.size === 1) {
+
+  if (wasEmpty) {
     leaderCleanup = initMessageLeader(
       (nowLeader) => {
-        // Leadership changed — start or stop polling accordingly
-        if (nowLeader && authUserId) {
-          fetchThreads({ silent: false })
-          schedulePoll(BASE_INTERVAL)
-        }
+        if (nowLeader) startPollingForLeader()
+        else stopPolling()
       },
-      (threads) => {
-        // Received broadcast from leader tab — update state without fetching
-        setState({ data: threads, loading: false, error: null })
-      },
+      (threads) => setState({ data: threads, loading: false, error: null }),
     )
-    if (authUserId) schedulePoll(0)
   }
+  startPollingForLeader()
+
   return () => {
-    subscribers.delete(listener)
+    subscribers.delete(id)
+    syncAuthUser()
     if (!subscribers.size) {
       stopPolling()
+      abortRequest()
       if (leaderCleanup) {
         leaderCleanup()
         leaderCleanup = null
       }
-      // Reset attachment flags so a remount (e.g. same-tab session swap) re-initialises listeners
-      visibilityAttached = false
-      idleAttached = false
+      detachListeners()
     }
   }
 }
@@ -211,6 +239,7 @@ export const refreshMessageThreads = () => fetchThreads({ silent: false })
 export const isMessagingIdle = () => isIdle
 
 export const updateMessageThreads = (updater) => {
+  if (!hasEnabledSubscribers()) return
   const nextData = typeof updater === 'function' ? updater(state.data) : updater
   setState({ data: nextData })
 }
@@ -220,10 +249,9 @@ const useMessageThreads = ({ enabled = true } = {}) => {
   const [localState, setLocalState] = useState(state)
 
   useEffect(() => {
-    setAuthUserId(enabled ? authUser?.id || null : null)
+    if (!enabled || !authUser?.id) return undefined
+    return subscribe(setLocalState, authUser.id)
   }, [authUser?.id, enabled])
-
-  useEffect(() => subscribe(setLocalState), [])
 
   return {
     threads: localState.data,

@@ -434,6 +434,7 @@ const HydraulicEquipmentCheckCard = ({
   showBody = true,
   active = false,
   onOpenDetails,
+  interactionMode = 'inline',
 }) => {
   const workflowState = getHydraulicWorkflowState(current)
   const retainedEvidenceFields = getHydraulicRetainedEvidenceFields(current)
@@ -463,10 +464,7 @@ const HydraulicEquipmentCheckCard = ({
               Retained evidence
             </span>
           ) : null}
-          <InspectionElementValidationBadges
-            missingCount={workflowState.missingCount}
-            needsEvidence={workflowState.needsEvidence}
-          />
+          <InspectionElementValidationBadges needsEvidence={workflowState.needsEvidence} />
         </>
       }
       helperLines={
@@ -476,6 +474,8 @@ const HydraulicEquipmentCheckCard = ({
       }
       actions={actionItems}
       actionLabel={`Equipment actions for ${row.equipment}`}
+      interactionMode={interactionMode}
+      openLabel={`Open ${row.equipment} inspection details`}
       expanded={showBody}
       active={active}
       readOnly={readOnly}

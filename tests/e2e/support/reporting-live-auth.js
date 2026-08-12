@@ -191,7 +191,6 @@ const installAppShellApiStubs = async (page) => {
           registry: [],
           configured: {},
           effective: {},
-          forceAllEnabled: false,
           fallbackMode: true,
         },
       },

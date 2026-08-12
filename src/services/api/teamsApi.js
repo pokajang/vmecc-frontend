@@ -37,7 +37,11 @@ export const updateTeamWithImage = (id, payload, imageFile) => {
   return apiRequest(`/teams/${id}`, { method: 'POST', body: formData })
 }
 
-export const deleteTeam = (id) => apiRequest(`/teams/${id}`, { method: 'DELETE' })
+export const deleteTeam = (id, confirmation) =>
+  apiRequest(`/teams/${id}`, {
+    method: 'DELETE',
+    body: JSON.stringify(confirmation || {}),
+  })
 export const uploadTeamImage = (id, file) => {
   const formData = new FormData()
   formData.append('image', file)

@@ -171,9 +171,17 @@ describe('ErAuxEquipmentChecks mobile detail drawer', () => {
       />,
     )
 
+    const cardTrigger = screen.getByRole('button', {
+      name: 'Open Radio Tetra inspection details',
+    })
+    expect(cardTrigger.getAttribute('aria-haspopup')).toBe('dialog')
+    expect(cardTrigger.hasAttribute('aria-expanded')).toBe(false)
+    expect(document.querySelector('.inspection-entity-card__chevron')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Equipment actions for Radio Tetra' })).toBeNull()
+    expect(screen.queryByText(/^\d+ missing$/)).toBeNull()
     expect(screen.queryByText('Quantity')).toBeNull()
 
-    fireEvent.click(screen.getByText('Radio Tetra'))
+    fireEvent.click(cardTrigger)
 
     expect(screen.getAllByText('Office set').length).toBeGreaterThan(1)
     expect(screen.getByText('Quantity')).toBeTruthy()

@@ -133,7 +133,6 @@ const installDashboardStubs = async (page) => {
           registry: [],
           configured: {},
           effective: {},
-          forceAllEnabled: true,
           fallbackMode: true,
         },
       })

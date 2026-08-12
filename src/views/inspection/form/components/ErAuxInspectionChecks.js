@@ -669,13 +669,14 @@ export const ErAuxEquipmentChecks = ({
                       <span className="badge text-bg-light border text-body-secondary">Custom</span>
                     ) : null}
                     <InspectionElementValidationBadges
-                      missingCount={workflowState.missingCount}
                       needsEvidence={workflowState.needsEvidence}
                     />
                   </>
                 }
                 actions={actionItems}
                 actionLabel={`Equipment actions for ${row.equipment}`}
+                interactionMode={useMobileDrawer && !readOnly ? 'drawer' : 'inline'}
+                openLabel={`Open ${row.equipment} inspection details`}
                 expanded={!useMobileDrawer || readOnly}
                 active={useMobileDrawer && mobileDetailRowId === rowId}
                 readOnly={readOnly}

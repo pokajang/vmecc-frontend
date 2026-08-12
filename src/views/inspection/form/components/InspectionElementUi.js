@@ -1,5 +1,5 @@
 import React from 'react'
-import { CBadge, CButton, CCard, CCardBody, CCardHeader } from '@coreui/react'
+import { CButton, CCard, CCardBody, CCardHeader } from '@coreui/react'
 import { ChevronDown } from 'lucide-react'
 import RowActions from 'src/components/RowActions'
 
@@ -62,6 +62,9 @@ export const InspectionElementCard = ({
   badges = null,
   actions = [],
   actionLabel = 'Element actions',
+  interactionMode = 'inline',
+  openLabel = '',
+  closeLabel = '',
   expanded = true,
   active = false,
   readOnly = false,
@@ -75,11 +78,15 @@ export const InspectionElementCard = ({
   children,
 }) => {
   const canToggle = !readOnly && typeof onToggle === 'function'
+  const opensDrawer = canToggle && interactionMode === 'drawer'
+  const expandsInline = canToggle && !opensDrawer
   const hasSeparateMobileMeta = mobileMeta !== undefined
   const visibleHelperLines = (Array.isArray(helperLines) ? helperLines : [helperLines]).filter(
     Boolean,
   )
   const SummaryComponent = canToggle ? 'button' : 'div'
+  const toggleLabel =
+    expandsInline && expanded ? closeLabel || openLabel.replace(/^Open\b/i, 'Close') : openLabel
 
   return (
     <CCard
@@ -101,8 +108,10 @@ export const InspectionElementCard = ({
             canToggle ? 'inspection-entity-card__toggle' : 'flex-grow-1'
           }`}
           style={{ minWidth: 0 }}
-          aria-expanded={canToggle ? expanded : undefined}
-          aria-controls={canToggle ? bodyId : undefined}
+          aria-label={canToggle && toggleLabel ? toggleLabel : undefined}
+          aria-expanded={expandsInline ? expanded : undefined}
+          aria-controls={expandsInline ? bodyId : undefined}
+          aria-haspopup={opensDrawer ? 'dialog' : undefined}
           onClick={canToggle ? onToggle : undefined}
         >
           <div className="d-grid gap-1 flex-grow-1 min-w-0">
@@ -135,7 +144,7 @@ export const InspectionElementCard = ({
               </div>
             ))}
           </div>
-          {canToggle ? (
+          {expandsInline ? (
             <ChevronDown
               size={18}
               className={`inspection-entity-card__chevron ${
@@ -145,7 +154,7 @@ export const InspectionElementCard = ({
             />
           ) : null}
         </SummaryComponent>
-        {!readOnly ? (
+        {!readOnly && !opensDrawer ? (
           <div
             className="d-flex flex-wrap align-items-center justify-content-end gap-1 flex-shrink-0 inspection-fire-extinguisher-card-actions"
             data-prevent-card-toggle="true"
@@ -170,13 +179,8 @@ export const InspectionElementCard = ({
   )
 }
 
-export const InspectionElementValidationBadges = ({ missingCount = 0, needsEvidence = false }) => (
+export const InspectionElementValidationBadges = ({ needsEvidence = false }) => (
   <>
-    {missingCount > 0 ? (
-      <CBadge color="warning" className="d-inline-flex">
-        {missingCount} missing
-      </CBadge>
-    ) : null}
     {needsEvidence ? (
       <span className="badge rounded-pill text-bg-danger d-inline-flex align-items-center">
         Needs evidence

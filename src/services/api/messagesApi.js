@@ -43,14 +43,14 @@ export const markMessageRead = (id) =>
     method: 'POST',
   })
 
-export const fetchMessageThreads = (params = {}) => {
+export const fetchMessageThreads = (params = {}, options = {}) => {
   const query = new URLSearchParams()
   Object.entries(params).forEach(([key, value]) => {
     if (value === undefined || value === null || value === '') return
     query.append(key, value)
   })
   const path = query.toString() ? `/messages/threads?${query.toString()}` : '/messages/threads'
-  return apiRequest(path)
+  return apiRequest(path, options)
 }
 
 export const fetchThreadMessages = (userId, params = {}) => {
