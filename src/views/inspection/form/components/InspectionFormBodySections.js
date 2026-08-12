@@ -247,6 +247,7 @@ const InspectionNextLocationCard = ({ continueAction = null, onContinueToLocatio
             showDescription={false}
             columns={{ xs: 12, md: 6 }}
             testIdPrefix="inspection-continue-location"
+            useScopeNavigator
           />
         </div>
       </MobileBottomDrawer>

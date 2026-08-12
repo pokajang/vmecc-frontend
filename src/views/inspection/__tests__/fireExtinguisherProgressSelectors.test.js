@@ -43,12 +43,12 @@ describe('fireExtinguisherProgressSelectors', () => {
     })
 
     expect(options[0]).toMatchObject({
-      metaLabel: '1/1 FEs',
+      metaLabel: '1/1 checked',
       metaTone: 'success',
       progress: { inspectedCount: 1, totalCount: 1, isDone: true },
     })
     expect(options[1]).toMatchObject({
-      metaLabel: '0/1 FEs',
+      metaLabel: '0/1 checked',
       progress: { inspectedCount: 0, totalCount: 1, isDone: false },
     })
   })
@@ -81,9 +81,32 @@ describe('fireExtinguisherProgressSelectors', () => {
     })
 
     expect(options[0]).toMatchObject({
-      metaLabel: '2/2 FEs',
+      metaLabel: '2/2 checked',
       metaTone: 'success',
       progress: { inspectedCount: 2, totalCount: 2, isDone: true },
+    })
+  })
+
+  it('surfaces completed local defects as issues without success decoration', () => {
+    const defectRow = {
+      ...completeRow,
+      physicalCondition: 'Not Good',
+      physicalConditionRemarks: 'Cylinder body dented.',
+    }
+    const options = applyFireExtinguisherLocationProgress({
+      options: [{ value: 'Reception', title: 'Reception', metaIconKey: 'check' }],
+      extinguisherRows: [defectRow],
+      level: 'subLocation',
+      showActiveProgress: true,
+      zone: 'Zone 1',
+      mainLocation: 'Manjung Hub',
+    })
+
+    expect(options[0]).toMatchObject({
+      metaLabel: '1/1 checked • 1 issue',
+      metaTone: 'danger',
+      metaIconKey: '',
+      progress: { inspectedCount: 1, totalCount: 1, issueCount: 1, isDone: true },
     })
   })
 

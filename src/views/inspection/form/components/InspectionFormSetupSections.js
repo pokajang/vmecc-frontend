@@ -733,12 +733,13 @@ const InspectionFormSetupSections = ({
           mainLocation,
         })
       : location.visibleSubLocationOptions
-  const selectedSubLocationCountOption = isFireExtinguisherCatalogInspectionForm
-    ? subLocationOptionsWithCounts.find(
-        (option) =>
-          normalizeCountKey(option?.value || option?.title) === normalizeCountKey(subLocation),
-      )
-    : null
+  const selectedSubLocationCountOption =
+    isFireExtinguisherCatalogInspectionForm || isFireTruckCompartmentFlow
+      ? subLocationOptionsWithCounts.find(
+          (option) =>
+            normalizeCountKey(option?.value || option?.title) === normalizeCountKey(subLocation),
+        )
+      : null
   const selectedSubLocationCountLabel = String(
     selectedSubLocationCountOption?.metaLabel || '',
   ).trim()
@@ -1160,15 +1161,18 @@ const InspectionFormSetupSections = ({
                 key: 'sub-location',
                 label: subLocationCollapsedLabel,
                 value: selectedSubLocationLabel,
-                metaIconKey: shouldShowFireExtinguisherContextCount
-                  ? selectedSubLocationCountOption?.metaIconKey
-                  : '',
-                metaLabel: shouldShowFireExtinguisherContextCount
-                  ? selectedSubLocationCountLabel
-                  : '',
-                metaTone: shouldShowFireExtinguisherContextCount
-                  ? selectedSubLocationCountOption?.metaTone
-                  : '',
+                metaIconKey:
+                  shouldShowFireExtinguisherContextCount || isFireTruckCompartmentFlow
+                    ? selectedSubLocationCountOption?.metaIconKey
+                    : '',
+                metaLabel:
+                  shouldShowFireExtinguisherContextCount || isFireTruckCompartmentFlow
+                    ? selectedSubLocationCountLabel
+                    : '',
+                metaTone:
+                  shouldShowFireExtinguisherContextCount || isFireTruckCompartmentFlow
+                    ? selectedSubLocationCountOption?.metaTone
+                    : '',
                 onEdit: () => setActiveMobileSetupDrawer(MOBILE_SETUP_DRAWERS.subLocation),
               }
             : null,
@@ -1578,15 +1582,17 @@ const InspectionFormSetupSections = ({
                   sectionLabel={subLocationCollapsedLabel}
                   selectedLabel={selectedSubLocationLabel}
                   selectedMetaIconKey={
-                    shouldShowFireExtinguisherContextCount
+                    shouldShowFireExtinguisherContextCount || isFireTruckCompartmentFlow
                       ? selectedSubLocationCountOption?.metaIconKey
                       : ''
                   }
                   selectedMetaLabel={
-                    shouldShowFireExtinguisherContextCount ? selectedSubLocationCountLabel : ''
+                    shouldShowFireExtinguisherContextCount || isFireTruckCompartmentFlow
+                      ? selectedSubLocationCountLabel
+                      : ''
                   }
                   selectedMetaTone={
-                    shouldShowFireExtinguisherContextCount
+                    shouldShowFireExtinguisherContextCount || isFireTruckCompartmentFlow
                       ? selectedSubLocationCountOption?.metaTone
                       : ''
                   }
@@ -1601,8 +1607,13 @@ const InspectionFormSetupSections = ({
                   searchPlaceholder={subLocationPickerSearchPlaceholder}
                   searchAriaLabel={subLocationPickerSearchAriaLabel}
                   clearSearchAriaLabel={subLocationPickerClearSearchAriaLabel}
+                  threshold={isFireTruckCompartmentFlow ? 6 : undefined}
                   toggleValue={LOCATION_TOGGLE_VALUE}
                   cardProps={locationCardProps}
+                  useScopeNavigator={isFireTruckCompartmentFlow}
+                  getFocusTarget={() =>
+                    document.querySelector('[data-inspection-scope-content="frt"]')
+                  }
                 />
               ) : null}
               <FormFieldError>
@@ -1780,6 +1791,10 @@ const InspectionFormSetupSections = ({
                 clearSearchAriaLabel="Clear main area search"
                 toggleValue={LOCATION_TOGGLE_VALUE}
                 cardProps={locationCardProps}
+                useScopeNavigator={isFireTruckCompartmentFlow}
+                getFocusTarget={() =>
+                  document.querySelector('[data-inspection-scope-content="frt"]')
+                }
               />
               <MobileDrawerClearAction label="Clear main area" onClear={resetMainArea} />
             </div>
@@ -1824,6 +1839,7 @@ const InspectionFormSetupSections = ({
                 searchPlaceholder={subLocationPickerSearchPlaceholder}
                 searchAriaLabel={subLocationPickerSearchAriaLabel}
                 clearSearchAriaLabel={subLocationPickerClearSearchAriaLabel}
+                threshold={isFireTruckCompartmentFlow ? 6 : undefined}
                 toggleValue={LOCATION_TOGGLE_VALUE}
                 cardProps={locationCardProps}
               />

@@ -55,16 +55,35 @@ describe('inspection continuation helpers', () => {
     expect(continuation.options[0]).toEqual(
       expect.objectContaining({
         value: 'Store',
-        metaLabel: '',
-        progress: expect.objectContaining({ isDone: true }),
+        metaLabel: '2/2 checked',
+        progress: expect.objectContaining({ checkedCount: 2, isDone: true }),
       }),
     )
     expect(continuation.options[1]).toEqual(
       expect.objectContaining({
         value: 'Office',
-        metaLabel: '2 checks',
-        progress: expect.objectContaining({ isDone: false }),
+        metaLabel: '0/2 checked',
+        progress: expect.objectContaining({ checkedCount: 0, isDone: false }),
       }),
     )
+  })
+
+  it('uses issue emphasis instead of success decoration for a completed scope with issues', () => {
+    const continuation = buildMainLocationContinuationOptions({
+      form: { mainLocation: 'Store' },
+      options: [
+        { value: 'Store', title: 'Store' },
+        { value: 'Office', title: 'Office' },
+      ],
+      getSummary: () => ({ totalCount: 2, checkedCount: 2, issueCount: 1 }),
+      getMissingFields: () => ({}),
+    })
+
+    expect(continuation.options[0]).toMatchObject({
+      metaLabel: '2/2 checked • 1 issue',
+      metaTone: 'danger',
+      metaIconKey: '',
+      progress: { issueCount: 1, isDone: true },
+    })
   })
 })

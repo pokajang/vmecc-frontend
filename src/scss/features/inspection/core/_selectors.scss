@@ -23,6 +23,27 @@
   vertical-align: middle;
 }
 
+.inspection-scope-navigator__option {
+  min-height: 4.75rem;
+  color: inherit;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.inspection-scope-navigator__option:hover {
+  border-color: rgba(var(--cui-primary-rgb), 0.48) !important;
+}
+
+.inspection-scope-navigator__option:focus-visible {
+  outline: 3px solid rgba(var(--cui-primary-rgb), 0.28);
+  outline-offset: 2px;
+}
+
+.inspection-progress-summary__issues {
+  color: var(--cui-danger);
+}
+
 .inspection-fire-extinguisher-mode-card--idle,
 .inspection-fire-extinguisher-mode-card--idle:hover,
 .inspection-fire-extinguisher-mode-card--idle:active,

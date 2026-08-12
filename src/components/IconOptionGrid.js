@@ -19,6 +19,7 @@ const isOptionSelected = (value, optionValue) => {
 }
 
 const META_TONE_CLASS = {
+  danger: 'text-danger',
   success: 'text-success',
   muted: 'text-muted',
 }

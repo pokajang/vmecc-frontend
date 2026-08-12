@@ -124,6 +124,99 @@ describe('InspectionLocationOptionPicker', () => {
     expect(screen.queryByText('Show more')).toBeNull()
   })
 
+  it('uses the shared scope contract without repeating the surrounding picker heading', () => {
+    const onChange = vi.fn()
+    const options = [
+      {
+        value: 'Front Locker',
+        title: 'Front Locker',
+        itemCount: 2,
+        progress: { checkedCount: 1, totalCount: 2, issueCount: 1 },
+      },
+      {
+        value: 'Rear Locker',
+        title: 'Rear Locker',
+        itemCount: 3,
+        progress: { checkedCount: 3, totalCount: 3, issueCount: 0, isDone: true },
+      },
+    ]
+
+    render(
+      <InspectionLocationOptionPicker
+        options={options}
+        visibleOptions={options}
+        value=""
+        sectionLabel="Compartment"
+        useScopeNavigator
+        onChange={onChange}
+      />,
+    )
+
+    const option = screen.getByRole('button', {
+      name: 'Front Locker 2 items 1/2 checked • 1 issue Next incomplete',
+    })
+    expect(screen.queryByText('Choose Compartment')).toBeNull()
+
+    fireEvent.click(option)
+
+    expect(onChange).toHaveBeenCalledWith('Front Locker', options[0])
+  })
+
+  it('marks another incomplete scope as next when the current desktop scope is selected', () => {
+    const options = [
+      {
+        value: 'Front Locker',
+        title: 'Front Locker',
+        progress: { checkedCount: 1, totalCount: 2, isDone: false },
+      },
+      {
+        value: 'Rear Locker',
+        title: 'Rear Locker',
+        progress: { checkedCount: 0, totalCount: 3, isDone: false },
+      },
+    ]
+
+    render(
+      <InspectionLocationOptionPicker
+        options={options}
+        visibleOptions={options}
+        value="Front Locker"
+        sectionLabel="Compartment"
+        useScopeNavigator
+        onChange={vi.fn()}
+      />,
+    )
+
+    expect(
+      screen.getByRole('button', { name: /Front Locker 2 items 1\/2 checked Selected/ }),
+    ).toBeTruthy()
+    expect(
+      screen.getByRole('button', { name: /Rear Locker 3 items 0\/3 checked Next incomplete/ }),
+    ).toBeTruthy()
+  })
+
+  it('keeps long scope lists searchable', () => {
+    const options = makeOptions(7).map((option) => ({
+      ...option,
+      progress: { checkedCount: 0, totalCount: 1, isDone: false },
+    }))
+
+    render(
+      <InspectionLocationOptionPicker
+        options={options}
+        visibleOptions={options}
+        value=""
+        sectionLabel="Compartment"
+        useScopeNavigator
+        threshold={6}
+        searchAriaLabel="Search compartment"
+        onChange={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByLabelText('Search compartment')).toBeTruthy()
+  })
+
   it('shows a collapsed mobile selector row after selection and reopens through the edit affordance', () => {
     const onRequestEdit = vi.fn()
 

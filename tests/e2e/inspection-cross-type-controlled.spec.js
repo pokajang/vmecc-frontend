@@ -496,6 +496,94 @@ test('captures every real inspection type form with controlled data', async ({
   expect(audit.checkpoints.some(({ actionRects }) => actionRects.length > 0)).toBe(true)
 })
 
+test('keeps structured scope selection consistent across Fire Truck, High Angle and SCBA', async ({
+  browser,
+}, testInfo) => {
+  const scopedTypes = INSPECTION_TYPES.filter((type) =>
+    ['frt-daily-inspection', 'high-angle-rescue-equipment-inspection', 'scba-inspection'].includes(
+      type.key,
+    ),
+  )
+
+  for (const profile of [
+    { mode: 'mobile', width: 390, height: 844, isMobile: true },
+    { mode: 'desktop', width: 1440, height: 900, isMobile: false },
+  ]) {
+    for (const type of scopedTypes) {
+      const seed = buildFormRecordSeed(type.label, `scope-${profile.mode}`)
+      const form = {
+        ...seed.payload,
+        inspectionType: type.formType || seed.payload.inspectionType,
+        incidentType: type.formType || seed.payload.incidentType,
+        subLocation: type.key === 'frt-daily-inspection' ? '' : seed.payload.subLocation,
+      }
+      const context = await browser.newContext({
+        viewport: { width: profile.width, height: profile.height },
+        isMobile: profile.isMobile,
+      })
+      const page = await context.newPage()
+      const pageErrors = []
+      page.on('pageerror', (error) => pageErrors.push(error.message))
+
+      try {
+        await page.addInitScript(
+          ({ userId, form }) => {
+            sessionStorage.setItem(
+              `inspection_workspace_v1_${userId}`,
+              JSON.stringify({ mode: 'new', recordId: '', form }),
+            )
+          },
+          { userId: auditUser.id, form },
+        )
+        await installInspectionApiStubs(page)
+        await page.goto('/inspection/new', { waitUntil: 'domcontentloaded' })
+        await waitForReady(page)
+
+        const firstScope = page.locator('[data-inspection-scope-option]').first()
+        await expect(firstScope).toBeVisible()
+        await expect(firstScope).toContainText(/\d+ items?\s*•\s*\d+\/\d+ checked/i)
+        await expect(firstScope).not.toContainText(/missing|issue\(s\)/i)
+        await firstScope.click()
+
+        const activeScopeContent = page.locator('[data-inspection-scope-content]').first()
+        await expect(activeScopeContent).toBeVisible()
+        await expect
+          .poll(() =>
+            page.evaluate(() =>
+              document.activeElement?.hasAttribute('data-inspection-scope-content'),
+            ),
+          )
+          .toBe(true)
+
+        if (profile.isMobile) {
+          await expect(page.locator('[data-inspection-scope-option]')).toHaveCount(0)
+          await expect(
+            page.getByText(/\d+\/\d+ checked(?:\s*•\s*\d+ issues?)?/i).first(),
+          ).toBeVisible()
+        } else {
+          await expect(
+            page.locator('[data-inspection-scope-option][aria-pressed="true"]'),
+          ).toHaveCount(1)
+          await expect(page.getByText('Selected', { exact: true })).toBeVisible()
+        }
+
+        expect(
+          await page.evaluate(() => document.documentElement.scrollWidth - innerWidth),
+        ).toBeLessThanOrEqual(1)
+        expect(pageErrors).toEqual([])
+        await capture(
+          page,
+          testInfo,
+          `screenshots/${profile.mode}/${type.key}/13-scope-selected.png`,
+          { fullPage: true },
+        )
+      } finally {
+        await context.close()
+      }
+    }
+  }
+})
+
 test('keeps multiple mobile inspection actions full-width and primary-first', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await installInspectionApiStubs(page)

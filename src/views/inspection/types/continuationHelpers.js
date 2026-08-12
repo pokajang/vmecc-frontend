@@ -1,3 +1,5 @@
+import { formatInspectionProgressSummary } from '../form/components/patterns/inspectionProgressSummary'
+
 const text = (value) => String(value || '').trim()
 
 export const normalizeContinuationKey = (value) => text(value).toLowerCase()
@@ -74,13 +76,12 @@ export const neutralizeCompletionPresentation = (option = {}) => {
   }
 }
 
-const buildProgressLabel = (summary = {}, isDone = false) => {
-  const totalCount = Number(summary?.totalCount || 0)
-  const checkedCount = Number(summary?.checkedCount ?? summary?.completedCount ?? 0)
-  if (isDone) return 'Completed'
-  if (totalCount > 0) return `${checkedCount}/${totalCount} checks`
-  return ''
-}
+const buildProgress = (summary = {}) =>
+  formatInspectionProgressSummary({
+    checkedCount: summary?.checkedCount ?? summary?.completedCount,
+    totalCount: summary?.totalCount,
+    issueCount: summary?.issueCount ?? summary?.defectCount,
+  })
 
 export const buildMainLocationContinuationOptions = ({
   context = {},
@@ -114,22 +115,32 @@ export const buildMainLocationContinuationOptions = ({
       const missingFields =
         typeof getMissingFields === 'function' ? getMissingFields(scopedForm) : {}
       const isDone = isSummaryComplete({ summary, missingFields })
-      const metaLabel = buildProgressLabel(summary, isDone)
-      const metaTone = isDone ? 'success' : metaLabel ? 'muted' : option.metaTone
+      const normalizedProgress = buildProgress(summary)
+      const metaLabel = normalizedProgress.totalCount > 0 ? normalizedProgress.text : ''
+      const metaTone =
+        normalizedProgress.issueCount > 0
+          ? 'danger'
+          : isDone
+            ? 'success'
+            : metaLabel
+              ? 'muted'
+              : option.metaTone
       const progress = {
-        checkedCount: Number(summary?.checkedCount ?? summary?.completedCount ?? 0),
-        inspectedCount: Number(summary?.checkedCount ?? summary?.completedCount ?? 0),
-        totalCount: Number(summary?.totalCount || 0),
+        checkedCount: normalizedProgress.checkedCount,
+        inspectedCount: normalizedProgress.checkedCount,
+        totalCount: normalizedProgress.totalCount,
+        issueCount: normalizedProgress.issueCount,
         isDone,
       }
 
-      return neutralizeCompletionPresentation({
+      return {
         ...option,
         metaLabel,
         metaTone,
-        metaIconKey: isDone ? 'check' : option.metaIconKey || '',
+        metaIconKey:
+          normalizedProgress.issueCount > 0 ? '' : isDone ? 'check' : option.metaIconKey || '',
         progress,
-      })
+      }
     }),
   }
 }

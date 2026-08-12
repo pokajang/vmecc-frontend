@@ -28,7 +28,7 @@ import HighAngleInspectionRowCard, {
 import HighAngleCustomRecordModal from './HighAngleCustomRecordModal'
 import InspectionResetConfirmDrawer from './InspectionResetConfirmDrawer'
 import { InspectionElementDrawerFooter } from './InspectionElementUi'
-import { InspectionMobileCollapsedSelectorRow } from './InspectionSetupSelectorControls'
+import InspectionScopeNavigator from './InspectionScopeNavigator'
 import { resetInspectionViewport } from '../inspectionViewport'
 
 const text = (value) => String(value || '').trim()
@@ -353,89 +353,66 @@ export const HighAngleInspectionChecks = ({
     >
       {!readOnly ? (
         <div className="d-grid gap-3">
-          {selectedGroup && useMobileDrawer ? (
-            <InspectionMobileCollapsedSelectorRow
-              label="Compartment"
-              value={selectedGroup.title}
-              resetLabel="Reset compartment"
-              editLabel={selectedGroup.custom ? 'Edit compartment' : 'Change compartment'}
-              onReset={() => {
-                setSelectedGroupKey('')
-                setSearch('')
-              }}
-              onEdit={() => {
-                if (selectedGroup.custom) {
-                  openCompartmentModal(selectedGroup)
-                  return
-                }
-                setSelectedGroupKey('')
-                setSearch('')
-              }}
-            />
-          ) : (
-            <>
-              <div className="inspection-hydraulic-section-heading d-flex flex-wrap align-items-center justify-content-between gap-2">
-                <div className="fw-semibold text-muted">
-                  {selectedGroup && !useMobileDrawer ? 'Compartments' : 'Choose Compartment'}
-                </div>
-                <div className="d-flex flex-wrap align-items-center gap-2">
-                  {selectedGroup?.custom && !useMobileDrawer ? (
-                    <CreateActionButton
-                      label="Edit compartment"
-                      className="inspection-compact-action-btn"
-                      onClick={() => openCompartmentModal(selectedGroup)}
-                    />
-                  ) : null}
-                  {canAddCompartment ? (
-                    <CreateActionButton
-                      label="Add compartment"
-                      className="inspection-compact-action-btn"
-                      onClick={() => openCompartmentModal()}
-                    />
-                  ) : null}
-                </div>
+          <InspectionScopeNavigator
+            label="Compartment"
+            options={visibleGroups.map((group) => ({
+              ...group,
+              value: group.key,
+              totalCount: (group.rows || []).length,
+              itemCount: (group.rows || []).length,
+            }))}
+            value={selectedCompartmentKey}
+            nextIncompleteValue={nextCompartment?.key}
+            isCompactViewport={useMobileDrawer}
+            actions={
+              <div className="d-flex flex-wrap align-items-center gap-2">
+                {selectedGroup?.custom && !useMobileDrawer ? (
+                  <CreateActionButton
+                    label="Edit compartment"
+                    className="inspection-compact-action-btn"
+                    onClick={() => openCompartmentModal(selectedGroup)}
+                  />
+                ) : null}
+                {canAddCompartment ? (
+                  <CreateActionButton
+                    label="Add compartment"
+                    className="inspection-compact-action-btn"
+                    onClick={() => openCompartmentModal()}
+                  />
+                ) : null}
               </div>
-              {visibleGroups.length > 0 ? (
-                <div className="row g-3">
-                  {visibleGroups.map((group) => {
-                    const isSelected = selectedCompartmentKey === group.key
-                    return (
-                      <div key={group.key} className="col-12 col-md-6">
-                        <button
-                          type="button"
-                          className={`inspection-location-option-card w-100 rounded-3 border bg-body p-3 text-start${
-                            isSelected ? ' border-primary shadow-sm' : ''
-                          }`}
-                          aria-pressed={isSelected}
-                          onClick={() => {
-                            setSelectedGroupKey(group.key)
-                            setSearch('')
-                          }}
-                        >
-                          <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                            <div className="fw-semibold text-break">{group.title}</div>
-                            <span className="small text-body-secondary">
-                              {(group.rows || []).length} item
-                              {(group.rows || []).length === 1 ? '' : 's'}
-                            </span>
-                          </div>
-                        </button>
-                      </div>
-                    )
-                  })}
-                </div>
-              ) : (
-                <div className="rounded-3 border bg-light-subtle p-3 text-body-secondary">
-                  No compartments have been added for this main location.
-                </div>
-              )}
-            </>
-          )}
+            }
+            emptyMessage="No compartments have been added for this main location."
+            onSelect={(groupKey) => {
+              setSelectedGroupKey(groupKey)
+              setSearch('')
+            }}
+            onResetSelected={() => {
+              setSelectedGroupKey('')
+              setSearch('')
+            }}
+            onEditSelected={() => {
+              if (selectedGroup?.custom) {
+                openCompartmentModal(selectedGroup)
+                return
+              }
+              setSelectedGroupKey('')
+              setSearch('')
+            }}
+            editSelectedLabel={selectedGroup?.custom ? 'Edit compartment' : 'Change compartment'}
+            getFocusTarget={() =>
+              sectionRef.current?.querySelector('[data-inspection-scope-content]')
+            }
+          />
         </div>
       ) : null}
 
       {showEquipmentRows ? (
-        <div className="inspection-hydraulic-section-heading d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <div
+          className="inspection-hydraulic-section-heading d-flex flex-wrap align-items-center justify-content-between gap-2"
+          data-inspection-scope-content={selectedGroup?.key || undefined}
+          tabIndex={selectedGroup ? -1 : undefined}
+        >
           <div className="d-flex flex-wrap align-items-center gap-2">
             <div className="fw-semibold text-muted">Equipment</div>
           </div>

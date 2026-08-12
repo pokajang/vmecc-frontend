@@ -1,6 +1,4 @@
 import { dedupePhotos } from 'src/views/inspection/inspectionSharedUtils'
-import { getScopedProgressLabel } from 'src/views/inspection/form/inspectionCountLabels'
-import { neutralizeCompletionPresentation } from '../continuationHelpers'
 import { FRT_REFERENCE, FRT_TRUCK_REFERENCE } from './reference'
 import {
   defaultFrtTruckOption,
@@ -428,24 +426,29 @@ export const getFrtCompartmentOptions = (form = {}) => {
     const inspectedCount = rows.filter((row) =>
       row.checklistKind === 'oneOff' ? isFrtOneOffRowComplete(row) : isFrtDailyRowComplete(row),
     ).length
+    const issueCount = rows.filter((row) =>
+      row.checklistKind === 'oneOff' ? row.condition === 'Not Good' : row.status === 'Issue',
+    ).length
     const totalCount = rows.length || option.dailyRowCount + option.oneOffRowCount
     const isDone = totalCount > 0 && inspectedCount === totalCount
-    return neutralizeCompletionPresentation({
+    return {
       ...option,
-      metaLabel: getScopedProgressLabel({
-        completedCount: inspectedCount,
-        totalCount,
-        singular: 'check',
-        plural: 'checks',
-      }),
-      metaTone: isDone ? 'success' : 'muted',
-      metaIconKey: isDone ? 'check' : '',
+      metaLabel: `${inspectedCount}/${totalCount} checked${
+        issueCount > 0 ? ` • ${issueCount} ${issueCount === 1 ? 'issue' : 'issues'}` : ''
+      }`,
+      metaTone: issueCount > 0 ? 'danger' : isDone ? 'success' : 'muted',
+      metaIconKey: isDone && issueCount === 0 ? 'check' : '',
       progress: {
+        checkedCount: inspectedCount,
         inspectedCount,
         totalCount,
+        issueCount,
         isDone,
       },
-    })
+      checkedCount: inspectedCount,
+      totalCount,
+      issueCount,
+    }
   })
 }
 

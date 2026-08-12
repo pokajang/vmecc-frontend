@@ -54,7 +54,11 @@ describe('structured inspection loading counts', () => {
       ],
     })
 
-    expect(options.find((option) => option.value === 'CUSTOM BAY')?.metaLabel).toBe('2 checks')
+    expect(options.find((option) => option.value === 'CUSTOM BAY')).toMatchObject({
+      metaLabel: '2/2 checked',
+      metaTone: 'success',
+      metaIconKey: 'check',
+    })
   })
 
   it('renders hydraulic equipment rows without header progress chips', () => {

@@ -24,10 +24,17 @@ const getProgressRows = ({ completedLocations = [], locationProgress = [] } = {}
       ? completedLocations
       : []
 
-const getLocationProgressLabel = ({ inspectedCount, totalCount, isLoading = false }) => {
+const getLocationProgressLabel = ({
+  inspectedCount,
+  totalCount,
+  issueCount = 0,
+  isLoading = false,
+}) => {
   if (isLoading) return LOADING_COUNT_LABEL
   if (!totalCount) return ''
-  return `${inspectedCount}/${totalCount} FEs`
+  return `${inspectedCount}/${totalCount} checked${
+    issueCount > 0 ? ` • ${issueCount} ${issueCount === 1 ? 'issue' : 'issues'}` : ''
+  }`
 }
 
 const getLocationCountLabel = ({ totalCount, isLoading = false }) =>
@@ -38,17 +45,29 @@ const getLocationCountLabel = ({ totalCount, isLoading = false }) =>
     isLoading,
   })
 
-const getLocationProgressMeta = ({ inspectedCount = 0, totalCount = 0, isLoading = false }) => {
-  const metaLabel = getLocationProgressLabel({ inspectedCount, totalCount, isLoading })
+const getLocationProgressMeta = ({
+  inspectedCount = 0,
+  totalCount = 0,
+  issueCount = 0,
+  isLoading = false,
+}) => {
+  const metaLabel = getLocationProgressLabel({
+    inspectedCount,
+    totalCount,
+    issueCount,
+    isLoading,
+  })
   if (!metaLabel) return {}
   const isDone = !isLoading && totalCount > 0 && inspectedCount === totalCount
   return {
     metaLabel,
-    metaTone: isDone ? 'success' : 'muted',
-    metaIconKey: isDone ? 'check' : '',
+    metaTone: issueCount > 0 ? 'danger' : isDone ? 'success' : 'muted',
+    metaIconKey: isDone && issueCount === 0 ? 'check' : '',
     progress: {
+      checkedCount: inspectedCount,
       inspectedCount,
       totalCount,
+      issueCount,
       isDone,
       isLoading,
     },
@@ -329,6 +348,7 @@ const buildProgressCounts = ({
     const current = counts.get(groupKey) || {
       totalCount: 0,
       inspectedCount: 0,
+      issueCount: 0,
       localTotalCount: 0,
       localInspectedCount: 0,
       hasServerProgress: false,
@@ -349,13 +369,16 @@ const buildProgressCounts = ({
     const current = counts.get(groupKey) || {
       totalCount: 0,
       inspectedCount: 0,
+      issueCount: 0,
       localTotalCount: 0,
       localInspectedCount: 0,
     }
     current.localTotalCount = (current.localTotalCount || 0) + 1
-    if (getFireExtinguisherRowWorkflowState(row).isComplete) {
+    const workflowState = getFireExtinguisherRowWorkflowState(row)
+    if (workflowState.isComplete) {
       current.localInspectedCount = (current.localInspectedCount || 0) + 1
     }
+    if (workflowState.hasDefect) current.issueCount = (current.issueCount || 0) + 1
     current.totalCount = Math.max(current.totalCount, current.localTotalCount)
     current.inspectedCount = Math.max(current.inspectedCount, current.localInspectedCount || 0)
     counts.set(groupKey, current)
@@ -371,6 +394,7 @@ const buildProgressCounts = ({
     const current = counts.get(groupKey) || {
       totalCount: 0,
       inspectedCount: 0,
+      issueCount: 0,
       localTotalCount: 0,
       localInspectedCount: 0,
     }
@@ -379,6 +403,9 @@ const buildProgressCounts = ({
       (current.localInspectedCount || 0) + 1,
     )
     current.localInspectedCount = (current.localInspectedCount || 0) + 1
+    if (getFireExtinguisherRowWorkflowState(row).hasDefect) {
+      current.issueCount = (current.issueCount || 0) + 1
+    }
     current.totalCount = Math.max(current.totalCount, current.localTotalCount)
     current.inspectedCount = Math.max(current.inspectedCount, current.localInspectedCount)
     counts.set(groupKey, current)
@@ -421,7 +448,11 @@ export const applyFireExtinguisherLocationProgress = ({
       level === 'zone'
         ? normalizeZoneCountKey(option?.value || option?.title)
         : normalizeCountKey(option?.value || option?.title)
-    const progress = progressCounts.get(optionKey) || { totalCount: 0, inspectedCount: 0 }
+    const progress = progressCounts.get(optionKey) || {
+      totalCount: 0,
+      inspectedCount: 0,
+      issueCount: 0,
+    }
     const showLoading =
       isLoading && (!hasReliableRows || (!hasSessionProgress && progress.inspectedCount === 0))
     if (!showActiveProgress) {
@@ -441,12 +472,15 @@ export const applyFireExtinguisherLocationProgress = ({
         metaLabel: getLocationProgressLabel({
           inspectedCount: progress.inspectedCount,
           totalCount: progress.totalCount,
+          issueCount: progress.issueCount,
         }),
-        metaTone: 'success',
-        metaIconKey: 'check',
+        metaTone: progress.issueCount > 0 ? 'danger' : 'success',
+        metaIconKey: progress.issueCount > 0 ? '' : 'check',
         progress: {
+          checkedCount: progress.inspectedCount,
           inspectedCount: progress.inspectedCount,
           totalCount: progress.totalCount,
+          issueCount: progress.issueCount,
           isDone: true,
           isLoading: false,
         },
@@ -455,6 +489,7 @@ export const applyFireExtinguisherLocationProgress = ({
     const progressMeta = getLocationProgressMeta({
       inspectedCount: progress.inspectedCount,
       totalCount: progress.totalCount,
+      issueCount: progress.issueCount,
       isLoading: showLoading,
     })
     return {
@@ -467,7 +502,7 @@ export const applyFireExtinguisherLocationProgress = ({
           isLoading: showLoading,
         }),
       metaTone: progressMeta.metaTone || option.metaTone,
-      metaIconKey: progressMeta.metaIconKey || option.metaIconKey,
+      metaIconKey: progressMeta.metaLabel ? progressMeta.metaIconKey : option.metaIconKey,
       progress: progressMeta.progress,
     }
   })

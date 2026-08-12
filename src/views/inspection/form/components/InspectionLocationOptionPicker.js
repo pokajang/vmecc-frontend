@@ -6,6 +6,7 @@ import {
   InspectionMobileCollapsedSelectorRow,
   InspectionMobileChoiceList,
 } from './InspectionSetupSelectorControls'
+import InspectionScopeNavigator from './InspectionScopeNavigator'
 
 export const INSPECTION_LOCATION_SEARCH_THRESHOLD = 12
 
@@ -53,6 +54,8 @@ const InspectionLocationOptionPicker = ({
   ariaLabel,
   testIdPrefix,
   showAllOptions = false,
+  useScopeNavigator = false,
+  getFocusTarget,
 }) => {
   const searchableOptions = useMemo(
     () => withoutToggleOption(options, toggleValue),
@@ -138,7 +141,26 @@ const InspectionLocationOptionPicker = ({
         </div>
       ) : null}
 
-      {isCompactViewport ? (
+      {useScopeNavigator ? (
+        <InspectionScopeNavigator
+          label={sectionLabel || 'Scope'}
+          options={displayedOptions}
+          value={value}
+          nextIncompleteValue={
+            displayedOptions.find(
+              (option) =>
+                String(option?.value || '') !== String(value || '') &&
+                option?.progress &&
+                option.progress.isDone !== true,
+            )?.value
+          }
+          isCompactViewport={false}
+          showHeading={false}
+          emptyMessage={emptySearchMessage}
+          onSelect={handleOptionChange}
+          getFocusTarget={getFocusTarget}
+        />
+      ) : isCompactViewport ? (
         displayedOptions.length > 0 ? (
           <InspectionMobileChoiceList
             options={displayedOptions}

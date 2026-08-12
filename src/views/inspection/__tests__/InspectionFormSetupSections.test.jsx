@@ -1269,8 +1269,18 @@ describe('InspectionFormSetupSections', () => {
     mockCompactViewport(true)
     const updateForm = vi.fn()
     const compartmentOptions = [
-      { value: 'LOCKER 01', title: 'LOCKER 01', metaLabel: '0/8 checked' },
-      { value: 'FIRE TRUCK', title: 'FIRE TRUCK', metaLabel: '0/60 checked' },
+      {
+        value: 'LOCKER 01',
+        title: 'LOCKER 01',
+        metaLabel: '0/8 checked',
+        progress: { checkedCount: 0, totalCount: 8, issueCount: 0, isDone: false },
+      },
+      {
+        value: 'FIRE TRUCK',
+        title: 'FIRE TRUCK',
+        metaLabel: '0/60 checked',
+        progress: { checkedCount: 0, totalCount: 60, issueCount: 0, isDone: false },
+      },
     ]
 
     render(
@@ -1302,8 +1312,9 @@ describe('InspectionFormSetupSections', () => {
     expect(screen.getByText('Choose Compartment')).toBeTruthy()
     expect(screen.getByText('LOCKER 01')).toBeTruthy()
     expect(screen.getByText('0/8 checked')).toBeTruthy()
+    expect(document.querySelector('[data-inspection-scope-option="LOCKER 01"]')).toBeTruthy()
 
-    fireEvent.click(screen.getByText('LOCKER 01'))
+    fireEvent.click(screen.getByRole('button', { name: /LOCKER 01 8 items 0\/8 checked/ }))
 
     expect(updateForm).toHaveBeenCalledWith(
       expect.objectContaining({

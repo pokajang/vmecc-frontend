@@ -257,7 +257,11 @@ export const FrtDailyInspectionChecks = ({
         </CCard>
       ) : null}
 
-      <div className="inspection-hydraulic-section-heading d-flex flex-wrap align-items-center justify-content-between gap-2">
+      <div
+        className="inspection-hydraulic-section-heading d-flex flex-wrap align-items-center justify-content-between gap-2"
+        data-inspection-scope-content="frt"
+        tabIndex={-1}
+      >
         <div className="d-flex flex-wrap align-items-center gap-2">
           <div className="fw-semibold text-muted">Truck Readiness</div>
           {showDesktopDraftStatus ? (

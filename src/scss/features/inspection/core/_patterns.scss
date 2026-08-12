@@ -81,6 +81,11 @@
   text-align: left;
 }
 
+.inspection-fire-extinguisher-card-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .inspection-entity-card__toggle:focus-visible {
   border-radius: var(--cui-border-radius-sm);
   outline: 2px solid var(--cui-primary);

@@ -339,6 +339,10 @@ Verification completed:
 
 Verdict: UAT-INS-06 through UAT-INS-08 are complete and regression-guarded. UAT-INS-01 and UAT-INS-02 remain the next separate consistency-remediation scope.
 
+### 12 August 2026 remediation addendum
+
+UAT-INS-01 and UAT-INS-02 were subsequently remediated and regression-guarded. The implementation and verification evidence is recorded in `FRONTEND_INSPECTION_REMAINING_CONSISTENCY_REMEDIATION_EXECUTION_2026-08-12.md`. This addendum supersedes only the remaining-work statement above; the original audit evidence and point-in-time verdict are retained.
+
 ## Exit decision
 
 Proceed to a **small inspection consistency remediation stage** covering UAT-INS-01 and UAT-INS-02. Follow it with the same focused screenshot comparison and regression suite. UAT-INS-06 through UAT-INS-08 require no further implementation work unless later UAT exposes a regression. The inspection experience is not blocked, and another broad refactor would be disproportionate to the remaining evidence.

@@ -15,7 +15,7 @@ import {
   rowContainsSearch,
 } from './InspectionDisplayShared'
 import ScbaSectionCards from './ScbaSectionCards'
-import { InspectionMobileCollapsedSelectorRow } from './InspectionSetupSelectorControls'
+import InspectionScopeNavigator from './InspectionScopeNavigator'
 
 export const ScbaInspectionChecks = ({
   mainLocation,
@@ -187,70 +187,57 @@ export const ScbaInspectionChecks = ({
     setExpandedSectionKeys(new Set())
   }
 
+  const sectionOptions = visibleSections.map((section) => ({
+    ...section,
+    value: section.key,
+    totalCount: (section.visibleRows || []).length,
+    itemCount: (section.visibleRows || []).length,
+  }))
+  const selectedSectionIndex = visibleSections.findIndex(
+    (section) => section.key === selectedSectionKey,
+  )
+  const orderedSections =
+    selectedSectionIndex >= 0
+      ? visibleSections
+          .slice(selectedSectionIndex + 1)
+          .concat(visibleSections.slice(0, selectedSectionIndex + 1))
+      : visibleSections
+  const nextIncompleteSection = orderedSections.find((section) => {
+    const rowCount = (section.visibleRows || []).length
+    return (
+      rowCount > 0 &&
+      (Number(section.checkedCount || 0) < rowCount ||
+        Number(section.incompleteRemarksCount || 0) > 0)
+    )
+  })
+
   const renderSectionSelector = () => {
     if (readOnly) return null
 
-    if (selectedSection && isCompactViewport) {
-      return (
-        <InspectionMobileCollapsedSelectorRow
-          label="Group"
-          value={selectedSection.title}
-          resetLabel="Reset group"
-          editLabel="Change group"
-          onReset={resetSelectedSection}
-          onEdit={resetSelectedSection}
-        />
-      )
-    }
-
     return (
-      <div className="d-grid gap-3">
-        <div className="inspection-hydraulic-section-heading d-flex flex-wrap align-items-center justify-content-between gap-2">
-          <div className="fw-semibold text-muted">
-            {selectedSection ? 'Groups' : 'Choose Group'}
-          </div>
+      <InspectionScopeNavigator
+        label="Group"
+        options={sectionOptions}
+        value={selectedSectionKey}
+        nextIncompleteValue={nextIncompleteSection?.key}
+        isCompactViewport={isCompactViewport}
+        actions={
           <CreateActionButton
             label="Add section"
             className="inspection-compact-action-btn"
             onClick={onAddSection}
           />
-        </div>
-        {visibleSections.length > 0 ? (
-          <div className="row g-3">
-            {visibleSections.map((section) => {
-              const isSelected = selectedSectionKey === section.key
-              const rowCount = (section.visibleRows || []).length
-              return (
-                <div key={section.key} className="col-12 col-md-6 col-xl-4">
-                  <button
-                    type="button"
-                    className={`inspection-location-option-card w-100 rounded-3 border bg-body p-3 text-start${
-                      isSelected ? ' border-primary shadow-sm' : ''
-                    }`}
-                    aria-pressed={isSelected}
-                    onClick={() => selectSection(section.key)}
-                  >
-                    <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                      <div className="fw-semibold text-break">{section.title}</div>
-                      <span className="small text-body-secondary">
-                        {rowCount} item{rowCount === 1 ? '' : 's'}
-                      </span>
-                    </div>
-                    <div className="small text-body-secondary mt-1">
-                      {section.checkedCount || 0}/{rowCount} checked
-                      {section.issueCount ? ` | ${section.issueCount} issue(s)` : ''}
-                    </div>
-                  </button>
-                </div>
-              )
-            })}
-          </div>
-        ) : (
-          <div className="rounded-3 border bg-light-subtle p-3 text-body-secondary">
-            No SCBA groups have items for this main location.
-          </div>
-        )}
-      </div>
+        }
+        emptyMessage="No SCBA groups have items for this main location."
+        loading={isLoadingRows}
+        onSelect={selectSection}
+        onEditSelected={resetSelectedSection}
+        onResetSelected={resetSelectedSection}
+        getFocusTarget={(option) =>
+          document.querySelector(`[data-inspection-scope-content="${option.key}"]`)
+        }
+        columnsClassName="col-12 col-md-6 col-xl-4"
+      />
     )
   }
 
@@ -263,7 +250,11 @@ export const ScbaInspectionChecks = ({
       {renderSectionSelector()}
 
       {readOnly || selectedSection ? (
-        <div className="inspection-hydraulic-section-heading d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <div
+          className="inspection-hydraulic-section-heading d-flex flex-wrap align-items-center justify-content-between gap-2"
+          data-inspection-scope-content={selectedSection?.key || undefined}
+          tabIndex={selectedSection ? -1 : undefined}
+        >
           <div className="d-flex flex-wrap align-items-center gap-2">
             <div className="fw-semibold text-muted">
               {selectedSection ? `${selectedSection.title} Items` : 'SCBA Items'}
