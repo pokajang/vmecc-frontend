@@ -1,6 +1,7 @@
 import { CTooltip } from '@coreui/react'
-import { ArrowLeft, Loader, Trash2 } from 'lucide-react'
+import { Loader, Trash2 } from 'lucide-react'
 
+import BackButton from 'src/components/BackButton'
 import { formatHistoryTime } from './constants'
 
 const HistoryView = ({
@@ -22,16 +23,13 @@ const HistoryView = ({
   <div className="ai-helper-history ai-helper-history--page">
     <div className="ai-helper-history__header">
       <div>
-        <button
-          type="button"
-          className="ai-helper-history__back"
+        <BackButton
           ref={backButtonRef}
+          label="Back to chat"
+          className="ai-helper-history__back"
           onClick={onBack}
           aria-label="Back to chat"
-        >
-          <ArrowLeft size={16} />
-          <span>Back to chat</span>
-        </button>
+        />
         <div className="ai-helper-history__heading">Chat history</div>
       </div>
       <button type="button" onClick={onRefresh} disabled={loading}>

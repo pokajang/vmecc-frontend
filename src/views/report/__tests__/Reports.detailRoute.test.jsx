@@ -361,7 +361,7 @@ describe('Reports direct detail route loading', () => {
     expect(screen.queryByText('ERCO-API')).toBeNull()
   })
 
-  it('preserves the compact mobile Back action and returns detail to the mobile home', async () => {
+  it('uses the shared chrome-free mobile Back action and returns detail to the mobile home', async () => {
     mocks.useReportRecords.mockReturnValue(
       buildRecordsState({
         records: [ercoRecord],
@@ -373,12 +373,13 @@ describe('Reports direct detail route loading', () => {
 
     const backButton = screen.getByRole('button', { name: 'Back' })
     expect(backButton.type).toBe('button')
-    expect(backButton.className).toContain('btn-outline-secondary')
+    expect(backButton.className).toContain('back-button')
+    expect(backButton.className).toContain('btn-link')
+    expect(backButton.className).not.toContain('btn-outline')
     expect(backButton.className).toContain('inspection-header-back-btn')
     expect(backButton.className).toContain('inspection-compact-action-btn')
     expect(backButton.className).toContain('d-md-none')
-    expect(backButton.className).toContain('d-inline-flex')
-    expect(backButton.querySelector('.lucide-arrow-left')?.getAttribute('width')).toBe('14')
+    expect(backButton.querySelector('.lucide-arrow-left')?.getAttribute('width')).toBe('18')
 
     fireEvent.click(backButton)
 

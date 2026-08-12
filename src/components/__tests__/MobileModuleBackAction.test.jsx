@@ -9,7 +9,7 @@ afterEach(() => {
 })
 
 describe('MobileModuleBackAction', () => {
-  it('preserves the compact outlined mobile presentation and click event', () => {
+  it('uses the shared chrome-free mobile Back presentation and click event', () => {
     const onClick = vi.fn()
     render(
       <MobileModuleBackAction
@@ -20,15 +20,14 @@ describe('MobileModuleBackAction', () => {
 
     const button = screen.getByRole('button', { name: 'Back' })
     expect(button.type).toBe('button')
-    expect(button.className).toContain('btn-outline-secondary')
+    expect(button.className).toContain('back-button')
+    expect(button.className).toContain('btn-link')
+    expect(button.className).not.toContain('btn-outline')
     expect(button.className).toContain('btn-sm')
     expect(button.className).toContain('d-md-none')
-    expect(button.className).toContain('d-inline-flex')
-    expect(button.className).toContain('align-items-center')
-    expect(button.className).toContain('gap-1')
     expect(button.className).toContain('inspection-header-back-btn')
     expect(button.className).toContain('inspection-compact-action-btn')
-    expect(button.querySelector('.lucide-arrow-left')?.getAttribute('width')).toBe('14')
+    expect(button.querySelector('.lucide-arrow-left')?.getAttribute('width')).toBe('18')
 
     fireEvent.click(button)
     expect(onClick).toHaveBeenCalledTimes(1)
@@ -52,7 +51,7 @@ describe('MobileModuleBackAction', () => {
 
     const button = screen.getByRole('button', { name: 'Return to records' })
     expect(button.type).toBe('button')
-    expect(button.className).toContain('btn-outline-secondary')
+    expect(button.className).toContain('btn-link')
     expect(button.className).not.toContain('btn-danger')
     expect(button.className).not.toContain('btn-ghost')
     expect(button.className).toContain('btn-lg')

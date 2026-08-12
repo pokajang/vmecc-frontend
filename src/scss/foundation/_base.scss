@@ -162,8 +162,54 @@ html {
 }
 
 .back-button {
-  background-color: var(--vmecc-primary-soft);
-  color: var(--vmecc-primary-on-soft);
+  --cui-btn-color: var(--vmecc-primary-on-soft);
+  --cui-btn-bg: transparent;
+  --cui-btn-border-color: transparent;
+  --cui-btn-hover-color: var(--cui-primary);
+  --cui-btn-hover-bg: transparent;
+  --cui-btn-hover-border-color: transparent;
+  --cui-btn-active-color: var(--cui-primary);
+  --cui-btn-active-bg: transparent;
+  --cui-btn-active-border-color: transparent;
+  --cui-btn-disabled-color: var(--vmecc-fg-disabled);
+  --cui-btn-disabled-bg: transparent;
+  --cui-btn-disabled-border-color: transparent;
+  display: inline-flex;
+  min-width: 0;
+  min-height: var(--vmecc-touch-target);
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.125rem;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  font-size: 0.9375rem;
+  font-weight: var(--vmecc-weight-semibold);
+  line-height: 1.25;
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:hover {
+    background: transparent;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  &:focus-visible {
+    border-radius: var(--vmecc-radius-control);
+    background: transparent;
+    box-shadow: var(--vmecc-focus-ring);
+  }
+
+  &:active,
+  &:disabled {
+    background: transparent;
+    box-shadow: none;
+  }
+
+  svg {
+    flex: 0 0 auto;
+  }
 }
 
 .btn.btn-outline-light {

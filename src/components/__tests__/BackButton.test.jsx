@@ -26,10 +26,12 @@ describe('BackButton', () => {
     const button = screen.getByRole('button', { name: 'Back' })
     expect(button.type).toBe('button')
     expect(button.className).toContain('back-button')
-    expect(button.className).toContain('text-primary')
-    expect(button.className).toContain('border-0')
+    expect(button.className).toContain('btn-link')
+    expect(button.className).not.toContain('btn-outline')
     expect(button.className).toContain('btn-sm')
-    expect(button.querySelector('.lucide-arrow-left')?.classList.contains('me-1')).toBe(true)
+    expect(button.querySelector('.lucide-arrow-left')?.getAttribute('width')).toBe('18')
+    expect(button.querySelector('.lucide-arrow-left')?.getAttribute('aria-hidden')).toBe('true')
+    expect(button.querySelector('.back-button__label')?.textContent).toBe('Back')
 
     fireEvent.click(button)
     expect(onClick).toHaveBeenCalledTimes(1)
@@ -68,5 +70,19 @@ describe('BackButton', () => {
     expect(button.className).toContain('consumer-back')
     expect(button.style.minWidth).toBe('12rem')
     expect(button.querySelector('.lucide-arrow-left')?.getAttribute('width')).toBe('16')
+  })
+
+  it('forwards focus refs while keeping fixed button semantics and chrome-free styling', () => {
+    const backRef = React.createRef()
+
+    render(
+      <BackButton ref={backRef} onClick={vi.fn()} type="submit" color="danger" variant="outline" />,
+    )
+
+    expect(backRef.current).toBe(screen.getByRole('button', { name: 'Back' }))
+    expect(backRef.current.type).toBe('button')
+    expect(backRef.current.className).toContain('btn-link')
+    expect(backRef.current.className).not.toContain('btn-danger')
+    expect(backRef.current.className).not.toContain('btn-outline')
   })
 })

@@ -24,7 +24,7 @@ describe('InspectionModuleHeaderActions', () => {
     expect(screen.getByRole('button', { name: 'Conduct Inspection' })).toBeTruthy()
   })
 
-  it('preserves the compact mobile Back presentation and callback', () => {
+  it('uses the shared chrome-free mobile Back presentation and callback', () => {
     const onMobileBack = vi.fn()
     render(
       <InspectionModuleHeaderActions
@@ -36,12 +36,13 @@ describe('InspectionModuleHeaderActions', () => {
 
     const backButton = screen.getByRole('button', { name: 'Back' })
     expect(backButton.type).toBe('button')
-    expect(backButton.className).toContain('btn-outline-secondary')
+    expect(backButton.className).toContain('back-button')
+    expect(backButton.className).toContain('btn-link')
+    expect(backButton.className).not.toContain('btn-outline')
     expect(backButton.className).toContain('inspection-header-back-btn')
     expect(backButton.className).toContain('inspection-compact-action-btn')
     expect(backButton.className).toContain('d-md-none')
-    expect(backButton.className).toContain('d-inline-flex')
-    expect(backButton.querySelector('.lucide-arrow-left')?.getAttribute('width')).toBe('14')
+    expect(backButton.querySelector('.lucide-arrow-left')?.getAttribute('width')).toBe('18')
 
     fireEvent.click(backButton)
     expect(onMobileBack).toHaveBeenCalledTimes(1)

@@ -1,5 +1,4 @@
-import { ArrowLeft } from 'lucide-react'
-
+import BackButton from 'src/components/BackButton'
 import { KNOWLEDGE_VIEW_LIST, KNOWLEDGE_VIEW_UPLOAD } from './constants'
 import KnowledgeListView from './KnowledgeListView'
 import KnowledgeReaderModal from './KnowledgeReaderModal'
@@ -50,16 +49,13 @@ const KnowledgeView = ({
     <div className="ai-helper-knowledge">
       <div className="ai-helper-history__header">
         <div>
-          <button
-            type="button"
-            className="ai-helper-history__back"
+          <BackButton
             ref={backButtonRef}
+            label="Back to chat"
+            className="ai-helper-history__back"
             onClick={onBack}
             aria-label="Back to chat"
-          >
-            <ArrowLeft size={16} />
-            <span>Back to chat</span>
-          </button>
+          />
           <div className="ai-helper-history__heading">Reference documents</div>
         </div>
       </div>

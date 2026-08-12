@@ -1,27 +1,22 @@
 import React from 'react'
-import { CButton } from '@coreui/react'
-import { ArrowLeft } from 'lucide-react'
+import BackButton from 'src/components/BackButton'
 
 const MobileModuleBackAction = ({
   label = 'Back',
   onClick,
   className = '',
   size = 'sm',
-  iconSize = 14,
+  iconSize = 18,
   ...buttonProps
 }) => (
-  <CButton
+  <BackButton
     {...buttonProps}
-    type="button"
-    color="secondary"
-    variant="outline"
     size={size}
-    className={`d-md-none d-inline-flex align-items-center gap-1 ${className}`.trim()}
+    iconSize={iconSize}
+    label={label}
+    className={`d-md-none ${className}`.trim()}
     onClick={onClick}
-  >
-    <ArrowLeft size={iconSize} />
-    {label}
-  </CButton>
+  />
 )
 
 export default MobileModuleBackAction

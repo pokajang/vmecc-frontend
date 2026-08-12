@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CAlert, CBadge, CButton, CCard, CCardBody } from '@coreui/react'
-import { ArrowLeft } from 'lucide-react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import BackButton from 'src/components/BackButton'
 
 import { InspectionPhotoViewerModal } from 'src/views/inspection/form/components/InspectionDisplayShared'
 import {
@@ -215,17 +215,11 @@ const FireExtinguisherDetailPage = ({
             </div>
           ) : null}
         </div>
-        <CButton
-          type="button"
-          color="secondary"
-          variant="outline"
-          size="sm"
-          className="inspection-compact-action-btn d-inline-flex align-items-center gap-1"
+        <BackButton
+          label="Back to all extinguishers"
+          className="inspection-compact-action-btn"
           onClick={() => navigate(returnTo, { replace: true, state: { catalogViewState } })}
-        >
-          <ArrowLeft size={14} aria-hidden="true" />
-          Back to all extinguishers
-        </CButton>
+        />
       </div>
 
       {feedback?.message ? (
