@@ -1,8 +1,5 @@
 # Frontend Live UAT Route Matrix
 
-> [!WARNING]
-> Archived baseline: later UAT execution supersedes the untested-route status below.
-
 **Date:** 2026-08-10
 
 **Status:** Day 1 baseline; routes have not yet passed live UAT

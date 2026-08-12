@@ -7,7 +7,12 @@ const routesSource = await readFile(resolve(root, 'src', 'routes.js'), 'utf8')
 const appSource = await readFile(resolve(root, 'src', 'App.js'), 'utf8')
 const outputDirectory = resolve(root, 'tests', 'e2e', 'live-uat')
 const manifestPath = resolve(outputDirectory, 'route-manifest.json')
-const matrixPath = resolve(root, 'upgrade-works', 'FRONTEND_LIVE_UAT_ROUTE_MATRIX_2026-08-10.md')
+const matrixPath = resolve(
+  root,
+  'upgrade-works',
+  '03-reference',
+  'FRONTEND_LIVE_UAT_ROUTE_MATRIX_2026-08-10.md',
+)
 
 const sourceRouteMatches = Array.from(
   routesSource.matchAll(/\{\s*path:\s*(['"`])([^'"`]+)\1\s*,([\s\S]*?)\},?/g),

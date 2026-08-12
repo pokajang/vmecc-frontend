@@ -192,7 +192,7 @@ These are audit targets, not automatic extraction decisions. Later stages must s
 
 - `upgrade-works/90-archive/stale-status/FRONTEND_LIVE_UAT_COMPONENT_RECONCILIATION_PLAN_2026-08-10.md`
 - `upgrade-works/90-archive/actioned-plans/FRONTEND_LIVE_UAT_DAY_1_TASKS_2026-08-10.md`
-- `upgrade-works/90-archive/stale-status/FRONTEND_LIVE_UAT_ROUTE_MATRIX_2026-08-10.md`
+- `upgrade-works/03-reference/FRONTEND_LIVE_UAT_ROUTE_MATRIX_2026-08-10.md`
 - `upgrade-works/02-completed/FRONTEND_LIVE_UAT_DAY_1_EXECUTION_2026-08-10.md`
 
 ### Local-only evidence
@@ -237,4 +237,3 @@ The first lint run found seven formatting-only issues in the new scripts. They w
 **Day 1 engineering work: complete.**  
 **Day 2 harness construction: ready.**  
 **Authenticated live production execution: blocked until safe role credentials are available.**
-

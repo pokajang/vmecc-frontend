@@ -33,7 +33,7 @@ Day 1 does not declare that a view works. It establishes the complete test popul
 
 ### Committed planning and coverage files
 
-- `upgrade-works/90-archive/stale-status/FRONTEND_LIVE_UAT_ROUTE_MATRIX_2026-08-10.md`
+- `upgrade-works/03-reference/FRONTEND_LIVE_UAT_ROUTE_MATRIX_2026-08-10.md`
 - `tests/e2e/live-uat/route-manifest.json`
 - `scripts/audit-live-uat-route-coverage.mjs`
 - a package script for the new route coverage audit

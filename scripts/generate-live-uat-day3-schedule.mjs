@@ -8,6 +8,7 @@ const outputPath = resolve(root, 'tests', 'e2e', 'live-uat', 'day3-route-schedul
 const reportPath = resolve(
   root,
   'upgrade-works',
+  '03-reference',
   'FRONTEND_LIVE_UAT_DAY_3_ROUTE_SCHEDULE_2026-08-10.md',
 )
 const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
