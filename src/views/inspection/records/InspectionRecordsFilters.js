@@ -66,7 +66,7 @@ const InspectionRecordsFilters = ({
         },
       ]}
       onClear={clearFilters}
-      rowClassName="inspection-records-filter-row align-items-md-end"
+      rowClassName="inspection-records-filter-row inspection-report-records-filter-row align-items-md-end"
       searchColMd={3}
       periodColMd={2}
       filterColMd={2}

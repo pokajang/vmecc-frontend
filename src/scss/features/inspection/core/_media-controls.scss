@@ -39,6 +39,27 @@
   }
 }
 
+.workflow-scope-segmented--text {
+  gap: 0.4rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.workflow-scope-segmented--text .workflow-scope-segment {
+  padding-inline: 0.25rem;
+  border-radius: 0;
+  background: transparent;
+  color: var(--cui-secondary-color);
+}
+
+.workflow-scope-segmented--text .workflow-scope-segment[data-active='true'] {
+  background: transparent;
+  color: var(--vmecc-primary-on-soft);
+  font-weight: 700;
+}
+
 .workflow-photo-preview,
 .inspection-photo-preview {
   display: flex;

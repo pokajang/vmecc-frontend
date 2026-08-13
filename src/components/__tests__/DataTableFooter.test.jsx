@@ -8,6 +8,12 @@ import DataTableFooter from '../DataTableFooter'
 afterEach(cleanup)
 
 describe('DataTableFooter', () => {
+  it('keeps the explicitly selected numeric page size when All is also available', () => {
+    render(<DataTableFooter rowsToShow={5} filteredCount={1} totalCount={1} compactMobile />)
+
+    expect(screen.getByRole('combobox').value).toBe('5')
+  })
+
   it('keeps a numeric remote page size selected when the current result is smaller', () => {
     render(
       <DataTableFooter

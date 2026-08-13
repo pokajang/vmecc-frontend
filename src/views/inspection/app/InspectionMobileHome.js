@@ -130,7 +130,10 @@ const InspectionMobileHome = ({
         testId="inspection-records"
         recordScope={recordScope}
         onRecordScopeChange={onRecordScopeChange}
-        scopeProps={{ 'data-testid': 'inspection-scope' }}
+        scopeProps={{
+          className: 'workflow-scope-segmented--text',
+          'data-testid': 'inspection-scope',
+        }}
         recordsCount={recordsCount}
         items={recentRecordItems}
         sectionKey="recent-inspection-records"

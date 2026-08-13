@@ -89,8 +89,15 @@
   .action-row-thumb--sticky,
   .action-row-thumb--compact-sticky {
     position: fixed;
-    left: calc(var(--cui-sidebar-occupy-start, 0px) + 0.75rem);
-    right: calc(var(--cui-sidebar-occupy-end, 0px) + 0.75rem);
+    left: var(--action-row-dock-left, calc(var(--cui-sidebar-occupy-start, 0px) + 0.75rem));
+    right: auto;
+    width: var(
+      --action-row-dock-width,
+      calc(
+        100% - var(--cui-sidebar-occupy-start, 0px) - var(--cui-sidebar-occupy-end, 0px) -
+          1.5rem
+      )
+    );
     bottom: calc(var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 0.75rem);
     z-index: 1020;
     max-height: min(40dvh, 12rem);
@@ -100,6 +107,10 @@
     border-radius: 0.5rem;
     background-color: var(--cui-body-bg);
     box-shadow: none !important;
+    transition:
+      border-color 180ms ease,
+      background-color 180ms ease,
+      box-shadow 180ms ease;
 
     @include scrollbars.vmecc-scrollbar;
   }
@@ -107,7 +118,13 @@
   .action-row-thumb--compact-sticky.action-row-thumb--docked-at-end {
     position: static;
     inset: auto;
+    width: 100%;
     z-index: auto;
+  }
+
+  .action-row-thumb--compact-sticky.action-row-thumb--floating,
+  .action-row-thumb--compact-sticky.action-row-thumb--docked-at-end {
+    animation: action-row-dock-settle 180ms ease-out;
   }
 
   .action-row-thumb--sticky,
@@ -269,5 +286,25 @@
   .salary-bulk-mode-spacer {
     display: block;
     height: calc(var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 12rem);
+  }
+}
+
+@keyframes action-row-dock-settle {
+  from {
+    opacity: 0.92;
+    transform: translateY(0.2rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action-row-thumb--compact-sticky.action-row-thumb--floating,
+  .action-row-thumb--compact-sticky.action-row-thumb--docked-at-end {
+    animation: none;
+    transition: none;
   }
 }

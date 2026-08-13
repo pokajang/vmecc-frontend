@@ -129,6 +129,34 @@
     padding: 2px;
   }
 
+  .inspection-module-page .workflow-scope-segmented--text,
+  .inspection-mobile-section .workflow-scope-segmented--text {
+    gap: 0.4rem;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .inspection-module-page .workflow-scope-segmented--text .workflow-scope-segment,
+  .inspection-mobile-section .workflow-scope-segmented--text .workflow-scope-segment {
+    padding-inline: 0.25rem;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .inspection-module-page
+    .workflow-scope-segmented--text
+    .workflow-scope-segment[data-active='true'],
+  .inspection-mobile-section
+    .workflow-scope-segmented--text
+    .workflow-scope-segment[data-active='true'] {
+    background: transparent;
+    color: var(--vmecc-primary-on-soft);
+    font-weight: 700;
+  }
+
   .inspection-module-page .mobile-workflow-home__records-toolbar .workflow-scope-segmented,
   .inspection-module-page .mobile-workflow-home__records-toolbar .inspection-scope-segmented {
     gap: 0.4rem;
@@ -142,17 +170,19 @@
   .inspection-mobile-section .workflow-scope-segment,
   .inspection-mobile-section .inspection-scope-segment {
     min-height: calc(var(--inspection-mobile-control-height) - 6px);
-    padding: 0.45rem 0.75rem;
-    font-size: var(--vmecc-text-meta);
+    padding: 0.28rem 0.65rem;
+    font-size: 0.875rem;
     font-weight: 600;
+    color: var(--cui-secondary-color);
   }
 
   .inspection-module-page .mobile-workflow-home__records-toolbar .workflow-scope-segment,
   .inspection-module-page .mobile-workflow-home__records-toolbar .inspection-scope-segment {
     min-height: var(--inspection-mobile-control-height);
-    border: 1px solid var(--cui-border-color);
-    border-radius: 999px;
-    background: var(--cui-tertiary-bg);
+    padding-inline: 0.25rem;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
   }
 
   .inspection-module-page
@@ -161,9 +191,20 @@
   .inspection-module-page
     .mobile-workflow-home__records-toolbar
     .inspection-scope-segment[data-active='true'] {
-    border-color: var(--vmecc-primary-on-soft);
-    background: var(--vmecc-primary-soft);
+    border-color: transparent;
+    background: transparent;
     color: var(--vmecc-primary-on-soft);
+    font-weight: 700;
+  }
+
+  .inspection-module-page .mobile-workflow-home__view-all.mobile-workflow-home__action-chip {
+    padding: 0.28rem 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--cui-secondary-color);
   }
 
   .inspection-module-page .inspection-hse-choice-btn {

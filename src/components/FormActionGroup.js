@@ -27,6 +27,7 @@ const FormActionGroup = ({
   const isCompactSticky = resolvedMobileBehavior === 'compact-sticky'
   const supportsEndDocking = isCompactSticky && dockAtEnd
   const [isDockedAtEnd, setIsDockedAtEnd] = useState(false)
+  const [mobileDockMetrics, setMobileDockMetrics] = useState(null)
   const isEndDocked = supportsEndDocking && isDockedAtEnd
   const endAnchorRef = useRef(null)
   const groupRef = useRef(null)
@@ -48,12 +49,17 @@ const FormActionGroup = ({
             ? 'justify-content-start'
             : 'justify-content-end'
       }`
-  const containerStyle =
-    usesMobileActionLayout && alignStart
-      ? {
-          justifyItems: 'start',
-        }
-      : undefined
+  const containerStyle = usesMobileActionLayout
+    ? {
+        ...(alignStart ? { justifyItems: 'start' } : {}),
+        ...(mobileDockMetrics
+          ? {
+              '--action-row-dock-left': `${mobileDockMetrics.left}px`,
+              '--action-row-dock-width': `${mobileDockMetrics.width}px`,
+            }
+          : {}),
+      }
+    : undefined
   const actionsStyle = alignStart
     ? {
         justifyContent: 'flex-start',
@@ -94,11 +100,22 @@ const FormActionGroup = ({
       )
       const reservedBottom = (Number.isFinite(mobileNavHeight) ? mobileNavHeight : 64) + 12
       const anchorTop = anchor.getBoundingClientRect().top
+      const anchorRect = anchor.getBoundingClientRect()
       const groupHeight = group.getBoundingClientRect().height
-      const shouldDock =
-        anchorTop >= 0 && anchorTop + groupHeight <= window.innerHeight - reservedBottom
+      const boundary = window.innerHeight - reservedBottom
 
-      setIsDockedAtEnd((current) => (current === shouldDock ? current : shouldDock))
+      setMobileDockMetrics((current) => {
+        const next = {
+          left: Math.round(anchorRect.left),
+          width: Math.round(anchorRect.width),
+        }
+        return current?.left === next.left && current?.width === next.width ? current : next
+      })
+      setIsDockedAtEnd((current) => {
+        const threshold = current ? boundary + 8 : boundary - 4
+        const shouldDock = anchorTop >= 0 && anchorTop + groupHeight <= threshold
+        return current === shouldDock ? current : shouldDock
+      })
     }
     const scheduleDockingCheck = () => {
       if (frameId !== null) window.cancelAnimationFrame(frameId)
@@ -113,6 +130,7 @@ const FormActionGroup = ({
         ? new window.ResizeObserver(scheduleDockingCheck)
         : null
     if (groupRef.current) resizeObserver?.observe(groupRef.current)
+    if (endAnchorRef.current) resizeObserver?.observe(endAnchorRef.current)
 
     return () => {
       if (frameId !== null) window.cancelAnimationFrame(frameId)
@@ -129,7 +147,7 @@ const FormActionGroup = ({
       ) : null}
       <div
         ref={groupRef}
-        className={`${containerClassName} ${isEndDocked ? 'action-row-thumb--docked-at-end' : ''} ${className}`.trim()}
+        className={`${containerClassName} ${supportsEndDocking ? (isEndDocked ? 'action-row-thumb--docked-at-end' : 'action-row-thumb--floating') : ''} ${className}`.trim()}
         role="group"
         aria-label={ariaLabel}
         style={containerStyle}

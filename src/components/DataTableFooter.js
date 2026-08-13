@@ -23,12 +23,12 @@ const DataTableFooter = ({
   currentPage = 1,
   lastPage = 1,
   onPageChange = null,
+  compactMobile = false,
   className = '',
 }) => {
   const rowsSelectId = useId()
   if (!filteredCount) return null
 
-  const hasAllOption = options.some((option) => option.value === ALL_ROWS_VALUE)
   const isShowingAll = rowsToShow === ALL_ROWS_VALUE || rowsToShow >= filteredCount
   const visibleCount =
     visibleCountOverride === null
@@ -41,22 +41,19 @@ const DataTableFooter = ({
 
   return (
     <div
-      className={`data-table-footer vmecc-meta d-flex flex-wrap justify-content-end align-items-center gap-2 text-muted mt-2 ${className}`.trim()}
+      className={`data-table-footer${compactMobile ? ' data-table-footer--compact-mobile' : ''} vmecc-meta d-flex flex-wrap justify-content-end align-items-center gap-2 text-muted mt-2 ${className}`.trim()}
     >
       {showRowsPerPage ? (
-        <>
+        <div className="data-table-footer__page-size-control d-inline-flex align-items-center gap-2">
           <CFormLabel htmlFor={rowsSelectId} className="mb-0">
-            Rows per page
+            {compactMobile ? <span className="d-md-none">View</span> : null}
+            <span className={compactMobile ? 'd-none d-md-inline' : ''}>Rows per page</span>
           </CFormLabel>
           <CFormSelect
             id={rowsSelectId}
             size="sm"
             className="data-table-footer__page-size"
-            value={
-              rowsToShow === ALL_ROWS_VALUE || (hasAllOption && rowsToShow >= filteredCount)
-                ? ALL_ROWS_VALUE
-                : rowsToShow
-            }
+            value={rowsToShow}
             onChange={(e) => {
               const raw = e.target.value
               onRowsToShowChange(raw === ALL_ROWS_VALUE ? ALL_ROWS_VALUE : Number(raw))
@@ -68,11 +65,22 @@ const DataTableFooter = ({
               </option>
             ))}
           </CFormSelect>
-        </>
+        </div>
       ) : null}
-      <span aria-live="polite">
-        Showing {visibleCount} of {filteredCount}
-        {showFiltered ? <span className="ms-1">(filtered from {totalCount})</span> : null}
+      <span className="data-table-footer__summary" aria-live="polite">
+        {compactMobile ? (
+          <>
+            <span className="d-none d-md-inline">Showing </span>
+            {visibleCount} of {filteredCount}
+          </>
+        ) : (
+          `Showing ${visibleCount} of ${filteredCount}`
+        )}
+        {showFiltered ? (
+          <span className="data-table-footer__filtered-context ms-1">
+            (filtered from {totalCount})
+          </span>
+        ) : null}
       </span>
       {showPagination ? (
         <div

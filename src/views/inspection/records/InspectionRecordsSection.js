@@ -91,6 +91,7 @@ const InspectionRecordsSection = ({
       onRowsToShowChange={setRowsToShow}
       filteredCount={filteredRecords.length}
       totalCount={totalCount}
+      compactMobile
     />
   )
   const buildActions = (row) =>
@@ -169,6 +170,7 @@ const InspectionRecordsSection = ({
           <RecordScopeSegmentedControl
             value={recordScope}
             onChange={setRecordScope}
+            className="workflow-scope-segmented--text"
             data-testid="inspection-scope"
           />
           <div className="d-flex align-items-center gap-2">
@@ -203,6 +205,7 @@ const InspectionRecordsSection = ({
           <RecordScopeSegmentedControl
             value={recordScope}
             onChange={setRecordScope}
+            className="workflow-scope-segmented--text"
             data-testid="inspection-scope"
           />
           <div className="d-flex align-items-center gap-2">
