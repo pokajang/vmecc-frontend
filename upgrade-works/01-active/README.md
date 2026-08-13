@@ -4,6 +4,11 @@ Only current, actionable records belong here.
 
 Current records:
 
+- [Inspection visual CRUD UI/UX audit plan](./FRONTEND_INSPECTION_VISUAL_CRUD_UIUX_AUDIT_PLAN_2026-08-12.md)
+- [Inspection visual CRUD UI/UX audit execution and verdict](./FRONTEND_INSPECTION_VISUAL_CRUD_UIUX_AUDIT_EXECUTION_2026-08-12.md)
+- [Inspection visual remediation backlog](./FRONTEND_INSPECTION_VISUAL_REMEDIATION_BACKLOG_2026-08-12.md)
+- [Inspection visual remediation implementation plan](./FRONTEND_INSPECTION_VISUAL_REMEDIATION_PLAN_2026-08-12.md)
+- [Inspection visual remediation execution and verdict](./FRONTEND_INSPECTION_VISUAL_REMEDIATION_EXECUTION_2026-08-12.md)
 - [Inspection cross-type Playwright UAT plan](./FRONTEND_INSPECTION_CROSS_TYPE_PLAYWRIGHT_UAT_PLAN_2026-08-12.md)
 - [Inspection cross-type Playwright UAT execution and verdict](./FRONTEND_INSPECTION_CROSS_TYPE_PLAYWRIGHT_UAT_EXECUTION_2026-08-12.md)
 - [Inspection remaining consistency remediation plan](./FRONTEND_INSPECTION_REMAINING_CONSISTENCY_REMEDIATION_PLAN_2026-08-12.md)

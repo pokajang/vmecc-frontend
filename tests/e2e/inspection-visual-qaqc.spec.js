@@ -354,6 +354,20 @@ test('inspection matrix remains legible and overflow-safe across representative 
         expect(statusBox).not.toBeNull()
         expect(statusBox.y + statusBox.height).toBeLessThanOrEqual(navigationBox.y)
       }
+
+      const stickyAction = inspectionCase
+        .locator('.action-row-thumb--compact-sticky:visible')
+        .last()
+      if (await stickyAction.count()) {
+        const reservation = await stickyAction.evaluate((element) => {
+          const spacer = element.nextElementSibling
+          return {
+            actionHeight: element.getBoundingClientRect().height,
+            spacerHeight: spacer?.getBoundingClientRect().height || 0,
+          }
+        })
+        expect(reservation.spacerHeight).toBeGreaterThanOrEqual(reservation.actionHeight + 64)
+      }
     } else {
       const draftButton = inspectionCase.getByRole('button', { name: 'Save Draft' }).last()
       if (await draftButton.count()) {
@@ -409,6 +423,27 @@ test('inspection matrix remains legible and overflow-safe across representative 
     }
     document.documentElement.setAttribute('data-coreui-theme', theme)
   }, originalTheme)
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto(
+    '/inspection/ux-matrix?viewport=mobile&state=complete-with-next-location&type=health-safety-environment-inspection',
+    { waitUntil: 'domcontentloaded' },
+  )
+  await page.evaluate(() => document.documentElement.setAttribute('data-coreui-theme', 'dark'))
+  const darkMatrix = page.locator(
+    '[data-matrix-case="health-safety-environment-inspection:complete-with-next-location:mobile"]',
+  )
+  await expect(darkMatrix).toBeVisible()
+  const darkSurfaces = await darkMatrix.evaluate((element) => {
+    const read = (selector) => getComputedStyle(element.querySelector(selector)).backgroundColor
+    return {
+      header: read('.inspection-ux-matrix-case-header'),
+      preview: read('.inspection-ux-matrix-preview'),
+      body: getComputedStyle(document.body).backgroundColor,
+    }
+  })
+  expect(darkSurfaces.preview).toBe(darkSurfaces.body)
+  expect(darkSurfaces.header).not.toMatch(/rgb\(24[1-9], 24[1-9], 24[1-9]\)/)
 
   expect(pageErrors).toEqual([])
 })

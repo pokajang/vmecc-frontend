@@ -40,6 +40,7 @@ export const InspectionFormActions = ({
   isUpdateMode = false,
   onRequestReview,
   onRetryDraftSync,
+  reviewScopeMessage = '',
   sectionLabel = '',
   submissionMode = 'review',
   validationStatusMessage,
@@ -60,7 +61,14 @@ export const InspectionFormActions = ({
         className={['inspection-form-actions', className].filter(Boolean).join(' ')}
         actionsAlign={alignLeft ? 'start' : 'end'}
         mobileBehavior={isMobileSticky ? 'compact-sticky' : 'in-flow'}
-        statusMessage={validationStatusMessage || draftStatus}
+        statusMessage={
+          validationStatusMessage ||
+          reviewScopeMessage ||
+          (submissionMode === 'direct'
+            ? 'This submits immediately without a separate review screen.'
+            : '') ||
+          draftStatus
+        }
         feedback={buildSyncFeedback(draftSyncState, onRetryDraftSync)}
         auxiliaryActions={leadingAction}
         onPrimary={onRequestReview}

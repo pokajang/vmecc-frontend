@@ -34,6 +34,21 @@
   padding-bottom: 0.6rem;
 }
 
+.table-filter-advanced > summary {
+  width: fit-content;
+  padding: 0.35rem 0.5rem;
+  border-radius: var(--cui-border-radius);
+  color: var(--cui-primary);
+  cursor: pointer;
+  font-size: var(--vmecc-text-meta);
+  font-weight: 600;
+}
+
+.table-filter-advanced > summary:focus-visible {
+  outline: 0.14rem solid rgba(var(--cui-primary-rgb), 0.3);
+  outline-offset: 0.12rem;
+}
+
 @media (max-height: 520px) {
   .table-filter-drawer .offcanvas-body {
     overflow-y: auto;

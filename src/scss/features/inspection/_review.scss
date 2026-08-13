@@ -364,6 +364,29 @@
   column-gap: 0.75rem;
 }
 
+.all-extinguishers-summary-group {
+  min-width: 0;
+}
+
+.all-extinguishers-summary-group[open] {
+  flex-basis: 100%;
+}
+
+.all-extinguishers-summary-group > summary {
+  width: fit-content;
+  padding: 0.42rem 0.75rem;
+  border-radius: 999px;
+  color: var(--cui-primary);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.all-extinguishers-summary-group > summary:focus-visible {
+  outline: 0.14rem solid rgba(var(--cui-primary-rgb), 0.3);
+  outline-offset: 0.12rem;
+}
+
 @media (min-width: 768px) {
   .all-extinguishers-filter-row > .flex-grow-1 {
     flex: 1 1 14rem !important;
@@ -373,7 +396,7 @@
 }
 
 .all-extinguishers-summary-item {
-  --bg: #f8f9fa;
+  --bg: var(--cui-tertiary-bg);
   --border: var(--cui-border-color);
   display: inline-flex;
   align-items: center;

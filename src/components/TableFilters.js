@@ -36,6 +36,8 @@ const TableFilters = ({
   labelClassName = 'text-body-secondary',
   periodLabel = 'Period',
   showActiveSummary = true,
+  desktopPrimaryFilterCount = null,
+  advancedFiltersLabel = 'More filters',
 }) => {
   const mobileFilterTriggerSize = 'calc(1.5em + 0.75rem + 2px)'
   const searchId = useId()
@@ -71,6 +73,15 @@ const TableFilters = ({
   const filterColProps = autoWidth ? { xs: 6, md: 'auto' } : { xs: 6, md: filterColMd }
   const clearColProps = autoWidth ? { xs: 12, md: 'auto' } : { xs: 12, md: clearColMd }
   const mobileSearchColProps = autoWidth ? { xs: true, className: 'flex-grow-1' } : { xs: true }
+  const resolvedPrimaryFilterCount = Number.isInteger(desktopPrimaryFilterCount)
+    ? Math.max(0, desktopPrimaryFilterCount)
+    : filters.length
+  const primaryDesktopFilters = filters.slice(0, resolvedPrimaryFilterCount)
+  const advancedDesktopFilters = filters.slice(resolvedPrimaryFilterCount)
+  const hasActiveAdvancedFilter = advancedDesktopFilters.some(
+    (filter) => String(filter.value ?? '') !== String(filter.defaultValue ?? 'all'),
+  )
+  const [advancedDesktopOpen, setAdvancedDesktopOpen] = useState(hasActiveAdvancedFilter)
 
   const closeMobileFilters = useCallback(() => setMobileFiltersOpen(false), [])
 
@@ -175,11 +186,28 @@ const TableFilters = ({
           </CCol>
         )}
 
-        {filters.map((filter) => (
+        {primaryDesktopFilters.map((filter) => (
           <CCol key={filter.key} {...filterColProps} className="d-none d-md-block">
             {renderFilterControl(filter)}
           </CCol>
         ))}
+
+        {advancedDesktopFilters.length > 0 ? (
+          <CCol xs={12} className="d-none d-md-block">
+            <details
+              className="table-filter-advanced"
+              open={advancedDesktopOpen || hasActiveAdvancedFilter}
+              onToggle={(event) => setAdvancedDesktopOpen(event.currentTarget.open)}
+            >
+              <summary>{advancedFiltersLabel}</summary>
+              <div className="d-flex flex-wrap align-items-center gap-2 pt-2">
+                {advancedDesktopFilters.map((filter) => (
+                  <div key={filter.key}>{renderFilterControl(filter)}</div>
+                ))}
+              </div>
+            </details>
+          </CCol>
+        ) : null}
 
         {isAnyFilterActive && (
           <CCol {...clearColProps} className="d-none d-md-flex justify-content-md-end">

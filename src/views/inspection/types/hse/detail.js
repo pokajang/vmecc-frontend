@@ -17,60 +17,57 @@ const getHseGroupLabel = (form = {}) =>
     .filter(Boolean)
     .join(' > ')
 
-const buildObservationItems = (form, normalized) =>
-  normalized.hseSelections.map((selection, index) => {
+const buildObservationItem = (form, normalized) => {
+  const observations = normalized.hseSelections.map((selection, index) => {
     const option = HSE_SELECTION_OPTIONS.find((candidate) => candidate.value === selection)
     return {
-      key: `hse:${selection || index}`,
-      groupLabel: getHseGroupLabel(form),
-      title: option?.label || selection || `Observation ${index + 1}`,
-      summaryLines: [],
-      badges: [issueBadge(1, 'Finding')],
-      field: HSE_DETAIL_FIELDS[selection],
-      normalized,
+      key: selection || String(index),
+      label: option?.label || selection || `Observation ${index + 1}`,
+      value: HSE_DETAIL_FIELDS[selection] ? normalized[HSE_DETAIL_FIELDS[selection].key] : '',
     }
   })
-
-const buildFollowUpItem = (form, normalized) => {
   const photos = Array.isArray(form.photos) ? form.photos : []
-  if (!detailText(normalized.hseImmediateAction) && photos.length === 0) return null
+  if (
+    observations.length === 0 &&
+    !detailText(normalized.hseImmediateAction) &&
+    photos.length === 0
+  ) {
+    return null
+  }
 
   return {
-    key: 'hse:follow-up',
+    key: 'hse:observation',
     groupLabel: getHseGroupLabel(form),
-    title: 'Follow-up and evidence',
+    title: observations.map((observation) => observation.label).join(' and ') || 'Observation',
     summaryLines: [detailPhotoSummary(photos)].filter(Boolean),
+    badges: [issueBadge(1, 'Finding')],
     normalized,
+    observations,
     photos,
-    followUp: true,
   }
 }
 
 export const buildHseDetailFindingItems = (form = {}) => {
   const normalized = normalizeHseFormFields(form)
-  return [...buildObservationItems(form, normalized), buildFollowUpItem(form, normalized)].filter(
-    Boolean,
-  )
+  return [buildObservationItem(form, normalized)].filter(Boolean)
 }
 
 export const renderHseDetailFindingContent = (item = {}) => {
-  if (item.followUp) {
-    const { normalized = {}, photos = [] } = item
-    return (
-      <div className="inspection-form-section d-grid gap-3">
-        <DetailValueBlock
-          label="Immediate corrective action"
-          value={normalized.hseImmediateAction}
-        />
-        <DetailEvidenceBlock title="HSE evidence" photos={photos} />
-      </div>
-    )
-  }
-
-  const { normalized = {}, field } = item
+  const { normalized = {}, observations = [], photos = [] } = item
   return (
     <div className="inspection-form-section d-grid gap-3">
-      <DetailValueBlock label="Description" value={field ? normalized[field.key] : ''} />
+      {observations.map((observation) => (
+        <DetailValueBlock
+          key={observation.key}
+          label={observations.length > 1 ? `${observation.label} description` : 'Description'}
+          value={observation.value}
+        />
+      ))}
+      <DetailValueBlock label="Immediate corrective action" value={normalized.hseImmediateAction} />
+      <DetailEvidenceBlock
+        photos={photos}
+        hiddenDescriptionValues={observations.map((observation) => observation.label)}
+      />
     </div>
   )
 }

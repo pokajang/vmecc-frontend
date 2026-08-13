@@ -54,6 +54,7 @@ export const PhotoGallery = ({
   showCaptionChips = true,
   presentation = 'default',
   contextLabel = 'Inspection evidence photo',
+  hiddenDescriptionValues = [],
 }) => {
   if (presentation === 'drawer-editor' && !readOnly) {
     return (
@@ -80,6 +81,15 @@ export const PhotoGallery = ({
     const message = String(emptyMessage || '').trim()
     return message ? <div className="text-body-secondary">{message}</div> : null
   }
+  const hiddenDescriptions = new Set(
+    (Array.isArray(hiddenDescriptionValues) ? hiddenDescriptionValues : [])
+      .map((value) =>
+        String(value || '')
+          .trim()
+          .toLowerCase(),
+      )
+      .filter(Boolean),
+  )
 
   return (
     <div
@@ -91,6 +101,14 @@ export const PhotoGallery = ({
     >
       {visiblePhotos.map((photo, index) => {
         const photoLabel = resolvePhotoLabel({ photo, index, contextLabel })
+        const normalizedDescription = String(photo?.description || '').trim()
+        const normalizedFileName = String(photo?.fileName || photo?.name || '').trim()
+        const visibleDescription =
+          normalizedDescription &&
+          normalizedDescription.toLowerCase() !== normalizedFileName.toLowerCase() &&
+          !hiddenDescriptions.has(normalizedDescription.toLowerCase())
+            ? normalizedDescription
+            : ''
 
         return (
           <div
@@ -103,9 +121,9 @@ export const PhotoGallery = ({
               className="workflow-photo-preview--uncropped"
             />
             {readOnly ? (
-              String(photo?.description || '').trim() ? (
+              visibleDescription ? (
                 <div className="small text-body-secondary" style={{ whiteSpace: 'pre-wrap' }}>
-                  {photo.description}
+                  {visibleDescription}
                 </div>
               ) : null
             ) : (

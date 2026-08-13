@@ -1473,7 +1473,7 @@ const CoverageOverview = ({
       {hasInspectionData ? (
         <>
           <section className="d-grid gap-2">
-            <div className="fw-semibold">Latest Inspection</div>
+            <div className="fw-semibold">Latest inspection result</div>
             <div className="rounded-3 border p-3 d-flex flex-wrap align-items-center gap-2">
               <StatusBadge value={latestStatus} label={statusLabel[latestStatus]} />
               <span className="text-body-secondary">
@@ -1528,11 +1528,6 @@ const CoverageOverview = ({
               </div>
             </section>
           ) : null}
-
-          <section className="d-grid gap-2">
-            <div className="fw-semibold">Latest inspection criteria</div>
-            <CriteriaRows checks={checks} detail={detail} onViewPhotos={onViewPhotos} />
-          </section>
         </>
       ) : null}
 
@@ -2329,6 +2324,8 @@ const AllExtinguishersSection = ({
         onPeriodChange={updatePeriod}
         periodOptions={PERIOD_OPTIONS}
         periodLabel="Record period"
+        desktopPrimaryFilterCount={3}
+        advancedFiltersLabel="More extinguisher filters"
         filters={[
           {
             key: 'sort',
@@ -2517,36 +2514,41 @@ const AllExtinguishersSection = ({
         }}
         isActive={lifecycleFilter === ALL_ROWS_VALUE}
       />
-      <SummaryItem
-        label="Active"
-        value={lifecycleSummary.active}
-        tone="success"
-        onClick={() => {
-          resetToFirstPage()
-          setLifecycleFilter('active')
-        }}
-        isActive={lifecycleFilter === 'active'}
-      />
-      <SummaryItem
-        label="Out of service"
-        value={lifecycleSummary.outOfService}
-        tone="warning"
-        onClick={() => {
-          resetToFirstPage()
-          setLifecycleFilter('out_of_service')
-        }}
-        isActive={lifecycleFilter === 'out_of_service'}
-      />
-      <SummaryItem
-        label="Retired"
-        value={lifecycleSummary.retired}
-        tone="secondary"
-        onClick={() => {
-          resetToFirstPage()
-          setLifecycleFilter('retired')
-        }}
-        isActive={lifecycleFilter === 'retired'}
-      />
+      <details className="all-extinguishers-summary-group">
+        <summary>Lifecycle metrics</summary>
+        <div className="d-flex flex-wrap gap-2 pt-2">
+          <SummaryItem
+            label="Active"
+            value={lifecycleSummary.active}
+            tone="success"
+            onClick={() => {
+              resetToFirstPage()
+              setLifecycleFilter('active')
+            }}
+            isActive={lifecycleFilter === 'active'}
+          />
+          <SummaryItem
+            label="Out of service"
+            value={lifecycleSummary.outOfService}
+            tone="warning"
+            onClick={() => {
+              resetToFirstPage()
+              setLifecycleFilter('out_of_service')
+            }}
+            isActive={lifecycleFilter === 'out_of_service'}
+          />
+          <SummaryItem
+            label="Retired"
+            value={lifecycleSummary.retired}
+            tone="secondary"
+            onClick={() => {
+              resetToFirstPage()
+              setLifecycleFilter('retired')
+            }}
+            isActive={lifecycleFilter === 'retired'}
+          />
+        </div>
+      </details>
       <SummaryItem
         label={`${monthlyCyclePrefix}Inspected`}
         value={monthlyInspected}
@@ -2600,66 +2602,64 @@ const AllExtinguishersSection = ({
         }}
         isActive={issueFilter === 'with-issues'}
       />
-      <SummaryItem
-        label={`${monthlyCyclePrefix}Repeat checks`}
-        value={monthlyRepeatChecks}
-        tone="warning"
-        onClick={() => {
-          resetToFirstPage()
-          const nextScope =
-            monthlyComplianceFilter === 'repeat_check' ? ALL_ROWS_VALUE : 'repeat_check'
-          setPeriod('thismonth')
-          setMonthlyComplianceFilter(nextScope)
-          setDuplicateScope('all')
-          if (nextScope === 'repeat_check') {
-            setSort('duplicates')
-          }
-        }}
-        isActive={monthlyComplianceFilter === 'repeat_check'}
-      />
-      <SummaryItem
-        label="Duplicate barcode"
-        value={summary.barcodeDuplicates ?? summary.locatorDuplicates ?? 0}
-        tone="warning"
-        onClick={() => {
-          const nextScope = duplicateScope === 'locator' ? 'all' : 'locator'
-          resetToFirstPage()
-          setDuplicateScope(nextScope)
-          if (nextScope === 'locator') {
-            setSort('locator-duplicates')
-          }
-        }}
-        isActive={duplicateScope === 'locator'}
-      />
-      <SummaryItem
-        label="Duplicate ID Loc No."
-        value={summary.idLocNoDuplicates ?? 0}
-        tone="warning"
-        onClick={() => {
-          const nextScope = duplicateScope === 'id-loc' ? 'all' : 'id-loc'
-          resetToFirstPage()
-          setDuplicateScope(nextScope)
-          if (nextScope === 'id-loc') {
-            setSort('id-loc-duplicates')
-          }
-        }}
-        isActive={duplicateScope === 'id-loc'}
-      />
-      <SummaryItem
-        label="Expired"
-        value={summary.expired}
-        tone="danger"
-        onClick={() => {
-          resetToFirstPage()
-          const nextCertification = certificationFilter === 'expired' ? ALL_ROWS_VALUE : 'expired'
-          setCertificationFilter(nextCertification)
-          setDuplicateScope('all')
-          if (nextCertification === 'expired') {
-            setSort('days-left')
-          }
-        }}
-        isActive={certificationFilter === 'expired'}
-      />
+      <details className="all-extinguishers-summary-group">
+        <summary>Exceptions and data quality</summary>
+        <div className="d-flex flex-wrap gap-2 pt-2">
+          <SummaryItem
+            label={`${monthlyCyclePrefix}Repeat checks`}
+            value={monthlyRepeatChecks}
+            tone="warning"
+            onClick={() => {
+              resetToFirstPage()
+              const nextScope =
+                monthlyComplianceFilter === 'repeat_check' ? ALL_ROWS_VALUE : 'repeat_check'
+              setPeriod('thismonth')
+              setMonthlyComplianceFilter(nextScope)
+              setDuplicateScope('all')
+              if (nextScope === 'repeat_check') setSort('duplicates')
+            }}
+            isActive={monthlyComplianceFilter === 'repeat_check'}
+          />
+          <SummaryItem
+            label="Duplicate barcode"
+            value={summary.barcodeDuplicates ?? summary.locatorDuplicates ?? 0}
+            tone="warning"
+            onClick={() => {
+              const nextScope = duplicateScope === 'locator' ? 'all' : 'locator'
+              resetToFirstPage()
+              setDuplicateScope(nextScope)
+              if (nextScope === 'locator') setSort('locator-duplicates')
+            }}
+            isActive={duplicateScope === 'locator'}
+          />
+          <SummaryItem
+            label="Duplicate ID Loc No."
+            value={summary.idLocNoDuplicates ?? 0}
+            tone="warning"
+            onClick={() => {
+              const nextScope = duplicateScope === 'id-loc' ? 'all' : 'id-loc'
+              resetToFirstPage()
+              setDuplicateScope(nextScope)
+              if (nextScope === 'id-loc') setSort('id-loc-duplicates')
+            }}
+            isActive={duplicateScope === 'id-loc'}
+          />
+          <SummaryItem
+            label="Expired"
+            value={summary.expired}
+            tone="danger"
+            onClick={() => {
+              resetToFirstPage()
+              const nextCertification =
+                certificationFilter === 'expired' ? ALL_ROWS_VALUE : 'expired'
+              setCertificationFilter(nextCertification)
+              setDuplicateScope('all')
+              if (nextCertification === 'expired') setSort('days-left')
+            }}
+            isActive={certificationFilter === 'expired'}
+          />
+        </div>
+      </details>
     </div>
   )
 

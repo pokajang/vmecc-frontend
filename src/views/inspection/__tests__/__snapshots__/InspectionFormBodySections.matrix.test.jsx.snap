@@ -1586,9 +1586,20 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     >
       <div
         aria-label="Inspection form actions"
-        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        class="action-row-thumb action-row-thumb--in-flow action-row-thumb--split workflow-stage-actions__group"
         role="group"
       >
+        <div
+          class="action-row-thumb-leading"
+        >
+          <div
+            aria-live="polite"
+            class="workflow-stage-actions__status"
+            role="status"
+          >
+            This submits immediately without a separate review screen.
+          </div>
+        </div>
         <div
           class="action-row-thumb-actions"
         >
@@ -1613,6 +1624,14 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
         class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
         role="group"
       >
+        <div
+          aria-live="polite"
+          class="action-row-thumb-status text-body-secondary"
+          role="status"
+          title="This submits immediately without a separate review screen."
+        >
+          This submits immediately without a separate review screen.
+        </div>
         <div
           class="action-row-thumb-actions"
         >
@@ -1654,9 +1673,20 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     >
       <div
         aria-label="Inspection form actions"
-        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        class="action-row-thumb action-row-thumb--in-flow action-row-thumb--split workflow-stage-actions__group"
         role="group"
       >
+        <div
+          class="action-row-thumb-leading"
+        >
+          <div
+            aria-live="polite"
+            class="workflow-stage-actions__status"
+            role="status"
+          >
+            This submits immediately without a separate review screen.
+          </div>
+        </div>
         <div
           class="action-row-thumb-actions"
         >
@@ -1681,6 +1711,14 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
         class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
         role="group"
       >
+        <div
+          aria-live="polite"
+          class="action-row-thumb-status text-body-secondary"
+          role="status"
+          title="This submits immediately without a separate review screen."
+        >
+          This submits immediately without a separate review screen.
+        </div>
         <div
           class="action-row-thumb-actions"
         >
@@ -3283,9 +3321,20 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     >
       <div
         aria-label="Inspection form actions"
-        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        class="action-row-thumb action-row-thumb--in-flow action-row-thumb--split workflow-stage-actions__group"
         role="group"
       >
+        <div
+          class="action-row-thumb-leading"
+        >
+          <div
+            aria-live="polite"
+            class="workflow-stage-actions__status"
+            role="status"
+          >
+            Only completed items in this inspection scope will be included.
+          </div>
+        </div>
         <div
           class="action-row-thumb-actions"
         >
@@ -3310,6 +3359,14 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
         class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
         role="group"
       >
+        <div
+          aria-live="polite"
+          class="action-row-thumb-status text-body-secondary"
+          role="status"
+          title="Only completed items in this inspection scope will be included."
+        >
+          Only completed items in this inspection scope will be included.
+        </div>
         <div
           class="action-row-thumb-actions"
         >
@@ -3382,9 +3439,20 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     >
       <div
         aria-label="Inspection form actions"
-        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        class="action-row-thumb action-row-thumb--in-flow action-row-thumb--split workflow-stage-actions__group"
         role="group"
       >
+        <div
+          class="action-row-thumb-leading"
+        >
+          <div
+            aria-live="polite"
+            class="workflow-stage-actions__status"
+            role="status"
+          >
+            Only completed items in this inspection scope will be included.
+          </div>
+        </div>
         <div
           class="action-row-thumb-actions"
         >
@@ -3409,6 +3477,14 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
         class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
         role="group"
       >
+        <div
+          aria-live="polite"
+          class="action-row-thumb-status text-body-secondary"
+          role="status"
+          title="Only completed items in this inspection scope will be included."
+        >
+          Only completed items in this inspection scope will be included.
+        </div>
         <div
           class="action-row-thumb-actions"
         >
@@ -4102,9 +4178,20 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     >
       <div
         aria-label="Inspection form actions"
-        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        class="action-row-thumb action-row-thumb--in-flow action-row-thumb--split workflow-stage-actions__group"
         role="group"
       >
+        <div
+          class="action-row-thumb-leading"
+        >
+          <div
+            aria-live="polite"
+            class="workflow-stage-actions__status"
+            role="status"
+          >
+            This submits immediately without a separate review screen.
+          </div>
+        </div>
         <div
           class="action-row-thumb-actions"
         >
@@ -4129,6 +4216,14 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
         class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
         role="group"
       >
+        <div
+          aria-live="polite"
+          class="action-row-thumb-status text-body-secondary"
+          role="status"
+          title="This submits immediately without a separate review screen."
+        >
+          This submits immediately without a separate review screen.
+        </div>
         <div
           class="action-row-thumb-actions"
         >
@@ -4170,9 +4265,20 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
     >
       <div
         aria-label="Inspection form actions"
-        class="action-row-thumb action-row-thumb--in-flow workflow-stage-actions__group"
+        class="action-row-thumb action-row-thumb--in-flow action-row-thumb--split workflow-stage-actions__group"
         role="group"
       >
+        <div
+          class="action-row-thumb-leading"
+        >
+          <div
+            aria-live="polite"
+            class="workflow-stage-actions__status"
+            role="status"
+          >
+            This submits immediately without a separate review screen.
+          </div>
+        </div>
         <div
           class="action-row-thumb-actions"
         >
@@ -4197,6 +4303,14 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
         class="action-row-thumb action-row-thumb--compact-sticky workflow-stage-actions__group"
         role="group"
       >
+        <div
+          aria-live="polite"
+          class="action-row-thumb-status text-body-secondary"
+          role="status"
+          title="This submits immediately without a separate review screen."
+        >
+          This submits immediately without a separate review screen.
+        </div>
         <div
           class="action-row-thumb-actions"
         >

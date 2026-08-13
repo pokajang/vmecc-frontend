@@ -31,10 +31,9 @@ const styles = `
     display: grid;
     gap: 1rem;
     padding: 1rem;
-    border: 1px solid rgba(15, 23, 42, 0.08);
+    border: 1px solid var(--cui-border-color);
     border-radius: 1rem;
-    background:
-      linear-gradient(135deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.95));
+    background: var(--cui-tertiary-bg);
   }
 
   .inspection-ux-matrix-toolbar-grid {
@@ -56,16 +55,16 @@ const styles = `
   .inspection-ux-matrix-case {
     border-radius: 1rem;
     overflow: hidden;
-    border: 1px solid rgba(15, 23, 42, 0.08);
-    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+    border: 1px solid var(--cui-border-color);
+    box-shadow: 0 16px 40px rgba(var(--cui-black-rgb, 0, 0, 0), 0.08);
   }
 
   .inspection-ux-matrix-case-header {
     display: grid;
     gap: 0.65rem;
     padding: 1rem 1rem 0.85rem;
-    border-bottom: 1px solid rgba(15, 23, 42, 0.08);
-    background: rgba(248, 250, 252, 0.92);
+    border-bottom: 1px solid var(--cui-border-color);
+    background: var(--cui-tertiary-bg);
   }
 
   .inspection-ux-matrix-case-meta {
@@ -75,9 +74,7 @@ const styles = `
   }
 
   .inspection-ux-matrix-preview {
-    background:
-      radial-gradient(circle at top left, rgba(14, 165, 233, 0.08), transparent 38%),
-      linear-gradient(180deg, rgba(248, 250, 252, 0.96), rgba(255, 255, 255, 1));
+    background: var(--cui-body-bg);
     padding: 1rem;
   }
 

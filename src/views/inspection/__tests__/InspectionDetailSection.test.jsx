@@ -132,7 +132,8 @@ describe('InspectionDetailSection', () => {
     expect(screen.getByText('Oil spill near the loading bay.')).toBeTruthy()
     expect(screen.getByText('Area cordoned off.')).toBeTruthy()
     const findings = screen.getByText('Inspection Findings').closest('section')
-    expect(findings?.querySelectorAll('.inspection-detail-finding-accordion-item')).toHaveLength(2)
+    expect(findings?.querySelectorAll('.inspection-detail-finding-accordion-item')).toHaveLength(1)
+    expect(screen.queryByText('Follow-up and evidence')).toBeNull()
   })
 
   it('renders ER Aux read-only equipment cards in detail mode', () => {

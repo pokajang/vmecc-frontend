@@ -228,7 +228,6 @@ const InspectionRecordMeta = ({
   submittedAt,
   submittedEntry,
   timeline,
-  renderStatusBadge: customStatusRenderer,
 }) => {
   const submittedRole = formatInspectionRole(
     record.submittedByRole ||
@@ -246,14 +245,10 @@ const InspectionRecordMeta = ({
     <section className="inspection-form-section d-grid gap-3">
       <div className="fw-semibold text-muted">Report Metadata</div>
       <CRow className="g-3">
-        <DetailField label="Report ID">{record.displayId || '--'}</DetailField>
-        <DetailField label="Status">
-          {renderStatusBadge(record.status || 'Unknown', customStatusRenderer)}
-        </DetailField>
         <DetailField label="Inspection Date/Time">{inspectedAt || '--'}</DetailField>
-        <DetailField label="Submitted By">
-          {record.submittedBy || submittedEntry?.by || '--'}
-        </DetailField>
+        {record.submittedBy || submittedEntry?.by ? (
+          <DetailField label="Submitted By">{record.submittedBy || submittedEntry?.by}</DetailField>
+        ) : null}
         {submittedRole ? <DetailField label="Role">{submittedRole}</DetailField> : null}
         <DetailField label="Submitted At">{submittedAt}</DetailField>
         {record.nextActionRole ? (
@@ -385,9 +380,15 @@ const InspectionDetailSection = ({
     <div className="inspection-detail-section">
       <div className="inspection-form-sections d-grid gap-4">
         <div className="d-flex flex-wrap justify-content-between align-items-start gap-3">
-          <div>
-            <div className="fw-semibold">{record.displayId}</div>
-            <div className="small text-body-secondary">{submittedAt}</div>
+          <div className="d-grid gap-1">
+            <div className="d-flex flex-wrap align-items-center gap-2">
+              <div className="fw-semibold">{selectedTypeDefinition?.title || selectedType}</div>
+              {renderStatusBadge(record.status || 'Unknown', customStatusRenderer)}
+            </div>
+            {mainLocationLabel ? <div>{mainLocationLabel}</div> : null}
+            <div className="small text-body-secondary">
+              {[record.displayId, submittedAt].filter(Boolean).join(' · ')}
+            </div>
           </div>
           <InspectionDetailActionBar
             mode="desktop"
@@ -406,16 +407,6 @@ const InspectionDetailSection = ({
             isDeleting={isDeleting}
           />
         </div>
-
-        <InspectionRecordMeta
-          record={record}
-          form={form}
-          inspectedAt={inspectedAt}
-          submittedAt={submittedAt}
-          submittedEntry={submittedEntry}
-          timeline={timeline}
-          renderStatusBadge={customStatusRenderer}
-        />
 
         <section className="inspection-form-section d-grid gap-3">
           <div className="fw-semibold text-muted">Inspection Context</div>
@@ -455,6 +446,15 @@ const InspectionDetailSection = ({
             />
           </section>
         ) : null}
+
+        <InspectionRecordMeta
+          record={record}
+          form={form}
+          inspectedAt={inspectedAt}
+          submittedAt={submittedAt}
+          submittedEntry={submittedEntry}
+          timeline={timeline}
+        />
 
         <InspectionDetailActionBar
           mode="mobile"

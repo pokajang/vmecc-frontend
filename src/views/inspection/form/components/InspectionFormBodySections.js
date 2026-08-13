@@ -1157,6 +1157,15 @@ const InspectionFormBodySections = ({
     String(form.fireExtinguisherFocusedAssetKey || '').trim() &&
     isCurrentFireExtinguisherLocationComplete &&
     typeof fireExtinguisherScan?.onOpenScanner === 'function'
+  const structuredTotalCount = Number(currentStructuredSummary?.totalCount || 0)
+  const structuredCheckedCount = Number(
+    currentStructuredSummary?.checkedCount ?? currentStructuredSummary?.completedCount ?? 0,
+  )
+  const isPartialStructuredScope =
+    isStructuredInspectionForm &&
+    selectedTypeDefinition?.submissionMode !== 'direct' &&
+    structuredCheckedCount > 0 &&
+    structuredCheckedCount < structuredTotalCount
   const renderActions = (className = '', isMobileSticky = false, wrapperClassName = '') => (
     <InspectionFormActions
       alignLeft={Boolean(nextStepAction)}
@@ -1169,6 +1178,11 @@ const InspectionFormBodySections = ({
       isUpdateMode={isUpdateMode}
       onRequestReview={onRequestReview}
       onRetryDraftSync={onRetryDraftSync}
+      reviewScopeMessage={
+        isPartialStructuredScope
+          ? 'Only completed items in this inspection scope will be included.'
+          : ''
+      }
       sectionLabel={nextStepAction ? "What's Next" : ''}
       submissionMode={
         selectedTypeDefinition?.submissionMode === 'direct' &&

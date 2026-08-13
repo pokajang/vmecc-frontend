@@ -176,11 +176,11 @@
   }
 
   .action-row-thumb-spacer--compact {
-    height: calc(var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 6rem);
+    height: calc(var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 7.5rem);
   }
 
   .action-row-thumb-spacer--compact-with-leading {
-    height: calc(var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 8rem);
+    height: calc(var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 10rem);
   }
 
   .salary-bulk-mode-bar {

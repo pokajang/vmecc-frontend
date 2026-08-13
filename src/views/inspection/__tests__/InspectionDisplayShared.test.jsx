@@ -116,6 +116,39 @@ describe('InspectionDisplayShared', () => {
     expect(previews[1].querySelector('img')?.getAttribute('src')).toContain('portrait')
   })
 
+  it('hides device filenames and context-duplicate captions in read-only evidence', () => {
+    render(
+      <PhotoGallery
+        readOnly
+        hiddenDescriptionValues={['Unsafe Condition']}
+        photos={[
+          {
+            id: 'device-name',
+            fileName: 'inspection-camera-123.jpg',
+            description: 'inspection-camera-123.jpg',
+            url: 'data:image/png;base64,device',
+          },
+          {
+            id: 'context-caption',
+            fileName: 'finding.jpg',
+            description: 'Unsafe Condition',
+            url: 'data:image/png;base64,context',
+          },
+          {
+            id: 'meaningful-caption',
+            fileName: 'evidence.jpg',
+            description: 'Guard removed from the drive belt.',
+            url: 'data:image/png;base64,meaningful',
+          },
+        ]}
+      />,
+    )
+
+    expect(screen.queryByText('inspection-camera-123.jpg')).toBeNull()
+    expect(screen.queryByText('Unsafe Condition')).toBeNull()
+    expect(screen.getByText('Guard removed from the drive belt.')).toBeTruthy()
+  })
+
   it('uses the full-width drawer editor with collapsed descriptions and compact actions', () => {
     const onChangeDescription = vi.fn()
     const onRemove = vi.fn()

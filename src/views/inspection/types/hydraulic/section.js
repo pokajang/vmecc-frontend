@@ -1,9 +1,7 @@
 import React from 'react'
 import { CBadge, CCard, CCardBody, CCardHeader } from '@coreui/react'
-import {
-  HydraulicEquipmentChecks,
-  PhotoGallery,
-} from 'src/views/inspection/form/components/InspectionFormDisplaySections'
+import { HydraulicEquipmentChecks } from 'src/views/inspection/form/components/InspectionFormDisplaySections'
+import { DetailEvidenceBlock } from '../../records/InspectionDetailReadOnly'
 import { HYDRAULIC_CHECK_FIELDS, getHydraulicRetainedEvidenceFields } from './helpers'
 
 export const HydraulicEditSection = ({
@@ -58,25 +56,7 @@ const HydraulicStatusBadge = ({ value }) => {
   )
 }
 
-const HydraulicReadOnlyEvidence = ({ title, remarks = '', photos = [] }) => {
-  const hasRemarks = String(remarks || '').trim()
-  const visiblePhotos = Array.isArray(photos) ? photos.filter(Boolean) : []
-  if (!hasRemarks && visiblePhotos.length === 0) return null
-
-  return (
-    <div className="inspection-readonly-evidence rounded-3 border bg-light-subtle p-2 d-grid gap-2">
-      <div className="small fw-semibold text-body-secondary">{title}</div>
-      {hasRemarks ? (
-        <div className="small" style={{ whiteSpace: 'pre-wrap' }}>
-          {remarks}
-        </div>
-      ) : null}
-      {visiblePhotos.length > 0 ? (
-        <PhotoGallery photos={visiblePhotos} readOnly emptyMessage="" />
-      ) : null}
-    </div>
-  )
-}
+const HydraulicReadOnlyEvidence = DetailEvidenceBlock
 
 const HydraulicReadOnlyField = ({ field, row }) => {
   const status = String(row?.[field.key] || '').trim()

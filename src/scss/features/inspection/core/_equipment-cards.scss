@@ -70,9 +70,8 @@
 }
 
 .inspection-fire-extinguisher-card-mobile-line {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .fire-extinguisher-drawer-location-meta {

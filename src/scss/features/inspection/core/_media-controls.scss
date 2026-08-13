@@ -48,7 +48,7 @@
   justify-content: center;
   overflow: hidden;
   border-radius: 0.25rem;
-  background: #f8fafc;
+  background: var(--cui-tertiary-bg);
   color: var(--cui-secondary-color);
 }
 
@@ -72,6 +72,13 @@
   height: auto;
   max-height: min(72dvh, 52rem);
   object-fit: contain;
+}
+
+.inspection-photo-gallery__item--read-only .workflow-photo-preview--uncropped {
+  min-height: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .inspection-general-evidence-drawer-gallery > div:first-child {

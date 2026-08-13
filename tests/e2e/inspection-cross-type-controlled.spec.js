@@ -454,6 +454,18 @@ test('captures consolidated inspection entry, state, evidence and detail views',
         })
         await waitForReady(page)
         await expect(page.getByText('Inspection Details', { exact: true }).first()).toBeVisible()
+        if (type.key === 'health-safety-environment-inspection') {
+          const findings = page.locator('.inspection-detail-finding-accordion-item')
+          await expect(findings).toHaveCount(1)
+          await expect(page.getByText('Follow-up and evidence', { exact: true })).toHaveCount(0)
+          await findings.locator('.accordion-button').click()
+          const evidence = findings.locator('.inspection-readonly-evidence')
+          await expect(evidence).toBeVisible()
+          await expect(evidence).not.toHaveClass(/\bborder\b|\bbg-light-subtle\b/)
+          const preview = evidence.locator('.workflow-photo-preview--uncropped')
+          await expect(preview).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
+          await expect(preview).toHaveCSS('padding-top', '0px')
+        }
         await capture(
           page,
           testInfo,
