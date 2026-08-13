@@ -159,32 +159,32 @@ const ScheduleTab = ({
     >
       <CButton
         size="sm"
-        className={`d-inline-flex align-items-center ${ghostBtn}`}
+        className={`icon-label-action ${ghostBtn}`}
         onClick={handlePrint}
         disabled={loading || monthWeekGroups.length === 0}
         title="Print / Save as PDF"
       >
-        <Printer size={13} className="me-1 align-text-bottom" />
+        <Printer size={13} aria-hidden="true" />
         Print / PDF
       </CButton>
       <CButton
         size="sm"
-        className={`d-inline-flex align-items-center ${ghostBtn}`}
+        className={`icon-label-action ${ghostBtn}`}
         onClick={handleExportXlsx}
         disabled={loading || filteredRows.length === 0}
         title="Export to Excel"
       >
-        <Download size={13} className="me-1 align-text-bottom" />
+        <Download size={13} aria-hidden="true" />
         Export
       </CButton>
       <CButton
         size="sm"
-        className={`d-inline-flex align-items-center ${ghostBtn}`}
+        className={`icon-label-action ${ghostBtn}`}
         onClick={() => setEditMode(true)}
         data-testid="roster-management-edit-action"
         disabled={loading}
       >
-        <Pencil size={13} className="me-1 align-text-bottom" />
+        <Pencil size={13} aria-hidden="true" />
         Edit Roster
       </CButton>
     </div>

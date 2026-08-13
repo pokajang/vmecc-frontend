@@ -216,7 +216,7 @@ const LeaveRecordsSection = ({
             <CreateActionButton
               label={groupByMonth ? 'Grouped by month' : 'Group by month'}
               onClick={() => onGroupByMonthChange?.(!groupByMonth)}
-              icon={<Clock3 size={13} className="me-1 align-text-bottom" />}
+              icon={<Clock3 size={13} />}
               className={groupByMonth ? 'fw-semibold' : 'text-body-secondary'}
             />
           ) : null}
@@ -225,7 +225,7 @@ const LeaveRecordsSection = ({
               label={primaryActionLabel}
               importance="section-primary"
               onClick={startNewLeave}
-              icon={primaryActionIcon || <Plus size={13} className="me-1 align-text-bottom" />}
+              icon={primaryActionIcon || <Plus size={13} />}
             />
           ) : null}
         </div>

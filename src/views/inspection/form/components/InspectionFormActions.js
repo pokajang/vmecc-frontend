@@ -3,6 +3,16 @@ import WorkflowStageActions from 'src/components/report-workflow/WorkflowStageAc
 
 const REVIEW_ACTION_LABEL = 'Continue to Review'
 const REVIEW_UPDATE_ACTION_LABEL = 'Continue to Review Updates'
+const ROUTINE_DRAFT_STATUSES = new Set([
+  'saved locally. backend sync pending',
+  'saved locally. syncing...',
+  'draft synced',
+])
+
+export const getVisibleInspectionActionStatus = (draftStatus = '') => {
+  const normalizedStatus = String(draftStatus || '').trim()
+  return ROUTINE_DRAFT_STATUSES.has(normalizedStatus.toLowerCase()) ? '' : normalizedStatus
+}
 
 const ActionSection = ({ sectionLabel = '', wrapperClassName = '', children }) => (
   <div className={['d-grid gap-2', wrapperClassName].filter(Boolean).join(' ')}>
@@ -46,6 +56,7 @@ export const InspectionFormActions = ({
   validationStatusMessage,
   wrapperClassName = '',
 }) => {
+  const visibleDraftStatus = getVisibleInspectionActionStatus(draftStatus)
   const reviewLabel =
     submissionMode === 'direct'
       ? isUpdateMode
@@ -61,13 +72,14 @@ export const InspectionFormActions = ({
         className={['inspection-form-actions', className].filter(Boolean).join(' ')}
         actionsAlign={alignLeft ? 'start' : 'end'}
         mobileBehavior={isMobileSticky ? 'compact-sticky' : 'in-flow'}
+        dockAtEnd={isMobileSticky}
         statusMessage={
           validationStatusMessage ||
           reviewScopeMessage ||
           (submissionMode === 'direct'
             ? 'This submits immediately without a separate review screen.'
             : '') ||
-          draftStatus
+          visibleDraftStatus
         }
         feedback={buildSyncFeedback(draftSyncState, onRetryDraftSync)}
         auxiliaryActions={leadingAction}
@@ -97,6 +109,7 @@ export const InspectionFormDraftOnlyActions = ({
   statusMessage = '',
   wrapperClassName = '',
 }) => {
+  const visibleDraftStatus = getVisibleInspectionActionStatus(draftStatus)
   const reviewLabel = isUpdateMode ? REVIEW_UPDATE_ACTION_LABEL : REVIEW_ACTION_LABEL
 
   return (
@@ -105,10 +118,11 @@ export const InspectionFormDraftOnlyActions = ({
         className={['inspection-form-actions', className].filter(Boolean).join(' ')}
         actionsAlign={alignLeft ? 'start' : 'end'}
         mobileBehavior={isMobileSticky ? 'compact-sticky' : 'in-flow'}
+        dockAtEnd={isMobileSticky}
         statusMessage={
           disabledReviewMessage ||
           statusMessage ||
-          draftStatus ||
+          visibleDraftStatus ||
           'This inspection type can be saved as draft only.'
         }
         feedback={buildSyncFeedback(draftSyncState, onRetryDraftSync)}

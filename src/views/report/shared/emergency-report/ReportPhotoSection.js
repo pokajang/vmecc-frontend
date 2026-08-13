@@ -231,7 +231,7 @@ const ReportPhotoSection = ({
           {allowCapture ? (
             <CreateActionButton
               label={captureLabel}
-              icon={<Camera size={13} className="me-1 align-text-bottom" />}
+              icon={<Camera size={13} />}
               onClick={startCamera}
               disabled={processing}
             />

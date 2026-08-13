@@ -318,7 +318,7 @@ export const HydraulicEquipmentCheckDetails = ({
               <CreateActionButton
                 label="Remark"
                 className="inspection-compact-action-btn"
-                icon={<MessageSquare size={13} className="me-1 align-text-bottom" />}
+                icon={<MessageSquare size={14} />}
                 onClick={() =>
                   setExpandedGeneralRemarks((currentExpanded) => ({
                     ...currentExpanded,
@@ -330,7 +330,7 @@ export const HydraulicEquipmentCheckDetails = ({
             <CreateActionButton
               label="Photo"
               className="inspection-compact-action-btn"
-              icon={<Camera size={13} className="me-1 align-text-bottom" />}
+              icon={<Camera size={14} />}
               onClick={() =>
                 onRequestPhotoUpload?.(
                   row,

@@ -7,15 +7,15 @@ const DISABLED_STYLE = { cursor: 'not-allowed', pointerEvents: 'none' }
 const INTENT_CONFIG = {
   neutral: {
     className: 'text-body-secondary',
-    icon: <X size={13} className="me-1 align-text-bottom" />,
+    icon: <X size={13} aria-hidden="true" />,
   },
   approve: {
     className: 'text-success',
-    icon: <CheckCircle2 size={13} className="me-1 align-text-bottom" />,
+    icon: <CheckCircle2 size={13} aria-hidden="true" />,
   },
   reject: {
     className: 'text-danger',
-    icon: <XCircle size={13} className="me-1 align-text-bottom" />,
+    icon: <XCircle size={13} aria-hidden="true" />,
   },
 }
 

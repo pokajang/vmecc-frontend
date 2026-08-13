@@ -138,6 +138,63 @@ $inspection-detail-drawer-max-width: 58rem;
   padding: 0.75rem 1rem;
 }
 
+.inspection-detail-next-action {
+  color: var(--cui-body-color);
+}
+
+.inspection-report-meta-disclosure {
+  overflow: hidden;
+  border: 1px solid var(--cui-border-color);
+  border-radius: var(--cui-border-radius-lg);
+  background: var(--cui-body-bg);
+}
+
+.inspection-report-meta-disclosure > summary {
+  display: grid;
+  min-height: 44px;
+  cursor: pointer;
+  list-style: none;
+  align-content: center;
+  gap: 0.1rem;
+  padding: 0.75rem 2.75rem 0.75rem 1rem;
+  position: relative;
+}
+
+.inspection-report-meta-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+.inspection-report-meta-disclosure > summary::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-65%) rotate(45deg);
+  transition: transform 0.16s ease;
+}
+
+.inspection-report-meta-disclosure[open] > summary::after {
+  transform: translateY(-35%) rotate(225deg);
+}
+
+.inspection-report-meta-disclosure > summary:focus-visible {
+  outline: 2px solid var(--cui-primary);
+  outline-offset: -2px;
+}
+
+.inspection-report-meta-disclosure__body {
+  padding: 0 1rem 1rem;
+  border-top: 1px solid var(--cui-border-color);
+}
+
+.inspection-report-meta-disclosure__body > .row {
+  padding-top: 0.25rem;
+}
+
 .inspection-detail-finding-accordion-title-row {
   display: flex;
   min-width: 0;
@@ -202,6 +259,41 @@ $inspection-detail-drawer-max-width: 58rem;
   white-space: normal;
 }
 
+.record-action-sheet .inspection-detail-more-actions .inspection-drawer-action {
+  --cui-btn-color: var(--cui-body-color);
+  --cui-btn-bg: var(--cui-tertiary-bg);
+  --cui-btn-border-color: transparent;
+  --cui-btn-hover-color: var(--cui-emphasis-color);
+  --cui-btn-hover-bg: color-mix(in srgb, var(--cui-tertiary-bg) 78%, var(--cui-body-color));
+  --cui-btn-hover-border-color: transparent;
+  --cui-btn-active-border-color: transparent;
+  min-height: var(--vmecc-touch-target);
+  padding: 0.45rem 0.85rem;
+  border-color: transparent !important;
+  border-radius: var(--vmecc-radius-pill);
+  background: var(--cui-tertiary-bg);
+  box-shadow: none;
+  color: var(--cui-body-color);
+}
+
+.record-action-sheet .inspection-detail-more-actions .inspection-drawer-action:focus-visible {
+  outline: 0;
+  box-shadow: var(--vmecc-focus-ring);
+}
+
+.record-action-sheet
+  .inspection-detail-more-actions
+  .inspection-drawer-action.inspection-drawer-action--danger {
+  background: var(--vmecc-status-danger-bg);
+  color: var(--vmecc-status-danger-text);
+}
+
+.record-action-sheet .inspection-detail-more-actions .inspection-drawer-action:disabled {
+  background: var(--vmecc-status-muted-bg);
+  color: var(--vmecc-fg-disabled);
+  opacity: 0.68;
+}
+
 .record-action-sheet .mobile-bottom-drawer__close {
   width: 2.75rem;
   height: 2.75rem;
@@ -228,7 +320,7 @@ $inspection-detail-drawer-max-width: 58rem;
   .inspection-review-inline-actions .action-row-thumb-actions {
     min-width: 0;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
+    grid-template-columns: minmax(0, 1fr);
     width: 100%;
   }
 

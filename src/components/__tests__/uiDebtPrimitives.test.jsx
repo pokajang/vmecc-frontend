@@ -43,6 +43,27 @@ describe('UI debt shared primitives', () => {
     expect(screen.getByRole('button', { name: 'Primary add' }).className).toContain('btn-primary')
   })
 
+  it('centers CreateActionButton icons and labels through one shared structure', () => {
+    render(
+      <CreateActionButton
+        label="Add remark"
+        icon={<svg data-testid="custom-action-icon" />}
+        onClick={vi.fn()}
+      />,
+    )
+
+    const button = screen.getByRole('button', { name: 'Add remark' })
+    const icon = button.querySelector('.create-action-button__icon')
+    const label = button.querySelector('.create-action-button__label')
+
+    expect(button.className).toContain('d-inline-flex')
+    expect(button.className).toContain('align-items-center')
+    expect(button.className).toContain('justify-content-center')
+    expect(icon?.getAttribute('aria-hidden')).toBe('true')
+    expect(icon?.contains(screen.getByTestId('custom-action-icon'))).toBe(true)
+    expect(label?.textContent).toBe('Add remark')
+  })
+
   it('keeps full header context on desktop and concise context on mobile', () => {
     render(
       <ModulePageHeader
@@ -332,6 +353,20 @@ describe('UI debt shared primitives', () => {
     const group = screen.getByRole('group', { name: 'Form actions' })
     expect(group.className).toContain('action-row-thumb--sticky')
     expect(document.querySelector('.action-row-thumb-spacer')).toBeTruthy()
+  })
+
+  it('renders terminal mobile actions in flow without a sticky spacer', () => {
+    render(
+      <FormActionGroup mobileBehavior="terminal">
+        <button type="button">Edit</button>
+        <button type="button">More actions</button>
+      </FormActionGroup>,
+    )
+
+    const group = screen.getByRole('group', { name: 'Form actions' })
+    expect(group.className).toContain('action-row-thumb--terminal')
+    expect(document.querySelector('.action-row-thumb-spacer')).toBeNull()
+    expect(within(group).getAllByRole('button')).toHaveLength(2)
   })
 
   it('renders compact sticky form actions with a mobile status message', () => {

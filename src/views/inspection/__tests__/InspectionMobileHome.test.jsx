@@ -72,7 +72,11 @@ describe('InspectionMobileHome', () => {
     expect(container.querySelector('.mobile-workflow-home')).toBeTruthy()
     expect(container.querySelector('.mobile-workflow-home__type-list')).toBeTruthy()
     expect(container.querySelector('.mobile-workflow-home__records-toolbar')).toBeTruthy()
-    expect(container.querySelector('.mobile-workflow-home__view-all')).toBeTruthy()
+    const viewAll = container.querySelector('.mobile-workflow-home__view-all')
+    expect(viewAll).toBeTruthy()
+    expect(viewAll?.className).toContain('mobile-workflow-home__action-chip')
+    expect(viewAll?.className).not.toContain('btn')
+    expect(container.querySelectorAll('.workflow-scope-segment')).toHaveLength(2)
   })
 
   it('renders recent records as a grouped mobile list and opens selected rows', () => {

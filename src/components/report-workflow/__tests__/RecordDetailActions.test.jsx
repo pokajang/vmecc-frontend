@@ -33,6 +33,8 @@ describe('RecordDetailActions', () => {
     more.focus()
     fireEvent.click(more)
     const deleteButton = screen.getByRole('button', { name: 'Delete' })
+    expect(deleteButton.className).toContain('inspection-drawer-action')
+    expect(deleteButton.className).toContain('inspection-drawer-action--danger')
     deleteButton.focus()
     fireEvent.click(deleteButton)
 

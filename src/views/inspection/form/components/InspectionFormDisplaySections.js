@@ -339,7 +339,7 @@ export const InspectionGeneralEvidenceCard = ({
       <CreateActionButton
         label={<span className="d-none d-sm-inline">Take photo</span>}
         ariaLabel="Take photo"
-        icon={<Camera size={13} className="me-0 me-sm-1 align-text-bottom" />}
+        icon={<Camera size={13} />}
         importance="section-primary"
         className="inspection-take-photo-btn px-2 px-sm-2"
         onClick={onTakePhoto}
@@ -347,7 +347,7 @@ export const InspectionGeneralEvidenceCard = ({
       <CreateActionButton
         label={<span className="d-none d-sm-inline">Upload photo</span>}
         ariaLabel="Upload photo"
-        icon={<Upload size={13} className="me-0 me-sm-1 align-text-bottom" />}
+        icon={<Upload size={13} />}
         className="px-2 px-sm-2"
         onClick={onUploadPhoto}
       />

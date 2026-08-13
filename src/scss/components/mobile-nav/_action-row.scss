@@ -33,6 +33,12 @@
 }
 
 @include media-breakpoint-down(md) {
+  .action-row-thumb-end-anchor {
+    display: block;
+    width: 100%;
+    height: 0;
+  }
+
   .action-row-thumb--in-flow {
     flex-direction: column;
     align-items: stretch;
@@ -58,6 +64,28 @@
     grid-column: 1 / -1;
   }
 
+  .action-row-thumb--terminal {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .action-row-thumb--terminal .action-row-thumb-leading,
+  .action-row-thumb--terminal .action-row-thumb-actions {
+    display: grid;
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
+  }
+
+  .action-row-thumb--terminal .action-row-thumb-actions > *,
+  .action-row-thumb--terminal .action-row-thumb-actions .btn {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    white-space: normal;
+  }
+
   .action-row-thumb--sticky,
   .action-row-thumb--compact-sticky {
     position: fixed;
@@ -74,6 +102,12 @@
     box-shadow: none !important;
 
     @include scrollbars.vmecc-scrollbar;
+  }
+
+  .action-row-thumb--compact-sticky.action-row-thumb--docked-at-end {
+    position: static;
+    inset: auto;
+    z-index: auto;
   }
 
   .action-row-thumb--sticky,
@@ -147,6 +181,20 @@
   .inspection-form-actions .action-row-thumb--compact-sticky {
     grid-template-columns: minmax(0, 1fr);
     justify-items: stretch !important;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none !important;
+  }
+
+  .inspection-form-actions
+    .action-row-thumb--compact-sticky:has(.action-row-thumb-status:not(:empty)) {
+    padding: 0.45rem 0.5rem;
+    border: 1px solid rgba(148, 163, 184, 0.24);
+    border-radius: 0.5rem;
+    background: var(--cui-body-bg);
+    box-shadow: 0 -0.75rem 2rem rgba(15, 23, 42, 0.14) !important;
   }
 
   .inspection-form-actions .action-row-thumb--compact-sticky .action-row-thumb-actions {
@@ -162,9 +210,9 @@
   }
 
   .inspection-form-actions
-    .action-row-thumb--compact-sticky:has(.action-row-thumb-actions > :nth-child(2))
-    + .action-row-thumb-spacer--compact {
-    height: calc(var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 9rem);
+    .action-row-thumb--compact-sticky:not(:has(.action-row-thumb-status:not(:empty)))
+    .workflow-stage-actions__primary {
+    box-shadow: 0 0.45rem 1.1rem rgba(15, 23, 42, 0.18);
   }
 
   .action-row-thumb--compact-sticky .btn {
@@ -176,11 +224,32 @@
   }
 
   .action-row-thumb-spacer--compact {
-    height: calc(var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 7.5rem);
+    height: calc(var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 4.25rem);
+  }
+
+  .action-row-thumb--compact-sticky:has(.action-row-thumb-status:not(:empty))
+    + .action-row-thumb-spacer--compact {
+    height: calc(var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 5.75rem);
+  }
+
+  .action-row-thumb--compact-sticky:has(.action-row-thumb-actions > :nth-child(2))
+    + .action-row-thumb-spacer--compact {
+    height: calc(var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 6.75rem);
+  }
+
+  .action-row-thumb--compact-sticky:has(.action-row-thumb-status:not(:empty)):has(
+      .action-row-thumb-actions > :nth-child(2)
+    )
+    + .action-row-thumb-spacer--compact {
+    height: calc(var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 8.25rem);
   }
 
   .action-row-thumb-spacer--compact-with-leading {
-    height: calc(var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 10rem);
+    height: calc(var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 9rem);
+  }
+
+  .action-row-thumb--docked-at-end + .action-row-thumb-spacer--compact {
+    height: calc(var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 0.75rem);
   }
 
   .salary-bulk-mode-bar {

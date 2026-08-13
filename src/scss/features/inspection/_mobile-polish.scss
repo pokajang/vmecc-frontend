@@ -129,6 +129,14 @@
     padding: 2px;
   }
 
+  .inspection-module-page .mobile-workflow-home__records-toolbar .workflow-scope-segmented,
+  .inspection-module-page .mobile-workflow-home__records-toolbar .inspection-scope-segmented {
+    gap: 0.4rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
   .inspection-module-page .workflow-scope-segment,
   .inspection-module-page .inspection-scope-segment,
   .inspection-mobile-section .workflow-scope-segment,
@@ -137,6 +145,25 @@
     padding: 0.45rem 0.75rem;
     font-size: var(--vmecc-text-meta);
     font-weight: 600;
+  }
+
+  .inspection-module-page .mobile-workflow-home__records-toolbar .workflow-scope-segment,
+  .inspection-module-page .mobile-workflow-home__records-toolbar .inspection-scope-segment {
+    min-height: var(--inspection-mobile-control-height);
+    border: 1px solid var(--cui-border-color);
+    border-radius: 999px;
+    background: var(--cui-tertiary-bg);
+  }
+
+  .inspection-module-page
+    .mobile-workflow-home__records-toolbar
+    .workflow-scope-segment[data-active='true'],
+  .inspection-module-page
+    .mobile-workflow-home__records-toolbar
+    .inspection-scope-segment[data-active='true'] {
+    border-color: var(--vmecc-primary-on-soft);
+    background: var(--vmecc-primary-soft);
+    color: var(--vmecc-primary-on-soft);
   }
 
   .inspection-module-page .inspection-hse-choice-btn {
@@ -194,6 +221,55 @@
   .inspection-equipment-detail-drawer-body .inspection-hydraulic-status-btn {
     min-width: 3.25rem;
     min-height: var(--inspection-mobile-control-height);
+  }
+
+  .inspection-fire-extinguisher-detail-drawer-body .inspection-drawer-choice-group,
+  .inspection-equipment-detail-drawer-body .inspection-drawer-choice-group {
+    gap: 0.4rem !important;
+  }
+
+  .inspection-fire-extinguisher-detail-drawer-body .inspection-drawer-choice,
+  .inspection-equipment-detail-drawer-body .inspection-drawer-choice {
+    --cui-btn-color: var(--cui-body-color);
+    --cui-btn-bg: var(--cui-tertiary-bg);
+    --cui-btn-border-color: transparent;
+    --cui-btn-hover-color: var(--cui-emphasis-color);
+    --cui-btn-hover-bg: color-mix(in srgb, var(--cui-tertiary-bg) 78%, var(--cui-body-color));
+    --cui-btn-hover-border-color: transparent;
+    --cui-btn-active-border-color: transparent;
+    min-height: var(--inspection-mobile-control-height) !important;
+    padding: 0.35rem 0.75rem;
+    border-color: transparent !important;
+    border-radius: var(--vmecc-radius-pill);
+    background: var(--cui-tertiary-bg);
+    box-shadow: none;
+    color: var(--cui-body-color);
+  }
+
+  .inspection-fire-extinguisher-detail-drawer-body .inspection-drawer-choice[data-selected='true'],
+  .inspection-equipment-detail-drawer-body .inspection-drawer-choice[data-selected='true'] {
+    --cui-btn-color: var(--vmecc-primary-on-soft);
+    --cui-btn-bg: var(--vmecc-primary-soft);
+    --cui-btn-border-color: transparent;
+    --cui-btn-hover-color: var(--vmecc-primary-on-soft);
+    --cui-btn-hover-bg: color-mix(in srgb, var(--vmecc-primary-soft) 82%, var(--vmecc-primary-on-soft));
+    border-color: transparent !important;
+    background: var(--vmecc-primary-soft);
+    color: var(--vmecc-primary-on-soft);
+    font-weight: 700;
+  }
+
+  .inspection-fire-extinguisher-detail-drawer-body .inspection-drawer-choice:focus-visible,
+  .inspection-equipment-detail-drawer-body .inspection-drawer-choice:focus-visible {
+    outline: 0;
+    box-shadow: var(--vmecc-focus-ring);
+  }
+
+  .inspection-fire-extinguisher-detail-drawer-body .inspection-drawer-choice:disabled,
+  .inspection-equipment-detail-drawer-body .inspection-drawer-choice:disabled {
+    background: var(--vmecc-status-muted-bg);
+    color: var(--vmecc-fg-disabled);
+    opacity: 0.68;
   }
 
   .inspection-module-page .form-control,

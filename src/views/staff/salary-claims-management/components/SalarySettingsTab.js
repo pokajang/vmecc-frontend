@@ -301,13 +301,7 @@ const SalarySettingsTab = ({ vm, handlers }) => {
             <CreateActionButton
               label={isGroupExpanded ? 'Hide Preview' : 'Preview'}
               ariaExpanded={isGroupExpanded}
-              icon={
-                isGroupExpanded ? (
-                  <EyeOff size={13} className="me-1 align-text-bottom" />
-                ) : (
-                  <Eye size={13} className="me-1 align-text-bottom" />
-                )
-              }
+              icon={isGroupExpanded ? <EyeOff size={13} /> : <Eye size={13} />}
               onClick={() => toggleGroupExpanded(group.key)}
             />
           </GroupedTableHeaderRow>
@@ -637,13 +631,7 @@ const SalarySettingsTab = ({ vm, handlers }) => {
           <div className="d-flex justify-content-end">
             <CreateActionButton
               label={showFullHistory ? 'Collapse' : 'Expand'}
-              icon={
-                showFullHistory ? (
-                  <EyeOff size={13} className="me-1 align-text-bottom" />
-                ) : (
-                  <Eye size={13} className="me-1 align-text-bottom" />
-                )
-              }
+              icon={showFullHistory ? <EyeOff size={13} /> : <Eye size={13} />}
               onClick={toggleShowFullHistory}
             />
           </div>

@@ -391,6 +391,7 @@ const ReportDetailSection = ({
         <MobileBottomDrawer
           visible={moreActionsOpen}
           title="More actions"
+          className="record-action-sheet"
           bodyClassName="inspection-equipment-detail-drawer-shell"
           onClose={() => setMoreActionsOpen(false)}
         >
@@ -404,7 +405,7 @@ const ReportDetailSection = ({
                     action.onClick?.()
                   },
                 },
-                'w-100',
+                `inspection-drawer-action inspection-drawer-action--${action.color || 'secondary'} w-100`,
               ),
             )}
           </div>

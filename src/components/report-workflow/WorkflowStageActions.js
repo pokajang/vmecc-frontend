@@ -24,6 +24,7 @@ const WorkflowStageActions = ({
   auxiliaryActions = null,
   leading = null,
   mobileBehavior = 'in-flow',
+  dockAtEnd = false,
   actionsAlign = 'end',
   className = '',
   ariaLabel = 'Workflow actions',
@@ -74,6 +75,7 @@ const WorkflowStageActions = ({
       <FormActionGroup
         className="workflow-stage-actions__group"
         mobileBehavior={mobileBehavior}
+        dockAtEnd={dockAtEnd}
         actionsAlign={actionsAlign}
         leading={resolvedLeading}
         statusMessage={visibleStatus}

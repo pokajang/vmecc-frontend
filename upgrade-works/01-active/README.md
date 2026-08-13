@@ -4,6 +4,8 @@ Only current, actionable records belong here.
 
 Current records:
 
+- [Mobile drawer actions and icon alignment plan](./FRONTEND_MOBILE_DRAWER_ACTIONS_AND_ICON_ALIGNMENT_PLAN_2026-08-13.md)
+- [Mobile drawer actions and icon alignment execution](./FRONTEND_MOBILE_DRAWER_ACTIONS_AND_ICON_ALIGNMENT_EXECUTION_2026-08-13.md)
 - [Inspection visual CRUD UI/UX audit plan](./FRONTEND_INSPECTION_VISUAL_CRUD_UIUX_AUDIT_PLAN_2026-08-12.md)
 - [Inspection visual CRUD UI/UX audit execution and verdict](./FRONTEND_INSPECTION_VISUAL_CRUD_UIUX_AUDIT_EXECUTION_2026-08-12.md)
 - [Inspection visual remediation backlog](./FRONTEND_INSPECTION_VISUAL_REMEDIATION_BACKLOG_2026-08-12.md)

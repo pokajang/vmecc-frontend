@@ -3,7 +3,10 @@ import { CAccordion, CAccordionBody, CAccordionHeader, CAccordionItem, CBadge } 
 
 const text = (value) => String(value || '').trim()
 
-const isRedundantCheckedBadge = (badge = {}) => text(badge.label).toLowerCase() === 'checked'
+const REDUNDANT_SUMMARY_BADGES = new Set(['checked', 'finding'])
+
+const isRedundantSummaryBadge = (badge = {}) =>
+  REDUNDANT_SUMMARY_BADGES.has(text(badge.label).toLowerCase())
 
 const FindingSummaryHeader = ({ item }) => {
   const summaryLines = (Array.isArray(item?.summaryLines) ? item.summaryLines : []).filter((line) =>
@@ -11,7 +14,7 @@ const FindingSummaryHeader = ({ item }) => {
   )
   const [primarySummaryLine, ...secondarySummaryLines] = summaryLines
   const badges = (Array.isArray(item?.badges) ? item.badges : []).filter(
-    (badge) => !isRedundantCheckedBadge(badge),
+    (badge) => !isRedundantSummaryBadge(badge),
   )
 
   return (

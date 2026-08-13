@@ -329,10 +329,13 @@
 
   .mobile-workflow-home__records-toolbar .workflow-scope-segmented,
   .mobile-workflow-home__records-toolbar .inspection-scope-segmented {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
     min-width: 0;
     min-height: var(--mobile-workflow-control-height);
-    padding: 2px;
+    gap: 0.4rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
   }
 
   .mobile-workflow-home__records-toolbar .mobile-workflow-home__view-all {
@@ -344,10 +347,54 @@
 
   .mobile-workflow-home .workflow-scope-segment,
   .mobile-workflow-home .inspection-scope-segment {
-    min-height: calc(var(--mobile-workflow-control-height) - 6px);
-    padding: 0.45rem 0.75rem;
+    min-height: var(--mobile-workflow-control-height);
+    padding: 0.4rem 0.8rem;
+    border: 1px solid var(--cui-border-color);
+    border-radius: 999px;
+    background: var(--cui-tertiary-bg);
     font-size: var(--vmecc-text-meta);
     font-weight: var(--vmecc-weight-semibold);
+  }
+
+  .mobile-workflow-home .workflow-scope-segment[data-active='true'],
+  .mobile-workflow-home .inspection-scope-segment[data-active='true'] {
+    border-color: var(--vmecc-primary-on-soft);
+    background: var(--vmecc-primary-soft);
+    color: var(--vmecc-primary-on-soft);
+  }
+
+  .mobile-workflow-home__action-chip {
+    display: inline-flex;
+    min-height: var(--mobile-workflow-control-height);
+    align-items: center;
+    justify-content: center;
+    padding: 0.4rem 0.8rem;
+    border: 1px solid var(--vmecc-primary-on-soft);
+    border-radius: 999px;
+    background: var(--vmecc-primary-soft);
+    color: var(--vmecc-primary-on-soft);
+    font-size: var(--vmecc-text-meta);
+    font-weight: var(--vmecc-weight-semibold);
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .mobile-workflow-home__action-chip:hover:not(:disabled) {
+    border-color: var(--cui-primary);
+    color: var(--cui-primary);
+  }
+
+  .mobile-workflow-home__action-chip:focus-visible,
+  .mobile-workflow-home .workflow-scope-segment:focus-visible,
+  .mobile-workflow-home .inspection-scope-segment:focus-visible {
+    outline: 2px solid var(--cui-primary);
+    outline-offset: 2px;
+  }
+
+  .mobile-workflow-home__action-chip:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
   }
 
   .inspection-mobile-section {
@@ -358,16 +405,6 @@
 
 @media (max-width: 359.98px) {
   .mobile-workflow-home__records-toolbar {
-    align-items: stretch;
-  }
-
-  .mobile-workflow-home__records-toolbar .workflow-scope-segmented,
-  .mobile-workflow-home__records-toolbar .inspection-scope-segmented,
-  .mobile-workflow-home__records-toolbar .mobile-workflow-home__view-all {
-    width: 100%;
-  }
-
-  .mobile-workflow-home__records-toolbar .mobile-workflow-home__view-all {
-    justify-content: center;
+    justify-content: flex-start;
   }
 }

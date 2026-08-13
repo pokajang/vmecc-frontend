@@ -5,9 +5,35 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import InspectionDetailSection from '../InspectionDetailSection'
 import { INSPECTION_REPORT_EVIDENCE_COPY } from '../inspectionReportEvidenceCopy'
 
+const originalMatchMedia = window.matchMedia
+
 afterEach(() => {
   cleanup()
+  if (originalMatchMedia) {
+    Object.defineProperty(window, 'matchMedia', {
+      configurable: true,
+      value: originalMatchMedia,
+    })
+  } else {
+    delete window.matchMedia
+  }
 })
+
+const useMobileViewport = () => {
+  Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
+    value: vi.fn().mockImplementation((query) => ({
+      matches: query === '(max-width: 767.98px)',
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  })
+}
 
 const expectItemizedReadOnlyFindings = () => {
   const section = screen.getByText('Inspection Findings').closest('section')
@@ -133,7 +159,52 @@ describe('InspectionDetailSection', () => {
     expect(screen.getByText('Area cordoned off.')).toBeTruthy()
     const findings = screen.getByText('Inspection Findings').closest('section')
     expect(findings?.querySelectorAll('.inspection-detail-finding-accordion-item')).toHaveLength(1)
+    expect(within(findings).queryByText('Finding', { exact: true })).toBeNull()
+    expect(
+      within(findings)
+        .getByRole('button', { name: /Unsafe Condition/i })
+        .getAttribute('aria-expanded'),
+    ).toBe('false')
     expect(screen.queryByText('Follow-up and evidence')).toBeNull()
+  })
+
+  it('collapses audit metadata on mobile while keeping the next action visible', () => {
+    useMobileViewport()
+
+    render(
+      <InspectionDetailSection
+        selectedRecord={{
+          id: 'inspection-mobile-meta-1',
+          displayId: 'INSP-MOBILE-META-001',
+          status: 'Submitted',
+          submittedAt: '2026-07-30T14:50:00.000Z',
+          submittedBy: 'Azam',
+          submittedByRole: 'Tactical Response Team',
+          nextActionRole: 'Incident Commander',
+          mainLocation: 'Manjung Hub',
+          incidentType: 'General Inspection',
+          inspectionIssues: [],
+        }}
+        onBack={vi.fn()}
+        formatDateTime={() => '30 Jul 2026, 22:48'}
+        renderStatusBadge={(status) => <span>{status}</span>}
+        canEditRecord={() => false}
+      />,
+    )
+
+    const disclosure = screen.getByText('Report information').closest('details')
+    expect(disclosure).toBeTruthy()
+    expect(disclosure?.open).toBe(false)
+    expect(screen.queryByText('Report Metadata')).toBeNull()
+
+    const nextAction = screen.getByText('Incident Commander')
+    expect(nextAction.closest('details')).toBeNull()
+
+    disclosure.open = true
+    fireEvent(disclosure, new Event('toggle'))
+    expect(disclosure.open).toBe(true)
+    expect(within(disclosure).getByText('Inspection Date/Time')).toBeTruthy()
+    expect(within(disclosure).getByText('Submitted By')).toBeTruthy()
   })
 
   it('renders ER Aux read-only equipment cards in detail mode', () => {
@@ -895,7 +966,7 @@ describe('InspectionDetailSection', () => {
 
     const actionGroup = screen.getByRole('group', { name: 'Inspection detail actions' })
     expect(actionGroup.className).toContain('inspection-detail-inline-actions')
-    expect(actionGroup.className).not.toContain('action-row-thumb')
+    expect(actionGroup.className).toContain('action-row-thumb--terminal')
     expect(within(actionGroup).getByRole('button', { name: 'Review' })).toBeTruthy()
     expect(within(actionGroup).getByRole('button', { name: 'More actions' })).toBeTruthy()
 

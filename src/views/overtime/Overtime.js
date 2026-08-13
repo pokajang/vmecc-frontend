@@ -599,7 +599,7 @@ const OvertimeContent = () => {
                 label="Apply Overtime"
                 importance="page-primary"
                 onClick={() => runWithDiscardGuard(startNewOvertime)}
-                icon={<Plus size={15} className="me-1 align-text-bottom" />}
+                icon={<Plus size={15} />}
               />
             </div>
           )

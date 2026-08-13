@@ -192,14 +192,14 @@ const RolePermissionMatrix = () => {
               <>
                 <CButton
                   size="sm"
-                  className="text-primary px-2 py-1 border-0 bg-transparent shadow-none"
+                  className="icon-label-action text-primary px-2 py-1 border-0 bg-transparent shadow-none"
                   onClick={save}
                   disabled={saving || loading}
                 >
                   {saving ? (
                     <ButtonLoader label="Saving..." size={13} />
                   ) : (
-                    <Save size={13} className="me-1 align-text-bottom" />
+                    <Save size={13} aria-hidden="true" />
                   )}
                   {!saving ? 'Save' : null}
                 </CButton>
@@ -215,11 +215,11 @@ const RolePermissionMatrix = () => {
             ) : (
               <CButton
                 size="sm"
-                className="text-primary px-2 py-1 border-0 bg-transparent shadow-none"
+                className="icon-label-action text-primary px-2 py-1 border-0 bg-transparent shadow-none"
                 onClick={() => setEditMode(true)}
                 disabled={loading}
               >
-                <Pencil size={13} className="me-1 align-text-bottom" />
+                <Pencil size={13} aria-hidden="true" />
                 Edit
               </CButton>
             )}

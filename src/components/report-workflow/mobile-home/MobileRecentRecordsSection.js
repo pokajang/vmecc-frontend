@@ -1,5 +1,4 @@
 import React from 'react'
-import { CButton } from '@coreui/react'
 import MobileRecordList from 'src/components/MobileRecordList'
 import PageState from 'src/components/PageState'
 import RecordScopeSegmentedControl from 'src/components/report-workflow/RecordScopeSegmentedControl'
@@ -27,18 +26,15 @@ const MobileRecentRecordsSection = ({
         value={recordScope}
         onChange={onRecordScopeChange}
       />
-      <CButton
+      <button
         type="button"
-        color="secondary"
-        variant="outline"
-        size="sm"
-        className="mobile-workflow-home__view-all d-inline-flex align-items-center"
+        className="mobile-workflow-home__view-all mobile-workflow-home__action-chip"
         disabled={isLoading}
         onClick={onViewRecords}
       >
         View all
         {recordsCount ? ` (${recordsCount})` : ''}
-      </CButton>
+      </button>
     </div>
     {isLoading ? (
       <div className="border rounded-3 bg-body">

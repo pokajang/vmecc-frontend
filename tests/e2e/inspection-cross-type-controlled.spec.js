@@ -58,7 +58,9 @@ const json = (route, body, status = 200) =>
 const installInspectionApiStubs = async (page) => {
   await installControlledApiRequestGuard(page, apiBaseUrl)
   let draftVersion = 0
-  await page.route(`${apiBaseUrl}/**`, async (route) => {
+  // Match the compiled browser API origin as well as the configured guard origin.
+  // Local Vite and preview builds may use localhost or 127.0.0.1 interchangeably.
+  await page.route('**/api/**', async (route) => {
     const request = route.request()
     const url = new URL(request.url())
     const pathname = url.pathname.replace(/^\/api/, '')
@@ -246,6 +248,13 @@ const captureActualTypeForm = async ({ browser, testInfo, type, profile }) => {
     await page.goto('/inspection/new', { waitUntil: 'domcontentloaded' })
     await waitForReady(page)
     await expect(page.getByText(type.label, { exact: true }).first()).toBeVisible()
+    await page.evaluate(
+      () =>
+        new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+        ),
+    )
+    await capture(page, testInfo, `screenshots/${profile.mode}/${type.key}/11-actual-viewport.png`)
     await capture(
       page,
       testInfo,
@@ -266,6 +275,12 @@ const captureActualTypeForm = async ({ browser, testInfo, type, profile }) => {
       )
       const stickyGroup = stickyActions?.closest('.action-row-thumb--compact-sticky')
       const stickyStyle = stickyGroup ? getComputedStyle(stickyGroup) : null
+      const stickyStatus = stickyGroup?.querySelector('.action-row-thumb-status')
+      const stickySpacer = stickyGroup?.nextElementSibling?.classList.contains(
+        'action-row-thumb-spacer--compact',
+      )
+        ? stickyGroup.nextElementSibling
+        : null
       const actionRects = actionButtons.map((button) => {
         const rect = button.getBoundingClientRect()
         return { label: button.textContent.trim(), top: rect.top, width: rect.width }
@@ -297,6 +312,13 @@ const captureActualTypeForm = async ({ browser, testInfo, type, profile }) => {
           : 0,
         actionRects,
         primaryTop: primaryButton?.getBoundingClientRect().top || 0,
+        stickyHasStatus: Boolean(stickyStatus?.textContent.trim()),
+        stickyBorderWidth: stickyStyle?.borderTopWidth || '',
+        stickyBackground: stickyStyle?.backgroundColor || '',
+        stickyBoxShadow: stickyStyle?.boxShadow || '',
+        stickyPosition: stickyStyle?.position || '',
+        stickySpacerHeight: stickySpacer?.getBoundingClientRect().height || 0,
+        stickyDockedAtEnd: stickyGroup?.classList.contains('action-row-thumb--docked-at-end'),
       }
     })
     expect(formMetrics.overflow).toBeLessThanOrEqual(1)
@@ -306,6 +328,9 @@ const captureActualTypeForm = async ({ browser, testInfo, type, profile }) => {
       expect(formMetrics.missingSummaryCount).toBe(0)
     }
     if (formMetrics.actionRects.length > 0) {
+      await expect(
+        page.getByText('Saved locally. Backend sync pending', { exact: true }),
+      ).toHaveCount(0)
       expect(
         Math.abs(formMetrics.actionContainerWidth - formMetrics.availableActionWidth),
       ).toBeLessThanOrEqual(2)
@@ -316,6 +341,20 @@ const captureActualTypeForm = async ({ browser, testInfo, type, profile }) => {
       expect(formMetrics.primaryTop).toBe(
         Math.min(...formMetrics.actionRects.map(({ top }) => top)),
       )
+      if (!formMetrics.stickyHasStatus) {
+        expect(formMetrics.stickyBorderWidth).toBe('0px')
+        expect(formMetrics.stickyBackground).toBe('rgba(0, 0, 0, 0)')
+        expect(formMetrics.stickyBoxShadow).toBe('none')
+        if (formMetrics.actionRects.length === 1) {
+          expect(formMetrics.stickySpacerHeight).toBeLessThanOrEqual(132.5)
+        }
+      }
+      if (formMetrics.stickyDockedAtEnd) {
+        expect(formMetrics.stickyPosition).toBe('static')
+        expect(formMetrics.stickySpacerHeight).toBeLessThanOrEqual(76.5)
+      } else {
+        expect(formMetrics.stickyPosition).toBe('fixed')
+      }
     }
 
     expect(pageErrors).toEqual([])
@@ -345,6 +384,25 @@ test('captures consolidated inspection entry, state, evidence and detail views',
   await installInspectionApiStubs(page)
 
   try {
+    await page.goto('/inspection', { waitUntil: 'domcontentloaded' })
+    await waitForReady(page)
+    const recordsToolbar = page.locator('.mobile-workflow-home__records-toolbar')
+    await expect(recordsToolbar).toBeVisible()
+    const scopeContainer = recordsToolbar.locator('.workflow-scope-segmented')
+    await expect(scopeContainer).toHaveCSS('border-top-width', '0px')
+    const activeScopeChip = recordsToolbar.locator('.workflow-scope-segment[data-active="true"]')
+    const viewAllChip = recordsToolbar.locator('.mobile-workflow-home__action-chip')
+    await expect(activeScopeChip).toHaveCSS('border-top-left-radius', '999px')
+    await expect(viewAllChip).toHaveCSS('border-top-left-radius', '999px')
+    for (const chip of [activeScopeChip, viewAllChip]) {
+      const chipBox = await chip.boundingBox()
+      expect(chipBox?.height || 0).toBeGreaterThanOrEqual(43.5)
+    }
+    await capture(page, testInfo, 'screenshots/mobile/inspection-home-action-chips.png', {
+      fullPage: true,
+    })
+    audit.checkpoints.push({ mode: 'mobile', checkpoint: 'inspection-home-action-chips' })
+
     for (const profile of [
       { mode: 'mobile', matrixViewport: 'mobile', width: 390, height: 844 },
       { mode: 'desktop', matrixViewport: 'desktop', width: 1440, height: 900 },
@@ -454,11 +512,44 @@ test('captures consolidated inspection entry, state, evidence and detail views',
         })
         await waitForReady(page)
         await expect(page.getByText('Inspection Details', { exact: true }).first()).toBeVisible()
+        const detail = page.locator('.inspection-detail-section')
+        if (profile.mode === 'mobile') {
+          const reportInformation = detail.locator('.inspection-report-meta-disclosure')
+          await expect(reportInformation).toBeVisible()
+          await expect(reportInformation).not.toHaveAttribute('open', '')
+          await expect(detail.getByText('Report Metadata', { exact: true })).toHaveCount(0)
+          const reportInformationSummary = reportInformation.locator('summary')
+          const summaryBox = await reportInformationSummary.boundingBox()
+          expect(summaryBox?.height || 0).toBeGreaterThanOrEqual(43.5)
+          await reportInformationSummary.click()
+          await expect(reportInformation).toHaveAttribute('open', '')
+          await expect(
+            reportInformation.getByText('Inspection Date/Time', { exact: true }),
+          ).toBeVisible()
+          await reportInformationSummary.click()
+          await expect(reportInformation).not.toHaveAttribute('open', '')
+          const terminalActions = detail.locator('.action-row-thumb--terminal')
+          await expect(terminalActions).toBeVisible()
+          await expect(terminalActions).toHaveCSS('position', 'static')
+          const terminalButtons = terminalActions.locator('.action-row-thumb-actions > .btn')
+          const terminalButtonCount = await terminalButtons.count()
+          for (let index = 0; index < terminalButtonCount; index += 1) {
+            const buttonBox = await terminalButtons.nth(index).boundingBox()
+            expect(buttonBox?.height || 0).toBeGreaterThanOrEqual(43.5)
+          }
+        } else {
+          await expect(detail.getByText('Report Metadata', { exact: true })).toBeVisible()
+          await expect(detail.locator('.inspection-report-meta-disclosure')).toHaveCount(0)
+        }
         if (type.key === 'health-safety-environment-inspection') {
           const findings = page.locator('.inspection-detail-finding-accordion-item')
           await expect(findings).toHaveCount(1)
           await expect(page.getByText('Follow-up and evidence', { exact: true })).toHaveCount(0)
-          await findings.locator('.accordion-button').click()
+          await expect(findings.locator('.badge', { hasText: /^Finding$/i })).toHaveCount(0)
+          const findingToggle = findings.locator('.accordion-button')
+          await expect(findingToggle).toHaveAttribute('aria-expanded', 'false')
+          await findingToggle.click()
+          await expect(findingToggle).toHaveAttribute('aria-expanded', 'true')
           const evidence = findings.locator('.inspection-readonly-evidence')
           await expect(evidence).toBeVisible()
           await expect(evidence).not.toHaveClass(/\bborder\b|\bbg-light-subtle\b/)
@@ -506,6 +597,8 @@ test('captures every real inspection type form with controlled data', async ({
 
   expect(audit.checkpoints).toHaveLength(INSPECTION_TYPES.length)
   expect(audit.checkpoints.some(({ actionRects }) => actionRects.length > 0)).toBe(true)
+  expect(audit.checkpoints.some(({ stickyDockedAtEnd }) => stickyDockedAtEnd)).toBe(true)
+  expect(audit.checkpoints.some(({ stickyDockedAtEnd }) => stickyDockedAtEnd === false)).toBe(true)
 })
 
 test('keeps structured scope selection consistent across Fire Truck, High Angle and SCBA', async ({
@@ -596,8 +689,8 @@ test('keeps structured scope selection consistent across Fire Truck, High Angle 
   }
 })
 
-test('keeps multiple mobile inspection actions full-width and primary-first', async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 })
+test('keeps persistent and terminal mobile inspection actions full-width', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 })
   await installInspectionApiStubs(page)
   await page.goto('/inspection/ux-matrix', { waitUntil: 'domcontentloaded' })
   await waitForReady(page)
@@ -611,6 +704,13 @@ test('keeps multiple mobile inspection actions full-width and primary-first', as
             </button>
             <button class="btn btn-outline-secondary" type="button">Save Draft</button>
           </div>
+        </div>
+        <div class="action-row-thumb-spacer action-row-thumb-spacer--compact"></div>
+      </div>
+      <div class="action-row-thumb action-row-thumb--terminal inspection-detail-inline-actions">
+        <div class="action-row-thumb-actions">
+          <button class="btn btn-outline-primary" type="button">Edit</button>
+          <button class="btn btn-outline-secondary" type="button">More actions</button>
         </div>
       </div>
     `
@@ -641,4 +741,38 @@ test('keeps multiple mobile inspection actions full-width and primary-first', as
     expect(Math.abs(width - metrics.actionContainerWidth)).toBeLessThanOrEqual(2)
   }
   expect(metrics.primaryTop).toBeLessThan(metrics.secondaryTop)
+
+  const twoActionSpacerHeight = await page
+    .locator('.action-row-thumb-spacer--compact')
+    .evaluate((spacer) => spacer.getBoundingClientRect().height)
+  expect(twoActionSpacerHeight).toBeLessThanOrEqual(172.5)
+
+  await page.getByRole('button', { name: 'Save Draft' }).evaluate((button) => button.remove())
+  const singleActionSpacerHeight = await page
+    .locator('.action-row-thumb-spacer--compact')
+    .evaluate((spacer) => spacer.getBoundingClientRect().height)
+  expect(singleActionSpacerHeight).toBeLessThanOrEqual(132.5)
+  expect(twoActionSpacerHeight - singleActionSpacerHeight).toBeGreaterThanOrEqual(39)
+
+  const terminalMetrics = await page.locator('.action-row-thumb--terminal').evaluate((group) => {
+    const container = group.querySelector('.action-row-thumb-actions')
+    const buttons = [...container.querySelectorAll(':scope > .btn')]
+    return {
+      groupWidth: group.getBoundingClientRect().width,
+      containerWidth: container.getBoundingClientRect().width,
+      buttonWidths: buttons.map((button) => button.getBoundingClientRect().width),
+      buttonHeights: buttons.map((button) => button.getBoundingClientRect().height),
+      buttonTops: buttons.map((button) => button.getBoundingClientRect().top),
+      position: getComputedStyle(group).position,
+    }
+  })
+  expect(terminalMetrics.position).toBe('static')
+  expect(Math.abs(terminalMetrics.containerWidth - terminalMetrics.groupWidth)).toBeLessThanOrEqual(
+    2,
+  )
+  terminalMetrics.buttonWidths.forEach((width) => {
+    expect(Math.abs(width - terminalMetrics.containerWidth)).toBeLessThanOrEqual(2)
+  })
+  terminalMetrics.buttonHeights.forEach((height) => expect(height).toBeGreaterThanOrEqual(43.5))
+  expect(terminalMetrics.buttonTops[0]).toBeLessThan(terminalMetrics.buttonTops[1])
 })

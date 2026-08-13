@@ -49,7 +49,7 @@ const ClaimsSection = ({
           label="Apply Claim"
           importance="section-primary"
           onClick={onCreateClaim}
-          icon={<Plus size={13} className="me-1 align-text-bottom" />}
+          icon={<Plus size={13} />}
         />
       ) : null}
     </CCardHeader>

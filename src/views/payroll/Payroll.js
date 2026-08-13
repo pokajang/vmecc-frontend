@@ -270,7 +270,7 @@ const PayrollContent = () => {
                 label="Apply Claim"
                 importance="page-primary"
                 onClick={() => navigate('/payroll/claims/new')}
-                icon={<Plus size={15} className="me-1 align-text-bottom" />}
+                icon={<Plus size={15} />}
               />
             </div>
           )

@@ -176,19 +176,21 @@ const ClaimDetailSection = ({
           <WorkflowDetailActions ariaLabel="Claim actions">
             <CButton
               color="light"
+              className="icon-label-action"
               data-testid="payroll-claim-download-action"
               onClick={() => onDownloadClaim(selectedClaim)}
             >
-              <Download size={14} className="me-1 align-text-bottom" />
+              <Download size={14} aria-hidden="true" />
               Download claim
             </CButton>
             <CButton
               color="primary"
+              className="icon-label-action"
               data-testid="payroll-claim-edit-action"
               onClick={() => onEditClaim(selectedClaim)}
               disabled={!canEditSubmittedClaim}
             >
-              <Pencil size={14} className="me-1 align-text-bottom" />
+              <Pencil size={14} aria-hidden="true" />
               Edit
             </CButton>
             <CButton

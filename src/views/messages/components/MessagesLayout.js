@@ -83,7 +83,7 @@ const MessagesLayout = ({
         <CreateActionButton
           label="Create chat"
           onClick={onOpenNewChat}
-          icon={<Plus size={13} className="me-1 align-text-bottom" />}
+          icon={<Plus size={13} />}
           data-testid="messages-create-action"
         />
       </CCardHeader>

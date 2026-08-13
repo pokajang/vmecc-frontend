@@ -341,6 +341,46 @@ html {
   opacity: 1 !important;
 }
 
+.create-action-button {
+  gap: 0.3rem;
+}
+
+.create-action-button__icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.create-action-button__icon > svg {
+  display: block;
+  flex: 0 0 auto;
+  margin: 0 !important;
+  vertical-align: middle !important;
+}
+
+.create-action-button__label {
+  display: block;
+  line-height: 1.25;
+}
+
+.icon-label-action,
+.bulk-action-button {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.icon-label-action > svg,
+.bulk-action-button > svg {
+  display: block;
+  flex: 0 0 auto;
+  margin: 0 !important;
+  vertical-align: middle !important;
+}
+
 .module-nav-link {
   cursor: pointer;
 }

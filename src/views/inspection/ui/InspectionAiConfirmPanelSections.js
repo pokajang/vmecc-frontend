@@ -203,7 +203,7 @@ export const SecondaryFindingsSection = ({
               </div>
               <CreateActionButton
                 label="Show"
-                icon={<Eye size={13} className="me-1 align-text-bottom" />}
+                icon={<Eye size={13} />}
                 className="text-body-secondary"
                 onClick={() => setSecondaryActions((prev) => ({ ...prev, [i]: undefined }))}
               />

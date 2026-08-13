@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 
 const FormActionGroup = ({
   actionsAlign = 'end',
@@ -10,6 +10,7 @@ const FormActionGroup = ({
   mobileVariant = 'default',
   statusMessage = '',
   showSpacer = true,
+  dockAtEnd = false,
   spacerClassName = 'd-md-none',
   ariaLabel = 'Form actions',
 }) => {
@@ -24,6 +25,11 @@ const FormActionGroup = ({
         : 'legacy-in-flow')
   const isSticky = resolvedMobileBehavior === 'sticky'
   const isCompactSticky = resolvedMobileBehavior === 'compact-sticky'
+  const supportsEndDocking = isCompactSticky && dockAtEnd
+  const [isDockedAtEnd, setIsDockedAtEnd] = useState(false)
+  const isEndDocked = supportsEndDocking && isDockedAtEnd
+  const endAnchorRef = useRef(null)
+  const groupRef = useRef(null)
   const usesMobileActionLayout = resolvedMobileBehavior !== 'legacy-in-flow'
   const alignStart = actionsAlign === 'start'
   const containerClassName = usesMobileActionLayout
@@ -65,10 +71,65 @@ const FormActionGroup = ({
     .filter(Boolean)
     .join(' ')
 
+  useEffect(() => {
+    if (!supportsEndDocking || typeof window === 'undefined') {
+      return undefined
+    }
+
+    let frameId = null
+    const evaluateDocking = () => {
+      frameId = null
+      if (!window.matchMedia?.('(max-width: 767.98px)').matches) {
+        setIsDockedAtEnd(false)
+        return
+      }
+
+      const anchor = endAnchorRef.current
+      const group = groupRef.current
+      if (!anchor || !group) return
+
+      const rootStyle = window.getComputedStyle(document.documentElement)
+      const mobileNavHeight = Number.parseFloat(
+        rootStyle.getPropertyValue('--mobile-overlay-nav-height'),
+      )
+      const reservedBottom = (Number.isFinite(mobileNavHeight) ? mobileNavHeight : 64) + 12
+      const anchorTop = anchor.getBoundingClientRect().top
+      const groupHeight = group.getBoundingClientRect().height
+      const shouldDock =
+        anchorTop >= 0 && anchorTop + groupHeight <= window.innerHeight - reservedBottom
+
+      setIsDockedAtEnd((current) => (current === shouldDock ? current : shouldDock))
+    }
+    const scheduleDockingCheck = () => {
+      if (frameId !== null) window.cancelAnimationFrame(frameId)
+      frameId = window.requestAnimationFrame(evaluateDocking)
+    }
+
+    scheduleDockingCheck()
+    window.addEventListener('scroll', scheduleDockingCheck, { passive: true })
+    window.addEventListener('resize', scheduleDockingCheck)
+    const resizeObserver =
+      typeof window.ResizeObserver === 'function'
+        ? new window.ResizeObserver(scheduleDockingCheck)
+        : null
+    if (groupRef.current) resizeObserver?.observe(groupRef.current)
+
+    return () => {
+      if (frameId !== null) window.cancelAnimationFrame(frameId)
+      resizeObserver?.disconnect()
+      window.removeEventListener('scroll', scheduleDockingCheck)
+      window.removeEventListener('resize', scheduleDockingCheck)
+    }
+  }, [supportsEndDocking])
+
   return (
     <>
+      {supportsEndDocking ? (
+        <span ref={endAnchorRef} className="action-row-thumb-end-anchor" aria-hidden="true" />
+      ) : null}
       <div
-        className={`${containerClassName} ${className}`.trim()}
+        ref={groupRef}
+        className={`${containerClassName} ${isEndDocked ? 'action-row-thumb--docked-at-end' : ''} ${className}`.trim()}
         role="group"
         aria-label={ariaLabel}
         style={containerStyle}

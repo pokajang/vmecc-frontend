@@ -190,7 +190,7 @@ const ClaimDetailView = ({ vm, handlers }) => {
                       <CreateActionButton
                         label="Close"
                         onClick={onCloseItemDetails}
-                        icon={<X size={13} className="me-1 align-text-bottom" />}
+                        icon={<X size={13} />}
                       />
                     </CCardHeader>
                     <CCardBody>
@@ -273,10 +273,11 @@ const ClaimDetailView = ({ vm, handlers }) => {
           >
             <CButton
               color="light"
+              className="icon-label-action"
               onClick={() => onTriggerClaimAction(selectedClaim, selectedClaimActions.download.key)}
               disabled={selectedClaimActions.download.disabled}
             >
-              <Download size={14} className="me-1 align-text-bottom" aria-hidden="true" />
+              <Download size={14} aria-hidden="true" />
               {selectedClaimActions.download.label}
             </CButton>
             {!selectedClaimActions.reject.disabled ? (

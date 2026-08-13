@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { CAlert, CBadge, CRow } from '@coreui/react'
 import { DetailField } from 'src/components/report-workflow/ReportViewComponents'
+import useMediaQuery from 'src/hooks/useMediaQuery'
 import {
   getInspectionTypeDefinition,
   INSPECTION_TYPE_DEFINITIONS,
@@ -229,6 +230,8 @@ const InspectionRecordMeta = ({
   submittedEntry,
   timeline,
 }) => {
+  const isMobile = useMediaQuery('(max-width: 767.98px)')
+  const [isMobileOpen, setIsMobileOpen] = useState(false)
   const submittedRole = formatInspectionRole(
     record.submittedByRole ||
       form.submittedByRole ||
@@ -240,26 +243,46 @@ const InspectionRecordMeta = ({
       form.inspectionActor?.roleCode,
   )
   const workflowHistoryEntries = getWorkflowHistoryEntries(timeline)
+  const submittedBy = text(record.submittedBy || submittedEntry?.by)
+
+  const fields = (
+    <CRow className="g-3">
+      <DetailField label="Inspection Date/Time">{inspectedAt || '--'}</DetailField>
+      {submittedBy ? <DetailField label="Submitted By">{submittedBy}</DetailField> : null}
+      {submittedRole ? <DetailField label="Role">{submittedRole}</DetailField> : null}
+      <DetailField label="Submitted At">{submittedAt}</DetailField>
+      {workflowHistoryEntries.map(([label, entry]) => (
+        <DetailField key={label} label={label}>
+          <WorkflowActor entry={entry} />
+        </DetailField>
+      ))}
+    </CRow>
+  )
+
+  if (isMobile) {
+    const summary = [submittedAt && `Submitted ${submittedAt}`, submittedBy && `by ${submittedBy}`]
+      .filter(Boolean)
+      .join(' ')
+
+    return (
+      <details
+        className="inspection-report-meta-disclosure"
+        open={isMobileOpen}
+        onToggle={(event) => setIsMobileOpen(event.currentTarget.open)}
+      >
+        <summary>
+          <span className="fw-semibold">Report information</span>
+          {summary ? <span className="small text-body-secondary">{summary}</span> : null}
+        </summary>
+        <div className="inspection-report-meta-disclosure__body">{fields}</div>
+      </details>
+    )
+  }
 
   return (
     <section className="inspection-form-section d-grid gap-3">
       <div className="fw-semibold text-muted">Report Metadata</div>
-      <CRow className="g-3">
-        <DetailField label="Inspection Date/Time">{inspectedAt || '--'}</DetailField>
-        {record.submittedBy || submittedEntry?.by ? (
-          <DetailField label="Submitted By">{record.submittedBy || submittedEntry?.by}</DetailField>
-        ) : null}
-        {submittedRole ? <DetailField label="Role">{submittedRole}</DetailField> : null}
-        <DetailField label="Submitted At">{submittedAt}</DetailField>
-        {record.nextActionRole ? (
-          <DetailField label="Next Action">Next action: {record.nextActionRole}</DetailField>
-        ) : null}
-        {workflowHistoryEntries.map(([label, entry]) => (
-          <DetailField key={label} label={label}>
-            <WorkflowActor entry={entry} />
-          </DetailField>
-        ))}
-      </CRow>
+      {fields}
     </section>
   )
 }
@@ -389,6 +412,12 @@ const InspectionDetailSection = ({
             <div className="small text-body-secondary">
               {[record.displayId, submittedAt].filter(Boolean).join(' · ')}
             </div>
+            {record.nextActionRole ? (
+              <div className="inspection-detail-next-action small">
+                <span className="text-body-secondary">Next action:</span>{' '}
+                <span className="fw-semibold">{record.nextActionRole}</span>
+              </div>
+            ) : null}
           </div>
           <InspectionDetailActionBar
             mode="desktop"

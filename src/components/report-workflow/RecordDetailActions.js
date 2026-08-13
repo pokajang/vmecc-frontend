@@ -101,7 +101,7 @@ const RecordDetailActions = ({
       {showMobile ? (
         <FormActionGroup
           className="inspection-detail-inline-actions d-md-none"
-          mobileThumb={false}
+          mobileBehavior="terminal"
           ariaLabel={ariaLabel}
         >
           {primaryActions.map((action) => (
@@ -143,7 +143,7 @@ const RecordDetailActions = ({
               <ActionButton
                 key={action.key}
                 action={{ ...action, onClick: () => queueDrawerAction(action) }}
-                className="w-100"
+                className={`inspection-drawer-action inspection-drawer-action--${action.color || 'secondary'} w-100`}
               />
             ))}
           </div>

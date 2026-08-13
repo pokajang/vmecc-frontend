@@ -68,7 +68,7 @@ const InspectionStatusSegment = ({
         </div>
       ) : (
         <div
-          className="inspection-status-segment inspection-hydraulic-status-group d-flex flex-wrap justify-content-start gap-2"
+          className="inspection-status-segment inspection-drawer-choice-group inspection-hydraulic-status-group d-flex flex-wrap justify-content-start gap-2"
           role="group"
           aria-label={labelId ? undefined : accessibleLabel}
           aria-labelledby={labelId}
@@ -84,8 +84,9 @@ const InspectionStatusSegment = ({
                 color={selectedOption ? 'primary' : 'secondary'}
                 variant={selectedOption ? undefined : 'outline'}
                 size="sm"
-                className="inspection-hydraulic-status-btn"
+                className="inspection-drawer-choice inspection-hydraulic-status-btn"
                 aria-pressed={selectedOption}
+                data-selected={selectedOption || undefined}
                 onClick={() => onChange?.(option.value)}
               >
                 {option.label}

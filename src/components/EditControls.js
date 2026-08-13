@@ -38,10 +38,10 @@ const EditControls = ({
       ) : (
         <CButton
           size="sm"
-          className="edit-controls__action text-primary px-2 py-1 border-0 bg-transparent shadow-none"
+          className="edit-controls__action icon-label-action text-primary px-2 py-1 border-0 bg-transparent shadow-none"
           onClick={onEdit}
         >
-          <Pencil size={13} className="me-1 align-text-bottom" />
+          <Pencil size={13} aria-hidden="true" />
           {editLabel}
         </CButton>
       )}

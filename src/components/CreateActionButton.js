@@ -18,19 +18,17 @@ const CreateActionButton = ({
   ...rest
 }) => {
   const normalizedImportance = importance === 'primary' ? 'page-primary' : importance
-  const resolvedIcon = showIcon
-    ? icon || <Plus size={13} className="me-1 align-text-bottom" />
-    : null
+  const resolvedIcon = showIcon ? icon || <Plus size={13} /> : null
   const resolvedAriaLabel = ariaLabel || label || undefined
   const isPagePrimary = normalizedImportance === 'page-primary'
   const isSectionPrimary = normalizedImportance === 'section-primary'
   const disabledClassName = disabled ? 'create-action-button--disabled' : ''
   const importanceClassName = `create-action-button--${normalizedImportance}`
   const buttonClassName = isPagePrimary
-    ? `create-action-button ${importanceClassName} d-inline-flex align-items-center px-3 ${disabledClassName} ${className}`.trim()
+    ? `create-action-button ${importanceClassName} d-inline-flex align-items-center justify-content-center px-3 ${disabledClassName} ${className}`.trim()
     : isSectionPrimary
-      ? `create-action-button ${importanceClassName} d-inline-flex align-items-center px-3 ${disabledClassName} ${className}`.trim()
-      : `create-action-button ${importanceClassName} text-primary px-2 py-1 border-0 bg-transparent shadow-none ${disabledClassName} ${className}`.trim()
+      ? `create-action-button ${importanceClassName} d-inline-flex align-items-center justify-content-center px-3 ${disabledClassName} ${className}`.trim()
+      : `create-action-button ${importanceClassName} d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none ${disabledClassName} ${className}`.trim()
   const colorProps = isPagePrimary
     ? { color: 'primary' }
     : isSectionPrimary
@@ -49,8 +47,12 @@ const CreateActionButton = ({
       aria-expanded={ariaExpanded}
       {...rest}
     >
-      {resolvedIcon}
-      {label}
+      {resolvedIcon ? (
+        <span className="create-action-button__icon" aria-hidden="true">
+          {resolvedIcon}
+        </span>
+      ) : null}
+      <span className="create-action-button__label">{label}</span>
     </CButton>
   )
 }

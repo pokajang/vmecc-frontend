@@ -20,13 +20,7 @@ const UserManagementHeader = ({
         importance={showForm ? 'inline' : 'page-primary'}
         disabled={submitStatus.loading}
         onClick={onToggleForm}
-        icon={
-          showForm ? (
-            <X size={13} className="me-1 align-text-bottom" />
-          ) : (
-            <Plus size={13} className="me-1 align-text-bottom" />
-          )
-        }
+        icon={showForm ? <X size={13} /> : <Plus size={13} />}
       />
       <CDropdown alignment="end">
         <CDropdownToggle size="sm" color="secondary" variant="outline">

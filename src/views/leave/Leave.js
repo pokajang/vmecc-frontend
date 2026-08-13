@@ -372,7 +372,7 @@ const Leave = () => {
                 label="Apply Leave"
                 importance="page-primary"
                 onClick={() => runWithDiscardGuard(startNewLeave)}
-                icon={<Plus size={15} className="me-1 align-text-bottom" />}
+                icon={<Plus size={15} />}
               />
             </div>
           )
