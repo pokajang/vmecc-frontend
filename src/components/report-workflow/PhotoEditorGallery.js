@@ -130,7 +130,7 @@ const PhotoEditorGallery = ({
                       <button
                         key={caption}
                         type="button"
-                        className="photo-editor-gallery__caption-option btn btn-sm btn-light border"
+                        className="photo-editor-gallery__caption-option btn btn-sm btn-light"
                         onClick={() => onApplyCaption(photo, caption, index)}
                       >
                         {caption}

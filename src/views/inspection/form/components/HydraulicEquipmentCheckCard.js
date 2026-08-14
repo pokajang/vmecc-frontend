@@ -8,6 +8,7 @@ import {
   InspectionElementCard,
   InspectionElementValidationBadges,
 } from './InspectionElementUi'
+import { hasHydraulicInspectionData } from '../inspectionResetActions'
 import {
   HYDRAULIC_CHECK_FIELDS,
   HYDRAULIC_CHECK_STATUS_OPTIONS,
@@ -16,6 +17,7 @@ import {
 import {
   EvidenceBlock,
   FormFieldError,
+  InspectionEvidenceEditor,
   InspectionPhotoActionRow,
   InspectionPhotoEvidenceSummary,
 } from './InspectionDisplayShared'
@@ -209,7 +211,7 @@ export const HydraulicEquipmentCheckDetails = ({
                   }
                 />
               ) : (
-                <div className="inspection-hydraulic-defect-evidence rounded-3 border bg-light-subtle p-2 d-grid gap-2">
+                <InspectionEvidenceEditor>
                   <CFormTextarea
                     rows={2}
                     value={defectRemarks}
@@ -227,7 +229,7 @@ export const HydraulicEquipmentCheckDetails = ({
                     onView={() => openDefectPhotoViewer(defectPhotos)}
                     onAddPhoto={requestDefectPhoto}
                   />
-                </div>
+                </InspectionEvidenceEditor>
               )
             ) : null}
             {hasFieldRetainedEvidence ? (
@@ -442,10 +444,14 @@ const HydraulicEquipmentCheckCard = ({
   const canReset = !readOnly && typeof onResetCheck === 'function'
   const actionItems = buildInspectionElementActions({
     canReset,
+    hasInspectionAnswers: hasHydraulicInspectionData(current, HYDRAULIC_CHECK_FIELDS),
     onReset: () => onResetCheck(row),
     canEdit: row.canEdit && row.equipmentId,
     onEdit: () => onEditEquipment?.(row),
-    canDelete: row.canDelete && row.equipmentId,
+    canDelete:
+      row.canDelete &&
+      (row.isCustomEquipment || row.equipmentSource === 'custom') &&
+      row.equipmentId,
     onDelete: () => onDeleteEquipment?.(row),
   })
 

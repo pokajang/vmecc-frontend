@@ -1,6 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { CButton } from '@coreui/react'
-import { Pencil } from 'lucide-react'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import CreateActionButton from 'src/components/CreateActionButton'
 import RowActions from 'src/components/RowActions'
@@ -13,6 +11,9 @@ import {
   ManagedCheckToolbar,
 } from '../../form/components/InspectionFormDisplaySections'
 import InspectionResetConfirmDrawer from '../../form/components/InspectionResetConfirmDrawer'
+import { InspectionElementDrawerFooter } from '../../form/components/InspectionElementUi'
+import InspectionItemDrawer from '../../form/components/InspectionItemDrawer'
+import { hasFireExtinguisherInspectionData } from '../../form/inspectionResetActions'
 import {
   applyPhotoCaptionById,
   buildInspectionPhotoListPatch,
@@ -135,6 +136,8 @@ const FireExtinguisherListView = ({
   const [photoViewer, setPhotoViewer] = useState(null)
   const [resetTarget, setResetTarget] = useState(null)
   const [pendingDiscardAction, setPendingDiscardAction] = useState('')
+  const [metadataDirty, setMetadataDirty] = useState(false)
+  const [metadataSaving, setMetadataSaving] = useState(false)
   const useMobileDrawer = useMediaQuery('(max-width: 575.98px)')
   const lastValidationTargetRef = useRef('')
   const allRows = useMemo(() => summary?.visibleChecks || [], [summary?.visibleChecks])
@@ -274,15 +277,21 @@ const FireExtinguisherListView = ({
     setMobileDraftBaseSignature('')
     setMobileSaveStatus('')
     setIsSavingMobileRow(false)
+    setMetadataDirty(false)
+    setMetadataSaving(false)
   }, [])
 
   const requestCloseMobileDetailDrawer = useCallback(() => {
+    if (mobileDetailMode === 'edit' && metadataDirty) {
+      setPendingDiscardAction('metadata-close')
+      return
+    }
     if (mobileDraftDirty) {
       setPendingDiscardAction('close')
       return
     }
     closeMobileDetailDrawer()
-  }, [closeMobileDetailDrawer, mobileDraftDirty])
+  }, [closeMobileDetailDrawer, metadataDirty, mobileDetailMode, mobileDraftDirty])
 
   const openMobileMetadataEdit = useCallback(() => {
     if (mobileDraftDirty) {
@@ -292,8 +301,17 @@ const FireExtinguisherListView = ({
     setMobileDraftRow(null)
     setMobileDraftBaseSignature('')
     setMobileSaveStatus('')
+    setMetadataDirty(false)
     setMobileDetailMode('edit')
   }, [mobileDraftDirty])
+
+  const requestCancelMetadataEdit = useCallback(() => {
+    if (metadataDirty) {
+      setPendingDiscardAction('metadata-cancel')
+      return
+    }
+    setMobileDetailMode('inspect')
+  }, [metadataDirty])
 
   const discardMobileDraftChanges = useCallback(() => {
     const action = pendingDiscardAction
@@ -302,7 +320,14 @@ const FireExtinguisherListView = ({
       setMobileDraftRow(null)
       setMobileDraftBaseSignature('')
       setMobileSaveStatus('')
+      setMetadataDirty(false)
       setMobileDetailMode('edit')
+      return
+    }
+    if (action === 'metadata-cancel') {
+      setMetadataDirty(false)
+      setMetadataSaving(false)
+      setMobileDetailMode('inspect')
       return
     }
     closeMobileDetailDrawer()
@@ -515,25 +540,15 @@ const FireExtinguisherListView = ({
       ) : null}
 
       {useMobileDrawer && mobileDetailRow ? (
-        <MobileBottomDrawer
+        <InspectionItemDrawer
           visible
-          title={getFireExtinguisherRowTitle(mobileDetailRow)}
-          titleAction={
-            !mobileDetailReadOnly && mobileDetailRow.canEdit && mobileDetailMode === 'inspect' ? (
-              <CButton
-                type="button"
-                color="link"
-                className="inspection-fire-extinguisher-drawer-title-action p-1"
-                aria-label={`Edit ${getFireExtinguisherRowTitle(mobileDetailRow)}`}
-                onClick={openMobileMetadataEdit}
-              >
-                <Pencil size={16} />
-              </CButton>
-            ) : null
-          }
+          mode={mobileDetailMode === 'edit' ? 'edit-equipment' : 'inspect'}
+          itemTitle={getFireExtinguisherRowTitle(mobileDetailRow)}
+          editTitle={`Edit ${getFireExtinguisherRowTitle(mobileDetailRow)}`}
+          closeDisabled={metadataSaving}
           bodyClassName="inspection-fire-extinguisher-detail-drawer-shell"
           headerAction={
-            !mobileDetailReadOnly && typeof handlers.onResetCheck === 'function' ? (
+            !mobileDetailReadOnly && mobileDetailMode === 'inspect' ? (
               <RowActions
                 iconSize={16}
                 hitArea={44}
@@ -541,16 +556,29 @@ const FireExtinguisherListView = ({
                   mobileDraftRow || mobileDetailRow,
                 )}`}
                 items={[
-                  {
-                    key: 'reset',
-                    label: 'Reset check',
-                    className: 'text-danger',
-                    onClick: () =>
-                      requestResetRow(mobileDraftRow || mobileDetailRow, {
-                        onAfterConfirm: closeMobileDetailDrawer,
-                      }),
-                  },
-                ]}
+                  mobileDetailRow.canEdit
+                    ? {
+                        key: 'edit-equipment',
+                        label: 'Edit equipment details',
+                        onClick: openMobileMetadataEdit,
+                      }
+                    : null,
+                  typeof handlers.onResetCheck === 'function' &&
+                  hasFireExtinguisherInspectionData(
+                    mobileDraftRow || mobileDetailRow,
+                    FIRE_EXTINGUISHER_CHECK_FIELDS,
+                  )
+                    ? {
+                        key: 'clear-answers',
+                        label: 'Clear inspection answers',
+                        className: 'text-danger',
+                        onClick: () =>
+                          requestResetRow(mobileDraftRow || mobileDetailRow, {
+                            onAfterConfirm: closeMobileDetailDrawer,
+                          }),
+                      }
+                    : null,
+                ].filter(Boolean)}
               />
             ) : null
           }
@@ -562,13 +590,17 @@ const FireExtinguisherListView = ({
               subLocation={subLocation}
               initialValue={mobileDetailRow}
               presentation="drawer"
+              submitLabel="Save equipment details"
               onCheckLocatorConflict={handlers.onCheckLocatorConflict}
-              onCancel={() => setMobileDetailMode('inspect')}
+              onDirtyChange={setMetadataDirty}
+              onSubmittingChange={setMetadataSaving}
+              onCancel={requestCancelMetadataEdit}
               onSave={async (payload) => {
                 const saved = await persistFireExtinguisherEntry(payload, mobileDetailRow)
-                if (saved) {
-                  setMobileDetailMode('inspect')
-                }
+                if (!saved) throw new Error('Unable to save equipment details. Please try again.')
+                setMetadataDirty(false)
+                setMetadataSaving(false)
+                setMobileDetailMode('inspect')
               }}
             />
           ) : (
@@ -604,41 +636,17 @@ const FireExtinguisherListView = ({
                 />
               </div>
               {!mobileDetailReadOnly ? (
-                <div className="inspection-fire-extinguisher-drawer-footer mobile-bottom-drawer__footer d-flex align-items-center justify-content-between gap-2">
-                  <div
-                    className="inspection-fire-extinguisher-drawer-footer__status small text-body-secondary"
-                    aria-live="polite"
-                  >
-                    {isSavingMobileRow
-                      ? 'Saving...'
-                      : mobileSaveStatus || (mobileDraftDirty ? 'Unsaved changes' : 'No changes')}
-                  </div>
-                  <div className="inspection-fire-extinguisher-drawer-footer__actions d-flex gap-2">
-                    <CButton
-                      type="button"
-                      color="secondary"
-                      variant="outline"
-                      size="sm"
-                      disabled={isSavingMobileRow}
-                      onClick={closeMobileDetailDrawer}
-                    >
-                      Cancel
-                    </CButton>
-                    <CButton
-                      type="button"
-                      color="primary"
-                      size="sm"
-                      disabled={isSavingMobileRow || !mobileDraftDirty}
-                      onClick={saveMobileDraftRow}
-                    >
-                      Save
-                    </CButton>
-                  </div>
-                </div>
+                <InspectionElementDrawerFooter
+                  statusText={mobileSaveStatus}
+                  dirty={mobileDraftDirty}
+                  saving={isSavingMobileRow}
+                  onCancel={requestCloseMobileDetailDrawer}
+                  onSave={saveMobileDraftRow}
+                />
               ) : null}
             </>
           )}
-        </MobileBottomDrawer>
+        </InspectionItemDrawer>
       ) : null}
 
       <FormFieldError>
@@ -736,9 +744,9 @@ const FireExtinguisherListView = ({
       />
       <ActionConfirmModal
         visible={Boolean(pendingDiscardAction)}
-        title="Discard changes?"
+        title="Discard unsaved changes?"
         message="Your extinguisher changes have not been saved."
-        confirmLabel="Discard"
+        confirmLabel="Discard changes"
         confirmColor="danger"
         cancelLabel="Keep editing"
         mobileDrawer
@@ -838,12 +846,12 @@ export const buildFireExtinguisherDetailFindingItems = (form = {}, summary = nul
   }))
 }
 
-export const renderFireExtinguisherDetailFindingContent = (item, { onViewPhotos } = {}) => {
+export const renderFireExtinguisherDetailFindingContent = (item) => {
   const row = item?.row
   if (!row) return null
   return (
     <div className="inspection-form-section d-grid gap-3">
-      <FireExtinguisherRowDetails readOnly row={row} onViewPhotos={onViewPhotos} />
+      <FireExtinguisherRowDetails readOnly row={row} />
     </div>
   )
 }

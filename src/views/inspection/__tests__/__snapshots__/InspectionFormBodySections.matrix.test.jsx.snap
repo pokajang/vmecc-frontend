@@ -30,7 +30,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       >
         <button
           aria-label="Take photo"
-          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center justify-content-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <span
@@ -72,7 +72,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action px-2 px-sm-2"
           type="button"
         >
           <span
@@ -206,7 +206,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     </div>
   </div>
   <div
-    class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
+    class="inspection-next-location-card d-grid gap-1"
   >
     <div
       class="small fw-semibold text-body-secondary"
@@ -239,7 +239,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -267,7 +267,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -301,7 +301,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
   >
     <button
       aria-label="General photos (1)"
-      class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <span
@@ -312,13 +312,13 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           aria-hidden="true"
           class="lucide lucide-plus"
           fill="none"
-          height="13"
+          height="16"
           stroke="currentColor"
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"
           viewBox="0 0 24 24"
-          width="13"
+          width="16"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
@@ -337,7 +337,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     </button>
   </div>
   <div
-    class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
+    class="inspection-next-location-card d-grid gap-1"
   >
     <div
       class="small fw-semibold text-body-secondary"
@@ -370,7 +370,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -398,7 +398,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -443,7 +443,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       >
         <button
           aria-label="Take photo"
-          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center justify-content-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <span
@@ -485,7 +485,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action px-2 px-sm-2"
           type="button"
         >
           <span
@@ -619,7 +619,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     </div>
   </div>
   <div
-    class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
+    class="inspection-next-location-card d-grid gap-1"
   >
     <div
       class="small fw-semibold text-body-secondary"
@@ -652,7 +652,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -680,7 +680,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -714,7 +714,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
   >
     <button
       aria-label="General photos (1)"
-      class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <span
@@ -725,13 +725,13 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           aria-hidden="true"
           class="lucide lucide-plus"
           fill="none"
-          height="13"
+          height="16"
           stroke="currentColor"
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"
           viewBox="0 0 24 24"
-          width="13"
+          width="16"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
@@ -750,7 +750,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     </button>
   </div>
   <div
-    class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
+    class="inspection-next-location-card d-grid gap-1"
   >
     <div
       class="small fw-semibold text-body-secondary"
@@ -783,7 +783,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -811,7 +811,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -856,7 +856,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       >
         <button
           aria-label="Take photo"
-          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center justify-content-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <span
@@ -898,7 +898,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action px-2 px-sm-2"
           type="button"
         >
           <span
@@ -1032,7 +1032,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     </div>
   </div>
   <div
-    class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
+    class="inspection-next-location-card d-grid gap-1"
   >
     <div
       class="small fw-semibold text-body-secondary"
@@ -1065,7 +1065,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -1093,7 +1093,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -1127,7 +1127,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
   >
     <button
       aria-label="General photos (1)"
-      class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <span
@@ -1138,13 +1138,13 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           aria-hidden="true"
           class="lucide lucide-plus"
           fill="none"
-          height="13"
+          height="16"
           stroke="currentColor"
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"
           viewBox="0 0 24 24"
-          width="13"
+          width="16"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
@@ -1163,7 +1163,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     </button>
   </div>
   <div
-    class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
+    class="inspection-next-location-card d-grid gap-1"
   >
     <div
       class="small fw-semibold text-body-secondary"
@@ -1196,7 +1196,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -1224,7 +1224,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -1271,7 +1271,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       </span>
       <button
         aria-label="Add finding"
-        class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
+        class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
         type="button"
       >
         <span
@@ -1282,13 +1282,13 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
             aria-hidden="true"
             class="lucide lucide-plus"
             fill="none"
-            height="13"
+            height="16"
             stroke="currentColor"
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="2"
             viewBox="0 0 24 24"
-            width="13"
+            width="16"
             xmlns="http://www.w3.org/2000/svg"
           >
             <path
@@ -1323,7 +1323,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       >
         <button
           aria-label="Take photo"
-          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center justify-content-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <span
@@ -1365,7 +1365,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action px-2 px-sm-2"
           type="button"
         >
           <span
@@ -1513,7 +1513,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -1541,7 +1541,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -1588,7 +1588,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       </span>
       <button
         aria-label="Add finding"
-        class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
+        class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
         type="button"
       >
         <span
@@ -1599,13 +1599,13 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
             aria-hidden="true"
             class="lucide lucide-plus"
             fill="none"
-            height="13"
+            height="16"
             stroke="currentColor"
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="2"
             viewBox="0 0 24 24"
-            width="13"
+            width="16"
             xmlns="http://www.w3.org/2000/svg"
           >
             <path
@@ -1629,7 +1629,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
   >
     <button
       aria-label="General photos (1)"
-      class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <span
@@ -1640,13 +1640,13 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           aria-hidden="true"
           class="lucide lucide-plus"
           fill="none"
-          height="13"
+          height="16"
           stroke="currentColor"
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"
           viewBox="0 0 24 24"
-          width="13"
+          width="16"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
@@ -1679,7 +1679,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -1707,7 +1707,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -1762,7 +1762,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Submit Report
@@ -1798,7 +1798,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Submit Report
@@ -1853,7 +1853,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Submit Report
@@ -1889,7 +1889,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Submit Report
@@ -1934,7 +1934,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       >
         <button
           aria-label="Take photo"
-          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center justify-content-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <span
@@ -1976,7 +1976,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action px-2 px-sm-2"
           type="button"
         >
           <span
@@ -2110,7 +2110,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     </div>
   </div>
   <div
-    class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
+    class="inspection-next-location-card d-grid gap-1"
   >
     <div
       class="small fw-semibold text-body-secondary"
@@ -2143,7 +2143,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -2171,7 +2171,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -2205,7 +2205,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
   >
     <button
       aria-label="General photos (1)"
-      class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <span
@@ -2216,13 +2216,13 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           aria-hidden="true"
           class="lucide lucide-plus"
           fill="none"
-          height="13"
+          height="16"
           stroke="currentColor"
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"
           viewBox="0 0 24 24"
-          width="13"
+          width="16"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
@@ -2241,7 +2241,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     </button>
   </div>
   <div
-    class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
+    class="inspection-next-location-card d-grid gap-1"
   >
     <div
       class="small fw-semibold text-body-secondary"
@@ -2274,7 +2274,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -2302,7 +2302,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -2347,7 +2347,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       >
         <button
           aria-label="Take photo"
-          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center justify-content-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <span
@@ -2389,7 +2389,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action px-2 px-sm-2"
           type="button"
         >
           <span
@@ -2523,7 +2523,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     </div>
   </div>
   <div
-    class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
+    class="inspection-next-location-card d-grid gap-1"
   >
     <div
       class="small fw-semibold text-body-secondary"
@@ -2556,7 +2556,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -2584,7 +2584,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -2618,7 +2618,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
   >
     <button
       aria-label="General photos (1)"
-      class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <span
@@ -2629,13 +2629,13 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           aria-hidden="true"
           class="lucide lucide-plus"
           fill="none"
-          height="13"
+          height="16"
           stroke="currentColor"
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"
           viewBox="0 0 24 24"
-          width="13"
+          width="16"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
@@ -2654,7 +2654,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     </button>
   </div>
   <div
-    class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
+    class="inspection-next-location-card d-grid gap-1"
   >
     <div
       class="small fw-semibold text-body-secondary"
@@ -2687,7 +2687,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -2715,7 +2715,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -2760,7 +2760,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
       >
         <button
           aria-label="Take photo"
-          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center justify-content-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <span
@@ -2802,7 +2802,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action px-2 px-sm-2"
           type="button"
         >
           <span
@@ -2936,7 +2936,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     </div>
   </div>
   <div
-    class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
+    class="inspection-next-location-card d-grid gap-1"
   >
     <div
       class="small fw-semibold text-body-secondary"
@@ -2969,7 +2969,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -2997,7 +2997,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -3031,7 +3031,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
   >
     <button
       aria-label="General photos (1)"
-      class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <span
@@ -3042,13 +3042,13 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           aria-hidden="true"
           class="lucide lucide-plus"
           fill="none"
-          height="13"
+          height="16"
           stroke="currentColor"
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"
           viewBox="0 0 24 24"
-          width="13"
+          width="16"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
@@ -3067,7 +3067,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
     </button>
   </div>
   <div
-    class="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2"
+    class="inspection-next-location-card d-grid gap-1"
   >
     <div
       class="small fw-semibold text-body-secondary"
@@ -3100,7 +3100,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -3128,7 +3128,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'comple
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -3205,7 +3205,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       >
         <button
           aria-label="Take photo"
-          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center justify-content-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <span
@@ -3247,7 +3247,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action px-2 px-sm-2"
           type="button"
         >
           <span
@@ -3336,7 +3336,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -3364,7 +3364,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -3398,7 +3398,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
   >
     <button
       aria-label="Add general photos (optional)"
-      class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <span
@@ -3409,13 +3409,13 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           aria-hidden="true"
           class="lucide lucide-plus"
           fill="none"
-          height="13"
+          height="16"
           stroke="currentColor"
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"
           viewBox="0 0 24 24"
-          width="13"
+          width="16"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
@@ -3448,7 +3448,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -3476,7 +3476,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -3521,7 +3521,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       >
         <button
           aria-label="Take photo"
-          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center justify-content-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <span
@@ -3563,7 +3563,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action px-2 px-sm-2"
           type="button"
         >
           <span
@@ -3663,7 +3663,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -3699,7 +3699,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -3733,7 +3733,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
   >
     <button
       aria-label="Add general photos (optional)"
-      class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <span
@@ -3744,13 +3744,13 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           aria-hidden="true"
           class="lucide lucide-plus"
           fill="none"
-          height="13"
+          height="16"
           stroke="currentColor"
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"
           viewBox="0 0 24 24"
-          width="13"
+          width="16"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
@@ -3794,7 +3794,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -3830,7 +3830,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -3875,7 +3875,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       >
         <button
           aria-label="Take photo"
-          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center justify-content-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <span
@@ -3917,7 +3917,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action px-2 px-sm-2"
           type="button"
         >
           <span
@@ -4006,7 +4006,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -4034,7 +4034,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -4068,7 +4068,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
   >
     <button
       aria-label="Add general photos (optional)"
-      class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <span
@@ -4079,13 +4079,13 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           aria-hidden="true"
           class="lucide lucide-plus"
           fill="none"
-          height="13"
+          height="16"
           stroke="currentColor"
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"
           viewBox="0 0 24 24"
-          width="13"
+          width="16"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
@@ -4118,7 +4118,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -4146,7 +4146,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -4193,7 +4193,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       </span>
       <button
         aria-label="Add finding"
-        class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
+        class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
         type="button"
       >
         <span
@@ -4204,13 +4204,13 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
             aria-hidden="true"
             class="lucide lucide-plus"
             fill="none"
-            height="13"
+            height="16"
             stroke="currentColor"
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="2"
             viewBox="0 0 24 24"
-            width="13"
+            width="16"
             xmlns="http://www.w3.org/2000/svg"
           >
             <path
@@ -4245,7 +4245,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       >
         <button
           aria-label="Take photo"
-          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center justify-content-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <span
@@ -4287,7 +4287,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action px-2 px-sm-2"
           type="button"
         >
           <span
@@ -4376,7 +4376,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -4404,7 +4404,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -4451,7 +4451,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       </span>
       <button
         aria-label="Add finding"
-        class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
+        class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn"
         type="button"
       >
         <span
@@ -4462,13 +4462,13 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
             aria-hidden="true"
             class="lucide lucide-plus"
             fill="none"
-            height="13"
+            height="16"
             stroke="currentColor"
             stroke-linecap="round"
             stroke-linejoin="round"
             stroke-width="2"
             viewBox="0 0 24 24"
-            width="13"
+            width="16"
             xmlns="http://www.w3.org/2000/svg"
           >
             <path
@@ -4492,7 +4492,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
   >
     <button
       aria-label="Add general photos (optional)"
-      class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <span
@@ -4503,13 +4503,13 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           aria-hidden="true"
           class="lucide lucide-plus"
           fill="none"
-          height="13"
+          height="16"
           stroke="currentColor"
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"
           viewBox="0 0 24 24"
-          width="13"
+          width="16"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
@@ -4542,7 +4542,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -4570,7 +4570,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -4625,7 +4625,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Submit Report
@@ -4661,7 +4661,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Submit Report
@@ -4716,7 +4716,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Submit Report
@@ -4752,7 +4752,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Submit Report
@@ -4797,7 +4797,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       >
         <button
           aria-label="Take photo"
-          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center justify-content-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <span
@@ -4839,7 +4839,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action px-2 px-sm-2"
           type="button"
         >
           <span
@@ -4928,7 +4928,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -4956,7 +4956,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -4990,7 +4990,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
   >
     <button
       aria-label="Add general photos (optional)"
-      class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <span
@@ -5001,13 +5001,13 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           aria-hidden="true"
           class="lucide lucide-plus"
           fill="none"
-          height="13"
+          height="16"
           stroke="currentColor"
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"
           viewBox="0 0 24 24"
-          width="13"
+          width="16"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
@@ -5040,7 +5040,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -5068,7 +5068,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -5113,7 +5113,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       >
         <button
           aria-label="Take photo"
-          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center justify-content-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <span
@@ -5155,7 +5155,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action px-2 px-sm-2"
           type="button"
         >
           <span
@@ -5244,7 +5244,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -5272,7 +5272,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -5306,7 +5306,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
   >
     <button
       aria-label="Add general photos (optional)"
-      class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <span
@@ -5317,13 +5317,13 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           aria-hidden="true"
           class="lucide lucide-plus"
           fill="none"
-          height="13"
+          height="16"
           stroke="currentColor"
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"
           viewBox="0 0 24 24"
-          width="13"
+          width="16"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
@@ -5356,7 +5356,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -5384,7 +5384,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -5429,7 +5429,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
       >
         <button
           aria-label="Take photo"
-          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center justify-content-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <span
@@ -5471,7 +5471,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action px-2 px-sm-2"
           type="button"
         >
           <span
@@ -5560,7 +5560,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -5588,7 +5588,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -5622,7 +5622,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
   >
     <button
       aria-label="Add general photos (optional)"
-      class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <span
@@ -5633,13 +5633,13 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           aria-hidden="true"
           class="lucide lucide-plus"
           fill="none"
-          height="13"
+          height="16"
           stroke="currentColor"
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"
           viewBox="0 0 24 24"
-          width="13"
+          width="16"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
@@ -5672,7 +5672,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -5700,7 +5700,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'missin
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -5745,7 +5745,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
       >
         <button
           aria-label="Take photo"
-          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center justify-content-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <span
@@ -5787,7 +5787,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action px-2 px-sm-2"
           type="button"
         >
           <span
@@ -5876,7 +5876,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -5904,7 +5904,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -5938,7 +5938,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
   >
     <button
       aria-label="Add general photos (optional)"
-      class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <span
@@ -5949,13 +5949,13 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
           aria-hidden="true"
           class="lucide lucide-plus"
           fill="none"
-          height="13"
+          height="16"
           stroke="currentColor"
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"
           viewBox="0 0 24 24"
-          width="13"
+          width="16"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
@@ -5988,7 +5988,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -6016,7 +6016,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -6261,7 +6261,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
       >
         <button
           aria-label="Take photo"
-          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center justify-content-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <span
@@ -6303,7 +6303,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action px-2 px-sm-2"
           type="button"
         >
           <span
@@ -6392,7 +6392,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -6420,7 +6420,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -6454,7 +6454,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
   >
     <button
       aria-label="Add general photos (optional)"
-      class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <span
@@ -6465,13 +6465,13 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
           aria-hidden="true"
           class="lucide lucide-plus"
           fill="none"
-          height="13"
+          height="16"
           stroke="currentColor"
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"
           viewBox="0 0 24 24"
-          width="13"
+          width="16"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
@@ -6504,7 +6504,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -6532,7 +6532,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -6577,7 +6577,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
       >
         <button
           aria-label="Take photo"
-          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center justify-content-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <span
@@ -6619,7 +6619,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action px-2 px-sm-2"
           type="button"
         >
           <span
@@ -6708,7 +6708,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -6736,7 +6736,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -6770,7 +6770,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
   >
     <button
       aria-label="Add general photos (optional)"
-      class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <span
@@ -6781,13 +6781,13 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
           aria-hidden="true"
           class="lucide lucide-plus"
           fill="none"
-          height="13"
+          height="16"
           stroke="currentColor"
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"
           viewBox="0 0 24 24"
-          width="13"
+          width="16"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
@@ -6820,7 +6820,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -6848,7 +6848,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -6893,7 +6893,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
       >
         <button
           aria-label="Take photo"
-          class="btn btn-outline-primary btn-sm create-action-button create-action-button--section-primary d-inline-flex align-items-center justify-content-center px-3  inspection-take-photo-btn px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action inspection-take-photo-btn px-2 px-sm-2"
           type="button"
         >
           <span
@@ -6935,7 +6935,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
         </button>
         <button
           aria-label="Upload photo"
-          class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  px-2 px-sm-2"
+          class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  media-add-action px-2 px-sm-2"
           type="button"
         >
           <span
@@ -7024,7 +7024,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -7052,7 +7052,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -7086,7 +7086,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
   >
     <button
       aria-label="Add general photos (optional)"
-      class="btn btn-sm create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
+      class="btn btn-link btn-sm app-button app-button--neutral app-button--ghost create-action-button create-action-button--inline d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none  inspection-compact-action-btn justify-self-start"
       type="button"
     >
       <span
@@ -7097,13 +7097,13 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
           aria-hidden="true"
           class="lucide lucide-plus"
           fill="none"
-          height="13"
+          height="16"
           stroke="currentColor"
           stroke-linecap="round"
           stroke-linejoin="round"
           stroke-width="2"
           viewBox="0 0 24 24"
-          width="13"
+          width="16"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
@@ -7136,7 +7136,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review
@@ -7164,7 +7164,7 @@ exports[`InspectionFormBodySections cross-form in-form state snapshots > 'partia
           class="action-row-thumb-actions"
         >
           <button
-            class="btn btn-primary workflow-stage-actions__primary"
+            class="btn btn-primary app-button app-button--primary app-button--solid workflow-stage-actions__primary"
             type="button"
           >
             Continue to Review

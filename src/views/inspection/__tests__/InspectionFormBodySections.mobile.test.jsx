@@ -933,7 +933,7 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
     expect(onSaveDraft).not.toHaveBeenCalled()
 
     await act(async () => {
-      fireEvent.click(screen.getByText('Save'))
+      fireEvent.click(screen.getByRole('button', { name: 'Save finding' }))
     })
 
     expect(onSaveDraft).toHaveBeenCalledTimes(1)
@@ -1242,7 +1242,7 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
     expect(screen.getByText('No findings.')).toBeTruthy()
     expect(screen.getByLabelText('Describe finding')).toBeTruthy()
 
-    fireEvent.click(screen.getByText('Save'))
+    fireEvent.click(screen.getByRole('button', { name: 'Save finding' }))
 
     expect(screen.getByText('Describe the finding before saving.')).toBeTruthy()
 
@@ -1251,7 +1251,7 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
     })
 
     await act(async () => {
-      fireEvent.click(screen.getByText('Save'))
+      fireEvent.click(screen.getByRole('button', { name: 'Save finding' }))
     })
 
     const savedForm = updateForm.mock.calls.at(-1)?.[0]
@@ -1316,7 +1316,7 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
     expect(screen.queryByText('Finding 1')).toBeNull()
 
     fireEvent.click(screen.getByLabelText('Finding 1 actions'))
-    fireEvent.click(screen.getByText('Edit'))
+    fireEvent.click(screen.getByText('Edit finding'))
 
     expect(screen.getByText('Edit finding')).toBeTruthy()
     expect(screen.getByDisplayValue('Blocked emergency exit.')).toBeTruthy()
@@ -1324,7 +1324,7 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
       target: { value: 'Blocked emergency exit near workshop door.' },
     })
     await act(async () => {
-      fireEvent.click(screen.getByText('Save'))
+      fireEvent.click(screen.getByRole('button', { name: 'Save finding' }))
     })
 
     expect(onSaveDraft).toHaveBeenCalledTimes(2)
@@ -1378,7 +1378,7 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
     })
 
     await act(async () => {
-      fireEvent.click(screen.getByText('Save'))
+      fireEvent.click(screen.getByRole('button', { name: 'Save finding' }))
     })
 
     expect(onSaveInspectionFindingDraft).toHaveBeenCalledWith([
@@ -1448,7 +1448,15 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
     })
 
     fireEvent.click(screen.getByLabelText('Finding 1 actions'))
-    fireEvent.click(screen.getByText('Delete'))
+    fireEvent.click(screen.getByText('Delete finding'))
+    await act(async () => {
+      fireEvent.click(
+        within((await screen.findByText('Delete finding?')).closest('[role="dialog"]')).getByRole(
+          'button',
+          { name: 'Delete finding' },
+        ),
+      )
+    })
 
     expect(onSaveInspectionFindingDraft).toHaveBeenCalledWith([])
     expect(onSaveDraft).not.toHaveBeenCalled()
@@ -1506,7 +1514,7 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
       target: { value: 'Saved finding.' },
     })
     await act(async () => {
-      fireEvent.click(screen.getByText('Save'))
+      fireEvent.click(screen.getByRole('button', { name: 'Save finding' }))
     })
 
     const savedForm = updateForm.mock.calls.at(-1)?.[0]
@@ -1558,7 +1566,15 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
 
     fireEvent.click(screen.getByLabelText('Finding 1 actions'))
     await act(async () => {
-      fireEvent.click(screen.getByText('Delete'))
+      fireEvent.click(screen.getByText('Delete finding'))
+    })
+    await act(async () => {
+      fireEvent.click(
+        within((await screen.findByText('Delete finding?')).closest('[role="dialog"]')).getByRole(
+          'button',
+          { name: 'Delete finding' },
+        ),
+      )
     })
 
     expect(onSaveDraft).toHaveBeenCalledTimes(2)
@@ -1675,9 +1691,9 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
       expect(
         screen.getByText('Photos are still uploading. Keep this finding open until they finish.'),
       ).toBeTruthy()
-      expect(screen.getByRole('button', { name: 'Close Add finding' }).disabled).toBe(true)
+      expect(screen.getByRole('button', { name: /Close Add finding/i }).disabled).toBe(true)
       expect(screen.getByRole('button', { name: 'Cancel' }).disabled).toBe(true)
-      expect(screen.getByRole('button', { name: 'Save' }).disabled).toBe(true)
+      expect(screen.getByRole('button', { name: 'Save finding' }).disabled).toBe(true)
     } finally {
       nowSpy.mockRestore()
       randomSpy.mockRestore()
@@ -1719,7 +1735,7 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
     })
 
     await act(async () => {
-      fireEvent.click(screen.getByText('Save'))
+      fireEvent.click(screen.getByRole('button', { name: 'Save finding' }))
     })
 
     expect(onSaveDraft).toHaveBeenCalledTimes(1)
@@ -1765,7 +1781,15 @@ describe('InspectionFormBodySections mobile generic details drawer', () => {
 
     fireEvent.click(screen.getByLabelText('Finding 1 actions'))
     await act(async () => {
-      fireEvent.click(screen.getByText('Delete'))
+      fireEvent.click(screen.getByText('Delete finding'))
+    })
+    await act(async () => {
+      fireEvent.click(
+        within((await screen.findByText('Delete finding?')).closest('[role="dialog"]')).getByRole(
+          'button',
+          { name: 'Delete finding' },
+        ),
+      )
     })
 
     expect(onSaveDraft).toHaveBeenCalledWith(

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { CButton, CCol, CFormFeedback, CFormInput, CFormLabel, CRow } from '@coreui/react'
 import { CheckCircle2, Clock3 } from 'lucide-react'
+import DisclosureCard from 'src/components/DisclosureCard'
 import MobileSetupSummaryList from 'src/components/report-workflow/MobileSetupSummaryList'
 import useReportIsMobile from '../hooks/useReportIsMobile'
 import { FITNESS_PROTOCOL, FITNESS_REPORT_OPTION } from './constants'
@@ -11,10 +12,8 @@ const FitnessTestSetupStep = ({
   setForm,
   fieldErrors,
   clearError,
-  onSaveDraft,
   onContinue,
-  saveLabel,
-  draftStatus,
+  isSaving = false,
 }) => {
   const isMobile = useReportIsMobile()
   const [isEditingReportingMonth, setIsEditingReportingMonth] = useState(
@@ -26,6 +25,8 @@ const FitnessTestSetupStep = ({
     isEditingReportingMonth ||
     !hasReportingMonth ||
     Boolean(fieldErrors.reportingMonth)
+  const shouldShowWorkflowActions =
+    hasReportingMonth && (!isMobile || !showReportingMonthEditor) && !fieldErrors.reportingMonth
 
   const setReportingMonth = (value) => {
     setIsEditingReportingMonth(true)
@@ -91,9 +92,8 @@ const FitnessTestSetupStep = ({
         </CRow>
       </section>
 
-      <details className="rounded-3 border">
-        <summary className="p-3 fw-semibold">View assessment protocol</summary>
-        <div className="px-3 pb-3 d-grid gap-3">
+      <DisclosureCard summary={<span className="fw-semibold">View assessment protocol</span>}>
+        <div className="d-grid gap-3">
           <CRow className="g-3">
             <CCol xs={7} md={4} lg={3}>
               <CFormLabel htmlFor="fitness-document-reference">Document reference</CFormLabel>
@@ -106,7 +106,7 @@ const FitnessTestSetupStep = ({
           </CRow>
           <CRow className="g-3">
             <CCol xs={12} lg={5}>
-              <div className="rounded-3 border p-3 h-100 d-grid gap-2">
+              <div className="h-100 d-grid gap-2">
                 <div className="d-flex align-items-center gap-2 fw-semibold">
                   <CheckCircle2 size={18} className="text-primary" /> Fitness test
                 </div>
@@ -121,7 +121,7 @@ const FitnessTestSetupStep = ({
               </div>
             </CCol>
             <CCol xs={12} lg={7}>
-              <div className="rounded-3 border p-3 h-100 d-grid gap-2">
+              <div className="h-100 d-grid gap-2">
                 <div className="d-flex align-items-center gap-2 fw-semibold">
                   <Clock3 size={18} className="text-primary" /> Proficiency test
                 </div>
@@ -137,14 +137,11 @@ const FitnessTestSetupStep = ({
             </CCol>
           </CRow>
         </div>
-      </details>
+      </DisclosureCard>
 
-      <FitnessStageActions
-        onSaveDraft={onSaveDraft}
-        onContinue={onContinue}
-        saveLabel={saveLabel}
-        statusMessage={draftStatus}
-      />
+      {shouldShowWorkflowActions ? (
+        <FitnessStageActions onContinue={onContinue} isSaving={isSaving} />
+      ) : null}
     </div>
   )
 }

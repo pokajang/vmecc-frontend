@@ -63,7 +63,6 @@ const styles = `
     display: grid;
     gap: 0.65rem;
     padding: 1rem 1rem 0.85rem;
-    border-bottom: 1px solid var(--cui-border-color);
     background: var(--cui-tertiary-bg);
   }
 

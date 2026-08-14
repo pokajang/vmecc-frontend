@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { CButton, CCard, CCardBody, CFormCheck, CFormInput, CFormLabel } from '@coreui/react'
 import { FormFieldError } from '../../form/components/InspectionFormDisplaySections'
 import { formatFireExtinguisherDaysLeft } from './helpers'
@@ -103,14 +103,13 @@ export const AddFireExtinguisherForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const requiresDuplicateConfirmation = duplicatePolicy === 'confirm'
 
-  const setField = (field, value) =>
-    setDraft((current) => {
-      const next = { ...current, [field]: value }
-      onDirtyChange?.(
-        Object.keys(initialDraft).some((key) => text(next[key]) !== text(initialDraft[key])),
-      )
-      return next
-    })
+  useEffect(() => {
+    onDirtyChange?.(
+      Object.keys(initialDraft).some((key) => text(draft[key]) !== text(initialDraft[key])),
+    )
+  }, [draft, initialDraft, onDirtyChange])
+
+  const setField = (field, value) => setDraft((current) => ({ ...current, [field]: value }))
 
   const save = async () => {
     const duplicateLookupLocators = Array.from(
@@ -227,9 +226,10 @@ export const AddFireExtinguisherForm = ({
           {initialValue?.catalogId ? 'Edit extinguisher' : 'Add extinguisher'}
         </div>
       )}
-      {initialValue?.equipmentSource === 'seed' ? (
+      {initialValue?.catalogId || initialValue?.id ? (
         <div className="small rounded border border-warning-subtle bg-warning-subtle text-body px-3 py-2">
-          This item is shared across inspections. Changes will affect future inspections.
+          Updates the equipment register and future inspections. Current inspection answers will not
+          be changed.
         </div>
       ) : null}
       {presentation === 'drawer' && !editableLocation && locationMetadata.length > 0 ? (
@@ -302,13 +302,15 @@ export const AddFireExtinguisherForm = ({
           {isCheckingDuplicate
             ? 'Checking locator...'
             : isSubmitting
-              ? 'Adding extinguisher...'
+              ? initialValue?.catalogId || initialValue?.id
+                ? 'Saving equipment details...'
+                : 'Adding extinguisher...'
               : requiresDuplicateConfirmation && duplicateRows.length > 0
                 ? 'Add as separate extinguisher'
                 : submitLabel
                   ? submitLabel
-                  : initialValue?.equipmentSource === 'seed'
-                    ? 'Save global change'
+                  : initialValue?.catalogId || initialValue?.id
+                    ? 'Save equipment details'
                     : 'Save extinguisher'}
         </CButton>
       </div>

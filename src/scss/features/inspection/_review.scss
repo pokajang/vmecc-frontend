@@ -184,39 +184,6 @@
   font-weight: 700;
 }
 
-.inspection-review-photo-group__grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0.55rem;
-}
-
-.inspection-review-photo-item {
-  min-width: 0;
-  display: grid;
-  gap: 0.35rem;
-}
-
-.inspection-review-photo-item__image {
-  display: block;
-  width: 100%;
-  height: auto;
-  max-height: 24rem;
-  margin-inline: auto;
-  object-fit: contain;
-  border-radius: 0.35rem;
-  background: rgba(var(--cui-secondary-rgb), 0.08);
-}
-
-.inspection-review-photo-item__description {
-  overflow-wrap: anywhere;
-}
-
-.inspection-review-photo-item__description {
-  color: var(--cui-secondary-color);
-  font-size: var(--vmecc-text-caption);
-  line-height: 1.35;
-}
-
 .inspection-review-no-issues {
   display: grid;
   gap: 0.2rem;
@@ -244,7 +211,6 @@
   display: grid;
   gap: 0.55rem;
   padding-top: 0.75rem;
-  border-top: 1px solid var(--cui-border-color);
 }
 
 .inspection-review-issue-group:first-child {
@@ -309,7 +275,6 @@
   justify-content: space-between;
   gap: 0.75rem;
   padding-top: 0.55rem;
-  border-top: 1px solid var(--cui-border-color);
 }
 
 .inspection-review-status-row {
@@ -318,7 +283,6 @@
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0.45rem 0;
-  border-bottom: 1px solid var(--cui-border-color);
 }
 
 .inspection-review-status-row__label {
@@ -613,7 +577,6 @@
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0.9rem 1rem;
-  border-bottom: 1px solid var(--cui-border-color);
 }
 
 .inspection-side-panel__leading {
@@ -793,7 +756,6 @@
   gap: 0.75rem;
   padding: 0.7rem 0.85rem;
   background: var(--cui-body-bg);
-  border-top: 1px solid var(--cui-border-color);
 }
 
 .all-extinguishers-detail__criteria-row:first-child {

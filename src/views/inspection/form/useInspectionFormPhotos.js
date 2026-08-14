@@ -12,11 +12,8 @@ import { buildCameraDiagnostics, inspectCameraEnvironment } from 'src/utils/came
 import { supportsInAppInspectionCamera } from './inspectionCameraCaptureUtils'
 import {
   applyPhotoCaptionById,
-  collectInspectionPhotos,
   getRowPhotoList,
-  INSPECTION_MAX_PHOTO_COUNT,
   isCameraFailureToRetry,
-  mergeInspectionPhotoLists,
   prepareInspectionPhotoUploads,
   normalizePhotoFailure,
   removePhotoById,
@@ -192,7 +189,6 @@ const useInspectionFormPhotos = ({
     compressed_too_large: 'Photo is too large after compression. Upload manually.',
     total_size_exceeded: 'Combined photos are too large. Upload fewer photos manually.',
     read_failed: 'Unable to read photo. Upload the photo manually.',
-    max_photo_count: 'Photo limit reached.',
     unsupported_file_type: 'This photo format is not supported. Upload the photo manually.',
     invalid_file: 'This photo file is invalid. Upload a valid photo manually.',
     no_photo_data: 'Photo has no readable data. Upload the photo manually.',
@@ -280,41 +276,9 @@ const useInspectionFormPhotos = ({
       return
     }
     const nextTarget = target || { kind: 'root' }
-    const latestForm = typeof getLatestForm === 'function' ? getLatestForm() : form
-    const currentPhotos = mergeInspectionPhotoLists(
-      collectInspectionPhotos(latestForm),
-      Array.isArray(nextTarget?.currentPhotos) ? nextTarget.currentPhotos : [],
-      Array.isArray(nextTarget?.rootPhotos) ? nextTarget.rootPhotos : [],
-    )
-    const reservedQueueSlots = photoUploadQueueRef.current.filter(
-      (item) => item.status === 'failed' || ACTIVE_PHOTO_UPLOAD_STATES.has(item.status),
-    ).length
-    const remainingPhotoSlots = Math.max(
-      0,
-      INSPECTION_MAX_PHOTO_COUNT - currentPhotos.length - reservedQueueSlots,
-    )
-    if (remainingPhotoSlots === 0) {
-      pushToast?.(
-        `This inspection already contains ${INSPECTION_MAX_PHOTO_COUNT} photos. Remove one before adding another.`,
-        {
-          title: 'Photo limit reached',
-          color: 'warning',
-        },
-      )
-      return
-    }
     photoUploadTargetRef.current = nextTarget
     clearCameraUploadFallback()
     const isExplicitUpload = inputRef === uploadInputRef
-    if (isExplicitUpload && remainingPhotoSlots < INSPECTION_MAX_PHOTO_COUNT) {
-      pushToast?.(
-        `You can add ${remainingPhotoSlots} more photo${remainingPhotoSlots === 1 ? '' : 's'} to this inspection.`,
-        {
-          title: 'Inspection photo capacity',
-          color: 'info',
-        },
-      )
-    }
     const canUseInAppCamera =
       !isExplicitUpload && !isLikelyEmbeddedBrowser() && supportsInAppInspectionCamera()
     activePhotoInputRef.current = canUseInAppCamera ? 'camera' : 'upload'

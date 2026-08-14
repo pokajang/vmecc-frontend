@@ -10,6 +10,7 @@ import {
   CModalTitle,
 } from '@coreui/react'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
+import InspectionDrawerFooterAction from './patterns/InspectionDrawerFooterAction'
 
 const text = (value) => String(value || '').trim()
 
@@ -139,12 +140,12 @@ const HighAngleCustomRecordModal = ({
 
   const actions = (
     <>
-      <CButton type="button" color="secondary" variant="outline" onClick={onClose}>
+      <InspectionDrawerFooterAction type="button" onClick={onClose}>
         Cancel
-      </CButton>
-      <CButton type="button" color="primary" onClick={submit}>
+      </InspectionDrawerFooterAction>
+      <InspectionDrawerFooterAction type="button" intent="primary" onClick={submit}>
         Save
-      </CButton>
+      </InspectionDrawerFooterAction>
     </>
   )
 

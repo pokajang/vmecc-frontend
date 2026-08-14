@@ -95,13 +95,6 @@
   object-fit: contain;
 }
 
-.inspection-photo-gallery__item--read-only .workflow-photo-preview--uncropped {
-  min-height: 0;
-  padding: 0;
-  border-radius: 0;
-  background: transparent;
-}
-
 .inspection-general-evidence-drawer-gallery > div:first-child {
   grid-template-columns: minmax(0, 1fr) !important;
 }

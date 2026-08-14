@@ -1,5 +1,5 @@
 import React from 'react'
-import { CButton } from '@coreui/react'
+import AppButton from './AppButton'
 import { Plus } from 'lucide-react'
 
 const DISABLED_STYLE = { cursor: 'not-allowed' }
@@ -18,7 +18,7 @@ const CreateActionButton = ({
   ...rest
 }) => {
   const normalizedImportance = importance === 'primary' ? 'page-primary' : importance
-  const resolvedIcon = showIcon ? icon || <Plus size={13} /> : null
+  const resolvedIcon = showIcon ? icon || <Plus size={16} /> : null
   const resolvedAriaLabel = ariaLabel || label || undefined
   const isPagePrimary = normalizedImportance === 'page-primary'
   const isSectionPrimary = normalizedImportance === 'section-primary'
@@ -29,16 +29,14 @@ const CreateActionButton = ({
     : isSectionPrimary
       ? `create-action-button ${importanceClassName} d-inline-flex align-items-center justify-content-center px-3 ${disabledClassName} ${className}`.trim()
       : `create-action-button ${importanceClassName} d-inline-flex align-items-center justify-content-center text-primary px-2 py-1 border-0 bg-transparent shadow-none ${disabledClassName} ${className}`.trim()
-  const colorProps = isPagePrimary
-    ? { color: 'primary' }
-    : isSectionPrimary
-      ? { color: 'primary', variant: 'outline' }
-      : {}
+  const intent = isPagePrimary || isSectionPrimary ? 'primary' : 'neutral'
+  const presentation = isPagePrimary ? 'solid' : isSectionPrimary ? 'soft' : 'ghost'
 
   return (
-    <CButton
+    <AppButton
       size={size}
-      {...colorProps}
+      intent={intent}
+      presentation={presentation}
       className={buttonClassName}
       style={disabled ? DISABLED_STYLE : undefined}
       onClick={disabled ? undefined : onClick}
@@ -53,7 +51,7 @@ const CreateActionButton = ({
         </span>
       ) : null}
       <span className="create-action-button__label">{label}</span>
-    </CButton>
+    </AppButton>
   )
 }
 

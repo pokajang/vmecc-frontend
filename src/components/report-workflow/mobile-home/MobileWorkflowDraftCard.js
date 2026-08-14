@@ -2,19 +2,10 @@ import React from 'react'
 import { CButton } from '@coreui/react'
 import { Trash2 } from 'lucide-react'
 
-const MobileWorkflowDraftCard = ({
-  ariaLabel,
-  summary = '',
-  savedLabel,
-  syncStatus = '',
-  onContinue,
-  onDelete,
-}) => {
-  const hasPendingSync = syncStatus && syncStatus !== 'synced'
-
+const MobileWorkflowDraftCard = ({ ariaLabel, summary = '', savedLabel, onContinue, onDelete }) => {
   return (
-    <div className="mobile-workflow-home__draft-list list-group list-group-flush overflow-hidden border rounded-3">
-      <article className="mobile-workflow-draft-card list-group-item p-3 bg-body">
+    <div className="mobile-workflow-home__draft-list">
+      <article className="mobile-workflow-draft-card">
         <div className="mobile-workflow-draft-card__grid">
           <button
             type="button"
@@ -34,9 +25,6 @@ const MobileWorkflowDraftCard = ({
             </span>
           </button>
           <div className="mobile-workflow-draft-card__meta">
-            {hasPendingSync ? (
-              <span className="small text-warning-emphasis">Sync pending</span>
-            ) : null}
             <CButton
               type="button"
               color="link"

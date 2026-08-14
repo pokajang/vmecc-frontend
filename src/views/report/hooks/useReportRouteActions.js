@@ -780,73 +780,6 @@ const useReportRouteActions = ({
     ],
   )
 
-  const saveReviewDraft = useCallback(
-    async ({ reviewRecord, selectedEditingRecord }) => {
-      if (!reviewRecord) return
-      const payload = {
-        ...recordToDraft(reviewRecord, activeFormSlug),
-        ...(selectedEditingRecord
-          ? { __draftMode: 'edit', __editReportId: String(selectedEditingRecord.id || '') }
-          : { __draftMode: 'new', __editReportId: '' }),
-        savedAt: new Date().toISOString(),
-      }
-      let saved = null
-      if (activeFormSlug === 'erco') {
-        const title = `${reviewRecord?.incidentType || reportTypeLabel} draft`
-        const activeDraft = activeDraftRows.find(
-          (row) => String(row?.draftId || '').trim() === String(queryDraftId || '').trim(),
-        )
-        saved = queryDraftId
-          ? await updateErcoDraft(user?.id, queryDraftId, payload, {
-              title,
-              originMode: selectedEditingRecord ? 'edit' : 'new',
-              sourceReportUid: selectedEditingRecord?.id || '',
-              baseVersion: Number(activeDraft?.version || 0) || 0,
-            })
-          : await createErcoDraft(user?.id, payload, {
-              title,
-              originMode: selectedEditingRecord ? 'edit' : 'new',
-              sourceReportUid: selectedEditingRecord?.id || '',
-            })
-        if (saved?.draftId && !queryDraftId) {
-          const query = new URLSearchParams(location.search)
-          query.set('draft', saved.draftId)
-          navigate(`${location.pathname}?${query.toString()}`, { replace: true })
-        }
-      } else {
-        const activeDraft = activeDraftRows[0] || null
-        const ok = await saveReportDraft(user?.id, payload, activeFormSlug, {
-          draftId: activeDraft?.draftId || '',
-          baseVersion: Number(activeDraft?.version || 0) || 0,
-        })
-        saved = ok ? { draftId: '' } : null
-      }
-      if (!saved) {
-        pushToast('Unable to save the draft to the server. Please try again.', {
-          title: 'Draft save failed',
-          color: 'danger',
-        })
-        return
-      }
-      setDraftVersion((prev) => prev + 1)
-      setIsFormDirty(false)
-      pushToast('Draft saved.', { title: 'Draft saved', color: 'success' })
-    },
-    [
-      activeFormSlug,
-      activeDraftRows,
-      location.pathname,
-      location.search,
-      navigate,
-      pushToast,
-      queryDraftId,
-      reportTypeLabel,
-      setDraftVersion,
-      setIsFormDirty,
-      user?.id,
-    ],
-  )
-
   const requestReview = useCallback(
     (record, backSection = '') => {
       if (!record) return
@@ -917,7 +850,6 @@ const useReportRouteActions = ({
     requestDeleteRecord,
     requestReview,
     runGuardedAction,
-    saveReviewDraft,
     setDeleteTarget,
     setPendingAction,
     setShowDiscard,

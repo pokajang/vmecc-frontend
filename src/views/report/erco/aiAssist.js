@@ -2,29 +2,14 @@ import { buildAiHelperPageContext } from 'src/components/ai-helper/pageContextCo
 import { formatErcoLocation } from './utils'
 import { sortResponders } from './chronologyUtils'
 
-export const AI_REVIEW_STATUS = {
-  LOOKS_OK: 'looks_ok',
-  NEEDS_ATTENTION: 'needs_attention',
-  MISSING_INFORMATION: 'missing_information',
-}
-
 export const ERCO_EMBEDDED_TASK = {
   GENERATE_SUMMARY: 'erco_generate_summary',
   IMPROVE_SUMMARY: 'erco_improve_summary',
-  REVIEW_REPORT: 'erco_review_report',
 }
 
 export const ERCO_AI_MESSAGE_MAX_LENGTH = 12000
 export const ERCO_AI_MESSAGE_TOO_LONG =
   'This report is too long for AI assistance. Shorten the summary or continue editing manually.'
-
-const STATUS_LABELS = {
-  [AI_REVIEW_STATUS.LOOKS_OK]: 'Looks OK',
-  [AI_REVIEW_STATUS.NEEDS_ATTENTION]: 'Needs attention',
-  [AI_REVIEW_STATUS.MISSING_INFORMATION]: 'Missing information',
-}
-
-const ALLOWED_REVIEW_STATUSES = new Set(Object.values(AI_REVIEW_STATUS))
 
 export const compactText = (value) =>
   String(value || '')
@@ -143,70 +128,9 @@ export const buildErcoSummaryPrompt = (payload, mode = 'generate') => {
   ].join('\n')
 }
 
-export const buildErcoReviewPrompt = (payload) =>
-  [
-    'Check this ERCO report for possible missing or unclear information before submission.',
-    'This is advisory only. Do not rewrite the report and do not block submission.',
-    'Use only the supplied ERCO report facts. Do not invent facts.',
-    'Focus on chronology gaps, vague actions, missing demobilisation/RTB, summary-data mismatch, missing responders, missing location/date/time, and missing post-incident analysis where relevant.',
-    'Do not include unrelated HSE, inspection, payroll, leave, or other module content.',
-    'Return strict JSON only in this shape:',
-    '{"items":[{"status":"looks_ok|needs_attention|missing_information","message":"short plain-language suggestion"}]}',
-    'Use at most 6 items. If no issues are found, return one looks_ok item.',
-    '',
-    'ERCO report payload:',
-    jsonBlock(payload),
-  ].join('\n')
-
 export const normalizeGeneratedSummary = (value) =>
   compactText(value && typeof value === 'object' ? value.summary : value)
     .replace(/^```(?:text|markdown)?\s*/i, '')
     .replace(/\s*```$/i, '')
     .replace(/^(incident summary|summary)\s*:\s*/i, '')
     .trim()
-
-const extractJsonObject = (value) => {
-  const text = String(value || '').trim()
-  if (!text) return null
-  const withoutFence = text
-    .replace(/^```(?:json)?\s*/i, '')
-    .replace(/\s*```$/i, '')
-    .trim()
-  const start = withoutFence.indexOf('{')
-  const end = withoutFence.lastIndexOf('}')
-  if (start < 0 || end <= start) return null
-  return withoutFence.slice(start, end + 1)
-}
-
-export const normalizeReviewStatus = (status) => {
-  const value = compactText(status).toLowerCase()
-  return ALLOWED_REVIEW_STATUSES.has(value) ? value : AI_REVIEW_STATUS.NEEDS_ATTENTION
-}
-
-export const reviewStatusLabel = (status) =>
-  STATUS_LABELS[normalizeReviewStatus(status)] || STATUS_LABELS[AI_REVIEW_STATUS.NEEDS_ATTENTION]
-
-export const parseAiReviewItems = (value) => {
-  const structuredValue = value && typeof value === 'object' ? value : null
-  const jsonText = structuredValue ? null : extractJsonObject(value)
-  if (!structuredValue && !jsonText) {
-    const fallbackMessage = compactText(value)
-    return fallbackMessage
-      ? [{ status: AI_REVIEW_STATUS.NEEDS_ATTENTION, message: fallbackMessage }]
-      : []
-  }
-
-  try {
-    const parsed = structuredValue || JSON.parse(jsonText)
-    const rows = Array.isArray(parsed?.items) ? parsed.items : []
-    return rows
-      .map((row) => ({
-        status: normalizeReviewStatus(row?.status),
-        message: compactText(row?.message),
-      }))
-      .filter((row) => row.message)
-      .slice(0, 6)
-  } catch {
-    return []
-  }
-}

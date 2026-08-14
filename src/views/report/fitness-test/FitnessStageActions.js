@@ -3,24 +3,20 @@ import WorkflowStageActions from 'src/components/report-workflow/WorkflowStageAc
 
 const FitnessStageActions = ({
   onBack,
-  onSaveDraft,
   onContinue,
-  saveLabel = 'Save Draft',
   continueLabel = 'Continue',
-  statusMessage = '',
   primaryType = 'button',
   disabled = false,
+  isSaving = false,
 }) => (
   <WorkflowStageActions
+    mobileLayout="stacked-primary-first"
     onBack={onBack}
-    onSaveDraft={onSaveDraft}
     onPrimary={onContinue}
-    saveLabel={saveLabel}
     primaryLabel={continueLabel}
     primaryType={primaryType}
-    statusMessage={statusMessage}
-    saveDisabled={disabled}
     primaryDisabled={disabled}
+    isSaving={isSaving}
   />
 )
 

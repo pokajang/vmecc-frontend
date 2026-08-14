@@ -4,6 +4,13 @@ Only current, actionable records belong here.
 
 Current records:
 
+- [Inspection item drawer workflow realignment plan](./FRONTEND_INSPECTION_ITEM_DRAWER_WORKFLOW_REALIGNMENT_PLAN_2026-08-13.md)
+- [Shared evidence gallery and lightbox plan](./FRONTEND_SHARED_EVIDENCE_GALLERY_LIGHTBOX_PLAN_2026-08-13.md)
+- [Shared evidence gallery and lightbox execution](./FRONTEND_SHARED_EVIDENCE_GALLERY_LIGHTBOX_EXECUTION_2026-08-13.md)
+- [Global button system plan](./FRONTEND_GLOBAL_BUTTON_SYSTEM_PLAN_2026-08-13.md)
+- [Global button system execution](./FRONTEND_GLOBAL_BUTTON_SYSTEM_EXECUTION_2026-08-13.md)
+- [Reporting records page convergence plan](./FRONTEND_REPORTING_RECORDS_PAGE_CONVERGENCE_PLAN_2026-08-13.md)
+- [Reporting records page convergence execution](./FRONTEND_REPORTING_RECORDS_PAGE_CONVERGENCE_EXECUTION_2026-08-13.md)
 - [Mobile drawer actions and icon alignment plan](./FRONTEND_MOBILE_DRAWER_ACTIONS_AND_ICON_ALIGNMENT_PLAN_2026-08-13.md)
 - [Mobile drawer actions and icon alignment execution](./FRONTEND_MOBILE_DRAWER_ACTIONS_AND_ICON_ALIGNMENT_EXECUTION_2026-08-13.md)
 - [Inspection visual CRUD UI/UX audit plan](./FRONTEND_INSPECTION_VISUAL_CRUD_UIUX_AUDIT_PLAN_2026-08-12.md)

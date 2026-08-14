@@ -20,7 +20,13 @@ const InspectionContextSummary = ({ fields = [] }) => {
   )
   if (!visibleFields.length) return null
 
-  return <WorkflowSummaryList items={visibleFields} variant="detail" />
+  return (
+    <WorkflowSummaryList
+      items={visibleFields}
+      variant="detail"
+      listClassName="inspection-context-summary__list"
+    />
+  )
 }
 
 export default InspectionContextSummary

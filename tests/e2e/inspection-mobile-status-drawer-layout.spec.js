@@ -24,7 +24,7 @@ const drawerFixture = (bodyClass) => `
                     class="inspection-drawer-choice inspection-hydraulic-status-btn btn btn-sm ${index === 0 ? 'btn-primary' : 'btn-outline-secondary'}"
                     aria-pressed="${index === 0}"
                     ${index === 0 ? 'data-selected="true"' : ''}
-                  >${label}</button>`,
+                  ><span class="inspection-drawer-choice__surface">${label}</span></button>`,
               )
               .join('')}
           </div>
@@ -134,28 +134,29 @@ test.describe('inspection mobile status drawer layout', () => {
         const unselected = choices.filter({ hasText: 'Defect' })
         const [selectedStyle, unselectedStyle] = await Promise.all([
           selected.evaluate((element) => {
-            const style = getComputedStyle(element)
+            const surface = element.querySelector('.inspection-drawer-choice__surface')
+            const style = getComputedStyle(surface)
             return {
               background: style.backgroundColor,
-              border: style.borderColor,
               radius: Number.parseFloat(style.borderRadius),
-              height: element.getBoundingClientRect().height,
+              height: surface.getBoundingClientRect().height,
+              targetHeight: element.getBoundingClientRect().height,
             }
           }),
           unselected.evaluate((element) => {
-            const style = getComputedStyle(element)
+            const surface = element.querySelector('.inspection-drawer-choice__surface')
+            const style = getComputedStyle(surface)
             return {
               background: style.backgroundColor,
-              border: style.borderColor,
               radius: Number.parseFloat(style.borderRadius),
             }
           }),
         ])
 
-        expect(selectedStyle.border).toBe('rgba(0, 0, 0, 0)')
-        expect(unselectedStyle.border).toBe('rgba(0, 0, 0, 0)')
         expect(selectedStyle.background).not.toBe(unselectedStyle.background)
         expect(selectedStyle.radius).toBeGreaterThanOrEqual(selectedStyle.height / 2)
+        expect(selectedStyle.height).toBeLessThanOrEqual(34)
+        expect(selectedStyle.targetHeight).toBeGreaterThanOrEqual(44)
         await expect(selected).toHaveAttribute('aria-pressed', 'true')
         await expect(unselected).toHaveAttribute('aria-pressed', 'false')
 
@@ -163,8 +164,16 @@ test.describe('inspection mobile status drawer layout', () => {
           .locator('html')
           .evaluate((element) => element.setAttribute('data-coreui-theme', 'dark'))
         const darkBackgrounds = await Promise.all([
-          selected.evaluate((element) => getComputedStyle(element).backgroundColor),
-          unselected.evaluate((element) => getComputedStyle(element).backgroundColor),
+          selected.evaluate(
+            (element) =>
+              getComputedStyle(element.querySelector('.inspection-drawer-choice__surface'))
+                .backgroundColor,
+          ),
+          unselected.evaluate(
+            (element) =>
+              getComputedStyle(element.querySelector('.inspection-drawer-choice__surface'))
+                .backgroundColor,
+          ),
         ])
         expect(darkBackgrounds[0]).not.toBe(darkBackgrounds[1])
 

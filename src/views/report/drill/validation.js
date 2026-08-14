@@ -142,8 +142,6 @@ export const validateDrillAnalysis = (form) => {
     lists.some((rows) => rows.some((row) => String(row || '').length > DRILL_FIELD_LIMITS.listItem))
   ) {
     next.postIncidentAnalysis = `Each analysis entry must be ${DRILL_FIELD_LIMITS.listItem} characters or fewer.`
-  } else if (analysis.photos.length > DRILL_FIELD_LIMITS.photos) {
-    next.postIncidentAnalysis = `Use no more than ${DRILL_FIELD_LIMITS.photos} photographs.`
   } else if (
     analysis.photos.some(
       (photo) => String(photo?.description || '').length > DRILL_FIELD_LIMITS.listItem,

@@ -209,4 +209,14 @@ describe('ReportRecordsSection', () => {
 
     expect(screen.getByRole('columnheader', { name: 'Fitness Test Type' })).toBeTruthy()
   })
+
+  it('uses the compact inspection records presentation for work-first report modules', () => {
+    const { container } = render(
+      <ReportRecordsSection {...buildProps({ isMobileCardless: true })} />,
+    )
+
+    expect(container.querySelector('.workflow-scope-segmented--text')).toBeTruthy()
+    expect(container.querySelector('.inspection-report-records-filter-row')).toBeTruthy()
+    expect(container.querySelector('.data-table-footer--compact-mobile')).toBeTruthy()
+  })
 })

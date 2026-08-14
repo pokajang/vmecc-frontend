@@ -15,24 +15,24 @@ const InspectionResetConfirmDrawer = ({
   return (
     <MobileBottomDrawer
       visible={visible}
-      title="Reset check"
+      title="Clear inspection answers"
       bodyClassName="inspection-equipment-detail-drawer-shell"
       onClose={onClose}
     >
       <div className="inspection-mobile-detail-drawer-body inspection-equipment-detail-drawer-body d-grid gap-3">
         <div className="text-body-secondary">
-          Reset inspection answers for <span className="fw-semibold text-body">{rowLabel}</span>?
+          Clear inspection answers for <span className="fw-semibold text-body">{rowLabel}</span>?
         </div>
         <div className="small text-body-secondary">
-          This clears statuses, remarks, and photos for this check only. The equipment record stays
-          in the inspection.
+          Statuses, remarks and photos from this inspection will be cleared. The equipment record
+          stays registered and available for future inspections.
         </div>
         <div className="mobile-bottom-drawer__footer d-flex justify-content-end gap-2">
           <CButton type="button" color="secondary" variant="outline" size="sm" onClick={onClose}>
             Cancel
           </CButton>
           <CButton type="button" color="danger" size="sm" onClick={onConfirm}>
-            Reset
+            Clear answers
           </CButton>
         </div>
       </div>

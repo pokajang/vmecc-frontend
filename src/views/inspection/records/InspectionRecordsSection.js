@@ -1,11 +1,8 @@
 import React from 'react'
-import { CCard, CCardBody, CCardHeader } from '@coreui/react'
 
 import CreateActionButton from 'src/components/CreateActionButton'
 import DataTableFooter from 'src/components/DataTableFooter'
-import ResponsiveRecordCollection from 'src/components/ResponsiveRecordCollection'
-import TableLoader from 'src/components/TableLoader'
-import RecordScopeSegmentedControl from 'src/components/report-workflow/RecordScopeSegmentedControl'
+import ReportingRecordsSectionShell from 'src/components/report-workflow/ReportingRecordsSectionShell'
 
 import InspectionMobileRecordsList from './InspectionMobileRecordsList'
 import InspectionQueueBanner from './InspectionQueueBanner'
@@ -164,25 +161,29 @@ const InspectionRecordsSection = ({
         onDeleteRecord={onDeleteRecord}
       />
 
-      <div className="inspection-mobile-section d-md-none" data-testid="inspection-records">
-        {commonQueueBanner}
-        <div className="d-flex justify-content-between align-items-center gap-2 mb-3">
-          <RecordScopeSegmentedControl
-            value={recordScope}
-            onChange={setRecordScope}
-            className="workflow-scope-segmented--text"
-            data-testid="inspection-scope"
-          />
-          <div className="d-flex align-items-center gap-2">
-            {showPrimaryAction ? (
-              <CreateActionButton label="New" onClick={startNew} data-testid="inspection-new" />
-            ) : null}
-          </div>
-        </div>
-        {filters}
-        {isLoading ? null : filteredRecords.length === 0 ? (
-          emptyMessage
-        ) : (
+      <ReportingRecordsSectionShell
+        recordScope={recordScope}
+        onRecordScopeChange={setRecordScope}
+        compactPresentation
+        scopeTestId="inspection-scope"
+        recordsTestId="inspection-records"
+        mobileBefore={commonQueueBanner}
+        desktopBefore={commonQueueBanner}
+        mobilePrimaryAction={
+          showPrimaryAction ? (
+            <CreateActionButton label="New" onClick={startNew} data-testid="inspection-new" />
+          ) : null
+        }
+        desktopPrimaryAction={
+          showPrimaryAction ? (
+            <CreateActionButton label="New" onClick={startNew} data-testid="inspection-new" />
+          ) : null
+        }
+        filters={filters}
+        isLoading={isLoading}
+        isEmpty={filteredRecords.length === 0}
+        emptyMessage={emptyMessage}
+        mobileRecords={
           <InspectionMobileRecordsList
             visibleRows={visibleRows}
             downloadingId={downloadingId}
@@ -190,52 +191,19 @@ const InspectionRecordsSection = ({
             onEditRecord={onEditRecord}
             onViewRecord={onViewRecord}
           />
-        )}
-        {isLoading ? (
-          <div className="border rounded-3 bg-body">
-            <TableLoader message="Loading records..." minHeight={144} />
-          </div>
-        ) : filteredRecords.length > 0 ? (
-          footer
-        ) : null}
-      </div>
-
-      <CCard className="d-none d-md-block" data-testid="inspection-records">
-        <CCardHeader className="d-flex justify-content-between align-items-center">
-          <RecordScopeSegmentedControl
-            value={recordScope}
-            onChange={setRecordScope}
-            className="workflow-scope-segmented--text"
-            data-testid="inspection-scope"
+        }
+        desktopRecords={
+          <InspectionRecordsTable
+            visibleRows={visibleRows}
+            downloadingId={downloadingId}
+            buildActions={buildActions}
+            formatDateTime={formatDateTime}
+            onEditRecord={onEditRecord}
+            onViewRecord={onViewRecord}
           />
-          <div className="d-flex align-items-center gap-2">
-            {showPrimaryAction ? (
-              <CreateActionButton label="New" onClick={startNew} data-testid="inspection-new" />
-            ) : null}
-          </div>
-        </CCardHeader>
-        <CCardBody>
-          {commonQueueBanner}
-          {filters}
-          <ResponsiveRecordCollection
-            isLoading={isLoading}
-            isEmpty={filteredRecords.length === 0}
-            emptyMessage={emptyMessage}
-            mobileSections={[]}
-            renderDesktop={() => (
-              <InspectionRecordsTable
-                visibleRows={visibleRows}
-                downloadingId={downloadingId}
-                buildActions={buildActions}
-                formatDateTime={formatDateTime}
-                onEditRecord={onEditRecord}
-                onViewRecord={onViewRecord}
-              />
-            )}
-            footer={footer}
-          />
-        </CCardBody>
-      </CCard>
+        }
+        footer={footer}
+      />
     </>
   )
 }

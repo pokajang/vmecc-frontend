@@ -3,6 +3,8 @@ import React from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import {
+  InspectionEvidenceEditor,
+  InspectionPhotoActionRow,
   InspectionPhotoViewerModal,
   ManagedCheckToolbar,
   PhotoGallery,
@@ -33,6 +35,28 @@ afterEach(() => {
 })
 
 describe('InspectionDisplayShared', () => {
+  it('keeps issue evidence flat and photo acquisition chrome-free', () => {
+    const onAddPhoto = vi.fn()
+    const { container } = render(
+      <InspectionEvidenceEditor>
+        <textarea aria-label="Issue remarks" />
+        <InspectionPhotoActionRow photos={[]} onAddPhoto={onAddPhoto} />
+      </InspectionEvidenceEditor>,
+    )
+
+    const editor = container.querySelector('.inspection-evidence-editor')
+    const addPhoto = screen.getByRole('button', { name: 'Add photo (optional)' })
+
+    expect(editor?.classList.contains('border')).toBe(false)
+    expect(editor?.classList.contains('bg-light-subtle')).toBe(false)
+    expect(editor?.classList.contains('p-2')).toBe(false)
+    expect(addPhoto.className).toContain('media-add-action')
+    expect(addPhoto.className).toContain('btn-link')
+
+    fireEvent.click(addPhoto)
+    expect(onAddPhoto).toHaveBeenCalledOnce()
+  })
+
   it('composes search, clear, managed actions, counts, and idle status without changing ownership', () => {
     const onSearch = vi.fn()
     const onClearSearch = vi.fn()
@@ -109,9 +133,9 @@ describe('InspectionDisplayShared', () => {
       />,
     )
 
-    const previews = container.querySelectorAll('.workflow-photo-preview--uncropped')
+    const previews = container.querySelectorAll('.evidence-photo-gallery__item')
     expect(previews).toHaveLength(2)
-    expect(previews[0].className).toBe('workflow-photo-preview workflow-photo-preview--uncropped')
+    expect(previews[0].className).toBe('evidence-photo-gallery__item')
     expect(previews[0].querySelector('img')?.getAttribute('src')).toContain('landscape')
     expect(previews[1].querySelector('img')?.getAttribute('src')).toContain('portrait')
   })

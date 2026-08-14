@@ -84,7 +84,7 @@ const json = (route, body, status = 200) =>
 const installApiStubs = async (page, initialDraft = draftPayload) => {
   let serverDraft = initialDraft
   await installControlledApiRequestGuard(page, apiBaseUrl)
-  await page.route(`${apiBaseUrl}/**`, async (route) => {
+  const handleApiRoute = async (route) => {
     const request = route.request()
     const url = new URL(request.url())
     const path = url.pathname.replace(/^\/api/, '')
@@ -175,7 +175,12 @@ const installApiStubs = async (page, initialDraft = draftPayload) => {
     }
     if (method === 'GET') return json(route, { data: [] })
     return json(route, { data: {} })
-  })
+  }
+
+  const apiOrigins = new Set([apiBaseUrl, apiBaseUrl.replace('127.0.0.1', 'localhost')])
+  for (const origin of apiOrigins) {
+    await page.route(`${origin}/**`, handleApiRoute)
+  }
 }
 
 const expectNoHorizontalOverflow = async (page) => {
@@ -183,6 +188,15 @@ const expectNoHorizontalOverflow = async (page) => {
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   )
   expect(overflow).toBeLessThanOrEqual(1)
+}
+
+const openExercisePhotographs = async (page) => {
+  const disclosure = page
+    .locator('details.disclosure-card')
+    .filter({ has: page.getByText('Exercise photographs', { exact: true }) })
+    .last()
+  await disclosure.locator(':scope > summary').click()
+  await expect(disclosure).toHaveAttribute('open', '')
 }
 
 const responsiveViewports = [
@@ -325,6 +339,7 @@ test.describe('Drill Upgrade UI V1', () => {
       await expect(page.getByRole('textbox', { name: 'Strengths entry 1' })).toHaveValue(
         'Clear command structure',
       )
+      await openExercisePhotographs(page)
       await expect(page.getByRole('button', { name: 'Upload photo' })).toBeVisible()
       await expect(page.getByRole('button', { name: 'Reset' })).toHaveCount(0)
       await expectNoHorizontalOverflow(page)
@@ -345,6 +360,7 @@ test.describe('Drill Upgrade UI V1', () => {
     await installApiStubs(page, stressDraftPayload)
     await page.goto(`${baseUrl}/report/drill/new/analysis`)
 
+    await openExercisePhotographs(page)
     const photoSection = page.getByRole('region', { name: 'Exercise photographs' })
     const photoList = photoSection.getByRole('list', { name: '10 photos attached' })
     await expect(photoList.getByRole('listitem')).toHaveCount(10)
@@ -371,6 +387,7 @@ test.describe('Drill Upgrade UI V1', () => {
     await installApiStubs(page)
     await page.goto(`${baseUrl}/report/drill/new/analysis`)
 
+    await openExercisePhotographs(page)
     await page.getByLabel('Upload drill report photos').setInputFiles({
       name: 'camera-return.jpg',
       mimeType: 'image/png',
@@ -390,7 +407,7 @@ test.describe('Drill Upgrade UI V1', () => {
 
     await page.getByRole('button', { name: 'Review & Submit' }).click()
     await expect(page).toHaveURL(/\/report\/drill\/new\/review/)
-    await expect(page.getByRole('img', { name: 'Report photo 1' })).toBeVisible()
+    await expect(page.getByRole('img', { name: 'Report evidence photo 1' })).toBeVisible()
     await expect(page.getByText('camera-return.jpg')).toHaveCount(0)
     await expectNoHorizontalOverflow(page)
   })
@@ -417,7 +434,10 @@ test.describe('Drill Upgrade UI V1', () => {
     await expect(customCategory).toHaveAttribute('aria-pressed', 'true')
     await expect(page.getByRole('checkbox')).toHaveCount(0)
 
-    await page.getByRole('button', { name: 'Save Draft' }).click()
+    await page.getByRole('button', { name: 'Continue', exact: true }).click()
+    await expect(page).toHaveURL(/\/report\/drill\/new\/personnel/)
+    await page.getByRole('button', { name: 'Back', exact: true }).click()
+    await expect(page).toHaveURL(/\/report\/drill\/new\/setup/)
     await page.reload()
 
     await expect(

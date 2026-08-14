@@ -28,13 +28,13 @@ describe('WorkflowStageActions', () => {
     expect(onBack).toHaveBeenCalledOnce()
     expect(onSave).toHaveBeenCalledOnce()
     expect(onPrimary).toHaveBeenCalledOnce()
-    expect(screen.getByRole('status').textContent).toContain('Unsaved changes')
+    expect(screen.queryByRole('status')).toBeNull()
   })
 
   it('disables only the affected actions during an operational blocker', () => {
     render(<WorkflowStageActions onSaveDraft={() => {}} onPrimary={() => {}} isSaving />)
 
-    expect(screen.getByRole('button', { name: 'Saving…' }).disabled).toBe(true)
+    expect(screen.getByRole('button', { name: 'Saving...' }).disabled).toBe(true)
     expect(screen.getByRole('button', { name: 'Continue' }).disabled).toBe(true)
   })
 

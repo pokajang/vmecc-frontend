@@ -1,8 +1,5 @@
 import React from 'react'
 import {
-  CCard,
-  CCardBody,
-  CCardHeader,
   CTable,
   CTableBody,
   CTableDataCell,
@@ -15,13 +12,11 @@ import CreateActionButton from 'src/components/CreateActionButton'
 import ButtonLoader from 'src/components/ButtonLoader'
 import DataTableFooter from 'src/components/DataTableFooter'
 import MobileRecordList from 'src/components/MobileRecordList'
-import ResponsiveRecordCollection from 'src/components/ResponsiveRecordCollection'
 import RowActionCell from 'src/components/RowActionCell'
 import RowActions from 'src/components/RowActions'
-import TableLoader from 'src/components/TableLoader'
 import TableFilters from 'src/components/TableFilters'
 import WorkflowStatusSummary from 'src/components/WorkflowStatusSummary'
-import RecordScopeSegmentedControl from 'src/components/report-workflow/RecordScopeSegmentedControl'
+import ReportingRecordsSectionShell from 'src/components/report-workflow/ReportingRecordsSectionShell'
 import { resolveRecordActions } from 'src/components/report-workflow/recordActionResolver'
 import { formatMobileReportDate } from '../reportUiUtils'
 import RecordStateBadge from 'src/components/RecordStateBadge'
@@ -325,7 +320,7 @@ const ReportRecordsSection = ({
       ]}
       onClear={clearFilters}
       rowClassName={`flex-md-nowrap align-items-md-end ${
-        isMobileCardless ? 'inspection-records-filter-row' : ''
+        isMobileCardless ? 'inspection-records-filter-row inspection-report-records-filter-row' : ''
       }`.trim()}
       searchColMd={3}
       periodColMd={2}
@@ -342,6 +337,7 @@ const ReportRecordsSection = ({
       onRowsToShowChange={setRowsToShow}
       filteredCount={filteredRecords.length}
       totalCount={totalCount}
+      compactMobile={isMobileCardless}
     />
   )
 
@@ -352,169 +348,142 @@ const ReportRecordsSection = ({
   )
 
   return (
-    <>
-      <div className={`${isMobileCardless ? 'inspection-mobile-section' : ''} d-md-none`.trim()}>
-        <div className="d-flex justify-content-between align-items-center gap-2 mb-3">
-          <RecordScopeSegmentedControl value={recordScope} onChange={setRecordScope} />
-          {showPrimaryAction ? (
-            <CreateActionButton
-              label="New"
-              onClick={startNew}
-              {...(moduleNewActionTestId ? { 'data-testid': moduleNewActionTestId } : {})}
-            />
-          ) : null}
-        </div>
-        <div {...(moduleFiltersTestId ? { 'data-testid': moduleFiltersTestId } : {})}>
-          {filters}
-        </div>
-        {isLoading ? null : filteredRecords.length === 0 ? (
-          emptyMessage
-        ) : (
-          <div {...(moduleRecordsTestId ? { 'data-testid': moduleRecordsTestId } : {})}>
-            <MobileRecordList
-              sections={[{ key: 'reports', items: mobileItems }]}
-              variant="list-group"
-            />
-          </div>
-        )}
-        {isLoading ? (
-          <div className="border rounded-3 bg-body">
-            <TableLoader message="Loading records..." minHeight={144} />
-          </div>
-        ) : filteredRecords.length > 0 ? (
-          footer
-        ) : null}
-      </div>
-
-      <CCard
-        className="d-none d-md-block"
-        {...(moduleRecordsTestId ? { 'data-testid': moduleRecordsTestId } : {})}
-      >
-        <CCardHeader className="d-flex justify-content-between align-items-center">
-          <RecordScopeSegmentedControl value={recordScope} onChange={setRecordScope} />
-          {showPrimaryAction ? (
-            <CreateActionButton
-              label={`New ${reportTypeLabel} Report`}
-              onClick={startNew}
-              {...(moduleNewActionTestId ? { 'data-testid': moduleNewActionTestId } : {})}
-            />
-          ) : null}
-        </CCardHeader>
-        <CCardBody>
-          <div {...(moduleFiltersTestId ? { 'data-testid': moduleFiltersTestId } : {})}>
-            {filters}
-          </div>
-          <ResponsiveRecordCollection
-            isLoading={isLoading}
-            isEmpty={filteredRecords.length === 0}
-            emptyMessage={emptyMessage}
-            mobileSections={[]}
-            renderDesktop={() => (
-              <div className="d-none d-md-block">
-                <CTable align="middle" className="mb-0" hover responsive>
-                  <CTableHead color="light">
-                    <CTableRow>
-                      <CTableHeaderCell className="text-center" style={{ width: '56px' }}>
-                        #
-                      </CTableHeaderCell>
-                      <CTableHeaderCell>Report ID</CTableHeaderCell>
-                      <CTableHeaderCell>{typeLabel}</CTableHeaderCell>
-                      <CTableHeaderCell>Location</CTableHeaderCell>
-                      <CTableHeaderCell>Reported By</CTableHeaderCell>
-                      <CTableHeaderCell>Reported At</CTableHeaderCell>
-                      <CTableHeaderCell>Status</CTableHeaderCell>
-                      <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
-                    </CTableRow>
-                  </CTableHead>
-                  <CTableBody>
-                    {visibleRows.map((row, index) => {
-                      const reportedBy = row.timeline?.[0]?.by || row.submittedBy || '--'
-                      const rowSubtext = getRowSubtext(row)
-                      const isGeneratingDownload = downloadingId === row.id
-                      return (
-                        <CTableRow
-                          key={row.recordKey || row.id}
-                          className="cursor-pointer"
-                          style={{ cursor: 'pointer' }}
-                          role="button"
-                          tabIndex={0}
-                          aria-label={`Open report ${formatDisplayId(row, index)}`}
-                          onClick={() =>
-                            row.recordKind === 'draft' ? onEditRecord(row) : onViewRecord(row.id)
-                          }
-                          onKeyDown={(event) =>
-                            activateOnEnterOrSpace(event, () =>
-                              row.recordKind === 'draft' ? onEditRecord(row) : onViewRecord(row.id),
-                            )
-                          }
-                        >
-                          <CTableDataCell className="text-center text-body-secondary">
-                            {index + 1}
-                          </CTableDataCell>
-                          <CTableDataCell className="fw-semibold">
-                            {formatDisplayId(row, index)}
-                          </CTableDataCell>
-                          <CTableDataCell>
-                            <div>{row.incidentType || '--'}</div>
-                            {rowSubtext ? (
-                              <CTooltip content={rowSubtext} placement="top">
-                                <div
-                                  className="small text-muted text-truncate"
-                                  style={{ maxWidth: '220px' }}
-                                >
-                                  {rowSubtext}
-                                </div>
-                              </CTooltip>
-                            ) : null}
-                          </CTableDataCell>
-                          <CTableDataCell>{row.location || '--'}</CTableDataCell>
-                          <CTableDataCell>{reportedBy}</CTableDataCell>
-                          <CTableDataCell>{formatRowDateTime(row, formatDateTime)}</CTableDataCell>
-                          <CTableDataCell>
-                            {row.recordKind === 'draft' ? (
-                              <DraftStatus />
-                            ) : (
-                              <WorkflowStatusSummary
-                                statusLabel={getWorkflowStatusLabel(row)}
-                                nextActionLabel={getWorkflowNextActionLabel(row)}
-                                gates={REPORT_GATES}
-                                approvalHistory={getApprovalHistory(row)}
-                                isCancelled={row.status === 'Cancelled'}
-                              />
-                            )}
-                          </CTableDataCell>
-                          <RowActionCell className="text-center">
-                            {isGeneratingDownload ? (
-                              <span className="small text-muted">
-                                <ButtonLoader label="Generating..." size={13} />
-                              </span>
-                            ) : (
-                              <RowActions
-                                hitArea={40}
-                                items={buildActions(row)}
-                                testId={
-                                  row.recordKind === 'draft' &&
-                                  firstDraftRowKey ===
-                                    String(row.recordKey || row.id || '').trim() &&
-                                  anchorPrefix
-                                    ? `${anchorPrefix}-draft-resume-action`
-                                    : ''
-                                }
-                              />
-                            )}
-                          </RowActionCell>
-                        </CTableRow>
-                      )
-                    })}
-                  </CTableBody>
-                </CTable>
-              </div>
-            )}
-            footer={footer}
+    <ReportingRecordsSectionShell
+      recordScope={recordScope}
+      onRecordScopeChange={setRecordScope}
+      compactPresentation={isMobileCardless}
+      recordsTestId={moduleRecordsTestId}
+      filtersTestId={moduleFiltersTestId}
+      mobilePrimaryAction={
+        showPrimaryAction ? (
+          <CreateActionButton
+            label="New"
+            onClick={startNew}
+            {...(moduleNewActionTestId ? { 'data-testid': moduleNewActionTestId } : {})}
           />
-        </CCardBody>
-      </CCard>
-    </>
+        ) : null
+      }
+      desktopPrimaryAction={
+        showPrimaryAction ? (
+          <CreateActionButton
+            label={`New ${reportTypeLabel} Report`}
+            onClick={startNew}
+            {...(moduleNewActionTestId ? { 'data-testid': moduleNewActionTestId } : {})}
+          />
+        ) : null
+      }
+      filters={filters}
+      isLoading={isLoading}
+      isEmpty={filteredRecords.length === 0}
+      emptyMessage={emptyMessage}
+      mobileRecords={
+        <MobileRecordList
+          sections={[{ key: 'reports', items: mobileItems }]}
+          variant="list-group"
+        />
+      }
+      desktopRecords={
+        <div className="d-none d-md-block">
+          <CTable align="middle" className="mb-0" hover responsive>
+            <CTableHead color="light">
+              <CTableRow>
+                <CTableHeaderCell className="text-center" style={{ width: '56px' }}>
+                  #
+                </CTableHeaderCell>
+                <CTableHeaderCell>Report ID</CTableHeaderCell>
+                <CTableHeaderCell>{typeLabel}</CTableHeaderCell>
+                <CTableHeaderCell>Location</CTableHeaderCell>
+                <CTableHeaderCell>Reported By</CTableHeaderCell>
+                <CTableHeaderCell>Reported At</CTableHeaderCell>
+                <CTableHeaderCell>Status</CTableHeaderCell>
+                <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
+              </CTableRow>
+            </CTableHead>
+            <CTableBody>
+              {visibleRows.map((row, index) => {
+                const reportedBy = row.timeline?.[0]?.by || row.submittedBy || '--'
+                const rowSubtext = getRowSubtext(row)
+                const isGeneratingDownload = downloadingId === row.id
+                return (
+                  <CTableRow
+                    key={row.recordKey || row.id}
+                    className="cursor-pointer"
+                    style={{ cursor: 'pointer' }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Open report ${formatDisplayId(row, index)}`}
+                    onClick={() =>
+                      row.recordKind === 'draft' ? onEditRecord(row) : onViewRecord(row.id)
+                    }
+                    onKeyDown={(event) =>
+                      activateOnEnterOrSpace(event, () =>
+                        row.recordKind === 'draft' ? onEditRecord(row) : onViewRecord(row.id),
+                      )
+                    }
+                  >
+                    <CTableDataCell className="text-center text-body-secondary">
+                      {index + 1}
+                    </CTableDataCell>
+                    <CTableDataCell className="fw-semibold">
+                      {formatDisplayId(row, index)}
+                    </CTableDataCell>
+                    <CTableDataCell>
+                      <div>{row.incidentType || '--'}</div>
+                      {rowSubtext ? (
+                        <CTooltip content={rowSubtext} placement="top">
+                          <div
+                            className="small text-muted text-truncate"
+                            style={{ maxWidth: '220px' }}
+                          >
+                            {rowSubtext}
+                          </div>
+                        </CTooltip>
+                      ) : null}
+                    </CTableDataCell>
+                    <CTableDataCell>{row.location || '--'}</CTableDataCell>
+                    <CTableDataCell>{reportedBy}</CTableDataCell>
+                    <CTableDataCell>{formatRowDateTime(row, formatDateTime)}</CTableDataCell>
+                    <CTableDataCell>
+                      {row.recordKind === 'draft' ? (
+                        <DraftStatus />
+                      ) : (
+                        <WorkflowStatusSummary
+                          statusLabel={getWorkflowStatusLabel(row)}
+                          nextActionLabel={getWorkflowNextActionLabel(row)}
+                          gates={REPORT_GATES}
+                          approvalHistory={getApprovalHistory(row)}
+                          isCancelled={row.status === 'Cancelled'}
+                        />
+                      )}
+                    </CTableDataCell>
+                    <RowActionCell className="text-center">
+                      {isGeneratingDownload ? (
+                        <span className="small text-muted">
+                          <ButtonLoader label="Generating..." size={13} />
+                        </span>
+                      ) : (
+                        <RowActions
+                          hitArea={40}
+                          items={buildActions(row)}
+                          testId={
+                            row.recordKind === 'draft' &&
+                            firstDraftRowKey === String(row.recordKey || row.id || '').trim() &&
+                            anchorPrefix
+                              ? `${anchorPrefix}-draft-resume-action`
+                              : ''
+                          }
+                        />
+                      )}
+                    </RowActionCell>
+                  </CTableRow>
+                )
+              })}
+            </CTableBody>
+          </CTable>
+        </div>
+      }
+      footer={footer}
+    />
   )
 }
 

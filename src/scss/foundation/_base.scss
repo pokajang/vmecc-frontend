@@ -49,6 +49,12 @@ html {
   --workflow-summary-row-gap: 0.125rem;
   --vmecc-primary-soft: rgba(0, 126, 122, 0.1);
   --vmecc-primary-on-soft: #006966;
+  --vmecc-action-neutral-bg: var(--cui-tertiary-bg);
+  --vmecc-action-neutral-hover-bg: color-mix(
+    in srgb,
+    var(--cui-tertiary-bg) 78%,
+    var(--cui-body-color)
+  );
   --vmecc-scrollbar-size: 6px;
   --vmecc-scrollbar-track: transparent;
   --vmecc-scrollbar-thumb: color-mix(in srgb, var(--cui-secondary-color) 42%, transparent);
@@ -286,6 +292,158 @@ html {
   --cui-btn-active-border-color: var(--vmecc-status-danger-text);
 }
 
+// Shared action-button system. CoreUI variants remain the compatibility API so
+// existing and future CButton consumers inherit one intent-based presentation.
+.btn:not(.btn-link, .back-button, .btn-close) {
+  border: 0;
+  border-radius: var(--vmecc-radius-pill);
+}
+
+.btn.btn-secondary,
+.btn.btn-light,
+.btn.btn-outline-secondary,
+.btn.btn-outline-light,
+.app-button--neutral.app-button--soft {
+  --cui-btn-color: var(--vmecc-fg-default);
+  --cui-btn-bg: var(--vmecc-action-neutral-bg);
+  --cui-btn-border-color: transparent;
+  --cui-btn-hover-color: var(--vmecc-fg-strong);
+  --cui-btn-hover-bg: var(--vmecc-action-neutral-hover-bg);
+  --cui-btn-hover-border-color: transparent;
+  --cui-btn-active-color: var(--vmecc-fg-strong);
+  --cui-btn-active-bg: var(--vmecc-action-neutral-hover-bg);
+  --cui-btn-active-border-color: transparent;
+  --cui-btn-disabled-color: var(--vmecc-fg-disabled);
+  --cui-btn-disabled-bg: var(--vmecc-status-muted-bg);
+  --cui-btn-disabled-border-color: transparent;
+  border-color: transparent !important;
+}
+
+.btn.btn-outline-primary,
+.app-button--primary.app-button--soft {
+  --cui-btn-bg: var(--vmecc-primary-soft);
+  --cui-btn-border-color: transparent;
+  --cui-btn-hover-bg: color-mix(in srgb, var(--vmecc-primary-soft) 78%, var(--cui-primary));
+  --cui-btn-hover-border-color: transparent;
+  --cui-btn-active-bg: color-mix(in srgb, var(--vmecc-primary-soft) 72%, var(--cui-primary));
+  --cui-btn-active-border-color: transparent;
+  --cui-btn-disabled-border-color: transparent;
+  border-color: transparent !important;
+}
+
+.btn.btn-outline-success,
+.app-button--success.app-button--soft {
+  --cui-btn-bg: var(--vmecc-status-success-bg);
+  --cui-btn-border-color: transparent;
+  --cui-btn-hover-bg: color-mix(
+    in srgb,
+    var(--vmecc-status-success-bg) 78%,
+    var(--vmecc-status-success-text)
+  );
+  --cui-btn-hover-border-color: transparent;
+  --cui-btn-active-bg: color-mix(
+    in srgb,
+    var(--vmecc-status-success-bg) 72%,
+    var(--vmecc-status-success-text)
+  );
+  --cui-btn-active-border-color: transparent;
+  border-color: transparent !important;
+}
+
+.btn.btn-outline-info,
+.app-button--info.app-button--soft {
+  --cui-btn-bg: var(--vmecc-status-info-bg);
+  --cui-btn-border-color: transparent;
+  --cui-btn-hover-bg: color-mix(
+    in srgb,
+    var(--vmecc-status-info-bg) 78%,
+    var(--vmecc-status-info-text)
+  );
+  --cui-btn-hover-border-color: transparent;
+  --cui-btn-active-border-color: transparent;
+  border-color: transparent !important;
+}
+
+.btn.btn-outline-warning,
+.app-button--warning.app-button--soft {
+  --cui-btn-bg: var(--vmecc-status-draft-bg);
+  --cui-btn-border-color: transparent;
+  --cui-btn-hover-bg: color-mix(
+    in srgb,
+    var(--vmecc-status-draft-bg) 78%,
+    var(--vmecc-status-warning-text)
+  );
+  --cui-btn-hover-border-color: transparent;
+  --cui-btn-active-border-color: transparent;
+  border-color: transparent !important;
+}
+
+.btn.btn-outline-danger,
+.app-button--danger.app-button--soft {
+  --cui-btn-bg: var(--vmecc-status-danger-bg);
+  --cui-btn-border-color: transparent;
+  --cui-btn-hover-bg: color-mix(
+    in srgb,
+    var(--vmecc-status-danger-bg) 78%,
+    var(--vmecc-status-danger-text)
+  );
+  --cui-btn-hover-border-color: transparent;
+  --cui-btn-active-border-color: transparent;
+  border-color: transparent !important;
+}
+
+.btn.btn-primary,
+.btn.btn-success,
+.btn.btn-danger,
+.app-button--solid {
+  border-color: transparent !important;
+}
+
+.app-button--ghost,
+.app-button--icon-only,
+.row-actions .btn,
+.table-filter-trigger,
+.workflow-scope-segment,
+.back-button {
+  border-color: transparent !important;
+  box-shadow: none;
+}
+
+.app-button--icon-only {
+  min-width: var(--vmecc-touch-target);
+  min-height: var(--vmecc-touch-target);
+  padding: 0;
+  border-radius: 50%;
+}
+
+.app-action-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.app-action-group--end {
+  justify-content: flex-end;
+}
+
+.app-action-group--start {
+  justify-content: flex-start;
+}
+
+.app-action-group--between {
+  justify-content: space-between;
+}
+
+.app-action-group--stack {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.app-action-group--stack > .btn {
+  width: 100%;
+}
+
 .vmecc-choice-button.btn-primary {
   --cui-btn-color: #ffffff;
   --cui-btn-hover-color: #ffffff;
@@ -345,6 +503,16 @@ html {
   gap: 0.3rem;
 }
 
+.create-action-button--inline.btn-link {
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible,
+  &:active {
+    text-decoration: none;
+  }
+}
+
 .create-action-button__icon {
   display: inline-flex;
   flex: 0 0 auto;
@@ -363,6 +531,29 @@ html {
 .create-action-button__label {
   display: block;
   line-height: 1.25;
+}
+
+.media-add-action.btn-link {
+  min-height: var(--vmecc-touch-target);
+  padding: 0.25rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--vmecc-primary-on-soft);
+  font-size: var(--vmecc-text-meta);
+  font-weight: var(--vmecc-weight-bold);
+  text-decoration: none;
+
+  &:hover,
+  &:active {
+    background: transparent;
+    color: var(--cui-primary);
+    text-decoration: none;
+  }
+
+  &:focus-visible {
+    border-radius: var(--vmecc-radius-control);
+  }
 }
 
 .icon-label-action,

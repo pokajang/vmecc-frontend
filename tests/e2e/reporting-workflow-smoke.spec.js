@@ -49,6 +49,34 @@ const managedModules = [
   },
 ]
 
+const visualFormStages = {
+  erco: ['setup', 'team', 'form', 'analysis'],
+  drill: ['setup', 'personnel', 'details', 'chronology', 'analysis'],
+  'fitness-test': ['period', 'personnel', 'results', 'signoff'],
+}
+
+const visualStageReadySelectors = {
+  erco: {
+    setup: '[data-testid="erco-report-setup-ready"]',
+    team: '[data-erco-field="respondingAttendance"]',
+    form: '[data-erco-field="chronology"]',
+    analysis: '[data-erco-field="postIncidentStrengths"]',
+  },
+  drill: {
+    setup: '[data-testid="drill-report-setup-ready"]',
+    personnel: '[data-drill-field="respondingAttendance"]',
+    details: '[data-drill-field="details"]',
+    chronology: '[data-drill-field="chronology"]',
+    analysis: '[data-drill-field="postIncidentAnalysis"]',
+  },
+  'fitness-test': {
+    period: '[data-testid="fitness-test-report-setup-ready"]',
+    personnel: '[data-fitness-test-field="shiftGroups"]',
+    results: '[data-fitness-test-field="results"]',
+    signoff: '[data-fitness-test-field="assessors"]',
+  },
+}
+
 const shellApiStubDefinitions = [
   {
     path: '/settings/modules',
@@ -322,6 +350,37 @@ const createReport = async ({ request, csrfToken, module, displayId, status = 'S
   return body.data
 }
 
+const replaceCanonicalDraft = async ({ request, module, stage }) => {
+  const session = await apiJson(request, 'get', '/auth/session', null)
+  expect(session.response.status(), `Refresh ${module.label} visual session failed`).toBe(200)
+  const csrfToken = session.body?.csrf_token
+  expect(csrfToken, `Refresh ${module.label} visual session omitted CSRF token`).toBeTruthy()
+  await apiJson(
+    request,
+    'delete',
+    `/reports/draft?report_type=${encodeURIComponent(module.key)}`,
+    csrfToken,
+  )
+  const payload = {
+    ...validPayloadForModule(module),
+    ...(module.key === 'fitness-test' ? { workflowStep: stage } : {}),
+    ...(module.key === 'erco'
+      ? {
+          setupConfirmed: true,
+          respondingTeamConfirmed: true,
+          detailsConfirmed: true,
+        }
+      : {}),
+  }
+  const saved = await apiJson(request, 'post', '/reports/draft', csrfToken, {
+    report_type: module.key,
+    payload,
+  })
+  expect([200, 201], `Seed ${module.label} ${stage} visual draft failed: ${saved.text}`).toContain(
+    saved.response.status(),
+  )
+}
+
 const dismissIncidentalDialogs = async (page) => {
   for (const dialogName of ['Install VMECC', 'Notifications']) {
     const dialog = page.getByRole('dialog', { name: dialogName })
@@ -424,8 +483,9 @@ test.describe('Reporting workflow browser smoke', () => {
     await page.getByRole('button', { name: /edit/i }).click()
     const saveResponse = page.waitForResponse(
       (response) =>
-        response.url() === `${apiBaseUrl}/settings/reporting-workflow-rules` &&
-        response.request().method() === 'POST',
+        apiBaseUrls.some(
+          (candidate) => response.url() === `${candidate}/settings/reporting-workflow-rules`,
+        ) && response.request().method() === 'POST',
     )
     await page.getByRole('button', { name: /^save$/i }).click()
     expect((await saveResponse).status()).toBe(200)
@@ -503,6 +563,75 @@ test.describe('Reporting workflow browser smoke', () => {
     }
 
     assertNoUnreadCount500(failedResponses)
+  })
+
+  test('ERCO, Drill, and Fitness Test form stages keep the shared mobile and desktop visual contract', async ({
+    page,
+  }, testInfo) => {
+    const clientErrors = []
+    page.on('pageerror', (error) => clientErrors.push(error.message))
+    await loginWithPage(page, personas.submitter)
+    await installAppShellApiStubs(page)
+
+    const requestedModule = String(process.env.VMECC_VISUAL_MODULE || '').trim()
+    const requestedStage = String(process.env.VMECC_VISUAL_STAGE || '').trim()
+    const visualModules = requestedModule
+      ? managedModules.filter((module) => module.key === requestedModule)
+      : managedModules
+
+    for (const module of visualModules) {
+      await replaceCanonicalDraft({
+        request: page.request,
+        module,
+        stage: requestedStage || visualFormStages[module.key][0],
+      })
+
+      for (const viewport of [
+        { name: 'mobile', width: 390, height: 844 },
+        { name: 'desktop', width: 1440, height: 900 },
+      ]) {
+        await page.setViewportSize({ width: viewport.width, height: viewport.height })
+        const stages = requestedStage
+          ? visualFormStages[module.key].filter((stage) => stage === requestedStage)
+          : visualFormStages[module.key]
+        for (const stage of stages) {
+          const path = `${module.route}/new/${stage}`
+          await page.goto(`${baseUrl}${path}`, { waitUntil: 'domcontentloaded' })
+          await waitForAppReady(page, path)
+          await dismissIncidentalDialogs(page)
+          await expect(page.getByTestId(`${module.key}-report-form`)).toBeVisible()
+          const ready = page.locator(visualStageReadySelectors[module.key][stage])
+          await Promise.race([
+            ready.waitFor({ state: 'attached', timeout: routeTimeoutMs }),
+            page.getByText('Something went wrong', { exact: true }).waitFor({
+              state: 'visible',
+              timeout: routeTimeoutMs,
+            }),
+          ])
+          if (await page.getByText('Something went wrong', { exact: true }).isVisible()) {
+            const appLogs = await page.evaluate(() => window.__appLogs || [])
+            throw new Error(
+              `${module.label} ${stage} render failed: ${JSON.stringify(appLogs.slice(-3))}`,
+            )
+          }
+          expect(clientErrors, `${module.label} ${stage} crashed`).toEqual([])
+          await expect(ready).toBeAttached()
+          await expect(page).toHaveURL(new RegExp(`${path.replaceAll('/', '\\/')}(?:\\?.*)?$`))
+
+          const overflow = await page.evaluate(
+            () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+          )
+          expect(
+            overflow,
+            `${module.label} ${stage} overflows at ${viewport.name}`,
+          ).toBeLessThanOrEqual(1)
+          await page.screenshot({
+            path: testInfo.outputPath(`${module.key}-${stage}-${viewport.name}.png`),
+            fullPage: true,
+          })
+        }
+      }
+    }
   })
 
   test('reject path and unrelated-user authorization remain blocked', async ({ page }) => {

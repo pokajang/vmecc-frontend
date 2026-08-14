@@ -246,19 +246,19 @@
 
   .action-row-thumb--compact-sticky:has(.action-row-thumb-status:not(:empty))
     + .action-row-thumb-spacer--compact {
-    height: calc(var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 5.75rem);
+    height: calc(var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 6.75rem);
   }
 
   .action-row-thumb--compact-sticky:has(.action-row-thumb-actions > :nth-child(2))
     + .action-row-thumb-spacer--compact {
-    height: calc(var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 6.75rem);
+    height: calc(var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 7.625rem);
   }
 
   .action-row-thumb--compact-sticky:has(.action-row-thumb-status:not(:empty)):has(
       .action-row-thumb-actions > :nth-child(2)
     )
     + .action-row-thumb-spacer--compact {
-    height: calc(var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 8.25rem);
+    height: calc(var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 9.125rem);
   }
 
   .action-row-thumb-spacer--compact-with-leading {

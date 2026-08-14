@@ -3,7 +3,6 @@ import {
   CAlert,
   CBadge,
   CButton,
-  CButtonGroup,
   CFormInput,
   CFormLabel,
   CTable,
@@ -14,6 +13,7 @@ import {
   CTableRow,
 } from '@coreui/react'
 import { Pencil } from 'lucide-react'
+import DisclosureCard from 'src/components/DisclosureCard'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import ReportPhotoSection from '../shared/emergency-report/ReportPhotoSection'
 import { FITNESS_FIELD_LIMITS } from './constants'
@@ -133,15 +133,13 @@ const FitnessTestFormStep = ({
   updateParticipant,
   applyShiftTestDate,
   onBack,
-  onSaveDraft,
   onContinue,
-  saveLabel,
-  draftStatus,
   pushToast,
   incompleteOnly = false,
   onShowAllResults,
   photoProcessing = false,
   onPhotoProcessingChange,
+  isSaving = false,
 }) => {
   const [mode, setMode] = useState('fitness')
   const [drawerTarget, setDrawerTarget] = useState(null)
@@ -194,11 +192,11 @@ const FitnessTestFormStep = ({
         <div className="d-flex flex-wrap align-items-start justify-content-between gap-2">
           <div className="d-flex align-items-center gap-2">
             <h3 className="h6 mb-0">Participant results</h3>
-            <CBadge color="light" className="border text-body-secondary">
+            <CBadge color="light" className="text-body-secondary">
               Auto-calculated
             </CBadge>
           </div>
-          <CButtonGroup role="group" aria-label="Assessment result type">
+          <div className="d-flex flex-wrap gap-2" role="group" aria-label="Assessment result type">
             <CButton
               type="button"
               color={mode === 'fitness' ? 'primary' : 'light'}
@@ -217,7 +215,7 @@ const FitnessTestFormStep = ({
             >
               Proficiency
             </CButton>
-          </CButtonGroup>
+          </div>
         </div>
         {incompleteOnly ? (
           <CAlert
@@ -368,10 +366,22 @@ const FitnessTestFormStep = ({
         </div>
 
         <div className="d-grid gap-2 d-md-none">
-          {participantGroups.map((group) => (
-            <section key={group.id} className="rounded-3 border p-3 d-grid gap-3">
+          {participantGroups.map((group, groupIndex) => (
+            <DisclosureCard
+              key={group.id}
+              className="fitness-result-group"
+              defaultOpen={groupIndex === 0}
+              summary={
+                <div className="d-flex align-items-center justify-content-between gap-2">
+                  <span className="fw-semibold">{group.shift}</span>
+                  <span className="small text-body-secondary">
+                    {group.participants.length} participant
+                    {group.participants.length === 1 ? '' : 's'}
+                  </span>
+                </div>
+              }
+            >
               <div className="d-grid gap-2">
-                <div className="fw-semibold">{group.shift}</div>
                 <FitnessShiftDateTools
                   shift={group.shift}
                   mode={mode}
@@ -391,7 +401,7 @@ const FitnessTestFormStep = ({
                 return (
                   <div
                     key={participant.id}
-                    className="fitness-result-card border-top pt-3 d-grid gap-2"
+                    className="fitness-result-card pt-3 d-grid gap-2"
                     aria-invalid={issues.length > 0 || undefined}
                   >
                     <div className="d-flex justify-content-between align-items-start gap-2">
@@ -409,11 +419,12 @@ const FitnessTestFormStep = ({
                       <CButton
                         type="button"
                         color="light"
-                        className="fitness-result-edit"
+                        variant="ghost"
+                        className="fitness-result-edit border-0 bg-transparent text-primary"
                         aria-label={`Edit ${mode} result for ${participant.name}`}
                         onClick={() => setDrawerTarget(participant)}
                       >
-                        <Pencil size={16} />
+                        <Pencil size={19} />
                       </CButton>
                     </div>
                     <div className="d-flex justify-content-between align-items-end gap-3">
@@ -423,30 +434,40 @@ const FitnessTestFormStep = ({
                   </div>
                 )
               })}
-            </section>
+            </DisclosureCard>
           ))}
         </div>
       </section>
 
-      <ReportPhotoSection
-        moduleKey="fitness-test"
-        title="Fitness test photographs"
-        photos={form.photos}
-        onChange={(photos) => setForm((previous) => ({ ...previous, photos }))}
-        pushToast={pushToast}
-        allowCapture={false}
-        onProcessingChange={onPhotoProcessingChange}
-        emptyMessage=""
-        descriptionMaxLength={2000}
-      />
+      <DisclosureCard
+        summary={
+          <div className="d-flex align-items-center justify-content-between gap-2">
+            <span className="fw-semibold">Fitness test photographs</span>
+            <span className="small text-body-secondary">
+              {(Array.isArray(form.photos) ? form.photos : []).length} added
+            </span>
+          </div>
+        }
+      >
+        <ReportPhotoSection
+          moduleKey="fitness-test"
+          title="Fitness test photographs"
+          showHeading={false}
+          photos={form.photos}
+          onChange={(photos) => setForm((previous) => ({ ...previous, photos }))}
+          pushToast={pushToast}
+          allowCapture={false}
+          onProcessingChange={onPhotoProcessingChange}
+          emptyMessage=""
+          descriptionMaxLength={2000}
+        />
+      </DisclosureCard>
 
       <FitnessStageActions
         onBack={onBack}
-        onSaveDraft={onSaveDraft}
         onContinue={onContinue}
-        saveLabel={saveLabel}
-        statusMessage={photoProcessing ? 'Uploading fitness test photo…' : draftStatus}
         disabled={photoProcessing}
+        isSaving={isSaving}
       />
 
       <MobileBottomDrawer

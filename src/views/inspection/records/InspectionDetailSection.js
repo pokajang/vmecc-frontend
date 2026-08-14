@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { CAlert, CBadge, CRow } from '@coreui/react'
 import { DetailField } from 'src/components/report-workflow/ReportViewComponents'
+import DisclosureCard from 'src/components/DisclosureCard'
 import useMediaQuery from 'src/hooks/useMediaQuery'
 import {
   getInspectionTypeDefinition,
@@ -11,7 +12,6 @@ import { formatInspectionRole, recordToInspectionForm } from '../form/inspection
 import {
   ChipRow,
   InspectionGeneralEvidenceCard,
-  InspectionPhotoViewerModal,
   formatInspectionDisplayLocationTitle,
 } from '../form/components/InspectionFormDisplaySections'
 import { INSPECTION_REPORT_EVIDENCE_COPY } from '../inspectionReportEvidenceCopy'
@@ -265,17 +265,19 @@ const InspectionRecordMeta = ({
       .join(' ')
 
     return (
-      <details
+      <DisclosureCard
         className="inspection-report-meta-disclosure"
         open={isMobileOpen}
         onToggle={(event) => setIsMobileOpen(event.currentTarget.open)}
+        summary={
+          <div className="d-grid gap-1">
+            <span className="fw-semibold">Report information</span>
+            {summary ? <span className="small text-body-secondary">{summary}</span> : null}
+          </div>
+        }
       >
-        <summary>
-          <span className="fw-semibold">Report information</span>
-          {summary ? <span className="small text-body-secondary">{summary}</span> : null}
-        </summary>
         <div className="inspection-report-meta-disclosure__body">{fields}</div>
-      </details>
+      </DisclosureCard>
     )
   }
 
@@ -337,7 +339,6 @@ const InspectionDetailSection = ({
   isActionBusy = false,
   isDeleting = false,
 }) => {
-  const [photoViewer, setPhotoViewer] = useState(null)
   if (!selectedRecord) return <CAlert color="warning">Report not found.</CAlert>
 
   const record = selectedRecord
@@ -455,7 +456,6 @@ const InspectionDetailSection = ({
               form,
               summary: readOnlySummary,
               record,
-              onViewPhotos: setPhotoViewer,
             }) || null
           }
           fallbackContent={fallbackFindingsContent}
@@ -502,7 +502,6 @@ const InspectionDetailSection = ({
           isDeleting={isDeleting}
         />
       </div>
-      <InspectionPhotoViewerModal viewer={photoViewer} onClose={() => setPhotoViewer(null)} />
     </div>
   )
 }

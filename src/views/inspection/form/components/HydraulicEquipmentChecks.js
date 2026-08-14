@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { CButton } from '@coreui/react'
-import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
+import InspectionItemDrawer from './InspectionItemDrawer'
 import CreateActionButton from 'src/components/CreateActionButton'
 import RowActions from 'src/components/RowActions'
 import useMediaQuery from 'src/hooks/useMediaQuery'
@@ -20,6 +20,7 @@ import {
   rowContainsSearch,
 } from './InspectionDisplayShared'
 import { InspectionElementDrawerFooter } from './InspectionElementUi'
+import { hasHydraulicInspectionData } from '../inspectionResetActions'
 import HydraulicEquipmentCheckCard, {
   HydraulicEquipmentCheckDetails,
 } from './HydraulicEquipmentCheckCard'
@@ -326,9 +327,9 @@ export const HydraulicEquipmentChecks = ({
       ) : null}
 
       {useMobileDrawer && mobileDetailRow && mobileDetailCurrent ? (
-        <MobileBottomDrawer
+        <InspectionItemDrawer
           visible
-          title={mobileDetailRow.equipment || 'Equipment'}
+          itemTitle={mobileDetailRow.equipment || 'Equipment'}
           bodyClassName="inspection-equipment-detail-drawer-shell"
           headerAction={
             !readOnly ? (
@@ -337,21 +338,10 @@ export const HydraulicEquipmentChecks = ({
                 hitArea={44}
                 toggleAriaLabel={`Equipment actions for ${mobileDetailRow.equipment || 'Equipment'}`}
                 items={[
-                  typeof onResetCheck === 'function'
-                    ? {
-                        key: 'reset',
-                        label: 'Reset check',
-                        className: 'text-danger',
-                        onClick: () =>
-                          requestResetCheck(mobileDetailRow, {
-                            onAfterConfirm: closeMobileDetailDrawer,
-                          }),
-                      }
-                    : null,
                   mobileDetailRow.canEdit && mobileDetailRow.equipmentId
                     ? {
                         key: 'edit',
-                        label: 'Edit',
+                        label: 'Edit equipment details',
                         disabled: mobileDraftDirty,
                         disabledReason: mobileDraftDirty ? 'Save or cancel changes first.' : '',
                         onClick: () => {
@@ -360,10 +350,28 @@ export const HydraulicEquipmentChecks = ({
                         },
                       }
                     : null,
-                  mobileDetailRow.canDelete && mobileDetailRow.equipmentId
+                  typeof onResetCheck === 'function' &&
+                  hasHydraulicInspectionData(
+                    mobileDraftRow || mobileDetailRow,
+                    HYDRAULIC_CHECK_FIELDS,
+                  )
+                    ? {
+                        key: 'reset',
+                        label: 'Clear inspection answers',
+                        className: 'text-danger',
+                        onClick: () =>
+                          requestResetCheck(mobileDetailRow, {
+                            onAfterConfirm: closeMobileDetailDrawer,
+                          }),
+                      }
+                    : null,
+                  mobileDetailRow.canDelete &&
+                  (mobileDetailRow.isCustomEquipment ||
+                    mobileDetailRow.equipmentSource === 'custom') &&
+                  mobileDetailRow.equipmentId
                     ? {
                         key: 'delete',
-                        label: 'Delete',
+                        label: 'Delete custom item',
                         className: 'text-danger',
                         disabled: mobileDraftDirty,
                         disabledReason: mobileDraftDirty ? 'Save or cancel changes first.' : '',
@@ -424,7 +432,7 @@ export const HydraulicEquipmentChecks = ({
               onSave={saveMobileDraftRow}
             />
           ) : null}
-        </MobileBottomDrawer>
+        </InspectionItemDrawer>
       ) : null}
 
       {!readOnly ? (
@@ -447,9 +455,9 @@ export const HydraulicEquipmentChecks = ({
       />
       <ActionConfirmModal
         visible={showDiscardChanges}
-        title="Discard changes?"
+        title="Discard unsaved changes?"
         message="Your hydraulic equipment changes have not been saved."
-        confirmLabel="Discard"
+        confirmLabel="Discard changes"
         confirmColor="danger"
         cancelLabel="Keep editing"
         mobileDrawer

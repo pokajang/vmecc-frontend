@@ -23,7 +23,6 @@ const FitnessTestMobileHome = ({
   onViewRecords,
 }) => {
   const draftRow = draftRows[0] || null
-  const draftSyncStatus = String(draftRow?.syncStatus || draftRow?.__offlineSyncStatus || '').trim()
   const draftSummary = draftRow
     ? ['Physical Test Report', draftRow.reportingMonth || 'Month not selected']
         .filter(Boolean)
@@ -64,7 +63,6 @@ const FitnessTestMobileHome = ({
           ariaLabel="Continue fitness test draft"
           summary={draftSummary}
           savedLabel={formatMobileReportDate(draftRow, 'Saved')}
-          syncStatus={draftSyncStatus}
           onContinue={() => onContinueDraft?.(draftRow)}
           onDelete={() => onDeleteDraft?.(draftRow)}
         />

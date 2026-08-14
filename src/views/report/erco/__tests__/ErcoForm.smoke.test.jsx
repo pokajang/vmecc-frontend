@@ -183,7 +183,6 @@ const ErcoStepHarness = () => {
         onBack={() => setStep('team')}
         onContinue={vi.fn()}
         onClear={vi.fn()}
-        onSaveDraft={vi.fn()}
       />
     </form>
   )
@@ -233,7 +232,6 @@ const renderDetailsStep = ({ seed = {} } = {}) => {
           onBack={vi.fn()}
           onContinue={vi.fn()}
           onClear={vi.fn()}
-          onSaveDraft={vi.fn()}
         />
       </form>
     )
@@ -455,29 +453,6 @@ describe('ERCO step smoke flow', () => {
     expect(payload.message).toContain('Existing summary that needs clearer wording.')
   })
 
-  it('checks the ERCO report with AI as an optional non-blocking review', async () => {
-    await proceedToDetailsStep()
-
-    fireEvent.click(screen.getByRole('button', { name: /Check report with AI/i }))
-    await waitFor(() => expect(screen.getByText('Check Report with AI')).toBeTruthy())
-    expect(screen.getByText(/without changing or blocking the report/i)).toBeTruthy()
-    fireEvent.click(screen.getByRole('button', { name: 'Check Report' }))
-
-    await waitFor(() => {
-      expect(screen.getByText('Needs attention')).toBeTruthy()
-      expect(
-        screen.getByText('Chronology has a gap that may need a short note if relevant.'),
-      ).toBeTruthy()
-    })
-
-    const [payload] = streamAiHelperMessage.mock.calls[0]
-    expect(payload.response_language).toBe('en')
-    expect(payload.embedded_task).toBe('erco_review_report')
-    expect(payload.page_context.params).toEqual({ report_type: 'erco' })
-    expect(payload.message).toContain('Check this ERCO report')
-    expect(payload.message).toContain('Return strict JSON only')
-  })
-
   it('keeps an oversized ERCO report editable and does not send it to AI', async () => {
     renderDetailsStep({ seed: { summary: 'x'.repeat(12000) } })
 
@@ -605,7 +580,7 @@ describe('ERCO post-analysis mobile polish', () => {
     })
 
     fireEvent.click(screen.getByRole('button', { name: /Photos\s*0 photos/i }))
-    expect(screen.getByText('Incident photographs')).toBeTruthy()
+    expect(document.querySelector('[data-erco-field="postIncidentPhotos"]')).toBeTruthy()
 
     fireEvent.click(screen.getByRole('button', { name: /Strengths\s*1 selected/i }))
     expect(screen.getByText('KPI Response Time')).toBeTruthy()

@@ -1,6 +1,7 @@
 import React from 'react'
 import { CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
+import ActionButtonGroup from 'src/components/ActionButtonGroup'
 import useReportIsMobile from 'src/hooks/useReportIsMobile'
 
 const joinClassNames = (...values) => values.filter(Boolean).join(' ')
@@ -34,7 +35,7 @@ const ResponsiveReportDialog = ({
             footerClassName,
           )}
         >
-          {footer}
+          <ActionButtonGroup ariaLabel={`${title} actions`}>{footer}</ActionButtonGroup>
         </div>
       ) : null}
     </>
@@ -72,7 +73,11 @@ const ResponsiveReportDialog = ({
         <CModalTitle>{title}</CModalTitle>
       </CModalHeader>
       <CModalBody className={bodyClassName}>{children}</CModalBody>
-      {footer ? <CModalFooter>{footer}</CModalFooter> : null}
+      {footer ? (
+        <CModalFooter>
+          <ActionButtonGroup ariaLabel={`${title} actions`}>{footer}</ActionButtonGroup>
+        </CModalFooter>
+      ) : null}
     </CModal>
   )
 }

@@ -65,6 +65,7 @@ export const renderGeneralDetailFindingContent = ({ issue, description, photos }
       <DetailEvidenceBlock
         title={issue ? 'Finding evidence' : 'Inspection evidence'}
         photos={issue?.photos || photos}
+        hiddenDescriptionValues={[issue?.description || description, issue?.actionRequired]}
       />
     </div>
   ) : null

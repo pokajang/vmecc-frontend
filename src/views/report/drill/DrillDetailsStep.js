@@ -21,10 +21,7 @@ const DrillDetailsStep = ({
   fieldErrors,
   setFieldErrors,
   onBack,
-  onSaveDraft,
   onContinue,
-  saveLabel,
-  draftStatus,
   blockerMessage,
   isSaving,
 }) => {
@@ -203,7 +200,7 @@ const DrillDetailsStep = ({
         {erpReferences.map((row, index) => {
           const error = fieldErrors[`erpReferences.${row.id}`]
           return (
-            <div key={row.id} className="rounded-3 border p-3">
+            <div key={row.id} className="drill-reference-row py-2">
               <CRow className="g-2 align-items-end">
                 <CCol xs={12} md={4}>
                   <CFormLabel htmlFor={`drill-erp-number-${row.id}`}>ERP / Annex number</CFormLabel>
@@ -229,6 +226,8 @@ const DrillDetailsStep = ({
                   <CButton
                     type="button"
                     color="light"
+                    variant="ghost"
+                    className="border-0 bg-transparent text-primary"
                     aria-label={`Remove ERP reference ${index + 1}`}
                     disabled={erpReferences.length <= 1}
                     onClick={() =>
@@ -238,7 +237,7 @@ const DrillDetailsStep = ({
                       }))
                     }
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={19} />
                   </CButton>
                 </CCol>
               </CRow>
@@ -275,10 +274,7 @@ const DrillDetailsStep = ({
 
       <DrillStageActions
         onBack={onBack}
-        onSaveDraft={onSaveDraft}
         onContinue={onContinue}
-        saveLabel={saveLabel}
-        statusMessage={draftStatus}
         blockerMessage={blockerMessage}
         isSaving={isSaving}
       />

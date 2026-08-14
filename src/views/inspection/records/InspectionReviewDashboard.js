@@ -10,10 +10,7 @@ import {
   CModalTitle,
 } from '@coreui/react'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
-import {
-  ReportPhotoImage,
-  resolvePhotoLabel,
-} from 'src/components/report-workflow/ReportViewComponents'
+import EvidencePhotoGallery from 'src/components/media/EvidencePhotoGallery'
 import useMediaQuery from 'src/hooks/useMediaQuery'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import { INSPECTION_REPORT_EVIDENCE_COPY } from '../inspectionReportEvidenceCopy'
@@ -171,28 +168,10 @@ const InspectionReviewInlinePhotoGroups = ({ groups = [] }) => {
       {groups.map((group) => (
         <div className="inspection-review-photo-group" key={group.key}>
           <div className="inspection-review-photo-group__title">{group.title}</div>
-          <div className="inspection-review-photo-group__grid">
-            {group.photos.map((photo, index) => (
-              <div className="inspection-review-photo-item" key={photo.key || index}>
-                {photo.url ? (
-                  <ReportPhotoImage
-                    photo={photo}
-                    className="inspection-review-photo-item__image"
-                    alt={resolvePhotoLabel({
-                      photo,
-                      index,
-                      contextLabel: 'Inspection evidence photo',
-                    })}
-                  />
-                ) : null}
-                {photo.description ? (
-                  <div className="inspection-review-photo-item__description">
-                    {photo.description}
-                  </div>
-                ) : null}
-              </div>
-            ))}
-          </div>
+          <EvidencePhotoGallery
+            photos={group.photos}
+            contextLabel={group.title || 'Inspection evidence'}
+          />
         </div>
       ))}
     </div>

@@ -234,13 +234,14 @@ describe('FireExtinguisherEditSection', () => {
     })
 
     fireEvent.click(screen.getByText('CAN-001'))
-    fireEvent.click(screen.getByLabelText('Edit CAN-001'))
+    fireEvent.click(screen.getByLabelText('Extinguisher actions for CAN-001'))
+    fireEvent.click(screen.getByRole('button', { name: 'Edit equipment details' }))
 
     const idInput = screen.getByLabelText('ID Loc. No.')
     expect(idInput.value).toBe('CAN-001')
 
     fireEvent.change(idInput, { target: { value: 'CAN-002' } })
-    fireEvent.click(screen.getByText('Save extinguisher'))
+    fireEvent.click(screen.getByText('Save equipment details'))
 
     expect(onUpdateExtinguisher).toHaveBeenCalledWith(
       row,
@@ -374,10 +375,10 @@ describe('FireExtinguisherEditSection', () => {
     expect(screen.getByText('FE Physical Condition')).toBeTruthy()
     expect(screen.getByText(/Checked by Inspector A/)).toBeTruthy()
     fireEvent.click(screen.getAllByLabelText('Extinguisher actions for ADO-001').at(-1))
-    fireEvent.click(screen.getAllByText('Reset check').at(-1))
-    expect(screen.getAllByText('Reset check').length).toBeGreaterThan(0)
+    fireEvent.click(screen.getAllByText('Clear inspection answers').at(-1))
+    expect(screen.getAllByText('Clear inspection answers').length).toBeGreaterThan(0)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Clear answers' }))
     expect(onResetCheck).toHaveBeenCalledWith(expect.objectContaining({ id: 'fe:ok' }))
   })
 
@@ -402,7 +403,7 @@ describe('FireExtinguisherEditSection', () => {
     expect(screen.getByLabelText('Defect (1)')).toBeTruthy()
   })
 
-  it('keeps Reset check available when an extinguisher row is already empty', () => {
+  it('hides Clear inspection answers when an extinguisher row is already empty', () => {
     const onResetCheck = vi.fn()
     const row = buildCompleteOkRow({
       ...FIRE_EXTINGUISHER_CHECK_FIELDS.reduce((patch, field) => {
@@ -425,11 +426,10 @@ describe('FireExtinguisherEditSection', () => {
       handlers: { onResetCheck },
     })
 
-    fireEvent.click(screen.getByLabelText('Extinguisher actions for ADO-001'))
-    fireEvent.click(screen.getByText('Reset check'))
-    fireEvent.click(screen.getByRole('button', { name: 'Reset' }))
-
-    expect(onResetCheck).toHaveBeenCalledWith(expect.objectContaining({ id: 'fe:ok' }))
+    fireEvent.click(screen.getByText('ADO-001'))
+    expect(screen.queryByLabelText('Extinguisher actions for ADO-001')).toBeNull()
+    expect(screen.queryByText('Clear inspection answers')).toBeNull()
+    expect(onResetCheck).not.toHaveBeenCalled()
   })
 
   it('preserves trailing spaces in defect remarks while typing', () => {
@@ -583,6 +583,8 @@ describe('FireExtinguisherEditSection', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
 
     expect(onSaveFireExtinguisherRowDraft).not.toHaveBeenCalled()
+    expect(screen.getByText('Discard unsaved changes?')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }))
     expect(screen.queryByText('FE Physical Condition')).toBeNull()
   })
 
@@ -606,7 +608,7 @@ describe('FireExtinguisherEditSection', () => {
     fireEvent.click(screen.getAllByText('Good')[0])
     fireEvent.click(screen.getByLabelText('Close ADO-001'))
 
-    expect(screen.getByText('Discard changes?')).toBeTruthy()
+    expect(screen.getByText('Discard unsaved changes?')).toBeTruthy()
     expect(screen.getByText('Your extinguisher changes have not been saved.')).toBeTruthy()
     expect(screen.getByText('FE Physical Condition')).toBeTruthy()
 
@@ -614,7 +616,7 @@ describe('FireExtinguisherEditSection', () => {
     expect(screen.getByText('FE Physical Condition')).toBeTruthy()
 
     fireEvent.click(screen.getByLabelText('Close ADO-001'))
-    fireEvent.click(screen.getByRole('button', { name: 'Discard' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }))
     expect(screen.queryByText('FE Physical Condition')).toBeNull()
   })
 })

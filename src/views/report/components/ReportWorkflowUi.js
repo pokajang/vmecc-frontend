@@ -67,43 +67,34 @@ export const ReportSetupSummaryRow = ({
 }
 
 export const ReportMobileActionGroup = ({
-  onSaveDraft,
   onPrimary,
-  saveLabel = 'Save Draft',
   primaryLabel = 'Continue',
-  saveDisabled = false,
   primaryDisabled = false,
   primaryType = 'button',
-  statusMessage = '',
+  isSaving = false,
 }) => (
   <WorkflowStageActions
     className="report-setup-actions"
-    onSaveDraft={onSaveDraft}
+    mobileLayout="stacked-primary-first"
     onPrimary={onPrimary}
-    saveLabel={saveLabel}
     primaryLabel={primaryLabel}
-    saveDisabled={saveDisabled}
     primaryDisabled={primaryDisabled}
     primaryType={primaryType}
-    statusMessage={statusMessage}
+    isSaving={isSaving}
   />
 )
 
 export const ReportSetupActions = ({
-  onSaveDraft,
   onContinue,
   continueLabel = 'Continue',
-  saveLabel = 'Save Draft',
   primaryType = 'button',
-  statusMessage = '',
+  isSaving = false,
 }) => (
   <ReportMobileActionGroup
-    onSaveDraft={onSaveDraft}
     onPrimary={onContinue}
-    saveLabel={saveLabel}
     primaryLabel={continueLabel}
     primaryType={primaryType}
-    statusMessage={statusMessage}
+    isSaving={isSaving}
   />
 )
 

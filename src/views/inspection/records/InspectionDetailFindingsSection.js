@@ -1,5 +1,6 @@
-import React, { Fragment } from 'react'
-import { CAccordion, CAccordionBody, CAccordionHeader, CAccordionItem, CBadge } from '@coreui/react'
+import React from 'react'
+import { CBadge } from '@coreui/react'
+import DisclosureCard from 'src/components/DisclosureCard'
 
 const text = (value) => String(value || '').trim()
 
@@ -19,8 +20,11 @@ const FindingSummaryHeader = ({ item }) => {
 
   return (
     <div className="d-grid gap-2 w-100">
+      {text(item?.groupLabel) ? (
+        <div className="small text-body-secondary">{item.groupLabel}</div>
+      ) : null}
       <div className="d-flex flex-wrap align-items-start justify-content-between gap-2">
-        <div className="inspection-detail-finding-accordion-title-row">
+        <div className="inspection-detail-finding-disclosure-title-row">
           <span className="fw-semibold text-break">{item?.title || 'Finding item'}</span>
           {primarySummaryLine ? (
             <span className="small text-body-secondary">{primarySummaryLine}</span>
@@ -67,37 +71,18 @@ const InspectionDetailFindingsSection = ({
       <div className="fw-semibold text-muted">{sectionTitle}</div>
       {findingsTitle ? <div className="small text-body-secondary">{findingsTitle}</div> : null}
       {hasItems ? (
-        <CAccordion alwaysOpen>
-          {visibleItems.map((item, index) => {
-            const groupLabel = text(item.groupLabel)
-            const previousGroupLabel = text(visibleItems[index - 1]?.groupLabel)
-            const showGroupLabel = Boolean(groupLabel && groupLabel !== previousGroupLabel)
-            return (
-              <Fragment key={item.key || item.title}>
-                {showGroupLabel ? (
-                  <div
-                    className="inspection-detail-finding-group-label"
-                    role="heading"
-                    aria-level={3}
-                  >
-                    {groupLabel}
-                  </div>
-                ) : null}
-                <CAccordionItem
-                  itemKey={item.key || item.title}
-                  className="inspection-detail-finding-accordion-item"
-                >
-                  <CAccordionHeader>
-                    <FindingSummaryHeader item={item} />
-                  </CAccordionHeader>
-                  <CAccordionBody>
-                    {typeof renderItemContent === 'function' ? renderItemContent(item) : null}
-                  </CAccordionBody>
-                </CAccordionItem>
-              </Fragment>
-            )
-          })}
-        </CAccordion>
+        <div className="inspection-detail-disclosure-list">
+          {visibleItems.map((item) => (
+            <DisclosureCard
+              key={item.key || item.title}
+              className="inspection-detail-finding-disclosure inspection-detail-finding-accordion-item"
+              summaryClassName="inspection-detail-finding-accordion-title-row"
+              summary={<FindingSummaryHeader item={item} />}
+            >
+              {typeof renderItemContent === 'function' ? renderItemContent(item) : null}
+            </DisclosureCard>
+          ))}
+        </div>
       ) : null}
       {!hasItems && hasFallback ? fallbackContent : null}
       {!hasItems && !hasFallback && text(emptyMessage) ? (

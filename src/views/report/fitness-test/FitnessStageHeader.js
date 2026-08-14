@@ -15,7 +15,7 @@ const FitnessStageHeader = ({ activeStep }) => {
   return (
     <nav className="mb-4" aria-label="Fitness report progress">
       <div className="d-flex justify-content-end small text-body-secondary mb-2">
-        Step {activeIndex + 1} of {STEPS.length}
+        Step {activeIndex + 1} of {STEPS.length} · {STEPS[activeIndex][1]}
       </div>
       <div
         className="progress mb-2"
@@ -31,7 +31,7 @@ const FitnessStageHeader = ({ activeStep }) => {
           style={{ width: `${((activeIndex + 1) / STEPS.length) * 100}%` }}
         />
       </div>
-      <ol className="fitness-stage-steps list-unstyled small mb-0">
+      <ol className="visually-hidden">
         {STEPS.map(([key, label], index) => (
           <li
             key={key}

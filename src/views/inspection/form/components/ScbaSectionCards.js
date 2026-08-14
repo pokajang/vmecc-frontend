@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { CButton, CFormInput, CFormLabel, CFormTextarea } from '@coreui/react'
 import { CheckCircle2, Circle, TriangleAlert } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
-import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
+import InspectionItemDrawer from './InspectionItemDrawer'
 import RowActions from 'src/components/RowActions'
 import useMediaQuery from 'src/hooks/useMediaQuery'
 import {
@@ -21,13 +21,19 @@ import {
   getScbaSectionFields,
   getScbaSectionTitle,
 } from 'src/views/inspection/types/scba/helpers'
-import { EvidenceBlock, FormFieldError, InspectionPhotoActionRow } from './InspectionDisplayShared'
+import {
+  EvidenceBlock,
+  FormFieldError,
+  InspectionEvidenceEditor,
+  InspectionPhotoActionRow,
+} from './InspectionDisplayShared'
 import {
   buildInspectionElementActions,
   InspectionElementCard,
   InspectionElementDrawerFooter,
   InspectionElementValidationBadges,
 } from './InspectionElementUi'
+import { hasScbaInspectionData } from '../inspectionResetActions'
 import ScbaStatusSegment from './ScbaStatusSegment'
 import {
   getScbaDisplayLabel,
@@ -359,7 +365,7 @@ const ScbaSectionCards = ({
     }
 
     return (
-      <div className="inspection-hydraulic-defect-evidence rounded-3 border bg-light-subtle p-2 d-grid gap-2">
+      <InspectionEvidenceEditor>
         <CFormTextarea
           rows={2}
           value={remarks}
@@ -379,7 +385,7 @@ const ScbaSectionCards = ({
           onView={() => openIssuePhotoViewer(photos)}
           onAddPhoto={requestIssuePhoto}
         />
-      </div>
+      </InspectionEvidenceEditor>
     )
   }
 
@@ -623,7 +629,7 @@ const ScbaSectionCards = ({
                         section.catalogSectionId
                           ? {
                               key: 'archive',
-                              label: 'Archive from future inspections',
+                              label: 'Archive equipment',
                               className: 'text-danger',
                               onClick: () => onArchiveSection?.(section),
                             }
@@ -701,6 +707,7 @@ const ScbaSectionCards = ({
                     const canReset = !readOnly && typeof onResetGroupedCheck === 'function'
                     const itemActions = buildInspectionElementActions({
                       canReset,
+                      hasInspectionAnswers: hasScbaInspectionData(row, sectionFields),
                       onReset: () => requestResetGroupedCheck(section.key, row),
                       canEdit: row.isCustomEquipment,
                       onEdit: () => onEditItem?.(section.key, row),
@@ -711,7 +718,7 @@ const ScbaSectionCards = ({
                           ? [
                               {
                                 key: 'archive',
-                                label: 'Archive from future inspections',
+                                label: 'Archive equipment',
                                 className: 'text-danger',
                                 onClick: () => onArchiveItem?.(section.key, row),
                               },
@@ -787,9 +794,9 @@ const ScbaSectionCards = ({
       })}
 
       {useMobileDrawer && mobileDetailSection && mobileDetailRow ? (
-        <MobileBottomDrawer
+        <InspectionItemDrawer
           visible
-          title={getScbaDisplayLabel(mobileDetailRow)}
+          itemTitle={getScbaDisplayLabel(mobileDetailRow)}
           bodyClassName="inspection-equipment-detail-drawer-shell"
           headerAction={
             !readOnly ? (
@@ -798,10 +805,23 @@ const ScbaSectionCards = ({
                 hitArea={44}
                 toggleAriaLabel={`Item actions for ${getScbaDisplayLabel(mobileDetailRow)}`}
                 items={[
-                  typeof onResetGroupedCheck === 'function'
+                  mobileDetailRow.isCustomEquipment
+                    ? {
+                        key: 'edit',
+                        label: 'Edit custom item',
+                        disabled: mobileDraftDirty,
+                        disabledReason: mobileDraftDirty ? 'Save or cancel changes first.' : '',
+                        onClick: () => {
+                          onEditItem?.(mobileDetailSection.key, mobileDetailRow)
+                          closeMobileDetailDrawer()
+                        },
+                      }
+                    : null,
+                  typeof onResetGroupedCheck === 'function' &&
+                  hasScbaInspectionData(mobileDraftRow || mobileDetailRow, mobileDetailFields)
                     ? {
                         key: 'reset',
-                        label: 'Reset check',
+                        label: 'Clear inspection answers',
                         className: 'text-danger',
                         onClick: () =>
                           requestResetGroupedCheck(mobileDetailSection.key, mobileDetailRow, {
@@ -811,20 +831,8 @@ const ScbaSectionCards = ({
                     : null,
                   mobileDetailRow.isCustomEquipment
                     ? {
-                        key: 'edit',
-                        label: 'Edit',
-                        disabled: mobileDraftDirty,
-                        disabledReason: mobileDraftDirty ? 'Save or cancel changes first.' : '',
-                        onClick: () => {
-                          onEditItem?.(mobileDetailSection.key, mobileDetailRow)
-                          closeMobileDetailDrawer()
-                        },
-                      }
-                    : null,
-                  mobileDetailRow.isCustomEquipment
-                    ? {
                         key: 'delete',
-                        label: 'Delete',
+                        label: 'Delete custom item',
                         className: 'text-danger',
                         disabled: mobileDraftDirty,
                         disabledReason: mobileDraftDirty ? 'Save or cancel changes first.' : '',
@@ -837,7 +845,7 @@ const ScbaSectionCards = ({
                   mobileDetailRow.isCustomEquipment && mobileDetailRow.catalogItemId
                     ? {
                         key: 'archive',
-                        label: 'Archive from future inspections',
+                        label: 'Archive equipment',
                         className: 'text-danger',
                         disabled: mobileDraftDirty,
                         disabledReason: mobileDraftDirty ? 'Save or cancel changes first.' : '',
@@ -922,7 +930,7 @@ const ScbaSectionCards = ({
               onSave={saveMobileDraftRow}
             />
           ) : null}
-        </MobileBottomDrawer>
+        </InspectionItemDrawer>
       ) : null}
 
       {!readOnly ? (
@@ -941,9 +949,9 @@ const ScbaSectionCards = ({
       />
       <ActionConfirmModal
         visible={showDiscardChanges}
-        title="Discard changes?"
+        title="Discard unsaved changes?"
         message="Your SCBA item changes have not been saved."
-        confirmLabel="Discard"
+        confirmLabel="Discard changes"
         confirmColor="danger"
         cancelLabel="Keep editing"
         mobileDrawer

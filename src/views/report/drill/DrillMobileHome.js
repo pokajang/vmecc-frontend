@@ -45,7 +45,6 @@ const DrillMobileHome = ({
     )
   }, [drillType.showAllDrillTypes, drillType.visibleTypeOptions])
   const draftRow = draftRows[0] || null
-  const draftSyncStatus = String(draftRow?.syncStatus || draftRow?.__offlineSyncStatus || '').trim()
   const draftSummary = draftRow
     ? [
         draftRow.exerciseTitle || draftRow.incidentType || 'Drill',
@@ -161,7 +160,6 @@ const DrillMobileHome = ({
           ariaLabel="Continue drill draft"
           summary={draftSummary}
           savedLabel={formatMobileReportDate(draftRow, 'Saved')}
-          syncStatus={draftSyncStatus}
           onContinue={() => onContinueDraft?.(draftRow)}
           onDelete={() => onDeleteDraft?.(draftRow)}
         />

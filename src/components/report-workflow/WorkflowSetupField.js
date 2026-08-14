@@ -41,10 +41,11 @@ const WorkflowSetupField = ({
                 type="button"
                 color="light"
                 size="sm"
+                className="workflow-setup-field__icon-action"
                 aria-label={`Reset ${label}`}
                 onClick={onReset}
               >
-                <RotateCcw size={15} aria-hidden="true" />
+                <RotateCcw size={18} aria-hidden="true" />
               </CButton>
             ) : null}
           </div>
@@ -70,10 +71,11 @@ const WorkflowSetupField = ({
                 color="light"
                 variant="ghost"
                 size="sm"
+                className="workflow-setup-field__icon-action"
                 aria-label={`Reset ${label}`}
                 onClick={onReset}
               >
-                <RotateCcw size={15} aria-hidden="true" />
+                <RotateCcw size={18} aria-hidden="true" />
               </CButton>
             ) : null}
             {typeof onEdit === 'function' ? (
@@ -82,10 +84,11 @@ const WorkflowSetupField = ({
                 color="primary"
                 variant="ghost"
                 size="sm"
+                className="workflow-setup-field__icon-action"
                 aria-label={`Edit ${label}`}
                 onClick={onEdit}
               >
-                <Pencil size={15} aria-hidden="true" />
+                <Pencil size={18} aria-hidden="true" />
               </CButton>
             ) : null}
           </div>

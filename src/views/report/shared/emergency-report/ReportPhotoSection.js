@@ -1,8 +1,8 @@
 import React from 'react'
 import { CAlert, CButton, CFormInput, CFormTextarea } from '@coreui/react'
-import { Camera, Trash2 } from 'lucide-react'
+import { Camera, Trash2, Upload } from 'lucide-react'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
-import CreateActionButton from 'src/components/CreateActionButton'
+import MediaAddActionButton from 'src/components/MediaAddActionButton'
 import PhotoEditorGallery from 'src/components/report-workflow/PhotoEditorGallery'
 import {
   ReportPhotoImage,
@@ -11,7 +11,6 @@ import {
 import {
   deleteReportMedia,
   getReportPhotoBytes,
-  REPORT_PHOTO_MAX_COUNT,
   REPORT_PHOTO_MAX_TOTAL_BYTES,
   reportPhotoFailureMessage,
   uploadReportPhotosSequentially,
@@ -38,6 +37,7 @@ const ReportPhotoSection = ({
   onBeforeCameraOpen,
   onProcessingChange,
   title = 'Photographs',
+  showHeading = true,
   emptyMessage = 'No photos.',
   captureLabel = 'Capture photo',
   uploadLabel = 'Upload photo',
@@ -92,26 +92,10 @@ const ReportPhotoSection = ({
     abortRef.current = controller
     setProcessingState(true)
     setFallback('')
-    const remaining = Math.max(0, REPORT_PHOTO_MAX_COUNT - rows.length)
-    if (!remaining) {
-      pushToast?.(`Maximum ${REPORT_PHOTO_MAX_COUNT} photos are allowed.`, {
-        title: 'Photo limit reached',
-        color: 'warning',
-      })
-      setProcessingState(false)
-      return
-    }
-    if (files.length > remaining) {
-      pushToast?.(
-        `Only ${remaining} more photo${remaining === 1 ? '' : 's'} can be added. Extra selections were ignored.`,
-        { title: 'Photo limit', color: 'warning' },
-      )
-    }
-
     try {
       const failures = []
       const uploaded = await uploadReportPhotosSequentially({
-        files: files.slice(0, remaining),
+        files,
         module: moduleKey,
         source,
         signal: controller.signal,
@@ -217,35 +201,35 @@ const ReportPhotoSection = ({
         onConfirm={confirmRemove}
       />
       <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <div>
-          <div className="fw-semibold">
-            {title} {required ? <span className="text-danger">*</span> : null}
+        {showHeading || required ? (
+          <div>
+            {showHeading ? (
+              <div className="fw-semibold">
+                {title} {required ? <span className="text-danger">*</span> : null}
+              </div>
+            ) : null}
+            {required ? (
+              <div className="small text-body-secondary">
+                Upload at least 1 photo. {uploadedCount} uploaded.
+              </div>
+            ) : null}
           </div>
-          {required ? (
-            <div className="small text-body-secondary">
-              Upload at least 1 photo. {uploadedCount} of {REPORT_PHOTO_MAX_COUNT} uploaded.
-            </div>
-          ) : null}
-        </div>
+        ) : null}
         <div className="d-flex gap-2">
           {allowCapture ? (
-            <CreateActionButton
+            <MediaAddActionButton
               label={captureLabel}
-              icon={<Camera size={13} />}
+              icon={<Camera size={16} />}
               onClick={startCamera}
               disabled={processing}
             />
           ) : null}
-          <CButton
-            type="button"
-            color="secondary"
-            variant="outline"
-            size="sm"
+          <MediaAddActionButton
+            label={uploadLabel}
+            icon={<Upload size={16} />}
             disabled={processing}
             onClick={() => uploadRef.current?.click()}
-          >
-            {uploadLabel}
-          </CButton>
+          />
         </div>
       </div>
       {allowCapture ? (
@@ -359,9 +343,7 @@ const ReportPhotoSection = ({
           </div>
         )
       ) : emptyMessage ? (
-        <div className="rounded-3 border bg-light-subtle p-3 text-body-secondary">
-          {emptyMessage}
-        </div>
+        <div className="text-body-secondary">{emptyMessage}</div>
       ) : null}
     </section>
   )

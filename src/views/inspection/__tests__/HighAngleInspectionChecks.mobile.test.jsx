@@ -531,7 +531,7 @@ describe('HighAngleInspectionChecks mobile detail drawer', () => {
     fireEvent.click(screen.getByText('Locker A - Top shelf'))
     fireEvent.click(screen.getByRole('button', { name: 'Open Edge Protector inspection details' }))
     fireEvent.click(screen.getByRole('button', { name: 'High angle actions for Edge Protector' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Delete custom item' }))
 
     const drawer = document.querySelector('.offcanvas')
     expect(drawer).toBeTruthy()
@@ -715,7 +715,7 @@ describe('HighAngleInspectionChecks mobile detail drawer', () => {
     fireEvent.click(screen.getByText('Cancel'))
 
     expect(onUpdateCheck).not.toHaveBeenCalled()
-    expect(screen.getByText('Discard changes?')).toBeTruthy()
+    expect(screen.getByText('Discard unsaved changes?')).toBeTruthy()
     expect(screen.getByText('Your high angle item changes have not been saved.')).toBeTruthy()
     expect(screen.getByText('Condition')).toBeTruthy()
 
@@ -723,7 +723,7 @@ describe('HighAngleInspectionChecks mobile detail drawer', () => {
     expect(screen.getByText('Condition')).toBeTruthy()
 
     fireEvent.click(screen.getByText('Cancel'))
-    fireEvent.click(screen.getByRole('button', { name: 'Discard' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }))
     expect(screen.queryByText('Condition')).toBeNull()
   })
 

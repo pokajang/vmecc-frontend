@@ -415,9 +415,7 @@ describe('InspectionDetailSection', () => {
 
     expect(screen.getByText('Extinguishers')).toBeTruthy()
     expect(screen.getByText('ADO-001')).toBeTruthy()
-    const extinguisherHeader = screen
-      .getByRole('button', { name: /ADO-001/ })
-      .querySelector('.inspection-detail-finding-accordion-title-row')
+    const extinguisherHeader = screen.getByRole('button', { name: /ADO-001/ })
     expect(extinguisherHeader?.textContent || '').toContain('ADO-001')
     expect(extinguisherHeader?.textContent || '').toContain('Checked by Inspector Fire')
     expect(
@@ -430,10 +428,11 @@ describe('InspectionDetailSection', () => {
     expect(screen.getByText('Cylinder defect')).toBeTruthy()
     expect(screen.getByText('Needs replacement.')).toBeTruthy()
 
-    fireEvent.click(screen.getByRole('button', { name: 'View photos' }))
+    fireEvent.click(screen.getByRole('button', { name: /View photo 1: Cylinder defect/i }))
 
-    expect(screen.getByText('ADO-001 - FE Physical Condition defect photos')).toBeTruthy()
-    expect(screen.getByRole('img', { name: 'Cylinder defect' })).toBeTruthy()
+    expect(screen.getByRole('dialog')).toBeTruthy()
+    expect(screen.getByText('1 of 1')).toBeTruthy()
+    expect(screen.getAllByRole('img', { name: 'Cylinder defect' })).toHaveLength(2)
     expect(screen.queryByText('dent.jpg')).toBeNull()
     expect(document.querySelector('.modal.show')).toBeTruthy()
     expectItemizedReadOnlyFindings()

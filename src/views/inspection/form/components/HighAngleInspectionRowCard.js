@@ -8,12 +8,18 @@ import {
   InspectionElementCard,
   InspectionElementValidationBadges,
 } from './InspectionElementUi'
+import { hasHighAngleInspectionData } from '../inspectionResetActions'
 import {
   HIGH_ANGLE_CONDITION_FIELD,
   HIGH_ANGLE_STATUS_OPTIONS,
   getHighAngleRetainedEvidenceRows,
 } from 'src/views/inspection/types/high-angle/helpers'
-import { EvidenceBlock, FormFieldError, InspectionPhotoActionRow } from './InspectionDisplayShared'
+import {
+  EvidenceBlock,
+  FormFieldError,
+  InspectionEvidenceEditor,
+  InspectionPhotoActionRow,
+} from './InspectionDisplayShared'
 import InspectionStatusSegment from './patterns/InspectionStatusSegment'
 
 const text = (value) => String(value || '').trim()
@@ -237,7 +243,7 @@ export const HighAngleInspectionRowDetails = ({
         </FormFieldError>
       </div>
       {hasIssue ? (
-        <div className="inspection-hydraulic-defect-evidence rounded-3 border bg-light-subtle p-2 d-grid gap-2">
+        <InspectionEvidenceEditor>
           <CFormLabel
             htmlFor={`${bodyId}-issue-remarks`}
             className="small fw-semibold text-muted mb-1"
@@ -264,7 +270,7 @@ export const HighAngleInspectionRowDetails = ({
             onView={() => openConditionPhotoViewer(conditionPhotos)}
             onAddPhoto={requestConditionPhoto}
           />
-        </div>
+        </InspectionEvidenceEditor>
       ) : null}
       {hasRetainedEvidence ? (
         <EvidenceBlock
@@ -365,6 +371,7 @@ const HighAngleInspectionRowCard = ({
     (typeof onEditItem === 'function' || typeof onDeleteItem === 'function')
   const actionItems = buildInspectionElementActions({
     canReset,
+    hasInspectionAnswers: hasHighAngleInspectionData(sourceRow),
     onReset: () => onResetCheck(sourceRow),
     canEdit: canManageItem && typeof onEditItem === 'function',
     onEdit: () => onEditItem(sourceRow),

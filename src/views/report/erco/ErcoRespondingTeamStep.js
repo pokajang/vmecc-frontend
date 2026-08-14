@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { CAlert, CBadge, CFormCheck } from '@coreui/react'
-import { ChevronDown, Users } from 'lucide-react'
+import { Users } from 'lucide-react'
+import DisclosureCard from 'src/components/DisclosureCard'
 import ResponsiveChoiceSelector from 'src/components/report-workflow/ResponsiveChoiceSelector'
 import TableLoader from 'src/components/TableLoader'
 import { fetchRosters, fetchShiftWindows, fetchTeams } from 'src/services/apiClient'
@@ -97,11 +98,9 @@ const ErcoRespondingTeamStep = ({
   clearError,
   pushToast,
   onBack,
-  onSaveDraft,
   onContinue,
-  saveLabel = 'Save Draft',
-  draftStatus = '',
   showActions = true,
+  isSaving = false,
 }) => {
   const isMobile = useReportIsMobile()
   const [isLoadingMembers, setIsLoadingMembers] = useState(false)
@@ -448,7 +447,7 @@ const ErcoRespondingTeamStep = ({
           <div className="d-flex align-items-center gap-2 flex-wrap">
             <CBadge
               color="light"
-              className="border text-body-secondary d-inline-flex align-items-center gap-1"
+              className="text-body-secondary d-inline-flex align-items-center gap-1"
               style={{ maxWidth: '260px' }}
               title={`Team on Shift During Incident: ${teamLabel}`}
             >
@@ -456,7 +455,7 @@ const ErcoRespondingTeamStep = ({
               <span className="text-truncate">{teamLabel}</span>
             </CBadge>
             {shiftLabel ? (
-              <CBadge color="light" className="border text-body-secondary">
+              <CBadge color="light" className="text-body-secondary">
                 Shift: {shiftLabel}
               </CBadge>
             ) : null}
@@ -482,84 +481,68 @@ const ErcoRespondingTeamStep = ({
         ) : useGroupedFallbackView ? (
           <div className="erco-team-accordion d-grid gap-2">
             {attendanceGroups.map((group) => (
-              <div key={group.teamName} className="erco-team-accordion__item rounded-3 border">
-                {(() => {
-                  const groupKey = teamAccordionKey(group.teamName)
-                  const panelId = `erco-team-panel-${groupKey}`
-                  const allSelected =
+              <DisclosureCard
+                key={group.teamName}
+                className="erco-team-accordion__item"
+                open={expandedTeamKeys.has(teamAccordionKey(group.teamName))}
+                onToggle={(event) => {
+                  const shouldOpen = event.currentTarget.open
+                  const isOpen = expandedTeamKeys.has(teamAccordionKey(group.teamName))
+                  if (shouldOpen !== isOpen) toggleTeamExpanded(group.teamName)
+                }}
+                summary={
+                  <div className="d-flex align-items-center justify-content-between gap-2">
+                    <span className="fw-semibold">{group.teamName}</span>
+                    <span className="small text-body-secondary">
+                      {group.rows.filter((row) => Boolean(row?.present)).length} selected
+                    </span>
+                  </div>
+                }
+              >
+                <CFormCheck
+                  id={`erco-team-select-${teamAccordionKey(group.teamName)}`}
+                  className="mb-3"
+                  label="Select all team members"
+                  checked={
                     group.rows.length > 0 && group.rows.every((row) => Boolean(row?.present))
-                  const selectedCount = group.rows.filter((row) => Boolean(row?.present)).length
-                  const someSelected = selectedCount > 0
-                  const isExpanded = expandedTeamKeys.has(groupKey)
-                  const checkboxId = `erco-team-select-${groupKey}`
-                  return (
-                    <>
-                      <div className="erco-team-accordion__header d-flex align-items-center gap-2">
-                        <CFormCheck
-                          id={checkboxId}
-                          checked={allSelected}
-                          indeterminate={someSelected && !allSelected}
-                          onChange={(event) =>
-                            toggleTeamMembers(group.teamName, group.rows, event.target.checked)
-                          }
-                        />
-                        <button
-                          type="button"
-                          className="erco-team-accordion__toggle"
-                          aria-expanded={isExpanded}
-                          aria-controls={panelId}
-                          onClick={() => toggleTeamExpanded(group.teamName)}
-                        >
-                          <span className="erco-team-accordion__team fw-semibold">
-                            {group.teamName}
-                          </span>
-                          <span className="erco-team-accordion__count text-body-secondary">
-                            {selectedCount} selected
-                          </span>
-                          <ChevronDown
-                            size={17}
-                            className={`erco-team-accordion__chevron${
-                              isExpanded ? ' erco-team-accordion__chevron--open' : ''
-                            }`}
-                          />
-                        </button>
-                      </div>
-                      {isExpanded ? (
-                        <div id={panelId} className="erco-team-accordion__body">
-                          <ResponsiveChoiceSelector
-                            isMobile={isMobile}
-                            options={buildMemberOptions(group.rows)}
-                            value={selectedMemberKeys}
-                            onChange={toggleMember}
-                            selectionMode="multi"
-                            ariaLabel={`${group.teamName} responding members`}
-                            variant="compact"
-                            showDescription
-                            columns={resolveMemberColumns(group.rows.length)}
-                            cardProps={(option, isSelected) =>
-                              isSelected
-                                ? {
-                                    style: {
-                                      backgroundColor: ACTIVE_CARD_BG,
-                                      borderColor: ACTIVE_CARD_BORDER,
-                                    },
-                                    icon: null,
-                                    bodyClassName: 'd-flex align-items-start',
-                                    paddingClassName: 'p-3',
-                                  }
-                                : {
-                                    icon: null,
-                                    bodyClassName: 'd-flex align-items-start',
-                                    paddingClassName: 'p-3',
-                                  }
-                            }
-                          />
-                        </div>
-                      ) : null}
-                    </>
-                  )
-                })()}
-              </div>
+                  }
+                  indeterminate={
+                    group.rows.some((row) => Boolean(row?.present)) &&
+                    !group.rows.every((row) => Boolean(row?.present))
+                  }
+                  onChange={(event) =>
+                    toggleTeamMembers(group.teamName, group.rows, event.target.checked)
+                  }
+                />
+                <ResponsiveChoiceSelector
+                  isMobile={isMobile}
+                  options={buildMemberOptions(group.rows)}
+                  value={selectedMemberKeys}
+                  onChange={toggleMember}
+                  selectionMode="multi"
+                  ariaLabel={`${group.teamName} responding members`}
+                  variant="compact"
+                  showDescription
+                  columns={resolveMemberColumns(group.rows.length)}
+                  cardProps={(option, isSelected) =>
+                    isSelected
+                      ? {
+                          style: {
+                            backgroundColor: ACTIVE_CARD_BG,
+                            borderColor: ACTIVE_CARD_BORDER,
+                          },
+                          icon: null,
+                          bodyClassName: 'd-flex align-items-start',
+                          paddingClassName: 'p-3',
+                        }
+                      : {
+                          icon: null,
+                          bodyClassName: 'd-flex align-items-start',
+                          paddingClassName: 'p-3',
+                        }
+                  }
+                />
+              </DisclosureCard>
             ))}
           </div>
         ) : (
@@ -597,21 +580,14 @@ const ErcoRespondingTeamStep = ({
       {showActions ? (
         <div ref={actionsRef}>
           {isMobile ? (
-            <ReportMobileActionGroup
-              onSaveDraft={onSaveDraft}
-              onPrimary={handleContinueClick}
-              saveLabel={saveLabel}
-              statusMessage={draftStatus}
-            />
+            <ReportMobileActionGroup onPrimary={handleContinueClick} isSaving={isSaving} />
           ) : (
             <DetailsStepActions
               onBack={onBack}
-              onSaveDraft={onSaveDraft}
-              saveLabel={saveLabel}
               primaryLabel="Continue"
               primaryType="button"
               onPrimary={handleContinueClick}
-              statusMessage={draftStatus}
+              isSaving={isSaving}
             />
           )}
         </div>

@@ -5,7 +5,6 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import {
   ChronologyRowModal,
   ChronologyStartModeModal,
-  ErcoAiReviewModal,
   PreMobModeModal,
   SummaryGenerationModal,
 } from '../erco-form-components'
@@ -77,20 +76,6 @@ const modalCases = [
         onGenerate={vi.fn()}
         onRetry={vi.fn()}
         onUseGenerated={vi.fn()}
-      />
-    ),
-  },
-  {
-    name: 'AI review',
-    renderModal: () => (
-      <ErcoAiReviewModal
-        visible
-        stage="confirm"
-        items={[]}
-        errorMessage=""
-        onClose={vi.fn()}
-        onRun={vi.fn()}
-        onRetry={vi.fn()}
       />
     ),
   },

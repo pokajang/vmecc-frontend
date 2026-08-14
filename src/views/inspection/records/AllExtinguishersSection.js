@@ -20,6 +20,7 @@ import { Camera, Download, MessageSquare } from 'lucide-react'
 
 import DataTableFooter from 'src/components/DataTableFooter'
 import CreateActionButton from 'src/components/CreateActionButton'
+import EvidencePhotoGallery from 'src/components/media/EvidencePhotoGallery'
 import ResponsiveRecordCollection from 'src/components/ResponsiveRecordCollection'
 import RowActionCell from 'src/components/RowActionCell'
 import RowActions from 'src/components/RowActions'
@@ -1025,25 +1026,12 @@ const HistoricalIssueList = ({
                 {issue.remarks ? <div className="small mt-1">{issue.remarks}</div> : null}
               </div>
               {Array.isArray(issue.photos) && issue.photos.length > 0 ? (
-                <CButton
-                  type="button"
-                  color="secondary"
-                  variant="outline"
-                  size="sm"
-                  className="inspection-compact-action-btn justify-self-start"
-                  onClick={() =>
-                    onViewPhotos?.({
-                      title: `${detail.idLocNo || detail.barcodeNo || 'Fire extinguisher'} - ${
-                        issue.label
-                      } photos`,
-                      photos: issue.photos,
-                      readOnly: true,
-                      showDescriptionInput: false,
-                    })
-                  }
-                >
-                  View {issue.evidenceCount} photo{issue.evidenceCount === 1 ? '' : 's'}
-                </CButton>
+                <EvidencePhotoGallery
+                  photos={issue.photos}
+                  title={`${issue.label} photos`}
+                  contextLabel={`${issue.label} evidence`}
+                  hiddenDescriptionValues={[issue.remarks, issue.label]}
+                />
               ) : null}
             </article>
           ))
@@ -1324,7 +1312,7 @@ const HistoricalRecordList = ({
   </section>
 )
 
-const CriteriaRows = ({ checks, detail, onViewPhotos }) => (
+const CriteriaRows = ({ checks }) => (
   <div className="all-extinguishers-detail__criteria">
     {checks.map((check) => (
       <div key={`criteria-${check.key}`} className="all-extinguishers-detail__criteria-row">
@@ -1336,25 +1324,13 @@ const CriteriaRows = ({ checks, detail, onViewPhotos }) => (
             </div>
           ) : null}
           {Array.isArray(check.photos) && check.photos.length > 0 ? (
-            <CButton
-              type="button"
-              color="secondary"
-              variant="outline"
-              size="sm"
-              className="inspection-compact-action-btn mt-2"
-              onClick={() =>
-                onViewPhotos?.({
-                  title: `${detail.idLocNo || detail.barcodeNo || 'Fire extinguisher'} - ${
-                    check.label
-                  } photos`,
-                  photos: check.photos,
-                  readOnly: true,
-                  showDescriptionInput: false,
-                })
-              }
-            >
-              View photos
-            </CButton>
+            <EvidencePhotoGallery
+              photos={check.photos}
+              title={`${check.label} photos`}
+              contextLabel={`${check.label} evidence`}
+              hiddenDescriptionValues={[check.remarks, check.label]}
+              className="mt-2"
+            />
           ) : null}
         </div>
         <StatusBadge
@@ -1366,7 +1342,7 @@ const CriteriaRows = ({ checks, detail, onViewPhotos }) => (
   </div>
 )
 
-const HistoricalRecordDetail = ({ detail, record, onViewPhotos }) => {
+const HistoricalRecordDetail = ({ detail, record }) => {
   if (!record) return null
   const checks = normalizeChecks(record.checks, detail)
 
@@ -1390,7 +1366,7 @@ const HistoricalRecordDetail = ({ detail, record, onViewPhotos }) => {
       <section className="d-grid gap-2">
         <div className="fw-semibold">Inspection criteria</div>
         {checks.length > 0 ? (
-          <CriteriaRows checks={checks} detail={detail} onViewPhotos={onViewPhotos} />
+          <CriteriaRows checks={checks} />
         ) : (
           <div className="rounded-3 border p-3 text-body-secondary">
             No criterion details are available for this historical record.
@@ -1498,31 +1474,14 @@ const CoverageOverview = ({
                     {check.remarks ? (
                       <div style={{ whiteSpace: 'pre-wrap' }}>{check.remarks}</div>
                     ) : null}
-                    <div className="d-flex flex-wrap align-items-center gap-2 text-body-secondary">
-                      <span>
-                        {check.evidenceCount} photo{check.evidenceCount === 1 ? '' : 's'}
-                      </span>
-                      {Array.isArray(check.photos) && check.photos.length > 0 ? (
-                        <CButton
-                          color="secondary"
-                          variant="outline"
-                          size="sm"
-                          className="inspection-compact-action-btn"
-                          onClick={() =>
-                            onViewPhotos?.({
-                              title: `${
-                                detail.idLocNo || detail.barcodeNo || 'Fire extinguisher'
-                              } - ${check.label} photos`,
-                              photos: check.photos,
-                              readOnly: true,
-                              showDescriptionInput: false,
-                            })
-                          }
-                        >
-                          View photos
-                        </CButton>
-                      ) : null}
-                    </div>
+                    {Array.isArray(check.photos) && check.photos.length > 0 ? (
+                      <EvidencePhotoGallery
+                        photos={check.photos}
+                        title={`${check.label} photos`}
+                        contextLabel={`${check.label} evidence`}
+                        hiddenDescriptionValues={[check.remarks, check.label]}
+                      />
+                    ) : null}
                   </div>
                 ))}
               </div>
@@ -1636,16 +1595,7 @@ export const CoverageDetailBody = ({
   const historyRecords = normalizeHistoryRecords(detail)
 
   return view === 'historyDetail' ? (
-    <HistoricalRecordDetail
-      detail={detail}
-      record={selectedHistoryRecord}
-      onViewPhotos={onViewPhotos}
-      currentUser={currentUser}
-      canManageCatalog={canManageCatalog}
-      canManageIssues={canManageIssues}
-      canVerifyIssues={canVerifyIssues}
-      onAssetChanged={onAssetChanged}
-    />
+    <HistoricalRecordDetail detail={detail} record={selectedHistoryRecord} />
   ) : (
     <CoverageOverview
       detail={detail}

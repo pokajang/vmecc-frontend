@@ -102,7 +102,7 @@ const ChronologyRow = ({
                 }}
                 onPointerDown={(e) => handleEventGripPointerDown(e, row.id)}
               >
-                <GripVertical size={13} />
+                <GripVertical size={19} />
               </CButton>
             </CTooltip>
           </div>
@@ -121,7 +121,7 @@ const ChronologyRow = ({
               className="p-1 border-0 bg-transparent text-body-secondary shadow-none"
               style={{ minWidth: 40, minHeight: 40 }}
             >
-              <ArrowUp size={14} />
+              <ArrowUp size={19} />
             </CButton>
           </span>
         </CTooltip>
@@ -137,7 +137,7 @@ const ChronologyRow = ({
               className="p-1 border-0 bg-transparent text-body-secondary shadow-none"
               style={{ minWidth: 40, minHeight: 40 }}
             >
-              <ArrowDown size={14} />
+              <ArrowDown size={19} />
             </CButton>
           </span>
         </CTooltip>
@@ -153,7 +153,7 @@ const ChronologyRow = ({
                 className="p-1 border-0 bg-transparent text-danger shadow-none"
                 style={{ minWidth: 40, minHeight: 40 }}
               >
-                <Trash2 size={14} />
+                <Trash2 size={19} />
               </CButton>
             </span>
           </CTooltip>
@@ -167,7 +167,7 @@ const ChronologyRow = ({
               className="p-1 border-0 bg-transparent text-danger shadow-none"
               style={{ minWidth: 40, minHeight: 40 }}
             >
-              <Trash2 size={14} />
+              <Trash2 size={19} />
             </CButton>
           </CTooltip>
         )}

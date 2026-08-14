@@ -10,12 +10,16 @@ Workflow screens are calm, operational, precise, compact, and high-trust.
 ## Interaction rules
 
 - Keep one visually dominant primary action in each stage.
-- Present Back as a quiet action and Save Draft as a secondary action.
+- Present Back as a quiet action. Persist drafts automatically at validated Continue, Back, media,
+  and Review boundaries instead of showing a permanent Save Draft action.
+- Hide workflow-level actions while an individual setup selector is active. Once the required
+  setup is complete and summarized, expose only Continue.
 - Do not disable Continue or Review for ordinary incomplete input. Validate after the user acts,
   focus the first invalid field, and keep specific feedback beside its control.
 - Reserve disabled primary actions for operational blockers such as an upload, save, conflict,
   permission restriction, or non-idempotent submission in progress.
-- Keep operational failures inline with a recovery action. Use toasts only for transient success.
+- Keep operational failures inline with a Retry save action. Do not show routine persistence or
+  synchronization notices that give the user nothing to act on. Use toasts only for transient success.
 - Preserve user input after recoverable failures.
 - Put protocols and infrequent reference material behind explicit disclosure.
 

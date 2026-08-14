@@ -49,7 +49,7 @@ const FitnessContextSummary = ({ form }) => (
     title="Test Context"
     items={buildFitnessContextSummaryItems(form)}
     variant="context"
-    className="d-md-none"
+    className="d-md-none mb-4"
   />
 )
 

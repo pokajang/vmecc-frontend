@@ -1,5 +1,6 @@
 import React from 'react'
 import { CAlert } from '@coreui/react'
+import DisclosureCard from 'src/components/DisclosureCard'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import TypeManagerModal from 'src/components/report-workflow/TypeManagerModal'
 import {
@@ -14,19 +15,16 @@ import { sortResponders } from './chronologyUtils'
 import {
   buildErcoAiContext,
   buildErcoAiPayload,
-  buildErcoReviewPrompt,
   buildErcoSummaryPrompt,
   assertErcoAiMessageWithinLimit,
   ERCO_EMBEDDED_TASK,
   normalizeGeneratedSummary,
-  parseAiReviewItems,
 } from './aiAssist'
 import useIncidentTitleManager from './useIncidentTitleManager'
 import { useChronology } from './useChronology'
 import {
   ChronologySection,
   DetailsStepActions,
-  ErcoAiReviewModal,
   IncidentSummaryPanel,
   SummaryGenerationModal,
   IncidentSummaryTextarea,
@@ -45,11 +43,9 @@ const ErcoDetailsStep = ({
   onBack,
   onContinue,
   onClear,
-  onSaveDraft,
   userId,
-  saveLabel = 'Save Draft',
-  draftStatus = '',
   showActions = true,
+  isSaving = false,
 }) => {
   const isMobile = useReportIsMobile()
   const [isTitleMenuOpen, setIsTitleMenuOpen] = React.useState(false)
@@ -61,14 +57,7 @@ const ErcoDetailsStep = ({
   const [generatedSummaryDraft, setGeneratedSummaryDraft] = React.useState('')
   const [summaryGenerationError, setSummaryGenerationError] = React.useState('')
   const [summaryGenerationCanRetry, setSummaryGenerationCanRetry] = React.useState(true)
-  const [showAiReviewModal, setShowAiReviewModal] = React.useState(false)
-  const [aiReviewStage, setAiReviewStage] = React.useState('confirm')
-  const [isReviewingWithAi, setIsReviewingWithAi] = React.useState(false)
-  const [aiReviewItems, setAiReviewItems] = React.useState([])
-  const [aiReviewError, setAiReviewError] = React.useState('')
-  const [aiReviewCanRetry, setAiReviewCanRetry] = React.useState(true)
   const summaryAbortControllerRef = React.useRef(null)
-  const reviewAbortControllerRef = React.useRef(null)
   const chronologyDetailsRef = React.useRef(null)
 
   React.useEffect(() => {
@@ -164,7 +153,6 @@ const ErcoDetailsStep = ({
   React.useEffect(
     () => () => {
       summaryAbortControllerRef.current?.abort()
-      reviewAbortControllerRef.current?.abort()
     },
     [],
   )
@@ -215,22 +203,6 @@ const ErcoDetailsStep = ({
     setSummaryGenerationError('')
     setGeneratedSummaryDraft('')
   }, [isGeneratingSummary])
-
-  const openAiReviewModal = React.useCallback(() => {
-    setShowAiReviewModal(true)
-    setAiReviewStage('confirm')
-    setAiReviewError('')
-    setAiReviewCanRetry(true)
-    setAiReviewItems([])
-  }, [])
-
-  const closeAiReviewModal = React.useCallback(() => {
-    if (isReviewingWithAi) return
-    setShowAiReviewModal(false)
-    setAiReviewStage('confirm')
-    setAiReviewError('')
-    setAiReviewItems([])
-  }, [isReviewingWithAi])
 
   const handleGenerateSummary = React.useCallback(async () => {
     if (isGeneratingSummary) return
@@ -301,70 +273,6 @@ const ErcoDetailsStep = ({
     }
   }, [buildCurrentAiPayload, isGeneratingSummary, summaryGenerationMode])
 
-  const handleRunAiReview = React.useCallback(async () => {
-    if (isReviewingWithAi) return
-    setAiReviewError('')
-    setAiReviewStage('loading')
-    setIsReviewingWithAi(true)
-    const abortController = new AbortController()
-    reviewAbortControllerRef.current = abortController
-    let streamedText = ''
-    let doneText = ''
-    let doneEmbeddedResult = null
-    let streamError = null
-
-    try {
-      const payload = buildCurrentAiPayload()
-      const message = assertErcoAiMessageWithinLimit(buildErcoReviewPrompt(payload))
-      await streamAiHelperMessage(
-        {
-          thread_id: null,
-          new_thread: true,
-          conversation_purpose: 'embedded_helper',
-          embedded_task: ERCO_EMBEDDED_TASK.REVIEW_REPORT,
-          message,
-          page_context: buildErcoAiContext(),
-          response_language: 'en',
-        },
-        {
-          onDelta: (eventPayload) => {
-            streamedText += String(eventPayload?.text || '')
-          },
-          onDone: (eventPayload) => {
-            doneText = String(eventPayload?.message?.content || '')
-            doneEmbeddedResult =
-              eventPayload?.embedded_result || eventPayload?.message?.embedded_result || null
-          },
-          onError: (eventPayload) => {
-            streamError = normalizeAiHelperError(eventPayload, 'Ask AI could not check the report.')
-          },
-        },
-        { signal: abortController.signal },
-      )
-
-      if (streamError) throw streamError
-
-      const nextItems = parseAiReviewItems(doneEmbeddedResult || doneText || streamedText)
-      if (nextItems.length === 0) {
-        throw new Error('Ask AI returned an empty review.')
-      }
-
-      setAiReviewItems(nextItems)
-      setAiReviewStage('results')
-    } catch (error) {
-      setAiReviewCanRetry(isAiHelperErrorRetryable(error))
-      setAiReviewError(
-        safeAiHelperError(error, error?.message || 'Ask AI could not check the report.'),
-      )
-      setAiReviewStage('error')
-    } finally {
-      if (reviewAbortControllerRef.current === abortController) {
-        reviewAbortControllerRef.current = null
-      }
-      setIsReviewingWithAi(false)
-    }
-  }, [buildCurrentAiPayload, isReviewingWithAi])
-
   const applyGeneratedSummary = React.useCallback(() => {
     if (!generatedSummaryDraft) return
     setForm((prev) => ({ ...prev, summary: generatedSummaryDraft }))
@@ -412,17 +320,6 @@ const ErcoDetailsStep = ({
         onRetry={handleGenerateSummary}
         onUseGenerated={applyGeneratedSummary}
       />
-      <ErcoAiReviewModal
-        visible={showAiReviewModal}
-        stage={aiReviewStage}
-        items={aiReviewItems}
-        errorMessage={aiReviewError}
-        canRetry={aiReviewCanRetry}
-        onClose={closeAiReviewModal}
-        onRun={handleRunAiReview}
-        onRetry={handleRunAiReview}
-      />
-
       <TypeManagerModal
         visible={titleManager.showAddTitleModal}
         mobileDrawer
@@ -487,13 +384,12 @@ const ErcoDetailsStep = ({
         updateIncidentTitleField={updateIncidentTitleField}
       />
 
-      <details
+      <DisclosureCard
         ref={chronologyDetailsRef}
-        className="rounded-3 border bg-body p-3"
+        summary={<span className="fw-semibold">Chronology</span>}
         data-erco-field="chronology"
       >
-        <summary className="fw-semibold">Chronology</summary>
-        <div className="mt-3">
+        <div>
           <ChronologySection
             fieldError={fieldErrors.chronology}
             showChronologyStarter={showChronologyStarter}
@@ -529,7 +425,7 @@ const ErcoDetailsStep = ({
             onCommitRowModal={commitRowModal}
           />
         </div>
-      </details>
+      </DisclosureCard>
 
       <IncidentSummaryTextarea
         value={form.summary}
@@ -537,29 +433,20 @@ const ErcoDetailsStep = ({
         error={fieldErrors.summary}
         onChange={(e) => setForm((p) => ({ ...p, summary: e.target.value }))}
         onGenerate={openSummaryGenerationModal}
-        onReview={openAiReviewModal}
         isGenerating={isGeneratingSummary}
-        isReviewing={isReviewingWithAi}
       />
 
       {showActions ? (
         isMobile ? (
-          <ReportMobileActionGroup
-            onSaveDraft={onSaveDraft}
-            onPrimary={onContinue}
-            saveLabel={saveLabel}
-            statusMessage={draftStatus}
-          />
+          <ReportMobileActionGroup onPrimary={onContinue} isSaving={isSaving} />
         ) : (
           <DetailsStepActions
             onBack={onBack}
             onClear={onClear}
-            onSaveDraft={onSaveDraft}
-            saveLabel={saveLabel}
             primaryLabel="Continue"
             primaryType="button"
             onPrimary={onContinue}
-            statusMessage={draftStatus}
+            isSaving={isSaving}
           />
         )
       ) : null}

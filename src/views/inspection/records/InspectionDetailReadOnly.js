@@ -50,21 +50,22 @@ export const DetailEvidenceBlock = ({
   hiddenDescriptionValues = [],
 }) => {
   const visiblePhotos = Array.isArray(photos) ? photos.filter(Boolean) : []
+  const duplicateDescriptionValues = [title, remarks, ...hiddenDescriptionValues]
   if (!detailText(remarks) && visiblePhotos.length === 0) return null
   return (
     <div className="inspection-readonly-evidence d-grid gap-2">
       {detailText(title) ? (
         <div className="small fw-semibold text-body-secondary">{title}</div>
       ) : null}
-      {detailText(remarks) ? <div style={{ whiteSpace: 'pre-wrap' }}>{remarks}</div> : null}
       {visiblePhotos.length > 0 ? (
         <PhotoGallery
           photos={visiblePhotos}
           readOnly
           emptyMessage=""
-          hiddenDescriptionValues={hiddenDescriptionValues}
+          hiddenDescriptionValues={duplicateDescriptionValues}
         />
       ) : null}
+      {detailText(remarks) ? <div style={{ whiteSpace: 'pre-wrap' }}>{remarks}</div> : null}
     </div>
   )
 }

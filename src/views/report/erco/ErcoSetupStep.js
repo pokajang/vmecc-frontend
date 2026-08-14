@@ -49,7 +49,7 @@ const getFirstIncompleteSetupGroup = (form) => {
   if (normalizeErcoLocationList(form?.location).length === 0) return 'area'
   const hasIncidentDate = Boolean(String(form?.incidentDate || '').trim())
   const hasIncidentTime = Boolean(String(form?.incidentTime || '').trim())
-  if (!hasIncidentDate && !hasIncidentTime) return 'area'
+  if (!hasIncidentDate && !hasIncidentTime) return 'datetime'
   if (!hasIncidentDate || !hasIncidentTime) return 'datetime'
   return ''
 }
@@ -57,6 +57,7 @@ const getFirstIncompleteSetupGroup = (form) => {
 const getInitialMobileSetupGroup = (form) => {
   const firstIncomplete = getFirstIncompleteSetupGroup(form)
   const rememberedGroup = readMobileSetupGroupHint()
+  if (!firstIncomplete) return ''
   if (!rememberedGroup) return firstIncomplete
   if (firstIncomplete === 'incident' || firstIncomplete === 'weather') return firstIncomplete
   if (firstIncomplete === 'area') return 'area'
@@ -65,7 +66,7 @@ const getInitialMobileSetupGroup = (form) => {
       ? rememberedGroup
       : 'datetime'
   }
-  return rememberedGroup
+  return ''
 }
 
 const ErcoSetupStep = ({
@@ -76,11 +77,9 @@ const ErcoSetupStep = ({
   setSetupFieldErrors,
   datePresetOptions,
   pushToast,
-  onSaveDraft,
   onContinue,
-  saveLabel = 'Save Draft',
-  draftStatus = '',
   showActions = true,
+  isSaving = false,
 }) => {
   const isMobile = useReportIsMobile()
   const [deleteTarget, setDeleteTarget] = useState(null)
@@ -257,6 +256,11 @@ const ErcoSetupStep = ({
       : !completion[group] || desktopEditGroup === group || setupGroupHasError(group)
   const setupGroupClassName = (group, gap = 2) =>
     `d-grid gap-${gap}${isMobile && !shouldShowSetupEditor(group) ? ' d-none' : ''}`
+  const isSetupComplete = Object.values(completion).every(Boolean)
+  const isSetupEditorOpen = isMobile
+    ? Boolean(effectiveMobileGroup)
+    : ['incident', 'weather', 'area', 'datetime'].some((group) => shouldShowSetupEditor(group))
+  const shouldShowWorkflowActions = showActions && isSetupComplete && !isSetupEditorOpen
 
   const handleContinueClick = () => {
     if (isMobile) {
@@ -863,22 +867,15 @@ const ErcoSetupStep = ({
           ) : null}
         </div>
 
-        {showActions ? (
+        {shouldShowWorkflowActions ? (
           isMobile ? (
-            <ReportMobileActionGroup
-              onSaveDraft={onSaveDraft}
-              onPrimary={handleContinueClick}
-              saveLabel={saveLabel}
-              statusMessage={draftStatus}
-            />
+            <ReportMobileActionGroup onPrimary={handleContinueClick} isSaving={isSaving} />
           ) : (
             <DetailsStepActions
-              onSaveDraft={onSaveDraft}
-              saveLabel={saveLabel}
               primaryLabel="Continue"
               primaryType="button"
               onPrimary={handleContinueClick}
-              statusMessage={draftStatus}
+              isSaving={isSaving}
             />
           )
         ) : null}

@@ -2,6 +2,7 @@ import React from 'react'
 import { CButton, CFormInput } from '@coreui/react'
 import { ChevronDown, ChevronUp, ClipboardCheck } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
+import DisclosureCard from 'src/components/DisclosureCard'
 import MobileChoiceList from 'src/components/report-workflow/MobileChoiceList'
 import ResponsiveChoiceSelector from 'src/components/report-workflow/ResponsiveChoiceSelector'
 import TypeManagerModal from 'src/components/report-workflow/TypeManagerModal'
@@ -301,7 +302,7 @@ const PostIncidentAnalysisSection = ({
     }
   }
 
-  const renderCardSection = (key) => {
+  const renderCardSection = (key, { showHeading = true } = {}) => {
     const meta = SECTION_META[key]
     const selectedRows = Array.isArray(section[key]) ? section[key] : []
     const options = buildVisibleOptions(key)
@@ -314,8 +315,10 @@ const PostIncidentAnalysisSection = ({
         className="d-grid gap-2"
         data-erco-field={key === 'strengths' ? 'postIncidentStrengths' : undefined}
       >
-        <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
-          <div className="fw-semibold">{meta.title}</div>
+        <div
+          className={`d-flex flex-wrap align-items-center gap-2 ${showHeading ? 'justify-content-between' : 'justify-content-end'}`}
+        >
+          {showHeading ? <div className="fw-semibold">{meta.title}</div> : null}
           <CreateActionButton label={meta.addLabel} onClick={() => openAddModal(key)} />
         </div>
         <ResponsiveChoiceSelector
@@ -371,7 +374,7 @@ const PostIncidentAnalysisSection = ({
     )
   }
 
-  const renderPillSection = (key) => {
+  const renderPillSection = (key, { showHeading = true } = {}) => {
     const meta = SECTION_META[key]
     const selectedRows = Array.isArray(section[key]) ? section[key] : []
     const selectedSet = new Set(selectedRows.map(normalizeKey))
@@ -399,8 +402,10 @@ const PostIncidentAnalysisSection = ({
     if (isMobile) {
       return (
         <div key={key} className="d-grid gap-2">
-          <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <div className="fw-semibold">{meta.title}</div>
+          <div
+            className={`d-flex flex-wrap align-items-center gap-2 ${showHeading ? 'justify-content-between' : 'justify-content-end'}`}
+          >
+            {showHeading ? <div className="fw-semibold">{meta.title}</div> : null}
             <CreateActionButton label={meta.addLabel} onClick={() => openAddModal(key)} />
           </div>
           <MobileChoiceList
@@ -426,8 +431,10 @@ const PostIncidentAnalysisSection = ({
 
     return (
       <div key={key} className="d-grid gap-2">
-        <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
-          <div className="fw-semibold">{meta.title}</div>
+        <div
+          className={`d-flex flex-wrap align-items-center gap-2 ${showHeading ? 'justify-content-between' : 'justify-content-end'}`}
+        >
+          {showHeading ? <div className="fw-semibold">{meta.title}</div> : null}
           <CreateActionButton label={meta.addLabel} onClick={() => openAddModal(key)} />
         </div>
         <div className="d-flex flex-wrap gap-2">
@@ -446,8 +453,8 @@ const PostIncidentAnalysisSection = ({
                         color: '#fff',
                       }
                     : {
-                        backgroundColor: 'transparent',
-                        border: '1px solid var(--cui-border-color, #d8dbe0)',
+                        backgroundColor: 'var(--vmecc-action-neutral-bg)',
+                        border: '1px solid transparent',
                         color: 'var(--cui-body-color)',
                       }
                 }
@@ -461,7 +468,10 @@ const PostIncidentAnalysisSection = ({
             <button
               type="button"
               className="btn btn-sm rounded-pill px-3 py-1 d-inline-flex align-items-center gap-1 text-primary"
-              style={{ border: '1px dashed rgba(0,126,122,0.5)', backgroundColor: 'transparent' }}
+              style={{
+                border: '1px solid transparent',
+                backgroundColor: 'var(--vmecc-action-neutral-bg)',
+              }}
               onClick={() => setShowAllBySection((prev) => ({ ...prev, [key]: true }))}
             >
               <ChevronDown size={12} />
@@ -472,7 +482,10 @@ const PostIncidentAnalysisSection = ({
             <button
               type="button"
               className="btn btn-sm rounded-pill px-3 py-1 d-inline-flex align-items-center gap-1 text-primary"
-              style={{ border: '1px dashed rgba(0,126,122,0.5)', backgroundColor: 'transparent' }}
+              style={{
+                border: '1px solid transparent',
+                backgroundColor: 'var(--vmecc-action-neutral-bg)',
+              }}
               onClick={() => setShowAllBySection((prev) => ({ ...prev, [key]: false }))}
             >
               <ChevronUp size={12} />
@@ -484,7 +497,7 @@ const PostIncidentAnalysisSection = ({
     )
   }
 
-  const renderPhotosSection = () => (
+  const renderPhotosSection = ({ showHeading = true } = {}) => (
     <ReportPhotoSection
       moduleKey="erco"
       photos={section.photos}
@@ -494,6 +507,7 @@ const PostIncidentAnalysisSection = ({
       allowCapture={allowCapture}
       uploadLabel="Upload incident photos"
       title="Incident photographs"
+      showHeading={showHeading}
       required
       error={fieldErrors.postIncidentPhotos}
       descriptionMaxLength={2000}
@@ -503,9 +517,9 @@ const PostIncidentAnalysisSection = ({
   )
 
   const renderMobileSectionBody = (key) => {
-    if (key === 'resourcesMobilised') return renderPillSection(key)
-    if (key === 'photos') return renderPhotosSection()
-    return renderCardSection(key)
+    if (key === 'resourcesMobilised') return renderPillSection(key, { showHeading: false })
+    if (key === 'photos') return renderPhotosSection({ showHeading: false })
+    return renderCardSection(key, { showHeading: false })
   }
 
   const renderMobileAccordionSection = (key) => {
@@ -513,28 +527,24 @@ const PostIncidentAnalysisSection = ({
     const count = getSelectedCount(key)
     const countLabel =
       key === 'photos' ? `${count} photo${count === 1 ? '' : 's'}` : `${count} selected`
-    const ToggleIcon = isOpen ? ChevronUp : ChevronDown
-
     return (
-      <section key={key} className="erco-analysis-mobile-section">
-        <button
-          type="button"
-          className="erco-analysis-mobile-section__header"
-          aria-expanded={isOpen}
-          onClick={() => setOpenMobileSection(key)}
-        >
-          <span className="erco-analysis-mobile-section__title">
-            {MOBILE_SECTION_LABELS[key] || SECTION_META[key]?.title || key}
-          </span>
-          <span className="erco-analysis-mobile-section__meta">
-            {countLabel}
-            <ToggleIcon size={15} />
-          </span>
-        </button>
-        {isOpen ? (
-          <div className="erco-analysis-mobile-section__body">{renderMobileSectionBody(key)}</div>
-        ) : null}
-      </section>
+      <DisclosureCard
+        key={key}
+        className="erco-analysis-mobile-section"
+        open={isOpen}
+        onToggle={(event) => setOpenMobileSection(event.currentTarget.open ? key : '')}
+        summary={
+          <div className="erco-analysis-mobile-section__header">
+            <span className="erco-analysis-mobile-section__title">
+              {MOBILE_SECTION_LABELS[key] || SECTION_META[key]?.title || key}
+            </span>
+            <span className="erco-analysis-mobile-section__meta">{countLabel}</span>
+          </div>
+        }
+        bodyClassName="erco-analysis-mobile-section__body"
+      >
+        {renderMobileSectionBody(key)}
+      </DisclosureCard>
     )
   }
 

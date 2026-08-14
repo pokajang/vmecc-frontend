@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import WorkflowEditStateBanner from 'src/components/report-workflow/WorkflowEditStateBanner'
+import WorkflowInlineFeedback from 'src/components/report-workflow/WorkflowInlineFeedback'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { loadReportDraftRow, saveReportDraft } from '../reportStorage'
 import useReportDraft from '../hooks/useReportDraft'
@@ -29,20 +30,15 @@ import {
 
 const signature = (form) => {
   const value = toSerializableDrillForm(form)
+  const content = { ...value }
+  delete content.workflowSection
   return JSON.stringify({
-    ...value,
+    ...content,
     exerciseObjectives: value.exerciseObjectives.map(({ text }) => ({ text })),
     erpReferences: value.erpReferences.map(({ annexNumber, title }) => ({ annexNumber, title })),
     chronology: value.chronology.map(({ time, action }) => ({ time, action })),
   })
 }
-const SAVE_MESSAGES = {
-  idle: '',
-  dirty: 'Unsaved changes',
-  saving: 'Saving draft...',
-  saved: 'Draft saved',
-}
-
 const DrillForm = ({
   user,
   reportTypeSlug,
@@ -145,7 +141,6 @@ const DrillForm = ({
     .trim()
     .toLowerCase()
   const activeSection = DRILL_NEW_SECTIONS.includes(normalizedSection) ? normalizedSection : 'setup'
-  const saveLabel = editingRecord ? 'Save Update Draft' : 'Save Draft'
 
   useEffect(() => {
     resetReportViewport()
@@ -186,6 +181,7 @@ const DrillForm = ({
       setSaveState('saved')
       setFormHydrationVersion((prev) => prev + 1)
       onDirtyChange(false)
+      navigateToSection(normalized.workflowSection, true)
     },
   })
 
@@ -218,13 +214,13 @@ const DrillForm = ({
     onDirtyChange(isDirty)
   }, [isDirty, onDirtyChange])
 
-  const saveDraft = async ({ silentSuccess = false } = {}) => {
+  const saveDraft = async ({ silentSuccess = false, section = activeSection } = {}) => {
     if (saveLockRef.current) {
       setBlockerMessage('A draft save is still in progress. Wait for it to finish and retry.')
       return false
     }
     saveLockRef.current = true
-    const snapshot = toSerializableDrillForm(formRef.current)
+    const snapshot = toSerializableDrillForm({ ...formRef.current, workflowSection: section })
     const snapshotSignature = signature(snapshot)
     setSaveState('saving')
     setBlockerMessage('')
@@ -253,7 +249,7 @@ const DrillForm = ({
       saveLockRef.current = false
       setSaveState('failed')
       setBlockerMessage(
-        'Draft could not be saved to the server. Check your connection, then use Save Draft to retry.',
+        'Draft could not be saved to the server. Check your connection, then retry.',
       )
       onDirtyChange(true)
       return false
@@ -268,6 +264,12 @@ const DrillForm = ({
     if (!silentSuccess) pushToast('Draft saved.', { title: 'Draft saved', color: 'success' })
     saveLockRef.current = false
     onDraftSaved?.()
+    if (changedDuringSave) {
+      setBlockerMessage(
+        'New changes were made while saving. Continue again to save the latest values.',
+      )
+      return false
+    }
     return true
   }
 
@@ -292,13 +294,14 @@ const DrillForm = ({
 
   const continueTo = async (validator, nextSection, message, errorTarget) => {
     if (!validateStage(validator, message, errorTarget)) return
-    const saved = await saveDraft({ silentSuccess: true })
+    const saved = await saveDraft({ silentSuccess: true, section: nextSection })
     if (!saved) return
     navigateToSection(nextSection)
   }
 
-  const navigateWithDraft = (section) => {
-    void saveDraft({ silentSuccess: true })
+  const navigateWithDraft = async (section) => {
+    const saved = await saveDraft({ silentSuccess: true, section })
+    if (!saved) return
     navigateToSection(section)
   }
 
@@ -319,7 +322,7 @@ const DrillForm = ({
       window.setTimeout(scrollToFirstError, 0)
       return
     }
-    const draftSaved = await saveDraft({ silentSuccess: true })
+    const draftSaved = await saveDraft({ silentSuccess: true, section: 'analysis' })
     if (!draftSaved) return
     const nextRecord = buildDrillRecord({
       form: formRef.current,
@@ -363,17 +366,7 @@ const DrillForm = ({
     setForm,
     fieldErrors,
     setFieldErrors,
-    onSaveDraft: saveDraft,
-    saveLabel,
-    draftStatus:
-      saveState === 'saving'
-        ? SAVE_MESSAGES.saving
-        : isDirty
-          ? SAVE_MESSAGES.dirty
-          : lastSavedSignature
-            ? SAVE_MESSAGES.saved
-            : SAVE_MESSAGES.idle,
-    blockerMessage,
+    blockerMessage: saveState === 'failed' ? '' : blockerMessage,
     isSaving: saveState === 'saving',
   }
 
@@ -392,6 +385,13 @@ const DrillForm = ({
       ) : null}
 
       <form onSubmit={(event) => event.preventDefault()}>
+        {saveState === 'failed' ? (
+          <WorkflowInlineFeedback
+            kind="error"
+            message={blockerMessage}
+            action={{ label: 'Retry save', onAction: () => saveDraft() }}
+          />
+        ) : null}
         {activeSection === 'setup' ? (
           <DrillSetupStep
             key={`drill-setup-${formHydrationVersion}`}
@@ -403,18 +403,8 @@ const DrillForm = ({
             datePresetOptions={datePresetOptions}
             timePresetOptions={timePresetOptions}
             pushToast={pushToast}
-            onSaveDraft={saveDraft}
-            saveLabel={saveLabel}
-            draftStatus={
-              saveState === 'saving'
-                ? SAVE_MESSAGES.saving
-                : isDirty
-                  ? SAVE_MESSAGES.dirty
-                  : lastSavedSignature
-                    ? SAVE_MESSAGES.saved
-                    : SAVE_MESSAGES.idle
-            }
-            blockerMessage={blockerMessage}
+            blockerMessage={saveState === 'failed' ? '' : blockerMessage}
+            isSaving={saveState === 'saving'}
             onContinue={() =>
               void continueTo(
                 validateDrillSetup,

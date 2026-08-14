@@ -89,7 +89,7 @@ const InspectionStatusSegment = ({
                 data-selected={selectedOption || undefined}
                 onClick={() => onChange?.(option.value)}
               >
-                {option.label}
+                <span className="inspection-drawer-choice__surface">{option.label}</span>
               </CButton>
             )
           })}

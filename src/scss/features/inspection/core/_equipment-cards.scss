@@ -205,7 +205,6 @@
   .fire-extinguisher-drawer-location-meta__item {
     padding: 0.65rem 0;
     border: 0;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
     border-radius: 0;
     background: transparent;
   }
@@ -228,7 +227,6 @@
 }
 
 .inspection-check-card__collapsed-summary {
-  border-top: 1px solid var(--cui-border-color-translucent);
   padding: 0.55rem 0.85rem;
   color: var(--cui-secondary-color);
   font-size: var(--vmecc-text-meta);

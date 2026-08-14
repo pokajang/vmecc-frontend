@@ -227,7 +227,6 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
     requestDeleteRecord,
     requestReview,
     runGuardedAction,
-    saveReviewDraft,
     setDeleteTarget,
     setPendingAction,
     setShowDiscard,
@@ -430,10 +429,6 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
     [submittedRecordsInScope],
   )
   const recentMobileDrafts = useMemo(() => activeDraftRows.slice(0, 3), [activeDraftRows])
-  const handleSaveReviewDraft = useCallback(
-    () => saveReviewDraft({ reviewRecord, selectedEditingRecord }),
-    [reviewRecord, saveReviewDraft, selectedEditingRecord],
-  )
   const handleBackFromReview = useCallback(
     (requestedSection = '') =>
       backFromReview({
@@ -935,7 +930,6 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
             selectedRecord={reviewRecord}
             reviewActions={{
               onBackToEdit: handleBackFromReview,
-              onSaveDraft: handleSaveReviewDraft,
               onConfirm: handleConfirmReviewSubmit,
               confirmLabel: selectedEditingRecord ? 'Confirm Update' : 'Confirm Submit',
             }}

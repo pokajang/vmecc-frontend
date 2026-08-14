@@ -986,10 +986,10 @@ describe('AllExtinguishersSection', () => {
       })[0],
     )
     fireEvent.click(screen.getByRole('button', { name: 'View INS-02-772026' }))
-    fireEvent.click(screen.getByRole('button', { name: 'View photos' }))
+    fireEvent.click(screen.getByRole('button', { name: /View photo 1:/i }))
 
-    expect(screen.getByText('ADO-002 - Operational Condition photos')).toBeTruthy()
-    expect(screen.getByText('1 photo')).toBeTruthy()
+    expect(document.querySelector('.photo-lightbox')).toBeTruthy()
+    expect(screen.getByText('1 of 1')).toBeTruthy()
   })
 
   it('opens criterion photos directly from the historical records table', () => {

@@ -28,8 +28,6 @@ const Harness = ({ initialForm }) => {
       form={form}
       setForm={setForm}
       onBack={vi.fn()}
-      onReset={vi.fn()}
-      onSaveDraft={vi.fn()}
       onContinue={vi.fn()}
     />
   )

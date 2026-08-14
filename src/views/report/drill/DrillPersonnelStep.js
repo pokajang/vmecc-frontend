@@ -56,10 +56,7 @@ const DrillPersonnelStep = ({
   fieldErrors,
   setFieldErrors = () => {},
   onBack,
-  onSaveDraft,
   onContinue,
-  saveLabel,
-  draftStatus,
   blockerMessage,
   isSaving,
 }) => {
@@ -228,7 +225,7 @@ const DrillPersonnelStep = ({
                 {members.map((member) => (
                   <div
                     key={member.memberKey}
-                    className="d-grid d-md-flex align-items-md-center gap-2 border-top pt-3"
+                    className="d-grid d-md-flex align-items-md-center gap-2 pt-3"
                   >
                     <CFormCheck
                       id={`drill-member-${member.memberKey}`}
@@ -278,10 +275,7 @@ const DrillPersonnelStep = ({
             ))
           : null}
 
-        <section
-          className="rounded-3 border p-3 d-grid gap-3"
-          aria-labelledby="manual-person-title"
-        >
+        <section className="d-grid gap-3" aria-labelledby="manual-person-title">
           <div id="manual-person-title" className="fw-semibold">
             Add manual / external participant
           </div>
@@ -336,10 +330,7 @@ const DrillPersonnelStep = ({
 
       <DrillStageActions
         onBack={onBack}
-        onSaveDraft={onSaveDraft}
         onContinue={onContinue}
-        saveLabel={saveLabel}
-        statusMessage={draftStatus}
         blockerMessage={blockerMessage}
         isSaving={isSaving}
       />

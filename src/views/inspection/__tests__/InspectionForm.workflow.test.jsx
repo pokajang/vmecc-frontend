@@ -1275,19 +1275,19 @@ describe('InspectionForm workflow', () => {
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Extinguisher actions for ADO-001' }))
-    fireEvent.click(screen.getAllByRole('button', { name: 'Edit' }).at(-1))
+    fireEvent.click(screen.getAllByRole('button', { name: 'Edit equipment details' }).at(-1))
 
     await waitFor(() => {
       expect(
         screen.getByText(
-          'This item is shared across inspections. Changes will affect future inspections.',
+          'Updates the equipment register and future inspections. Current inspection answers will not be changed.',
         ),
       ).toBeTruthy()
     })
-    expect(screen.getByRole('button', { name: 'Save global change' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Save equipment details' })).toBeTruthy()
   })
 
-  it('confirms shared extinguisher delete with future-inspection warning copy', async () => {
+  it('does not expose shared extinguisher deletion from the conduct-inspection flow', () => {
     render(
       <InspectionForm
         {...baseProps}
@@ -1324,17 +1324,7 @@ describe('InspectionForm workflow', () => {
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Extinguisher actions for ADO-001' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
-
-    await waitFor(() => {
-      expect(screen.getByText('Delete Extinguisher')).toBeTruthy()
-    })
-    expect(
-      screen.getByText(
-        'Delete this shared extinguisher? This will remove it from all future inspections. Past inspection records will not be changed.',
-      ),
-    ).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Delete' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: /Delete/i })).toBeNull()
   })
 
   it('sends Fire Extinguisher defect rows to the Continue to Review flow', async () => {
@@ -2368,9 +2358,7 @@ describe('InspectionForm workflow', () => {
     fireEvent.click(screen.getByLabelText('Section actions for Regulator'))
     expect(await screen.findByRole('button', { name: 'Edit section' })).toBeTruthy()
     expect(await screen.findByRole('button', { name: 'Remove from this inspection' })).toBeTruthy()
-    expect(
-      await screen.findByRole('button', { name: 'Archive from future inspections' }),
-    ).toBeTruthy()
+    expect(await screen.findByRole('button', { name: 'Archive equipment' })).toBeTruthy()
   })
 
   it('shows custom SCBA item action menu for editing and deleting custom items', async () => {
@@ -2412,8 +2400,10 @@ describe('InspectionForm workflow', () => {
 
     await openScbaGroup('Regulator')
     fireEvent.click(screen.getByLabelText('Item actions for MSA R-01'))
-    expect((await screen.findAllByRole('button', { name: 'Edit' })).length).toBeGreaterThan(0)
-    expect(await screen.findByRole('button', { name: 'Delete' })).toBeTruthy()
+    expect(
+      (await screen.findAllByRole('button', { name: 'Edit equipment details' })).length,
+    ).toBeGreaterThan(0)
+    expect(await screen.findByRole('button', { name: 'Delete custom item' })).toBeTruthy()
   })
 
   it('collapses and expands SCBA sections from the search toolbar', async () => {
@@ -3183,11 +3173,11 @@ describe('InspectionForm workflow', () => {
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Equipment actions for Radio Tetra' }))
-    fireEvent.click(await screen.findByRole('button', { name: 'Edit' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit equipment details' }))
     await waitFor(() => expect(onEditEquipment).toHaveBeenCalledWith(row))
 
     fireEvent.click(screen.getByRole('button', { name: 'Equipment actions for Radio Tetra' }))
-    fireEvent.click(await screen.findByRole('button', { name: 'Delete' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete custom item' }))
     await waitFor(() => expect(onDeleteEquipment).toHaveBeenCalledWith(row))
   })
 
@@ -3236,7 +3226,7 @@ describe('InspectionForm workflow', () => {
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Equipment actions for Radio Tetra' }))
-    fireEvent.click(await screen.findByRole('button', { name: 'Delete' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete custom item' }))
     fireEvent.click(await screen.findByRole('button', { name: 'Delete' }))
 
     await waitFor(() => {

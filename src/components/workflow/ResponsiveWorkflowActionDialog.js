@@ -1,6 +1,7 @@
 import React from 'react'
 import { CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
+import ActionButtonGroup from 'src/components/ActionButtonGroup'
 import useMediaQuery from 'src/hooks/useMediaQuery'
 
 const ResponsiveWorkflowActionDialog = ({
@@ -26,8 +27,8 @@ const ResponsiveWorkflowActionDialog = ({
         closeDisabled={closeDisabled}
       >
         <div className="inspection-mobile-detail-drawer-body d-grid gap-3">{body}</div>
-        <div className="mobile-bottom-drawer__footer d-flex justify-content-end gap-2">
-          {footer}
+        <div className="mobile-bottom-drawer__footer">
+          <ActionButtonGroup ariaLabel={`${title} actions`}>{footer}</ActionButtonGroup>
         </div>
       </MobileBottomDrawer>
     )
@@ -45,7 +46,9 @@ const ResponsiveWorkflowActionDialog = ({
         <CModalTitle>{title}</CModalTitle>
       </CModalHeader>
       <CModalBody className="d-grid gap-3">{body}</CModalBody>
-      <CModalFooter>{footer}</CModalFooter>
+      <CModalFooter>
+        <ActionButtonGroup ariaLabel={`${title} actions`}>{footer}</ActionButtonGroup>
+      </CModalFooter>
     </CModal>
   )
 }

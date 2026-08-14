@@ -115,7 +115,7 @@ const InspectionQueueDetailsModal = ({
               <div className="small">Next retry: {row.nextRetryAt || '--'}</div>
               {row.lastError ? <div className="small text-danger">{row.lastError}</div> : null}
               {Array.isArray(row.history) && row.history.length > 0 ? (
-                <div className="border-top pt-2 mt-1">
+                <div className="pt-2 mt-1">
                   <div className="small fw-semibold mb-1">Queue history</div>
                   <div className="d-grid gap-1">
                     {row.history.slice(-6).map((event, index) => (

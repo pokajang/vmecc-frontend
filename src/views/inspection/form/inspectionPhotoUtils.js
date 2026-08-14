@@ -16,12 +16,10 @@ import {
 import { prepareInspectionPhotoFile } from './inspectionPhotoPreparation'
 
 const MAX_PHOTO_BYTES = 1.5 * 1024 * 1024
-export const INSPECTION_MAX_PHOTO_COUNT = 10
 const MAX_TOTAL_PHOTO_BYTES = 12 * 1024 * 1024
 
 const FAILURE_TITLES = {
   invalid_file: 'Invalid photo',
-  max_photo_count: 'Too many photos',
   no_photo_data: 'No photo data',
   processing_failed: 'Upload failed',
   compressed_too_large: 'Photo too large',
@@ -46,7 +44,6 @@ const FAILURE_TITLES = {
 
 const FAILURE_COLORS = {
   invalid_file: 'warning',
-  max_photo_count: 'warning',
   no_photo_data: 'warning',
   processing_failed: 'danger',
   compressed_too_large: 'warning',
@@ -72,7 +69,6 @@ const FAILURE_COLORS = {
 const DEFAULT_FAILURE_MESSAGES = {
   invalid_file: 'Selected file is not a valid image.',
   no_photo_data: 'Could not read photo bytes from file.',
-  max_photo_count: 'You can upload up to 10 photos per inspection report.',
   processing_failed: 'Unable to process selected photo.',
   compressed_too_large: 'Photo is too large even after compression.',
   total_size_exceeded: 'Total photo size must be 12 MB or smaller.',
@@ -100,7 +96,6 @@ const DEFAULT_FAILURE_MESSAGES = {
 }
 
 const CAMERA_MANUAL_FALLBACK_EXCLUDED_CODES = new Set([
-  'max_photo_count',
   'total_size_exceeded',
   'session_expired',
   'csrf_expired',
@@ -343,27 +338,6 @@ export const prepareInspectionPhotoUploads = async ({
     collectInspectionPhotos(form),
     Array.isArray(additionalCurrentPhotos) ? additionalCurrentPhotos : [],
   )
-  const remainingPhotoSlots = Math.max(0, INSPECTION_MAX_PHOTO_COUNT - allCurrentPhotos.length)
-  if (remainingPhotoSlots === 0) {
-    const failure = buildPhotoFailure(
-      'max_photo_count',
-      `You can upload up to ${INSPECTION_MAX_PHOTO_COUNT} photos.`,
-    )
-    notifyFailureOnce(failure)
-    photoFiles.forEach((file, index) =>
-      onItemState?.({
-        batchId,
-        clientUploadId: uploadItems[index]?.clientUploadId,
-        index,
-        count: photoFiles.length,
-        fileName: String(file?.name || ''),
-        status: 'failed',
-        failure,
-      }),
-    )
-    return null
-  }
-
   const existingTotalBytes = allCurrentPhotos.reduce(
     (sum, photo) => sum + getReportPhotoBytes(photo),
     0,
@@ -371,7 +345,7 @@ export const prepareInspectionPhotoUploads = async ({
   let remainingTotalBytes = Math.max(0, MAX_TOTAL_PHOTO_BYTES - existingTotalBytes)
   const normalizedDefaultDescription = String(defaultDescription || '').trim()
   const nextPhotos = []
-  const selectedRows = photoFiles.slice(0, remainingPhotoSlots).flatMap((file, index) => {
+  const selectedRows = photoFiles.flatMap((file, index) => {
     const failure = classifyValidationFailure(file, isCameraUpload)
     if (failure) {
       notifyFailureOnce(failure)
@@ -388,25 +362,6 @@ export const prepareInspectionPhotoUploads = async ({
     }
     return [{ file, uploadItem: uploadItems[index] }]
   })
-  if (photoFiles.length > remainingPhotoSlots) {
-    const failure = buildPhotoFailure(
-      'max_photo_count',
-      `You can upload up to ${INSPECTION_MAX_PHOTO_COUNT} photos.`,
-    )
-    notifyFailureOnce(failure)
-    photoFiles.slice(remainingPhotoSlots).forEach((file, offset) => {
-      const index = remainingPhotoSlots + offset
-      onItemState?.({
-        batchId,
-        clientUploadId: uploadItems[index]?.clientUploadId,
-        index,
-        count: photoFiles.length,
-        fileName: String(file?.name || ''),
-        status: 'failed',
-        failure,
-      })
-    })
-  }
   const uploaded = await uploadReportPhotosSequentially({
     files: selectedRows.map((row) => row.file),
     module: 'inspection',

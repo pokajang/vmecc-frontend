@@ -12,6 +12,13 @@
   padding: 0.85rem;
 }
 
+.inspection-evidence-editor {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
 .inspection-check-card-grid,
 .inspection-hydraulic-card-grid {
   display: grid;

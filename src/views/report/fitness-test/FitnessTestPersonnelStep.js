@@ -29,11 +29,9 @@ const FitnessTestPersonnelStep = ({
   fieldErrors,
   clearError,
   onBack,
-  onSaveDraft,
   onContinue,
-  saveLabel,
-  draftStatus,
   pushToast,
+  isSaving = false,
 }) => {
   const isMobile = useReportIsMobile()
   const [teams, setTeams] = useState([])
@@ -189,7 +187,7 @@ const FitnessTestPersonnelStep = ({
             {!loading && !loadError && teams.length ? (
               <CBadge color="success">Active roster included</CBadge>
             ) : null}
-            <CBadge color="light" className="border text-body-secondary">
+            <CBadge color="light" className="text-body-secondary">
               {selectedCount} included
             </CBadge>
             <CreateActionButton
@@ -284,15 +282,12 @@ const FitnessTestPersonnelStep = ({
           )
         })}
         {manualParticipants.length ? (
-          <section
-            className="rounded-3 border p-3 d-grid gap-2"
-            aria-labelledby="fitness-manual-participants-title"
-          >
+          <section className="d-grid gap-2" aria-labelledby="fitness-manual-participants-title">
             <div id="fitness-manual-participants-title" className="fw-semibold">
               Added participants
             </div>
             {manualParticipants.map((participant) => (
-              <div key={participant.id} className="fitness-manual-participant border-top pt-2">
+              <div key={participant.id} className="fitness-manual-participant pt-2">
                 <div className="fitness-manual-participant__copy">
                   <div className="fw-semibold">{participant.name}</div>
                   <div className="fitness-manual-participant__meta small text-body-secondary">
@@ -304,24 +299,20 @@ const FitnessTestPersonnelStep = ({
                 <CButton
                   type="button"
                   color="light"
+                  variant="ghost"
                   size="sm"
+                  className="border-0 bg-transparent"
                   aria-label={`Remove ${participant.name}`}
                   onClick={() => removeManualParticipant(participant)}
                 >
-                  <Trash2 size={15} className="text-danger" />
+                  <Trash2 size={18} className="text-danger" />
                 </CButton>
               </div>
             ))}
           </section>
         ) : null}
       </section>
-      <FitnessStageActions
-        onBack={onBack}
-        onSaveDraft={onSaveDraft}
-        onContinue={onContinue}
-        saveLabel={saveLabel}
-        statusMessage={draftStatus}
-      />
+      <FitnessStageActions onBack={onBack} onContinue={onContinue} isSaving={isSaving} />
       <FitnessParticipantModal
         visible={showAddParticipant}
         draft={manualDraft}

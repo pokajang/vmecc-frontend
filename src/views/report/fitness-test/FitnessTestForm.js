@@ -28,19 +28,17 @@ import {
 } from './validation'
 
 const signature = (form) => JSON.stringify(toSerializableFitnessTestForm(form))
+const contentSignature = (form) => {
+  const value = { ...toSerializableFitnessTestForm(form) }
+  delete value.workflowStep
+  return JSON.stringify(value)
+}
 const VALIDATORS = {
   period: validateFitnessPeriod,
   personnel: validateFitnessPersonnel,
   results: validateFitnessResults,
   signoff: validateFitnessSignoff,
 }
-const SAVE_MESSAGES = {
-  idle: '',
-  dirty: 'Unsaved changes',
-  saving: 'Saving draft...',
-  saved: 'Draft saved',
-}
-
 const FitnessTestForm = ({
   user,
   reportTypeSlug,
@@ -193,10 +191,17 @@ const FitnessTestForm = ({
       draftIdRef.current = String(saved?.draftId || draftIdRef.current).trim()
       draftVersionRef.current = Number(saved?.version || draftVersionRef.current) || 0
       setLastSavedSignature(signature(snapshot))
-      setSaveState('saved')
-      onDirtyChange(false)
+      const changedDuringSave = contentSignature(formRef.current) !== contentSignature(snapshot)
+      setSaveState(changedDuringSave ? 'dirty' : 'saved')
+      onDirtyChange(changedDuringSave)
       onDraftSaved?.()
       if (!silentSuccess) pushToast('Draft saved.', { title: 'Draft saved', color: 'success' })
+      if (changedDuringSave) {
+        setBlockerMessage(
+          'New changes were made while saving. Continue again to save the latest values.',
+        )
+        return false
+      }
       return true
     } catch {
       setSaveState('failed')
@@ -209,7 +214,7 @@ const FitnessTestForm = ({
     }
   }
 
-  const goToStep = (nextStep) => {
+  const goToStep = async (nextStep) => {
     const validation = VALIDATORS[activeStep](form)
     setFieldErrors(validation.errors)
     if (!validation.isValid) {
@@ -219,19 +224,22 @@ const FitnessTestForm = ({
       return
     }
     setBlockerMessage('')
-    setForm((current) => ({ ...current, workflowStep: nextStep }))
-    setActiveStep(nextStep)
-    navigateToStep(nextStep)
-    void saveDraft({ silentSuccess: true, step: nextStep })
-  }
-
-  const returnToStep = (nextStep) => {
+    const saved = await saveDraft({ silentSuccess: true, step: nextStep })
+    if (!saved) return
     setForm((current) => ({ ...current, workflowStep: nextStep }))
     setActiveStep(nextStep)
     navigateToStep(nextStep)
   }
 
-  const requestReview = () => {
+  const returnToStep = async (nextStep) => {
+    const saved = await saveDraft({ silentSuccess: true, step: nextStep })
+    if (!saved) return
+    setForm((current) => ({ ...current, workflowStep: nextStep }))
+    setActiveStep(nextStep)
+    navigateToStep(nextStep)
+  }
+
+  const requestReview = async () => {
     if (photoProcessing) {
       setBlockerMessage('Wait for the photo upload to finish before reviewing the report.')
       return
@@ -246,6 +254,8 @@ const FitnessTestForm = ({
       return
     }
     setBlockerMessage('')
+    const saved = await saveDraft({ silentSuccess: true, step: 'signoff' })
+    if (!saved) return
     const nextRecord = buildFitnessTestRecord({
       form,
       reportTypeSlug,
@@ -273,14 +283,10 @@ const FitnessTestForm = ({
     )
   }
 
-  const saveLabel = editingRecord ? 'Save Update Draft' : 'Save Draft'
   const common = {
     form,
     fieldErrors,
     clearError,
-    onSaveDraft: saveDraft,
-    saveLabel,
-    draftStatus: saveState === 'failed' ? '' : SAVE_MESSAGES[saveState],
     pushToast,
   }
 
@@ -289,7 +295,7 @@ const FitnessTestForm = ({
       className="fitness-test-form"
       onSubmit={(event) => {
         event.preventDefault()
-        requestReview()
+        void requestReview()
       }}
     >
       {editingRecord ? (
@@ -314,6 +320,7 @@ const FitnessTestForm = ({
         <FitnessTestSetupStep
           {...common}
           setForm={setForm}
+          isSaving={saveState === 'saving'}
           onContinue={() => goToStep('personnel')}
         />
       ) : null}
@@ -321,6 +328,7 @@ const FitnessTestForm = ({
         <FitnessTestPersonnelStep
           {...common}
           setForm={setForm}
+          isSaving={saveState === 'saving'}
           onBack={() => returnToStep('period')}
           onContinue={() => goToStep('results')}
         />
@@ -329,6 +337,7 @@ const FitnessTestForm = ({
         <FitnessTestFormStep
           {...common}
           setForm={setForm}
+          isSaving={saveState === 'saving'}
           updateParticipant={updateParticipant}
           applyShiftTestDate={applyShiftTestDate}
           incompleteOnly={showIncompleteResultsOnly}
@@ -349,6 +358,7 @@ const FitnessTestForm = ({
           {...common}
           user={user}
           setForm={setForm}
+          isSaving={saveState === 'saving'}
           setShiftAssessor={setShiftAssessor}
           onBack={() => returnToStep('results')}
           onReviewIncomplete={() => {

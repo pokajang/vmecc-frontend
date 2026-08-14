@@ -204,7 +204,6 @@ const buildRouteActions = (overrides = {}) => ({
   requestDeleteRecord: vi.fn(),
   requestReview: vi.fn(),
   runGuardedAction: (action) => action(),
-  saveReviewDraft: vi.fn(),
   setDeleteTarget: vi.fn(),
   setPendingAction: vi.fn(),
   setShowDiscard: vi.fn(),

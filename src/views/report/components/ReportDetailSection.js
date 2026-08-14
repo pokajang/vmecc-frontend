@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { CAlert, CBadge, CButton, CRow } from '@coreui/react'
 import FormActionGroup from 'src/components/FormActionGroup'
+import DisclosureCard from 'src/components/DisclosureCard'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import ReportPhotoGallery from 'src/components/report-workflow/ReportPhotoGallery'
 import RecordDetailActions from 'src/components/report-workflow/RecordDetailActions'
@@ -13,12 +14,9 @@ const ChronologyRows = ({ chronology }) => {
   return (
     <section className="inspection-form-section d-grid gap-3">
       <div className="fw-semibold text-muted">Chronology</div>
-      <div className="rounded-3 border overflow-hidden">
+      <div className="d-grid gap-2">
         {rows.map((row, i) => (
-          <div
-            key={i}
-            className={`d-flex gap-3 px-3 py-2${i < rows.length - 1 ? ' border-bottom' : ''}`}
-          >
+          <div key={i} className="d-flex gap-3 px-3 py-2">
             <div
               className="text-body-secondary flex-shrink-0 text-truncate"
               style={{ width: '52px' }}
@@ -68,7 +66,7 @@ const PostAnalysisRows = ({ analysis, fallbackPhotos = [], isDrill = false }) =>
           <div className="small text-body-secondary mb-1">Resources Mobilised</div>
           <div className="d-flex flex-wrap gap-2">
             {resources.map((r, i) => (
-              <CBadge key={i} color="light" className="border text-body-secondary fw-normal">
+              <CBadge key={i} color="light" className="text-body-secondary fw-normal">
                 {r}
               </CBadge>
             ))}
@@ -88,7 +86,10 @@ const PostAnalysisRows = ({ analysis, fallbackPhotos = [], isDrill = false }) =>
       {photos.length > 0 ? (
         <div>
           <div className="small text-body-secondary mb-2">Photographs</div>
-          <ReportPhotoGallery photos={photos} />
+          <ReportPhotoGallery
+            photos={photos}
+            hiddenDescriptionValues={[...strengths, ...resources, ...improvements]}
+          />
         </div>
       ) : null}
     </section>
@@ -142,6 +143,7 @@ const ReportDetailSection = ({
   const reportType = String(r.reportType || '').toLowerCase()
   const isErco = reportType === 'erco'
   const isDrill = reportType === 'drill'
+  const isFitness = reportType === 'fitness-test'
 
   const hasRespondingTeam = (isErco || isDrill) && r.respondingTeam
   const hasChronology =
@@ -202,12 +204,6 @@ const ReportDetailSection = ({
           label: 'Back to Edit',
           color: 'light',
           onClick: () => reviewActions?.onBackToEdit?.(),
-        },
-        {
-          key: 'draft',
-          label: 'Save Draft',
-          color: 'secondary',
-          onClick: () => reviewActions?.onSaveDraft?.(),
         },
         {
           key: 'confirm',
@@ -423,18 +419,6 @@ const ReportDetailSection = ({
       ) : null}
 
       <section className="inspection-form-section d-grid gap-3">
-        <div className="fw-semibold text-muted">Report Metadata</div>
-        <CRow className="g-3">
-          <DetailField label="Report ID">{r.displayId || '--'}</DetailField>
-          <DetailField label="Status">{renderStatusValue()}</DetailField>
-          <DetailField label="Submitted By">{submittedBy}</DetailField>
-          <DetailField label="Submitted At">{submittedAt}</DetailField>
-          <DetailField label="Action Owner">{r.actionOwner || '--'}</DetailField>
-          <DetailField label="Date / Time">{dateTime || '--'}</DetailField>
-        </CRow>
-      </section>
-
-      <section className="inspection-form-section d-grid gap-3">
         <div className="fw-semibold text-muted">Report Context</div>
         <CRow className="g-3">
           <DetailField label={typeLabel}>{r.incidentType || '--'}</DetailField>
@@ -511,6 +495,18 @@ const ReportDetailSection = ({
         </section>
       ) : null}
 
+      {isFitness && Array.isArray(r.photos) && r.photos.some((photo) => photo?.url) ? (
+        <section className="inspection-form-section d-grid gap-3">
+          <div className="fw-semibold text-muted">Fitness test photographs</div>
+          <ReportPhotoGallery
+            photos={r.photos}
+            title="Fitness test photographs"
+            contextLabel="Fitness test evidence"
+            hiddenDescriptionValues={[r.notes, r.remarks, r.summary, r.result]}
+          />
+        </section>
+      ) : null}
+
       {submittedEntry || reviewedEntry || approvedEntry || rejectedEntry ? (
         <section className="inspection-form-section d-grid gap-3">
           <div className="fw-semibold text-muted">Workflow Activity</div>
@@ -547,12 +543,9 @@ const ReportDetailSection = ({
         <section className="inspection-form-section d-grid gap-3">
           <div className="fw-semibold text-muted">Changed Fields</div>
           {Array.isArray(changeSummary) && changeSummary.length > 0 ? (
-            <div className="rounded-3 border overflow-hidden">
+            <div className="d-grid gap-2">
               {changeSummary.map((entry, index) => (
-                <div
-                  key={`${entry.label}-${index}`}
-                  className={`px-3 py-2 ${index < changeSummary.length - 1 ? 'border-bottom' : ''}`}
-                >
+                <div key={`${entry.label}-${index}`} className="px-3 py-2">
                   <div className="small text-body-secondary">{entry.label}</div>
                   <div className="small">
                     <span className="text-body-secondary">From:</span> {entry.before || '--'}
@@ -582,6 +575,27 @@ const ReportDetailSection = ({
           isDrill={isDrill}
         />
       ) : null}
+
+      <DisclosureCard
+        className="report-detail-metadata-disclosure"
+        summary={
+          <div>
+            <div className="fw-semibold">Report information</div>
+            <div className="small text-body-secondary">
+              {[r.displayId, submittedAt !== '--' ? submittedAt : ''].filter(Boolean).join(' · ')}
+            </div>
+          </div>
+        }
+      >
+        <CRow className="g-3">
+          <DetailField label="Report ID">{r.displayId || '--'}</DetailField>
+          <DetailField label="Status">{renderStatusValue()}</DetailField>
+          <DetailField label="Submitted By">{submittedBy}</DetailField>
+          <DetailField label="Submitted At">{submittedAt}</DetailField>
+          <DetailField label="Action Owner">{r.actionOwner || '--'}</DetailField>
+          <DetailField label="Date / Time">{dateTime || '--'}</DetailField>
+        </CRow>
+      </DisclosureCard>
     </div>
   )
 

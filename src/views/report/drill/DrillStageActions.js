@@ -3,24 +3,19 @@ import WorkflowStageActions from 'src/components/report-workflow/WorkflowStageAc
 
 const DrillStageActions = ({
   onBack,
-  onSaveDraft,
   onContinue,
-  saveLabel = 'Save Draft',
   continueLabel = 'Continue',
-  statusMessage = '',
   blockerMessage = '',
   continueType = 'button',
   isSaving = false,
 }) => (
   <WorkflowStageActions
     className="mb-4"
+    mobileLayout="stacked-primary-first"
     onBack={onBack}
-    onSaveDraft={onSaveDraft}
     onPrimary={onContinue}
-    saveLabel={saveLabel}
     primaryLabel={continueLabel}
     primaryType={continueType}
-    statusMessage={statusMessage}
     blockerMessage={blockerMessage}
     isSaving={isSaving}
   />

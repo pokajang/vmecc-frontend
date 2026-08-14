@@ -154,7 +154,7 @@ describe('FitnessTestMobileHome', () => {
     fireEvent.click(recentCard)
     expect(props.onOpenRecord).toHaveBeenCalledWith(props.recentRecords[0])
 
-    const draftCard = screen.getByText('Continue Draft').closest('.border')
+    const draftCard = screen.getByText('Continue Draft').closest('.mobile-workflow-draft-card')
     fireEvent.click(within(draftCard).getByRole('button', { name: 'Delete draft' }))
     expect(props.onDeleteDraft).toHaveBeenCalledWith(props.draftRows[0])
   })

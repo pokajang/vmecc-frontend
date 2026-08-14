@@ -102,6 +102,7 @@ export const HseEditSection = (props) => {
             : '')
         }
         compactOnMobile
+        stageDrawerPhotos
         compactActionLabel="Add observation photo"
         drawerDescription="Attach at least one clear photo of the unsafe act or condition."
         emptyMessage="No observation photo attached."

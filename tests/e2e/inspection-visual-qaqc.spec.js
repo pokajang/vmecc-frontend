@@ -20,7 +20,7 @@ const json = (route, body) =>
 
 const installApiStubs = async (page) => {
   await installControlledApiRequestGuard(page, apiBaseUrl)
-  await page.route(`${apiBaseUrl}/**`, (route) => {
+  const handleApiRoute = (route) => {
     const path = new URL(route.request().url()).pathname.replace(/^\/api/, '')
 
     if (path === '/auth/session') {
@@ -44,7 +44,11 @@ const installApiStubs = async (page) => {
     }
 
     return json(route, { data: [], meta: {} })
-  })
+  }
+  const apiOrigins = new Set([apiBaseUrl, apiBaseUrl.replace('127.0.0.1', 'localhost')])
+  for (const origin of apiOrigins) {
+    await page.route(`${origin}/**`, handleApiRoute)
+  }
 }
 
 const expectNoHorizontalOverflow = async (locator) => {
@@ -117,6 +121,10 @@ const measureControlContrast = (element, selector) => {
       parentBackgroundColor: getComputedStyle(control.parentElement).backgroundColor,
       text: ratio(parseColor(style.color), background),
       border: ratio(parseColor(style.borderTopColor), parentBackground),
+      surface: ratio(background, parentBackground),
+      borderWidth: parseFloat(style.borderTopWidth),
+      radius: parseFloat(style.borderTopLeftRadius),
+      height: control.getBoundingClientRect().height,
     }
   })
 }
@@ -411,7 +419,15 @@ test('inspection matrix remains legible and overflow-safe across representative 
       `${theme}: ${JSON.stringify(contrasts)}`,
     ).toEqual([])
     expect(
-      contrasts.filter(({ border }) => border < 3),
+      contrasts.filter(({ borderWidth }) => borderWidth !== 0),
+      `${theme}: ${JSON.stringify(contrasts)}`,
+    ).toEqual([])
+    expect(
+      contrasts.filter(({ surface }) => surface <= 1.01),
+      `${theme}: ${JSON.stringify(contrasts)}`,
+    ).toEqual([])
+    expect(
+      contrasts.filter(({ radius, height }) => radius < height / 2),
       `${theme}: ${JSON.stringify(contrasts)}`,
     ).toEqual([])
   }

@@ -10,7 +10,9 @@ import {
   CModalTitle,
 } from '@coreui/react'
 import { Camera, Trash2 } from 'lucide-react'
+import MediaAddActionButton from 'src/components/MediaAddActionButton'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
+import EvidencePhotoGallery from 'src/components/media/EvidencePhotoGallery'
 import PhotoEditorGallery from 'src/components/report-workflow/PhotoEditorGallery'
 import {
   PhotoPreview,
@@ -22,6 +24,7 @@ import {
   appendInspectionText,
   INSPECTION_PHOTO_CAPTION_CHIPS,
 } from 'src/views/inspection/inspectionFormHelpers'
+import InspectionDrawerFooterAction from './patterns/InspectionDrawerFooterAction'
 import InspectionFieldError from './patterns/InspectionFieldError'
 
 export const FormFieldError = InspectionFieldError
@@ -90,6 +93,17 @@ export const PhotoGallery = ({
       )
       .filter(Boolean),
   )
+
+  if (readOnly) {
+    return (
+      <EvidencePhotoGallery
+        photos={visiblePhotos}
+        title={contextLabel}
+        contextLabel={contextLabel}
+        hiddenDescriptionValues={hiddenDescriptionValues}
+      />
+    )
+  }
 
   return (
     <div
@@ -185,7 +199,7 @@ export const InspectionPhotoActionRow = ({
   if (readOnly && count === 0) return null
 
   return (
-    <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+    <div className="inspection-photo-action-row d-flex align-items-center justify-content-between gap-2 flex-wrap">
       {count > 0 ? (
         <CButton
           type="button"
@@ -203,22 +217,22 @@ export const InspectionPhotoActionRow = ({
         <span className="small text-body-secondary">No photos added</span>
       )}
       {!readOnly ? (
-        <CButton
-          type="button"
-          color="secondary"
-          variant="outline"
-          size="sm"
-          className="inspection-compact-action-btn d-inline-flex align-items-center gap-1"
+        <MediaAddActionButton
+          label={addLabel}
+          className="inspection-compact-action-btn"
           onClick={onAddPhoto}
           disabled={!onAddPhoto}
-        >
-          <Camera size={13} aria-hidden="true" />
-          {addLabel}
-        </CButton>
+        />
       ) : null}
     </div>
   )
 }
+
+export const InspectionEvidenceEditor = ({ children, className = '', ...props }) => (
+  <div className={`inspection-evidence-editor d-grid gap-2 ${className}`.trim()} {...props}>
+    {children}
+  </div>
+)
 
 export const InspectionPhotoEvidenceSummary = ({
   photos,
@@ -329,12 +343,12 @@ const InspectionPhotoViewerModalContent = ({ viewer, onClose }) => {
   const footer =
     viewer?.readOnly === true ? null : (
       <div className="mobile-bottom-drawer__footer d-flex align-items-center justify-content-end gap-2">
-        <CButton type="button" color="secondary" variant="outline" onClick={onClose}>
+        <InspectionDrawerFooterAction type="button" onClick={onClose}>
           Cancel
-        </CButton>
-        <CButton type="button" color="primary" onClick={handleSave}>
+        </InspectionDrawerFooterAction>
+        <InspectionDrawerFooterAction type="button" intent="primary" onClick={handleSave}>
           Save
-        </CButton>
+        </InspectionDrawerFooterAction>
       </div>
     )
 

@@ -37,7 +37,6 @@ describe('FitnessTestFormStep', () => {
         clearError={vi.fn()}
         updateParticipant={updateParticipant}
         onBack={vi.fn()}
-        onSaveDraft={vi.fn()}
         onContinue={vi.fn()}
       />,
     )
@@ -80,7 +79,6 @@ describe('FitnessTestFormStep', () => {
         updateParticipant={updateParticipant}
         applyShiftTestDate={applyShiftTestDate}
         onBack={vi.fn()}
-        onSaveDraft={vi.fn()}
         onContinue={vi.fn()}
       />,
     )

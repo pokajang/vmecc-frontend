@@ -11,7 +11,6 @@ const mediaMocks = vi.hoisted(() => ({
 }))
 
 vi.mock('src/services/api/reportMediaApi', () => ({
-  REPORT_PHOTO_MAX_COUNT: 10,
   REPORT_PHOTO_MAX_TOTAL_BYTES: 12 * 1024 * 1024,
   deleteReportMedia: mediaMocks.remove,
   getReportPhotoBytes: (photo) => Number(photo?.sizeBytes || 0),
@@ -53,11 +52,14 @@ describe('ReportPhotoSection', () => {
       />,
     )
 
-    expect(screen.getByRole('button', { name: 'Upload photos' })).toBeTruthy()
+    const uploadButton = screen.getByRole('button', { name: 'Upload photos' })
+    expect(uploadButton.className).toContain('media-add-action')
+    expect(uploadButton.className).toContain('btn-link')
+    expect(uploadButton.className).not.toContain('btn-outline')
     expect(screen.getByLabelText('Upload erco report photos')).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Capture photo' })).toBeNull()
     expect(screen.queryByLabelText('Take erco report photo')).toBeNull()
-    expect(screen.getByText('Upload at least 1 photo. 0 of 10 uploaded.')).toBeTruthy()
+    expect(screen.getByText('Upload at least 1 photo. 0 uploaded.')).toBeTruthy()
     expect(screen.getByRole('alert').textContent).toContain(
       'Upload at least one incident photograph.',
     )

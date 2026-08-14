@@ -1,5 +1,6 @@
 import { getLocalDateInputValue } from 'src/utils/localDate'
 import { createReportSubmissionKey, uid } from '../utils'
+import { DRILL_NEW_SECTIONS } from './constants'
 
 export const DRILL_FORM_SCHEMA_VERSION = 2
 
@@ -140,6 +141,7 @@ export const createDefaultDrillForm = () => ({
     improvementOpportunities: [''],
     photos: [],
   },
+  workflowSection: 'setup',
 })
 
 export const normalizeDrillForm = (input = {}) => {
@@ -164,6 +166,9 @@ export const normalizeDrillForm = (input = {}) => {
     : Array.isArray(source.exercise_categories)
       ? source.exercise_categories
       : []
+  const workflowSection = DRILL_NEW_SECTIONS.includes(text(source.workflowSection))
+    ? text(source.workflowSection)
+    : 'setup'
 
   return {
     schemaVersion: DRILL_FORM_SCHEMA_VERSION,
@@ -188,6 +193,7 @@ export const normalizeDrillForm = (input = {}) => {
     respondingAttendance: normalizeAttendance(sourceAttendance),
     chronology: normalizeChronology(source.chronology),
     postIncidentAnalysis: normalizeAnalysis(source.postIncidentAnalysis, source.photos),
+    workflowSection,
   }
 }
 

@@ -77,13 +77,13 @@ test('high angle mobile drawer stages changes until save', async ({ page }) => {
     await drawer.getByRole('button', { name: 'Cancel', exact: true }).click()
 
     let discardDrawer = page.locator('.offcanvas.show').last()
-    await expect(discardDrawer.getByText('Discard changes?', { exact: true })).toBeVisible()
+    await expect(discardDrawer.getByText('Discard unsaved changes?', { exact: true })).toBeVisible()
     await discardDrawer.getByRole('button', { name: 'Keep editing', exact: true }).click()
     await expect(drawer.getByText('Unsaved changes', { exact: true })).toBeVisible()
 
     await drawer.getByRole('button', { name: 'Cancel', exact: true }).click()
     discardDrawer = page.locator('.offcanvas.show').last()
-    await discardDrawer.getByRole('button', { name: 'Discard', exact: true }).click()
+    await discardDrawer.getByRole('button', { name: 'Discard changes', exact: true }).click()
     await expect(page.locator('.offcanvas.show')).toHaveCount(0)
 
     await row.locator('.inspection-entity-card__toggle').click()

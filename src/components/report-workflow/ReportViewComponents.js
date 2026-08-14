@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { CCol, CRow } from '@coreui/react'
+import EvidencePhotoGallery from 'src/components/media/EvidencePhotoGallery'
 
 export const resolvePhotoLabel = ({ photo, index = 0, contextLabel = 'Evidence photo' } = {}) => {
   const description = String(photo?.description || '').trim()
@@ -25,7 +26,7 @@ export const DetailField = ({ label, children, xs = 12, md = 4, mobileLayout = '
 )
 
 export const SectionHeading = ({ children }) => (
-  <div className="fw-semibold text-muted border-bottom pb-2 mb-1">{children}</div>
+  <div className="fw-semibold text-muted mb-1">{children}</div>
 )
 
 export const ReportPhotoImage = ({
@@ -124,34 +125,14 @@ export const PhotoPreview = ({
 export const PhotosGrid = ({ photos }) => {
   if (!photos?.length) return null
   return (
-    <CRow className="g-2">
-      <CCol xs={12}>
-        <div className="fw-semibold text-muted mb-1">Uploaded Photos</div>
-      </CCol>
-      <CCol xs={12}>
-        <CRow className="g-3">
-          {photos.map((photo, i) => (
-            <CCol key={photo.id || i} xs={12} sm={6} md={4} lg={3}>
-              <div className="workflow-photo-grid__item d-grid gap-2 h-100">
-                <PhotoPreview
-                  photo={photo}
-                  alt={resolvePhotoLabel({
-                    photo,
-                    index: i,
-                    contextLabel: 'Resolution evidence photo',
-                  })}
-                />
-                {String(photo.description || '').trim() ? (
-                  <div className="small text-body-secondary" style={{ whiteSpace: 'pre-wrap' }}>
-                    {photo.description}
-                  </div>
-                ) : null}
-              </div>
-            </CCol>
-          ))}
-        </CRow>
-      </CCol>
-    </CRow>
+    <div className="d-grid gap-2">
+      <div className="fw-semibold text-muted">Uploaded Photos</div>
+      <EvidencePhotoGallery
+        photos={photos}
+        title="Uploaded photos"
+        contextLabel="Resolution evidence"
+      />
+    </div>
   )
 }
 

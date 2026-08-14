@@ -35,11 +35,9 @@ const DrillSetupStep = ({
   datePresetOptions,
   timePresetOptions,
   pushToast,
-  onSaveDraft,
   onContinue,
-  saveLabel = 'Save Draft',
-  draftStatus = '',
   blockerMessage = '',
+  isSaving = false,
 }) => {
   const isMobile = useReportIsMobile()
   const [isEditingType, setIsEditingType] = useState(() => !String(form.incidentType || '').trim())
@@ -155,13 +153,11 @@ const DrillSetupStep = ({
                 onEdit: openTypeEditor,
               }
             : null,
-          Array.isArray(form.exerciseCategories) &&
-          form.exerciseCategories.length > 0 &&
           !isEditingCategories
             ? {
                 key: 'categories',
                 label: 'Exercise Categories',
-                value: categorySummary,
+                value: categorySummary || 'None selected',
                 editLabel: 'Edit Exercise Categories',
                 onEdit: () => setIsEditingCategories(true),
               }
@@ -198,6 +194,21 @@ const DrillSetupStep = ({
             : null,
         ].filter(Boolean)
       : []
+  const isSetupComplete = Boolean(
+    hasType &&
+      String(form.weather || '').trim() &&
+      String(form.location || '').trim() &&
+      String(form.reportDate || '').trim() &&
+      String(form.reportTime || '').trim(),
+  )
+  const isSetupEditorOpen =
+    isMobile &&
+    (showTypePicker ||
+      isEditingCategories ||
+      showEnvironmentPicker ||
+      showLocationPicker ||
+      showDateTimePicker)
+  const shouldShowWorkflowActions = isSetupComplete && !isSetupEditorOpen
 
   return (
     <div className="mb-3 d-grid gap-4" data-testid="drill-report-setup-ready">
@@ -448,13 +459,11 @@ const DrillSetupStep = ({
         </div>
         {!isMobile || hasType ? (
           <>
-            {Array.isArray(form.exerciseCategories) &&
-            form.exerciseCategories.length > 0 &&
-            !isEditingCategories ? (
+            {!isEditingCategories ? (
               !isMobile ? (
                 <ReportSetupSummaryRow
                   label="Exercise Categories"
-                  value={categorySummary}
+                  value={categorySummary || 'None selected'}
                   showDesktop
                   onEdit={() => setIsEditingCategories(true)}
                   onReset={() => {
@@ -505,19 +514,17 @@ const DrillSetupStep = ({
                   ariaLabel="Exercise categories"
                   testIdPrefix="drill-category"
                 />
-                {Array.isArray(form.exerciseCategories) && form.exerciseCategories.length > 0 ? (
-                  <div className="report-setup-confirm-row">
-                    <CButton
-                      type="button"
-                      color="secondary"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsEditingCategories(false)}
-                    >
-                      Done
-                    </CButton>
-                  </div>
-                ) : null}
+                <div className="report-setup-confirm-row">
+                  <CButton
+                    type="button"
+                    color="secondary"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsEditingCategories(false)}
+                  >
+                    Done
+                  </CButton>
+                </div>
               </div>
             )}
             <div
@@ -730,12 +737,9 @@ const DrillSetupStep = ({
                 {blockerMessage}
               </CAlert>
             ) : null}
-            <ReportSetupActions
-              onSaveDraft={onSaveDraft}
-              onContinue={onContinue}
-              saveLabel={saveLabel}
-              statusMessage={draftStatus}
-            />
+            {shouldShowWorkflowActions ? (
+              <ReportSetupActions onContinue={onContinue} isSaving={isSaving} />
+            ) : null}
           </>
         ) : null}
       </div>

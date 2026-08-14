@@ -27,7 +27,6 @@
   gap: var(--workflow-summary-row-gap);
   min-width: 0;
   padding: 0.625rem 0;
-  border-bottom: 1px solid var(--cui-border-color-translucent);
 }
 
 .workflow-summary__item--full {
@@ -79,7 +78,4 @@
     padding-block: 0;
   }
 
-  .workflow-summary__item:last-child {
-    border-bottom: 0;
-  }
 }

@@ -83,7 +83,7 @@ const ChronologySection = ({
                   aria-label="Reset events"
                   className="text-primary px-2 py-1 border-0 bg-transparent shadow-none d-inline-flex align-items-center gap-1"
                 >
-                  <RotateCcw size={14} className="d-sm-none" />
+                  <RotateCcw size={19} className="d-sm-none" />
                   <span className="d-none d-sm-inline">Reset Events</span>
                 </CButton>
               </span>
@@ -98,7 +98,7 @@ const ChronologySection = ({
                   aria-label="Undo"
                   className="text-secondary px-2 py-1 border-0 bg-transparent shadow-none d-inline-flex align-items-center gap-1"
                 >
-                  <Undo2 size={14} className="d-sm-none" />
+                  <Undo2 size={19} className="d-sm-none" />
                   <span className="d-none d-sm-inline">Undo</span>
                 </CButton>
               </CTooltip>
@@ -114,7 +114,7 @@ const ChronologySection = ({
                 aria-label="Add row"
                 className="d-md-none text-primary px-2 py-1 border-0 bg-transparent shadow-none d-inline-flex align-items-center gap-1"
               >
-                <Plus size={14} />
+                <Plus size={20} />
               </CButton>
             </CTooltip>
             {/* Desktop: adds inline */}
@@ -127,7 +127,7 @@ const ChronologySection = ({
                 aria-label="Add row"
                 className="d-none d-md-inline-flex text-primary px-2 py-1 border-0 bg-transparent shadow-none align-items-center gap-1"
               >
-                <Plus size={14} />
+                <Plus size={20} />
                 <span>Add Row</span>
               </CButton>
             </CTooltip>
@@ -146,14 +146,14 @@ const ChronologySection = ({
                 className="text-primary px-2 py-1 border-0 bg-transparent shadow-none d-flex align-items-center gap-1"
                 aria-label="Add advance row"
               >
-                <MoreHorizontal size={15} className="d-sm-none" />
+                <MoreHorizontal size={20} className="d-sm-none" />
                 <span className="d-none d-sm-inline">
                   {hasAnyPresetRows ? 'Add / Remove Advance Row' : 'Add Advance Row'}
                 </span>
                 {isAdvanceMenuOpen ? (
-                  <ChevronDown size={13} className="align-text-bottom" />
+                  <ChevronDown size={17} aria-hidden="true" />
                 ) : (
-                  <ChevronRight size={13} className="align-text-bottom" />
+                  <ChevronRight size={17} aria-hidden="true" />
                 )}
               </CDropdownToggle>
               <CDropdownMenu>
@@ -280,7 +280,7 @@ const ChronologySection = ({
                       className="erco-chronology-mobile-row__menu"
                       aria-label={`Chronology row ${idx + 1} actions`}
                     >
-                      <MoreHorizontal size={16} />
+                      <MoreHorizontal size={20} />
                     </CDropdownToggle>
                     <CDropdownMenu>
                       <CDropdownItem onClick={() => onOpenEditRowModal(row)}>

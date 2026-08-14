@@ -1022,10 +1022,8 @@ const FireExtinguisherScanner = ({
           {showFailureMessage ? <div>{failure.message}</div> : null}
         </CAlert>
       ) : null}
-      <div className="d-flex align-items-center gap-3 text-body-secondary small">
-        <div className="flex-grow-1 border-top" />
+      <div className="text-center text-body-secondary small">
         <span className="fw-semibold">OR</span>
-        <div className="flex-grow-1 border-top" />
       </div>
       <div>
         <div className="position-relative">

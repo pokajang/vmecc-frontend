@@ -25,7 +25,6 @@ const Harness = () => {
         fieldErrors={{}}
         clearError={vi.fn()}
         onBack={vi.fn()}
-        onSaveDraft={vi.fn()}
         onContinue={vi.fn()}
         pushToast={vi.fn()}
       />

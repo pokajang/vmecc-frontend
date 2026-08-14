@@ -6,14 +6,13 @@ const buildClassName = (...parts) => parts.filter(Boolean).join(' ')
 
 export const MOBILE_TYPE_TOGGLE_CARD_PROPS = {
   style: {
-    backgroundColor: 'var(--cui-light-bg-subtle, #f8f9fa)',
-    borderColor: 'var(--cui-border-color, #d8dbe0)',
-    borderStyle: 'dashed',
+    backgroundColor: 'transparent',
+    borderColor: 'transparent',
   },
   className: 'text-primary',
   iconContainerClassName: 'bg-transparent text-primary',
-  iconContainerSize: 20,
-  iconSize: 16,
+  iconContainerSize: 24,
+  iconSize: 19,
   titleClassName: 'fw-semibold text-primary',
   descriptionClassName: 'mb-0 mt-1 text-body-secondary',
 }

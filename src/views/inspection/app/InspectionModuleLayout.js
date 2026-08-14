@@ -183,7 +183,7 @@ const InspectionModuleLayout = ({
             <CButton
               type="button"
               color="link"
-              className="inspection-detail-drawer__close p-1 text-body-secondary"
+              className="inspection-detail-drawer__close ms-auto p-1 text-body-secondary"
               aria-label="Close inspection details"
               onClick={() => navigate(recordsReturnPath || reportBasePath)}
             >

@@ -35,7 +35,6 @@ const record = {
 describe('ReportReviewSection', () => {
   it('uses inspection review shell and action layout', () => {
     const onBackToEdit = vi.fn()
-    const onSaveDraft = vi.fn()
     const onConfirm = vi.fn()
 
     const { container } = render(
@@ -43,7 +42,6 @@ describe('ReportReviewSection', () => {
         selectedRecord={record}
         reviewActions={{
           onBackToEdit,
-          onSaveDraft,
           onConfirm,
           confirmLabel: 'Confirm Submit',
         }}
@@ -67,11 +65,8 @@ describe('ReportReviewSection', () => {
     expect(within(reviewPage).getByText('Alex - Responder (SC)')).toBeTruthy()
     expect(within(reviewPage).getByText('Post-Exercise Analysis')).toBeTruthy()
     expect(within(reviewPage).getByText('Chronology')).toBeTruthy()
-    expect(within(reviewPage).getAllByText('Save Draft').length).toBeGreaterThan(0)
+    expect(within(reviewPage).queryByText('Save Draft')).toBeNull()
     expect(within(reviewPage).getAllByText('Confirm Submit').length).toBeGreaterThan(0)
-
-    fireEvent.click(screen.getAllByText('Save Draft')[0])
-    expect(onSaveDraft).toHaveBeenCalledTimes(1)
 
     const chronologySection = within(reviewPage).getByText('Chronology').closest('section')
     fireEvent.click(within(chronologySection).getByRole('button', { name: 'Edit' }))

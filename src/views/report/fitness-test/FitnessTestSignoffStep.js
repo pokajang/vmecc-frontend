@@ -24,10 +24,8 @@ const FitnessTestSignoffStep = ({
   setShiftAssessor,
   onBack,
   onReviewIncomplete,
-  onSaveDraft,
-  saveLabel,
   submitLabel,
-  draftStatus,
+  isSaving = false,
 }) => {
   const summary = getFitnessCompletionSummary(form)
   const [staffOptions, setStaffOptions] = useState([])
@@ -174,7 +172,7 @@ const FitnessTestSignoffStep = ({
         </CRow>
       </section>
 
-      <section className="rounded-3 border p-3 d-grid gap-3">
+      <section className="d-grid gap-3">
         <div className="fw-semibold">Report signoff</div>
         <CRow className="g-3">
           <CCol xs={12} md={6}>
@@ -200,11 +198,9 @@ const FitnessTestSignoffStep = ({
 
       <FitnessStageActions
         onBack={onBack}
-        onSaveDraft={onSaveDraft}
-        saveLabel={saveLabel}
         continueLabel={submitLabel}
-        statusMessage={draftStatus}
         primaryType="submit"
+        isSaving={isSaving}
       />
     </div>
   )

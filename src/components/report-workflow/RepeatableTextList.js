@@ -10,6 +10,7 @@ const RepeatableTextList = ({
   maxLength,
   placeholder = '',
   addLabel = 'Add',
+  showHeading = true,
   onAdd,
   onChange,
   onRemove,
@@ -19,16 +20,24 @@ const RepeatableTextList = ({
   const nearLimit = Number.isFinite(maxRows) && safeRows.length >= maxRows - 1
 
   return (
-    <section className="workflow-repeatable-list" aria-labelledby={id}>
-      <div className="workflow-repeatable-list__header">
-        <div id={id} className="workflow-repeatable-list__title">
-          {label}
-          {nearLimit ? (
-            <span className="workflow-repeatable-list__count">
-              {safeRows.length}/{maxRows}
-            </span>
-          ) : null}
-        </div>
+    <section
+      className="workflow-repeatable-list"
+      aria-labelledby={showHeading ? id : undefined}
+      aria-label={showHeading ? undefined : label}
+    >
+      <div
+        className={`workflow-repeatable-list__header ${showHeading ? '' : 'justify-content-end'}`.trim()}
+      >
+        {showHeading ? (
+          <div id={id} className="workflow-repeatable-list__title">
+            {label}
+            {nearLimit ? (
+              <span className="workflow-repeatable-list__count">
+                {safeRows.length}/{maxRows}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
         <CButton type="button" color="light" size="sm" disabled={atLimit} onClick={onAdd}>
           <Plus size={14} aria-hidden="true" /> {addLabel}
         </CButton>

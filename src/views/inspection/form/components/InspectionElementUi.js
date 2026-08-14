@@ -2,9 +2,11 @@ import React from 'react'
 import { CButton, CCard, CCardBody, CCardHeader } from '@coreui/react'
 import { ChevronDown } from 'lucide-react'
 import RowActions from 'src/components/RowActions'
+import InspectionDrawerFooterAction from './patterns/InspectionDrawerFooterAction'
 
 export const buildInspectionElementActions = ({
   canReset = false,
+  hasInspectionAnswers = true,
   onReset,
   canEdit = false,
   onEdit,
@@ -15,27 +17,27 @@ export const buildInspectionElementActions = ({
   disabledReason = 'Save or cancel changes first.',
 } = {}) =>
   [
-    canReset && typeof onReset === 'function'
-      ? {
-          key: 'reset',
-          label: 'Reset check',
-          className: 'text-danger',
-          onClick: onReset,
-        }
-      : null,
     canEdit && typeof onEdit === 'function'
       ? {
           key: 'edit',
-          label: 'Edit',
+          label: 'Edit equipment details',
           disabled: disableManage,
           disabledReason: disableManage ? disabledReason : '',
           onClick: onEdit,
         }
       : null,
+    canReset && hasInspectionAnswers && typeof onReset === 'function'
+      ? {
+          key: 'reset',
+          label: 'Clear inspection answers',
+          className: 'text-danger',
+          onClick: onReset,
+        }
+      : null,
     canDelete && typeof onDelete === 'function'
       ? {
           key: 'delete',
-          label: 'Delete',
+          label: 'Delete custom item',
           className: 'text-danger',
           disabled: disableManage,
           disabledReason: disableManage ? disabledReason : '',
@@ -200,20 +202,18 @@ export const InspectionElementDrawerFooter = ({
     <div className="small text-body-secondary" aria-live="polite">
       {saving ? 'Saving...' : statusText || (dirty ? 'Unsaved changes' : 'No changes')}
     </div>
-    <div className="d-flex gap-2">
-      <CButton
-        type="button"
-        color="secondary"
-        variant="outline"
-        size="sm"
-        disabled={saving}
-        onClick={onCancel}
-      >
+    <div className="inspection-fire-extinguisher-drawer-footer__actions d-flex gap-2">
+      <InspectionDrawerFooterAction type="button" disabled={saving} onClick={onCancel}>
         Cancel
-      </CButton>
-      <CButton type="button" color="primary" size="sm" disabled={saving || !dirty} onClick={onSave}>
+      </InspectionDrawerFooterAction>
+      <InspectionDrawerFooterAction
+        type="button"
+        intent="primary"
+        disabled={saving || !dirty}
+        onClick={onSave}
+      >
         Save
-      </CButton>
+      </InspectionDrawerFooterAction>
     </div>
   </div>
 )

@@ -7,7 +7,6 @@ import {
   refreshCsrfToken,
 } from './httpClient'
 
-export const REPORT_PHOTO_MAX_COUNT = 10
 export const REPORT_PHOTO_MAX_BYTES = 1.5 * 1024 * 1024
 export const REPORT_PHOTO_MAX_TOTAL_BYTES = 12 * 1024 * 1024
 export const CAMERA_SOURCE_MAX_BYTES = 30 * 1024 * 1024

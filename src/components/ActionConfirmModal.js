@@ -1,5 +1,7 @@
 import React from 'react'
-import { CButton, CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
+import { CModal, CModalBody, CModalFooter, CModalHeader, CModalTitle } from '@coreui/react'
+import ActionButtonGroup from 'src/components/ActionButtonGroup'
+import AppButton from 'src/components/AppButton'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import useMediaQuery from 'src/hooks/useMediaQuery'
 
@@ -19,6 +21,9 @@ const ActionConfirmModal = ({
   onConfirm,
 }) => {
   const useMobileDrawer = useMediaQuery(mobileDrawerQuery)
+  const confirmIntent = ['primary', 'success', 'info', 'warning', 'danger'].includes(confirmColor)
+    ? confirmColor
+    : 'primary'
 
   const handleClose = () => {
     if (cancelDisabled) return
@@ -26,14 +31,19 @@ const ActionConfirmModal = ({
   }
 
   const actions = (
-    <>
-      <CButton color="secondary" variant="outline" onClick={handleClose} disabled={cancelDisabled}>
+    <ActionButtonGroup ariaLabel="Confirmation actions">
+      <AppButton intent="neutral" onClick={handleClose} disabled={cancelDisabled}>
         {cancelLabel}
-      </CButton>
-      <CButton color={confirmColor} onClick={onConfirm} disabled={confirmDisabled}>
+      </AppButton>
+      <AppButton
+        intent={confirmIntent}
+        presentation="solid"
+        onClick={onConfirm}
+        disabled={confirmDisabled}
+      >
         {confirmLabel}
-      </CButton>
-    </>
+      </AppButton>
+    </ActionButtonGroup>
   )
 
   if (mobileDrawer && useMobileDrawer) {
@@ -49,9 +59,7 @@ const ActionConfirmModal = ({
         <div className="action-confirm-modal__body d-grid">
           <div>{message}</div>
         </div>
-        <div className="mobile-bottom-drawer__footer d-flex align-items-center justify-content-end gap-2">
-          {actions}
-        </div>
+        <div className="mobile-bottom-drawer__footer">{actions}</div>
       </MobileBottomDrawer>
     )
   }

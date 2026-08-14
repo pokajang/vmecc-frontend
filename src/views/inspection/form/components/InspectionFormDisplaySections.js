@@ -13,6 +13,7 @@ import {
 } from '@coreui/react'
 import { Camera, MessageSquare, Pencil, Trash2, Upload } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
+import MediaAddActionButton from 'src/components/MediaAddActionButton'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import RowActions from 'src/components/RowActions'
 import useMediaQuery from 'src/hooks/useMediaQuery'
@@ -29,6 +30,7 @@ import {
   ChipRow,
   FormFieldError,
   EvidenceBlock,
+  InspectionEvidenceEditor,
   InspectionPhotoActionRow,
   InspectionPhotoEvidenceSummary,
   InspectionPhotoViewerModal,
@@ -41,11 +43,13 @@ import { FrtDailyInspectionChecks } from 'src/views/inspection/types/frt-daily/f
 import { HighAngleInspectionChecks } from './HighAngleInspectionChecks'
 import { HydraulicEquipmentChecks } from './HydraulicEquipmentChecks'
 import { ErAuxEquipmentChecks } from './ErAuxInspectionChecks'
+import InspectionDrawerFooterAction from './patterns/InspectionDrawerFooterAction'
 import { ScbaInspectionChecks } from './ScbaInspectionChecks'
 export {
   ChipButton,
   ChipRow,
   EvidenceBlock,
+  InspectionEvidenceEditor,
   ErAuxEquipmentChecks,
   FormFieldError,
   FrtDailyInspectionChecks,
@@ -336,15 +340,14 @@ export const InspectionGeneralEvidenceCard = ({
 
   const actions = (
     <div className="d-flex align-items-center gap-2">
-      <CreateActionButton
+      <MediaAddActionButton
         label={<span className="d-none d-sm-inline">Take photo</span>}
         ariaLabel="Take photo"
         icon={<Camera size={13} />}
-        importance="section-primary"
         className="inspection-take-photo-btn px-2 px-sm-2"
         onClick={onTakePhoto}
       />
-      <CreateActionButton
+      <MediaAddActionButton
         label={<span className="d-none d-sm-inline">Upload photo</span>}
         ariaLabel="Upload photo"
         icon={<Upload size={13} />}
@@ -356,31 +359,22 @@ export const InspectionGeneralEvidenceCard = ({
 
   const drawerActions = (
     <div className="inspection-general-evidence-drawer-actions d-flex flex-wrap align-items-center gap-2">
-      <CButton
-        type="button"
-        color="primary"
-        size="sm"
+      <MediaAddActionButton
+        label="Take photo"
+        icon={<Camera size={14} />}
         className="inspection-general-evidence-drawer-action d-inline-flex align-items-center justify-content-center gap-1"
         disabled={uploadsPending}
         onClick={() => (useStagedDrawer ? onTakePhoto?.(getDraftUploadOptions()) : onTakePhoto?.())}
-      >
-        <Camera size={14} aria-hidden="true" />
-        Take photo
-      </CButton>
-      <CButton
-        type="button"
-        color="secondary"
-        variant="outline"
-        size="sm"
+      />
+      <MediaAddActionButton
+        label="Upload photo"
+        icon={<Upload size={14} />}
         className="inspection-general-evidence-drawer-action d-inline-flex align-items-center justify-content-center gap-1"
         disabled={uploadsPending}
         onClick={() =>
           useStagedDrawer ? onUploadPhoto?.(getDraftUploadOptions()) : onUploadPhoto?.()
         }
-      >
-        <Upload size={14} aria-hidden="true" />
-        Upload photo
-      </CButton>
+      />
     </div>
   )
 
@@ -389,6 +383,7 @@ export const InspectionGeneralEvidenceCard = ({
       <PhotoGallery
         photos={photos}
         readOnly={readOnly}
+        hiddenDescriptionValues={readOnly ? [remarksText, remarksLabel] : []}
         presentation={showCompactMobile ? 'drawer-editor' : 'default'}
         onRemove={onRemovePhoto}
         onChangeDescription={onChangePhotoDescription}
@@ -487,39 +482,34 @@ export const InspectionGeneralEvidenceCard = ({
               <div className="inspection-general-evidence-drawer-footer__actions d-flex gap-2">
                 {useStagedDrawer ? (
                   <>
-                    <CButton
+                    <InspectionDrawerFooterAction
                       type="button"
-                      color="secondary"
-                      variant="outline"
-                      size="sm"
                       disabled={uploadsPending || !hasDraftChanges}
                       onClick={handleResetDraftPhotos}
                     >
                       Reset
-                    </CButton>
-                    <CButton
+                    </InspectionDrawerFooterAction>
+                    <InspectionDrawerFooterAction
                       type="button"
-                      color="primary"
-                      size="sm"
+                      intent="primary"
                       disabled={
                         uploadsPending || !hasDraftChanges || typeof onSavePhotos !== 'function'
                       }
                       onClick={handleSaveDraftPhotos}
                     >
                       Save photos
-                    </CButton>
+                    </InspectionDrawerFooterAction>
                   </>
                 ) : (
-                  <CButton
+                  <InspectionDrawerFooterAction
                     type="button"
-                    color="primary"
-                    size="sm"
+                    intent="primary"
                     className="inspection-general-evidence-drawer-done"
                     aria-label={`Done with ${title}`}
                     onClick={() => setDrawerOpen(false)}
                   >
                     Done
-                  </CButton>
+                  </InspectionDrawerFooterAction>
                 )}
               </div>
             </div>

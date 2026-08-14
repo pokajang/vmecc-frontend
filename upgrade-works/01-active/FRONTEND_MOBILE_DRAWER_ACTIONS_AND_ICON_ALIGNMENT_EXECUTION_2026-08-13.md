@@ -107,3 +107,21 @@ The change is presentation-only:
 ## 7. Verdict
 
 The requested drawer-pill and repo-wide icon-label alignment work is complete and passes its targeted functional, accessibility, visual and build gates. It is ready for review and inclusion in the next frontend commit, with the broader authenticated/full-matrix checks recorded as environment/time-limited rather than falsely reported as passed.
+
+## 8. Compact visual-surface refinement
+
+A subsequent mobile review found that the full 44px touch target was also being painted as the status pill. This made short choices look vertically heavy and made the short `Save` label appear almost circular.
+
+The shared implementation was refined as follows:
+
+- `InspectionStatusSegment` now separates the accessible button target from an inner compact visual surface.
+- The outer status control retains the 44px mobile hit area.
+- The visible choice pill is approximately 32px high with small semibold text and tighter spacing.
+- Selected, unselected, hover, disabled and focus treatments remain semantically distinct.
+- A shared `InspectionDrawerFooterAction` now gives drawer commit actions a 44px target around an approximately 34px visual surface.
+- Footer actions use a consistent minimum width so short labels such as `Save`, `Done` and `Add` remain visibly elongated.
+- Fire Extinguisher now consumes the same `InspectionElementDrawerFooter` as ER Auxiliary, FRT, High Angle, Hydraulic and SCBA.
+- The same compact footer action is used by inspection photo editing, general evidence, High Angle custom-record editing and the FRT add-item drawer.
+- More Actions rows, destructive confirmations, icon-only controls, Back navigation and main workflow CTAs remain excluded.
+
+No lint, test, Playwright or build command was run for this refinement, following the explicit instruction for this working pass. The earlier verification evidence in this document predates these latest visual-surface changes and must not be interpreted as verification of this addendum.

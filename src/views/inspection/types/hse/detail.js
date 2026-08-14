@@ -66,7 +66,10 @@ export const renderHseDetailFindingContent = (item = {}) => {
       <DetailValueBlock label="Immediate corrective action" value={normalized.hseImmediateAction} />
       <DetailEvidenceBlock
         photos={photos}
-        hiddenDescriptionValues={observations.map((observation) => observation.label)}
+        hiddenDescriptionValues={[
+          ...observations.flatMap((observation) => [observation.label, observation.value]),
+          normalized.hseImmediateAction,
+        ]}
       />
     </div>
   )

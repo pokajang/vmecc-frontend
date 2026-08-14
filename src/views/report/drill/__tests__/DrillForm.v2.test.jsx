@@ -283,15 +283,16 @@ describe('DrillForm V2 flow', () => {
     storageMocks.save.mockResolvedValue(false)
     renderForm()
 
-    const saveButtons = await screen.findAllByRole('button', { name: 'Save Draft' })
-    fireEvent.click(saveButtons[0])
+    const reviewButtons = await screen.findAllByRole('button', { name: 'Review & Submit' })
+    fireEvent.click(reviewButtons[0])
 
     expect(
       await screen.findByText(
-        'Draft could not be saved to the server. Check your connection, then use Save Draft to retry.',
+        'Draft could not be saved to the server. Check your connection, then retry.',
       ),
     ).toBeTruthy()
     expect(screen.getByRole('alert')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Retry save' })).toBeTruthy()
   })
 
   it('keeps newer edits dirty when an older draft snapshot finishes saving', async () => {
@@ -303,14 +304,13 @@ describe('DrillForm V2 flow', () => {
     )
     const onDirtyChange = vi.fn()
     renderForm({ onDirtyChange })
-    const saveButtons = await screen.findAllByRole('button', { name: 'Save Draft' })
-    fireEvent.click(saveButtons[0])
+    const reviewButtons = await screen.findAllByRole('button', { name: 'Review & Submit' })
+    fireEvent.click(reviewButtons[0])
     fireEvent.change(screen.getByLabelText('Strengths entry 1'), {
       target: { value: 'New observation while saving' },
     })
     resolveSave(true)
 
-    await waitFor(() => expect(screen.getAllByText('Unsaved changes').length).toBeGreaterThan(0))
-    expect(onDirtyChange).toHaveBeenLastCalledWith(true)
+    await waitFor(() => expect(onDirtyChange).toHaveBeenLastCalledWith(true))
   })
 })

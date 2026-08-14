@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { CButton, CFormInput, CFormLabel, CFormTextarea } from '@coreui/react'
 import { CheckCircle2, Circle, TriangleAlert } from 'lucide-react'
-import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
+import InspectionItemDrawer from 'src/views/inspection/form/components/InspectionItemDrawer'
 import RowActions from 'src/components/RowActions'
 import useMediaQuery from 'src/hooks/useMediaQuery'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
@@ -22,12 +22,14 @@ import {
   InspectionElementCard,
   InspectionElementDrawerFooter,
 } from 'src/views/inspection/form/components/InspectionElementUi'
+import { hasFrtInspectionData } from 'src/views/inspection/form/inspectionResetActions'
 import {
   FRT_DAILY_STATUS_OPTIONS,
   FRT_ONE_OFF_STATUS_OPTIONS,
 } from 'src/views/inspection/types/frt-daily/helpers'
 import {
   FormFieldError,
+  InspectionEvidenceEditor,
   InspectionPhotoActionRow,
   InspectionPhotoEvidenceSummary,
 } from 'src/views/inspection/form/components/InspectionDisplayShared'
@@ -49,6 +51,7 @@ const buildFrtRowActionItems = ({
 } = {}) =>
   buildInspectionElementActions({
     canReset,
+    hasInspectionAnswers: hasFrtInspectionData(row),
     onReset,
     canEdit: typeof onEdit === 'function',
     onEdit,
@@ -189,10 +192,7 @@ const FrtIssueEvidence = ({
     )
 
   return (
-    <div
-      className="inspection-hydraulic-defect-evidence rounded-3 border bg-light-subtle p-2 d-grid gap-2"
-      data-inspection-frt-detail-key="remarks"
-    >
+    <InspectionEvidenceEditor data-inspection-frt-detail-key="remarks">
       <CFormLabel htmlFor={remarksId} className="small fw-semibold text-muted mb-1">
         Issue evidence
       </CFormLabel>
@@ -211,7 +211,7 @@ const FrtIssueEvidence = ({
           onAddPhoto={requestIssuePhoto}
         />
       </div>
-    </div>
+    </InspectionEvidenceEditor>
   )
 }
 
@@ -521,7 +521,6 @@ const FrtRowCard = ({
     row,
     canReset,
     onReset: () => onResetCheck(row),
-    onEdit: () => onToggleExpanded?.(row, { forceOpen: true }),
     onDelete: onDeleteItem ? () => onDeleteItem(row) : undefined,
   })
 
@@ -868,9 +867,9 @@ const FrtSectionCards = ({
         : null}
 
       {useMobileDrawer && mobileDetail ? (
-        <MobileBottomDrawer
+        <InspectionItemDrawer
           visible
-          title={mobileDetail.row.equipment || 'Truck Readiness'}
+          itemTitle={mobileDetail.row.equipment || 'Truck Readiness'}
           bodyClassName="inspection-fire-extinguisher-detail-drawer-shell"
           headerAction={
             !readOnly ? (
@@ -929,11 +928,11 @@ const FrtSectionCards = ({
               statusText={mobileSaveStatus}
               dirty={mobileDraftDirty}
               saving={isSavingMobileRow}
-              onCancel={closeMobileDetailDrawer}
+              onCancel={requestCloseMobileDetailDrawer}
               onSave={saveMobileDraftRow}
             />
           ) : null}
-        </MobileBottomDrawer>
+        </InspectionItemDrawer>
       ) : null}
       <InspectionResetConfirmDrawer
         visible={Boolean(resetTarget)}
@@ -944,9 +943,9 @@ const FrtSectionCards = ({
       />
       <ActionConfirmModal
         visible={showDiscardChanges}
-        title="Discard changes?"
+        title="Discard unsaved changes?"
         message="Your fire truck row changes have not been saved."
-        confirmLabel="Discard"
+        confirmLabel="Discard changes"
         confirmColor="danger"
         cancelLabel="Keep editing"
         mobileDrawer

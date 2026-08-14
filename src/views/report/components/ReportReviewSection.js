@@ -11,8 +11,8 @@ import {
   CTableHeaderCell,
   CTableRow,
 } from '@coreui/react'
-import FormActionGroup from 'src/components/FormActionGroup'
 import ReportPhotoGallery from 'src/components/report-workflow/ReportPhotoGallery'
+import WorkflowStageActions from 'src/components/report-workflow/WorkflowStageActions'
 import { DetailField } from 'src/components/report-workflow/ReportViewComponents'
 import RespondingTeamSummary from 'src/components/report-workflow/RespondingTeamSummary'
 import { getProficiencyCheckpointSummary } from '../fitness-test/fitnessFormDomain'
@@ -50,12 +50,9 @@ const ChronologyRows = ({ chronology, onEdit }) => {
 
   return (
     <ReviewSectionBlock title="Chronology" onEdit={onEdit}>
-      <div className="rounded-3 border overflow-hidden">
+      <div className="d-grid gap-2">
         {rows.map((row, index) => (
-          <div
-            key={`${row.time || 'time'}-${index}`}
-            className={`d-flex gap-3 px-3 py-2${index < rows.length - 1 ? ' border-bottom' : ''}`}
-          >
+          <div key={`${row.time || 'time'}-${index}`} className="d-flex gap-3 px-3 py-2">
             <div className="text-body-secondary flex-shrink-0 text-truncate" style={{ width: 52 }}>
               {row.time || '--'}
             </div>
@@ -107,7 +104,7 @@ const AnalysisRows = ({ analysis, photos = [], isDrill = false, onEdit }) => {
               <CBadge
                 key={`${item}-${index}`}
                 color="light"
-                className="border text-body-secondary fw-normal"
+                className="text-body-secondary fw-normal"
               >
                 {item}
               </CBadge>
@@ -128,7 +125,10 @@ const AnalysisRows = ({ analysis, photos = [], isDrill = false, onEdit }) => {
       {photoRows.length > 0 ? (
         <div>
           <div className="small text-body-secondary mb-2">Photographs</div>
-          <ReportPhotoGallery photos={photoRows} />
+          <ReportPhotoGallery
+            photos={photoRows}
+            hiddenDescriptionValues={[...strengths, ...resources, ...improvements]}
+          />
         </div>
       ) : null}
     </ReviewSectionBlock>
@@ -301,11 +301,6 @@ const ReportReviewSection = ({
       : 'Submitting...'
     : mobileSubmitLabel
 
-  const editButton = (
-    <CButton color="light" onClick={() => reviewActions?.onBackToEdit?.()}>
-      Edit
-    </CButton>
-  )
   const editSection = (section) => reviewActions?.onBackToEdit?.(section)
   const exerciseCategories = (Array.isArray(r.exerciseCategories) ? r.exerciseCategories : [])
     .map(text)
@@ -320,47 +315,18 @@ const ReportReviewSection = ({
   const reviewed = [...timeline].reverse().find((row) => /review/i.test(text(row?.action)))
   const approved = [...timeline].reverse().find((row) => /approv/i.test(text(row?.action)))
 
-  const renderReviewActions = (className = '', isMobileSticky = false) => {
-    if (isMobileSticky) {
-      return (
-        <FormActionGroup
-          className={className}
-          mobileThumb={false}
-          leading={editButton}
-          ariaLabel="Report review actions"
-        >
-          <CButton color="secondary" onClick={() => reviewActions?.onSaveDraft?.()}>
-            Save Draft
-          </CButton>
-          <CButton
-            color="primary"
-            disabled={isSubmittingReview}
-            onClick={() => reviewActions?.onConfirm?.()}
-          >
-            {activeMobileSubmitLabel}
-          </CButton>
-        </FormActionGroup>
-      )
-    }
-
-    return (
-      <div
-        className={`inspection-review-actions d-flex flex-column flex-sm-row gap-2 ${className}`.trim()}
-      >
-        {editButton}
-        <CButton color="secondary" onClick={() => reviewActions?.onSaveDraft?.()}>
-          Save Draft
-        </CButton>
-        <CButton
-          color="primary"
-          disabled={isSubmittingReview}
-          onClick={() => reviewActions?.onConfirm?.()}
-        >
-          {activeSubmitLabel}
-        </CButton>
-      </div>
-    )
-  }
+  const renderReviewActions = (className = '', compactLabel = false) => (
+    <WorkflowStageActions
+      className={className}
+      mobileLayout="stacked-primary-first"
+      onBack={() => reviewActions?.onBackToEdit?.()}
+      backLabel="Edit"
+      onPrimary={() => reviewActions?.onConfirm?.()}
+      primaryLabel={compactLabel ? activeMobileSubmitLabel : activeSubmitLabel}
+      primaryDisabled={isSubmittingReview}
+      ariaLabel="Report review actions"
+    />
+  )
 
   return (
     <section className="inspection-review-page d-grid gap-3">
@@ -375,6 +341,17 @@ const ReportReviewSection = ({
       </div>
 
       {isFitness ? <FitnessReviewRows report={r} onEdit={editSection} /> : null}
+
+      {isFitness && Array.isArray(r.photos) && r.photos.some((photo) => photo?.url) ? (
+        <ReviewSectionBlock title="Fitness test photographs" onEdit={() => editSection('results')}>
+          <ReportPhotoGallery
+            photos={r.photos}
+            title="Fitness test photographs"
+            contextLabel="Fitness test evidence"
+            hiddenDescriptionValues={[r.notes, r.remarks, r.summary, r.result]}
+          />
+        </ReviewSectionBlock>
+      ) : null}
 
       {!isFitness ? (
         <ReviewSectionBlock
@@ -462,12 +439,9 @@ const ReportReviewSection = ({
 
       {Array.isArray(changeSummary) && changeSummary.length > 0 ? (
         <ReviewSectionBlock title="Changed Fields">
-          <div className="rounded-3 border overflow-hidden">
+          <div className="d-grid gap-2">
             {changeSummary.map((entry, index) => (
-              <div
-                key={`${entry.label}-${index}`}
-                className={`px-3 py-2 ${index < changeSummary.length - 1 ? 'border-bottom' : ''}`}
-              >
+              <div key={`${entry.label}-${index}`} className="px-3 py-2">
                 <div className="small text-body-secondary">{entry.label}</div>
                 <div className="small">
                   <span className="text-body-secondary">From:</span> {entry.before || '--'}
@@ -524,8 +498,7 @@ const ReportReviewSection = ({
         </ReviewSectionBlock>
       ) : null}
 
-      {renderReviewActions('justify-content-end d-none d-md-flex')}
-      {renderReviewActions('inspection-review-inline-actions d-md-none', true)}
+      {renderReviewActions('inspection-review-inline-actions', true)}
     </section>
   )
 }

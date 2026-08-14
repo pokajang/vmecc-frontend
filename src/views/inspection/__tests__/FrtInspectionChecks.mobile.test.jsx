@@ -300,6 +300,8 @@ describe('FrtDailyInspectionChecks mobile detail drawer', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
 
     expect(onSaveFrtRowDraft).not.toHaveBeenCalled()
+    expect(screen.getByText('Discard unsaved changes?')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }))
     expect(screen.queryByText('Status')).toBeNull()
   })
 
@@ -326,7 +328,7 @@ describe('FrtDailyInspectionChecks mobile detail drawer', () => {
     fireEvent.click(screen.getByText('Checked'))
     fireEvent.click(screen.getByLabelText('Close Pump Panel'))
 
-    expect(screen.getByText('Discard changes?')).toBeTruthy()
+    expect(screen.getByText('Discard unsaved changes?')).toBeTruthy()
     expect(screen.getByText('Your fire truck row changes have not been saved.')).toBeTruthy()
     expect(screen.getByText('Status')).toBeTruthy()
 
@@ -334,7 +336,7 @@ describe('FrtDailyInspectionChecks mobile detail drawer', () => {
     expect(screen.getByText('Status')).toBeTruthy()
 
     fireEvent.click(screen.getByLabelText('Close Pump Panel'))
-    fireEvent.click(screen.getByRole('button', { name: 'Discard' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }))
     expect(screen.queryByText('Status')).toBeNull()
   })
 

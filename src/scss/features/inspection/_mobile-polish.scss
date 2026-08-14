@@ -96,7 +96,6 @@
   .inspection-module-page .inspection-header-back-btn,
   .inspection-module-page .inspection-view-all-btn,
   .inspection-module-page .inspection-compact-action-btn,
-  .inspection-module-page .inspection-next-location-btn,
   .inspection-module-page .inspection-check-status-btn,
   .inspection-module-page .inspection-hydraulic-status-btn,
   .inspection-module-page .inspection-helper-chip,
@@ -279,12 +278,39 @@
     --cui-btn-hover-border-color: transparent;
     --cui-btn-active-border-color: transparent;
     min-height: var(--inspection-mobile-control-height) !important;
-    padding: 0.35rem 0.75rem;
+    padding: 0 !important;
     border-color: transparent !important;
     border-radius: var(--vmecc-radius-pill);
-    background: var(--cui-tertiary-bg);
+    background: transparent !important;
     box-shadow: none;
     color: var(--cui-body-color);
+  }
+
+  .inspection-fire-extinguisher-detail-drawer-body .inspection-drawer-choice__surface,
+  .inspection-equipment-detail-drawer-body .inspection-drawer-choice__surface {
+    display: inline-flex;
+    min-width: 3.25rem;
+    min-height: 2rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0.2rem 0.7rem;
+    border-radius: var(--vmecc-radius-pill);
+    background: var(--cui-tertiary-bg);
+    color: var(--cui-body-color);
+    font-size: var(--vmecc-text-meta);
+    font-weight: 600;
+    line-height: 1.15;
+    transition:
+      background-color 0.14s ease,
+      color 0.14s ease;
+  }
+
+  .inspection-fire-extinguisher-detail-drawer-body .inspection-drawer-choice:hover
+    .inspection-drawer-choice__surface,
+  .inspection-equipment-detail-drawer-body .inspection-drawer-choice:hover
+    .inspection-drawer-choice__surface {
+    background: color-mix(in srgb, var(--cui-tertiary-bg) 78%, var(--cui-body-color));
+    color: var(--cui-emphasis-color);
   }
 
   .inspection-fire-extinguisher-detail-drawer-body .inspection-drawer-choice[data-selected='true'],
@@ -295,6 +321,17 @@
     --cui-btn-hover-color: var(--vmecc-primary-on-soft);
     --cui-btn-hover-bg: color-mix(in srgb, var(--vmecc-primary-soft) 82%, var(--vmecc-primary-on-soft));
     border-color: transparent !important;
+    background: transparent !important;
+    color: var(--vmecc-primary-on-soft);
+    font-weight: 700;
+  }
+
+  .inspection-fire-extinguisher-detail-drawer-body
+    .inspection-drawer-choice[data-selected='true']
+    .inspection-drawer-choice__surface,
+  .inspection-equipment-detail-drawer-body
+    .inspection-drawer-choice[data-selected='true']
+    .inspection-drawer-choice__surface {
     background: var(--vmecc-primary-soft);
     color: var(--vmecc-primary-on-soft);
     font-weight: 700;
@@ -308,9 +345,18 @@
 
   .inspection-fire-extinguisher-detail-drawer-body .inspection-drawer-choice:disabled,
   .inspection-equipment-detail-drawer-body .inspection-drawer-choice:disabled {
+    background: transparent !important;
+    opacity: 0.68;
+  }
+
+  .inspection-fire-extinguisher-detail-drawer-body
+    .inspection-drawer-choice:disabled
+    .inspection-drawer-choice__surface,
+  .inspection-equipment-detail-drawer-body
+    .inspection-drawer-choice:disabled
+    .inspection-drawer-choice__surface {
     background: var(--vmecc-status-muted-bg);
     color: var(--vmecc-fg-disabled);
-    opacity: 0.68;
   }
 
   .inspection-module-page .form-control,
@@ -352,19 +398,19 @@
   }
 
   .inspection-next-location-card {
-    gap: 0.65rem !important;
-    padding: 0.85rem !important;
-    border-color: var(--cui-border-color) !important;
-    border-radius: var(--vmecc-radius-card, 0.5rem) !important;
-    background: var(--cui-body-bg) !important;
+    gap: 0.3rem !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
   }
 
   .inspection-next-location-btn {
     max-width: 100%;
-    padding: 0.55rem 0.75rem;
+    min-height: 1.875rem !important;
+    padding: 0.18rem 0.6rem;
     overflow: visible;
     font-size: var(--vmecc-text-meta);
-    line-height: 1.3;
+    line-height: 1.2;
     text-overflow: clip;
     white-space: normal;
     overflow-wrap: anywhere;
@@ -441,7 +487,6 @@
   .inspection-mobile-setup-drawer__header {
     min-height: 3.75rem;
     padding: 0.75rem 1rem 0.6rem;
-    border-bottom: 1px solid var(--cui-border-color-translucent);
   }
 
   .inspection-mobile-setup-drawer__title {

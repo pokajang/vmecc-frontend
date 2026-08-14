@@ -179,14 +179,14 @@ const InspectionFormManagerModals = ({
         saveLabel={`Save ${locationEntityLabel}`}
         updateLabel={
           location.editingLocationRow && !location.editingLocationRow.custom
-            ? 'Save global change'
+            ? `Save shared ${locationEntityLabel.toLowerCase()}`
             : `Update ${locationEntityLabel}`
         }
         showRowIcon={false}
         getRowBadgeLabel={(row) => (row?.custom ? '' : 'Shared')}
         warningNotice={
           location.editingLocationRow && !location.editingLocationRow.custom
-            ? 'This item is shared across inspections. Changes will affect future inspections.'
+            ? `Updates this shared ${locationEntityLabel.toLowerCase()} and future inspections.`
             : ''
         }
         iconOptions={[]}

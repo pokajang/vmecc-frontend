@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { CButton, CFormInput, CFormLabel, CFormTextarea } from '@coreui/react'
 import { Camera, CheckCircle2, Circle, MessageSquare, Trash2, TriangleAlert } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
-import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
+import InspectionItemDrawer from './InspectionItemDrawer'
 import RowActions from 'src/components/RowActions'
 import useMediaQuery from 'src/hooks/useMediaQuery'
 import { ER_AUX_CONDITION_OPTIONS } from 'src/views/inspection/inspectionErAuxHelpers'
@@ -32,6 +32,7 @@ import {
   InspectionElementDrawerFooter,
   InspectionElementValidationBadges,
 } from './InspectionElementUi'
+import { hasErAuxInspectionData } from '../inspectionResetActions'
 import InspectionResetConfirmDrawer from './InspectionResetConfirmDrawer'
 import InspectionStatusSegment from './patterns/InspectionStatusSegment'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
@@ -650,10 +651,15 @@ export const ErAuxEquipmentChecks = ({
             const rowId = String(row.id || row.equipment || '')
             const actionItems = buildInspectionElementActions({
               canReset: !readOnly && typeof onResetCheck === 'function',
+              hasInspectionAnswers: hasErAuxInspectionData(row),
               onReset: () => requestResetCheck(row),
               canEdit: row.canEdit && (row.equipmentId || row.isLocalSeedEquipment),
               onEdit: () => onEditEquipment?.(row),
-              canDelete: row.canDelete && (row.equipmentId || row.isLocalSeedEquipment),
+              canDelete:
+                row.canDelete &&
+                (row.isCustomEquipment ||
+                  row.equipmentSource === 'custom' ||
+                  row.isLocalSeedEquipment),
               onDelete: () => onDeleteEquipment?.(row),
             })
 
@@ -710,9 +716,9 @@ export const ErAuxEquipmentChecks = ({
       )}
 
       {useMobileDrawer && mobileDetailRow ? (
-        <MobileBottomDrawer
+        <InspectionItemDrawer
           visible
-          title={mobileDetailRow.equipment || 'Equipment'}
+          itemTitle={mobileDetailRow.equipment || 'Equipment'}
           bodyClassName="inspection-equipment-detail-drawer-shell"
           headerAction={
             !readOnly ? (
@@ -721,22 +727,11 @@ export const ErAuxEquipmentChecks = ({
                 hitArea={44}
                 toggleAriaLabel={`Equipment actions for ${mobileDetailRow.equipment || 'Equipment'}`}
                 items={[
-                  typeof onResetCheck === 'function'
-                    ? {
-                        key: 'reset',
-                        label: 'Reset check',
-                        className: 'text-danger',
-                        onClick: () =>
-                          requestResetCheck(mobileDetailRow, {
-                            onAfterConfirm: closeMobileDetailDrawer,
-                          }),
-                      }
-                    : null,
                   mobileDetailRow.canEdit &&
                   (mobileDetailRow.equipmentId || mobileDetailRow.isLocalSeedEquipment)
                     ? {
                         key: 'edit',
-                        label: 'Edit',
+                        label: 'Edit equipment details',
                         disabled: mobileDraftDirty,
                         disabledReason: mobileDraftDirty ? 'Save or cancel changes first.' : '',
                         onClick: () => {
@@ -745,11 +740,25 @@ export const ErAuxEquipmentChecks = ({
                         },
                       }
                     : null,
+                  typeof onResetCheck === 'function' &&
+                  hasErAuxInspectionData(mobileDraftRow || mobileDetailRow)
+                    ? {
+                        key: 'reset',
+                        label: 'Clear inspection answers',
+                        className: 'text-danger',
+                        onClick: () =>
+                          requestResetCheck(mobileDetailRow, {
+                            onAfterConfirm: closeMobileDetailDrawer,
+                          }),
+                      }
+                    : null,
                   mobileDetailRow.canDelete &&
-                  (mobileDetailRow.equipmentId || mobileDetailRow.isLocalSeedEquipment)
+                  (mobileDetailRow.isCustomEquipment ||
+                    mobileDetailRow.equipmentSource === 'custom' ||
+                    mobileDetailRow.isLocalSeedEquipment)
                     ? {
                         key: 'delete',
-                        label: 'Delete',
+                        label: 'Delete custom item',
                         className: 'text-danger',
                         disabled: mobileDraftDirty,
                         disabledReason: mobileDraftDirty ? 'Save or cancel changes first.' : '',
@@ -795,7 +804,7 @@ export const ErAuxEquipmentChecks = ({
               onSave={saveMobileDraftRow}
             />
           ) : null}
-        </MobileBottomDrawer>
+        </InspectionItemDrawer>
       ) : null}
 
       {!readOnly ? (
@@ -852,9 +861,9 @@ export const ErAuxEquipmentChecks = ({
       />
       <ActionConfirmModal
         visible={showDiscardChanges}
-        title="Discard changes?"
+        title="Discard unsaved changes?"
         message="Your ER Aux equipment changes have not been saved."
-        confirmLabel="Discard"
+        confirmLabel="Discard changes"
         confirmColor="danger"
         cancelLabel="Keep editing"
         mobileDrawer

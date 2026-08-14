@@ -5,8 +5,10 @@ import CreateActionButton from 'src/components/CreateActionButton'
 import { buildPhotoViewerUploadOptions } from '../../form/inspectionPhotoFlow'
 import {
   FormFieldError,
+  InspectionEvidenceEditor,
   InspectionPhotoActionRow,
   InspectionPhotoEvidenceSummary,
+  PhotoGallery,
 } from '../../form/components/InspectionFormDisplaySections'
 import {
   FIRE_EXTINGUISHER_CHECK_FIELDS,
@@ -19,6 +21,7 @@ import {
 } from './helpers'
 import InspectionStatusSegment from '../../form/components/patterns/InspectionStatusSegment'
 import { InspectionElementCard } from '../../form/components/InspectionElementUi'
+import { hasFireExtinguisherInspectionData } from '../../form/inspectionResetActions'
 export { AddFireExtinguisherForm } from './fireExtinguisherEditForm'
 
 const text = (value) => String(value || '').trim()
@@ -116,44 +119,25 @@ const FireExtinguisherStatusSegment = ({
   />
 )
 
-const FireExtinguisherEvidenceBlock = ({
-  title,
-  remarks = '',
-  photos = [],
-  readOnly = false,
-  children = null,
-  onViewPhotos,
-}) => {
+const FireExtinguisherEvidenceBlock = ({ title, remarks = '', photos = [] }) => {
   const visiblePhotos = Array.isArray(photos) ? photos.filter(Boolean) : []
   const hasRemarks = text(remarks)
-  const visiblePhotoCaptions = visiblePhotos
-    .map((photo) => text(photo?.description || photo?.caption || photo?.fileName))
-    .filter(Boolean)
-  if (readOnly && !hasRemarks && visiblePhotos.length === 0 && !children) return null
+  if (!hasRemarks && visiblePhotos.length === 0) return null
 
   return (
-    <div className="inspection-hydraulic-defect-evidence rounded-3 border bg-light-subtle p-2 d-grid gap-2">
+    <div className="inspection-readonly-evidence d-grid gap-2">
       {title ? <div className="small fw-semibold text-body-secondary">{title}</div> : null}
+      {visiblePhotos.length > 0 ? (
+        <PhotoGallery
+          photos={visiblePhotos}
+          readOnly
+          emptyMessage=""
+          hiddenDescriptionValues={[remarks, title]}
+        />
+      ) : null}
       {hasRemarks ? (
         <div className="small" style={{ whiteSpace: 'pre-wrap' }}>
           {remarks}
-        </div>
-      ) : null}
-      {children}
-      {visiblePhotos.length > 0 ? (
-        <InspectionPhotoEvidenceSummary
-          photos={visiblePhotos}
-          readOnly={readOnly}
-          onView={onViewPhotos}
-        />
-      ) : null}
-      {readOnly && visiblePhotoCaptions.length > 0 ? (
-        <div className="d-grid gap-1">
-          {visiblePhotoCaptions.map((caption, index) => (
-            <div key={`${caption}-${index}`} className="small text-body-secondary">
-              {caption}
-            </div>
-          ))}
         </div>
       ) : null}
     </div>
@@ -236,84 +220,85 @@ const FireExtinguisherAdditionalInfo = ({ row, readOnly = false, handlers = {}, 
 
   if (readOnly && !showRemarks && photos.length === 0) return null
 
+  if (readOnly) {
+    return (
+      <FireExtinguisherEvidenceBlock
+        title="General extinguisher remarks and photos"
+        remarks={rawRemarks}
+        photos={photos}
+      />
+    )
+  }
+
   return (
     <div className="inspection-fire-extinguisher-additional-info d-grid gap-2">
       <div className="small fw-semibold text-muted">Additional Info (optional)</div>
-      {!readOnly ? (
-        <div className="inspection-fire-extinguisher-additional-actions d-flex flex-wrap justify-content-start gap-2">
-          {!showRemarks ? (
-            <CreateActionButton
-              label="Remark"
-              className="inspection-compact-action-btn"
-              icon={<MessageSquare size={14} />}
-              onClick={() => setExpanded(true)}
-            />
-          ) : null}
+      <div className="inspection-fire-extinguisher-additional-actions d-flex flex-wrap justify-content-start gap-2">
+        {!showRemarks ? (
           <CreateActionButton
-            label="Photo"
+            label="Remark"
             className="inspection-compact-action-btn"
-            icon={<Camera size={14} />}
-            onClick={() =>
-              handlers.onRequestPhotoUpload?.(
-                row,
-                buildPhotoViewerUploadOptions(openAdditionalPhotoViewer, {
-                  currentPhotos: photos,
-                }),
-              )
-            }
+            icon={<MessageSquare size={14} />}
+            onClick={() => setExpanded(true)}
           />
-        </div>
-      ) : null}
+        ) : null}
+        <CreateActionButton
+          label="Photo"
+          className="inspection-compact-action-btn"
+          icon={<Camera size={14} />}
+          onClick={() =>
+            handlers.onRequestPhotoUpload?.(
+              row,
+              buildPhotoViewerUploadOptions(openAdditionalPhotoViewer, {
+                currentPhotos: photos,
+              }),
+            )
+          }
+        />
+      </div>
       {showRemarks ? (
-        readOnly ? (
-          <div className="small">
-            <div className="fw-semibold text-body-secondary">General extinguisher remarks</div>
-            <div style={{ whiteSpace: 'pre-wrap' }}>{row.remarks}</div>
-          </div>
-        ) : (
-          <div className="d-grid gap-1">
-            <div className="d-flex align-items-center justify-content-between gap-2">
-              <CFormLabel className="small fw-semibold text-muted mb-0">
-                General extinguisher remarks
-              </CFormLabel>
-              {hasRemarks ? (
-                <CButton
-                  type="button"
-                  color="danger"
-                  variant="outline"
-                  size="sm"
-                  className="inspection-compact-action-btn d-inline-flex align-items-center gap-1"
-                  onClick={() => {
-                    handlers.onUpdateCheck?.(row, { remarks: '' })
-                    setExpanded(false)
-                  }}
-                >
-                  <Trash2 size={13} />
-                  Clear
-                </CButton>
-              ) : null}
-            </div>
-            <CFormTextarea
-              rows={2}
-              aria-label="General extinguisher remarks"
-              placeholder="General extinguisher remarks"
-              value={rawRemarks}
-              onChange={(event) => handlers.onUpdateCheck?.(row, { remarks: event.target.value })}
-            />
-            {!hasRemarks ? (
+        <div className="d-grid gap-1">
+          <div className="d-flex align-items-center justify-content-between gap-2">
+            <CFormLabel className="small fw-semibold text-muted mb-0">
+              General extinguisher remarks
+            </CFormLabel>
+            {hasRemarks ? (
               <CButton
                 type="button"
-                color="secondary"
+                color="danger"
                 variant="outline"
                 size="sm"
-                className="inspection-compact-action-btn justify-self-start"
-                onClick={() => setExpanded(false)}
+                className="inspection-compact-action-btn d-inline-flex align-items-center gap-1"
+                onClick={() => {
+                  handlers.onUpdateCheck?.(row, { remarks: '' })
+                  setExpanded(false)
+                }}
               >
-                Cancel
+                <Trash2 size={13} />
+                Clear
               </CButton>
             ) : null}
           </div>
-        )
+          <CFormTextarea
+            rows={2}
+            aria-label="General extinguisher remarks"
+            placeholder="General extinguisher remarks"
+            value={rawRemarks}
+            onChange={(event) => handlers.onUpdateCheck?.(row, { remarks: event.target.value })}
+          />
+          {!hasRemarks ? (
+            <CButton
+              type="button"
+              color="secondary"
+              variant="outline"
+              size="sm"
+              className="inspection-compact-action-btn justify-self-start"
+              onClick={() => setExpanded(false)}
+            >
+              Cancel
+            </CButton>
+          ) : null}
+        </div>
       ) : null}
       {photos.length > 0 ? (
         <InspectionPhotoEvidenceSummary
@@ -390,27 +375,9 @@ export const FireExtinguisherRowDetails = ({
             </FormFieldError>
             {isDefect ? (
               readOnly ? (
-                <FireExtinguisherEvidenceBlock
-                  title={`${field.label} defect evidence`}
-                  remarks={defectRemarks}
-                  photos={defectPhotos}
-                  readOnly
-                  onViewPhotos={() =>
-                    onViewPhotos?.(
-                      getFireExtinguisherPhotoViewer({
-                        row,
-                        title: `${title} - ${field.label} defect photos`,
-                        photos: defectPhotos,
-                        photosKey: field.photosKey,
-                        readOnly: true,
-                        handlers,
-                        showDescriptionInput: false,
-                      }),
-                    )
-                  }
-                />
+                <FireExtinguisherEvidenceBlock remarks={defectRemarks} photos={defectPhotos} />
               ) : (
-                <div className="inspection-hydraulic-defect-evidence rounded-3 border bg-light-subtle p-2 d-grid gap-2">
+                <InspectionEvidenceEditor>
                   <CFormTextarea
                     rows={2}
                     placeholder={`${field.label} defect remarks`}
@@ -431,7 +398,7 @@ export const FireExtinguisherRowDetails = ({
                       onAddPhoto={requestDefectPhoto}
                     />
                   </div>
-                </div>
+                </InspectionEvidenceEditor>
               )
             ) : null}
           </div>
@@ -465,26 +432,28 @@ export const FireExtinguisherRowCard = ({
   const bodyId = `fire-extinguisher-checks-${String(row.id || '').replace(/[^A-Za-z0-9_-]/g, '-')}`
   const toggleExpanded = () => onToggleExpanded?.(row)
   const canReset = !readOnly && typeof handlers.onResetCheck === 'function'
+  const canDeleteCustomItem =
+    row.canDelete && (row.equipmentSource === 'custom' || row.source === 'custom')
   const actionItems = [
-    canReset
+    row.canEdit
+      ? {
+          key: 'edit',
+          label: 'Edit equipment details',
+          onClick: () => handlers.onEditExtinguisher?.(row),
+        }
+      : null,
+    canReset && hasFireExtinguisherInspectionData(row, FIRE_EXTINGUISHER_CHECK_FIELDS)
       ? {
           key: 'reset',
-          label: 'Reset check',
+          label: 'Clear inspection answers',
           className: 'text-danger',
           onClick: () => handlers.onResetCheck?.(row),
         }
       : null,
-    row.canEdit
-      ? {
-          key: 'edit',
-          label: 'Edit',
-          onClick: () => handlers.onEditExtinguisher?.(row),
-        }
-      : null,
-    row.canDelete
+    canDeleteCustomItem
       ? {
           key: 'delete',
-          label: 'Delete',
+          label: 'Delete custom item',
           className: 'text-danger',
           onClick: () => handlers.onDeleteExtinguisher?.(row),
         }

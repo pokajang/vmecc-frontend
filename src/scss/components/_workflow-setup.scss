@@ -62,6 +62,19 @@
   padding: 0;
 }
 
+.workflow-setup-field__icon-action {
+  display: inline-flex;
+  min-width: var(--workflow-control-height);
+  min-height: var(--workflow-control-height);
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--cui-primary) !important;
+  box-shadow: none !important;
+}
+
 .workflow-setup-field__error {
   color: var(--vmecc-status-danger-text);
   font-size: var(--vmecc-text-meta);

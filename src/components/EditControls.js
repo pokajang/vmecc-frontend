@@ -1,5 +1,5 @@
 import React from 'react'
-import { CButton } from '@coreui/react'
+import AppButton from './AppButton'
 import { Pencil } from 'lucide-react'
 import ButtonLoader from './ButtonLoader'
 
@@ -18,32 +18,38 @@ const EditControls = ({
     <div className={`d-flex align-items-center gap-2 ${className}`}>
       {editMode ? (
         <>
-          <CButton
+          <AppButton
             size="sm"
+            intent="primary"
+            presentation="ghost"
             className="edit-controls__action text-primary px-2 py-1 border-0 bg-transparent shadow-none"
             onClick={onSave}
             disabled={loading}
           >
             {loading ? <ButtonLoader label="Saving..." /> : saveLabel}
-          </CButton>
-          <CButton
+          </AppButton>
+          <AppButton
             size="sm"
+            intent="primary"
+            presentation="ghost"
             className="edit-controls__action text-primary px-2 py-1 border-0 bg-transparent shadow-none"
             onClick={onCancel}
             disabled={loading}
           >
             {cancelLabel}
-          </CButton>
+          </AppButton>
         </>
       ) : (
-        <CButton
+        <AppButton
           size="sm"
+          intent="primary"
+          presentation="ghost"
           className="edit-controls__action icon-label-action text-primary px-2 py-1 border-0 bg-transparent shadow-none"
           onClick={onEdit}
         >
           <Pencil size={13} aria-hidden="true" />
           {editLabel}
-        </CButton>
+        </AppButton>
       )}
     </div>
   )

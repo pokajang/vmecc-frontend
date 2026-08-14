@@ -4,26 +4,21 @@ import WorkflowStageActions from 'src/components/report-workflow/WorkflowStageAc
 const DetailsStepActions = ({
   onBack,
   onClear,
-  onSaveDraft,
-  saveLabel = 'Save Draft',
   primaryLabel = 'Submit Report',
   primaryType = 'submit',
   onPrimary,
-  statusMessage = '',
-  saveDisabled = false,
   primaryDisabled = false,
+  isSaving = false,
 }) => (
   <WorkflowStageActions
+    mobileLayout="stacked-primary-first"
     onBack={onBack}
     onReset={onClear}
-    onSaveDraft={onSaveDraft}
     onPrimary={onPrimary}
-    saveLabel={saveLabel}
     primaryLabel={primaryLabel}
     primaryType={primaryType}
-    statusMessage={statusMessage}
-    saveDisabled={saveDisabled}
     primaryDisabled={primaryDisabled}
+    isSaving={isSaving}
   />
 )
 

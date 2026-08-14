@@ -28,7 +28,7 @@ const MobileRecentRecordsSection = ({
       />
       <button
         type="button"
-        className="mobile-workflow-home__view-all mobile-workflow-home__action-chip"
+        className="mobile-workflow-home__view-all"
         disabled={isLoading}
         onClick={onViewRecords}
       >
@@ -37,7 +37,7 @@ const MobileRecentRecordsSection = ({
       </button>
     </div>
     {isLoading ? (
-      <div className="border rounded-3 bg-body">
+      <div className="mobile-workflow-home__records-state">
         <TableLoader message="Loading records..." minHeight={112} />
       </div>
     ) : items.length > 0 ? (
@@ -47,7 +47,7 @@ const MobileRecentRecordsSection = ({
         variant="empty"
         message={emptyMessage}
         minHeight={96}
-        className="border rounded-3"
+        className="mobile-workflow-home__records-state"
       />
     )}
   </MobileWorkflowSection>

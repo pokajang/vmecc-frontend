@@ -250,8 +250,13 @@ const runAuthenticatedMediaFlow = async (page, moduleKey) => {
         ? url.pathname.includes('/api/reports/drafts/') && response.request().method() === 'PUT'
         : url.pathname.endsWith('/api/reports/draft') && response.request().method() === 'POST'
     })
-    await page.getByRole('button', { name: 'Save Draft', exact: true }).click()
+    await page
+      .getByRole('button', { name: moduleKey === 'erco' ? 'Review report' : 'Review & Submit' })
+      .click()
     expect((await draftSaveResponse).status()).toBe(200)
+    await expect(page).toHaveURL(new RegExp(`/report/${moduleKey}/new/review`))
+    await page.getByRole('button', { name: 'Edit', exact: true }).click()
+    await expect(page).toHaveURL(new RegExp(`/report/${moduleKey}/new/analysis`))
 
     const storedDraft = await apiJson(
       page.request,

@@ -1,7 +1,10 @@
 import React from 'react'
-import { CButton } from '@coreui/react'
+import AppButton from 'src/components/AppButton'
 import FormActionGroup from 'src/components/FormActionGroup'
+import useMediaQuery from 'src/hooks/useMediaQuery'
 import WorkflowInlineFeedback from './WorkflowInlineFeedback'
+
+const MOBILE_WORKFLOW_ACTION_QUERY = '(max-width: 767.98px)'
 
 const WorkflowStageActions = ({
   onBack,
@@ -24,11 +27,16 @@ const WorkflowStageActions = ({
   auxiliaryActions = null,
   leading = null,
   mobileBehavior = 'in-flow',
+  mobileLayout = 'default',
   dockAtEnd = false,
   actionsAlign = 'end',
   className = '',
   ariaLabel = 'Workflow actions',
 }) => {
+  const isMobile = useMediaQuery(MOBILE_WORKFLOW_ACTION_QUERY)
+  const usesMobileStackedLayout = mobileLayout === 'stacked-primary-first'
+  const isMobileStacked = usesMobileStackedLayout && isMobile
+  const resolvedPrimaryFirst = primaryFirst || isMobileStacked
   const resolvedFeedback =
     feedback ||
     (blockerMessage
@@ -37,7 +45,8 @@ const WorkflowStageActions = ({
           message: blockerMessage,
         }
       : null)
-  const visibleStatus = String(statusMessage || '').trim()
+  const rawStatus = String(statusMessage || '').trim()
+  const visibleStatus = /^unsaved changes$/i.test(rawStatus) ? '' : rawStatus
   const statusNode = visibleStatus ? (
     <div className="workflow-stage-actions__status" role="status" aria-live="polite">
       {visibleStatus}
@@ -55,56 +64,64 @@ const WorkflowStageActions = ({
       leading || statusNode
     )
   const primaryAction = showPrimary ? (
-    <CButton
+    <AppButton
       className="workflow-stage-actions__primary"
       type={primaryType}
-      color="primary"
+      intent="primary"
       disabled={primaryDisabled || isSaving}
       onClick={primaryType === 'submit' ? undefined : onPrimary}
     >
       {primaryLabel}
-    </CButton>
+    </AppButton>
   ) : null
+  const saveAction =
+    typeof onSaveDraft === 'function' ? (
+      <AppButton
+        type="button"
+        intent="neutral"
+        disabled={saveDisabled || isSaving}
+        onClick={onSaveDraft}
+      >
+        {isSaving ? 'Saving...' : saveLabel}
+      </AppButton>
+    ) : null
 
   return (
     <div
-      className={['workflow-stage-actions', className].filter(Boolean).join(' ')}
+      className={[
+        'workflow-stage-actions',
+        usesMobileStackedLayout ? 'workflow-stage-actions--mobile-stacked' : '',
+        className,
+      ]
+        .filter(Boolean)
+        .join(' ')}
       aria-busy={isSaving || undefined}
     >
       {resolvedFeedback ? <WorkflowInlineFeedback {...resolvedFeedback} /> : null}
       <FormActionGroup
         className="workflow-stage-actions__group"
-        mobileBehavior={mobileBehavior}
+        mobileBehavior={usesMobileStackedLayout ? 'terminal' : mobileBehavior}
         dockAtEnd={dockAtEnd}
         actionsAlign={actionsAlign}
         leading={resolvedLeading}
         statusMessage={visibleStatus}
         ariaLabel={ariaLabel}
       >
-        {primaryFirst ? primaryAction : null}
+        {resolvedPrimaryFirst ? primaryAction : null}
+        {isMobileStacked ? saveAction : null}
         {typeof onBack === 'function' ? (
-          <CButton type="button" color="light" onClick={onBack}>
+          <AppButton type="button" intent="neutral" disabled={isSaving} onClick={onBack}>
             {backLabel}
-          </CButton>
+          </AppButton>
         ) : null}
         {typeof onReset === 'function' ? (
-          <CButton type="button" color="light" onClick={onReset}>
+          <AppButton type="button" intent="neutral" disabled={isSaving} onClick={onReset}>
             {resetLabel}
-          </CButton>
+          </AppButton>
         ) : null}
         {auxiliaryActions}
-        {typeof onSaveDraft === 'function' ? (
-          <CButton
-            type="button"
-            color="secondary"
-            variant="outline"
-            disabled={saveDisabled || isSaving}
-            onClick={onSaveDraft}
-          >
-            {isSaving ? 'Saving…' : saveLabel}
-          </CButton>
-        ) : null}
-        {!primaryFirst ? primaryAction : null}
+        {!isMobileStacked ? saveAction : null}
+        {!resolvedPrimaryFirst ? primaryAction : null}
       </FormActionGroup>
     </div>
   )

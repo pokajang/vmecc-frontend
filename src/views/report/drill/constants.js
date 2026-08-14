@@ -135,5 +135,4 @@ export const DRILL_FIELD_LIMITS = Object.freeze({
   personnel: 100,
   chronology: 250,
   analysisRows: 50,
-  photos: 10,
 })

@@ -53,7 +53,7 @@ describe('ReportDetailSection work-first mobile detail', () => {
 
     expect(detail).toBeTruthy()
     expect(within(detail).getAllByText('ERCO-001').length).toBeGreaterThan(0)
-    expect(within(detail).getByText('Report Metadata')).toBeTruthy()
+    expect(within(detail).getByText('Report information')).toBeTruthy()
     expect(within(detail).getByText('Report Context')).toBeTruthy()
     expect(within(detail).getByText('Report Details')).toBeTruthy()
     expect(within(detail).getByText('Hazmat containment')).toBeTruthy()

@@ -74,7 +74,7 @@ describe('InspectionMobileHome', () => {
     expect(container.querySelector('.mobile-workflow-home__records-toolbar')).toBeTruthy()
     const viewAll = container.querySelector('.mobile-workflow-home__view-all')
     expect(viewAll).toBeTruthy()
-    expect(viewAll?.className).toContain('mobile-workflow-home__action-chip')
+    expect(viewAll?.className).toBe('mobile-workflow-home__view-all')
     expect(viewAll?.className).not.toContain('btn')
     expect(container.querySelectorAll('.workflow-scope-segment')).toHaveLength(2)
   })
@@ -142,7 +142,7 @@ describe('InspectionMobileHome', () => {
     expect(onViewRecords).not.toHaveBeenCalled()
   })
 
-  it('surfaces fire extinguisher draft progress and pending sync state', () => {
+  it('surfaces fire extinguisher draft progress without internal sync copy', () => {
     const onContinueDraft = vi.fn()
     const onDeleteDraft = vi.fn()
 
@@ -166,7 +166,7 @@ describe('InspectionMobileHome', () => {
     expect(
       screen.getByText('Fire Extinguisher - Reception - 19/20 checked - 2 defects'),
     ).toBeTruthy()
-    expect(screen.getByText('Sync pending')).toBeTruthy()
+    expect(screen.queryByText('Sync pending')).toBeNull()
 
     fireEvent.click(screen.getByRole('button', { name: 'Continue inspection draft' }))
     expect(onContinueDraft).toHaveBeenCalledTimes(1)

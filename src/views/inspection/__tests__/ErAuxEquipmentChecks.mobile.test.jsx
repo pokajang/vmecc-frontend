@@ -230,7 +230,7 @@ describe('ErAuxEquipmentChecks mobile detail drawer', () => {
     fireEvent.click(
       within(drawer).getByRole('button', { name: 'Equipment actions for Radio Tetra' }),
     )
-    fireEvent.click(screen.getByRole('button', { name: 'Edit' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Edit equipment details' }))
 
     expect(onEditEquipment).toHaveBeenCalledWith(row)
   })

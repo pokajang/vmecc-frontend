@@ -79,14 +79,13 @@
   }
 
   .mobile-workflow-draft-card {
-    padding-bottom: 0.75rem !important;
+    padding: 0.75rem 0;
   }
 
   .mobile-workflow-home .mobile-workflow-draft-card {
-    border-color: transparent !important;
-    border-left: 3px solid var(--cui-warning) !important;
-    background: var(--cui-warning-bg-subtle, #fff7e6) !important;
-    box-shadow: 0 0.25rem 0.9rem rgba(15, 23, 42, 0.06);
+    border: 0;
+    background: transparent;
+    box-shadow: none;
   }
 
   .mobile-workflow-draft-card__grid {
@@ -117,7 +116,7 @@
   .mobile-workflow-draft-card__eyebrow {
     display: block;
     margin-bottom: 0.25rem;
-    color: var(--cui-warning-text-emphasis, #92400e);
+    color: var(--cui-secondary-color);
     font-size: var(--vmecc-text-caption);
     font-weight: 700;
     line-height: 1.15;
@@ -319,8 +318,10 @@
   }
 
   .inspection-mobile-section .inspection-report-records-filter-row .table-filter-trigger {
+    min-width: 44px;
+    min-height: 44px;
     padding: 0;
-    border-color: transparent !important;
+    border: 0 !important;
     background: transparent !important;
     color: var(--cui-primary) !important;
     box-shadow: none;
@@ -328,7 +329,7 @@
 
   .inspection-mobile-section .inspection-report-records-filter-row .table-filter-trigger:hover,
   .inspection-mobile-section .inspection-report-records-filter-row .table-filter-trigger:active {
-    border-color: transparent !important;
+    border: 0 !important;
     background: transparent !important;
     color: var(--cui-primary) !important;
   }
@@ -345,8 +346,8 @@
   }
 
   .mobile-workflow-home__draft-list {
-    width: calc(100% - 0.5rem);
-    margin-inline: 0.25rem;
+    width: 100%;
+    margin: 0;
   }
 
   .mobile-workflow-home .mobile-workflow-home__draft-list {
@@ -382,10 +383,10 @@
   .mobile-workflow-home .workflow-scope-segment,
   .mobile-workflow-home .inspection-scope-segment {
     min-height: var(--mobile-workflow-control-height);
-    padding: 0.25rem 0.7rem;
-    border: 1px solid var(--cui-border-color);
-    border-radius: 999px;
-    background: var(--cui-tertiary-bg);
+    padding: 0.2rem 0.35rem;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
     font-size: 0.875rem;
     font-weight: var(--vmecc-weight-semibold);
     color: var(--cui-secondary-color);
@@ -393,21 +394,20 @@
 
   .mobile-workflow-home .workflow-scope-segment[data-active='true'],
   .mobile-workflow-home .inspection-scope-segment[data-active='true'] {
-    border-color: var(--vmecc-primary-on-soft);
-    background: var(--vmecc-primary-soft);
-    color: var(--vmecc-primary-on-soft);
+    background: transparent;
+    color: var(--cui-primary);
+    font-weight: var(--vmecc-weight-bold);
   }
 
-  .mobile-workflow-home__action-chip {
+  .mobile-workflow-home__view-all {
     display: inline-flex;
     min-height: var(--mobile-workflow-control-height);
     align-items: center;
     justify-content: center;
-    padding: 0.25rem 0.65rem;
-    border: 1px solid var(--vmecc-primary-on-soft);
-    border-radius: 999px;
-    background: var(--vmecc-primary-soft);
-    color: var(--vmecc-primary-on-soft);
+    padding: 0.2rem 0.25rem;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
     font-size: 0.875rem;
     font-weight: var(--vmecc-weight-semibold);
     line-height: 1.2;
@@ -416,19 +416,18 @@
     cursor: pointer;
   }
 
-  .mobile-workflow-home__action-chip:hover:not(:disabled) {
-    border-color: var(--cui-primary);
+  .mobile-workflow-home__view-all:hover:not(:disabled) {
     color: var(--cui-primary);
   }
 
-  .mobile-workflow-home__action-chip:focus-visible,
+  .mobile-workflow-home__view-all:focus-visible,
   .mobile-workflow-home .workflow-scope-segment:focus-visible,
   .mobile-workflow-home .inspection-scope-segment:focus-visible {
     outline: 2px solid var(--cui-primary);
     outline-offset: 2px;
   }
 
-  .mobile-workflow-home__action-chip:disabled {
+  .mobile-workflow-home__view-all:disabled {
     cursor: not-allowed;
     opacity: 0.55;
   }
@@ -436,6 +435,11 @@
   .inspection-mobile-section {
     display: grid;
     gap: 1rem;
+  }
+
+  .mobile-workflow-home__records-state {
+    border: 0 !important;
+    background: transparent !important;
   }
 }
 

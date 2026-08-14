@@ -244,32 +244,6 @@ describe('useInspectionFormPhotos', () => {
     expect(getPendingCameraOperation()).toBeNull()
   })
 
-  it('does not promote max-photo-count errors to camera manual fallback', async () => {
-    const prepare = await import('../form/inspectionPhotoUtils')
-    const { result } = createTestHook()
-
-    prepare.prepareInspectionPhotoUploads.mockImplementationOnce(async ({ onFailure }) => {
-      onFailure({
-        code: 'max_photo_count',
-        message: 'You can upload up to 10 photos.',
-      })
-      return null
-    })
-
-    const file = new File([new Uint8Array([1, 2, 3])], 'camera-photo.jpg', {
-      type: 'image/jpeg',
-    })
-
-    act(() => result.current.requestFireExtinguisherPhotoUpload({ id: 'row-2' }, {}))
-    await act(async () => {
-      await result.current.handlePhotoSelect({ target: { files: [file], value: '' } })
-    })
-
-    expect(result.current.cameraUploadFallback).toBeNull()
-    expect(isCameraFailureToRetry('max_photo_count')).toBe(false)
-    expect(getPendingCameraOperation()).toBeNull()
-  })
-
   it('shows an actionable toast instead of manual fallback when the session expired', async () => {
     const prepare = await import('../form/inspectionPhotoUtils')
     const pushToast = vi.fn()
@@ -765,7 +739,7 @@ describe('useInspectionFormPhotos', () => {
 
     prepare.prepareInspectionPhotoUploads.mockImplementationOnce(async ({ onFailure }) => {
       onFailure({ code: 'low_memory', message: 'Unable to complete due to low memory.' })
-      onFailure({ code: 'max_photo_count', message: 'You can upload up to 10 photos.' })
+      onFailure({ code: 'session_expired', message: 'Your session expired.' })
       return null
     })
 

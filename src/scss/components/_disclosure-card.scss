@@ -1,0 +1,58 @@
+.disclosure-card {
+  overflow: hidden;
+  border: 1px solid var(--cui-border-color);
+  border-radius: var(--vmecc-radius-card);
+  background: var(--cui-body-bg);
+}
+
+.disclosure-card__summary {
+  position: relative;
+  display: flex;
+  min-height: var(--vmecc-touch-target);
+  cursor: pointer;
+  list-style: none;
+  align-items: center;
+  padding: 0.75rem 2.75rem 0.75rem 1rem;
+  background: transparent;
+  color: var(--cui-body-color);
+}
+
+.disclosure-card__summary::-webkit-details-marker {
+  display: none;
+}
+
+.disclosure-card__summary::after {
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  content: '';
+  transform: translateY(-65%) rotate(45deg);
+  transition: transform 0.16s ease;
+}
+
+.disclosure-card[open] > .disclosure-card__summary::after {
+  transform: translateY(-35%) rotate(225deg);
+}
+
+.disclosure-card__summary:focus-visible {
+  outline: 2px solid var(--cui-primary);
+  outline-offset: -2px;
+}
+
+.disclosure-card__summary-content {
+  min-width: 0;
+  width: 100%;
+}
+
+.disclosure-card__body {
+  padding: 0 1rem 1rem;
+}
+
+.disclosure-card + .disclosure-card {
+  margin-top: 0.65rem;
+}
+

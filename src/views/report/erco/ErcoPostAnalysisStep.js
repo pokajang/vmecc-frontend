@@ -15,12 +15,10 @@ const ErcoPostAnalysisStep = ({
   pushToast,
   onBack,
   onClear,
-  onSaveDraft,
   showIncidentSummary = true,
   showActions = true,
-  saveLabel = 'Save Draft',
+  isSaving = false,
   primaryLabel = 'Submit Report',
-  draftStatus = '',
   photoProcessing = false,
   onPhotoProcessingChange,
 }) => {
@@ -54,24 +52,18 @@ const ErcoPostAnalysisStep = ({
       {showActions ? (
         isMobile ? (
           <ReportMobileActionGroup
-            onSaveDraft={onSaveDraft}
-            saveLabel={saveLabel}
             primaryLabel={primaryLabel}
             primaryType="submit"
-            saveDisabled={photoProcessing}
             primaryDisabled={photoProcessing}
-            statusMessage={photoProcessing ? 'Uploading incident photo…' : draftStatus}
+            isSaving={isSaving}
           />
         ) : (
           <DetailsStepActions
             onBack={onBack}
             onClear={onClear}
-            onSaveDraft={onSaveDraft}
-            saveLabel={saveLabel}
             primaryLabel={primaryLabel}
-            saveDisabled={photoProcessing}
             primaryDisabled={photoProcessing}
-            statusMessage={photoProcessing ? 'Uploading incident photo…' : draftStatus}
+            isSaving={isSaving}
           />
         )
       ) : null}

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CButton } from '@coreui/react'
 import CreateActionButton from 'src/components/CreateActionButton'
-import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
+import InspectionItemDrawer from './InspectionItemDrawer'
 import RowActions from 'src/components/RowActions'
 import useMediaQuery from 'src/hooks/useMediaQuery'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
@@ -28,6 +28,7 @@ import HighAngleInspectionRowCard, {
 import HighAngleCustomRecordModal from './HighAngleCustomRecordModal'
 import InspectionResetConfirmDrawer from './InspectionResetConfirmDrawer'
 import { InspectionElementDrawerFooter } from './InspectionElementUi'
+import { hasHighAngleInspectionData } from '../inspectionResetActions'
 import InspectionScopeNavigator from './InspectionScopeNavigator'
 import { resetInspectionViewport } from '../inspectionViewport'
 
@@ -521,7 +522,7 @@ export const HighAngleInspectionChecks = ({
       ) : null}
 
       {nextCompartment && !readOnly ? (
-        <div className="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2">
+        <div className="inspection-next-location-card d-grid gap-1">
           <div className="small fw-semibold text-body-secondary">Next compartment</div>
           <CButton
             type="button"
@@ -540,9 +541,9 @@ export const HighAngleInspectionChecks = ({
       ) : null}
 
       {useMobileDrawer && mobileDetailRow ? (
-        <MobileBottomDrawer
+        <InspectionItemDrawer
           visible
-          title={mobileDetailRow.equipment || 'Equipment'}
+          itemTitle={mobileDetailRow.equipment || 'Equipment'}
           bodyClassName="inspection-equipment-detail-drawer-shell"
           headerAction={
             !readOnly ? (
@@ -551,10 +552,25 @@ export const HighAngleInspectionChecks = ({
                 hitArea={44}
                 toggleAriaLabel={`High angle actions for ${mobileDetailRow.equipment || 'Equipment'}`}
                 items={[
-                  typeof onResetCheck === 'function'
+                  (mobileDetailRow.isExtensionRow === true ||
+                    mobileDetailRow.equipmentSource === 'custom') &&
+                  typeof onUpdateItem === 'function'
+                    ? {
+                        key: 'edit',
+                        label: 'Edit custom item',
+                        disabled: mobileDraftDirty,
+                        disabledReason: mobileDraftDirty ? 'Save or cancel changes first.' : '',
+                        onClick: () => {
+                          openItemModal(stripHighAngleDisplayMeta(mobileDetailRow))
+                          closeMobileDetailDrawer()
+                        },
+                      }
+                    : null,
+                  typeof onResetCheck === 'function' &&
+                  hasHighAngleInspectionData(mobileDraftRow || mobileDetailRow)
                     ? {
                         key: 'reset',
-                        label: 'Reset check',
+                        label: 'Clear inspection answers',
                         className: 'text-danger',
                         onClick: () =>
                           requestResetCheck(stripHighAngleDisplayMeta(mobileDetailRow), {
@@ -564,24 +580,10 @@ export const HighAngleInspectionChecks = ({
                     : null,
                   (mobileDetailRow.isExtensionRow === true ||
                     mobileDetailRow.equipmentSource === 'custom') &&
-                  typeof onUpdateItem === 'function'
-                    ? {
-                        key: 'edit',
-                        label: 'Edit',
-                        disabled: mobileDraftDirty,
-                        disabledReason: mobileDraftDirty ? 'Save or cancel changes first.' : '',
-                        onClick: () => {
-                          openItemModal(stripHighAngleDisplayMeta(mobileDetailRow))
-                          closeMobileDetailDrawer()
-                        },
-                      }
-                    : null,
-                  (mobileDetailRow.isExtensionRow === true ||
-                    mobileDetailRow.equipmentSource === 'custom') &&
                   typeof onDeleteItem === 'function'
                     ? {
                         key: 'delete',
-                        label: 'Delete',
+                        label: 'Delete custom item',
                         className: 'text-danger',
                         disabled: mobileDraftDirty,
                         disabledReason: mobileDraftDirty ? 'Save or cancel changes first.' : '',
@@ -627,7 +629,7 @@ export const HighAngleInspectionChecks = ({
               />
             ) : null}
           </>
-        </MobileBottomDrawer>
+        </InspectionItemDrawer>
       ) : null}
 
       {!readOnly ? (
@@ -668,9 +670,9 @@ export const HighAngleInspectionChecks = ({
       />
       <ActionConfirmModal
         visible={showDiscardChanges}
-        title="Discard changes?"
+        title="Discard unsaved changes?"
         message="Your high angle item changes have not been saved."
-        confirmLabel="Discard"
+        confirmLabel="Discard changes"
         confirmColor="danger"
         cancelLabel="Keep editing"
         mobileDrawer

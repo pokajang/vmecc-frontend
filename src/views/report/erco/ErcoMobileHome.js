@@ -45,7 +45,6 @@ const ErcoMobileHome = ({
     )
   }, [incident.showAllIncidentTypes, incident.visibleTypeOptions])
   const draftRow = draftRows[0] || null
-  const draftSyncStatus = String(draftRow?.syncStatus || draftRow?.__offlineSyncStatus || '').trim()
   const draftSummary = draftRow
     ? [draftRow.incidentType || 'ERCO', draftRow.location || 'No location']
         .filter(Boolean)
@@ -158,7 +157,6 @@ const ErcoMobileHome = ({
           ariaLabel="Continue ERCO draft"
           summary={draftSummary}
           savedLabel={formatMobileReportDate(draftRow, 'Saved')}
-          syncStatus={draftSyncStatus}
           onContinue={() => onContinueDraft?.(draftRow)}
           onDelete={() => onDeleteDraft?.(draftRow)}
         />

@@ -1,15 +1,18 @@
 import React, { useMemo, useRef, useState } from 'react'
-import { CButton } from '@coreui/react'
+import AppButton from 'src/components/AppButton'
+import ActionButtonGroup from 'src/components/ActionButtonGroup'
 import ButtonLoader from 'src/components/ButtonLoader'
 import FormActionGroup from 'src/components/FormActionGroup'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import { getPrimaryRecordActionKeys, resolveRecordActions } from './recordActionResolver'
 
-const ActionButton = ({ action, className = '' }) => (
-  <CButton
+const ActionButton = ({ action, className = '', presentation }) => (
+  <AppButton
     type="button"
-    color={action.color}
-    variant={action.variant}
+    intent={
+      action.color === 'danger' ? 'danger' : action.color === 'primary' ? 'primary' : 'neutral'
+    }
+    presentation={presentation || (action.variant === 'outline' ? 'soft' : 'solid')}
     className={className}
     disabled={action.disabled}
     aria-busy={action.loading || undefined}
@@ -18,7 +21,7 @@ const ActionButton = ({ action, className = '' }) => (
     onClick={action.onClick}
   >
     {action.loading ? <ButtonLoader label={action.label} size={14} /> : action.label}
-  </CButton>
+  </AppButton>
 )
 
 const RecordDetailActions = ({
@@ -112,10 +115,9 @@ const RecordDetailActions = ({
             />
           ))}
           {drawerActions.length > 0 ? (
-            <CButton
+            <AppButton
               type="button"
-              color="secondary"
-              variant="outline"
+              intent="neutral"
               className="inspection-detail-sticky-action-btn"
               aria-haspopup="dialog"
               aria-expanded={moreOpen}
@@ -123,7 +125,7 @@ const RecordDetailActions = ({
               onClick={() => setMoreOpen(true)}
             >
               More actions
-            </CButton>
+            </AppButton>
           ) : null}
         </FormActionGroup>
       ) : null}
@@ -138,15 +140,20 @@ const RecordDetailActions = ({
           onAfterClose={runPendingAction}
           onClose={closeMoreActions}
         >
-          <div className="inspection-detail-more-actions" role="group" aria-label={ariaLabel}>
+          <ActionButtonGroup
+            layout="stack"
+            className="inspection-detail-more-actions"
+            ariaLabel={ariaLabel}
+          >
             {drawerActions.map((action) => (
               <ActionButton
                 key={action.key}
                 action={{ ...action, onClick: () => queueDrawerAction(action) }}
+                presentation="soft"
                 className={`inspection-drawer-action inspection-drawer-action--${action.color || 'secondary'} w-100`}
               />
             ))}
-          </div>
+          </ActionButtonGroup>
         </MobileBottomDrawer>
       ) : null}
     </>

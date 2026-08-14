@@ -12,6 +12,7 @@ import CreateActionButton from 'src/components/CreateActionButton'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import useMediaQuery from 'src/hooks/useMediaQuery'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
+import InspectionDrawerFooterAction from 'src/views/inspection/form/components/patterns/InspectionDrawerFooterAction'
 import {
   FormFieldError,
   InspectionPhotoViewerModal,
@@ -215,17 +216,17 @@ export const FrtDailyInspectionChecks = ({
 
   const addItemFooter = (
     <div className="mobile-bottom-drawer__footer d-flex align-items-center justify-content-end gap-2">
-      <CButton type="button" color="secondary" variant="outline" onClick={closeAddItem}>
+      <InspectionDrawerFooterAction type="button" onClick={closeAddItem}>
         Cancel
-      </CButton>
-      <CButton
+      </InspectionDrawerFooterAction>
+      <InspectionDrawerFooterAction
         type="button"
-        color="primary"
+        intent="primary"
         disabled={!String(newItem.equipment || '').trim()}
         onClick={submitNewItem}
       >
         Add
-      </CButton>
+      </InspectionDrawerFooterAction>
     </div>
   )
 

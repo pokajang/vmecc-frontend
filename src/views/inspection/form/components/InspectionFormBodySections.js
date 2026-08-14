@@ -5,6 +5,7 @@ import CreateActionButton from 'src/components/CreateActionButton'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import RowActions from 'src/components/RowActions'
 import useMediaQuery from 'src/hooks/useMediaQuery'
+import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import {
   isAiHelperErrorRetryable,
   normalizeAiHelperError,
@@ -33,6 +34,8 @@ import {
   PARTIAL_STATE_PROMPTS,
 } from '../../inspectionFormUiTokens'
 import { FormFieldError, InspectionGeneralEvidenceCard } from './InspectionFormDisplaySections'
+import InspectionItemDrawer from './InspectionItemDrawer'
+import InspectionDrawerFooterAction from './patterns/InspectionDrawerFooterAction'
 import { InspectionFormActions, InspectionFormDraftOnlyActions } from './InspectionFormActions'
 import { InspectionSectionHeading } from './patterns'
 import InspectionLocationOptionPicker from './InspectionLocationOptionPicker'
@@ -193,7 +196,7 @@ const InspectionNextLocationCard = ({ continueAction = null, onContinueToLocatio
   }
 
   return (
-    <div className="inspection-next-location-card rounded-3 border bg-light-subtle p-3 d-grid gap-2">
+    <div className="inspection-next-location-card d-grid gap-1">
       <div className="small fw-semibold text-body-secondary">{`Next ${continuationSuffix}`}</div>
       <div className="inspection-next-location-options d-flex flex-wrap gap-2">
         {recommendedOptions.map((option) => {
@@ -325,6 +328,9 @@ const InspectionFindingsSection = ({
 }) => {
   const issues = normalizeInspectionIssueDrafts(form.inspectionIssues)
   const [editor, setEditor] = useState(null)
+  const [editorBaseSignature, setEditorBaseSignature] = useState('')
+  const [showDiscardEditor, setShowDiscardEditor] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState(null)
   const [editorError, setEditorError] = useState('')
   const [deleteError, setDeleteError] = useState('')
   const [savingAction, setSavingAction] = useState('')
@@ -343,6 +349,7 @@ const InspectionFindingsSection = ({
   const hasFailedEditorPhotoUploads = unresolvedEditorPhotoUploads.some(
     (item) => item?.status === 'failed',
   )
+  const editorDirty = Boolean(editor && JSON.stringify(editor.issue || {}) !== editorBaseSignature)
 
   useEffect(
     () => () => {
@@ -427,22 +434,26 @@ const InspectionFindingsSection = ({
   }
 
   const startCreate = () => {
+    const issue = applyFindingLocationContext(createInspectionIssue())
     setEditor({
       mode: 'create',
-      issue: applyFindingLocationContext(createInspectionIssue()),
+      issue,
     })
+    setEditorBaseSignature(JSON.stringify(issue))
     setEditorError('')
     setDeleteError('')
     resetAllAiFieldStates()
   }
   const startEdit = (issue) => {
+    const editableIssue = {
+      ...issue,
+      photos: Array.isArray(issue.photos) ? issue.photos : [],
+    }
     setEditor({
       mode: 'edit',
-      issue: {
-        ...issue,
-        photos: Array.isArray(issue.photos) ? issue.photos : [],
-      },
+      issue: editableIssue,
     })
+    setEditorBaseSignature(JSON.stringify(editableIssue))
     setEditorError('')
     setDeleteError('')
     resetAllAiFieldStates()
@@ -504,6 +515,7 @@ const InspectionFindingsSection = ({
       updateForm(nextForm)
       resetAllAiFieldStates()
       setEditor(null)
+      setEditorBaseSignature('')
       return
     }
 
@@ -516,6 +528,7 @@ const InspectionFindingsSection = ({
       }
       updateForm(nextForm)
       setEditor(null)
+      setEditorBaseSignature('')
       setEditorError('')
     } catch {
       setEditorError('Unable to save finding. Please try again.')
@@ -523,11 +536,20 @@ const InspectionFindingsSection = ({
       setSavingAction('')
     }
   }
-  const cancelEditor = () => {
+  const closeEditor = () => {
     if (savingAction === 'editor' || hasUnresolvedEditorPhotoUploads) return
     resetAllAiFieldStates()
     setEditor(null)
+    setEditorBaseSignature('')
     setEditorError('')
+  }
+  const cancelEditor = () => {
+    if (savingAction === 'editor' || hasUnresolvedEditorPhotoUploads) return
+    if (editorDirty) {
+      setShowDiscardEditor(true)
+      return
+    }
+    closeEditor()
   }
   const removeIssue = async (issueId) => {
     if (savingAction) return
@@ -877,23 +899,21 @@ const InspectionFindingsSection = ({
           </div>
         ) : null}
         <div className="d-flex flex-wrap justify-content-end gap-2">
-          <CButton
+          <InspectionDrawerFooterAction
             type="button"
-            color="secondary"
-            variant="outline"
             disabled={savingAction === 'editor' || hasUnresolvedEditorPhotoUploads}
             onClick={cancelEditor}
           >
             Cancel
-          </CButton>
-          <CButton
+          </InspectionDrawerFooterAction>
+          <InspectionDrawerFooterAction
             type="button"
-            color="primary"
+            intent="primary"
             disabled={savingAction === 'editor' || hasUnresolvedEditorPhotoUploads}
             onClick={saveEditor}
           >
-            {savingAction === 'editor' ? 'Saving...' : 'Save'}
-          </CButton>
+            {savingAction === 'editor' ? 'Saving...' : 'Save finding'}
+          </InspectionDrawerFooterAction>
         </div>
       </div>
     )
@@ -972,16 +992,19 @@ const InspectionFindingsSection = ({
                     items={[
                       {
                         key: 'edit',
-                        label: 'Edit',
+                        label: 'Edit finding',
                         disabled: Boolean(savingAction),
                         onClick: () => startEdit(issue),
                       },
                       {
                         key: 'delete',
-                        label: savingAction === `delete:${issue.id}` ? 'Deleting...' : 'Delete',
+                        label:
+                          savingAction === `delete:${issue.id}`
+                            ? 'Deleting finding...'
+                            : 'Delete finding',
                         className: 'text-danger',
                         disabled: Boolean(savingAction),
-                        onClick: () => removeIssue(issue.id),
+                        onClick: () => setDeleteTarget(issue),
                       },
                     ]}
                   />
@@ -992,9 +1015,12 @@ const InspectionFindingsSection = ({
         </div>
       )}
 
-      <MobileBottomDrawer
+      <InspectionItemDrawer
         visible={Boolean(editor)}
-        title={editor?.mode === 'edit' ? 'Edit finding' : 'Add finding'}
+        mode={editor?.mode === 'edit' ? 'edit-finding' : 'create-finding'}
+        entityKind="finding"
+        itemTitle={editor?.mode === 'edit' ? 'Finding' : 'Add finding'}
+        editTitle={editor?.mode === 'edit' ? 'Edit finding' : 'Add finding'}
         bodyClassName="inspection-equipment-detail-drawer-shell"
         closeDisabled={hasUnresolvedEditorPhotoUploads}
         onClose={cancelEditor}
@@ -1002,7 +1028,36 @@ const InspectionFindingsSection = ({
         <div className="inspection-mobile-detail-drawer-body inspection-equipment-detail-drawer-body d-grid">
           {renderEditorFields()}
         </div>
-      </MobileBottomDrawer>
+      </InspectionItemDrawer>
+      <ActionConfirmModal
+        visible={showDiscardEditor}
+        title="Discard unsaved changes?"
+        message="Your finding changes have not been saved."
+        confirmLabel="Discard changes"
+        confirmColor="danger"
+        cancelLabel="Keep editing"
+        mobileDrawer
+        onClose={() => setShowDiscardEditor(false)}
+        onConfirm={() => {
+          setShowDiscardEditor(false)
+          closeEditor()
+        }}
+      />
+      <ActionConfirmModal
+        visible={Boolean(deleteTarget)}
+        title="Delete finding?"
+        message="This removes the finding and its attached evidence from the current inspection."
+        confirmLabel="Delete finding"
+        confirmColor="danger"
+        cancelLabel="Keep finding"
+        mobileDrawer
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          const targetId = deleteTarget?.id
+          setDeleteTarget(null)
+          if (targetId) removeIssue(targetId)
+        }}
+      />
     </div>
   )
 }

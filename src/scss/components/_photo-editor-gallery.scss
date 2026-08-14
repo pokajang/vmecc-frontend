@@ -7,8 +7,7 @@
 
 .photo-editor-gallery__item {
   min-width: 0;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--photo-editor-gallery-border-color);
+  padding-bottom: 0.75rem;
 }
 
 .photo-editor-gallery__item:last-child {
@@ -54,10 +53,9 @@
 
 .photo-editor-gallery__description-editor {
   margin-bottom: 0.75rem;
-  padding: 0.75rem;
-  border: 1px solid var(--photo-editor-gallery-border-color);
-  border-radius: var(--vmecc-radius-card, 0.5rem);
-  background: var(--cui-tertiary-bg);
+  padding: 0;
+  border: 0;
+  background: transparent;
 }
 
 .photo-editor-gallery__description-state {
@@ -78,7 +76,9 @@
 .photo-editor-gallery__caption-option {
   min-height: 1.75rem;
   padding: 0.18rem 0.45rem;
-  border-color: var(--cui-border-color) !important;
+  border-color: transparent !important;
+  border-radius: var(--vmecc-radius-pill);
+  background: var(--vmecc-action-neutral-bg);
   color: var(--cui-body-color);
   font-size: var(--vmecc-text-caption);
   line-height: 1.2;
@@ -87,7 +87,7 @@
 
 .photo-editor-gallery__caption-option:active,
 .photo-editor-gallery__caption-option:focus-visible {
-  border-color: rgba(var(--cui-primary-rgb), 0.38) !important;
+  border-color: transparent !important;
   background: rgba(var(--cui-primary-rgb), 0.08);
   color: var(--cui-primary);
 }
