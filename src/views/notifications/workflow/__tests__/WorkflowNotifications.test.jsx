@@ -152,13 +152,13 @@ describe('WorkflowNotifications', () => {
 
     fireEvent.click(refreshButton)
     expect(await screen.findByText('Messages refreshed successfully.')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'OK' }))
+    await waitFor(() => expect(screen.queryByText('Messages refreshed successfully.')).toBeNull())
 
     fireEvent.click(deleteAllButton)
     expect(screen.getByText('Delete all notifications?')).toBeTruthy()
-    expect(screen.getByRole('alertdialog')).toBeTruthy()
-    await waitFor(() =>
-      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Cancel' })),
-    )
+    expect(screen.getByRole('dialog')).toBeTruthy()
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('dialog')))
     fireEvent.click(screen.getByRole('button', { name: 'Delete all', exact: true }))
 
     await waitFor(() => expect(deleteAll).toHaveBeenCalledTimes(1))

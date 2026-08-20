@@ -126,7 +126,7 @@ describe('OvertimeRecordsSection draft row UX', () => {
     const firstRow = bodyRows[0]
     expect(within(firstRow).getByText('DRAFT')).toBeTruthy()
 
-    const draftStatus = screen.getByTestId('overtime-draft-status-DRAFT')
+    const draftStatus = within(firstRow).getByTestId('overtime-draft-status-DRAFT')
     expect(draftStatus.textContent || '').toContain('Draft')
     expect((draftStatus.className || '').includes('text-body-secondary')).toBe(true)
     expect(draftStatus.querySelector('svg')).toBeTruthy()
@@ -154,12 +154,16 @@ describe('OvertimeRecordsSection draft row UX', () => {
       />,
     )
 
-    const draftCard = screen.getByRole('button', { name: 'Open overtime record DRAFT summary' })
-    const submittedCard = screen.getByRole('button', {
-      name: 'Open overtime record OT-2026-001 summary',
-    })
+    const draftCard = screen
+      .getAllByRole('button', { name: 'Open overtime record DRAFT summary' })
+      .find((card) => card.closest('.d-md-none'))
+    const submittedCard = screen
+      .getAllByRole('button', { name: 'Open overtime record OT-2026-001 summary' })
+      .find((card) => card.closest('.d-md-none'))
 
-    expect(screen.getByText('Drafts')).toBeTruthy()
+    expect(draftCard).toBeTruthy()
+    expect(submittedCard).toBeTruthy()
+    expect(screen.getAllByText('Drafts').length).toBeGreaterThan(0)
     expect(draftCard.textContent).toContain('DRAFT')
     expect(draftCard.textContent).toContain('2h')
     expect(submittedCard.textContent).toContain('OT-2026-001')
@@ -245,7 +249,9 @@ describe('OvertimeRecordsSection draft row UX', () => {
       />,
     )
 
-    const marker = screen.getByTestId('overtime-linked-draft-status-OT-2026-003')
+    const marker = within(document.querySelector('tbody')).getByTestId(
+      'overtime-linked-draft-status-OT-2026-003',
+    )
     expect(marker).toBeTruthy()
     expect(marker.textContent || '').toContain('Draft saved')
     expect(marker.querySelector('svg')).toBeTruthy()
@@ -262,9 +268,10 @@ describe('OvertimeRecordsSection draft row UX', () => {
       />,
     )
 
-    expect(screen.getByTestId('ot-type-summary-chip-weekend')).toBeTruthy()
-    expect(screen.getByTestId('ot-type-summary-chip-publicHoliday')).toBeTruthy()
-    expect(screen.getByTestId('ot-month-group-2026-04-month').textContent).toBe('APRIL 2026')
+    const table = document.querySelector('table')
+    expect(within(table).getByTestId('ot-type-summary-chip-weekend')).toBeTruthy()
+    expect(within(table).getByTestId('ot-type-summary-chip-publicHoliday')).toBeTruthy()
+    expect(within(table).getByTestId('ot-month-group-2026-04-month').textContent).toBe('APRIL 2026')
     expect(screen.getAllByText('2 records').length).toBeGreaterThan(0)
     expect(screen.queryByText(/Total:/i)).toBeNull()
   })

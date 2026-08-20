@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from 'react'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import LeaveRecordsSection from '../LeaveRecordsSection'
 
@@ -85,7 +85,9 @@ describe('LeaveRecordsSection interactions', () => {
     const props = buildProps()
     render(<LeaveRecordsSection {...props} />)
 
-    const rowButton = screen.getByRole('button', { name: 'Open leave record LV-AL-2026-001' })
+    const rowButton = within(document.querySelector('table')).getByRole('button', {
+      name: 'Open leave record LV-AL-2026-001',
+    })
 
     fireEvent.keyDown(rowButton, { key: 'Enter' })
     fireEvent.keyDown(rowButton, { key: ' ' })
@@ -97,10 +99,11 @@ describe('LeaveRecordsSection interactions', () => {
     const props = buildProps()
     render(<LeaveRecordsSection {...props} />)
 
-    const mobileCard = screen.getByRole('button', {
-      name: 'Open leave record LV-AL-2026-001 summary',
-    })
+    const mobileCard = screen
+      .getAllByRole('button', { name: 'Open leave record LV-AL-2026-001 summary' })
+      .find((card) => card.closest('.d-md-none'))
 
+    expect(mobileCard).toBeTruthy()
     expect(document.querySelector('.list-group')).toBeTruthy()
     expect(mobileCard.closest('article').className).toContain('list-group-item')
     expect(mobileCard.textContent).toContain('LV-AL-2026-001')

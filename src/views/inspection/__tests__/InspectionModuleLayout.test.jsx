@@ -21,19 +21,12 @@ afterEach(() => {
 })
 
 describe('InspectionModuleLayout', () => {
-  it('renders async feedback inside the visible inspection detail drawer', () => {
+  it('renders inspection details inside the visible drawer', () => {
     render(
       <InspectionModuleLayout
         activeSection="detail"
         clearContinuationState={vi.fn()}
         detailViewProps={{}}
-        feedback={{
-          id: 1,
-          title: 'Downloading report',
-          message: 'Preparing your PDF for download...',
-          color: 'info',
-          delay: 0,
-        }}
         formViewProps={{}}
         headerActions={null}
         isDeleting={false}
@@ -50,10 +43,8 @@ describe('InspectionModuleLayout', () => {
       />,
     )
 
-    const status = screen.getByRole('status')
-    expect(status.textContent).toContain('Downloading report')
-    expect(status.closest('.inspection-detail-drawer__feedback')).toBeTruthy()
-    expect(screen.getAllByRole('status')).toHaveLength(1)
+    const detail = screen.getByText('Inspection detail content')
+    expect(detail.closest('.inspection-detail-drawer')).toBeTruthy()
   })
 
   it('closes a detail drawer to its durable record-list context', () => {

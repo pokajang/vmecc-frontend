@@ -223,7 +223,7 @@ export const hasMeaningfulDrillChanges = (form) => {
   if (
     value.reportDate !== defaults.reportDate ||
     value.reportTime ||
-    value.reportIssuanceDate ||
+    value.reportIssuanceDate !== defaults.reportIssuanceDate ||
     value.weather !== defaults.weather ||
     text(value.incidentType) ||
     value.exerciseCategories.length ||
