@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from 'react'
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import DrillForm from '../DrillForm'
@@ -56,6 +56,7 @@ const renderForm = (props = {}) =>
         initialFormSeed={completeSeed}
         onRequestReview={vi.fn()}
         {...props}
+        onRegisterMobileBackHandler={props.onRegisterMobileBackHandler}
       />
     </MemoryRouter>,
   )
@@ -123,6 +124,28 @@ describe('DrillForm V2 flow', () => {
     expect(await screen.findByText('Choose Drill Type')).toBeTruthy()
     expect(screen.queryByText('Exercise Setup')).toBeNull()
     expect(screen.queryByRole('button', { name: 'Reset' })).toBeNull()
+  })
+
+  it('rewinds one setup group when a mobile setup back handler is registered', () => {
+    let mobileBackHandler
+    mockMobileViewport()
+    renderForm({
+      newSection: 'setup',
+      onRegisterMobileBackHandler: (handler) => {
+        mobileBackHandler = handler
+      },
+      initialFormSeed: {
+        ...completeSeed,
+        reportDate: '',
+        reportTime: '',
+      },
+    })
+
+    expect(screen.getByLabelText('Report date')).toBeTruthy()
+    expect(typeof mobileBackHandler).toBe('function')
+
+    act(() => expect(mobileBackHandler()).toBe(true))
+    expect(screen.getByText('Choose Drill Location')).toBeTruthy()
   })
 
   it('uses the type selected on mobile home without asking for it again', async () => {

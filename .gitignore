@@ -9,6 +9,7 @@ yarn.lock
 /test-results/
 /playwright-report/
 /smoke-artifacts/
+/.playwright-output/
 
 # production build artifacts are committed for shared cPanel hosting.
 
@@ -29,6 +30,7 @@ yarn-error.log*
 vite-*.log
 /temp-*.js
 /tmp-*.js
+/tmp_check_viewport.js
 /tmp-*.png
 /diag*.png
 /dashboard-route-check*.png

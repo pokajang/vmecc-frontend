@@ -1,8 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
 
 const runId = process.env.E2E_RUN_ID || ''
-const baseURL = process.env.VMECC_E2E_BASE_URL || 'http://127.0.0.1:3000'
-const apiURL = process.env.VMECC_E2E_API_URL || 'http://127.0.0.1:8000/api'
+const baseURL = process.env.VMECC_E2E_BASE_URL || 'http://localhost:3000'
+const apiURL = process.env.VMECC_E2E_API_URL || 'http://localhost:8000/api'
 const browserName = process.env.VMECC_E2E_BROWSER || 'chromium'
 
 const browserDevices = {
@@ -17,8 +17,9 @@ if (!Object.hasOwn(browserDevices, browserName)) {
 
 const assertControlledOrigin = (value, label) => {
   const url = new URL(value)
-  if (url.protocol !== 'http:' || url.hostname !== '127.0.0.1' || !url.port) {
-    throw new Error(`${label} must use an explicit http://127.0.0.1:<port> origin`)
+  const allowedHostnames = new Set(['127.0.0.1', 'localhost'])
+  if (url.protocol !== 'http:' || !allowedHostnames.has(url.hostname) || !url.port) {
+    throw new Error(`${label} must use an explicit http://localhost-or-127.0.0.1:<port> origin`)
   }
 }
 

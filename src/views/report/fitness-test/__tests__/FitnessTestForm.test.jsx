@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from 'react'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import FitnessTestForm from '../FitnessTestForm'
@@ -118,6 +118,25 @@ describe('FitnessTestForm', () => {
 
     expect(screen.queryByLabelText('Reporting month')).toBeNull()
     expect(screen.getByText('2026-07')).toBeTruthy()
+  })
+
+  it('rewinds mobile setup to reporting period editor when possible', () => {
+    let mobileBackHandler
+    mockMobileViewport()
+    renderForm(
+      props({
+        initialFormSeed: { reportingMonth: '2026-06' },
+        onRegisterMobileBackHandler: (handler) => {
+          mobileBackHandler = handler
+        },
+      }),
+    )
+
+    expect(screen.getByText('2026-06')).toBeTruthy()
+    expect(typeof mobileBackHandler).toBe('function')
+
+    act(() => expect(mobileBackHandler()).toBe(true))
+    expect(screen.getByLabelText('Reporting month')).toBeTruthy()
   })
 
   it('reviews a complete shift-grouped report with calculated results', async () => {

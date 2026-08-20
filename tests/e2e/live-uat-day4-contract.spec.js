@@ -54,7 +54,8 @@ test.describe('Day 4 deep-record UAT contracts', () => {
 
     expect(sources[0]).toContain('inspection-detail-drawer')
     expect(sources[1]).toContain('inspection-readonly-evidence')
-    expect(sources[2]).toContain('report-photo-gallery__card')
+    expect(sources[2]).toContain('EvidencePhotoGallery')
+    expect(sources[2]).toContain('src/components/media/EvidencePhotoGallery')
     expect(sources[3]).toContain('workflow-photo-preview')
   })
 

@@ -34,7 +34,10 @@ const renderFamilies = {
     'src/views/team/components/TeamCard.js',
   ]),
   'chat-image': new Set(['src/components/messages/ChatThread.js']),
-  'shared-media-foundation': new Set(['src/components/report-workflow/ReportViewComponents.js']),
+  'shared-media-foundation': new Set([
+    'src/components/report-workflow/ReportViewComponents.js',
+    'src/components/media/EvidenceImage.js',
+  ]),
   'read-only-evidence': new Set([
     'src/components/report-workflow/ReportPhotoGallery.js',
     'src/views/inspection/records/FireExtinguisherManagementPanel.js',

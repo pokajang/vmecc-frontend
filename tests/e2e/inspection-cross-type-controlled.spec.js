@@ -349,12 +349,8 @@ const captureActualTypeForm = async ({ browser, testInfo, type, profile }) => {
           expect(formMetrics.stickySpacerHeight).toBeLessThanOrEqual(132.5)
         }
       }
-      if (formMetrics.stickyDockedAtEnd) {
-        expect(formMetrics.stickyPosition).toBe('static')
-        expect(formMetrics.stickySpacerHeight).toBeLessThanOrEqual(76.5)
-      } else {
-        expect(formMetrics.stickyPosition).toBe('fixed')
-      }
+      expect(formMetrics.stickyDockedAtEnd).toBe(false)
+      expect(formMetrics.stickyPosition).toBe('fixed')
     }
 
     expect(pageErrors).toEqual([])
@@ -597,8 +593,8 @@ test('captures every real inspection type form with controlled data', async ({
 
   expect(audit.checkpoints).toHaveLength(INSPECTION_TYPES.length)
   expect(audit.checkpoints.some(({ actionRects }) => actionRects.length > 0)).toBe(true)
-  expect(audit.checkpoints.some(({ stickyDockedAtEnd }) => stickyDockedAtEnd)).toBe(true)
   expect(audit.checkpoints.some(({ stickyDockedAtEnd }) => stickyDockedAtEnd === false)).toBe(true)
+  expect(audit.checkpoints.every(({ stickyDockedAtEnd }) => stickyDockedAtEnd === false)).toBe(true)
 })
 
 test('keeps structured scope selection consistent across Fire Truck, High Angle and SCBA', async ({

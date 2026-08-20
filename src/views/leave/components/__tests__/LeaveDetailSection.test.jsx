@@ -82,7 +82,9 @@ const expectCommonDetailContract = ({ staff = false } = {}) => {
   expect(screen.getByText('0')).toBeTruthy()
   expect(screen.getByText(longReason)).toBeTruthy()
   expect(screen.getByTestId('leave-status-badge').closest('dd')).toBeTruthy()
-  expect(screen.getByText('Supervisor review required').closest('dd')).toBeTruthy()
+  expect(screen.getByText('Next Action').closest('div').querySelector('dd').textContent).toContain(
+    'Supervisor review required',
+  )
 
   const evidence = screen.getByRole('link', { name: 'supporting-evidence.pdf' })
   expect(evidence.closest('dd')).toBeTruthy()
@@ -128,6 +130,6 @@ describe('Leave detail read-only presentation', () => {
   ])('retains the missing-record state for the %s view', (_name, Component) => {
     renderWithRouter(<Component {...sharedProps} selectedRecord={null} />)
     expect(screen.getByRole('alert').textContent).toContain('Leave record not found.')
-    expect(screen.getByRole('button', { name: 'Back' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: /^Back(?: to leave)?$/ })).toBeTruthy()
   })
 })

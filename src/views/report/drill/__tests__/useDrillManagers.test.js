@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import useDrillCategoryManager from '../useDrillCategoryManager'
 import useDrillLocationManager from '../useDrillLocationManager'
 import useDrillTypeManager from '../useDrillTypeManager'
+import useDrillEnvironmentManager from '../useDrillEnvironmentManager'
 
 const createStorageMock = () => {
   let store = {}
@@ -64,6 +65,21 @@ const renderCategoryManager = (overrides = {}) => {
     useDrillCategoryManager({
       userId: 'user-1',
       selectedCategories: [],
+      updateSetupField,
+      pushToast,
+      ...overrides,
+    }),
+  )
+  return { ...hook, updateSetupField, pushToast }
+}
+
+const renderEnvironmentManager = (overrides = {}) => {
+  const updateSetupField = vi.fn()
+  const pushToast = vi.fn()
+  const hook = renderHook(() =>
+    useDrillEnvironmentManager({
+      userId: 'user-1',
+      selectedEnvironment: '',
       updateSetupField,
       pushToast,
       ...overrides,
@@ -323,6 +339,88 @@ describe('useDrillCategoryManager', () => {
     expect(removed.updateSetupField).toHaveBeenLastCalledWith('exerciseCategories', ['Fire'])
     expect(storedRows()).not.toEqual(
       expect.arrayContaining([expect.objectContaining({ value: 'Medical Support' })]),
+    )
+  })
+})
+
+describe('useDrillEnvironmentManager', () => {
+  it('adds a custom environment and persists selection', async () => {
+    const { result, updateSetupField, pushToast } = renderEnvironmentManager()
+
+    act(() => result.current.openAddModal())
+    await waitFor(() => expect(result.current.newEnvironmentIconKey).toBeTruthy())
+
+    act(() => {
+      result.current.setNewEnvironmentName('Tunnel Environment')
+      result.current.setNewEnvironmentDescription('Low-light confined operations.')
+    })
+    act(() => result.current.saveType())
+
+    expect(updateSetupField).toHaveBeenCalledWith('weather', 'Tunnel Environment')
+    expect(pushToast).toHaveBeenCalledWith(
+      'Drill environment "Tunnel Environment" added.',
+      expect.objectContaining({ title: 'Environment added', color: 'success' }),
+    )
+    expect(storedRows()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          value: 'Tunnel Environment',
+          title: 'Tunnel Environment',
+          description: 'Low-light confined operations.',
+          iconKey: expect.any(String),
+        }),
+      ]),
+    )
+  })
+
+  it('blocks duplicate environment names and duplicate icons', async () => {
+    const { result } = renderEnvironmentManager()
+
+    act(() => result.current.openAddModal())
+    await waitFor(() => expect(result.current.newEnvironmentIconKey).toBeTruthy())
+    act(() => result.current.setNewEnvironmentName('Clear'))
+    act(() => result.current.saveType())
+    expect(result.current.addEnvironmentError).toBe('This drill environment already exists.')
+
+    act(() => {
+      result.current.setAddEnvironmentError('')
+      result.current.setNewEnvironmentName('Tunnel Environment')
+      result.current.setNewEnvironmentIconKey('Sun')
+    })
+    act(() => result.current.saveType())
+    expect(result.current.addEnvironmentError).toBe(
+      'This icon is already used by another environment.',
+    )
+  })
+
+  it('edits and removes a selected custom environment while preserving selected state', async () => {
+    const first = renderEnvironmentManager({ selectedEnvironment: 'Tunnel Environment' })
+    act(() => first.result.current.openAddModal())
+    await waitFor(() => expect(first.result.current.newEnvironmentIconKey).toBeTruthy())
+    act(() => first.result.current.setNewEnvironmentName('Tunnel Environment'))
+    act(() => first.result.current.setNewEnvironmentDescription('Low-light confined operations.'))
+    act(() => first.result.current.saveType())
+    first.unmount()
+
+    const edited = renderEnvironmentManager({
+      selectedEnvironment: 'Tunnel Environment',
+    })
+    await waitFor(() =>
+      expect(
+        edited.result.current.typeOptions.some((row) => row.value === 'Tunnel Environment'),
+      ).toBe(true),
+    )
+    const customEnvironment = edited.result.current.typeOptions.find(
+      (row) => row.value === 'Tunnel Environment',
+    )
+    act(() => edited.result.current.startEditType(customEnvironment))
+    act(() => edited.result.current.setNewEnvironmentName('Confined Tunnel'))
+    act(() => edited.result.current.saveType())
+    expect(edited.updateSetupField).toHaveBeenCalledWith('weather', 'Confined Tunnel')
+
+    act(() => edited.result.current.removeType('Confined Tunnel'))
+    expect(storedRows()).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ value: 'Confined Tunnel' })]),
     )
   })
 })

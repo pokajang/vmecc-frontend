@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React, { useState } from 'react'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import ErcoSetupStep from '../ErcoSetupStep'
 import ErcoRespondingTeamStep from '../ErcoRespondingTeamStep'
@@ -240,7 +240,12 @@ const renderDetailsStep = ({ seed = {} } = {}) => {
   return render(<Harness />)
 }
 
-const renderSetupStep = ({ mobile = false, seed = {}, errors = {} } = {}) => {
+const renderSetupStep = ({
+  mobile = false,
+  seed = {},
+  errors = {},
+  onRegisterMobileBackHandler,
+} = {}) => {
   setMobileViewport(mobile)
 
   const Harness = () => {
@@ -268,6 +273,7 @@ const renderSetupStep = ({ mobile = false, seed = {}, errors = {} } = {}) => {
           { title: '2 days ago', description: 'Earlier date', value: '2026-04-23' },
         ]}
         pushToast={vi.fn()}
+        onRegisterMobileBackHandler={onRegisterMobileBackHandler}
         onContinue={vi.fn()}
       />
     )
@@ -337,7 +343,12 @@ describe('ERCO step smoke flow', () => {
 
     const beforeRows = screen.getAllByLabelText(/Event \/ Action for chronology row/i).length
     const firstEventInput = screen.getByLabelText('Event / Action for chronology row 1')
-    fireEvent.keyDown(firstEventInput, { key: 'Enter', code: 'Enter', charCode: 13 })
+    fireEvent.keyDown(firstEventInput, {
+      key: 'Enter',
+      code: 'Enter',
+      charCode: 13,
+      ctrlKey: true,
+    })
 
     await waitFor(() => {
       const afterRows = screen.getAllByLabelText(/Event \/ Action for chronology row/i).length
@@ -476,6 +487,23 @@ describe('ERCO step smoke flow', () => {
 })
 
 describe('ERCO mobile setup polish', () => {
+  it('registers a mobile back handler and rewinds from datetime to area', () => {
+    let mobileBackHandler
+    renderSetupStep({
+      mobile: true,
+      seed: { incidentDate: '', incidentTime: '' },
+      onRegisterMobileBackHandler: (handler) => {
+        mobileBackHandler = handler
+      },
+    })
+
+    expect(screen.getByText('Choose Incident Time')).toBeTruthy()
+    expect(typeof mobileBackHandler).toBe('function')
+
+    act(() => expect(mobileBackHandler()).toBe(true))
+    expect(screen.getByText('Choose Area')).toBeTruthy()
+  })
+
   it('renders completed mobile setup groups as summaries and reopens one for editing', async () => {
     renderSetupStep({ mobile: true })
 

@@ -38,6 +38,23 @@ describe('WorkflowStageActions', () => {
     expect(screen.getByRole('button', { name: 'Continue' }).disabled).toBe(true)
   })
 
+  it('uses compact-sticky behavior for stacked mobile layouts when requested', () => {
+    render(
+      <WorkflowStageActions
+        mobileLayout="stacked-primary-first"
+        stackedMobileBehavior="compact-sticky"
+        onPrimary={() => {}}
+      />,
+    )
+
+    const compactGroup = document.querySelector('.workflow-stage-actions__group.action-row-thumb')
+    expect(compactGroup).toBeTruthy()
+    expect(compactGroup?.className).toContain('action-row-thumb--compact-sticky')
+    expect(screen.getByRole('button', { name: 'Continue' }).classList).toContain(
+      'workflow-stage-actions__primary',
+    )
+  })
+
   it('announces sticky status once while preserving the compact action layout', () => {
     render(
       <WorkflowStageActions

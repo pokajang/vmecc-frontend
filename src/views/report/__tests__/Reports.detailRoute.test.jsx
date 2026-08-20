@@ -2,7 +2,7 @@
 import React from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import Reports from '../Reports'
 
 const mocks = vi.hoisted(() => ({
@@ -231,12 +231,35 @@ const buildRouteActions = (overrides = {}) => ({
   ...overrides,
 })
 
+const RoutePathProbe = () => {
+  const location = useLocation()
+  return <div data-testid="route-path">{location.pathname}</div>
+}
+
 const renderReportsRoute = (initialPath = '/report/erco/erco-001') =>
   render(
     <MemoryRouter initialEntries={[initialPath]}>
       <Routes>
         <Route path="/report/:reportType/:reportId" element={<Reports />} />
-        <Route path="/report/:reportType" element={<Reports />} />
+        <Route
+          path="/report/:reportType"
+          element={
+            <>
+              <Reports />
+              <RoutePathProbe />
+            </>
+          }
+        />
+        <Route path="/report/:reportType/new" element={<Reports />} />
+        <Route
+          path="/report/:reportType/new/:newSection"
+          element={
+            <>
+              <Reports />
+              <RoutePathProbe />
+            </>
+          }
+        />
       </Routes>
     </MemoryRouter>,
   )
@@ -383,6 +406,90 @@ describe('Reports direct detail route loading', () => {
     fireEvent.click(backButton)
 
     await waitFor(() => expect(screen.getByTestId('erco-mobile-home')).toBeTruthy())
+  })
+
+  it('navigates ERCO mobile Back from analysis to form without running guarded action', () => {
+    const runGuardedAction = vi.fn((action) => action())
+
+    mocks.useReportRouteActions.mockReturnValue(buildRouteActions({ runGuardedAction }))
+
+    renderReportsRoute('/report/erco/new/analysis')
+
+    const backButton = screen.getByRole('button', { name: 'Back' })
+    fireEvent.click(backButton)
+
+    expect(runGuardedAction).not.toHaveBeenCalled()
+    expect(screen.getByTestId('route-path').textContent).toBe('/report/erco/new/form')
+  })
+
+  it('still uses guarded back action from ERCO setup and returns to report home', () => {
+    const runGuardedAction = vi.fn((action) => action())
+
+    mocks.useReportRouteActions.mockReturnValue(buildRouteActions({ runGuardedAction }))
+
+    renderReportsRoute('/report/erco/new/setup')
+
+    const backButton = screen.getByRole('button', { name: 'Back' })
+    fireEvent.click(backButton)
+
+    expect(runGuardedAction).toHaveBeenCalledTimes(1)
+    expect(screen.getByTestId('route-path').textContent).toBe('/report/erco')
+  })
+
+  it('navigates Drill mobile Back from analysis to chronology without running guarded action', () => {
+    const runGuardedAction = vi.fn((action) => action())
+
+    mocks.useReportRouteActions.mockReturnValue(buildRouteActions({ runGuardedAction }))
+
+    renderReportsRoute('/report/drill/new/analysis')
+
+    const backButton = screen.getByRole('button', { name: 'Back' })
+    fireEvent.click(backButton)
+
+    expect(runGuardedAction).not.toHaveBeenCalled()
+    expect(screen.getByTestId('route-path').textContent).toBe('/report/drill/new/chronology')
+  })
+
+  it('still uses guarded back action from Drill setup and returns to report home', () => {
+    const runGuardedAction = vi.fn((action) => action())
+
+    mocks.useReportRouteActions.mockReturnValue(buildRouteActions({ runGuardedAction }))
+
+    renderReportsRoute('/report/drill/new/setup')
+
+    const backButton = screen.getByRole('button', { name: 'Back' })
+    fireEvent.click(backButton)
+
+    expect(runGuardedAction).toHaveBeenCalledTimes(1)
+    expect(screen.getByTestId('route-path').textContent).toBe('/report/drill')
+  })
+
+  it('navigates Fitness Test mobile Back from signoff to results without running guarded action', () => {
+    const runGuardedAction = vi.fn((action) => action())
+
+    mocks.useReportRouteActions.mockReturnValue(buildRouteActions({ runGuardedAction }))
+
+    renderReportsRoute('/report/fitness-test/new/signoff')
+
+    const backButton = screen.getByRole('button', { name: 'Back' })
+    fireEvent.click(backButton)
+
+    expect(runGuardedAction).not.toHaveBeenCalled()
+    expect(screen.getByTestId('route-path').textContent).toBe('/report/fitness-test/new/results')
+  })
+
+  it('still uses guarded back action from Fitness Test period and returns to report home', () => {
+    const runGuardedAction = vi.fn((action) => action())
+
+    mocks.useReportRouteActions.mockReturnValue(buildRouteActions({ runGuardedAction }))
+
+    renderReportsRoute('/report/fitness-test/new/period')
+
+    const backButton = screen.getByRole('button', { name: 'Back' })
+    fireEvent.click(backButton)
+
+    expect(runGuardedAction).toHaveBeenCalledTimes(1)
+    expect(screen.getByTestId('route-path').textContent).toBe('/report/fitness-test')
   })
 
   it('discarding dirty form changes does not delete the saved draft', () => {
