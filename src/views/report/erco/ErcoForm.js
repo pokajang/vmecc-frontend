@@ -36,6 +36,7 @@ import ErcoDetailsStep from './ErcoDetailsStep'
 import ErcoPostAnalysisStep from './ErcoPostAnalysisStep'
 import ErcoValidationSummary from './ErcoValidationSummary'
 import { REPORT_MOBILE_QUERY } from '../hooks/useReportIsMobile'
+import { REPORT_ACTION_LABELS, getReviewLabel } from '../reportActionLabels'
 
 const ERCO_NEW_SECTIONS = ['setup', 'team', 'form', 'analysis']
 const createDraftSignature = (form) => JSON.stringify(form || {})
@@ -48,7 +49,6 @@ const ErcoForm = ({
   reportTypeLabel,
   reportBasePath,
   newSection,
-  datePresetOptions,
   pushToast,
   onDirtyChange,
   skipDraftLoad = false,
@@ -61,6 +61,7 @@ const ErcoForm = ({
   initialFormSeed = null,
   onRequestReview,
   onDraftSaved,
+  onRegisterMobileBackHandler,
 }) => {
   const navigate = useNavigate()
   const location = useLocation()
@@ -657,9 +658,9 @@ const ErcoForm = ({
             setForm={setForm}
             setupFieldErrors={visibleSetupFieldErrors}
             setSetupFieldErrors={setSetupFieldErrors}
-            datePresetOptions={datePresetOptions}
             pushToast={pushToast}
             isSaving={isSaving}
+            onRegisterMobileBackHandler={onRegisterMobileBackHandler}
             onContinue={async () => {
               if (!validateSetupBeforeContinue()) return
               const saved = await saveDraft({
@@ -768,7 +769,7 @@ const ErcoForm = ({
               navigateToSection('form')
             }}
             onClear={() => setShowReset(true)}
-            primaryLabel={editingRecord ? 'Review changes' : 'Review report'}
+            primaryLabel={getReviewLabel(Boolean(editingRecord))}
             photoProcessing={isPhotoProcessing}
             onPhotoProcessingChange={setIsPhotoProcessing}
           />

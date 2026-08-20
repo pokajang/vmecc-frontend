@@ -31,9 +31,8 @@ html {
   --vmecc-fg-placeholder: var(--cui-secondary-color);
   --vmecc-fg-disabled: var(--cui-secondary-color);
   --vmecc-control-border: var(--cui-secondary-color);
-  --vmecc-focus-indicator: #007e7a;
-  --vmecc-focus-ring:
-    0 0 0 0.125rem var(--cui-body-bg), 0 0 0 0.3125rem var(--vmecc-focus-indicator);
+  --vmecc-focus-indicator: rgba(0, 126, 122, 0.45);
+  --vmecc-focus-ring: 0 0 0 0.2rem var(--vmecc-focus-indicator);
   --vmecc-radius-control: 0.375rem;
   --vmecc-radius-card: 0.5rem;
   --vmecc-radius-overlay: 0.875rem;
@@ -99,7 +98,7 @@ html {
 }
 
 [data-coreui-theme='dark'] {
-  --vmecc-focus-indicator: #66c7c4;
+  --vmecc-focus-indicator: rgba(102, 199, 196, 0.45);
   --vmecc-primary-soft: rgba(102, 199, 196, 0.16);
   --vmecc-primary-on-soft: #8bd8d5;
   --vmecc-status-draft-bg: #4a3a0c;

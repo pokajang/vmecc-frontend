@@ -3,8 +3,8 @@ import {
   CBadge,
   CButton,
   CFormCheck,
-  CFormInput,
   CFormLabel,
+  CFormTextarea,
   CModal,
   CModalBody,
   CModalFooter,
@@ -88,9 +88,9 @@ const InspectionWorkflowActionModal = ({
             <CFormLabel htmlFor="inspection-workflow-remarks" className="small text-muted mb-1">
               {action.remarksLabel}
             </CFormLabel>
-            <CFormInput
+            <CFormTextarea
               id="inspection-workflow-remarks"
-              type="text"
+              rows={3}
               value={remarks}
               onChange={(event) => onRemarksChange?.(event.target.value)}
               placeholder="Add your remarks"

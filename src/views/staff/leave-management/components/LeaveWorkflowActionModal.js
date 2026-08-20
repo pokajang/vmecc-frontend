@@ -3,8 +3,8 @@ import {
   CBadge,
   CButton,
   CFormCheck,
-  CFormInput,
   CFormLabel,
+  CFormTextarea,
   CModal,
   CModalBody,
   CModalFooter,
@@ -86,10 +86,10 @@ const LeaveWorkflowActionModal = ({
               >
                 {remarksRequired ? 'Remarks (required)' : 'Remarks (optional)'}
               </CFormLabel>
-              <CFormInput
+              <CFormTextarea
                 id="leave-workflow-remarks"
-                type="text"
-                value={remarks}
+                rows={3}
+                value={remarks ?? ''}
                 onChange={(event) => onRemarksChange(event.target.value)}
                 placeholder="Add your remarks"
                 invalid={Boolean(rejectError)}

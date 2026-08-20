@@ -1,0 +1,55 @@
+.vmecc-date-time-input,
+.form-control[type='date'],
+.form-control[type='time'],
+.form-control[type='datetime-local'] {
+  min-width: 0;
+  border-radius: var(--vmecc-radius-control);
+  border-color: var(--vmecc-control-border);
+  color: var(--vmecc-fg-default);
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    background-color 0.16s ease;
+}
+
+.vmecc-date-time-input:not(.form-control-sm),
+.form-control[type='date']:not(.form-control-sm),
+.form-control[type='time']:not(.form-control-sm),
+.form-control[type='datetime-local']:not(.form-control-sm) {
+  min-height: 2.55rem;
+}
+
+.vmecc-date-time-input:focus,
+.vmecc-date-time-input:focus-visible,
+.form-control[type='date']:focus,
+.form-control[type='date']:focus-visible,
+.form-control[type='time']:focus,
+.form-control[type='time']:focus-visible,
+.form-control[type='datetime-local']:focus,
+.form-control[type='datetime-local']:focus-visible {
+  border-color: var(--vmecc-focus-indicator);
+  box-shadow: var(--vmecc-focus-ring);
+}
+
+.vmecc-date-time-input:disabled,
+.form-control[type='date']:disabled,
+.form-control[type='time']:disabled,
+.form-control[type='datetime-local']:disabled {
+  color: var(--vmecc-fg-disabled);
+}
+
+@media (max-width: 767.98px) {
+  .vmecc-date-time-input,
+  .form-control[type='date'],
+  .form-control[type='time'],
+  .form-control[type='datetime-local'] {
+    min-height: 2.75rem;
+  }
+
+  .vmecc-date-time-input.form-control-sm,
+  .form-control[type='date'].form-control-sm,
+  .form-control[type='time'].form-control-sm,
+  .form-control[type='datetime-local'].form-control-sm {
+    min-height: 2.35rem;
+  }
+}

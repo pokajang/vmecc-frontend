@@ -1,0 +1,1 @@
+import{q as c}from"./index-BXwx5SRp.js";import{B as e}from"./DefaultLayout-CGIGkGBg.js";const B=({label:o="Back",onClick:s,className:t="",size:m="sm",iconSize:a=18,...r})=>c.jsx(e,{...r,size:m,iconSize:a,label:o,className:`d-md-none ${t}`.trim(),onClick:s});export{B as M};

@@ -127,6 +127,7 @@ const AnalysisRows = ({ analysis, photos = [], isDrill = false, onEdit }) => {
           <div className="small text-body-secondary mb-2">Photographs</div>
           <ReportPhotoGallery
             photos={photoRows}
+            contextLabel={isDrill ? 'Report evidence' : 'Report'}
             hiddenDescriptionValues={[...strengths, ...resources, ...improvements]}
           />
         </div>

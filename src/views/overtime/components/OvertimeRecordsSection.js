@@ -1,9 +1,6 @@
 import React from 'react'
 import {
   CBadge,
-  CCard,
-  CCardBody,
-  CCardHeader,
   CTable,
   CTableBody,
   CTableDataCell,
@@ -20,6 +17,7 @@ import RowActionCell from 'src/components/RowActionCell'
 import TypeDurationSummaryChips from 'src/views/overtime/components/TypeDurationSummaryChips'
 import RowActions from 'src/components/RowActions'
 import TableFilters from 'src/components/TableFilters'
+import WorkflowRecordsSectionShell from 'src/components/workflow/WorkflowRecordsSectionShell'
 import WorkflowStatusSummary from 'src/components/WorkflowStatusSummary'
 import {
   APPLICANT_OVERTIME_EDIT_LOCK_REASON,
@@ -192,19 +190,20 @@ const OvertimeRecordsSection = ({
   ]
 
   return (
-    <CCard>
-      <CCardHeader className="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <span>My Overtime Records</span>
-        {showPrimaryAction ? (
+    <WorkflowRecordsSectionShell
+      sectionTitle="My Overtime Records"
+      recordsTestId="overtime-records"
+      headerActions={
+        showPrimaryAction ? (
           <CreateActionButton
             label="Apply Overtime"
             importance="section-primary"
             onClick={startNewOvertime}
             icon={<Plus size={13} />}
           />
-        ) : null}
-      </CCardHeader>
-      <CCardBody>
+        ) : null
+      }
+      filters={
         <div {...(filtersTestId ? { 'data-testid': filtersTestId } : {})}>
           <TableFilters
             searchValue={search}
@@ -235,164 +234,162 @@ const OvertimeRecordsSection = ({
             clearColMd="auto"
           />
         </div>
-
-        <ResponsiveRecordCollection
-          isLoading={isLoading}
-          isEmpty={filteredRecords.length === 0}
-          emptyMessage={
-            <div className="text-body-secondary">
-              No overtime records match the current filters.
-            </div>
-          }
-          mobileSections={mobileSections}
-          mobileVariant="list-group"
-          renderDesktop={() => (
-            <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-body">
-              <CTable align="middle" className="mb-0" hover responsive>
-                <CTableHead color="light">
-                  <CTableRow>
-                    <CTableHeaderCell className="text-center" style={{ width: '56px' }}>
-                      #
-                    </CTableHeaderCell>
-                    <CTableHeaderCell>Overtime ID</CTableHeaderCell>
-                    <CTableHeaderCell>Type</CTableHeaderCell>
-                    <CTableHeaderCell>Reason</CTableHeaderCell>
-                    <CTableHeaderCell>Start</CTableHeaderCell>
-                    <CTableHeaderCell>End</CTableHeaderCell>
-                    <CTableHeaderCell>Duration</CTableHeaderCell>
-                    <CTableHeaderCell>Status</CTableHeaderCell>
-                    <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
-                  </CTableRow>
-                </CTableHead>
-                <CTableBody>
-                  {draftVisibleRows.map(({ row, displayIndex }) => (
-                    <CTableRow
-                      key={row.recordKey || row.id}
-                      role="button"
-                      className="cursor-pointer"
-                      tabIndex={0}
-                      aria-label={`Open overtime record ${getDisplayOvertimeId(row)}`}
-                      onClick={() => openRecord(row)}
-                      onKeyDown={(event) => {
-                        if (event.key === 'Enter' || event.key === ' ') {
-                          event.preventDefault()
-                          openRecord(row)
-                        }
-                      }}
-                    >
-                      <CTableDataCell className="text-center text-muted">
-                        {displayIndex}
-                      </CTableDataCell>
-                      <CTableDataCell className="fw-semibold">
-                        {getDisplayOvertimeId(row)}
-                      </CTableDataCell>
-                      <CTableDataCell>
-                        {getOvertimeTypeLabel(row?.overtimeType, { short: true })}
-                      </CTableDataCell>
-                      <CTableDataCell>{row.reason || '-'}</CTableDataCell>
-                      <CTableDataCell>{getStartDateTimeLabel(row)}</CTableDataCell>
-                      <CTableDataCell>{getEndDateTimeLabel(row)}</CTableDataCell>
-                      <CTableDataCell>{formatDuration(row.durationMinutes)}</CTableDataCell>
-                      <CTableDataCell>
-                        <span
-                          className="d-inline-flex align-items-center text-body-secondary"
-                          data-testid={`overtime-draft-status-${row.id}`}
-                        >
-                          <LoaderCircle size={13} className="me-1" />
-                          Draft
-                        </span>
-                      </CTableDataCell>
-                      <RowActionCell className="text-center align-middle">
-                        <RowActions items={getDraftActionItems(row)} />
-                      </RowActionCell>
-                    </CTableRow>
-                  ))}
-                  {groupedVisibleRows.map((group) => (
-                    <React.Fragment key={group.key}>
-                      <GroupedTableHeaderRow
-                        colSpan={9}
-                        label={group.label}
-                        count={group.entries.length}
-                        countNoun={group.entries.length === 1 ? 'record' : 'records'}
-                        testId={`ot-month-group-${group.key}`}
+      }
+    >
+      <ResponsiveRecordCollection
+        isLoading={isLoading}
+        isEmpty={filteredRecords.length === 0}
+        emptyMessage={
+          <div className="text-body-secondary">No overtime records match the current filters.</div>
+        }
+        mobileSections={mobileSections}
+        mobileVariant="list-group"
+        renderDesktop={() => (
+          <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-body">
+            <CTable align="middle" className="mb-0" hover responsive>
+              <CTableHead color="light">
+                <CTableRow>
+                  <CTableHeaderCell className="text-center" style={{ width: '56px' }}>
+                    #
+                  </CTableHeaderCell>
+                  <CTableHeaderCell>Overtime ID</CTableHeaderCell>
+                  <CTableHeaderCell>Type</CTableHeaderCell>
+                  <CTableHeaderCell>Reason</CTableHeaderCell>
+                  <CTableHeaderCell>Start</CTableHeaderCell>
+                  <CTableHeaderCell>End</CTableHeaderCell>
+                  <CTableHeaderCell>Duration</CTableHeaderCell>
+                  <CTableHeaderCell>Status</CTableHeaderCell>
+                  <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
+                </CTableRow>
+              </CTableHead>
+              <CTableBody>
+                {draftVisibleRows.map(({ row, displayIndex }) => (
+                  <CTableRow
+                    key={row.recordKey || row.id}
+                    role="button"
+                    className="cursor-pointer"
+                    tabIndex={0}
+                    aria-label={`Open overtime record ${getDisplayOvertimeId(row)}`}
+                    onClick={() => openRecord(row)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        openRecord(row)
+                      }
+                    }}
+                  >
+                    <CTableDataCell className="text-center text-muted">
+                      {displayIndex}
+                    </CTableDataCell>
+                    <CTableDataCell className="fw-semibold">
+                      {getDisplayOvertimeId(row)}
+                    </CTableDataCell>
+                    <CTableDataCell>
+                      {getOvertimeTypeLabel(row?.overtimeType, { short: true })}
+                    </CTableDataCell>
+                    <CTableDataCell>{row.reason || '-'}</CTableDataCell>
+                    <CTableDataCell>{getStartDateTimeLabel(row)}</CTableDataCell>
+                    <CTableDataCell>{getEndDateTimeLabel(row)}</CTableDataCell>
+                    <CTableDataCell>{formatDuration(row.durationMinutes)}</CTableDataCell>
+                    <CTableDataCell>
+                      <span
+                        className="d-inline-flex align-items-center text-body-secondary"
+                        data-testid={`overtime-draft-status-${row.id}`}
                       >
-                        <TypeDurationSummaryChips
-                          typeDurationMinutes={group.typeDurationMinutes}
-                          align="end"
-                          size="sm"
-                          variant="subtle"
-                        />
-                      </GroupedTableHeaderRow>
-                      {group.entries.map(({ row, displayIndex }) => {
-                        return (
-                          <CTableRow
-                            key={row.id}
-                            role="button"
-                            className="cursor-pointer"
-                            tabIndex={0}
-                            aria-label={`Open overtime record ${getDisplayOvertimeId(row)}`}
-                            onClick={() => openRecord(row)}
-                            onKeyDown={(event) => {
-                              if (event.key === 'Enter' || event.key === ' ') {
-                                event.preventDefault()
-                                openRecord(row)
-                              }
-                            }}
-                          >
-                            <CTableDataCell className="text-center text-muted">
-                              {displayIndex}
-                            </CTableDataCell>
-                            <CTableDataCell className="fw-semibold">
-                              {getDisplayOvertimeId(row)}
-                            </CTableDataCell>
-                            <CTableDataCell>
-                              {getOvertimeTypeLabel(row?.overtimeType, { short: true })}
-                            </CTableDataCell>
-                            <CTableDataCell>{row.reason || '-'}</CTableDataCell>
-                            <CTableDataCell>{getStartDateTimeLabel(row)}</CTableDataCell>
-                            <CTableDataCell>{getEndDateTimeLabel(row)}</CTableDataCell>
-                            <CTableDataCell>{formatDuration(row.durationMinutes)}</CTableDataCell>
-                            <CTableDataCell>
-                              {row?.hasDraftChanges ? (
-                                <div
-                                  className="small d-inline-flex align-items-center text-body-secondary mb-1"
-                                  data-testid={`overtime-linked-draft-status-${row.id}`}
-                                >
-                                  <LoaderCircle size={12} className="me-1" />
-                                  Draft saved
-                                </div>
-                              ) : null}
-                              <WorkflowStatusSummary
-                                statusLabel={getStatusLabel?.(row) || row.status || '-'}
-                                nextActionLabel={getPendingActionHint?.(row) || ''}
-                                gates={resolveOvertimeGates(row)}
-                                approvalHistory={row.approvalHistory}
-                                isCancelled={row.status === 'Cancelled'}
-                              />
-                            </CTableDataCell>
-                            <RowActionCell className="text-center align-middle">
-                              <RowActions items={getSubmittedActionItems(row)} />
-                            </RowActionCell>
-                          </CTableRow>
-                        )
-                      })}
-                    </React.Fragment>
-                  ))}
-                </CTableBody>
-              </CTable>
-            </div>
-          )}
-          footer={
-            <DataTableFooter
-              rowsToShow={rowsToShow}
-              onRowsToShowChange={setRowsToShow}
-              filteredCount={filteredRecords.length}
-              totalCount={overtimeRecordsCount}
-            />
-          }
-        />
-      </CCardBody>
-    </CCard>
+                        <LoaderCircle size={13} className="me-1" />
+                        Draft
+                      </span>
+                    </CTableDataCell>
+                    <RowActionCell className="text-center align-middle">
+                      <RowActions items={getDraftActionItems(row)} />
+                    </RowActionCell>
+                  </CTableRow>
+                ))}
+                {groupedVisibleRows.map((group) => (
+                  <React.Fragment key={group.key}>
+                    <GroupedTableHeaderRow
+                      colSpan={9}
+                      label={group.label}
+                      count={group.entries.length}
+                      countNoun={group.entries.length === 1 ? 'record' : 'records'}
+                      testId={`ot-month-group-${group.key}`}
+                    >
+                      <TypeDurationSummaryChips
+                        typeDurationMinutes={group.typeDurationMinutes}
+                        align="end"
+                        size="sm"
+                        variant="subtle"
+                      />
+                    </GroupedTableHeaderRow>
+                    {group.entries.map(({ row, displayIndex }) => {
+                      return (
+                        <CTableRow
+                          key={row.id}
+                          role="button"
+                          className="cursor-pointer"
+                          tabIndex={0}
+                          aria-label={`Open overtime record ${getDisplayOvertimeId(row)}`}
+                          onClick={() => openRecord(row)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault()
+                              openRecord(row)
+                            }
+                          }}
+                        >
+                          <CTableDataCell className="text-center text-muted">
+                            {displayIndex}
+                          </CTableDataCell>
+                          <CTableDataCell className="fw-semibold">
+                            {getDisplayOvertimeId(row)}
+                          </CTableDataCell>
+                          <CTableDataCell>
+                            {getOvertimeTypeLabel(row?.overtimeType, { short: true })}
+                          </CTableDataCell>
+                          <CTableDataCell>{row.reason || '-'}</CTableDataCell>
+                          <CTableDataCell>{getStartDateTimeLabel(row)}</CTableDataCell>
+                          <CTableDataCell>{getEndDateTimeLabel(row)}</CTableDataCell>
+                          <CTableDataCell>{formatDuration(row.durationMinutes)}</CTableDataCell>
+                          <CTableDataCell>
+                            {row?.hasDraftChanges ? (
+                              <div
+                                className="small d-inline-flex align-items-center text-body-secondary mb-1"
+                                data-testid={`overtime-linked-draft-status-${row.id}`}
+                              >
+                                <LoaderCircle size={12} className="me-1" />
+                                Draft saved
+                              </div>
+                            ) : null}
+                            <WorkflowStatusSummary
+                              statusLabel={getStatusLabel?.(row) || row.status || '-'}
+                              nextActionLabel={getPendingActionHint?.(row) || ''}
+                              gates={resolveOvertimeGates(row)}
+                              approvalHistory={row.approvalHistory}
+                              isCancelled={row.status === 'Cancelled'}
+                            />
+                          </CTableDataCell>
+                          <RowActionCell className="text-center align-middle">
+                            <RowActions items={getSubmittedActionItems(row)} />
+                          </RowActionCell>
+                        </CTableRow>
+                      )
+                    })}
+                  </React.Fragment>
+                ))}
+              </CTableBody>
+            </CTable>
+          </div>
+        )}
+        footer={
+          <DataTableFooter
+            rowsToShow={rowsToShow}
+            onRowsToShowChange={setRowsToShow}
+            filteredCount={filteredRecords.length}
+            totalCount={overtimeRecordsCount}
+          />
+        }
+      />
+    </WorkflowRecordsSectionShell>
   )
 }
 

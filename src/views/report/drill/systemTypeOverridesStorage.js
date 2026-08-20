@@ -3,6 +3,7 @@ import { parse, storageKey } from '../utils'
 const DRILL_TYPE_OVERRIDES_KEY = 'report_drill_type_overrides_v1_user_'
 const DRILL_LOCATION_OVERRIDES_KEY = 'report_drill_location_overrides_v1_user_'
 const DRILL_CATEGORY_OVERRIDES_KEY = 'report_drill_category_overrides_v1_user_'
+const DRILL_ENVIRONMENT_OVERRIDES_KEY = 'report_drill_environment_system_overrides_v1_user_'
 
 const normalizeOverride = (row) => {
   const value = String(row?.value || '').trim()
@@ -55,3 +56,9 @@ export const loadDrillCategoryOverrides = (userId) =>
 
 export const saveDrillCategoryOverrides = (userId, rows) =>
   saveOverrides(DRILL_CATEGORY_OVERRIDES_KEY, userId, rows)
+
+export const loadDrillEnvironmentOverrides = (userId) =>
+  loadOverrides(DRILL_ENVIRONMENT_OVERRIDES_KEY, userId)
+
+export const saveDrillEnvironmentOverrides = (userId, rows) =>
+  saveOverrides(DRILL_ENVIRONMENT_OVERRIDES_KEY, userId, rows)

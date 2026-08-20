@@ -1,4 +1,5 @@
 import { apiRequest, clearCsrfToken } from './httpClient'
+import { normalizeMalaysiaStateForProfileRequest } from 'src/constants/malaysiaStates'
 
 export const loginRequest = (credentials) =>
   apiRequest('/auth/login', {
@@ -64,10 +65,24 @@ export const changePassword = (payload) =>
     body: JSON.stringify(payload),
   })
 
+const normalizeProfilePayload = (payload) => {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return payload
+  }
+  if (!Object.prototype.hasOwnProperty.call(payload, 'state')) {
+    return payload
+  }
+
+  return {
+    ...payload,
+    state: normalizeMalaysiaStateForProfileRequest(payload.state),
+  }
+}
+
 export const updateProfile = (payload) =>
   apiRequest('/profile', {
     method: 'PUT',
-    body: JSON.stringify(payload),
+    body: JSON.stringify(normalizeProfilePayload(payload)),
   })
 
 export const fetchOnboardingStates = () => apiRequest('/onboarding/states')

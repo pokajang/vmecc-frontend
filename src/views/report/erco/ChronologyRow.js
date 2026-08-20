@@ -1,5 +1,5 @@
 import React from 'react'
-import { CButton, CCol, CFormInput, CRow, CTooltip } from '@coreui/react'
+import { CButton, CCol, CFormInput, CFormTextarea, CRow, CTooltip } from '@coreui/react'
 import { ArrowDown, ArrowUp, GripVertical, Trash2 } from 'lucide-react'
 import { addMinutesToTime } from './chronologyUtils'
 
@@ -70,15 +70,17 @@ const ChronologyRow = ({
           onMouseEnter={() => setHoveredEventRowId(row.id)}
           onMouseLeave={() => setHoveredEventRowId((prev) => (prev === row.id ? null : prev))}
         >
-          <CFormInput
+          <CFormTextarea
             value={row.action}
             aria-label={`Event / Action for chronology row ${idx + 1}`}
             className="pe-5"
+            rows={2}
             onChange={(e) => updateChronologyRow(row.id, { action: e.target.value })}
             onFocus={() => setFocusedEventRowId(row.id)}
             onBlur={() => setFocusedEventRowId((prev) => (prev === row.id ? null : prev))}
             onKeyDown={(e) => {
               if (e.key !== 'Enter') return
+              if (!e.metaKey && !e.ctrlKey) return
               e.preventDefault()
               const baseTime = String(row?.time || incidentTime || '').trim()
               addChronologyRowAfter(row.id, { time: addMinutesToTime(baseTime, 5), action: '' })

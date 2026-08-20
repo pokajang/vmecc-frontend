@@ -159,9 +159,22 @@ const Login = () => {
 
   return (
     <div
-      className="bg-body-tertiary d-flex align-items-center justify-content-center vmecc-scroll-y"
+      className="login-page-shell bg-body-tertiary d-flex align-items-center justify-content-center vmecc-scroll-y"
       style={{ minHeight: '100dvh' }}
     >
+      <style>{`
+        @media (max-width: 767.98px) {
+          .login-page-shell {
+            background-color: #ffffff !important;
+          }
+
+          .login-card {
+            border: 0 !important;
+            box-shadow: none !important;
+            background-color: #ffffff !important;
+          }
+        }
+      `}</style>
       <CContainer fluid className="px-2 px-sm-3 py-4">
         <CRow
           className="justify-content-center align-items-center mx-0"
@@ -175,7 +188,7 @@ const Login = () => {
                 style={{ width: 'clamp(68px, 16vw, 120px)', height: 'auto' }}
               />
             </div>
-            <CCard className="border-0 shadow-sm">
+            <CCard className="login-card border-0 shadow-sm">
               <CCardBody className="p-3 p-sm-4">
                 <p className="text-center text-muted mb-3">Sign in to continue</p>
                 {maintenanceEnabled && (
@@ -244,6 +257,12 @@ const Login = () => {
                       color="secondary"
                       variant="outline"
                       className="border-start-0"
+                      style={{
+                        borderTopLeftRadius: 0,
+                        borderBottomLeftRadius: 0,
+                        borderTopRightRadius: 'var(--vmecc-radius-control)',
+                        borderBottomRightRadius: 'var(--vmecc-radius-control)',
+                      }}
                       aria-label={showPassword ? 'Hide password' : 'Show password'}
                       aria-pressed={showPassword}
                       disabled={isSubmitting || isCompletingGoogleSignIn}

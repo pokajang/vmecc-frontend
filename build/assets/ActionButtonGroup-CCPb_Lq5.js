@@ -1,1 +1,0 @@
-import{q as t}from"./index-BGgwRNiT.js";const e=({children:o,layout:a="inline",align:p="end",className:i="",ariaLabel:n="Actions"})=>t.jsx("div",{className:["app-action-group",`app-action-group--${a}`,`app-action-group--${p}`,i].filter(Boolean).join(" "),role:"group","aria-label":n,children:o});export{e as A};

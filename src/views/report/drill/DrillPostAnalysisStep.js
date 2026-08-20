@@ -6,6 +6,7 @@ import ReportPhotoSection from '../shared/emergency-report/ReportPhotoSection'
 import { DRILL_FIELD_LIMITS } from './constants'
 import DrillContextSummary from './DrillContextSummary'
 import DrillStageActions from './DrillStageActions'
+import { REPORT_ACTION_LABELS } from '../reportActionLabels'
 
 const LISTS = [
   { key: 'strengths', label: 'Strengths', placeholder: 'What worked well?' },
@@ -124,7 +125,7 @@ const DrillPostAnalysisStep = ({
       <DrillStageActions
         onBack={onBack}
         onContinue={onRequestReview}
-        continueLabel="Review & Submit"
+        continueLabel={REPORT_ACTION_LABELS.REVIEW_AND_SUBMIT}
         blockerMessage={
           photoProcessing
             ? 'Wait for the current photo upload to finish or leave this stage to cancel it.'

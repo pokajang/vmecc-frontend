@@ -14,6 +14,7 @@ const FitnessTestSetupStep = ({
   clearError,
   onContinue,
   isSaving = false,
+  onRegisterMobileBackHandler,
 }) => {
   const isMobile = useReportIsMobile()
   const [isEditingReportingMonth, setIsEditingReportingMonth] = useState(
@@ -27,6 +28,27 @@ const FitnessTestSetupStep = ({
     Boolean(fieldErrors.reportingMonth)
   const shouldShowWorkflowActions =
     hasReportingMonth && (!isMobile || !showReportingMonthEditor) && !fieldErrors.reportingMonth
+
+  const getMobileSetupBackGroup = React.useCallback(() => {
+    if (!isMobile) return ''
+    if (!hasReportingMonth) return ''
+    if (showReportingMonthEditor) return ''
+    return 'reportingPeriod'
+  }, [hasReportingMonth, isMobile, showReportingMonthEditor])
+
+  const handleMobileBack = React.useCallback(() => {
+    if (!isMobile) return false
+    const targetGroup = getMobileSetupBackGroup()
+    if (!targetGroup) return false
+    setIsEditingReportingMonth(true)
+    return true
+  }, [getMobileSetupBackGroup, isMobile])
+
+  React.useEffect(() => {
+    if (typeof onRegisterMobileBackHandler !== 'function') return
+    onRegisterMobileBackHandler(handleMobileBack)
+    return () => onRegisterMobileBackHandler(null)
+  }, [handleMobileBack, onRegisterMobileBackHandler])
 
   const setReportingMonth = (value) => {
     setIsEditingReportingMonth(true)

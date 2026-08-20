@@ -1,4 +1,4 @@
-import { getLocalDateInputValue } from 'src/utils/localDate'
+import { getLocalDateInputValue, parseLocalDateValue } from 'src/utils/localDate'
 import { createReportSubmissionKey, uid } from '../utils'
 import { DRILL_NEW_SECTIONS } from './constants'
 
@@ -31,6 +31,22 @@ const normalizeErpReferences = (rows) => {
     ),
   )
   return normalized.length ? normalized : [withId({ annexNumber: '', title: '' }, 'erp')]
+}
+
+const toDateInputValue = (value) => {
+  const text = String(value || '').trim()
+  if (!text) return ''
+
+  const parsed = parseLocalDateValue(text)
+  if (parsed) return getLocalDateInputValue(parsed)
+
+  const slashMatch = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(text)
+  if (slashMatch) {
+    const [, day, month, year] = slashMatch
+    return `${year}-${month}-${day}`
+  }
+
+  return text
 }
 
 export const normalizeDrillPhoto = (photo, index = 0) => {
@@ -121,8 +137,8 @@ export const createDefaultDrillForm = () => ({
   submissionKey: createReportSubmissionKey('drill'),
   reportDate: getLocalDateInputValue(),
   reportTime: '',
-  reportIssuanceDate: '',
-  weather: 'Clear',
+  reportIssuanceDate: getLocalDateInputValue(),
+  weather: '',
   incidentType: '',
   exerciseCategories: [],
   location: '',
@@ -173,9 +189,11 @@ export const normalizeDrillForm = (input = {}) => {
   return {
     schemaVersion: DRILL_FORM_SCHEMA_VERSION,
     submissionKey: text(source.submissionKey) || defaults.submissionKey,
-    reportDate: String(source.reportDate ?? source.incidentDate ?? defaults.reportDate),
+    reportDate: toDateInputValue(source.reportDate ?? source.incidentDate ?? defaults.reportDate),
     reportTime: String(source.reportTime ?? source.incidentTime ?? ''),
-    reportIssuanceDate: String(source.reportIssuanceDate ?? source.report_issuance_date ?? ''),
+    reportIssuanceDate: toDateInputValue(
+      source.reportIssuanceDate ?? source.report_issuance_date ?? defaults.reportIssuanceDate,
+    ),
     weather: String(source.weather ?? defaults.weather),
     incidentType: String(source.incidentType ?? ''),
     exerciseCategories: categories.map(text).filter(Boolean),

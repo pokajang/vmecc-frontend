@@ -12,6 +12,7 @@ import {
   CDropdownMenu,
   CDropdownToggle,
   CFormInput,
+  CFormTextarea,
   CFormLabel,
   CModal,
   CModalBody,
@@ -26,6 +27,7 @@ import {
   REPORT_MOBILE_QUERY,
   useReportIsMobile,
 } from '../hooks/useReportIsMobile'
+import { REPORT_ACTION_LABELS } from '../reportActionLabels'
 
 export { REPORT_MOBILE_BREAKPOINT, REPORT_MOBILE_QUERY, useReportIsMobile }
 
@@ -68,7 +70,7 @@ export const ReportSetupSummaryRow = ({
 
 export const ReportMobileActionGroup = ({
   onPrimary,
-  primaryLabel = 'Continue',
+  primaryLabel = REPORT_ACTION_LABELS.CONTINUE,
   primaryDisabled = false,
   primaryType = 'button',
   isSaving = false,
@@ -76,6 +78,7 @@ export const ReportMobileActionGroup = ({
   <WorkflowStageActions
     className="report-setup-actions"
     mobileLayout="stacked-primary-first"
+    stackedMobileBehavior="compact-sticky"
     onPrimary={onPrimary}
     primaryLabel={primaryLabel}
     primaryDisabled={primaryDisabled}
@@ -86,7 +89,7 @@ export const ReportMobileActionGroup = ({
 
 export const ReportSetupActions = ({
   onContinue,
-  continueLabel = 'Continue',
+  continueLabel = REPORT_ACTION_LABELS.CONTINUE,
   primaryType = 'button',
   isSaving = false,
 }) => (
@@ -167,8 +170,9 @@ export const ReportChronologySection = ({
       </div>
       <div>
         <CFormLabel htmlFor="report-row-modal-action">{actionLabel}</CFormLabel>
-        <CFormInput
+        <CFormTextarea
           id="report-row-modal-action"
+          rows={3}
           value={rowModal.draft?.action || ''}
           maxLength={actionMaxLength}
           onChange={(event) => updateDraft({ action: event.target.value })}
@@ -316,9 +320,10 @@ export const ReportChronologySection = ({
               </CCol>
               <CCol xs={12} md={8}>
                 <CFormLabel htmlFor={`report-row-${row.id}-action`}>{actionLabel}</CFormLabel>
-                <CFormInput
+                <CFormTextarea
                   id={`report-row-${row.id}-action`}
-                  value={row.action}
+                  rows={2}
+                  value={row.action ?? ''}
                   maxLength={actionMaxLength}
                   onChange={(event) => onUpdateRow?.(row.id, { action: event.target.value })}
                 />

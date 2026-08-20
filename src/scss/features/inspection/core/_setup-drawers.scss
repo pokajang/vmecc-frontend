@@ -102,19 +102,7 @@
 }
 
 .inspection-mobile-datetime-input.form-control {
-  min-height: 1.65rem;
-  padding: 0 0.35rem 0 0;
-  border: 0;
-  background-color: transparent;
-  box-shadow: none;
-  color: var(--cui-body-color);
-  font-weight: 600;
-  text-align: left;
-}
-
-.inspection-mobile-datetime-input.form-control:focus {
-  background-color: transparent;
-  box-shadow: none;
+  min-width: 0;
 }
 
 .offcanvas-bottom.inspection-mobile-setup-drawer {
@@ -274,18 +262,21 @@
     color 0.14s ease;
 }
 
-.mobile-bottom-drawer .inspection-drawer-footer-action--primary
+.mobile-bottom-drawer
+  .inspection-drawer-footer-action--primary
   .inspection-drawer-footer-action__surface {
   background: var(--cui-primary);
   color: #fff;
 }
 
-.mobile-bottom-drawer .inspection-drawer-footer-action:hover
+.mobile-bottom-drawer
+  .inspection-drawer-footer-action:hover
   .inspection-drawer-footer-action__surface {
   background: color-mix(in srgb, var(--cui-tertiary-bg) 78%, var(--cui-body-color));
 }
 
-.mobile-bottom-drawer .inspection-drawer-footer-action--primary:hover
+.mobile-bottom-drawer
+  .inspection-drawer-footer-action--primary:hover
   .inspection-drawer-footer-action__surface {
   background: color-mix(in srgb, var(--cui-primary) 88%, #000);
   color: #fff;
@@ -301,7 +292,8 @@
   opacity: 1;
 }
 
-.mobile-bottom-drawer .inspection-drawer-footer-action:disabled
+.mobile-bottom-drawer
+  .inspection-drawer-footer-action:disabled
   .inspection-drawer-footer-action__surface {
   background: var(--vmecc-status-muted-bg);
   color: var(--vmecc-fg-disabled);

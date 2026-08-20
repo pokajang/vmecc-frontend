@@ -3,6 +3,7 @@ import AppButton from 'src/components/AppButton'
 import FormActionGroup from 'src/components/FormActionGroup'
 import useMediaQuery from 'src/hooks/useMediaQuery'
 import WorkflowInlineFeedback from './WorkflowInlineFeedback'
+import { REPORT_ACTION_LABELS } from 'src/views/report/reportActionLabels'
 
 const MOBILE_WORKFLOW_ACTION_QUERY = '(max-width: 767.98px)'
 
@@ -12,9 +13,9 @@ const WorkflowStageActions = ({
   onReset,
   resetLabel = 'Reset',
   onSaveDraft,
-  saveLabel = 'Save Draft',
+  saveLabel = REPORT_ACTION_LABELS.SAVE_DRAFT,
   onPrimary,
-  primaryLabel = 'Continue',
+  primaryLabel = REPORT_ACTION_LABELS.CONTINUE,
   primaryType = 'button',
   statusMessage = '',
   feedback = null,
@@ -27,6 +28,7 @@ const WorkflowStageActions = ({
   auxiliaryActions = null,
   leading = null,
   mobileBehavior = 'in-flow',
+  stackedMobileBehavior = 'terminal',
   mobileLayout = 'default',
   dockAtEnd = false,
   actionsAlign = 'end',
@@ -52,8 +54,9 @@ const WorkflowStageActions = ({
       {visibleStatus}
     </div>
   ) : null
+  const resolvedMobileBehavior = usesMobileStackedLayout ? stackedMobileBehavior : mobileBehavior
   const resolvedLeading =
-    mobileBehavior === 'compact-sticky' ? (
+    resolvedMobileBehavior === 'compact-sticky' ? (
       leading
     ) : leading && statusNode ? (
       <div className="workflow-stage-actions__leading">
@@ -100,7 +103,7 @@ const WorkflowStageActions = ({
       {resolvedFeedback ? <WorkflowInlineFeedback {...resolvedFeedback} /> : null}
       <FormActionGroup
         className="workflow-stage-actions__group"
-        mobileBehavior={usesMobileStackedLayout ? 'terminal' : mobileBehavior}
+        mobileBehavior={resolvedMobileBehavior}
         dockAtEnd={dockAtEnd}
         actionsAlign={actionsAlign}
         leading={resolvedLeading}

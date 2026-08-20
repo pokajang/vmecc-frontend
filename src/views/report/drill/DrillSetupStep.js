@@ -1,20 +1,22 @@
-import React, { useEffect, useState } from 'react'
-import { CButton, CAlert, CCol, CFormFeedback, CFormInput, CFormLabel, CRow } from '@coreui/react'
+import React, { useCallback, useMemo, useRef, useState } from 'react'
+import { CAlert, CButton, CCol, CFormFeedback, CFormInput, CFormLabel, CRow } from '@coreui/react'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import CreateActionButton from 'src/components/CreateActionButton'
-import MobileChoiceList from 'src/components/report-workflow/MobileChoiceList'
 import MobileSetupSelectorDrawer from 'src/components/report-workflow/MobileSetupSelectorDrawer'
 import MobileSetupSummaryList from 'src/components/report-workflow/MobileSetupSummaryList'
+import DisclosureCard from 'src/components/DisclosureCard'
 import ResponsiveChoiceSelector from 'src/components/report-workflow/ResponsiveChoiceSelector'
 import TypeManagerModal from 'src/components/report-workflow/TypeManagerModal'
 import { MOBILE_TYPE_TOGGLE_CARD_PROPS } from 'src/components/report-workflow/mobile-home'
-import { DRILL_ENVIRONMENT_OPTIONS } from './constants'
-import SelectionCards from '../components/SelectionCards'
 import { ReportSetupActions, ReportSetupSummaryRow } from '../components/ReportWorkflowUi'
+import { getLocalDateInputValue, parseLocalDateValue } from 'src/utils/localDate'
 import useReportIsMobile, { REPORT_MOBILE_QUERY } from '../hooks/useReportIsMobile'
 import useDrillCategoryManager, { DRILL_CATEGORY_TOGGLE_VALUE } from './useDrillCategoryManager'
 import useDrillTypeManager, { DRILL_TYPE_TOGGLE_VALUE } from './useDrillTypeManager'
 import useDrillLocationManager, { DRILL_LOCATION_TOGGLE_VALUE } from './useDrillLocationManager'
+import useDrillEnvironmentManager, {
+  DRILL_ENVIRONMENT_TOGGLE_VALUE,
+} from './useDrillEnvironmentManager'
 import { recordDrillTypeUsage } from './typeUsageStorage'
 
 const TOGGLE_CARD_PROPS = {
@@ -26,52 +28,150 @@ const MOBILE_SETUP_DRAWERS = {
   type: 'type',
 }
 
+const MOBILE_SETUP_GROUP_STORAGE_KEY = 'drill_mobile_setup_group'
+let mobileSetupGroupHint = ''
+
+const readMobileSetupGroupHint = () => {
+  try {
+    return String(window.sessionStorage?.getItem(MOBILE_SETUP_GROUP_STORAGE_KEY) || '')
+  } catch {
+    return mobileSetupGroupHint
+  }
+}
+
+const rememberMobileSetupGroup = (group) => {
+  mobileSetupGroupHint = String(group || '')
+  try {
+    if (mobileSetupGroupHint) {
+      window.sessionStorage?.setItem(MOBILE_SETUP_GROUP_STORAGE_KEY, mobileSetupGroupHint)
+    } else {
+      window.sessionStorage?.removeItem(MOBILE_SETUP_GROUP_STORAGE_KEY)
+    }
+  } catch {
+    // Session storage is only a UI hint; ignore unavailable storage.
+  }
+}
+
+const DRILL_MOBILE_SETUP_GROUPS = ['type', 'categories', 'environment', 'location', 'datetime']
+const getLastCompleteDrillSetupGroup = (completion) => {
+  for (let i = DRILL_MOBILE_SETUP_GROUPS.length - 1; i >= 0; i--) {
+    const group = DRILL_MOBILE_SETUP_GROUPS[i]
+    if (completion?.[group]) return group
+  }
+  return ''
+}
+
+const getFirstIncompleteSetupGroup = (form) => {
+  if (!String(form?.incidentType || '').trim()) return 'type'
+  const categories = Array.isArray(form?.exerciseCategories) ? form.exerciseCategories : []
+  if (categories.length === 0) return 'categories'
+  if (!String(form?.weather || '').trim()) return 'environment'
+  if (!String(form?.location || '').trim()) return 'location'
+  if (!String(form?.reportDate || '').trim() || !String(form?.reportTime || '').trim())
+    return 'datetime'
+  return ''
+}
+
+const getInitialMobileSetupGroup = (form) => {
+  const firstIncomplete = getFirstIncompleteSetupGroup(form)
+  const rememberedGroup = readMobileSetupGroupHint()
+
+  if (!firstIncomplete) return ''
+  if (!rememberedGroup) return firstIncomplete
+  if (firstIncomplete === 'type' || firstIncomplete === 'environment') return firstIncomplete
+  if (firstIncomplete === 'location' && rememberedGroup === 'location') return rememberedGroup
+  if (firstIncomplete === 'datetime' && rememberedGroup === 'datetime') return rememberedGroup
+  return firstIncomplete
+}
+
+const normalizeReportDateInputValue = (value) => {
+  const text = String(value || '').trim()
+  if (!text) return ''
+  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text
+
+  const slashMatch = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(text)
+  if (slashMatch) {
+    const [, day, month, year] = slashMatch
+    return `${year}-${month}-${day}`
+  }
+
+  const parsed = parseLocalDateValue(text)
+  if (parsed) return getLocalDateInputValue(parsed)
+
+  return text
+}
+
 const DrillSetupStep = ({
   user,
   form,
   setForm,
   setupFieldErrors,
   setSetupFieldErrors,
-  datePresetOptions,
-  timePresetOptions,
   pushToast,
   onContinue,
   blockerMessage = '',
+  onRegisterMobileBackHandler,
   isSaving = false,
+  showActions = true,
 }) => {
   const isMobile = useReportIsMobile()
-  const [isEditingType, setIsEditingType] = useState(() => !String(form.incidentType || '').trim())
-  const [isEditingEnvironment, setIsEditingEnvironment] = useState(
-    () => !String(form.weather || '').trim(),
-  )
-  const [isEditingCategories, setIsEditingCategories] = useState(
-    () => !Array.isArray(form.exerciseCategories) || form.exerciseCategories.length === 0,
-  )
-  const [isEditingLocation, setIsEditingLocation] = useState(
-    () => !String(form.location || '').trim(),
-  )
-  const [isEditingDateTime, setIsEditingDateTime] = useState(
-    () => !String(form.reportDate || '').trim() || !String(form.reportTime || '').trim(),
-  )
+  const today = useMemo(() => new Date().toISOString().slice(0, 10), [])
+  const [activeMobileGroup, setActiveMobileGroup] = useState(() => getInitialMobileSetupGroup(form))
+  const [mobileEditOverride, setMobileEditOverride] = useState('')
+  const [desktopEditGroup, setDesktopEditGroup] = useState('')
   const [deleteTypeTarget, setDeleteTypeTarget] = useState(null)
   const [deleteCategoryTarget, setDeleteCategoryTarget] = useState(null)
   const [deleteLocationTarget, setDeleteLocationTarget] = useState(null)
+  const [deleteEnvironmentTarget, setDeleteEnvironmentTarget] = useState(null)
   const [activeMobileSetupDrawer, setActiveMobileSetupDrawer] = useState('')
   const [returnMobileSetupDrawer, setReturnMobileSetupDrawer] = useState('')
+  const initializationRef = useRef(false)
 
-  const updateSetupField = (field, value) => {
-    setForm((prev) => ({ ...prev, [field]: value }))
-    setSetupFieldErrors((prev) => ({ ...prev, [field]: undefined }))
-  }
+  const updateSetupField = useCallback(
+    (field, value) => {
+      setForm((prev) => ({ ...prev, [field]: value }))
+      setSetupFieldErrors((prev) => ({ ...prev, [field]: undefined }))
+    },
+    [setForm, setSetupFieldErrors],
+  )
 
   const hasType = Boolean(String(form.incidentType || '').trim())
-  const showTypePicker = !hasType || (!isMobile && isEditingType)
-  const showEnvironmentPicker = isEditingEnvironment || !String(form.weather || '').trim()
-  const showLocationPicker = isEditingLocation || !String(form.location || '').trim()
-  const showDateTimePicker =
-    isEditingDateTime ||
-    !String(form.reportDate || '').trim() ||
-    !String(form.reportTime || '').trim()
+  const hasEnvironment = Boolean(String(form.weather || '').trim())
+  const hasLocation = Boolean(String(form.location || '').trim())
+  const hasDateTime =
+    Boolean(String(form.reportDate || '').trim()) && Boolean(String(form.reportTime || '').trim())
+  const selectedCategories = useMemo(
+    () => (Array.isArray(form.exerciseCategories) ? form.exerciseCategories : []).map(String),
+    [form.exerciseCategories],
+  )
+
+  const completion = useMemo(
+    () => ({
+      type: hasType,
+      categories: selectedCategories.length > 0,
+      environment: hasEnvironment,
+      location: hasLocation,
+      datetime: hasDateTime,
+    }),
+    [hasType, hasEnvironment, hasLocation, hasDateTime, selectedCategories.length],
+  )
+
+  const getFirstIncompleteGroup = React.useCallback(
+    () => getFirstIncompleteSetupGroup(form),
+    [form],
+  )
+
+  const resolvedActiveMobileGroup =
+    activeMobileGroup &&
+    (!completion[activeMobileGroup] ||
+      activeMobileGroup === 'categories' ||
+      activeMobileGroup === 'datetime')
+      ? activeMobileGroup
+      : getFirstIncompleteGroup() || activeMobileGroup
+  const effectiveMobileGroup = isMobile
+    ? mobileEditOverride || resolvedActiveMobileGroup
+    : activeMobileGroup
+
   const drillType = useDrillTypeManager({
     userId: user?.id,
     selectedType: form.incidentType,
@@ -90,30 +190,135 @@ const DrillSetupStep = ({
     updateSetupField,
     pushToast,
   })
+  const drillEnvironment = useDrillEnvironmentManager({
+    userId: user?.id,
+    selectedEnvironment: form.weather,
+    updateSetupField,
+    pushToast,
+  })
   const mobileSetupChildDrawerVisible = drillType.showAddTypeModal
 
-  useEffect(() => {
-    if (!isMobile || !returnMobileSetupDrawer || mobileSetupChildDrawerVisible) return
-    const timer = window.setTimeout(() => {
-      setActiveMobileSetupDrawer(returnMobileSetupDrawer)
-      setReturnMobileSetupDrawer('')
-    }, 0)
-    return () => window.clearTimeout(timer)
-  }, [isMobile, mobileSetupChildDrawerVisible, returnMobileSetupDrawer])
+  const categorySummary = useMemo(
+    () =>
+      selectedCategories
+        .map(
+          (value) =>
+            drillCategory.categoryOptions.find((option) => option.value === value)?.title || value,
+        )
+        .join(', '),
+    [drillCategory.categoryOptions, selectedCategories],
+  )
+
+  const selectedTypeLabel = useMemo(() => {
+    const value = String(form.incidentType || '').trim()
+    if (!value) return ''
+    return (
+      drillType.typeOptions.find((option) => option.value === value)?.label ||
+      drillType.typeOptions.find((option) => option.value === value)?.title ||
+      value
+    )
+  }, [drillType.typeOptions, form.incidentType])
+
+  const selectedEnvironmentLabel = useMemo(() => {
+    const value = String(form.weather || '').trim()
+    if (!value) return ''
+    return (
+      drillEnvironment.typeOptions.find((option) => option.value === value)?.title ||
+      drillEnvironment.typeOptions.find((option) => option.value === value)?.label ||
+      value
+    )
+  }, [drillEnvironment.typeOptions, form.weather])
+
+  const setNextRequiredGroup = (nextForm = form) => {
+    const nextSection = getFirstIncompleteSetupGroup(nextForm)
+    if (isMobile) {
+      rememberMobileSetupGroup(nextSection)
+      setMobileEditOverride(nextSection)
+      setActiveMobileGroup(nextSection)
+      return
+    }
+    setDesktopEditGroup(nextSection)
+  }
+
+  const closeCurrentGroup = () => {
+    if (isMobile) {
+      setMobileEditOverride('')
+      setActiveMobileGroup('')
+      return
+    }
+    setDesktopEditGroup('')
+  }
+
+  const openSection = (section) => {
+    if (isMobile && section === 'type') {
+      setActiveMobileSetupDrawer(MOBILE_SETUP_DRAWERS.type)
+      return
+    }
+    if (!isMobile) {
+      setDesktopEditGroup(section)
+      return
+    }
+    if (section) rememberMobileSetupGroup(section)
+    else rememberMobileSetupGroup('')
+    setMobileEditOverride(section)
+    setActiveMobileGroup(section)
+  }
+
+  const shouldShowSetupEditor = (group) =>
+    isMobile
+      ? effectiveMobileGroup === group
+      : !completion[group] || desktopEditGroup === group || setupGroupHasError(group)
+
+  const setupGroupClassName = (group, gap = 3) =>
+    `d-grid gap-${gap}${isMobile && !shouldShowSetupEditor(group) ? ' d-none' : ''}`
+
+  const isSetupComplete =
+    completion.type && completion.environment && completion.location && completion.datetime
+  const isSetupEditorOpen = isMobile
+    ? Boolean(effectiveMobileGroup)
+    : Boolean(desktopEditGroup && desktopEditGroup !== 'categories')
+  const shouldShowWorkflowActions = showActions && isSetupComplete && !isSetupEditorOpen
+
+  const setupGroupHasError = (group) => {
+    if (group === 'type') return Boolean(setupFieldErrors.incidentType)
+    if (group === 'environment') return Boolean(setupFieldErrors.weather)
+    if (group === 'location') return Boolean(setupFieldErrors.location)
+    if (group === 'datetime') {
+      return Boolean(setupFieldErrors.reportDate || setupFieldErrors.reportTime)
+    }
+    return false
+  }
+
+  const maybeCloseDateTimeGroup = (nextDate, nextTime) => {
+    const updatedDate = String(nextDate || form.reportDate || '').trim()
+    const updatedTime = String(nextTime || form.reportTime || '').trim()
+    if (updatedDate && updatedTime) {
+      setNextRequiredGroup({ ...form, reportDate: updatedDate, reportTime: updatedTime })
+    }
+  }
+
+  const handleContinueClick = () => {
+    if (isMobile) {
+      const firstIncomplete = getFirstIncompleteGroup()
+      rememberMobileSetupGroup(firstIncomplete)
+      setMobileEditOverride('')
+      setActiveMobileGroup(firstIncomplete)
+    }
+    onContinue?.()
+  }
 
   const openTypeEditor = () => {
     if (isMobile) {
       setActiveMobileSetupDrawer(MOBILE_SETUP_DRAWERS.type)
       return
     }
-    setIsEditingType(true)
+    openSection('type')
   }
 
-  const resetTypeSelection = () => {
-    drillType.setShowAllDrillTypes(false)
-    updateSetupField('incidentType', '')
-    setIsEditingType(true)
+  const openTypeManagerFromDrawer = () => {
+    setReturnMobileSetupDrawer(MOBILE_SETUP_DRAWERS.type)
     setActiveMobileSetupDrawer('')
+    drillType.openAddModal()
   }
 
   const selectDrillType = (nextValue, { closeMobileDrawer = false } = {}) => {
@@ -123,92 +328,259 @@ const DrillSetupStep = ({
     }
     drillType.setShowAllDrillTypes(false)
     const value = String(nextValue || '').trim()
+    if (!value) return
     updateSetupField('incidentType', value)
     recordDrillTypeUsage(user?.id, value)
-    setIsEditingType(false)
     if (closeMobileDrawer) setActiveMobileSetupDrawer('')
+    setNextRequiredGroup({ ...form, incidentType: value })
   }
 
-  const openTypeManagerFromDrawer = () => {
-    setReturnMobileSetupDrawer(MOBILE_SETUP_DRAWERS.type)
-    setActiveMobileSetupDrawer('')
-    drillType.openAddModal()
+  const resetTypeSelection = () => {
+    drillType.setShowAllDrillTypes(false)
+    updateSetupField('incidentType', '')
+    openSection('type')
   }
 
-  const categorySummary = (Array.isArray(form.exerciseCategories) ? form.exerciseCategories : [])
-    .map(
-      (value) =>
-        drillCategory.categoryOptions.find((option) => option.value === value)?.title || value,
+  const resetCategorySelection = () => {
+    drillCategory.setShowAllCategories(false)
+    updateSetupField('exerciseCategories', [])
+    openSection('categories')
+  }
+
+  const resetEnvironmentSelection = () => {
+    drillEnvironment.setShowAllDrillEnvironments(false)
+    updateSetupField('weather', '')
+    setNextRequiredGroup({ ...form, weather: '' })
+  }
+
+  const resetLocationSelection = () => {
+    drillLocation.setShowAllDrillLocations(false)
+    updateSetupField('location', '')
+    setNextRequiredGroup({ ...form, location: '' })
+  }
+
+  const resetDateTimeSelection = () => {
+    updateSetupField('reportDate', '')
+    updateSetupField('reportTime', '')
+    setNextRequiredGroup({ ...form, reportDate: '', reportTime: '' })
+  }
+
+  const getMobileSetupBackGroup = React.useCallback(() => {
+    if (!isMobile) return ''
+
+    const orderedGroups = DRILL_MOBILE_SETUP_GROUPS
+    const preferredCurrent = String(mobileEditOverride || activeMobileGroup || '').trim()
+    const currentGroupIndex = orderedGroups.indexOf(preferredCurrent)
+    const lastCompleteGroup = getLastCompleteDrillSetupGroup(completion)
+    const lastCompleteIndex = orderedGroups.indexOf(lastCompleteGroup)
+    const targetIndex =
+      currentGroupIndex > 0
+        ? currentGroupIndex - 1
+        : currentGroupIndex === 0
+          ? -1
+          : lastCompleteIndex >= 0
+            ? lastCompleteIndex
+            : -1
+    if (targetIndex < 0) return ''
+    return orderedGroups[targetIndex]
+  }, [activeMobileGroup, completion, isMobile, mobileEditOverride])
+
+  const handleMobileBack = React.useCallback(() => {
+    if (!isMobile) return false
+    const targetGroup = getMobileSetupBackGroup()
+    if (!targetGroup) return false
+    setMobileEditOverride(targetGroup)
+    setActiveMobileGroup(targetGroup)
+    rememberMobileSetupGroup(targetGroup)
+    return true
+  }, [getMobileSetupBackGroup, isMobile])
+
+  React.useEffect(() => {
+    if (typeof onRegisterMobileBackHandler !== 'function') return
+    onRegisterMobileBackHandler(handleMobileBack)
+    return () => onRegisterMobileBackHandler(null)
+  }, [handleMobileBack, onRegisterMobileBackHandler])
+
+  const mobileDrawerReturnTimeoutRef = useRef(null)
+  React.useEffect(() => {
+    if (!isMobile || !returnMobileSetupDrawer || mobileSetupChildDrawerVisible) return
+
+    if (mobileDrawerReturnTimeoutRef.current) {
+      window.clearTimeout(mobileDrawerReturnTimeoutRef.current)
+    }
+    mobileDrawerReturnTimeoutRef.current = window.setTimeout(() => {
+      setActiveMobileSetupDrawer(returnMobileSetupDrawer)
+      setReturnMobileSetupDrawer('')
+      mobileDrawerReturnTimeoutRef.current = null
+    }, 0)
+
+    return () => {
+      if (mobileDrawerReturnTimeoutRef.current) {
+        window.clearTimeout(mobileDrawerReturnTimeoutRef.current)
+        mobileDrawerReturnTimeoutRef.current = null
+      }
+    }
+  }, [isMobile, mobileSetupChildDrawerVisible, returnMobileSetupDrawer])
+
+  React.useEffect(() => {
+    if (isMobile) return
+    const nextSection = getFirstIncompleteSetupGroup(form)
+    const isEditingSection = Boolean(desktopEditGroup)
+
+    if (!initializationRef.current) {
+      initializationRef.current = true
+      setDesktopEditGroup(nextSection)
+      return
+    }
+    if (isEditingSection) return
+    setDesktopEditGroup(nextSection)
+  }, [
+    desktopEditGroup,
+    form,
+    getFirstIncompleteGroup,
+    isMobile,
+    hasType,
+    hasEnvironment,
+    hasLocation,
+    hasDateTime,
+  ])
+
+  React.useEffect(() => {
+    if (!isMobile || mobileEditOverride) return
+    const firstIncomplete = getFirstIncompleteGroup()
+    if (
+      firstIncomplete &&
+      activeMobileGroup !== firstIncomplete &&
+      activeMobileGroup !== 'categories'
+    ) {
+      setActiveMobileGroup(firstIncomplete)
+      rememberMobileSetupGroup(firstIncomplete)
+    }
+  }, [
+    activeMobileGroup,
+    getFirstIncompleteGroup,
+    hasType,
+    hasEnvironment,
+    hasLocation,
+    hasDateTime,
+    isMobile,
+    mobileEditOverride,
+  ])
+
+  React.useEffect(() => {
+    if (!isMobile) return
+    const errorToGroup = {
+      incidentType: 'type',
+      weather: 'environment',
+      location: 'location',
+      reportDate: 'datetime',
+      reportTime: 'datetime',
+    }
+    const firstErrorGroup = Object.keys(setupFieldErrors || {})
+      .filter((key) => Boolean(setupFieldErrors?.[key]))
+      .map((key) => errorToGroup[key])
+      .find(Boolean)
+
+    if (firstErrorGroup) {
+      rememberMobileSetupGroup(firstErrorGroup)
+      setMobileEditOverride(firstErrorGroup)
+      setActiveMobileGroup(firstErrorGroup)
+    }
+  }, [isMobile, setupFieldErrors])
+
+  React.useEffect(() => {
+    const normalizedDate = normalizeReportDateInputValue(form.reportDate)
+    if (!normalizedDate) {
+      updateSetupField('reportDate', today)
+      return
+    }
+    if (normalizedDate !== String(form.reportDate || '').trim()) {
+      updateSetupField('reportDate', normalizedDate)
+    }
+  }, [form.reportDate, today, updateSetupField])
+
+  const renderSetupSummary = (group, label, value, secondaryValue = '') => {
+    if (isMobile || !completion[group] || shouldShowSetupEditor(group)) return null
+    return (
+      <ReportSetupSummaryRow
+        label={label}
+        value={value || '--'}
+        secondaryValue={secondaryValue}
+        showDesktop
+        onEdit={() => openSection(group)}
+        onReset={() => {
+          if (group === 'type') resetTypeSelection()
+          if (group === 'categories') resetCategorySelection()
+          if (group === 'environment') resetEnvironmentSelection()
+          if (group === 'location') resetLocationSelection()
+          if (group === 'datetime') resetDateTimeSelection()
+        }}
+      />
     )
-    .join(', ')
-  const mobileSetupSummaryItems =
-    isMobile && hasType
-      ? [
-          hasType && !isEditingType
-            ? {
-                key: 'type',
-                label: 'Type',
-                value: form.incidentType,
-                editLabel: 'Edit Type',
-                onEdit: openTypeEditor,
-              }
-            : null,
-          !isEditingCategories
-            ? {
-                key: 'categories',
-                label: 'Exercise Categories',
-                value: categorySummary || 'None selected',
-                editLabel: 'Edit Exercise Categories',
-                onEdit: () => setIsEditingCategories(true),
-              }
-            : null,
-          form.weather && !showEnvironmentPicker
-            ? {
-                key: 'environment',
-                label: 'Environment',
-                value: form.weather,
-                editLabel: 'Edit Environment',
-                onEdit: () => setIsEditingEnvironment(true),
-              }
-            : null,
-          form.location && !showLocationPicker
-            ? {
-                key: 'location',
-                label: 'Location',
-                value: form.location,
-                editLabel: 'Edit Location',
-                onEdit: () => setIsEditingLocation(true),
-              }
-            : null,
-          form.reportDate && form.reportTime && !showDateTimePicker
-            ? {
-                key: 'datetime',
-                label: 'Date & Time',
-                value: form.reportDate,
-                secondaryValue: `${form.reportTime}${
-                  form.reportIssuanceDate ? ` · Issued ${form.reportIssuanceDate}` : ''
-                }`,
-                editLabel: 'Edit Date & Time',
-                onEdit: () => setIsEditingDateTime(true),
-              }
-            : null,
-        ].filter(Boolean)
-      : []
-  const isSetupComplete = Boolean(
-    hasType &&
-      String(form.weather || '').trim() &&
-      String(form.location || '').trim() &&
-      String(form.reportDate || '').trim() &&
-      String(form.reportTime || '').trim(),
-  )
-  const isSetupEditorOpen =
-    isMobile &&
-    (showTypePicker ||
-      isEditingCategories ||
-      showEnvironmentPicker ||
-      showLocationPicker ||
-      showDateTimePicker)
-  const shouldShowWorkflowActions = isSetupComplete && !isSetupEditorOpen
+  }
+
+  const normalizedReportDate = normalizeReportDateInputValue(form.reportDate)
+
+  const setupSummaryDefinitions = [
+    {
+      key: 'type',
+      group: 'type',
+      label: 'Type',
+      value: selectedTypeLabel,
+    },
+    {
+      key: 'categories',
+      group: 'categories',
+      label: 'Exercise Categories',
+      value: categorySummary || 'None selected',
+    },
+    {
+      key: 'environment',
+      group: 'environment',
+      label: 'Environment',
+      value: selectedEnvironmentLabel || '--',
+    },
+    {
+      key: 'location',
+      group: 'location',
+      label: 'Location',
+      value: form.location || '--',
+    },
+    {
+      key: 'datetime',
+      group: 'datetime',
+      label: 'Date & Time',
+      value: normalizedReportDate || '--',
+      secondaryValue: `${form.reportTime || '--'}${form.reportIssuanceDate ? ` • Issued ${form.reportIssuanceDate}` : ''}`,
+    },
+  ].filter((item) => {
+    if (item.group === 'datetime') {
+      return hasType && Boolean(hasDateTime)
+    }
+    if (item.group === 'type') {
+      return hasType
+    }
+    if (item.group === 'categories') {
+      return hasType && Boolean(categorySummary)
+    }
+    if (item.group === 'environment') {
+      return hasType && hasEnvironment
+    }
+    if (item.group === 'location') {
+      return hasType && hasLocation
+    }
+    return false
+  })
+
+  const mobileSetupSummaryItems = isMobile
+    ? setupSummaryDefinitions
+        .filter(({ group }) => completion[group] && !shouldShowSetupEditor(group))
+        .map(({ group, ...item }) => ({
+          ...item,
+          editLabel: `Edit ${item.label}`,
+          onEdit: () => openSection(group),
+        }))
+    : []
 
   return (
     <div className="mb-3 d-grid gap-4" data-testid="drill-report-setup-ready">
@@ -230,6 +602,7 @@ const DrillSetupStep = ({
           setDeleteTypeTarget(null)
         }}
       />
+
       <ActionConfirmModal
         visible={Boolean(deleteCategoryTarget)}
         mobileDrawerQuery={REPORT_MOBILE_QUERY}
@@ -248,6 +621,7 @@ const DrillSetupStep = ({
           setDeleteCategoryTarget(null)
         }}
       />
+
       <ActionConfirmModal
         visible={Boolean(deleteLocationTarget)}
         mobileDrawerQuery={REPORT_MOBILE_QUERY}
@@ -264,6 +638,26 @@ const DrillSetupStep = ({
         onConfirm={() => {
           if (deleteLocationTarget?.value) drillLocation.removeType(deleteLocationTarget.value)
           setDeleteLocationTarget(null)
+        }}
+      />
+
+      <ActionConfirmModal
+        visible={Boolean(deleteEnvironmentTarget)}
+        mobileDrawerQuery={REPORT_MOBILE_QUERY}
+        testId="drill-report-environment-manager-delete-modal"
+        title="Delete Environment"
+        message={
+          deleteEnvironmentTarget?.label
+            ? `Delete "${deleteEnvironmentTarget.label}"? This cannot be undone.`
+            : 'Delete this environment?'
+        }
+        confirmLabel="Delete"
+        confirmColor="danger"
+        onClose={() => setDeleteEnvironmentTarget(null)}
+        onConfirm={() => {
+          if (deleteEnvironmentTarget?.value)
+            drillEnvironment.removeType(deleteEnvironmentTarget.value)
+          setDeleteEnvironmentTarget(null)
         }}
       />
 
@@ -303,6 +697,7 @@ const DrillSetupStep = ({
         onChangeIcon={drillType.setNewTypeIconKey}
         showIconPicker
       />
+
       <TypeManagerModal
         visible={drillCategory.showAddCategoryModal}
         mobileDrawer
@@ -339,6 +734,7 @@ const DrillSetupStep = ({
         onChangeIcon={drillCategory.setNewCategoryIconKey}
         showIconPicker
       />
+
       <TypeManagerModal
         visible={drillLocation.showAddLocationModal}
         mobileDrawer
@@ -371,6 +767,43 @@ const DrillSetupStep = ({
         saveLabel="Save Location"
         updateLabel="Update Location"
         showRowIcon={false}
+      />
+
+      <TypeManagerModal
+        visible={drillEnvironment.showAddEnvironmentModal}
+        mobileDrawer
+        mobileDrawerQuery={REPORT_MOBILE_QUERY}
+        testId="drill-report-environment-manager-modal"
+        onClose={drillEnvironment.closeAddModal}
+        editMode={drillEnvironment.environmentEditMode}
+        onSetEditMode={drillEnvironment.setEnvironmentEditMode}
+        editTitle="Edit Environments"
+        addTitle="Add Environment"
+        options={drillEnvironment.typeOptions}
+        onStartEdit={drillEnvironment.startEditType}
+        onRequestDelete={({ value, label }) => setDeleteEnvironmentTarget({ value, label })}
+        nameLabel="Environment Name"
+        nameValue={drillEnvironment.newEnvironmentName}
+        onChangeName={(value) => {
+          drillEnvironment.setNewEnvironmentName(value)
+          if (drillEnvironment.addEnvironmentError) drillEnvironment.setAddEnvironmentError('')
+        }}
+        namePlaceholder="e.g. Indoor / Controlled"
+        descriptionLabel="Environment details (optional)"
+        descriptionValue={drillEnvironment.newEnvironmentDescription}
+        onChangeDescription={drillEnvironment.setNewEnvironmentDescription}
+        descriptionPlaceholder="Subtext shown below environment name."
+        error={drillEnvironment.addEnvironmentError}
+        editingKey={drillEnvironment.editingEnvironmentKey}
+        editingLabel="Editing environment"
+        editButtonLabel="Edit Environments"
+        onSave={drillEnvironment.saveType}
+        saveLabel="Save Environment"
+        updateLabel="Update Environment"
+        iconOptions={drillEnvironment.iconOptions}
+        iconValue={drillEnvironment.newEnvironmentIconKey}
+        onChangeIcon={drillEnvironment.setNewEnvironmentIconKey}
+        showIconPicker
       />
 
       <MobileSetupSelectorDrawer
@@ -418,25 +851,23 @@ const DrillSetupStep = ({
         {mobileSetupSummaryItems.length > 0 ? (
           <MobileSetupSummaryList ariaLabel="Drill setup summary" items={mobileSetupSummaryItems} />
         ) : null}
+
         <div
-          className={`d-grid gap-3 ${!showTypePicker ? 'd-none d-md-grid' : ''}`.trim()}
+          className={setupGroupClassName('type')}
           data-drill-field="incidentType"
+          aria-invalid={Boolean(setupFieldErrors.incidentType) || undefined}
         >
-          {!showTypePicker ? (
-            !isMobile ? (
-              <ReportSetupSummaryRow
-                label="Type"
-                value={form.incidentType}
-                showDesktop
-                onEdit={openTypeEditor}
-                onReset={resetTypeSelection}
-              />
-            ) : null
-          ) : (
+          {renderSetupSummary('type', 'Type', selectedTypeLabel)}
+          {shouldShowSetupEditor('type') ? (
             <>
               <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <div className="fw-semibold text-muted">Choose Drill Type</div>
-                <CreateActionButton label="Add type" onClick={drillType.openAddModal} />
+                {isMobile ? (
+                  <CreateActionButton label="Change type" onClick={openTypeEditor} />
+                ) : null}
+                {!isMobile ? (
+                  <CreateActionButton label="Add type" onClick={drillType.openAddModal} />
+                ) : null}
               </div>
               <ResponsiveChoiceSelector
                 isMobile={isMobile}
@@ -455,148 +886,130 @@ const DrillSetupStep = ({
                 ariaLabel="Choose drill type"
               />
             </>
-          )}
+          ) : null}
         </div>
-        {!isMobile || hasType ? (
-          <>
-            {!isEditingCategories ? (
-              !isMobile ? (
-                <ReportSetupSummaryRow
-                  label="Exercise Categories"
-                  value={categorySummary || 'None selected'}
-                  showDesktop
-                  onEdit={() => setIsEditingCategories(true)}
-                  onReset={() => {
-                    drillCategory.setShowAllCategories(false)
-                    updateSetupField('exerciseCategories', [])
-                    setIsEditingCategories(true)
-                  }}
-                />
-              ) : null
-            ) : (
-              <div className="d-grid gap-2" role="group" aria-labelledby="drill-category-title">
-                <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
-                  <div id="drill-category-title" className="fw-semibold text-muted">
-                    Exercise Categories (optional)
-                  </div>
-                  <CreateActionButton label="Add category" onClick={drillCategory.openAddModal} />
+
+        <div className={setupGroupClassName('categories')}>
+          {renderSetupSummary(
+            'categories',
+            'Exercise Categories',
+            categorySummary || 'None selected',
+          )}
+          {shouldShowSetupEditor('categories') ? (
+            <div className="d-grid gap-2" role="group" aria-labelledby="drill-category-title">
+              <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div id="drill-category-title" className="fw-semibold text-muted">
+                  Exercise Categories (optional)
                 </div>
-                <ResponsiveChoiceSelector
-                  isMobile={isMobile}
-                  options={drillCategory.visibleCategoryOptions}
-                  value={Array.isArray(form.exerciseCategories) ? form.exerciseCategories : []}
-                  onChange={(nextValue) => {
-                    if (nextValue === DRILL_CATEGORY_TOGGLE_VALUE) {
-                      drillCategory.setShowAllCategories((prev) => !prev)
-                      return
-                    }
-                    setForm((prev) => {
-                      const current = Array.isArray(prev.exerciseCategories)
-                        ? prev.exerciseCategories
-                        : []
-                      return {
-                        ...prev,
-                        exerciseCategories: current.includes(nextValue)
-                          ? current.filter((value) => value !== nextValue)
-                          : [...current, nextValue],
-                      }
-                    })
-                  }}
-                  variant="compact"
-                  toggleValue={DRILL_CATEGORY_TOGGLE_VALUE}
-                  columns={{ xs: 12, md: 3 }}
-                  cardProps={(option) =>
-                    option?.value === DRILL_CATEGORY_TOGGLE_VALUE
-                      ? TOGGLE_CARD_PROPS
-                      : { className: 'report-option-card' }
-                  }
-                  selectionMode="multi"
-                  ariaLabel="Exercise categories"
-                  testIdPrefix="drill-category"
-                />
-                <div className="report-setup-confirm-row">
-                  <CButton
-                    type="button"
-                    color="secondary"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsEditingCategories(false)}
-                  >
-                    Done
-                  </CButton>
-                </div>
+                <CreateActionButton label="Add category" onClick={drillCategory.openAddModal} />
               </div>
-            )}
-            <div
-              className={form.weather && !showEnvironmentPicker ? 'd-none d-md-block' : undefined}
-              data-drill-field="weather"
-              aria-invalid={Boolean(setupFieldErrors.weather) || undefined}
-            >
-              {form.weather && !showEnvironmentPicker ? (
-                !isMobile ? (
-                  <ReportSetupSummaryRow
-                    label="Environment"
-                    value={form.weather}
-                    showDesktop
-                    onEdit={() => setIsEditingEnvironment(true)}
-                    onReset={() => {
-                      updateSetupField('weather', '')
-                      setIsEditingEnvironment(true)
-                    }}
-                  />
-                ) : null
-              ) : null}
-              <div className={form.weather && !showEnvironmentPicker ? 'd-none' : ''}>
-                {isMobile ? (
-                  <div className="d-grid gap-2">
-                    <div className="fw-semibold text-muted">Choose Environment / Condition</div>
-                    <MobileChoiceList
-                      mode="single"
-                      ariaLabel="Choose environment or condition"
-                      options={DRILL_ENVIRONMENT_OPTIONS}
-                      value={form.weather}
-                      onChange={(value) => {
-                        updateSetupField('weather', value)
-                        setIsEditingEnvironment(false)
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <SelectionCards
-                    label="Choose Environment / Condition"
-                    options={DRILL_ENVIRONMENT_OPTIONS}
-                    selectedValue={form.weather}
-                    showDescriptions={false}
-                    onSelect={(value) => {
-                      updateSetupField('weather', value)
-                      setIsEditingEnvironment(false)
-                    }}
-                    cols={{ xs: 12, md: 4 }}
-                  />
-                )}
+              <ResponsiveChoiceSelector
+                isMobile={isMobile}
+                options={drillCategory.visibleCategoryOptions}
+                value={selectedCategories}
+                onChange={(nextValue) => {
+                  if (nextValue === DRILL_CATEGORY_TOGGLE_VALUE) {
+                    drillCategory.setShowAllCategories((prev) => !prev)
+                    return
+                  }
+                  setForm((prev) => {
+                    const current = Array.isArray(prev.exerciseCategories)
+                      ? prev.exerciseCategories
+                      : []
+                    return {
+                      ...prev,
+                      exerciseCategories: current.includes(nextValue)
+                        ? current.filter((value) => value !== nextValue)
+                        : [...current, nextValue],
+                    }
+                  })
+                  setSetupFieldErrors((prev) => ({ ...prev, exerciseCategories: undefined }))
+                }}
+                variant="compact"
+                toggleValue={DRILL_CATEGORY_TOGGLE_VALUE}
+                columns={{ xs: 12, md: 3 }}
+                cardProps={(option) =>
+                  option?.value === DRILL_CATEGORY_TOGGLE_VALUE
+                    ? TOGGLE_CARD_PROPS
+                    : { className: 'report-option-card' }
+                }
+                selectionMode="multi"
+                ariaLabel="Exercise categories"
+                testIdPrefix="drill-category"
+              />
+              <div className="report-setup-confirm-row">
+                <CButton
+                  type="button"
+                  color="secondary"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setNextRequiredGroup(form)
+                    if (!isMobile) closeCurrentGroup()
+                  }}
+                >
+                  Done
+                </CButton>
               </div>
             </div>
-            <div
-              className={form.location && !showLocationPicker ? 'd-none d-md-block' : undefined}
-              data-drill-field="location"
-              aria-invalid={Boolean(setupFieldErrors.location) || undefined}
-            >
-              {form.location && !showLocationPicker ? (
-                !isMobile ? (
-                  <ReportSetupSummaryRow
-                    label="Location"
-                    value={form.location}
-                    showDesktop
-                    onEdit={() => setIsEditingLocation(true)}
-                    onReset={() => {
-                      drillLocation.setShowAllDrillLocations(false)
-                      updateSetupField('location', '')
-                      setIsEditingLocation(true)
-                    }}
-                  />
-                ) : null
-              ) : null}
-              <div className={form.location && !showLocationPicker ? 'd-none' : 'd-grid gap-3'}>
+          ) : null}
+        </div>
+
+        <div
+          className={setupGroupClassName('environment')}
+          data-drill-field="weather"
+          aria-invalid={Boolean(setupFieldErrors.weather) || undefined}
+        >
+          {renderSetupSummary('environment', 'Environment', selectedEnvironmentLabel)}
+          {shouldShowSetupEditor('environment') ? (
+            <>
+              <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div className="fw-semibold text-muted">Choose Environment / Condition</div>
+                <CreateActionButton
+                  label="Add environment"
+                  className="inspection-compact-action-btn"
+                  onClick={drillEnvironment.openAddModal}
+                />
+              </div>
+              <ResponsiveChoiceSelector
+                isMobile={isMobile}
+                options={drillEnvironment.visibleTypeOptions}
+                value={form.weather}
+                onChange={(nextValue) => {
+                  if (nextValue === DRILL_ENVIRONMENT_TOGGLE_VALUE) {
+                    drillEnvironment.setShowAllDrillEnvironments((prev) => !prev)
+                    return
+                  }
+                  drillEnvironment.setShowAllDrillEnvironments(false)
+                  const value = String(nextValue || '').trim()
+                  if (!value) return
+                  updateSetupField('weather', value)
+                  setNextRequiredGroup({ ...form, weather: value })
+                }}
+                variant="compact"
+                toggleValue={DRILL_ENVIRONMENT_TOGGLE_VALUE}
+                showDescription={false}
+                columns={{ xs: 12, md: 3 }}
+                cardProps={(option) =>
+                  option?.value === DRILL_ENVIRONMENT_TOGGLE_VALUE
+                    ? TOGGLE_CARD_PROPS
+                    : { className: 'report-option-card' }
+                }
+                ariaLabel="Choose environment or condition"
+              />
+            </>
+          ) : null}
+        </div>
+
+        <div
+          className={setupGroupClassName('location')}
+          data-drill-field="location"
+          aria-invalid={Boolean(setupFieldErrors.location) || undefined}
+        >
+          {renderSetupSummary('location', 'Location', form.location)}
+          {shouldShowSetupEditor('location') ? (
+            <>
+              <div className="d-grid gap-3">
                 <div className="d-flex flex-wrap justify-content-between align-items-center gap-2">
                   <div className="fw-semibold text-muted">Choose Drill Location</div>
                   <CreateActionButton label="Add location" onClick={drillLocation.openAddModal} />
@@ -611,8 +1024,9 @@ const DrillSetupStep = ({
                       return
                     }
                     drillLocation.setShowAllDrillLocations(false)
-                    updateSetupField('location', String(nextValue || '').trim())
-                    setIsEditingLocation(false)
+                    const next = String(nextValue || '').trim()
+                    updateSetupField('location', next)
+                    setNextRequiredGroup({ ...form, location: next })
                   }}
                   variant="compact"
                   showDescription
@@ -625,122 +1039,105 @@ const DrillSetupStep = ({
                   }
                 />
               </div>
-            </div>
-            <div
-              className={
-                form.reportDate && form.reportTime && !showDateTimePicker
-                  ? 'd-none d-md-block'
-                  : undefined
-              }
-              data-drill-field="reportDate"
-              aria-invalid={
-                Boolean(setupFieldErrors.reportDate || setupFieldErrors.reportTime) || undefined
-              }
-            >
-              {form.reportDate && form.reportTime && !showDateTimePicker ? (
-                !isMobile ? (
-                  <ReportSetupSummaryRow
-                    label="Date & Time"
+            </>
+          ) : null}
+        </div>
+
+        <div
+          className={setupGroupClassName('datetime', 4)}
+          data-drill-field="reportDate"
+          aria-invalid={
+            Boolean(setupFieldErrors.reportDate || setupFieldErrors.reportTime) || undefined
+          }
+        >
+          {renderSetupSummary(
+            'datetime',
+            'Report date',
+            normalizedReportDate,
+            `${form.reportTime}${
+              form.reportIssuanceDate ? ` • Issued ${form.reportIssuanceDate}` : ''
+            }`,
+          )}
+          {shouldShowSetupEditor('datetime') ? (
+            <div className="d-grid gap-3">
+              <CRow className="g-2">
+                <CCol xs={12} md={12}>
+                  <CFormLabel htmlFor="drill-report-date">Report date</CFormLabel>
+                  <CFormInput
+                    id="drill-report-date"
+                    type="date"
                     value={form.reportDate}
-                    secondaryValue={`${form.reportTime}${
-                      form.reportIssuanceDate ? ` · Issued ${form.reportIssuanceDate}` : ''
-                    }`}
-                    showDesktop
-                    onEdit={() => setIsEditingDateTime(true)}
-                    onReset={() => {
-                      updateSetupField('reportDate', '')
-                      updateSetupField('reportTime', '')
-                      setIsEditingDateTime(true)
+                    invalid={Boolean(setupFieldErrors.reportDate)}
+                    onChange={(event) => {
+                      const value = event.target.value
+                      updateSetupField('reportDate', value)
+                      maybeCloseDateTimeGroup(value, form.reportTime)
                     }}
                   />
-                ) : null
+                  <CFormFeedback invalid>{setupFieldErrors.reportDate}</CFormFeedback>
+                </CCol>
+              </CRow>
+              <CRow className="g-2">
+                <CCol xs={12} md={12}>
+                  <CFormLabel htmlFor="drill-report-time">Drill start time</CFormLabel>
+                  <CFormInput
+                    id="drill-report-time"
+                    type="time"
+                    value={form.reportTime}
+                    invalid={Boolean(setupFieldErrors.reportTime)}
+                    onChange={(event) => {
+                      const value = event.target.value
+                      updateSetupField('reportTime', value)
+                      maybeCloseDateTimeGroup(form.reportDate, value)
+                    }}
+                  />
+                  <CFormFeedback invalid>{setupFieldErrors.reportTime}</CFormFeedback>
+                </CCol>
+              </CRow>
+              <CRow className="g-2">
+                <CCol xs={12} md={12}>
+                  <CFormLabel htmlFor="drill-report-issuance-date">
+                    Report issuance date (optional)
+                  </CFormLabel>
+                  <CFormInput
+                    id="drill-report-issuance-date"
+                    type="date"
+                    value={form.reportIssuanceDate || ''}
+                    onChange={(event) => updateSetupField('reportIssuanceDate', event.target.value)}
+                  />
+                </CCol>
+              </CRow>
+              {hasDateTime ? (
+                <div className="report-setup-confirm-row">
+                  <CButton
+                    type="button"
+                    color="secondary"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      closeCurrentGroup()
+                      setNextRequiredGroup({
+                        ...form,
+                        reportDate: form.reportDate,
+                        reportTime: form.reportTime,
+                      })
+                    }}
+                  >
+                    Confirm Date & Time
+                  </CButton>
+                </div>
               ) : null}
-              <div
-                className={
-                  form.reportDate && form.reportTime && !showDateTimePicker
-                    ? 'd-none'
-                    : 'd-grid gap-3'
-                }
-              >
-                <SelectionCards
-                  label="Choose Drill Date"
-                  options={datePresetOptions}
-                  selectedValue={form.reportDate}
-                  onSelect={(value) => updateSetupField('reportDate', value)}
-                  cols={{ xs: 12, md: 6 }}
-                />
-                <CRow className="g-2">
-                  <CCol xs={12} md={4}>
-                    <CFormLabel htmlFor="drill-report-date">Custom drill date</CFormLabel>
-                    <CFormInput
-                      id="drill-report-date"
-                      type="date"
-                      value={form.reportDate}
-                      invalid={Boolean(setupFieldErrors.reportDate)}
-                      onChange={(event) => updateSetupField('reportDate', event.target.value)}
-                    />
-                    <CFormFeedback invalid>{setupFieldErrors.reportDate}</CFormFeedback>
-                  </CCol>
-                </CRow>
-                <CRow className="g-2">
-                  <CCol xs={12} md={4}>
-                    <CFormLabel htmlFor="drill-report-issuance-date">
-                      Report issuance date (optional)
-                    </CFormLabel>
-                    <CFormInput
-                      id="drill-report-issuance-date"
-                      type="date"
-                      value={form.reportIssuanceDate || ''}
-                      onChange={(event) =>
-                        updateSetupField('reportIssuanceDate', event.target.value)
-                      }
-                    />
-                  </CCol>
-                </CRow>
-                <SelectionCards
-                  label="Choose Start Time"
-                  options={timePresetOptions}
-                  selectedValue={form.reportTime}
-                  onSelect={(value) => updateSetupField('reportTime', value)}
-                  cols={{ xs: 12, md: 3 }}
-                />
-                <CRow className="g-2">
-                  <CCol xs={12} md={4}>
-                    <CFormLabel htmlFor="drill-report-time">Custom start time</CFormLabel>
-                    <CFormInput
-                      id="drill-report-time"
-                      type="time"
-                      value={form.reportTime}
-                      invalid={Boolean(setupFieldErrors.reportTime)}
-                      onChange={(event) => updateSetupField('reportTime', event.target.value)}
-                    />
-                    <CFormFeedback invalid>{setupFieldErrors.reportTime}</CFormFeedback>
-                  </CCol>
-                </CRow>
-                {form.reportDate && form.reportTime ? (
-                  <div className="report-setup-confirm-row">
-                    <CButton
-                      type="button"
-                      color="secondary"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsEditingDateTime(false)}
-                    >
-                      Confirm Date & Time
-                    </CButton>
-                  </div>
-                ) : null}
-              </div>
             </div>
-            {blockerMessage ? (
-              <CAlert color="danger" className="mb-0" role="alert">
-                {blockerMessage}
-              </CAlert>
-            ) : null}
-            {shouldShowWorkflowActions ? (
-              <ReportSetupActions onContinue={onContinue} isSaving={isSaving} />
-            ) : null}
-          </>
+          ) : null}
+        </div>
+
+        {blockerMessage ? (
+          <CAlert color="danger" className="mb-0" role="alert">
+            {blockerMessage}
+          </CAlert>
+        ) : null}
+        {shouldShowWorkflowActions ? (
+          <ReportSetupActions onContinue={handleContinueClick} isSaving={isSaving} />
         ) : null}
       </div>
     </div>

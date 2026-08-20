@@ -32,6 +32,7 @@ import {
   PreMobModeModal,
   ChronologyStartModeModal,
 } from './erco-form-components'
+import { REPORT_ACTION_LABELS } from '../reportActionLabels'
 import useReportIsMobile, { REPORT_MOBILE_QUERY } from '../hooks/useReportIsMobile'
 import useIncidentTitleSuggestions from './useIncidentTitleSuggestions'
 
@@ -443,7 +444,7 @@ const ErcoDetailsStep = ({
           <DetailsStepActions
             onBack={onBack}
             onClear={onClear}
-            primaryLabel="Continue"
+            primaryLabel={REPORT_ACTION_LABELS.CONTINUE}
             primaryType="button"
             onPrimary={onContinue}
             isSaving={isSaving}

@@ -11,8 +11,8 @@ import {
 } from '@coreui/react'
 import { AlertTriangle, CalendarX2, Download } from 'lucide-react'
 
+import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import ButtonLoader from 'src/components/ButtonLoader'
-import InlineFeedbackMessage from 'src/components/InlineFeedbackMessage'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import useMediaQuery from 'src/hooks/useMediaQuery'
 import { getFireExtinguisherExportFilterNotes } from './fireExtinguisherExportFilters'
@@ -43,6 +43,11 @@ const CategoryCard = ({ id, title, count, checked, disabled, icon, onChange }) =
   </label>
 )
 
+const resolveFeedbackConfirmColor = (color) => {
+  if (['primary', 'success', 'info', 'warning', 'danger'].includes(color)) return color
+  return 'info'
+}
+
 const FireExtinguisherExceptionExportDialog = ({ visible, filterSnapshot, onClose }) => {
   const useMobileDrawer = useMediaQuery('(max-width: 575.98px)')
   const notes = getFireExtinguisherExportFilterNotes(filterSnapshot)
@@ -62,6 +67,7 @@ const FireExtinguisherExceptionExportDialog = ({ visible, filterSnapshot, onClos
     toggleCategory,
     refreshPreview,
     download,
+    clearFeedback,
   } = exportState
   const selectedTotal = categories.length ? preview.total : 0
   const exportDisabled =
@@ -72,6 +78,20 @@ const FireExtinguisherExceptionExportDialog = ({ visible, filterSnapshot, onClos
     selectedTotal === 0
   const formatLabel = format === 'docx' ? 'Word' : 'PDF'
   const title = 'Export fire extinguisher exceptions'
+  const feedbackModal = (
+    <ActionConfirmModal
+      visible={Boolean(feedback?.message)}
+      title={feedback?.title || 'Notice'}
+      message={feedback?.message || ''}
+      confirmLabel="OK"
+      confirmColor={resolveFeedbackConfirmColor(feedback?.color)}
+      isNotice
+      showCancelAction={false}
+      confirmDisabled={isDownloading}
+      onClose={clearFeedback}
+      onConfirm={clearFeedback}
+    />
+  )
 
   const body = (
     <div className="fire-extinguisher-export d-grid gap-3">
@@ -200,8 +220,6 @@ const FireExtinguisherExceptionExportDialog = ({ visible, filterSnapshot, onClos
           />
         </div>
       </fieldset>
-
-      <InlineFeedbackMessage feedback={feedback} />
     </div>
   )
 
@@ -232,38 +250,44 @@ const FireExtinguisherExceptionExportDialog = ({ visible, filterSnapshot, onClos
 
   if (useMobileDrawer) {
     return (
-      <MobileBottomDrawer
-        visible={visible}
-        title={title}
-        onClose={onClose}
-        closeDisabled={isDownloading}
-        bodyClassName="fire-extinguisher-export-drawer"
-      >
-        {body}
-        <div className="mobile-bottom-drawer__footer fire-extinguisher-export__footer d-flex justify-content-end gap-2">
-          {footer}
-        </div>
-      </MobileBottomDrawer>
+      <>
+        {feedbackModal}
+        <MobileBottomDrawer
+          visible={visible}
+          title={title}
+          onClose={onClose}
+          closeDisabled={isDownloading}
+          bodyClassName="fire-extinguisher-export-drawer"
+        >
+          {body}
+          <div className="mobile-bottom-drawer__footer fire-extinguisher-export__footer d-flex justify-content-end gap-2">
+            {footer}
+          </div>
+        </MobileBottomDrawer>
+      </>
     )
   }
 
   return (
-    <CModal
-      visible={visible}
-      onClose={isDownloading ? undefined : onClose}
-      alignment="center"
-      scrollable
-      size="lg"
-      className="fire-extinguisher-export-modal"
-      backdrop={isDownloading ? 'static' : true}
-      keyboard={!isDownloading}
-    >
-      <CModalHeader closeButton={!isDownloading}>
-        <CModalTitle>{title}</CModalTitle>
-      </CModalHeader>
-      <CModalBody>{body}</CModalBody>
-      <CModalFooter>{footer}</CModalFooter>
-    </CModal>
+    <>
+      {feedbackModal}
+      <CModal
+        visible={visible}
+        onClose={isDownloading ? undefined : onClose}
+        alignment="center"
+        scrollable
+        size="lg"
+        className="fire-extinguisher-export-modal"
+        backdrop={isDownloading ? 'static' : true}
+        keyboard={!isDownloading}
+      >
+        <CModalHeader closeButton={!isDownloading}>
+          <CModalTitle>{title}</CModalTitle>
+        </CModalHeader>
+        <CModalBody>{body}</CModalBody>
+        <CModalFooter>{footer}</CModalFooter>
+      </CModal>
+    </>
   )
 }
 

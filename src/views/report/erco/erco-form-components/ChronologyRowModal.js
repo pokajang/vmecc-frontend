@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react'
-import { CButton, CFormInput, CFormLabel } from '@coreui/react'
+import { CButton, CFormInput, CFormLabel, CFormTextarea } from '@coreui/react'
 import ResponsiveReportDialog from 'src/components/report-workflow/ResponsiveReportDialog'
 
 const ChronologyRowModal = ({ visible, draft, onClose, onChangeDraft, onSave, onSaveAndNext }) => {
@@ -27,14 +27,16 @@ const ChronologyRowModal = ({ visible, draft, onClose, onChangeDraft, onSave, on
       </div>
       <div>
         <CFormLabel htmlFor="chronology-event-action">Event / action</CFormLabel>
-        <CFormInput
+        <CFormTextarea
           id="chronology-event-action"
           ref={actionRef}
           value={draft?.action || ''}
           placeholder="Describe the event or action..."
+          rows={3}
           onChange={(e) => onChangeDraft({ action: e.target.value })}
           onKeyDown={(e) => {
             if (e.key !== 'Enter') return
+            if (!e.metaKey && !e.ctrlKey) return
             e.preventDefault()
             if (isEditing) onSave()
             else onSaveAndNext()

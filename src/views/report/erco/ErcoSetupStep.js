@@ -1,7 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { CButton, CCol, CFormInput, CRow } from '@coreui/react'
 import CreateActionButton from 'src/components/CreateActionButton'
-import IconOptionCard from 'src/components/IconOptionCard'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import ResponsiveChoiceSelector from 'src/components/report-workflow/ResponsiveChoiceSelector'
 import MobileSetupSummaryList from 'src/components/report-workflow/MobileSetupSummaryList'
@@ -14,6 +13,7 @@ import useIncidentTypeManager, { INCIDENT_TYPE_TOGGLE_VALUE } from './useInciden
 import useWeatherTypeManager, { WEATHER_TOGGLE_VALUE } from './useWeatherTypeManager'
 import useLocationTypeManager, { LOCATION_TOGGLE_VALUE } from './useLocationTypeManager'
 import useReportIsMobile, { REPORT_MOBILE_QUERY } from '../hooks/useReportIsMobile'
+import { REPORT_ACTION_LABELS } from '../reportActionLabels'
 
 const ACTIVE_CARD_BG = 'rgba(0, 126, 122, 0.2)'
 const ACTIVE_CARD_BORDER = 'rgba(0, 126, 122, 0.45)'
@@ -41,6 +41,15 @@ const rememberMobileSetupGroup = (group) => {
   } catch {
     // Session storage is only a progressive UI hint; ignore unavailable storage.
   }
+}
+
+const ERCO_MOBILE_SETUP_GROUPS = ['incident', 'weather', 'area', 'datetime']
+const getLastCompleteErcoSetupGroup = (completion) => {
+  for (let i = ERCO_MOBILE_SETUP_GROUPS.length - 1; i >= 0; i--) {
+    const group = ERCO_MOBILE_SETUP_GROUPS[i]
+    if (completion?.[group]) return group
+  }
+  return ''
 }
 
 const getFirstIncompleteSetupGroup = (form) => {
@@ -75,9 +84,9 @@ const ErcoSetupStep = ({
   setForm,
   setupFieldErrors,
   setSetupFieldErrors,
-  datePresetOptions,
   pushToast,
   onContinue,
+  onRegisterMobileBackHandler,
   showActions = true,
   isSaving = false,
 }) => {
@@ -138,7 +147,6 @@ const ErcoSetupStep = ({
     pushToast,
   })
 
-  const datePresetCards = useMemo(() => datePresetOptions.slice(0, 3), [datePresetOptions])
   const selectedLocationLabels = useMemo(
     () =>
       selectedLocations
@@ -168,12 +176,6 @@ const ErcoSetupStep = ({
       selectedLocations.length,
     ],
   )
-  const isCustomDateSelected = useMemo(() => {
-    const selectedDate = String(form.incidentDate || '').trim()
-    if (!selectedDate) return false
-    return !datePresetCards.some((option) => String(option?.value || '') === selectedDate)
-  }, [datePresetCards, form.incidentDate])
-
   const getFirstIncompleteGroup = React.useCallback(
     () => getFirstIncompleteSetupGroup(form),
     [form],
@@ -315,6 +317,43 @@ const ErcoSetupStep = ({
       }))
     }
   }
+
+  const getMobileSetupBackGroup = React.useCallback(() => {
+    if (!isMobile) return ''
+
+    const orderedGroups = ERCO_MOBILE_SETUP_GROUPS
+    const preferredCurrent = String(mobileEditOverride || activeMobileGroup || '').trim()
+    const currentGroupIndex = orderedGroups.indexOf(preferredCurrent)
+    const lastCompleteGroup = getLastCompleteErcoSetupGroup(completion)
+    const lastCompleteIndex = orderedGroups.indexOf(lastCompleteGroup)
+    const targetIndex =
+      currentGroupIndex > 0
+        ? currentGroupIndex - 1
+        : currentGroupIndex === 0
+          ? -1
+          : lastCompleteIndex >= 0
+            ? lastCompleteIndex
+            : -1
+
+    if (targetIndex < 0) return ''
+    return orderedGroups[targetIndex]
+  }, [activeMobileGroup, completion, isMobile, mobileEditOverride])
+
+  const handleMobileBack = React.useCallback(() => {
+    if (!isMobile) return false
+    const targetGroup = getMobileSetupBackGroup()
+    if (!targetGroup) return false
+    setMobileEditOverride(targetGroup)
+    setActiveMobileGroup(targetGroup)
+    rememberMobileSetupGroup(targetGroup)
+    return true
+  }, [getMobileSetupBackGroup, isMobile])
+
+  React.useEffect(() => {
+    if (typeof onRegisterMobileBackHandler !== 'function') return
+    onRegisterMobileBackHandler(handleMobileBack)
+    return () => onRegisterMobileBackHandler(null)
+  }, [handleMobileBack, onRegisterMobileBackHandler])
 
   const collapseDesktopGroup = (group) => {
     if (!isMobile && desktopEditGroup === group) setDesktopEditGroup('')
@@ -773,43 +812,17 @@ const ErcoSetupStep = ({
                   <span className="d-none d-md-inline">Choose Incident Date</span>
                 </div>
                 <CRow className="g-2 g-md-3">
-                  {datePresetCards.map((option) => (
-                    <CCol key={String(option?.value || option?.title || '')} xs={6} md={3}>
-                      <IconOptionCard
-                        title={option?.title || String(option?.value || '')}
-                        selected={form.incidentDate === option?.value}
-                        icon={null}
-                        variant="compact"
-                        bodyClassName="d-flex align-items-start"
-                        paddingClassName="p-3"
-                        onSelect={() => updateSetupField('incidentDate', option?.value || '')}
-                      />
-                    </CCol>
-                  ))}
-                  <CCol xs={6} md={3}>
-                    <div
-                      className="rounded-3 border border-light-subtle h-100 w-100 p-3 d-flex flex-column justify-content-center gap-2"
-                      style={
-                        isCustomDateSelected
-                          ? {
-                              backgroundColor: ACTIVE_CARD_BG,
-                              borderColor: ACTIVE_CARD_BORDER,
-                            }
-                          : undefined
+                  <CCol xs={12} md={4}>
+                    <CFormInput
+                      id="erco-incident-date"
+                      type="date"
+                      value={form.incidentDate}
+                      aria-describedby={
+                        setupFieldErrors.incidentDate ? 'erco-incident-date-error' : undefined
                       }
-                    >
-                      <div className="small text-body-secondary">Custom date</div>
-                      <CFormInput
-                        id="erco-incident-date"
-                        type="date"
-                        value={form.incidentDate}
-                        aria-describedby={
-                          setupFieldErrors.incidentDate ? 'erco-incident-date-error' : undefined
-                        }
-                        invalid={Boolean(setupFieldErrors.incidentDate)}
-                        onChange={(event) => updateSetupField('incidentDate', event.target.value)}
-                      />
-                    </div>
+                      invalid={Boolean(setupFieldErrors.incidentDate)}
+                      onChange={(event) => updateSetupField('incidentDate', event.target.value)}
+                    />
                   </CCol>
                 </CRow>
                 {setupFieldErrors.incidentDate ? (
@@ -872,7 +885,7 @@ const ErcoSetupStep = ({
             <ReportMobileActionGroup onPrimary={handleContinueClick} isSaving={isSaving} />
           ) : (
             <DetailsStepActions
-              primaryLabel="Continue"
+              primaryLabel={REPORT_ACTION_LABELS.CONTINUE}
               primaryType="button"
               onPrimary={handleContinueClick}
               isSaving={isSaving}

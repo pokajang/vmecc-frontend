@@ -64,7 +64,7 @@ export const validateDrillSetup = (form) => {
   if (!text(value.incidentType)) next.incidentType = 'Drill type is required.'
   if (!text(value.weather)) next.weather = 'Condition is required.'
   if (!text(value.location)) next.location = 'Location is required.'
-  if (!text(value.reportDate)) next.reportDate = 'Drill date is required.'
+  if (!text(value.reportDate)) next.reportDate = 'Report date is required.'
   if (!text(value.reportTime)) next.reportTime = 'Start time is required.'
   if (String(value.incidentType || '').length > DRILL_FIELD_LIMITS.shortText)
     next.incidentType = `Drill type must be ${DRILL_FIELD_LIMITS.shortText} characters or fewer.`

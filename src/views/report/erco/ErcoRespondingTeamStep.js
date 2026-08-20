@@ -8,6 +8,7 @@ import { fetchRosters, fetchShiftWindows, fetchTeams } from 'src/services/apiCli
 import { ReportMobileActionGroup } from '../components/ReportWorkflowUi'
 import { DetailsStepActions, IncidentSummaryPanel } from './erco-form-components'
 import useReportIsMobile from '../hooks/useReportIsMobile'
+import { REPORT_ACTION_LABELS } from '../reportActionLabels'
 import { resolveRespondingTeamLabel } from './utils'
 
 const ACTIVE_CARD_BG = 'rgba(0, 126, 122, 0.2)'
@@ -584,7 +585,7 @@ const ErcoRespondingTeamStep = ({
           ) : (
             <DetailsStepActions
               onBack={onBack}
-              primaryLabel="Continue"
+              primaryLabel={REPORT_ACTION_LABELS.CONTINUE}
               primaryType="button"
               onPrimary={handleContinueClick}
               isSaving={isSaving}

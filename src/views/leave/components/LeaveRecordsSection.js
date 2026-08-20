@@ -1,9 +1,6 @@
 import React from 'react'
 import {
   CBadge,
-  CCard,
-  CCardBody,
-  CCardHeader,
   CTable,
   CTableBody,
   CTableDataCell,
@@ -20,6 +17,7 @@ import RowActionCell from 'src/components/RowActionCell'
 import RowActions from 'src/components/RowActions'
 import TableFilters from 'src/components/TableFilters'
 import WorkflowStatusSummary from 'src/components/WorkflowStatusSummary'
+import WorkflowRecordsSectionShell from 'src/components/workflow/WorkflowRecordsSectionShell'
 
 const resolveLeaveGates = (row) => {
   const requireRecommendation = row?.workflowSnapshot?.requireRecommendation !== false
@@ -206,31 +204,40 @@ const LeaveRecordsSection = ({
       }
     }),
   }))
+  const headerActions = []
+  if (enableMonthGrouping) {
+    headerActions.push(
+      <CreateActionButton
+        key="group-by-month"
+        label={groupByMonth ? 'Grouped by month' : 'Group by month'}
+        onClick={() => onGroupByMonthChange?.(!groupByMonth)}
+        icon={<Clock3 size={13} />}
+        className={groupByMonth ? 'fw-semibold' : 'text-body-secondary'}
+      />,
+    )
+  }
+  if (showPrimaryAction) {
+    headerActions.push(
+      <CreateActionButton
+        key="apply-leave"
+        label={primaryActionLabel}
+        importance="section-primary"
+        onClick={startNewLeave}
+        icon={primaryActionIcon || <Plus size={13} />}
+      />,
+    )
+  }
+  const renderedHeaderActions =
+    headerActions.length > 0 ? (
+      <div className="d-flex align-items-center gap-2">{headerActions}</div>
+    ) : null
 
   return (
-    <CCard>
-      <CCardHeader className="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <span>{title}</span>
-        <div className="d-flex align-items-center gap-2">
-          {enableMonthGrouping ? (
-            <CreateActionButton
-              label={groupByMonth ? 'Grouped by month' : 'Group by month'}
-              onClick={() => onGroupByMonthChange?.(!groupByMonth)}
-              icon={<Clock3 size={13} />}
-              className={groupByMonth ? 'fw-semibold' : 'text-body-secondary'}
-            />
-          ) : null}
-          {showPrimaryAction ? (
-            <CreateActionButton
-              label={primaryActionLabel}
-              importance="section-primary"
-              onClick={startNewLeave}
-              icon={primaryActionIcon || <Plus size={13} />}
-            />
-          ) : null}
-        </div>
-      </CCardHeader>
-      <CCardBody>
+    <WorkflowRecordsSectionShell
+      sectionTitle={title}
+      recordsTestId="leave-records"
+      headerActions={renderedHeaderActions}
+      filters={
         <div {...(filtersTestId ? { 'data-testid': filtersTestId } : {})}>
           <TableFilters
             searchValue={search}
@@ -267,111 +274,111 @@ const LeaveRecordsSection = ({
             clearColMd="auto"
           />
         </div>
+      }
+    >
+      <ResponsiveRecordCollection
+        isLoading={isLoading}
+        isEmpty={filteredRecords.length === 0}
+        emptyMessage={
+          <div className="text-body-secondary">No leave records match the current filters.</div>
+        }
+        mobileSections={mobileSections}
+        mobileVariant="list-group"
+        renderDesktop={() => (
+          <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-body">
+            <CTable align="middle" className="mb-0" hover responsive>
+              <CTableHead color="light">
+                <CTableRow>
+                  <CTableHeaderCell className="text-center" style={{ width: '56px' }}>
+                    #
+                  </CTableHeaderCell>
+                  <CTableHeaderCell>Leave ID</CTableHeaderCell>
+                  <CTableHeaderCell>Type</CTableHeaderCell>
+                  <CTableHeaderCell>Reason</CTableHeaderCell>
+                  <CTableHeaderCell>Start</CTableHeaderCell>
+                  <CTableHeaderCell>End</CTableHeaderCell>
+                  <CTableHeaderCell>Days</CTableHeaderCell>
+                  <CTableHeaderCell>Status</CTableHeaderCell>
+                  <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
+                </CTableRow>
+              </CTableHead>
+              <CTableBody>
+                {groupedVisibleRows.map((group) => (
+                  <React.Fragment key={group.label || 'all-records'}>
+                    {shouldGroupByMonth ? (
+                      <GroupedTableHeaderRow
+                        colSpan={9}
+                        label={group.label}
+                        count={group.entries.length}
+                        countNoun={group.entries.length === 1 ? 'record' : 'records'}
+                        testId={`leave-month-group-${group.label || 'unknown'}`}
+                      >
+                        <GroupTotalBadge
+                          label="Total"
+                          value={`${formatDayTotal(group.totalDays)} day(s)`}
+                        />
+                      </GroupedTableHeaderRow>
+                    ) : null}
+                    {group.entries.map(({ row, displayIndex }) => {
+                      const actionItems = getLeaveActionItems(row)
 
-        <ResponsiveRecordCollection
-          isLoading={isLoading}
-          isEmpty={filteredRecords.length === 0}
-          emptyMessage={
-            <div className="text-body-secondary">No leave records match the current filters.</div>
-          }
-          mobileSections={mobileSections}
-          mobileVariant="list-group"
-          renderDesktop={() => (
-            <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-body">
-              <CTable align="middle" className="mb-0" hover responsive>
-                <CTableHead color="light">
-                  <CTableRow>
-                    <CTableHeaderCell className="text-center" style={{ width: '56px' }}>
-                      #
-                    </CTableHeaderCell>
-                    <CTableHeaderCell>Leave ID</CTableHeaderCell>
-                    <CTableHeaderCell>Type</CTableHeaderCell>
-                    <CTableHeaderCell>Reason</CTableHeaderCell>
-                    <CTableHeaderCell>Start</CTableHeaderCell>
-                    <CTableHeaderCell>End</CTableHeaderCell>
-                    <CTableHeaderCell>Days</CTableHeaderCell>
-                    <CTableHeaderCell>Status</CTableHeaderCell>
-                    <CTableHeaderCell className="text-center">Actions</CTableHeaderCell>
-                  </CTableRow>
-                </CTableHead>
-                <CTableBody>
-                  {groupedVisibleRows.map((group) => (
-                    <React.Fragment key={group.label || 'all-records'}>
-                      {shouldGroupByMonth ? (
-                        <GroupedTableHeaderRow
-                          colSpan={9}
-                          label={group.label}
-                          count={group.entries.length}
-                          countNoun={group.entries.length === 1 ? 'record' : 'records'}
-                          testId={`leave-month-group-${group.label || 'unknown'}`}
+                      return (
+                        <CTableRow
+                          key={row.recordKey || row.id}
+                          role="button"
+                          className="cursor-pointer"
+                          tabIndex={0}
+                          aria-label={`Open leave record ${getDisplayLeaveId(row)}`}
+                          onClick={() => openRecord(row)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault()
+                              openRecord(row)
+                            }
+                          }}
                         >
-                          <GroupTotalBadge
-                            label="Total"
-                            value={`${formatDayTotal(group.totalDays)} day(s)`}
-                          />
-                        </GroupedTableHeaderRow>
-                      ) : null}
-                      {group.entries.map(({ row, displayIndex }) => {
-                        const actionItems = getLeaveActionItems(row)
-
-                        return (
-                          <CTableRow
-                            key={row.recordKey || row.id}
-                            role="button"
-                            className="cursor-pointer"
-                            tabIndex={0}
-                            aria-label={`Open leave record ${getDisplayLeaveId(row)}`}
-                            onClick={() => openRecord(row)}
-                            onKeyDown={(event) => {
-                              if (event.key === 'Enter' || event.key === ' ') {
-                                event.preventDefault()
-                                openRecord(row)
-                              }
-                            }}
-                          >
-                            <CTableDataCell className="text-center text-muted">
-                              {displayIndex}
-                            </CTableDataCell>
-                            <CTableDataCell className="fw-semibold">
-                              {getDisplayLeaveId(row)}
-                            </CTableDataCell>
-                            <CTableDataCell>{row.leaveType || '-'}</CTableDataCell>
-                            <CTableDataCell>{row.reason || '-'}</CTableDataCell>
-                            <CTableDataCell>{getStartDateTimeLabel(row)}</CTableDataCell>
-                            <CTableDataCell>{getEndDateTimeLabel(row)}</CTableDataCell>
-                            <CTableDataCell>{row.days ?? '-'}</CTableDataCell>
-                            <CTableDataCell>
-                              <WorkflowStatusSummary
-                                statusLabel={getStatusLabel?.(row) || row.status || '-'}
-                                nextActionLabel={getPendingActionHint?.(row) || ''}
-                                gates={resolveLeaveGates(row)}
-                                approvalHistory={row.approvalHistory}
-                                isCancelled={row.status === 'Cancelled'}
-                              />
-                            </CTableDataCell>
-                            <RowActionCell className="text-center align-middle">
-                              <RowActions items={actionItems} />
-                            </RowActionCell>
-                          </CTableRow>
-                        )
-                      })}
-                    </React.Fragment>
-                  ))}
-                </CTableBody>
-              </CTable>
-            </div>
-          )}
-          footer={
-            <DataTableFooter
-              rowsToShow={rowsToShow}
-              onRowsToShowChange={setRowsToShow}
-              filteredCount={filteredRecords.length}
-              totalCount={leaveRecordsCount}
-            />
-          }
-        />
-      </CCardBody>
-    </CCard>
+                          <CTableDataCell className="text-center text-muted">
+                            {displayIndex}
+                          </CTableDataCell>
+                          <CTableDataCell className="fw-semibold">
+                            {getDisplayLeaveId(row)}
+                          </CTableDataCell>
+                          <CTableDataCell>{row.leaveType || '-'}</CTableDataCell>
+                          <CTableDataCell>{row.reason || '-'}</CTableDataCell>
+                          <CTableDataCell>{getStartDateTimeLabel(row)}</CTableDataCell>
+                          <CTableDataCell>{getEndDateTimeLabel(row)}</CTableDataCell>
+                          <CTableDataCell>{row.days ?? '-'}</CTableDataCell>
+                          <CTableDataCell>
+                            <WorkflowStatusSummary
+                              statusLabel={getStatusLabel?.(row) || row.status || '-'}
+                              nextActionLabel={getPendingActionHint?.(row) || ''}
+                              gates={resolveLeaveGates(row)}
+                              approvalHistory={row.approvalHistory}
+                              isCancelled={row.status === 'Cancelled'}
+                            />
+                          </CTableDataCell>
+                          <RowActionCell className="text-center align-middle">
+                            <RowActions items={actionItems} />
+                          </RowActionCell>
+                        </CTableRow>
+                      )
+                    })}
+                  </React.Fragment>
+                ))}
+              </CTableBody>
+            </CTable>
+          </div>
+        )}
+        footer={
+          <DataTableFooter
+            rowsToShow={rowsToShow}
+            onRowsToShowChange={setRowsToShow}
+            filteredCount={filteredRecords.length}
+            totalCount={leaveRecordsCount}
+          />
+        }
+      />
+    </WorkflowRecordsSectionShell>
   )
 }
 

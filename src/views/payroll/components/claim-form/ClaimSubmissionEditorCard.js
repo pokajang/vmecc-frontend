@@ -227,10 +227,11 @@ const ClaimSubmissionEditorCard = ({
           {hasSection('exceptional') && (
             <CCol xs={12}>
               <CFormLabel htmlFor="draft-approval-note">Approval note</CFormLabel>
-              <CFormInput
+              <CFormTextarea
                 id="draft-approval-note"
+                rows={3}
                 placeholder="Reference approval memo, approver name, and approval date"
-                value={draftItem.approvalNote}
+                value={draftItem.approvalNote ?? ''}
                 onChange={(e) => onUpdateDraftItem({ approvalNote: e.target.value })}
               />
             </CCol>

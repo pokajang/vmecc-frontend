@@ -26,9 +26,7 @@ const FormActionGroup = ({
   const isSticky = resolvedMobileBehavior === 'sticky'
   const isCompactSticky = resolvedMobileBehavior === 'compact-sticky'
   const supportsEndDocking = isCompactSticky && dockAtEnd
-  const [isDockedAtEnd, setIsDockedAtEnd] = useState(false)
   const [mobileDockMetrics, setMobileDockMetrics] = useState(null)
-  const isEndDocked = supportsEndDocking && isDockedAtEnd
   const endAnchorRef = useRef(null)
   const groupRef = useRef(null)
   const usesMobileActionLayout = resolvedMobileBehavior !== 'legacy-in-flow'
@@ -86,7 +84,6 @@ const FormActionGroup = ({
     const evaluateDocking = () => {
       frameId = null
       if (!window.matchMedia?.('(max-width: 767.98px)').matches) {
-        setIsDockedAtEnd(false)
         return
       }
 
@@ -94,27 +91,13 @@ const FormActionGroup = ({
       const group = groupRef.current
       if (!anchor || !group) return
 
-      const rootStyle = window.getComputedStyle(document.documentElement)
-      const mobileNavHeight = Number.parseFloat(
-        rootStyle.getPropertyValue('--mobile-overlay-nav-height'),
-      )
-      const reservedBottom = (Number.isFinite(mobileNavHeight) ? mobileNavHeight : 64) + 12
-      const anchorTop = anchor.getBoundingClientRect().top
       const anchorRect = anchor.getBoundingClientRect()
-      const groupHeight = group.getBoundingClientRect().height
-      const boundary = window.innerHeight - reservedBottom
-
       setMobileDockMetrics((current) => {
         const next = {
           left: Math.round(anchorRect.left),
           width: Math.round(anchorRect.width),
         }
         return current?.left === next.left && current?.width === next.width ? current : next
-      })
-      setIsDockedAtEnd((current) => {
-        const threshold = current ? boundary + 8 : boundary - 4
-        const shouldDock = anchorTop >= 0 && anchorTop + groupHeight <= threshold
-        return current === shouldDock ? current : shouldDock
       })
     }
     const scheduleDockingCheck = () => {
@@ -123,7 +106,6 @@ const FormActionGroup = ({
     }
 
     scheduleDockingCheck()
-    window.addEventListener('scroll', scheduleDockingCheck, { passive: true })
     window.addEventListener('resize', scheduleDockingCheck)
     const resizeObserver =
       typeof window.ResizeObserver === 'function'
@@ -135,7 +117,6 @@ const FormActionGroup = ({
     return () => {
       if (frameId !== null) window.cancelAnimationFrame(frameId)
       resizeObserver?.disconnect()
-      window.removeEventListener('scroll', scheduleDockingCheck)
       window.removeEventListener('resize', scheduleDockingCheck)
     }
   }, [supportsEndDocking])
@@ -147,7 +128,7 @@ const FormActionGroup = ({
       ) : null}
       <div
         ref={groupRef}
-        className={`${containerClassName} ${supportsEndDocking ? (isEndDocked ? 'action-row-thumb--docked-at-end' : 'action-row-thumb--floating') : ''} ${className}`.trim()}
+        className={`${containerClassName} ${supportsEndDocking ? 'action-row-thumb--floating' : ''} ${className}`.trim()}
         role="group"
         aria-label={ariaLabel}
         style={containerStyle}

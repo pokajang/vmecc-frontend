@@ -120,7 +120,7 @@ const useDrillCategoryManager = ({ userId, selectedCategories, updateSetupField,
     const editKey = normalizeTypeKey(editingCategoryKey)
     if (!title) {
       setAddCategoryError('Exercise category name is required.')
-      return
+      return false
     }
     const exists = categoryOptions.some((row) => {
       const key = normalizeTypeKey(row.value)
@@ -128,7 +128,7 @@ const useDrillCategoryManager = ({ userId, selectedCategories, updateSetupField,
     })
     if (exists) {
       setAddCategoryError('This exercise category already exists.')
-      return
+      return false
     }
     const iconExists = iconOptions.some((option) => option.key === iconKey)
     const iconUsed = categoryOptions.some(
@@ -139,13 +139,13 @@ const useDrillCategoryManager = ({ userId, selectedCategories, updateSetupField,
       setAddCategoryError(
         iconExists ? 'This icon is already used by another category.' : 'Choose an icon.',
       )
-      return
+      return false
     }
     if (editKey && systemCategorySet.has(editKey)) {
       const baseOption = DRILL_EXERCISE_CATEGORY_OPTIONS.find(
         (row) => normalizeTypeKey(row.value) === editKey,
       )
-      if (!baseOption) return
+      if (!baseOption) return false
       const nextOverrides = [
         ...categoryOverrides.filter((row) => normalizeTypeKey(row.value) !== editKey),
         { value: baseOption.value, title, description, iconKey },
@@ -158,7 +158,7 @@ const useDrillCategoryManager = ({ userId, selectedCategories, updateSetupField,
       })
       resetDraft()
       setCategoryEditMode(true)
-      return
+      return true
     }
     const nextCustomCategories = editKey
       ? customCategories.map((row) =>
@@ -183,10 +183,11 @@ const useDrillCategoryManager = ({ userId, selectedCategories, updateSetupField,
     if (editKey) {
       resetDraft()
       setCategoryEditMode(true)
-      return
+      return true
     }
     setShowAllCategories(true)
     closeAddModal()
+    return true
   }
   const startEditCategory = (row) => {
     const value = String(row?.value || '').trim()

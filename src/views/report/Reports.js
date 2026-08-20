@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   CBadge,
   CButton,
@@ -17,7 +17,6 @@ import { X } from 'lucide-react'
 import { hasPermission } from 'src/utils/authz'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import CreateActionButton from 'src/components/CreateActionButton'
-import InlineFeedbackMessage from 'src/components/InlineFeedbackMessage'
 import MobileModuleBackAction from 'src/components/MobileModuleBackAction'
 import ModuleNavTabs from 'src/components/ModuleNavTabs'
 import ModulePageHeader from 'src/components/ModulePageHeader'
@@ -54,6 +53,11 @@ const initialRouteDetailState = {
   routeKey: '',
 }
 
+const resolveFeedbackConfirmColor = (color) => {
+  if (['primary', 'success', 'info', 'warning', 'danger'].includes(color)) return color
+  return 'info'
+}
+
 const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTypeMeta } = {}) => {
   const location = useLocation()
   const navigate = useNavigate()
@@ -72,6 +76,7 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
   const [draftVersion, setDraftVersion] = useState(0)
   const [showMobileRecords, setShowMobileRecords] = useState(false)
   const [routeDetailState, setRouteDetailState] = useState(initialRouteDetailState)
+  const mobileBackHandlerRef = useRef(null)
 
   const {
     reportTypeSlug,
@@ -200,6 +205,10 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
     }, feedback.delay)
     return () => window.clearTimeout(timerId)
   }, [feedback])
+
+  const clearFeedback = useCallback(() => {
+    setFeedback(null)
+  }, [])
   const {
     backFromReview,
     canApproveRecord,
@@ -437,6 +446,43 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
       }),
     [backFromReview, reviewBackSection, reviewRecord],
   )
+  const resolveWorkReportMobileBackRoute = useCallback(() => {
+    if (!activeFormSlug) return ''
+    const section = String(newSection || '')
+      .trim()
+      .toLowerCase()
+    const previousSectionByCurrent = isErcoReport
+      ? {
+          analysis: 'form',
+          form: 'team',
+          team: 'setup',
+        }
+      : isDrillReport
+        ? {
+            analysis: 'chronology',
+            chronology: 'details',
+            details: 'personnel',
+            personnel: 'setup',
+          }
+        : isFitnessTestReport
+          ? {
+              signoff: 'results',
+              results: 'personnel',
+              personnel: 'period',
+            }
+          : {}
+    const previousSection = previousSectionByCurrent[section]
+    if (!previousSection) return ''
+    return `${reportBasePath}/new/${previousSection}${location.search || ''}`
+  }, [
+    activeFormSlug,
+    isDrillReport,
+    isErcoReport,
+    isFitnessTestReport,
+    location.search,
+    newSection,
+    reportBasePath,
+  ])
   const handleConfirmReviewSubmit = useCallback(
     () => confirmReviewSubmit(reviewRecord),
     [confirmReviewSubmit, reviewRecord],
@@ -500,15 +546,32 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
       return
     }
     if (activeSection === 'new') {
-      runGuardedAction(navigateToMobileHome)
+      if (mobileBackHandlerRef.current?.() === true) return
+      const workReportStepBackRoute = resolveWorkReportMobileBackRoute()
+      if (workReportStepBackRoute) {
+        navigate(workReportStepBackRoute)
+      } else {
+        runGuardedAction(navigateToMobileHome)
+      }
+      return
     }
   }, [
     activeSection,
     handleBackFromReview,
+    navigate,
+    resolveWorkReportMobileBackRoute,
     navigateToMobileHome,
-    runGuardedAction,
     showMobileRecords,
+    runGuardedAction,
   ])
+
+  const registerMobileBackHandler = useCallback((handler) => {
+    if (typeof handler === 'function') {
+      mobileBackHandlerRef.current = handler
+      return
+    }
+    mobileBackHandlerRef.current = null
+  }, [])
 
   const showMobileBack =
     isWorkFirstReport &&
@@ -629,7 +692,17 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
           </>
         }
       />
-      <InlineFeedbackMessage feedback={feedback} className="mb-3" />
+      <ActionConfirmModal
+        visible={Boolean(feedback?.message)}
+        title={feedback?.title || 'Notice'}
+        message={feedback?.message || ''}
+        confirmLabel="OK"
+        confirmColor={resolveFeedbackConfirmColor(feedback?.color)}
+        isNotice
+        showCancelAction={false}
+        onClose={clearFeedback}
+        onConfirm={clearFeedback}
+      />
       {isDeleting || isSubmitting ? (
         <div
           style={{
@@ -987,6 +1060,7 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
               reviewReturnRecord={reviewReturnDraft}
               initialFormSeed={location.state?.initialFormSeed || null}
               onRequestReview={requestReview}
+              onRegisterMobileBackHandler={registerMobileBackHandler}
               onDraftSaved={() => setDraftVersion((prev) => prev + 1)}
             />
           ) : (

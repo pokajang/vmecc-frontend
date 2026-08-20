@@ -12,7 +12,9 @@ import { useSelector } from 'react-redux'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
+import RouteNavTabs from 'src/components/RouteNavTabs'
 import ModulePageHeader from 'src/components/ModulePageHeader'
+import MobileModuleBackAction from 'src/components/MobileModuleBackAction'
 import { useNavigationGuard } from 'src/contexts/NavigationGuardContext'
 import { isHolidayGuidanceOvertimeEnabledForUser } from 'src/config/featureFlags'
 import { hasPermission, isSystemAdministrator } from 'src/utils/authz'
@@ -544,6 +546,23 @@ const OvertimeContent = () => {
     isOvertimeTypeDeriving,
   })
 
+  const runOvertimeSectionNavigation = useCallback(
+    (targetPath) => {
+      if (activeSection === 'new-overtime' && isFormDirty) {
+        runWithDiscardGuard(() => navigate(targetPath))
+        return false
+      }
+      navigate(targetPath)
+      return true
+    },
+    [activeSection, isFormDirty, navigate, runWithDiscardGuard],
+  )
+  const showMobileBackAction = activeSection === 'new-overtime'
+  const handleMobileBack = useCallback(
+    () => runWithDiscardGuard(() => navigate('/overtime')),
+    [navigate, runWithDiscardGuard],
+  )
+
   if (!user) {
     return (
       <div className="my-4 text-danger">Unable to load overtime page. Please sign in again.</div>
@@ -593,18 +612,45 @@ const OvertimeContent = () => {
       <ModulePageHeader
         title="Overtime"
         actions={
-          activeSection === 'new-overtime' ? null : (
-            <div data-testid="overtime-new-action">
-              <CreateActionButton
-                label="Apply Overtime"
-                importance="page-primary"
-                onClick={() => runWithDiscardGuard(startNewOvertime)}
-                icon={<Plus size={15} />}
-              />
-            </div>
-          )
+          <>
+            {showMobileBackAction ? <MobileModuleBackAction onClick={handleMobileBack} /> : null}
+            {activeSection === 'new-overtime' ? null : (
+              <div data-testid="overtime-new-action">
+                <CreateActionButton
+                  label="Apply Overtime"
+                  importance="page-primary"
+                  onClick={() => runWithDiscardGuard(startNewOvertime)}
+                  icon={<Plus size={15} />}
+                />
+              </div>
+            )}
+          </>
         }
       />
+      {activeSection !== 'new-overtime' ? (
+        <div data-testid="overtime-nav">
+          <RouteNavTabs
+            currentPath={activeSection}
+            className="d-none d-md-flex"
+            items={[
+              {
+                key: 'overtime-records',
+                label: 'Records',
+                to: '/overtime',
+                onBeforeNavigate: () => runOvertimeSectionNavigation('/overtime'),
+                match: (section) => section === 'overtime-records' || section === 'overtime-detail',
+              },
+              {
+                key: 'new-overtime',
+                label: 'New',
+                to: '/overtime/new',
+                onBeforeNavigate: () => runOvertimeSectionNavigation('/overtime/new'),
+                match: 'new-overtime',
+              },
+            ]}
+          />
+        </div>
+      ) : null}
       <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
       <OvertimeSubmitConfirmModal
         visible={isSubmitConfirmVisible}

@@ -128,6 +128,10 @@ const useFireExtinguisherExceptionExport = ({ visible, filterSnapshot = {} }) =>
     }
   }, [categories, format, isDownloading, payload, preview.total])
 
+  const clearFeedback = useCallback(() => {
+    setFeedback(null)
+  }, [])
+
   return {
     categories,
     format,
@@ -137,6 +141,7 @@ const useFireExtinguisherExceptionExport = ({ visible, filterSnapshot = {} }) =>
     previewError,
     isDownloading,
     feedback,
+    clearFeedback,
     hasCurrentContext,
     setFormat,
     setScope,

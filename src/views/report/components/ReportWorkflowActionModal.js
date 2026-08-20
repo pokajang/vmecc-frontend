@@ -1,5 +1,5 @@
 import React from 'react'
-import { CBadge, CButton, CFormCheck, CFormInput, CFormLabel } from '@coreui/react'
+import { CBadge, CButton, CFormCheck, CFormLabel, CFormTextarea } from '@coreui/react'
 import FormFieldError from 'src/components/FormFieldError'
 import ResponsiveReportDialog from 'src/components/report-workflow/ResponsiveReportDialog'
 
@@ -78,10 +78,10 @@ const ReportWorkflowActionModal = ({
             >
               {action.remarksLabel}
             </CFormLabel>
-            <CFormInput
+            <CFormTextarea
               id="report-workflow-remarks"
-              type="text"
-              value={remarks}
+              rows={3}
+              value={remarks ?? ''}
               onChange={(event) => onRemarksChange?.(event.target.value)}
               placeholder="Add your remarks"
               invalid={Boolean(rejectError)}

@@ -1,8 +1,7 @@
 import React from 'react'
 import WorkflowStageActions from 'src/components/report-workflow/WorkflowStageActions'
+import { REPORT_ACTION_LABELS, getContinueToReviewLabel } from 'src/views/report/reportActionLabels'
 
-const REVIEW_ACTION_LABEL = 'Continue to Review'
-const REVIEW_UPDATE_ACTION_LABEL = 'Continue to Review Updates'
 const ROUTINE_DRAFT_STATUSES = new Set([
   'saved locally. backend sync pending',
   'saved locally. syncing...',
@@ -60,11 +59,11 @@ export const InspectionFormActions = ({
   const reviewLabel =
     submissionMode === 'direct'
       ? isUpdateMode
-        ? 'Update Report'
-        : 'Submit Report'
+        ? REPORT_ACTION_LABELS.UPDATE_REPORT
+        : REPORT_ACTION_LABELS.SUBMIT_REPORT
       : isUpdateMode
-        ? REVIEW_UPDATE_ACTION_LABEL
-        : REVIEW_ACTION_LABEL
+        ? getContinueToReviewLabel(true)
+        : getContinueToReviewLabel(false)
 
   return (
     <ActionSection sectionLabel={sectionLabel} wrapperClassName={wrapperClassName}>
@@ -110,7 +109,7 @@ export const InspectionFormDraftOnlyActions = ({
   wrapperClassName = '',
 }) => {
   const visibleDraftStatus = getVisibleInspectionActionStatus(draftStatus)
-  const reviewLabel = isUpdateMode ? REVIEW_UPDATE_ACTION_LABEL : REVIEW_ACTION_LABEL
+  const reviewLabel = getContinueToReviewLabel(Boolean(isUpdateMode))
 
   return (
     <ActionSection sectionLabel={sectionLabel} wrapperClassName={wrapperClassName}>

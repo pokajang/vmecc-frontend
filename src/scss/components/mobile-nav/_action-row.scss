@@ -91,13 +91,15 @@
     position: fixed;
     left: var(--action-row-dock-left, calc(var(--cui-sidebar-occupy-start, 0px) + 0.75rem));
     right: auto;
-    width: var(
-      --action-row-dock-width,
-      calc(
-        100% - var(--cui-sidebar-occupy-start, 0px) - var(--cui-sidebar-occupy-end, 0px) -
-          1.5rem
-      )
+    --action-row-safe-inline-space: calc(
+      100vw - var(--cui-sidebar-occupy-start, 0px) - var(--cui-sidebar-occupy-end, 0px) -
+        1.5rem - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)
     );
+    width: min(
+      var(--action-row-dock-width, var(--action-row-safe-inline-space)),
+      var(--action-row-safe-inline-space)
+    );
+    max-width: var(--action-row-safe-inline-space);
     bottom: calc(var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 0.75rem);
     z-index: 1020;
     max-height: min(40dvh, 12rem);
@@ -115,16 +117,17 @@
     @include scrollbars.vmecc-scrollbar;
   }
 
-  .action-row-thumb--compact-sticky.action-row-thumb--docked-at-end {
-    position: static;
-    inset: auto;
-    width: 100%;
-    z-index: auto;
-  }
-
   .action-row-thumb--compact-sticky.action-row-thumb--floating,
   .action-row-thumb--compact-sticky.action-row-thumb--docked-at-end {
     animation: action-row-dock-settle 180ms ease-out;
+  }
+
+  .action-row-thumb--compact-sticky.action-row-thumb--docked-at-end {
+    position: static;
+    inset: auto;
+    width: min(100%, var(--action-row-safe-inline-space));
+    max-width: var(--action-row-safe-inline-space);
+    z-index: auto;
   }
 
   .action-row-thumb--sticky,
@@ -158,7 +161,11 @@
   .action-row-thumb--compact-sticky {
     display: grid;
     gap: 0.45rem;
+    box-sizing: border-box;
     max-height: none;
+    max-width: calc(
+      100vw - var(--cui-sidebar-occupy-start, 0px) - var(--cui-sidebar-occupy-end, 0px) - 1.5rem
+    );
     overflow: visible;
     padding: 0.45rem 0.5rem;
     border: 1px solid rgba(148, 163, 184, 0.24);
@@ -195,6 +202,42 @@
     gap: 0.5rem;
   }
 
+  .action-row-thumb--compact-sticky .action-row-thumb-actions > *,
+  .action-row-thumb--compact-sticky .action-row-thumb-actions .btn {
+    max-width: 100%;
+  }
+
+  .workflow-stage-actions--mobile-stacked
+    .action-row-thumb--compact-sticky:not(:has(.action-row-thumb-status:not(:empty))) {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: stretch !important;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none !important;
+  }
+
+  .workflow-stage-actions--mobile-stacked
+    .action-row-thumb--compact-sticky:not(:has(.action-row-thumb-status:not(:empty)))
+    .action-row-thumb-actions {
+    display: flex;
+    flex-direction: column;
+    margin-inline: 0 !important;
+  }
+
+  .workflow-stage-actions--mobile-stacked
+    .action-row-thumb--compact-sticky:not(:has(.action-row-thumb-status:not(:empty)))
+    .action-row-thumb-actions
+    > *,
+  .workflow-stage-actions--mobile-stacked
+    .action-row-thumb--compact-sticky:not(:has(.action-row-thumb-status:not(:empty)))
+    .action-row-thumb-actions
+    .btn {
+    width: 100%;
+    flex: 0 0 auto;
+  }
+
   .inspection-form-actions .action-row-thumb--compact-sticky {
     grid-template-columns: minmax(0, 1fr);
     justify-items: stretch !important;
@@ -229,7 +272,7 @@
   .inspection-form-actions
     .action-row-thumb--compact-sticky:not(:has(.action-row-thumb-status:not(:empty)))
     .workflow-stage-actions__primary {
-    box-shadow: 0 0.45rem 1.1rem rgba(15, 23, 42, 0.18);
+    box-shadow: none !important;
   }
 
   .action-row-thumb--compact-sticky .btn {

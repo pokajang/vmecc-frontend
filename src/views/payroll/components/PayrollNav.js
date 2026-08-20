@@ -1,10 +1,11 @@
 import React from 'react'
 import RouteNavTabs from 'src/components/RouteNavTabs'
 
-const PayrollNav = ({ activeSection, onNavigate }) => (
+const PayrollNav = ({ activeSection, onNavigate, className = 'd-none d-md-flex' }) => (
   <RouteNavTabs
     currentPath={activeSection}
     navigate={(to) => onNavigate(to)}
+    className={className}
     items={[
       {
         key: 'claims',

@@ -1,5 +1,5 @@
 import React from 'react'
-import { CBadge, CButton, CFormCheck, CFormInput, CFormLabel } from '@coreui/react'
+import { CBadge, CButton, CFormCheck, CFormLabel, CFormTextarea } from '@coreui/react'
 import ResponsiveWorkflowActionDialog from 'src/components/workflow/ResponsiveWorkflowActionDialog'
 import { formatDuration } from 'src/views/overtime/utils'
 
@@ -74,10 +74,10 @@ const OvertimeWorkflowActionModal = ({
                 ? 'Remarks (required)'
                 : 'Remarks (optional)'}
             </CFormLabel>
-            <CFormInput
+            <CFormTextarea
               id="overtime-workflow-remarks"
-              type="text"
-              value={remarks}
+              rows={3}
+              value={remarks ?? ''}
               onChange={(event) => onRemarksChange(event.target.value)}
               placeholder="Add your remarks"
               invalid={Boolean(rejectError)}

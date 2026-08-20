@@ -46,7 +46,6 @@ const DrillForm = ({
   nextReportSequence,
   reportBasePath,
   newSection,
-  datePresetOptions,
   timePresetOptions,
   pushToast,
   onDirtyChange,
@@ -58,6 +57,7 @@ const DrillForm = ({
   initialFormSeed = null,
   onRequestReview,
   onDraftSaved,
+  onRegisterMobileBackHandler,
 }) => {
   const navigate = useNavigate()
   const location = useLocation()
@@ -82,6 +82,7 @@ const DrillForm = ({
   const [blockerMessage, setBlockerMessage] = useState(() =>
     String(location.state?.reviewRecoveryMessage || '').trim(),
   )
+  const [draftStatus, setDraftStatus] = useState('')
   const [photoProcessing, setPhotoProcessing] = useState(false)
   const [hasDraftSeed, setHasDraftSeed] = useState(false)
   const [editViewMode, setEditViewMode] = useState(preferSavedEditDraft ? 'draft' : 'original')
@@ -174,14 +175,31 @@ const DrillForm = ({
       return row?.payload || null
     },
     onDraftLoaded: (draftForm) => {
+      const sectionSource = draftForm && typeof draftForm === 'object' ? draftForm : {}
+      const workflowSectionRaw = Object.prototype.hasOwnProperty.call(
+        sectionSource,
+        'workflowSection',
+      )
+        ? sectionSource.workflowSection
+        : Object.prototype.hasOwnProperty.call(sectionSource, 'workflow_section')
+          ? sectionSource.workflow_section
+          : ''
+      const hasExplicitWorkflowSection = DRILL_NEW_SECTIONS.includes(
+        String(workflowSectionRaw || '')
+          .trim()
+          .toLowerCase(),
+      )
       const normalized = normalizeDrillForm(draftForm)
       setLastSavedSignature(signature(normalized))
       draftSeedRef.current = normalized
       setHasDraftSeed(true)
+      setDraftStatus('Draft loaded: Saved draft')
       setSaveState('saved')
       setFormHydrationVersion((prev) => prev + 1)
       onDirtyChange(false)
-      navigateToSection(normalized.workflowSection, true)
+      if (hasExplicitWorkflowSection && activeSection === 'setup') {
+        navigateToSection(String(workflowSectionRaw).trim().toLowerCase(), true)
+      }
     },
   })
 
@@ -256,6 +274,7 @@ const DrillForm = ({
     }
 
     setLastSavedSignature(snapshotSignature)
+    setDraftStatus('Draft saved')
     draftSeedRef.current = snapshot
     setHasDraftSeed(true)
     const changedDuringSave = signature(formRef.current) !== snapshotSignature
@@ -392,6 +411,9 @@ const DrillForm = ({
             action={{ label: 'Retry save', onAction: () => saveDraft() }}
           />
         ) : null}
+        {draftStatus && activeSection === 'setup' && saveState !== 'failed' ? (
+          <WorkflowInlineFeedback kind="info" message={draftStatus} />
+        ) : null}
         {activeSection === 'setup' ? (
           <DrillSetupStep
             key={`drill-setup-${formHydrationVersion}`}
@@ -400,8 +422,8 @@ const DrillForm = ({
             setForm={setForm}
             setupFieldErrors={setupFieldErrors}
             setSetupFieldErrors={setSetupFieldErrors}
-            datePresetOptions={datePresetOptions}
             timePresetOptions={timePresetOptions}
+            onRegisterMobileBackHandler={onRegisterMobileBackHandler}
             pushToast={pushToast}
             blockerMessage={saveState === 'failed' ? '' : blockerMessage}
             isSaving={saveState === 'saving'}

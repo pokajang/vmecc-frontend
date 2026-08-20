@@ -1,10 +1,10 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { CheckCheck, Trash2, RefreshCw } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import useWorkflowNotifications from 'src/hooks/useWorkflowNotifications'
 import { buildWorkflowNotificationDetailPath } from 'src/services/workflowNotifications'
 import TableLoader from 'src/components/TableLoader'
-import InlineFeedbackMessage from 'src/components/InlineFeedbackMessage'
 import WorkflowNotificationCard from '../WorkflowNotificationCard'
 import MobileOverlaySection from 'src/components/header/MobileOverlaySection'
 
@@ -32,6 +32,11 @@ export const groupWorkflowNotifications = (items = []) => {
   ].filter((group) => group.items.length > 0)
 }
 
+const resolveFeedbackConfirmColor = (color) => {
+  if (['primary', 'success', 'info', 'warning', 'danger'].includes(color)) return color
+  return 'info'
+}
+
 const WorkflowNotifications = ({ onClose }) => {
   const navigate = useNavigate()
   const {
@@ -50,12 +55,7 @@ const WorkflowNotifications = ({ onClose }) => {
   const [feedback, setFeedback] = useState(null)
   const [activeAction, setActiveAction] = useState(null)
   const deleteAllTriggerRef = useRef(null)
-  const deleteAllCancelRef = useRef(null)
   const groupedItems = groupWorkflowNotifications(items)
-
-  useEffect(() => {
-    if (confirmOpen) deleteAllCancelRef.current?.focus()
-  }, [confirmOpen])
 
   const handleClick = (item) => {
     if (item.unread) {
@@ -72,6 +72,10 @@ const WorkflowNotifications = ({ onClose }) => {
   const handleCancelDeleteAll = () => {
     setConfirmOpen(false)
     setTimeout(() => deleteAllTriggerRef.current?.focus(), 0)
+  }
+
+  const clearFeedback = () => {
+    setFeedback(null)
   }
 
   const runBatchAction = async (actionName, action, successMessage) => {
@@ -99,6 +103,27 @@ const WorkflowNotifications = ({ onClose }) => {
 
   return (
     <>
+      <ActionConfirmModal
+        visible={Boolean(feedback?.message)}
+        title={feedback?.title || 'Notice'}
+        message={feedback?.message || ''}
+        confirmLabel="OK"
+        confirmColor={resolveFeedbackConfirmColor(feedback?.color)}
+        isNotice
+        showCancelAction={false}
+        onClose={clearFeedback}
+        onConfirm={clearFeedback}
+      />
+      <ActionConfirmModal
+        visible={confirmOpen}
+        title="Delete all notifications?"
+        message={`This will remove ${items.length} notification${items.length !== 1 ? 's' : ''} from your list.`}
+        confirmLabel="Delete all"
+        confirmColor="danger"
+        confirmDisabled={submitting}
+        onClose={handleCancelDeleteAll}
+        onConfirm={handleConfirmDeleteAll}
+      />
       <div className="notification-drawer-content" data-testid="workflow-notifications-module">
         {/* Batch actions */}
         <div className="notification-drawer-actions" data-testid="workflow-notifications-actions">
@@ -139,45 +164,6 @@ const WorkflowNotifications = ({ onClose }) => {
             />
           </button>
         </div>
-
-        <InlineFeedbackMessage feedback={feedback} className="notification-drawer-feedback" />
-
-        {confirmOpen && (
-          <div
-            className="notification-drawer-inline-confirm"
-            role="alertdialog"
-            aria-modal="false"
-            aria-labelledby="notification-delete-all-title"
-            aria-describedby="notification-delete-all-description"
-          >
-            <div className="notification-drawer-inline-confirm__copy">
-              <strong id="notification-delete-all-title">Delete all notifications?</strong>
-              <span id="notification-delete-all-description">
-                This will remove {items.length} notification{items.length !== 1 ? 's' : ''} from
-                your list.
-              </span>
-            </div>
-            <div className="notification-drawer-inline-confirm__actions">
-              <button
-                ref={deleteAllCancelRef}
-                type="button"
-                className="notification-drawer-inline-confirm__btn"
-                onClick={handleCancelDeleteAll}
-                disabled={submitting}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="notification-drawer-inline-confirm__btn notification-drawer-inline-confirm__btn--danger"
-                onClick={handleConfirmDeleteAll}
-                disabled={submitting}
-              >
-                Delete all
-              </button>
-            </div>
-          </div>
-        )}
 
         {loading && (
           <div className="px-3 py-3">

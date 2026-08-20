@@ -9,7 +9,6 @@ import {
   COffcanvasTitle,
 } from '@coreui/react'
 import { X } from 'lucide-react'
-import InlineFeedbackMessage from 'src/components/InlineFeedbackMessage'
 import ModuleNavTabs from 'src/components/ModuleNavTabs'
 import ModulePageHeader from 'src/components/ModulePageHeader'
 import TableLoader from 'src/components/TableLoader'
@@ -93,16 +92,12 @@ const InspectionModuleLayout = ({
   navigate,
   reportBasePath,
   recordsReturnPath,
-  feedback,
   canConduct = true,
   showExtinguisherCatalog = true,
 }) => {
   return (
     <CContainer fluid className="inspection-module-page" data-testid="inspection-module">
       <ModulePageHeader title={pageTitle} actions={headerActions} />
-      {activeSection !== 'detail' ? (
-        <InlineFeedbackMessage feedback={feedback} className="mb-3" />
-      ) : null}
       {(isDeleting || isSubmitting) && (
         <div
           className="inspection-loading-overlay"
@@ -190,11 +185,6 @@ const InspectionModuleLayout = ({
               <X size={18} />
             </CButton>
           </COffcanvasHeader>
-          {feedback?.message ? (
-            <div className="inspection-detail-drawer__feedback">
-              <InlineFeedbackMessage feedback={feedback} />
-            </div>
-          ) : null}
           <COffcanvasBody className="inspection-detail-drawer__body">
             <InspectionDetailView {...detailViewProps} />
           </COffcanvasBody>

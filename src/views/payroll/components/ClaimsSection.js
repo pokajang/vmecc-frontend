@@ -1,10 +1,11 @@
 import React from 'react'
-import { CAlert, CButton, CCard, CCardBody, CCardHeader } from '@coreui/react'
+import { CAlert, CButton } from '@coreui/react'
 import { Plus } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
 import DataTableFooter from 'src/components/DataTableFooter'
 import TableFilters from 'src/components/TableFilters'
 import TableLoader from 'src/components/TableLoader'
+import WorkflowRecordsSectionShell from 'src/components/workflow/WorkflowRecordsSectionShell'
 import ClaimListTable from 'src/views/payroll/components/ClaimListTable'
 
 const ClaimsSection = ({
@@ -41,30 +42,21 @@ const ClaimsSection = ({
   onRetry = () => {},
   showPrimaryAction = true,
 }) => (
-  <CCard data-testid="payroll-claims">
-    <CCardHeader className="d-flex flex-wrap justify-content-between align-items-center gap-2">
-      <span>Claim Records</span>
-      {showPrimaryAction ? (
+  <WorkflowRecordsSectionShell
+    sectionTitle="Claim Records"
+    showHeader
+    recordsTestId="payroll-claims"
+    headerActions={
+      showPrimaryAction ? (
         <CreateActionButton
           label="Apply Claim"
           importance="section-primary"
           onClick={onCreateClaim}
           icon={<Plus size={13} />}
         />
-      ) : null}
-    </CCardHeader>
-    <CCardBody>
-      {errorMessage ? (
-        <CAlert
-          color="danger"
-          className="d-flex flex-wrap justify-content-between align-items-center gap-2"
-        >
-          <span>{errorMessage}</span>
-          <CButton color="danger" variant="outline" size="sm" onClick={onRetry}>
-            Retry
-          </CButton>
-        </CAlert>
-      ) : null}
+      ) : null
+    }
+    filters={
       <div data-testid="payroll-claims-filters">
         <TableFilters
           searchValue={search}
@@ -101,34 +93,45 @@ const ClaimsSection = ({
           clearColMd="auto"
         />
       </div>
-
-      {isLoading ? (
-        <TableLoader />
-      ) : filteredClaims.length === 0 ? (
-        <div className="text-body-secondary">No claim records match the current filters.</div>
-      ) : (
-        <>
-          <ClaimListTable
-            claims={visibleClaims}
-            groupByPeriod={groupByPeriod}
-            onOpenClaim={onOpenClaim}
-            onEditClaim={onEditClaim}
-            onCancelClaim={onCancelClaim}
-            onDownloadAttachment={onDownloadAttachment}
-            onDeleteClaim={onDeleteClaim}
-            formatCurrency={formatCurrency}
-            formatDate={formatDate}
-          />
-          <DataTableFooter
-            rowsToShow={rowsToShow}
-            onRowsToShowChange={onRowsToShowChange}
-            filteredCount={filteredClaims.length}
-            totalCount={totalCount}
-          />
-        </>
-      )}
-    </CCardBody>
-  </CCard>
+    }
+  >
+    {errorMessage ? (
+      <CAlert
+        color="danger"
+        className="d-flex flex-wrap justify-content-between align-items-center gap-2"
+      >
+        <span>{errorMessage}</span>
+        <CButton color="danger" variant="outline" size="sm" onClick={onRetry}>
+          Retry
+        </CButton>
+      </CAlert>
+    ) : null}
+    {isLoading ? (
+      <TableLoader />
+    ) : filteredClaims.length === 0 ? (
+      <div className="text-body-secondary">No claim records match the current filters.</div>
+    ) : (
+      <>
+        <ClaimListTable
+          claims={visibleClaims}
+          groupByPeriod={groupByPeriod}
+          onOpenClaim={onOpenClaim}
+          onEditClaim={onEditClaim}
+          onCancelClaim={onCancelClaim}
+          onDownloadAttachment={onDownloadAttachment}
+          onDeleteClaim={onDeleteClaim}
+          formatCurrency={formatCurrency}
+          formatDate={formatDate}
+        />
+        <DataTableFooter
+          rowsToShow={rowsToShow}
+          onRowsToShowChange={onRowsToShowChange}
+          filteredCount={filteredClaims.length}
+          totalCount={totalCount}
+        />
+      </>
+    )}
+  </WorkflowRecordsSectionShell>
 )
 
 export default ClaimsSection

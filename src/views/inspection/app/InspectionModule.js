@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import { ChevronDown, ChevronUp } from 'lucide-react'
+import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import { INSPECTION_SORT_OPTIONS } from 'src/views/inspection/constants'
 import { hasPermission } from 'src/utils/authz'
 import useIncidentTypeManager, {
@@ -54,6 +55,11 @@ import {
   buildInspectionRecordsLocation,
   getInitialInspectionRecordScope,
 } from './inspectionRecordRouteContext'
+
+const resolveFeedbackConfirmColor = (color) => {
+  if (['primary', 'success', 'info', 'warning', 'danger'].includes(color)) return color
+  return 'info'
+}
 
 const InspectionModule = () => {
   const location = useLocation()
@@ -135,6 +141,9 @@ const InspectionModule = () => {
     }, feedback.delay)
     return () => window.clearTimeout(timerId)
   }, [feedback])
+  const clearFeedback = useCallback(() => {
+    setFeedback(null)
+  }, [])
 
   const { setDraftVersion, activeDraftRows, setActiveDraftRows, activeDraftPayload } =
     useInspectionDraftRows(user)
@@ -549,183 +558,195 @@ const InspectionModule = () => {
   const conflictFields = buildQueueConflictFields(queueConflictTarget)
 
   return (
-    <InspectionModuleLayout
-      activeSection={visibleActiveSection}
-      canConduct={canConduct}
-      showExtinguisherCatalog
-      clearContinuationState={clearContinuationState}
-      detailViewProps={buildInspectionDetailViewProps({
-        canDeleteRecord: canConduct ? canDeleteRecord : () => false,
-        canEditRecord: canConduct ? canEditRecord : () => false,
-        downloadRecord,
-        downloadingId,
-        editRecord,
-        formatDateTime,
-        isActionBusy,
-        isDeleting,
-        navigate,
-        openWorkflowActionModal,
-        renderStatusBadge: renderInspectionStatusBadge,
-        reportBasePath,
-        recordsReturnPath,
-        requestDeleteRecord: setDeleteTarget,
-        selectedRecord,
-      })}
-      formViewProps={buildInspectionFormViewProps({
-        clearInspectionTypeDraft,
-        draftStatus,
-        draftSyncState,
-        formState,
-        isUpdatingExistingRecord,
-        isFormReady,
-        pushToast,
-        requestReview,
-        resolveDraftConflict,
-        retryDraftSync,
-        saveDraft,
-        commitDraftSnapshot,
-        setDraftStatus,
-        setFormState: updateFormState,
-        user,
-      })}
-      headerActions={headerActions}
-      isDeleting={isDeleting}
-      isSubmitting={isSubmitting}
-      modalProps={buildInspectionModalProps({
-        clearContinuationState,
-        closeWorkflowActionModal,
-        confirmDeleteRecord,
-        conflictFields,
-        continueToInspectionLocation,
-        continuationPrompt,
-        deleteQueuedSubmission,
-        deleteTarget,
-        formatDateTime,
-        handleWorkflowDeclarationChange,
-        handleWorkflowRemarksChange,
-        homeIncident,
-        homeTypeDeleteTarget,
-        isActionBusy,
-        keepServerConflict,
-        openSavedDraft,
-        pendingAction,
-        pushToast,
-        queueConflictTarget,
-        queuedDeleteTarget,
-        renderStatusBadge: renderInspectionStatusBadge,
-        retryConflictWithLatest,
-        saveQueuedAsDraft,
-        setDeleteTarget,
-        setHomeTypeDeleteTarget,
-        setIsFormDirty,
-        setPendingAction,
-        setQueueConflictTarget,
-        setQueuedDeleteTarget,
-        setShowDiscard,
-        showDiscard,
-        showDraftChoice,
-        startBlankReport,
-        submitWorkflowAction,
-        workflowActionState,
-        workflowDeclarationChecked,
-        workflowDeclarationError,
-        workflowRejectError,
-        workflowRemarks,
-      })}
-      navigate={navigate}
-      pageTitle={pageTitle}
-      recordsSectionActive={recordsSectionActive}
-      recordsViewProps={buildInspectionRecordsViewProps({
-        activeDraftRows,
-        canApproveRecord,
-        canDeleteRecord: canConduct ? canDeleteRecord : () => false,
-        canEditRecord: canConduct ? canEditRecord : () => false,
-        canRejectRecord,
-        canReviewRecord,
-        checklistFilter,
-        checklistOptions,
-        clearFilters,
-        downloadRecord,
-        downloadingId,
-        editRecord,
-        filteredRecords,
-        formatDateTime,
-        hasChecklistFilter,
-        homeIncident,
-        homeTypeOptions,
-        inspectionSortOptions: INSPECTION_SORT_OPTIONS,
-        isLoading,
-        isOfflineHealthLoading,
-        isQueueSyncing,
-        isRefreshingOfflineAssets,
-        navigate,
-        offlineHealth,
-        openSavedDraft,
-        openWorkflowActionModal,
-        period,
-        pushToast,
-        queueSummary,
-        queuedRecordRows,
-        recentRecords,
-        recordScope,
-        buildRecordDetailPath,
-        recordsInScopeCount,
-        recoverLocalDraft,
-        refreshOfflineHealth,
-        rowsToShow,
-        runGuardedAction,
-        saveQueuedAsDraft,
-        scopedSubmittedRecords,
-        search,
-        setChecklistFilter,
-        setDeleteTarget,
-        setHasChecklistFilter,
-        setIsRefreshingOfflineAssets,
-        setPeriod,
-        setQueueConflictTarget,
-        setQueuedDeleteTarget,
-        setRecordScope,
-        setRowsToShow,
-        setSearch,
-        setShowMobileRecords,
-        setSort,
-        setStatusFilter,
-        setTypeFilter,
-        showMobileRecords,
-        sort,
-        startNew,
-        startNewWithType,
-        statusFilter,
-        statusOptions,
-        syncQueuedSubmissions,
-        typeFilter,
-        typeOptions,
-        visibleRows,
-      })}
-      reportBasePath={reportBasePath}
-      recordsReturnPath={recordsReturnPath}
-      reviewViewProps={buildInspectionReviewViewProps({
-        backFromReview,
-        buildPendingReviewRecord,
-        clearInspectionTypeDraft,
-        isSubmitting,
-        isUpdatingExistingRecord,
-        pendingSubmissionSummary,
-        renderStatusBadge: renderInspectionStatusBadge,
-        reviewMayQueue,
-        reviewRecord,
-        reviewWorkspace,
-        retryDraftSync,
-        retryFireExtinguisherSessionSync,
-        saveDraft,
-        sessionReviewForm,
-        submit,
-        user,
-      })}
-      runGuardedAction={runGuardedAction}
-      startNew={startNew}
-      feedback={feedback}
-    />
+    <>
+      <ActionConfirmModal
+        visible={Boolean(feedback?.message)}
+        title={feedback?.title || 'Notice'}
+        message={feedback?.message || ''}
+        confirmLabel="OK"
+        confirmColor={resolveFeedbackConfirmColor(feedback?.color)}
+        isNotice
+        showCancelAction={false}
+        onClose={clearFeedback}
+        onConfirm={clearFeedback}
+      />
+      <InspectionModuleLayout
+        activeSection={visibleActiveSection}
+        canConduct={canConduct}
+        showExtinguisherCatalog
+        clearContinuationState={clearContinuationState}
+        detailViewProps={buildInspectionDetailViewProps({
+          canDeleteRecord: canConduct ? canDeleteRecord : () => false,
+          canEditRecord: canConduct ? canEditRecord : () => false,
+          downloadRecord,
+          downloadingId,
+          editRecord,
+          formatDateTime,
+          isActionBusy,
+          isDeleting,
+          navigate,
+          openWorkflowActionModal,
+          renderStatusBadge: renderInspectionStatusBadge,
+          reportBasePath,
+          recordsReturnPath,
+          requestDeleteRecord: setDeleteTarget,
+          selectedRecord,
+        })}
+        formViewProps={buildInspectionFormViewProps({
+          clearInspectionTypeDraft,
+          draftStatus,
+          draftSyncState,
+          formState,
+          isUpdatingExistingRecord,
+          isFormReady,
+          pushToast,
+          requestReview,
+          resolveDraftConflict,
+          retryDraftSync,
+          saveDraft,
+          commitDraftSnapshot,
+          setDraftStatus,
+          setFormState: updateFormState,
+          user,
+        })}
+        headerActions={headerActions}
+        isDeleting={isDeleting}
+        isSubmitting={isSubmitting}
+        modalProps={buildInspectionModalProps({
+          clearContinuationState,
+          closeWorkflowActionModal,
+          confirmDeleteRecord,
+          conflictFields,
+          continueToInspectionLocation,
+          continuationPrompt,
+          deleteQueuedSubmission,
+          deleteTarget,
+          formatDateTime,
+          handleWorkflowDeclarationChange,
+          handleWorkflowRemarksChange,
+          homeIncident,
+          homeTypeDeleteTarget,
+          isActionBusy,
+          keepServerConflict,
+          openSavedDraft,
+          pendingAction,
+          pushToast,
+          queueConflictTarget,
+          queuedDeleteTarget,
+          renderStatusBadge: renderInspectionStatusBadge,
+          retryConflictWithLatest,
+          saveQueuedAsDraft,
+          setDeleteTarget,
+          setHomeTypeDeleteTarget,
+          setIsFormDirty,
+          setPendingAction,
+          setQueueConflictTarget,
+          setQueuedDeleteTarget,
+          setShowDiscard,
+          showDiscard,
+          showDraftChoice,
+          startBlankReport,
+          submitWorkflowAction,
+          workflowActionState,
+          workflowDeclarationChecked,
+          workflowDeclarationError,
+          workflowRejectError,
+          workflowRemarks,
+        })}
+        navigate={navigate}
+        pageTitle={pageTitle}
+        recordsSectionActive={recordsSectionActive}
+        recordsViewProps={buildInspectionRecordsViewProps({
+          activeDraftRows,
+          canApproveRecord,
+          canDeleteRecord: canConduct ? canDeleteRecord : () => false,
+          canEditRecord: canConduct ? canEditRecord : () => false,
+          canRejectRecord,
+          canReviewRecord,
+          checklistFilter,
+          checklistOptions,
+          clearFilters,
+          downloadRecord,
+          downloadingId,
+          editRecord,
+          filteredRecords,
+          formatDateTime,
+          hasChecklistFilter,
+          homeIncident,
+          homeTypeOptions,
+          inspectionSortOptions: INSPECTION_SORT_OPTIONS,
+          isLoading,
+          isOfflineHealthLoading,
+          isQueueSyncing,
+          isRefreshingOfflineAssets,
+          navigate,
+          offlineHealth,
+          openSavedDraft,
+          openWorkflowActionModal,
+          period,
+          pushToast,
+          queueSummary,
+          queuedRecordRows,
+          recentRecords,
+          recordScope,
+          buildRecordDetailPath,
+          recordsInScopeCount,
+          recoverLocalDraft,
+          refreshOfflineHealth,
+          rowsToShow,
+          runGuardedAction,
+          saveQueuedAsDraft,
+          scopedSubmittedRecords,
+          search,
+          setChecklistFilter,
+          setDeleteTarget,
+          setHasChecklistFilter,
+          setIsRefreshingOfflineAssets,
+          setPeriod,
+          setQueueConflictTarget,
+          setQueuedDeleteTarget,
+          setRecordScope,
+          setRowsToShow,
+          setSearch,
+          setShowMobileRecords,
+          setSort,
+          setStatusFilter,
+          setTypeFilter,
+          showMobileRecords,
+          sort,
+          startNew,
+          startNewWithType,
+          statusFilter,
+          statusOptions,
+          syncQueuedSubmissions,
+          typeFilter,
+          typeOptions,
+          visibleRows,
+        })}
+        reportBasePath={reportBasePath}
+        recordsReturnPath={recordsReturnPath}
+        reviewViewProps={buildInspectionReviewViewProps({
+          backFromReview,
+          buildPendingReviewRecord,
+          clearInspectionTypeDraft,
+          isSubmitting,
+          isUpdatingExistingRecord,
+          pendingSubmissionSummary,
+          renderStatusBadge: renderInspectionStatusBadge,
+          reviewMayQueue,
+          reviewRecord,
+          reviewWorkspace,
+          retryDraftSync,
+          retryFireExtinguisherSessionSync,
+          saveDraft,
+          sessionReviewForm,
+          submit,
+          user,
+        })}
+        runGuardedAction={runGuardedAction}
+        startNew={startNew}
+      />
+    </>
   )
 }
 

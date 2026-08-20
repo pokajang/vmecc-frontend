@@ -26,7 +26,6 @@ import {
   validateFitnessSignoff,
   validateFitnessTestForm,
 } from './validation'
-
 const signature = (form) => JSON.stringify(toSerializableFitnessTestForm(form))
 const contentSignature = (form) => {
   const value = { ...toSerializableFitnessTestForm(form) }
@@ -55,6 +54,7 @@ const FitnessTestForm = ({
   initialFormSeed = null,
   onRequestReview,
   onDraftSaved,
+  onRegisterMobileBackHandler,
 }) => {
   const location = useLocation()
   const navigate = useNavigate()
@@ -320,6 +320,7 @@ const FitnessTestForm = ({
         <FitnessTestSetupStep
           {...common}
           setForm={setForm}
+          onRegisterMobileBackHandler={onRegisterMobileBackHandler}
           isSaving={saveState === 'saving'}
           onContinue={() => goToStep('personnel')}
         />

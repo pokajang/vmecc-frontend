@@ -4,7 +4,9 @@ import { useSelector } from 'react-redux'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
+import RouteNavTabs from 'src/components/RouteNavTabs'
 import ModulePageHeader from 'src/components/ModulePageHeader'
+import MobileModuleBackAction from 'src/components/MobileModuleBackAction'
 import { isHolidayGuidanceLeaveEnabledForUser } from 'src/config/featureFlags'
 import { hasPermission } from 'src/utils/authz'
 import useTableRows from 'src/hooks/useTableRows'
@@ -349,6 +351,23 @@ const Leave = () => {
     calculateDays,
   })
 
+  const runLeaveSectionNavigation = useCallback(
+    (targetPath) => {
+      if (activeSection === 'new-leave' && isFormDirty) {
+        runWithDiscardGuard(() => navigate(targetPath))
+        return false
+      }
+      navigate(targetPath)
+      return true
+    },
+    [activeSection, isFormDirty, navigate, runWithDiscardGuard],
+  )
+  const showMobileBackAction = activeSection === 'new-leave'
+  const handleMobileBack = useCallback(
+    () => runWithDiscardGuard(() => navigate('/leave')),
+    [navigate, runWithDiscardGuard],
+  )
+
   if (!user) {
     return <div className="my-4 text-danger">Unable to load leave page. Please sign in again.</div>
   }
@@ -362,22 +381,49 @@ const Leave = () => {
   }
 
   return (
-    <CContainer fluid data-testid="leave-module">
+    <CContainer fluid className="workflow-module-page" data-testid="leave-module">
       <ModulePageHeader
         title="Leave"
         actions={
-          activeSection === 'new-leave' ? null : (
-            <div data-testid="leave-new-action">
-              <CreateActionButton
-                label="Apply Leave"
-                importance="page-primary"
-                onClick={() => runWithDiscardGuard(startNewLeave)}
-                icon={<Plus size={15} />}
-              />
-            </div>
-          )
+          <>
+            {showMobileBackAction ? <MobileModuleBackAction onClick={handleMobileBack} /> : null}
+            {activeSection === 'new-leave' ? null : (
+              <div data-testid="leave-new-action">
+                <CreateActionButton
+                  label="Apply Leave"
+                  importance="page-primary"
+                  onClick={() => runWithDiscardGuard(startNewLeave)}
+                  icon={<Plus size={15} />}
+                />
+              </div>
+            )}
+          </>
         }
       />
+      {activeSection !== 'new-leave' ? (
+        <div data-testid="leave-nav">
+          <RouteNavTabs
+            currentPath={activeSection}
+            className="d-none d-md-flex"
+            items={[
+              {
+                key: 'leave-records',
+                label: 'Records',
+                to: '/leave',
+                onBeforeNavigate: () => runLeaveSectionNavigation('/leave'),
+                match: (section) => section === 'leave-records' || section === 'leave-detail',
+              },
+              {
+                key: 'new-leave',
+                label: 'New',
+                to: '/leave/new',
+                onBeforeNavigate: () => runLeaveSectionNavigation('/leave/new'),
+                match: 'new-leave',
+              },
+            ]}
+          />
+        </div>
+      ) : null}
       <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
       <LeaveSubmitConfirmModal
         visible={isSubmitConfirmVisible}

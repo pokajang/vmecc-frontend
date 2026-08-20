@@ -7,6 +7,7 @@ import {
   IncidentSummaryPanel,
 } from './erco-form-components'
 import useReportIsMobile from '../hooks/useReportIsMobile'
+import { REPORT_ACTION_LABELS } from '../reportActionLabels'
 
 const ErcoPostAnalysisStep = ({
   form,
@@ -18,7 +19,7 @@ const ErcoPostAnalysisStep = ({
   showIncidentSummary = true,
   showActions = true,
   isSaving = false,
-  primaryLabel = 'Submit Report',
+  primaryLabel = REPORT_ACTION_LABELS.SUBMIT_REPORT,
   photoProcessing = false,
   onPhotoProcessingChange,
 }) => {
