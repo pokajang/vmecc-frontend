@@ -6,7 +6,7 @@ import { Plus } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
 import RouteNavTabs from 'src/components/RouteNavTabs'
 import ModulePageHeader from 'src/components/ModulePageHeader'
-import MobileModuleBackAction from 'src/components/MobileModuleBackAction'
+import BackButton from 'src/components/BackButton'
 import { isHolidayGuidanceLeaveEnabledForUser } from 'src/config/featureFlags'
 import { hasPermission } from 'src/utils/authz'
 import useTableRows from 'src/hooks/useTableRows'
@@ -270,6 +270,8 @@ const Leave = () => {
   const {
     isSubmitConfirmVisible,
     submitPreview,
+    isSubmitting,
+    draftFeedback,
     isCancelConfirmVisible,
     cancelPreviewRecord,
     isDeleteConfirmVisible,
@@ -288,7 +290,6 @@ const Leave = () => {
     confirmCancelLeave,
     deleteLeave,
     confirmDeleteLeave,
-    handleDraft,
     confirmAndSubmit,
     handleSubmit,
     handleBackToLeaveType,
@@ -362,8 +363,8 @@ const Leave = () => {
     },
     [activeSection, isFormDirty, navigate, runWithDiscardGuard],
   )
-  const showMobileBackAction = activeSection === 'new-leave'
-  const handleMobileBack = useCallback(
+  const showApplyBackAction = activeSection === 'new-leave'
+  const handleApplyBack = useCallback(
     () => runWithDiscardGuard(() => navigate('/leave')),
     [navigate, runWithDiscardGuard],
   )
@@ -383,10 +384,10 @@ const Leave = () => {
   return (
     <CContainer fluid className="workflow-module-page" data-testid="leave-module">
       <ModulePageHeader
-        title="Leave"
+        title={activeSection === 'new-leave' ? 'Apply Leave' : 'Leave'}
         actions={
           <>
-            {showMobileBackAction ? <MobileModuleBackAction onClick={handleMobileBack} /> : null}
+            {showApplyBackAction ? <BackButton onClick={handleApplyBack} /> : null}
             {activeSection === 'new-leave' ? null : (
               <div data-testid="leave-new-action">
                 <CreateActionButton
@@ -430,6 +431,7 @@ const Leave = () => {
         submitPreview={submitPreview}
         onClose={closeSubmitConfirmModal}
         onConfirm={confirmAndSubmit}
+        isSubmitting={isSubmitting}
       />
       <LeaveDiscardConfirmModal
         visible={isDiscardConfirmVisible}
@@ -535,7 +537,6 @@ const Leave = () => {
             leaveType={leaveType}
             onSelectLeaveType={setLeaveType}
             onContinueLeaveType={handleLeaveTypeContinue}
-            onBack={() => runWithDiscardGuard(() => navigate('/leave'))}
             onBackToLeaveType={handleBackToLeaveType}
             onSubmit={handleSubmit}
             selectedLeaveTypeOption={selectedLeaveTypeOption}
@@ -574,7 +575,8 @@ const Leave = () => {
             reason={reason}
             onReasonChange={handleReasonChange}
             onClearForm={handleClearForm}
-            onDraft={handleDraft}
+            isSubmitting={isSubmitting}
+            draftFeedback={draftFeedback}
             isSubmitBlockedByBalance={isSubmitBlockedByBalance}
             editingRecordId={editingRecordId}
             guidanceMessage={shouldShowLeaveGuidanceMessage ? leaveGuidanceMessage : ''}

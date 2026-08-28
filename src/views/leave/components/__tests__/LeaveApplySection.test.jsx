@@ -81,25 +81,32 @@ const baseProps = {
 }
 
 describe('LeaveApplySection', () => {
-  it('renders top Back and in-flow action group in consistent order', () => {
+  it('uses a distinct change-type action and the canonical mobile action hierarchy', () => {
     render(
       <MemoryRouter>
         <LeaveApplySection {...baseProps} />
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('button', { name: 'Back' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Back' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Change leave type' })).toBeTruthy()
     const actionBar = document.querySelector('.action-row-thumb')
     expect(actionBar).toBeTruthy()
-    expect(actionBar.className).toContain('action-row-thumb--in-flow')
+    expect(actionBar.className).toContain('action-row-thumb--terminal')
     expect(document.querySelector('.action-row-thumb-spacer')).toBeNull()
 
     const actionButtons = within(actionBar).getAllByRole('button')
     expect(actionButtons.map((button) => button.textContent)).toEqual([
-      'Clear form',
-      'Save draft',
       'Submit request',
+      'Clear form',
     ])
+    expect(screen.queryByRole('button', { name: 'Save draft' })).toBeNull()
+    const balance = screen.getByTestId('leave-balance')
+    expect(within(balance).getAllByRole('term')).toHaveLength(4)
+    expect(balance.querySelector('.workflow-summary__list--metrics')).toBeTruthy()
+    expect(balance.querySelector('.bg-body-tertiary')).toBeNull()
+    expect(balance.className).not.toContain('border')
+    expect(document.querySelectorAll('.workflow-compact-stack-field')).toHaveLength(4)
   })
 
   it('renders camera fallback banner with manual upload action', () => {

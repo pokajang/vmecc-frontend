@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import {
   cancelMyOvertimeApiFirst,
   clearMyOvertimeDraftApiFirst,
+  deleteMyOvertimeAttachmentApiFirst,
   deleteMyOvertimeApiFirst,
   saveMyOvertimeDraftApiFirst,
   submitMyOvertimeApiFirst,
@@ -11,6 +12,7 @@ import { formatDuration, getDisplayOvertimeId, normalizeOvertimeType } from '../
 import { normalizeOvertimeDraftPayload, buildFormSnapshot } from '../domain/overtimeFormDomain'
 import { OT_INELIGIBLE_MESSAGE } from '../domain/overtimeWorkflowDomain'
 import { validateOvertimeSubmission } from '../domain/overtimeValidation'
+import useWorkflowDraftAutosave from 'src/hooks/useWorkflowDraftAutosave'
 
 const isSameOvertimeRecordId = (lhs, rhs) => String(lhs ?? '') === String(rhs ?? '')
 const createSubmissionKey = () =>
@@ -37,6 +39,7 @@ const useOvertimeActions = ({
   isOvertimeGuidanceEnabled,
   form,
   isOvertimeTypeDeriving,
+  autosaveEnabled = false,
 }) => {
   const [isSubmitConfirmVisible, setIsSubmitConfirmVisible] = useState(false)
   const [submitPreview, setSubmitPreview] = useState(null)
@@ -56,9 +59,38 @@ const useOvertimeActions = ({
     isSubmittingClaim ||
     isAttachmentUploading ||
     isOvertimeTypeDeriving
+  const formActionStatus = isSubmittingClaim
+    ? isResubmittingClaim
+      ? 'Resubmitting overtime claim...'
+      : 'Submitting overtime claim...'
+    : isDraftSaving
+      ? 'Saving overtime draft...'
+      : isFormClearing
+        ? 'Clearing overtime form...'
+        : isAttachmentUploading
+          ? 'Uploading evidence attachment...'
+          : isOvertimeTypeDeriving
+            ? 'Checking overtime type...'
+            : ''
+  const persistedAttachmentId = useMemo(() => {
+    if (!hasPersistedEditTarget) return null
+    const record = overtimeRecords.find((row) => isSameOvertimeRecordId(row?.id, editingRecordId))
+    return record?.attachmentId || record?.attachment?.id || null
+  }, [editingRecordId, hasPersistedEditTarget, overtimeRecords])
+
+  const explainBusyAction = () => {
+    pushToast(formActionStatus || 'Please wait for the current overtime action to finish.', {
+      title: 'Please wait',
+      color: 'info',
+    })
+  }
 
   const handleAttachmentUpload = async (file) => {
-    if (!file || isFormActionBusy) return
+    if (!file) return
+    if (isFormActionBusy) {
+      explainBusyAction()
+      return
+    }
     const allowed =
       /^(application\/pdf|image\/(jpeg|png)|application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.document|application\/msword)$/.test(
         file.type,
@@ -72,6 +104,7 @@ const useOvertimeActions = ({
     }
     setIsAttachmentUploading(true)
     try {
+      const previousAttachmentId = form.attachmentId || null
       const result = await uploadMyOvertimeAttachmentApiFirst(file)
       if (!result?.ok || !result?.data) {
         pushToast('Unable to upload overtime evidence. Please retry.', {
@@ -80,12 +113,63 @@ const useOvertimeActions = ({
         })
         return
       }
-      form.setAttachment({
+      const nextAttachment = {
         id: result.data.id,
         originalName: result.data.original_name || result.data.originalName || file.name,
         mimeType: result.data.mime_type || result.data.mimeType || file.type,
         size: result.data.size || file.size,
+      }
+      const shouldReleasePrevious =
+        previousAttachmentId &&
+        String(previousAttachmentId) !== String(nextAttachment.id) &&
+        String(previousAttachmentId) !== String(persistedAttachmentId || '')
+      if (shouldReleasePrevious) {
+        const cleanup = await deleteMyOvertimeAttachmentApiFirst(previousAttachmentId)
+        if (!cleanup.ok) {
+          await deleteMyOvertimeAttachmentApiFirst(nextAttachment.id)
+          form.setFieldErrors((prev) => ({
+            ...prev,
+            attachment: 'Unable to replace the current attachment. Please retry.',
+          }))
+          pushToast('The current attachment was kept. Please retry the replacement.', {
+            title: 'Replacement failed',
+            color: 'danger',
+          })
+          return
+        }
+      }
+      form.setAttachment(nextAttachment)
+      form.setFieldErrors((prev) => {
+        const next = { ...prev }
+        delete next.attachment
+        return next
       })
+    } finally {
+      setIsAttachmentUploading(false)
+    }
+  }
+
+  const handleAttachmentRemove = async () => {
+    if (!form.attachmentId) return
+    if (isFormActionBusy) {
+      explainBusyAction()
+      return
+    }
+    setIsAttachmentUploading(true)
+    try {
+      const isPersistedAttachment =
+        String(form.attachmentId) === String(persistedAttachmentId || '')
+      if (!isPersistedAttachment) {
+        const result = await deleteMyOvertimeAttachmentApiFirst(form.attachmentId)
+        if (!result.ok) {
+          pushToast('Unable to remove the overtime attachment. Please retry.', {
+            title: 'Remove failed',
+            color: 'danger',
+          })
+          return
+        }
+      }
+      form.setAttachment(null)
       form.setFieldErrors((prev) => {
         const next = { ...prev }
         delete next.attachment
@@ -140,7 +224,10 @@ const useOvertimeActions = ({
     })
     form.setFieldErrors(errors)
     if (Object.keys(errors).length === 0) return true
-    pushToast(Object.values(errors)[0], { title: 'Validation error', color: 'danger' })
+    pushToast('Review the highlighted overtime fields.', {
+      title: 'Check your entries',
+      color: 'danger',
+    })
     return false
   }
 
@@ -159,7 +246,10 @@ const useOvertimeActions = ({
 
   const handleSubmit = (event) => {
     event.preventDefault()
-    if (isFormActionBusy) return
+    if (isFormActionBusy) {
+      explainBusyAction()
+      return
+    }
     if (!validateSubmission()) return
     setSubmitPreview(buildSubmitPreview())
     setIsSubmitConfirmVisible(true)
@@ -263,49 +353,14 @@ const useOvertimeActions = ({
     }
   }
 
-  const handleDraft = async () => {
-    if (isFormActionBusy) return
-    setIsDraftSaving(true)
-    try {
-      const draftPayload = {
-        overtimeType: normalizeOvertimeType(form.overtimeType),
-        overtimeTypeConfirmed:
-          overtimeTypeDerivedMode || isResumeEditMode ? true : Boolean(form.overtimeTypeConfirmed),
-        claimDate: form.claimDate,
-        startTime: form.startTime,
-        endTime: form.endTime,
-        reason: form.reason,
-        sourceRecordId: hasPersistedEditTarget ? String(editingRecordId || '').trim() : '',
-        sourceRecordServerId: hasPersistedEditTarget
-          ? String(
-              overtimeRecords.find((record) => String(record.id) === String(editingRecordId))
-                ?.serverId || '',
-            ).trim()
-          : '',
-        attachmentId: form.attachmentId || null,
-        attachment: form.attachment || null,
-        savedAt: new Date().toISOString(),
+  const persistDraft = useCallback(
+    async ({ navigateAfter = false, showNotice = false } = {}) => {
+      if (isFormActionBusy) {
+        return false
       }
-      const result = await saveMyOvertimeDraftApiFirst(
-        userId,
-        draftPayload,
-        overtimeDraft?.draftVersion,
-      )
-      if (!result.ok) {
-        if (result?.isIneligible) {
-          pushToast(OT_INELIGIBLE_MESSAGE, { title: 'Overtime not applicable', color: 'warning' })
-        } else {
-          pushToast('Unable to save overtime draft to backend. Please retry.', {
-            title: 'Draft failed',
-            color: 'danger',
-          })
-        }
-        return
-      }
-      setOvertimeDraft(normalizeOvertimeDraftPayload(result?.data || draftPayload))
-      form.setFormBaseline(
-        buildFormSnapshot({
-          editingRecordId,
+      setIsDraftSaving(true)
+      try {
+        const draftPayload = {
           overtimeType: normalizeOvertimeType(form.overtimeType),
           overtimeTypeConfirmed:
             overtimeTypeDerivedMode || isResumeEditMode
@@ -315,15 +370,129 @@ const useOvertimeActions = ({
           startTime: form.startTime,
           endTime: form.endTime,
           reason: form.reason,
-          attachmentId: form.attachmentId,
-        }),
-      )
-      navigate('/overtime')
-      pushToast('Overtime draft saved.', { title: 'Draft saved', color: 'success' })
-    } finally {
-      setIsDraftSaving(false)
+          sourceRecordId: hasPersistedEditTarget ? String(editingRecordId || '').trim() : '',
+          sourceRecordServerId: hasPersistedEditTarget
+            ? String(
+                overtimeRecords.find((record) => String(record.id) === String(editingRecordId))
+                  ?.serverId || '',
+              ).trim()
+            : '',
+          attachmentId: form.attachmentId || null,
+          attachment: form.attachment || null,
+          savedAt: new Date().toISOString(),
+        }
+        const result = await saveMyOvertimeDraftApiFirst(
+          userId,
+          draftPayload,
+          overtimeDraft?.draftVersion,
+        )
+        if (!result.ok) {
+          if (result?.isIneligible) {
+            if (showNotice) {
+              pushToast(OT_INELIGIBLE_MESSAGE, {
+                title: 'Overtime not applicable',
+                color: 'warning',
+              })
+            }
+          } else if (showNotice) {
+            pushToast('Unable to save overtime draft to backend. Please retry.', {
+              title: 'Draft failed',
+              color: 'danger',
+            })
+          }
+          return false
+        }
+        setOvertimeDraft(normalizeOvertimeDraftPayload(result?.data || draftPayload))
+        form.setFormBaseline(
+          buildFormSnapshot({
+            editingRecordId,
+            overtimeType: normalizeOvertimeType(form.overtimeType),
+            overtimeTypeConfirmed:
+              overtimeTypeDerivedMode || isResumeEditMode
+                ? true
+                : Boolean(form.overtimeTypeConfirmed),
+            claimDate: form.claimDate,
+            startTime: form.startTime,
+            endTime: form.endTime,
+            reason: form.reason,
+            attachmentId: form.attachmentId,
+          }),
+        )
+        if (navigateAfter) navigate('/overtime')
+        if (showNotice) {
+          pushToast('Overtime draft saved.', { title: 'Draft saved', color: 'success' })
+        }
+        return true
+      } catch (error) {
+        if (showNotice) {
+          pushToast(error?.message || 'Unable to save overtime draft to backend. Please retry.', {
+            title: 'Draft failed',
+            color: 'danger',
+          })
+        }
+        return false
+      } finally {
+        setIsDraftSaving(false)
+      }
+    },
+    [
+      editingRecordId,
+      form,
+      hasPersistedEditTarget,
+      isFormActionBusy,
+      isResumeEditMode,
+      navigate,
+      overtimeDraft?.draftVersion,
+      overtimeRecords,
+      overtimeTypeDerivedMode,
+      pushToast,
+      setOvertimeDraft,
+      userId,
+    ],
+  )
+
+  const autosaveSnapshot = useMemo(
+    () =>
+      buildFormSnapshot({
+        editingRecordId,
+        overtimeType: normalizeOvertimeType(form.overtimeType),
+        overtimeTypeConfirmed:
+          overtimeTypeDerivedMode || isResumeEditMode ? true : Boolean(form.overtimeTypeConfirmed),
+        claimDate: form.claimDate,
+        startTime: form.startTime,
+        endTime: form.endTime,
+        reason: form.reason,
+        attachmentId: form.attachmentId,
+      }),
+    [
+      editingRecordId,
+      form.attachmentId,
+      form.claimDate,
+      form.endTime,
+      form.overtimeType,
+      form.overtimeTypeConfirmed,
+      form.reason,
+      form.startTime,
+      isResumeEditMode,
+      overtimeTypeDerivedMode,
+    ],
+  )
+  const overtimeDraftAutosave = useWorkflowDraftAutosave({
+    enabled: autosaveEnabled && !isSubmittingClaim && !isFormClearing && !isAttachmentUploading,
+    snapshot: autosaveSnapshot,
+    saveDraft: persistDraft,
+    errorMessage: 'Your overtime draft could not be saved. Your entries are still on this screen.',
+  })
+  const handleDraft = useCallback(() => {
+    if (isFormActionBusy) {
+      pushToast(formActionStatus || 'Please wait for the current overtime action to finish.', {
+        title: 'Please wait',
+        color: 'info',
+      })
+      return false
     }
-  }
+    return persistDraft({ navigateAfter: true, showNotice: true, source: 'manual' })
+  }, [formActionStatus, isFormActionBusy, persistDraft, pushToast])
 
   const confirmDiscardDraftChanges = async () => {
     if (!hasPersistedEditTarget || !isLinkedDraftForEditing) {
@@ -360,7 +529,10 @@ const useOvertimeActions = ({
   }
 
   const handleClearForm = async () => {
-    if (isFormActionBusy) return
+    if (isFormActionBusy) {
+      explainBusyAction()
+      return
+    }
     if (hasPersistedEditTarget) {
       if (isLinkedDraftForEditing) {
         setIsDiscardDraftChangesConfirmVisible(true)
@@ -551,7 +723,11 @@ const useOvertimeActions = ({
     isFormClearing,
     isSubmittingClaim,
     isAttachmentUploading,
+    isFormActionBusy,
+    formActionStatus,
+    draftFeedback: overtimeDraftAutosave.feedback,
     handleAttachmentUpload,
+    handleAttachmentRemove,
     cancelOvertime,
     confirmCancelOvertime,
     deleteOvertime,

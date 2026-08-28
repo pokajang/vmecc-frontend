@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { classifyMyOvertimeDateApiFirst } from 'src/services/overtimeApi'
 import { getOvertimeTypeLabel, normalizeOvertimeType } from '../utils'
 
@@ -12,80 +12,61 @@ const useOvertimeTypeGuidance = ({
   setIsOvertimeTypeDeriving,
   setOvertimeGuidanceMessage,
 }) => {
+  const requestSequenceRef = useRef(0)
+
   useEffect(() => {
-    if (activeSection !== 'new-overtime') return
-    if (!claimDate) {
-      setOvertimeGuidanceMessage('')
-      return
-    }
-    let active = true
-    const run = async () => {
-      if (!isOvertimeGuidanceEnabled || !claimDate) {
-        if (active) setOvertimeGuidanceMessage('')
-        return
-      }
-      setIsOvertimeTypeDeriving(true)
-      const result = await classifyMyOvertimeDateApiFirst(claimDate)
-      if (!active) return
+    const requestSequence = ++requestSequenceRef.current
+    const shouldClassify =
+      activeSection === 'new-overtime' &&
+      Boolean(claimDate) &&
+      (isOvertimeGuidanceEnabled || overtimeTypeDerivedMode)
+
+    if (!shouldClassify) {
       setIsOvertimeTypeDeriving(false)
-      if (!result?.ok) {
-        setOvertimeGuidanceMessage('')
-        return
+      setOvertimeGuidanceMessage('')
+      return undefined
+    }
+
+    const run = async () => {
+      setIsOvertimeTypeDeriving(true)
+      try {
+        const result = await classifyMyOvertimeDateApiFirst(claimDate)
+        if (requestSequenceRef.current !== requestSequence) return
+        if (!result?.ok) {
+          setOvertimeGuidanceMessage('')
+          return
+        }
+        const recommendedType = normalizeOvertimeType(
+          result?.data?.overtime_type || defaultOvertimeType,
+        )
+        const selectedType = normalizeOvertimeType(overtimeType || defaultOvertimeType)
+        const nextMessage =
+          selectedType !== recommendedType
+            ? `Recommended overtime type for ${claimDate} is ${getOvertimeTypeLabel(recommendedType, { short: true })}.`
+            : `Selected overtime type matches recommendation for ${claimDate}.`
+        setOvertimeGuidanceMessage(nextMessage)
+      } catch {
+        if (requestSequenceRef.current === requestSequence) {
+          setOvertimeGuidanceMessage('')
+        }
+      } finally {
+        if (requestSequenceRef.current === requestSequence) {
+          setIsOvertimeTypeDeriving(false)
+        }
       }
-      const recommendedType = normalizeOvertimeType(
-        result?.data?.overtime_type || defaultOvertimeType,
-      )
-      const selectedType = normalizeOvertimeType(overtimeType || defaultOvertimeType)
-      const nextMessage =
-        selectedType !== recommendedType
-          ? `Recommended overtime type for ${claimDate} is ${getOvertimeTypeLabel(recommendedType, { short: true })}.`
-          : `Selected overtime type matches recommendation for ${claimDate}.`
-      setOvertimeGuidanceMessage(nextMessage)
     }
     run()
+
     return () => {
-      active = false
+      if (requestSequenceRef.current === requestSequence) {
+        requestSequenceRef.current += 1
+      }
     }
   }, [
     activeSection,
     claimDate,
     defaultOvertimeType,
     isOvertimeGuidanceEnabled,
-    overtimeType,
-    setIsOvertimeTypeDeriving,
-    setOvertimeGuidanceMessage,
-  ])
-
-  useEffect(() => {
-    if (!overtimeTypeDerivedMode) return
-    if (!claimDate) return
-    let active = true
-    const run = async () => {
-      setIsOvertimeTypeDeriving(true)
-      const result = await classifyMyOvertimeDateApiFirst(claimDate)
-      if (!active) return
-      setIsOvertimeTypeDeriving(false)
-      if (!result?.ok) {
-        setOvertimeGuidanceMessage('')
-        return
-      }
-      const recommendedType = normalizeOvertimeType(
-        result?.data?.overtime_type || defaultOvertimeType,
-      )
-      const selectedType = normalizeOvertimeType(overtimeType || defaultOvertimeType)
-      const nextMessage =
-        selectedType !== recommendedType
-          ? `Recommended overtime type for ${claimDate} is ${getOvertimeTypeLabel(recommendedType, { short: true })}.`
-          : `Selected overtime type matches recommendation for ${claimDate}.`
-      setOvertimeGuidanceMessage(nextMessage)
-    }
-    run()
-    return () => {
-      active = false
-    }
-  }, [
-    claimDate,
-    defaultOvertimeType,
     overtimeType,
     overtimeTypeDerivedMode,
     setIsOvertimeTypeDeriving,

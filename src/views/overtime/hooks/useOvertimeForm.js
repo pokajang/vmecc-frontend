@@ -77,12 +77,13 @@ const useOvertimeForm = ({ overtimeTypeDerivedMode = false, editingRecordId = nu
   )
 
   const handleContinueOvertimeType = useCallback(
-    (pushToast) => {
+    (pushToast, nextType = '') => {
       if (overtimeTypeDerivedMode) {
         setOvertimeTypeConfirmed(true)
         return
       }
-      if (!overtimeType) {
+      const selectedType = String(nextType || overtimeType || '').trim()
+      if (!selectedType) {
         setFieldErrors((prev) => ({ ...prev, overtimeType: 'Please select overtime type.' }))
         pushToast?.('Please select overtime type before continuing.', {
           title: 'Type required',
@@ -90,6 +91,7 @@ const useOvertimeForm = ({ overtimeTypeDerivedMode = false, editingRecordId = nu
         })
         return
       }
+      setOvertimeType(normalizeOvertimeType(selectedType))
       setOvertimeTypeConfirmed(true)
       clearFieldError('overtimeType')
     },

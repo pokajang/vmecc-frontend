@@ -14,7 +14,7 @@ import {
 } from '@coreui/react'
 import { buildExpenseClaimEditorSchema } from './claimFormViewModel'
 import { PAYROLL_ATTACHMENT_ACCEPT, PAYROLL_ATTACHMENT_MAX_SIZE_MB } from './utils/claimFormUtils'
-import { Trash2 } from 'lucide-react'
+import WorkflowAttachmentField from 'src/components/report-workflow/WorkflowAttachmentField'
 
 const ClaimSubmissionEditorCard = ({
   isExceptionalClaim,
@@ -245,55 +245,42 @@ const ClaimSubmissionEditorCard = ({
             </div>
           </CCol>
           <CCol md={12} data-testid="payroll-claim-attachments">
-            <CFormLabel htmlFor="draft-attachment">
-              {isExceptionalClaim ? 'Attachment (required)' : 'Attachment'}
-            </CFormLabel>
-            <CFormInput
+            <WorkflowAttachmentField
               id="draft-attachment"
-              type="file"
+              label="Attachment"
+              required={isExceptionalClaim}
               accept={PAYROLL_ATTACHMENT_ACCEPT}
-              onChange={(e) => onAttachmentChange(e.target.files?.[0] || null)}
-            />
-            {draftItem.attachmentName ? (
-              <div className="small text-body-secondary mt-1">
-                {`Attached: ${draftItem.attachmentName}${
-                  draftItem.attachmentUploadState === 'uploading'
-                    ? ' (Uploading...)'
-                    : draftItem.attachmentUploadState === 'failed' || draftItem.needsReattach
-                      ? ' (Reattach required)'
+              onFileSelect={onAttachmentChange}
+              error={draftItem.attachmentError}
+              guidance={`PDF, JPG, or PNG up to ${PAYROLL_ATTACHMENT_MAX_SIZE_MB} MB.`}
+              statusLabel={
+                draftItem.attachmentUploadState === 'uploading'
+                  ? 'Uploading'
+                  : draftItem.attachmentUploadState === 'failed' || draftItem.needsReattach
+                    ? 'Reattach required'
+                    : draftItem.attachmentName
+                      ? 'Attachment ready'
                       : ''
-                }`}
-              </div>
-            ) : (
-              <>
-                <div className="small text-body-secondary mt-1">
-                  PDF, JPG or PNG up to {PAYROLL_ATTACHMENT_MAX_SIZE_MB} MB.
-                </div>
-                {schema.attachmentHint ? (
-                  <details className="small text-body-secondary mt-1">
-                    <summary>Evidence required</summary>
-                    <div className="mt-1">{schema.attachmentHint}</div>
-                  </details>
-                ) : null}
-              </>
-            )}
-            {draftItem.attachmentError ? (
-              <div className="small text-danger mt-1">{draftItem.attachmentError}</div>
+              }
+              statusDetail={draftItem.attachmentName ? 'The document is linked to this item.' : ''}
+              statusTone={
+                draftItem.attachmentUploadState === 'failed' || draftItem.needsReattach
+                  ? 'danger'
+                  : draftItem.attachmentUploadState === 'uploading'
+                    ? 'warning'
+                    : draftItem.attachmentName
+                      ? 'success'
+                      : 'muted'
+              }
+              hasAttachment={Boolean(draftItem.attachmentName)}
+              onRemove={onClearAttachment}
+            />
+            {schema.attachmentHint ? (
+              <details className="small text-body-secondary mt-1">
+                <summary>Evidence required</summary>
+                <div className="mt-1">{schema.attachmentHint}</div>
+              </details>
             ) : null}
-            {draftItem.attachmentName && (
-              <div className="mt-2">
-                <CButton
-                  color="light"
-                  size="sm"
-                  type="button"
-                  className="d-inline-flex align-items-center gap-1"
-                  onClick={onClearAttachment}
-                >
-                  <Trash2 size={14} />
-                  <span>Remove attachment</span>
-                </CButton>
-              </div>
-            )}
           </CCol>
           <CCol xs={12}>
             <CFormLabel htmlFor="draft-line-notes">

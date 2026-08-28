@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import {
   CAlert,
   CButton,
@@ -11,10 +11,14 @@ import {
   CFormTextarea,
   CRow,
 } from '@coreui/react'
-import { Camera, Pencil, Upload } from 'lucide-react'
+import { Upload } from 'lucide-react'
 import { formatCameraDiagnosticsLines } from 'src/utils/cameraDiagnostics'
-import BackButton from 'src/components/BackButton'
-import FormActionGroup from 'src/components/FormActionGroup'
+import WorkflowAttachmentField from 'src/components/report-workflow/WorkflowAttachmentField'
+import WorkflowInlineFeedback from 'src/components/report-workflow/WorkflowInlineFeedback'
+import WorkflowSetupField from 'src/components/report-workflow/WorkflowSetupField'
+import WorkflowStageActions from 'src/components/report-workflow/WorkflowStageActions'
+import WorkflowSummaryList from 'src/components/report-workflow/WorkflowSummaryList'
+import { focusFirstInvalidField } from 'src/components/report-workflow/workflowFormFocus'
 import LeaveTypeSelection from 'src/views/leave/components/LeaveTypeSelection'
 
 const LeaveApplySection = ({
@@ -22,11 +26,9 @@ const LeaveApplySection = ({
   leaveType,
   onSelectLeaveType,
   onContinueLeaveType,
-  onBack,
   onBackToLeaveType,
   onSubmit,
   selectedLeaveTypeOption,
-  SelectedLeaveIcon,
   balanceStats,
   balanceSummary,
   workShift,
@@ -61,369 +63,337 @@ const LeaveApplySection = ({
   reason,
   onReasonChange,
   onClearForm,
-  onDraft,
   isSubmitBlockedByBalance,
   editingRecordId,
   guidanceMessage = '',
   rosterImpact = null,
-}) => (
-  <>
-    {!leaveTypeConfirmed ? (
-      <LeaveTypeSelection
-        selectedType={leaveType}
-        onSelect={onSelectLeaveType}
-        onContinue={onContinueLeaveType}
-        onBack={onBack}
-      />
-    ) : (
-      <CForm onSubmit={onSubmit} data-testid="leave-apply">
-        <div className="mb-3">
-          <BackButton onClick={onBackToLeaveType} label="Back" />
-        </div>
-        <CRow className="g-3 mb-3 align-items-stretch">
-          <CCol xs={12} md={5} lg={4}>
-            <div className="rounded-3 border border-primary bg-primary bg-opacity-10 p-3 h-100">
-              <div className="d-flex align-items-start gap-3">
-                <div
-                  className="d-inline-flex align-items-center justify-content-center text-primary"
-                  style={{ flex: '0 0 auto', lineHeight: 0 }}
-                >
-                  {SelectedLeaveIcon ? <SelectedLeaveIcon size={20} /> : null}
-                </div>
-                <div className="flex-grow-1" style={{ minWidth: 0 }}>
-                  <div className="fw-semibold">{selectedLeaveTypeOption?.title || leaveType}</div>
-                </div>
-                <CButton
-                  type="button"
-                  color="link"
-                  className="d-inline-flex align-items-center justify-content-center p-0 text-body-secondary text-decoration-none"
-                  style={{ lineHeight: 0 }}
-                  onClick={onBackToLeaveType}
-                  title="Edit leave type"
-                  aria-label="Edit leave type"
-                >
-                  <Pencil size={14} />
-                </CButton>
-              </div>
-            </div>
-          </CCol>
-          <CCol xs={12} md={7} lg={8}>
-            <div className="rounded-3 border bg-body p-3 h-100" data-testid="leave-balance">
-              <div className="fw-semibold mb-2">Leave Balance</div>
-              <CRow className="g-2 g-lg-3">
-                {balanceStats.map((item) => (
-                  <CCol xs={6} md={3} key={item.key}>
-                    <div className="rounded-3 bg-light px-3 py-3 h-100 text-center">
-                      <div className="small text-muted">{item.label}</div>
-                      <div className={`fw-semibold ${item.isAlert ? 'text-danger' : ''}`}>
-                        {item.value}
-                      </div>
-                    </div>
-                  </CCol>
-                ))}
-              </CRow>
-              {!balanceSummary.hasAssignment && (
-                <div className="small text-danger mt-2">
-                  No assignment found for {leaveType} ({balanceSummary.year}).
-                </div>
-              )}
-              {balanceSummary.hasAssignment && balanceSummary.isZeroEntitlement && (
-                <div className="small text-danger mt-2">
-                  Entitlement is 0 day(s). Submission is blocked until HR/HQ updates assignment.
-                </div>
-              )}
-              {leaveType === 'Other Leave' && (
-                <div className="small text-muted mt-2">
-                  Requires HR/HQ review and written justification.
-                </div>
-              )}
-            </div>
-          </CCol>
-        </CRow>
-        <div className="rounded-3 border p-3 bg-body">
-          <CRow className="g-3">
-            {guidanceMessage ? (
-              <CCol xs={12}>
-                <div className="small text-info-emphasis bg-info bg-opacity-10 border border-info-subtle rounded-3 p-2">
-                  {guidanceMessage}
-                </div>
-              </CCol>
-            ) : null}
-            {rosterImpact?.summary?.duty_count ? (
-              <CCol xs={12}>
-                <CAlert color="warning" className="mb-0 py-2" data-testid="leave-roster-impact">
-                  <span className="fw-semibold">Roster duty detected:</span>{' '}
-                  {rosterImpact.items
-                    .map((item) => `${item.shift_label} shift, ${item.team_name}, ${item.date}`)
-                    .join('; ')}
-                  . Your leave request can still be submitted.
-                </CAlert>
-              </CCol>
-            ) : null}
-            <CCol md={4}>
-              <CFormLabel htmlFor="leave-work-shift">Work shift</CFormLabel>
-              <CFormSelect id="leave-work-shift" value={workShift} onChange={handleShiftChange}>
-                {shiftOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </CFormSelect>
-              {selectedShiftConfig.note && (
-                <div className="small text-muted mt-1">{selectedShiftConfig.note}</div>
-              )}
-            </CCol>
-            <CCol xs={6} md={2}>
-              <CFormLabel htmlFor="leave-start-date">Start date</CFormLabel>
-              <CFormInput
-                id="leave-start-date"
-                type="date"
-                value={startDate}
-                onChange={handleStartDateChange}
-                invalid={Boolean(fieldErrors.startDate)}
+  isSubmitting = false,
+  draftFeedback = null,
+}) => {
+  const formRef = useRef(null)
+
+  useEffect(() => {
+    if (!formRef.current || Object.keys(fieldErrors || {}).length === 0) return undefined
+    const frameId = window.requestAnimationFrame(() => focusFirstInvalidField(formRef.current))
+    return () => window.cancelAnimationFrame(frameId)
+  }, [fieldErrors])
+
+  return (
+    <>
+      {!leaveTypeConfirmed ? (
+        <LeaveTypeSelection
+          selectedType={leaveType}
+          onSelect={onSelectLeaveType}
+          onContinue={onContinueLeaveType}
+        />
+      ) : (
+        <CForm ref={formRef} onSubmit={onSubmit} data-testid="leave-apply" noValidate>
+          <CRow className="g-3 mb-4 align-items-stretch">
+            <CCol xs={12} md={5} lg={4}>
+              <WorkflowSetupField
+                className="h-100"
+                label="Leave type"
+                value={selectedLeaveTypeOption?.title || leaveType}
+                onEdit={onBackToLeaveType}
+                editLabel="Change leave type"
+                ariaLabel="Selected leave type"
               />
-              <CFormFeedback invalid>{fieldErrors.startDate}</CFormFeedback>
             </CCol>
-            <CCol xs={6} md={2}>
-              <CFormLabel htmlFor="leave-start-time">Start time</CFormLabel>
-              <CFormSelect
-                id="leave-start-time"
-                value={startTimeSlot}
-                onChange={handleStartTimeChange}
-                invalid={Boolean(fieldErrors.schedule)}
-              >
-                {selectedShiftConfig.startOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </CFormSelect>
-            </CCol>
-            <CCol xs={6} md={2}>
-              <CFormLabel htmlFor="leave-end-date">End date</CFormLabel>
-              <CFormInput
-                id="leave-end-date"
-                type="date"
-                value={endDate}
-                onChange={handleEndDateChange}
-                min={startDate || undefined}
-                invalid={Boolean(fieldErrors.endDate)}
-              />
-              <CFormFeedback invalid>{fieldErrors.endDate}</CFormFeedback>
-            </CCol>
-            <CCol xs={6} md={2}>
-              <CFormLabel htmlFor="leave-end-time">End time</CFormLabel>
-              <CFormSelect
-                id="leave-end-time"
-                value={endTimeSlot}
-                onChange={handleEndTimeChange}
-                invalid={Boolean(fieldErrors.schedule)}
-              >
-                {selectedShiftConfig.endOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </CFormSelect>
-              {fieldErrors.schedule ? (
-                <CFormFeedback invalid style={{ display: 'block' }}>
-                  {fieldErrors.schedule}
-                </CFormFeedback>
-              ) : null}
-            </CCol>
-            {(activeFieldRule.showCoverage || activeFieldRule.showAttachment) && (
-              <>
-                {activeFieldRule.showCoverage && (
-                  <CCol md={6}>
-                    <CFormLabel htmlFor="leave-cover-by">
-                      Coverage by ({activeFieldRule.coverageRequired ? 'required' : 'optional'})
-                    </CFormLabel>
-                    <CFormInput
-                      id="leave-cover-by"
-                      value={coverBy}
-                      onChange={(event) => onCoverByChange(event.target.value)}
-                      placeholder="Name of teammate covering your duties"
-                      invalid={Boolean(fieldErrors.coverBy)}
-                    />
-                    <CFormFeedback invalid>{fieldErrors.coverBy}</CFormFeedback>
-                  </CCol>
+            <CCol xs={12} md={7} lg={8}>
+              <div className="leave-balance h-100" data-testid="leave-balance">
+                <WorkflowSummaryList title="Leave balance" items={balanceStats} variant="metrics" />
+                {!balanceSummary.hasAssignment && (
+                  <WorkflowInlineFeedback
+                    className="mt-3"
+                    compact
+                    kind="error"
+                    title="Assignment required"
+                    message={`No assignment found for ${leaveType} (${balanceSummary.year}).`}
+                  />
                 )}
-                {activeFieldRule.showAttachment && (
-                  <CCol md={6} data-testid="leave-attachments">
-                    <CFormLabel htmlFor="leave-attachment">
-                      Supporting Attachment (
-                      {activeFieldRule.attachmentRequired ? 'required' : 'optional'})
-                    </CFormLabel>
-                    {cameraUploadFallback ? (
-                      <CAlert
-                        color="warning"
-                        className="mb-2"
-                        dismissible
-                        onClose={() => {
-                          if (clearCameraUploadFallback) clearCameraUploadFallback()
-                        }}
-                      >
-                        <div className="d-flex flex-column gap-2">
-                          <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2">
-                            <div className="small">{cameraUploadFallback.message}</div>
-                            <CButton
-                              type="button"
-                              color="warning"
-                              size="sm"
-                              onClick={() => {
-                                if (clearCameraUploadFallback) clearCameraUploadFallback()
-                                if (requestUploadFromCameraFallback)
-                                  requestUploadFromCameraFallback()
-                              }}
-                            >
-                              <Upload size={14} className="me-1" />
-                              Upload photo
-                            </CButton>
-                          </div>
-                          {cameraUploadFallback.diagnostics ? (
-                            <details className="small">
-                              <summary>Camera diagnostics</summary>
-                              <div className="mt-2 d-grid gap-1">
-                                {formatCameraDiagnosticsLines(cameraUploadFallback.diagnostics).map(
-                                  (line) => (
-                                    <div key={line}>{line}</div>
-                                  ),
-                                )}
-                              </div>
-                            </details>
-                          ) : null}
-                        </div>
-                      </CAlert>
-                    ) : null}
-                    <div className="d-flex align-items-center gap-2">
-                      <CFormInput
-                        id="leave-attachment"
-                        type="file"
-                        className="flex-grow-1"
-                        accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
-                        onChange={handleAttachmentChange}
-                        invalid={Boolean(fieldErrors.attachment)}
-                      />
-                      <CButton
-                        type="button"
-                        color="secondary"
-                        variant="outline"
-                        className="d-inline-flex align-items-center justify-content-center"
-                        style={{
-                          height: 'calc(1.5em + 0.75rem + 2px)',
-                          minHeight: 'calc(1.5em + 0.75rem + 2px)',
-                          width: 'calc(1.5em + 0.75rem + 2px)',
-                          minWidth: 'calc(1.5em + 0.75rem + 2px)',
-                          flex: '0 0 calc(1.5em + 0.75rem + 2px)',
-                          padding: 0,
-                        }}
-                        onClick={openCameraCapture}
-                        disabled={isAttachmentProcessing}
-                        title="Use camera"
-                        aria-label="Use camera"
-                      >
-                        <Camera size={14} />
-                      </CButton>
-                    </div>
-                    <CFormFeedback
-                      invalid
-                      style={{ display: fieldErrors.attachment ? 'block' : 'none' }}
-                    >
-                      {fieldErrors.attachment}
-                    </CFormFeedback>
-                    <CFormInput
-                      type="file"
-                      aria-label="Take leave attachment photo"
-                      accept="image/*"
-                      capture="environment"
-                      className="d-none"
-                      ref={cameraInputRef}
-                      onChange={handleAttachmentChange}
-                    />
-                    <input
-                      type="file"
-                      accept=".jpg,.jpeg,.png,.webp,.heic,.heif,.pdf,image/jpeg,image/png,image/webp,image/heic,image/heif,application/pdf"
-                      className="d-none"
-                      ref={uploadInputRef}
-                      onChange={handleAttachmentChange}
-                    />
-                    <div className="small text-body-secondary mt-1">
-                      Images/PDF only. Large images auto-compressed.
-                    </div>
-                    <div
-                      className={`small mt-1 ${
-                        attachmentStatus?.tone === 'danger'
-                          ? 'text-danger'
-                          : attachmentStatus?.tone === 'warning'
-                            ? 'text-warning'
-                            : attachmentStatus?.tone === 'success'
-                              ? 'text-success'
-                              : 'text-body-secondary'
-                      }`}
-                    >
-                      {attachmentStatus?.label ? (
-                        <>
-                          <span className="fw-semibold">{attachmentStatus.label}:</span>{' '}
-                          <span>{attachmentStatus.detail}</span>
-                        </>
-                      ) : (
-                        'No attachment selected.'
-                      )}
-                    </div>
-                    {attachmentMeta?.name ? (
-                      <div className="mt-1">
-                        <CButton type="button" size="sm" color="light" onClick={clearAttachment}>
-                          Remove attachment
-                        </CButton>
-                      </div>
-                    ) : null}
-                  </CCol>
+                {balanceSummary.hasAssignment && balanceSummary.isZeroEntitlement && (
+                  <WorkflowInlineFeedback
+                    className="mt-3"
+                    compact
+                    kind="error"
+                    title="No entitlement"
+                    message="Entitlement is 0 day(s). Submission is blocked until HR/HQ updates assignment."
+                  />
                 )}
-              </>
-            )}
-            <CCol xs={12}>
-              <div className="small text-muted">
-                Requested leave:{' '}
-                <span className="fw-semibold">{formatDayCount(requestedDays)} day(s)</span>
+                {leaveType === 'Other Leave' && (
+                  <WorkflowInlineFeedback
+                    className="mt-3"
+                    compact
+                    kind="info"
+                    message="Requires HR/HQ review and written justification."
+                  />
+                )}
               </div>
-            </CCol>
-            <CCol xs={12}>
-              <CFormLabel htmlFor="leave-reason">Reason</CFormLabel>
-              <CFormTextarea
-                id="leave-reason"
-                rows={5}
-                value={reason}
-                onChange={(event) => onReasonChange(event.target.value)}
-                placeholder={
-                  leaveType === 'Annual Leave'
-                    ? 'Briefly describe leave reason.'
-                    : 'Briefly describe leave reason and handover context.'
-                }
-                invalid={Boolean(fieldErrors.reason)}
-              />
-              <CFormFeedback invalid>{fieldErrors.reason}</CFormFeedback>
             </CCol>
           </CRow>
-        </div>
-        <FormActionGroup className="mt-4" data-testid="leave-draft-panel" mobileBehavior="in-flow">
-          <CButton color="secondary" variant="outline" type="button" onClick={onClearForm}>
-            Clear form
-          </CButton>
-          <CButton color="light" type="button" onClick={onDraft} data-testid="leave-draft-action">
-            Save draft
-          </CButton>
-          <CButton
-            color="primary"
-            type="submit"
-            data-testid="leave-submit-action"
-            disabled={isSubmitBlockedByBalance || isAttachmentProcessing}
-          >
-            {editingRecordId ? 'Update request' : 'Submit request'}
-          </CButton>
-        </FormActionGroup>
-      </CForm>
-    )}
-  </>
-)
+          <section className="leave-application-fields" aria-label="Leave request details">
+            <CRow className="g-3">
+              {guidanceMessage ? (
+                <CCol xs={12}>
+                  <WorkflowInlineFeedback kind="info" message={guidanceMessage} compact />
+                </CCol>
+              ) : null}
+              {rosterImpact?.summary?.duty_count ? (
+                <CCol xs={12} data-testid="leave-roster-impact">
+                  <WorkflowInlineFeedback
+                    kind="warning"
+                    compact
+                    title="Roster duty detected"
+                    message={`${rosterImpact.items
+                      .map((item) => `${item.shift_label} shift, ${item.team_name}, ${item.date}`)
+                      .join('; ')}. Your leave request can still be submitted.`}
+                  />
+                </CCol>
+              ) : null}
+              <CCol md={4}>
+                <CFormLabel htmlFor="leave-work-shift">Work shift</CFormLabel>
+                <CFormSelect id="leave-work-shift" value={workShift} onChange={handleShiftChange}>
+                  {shiftOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </CFormSelect>
+                {selectedShiftConfig.note && (
+                  <div className="small text-muted mt-1">{selectedShiftConfig.note}</div>
+                )}
+              </CCol>
+              <CCol xs={6} md={2} className="workflow-compact-stack-field">
+                <CFormLabel htmlFor="leave-start-date">Start date</CFormLabel>
+                <CFormInput
+                  id="leave-start-date"
+                  type="date"
+                  value={startDate}
+                  onChange={handleStartDateChange}
+                  invalid={Boolean(fieldErrors.startDate)}
+                  aria-invalid={Boolean(fieldErrors.startDate)}
+                  aria-describedby={fieldErrors.startDate ? 'leave-start-date-error' : undefined}
+                />
+                <CFormFeedback id="leave-start-date-error" invalid>
+                  {fieldErrors.startDate}
+                </CFormFeedback>
+              </CCol>
+              <CCol xs={6} md={2} className="workflow-compact-stack-field">
+                <CFormLabel htmlFor="leave-start-time">Start time</CFormLabel>
+                <CFormSelect
+                  id="leave-start-time"
+                  value={startTimeSlot}
+                  onChange={handleStartTimeChange}
+                  invalid={Boolean(fieldErrors.schedule)}
+                  aria-invalid={Boolean(fieldErrors.schedule)}
+                  aria-describedby={fieldErrors.schedule ? 'leave-schedule-error' : undefined}
+                >
+                  {selectedShiftConfig.startOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </CFormSelect>
+              </CCol>
+              <CCol xs={6} md={2} className="workflow-compact-stack-field">
+                <CFormLabel htmlFor="leave-end-date">End date</CFormLabel>
+                <CFormInput
+                  id="leave-end-date"
+                  type="date"
+                  value={endDate}
+                  onChange={handleEndDateChange}
+                  min={startDate || undefined}
+                  invalid={Boolean(fieldErrors.endDate)}
+                  aria-invalid={Boolean(fieldErrors.endDate)}
+                  aria-describedby={fieldErrors.endDate ? 'leave-end-date-error' : undefined}
+                />
+                <CFormFeedback id="leave-end-date-error" invalid>
+                  {fieldErrors.endDate}
+                </CFormFeedback>
+              </CCol>
+              <CCol xs={6} md={2} className="workflow-compact-stack-field">
+                <CFormLabel htmlFor="leave-end-time">End time</CFormLabel>
+                <CFormSelect
+                  id="leave-end-time"
+                  value={endTimeSlot}
+                  onChange={handleEndTimeChange}
+                  invalid={Boolean(fieldErrors.schedule)}
+                  aria-invalid={Boolean(fieldErrors.schedule)}
+                  aria-describedby={fieldErrors.schedule ? 'leave-schedule-error' : undefined}
+                >
+                  {selectedShiftConfig.endOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </CFormSelect>
+                {fieldErrors.schedule ? (
+                  <CFormFeedback id="leave-schedule-error" invalid style={{ display: 'block' }}>
+                    {fieldErrors.schedule}
+                  </CFormFeedback>
+                ) : null}
+              </CCol>
+              {(activeFieldRule.showCoverage || activeFieldRule.showAttachment) && (
+                <>
+                  {activeFieldRule.showCoverage && (
+                    <CCol md={6}>
+                      <CFormLabel htmlFor="leave-cover-by">
+                        Coverage by ({activeFieldRule.coverageRequired ? 'required' : 'optional'})
+                      </CFormLabel>
+                      <CFormInput
+                        id="leave-cover-by"
+                        value={coverBy}
+                        onChange={(event) => onCoverByChange(event.target.value)}
+                        placeholder="Name of teammate covering your duties"
+                        invalid={Boolean(fieldErrors.coverBy)}
+                        aria-invalid={Boolean(fieldErrors.coverBy)}
+                        aria-describedby={fieldErrors.coverBy ? 'leave-cover-by-error' : undefined}
+                      />
+                      <CFormFeedback id="leave-cover-by-error" invalid>
+                        {fieldErrors.coverBy}
+                      </CFormFeedback>
+                    </CCol>
+                  )}
+                  {activeFieldRule.showAttachment && (
+                    <CCol md={6} data-testid="leave-attachments">
+                      {cameraUploadFallback ? (
+                        <CAlert
+                          color="warning"
+                          className="mb-2"
+                          dismissible
+                          onClose={() => {
+                            if (clearCameraUploadFallback) clearCameraUploadFallback()
+                          }}
+                        >
+                          <div className="d-flex flex-column gap-2">
+                            <div className="d-flex flex-column flex-sm-row align-items-start align-items-sm-center justify-content-between gap-2">
+                              <div className="small">{cameraUploadFallback.message}</div>
+                              <CButton
+                                type="button"
+                                color="warning"
+                                size="sm"
+                                onClick={() => {
+                                  if (clearCameraUploadFallback) clearCameraUploadFallback()
+                                  if (requestUploadFromCameraFallback)
+                                    requestUploadFromCameraFallback()
+                                }}
+                              >
+                                <Upload size={14} className="me-1" />
+                                Upload photo
+                              </CButton>
+                            </div>
+                            {cameraUploadFallback.diagnostics ? (
+                              <details className="small">
+                                <summary>Camera diagnostics</summary>
+                                <div className="mt-2 d-grid gap-1">
+                                  {formatCameraDiagnosticsLines(
+                                    cameraUploadFallback.diagnostics,
+                                  ).map((line) => (
+                                    <div key={line}>{line}</div>
+                                  ))}
+                                </div>
+                              </details>
+                            ) : null}
+                          </div>
+                        </CAlert>
+                      ) : null}
+                      <WorkflowAttachmentField
+                        id="leave-attachment"
+                        label="Supporting attachment"
+                        required={activeFieldRule.attachmentRequired}
+                        accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf"
+                        onChange={handleAttachmentChange}
+                        disabled={isAttachmentProcessing}
+                        error={fieldErrors.attachment}
+                        guidance="Images or PDF only. Large images are compressed automatically."
+                        statusLabel={attachmentStatus?.label || ''}
+                        statusDetail={attachmentStatus?.detail || ''}
+                        statusTone={attachmentStatus?.tone || 'muted'}
+                        hasAttachment={Boolean(attachmentMeta?.name)}
+                        onRemove={clearAttachment}
+                        onCamera={openCameraCapture}
+                        cameraInput={
+                          <CFormInput
+                            type="file"
+                            aria-label="Take leave attachment photo"
+                            accept="image/*"
+                            capture="environment"
+                            className="d-none"
+                            ref={cameraInputRef}
+                            onChange={handleAttachmentChange}
+                          />
+                        }
+                        uploadInput={
+                          <input
+                            type="file"
+                            aria-label="Upload leave attachment from device"
+                            accept=".jpg,.jpeg,.png,.webp,.heic,.heif,.pdf,image/jpeg,image/png,image/webp,image/heic,image/heif,application/pdf"
+                            className="d-none"
+                            ref={uploadInputRef}
+                            onChange={handleAttachmentChange}
+                          />
+                        }
+                      />
+                    </CCol>
+                  )}
+                </>
+              )}
+              <CCol xs={12}>
+                <div className="small text-muted">
+                  Requested leave:{' '}
+                  <span className="fw-semibold">{formatDayCount(requestedDays)} day(s)</span>
+                </div>
+              </CCol>
+              <CCol xs={12}>
+                <CFormLabel htmlFor="leave-reason">Reason</CFormLabel>
+                <CFormTextarea
+                  id="leave-reason"
+                  rows={5}
+                  value={reason}
+                  onChange={(event) => onReasonChange(event.target.value)}
+                  placeholder={
+                    leaveType === 'Annual Leave'
+                      ? 'Briefly describe leave reason.'
+                      : 'Briefly describe leave reason and handover context.'
+                  }
+                  invalid={Boolean(fieldErrors.reason)}
+                  aria-invalid={Boolean(fieldErrors.reason)}
+                  aria-describedby={fieldErrors.reason ? 'leave-reason-error' : undefined}
+                />
+                <CFormFeedback id="leave-reason-error" invalid>
+                  {fieldErrors.reason}
+                </CFormFeedback>
+              </CCol>
+            </CRow>
+          </section>
+          <WorkflowStageActions
+            className="mt-4"
+            ariaLabel="Leave form actions"
+            onReset={onClearForm}
+            resetLabel="Clear form"
+            onPrimary={() => {}}
+            primaryType="submit"
+            primaryLabel={editingRecordId ? 'Update request' : 'Submit request'}
+            primaryBusyLabel="Submitting request..."
+            primaryTestId="leave-submit-action"
+            primaryDisabled={isSubmitBlockedByBalance || isAttachmentProcessing || isSubmitting}
+            isSaving={isSubmitting || isAttachmentProcessing}
+            feedback={draftFeedback}
+            statusMessage={
+              isSubmitting
+                ? 'Submitting leave request...'
+                : isAttachmentProcessing
+                  ? 'Processing attachment...'
+                  : ''
+            }
+            primaryFirst
+            mobileLayout="stacked-primary-first"
+            stackedMobileBehavior="terminal"
+          />
+        </CForm>
+      )}
+    </>
+  )
+}
 
 export default LeaveApplySection

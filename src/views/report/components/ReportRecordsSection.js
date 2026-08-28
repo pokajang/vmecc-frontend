@@ -207,6 +207,7 @@ const ReportRecordsSection = ({
   totalCount,
   showPrimaryAction = true,
   isMobileCardless = false,
+  useContextualLabels = false,
   moduleContextLabel = '',
   typeLabel = 'Incident Type',
   testAnchorPrefix = '',
@@ -343,7 +344,9 @@ const ReportRecordsSection = ({
 
   const emptyMessage = (
     <div className="text-body-secondary">
-      No {reportTypeLabel.toLowerCase()} reports match the current filters.
+      {useContextualLabels
+        ? 'No reports match the current filters.'
+        : `No ${reportTypeLabel.toLowerCase()} reports match the current filters.`}
     </div>
   )
 
@@ -366,7 +369,7 @@ const ReportRecordsSection = ({
       desktopPrimaryAction={
         showPrimaryAction ? (
           <CreateActionButton
-            label={`New ${reportTypeLabel} Report`}
+            label={useContextualLabels ? 'New Report' : `New ${reportTypeLabel} Report`}
             onClick={startNew}
             {...(moduleNewActionTestId ? { 'data-testid': moduleNewActionTestId } : {})}
           />

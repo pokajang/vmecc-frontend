@@ -79,6 +79,7 @@ const OvertimeSubmitConfirmModalContent = ({
       confirmLabel={confirmLabel}
       confirmDisabled={!submitPreview || isSubmitting}
       cancelDisabled={isSubmitting}
+      mobileDrawerQuery="(max-width: 767.98px)"
       onClose={onClose}
       onConfirm={onConfirm}
     />

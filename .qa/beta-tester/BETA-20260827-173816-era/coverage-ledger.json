@@ -1,0 +1,123 @@
+{
+  "runId": "BETA-20260827-173816-era",
+  "results": [
+    {
+      "id": "PERM-01",
+      "status": "passed",
+      "directAllowed": true
+    },
+    {
+      "id": "PERM-02",
+      "status": "passed",
+      "navVisible": true,
+      "expected": "An authorized ER Assessment operator can discover the module in navigation."
+    },
+    {
+      "id": "TECH-01",
+      "status": "passed",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "id": "PERM-03",
+      "status": "passed",
+      "navVisible": false,
+      "expected": "An ERCO-only operator does not see the ER Assessment navigation item."
+    },
+    {
+      "id": "PERM-04",
+      "status": "passed",
+      "directDenied": true
+    },
+    {
+      "id": "TECH-02",
+      "status": "passed",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "id": "REC-01",
+      "status": "passed",
+      "backPreserved": true
+    },
+    {
+      "id": "REC-02",
+      "status": "passed",
+      "cancelPreserved": true
+    },
+    {
+      "id": "KEY-01",
+      "status": "passed",
+      "keyboardSelected": true
+    },
+    {
+      "id": "REC-03",
+      "status": "passed",
+      "focusedOnRecoveryField": true
+    },
+    {
+      "id": "REC-04",
+      "status": "passed",
+      "saveFailureRetained": true,
+      "saveOutcome": "saved"
+    },
+    {
+      "id": "TECH-03",
+      "status": "passed",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "failedRequests": []
+    },
+    {
+      "id": "MOB-01",
+      "status": "passed",
+      "choiceCount": 5
+    },
+    {
+      "id": "MOB-02",
+      "status": "passed",
+      "homeNoOverflow": true,
+      "setupNoOverflow": true
+    },
+    {
+      "id": "MOB-03",
+      "status": "passed",
+      "choiceBoxes": [
+        {
+          "width": 247,
+          "height": 82.9375
+        },
+        {
+          "width": 247,
+          "height": 105.875
+        },
+        {
+          "width": 247,
+          "height": 82.9375
+        },
+        {
+          "width": 247,
+          "height": 82.9375
+        },
+        {
+          "width": 247,
+          "height": 105.875
+        }
+      ]
+    },
+    {
+      "id": "MOB-04",
+      "status": "passed",
+      "selectedType": "working-at-height"
+    },
+    {
+      "id": "TECH-04",
+      "status": "passed",
+      "consoleErrors": [],
+      "pageErrors": [],
+      "failedRequests": []
+    }
+  ]
+}

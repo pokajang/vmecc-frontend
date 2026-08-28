@@ -225,7 +225,9 @@ const useReportRecords = ({
             ? 'All drill types'
             : String(reportTypeSlug || '').toLowerCase() === 'fitness-test'
               ? 'All fitness test types'
-              : 'All incident types',
+              : String(reportTypeSlug || '').toLowerCase() === 'er-assessment'
+                ? 'All assessment types'
+                : 'All incident types',
       },
       ...Array.from(new Set(scopedRecords.map((row) => String(row.incidentType || '').trim())))
         .filter(Boolean)

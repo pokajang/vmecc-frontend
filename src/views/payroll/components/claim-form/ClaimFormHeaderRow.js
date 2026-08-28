@@ -1,8 +1,7 @@
 import React from 'react'
-import { CButton } from '@coreui/react'
-import { Calendar, Pencil } from 'lucide-react'
 import ClaimPeriodSection from './ClaimPeriodSection'
 import { CLAIM_TYPE_META } from './utils/claimFormUtils'
+import WorkflowSetupField from 'src/components/report-workflow/WorkflowSetupField'
 
 const ClaimFormHeaderRow = ({
   claimType,
@@ -16,74 +15,35 @@ const ClaimFormHeaderRow = ({
   onConfirmPeriod,
   onPeriodValueChange,
 }) => (
-  <div className="d-flex flex-wrap align-items-start gap-3">
-    <div
-      className="rounded-3 border d-flex align-items-center gap-2 px-3 py-3 bg-body"
-      style={{ minWidth: 240 }}
-    >
-      {(() => {
-        const meta = CLAIM_TYPE_META[claimType] || CLAIM_TYPE_META.expense
-        const Icon = meta.icon
-        return (
-          <>
-            <div
-              className="rounded-circle d-inline-flex align-items-center justify-content-center bg-light text-primary"
-              style={{ width: 28, height: 28, flex: '0 0 28px' }}
-            >
-              <Icon size={14} />
-            </div>
-            <span className="fw-medium">{meta.label}</span>
-            {!isClaimTypeLocked && (
-              <CButton
-                color="light"
-                size="sm"
-                type="button"
-                className="ms-auto d-inline-flex align-items-center justify-content-center"
-                style={{ width: 32, height: 32 }}
-                onClick={onEditType}
-                title="Edit claim type"
-              >
-                <Pencil size={14} />
-              </CButton>
-            )}
-          </>
-        )
-      })()}
+  <div className="row g-3 align-items-start">
+    <div className="col-12 col-md-5 col-lg-4">
+      <WorkflowSetupField
+        label="Claim type"
+        value={(CLAIM_TYPE_META[claimType] || CLAIM_TYPE_META.expense).label}
+        onEdit={!isClaimTypeLocked ? onEditType : undefined}
+        ariaLabel="Selected claim type"
+      />
     </div>
     {periodConfirmed ? (
-      <div
-        className="rounded-3 border d-flex align-items-center gap-2 px-3 py-3 bg-body"
-        style={{ minWidth: 240 }}
-      >
-        <div
-          className="rounded-circle d-inline-flex align-items-center justify-content-center bg-light text-primary"
-          style={{ width: 28, height: 28, flex: '0 0 28px' }}
-        >
-          <Calendar size={14} />
-        </div>
-        <span className="fw-medium">{periodLabel || periodValue}</span>
-        <CButton
-          color="light"
-          size="sm"
-          type="button"
-          className="ms-auto d-inline-flex align-items-center justify-content-center"
-          style={{ width: 32, height: 32 }}
-          onClick={onEditPeriod}
-        >
-          <Pencil size={14} />
-        </CButton>
+      <div className="col-12 col-md-7 col-lg-8">
+        <WorkflowSetupField
+          label="Claim month"
+          value={periodLabel || periodValue}
+          onEdit={onEditPeriod}
+          ariaLabel="Selected claim month"
+        />
       </div>
     ) : (
-      <ClaimPeriodSection
-        options={periodOptions}
-        value={periodValue}
-        onChange={onPeriodValueChange}
-        confirmed={periodConfirmed}
-        onConfirm={onConfirmPeriod}
-        onChangePeriod={onEditPeriod}
-        compact
-        frameless
-      />
+      <div className="col-12 col-md-7 col-lg-8">
+        <WorkflowSetupField label="Claim month" value={periodValue} editing>
+          <ClaimPeriodSection
+            options={periodOptions}
+            value={periodValue}
+            onChange={onPeriodValueChange}
+            onConfirm={onConfirmPeriod}
+          />
+        </WorkflowSetupField>
+      </div>
     )}
   </div>
 )

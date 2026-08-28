@@ -26,6 +26,8 @@ export default function useLeaveActions(props) {
     editingRecordId,
     isSubmitConfirmVisible: submission.isSubmitConfirmVisible,
     submitPreview: submission.submitPreview,
+    isSubmitting: submission.isSubmitting,
+    draftFeedback: submission.draftFeedback,
     isCancelConfirmVisible: records.isCancelConfirmVisible,
     cancelPreviewRecord: records.cancelPreviewRecord,
     isDeleteConfirmVisible: records.isDeleteConfirmVisible,

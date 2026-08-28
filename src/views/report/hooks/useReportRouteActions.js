@@ -11,6 +11,7 @@ import {
 } from '../reportStorage'
 import {
   deleteReportRecord,
+  downloadErAssessmentReportPdf,
   downloadFitnessTestReportJson,
   downloadDrillReportPdf,
   downloadErcoReportPdf,
@@ -191,7 +192,7 @@ const useReportRouteActions = ({
       }
 
       const recordType = String(record.reportType || '').toLowerCase()
-      if (recordType === 'erco' || recordType === 'drill') {
+      if (recordType === 'erco' || recordType === 'drill' || recordType === 'er-assessment') {
         if (record.canDownloadPdf !== true) {
           pushToast('PDF download is not available for this report.', {
             title: 'Download unavailable',
@@ -201,10 +202,13 @@ const useReportRouteActions = ({
         }
         setDownloadingId(id)
         try {
-          const { blob, filename } =
+          const download =
             recordType === 'drill'
-              ? await downloadDrillReportPdf(record)
-              : await downloadErcoReportPdf(record)
+              ? downloadDrillReportPdf
+              : recordType === 'er-assessment'
+                ? downloadErAssessmentReportPdf
+                : downloadErcoReportPdf
+          const { blob, filename } = await download(record)
           triggerBlobDownload(
             blob,
             buildReportPdfFilename(record, user, activeFormSlug) ||
@@ -653,9 +657,12 @@ const useReportRouteActions = ({
         const isUpdate = Boolean(existingRecord)
         const nowIso = new Date().toISOString()
         const actor = user?.name || user?.email || 'Requester'
-        const usesSingleRecordPersistence = ['erco', 'drill', 'fitness-test'].includes(
-          activeFormSlug,
-        )
+        const usesSingleRecordPersistence = [
+          'erco',
+          'drill',
+          'fitness-test',
+          'er-assessment',
+        ].includes(activeFormSlug)
         const sourceDraftId = String(
           record?.sourceDraftId || record?.source_draft_id || queryDraftId || '',
         ).trim()
@@ -700,12 +707,28 @@ const useReportRouteActions = ({
                 (a, b) => toDateTime(b) - toDateTime(a),
               ),
             )
-        const { saved, trimmed } = persistenceResult || {}
+        const { saved, trimmed, record: savedRecord } = persistenceResult || {}
         if (!saved) {
           pushToast('Unable to save this report to the server. Please try again.', {
             title: 'Save failed',
             color: 'danger',
           })
+          return
+        }
+        if (
+          activeFormSlug === 'er-assessment' &&
+          String(nextRecord?.status || '').toLowerCase() === 'submitted' &&
+          String(savedRecord?.status || '').toLowerCase() !== 'submitted'
+        ) {
+          pushToast(
+            'The server did not confirm this assessment as Submitted. The draft was kept; reload and retry after resolving the status conflict.',
+            {
+              title: 'Submission not confirmed',
+              color: 'danger',
+              delay: 10000,
+            },
+          )
+          await reloadRecords()
           return
         }
         if (trimmed) {
@@ -743,7 +766,17 @@ const useReportRouteActions = ({
         navigate(reportBasePath)
       } catch (error) {
         const code = String(error?.payload?.code || error?.code || '').trim()
-        if (error?.status === 409 || code === 'REPORT_VERSION_CONFLICT') {
+        if (code === 'REPORT_SUBMISSION_STATUS_CONFLICT') {
+          pushToast(
+            'This submission key already belongs to a report in a different status. The draft was kept; reload before retrying.',
+            {
+              title: 'Submission status conflict',
+              color: 'danger',
+              delay: 10000,
+            },
+          )
+          await reloadRecords()
+        } else if (error?.status === 409 || code === 'REPORT_VERSION_CONFLICT') {
           pushToast('This report changed on the server. Reload it before applying your update.', {
             title: 'Update conflict',
             color: 'warning',

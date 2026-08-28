@@ -1,0 +1,24 @@
+{
+  "runId": "BETA-20260827-173816-era",
+  "phase": "initial healthy-precondition audit before fix",
+  "summary": {
+    "passed": 15,
+    "failed": 2,
+    "blocked": 0
+  },
+  "failed": [
+    {
+      "id": "PERM-02",
+      "status": "failed",
+      "navVisible": false,
+      "expected": "An authorized ER Assessment operator can discover the module in navigation."
+    },
+    {
+      "id": "PERM-03",
+      "status": "failed",
+      "navVisible": true,
+      "expected": "An ERCO-only operator does not see the ER Assessment navigation item."
+    }
+  ],
+  "retestLedger": "coverage-ledger.json"
+}

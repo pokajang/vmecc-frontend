@@ -7,6 +7,7 @@ const DisclosureCard = React.forwardRef(function DisclosureCard(
     open,
     defaultOpen = false,
     onToggle,
+    variant = 'card',
     className = '',
     summaryClassName = '',
     bodyClassName = '',
@@ -21,7 +22,7 @@ const DisclosureCard = React.forwardRef(function DisclosureCard(
     <details
       {...detailsProps}
       ref={ref}
-      className={`disclosure-card ${className}`.trim()}
+      className={`disclosure-card disclosure-card--${variant} ${className}`.trim()}
       open={isControlled ? open : isOpen}
       onToggle={(event) => {
         if (!isControlled) setIsOpen(event.currentTarget.open)

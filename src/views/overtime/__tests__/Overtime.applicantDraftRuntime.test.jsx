@@ -80,21 +80,32 @@ vi.mock('../components/OvertimeRecordsSection', () => ({
 }))
 
 vi.mock('../components/OvertimeApplySection', () => ({
-  default: ({ onDraft, onClearForm, onSubmit, onBack, editingRecordId, clearButtonLabel }) => (
+  default: ({
+    onReasonChange,
+    onSelectOvertimeType,
+    onContinueOvertimeType,
+    onClearForm,
+    onSubmit,
+    editingRecordId,
+    clearButtonLabel,
+  }) => (
     <div data-testid="mock-apply-section">
       <div data-testid="editing-record-id">{String(editingRecordId || '')}</div>
       <div data-testid="clear-button-label">{String(clearButtonLabel || '')}</div>
-      <button type="button" onClick={onDraft}>
-        save-draft
+      <button type="button" onClick={() => onSelectOvertimeType('weekday')}>
+        select-weekday
+      </button>
+      <button type="button" onClick={() => onContinueOvertimeType('weekday')}>
+        continue-type
+      </button>
+      <button type="button" onClick={() => onReasonChange('Changed overtime reason')}>
+        change-reason
       </button>
       <button type="button" onClick={onClearForm}>
         clear-form
       </button>
       <button type="button" onClick={() => onSubmit({ preventDefault: () => {} })}>
         submit-claim
-      </button>
-      <button type="button" onClick={onBack}>
-        back-to-records
       </button>
     </div>
   ),
@@ -331,13 +342,13 @@ describe('Overtime applicant draft runtime', () => {
       expect(screen.getByTestId('pathname').textContent).toBe('/overtime/new')
     })
 
-    fireEvent.click(screen.getByText('back-to-records'))
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }))
     await waitFor(() => {
       expect(screen.getByTestId('pathname').textContent).toBe('/overtime')
     })
   })
 
-  it('save draft creates the synthetic draft row and clear removes it', async () => {
+  it('autosave creates the synthetic draft row and clear removes it', async () => {
     overtimeApiMocks.loadMyOvertimeDraftApiFirst.mockResolvedValue({
       ok: true,
       data: null,
@@ -350,13 +361,17 @@ describe('Overtime applicant draft runtime', () => {
       expect(screen.getByTestId('pathname').textContent).toBe('/overtime/new')
     })
 
-    fireEvent.click(screen.getByText('save-draft'))
+    fireEvent.click(screen.getByText('select-weekday'))
+    fireEvent.click(screen.getByText('continue-type'))
+    fireEvent.click(screen.getByText('change-reason'))
     await waitFor(() => {
       expect(overtimeApiMocks.saveMyOvertimeDraftApiFirst).toHaveBeenCalledTimes(1)
-      expect(screen.getByTestId('pathname').textContent).toBe('/overtime')
+      expect(screen.getByTestId('pathname').textContent).toBe('/overtime/new')
       const callPayload = overtimeApiMocks.saveMyOvertimeDraftApiFirst.mock.calls[0]?.[1] || {}
       expect(callPayload.sourceRecordId || '').toBe('')
     })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }))
     await waitFor(() => {
       const ids = screen.getByTestId('records-ids').textContent || ''
       expect(ids.startsWith('DRAFT')).toBe(true)
@@ -372,7 +387,7 @@ describe('Overtime applicant draft runtime', () => {
       expect(overtimeApiMocks.clearMyOvertimeDraftApiFirst).toHaveBeenCalled()
     })
 
-    fireEvent.click(screen.getByText('back-to-records'))
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }))
     await waitFor(() => {
       const ids = screen.getByTestId('records-ids').textContent || ''
       expect(ids.includes('DRAFT')).toBe(false)
@@ -380,7 +395,7 @@ describe('Overtime applicant draft runtime', () => {
     })
   })
 
-  it('save draft while editing pending record links draft to record and does not create standalone DRAFT row', async () => {
+  it('autosave while editing pending record links draft to record without a standalone DRAFT row', async () => {
     overtimeApiMocks.loadMyOvertimeDraftApiFirst.mockResolvedValue({
       ok: true,
       data: null,
@@ -399,12 +414,16 @@ describe('Overtime applicant draft runtime', () => {
       expect(screen.getByTestId('editing-record-id').textContent).toBe('OT-2026-001')
     })
 
-    fireEvent.click(screen.getByText('save-draft'))
+    fireEvent.click(screen.getByText('change-reason'))
     await waitFor(() => {
       expect(overtimeApiMocks.saveMyOvertimeDraftApiFirst).toHaveBeenCalledTimes(1)
       const callPayload = overtimeApiMocks.saveMyOvertimeDraftApiFirst.mock.calls[0]?.[1] || {}
       expect(callPayload.sourceRecordId).toBe('OT-2026-001')
-      expect(screen.getByTestId('pathname').textContent).toBe('/overtime')
+      expect(screen.getByTestId('pathname').textContent).toBe('/overtime/new')
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }))
+    await waitFor(() => {
       expect(screen.getByTestId('records-ids').textContent).toBe('OT-2026-001')
     })
   })

@@ -38,6 +38,8 @@ import { formatDateTime, normalizeReportRecord, normalizeReportTypeSlug } from '
 import DrillMobileHome from './drill/DrillMobileHome'
 import ErcoMobileHome from './erco/ErcoMobileHome'
 import FitnessTestMobileHome from './fitness-test/FitnessTestMobileHome'
+import ErAssessmentMobileHome from './er-assessment/ErAssessmentMobileHome'
+import { ER_FIELD_LABELS } from './er-assessment/constants'
 
 import {
   REPORT_WORKFLOW_DECLARATION_LABEL,
@@ -87,6 +89,7 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
     reportBasePath,
     datePresetOptions,
     timePresetOptions,
+    reportTypeMeta: resolvedReportTypeMeta,
   } = useReportMetadata({
     reportType,
     reportId,
@@ -301,7 +304,10 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
   const isErcoReport = activeFormSlug === 'erco'
   const isDrillReport = activeFormSlug === 'drill'
   const isFitnessTestReport = activeFormSlug === 'fitness-test'
-  const isWorkFirstReport = isErcoReport || isDrillReport || isFitnessTestReport
+  const isErAssessmentReport = activeFormSlug === 'er-assessment'
+  const isWorkFirstReport = Boolean(resolvedReportTypeMeta?.workFirst)
+  const recordsLabel = isWorkFirstReport ? 'Records' : `${reportTypeLabel} Records`
+  const newReportLabel = isWorkFirstReport ? 'New Report' : `New ${reportTypeLabel} Report`
   const testAnchorPrefix = activeFormSlug ? `${activeFormSlug}-report` : ''
   const selectedEditingRecord =
     records.find((row) => String(row.id || '').trim() === editingReportId) || null
@@ -330,28 +336,22 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
   const reviewBackSection =
     pendingReviewBackSection ||
     location.state?.reviewBackSection ||
-    (activeFormSlug === 'erco' ? 'analysis' : '')
+    (activeFormSlug === 'erco' ? 'analysis' : activeFormSlug === 'er-assessment' ? 'signoff' : '')
   const reviewChangeSummary =
     selectedEditingRecord && reviewRecord
       ? buildChangeSummary(selectedEditingRecord, reviewRecord)
       : []
   const displayReviewChangeSummary =
-    isDrillReport || isFitnessTestReport
+    isDrillReport || isFitnessTestReport || isErAssessmentReport
       ? reviewChangeSummary.map((entry) => ({
           ...entry,
           label:
             entry.label === 'Incident Type'
-              ? isFitnessTestReport
-                ? 'Fitness Test Type'
-                : 'Drill Type'
+              ? ER_FIELD_LABELS.assessmentType
               : entry.label === 'Title'
-                ? isFitnessTestReport
-                  ? 'Test Details'
-                  : 'Drill Scenario'
+                ? ER_FIELD_LABELS.scopeOfWork
                 : entry.label === 'Summary'
-                  ? isFitnessTestReport
-                    ? 'Test Summary'
-                    : 'Outcome Summary'
+                  ? 'Rescue plan'
                   : entry.label,
         }))
       : reviewChangeSummary
@@ -359,8 +359,17 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
     location.state?.returnFromReview && location.state?.reviewRecord
       ? recordToDraft(location.state.reviewRecord, activeFormSlug)
       : null
+  const isInitialNewRoute =
+    String(newSection || '')
+      .trim()
+      .toLowerCase() === '' ||
+    String(newSection || '')
+      .trim()
+      .toLowerCase() === 'setup'
   const shouldSkipDraftLoad =
-    location.state?.skipReportDraft === activeFormSlug || location.state?.returnFromReview === true
+    isInitialNewRoute &&
+    (location.state?.skipReportDraft === activeFormSlug ||
+      location.state?.returnFromReview === true)
   const activeDraftRow =
     activeFormSlug === 'erco' && queryDraftId
       ? activeDraftRows.find((row) => String(row?.draftId || '').trim() === queryDraftId) || null
@@ -451,38 +460,11 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
     const section = String(newSection || '')
       .trim()
       .toLowerCase()
-    const previousSectionByCurrent = isErcoReport
-      ? {
-          analysis: 'form',
-          form: 'team',
-          team: 'setup',
-        }
-      : isDrillReport
-        ? {
-            analysis: 'chronology',
-            chronology: 'details',
-            details: 'personnel',
-            personnel: 'setup',
-          }
-        : isFitnessTestReport
-          ? {
-              signoff: 'results',
-              results: 'personnel',
-              personnel: 'period',
-            }
-          : {}
+    const previousSectionByCurrent = resolvedReportTypeMeta?.mobileBackMap || {}
     const previousSection = previousSectionByCurrent[section]
     if (!previousSection) return ''
     return `${reportBasePath}/new/${previousSection}${location.search || ''}`
-  }, [
-    activeFormSlug,
-    isDrillReport,
-    isErcoReport,
-    isFitnessTestReport,
-    location.search,
-    newSection,
-    reportBasePath,
-  ])
+  }, [activeFormSlug, location.search, newSection, reportBasePath, resolvedReportTypeMeta])
   const handleConfirmReviewSubmit = useCallback(
     () => confirmReviewSubmit(reviewRecord),
     [confirmReviewSubmit, reviewRecord],
@@ -522,10 +504,11 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
       if (!value) return
       setIsFormDirty(false)
       setFormSessionKey((prev) => prev + 1)
-      navigate(`${reportBasePath}/new/setup`, {
+      const query = new URLSearchParams({ type: value })
+      navigate(`${reportBasePath}/new/setup?${query.toString()}`, {
         state: {
           skipReportDraft: activeFormSlug,
-          initialFormSeed: { incidentType: value },
+          initialFormSeed: { assessmentType: value },
         },
       })
     },
@@ -628,16 +611,10 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
         isActionBusy={isActionBusy}
         isDeleting={isDeleting}
         testAnchorPrefix={testAnchorPrefix}
-        typeLabel={
-          isFitnessTestReport ? 'Fitness Test Type' : isDrillReport ? 'Drill Type' : 'Incident Type'
-        }
-        conditionLabel={isDrillReport || isFitnessTestReport ? 'Condition' : 'Weather'}
-        detailsLabel={
-          isFitnessTestReport ? 'Test Details' : isDrillReport ? 'Drill Scenario' : 'Incident Title'
-        }
-        summaryLabel={
-          isFitnessTestReport ? 'Test Summary' : isDrillReport ? 'Outcome Summary' : 'Summary'
-        }
+        typeLabel={resolvedReportTypeMeta?.typeLabel || 'Incident Type'}
+        conditionLabel={resolvedReportTypeMeta?.conditionLabel || 'Weather'}
+        detailsLabel={resolvedReportTypeMeta?.detailsLabel || 'Incident Title'}
+        summaryLabel={resolvedReportTypeMeta?.summaryLabel || 'Summary'}
       />
     )
   }
@@ -683,7 +660,7 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
             ) : null}
             {isCreateSection ? null : (
               <CreateActionButton
-                label={`New ${reportTypeLabel} Report`}
+                label={newReportLabel}
                 importance="page-primary"
                 className={isWorkFirstReport ? 'd-none d-md-inline-flex' : ''}
                 onClick={() => runGuardedAction(startNew)}
@@ -824,13 +801,13 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
           items={[
             {
               key: 'records',
-              label: `${reportTypeLabel} Records`,
+              label: recordsLabel,
               active: recordsSectionActive,
               onClick: () => runGuardedAction(() => navigate(reportBasePath)),
             },
             {
               key: 'new',
-              label: `New ${reportTypeLabel} Report`,
+              label: newReportLabel,
               active: createSectionActive,
               onClick: () => runGuardedAction(startNew),
             },
@@ -902,6 +879,26 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
         />
       ) : null}
 
+      {activeSection === 'records' && isErAssessmentReport && !showMobileRecords ? (
+        <ErAssessmentMobileHome
+          draftRows={recentMobileDrafts}
+          recentRecords={recentMobileRecords}
+          recordsCount={recordsInScopeCount}
+          recordScope={recordScope}
+          onRecordScopeChange={setRecordScope}
+          isRecordsLoading={isLoading}
+          onSelectType={(incidentType) =>
+            runGuardedAction(() => startNewWithIncidentType(incidentType))
+          }
+          onContinueDraft={(row) => runGuardedAction(() => openDraftRow(row))}
+          onDeleteDraft={(row) => setDeleteTarget(row)}
+          onOpenRecord={(row) =>
+            navigate(`${reportBasePath}/${encodeURIComponent(String(row?.id || ''))}`)
+          }
+          onViewRecords={() => setShowMobileRecords(true)}
+        />
+      ) : null}
+
       {shouldRenderRecordsSection ? (
         <div
           className={
@@ -951,14 +948,9 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
             totalCount={recordsInScopeCount}
             showPrimaryAction={false}
             isMobileCardless={isWorkFirstReport}
-            moduleContextLabel={isDrillReport ? 'Drill' : isErcoReport ? 'ERCO' : reportTypeLabel}
-            typeLabel={
-              isFitnessTestReport
-                ? 'Fitness Test Type'
-                : isDrillReport
-                  ? 'Drill Type'
-                  : 'Incident Type'
-            }
+            useContextualLabels={isWorkFirstReport}
+            moduleContextLabel={reportTypeLabel}
+            typeLabel={resolvedReportTypeMeta?.typeLabel || 'Incident Type'}
             testAnchorPrefix={testAnchorPrefix}
           />
         </div>
@@ -1011,24 +1003,10 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
             formatDateTime={formatDateTime}
             renderStatusBadge={renderStatusBadge}
             testAnchorPrefix={testAnchorPrefix}
-            typeLabel={
-              isFitnessTestReport
-                ? 'Fitness Test Type'
-                : isDrillReport
-                  ? 'Drill Type'
-                  : 'Incident Type'
-            }
-            conditionLabel={isDrillReport || isFitnessTestReport ? 'Condition' : 'Weather'}
-            detailsLabel={
-              isFitnessTestReport
-                ? 'Test Details'
-                : isDrillReport
-                  ? 'Drill Scenario'
-                  : 'Incident Title'
-            }
-            summaryLabel={
-              isFitnessTestReport ? 'Test Summary' : isDrillReport ? 'Outcome Summary' : 'Summary'
-            }
+            typeLabel={resolvedReportTypeMeta?.typeLabel || 'Incident Type'}
+            conditionLabel={resolvedReportTypeMeta?.conditionLabel || 'Weather'}
+            detailsLabel={resolvedReportTypeMeta?.detailsLabel || 'Incident Title'}
+            summaryLabel={resolvedReportTypeMeta?.summaryLabel || 'Summary'}
             reportKind={activeFormSlug}
           />
         </div>

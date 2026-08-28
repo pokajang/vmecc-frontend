@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { apiRequest } from 'src/services/apiClient'
 import {
   clearLeaveDraft,
@@ -7,6 +7,7 @@ import {
   saveLeaveDraft,
 } from '../../leavePersistence'
 import { normalizeApiLeaveRecord } from '../../leaveApiNormalizer'
+import useWorkflowDraftAutosave from 'src/hooks/useWorkflowDraftAutosave'
 
 export default function useLeaveSubmissionActions({
   user,
@@ -45,6 +46,8 @@ export default function useLeaveSubmissionActions({
   getDisplayLeaveId,
   formatDayCount,
   calculateDays,
+  activeSection,
+  isFormDirty,
 }) {
   const [isSubmitConfirmVisible, setIsSubmitConfirmVisible] = useState(false)
   const [submitPreview, setSubmitPreview] = useState(null)
@@ -57,48 +60,94 @@ export default function useLeaveSubmissionActions({
 
   const resetSubmitPreview = closeSubmitConfirmModal
 
-  const handleDraft = useCallback(async () => {
-    const draftPayload = {
-      leaveType,
-      leaveTypeConfirmed: true,
-      startDate,
-      endDate,
-      workShift,
-      startTimeSlot,
-      endTimeSlot,
-      reason,
-      coverBy,
-      attachmentName,
+  const persistDraft = useCallback(
+    async ({ showNotice = false } = {}) => {
+      const draftPayload = {
+        leaveType,
+        leaveTypeConfirmed: true,
+        startDate,
+        endDate,
+        workShift,
+        startTimeSlot,
+        endTimeSlot,
+        reason,
+        coverBy,
+        attachmentName,
+        attachmentId,
+        attachmentMeta,
+        savedAt: new Date().toISOString(),
+      }
+      try {
+        await saveLeaveDraft(user?.id, draftPayload)
+        untrackTransientAttachment(attachmentId)
+        if (showNotice) {
+          pushToast('Leave draft saved.', { title: 'Draft saved', color: 'success' })
+        }
+        return true
+      } catch (error) {
+        if (showNotice) {
+          pushToast(error?.message || 'Unable to save draft. Please retry.', {
+            title: 'Draft failed',
+            color: 'danger',
+          })
+        }
+        return false
+      }
+    },
+    [
       attachmentId,
       attachmentMeta,
-      savedAt: new Date().toISOString(),
-    }
-    try {
-      await saveLeaveDraft(user?.id, draftPayload)
-      untrackTransientAttachment(attachmentId)
-      pushToast('Leave draft saved.', { title: 'Draft saved', color: 'success' })
-    } catch (error) {
-      pushToast(error?.message || 'Unable to save draft. Please retry.', {
-        title: 'Draft failed',
-        color: 'danger',
-      })
-    }
-  }, [
-    attachmentId,
-    attachmentMeta,
-    attachmentName,
-    coverBy,
-    endDate,
-    endTimeSlot,
-    leaveType,
-    pushToast,
-    reason,
-    startDate,
-    startTimeSlot,
-    untrackTransientAttachment,
-    user?.id,
-    workShift,
-  ])
+      attachmentName,
+      coverBy,
+      endDate,
+      endTimeSlot,
+      leaveType,
+      pushToast,
+      reason,
+      startDate,
+      startTimeSlot,
+      untrackTransientAttachment,
+      user?.id,
+      workShift,
+    ],
+  )
+  const draftSnapshot = useMemo(
+    () =>
+      JSON.stringify({
+        leaveType,
+        leaveTypeConfirmed: true,
+        startDate,
+        endDate,
+        workShift,
+        startTimeSlot,
+        endTimeSlot,
+        reason,
+        coverBy,
+        attachmentId: attachmentId || null,
+      }),
+    [
+      attachmentId,
+      coverBy,
+      endDate,
+      endTimeSlot,
+      leaveType,
+      reason,
+      startDate,
+      startTimeSlot,
+      workShift,
+    ],
+  )
+  const leaveDraftAutosave = useWorkflowDraftAutosave({
+    enabled:
+      activeSection === 'new-leave' && isFormDirty && !isAttachmentProcessing && !isSubmitting,
+    snapshot: draftSnapshot,
+    saveDraft: persistDraft,
+    errorMessage: 'Your leave draft could not be saved. Your entries are still on this screen.',
+  })
+  const handleDraft = useCallback(
+    () => persistDraft({ showNotice: true, source: 'manual' }),
+    [persistDraft],
+  )
 
   const validateSubmission = useCallback(() => {
     const nextErrors = {}
@@ -389,6 +438,8 @@ export default function useLeaveSubmissionActions({
     submitPreview,
     closeSubmitConfirmModal,
     resetSubmitPreview,
+    isSubmitting,
+    draftFeedback: leaveDraftAutosave.feedback,
     handleDraft,
     confirmAndSubmit,
     handleSubmit,

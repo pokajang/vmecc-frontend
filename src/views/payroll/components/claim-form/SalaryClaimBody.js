@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react'
-import { CBadge, CButton, CCard, CCardBody, CCardHeader, CFormCheck } from '@coreui/react'
-import BackButton from 'src/components/BackButton'
-import FormActionGroup from 'src/components/FormActionGroup'
+import { CBadge, CButton, CFormCheck } from '@coreui/react'
+import DisclosureCard from 'src/components/DisclosureCard'
+import WorkflowStageActions from 'src/components/report-workflow/WorkflowStageActions'
+import WorkflowSummaryList from 'src/components/report-workflow/WorkflowSummaryList'
 import SalaryPayoutCard from './SalaryPayoutCard'
 import SalaryAdjustmentCard from './SalaryAdjustmentCard'
 import OvertimeSectionCard from './OvertimeSectionCard'
@@ -65,7 +66,7 @@ const SalaryClaimBody = ({
     handleAttachmentChange = () => {},
     clearDraftAttachment = () => {},
   } = attachments
-  const { onBack = () => {}, submitClaim = () => {}, clearForm = resetDraft } = actions
+  const { submitClaim = () => {}, clearForm = resetDraft, retryDraft = () => {} } = actions
   const {
     draftSyncSummary = '',
     isEditingSubmittedClaim = false,
@@ -98,13 +99,12 @@ const SalaryClaimBody = ({
 
   return (
     <>
-      <CCard>
-        <CCardHeader className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
-          <div>
-            <div className="fw-semibold">Salary Claim Summary</div>
-            <div className="small text-body-secondary">{monthLabel}</div>
-          </div>
-          <div className="d-flex align-items-center gap-2">
+      <section className="workflow-summary-surface" aria-labelledby="salary-claim-summary-title">
+        <div className="workflow-summary-surface__header">
+          <h2 id="salary-claim-summary-title" className="workflow-summary__title">
+            Salary Claim Summary
+          </h2>
+          <div className="workflow-summary__actions">
             <CBadge color={summary.payrollBaselineConfirmed ? 'success' : 'warning'}>
               {summary.statusLabel}
             </CBadge>
@@ -112,56 +112,48 @@ const SalaryClaimBody = ({
               color="primary"
               variant="outline"
               size="sm"
+              className="workflow-item-action"
               onClick={handleAddItem}
               disabled={!hasAssignedSalaryBaseline}
             >
               Add Adjustment
             </CButton>
           </div>
-        </CCardHeader>
-        <CCardBody>
-          <div className="row g-3">
-            {summary.metrics.map((metric) => (
-              <div className="col-6 col-lg-3" key={metric.key}>
-                <div className="small text-body-secondary">{metric.label}</div>
-                <div className={metric.emphasis ? 'h5 mb-0 fw-semibold' : 'fw-semibold'}>
-                  {metric.value}
-                </div>
-              </div>
-            ))}
-          </div>
-        </CCardBody>
-      </CCard>
-
-      <details className="rounded-3 border bg-body">
-        <summary className="d-flex align-items-center justify-content-between gap-2 px-3 py-3 fw-semibold">
-          Salary baseline and adjustment details
-          <span className="small text-body-secondary fw-normal">Expand</span>
-        </summary>
-        <div className="px-3 pb-3">
-          <SalaryPayoutCard
-            isSalaryAssignmentsLoading={isSalaryAssignmentsLoading}
-            hasAssignedSalaryBaseline={hasAssignedSalaryBaseline}
-            onAddItem={handleAddItem}
-            assignedSalarySnapshot={assignedSalarySnapshot}
-            allowanceItems={allowanceItems}
-            statutoryDeductionItems={statutoryDeductionItems}
-            additionAdjustmentRows={additionAdjustmentRows}
-            deductionAdjustmentRows={deductionAdjustmentRows}
-            adjustedGrossSalary={adjustedGrossSalary}
-            adjustedTotalDeductions={adjustedTotalDeductions}
-            adjustedNetBeforeOvertime={adjustedNetBeforeOvertime}
-            totalAmount={totalAmount}
-            overtimeTotalPayoutApproved={overtimeTotals.totalPayoutApproved}
-            projectedNetPayout={projectedNetPayout}
-            editingIndex={editingIndex}
-            onEditItem={editSavedItem}
-            onRemoveItem={removeSavedItem}
-            onPreviewAttachment={openAttachmentPreview}
-            showAddAction={false}
-          />
         </div>
-      </details>
+        <WorkflowSummaryList
+          ariaLabel="Salary claim totals"
+          items={summary.metrics}
+          variant="metrics"
+        />
+      </section>
+
+      <DisclosureCard
+        variant="section"
+        summary={<span className="fw-semibold">Salary baseline and adjustment details</span>}
+      >
+        <SalaryPayoutCard
+          isSalaryAssignmentsLoading={isSalaryAssignmentsLoading}
+          hasAssignedSalaryBaseline={hasAssignedSalaryBaseline}
+          onAddItem={handleAddItem}
+          assignedSalarySnapshot={assignedSalarySnapshot}
+          allowanceItems={allowanceItems}
+          statutoryDeductionItems={statutoryDeductionItems}
+          additionAdjustmentRows={additionAdjustmentRows}
+          deductionAdjustmentRows={deductionAdjustmentRows}
+          adjustedGrossSalary={adjustedGrossSalary}
+          adjustedTotalDeductions={adjustedTotalDeductions}
+          adjustedNetBeforeOvertime={adjustedNetBeforeOvertime}
+          totalAmount={totalAmount}
+          overtimeTotalPayoutApproved={overtimeTotals.totalPayoutApproved}
+          projectedNetPayout={projectedNetPayout}
+          editingIndex={editingIndex}
+          onEditItem={editSavedItem}
+          onRemoveItem={removeSavedItem}
+          onPreviewAttachment={openAttachmentPreview}
+          showAddAction={false}
+          embedded
+        />
+      </DisclosureCard>
 
       {showForm && (
         <SalaryAdjustmentCard
@@ -178,31 +170,29 @@ const SalaryClaimBody = ({
         />
       )}
 
-      <details className="rounded-3 border bg-body">
-        <summary className="d-flex align-items-center justify-content-between gap-2 px-3 py-3 fw-semibold">
-          Overtime payout details
-          <span className="small text-body-secondary fw-normal">Expand</span>
-        </summary>
-        <div className="px-3 pb-3">
-          <OvertimeSectionCard
-            period={periodValue}
-            monthLabel={monthLabel}
-            overtimeEligibilityResolved={overtimeEligibilityResolved}
-            isOvertimeEligible={isOvertimeEligible}
-            isSysAdmin={isSysAdmin}
-            hasOvertimeEligibilityError={hasOvertimeEligibilityError}
-            isOvertimeRowsLoading={isOvertimeRowsLoading}
-            overtimeBaseMode={overtimeBaseMode}
-            overtimeAutoHourlyBaseRate={overtimeAutoHourlyBaseRate}
-            salaryBasic={assignedSalarySnapshot.basic}
-            overtimeMonthlyDivisor={overtimeMonthlyDivisor}
-            overtimePreviewHoursPerDay={overtimePreviewHoursPerDay}
-            overtimeHourlySourceSummary={overtimeHourlySourceSummary}
-            overtimeRowsForPeriod={overtimeRowsForPeriod}
-            overtimeTotals={overtimeTotals}
-          />
-        </div>
-      </details>
+      <DisclosureCard
+        variant="section"
+        summary={<span className="fw-semibold">Overtime payout details</span>}
+      >
+        <OvertimeSectionCard
+          period={periodValue}
+          monthLabel={monthLabel}
+          overtimeEligibilityResolved={overtimeEligibilityResolved}
+          isOvertimeEligible={isOvertimeEligible}
+          isSysAdmin={isSysAdmin}
+          hasOvertimeEligibilityError={hasOvertimeEligibilityError}
+          isOvertimeRowsLoading={isOvertimeRowsLoading}
+          overtimeBaseMode={overtimeBaseMode}
+          overtimeAutoHourlyBaseRate={overtimeAutoHourlyBaseRate}
+          salaryBasic={assignedSalarySnapshot.basic}
+          overtimeMonthlyDivisor={overtimeMonthlyDivisor}
+          overtimePreviewHoursPerDay={overtimePreviewHoursPerDay}
+          overtimeHourlySourceSummary={overtimeHourlySourceSummary}
+          overtimeRowsForPeriod={overtimeRowsForPeriod}
+          overtimeTotals={overtimeTotals}
+          embedded
+        />
+      </DisclosureCard>
 
       {hasAssignedSalaryBaseline && !isSalaryAssignmentsLoading && (
         <div className="px-1">
@@ -214,29 +204,30 @@ const SalaryClaimBody = ({
           />
         </div>
       )}
-      <div className="d-none d-md-block px-1 small text-body-secondary">{draftSyncSummary}</div>
-
-      <FormActionGroup
-        leading={<BackButton onClick={onBack} label="Back to claims" />}
-        mobileBehavior="compact-sticky"
-        statusMessage={draftSyncSummary}
-      >
-        <CButton color="secondary" variant="outline" onClick={clearForm}>
-          Clear form
-        </CButton>
-        <CButton
-          color="primary"
-          data-testid="payroll-claim-submit-action"
-          onClick={submitClaim}
-          disabled={!defaultPathReady || isSubmittingClaim}
-        >
-          {isSubmittingClaim
-            ? 'Submitting...'
-            : isEditingSubmittedClaim
-              ? 'Update request'
-              : 'Submit request'}
-        </CButton>
-      </FormActionGroup>
+      <WorkflowStageActions
+        onReset={clearForm}
+        resetLabel="Clear form"
+        onPrimary={submitClaim}
+        primaryLabel={isEditingSubmittedClaim ? 'Update request' : 'Submit request'}
+        primaryBusyLabel="Submitting..."
+        primaryTestId="payroll-claim-submit-action"
+        primaryDisabled={!defaultPathReady || isSubmittingClaim}
+        isSaving={isSubmittingClaim}
+        feedback={
+          /failed|unable|retry/i.test(draftSyncSummary)
+            ? {
+                kind: 'error',
+                title: 'Draft could not be saved',
+                message: draftSyncSummary,
+                action: { label: 'Retry', onAction: retryDraft },
+              }
+            : null
+        }
+        primaryFirst
+        mobileLayout="stacked-primary-first"
+        stackedMobileBehavior="terminal"
+        ariaLabel="Claim form actions"
+      />
     </>
   )
 }

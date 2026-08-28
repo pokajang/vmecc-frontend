@@ -11,6 +11,7 @@ const WorkflowSummaryList = ({
   variant = 'detail',
   emptyValue = '--',
   className = '',
+  titleClassName = '',
   listClassName = '',
   ariaLabel,
 }) => {
@@ -23,7 +24,10 @@ const WorkflowSummaryList = ({
   const content = (
     <>
       {title ? (
-        <h2 id={headingId} className="workflow-summary__title">
+        <h2
+          id={headingId}
+          className={['workflow-summary__title', titleClassName].filter(Boolean).join(' ')}
+        >
           {title}
         </h2>
       ) : null}
@@ -39,6 +43,8 @@ const WorkflowSummaryList = ({
             className={[
               'workflow-summary__item',
               item.span === 'full' || item.fullWidth ? 'workflow-summary__item--full' : '',
+              item.emphasis ? 'workflow-summary__item--emphasis' : '',
+              item.isAlert ? 'workflow-summary__item--alert' : '',
               item.className || '',
             ]
               .filter(Boolean)

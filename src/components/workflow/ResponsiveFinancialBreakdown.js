@@ -26,9 +26,11 @@ const ResponsiveFinancialBreakdown = ({
                   item.emphasis ? 'responsive-financial-breakdown__row--emphasis' : ''
                 } ${item.tone ? `responsive-financial-breakdown__row--${item.tone}` : ''}`.trim()}
               >
-                <div className="d-flex align-items-start justify-content-between gap-3">
-                  <div className="text-body-secondary text-break">{item.label}</div>
-                  <div className="responsive-financial-breakdown__value fw-semibold text-end text-break">
+                <div className="responsive-financial-breakdown__line">
+                  <div className="responsive-financial-breakdown__label text-body-secondary">
+                    {item.label}
+                  </div>
+                  <div className="responsive-financial-breakdown__value fw-semibold text-end">
                     {item.value ?? '-'}
                   </div>
                 </div>

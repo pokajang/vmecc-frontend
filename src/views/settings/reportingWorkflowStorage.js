@@ -37,6 +37,14 @@ export const REPORTING_WORKFLOW_MODULE_DEFS = [
     path: '/reporting-settings/fitness-test',
     to: '/reporting-settings/fitness-test',
   },
+  {
+    key: 'er-assessment',
+    label: 'ER Assessment',
+    description: 'Configure submitter review and approval routing for ER Assessment records.',
+    editable: true,
+    path: '/reporting-settings/er-assessment',
+    to: '/reporting-settings/er-assessment',
+  },
 ]
 
 const DEFAULT_INSPECTION_FALLBACK = {
@@ -113,6 +121,7 @@ const DEFAULT_RULES = normalizeReportingWorkflowRules({
     erco: { fallback: DEFAULT_OTHER_FALLBACK, options: DEFAULT_OPTIONS },
     drill: { fallback: DEFAULT_OTHER_FALLBACK, options: DEFAULT_OPTIONS },
     'fitness-test': { fallback: DEFAULT_OTHER_FALLBACK, options: DEFAULT_OPTIONS },
+    'er-assessment': { fallback: DEFAULT_OTHER_FALLBACK, options: DEFAULT_OPTIONS },
   },
 })
 

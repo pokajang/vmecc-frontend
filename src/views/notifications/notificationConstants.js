@@ -25,10 +25,27 @@ export const EVENT_LABELS = {
   allocation_deleted: 'Allocation Deleted',
 }
 
+const REPORT_TYPE_LABELS = {
+  inspection: 'Inspection',
+  erco: 'ERCO',
+  drill: 'Drill',
+  'fitness-test': 'Fitness Test',
+  'er-assessment': 'ER Assessment',
+}
+
 export const getModuleLabel = (item) => {
   const key = String(item?.module || item?.metadata?.module || '')
     .trim()
     .toLowerCase()
+  const reportType = String(item?.reportType || item?.metadata?.reportType || '')
+    .trim()
+    .toLowerCase()
+  const recordType = String(item?.recordType || item?.metadata?.recordType || '')
+    .trim()
+    .toLowerCase()
+  if ((key === 'report' || recordType === 'report') && REPORT_TYPE_LABELS[reportType]) {
+    return REPORT_TYPE_LABELS[reportType]
+  }
   return MODULE_LABELS[key] || key || 'Workflow'
 }
 

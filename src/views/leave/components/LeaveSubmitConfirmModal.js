@@ -2,16 +2,29 @@ import React from 'react'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import { formatDayCount, formatFileSize, formatSubmitPreviewPeriod } from '../utils'
 
-const LeaveSubmitConfirmModal = ({ visible, submitPreview, onClose, onConfirm }) => (
+const LeaveSubmitConfirmModal = ({
+  visible,
+  submitPreview,
+  onClose,
+  onConfirm,
+  isSubmitting = false,
+}) => (
   <LeaveSubmitConfirmModalContent
     visible={visible}
     submitPreview={submitPreview}
     onClose={onClose}
     onConfirm={onConfirm}
+    isSubmitting={isSubmitting}
   />
 )
 
-const LeaveSubmitConfirmModalContent = ({ visible, submitPreview, onClose, onConfirm }) => {
+const LeaveSubmitConfirmModalContent = ({
+  visible,
+  submitPreview,
+  onClose,
+  onConfirm,
+  isSubmitting,
+}) => {
   const body = (
     <div className="d-grid gap-2">
       {!submitPreview ? (
@@ -43,7 +56,7 @@ const LeaveSubmitConfirmModalContent = ({ visible, submitPreview, onClose, onCon
           {submitPreview.attachmentName && (
             <div>
               <span className="text-body-secondary small d-block">Attachment</span>
-              <span>{submitPreview.attachmentName}</span>
+              <span>Supporting document attached</span>
               {submitPreview.attachmentMeta?.originalSize ? (
                 <div className="small text-body-secondary mt-1">
                   Size:{' '}
@@ -76,7 +89,9 @@ const LeaveSubmitConfirmModalContent = ({ visible, submitPreview, onClose, onCon
       title={submitPreview?.editingRecordId ? 'Confirm leave update' : 'Confirm leave request'}
       message={body}
       confirmLabel={submitPreview?.editingRecordId ? 'Confirm update' : 'Confirm submission'}
-      confirmDisabled={!submitPreview}
+      confirmDisabled={!submitPreview || isSubmitting}
+      cancelDisabled={isSubmitting}
+      mobileDrawerQuery="(max-width: 767.98px)"
       onClose={onClose}
       onConfirm={onConfirm}
     />

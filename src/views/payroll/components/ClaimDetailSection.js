@@ -67,7 +67,6 @@ const ClaimDetailSection = ({
         subtitle={selectedClaim?.id ? `Claim ID: ${selectedClaim.id}` : ''}
         status={selectedClaim?.status || ''}
         backTo="/payroll"
-        backLabel="Back to claims"
       />
       {selectedClaim?.status ? (
         <div>

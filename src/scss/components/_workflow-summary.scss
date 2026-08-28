@@ -3,6 +3,24 @@
   gap: var(--workflow-control-gap);
 }
 
+.workflow-summary-surface {
+  display: grid;
+  gap: var(--workflow-surface-padding);
+  padding: var(--workflow-surface-padding);
+  border: 1px solid transparent;
+  border-radius: var(--vmecc-radius-card);
+  background: var(--cui-tertiary-bg);
+}
+
+.workflow-summary-surface__header {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--workflow-control-gap);
+}
+
 .workflow-summary__title {
   margin: 0;
   color: var(--vmecc-fg-strong);
@@ -50,14 +68,56 @@
   line-height: var(--vmecc-leading-compact);
 }
 
+.workflow-summary__item--emphasis .workflow-summary__value {
+  font-size: var(--vmecc-text-card-title);
+  font-weight: var(--vmecc-weight-bold);
+}
+
+.workflow-summary__item--alert .workflow-summary__value {
+  color: var(--cui-danger);
+}
+
 .workflow-summary__meta {
   color: var(--vmecc-fg-supporting);
   font-size: var(--vmecc-text-meta);
   font-weight: var(--vmecc-weight-body);
 }
 
+.workflow-summary__actions {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .workflow-summary__list--context {
   padding-block: 0;
+}
+
+.workflow-summary__list--metrics {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.workflow-summary__list--metrics .workflow-summary__item {
+  padding: 0.75rem 0;
+}
+
+.workflow-summary__list--metrics .workflow-summary__item:nth-child(odd) {
+  padding-right: 1rem;
+}
+
+.workflow-summary__list--metrics .workflow-summary__item:nth-child(even) {
+  padding-left: 1rem;
+  border-left: 1px solid var(--cui-border-color);
+}
+
+.workflow-summary__list--metrics .workflow-summary__item:nth-child(n + 3) {
+  border-top: 1px solid var(--cui-border-color);
 }
 
 @media (min-width: 768px) {
@@ -70,6 +130,25 @@
   .workflow-summary__list--detail .workflow-summary__item {
     border-bottom: 0;
   }
+
+  .workflow-summary__list--metrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .workflow-summary__list--metrics .workflow-summary__item {
+    padding: 0 1rem;
+    border-top: 0;
+    border-left: 1px solid var(--cui-border-color);
+  }
+
+  .workflow-summary__list--metrics .workflow-summary__item:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .workflow-summary__list--metrics .workflow-summary__item:last-child {
+    padding-right: 0;
+  }
 }
 
 @media (max-width: 767.98px) {
@@ -78,4 +157,13 @@
     padding-block: 0;
   }
 
+  .workflow-summary__list--metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 575.98px) {
+  .workflow-summary__actions {
+    width: 100%;
+  }
 }

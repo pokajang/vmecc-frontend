@@ -14,6 +14,7 @@ describe('LeaveTypeSelection', () => {
 
     const continueButton = screen.getByRole('button', { name: 'Continue' })
     expect(continueButton.disabled).toBe(true)
+    expect(screen.queryByRole('button', { name: 'Back' })).toBeNull()
   })
 
   it('allows selecting leave type and continuing', () => {

@@ -27,6 +27,12 @@ describe('responsive workflow primitives', () => {
     expect(screen.getByLabelText('Salary calculation')).toBeTruthy()
     expect(screen.getByRole('heading', { name: 'Payable Summary' })).toBeTruthy()
     expect(screen.getByText('Final Payable')).toBeTruthy()
+    expect(screen.getByText('Final Payable').classList).toContain(
+      'responsive-financial-breakdown__label',
+    )
+    const value = screen.getByText('RM 1,250.00')
+    expect(value.classList).toContain('responsive-financial-breakdown__value')
+    expect(value.classList).not.toContain('text-break')
     expect(screen.getByLabelText('Desktop salary calculation')).toBeTruthy()
   })
 

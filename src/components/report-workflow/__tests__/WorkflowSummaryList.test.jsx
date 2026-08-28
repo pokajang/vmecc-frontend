@@ -34,4 +34,26 @@ describe('WorkflowSummaryList', () => {
 
     expect(screen.getByText('--')).toBeTruthy()
   })
+
+  it('supports open metric grids with emphasis and alert semantics', () => {
+    render(
+      <WorkflowSummaryList
+        ariaLabel="Balance metrics"
+        variant="metrics"
+        items={[
+          { key: 'available', label: 'Available', value: '8 days', emphasis: true },
+          { key: 'pending', label: 'Pending', value: '2 days', isAlert: true },
+        ]}
+      />,
+    )
+
+    const list = document.querySelector('.workflow-summary__list')
+    expect(list.classList).toContain('workflow-summary__list--metrics')
+    expect(screen.getByText('8 days').closest('.workflow-summary__item').classList).toContain(
+      'workflow-summary__item--emphasis',
+    )
+    expect(screen.getByText('2 days').closest('.workflow-summary__item').classList).toContain(
+      'workflow-summary__item--alert',
+    )
+  })
 })

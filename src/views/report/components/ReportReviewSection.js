@@ -16,6 +16,7 @@ import WorkflowStageActions from 'src/components/report-workflow/WorkflowStageAc
 import { DetailField } from 'src/components/report-workflow/ReportViewComponents'
 import RespondingTeamSummary from 'src/components/report-workflow/RespondingTeamSummary'
 import { getProficiencyCheckpointSummary } from '../fitness-test/fitnessFormDomain'
+import ErAssessmentReadOnlySections from '../er-assessment/ErAssessmentReadOnlySections'
 
 const text = (value) => String(value || '').trim()
 
@@ -274,9 +275,12 @@ const ReportReviewSection = ({
   const isErco = reportKind === 'erco' || text(r.reportType).toLowerCase() === 'erco'
   const isFitness =
     reportKind === 'fitness-test' || text(r.reportType).toLowerCase() === 'fitness-test'
+  const isErAssessment =
+    reportKind === 'er-assessment' || text(r.reportType).toLowerCase() === 'er-assessment'
   const reportTitle =
     (isFitness ? `Physical Test Report - ${text(r.reportingMonth)}` : '') ||
     (isDrill ? text(r.exerciseTitle) : '') ||
+    (isErAssessment ? text(r.assessmentTypeLabel) : '') ||
     text(r.incidentType) ||
     text(r.displayId) ||
     'Report'
@@ -343,6 +347,8 @@ const ReportReviewSection = ({
 
       {isFitness ? <FitnessReviewRows report={r} onEdit={editSection} /> : null}
 
+      {isErAssessment ? <ErAssessmentReadOnlySections report={r} onEdit={editSection} /> : null}
+
       {isFitness && Array.isArray(r.photos) && r.photos.some((photo) => photo?.url) ? (
         <ReviewSectionBlock title="Fitness test photographs" onEdit={() => editSection('results')}>
           <ReportPhotoGallery
@@ -354,7 +360,7 @@ const ReportReviewSection = ({
         </ReviewSectionBlock>
       ) : null}
 
-      {!isFitness ? (
+      {!isFitness && !isErAssessment ? (
         <ReviewSectionBlock
           title="Report Details"
           onEdit={isDrill || isErco ? () => editSection('setup') : null}
@@ -388,7 +394,7 @@ const ReportReviewSection = ({
         </ReviewSectionBlock>
       ) : null}
 
-      {!isFitness && (detailsText || summaryText) ? (
+      {!isFitness && !isErAssessment && (detailsText || summaryText) ? (
         <ReviewSectionBlock
           title={isDrill ? 'Exercise Details' : 'Summary'}
           onEdit={
@@ -456,7 +462,7 @@ const ReportReviewSection = ({
         </ReviewSectionBlock>
       ) : null}
 
-      {!isFitness ? (
+      {!isFitness && !isErAssessment ? (
         <RespondingTeamSummary
           respondingTeam={r.respondingTeam}
           isDrill={isDrill}
@@ -466,7 +472,7 @@ const ReportReviewSection = ({
           variant="review"
         />
       ) : null}
-      {!isFitness ? (
+      {!isFitness && !isErAssessment ? (
         <ChronologyRows
           chronology={r.chronology}
           onEdit={
@@ -474,7 +480,7 @@ const ReportReviewSection = ({
           }
         />
       ) : null}
-      {!isFitness ? (
+      {!isFitness && !isErAssessment ? (
         <AnalysisRows
           analysis={r.postIncidentAnalysis}
           photos={Array.isArray(r.photos) ? r.photos : []}

@@ -31,198 +31,210 @@ const OvertimeSectionCard = ({
   overtimeHourlySourceSummary,
   overtimeRowsForPeriod,
   overtimeTotals,
-}) => (
-  <CCard>
-    <CCardHeader>Overtime Records ({monthLabel || period})</CCardHeader>
-    <CCardBody className="d-grid gap-3">
-      {overtimeEligibilityResolved && !isOvertimeEligible ? (
-        <div className="text-body-secondary">
-          Overtime contribution is disabled for your current role based on OT applicability
-          settings.
-        </div>
-      ) : !isSysAdmin && hasOvertimeEligibilityError ? (
-        <div className="text-warning">
-          Overtime records are unavailable because eligibility could not be verified. Please retry
-          later or contact HR/Admin.
-        </div>
-      ) : !isSysAdmin && !overtimeEligibilityResolved ? (
-        <div className="text-body-secondary">Checking overtime eligibility...</div>
-      ) : isOvertimeRowsLoading ? (
-        <TableLoader />
-      ) : (
-        <>
-          {overtimeBaseMode === OVERTIME_BASE_HOUR_MODES.AUTO_STATUTORY &&
-            overtimeAutoHourlyBaseRate !== null && (
+  embedded = false,
+}) => {
+  const Surface = embedded ? 'section' : CCard
+  const Content = embedded ? 'div' : CCardBody
+
+  return (
+    <Surface
+      className={embedded ? 'overtime-payout-embedded' : undefined}
+      aria-label={embedded ? `Overtime records for ${monthLabel || period}` : undefined}
+    >
+      {!embedded ? <CCardHeader>Overtime Records ({monthLabel || period})</CCardHeader> : null}
+      <Content className="d-grid gap-3">
+        {overtimeEligibilityResolved && !isOvertimeEligible ? (
+          <div className="text-body-secondary">
+            Overtime contribution is disabled for your current role based on OT applicability
+            settings.
+          </div>
+        ) : !isSysAdmin && hasOvertimeEligibilityError ? (
+          <div className="text-warning">
+            Overtime records are unavailable because eligibility could not be verified. Please retry
+            later or contact HR/Admin.
+          </div>
+        ) : !isSysAdmin && !overtimeEligibilityResolved ? (
+          <div className="text-body-secondary">Checking overtime eligibility...</div>
+        ) : isOvertimeRowsLoading ? (
+          <TableLoader />
+        ) : (
+          <>
+            {overtimeBaseMode === OVERTIME_BASE_HOUR_MODES.AUTO_STATUTORY &&
+              overtimeAutoHourlyBaseRate !== null && (
+                <details className="small text-body-secondary">
+                  <summary>Hourly rate calculation</summary>
+                  <div className="mt-1">
+                    {`(${formatCurrency(salaryBasic)} / ${overtimeMonthlyDivisor} days) / ${overtimePreviewHoursPerDay} hours/day = ${formatCurrency(overtimeAutoHourlyBaseRate)}/hour.`}
+                  </div>
+                </details>
+              )}
+            {overtimeBaseMode === OVERTIME_BASE_HOUR_MODES.MONTH_DAYS_DIVISION && (
               <details className="small text-body-secondary">
                 <summary>Hourly rate calculation</summary>
                 <div className="mt-1">
-                  {`(${formatCurrency(salaryBasic)} / ${overtimeMonthlyDivisor} days) / ${overtimePreviewHoursPerDay} hours/day = ${formatCurrency(overtimeAutoHourlyBaseRate)}/hour.`}
+                  Basic salary divided by calendar days in the overtime month, then by normal
+                  hours/day.
                 </div>
               </details>
             )}
-          {overtimeBaseMode === OVERTIME_BASE_HOUR_MODES.MONTH_DAYS_DIVISION && (
-            <details className="small text-body-secondary">
-              <summary>Hourly rate calculation</summary>
-              <div className="mt-1">
-                Basic salary divided by calendar days in the overtime month, then by normal
-                hours/day.
+            {overtimeHourlySourceSummary.missing > 0 && (
+              <div className="small text-warning">
+                {overtimeHourlySourceSummary.missing} overtime record(s) could not resolve hourly
+                base rate. Their payout is treated as MYR 0.00.
               </div>
-            </details>
-          )}
-          {overtimeHourlySourceSummary.missing > 0 && (
-            <div className="small text-warning">
-              {overtimeHourlySourceSummary.missing} overtime record(s) could not resolve hourly base
-              rate. Their payout is treated as MYR 0.00.
-            </div>
-          )}
-          {overtimeRowsForPeriod.length === 0 ? (
-            <div className="text-body-secondary">
-              No overtime records found for this payroll month.
-            </div>
-          ) : (
-            <>
-              <ResponsiveFinancialBreakdown
-                ariaLabel="Overtime records and payout breakdown"
-                sections={[
-                  ...overtimeRowsForPeriod.map((row) => ({
-                    key: row.id,
-                    title: row.overtimeId,
-                    items: [
-                      { key: 'type', label: 'Type', value: row.overtimeTypeLabel },
-                      { key: 'date', label: 'Date', value: formatDate(row.claimDate) },
-                      {
-                        key: 'duration',
-                        label: 'Duration',
-                        value: `${row.durationLabel} (${row.durationHours}h)`,
-                      },
-                      {
-                        key: 'status',
-                        label: 'Status',
-                        value: row.statusLabel || row.status || '-',
-                      },
-                      { key: 'rate', label: 'Rate', value: `${row.multiplier}x` },
-                      {
-                        key: 'payout',
-                        label: 'Payout Used',
-                        value: formatCurrency(row.payablePayout),
-                        emphasis: true,
-                        detail: `Hourly base = (${formatCurrency(salaryBasic)} / ${
-                          row.monthlyDivisorUsed || '-'
-                        } days) / ${row.normalHoursPerDay} h/day = ${formatCurrency(
-                          row.hourlyBaseRate,
-                        )}/h. Calculated payout: ${formatCurrency(row.calculatedPayout)}${
-                          row.isApproved ? '' : '; not approved, so payout used is MYR 0.00'
-                        }.`,
-                      },
-                    ],
-                  })),
-                  {
-                    key: 'overtime-totals',
-                    title: 'Overtime Totals',
-                    items: [
-                      {
-                        key: 'all-hours',
-                        label: 'Total OT Hours (All Status)',
-                        value: `${overtimeTotals.totalHoursAll}h`,
-                      },
-                      {
-                        key: 'approved-hours',
-                        label: 'Total OT Hours (Approved)',
-                        value: `${overtimeTotals.totalHoursApproved}h`,
-                      },
-                      {
-                        key: 'approved-payout',
-                        label: 'Total OT Payout (Approved)',
-                        value: formatCurrency(overtimeTotals.totalPayoutApproved),
-                        emphasis: true,
-                      },
-                    ],
-                  },
-                ]}
-              />
-              <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-body">
-                <CTable align="middle" className="mb-0" responsive>
-                  <CTableHead color="light">
-                    <CTableRow>
-                      <CTableHeaderCell className="text-center" style={{ width: '56px' }}>
-                        #
-                      </CTableHeaderCell>
-                      <CTableHeaderCell>Overtime ID</CTableHeaderCell>
-                      <CTableHeaderCell>Type</CTableHeaderCell>
-                      <CTableHeaderCell>Date</CTableHeaderCell>
-                      <CTableHeaderCell>Duration</CTableHeaderCell>
-                      <CTableHeaderCell>Status</CTableHeaderCell>
-                      <CTableHeaderCell className="text-end">Rate</CTableHeaderCell>
-                      <CTableHeaderCell className="text-end">Payout Used</CTableHeaderCell>
-                    </CTableRow>
-                  </CTableHead>
-                  <CTableBody>
-                    {overtimeRowsForPeriod.map((row, index) => (
-                      <React.Fragment key={row.id}>
-                        <CTableRow>
-                          <CTableDataCell className="text-center text-body-secondary">
-                            {index + 1}
-                          </CTableDataCell>
-                          <CTableDataCell className="fw-semibold">{row.overtimeId}</CTableDataCell>
-                          <CTableDataCell>{row.overtimeTypeLabel}</CTableDataCell>
-                          <CTableDataCell>{formatDate(row.claimDate)}</CTableDataCell>
-                          <CTableDataCell>
-                            {row.durationLabel}
-                            <span className="small text-body-secondary ms-1">
-                              ({row.durationHours}h)
-                            </span>
-                          </CTableDataCell>
-                          <CTableDataCell>{row.statusLabel || row.status || '-'}</CTableDataCell>
-                          <CTableDataCell className="text-end">{row.multiplier}x</CTableDataCell>
-                          <CTableDataCell className="text-end fw-semibold">
-                            {formatCurrency(row.payablePayout)}
-                          </CTableDataCell>
-                        </CTableRow>
-                        <CTableRow>
-                          <CTableDataCell colSpan={8} className="small text-body-secondary">
-                            <details>
-                              <summary>Calculation details</summary>
-                              <div className="mt-1">
-                                {`Hourly base = (${formatCurrency(salaryBasic)} / ${row.monthlyDivisorUsed || '-'} days) / ${row.normalHoursPerDay} h/day = ${formatCurrency(row.hourlyBaseRate)}/h. Payout = ${row.durationHours} h x ${formatCurrency(row.hourlyBaseRate)}/h x ${row.multiplier}x = ${formatCurrency(row.calculatedPayout)}${row.isApproved ? '' : ' (not approved, payout used is RM 0.00).'}`}
-                              </div>
-                            </details>
-                          </CTableDataCell>
-                        </CTableRow>
-                      </React.Fragment>
-                    ))}
-                    <CTableRow className="table-light">
-                      <CTableDataCell colSpan={7} className="fw-semibold">
-                        Total OT Hours (All Status)
-                      </CTableDataCell>
-                      <CTableDataCell className="text-end fw-semibold">
-                        {overtimeTotals.totalHoursAll}h
-                      </CTableDataCell>
-                    </CTableRow>
-                    <CTableRow className="table-light">
-                      <CTableDataCell colSpan={7} className="fw-semibold">
-                        Total OT Hours (Approved)
-                      </CTableDataCell>
-                      <CTableDataCell className="text-end fw-semibold">
-                        {overtimeTotals.totalHoursApproved}h
-                      </CTableDataCell>
-                    </CTableRow>
-                    <CTableRow className="table-light">
-                      <CTableDataCell colSpan={7} className="fw-semibold">
-                        Total OT Payout (Approved)
-                      </CTableDataCell>
-                      <CTableDataCell className="text-end fw-semibold">
-                        {formatCurrency(overtimeTotals.totalPayoutApproved)}
-                      </CTableDataCell>
-                    </CTableRow>
-                  </CTableBody>
-                </CTable>
+            )}
+            {overtimeRowsForPeriod.length === 0 ? (
+              <div className="text-body-secondary">
+                No overtime records found for this payroll month.
               </div>
-            </>
-          )}
-        </>
-      )}
-    </CCardBody>
-  </CCard>
-)
+            ) : (
+              <>
+                <ResponsiveFinancialBreakdown
+                  ariaLabel="Overtime records and payout breakdown"
+                  className={embedded ? 'responsive-financial-breakdown--embedded' : ''}
+                  sections={[
+                    ...overtimeRowsForPeriod.map((row) => ({
+                      key: row.id,
+                      title: row.overtimeId,
+                      items: [
+                        { key: 'type', label: 'Type', value: row.overtimeTypeLabel },
+                        { key: 'date', label: 'Date', value: formatDate(row.claimDate) },
+                        {
+                          key: 'duration',
+                          label: 'Duration',
+                          value: `${row.durationLabel} (${row.durationHours}h)`,
+                        },
+                        {
+                          key: 'status',
+                          label: 'Status',
+                          value: row.statusLabel || row.status || '-',
+                        },
+                        { key: 'rate', label: 'Rate', value: `${row.multiplier}x` },
+                        {
+                          key: 'payout',
+                          label: 'Payout Used',
+                          value: formatCurrency(row.payablePayout),
+                          emphasis: true,
+                          detail: `Hourly base = (${formatCurrency(salaryBasic)} / ${
+                            row.monthlyDivisorUsed || '-'
+                          } days) / ${row.normalHoursPerDay} h/day = ${formatCurrency(
+                            row.hourlyBaseRate,
+                          )}/h. Calculated payout: ${formatCurrency(row.calculatedPayout)}${
+                            row.isApproved ? '' : '; not approved, so payout used is MYR 0.00'
+                          }.`,
+                        },
+                      ],
+                    })),
+                    {
+                      key: 'overtime-totals',
+                      title: 'Overtime Totals',
+                      items: [
+                        {
+                          key: 'all-hours',
+                          label: 'Total OT Hours (All Status)',
+                          value: `${overtimeTotals.totalHoursAll}h`,
+                        },
+                        {
+                          key: 'approved-hours',
+                          label: 'Total OT Hours (Approved)',
+                          value: `${overtimeTotals.totalHoursApproved}h`,
+                        },
+                        {
+                          key: 'approved-payout',
+                          label: 'Total OT Payout (Approved)',
+                          value: formatCurrency(overtimeTotals.totalPayoutApproved),
+                          emphasis: true,
+                        },
+                      ],
+                    },
+                  ]}
+                />
+                <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-body">
+                  <CTable align="middle" className="mb-0" responsive>
+                    <CTableHead color="light">
+                      <CTableRow>
+                        <CTableHeaderCell className="text-center" style={{ width: '56px' }}>
+                          #
+                        </CTableHeaderCell>
+                        <CTableHeaderCell>Overtime ID</CTableHeaderCell>
+                        <CTableHeaderCell>Type</CTableHeaderCell>
+                        <CTableHeaderCell>Date</CTableHeaderCell>
+                        <CTableHeaderCell>Duration</CTableHeaderCell>
+                        <CTableHeaderCell>Status</CTableHeaderCell>
+                        <CTableHeaderCell className="text-end">Rate</CTableHeaderCell>
+                        <CTableHeaderCell className="text-end">Payout Used</CTableHeaderCell>
+                      </CTableRow>
+                    </CTableHead>
+                    <CTableBody>
+                      {overtimeRowsForPeriod.map((row, index) => (
+                        <React.Fragment key={row.id}>
+                          <CTableRow>
+                            <CTableDataCell className="text-center text-body-secondary">
+                              {index + 1}
+                            </CTableDataCell>
+                            <CTableDataCell className="fw-semibold">
+                              {row.overtimeId}
+                            </CTableDataCell>
+                            <CTableDataCell>{row.overtimeTypeLabel}</CTableDataCell>
+                            <CTableDataCell>{formatDate(row.claimDate)}</CTableDataCell>
+                            <CTableDataCell>
+                              {row.durationLabel}
+                              <span className="small text-body-secondary ms-1">
+                                ({row.durationHours}h)
+                              </span>
+                            </CTableDataCell>
+                            <CTableDataCell>{row.statusLabel || row.status || '-'}</CTableDataCell>
+                            <CTableDataCell className="text-end">{row.multiplier}x</CTableDataCell>
+                            <CTableDataCell className="text-end fw-semibold">
+                              {formatCurrency(row.payablePayout)}
+                            </CTableDataCell>
+                          </CTableRow>
+                          <CTableRow>
+                            <CTableDataCell colSpan={8} className="small text-body-secondary">
+                              <details>
+                                <summary>Calculation details</summary>
+                                <div className="mt-1">
+                                  {`Hourly base = (${formatCurrency(salaryBasic)} / ${row.monthlyDivisorUsed || '-'} days) / ${row.normalHoursPerDay} h/day = ${formatCurrency(row.hourlyBaseRate)}/h. Payout = ${row.durationHours} h x ${formatCurrency(row.hourlyBaseRate)}/h x ${row.multiplier}x = ${formatCurrency(row.calculatedPayout)}${row.isApproved ? '' : ' (not approved, payout used is RM 0.00).'}`}
+                                </div>
+                              </details>
+                            </CTableDataCell>
+                          </CTableRow>
+                        </React.Fragment>
+                      ))}
+                      <CTableRow className="table-light">
+                        <CTableDataCell colSpan={7} className="fw-semibold">
+                          Total OT Hours (All Status)
+                        </CTableDataCell>
+                        <CTableDataCell className="text-end fw-semibold">
+                          {overtimeTotals.totalHoursAll}h
+                        </CTableDataCell>
+                      </CTableRow>
+                      <CTableRow className="table-light">
+                        <CTableDataCell colSpan={7} className="fw-semibold">
+                          Total OT Hours (Approved)
+                        </CTableDataCell>
+                        <CTableDataCell className="text-end fw-semibold">
+                          {overtimeTotals.totalHoursApproved}h
+                        </CTableDataCell>
+                      </CTableRow>
+                      <CTableRow className="table-light">
+                        <CTableDataCell colSpan={7} className="fw-semibold">
+                          Total OT Payout (Approved)
+                        </CTableDataCell>
+                        <CTableDataCell className="text-end fw-semibold">
+                          {formatCurrency(overtimeTotals.totalPayoutApproved)}
+                        </CTableDataCell>
+                      </CTableRow>
+                    </CTableBody>
+                  </CTable>
+                </div>
+              </>
+            )}
+          </>
+        )}
+      </Content>
+    </Surface>
+  )
+}
 
 export default OvertimeSectionCard

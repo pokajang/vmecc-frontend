@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import OvertimeApplySection from '../OvertimeApplySection'
 
@@ -48,23 +48,70 @@ const baseProps = {
   durationMinutes: 90,
   isOvernight: false,
   onClearForm: vi.fn(),
+  onAttachmentRemove: vi.fn(),
   onDraft: vi.fn(),
 }
 
 describe('OvertimeApplySection', () => {
-  it('keeps staged type selection in fresh mode', () => {
+  it('advances from the fresh type selection as a direct action', () => {
     render(
       <MemoryRouter>
         <OvertimeApplySection {...baseProps} isResumeEditMode={false} />
       </MemoryRouter>,
     )
 
-    expect(screen.getByText('Overtime type')).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Continue' })).toBeTruthy()
+    expect(screen.getByText('Choose overtime type')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Continue' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Back' })).toBeNull()
     expect(screen.queryByLabelText('Reason / Work Done')).toBeNull()
+    fireEvent.click(screen.getByTestId('overtime-type-weekday'))
+    expect(baseProps.onSelectOvertimeType).toHaveBeenCalledWith(
+      'weekday',
+      expect.objectContaining({ value: 'weekday' }),
+    )
+    expect(baseProps.onContinueOvertimeType).toHaveBeenCalledWith(
+      'weekday',
+      expect.objectContaining({ value: 'weekday' }),
+    )
   })
 
-  it('disables Continue when no overtime type is selected', () => {
+  it('uses a distinct change-type action instead of a second Back control', () => {
+    render(
+      <MemoryRouter>
+        <OvertimeApplySection {...baseProps} overtimeTypeConfirmed isResumeEditMode={false} />
+      </MemoryRouter>,
+    )
+
+    expect(screen.queryByRole('button', { name: 'Back' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Change overtime type' })).toBeTruthy()
+    expect(
+      screen.getByLabelText('Start time').closest('.workflow-compact-stack-field'),
+    ).toBeTruthy()
+    expect(screen.getByLabelText('End time').closest('.workflow-compact-stack-field')).toBeTruthy()
+    expect(document.querySelectorAll('.workflow-compact-stack-field')).toHaveLength(2)
+    expect(screen.getByTestId('overtime-utility-panel').textContent).toContain('Overtime duration')
+  })
+
+  it('mirrors the authoritative action busy state in controls and status feedback', () => {
+    render(
+      <MemoryRouter>
+        <OvertimeApplySection
+          {...baseProps}
+          overtimeTypeConfirmed
+          isResumeEditMode={false}
+          isFormActionBusy
+          formActionStatus="Checking overtime type..."
+        />
+      </MemoryRouter>,
+    )
+
+    expect(screen.queryByRole('button', { name: 'Save draft' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Submit request' }).disabled).toBe(true)
+    expect(screen.getByRole('button', { name: 'Clear form' }).disabled).toBe(true)
+    expect(screen.getByRole('status').textContent).toContain('Checking overtime type...')
+  })
+
+  it('does not add a confirmation action when no overtime type is selected', () => {
     render(
       <MemoryRouter>
         <OvertimeApplySection
@@ -76,8 +123,8 @@ describe('OvertimeApplySection', () => {
       </MemoryRouter>,
     )
 
-    const continueButton = screen.getByRole('button', { name: 'Continue' })
-    expect(continueButton.disabled).toBe(true)
+    expect(screen.queryByRole('button', { name: 'Continue' })).toBeNull()
+    expect(screen.getByTestId('overtime-type-weekday')).toBeTruthy()
   })
 
   it('shows form immediately with inline type cards in resume/edit mode', () => {
@@ -100,9 +147,10 @@ describe('OvertimeApplySection', () => {
     expect(screen.getByText('Public Holiday Overtime')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Update request' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Clear form' })).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Save draft' })).toBeTruthy()
-    expect(document.querySelector('.action-row-thumb--compact-sticky')).toBeTruthy()
-    expect(document.querySelector('.action-row-thumb-spacer--compact')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Save draft' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Add attachment' })).toBeTruthy()
+    expect(document.querySelector('.action-row-thumb--terminal')).toBeTruthy()
+    expect(document.querySelector('.action-row-thumb-spacer')).toBeNull()
   })
 
   it('renders the overnight confirmation control on cross-day requests', () => {

@@ -1,7 +1,8 @@
 # Report workflow design contract
 
-Shared workflow components support Inspection, ERCO, Drill, and Fitness while keeping
-validation, persistence, permissions, and domain terminology inside each feature.
+Shared workflow components support Inspection, ERCO, Drill, Fitness, Overtime, Leave, and Payroll
+claims while keeping validation, persistence, permissions, and domain terminology inside each
+feature.
 
 ## Product character
 
@@ -37,6 +38,24 @@ Workflow screens are calm, operational, precise, compact, and high-trust.
 `src/components/report-workflow` owns presentation and interaction contracts. Feature modules own
 item builders, validation, API calls, form state, and domain-specific policy. Shared components must
 not import from `src/views`.
+
+## Application workflow composition
+
+- `WorkflowChoiceStage` owns responsive type/setup selection. Staged choices expose one Continue
+  action; opt-in action choices advance directly from the selected row. Page headers remain the sole
+  Back-navigation owner.
+- `WorkflowSetupField` owns selected setup summaries and their Edit/Change affordance.
+- `WorkflowStageActions` owns primary-first mobile action ordering, busy semantics, and inline
+  recoverable persistence failures. Application submit/reset groups stay in flow so they never
+  cover fields or evidence; compact sticky docking is reserved for workflows that explicitly
+  provide non-overlapping content clearance.
+- `WorkflowAttachmentField` owns the product-styled add/replace trigger, hidden native file input,
+  optional camera, status, error, and remove presentation. Feature modules continue to own upload
+  APIs, file policy, attachment lifecycle, and preview data.
+- `workflowFormFocus` owns the base scroll-and-focus behavior for invalid controls. A feature may
+  extend target resolution for nested domain items.
+- Ordinary application forms autosave drafts and do not expose a permanent Save Draft action.
+  Contextual Save draft and leave actions may remain inside dirty-navigation confirmations.
 
 ## Responsive and editing contracts
 

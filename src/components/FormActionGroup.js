@@ -27,6 +27,7 @@ const FormActionGroup = ({
   const isCompactSticky = resolvedMobileBehavior === 'compact-sticky'
   const supportsEndDocking = isCompactSticky && dockAtEnd
   const [mobileDockMetrics, setMobileDockMetrics] = useState(null)
+  const [isDockedAtEnd, setIsDockedAtEnd] = useState(false)
   const endAnchorRef = useRef(null)
   const groupRef = useRef(null)
   const usesMobileActionLayout = resolvedMobileBehavior !== 'legacy-in-flow'
@@ -92,6 +93,11 @@ const FormActionGroup = ({
       if (!anchor || !group) return
 
       const anchorRect = anchor.getBoundingClientRect()
+      const groupRect = group.getBoundingClientRect()
+      const viewportHeight = window.visualViewport?.height || window.innerHeight || 0
+      const mobileNavAllowance = 80
+      const dockThreshold = viewportHeight - groupRect.height - mobileNavAllowance
+      setIsDockedAtEnd(anchorRect.top <= dockThreshold)
       setMobileDockMetrics((current) => {
         const next = {
           left: Math.round(anchorRect.left),
@@ -107,6 +113,7 @@ const FormActionGroup = ({
 
     scheduleDockingCheck()
     window.addEventListener('resize', scheduleDockingCheck)
+    window.addEventListener('scroll', scheduleDockingCheck, { passive: true })
     const resizeObserver =
       typeof window.ResizeObserver === 'function'
         ? new window.ResizeObserver(scheduleDockingCheck)
@@ -118,6 +125,7 @@ const FormActionGroup = ({
       if (frameId !== null) window.cancelAnimationFrame(frameId)
       resizeObserver?.disconnect()
       window.removeEventListener('resize', scheduleDockingCheck)
+      window.removeEventListener('scroll', scheduleDockingCheck)
     }
   }, [supportsEndDocking])
 
@@ -128,7 +136,13 @@ const FormActionGroup = ({
       ) : null}
       <div
         ref={groupRef}
-        className={`${containerClassName} ${supportsEndDocking ? 'action-row-thumb--floating' : ''} ${className}`.trim()}
+        className={`${containerClassName} ${
+          supportsEndDocking
+            ? isDockedAtEnd
+              ? 'action-row-thumb--docked-at-end'
+              : 'action-row-thumb--floating'
+            : ''
+        } ${className}`.trim()}
         role="group"
         aria-label={ariaLabel}
         style={containerStyle}

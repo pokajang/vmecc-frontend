@@ -127,6 +127,20 @@ const REPORT_MOBILE_AUDIT_MATRIX = Object.freeze([
     },
     uatControls: sharedReportControls({ photos: false }),
   },
+  {
+    key: 'er-assessment',
+    route: '/report/er-assessment/new/setup',
+    heading: 'ER Assessment',
+    readyTestId: 'er-assessment-report-setup-ready',
+    capabilities: {
+      supportsPhotos: true,
+      photoScope: 'rescue-access-layout',
+      locationModel: 'single-label',
+      submissionModel: 'atomic-report',
+      stageNavigation: 'ordered-stages',
+    },
+    uatControls: sharedReportControls({ photos: true }),
+  },
 ])
 
 module.exports = { REPORT_MOBILE_AUDIT_MATRIX, UAT_CONTROL_STATUSES }

@@ -1,8 +1,6 @@
 import React from 'react'
-import { CButton } from '@coreui/react'
 import { Bell, CalendarDays, Clock, FileText, Heart, User, Users, WalletCards } from 'lucide-react'
-import FormActionGroup from 'src/components/FormActionGroup'
-import IconOptionGrid from 'src/components/IconOptionGrid'
+import WorkflowChoiceStage from 'src/components/report-workflow/WorkflowChoiceStage'
 
 export const LEAVE_TYPE_OPTIONS = [
   {
@@ -58,35 +56,23 @@ export const LEAVE_TYPE_OPTIONS = [
 export const getLeaveTypeOption = (value) =>
   LEAVE_TYPE_OPTIONS.find((option) => option.value === value) || LEAVE_TYPE_OPTIONS[0]
 
-const LeaveTypeSelection = ({ selectedType, onSelect, onContinue, onBack = () => {} }) => {
+const LeaveTypeSelection = ({ selectedType, onSelect, onContinue }) => {
   return (
-    <div className="d-grid gap-4" data-testid="leave-type-selection">
-      <div className="fw-semibold">Leave type</div>
-      <IconOptionGrid
-        options={LEAVE_TYPE_OPTIONS}
-        value={selectedType}
-        onChange={(nextType) => onSelect(nextType)}
-        variant="compact"
-        columns={{ xs: 6, md: 6, lg: 4 }}
-        rowClassName="g-2 g-md-3"
-        ariaLabel="Choose Leave Type"
-        testIdPrefix="leave-type"
-      />
-
-      <FormActionGroup mobileBehavior="sticky" ariaLabel="Leave type actions">
-        <CButton color="light" onClick={onBack}>
-          Back
-        </CButton>
-        <CButton
-          color="primary"
-          data-testid="leave-type-continue"
-          disabled={!selectedType}
-          onClick={() => onContinue(selectedType)}
-        >
-          Continue
-        </CButton>
-      </FormActionGroup>
-    </div>
+    <WorkflowChoiceStage
+      title="Choose leave type"
+      testId="leave-type-selection"
+      options={LEAVE_TYPE_OPTIONS}
+      value={selectedType}
+      onChange={onSelect}
+      onContinue={onContinue}
+      continueTestId="leave-type-continue"
+      continueDisabled={!selectedType}
+      showDescription
+      columns={{ xs: 6, md: 6, lg: 4 }}
+      rowClassName="g-2 g-md-3"
+      ariaLabel="Choose Leave Type"
+      testIdPrefix="leave-type"
+    />
   )
 }
 

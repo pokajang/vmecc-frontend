@@ -7,6 +7,7 @@ import {
   CalendarDays,
   Clock3,
   ClipboardList,
+  ClipboardCheck,
   Download,
   Dumbbell,
   MessageSquareWarning,
@@ -73,6 +74,13 @@ const _nav = [
     to: '/report/fitness-test',
     matchPrefix: ['/report/fitness-test'],
     icon: <Dumbbell className="nav-icon" size={20} />,
+  },
+  {
+    component: CNavItem,
+    name: 'ER Assessment',
+    to: '/report/er-assessment',
+    matchPrefix: ['/report/er-assessment'],
+    icon: <ClipboardCheck className="nav-icon" size={20} />,
   },
   {
     component: CNavItem,

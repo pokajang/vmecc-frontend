@@ -1,1 +1,0 @@
-import{q as c}from"./index-7OBtaelJ.js";import{B as e}from"./DefaultLayout-DB9z-jZG.js";const B=({label:o="Back",onClick:s,className:t="",size:m="sm",iconSize:a=18,...r})=>c.jsx(e,{...r,size:m,iconSize:a,label:o,className:`d-md-none ${t}`.trim(),onClick:s});export{B as M};

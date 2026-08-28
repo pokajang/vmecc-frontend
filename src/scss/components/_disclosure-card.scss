@@ -5,6 +5,19 @@
   background: var(--cui-body-bg);
 }
 
+.disclosure-card--section {
+  border-color: transparent;
+  background: var(--cui-tertiary-bg);
+}
+
+.disclosure-card--section .disclosure-card__summary {
+  padding-block: 0.875rem;
+}
+
+.disclosure-card--section .disclosure-card__body {
+  padding-top: 0.25rem;
+}
+
 .disclosure-card__summary {
   position: relative;
   display: flex;
@@ -55,4 +68,3 @@
 .disclosure-card + .disclosure-card {
   margin-top: 0.65rem;
 }
-

@@ -55,6 +55,7 @@ describe('system administrator navigation visibility', () => {
       '/report/erco',
       '/report/drill',
       '/report/fitness-test',
+      '/report/er-assessment',
     ]
     const navigation = protectedRoutes.map((to) => ({ component: CNavItem, name: to, to }))
     const user = { roles: ['System Administrator'], permissions: [] }
@@ -65,5 +66,35 @@ describe('system administrator navigation visibility', () => {
     })
 
     expect(visible.map((item) => item.to)).toEqual(protectedRoutes)
+  })
+})
+
+describe('report navigation permission visibility', () => {
+  const reportNavigation = [
+    { component: CNavTitle, name: 'Reporting' },
+    { component: CNavItem, name: 'ERCO', to: '/report/erco' },
+    { component: CNavItem, name: 'Drill', to: '/report/drill' },
+    { component: CNavItem, name: 'Fitness Test', to: '/report/fitness-test' },
+    { component: CNavItem, name: 'ER Assessment', to: '/report/er-assessment' },
+  ]
+
+  it('shows only ER Assessment to a user scoped to ER Assessment reporting', () => {
+    const visible = getVisibleNavigationWithOptions(
+      reportNavigation,
+      { permissions: ['reports.er_assessment.view'] },
+      0,
+    )
+
+    expect(visible.map((item) => item.to).filter(Boolean)).toEqual(['/report/er-assessment'])
+  })
+
+  it('does not expose ER Assessment to an ERCO-only user', () => {
+    const visible = getVisibleNavigationWithOptions(
+      reportNavigation,
+      { permissions: ['reports.erco.view'] },
+      0,
+    )
+
+    expect(visible.map((item) => item.to).filter(Boolean)).toEqual(['/report/erco'])
   })
 })

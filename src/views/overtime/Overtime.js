@@ -14,7 +14,7 @@ import { Plus } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
 import RouteNavTabs from 'src/components/RouteNavTabs'
 import ModulePageHeader from 'src/components/ModulePageHeader'
-import MobileModuleBackAction from 'src/components/MobileModuleBackAction'
+import BackButton from 'src/components/BackButton'
 import { useNavigationGuard } from 'src/contexts/NavigationGuardContext'
 import { isHolidayGuidanceOvertimeEnabledForUser } from 'src/config/featureFlags'
 import { hasPermission, isSystemAdministrator } from 'src/utils/authz'
@@ -475,7 +475,7 @@ const OvertimeContent = () => {
   }
 
   const handleContinueOvertimeTypeWithToast = useCallback(
-    () => handleContinueOvertimeType(pushToast),
+    (nextType) => handleContinueOvertimeType(pushToast, nextType),
     [handleContinueOvertimeType, pushToast],
   )
 
@@ -495,14 +495,17 @@ const OvertimeContent = () => {
     isFormClearing,
     isSubmittingClaim,
     isAttachmentUploading,
+    isFormActionBusy,
+    formActionStatus,
+    draftFeedback,
     handleAttachmentUpload,
+    handleAttachmentRemove,
     cancelOvertime,
     confirmCancelOvertime,
     deleteOvertime,
     confirmDeleteOvertime,
     handleSubmit,
     confirmAndSubmit,
-    handleDraft,
     confirmDiscardDraftChanges,
     handleClearForm,
   } = useOvertimeActions({
@@ -544,6 +547,7 @@ const OvertimeContent = () => {
       setFormBaseline,
     },
     isOvertimeTypeDeriving,
+    autosaveEnabled: activeSection === 'new-overtime' && isFormDirty,
   })
 
   const runOvertimeSectionNavigation = useCallback(
@@ -557,8 +561,8 @@ const OvertimeContent = () => {
     },
     [activeSection, isFormDirty, navigate, runWithDiscardGuard],
   )
-  const showMobileBackAction = activeSection === 'new-overtime'
-  const handleMobileBack = useCallback(
+  const showApplyBackAction = activeSection === 'new-overtime'
+  const handleApplyBack = useCallback(
     () => runWithDiscardGuard(() => navigate('/overtime')),
     [navigate, runWithDiscardGuard],
   )
@@ -610,10 +614,10 @@ const OvertimeContent = () => {
   return (
     <CContainer fluid className="workflow-module-page" data-testid="overtime-module">
       <ModulePageHeader
-        title="Overtime"
+        title={activeSection === 'new-overtime' ? 'Apply Overtime' : 'Overtime'}
         actions={
           <>
-            {showMobileBackAction ? <MobileModuleBackAction onClick={handleMobileBack} /> : null}
+            {showApplyBackAction ? <BackButton onClick={handleApplyBack} /> : null}
             {activeSection === 'new-overtime' ? null : (
               <div data-testid="overtime-new-action">
                 <CreateActionButton
@@ -784,7 +788,6 @@ const OvertimeContent = () => {
             onContinueOvertimeType={handleContinueOvertimeTypeWithToast}
             onBackToOvertimeType={handleBackToOvertimeType}
             onSubmit={handleSubmit}
-            onBack={() => runWithDiscardGuard(() => navigate('/overtime'))}
             claimDate={claimDate}
             startTime={startTime}
             endTime={endTime}
@@ -800,11 +803,14 @@ const OvertimeContent = () => {
             onOvernightConfirmationChange={setIsOvernightConfirmed}
             attachment={attachment}
             onAttachmentChange={handleAttachmentUpload}
+            onAttachmentRemove={handleAttachmentRemove}
             isAttachmentUploading={isAttachmentUploading}
+            isFormActionBusy={isFormActionBusy}
+            formActionStatus={formActionStatus}
+            draftFeedback={draftFeedback}
             onClearForm={handleClearForm}
             clearButtonLabel={clearButtonLabel}
             clearingButtonLabel={clearingButtonLabel}
-            onDraft={handleDraft}
             editingRecordId={editingRecordId}
             isResumeEditMode={isResumeEditMode}
             submitButtonLabel={submitButtonLabel}

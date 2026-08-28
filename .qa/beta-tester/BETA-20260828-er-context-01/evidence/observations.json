@@ -1,0 +1,114 @@
+{
+  "runId": "BETA-20260828-er-context-01",
+  "environment": {
+    "class": "local",
+    "frontend": "http://localhost:3000",
+    "api": "http://localhost:8000/api"
+  },
+  "browser": {
+    "mode": "headed",
+    "channel": "chrome",
+    "workers": 1,
+    "slowMo": 175,
+    "viewport": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "persona": "Tactical Response Team",
+  "attempts": [
+    {
+      "attempt": "attempt-1",
+      "expected": {
+        "company": "BETA-20260828-er-context-01-1 Company",
+        "location": "BETA-20260828-er-context-01-1 Location",
+        "assessmentType": "working-at-height",
+        "scopeOfWork": "BETA-20260828-er-context-01-1 elevated-lighting replacement"
+      },
+      "status": "failed-immediate-transfer",
+      "homeEvidence": "C:\\laragon\\www\\vmecc\\vmecc-frontend\\.qa\\beta-tester\\BETA-20260828-er-context-01\\evidence\\attempt-1-01-er-home.png",
+      "setupRoute": "http://localhost:3000/report/er-assessment/new/setup?type=working-at-height",
+      "setupBeforeEvidence": "C:\\laragon\\www\\vmecc\\vmecc-frontend\\.qa\\beta-tester\\BETA-20260828-er-context-01\\evidence\\attempt-1-02-setup-before-entry.png",
+      "setupInputValues": {
+        "company": "BETA-20260828-er-context-01-1 Company",
+        "location": "BETA-20260828-er-context-01-1 Location",
+        "assessmentType": "working-at-height",
+        "scopeOfWork": "BETA-20260828-er-context-01-1 elevated-lighting replacement"
+      },
+      "setupFilledEvidence": "C:\\laragon\\www\\vmecc\\vmecc-frontend\\.qa\\beta-tester\\BETA-20260828-er-context-01\\evidence\\attempt-1-03-setup-filled.png",
+      "draftRequest": {
+        "status": 201,
+        "company": "BETA-20260828-er-context-01-1 Company",
+        "location": "BETA-20260828-er-context-01-1 Location",
+        "assessmentType": "working-at-height",
+        "scopeOfWork": "BETA-20260828-er-context-01-1 elevated-lighting replacement",
+        "workflowStep": "requirements"
+      },
+      "requirementsRoute": "http://localhost:3000/report/er-assessment/new/requirements?type=working-at-height",
+      "requirementsEvidence": "C:\\laragon\\www\\vmecc\\vmecc-frontend\\.qa\\beta-tester\\BETA-20260828-er-context-01\\evidence\\attempt-1-04-requirements-context.png",
+      "contextImmediately": {
+        "companyPresent": false,
+        "locationPresent": false,
+        "dashCount": 0
+      },
+      "reloadEvidence": "C:\\laragon\\www\\vmecc\\vmecc-frontend\\.qa\\beta-tester\\BETA-20260828-er-context-01\\evidence\\attempt-1-05-requirements-after-reload.png",
+      "contextAfterReload": {
+        "companyPresent": false,
+        "locationPresent": false,
+        "dashCount": 0
+      }
+    },
+    {
+      "attempt": "attempt-2",
+      "expected": {
+        "company": "BETA-20260828-er-context-01-2 Company",
+        "location": "BETA-20260828-er-context-01-2 Location",
+        "assessmentType": "working-at-height",
+        "scopeOfWork": "BETA-20260828-er-context-01-2 elevated-lighting replacement"
+      },
+      "status": "failed-immediate-transfer",
+      "homeEvidence": "C:\\laragon\\www\\vmecc\\vmecc-frontend\\.qa\\beta-tester\\BETA-20260828-er-context-01\\evidence\\attempt-2-01-er-home.png",
+      "setupRoute": "http://localhost:3000/report/er-assessment/new/setup?type=working-at-height",
+      "setupBeforeEvidence": "C:\\laragon\\www\\vmecc\\vmecc-frontend\\.qa\\beta-tester\\BETA-20260828-er-context-01\\evidence\\attempt-2-02-setup-before-entry.png",
+      "setupInputValues": {
+        "company": "BETA-20260828-er-context-01-2 Company",
+        "location": "BETA-20260828-er-context-01-2 Location",
+        "assessmentType": "working-at-height",
+        "scopeOfWork": "BETA-20260828-er-context-01-2 elevated-lighting replacement"
+      },
+      "setupFilledEvidence": "C:\\laragon\\www\\vmecc\\vmecc-frontend\\.qa\\beta-tester\\BETA-20260828-er-context-01\\evidence\\attempt-2-03-setup-filled.png",
+      "draftRequest": {
+        "status": 200,
+        "company": "BETA-20260828-er-context-01-2 Company",
+        "location": "BETA-20260828-er-context-01-2 Location",
+        "assessmentType": "working-at-height",
+        "scopeOfWork": "BETA-20260828-er-context-01-2 elevated-lighting replacement",
+        "workflowStep": "requirements"
+      },
+      "requirementsRoute": "http://localhost:3000/report/er-assessment/new/requirements?type=working-at-height",
+      "requirementsEvidence": "C:\\laragon\\www\\vmecc\\vmecc-frontend\\.qa\\beta-tester\\BETA-20260828-er-context-01\\evidence\\attempt-2-04-requirements-context.png",
+      "contextImmediately": {
+        "companyPresent": false,
+        "locationPresent": false,
+        "dashCount": 0
+      },
+      "reloadEvidence": "C:\\laragon\\www\\vmecc\\vmecc-frontend\\.qa\\beta-tester\\BETA-20260828-er-context-01\\evidence\\attempt-2-05-requirements-after-reload.png",
+      "contextAfterReload": {
+        "companyPresent": false,
+        "locationPresent": false,
+        "dashCount": 0
+      }
+    }
+  ],
+  "console": [],
+  "pageErrors": [],
+  "failedResponses": [],
+  "recovery": [
+    {
+      "attempt": "attempt-2",
+      "classification": "product-retry",
+      "action": "fresh browser context, re-authentication, and new marker-owned setup values"
+    }
+  ],
+  "completedAt": "2026-08-28T08:54:05.942Z"
+}

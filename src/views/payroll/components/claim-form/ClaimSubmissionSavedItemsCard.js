@@ -94,11 +94,11 @@ const ClaimSubmissionSavedItemsCard = ({
         </div>
       )}
 
-      <div className="pt-1 d-flex justify-content-between align-items-center">
-        <span className="fw-semibold">
+      <div className="pt-1 d-flex flex-wrap align-items-center gap-2">
+        <span className="fw-semibold flex-grow-1">
           {isExceptionalClaim ? 'Total Exceptional Claim Amount' : 'Total Claim Amount'}
         </span>
-        <span className="h5 mb-0">{formatCurrency(totalAmount)}</span>
+        <span className="h5 mb-0 ms-auto text-nowrap">{formatCurrency(totalAmount)}</span>
       </div>
       {attachmentGroups.length > 0 && (
         <div className="small text-body-secondary">

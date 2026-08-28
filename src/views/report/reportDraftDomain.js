@@ -1,6 +1,8 @@
 import { uid } from './utils'
 import { normalizeFitnessTestRecordToForm } from './fitness-test/fitnessTestFormDomain'
 import { normalizeDrillRecordToForm } from './drill/drillFormDomain'
+import { normalizeErAssessmentRecordToForm } from './er-assessment/erAssessmentFormDomain'
+import { getErAssessmentType } from './er-assessment/constants'
 
 const statusToneMap = {
   draft: 'warning',
@@ -89,6 +91,13 @@ const buildErcoPostIncidentAnalysisDraft = (record) => {
 }
 
 const recordToDraft = (record, reportTypeSlug) => {
+  if (reportTypeSlug === 'er-assessment') {
+    return {
+      ...record,
+      ...normalizeErAssessmentRecordToForm(record),
+      savedAt: new Date().toISOString(),
+    }
+  }
   if (reportTypeSlug === 'fitness-test') {
     return {
       ...record,
@@ -148,6 +157,12 @@ const buildDraftRow = ({ draft, reportTypeSlug, reportTypeLabel, actorName }) =>
   const draftId = String(draft.draftId || draft.id || '').trim()
   const fallbackTitle = `${reportTypeLabel} Draft`
   const title = String(draft.title || '').trim() || fallbackTitle
+  const erAssessmentType =
+    reportTypeSlug === 'er-assessment'
+      ? getErAssessmentType(
+          payload.assessmentType || payload.assessmentTypeLabel || payload.incidentType,
+        )
+      : null
   return {
     ...payload,
     id: `draft-${draftId || uid()}`,
@@ -157,11 +172,14 @@ const buildDraftRow = ({ draft, reportTypeSlug, reportTypeLabel, actorName }) =>
     reportType: reportTypeSlug,
     recordKind: 'draft',
     status: 'Draft',
-    incidentType: payload.incidentType || '',
-    description: payload.exerciseTitle || payload.description || payload.details || '',
-    incidentDate: payload.incidentDate || payload.reportDate || '',
+    incidentType: erAssessmentType?.label || payload.incidentType || '',
+    assessmentType: erAssessmentType?.value || payload.assessmentType || '',
+    assessmentTypeLabel: erAssessmentType?.label || payload.assessmentTypeLabel || '',
+    description:
+      payload.exerciseTitle || payload.description || payload.details || payload.scopeOfWork || '',
+    incidentDate: payload.incidentDate || payload.reportDate || payload.assessmentDate || '',
     incidentTime: payload.incidentTime || payload.reportTime || '',
-    reportDate: payload.reportDate || payload.incidentDate || '',
+    reportDate: payload.reportDate || payload.incidentDate || payload.assessmentDate || '',
     reportTime: payload.reportTime || payload.incidentTime || '',
     location: splitLocation(payload.location).join(' | '),
     savedAt,

@@ -13,7 +13,9 @@ const WorkflowSetupField = ({
   secondaryValue = '',
   editing = false,
   onEdit,
+  editLabel,
   onReset,
+  resetLabel,
   error = '',
   children,
   className = '',
@@ -42,7 +44,7 @@ const WorkflowSetupField = ({
                 color="light"
                 size="sm"
                 className="workflow-setup-field__icon-action"
-                aria-label={`Reset ${label}`}
+                aria-label={resetLabel || `Reset ${label}`}
                 onClick={onReset}
               >
                 <RotateCcw size={18} aria-hidden="true" />
@@ -72,7 +74,7 @@ const WorkflowSetupField = ({
                 variant="ghost"
                 size="sm"
                 className="workflow-setup-field__icon-action"
-                aria-label={`Reset ${label}`}
+                aria-label={resetLabel || `Reset ${label}`}
                 onClick={onReset}
               >
                 <RotateCcw size={18} aria-hidden="true" />
@@ -85,7 +87,7 @@ const WorkflowSetupField = ({
                 variant="ghost"
                 size="sm"
                 className="workflow-setup-field__icon-action"
-                aria-label={`Edit ${label}`}
+                aria-label={editLabel || `Edit ${label}`}
                 onClick={onEdit}
               >
                 <Pencil size={18} aria-hidden="true" />

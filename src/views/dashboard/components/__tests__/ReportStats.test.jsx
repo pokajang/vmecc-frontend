@@ -3,7 +3,7 @@ import React from 'react'
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, expect, it } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
-import { ReportKpiTiles } from '../ReportStats'
+import { ReportBreakdown, ReportKpiTiles } from '../ReportStats'
 
 afterEach(cleanup)
 
@@ -56,4 +56,44 @@ it('links each role-aware status to its matching report records', () => {
   expect(hrefs).toContain('/inspection?scope=actionable&action=review&team_id=8')
   expect(screen.getByText('Actions assigned to you')).toBeTruthy()
   expect(screen.getByText('Alpha Team · Acting AIC · Temporary coverage')).toBeTruthy()
+})
+
+it('recognizes ER Assessment in reporting families and type breakdowns', () => {
+  const { rerender } = render(
+    <MemoryRouter>
+      <ReportKpiTiles
+        stats={{
+          families: {
+            'er-assessment': {
+              pendingReview: 1,
+              pendingApproval: 2,
+              submittedThisPeriod: 3,
+            },
+          },
+        }}
+      />
+    </MemoryRouter>,
+  )
+
+  expect(screen.getByRole('heading', { name: 'ER Assessment' })).toBeTruthy()
+  expect(screen.getByRole('link', { name: 'Records' }).getAttribute('href')).toBe(
+    '/report/er-assessment?scope=all',
+  )
+
+  rerender(
+    <ReportBreakdown
+      stats={{
+        byType: {
+          inspection: 0,
+          erco: 0,
+          drill: 0,
+          fitnessTest: 0,
+          erAssessment: 4,
+        },
+      }}
+      periodLabel="August 2026"
+    />,
+  )
+  expect(screen.getByText('ER Assessment')).toBeTruthy()
+  expect(screen.getByText('4')).toBeTruthy()
 })

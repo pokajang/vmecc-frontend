@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CButton, CToaster } from '@coreui/react'
 import ClaimLeaveModal from './ClaimLeaveModal'
 import { generateDraftId } from 'src/views/payroll/components/claimRecords'
@@ -40,6 +40,7 @@ const SalaryClaimForm = ({
   onPeriodConfirmedChange,
   draftPayload,
   overtimeEligibility = null,
+  onBackActionChange,
 }) => {
   const isEditingSubmittedClaim = Boolean(String(draftPayload?.sourceClaimId || '').trim())
   const [header, setHeader] = useState({ ...DEFAULT_HEADER, period: periodValue || '' })
@@ -382,6 +383,11 @@ const SalaryClaimForm = ({
     writeLocalBackup,
   })
 
+  useEffect(() => {
+    onBackActionChange?.(handleBack)
+    return () => onBackActionChange?.(null)
+  }, [handleBack, onBackActionChange])
+
   useAdjustmentFocus({
     showForm,
     adjustmentFormRef,
@@ -513,11 +519,11 @@ const SalaryClaimForm = ({
   )
   const salaryBodyActions = useMemo(
     () => ({
-      onBack: handleBack,
       submitClaim,
       clearForm: resetDraft,
+      retryDraft: () => saveDraft({ showNotice: false }),
     }),
-    [handleBack, resetDraft, submitClaim],
+    [resetDraft, saveDraft, submitClaim],
   )
   const salaryBodyState = useMemo(
     () => ({

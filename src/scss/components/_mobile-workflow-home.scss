@@ -382,6 +382,7 @@
 
   .mobile-workflow-home .workflow-scope-segment,
   .mobile-workflow-home .inspection-scope-segment {
+    min-width: var(--mobile-workflow-control-height);
     min-height: var(--mobile-workflow-control-height);
     padding: 0.2rem 0.35rem;
     border: 0;

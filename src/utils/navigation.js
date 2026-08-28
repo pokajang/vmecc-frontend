@@ -127,11 +127,18 @@ export const applyRoleVisibility = (items, authUser, options = {}) => {
       return acc
     }
     if (
+      String(item.to || '').startsWith('/report/er-assessment') &&
+      !hasPermission(authUser, 'reports.er_assessment.view')
+    ) {
+      return acc
+    }
+    if (
       String(item.to || '').startsWith('/report') &&
       !hasAnyPermission(authUser, [
         'reports.erco.view',
         'reports.drill.view',
         'reports.fitness.view',
+        'reports.er_assessment.view',
       ])
     ) {
       return acc

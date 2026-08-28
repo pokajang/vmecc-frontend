@@ -45,6 +45,8 @@ const ReportPhotoSection = ({
   allowCapture = true,
   required = false,
   error = '',
+  contextKey = '',
+  deleteRemovedMedia = true,
 }) => {
   const cameraRef = React.useRef(null)
   const uploadRef = React.useRef(null)
@@ -98,6 +100,7 @@ const ReportPhotoSection = ({
         files,
         module: moduleKey,
         source,
+        contextKey,
         signal: controller.signal,
         onFailure: (failure) => failures.push(failure),
         onProgress: (value) => setProgress({ ...value, retrying: false }),
@@ -176,7 +179,9 @@ const ReportPhotoSection = ({
     setRemoveTarget(null)
     if (!target) return
     onChange?.(rows.filter((photo) => String(photo?.id) !== String(target.id)))
-    void deleteReportMedia(target.mediaId)
+    if (deleteRemovedMedia) {
+      void deleteReportMedia(target.mediaId)
+    }
   }
 
   const updatePhotoDescription = (targetPhoto, description) => {

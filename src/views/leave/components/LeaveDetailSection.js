@@ -51,7 +51,6 @@ const LeaveDetailSection = ({
         subtitle={selectedRecordPendingActionHint || ''}
         status={selectedRecord?.status || ''}
         onBack={onBack}
-        backLabel="Back to leave"
       />
       {!selectedRecord ? (
         <PageState variant="error" message="Leave record not found." />

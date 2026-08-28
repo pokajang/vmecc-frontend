@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import SalaryClaimForm from '../SalaryClaimForm'
 import { loadMyOvertimeRecordsApiFirst } from 'src/services/overtimeApi'
@@ -97,7 +97,7 @@ const baseProps = {
 }
 
 describe('SalaryClaimForm', () => {
-  it('shows thumb action group in back/clear/submit order without manual draft save', async () => {
+  it('shows the canonical primary-first actions without page navigation or manual draft save', async () => {
     render(
       <MemoryRouter>
         <SalaryClaimForm
@@ -107,12 +107,11 @@ describe('SalaryClaimForm', () => {
       </MemoryRouter>,
     )
 
-    const actionBar = screen.getByRole('group', { name: 'Form actions' })
+    const actionBar = screen.getByRole('group', { name: 'Claim form actions' })
     const actionButtons = within(actionBar).getAllByRole('button')
     expect(actionButtons.map((button) => button.textContent.trim())).toEqual([
-      'Back to claims',
-      'Clear form',
       'Submit request',
+      'Clear form',
     ])
     expect(within(actionBar).queryByRole('button', { name: 'Save draft' })).toBeNull()
   })
@@ -128,7 +127,7 @@ describe('SalaryClaimForm', () => {
       </MemoryRouter>,
     )
 
-    const actionBar = screen.getByRole('group', { name: 'Form actions' })
+    const actionBar = screen.getByRole('group', { name: 'Claim form actions' })
     expect(within(actionBar).getByRole('button', { name: 'Update request' })).toBeTruthy()
     expect(within(actionBar).queryByRole('button', { name: 'Submit request' })).toBeNull()
   })
@@ -148,8 +147,10 @@ describe('SalaryClaimForm', () => {
     expect(screen.getByText('Baseline Net')).toBeTruthy()
     expect(screen.getByText('Adjustments')).toBeTruthy()
     expect(screen.getByText('Approved OT')).toBeTruthy()
+    expect(document.querySelectorAll('.workflow-summary-surface')).toHaveLength(1)
+    expect(document.querySelector('.workflow-summary__list--metrics')).toBeTruthy()
 
-    const actionBar = screen.getByRole('group', { name: 'Form actions' })
+    const actionBar = screen.getByRole('group', { name: 'Claim form actions' })
     await waitFor(() => {
       expect(
         within(actionBar).getByRole('button', { name: 'Submit request' }).hasAttribute('disabled'),
@@ -169,13 +170,21 @@ describe('SalaryClaimForm', () => {
       </MemoryRouter>,
     )
 
+    const salaryDisclosure = screen
+      .getByText('Salary baseline and adjustment details')
+      .closest('details')
     fireEvent.click(screen.getByText('Salary baseline and adjustment details'))
     await waitFor(() => {
       expect(screen.getAllByText('Adjusted Gross Salary').length).toBeGreaterThan(0)
     })
+    expect(salaryDisclosure.classList).toContain('disclosure-card--section')
+    expect(salaryDisclosure.querySelector('.card')).toBeNull()
+    expect(salaryDisclosure.querySelector('.responsive-financial-breakdown--embedded')).toBeTruthy()
 
+    const overtimeDisclosure = screen.getByText('Overtime payout details').closest('details')
     fireEvent.click(screen.getByText('Overtime payout details'))
     expect(screen.getByText(/No overtime records found/i)).toBeTruthy()
+    expect(overtimeDisclosure.querySelector('.card')).toBeNull()
   })
 
   it('opens a blank editor on Add Adjustment and clears it without touching saved items', async () => {
@@ -186,6 +195,8 @@ describe('SalaryClaimForm', () => {
     )
 
     const addButton = screen.getByRole('button', { name: 'Add Adjustment' })
+    expect(addButton.classList).toContain('workflow-item-action')
+    expect(addButton.parentElement.classList).toContain('workflow-summary__actions')
     await waitFor(() => {
       expect(addButton.hasAttribute('disabled')).toBe(false)
     })
@@ -195,6 +206,15 @@ describe('SalaryClaimForm', () => {
     // the time this click runs the editor opens empty regardless of what draftItem contains.
     fireEvent.click(addButton)
     expect(screen.getByLabelText('Remarks').value).toBe('')
+    expect(screen.getByRole('radiogroup', { name: 'Choose adjustment type' })).toBeTruthy()
+    expect(screen.getAllByRole('radio')).toHaveLength(2)
+    expect(document.querySelector('.salary-adjustment-editor .card')).toBeNull()
+    const editorActions = document.querySelector('.salary-adjustment-editor__actions')
+    expect(
+      within(editorActions)
+        .getAllByRole('button')
+        .map((button) => button.textContent),
+    ).toEqual(['Save item', 'Cancel add item'])
 
     fireEvent.change(screen.getByLabelText('Remarks'), {
       target: { value: 'temporary salary draft change' },
@@ -207,10 +227,17 @@ describe('SalaryClaimForm', () => {
 
   it('shows leave guard modal for dirty salary claim edits and discards through existing back action', async () => {
     const onBack = vi.fn()
+    let registeredBackAction = null
 
     render(
       <MemoryRouter>
-        <SalaryClaimForm {...baseProps} onBack={onBack} />
+        <SalaryClaimForm
+          {...baseProps}
+          onBack={onBack}
+          onBackActionChange={(action) => {
+            registeredBackAction = action
+          }}
+        />
       </MemoryRouter>,
     )
 
@@ -222,7 +249,8 @@ describe('SalaryClaimForm', () => {
     fireEvent.change(screen.getByLabelText('Remarks'), {
       target: { value: 'temporary salary draft change' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Back to claims' }))
+    await waitFor(() => expect(typeof registeredBackAction).toBe('function'))
+    act(() => registeredBackAction())
 
     expect(screen.getByText('Unsaved Changes')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }))
@@ -317,7 +345,7 @@ describe('SalaryClaimForm', () => {
       </MemoryRouter>,
     )
 
-    const actionBar = screen.getByRole('group', { name: 'Form actions' })
+    const actionBar = screen.getByRole('group', { name: 'Claim form actions' })
     await waitFor(() => {
       expect(
         within(actionBar).getByRole('button', { name: 'Submit request' }).hasAttribute('disabled'),

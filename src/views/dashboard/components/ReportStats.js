@@ -13,6 +13,7 @@ const familyFallbacks = {
   erco: { label: 'ERCO', route: '/report/erco' },
   drill: { label: 'Drill', route: '/report/drill' },
   'fitness-test': { label: 'Fitness test', route: '/report/fitness-test' },
+  'er-assessment': { label: 'ER Assessment', route: '/report/er-assessment' },
 }
 
 const appendQuery = (route, query) => `${route}${route.includes('?') ? '&' : '?'}${query}`
@@ -152,7 +153,13 @@ export const ReportActivityChart = ({ stats, periodLabel }) => (
 )
 
 export const ReportBreakdown = ({ stats, periodLabel }) => {
-  const byType = stats?.byType ?? { inspection: 0, erco: 0, drill: 0, fitnessTest: 0 }
+  const byType = stats?.byType ?? {
+    inspection: 0,
+    erco: 0,
+    drill: 0,
+    fitnessTest: 0,
+    erAssessment: 0,
+  }
   const ercoByType = stats?.ercoByIncidentType ?? []
   const byPersonnel = stats?.byPersonnel ?? []
   const reportTypeRows = [
@@ -160,6 +167,12 @@ export const ReportBreakdown = ({ stats, periodLabel }) => {
     { key: 'erco', label: 'ERCO', value: byType.erco, tone: 'primary' },
     { key: 'drill', label: 'Drill', value: byType.drill, tone: 'success' },
     { key: 'fitness-test', label: 'Fitness test', value: byType.fitnessTest, tone: 'secondary' },
+    {
+      key: 'er-assessment',
+      label: 'ER Assessment',
+      value: byType.erAssessment,
+      tone: 'warning',
+    },
   ]
   const incidentRows = ercoByType.map((row) => ({
     key: row.type,
@@ -219,6 +232,7 @@ const reportStatsShape = {
     erco: PropTypes.number,
     drill: PropTypes.number,
     fitnessTest: PropTypes.number,
+    erAssessment: PropTypes.number,
   }),
   ercoByIncidentType: PropTypes.arrayOf(
     PropTypes.shape({ type: PropTypes.string, count: PropTypes.number }),

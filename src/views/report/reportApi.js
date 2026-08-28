@@ -1,9 +1,11 @@
 import { apiRequest } from 'src/services/apiClient'
 import { downloadReportFile, downloadReportPdf } from 'src/services/api/reportPdfApi'
+import { uploadReportPhoto } from 'src/services/api/reportMediaApi'
 import featureFlags from 'src/config/featureFlags'
 import { REPORT_TYPE_CONFIG } from './constants'
 import { loadReportRecords, saveReportRecords } from './reportStorage'
 import { normalizeReportRecord, normalizeReportRecords } from './utils'
+import { getErAssessmentType } from './er-assessment/constants'
 
 const REPORT_API_ENABLED_TYPES_RAW = String(import.meta.env.VITE_REPORT_API_TYPES || '*')
   .split(',')
@@ -102,6 +104,65 @@ const normalizeType = (value) =>
     .trim()
     .toLowerCase()
 
+const legacyDataUrlToFile = (url, name = 'rescue-access-layout.jpg') => {
+  const match = /^data:(image\/[a-z0-9.+-]+);base64,(.+)$/is.exec(String(url || ''))
+  if (!match) return null
+  const binary = globalThis.atob(match[2].replace(/\s+/g, ''))
+  const bytes = new Uint8Array(binary.length)
+  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index)
+  return new File([bytes], String(name || 'rescue-access-layout.jpg'), { type: match[1] })
+}
+
+const prepareReportRowForApi = async (reportType, row) => {
+  if (reportType !== 'er-assessment') return row
+  const type = getErAssessmentType(
+    row?.assessmentType || row?.assessmentTypeLabel || row?.incidentType,
+  )
+  const incomingResponses = Array.isArray(row?.responses) ? row.responses : []
+  let prepared = type
+    ? {
+        ...row,
+        assessmentType: type.value,
+        responses: type.requirements.map((requirement, index) => ({
+          ...(incomingResponses.find(
+            (response) =>
+              String(response?.requirementId || '') === String(type.requirementIds[index]) ||
+              String(response?.requirement || '') === requirement,
+          ) ||
+            incomingResponses[index] ||
+            {}),
+          requirementId: type.requirementIds[index],
+          requirement,
+        })),
+      }
+    : row
+  const layout = prepared?.rescueAccessLayout
+  if (!layout || layout.mediaId || !String(layout.url || '').startsWith('data:image/')) {
+    return prepared
+  }
+  const file = legacyDataUrlToFile(layout.url, layout.name)
+  if (!file) return row
+  const stableId = String(row?.id || 'record')
+    .replace(/[^a-z0-9_-]/gi, '-')
+    .slice(0, 80)
+  const uploaded = await uploadReportPhoto({
+    file,
+    module: 'er-assessment',
+    source: 'upload',
+    uploadId: `era-backfill-${stableId}`,
+    contextKey: `er-assessment-backfill:${stableId}`,
+  })
+  prepared = {
+    ...prepared,
+    rescueAccessLayout: {
+      ...uploaded,
+      id: uploaded.mediaId,
+      name: uploaded.fileName,
+    },
+  }
+  return prepared
+}
+
 export const isReportApiEnabled = (reportTypeSlug) =>
   REPORT_API_ENABLED_TYPES.includes(normalizeType(reportTypeSlug))
 
@@ -125,6 +186,19 @@ export const refreshReportRecord = async (reportUid) => {
   const response = await apiRequest(
     `/reports/${encodeURIComponent(String(reportUid || '').trim())}`,
   )
+  return response?.data || null
+}
+
+export const fetchErAssessmentTemplate = async () => {
+  const response = await apiRequest('/reports/er-assessment/template')
+  return response?.data || null
+}
+
+export const createErAssessmentType = async (payload) => {
+  const response = await apiRequest('/reports/er-assessment/template/types', {
+    method: 'POST',
+    body: payload,
+  })
   return response?.data || null
 }
 
@@ -265,11 +339,18 @@ const persistReportRecordsToApi = async (reportTypeSlug, rows) => {
     if (!reportUid) continue
 
     const latest = latestMap.get(reportUid)
+    let preparedRow = row
+    try {
+      preparedRow = await prepareReportRowForApi(reportType, row)
+    } catch {
+      ok = false
+      continue
+    }
     const body = {
-      display_id: String(row?.displayId || row?.id || '').trim(),
-      report_type: String(row?.reportType || '').trim(),
-      payload: toPayload(row),
-      status: toApiStatus(row?.status),
+      display_id: String(preparedRow?.displayId || preparedRow?.id || '').trim(),
+      report_type: String(preparedRow?.reportType || '').trim(),
+      payload: toPayload(preparedRow),
+      status: toApiStatus(preparedRow?.status),
     }
 
     try {
@@ -286,7 +367,7 @@ const persistReportRecordsToApi = async (reportTypeSlug, rows) => {
           method: 'PUT',
           body: JSON.stringify({
             ...body,
-            version: Number(latest?.version || row?.version || 1),
+            version: Number(latest?.version || preparedRow?.version || 1),
           }),
         })
       }
@@ -374,6 +455,14 @@ export const downloadDrillReportPdf = async (record) => {
     throw new Error('Download unavailable until the drill report is saved.')
   }
   return downloadReportPdf({ endpoint: '/reports/drill/pdf', reportUid })
+}
+
+export const downloadErAssessmentReportPdf = async (record) => {
+  const reportUid = String(record?.id || '').trim()
+  if (!reportUid) {
+    throw new Error('Download unavailable until the ER Assessment is saved.')
+  }
+  return downloadReportPdf({ endpoint: '/reports/er-assessment/pdf', reportUid })
 }
 
 export const downloadFitnessTestReportJson = async (record) => {

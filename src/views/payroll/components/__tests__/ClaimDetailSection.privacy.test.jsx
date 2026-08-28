@@ -59,7 +59,7 @@ describe('ClaimDetailSection privacy boundaries', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('button', { name: 'Back to claims' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Back' })).toBeTruthy()
     expect(screen.getByRole('alert').textContent).toContain('Claim record not found.')
   })
 

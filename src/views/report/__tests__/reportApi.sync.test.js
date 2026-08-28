@@ -8,6 +8,8 @@ import {
 } from '../reportApi'
 import { loadReportRecords, saveReportRecords } from '../reportStorage'
 
+const mediaMocks = vi.hoisted(() => ({ upload: vi.fn() }))
+
 vi.mock('src/services/apiClient', () => ({
   apiRequest: vi.fn(),
   buildApiUrl: vi.fn((path) => path),
@@ -16,6 +18,10 @@ vi.mock('src/services/apiClient', () => ({
 vi.mock('../reportStorage', () => ({
   loadReportRecords: vi.fn(),
   saveReportRecords: vi.fn(),
+}))
+
+vi.mock('src/services/api/reportMediaApi', () => ({
+  uploadReportPhoto: (...args) => mediaMocks.upload(...args),
 }))
 
 const createStorageMock = () => {
@@ -40,6 +46,12 @@ describe('reportApi sync hardening', () => {
     vi.stubGlobal('localStorage', createStorageMock())
     saveReportRecords.mockReturnValue(true)
     loadReportRecords.mockReturnValue([])
+    mediaMocks.upload.mockResolvedValue({
+      mediaId: 'rpm-backfill-layout',
+      url: '/api/report-media/rpm-backfill-layout',
+      thumbnailUrl: '/api/report-media/rpm-backfill-layout?variant=thumbnail',
+      fileName: 'layout.png',
+    })
   })
 
   it('deletes only stale records of the active report type', async () => {
@@ -253,5 +265,60 @@ describe('reportApi sync hardening', () => {
 
     expect(result).toEqual({ migrated: true, reason: 'migrated' })
     expect(globalThis.localStorage.setItem).toHaveBeenCalledTimes(1)
+  })
+
+  it('uploads legacy ER Assessment layout data before backfilling the report', async () => {
+    let reportsFetchCount = 0
+    loadReportRecords.mockReturnValue([
+      {
+        id: 'era-local-1',
+        displayId: 'ERA-LOCAL-1',
+        reportType: 'er-assessment',
+        status: 'Submitted',
+        assessmentType: 'working-at-height',
+        responses: [
+          {
+            requirement: 'Scaffold tagged & inspected (Green/Yellow/Red)',
+            response: 'Yes',
+            remarks: '',
+          },
+        ],
+        rescueAccessLayout: {
+          name: 'layout.png',
+          url: 'data:image/png;base64,QQ==',
+        },
+      },
+    ])
+    apiRequest.mockImplementation(async (path, options = {}) => {
+      if (path === '/reports' && !options.method) {
+        reportsFetchCount += 1
+        return reportsFetchCount === 1
+          ? { data: [] }
+          : { data: [{ id: 'era-local-1', reportType: 'er-assessment', version: 1 }] }
+      }
+      return { data: null }
+    })
+
+    const result = await runReportApiBackfillMigration({
+      userId: 'u-1',
+      reportTypeSlug: 'er-assessment',
+    })
+
+    expect(result).toEqual({ migrated: true, reason: 'migrated' })
+    expect(mediaMocks.upload).toHaveBeenCalledWith(
+      expect.objectContaining({
+        module: 'er-assessment',
+        uploadId: 'era-backfill-era-local-1',
+      }),
+    )
+    const createCall = apiRequest.mock.calls.find(
+      ([path, options]) => path === '/reports' && options?.method === 'POST',
+    )
+    const body = JSON.parse(createCall[1].body)
+    expect(body.payload.rescueAccessLayout).toEqual(
+      expect.objectContaining({ mediaId: 'rpm-backfill-layout' }),
+    )
+    expect(body.payload.rescueAccessLayout.url).not.toContain('data:image')
+    expect(body.payload.responses[0].requirementId).toBe('wah.scaffold-tagged')
   })
 })

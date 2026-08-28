@@ -1,6 +1,5 @@
-import React from 'react'
+import React, { useEffect, useMemo, useRef } from 'react'
 import {
-  CButton,
   CCol,
   CForm,
   CFormCheck,
@@ -10,12 +9,22 @@ import {
   CFormTextarea,
   CRow,
 } from '@coreui/react'
-import { Clock3, Pencil } from 'lucide-react'
-import BackButton from 'src/components/BackButton'
-import ButtonLoader from 'src/components/ButtonLoader'
-import FormActionGroup from 'src/components/FormActionGroup'
-import IconOptionGrid from 'src/components/IconOptionGrid'
+import { CalendarCheck2, CalendarDays, Clock3 } from 'lucide-react'
+import useReportIsMobile from 'src/hooks/useReportIsMobile'
+import ResponsiveChoiceSelector from 'src/components/report-workflow/ResponsiveChoiceSelector'
+import WorkflowAttachmentField from 'src/components/report-workflow/WorkflowAttachmentField'
+import WorkflowChoiceStage from 'src/components/report-workflow/WorkflowChoiceStage'
+import WorkflowInlineFeedback from 'src/components/report-workflow/WorkflowInlineFeedback'
+import WorkflowSetupField from 'src/components/report-workflow/WorkflowSetupField'
+import WorkflowStageActions from 'src/components/report-workflow/WorkflowStageActions'
+import { focusFirstInvalidField } from 'src/components/report-workflow/workflowFormFocus'
 import { formatDuration } from '../utils'
+
+const OVERTIME_TYPE_ICONS = {
+  weekday: Clock3,
+  weekend: CalendarDays,
+  publicHoliday: CalendarCheck2,
+}
 
 const OvertimeApplySection = ({
   overtimeTypeConfirmed,
@@ -25,7 +34,6 @@ const OvertimeApplySection = ({
   onContinueOvertimeType,
   onBackToOvertimeType,
   onSubmit,
-  onBack,
   claimDate,
   startTime,
   endTime,
@@ -42,7 +50,6 @@ const OvertimeApplySection = ({
   onClearForm,
   clearButtonLabel = 'Clear form',
   clearingButtonLabel = 'Clearing...',
-  onDraft,
   isResumeEditMode = false,
   isOvertimeTypeDerived = false,
   submitButtonLabel = 'Submit request',
@@ -53,17 +60,50 @@ const OvertimeApplySection = ({
   guidanceMessage = '',
   attachment = null,
   onAttachmentChange,
+  onAttachmentRemove,
   isAttachmentUploading = false,
+  isFormActionBusy = false,
+  formActionStatus = '',
+  draftFeedback = null,
 }) => {
+  const formRef = useRef(null)
+  const isMobile = useReportIsMobile()
+  const visualOvertimeTypeOptions = useMemo(
+    () =>
+      overtimeTypeOptions.map((option) => ({
+        ...option,
+        icon: option.icon || OVERTIME_TYPE_ICONS[option.value] || Clock3,
+      })),
+    [overtimeTypeOptions],
+  )
   const selectedOvertimeTypeOption =
-    overtimeTypeOptions.find((option) => option.value === overtimeType) || overtimeTypeOptions[0]
+    visualOvertimeTypeOptions.find((option) => option.value === overtimeType) ||
+    visualOvertimeTypeOptions[0]
 
-  const isActionBusy = isDraftSaving || isFormClearing || isSubmittingClaim
   const canRenderFreshTypeSelector =
     !isOvertimeTypeDerived && !overtimeTypeConfirmed && !isResumeEditMode
+  const resolvedActionStatus =
+    formActionStatus ||
+    (isSubmittingClaim
+      ? submittingButtonLabel
+      : isDraftSaving
+        ? 'Saving overtime draft...'
+        : isFormClearing
+          ? clearingButtonLabel
+          : isAttachmentUploading
+            ? 'Uploading evidence attachment...'
+            : '')
 
-  const renderTypeCards = () => {
-    if (overtimeTypeOptions.length === 0) {
+  useEffect(() => {
+    if (!formRef.current || Object.keys(fieldErrors || {}).length === 0) return undefined
+    const frameId = window.requestAnimationFrame(() => {
+      focusFirstInvalidField(formRef.current)
+    })
+    return () => window.cancelAnimationFrame(frameId)
+  }, [fieldErrors])
+
+  const renderTypeChoices = () => {
+    if (visualOvertimeTypeOptions.length === 0) {
       return (
         <div className="rounded-3 border p-3 bg-light text-body-secondary">
           No overtime type is available. Please contact HR/Admin to configure OT rules.
@@ -72,11 +112,11 @@ const OvertimeApplySection = ({
     }
 
     return (
-      <IconOptionGrid
-        options={overtimeTypeOptions}
+      <ResponsiveChoiceSelector
+        isMobile={isMobile}
+        options={visualOvertimeTypeOptions}
         value={overtimeType}
         onChange={(nextType) => onSelectOvertimeType(nextType)}
-        fallbackIcon={Clock3}
         showDescription={false}
         variant="standard"
         columns={{ xs: 12, md: 4, lg: 4 }}
@@ -89,90 +129,67 @@ const OvertimeApplySection = ({
 
   if (canRenderFreshTypeSelector) {
     return (
-      <div className="d-grid gap-4" data-testid="overtime-type-selection">
-        <div className="fw-semibold">Overtime type</div>
-        {fieldErrors.overtimeType ? (
-          <div className="small text-danger">{fieldErrors.overtimeType}</div>
-        ) : null}
-        {renderTypeCards()}
-        {overtimeTypeOptions.length > 0 ? (
-          <FormActionGroup mobileBehavior="sticky" ariaLabel="Overtime type actions">
-            <CButton color="light" onClick={onBack}>
-              Back
-            </CButton>
-            <CButton
-              color="primary"
-              data-testid="overtime-type-continue"
-              disabled={!overtimeType}
-              onClick={() => onContinueOvertimeType(overtimeType)}
-            >
-              Continue
-            </CButton>
-          </FormActionGroup>
-        ) : null}
+      <div className="d-grid gap-4">
+        {visualOvertimeTypeOptions.length > 0 ? (
+          <WorkflowChoiceStage
+            title="Choose overtime type"
+            options={visualOvertimeTypeOptions}
+            value={overtimeType}
+            onChange={onSelectOvertimeType}
+            onContinue={onContinueOvertimeType}
+            error={fieldErrors.overtimeType}
+            showDescription={false}
+            columns={{ xs: 12, md: 4, lg: 4 }}
+            rowClassName="g-2 g-md-3"
+            variant="standard"
+            ariaLabel="Choose Overtime Type"
+            testIdPrefix="overtime-type"
+            testId="overtime-type-selection"
+            advanceOnSelect
+          />
+        ) : (
+          <div className="d-grid gap-3" data-testid="overtime-type-selection">
+            <h2 className="h6 mb-0">Choose overtime type</h2>
+            {renderTypeChoices()}
+          </div>
+        )}
       </div>
     )
   }
 
   return (
-    <CForm onSubmit={onSubmit} data-testid="overtime-apply">
-      <div className="mb-3">
-        <BackButton onClick={isResumeEditMode ? onBack : onBackToOvertimeType} label="Back" />
-      </div>
-
-      <CRow className="g-3 mb-3">
+    <CForm ref={formRef} onSubmit={onSubmit} data-testid="overtime-apply" noValidate>
+      <CRow className="g-3 mb-4">
         <CCol xs={12}>
           {isResumeEditMode && !isOvertimeTypeDerived ? (
-            <div>
-              <div className="fw-semibold mb-2">Overtime type</div>
-              {renderTypeCards()}
-              {fieldErrors.overtimeType ? (
-                <div className="small text-danger mt-2">{fieldErrors.overtimeType}</div>
-              ) : null}
-            </div>
+            <WorkflowSetupField
+              label="Overtime type"
+              value={selectedOvertimeTypeOption?.title || overtimeType}
+              editing
+              error={fieldErrors.overtimeType}
+            >
+              {renderTypeChoices()}
+            </WorkflowSetupField>
           ) : (
-            <div className="rounded-3 border border-primary bg-primary bg-opacity-10 p-3">
-              <div className="d-flex align-items-start gap-3">
-                <div
-                  className="d-inline-flex align-items-center justify-content-center text-primary"
-                  style={{ flex: '0 0 auto', lineHeight: 0 }}
-                >
-                  <Clock3 size={20} />
-                </div>
-                <div className="flex-grow-1" style={{ minWidth: 0 }}>
-                  <div className="fw-semibold">
-                    {selectedOvertimeTypeOption?.title || 'Overtime Claim'}
-                  </div>
-                </div>
-                {!isOvertimeTypeDerived ? (
-                  <CButton
-                    type="button"
-                    color="link"
-                    className="d-inline-flex align-items-center justify-content-center p-0 text-body-secondary text-decoration-none"
-                    style={{ lineHeight: 0 }}
-                    onClick={onBackToOvertimeType}
-                    title="Edit overtime type"
-                    aria-label="Edit overtime type"
-                  >
-                    <Pencil size={14} />
-                  </CButton>
-                ) : null}
-              </div>
-            </div>
+            <WorkflowSetupField
+              label="Overtime type"
+              value={selectedOvertimeTypeOption?.title || 'Overtime Claim'}
+              onEdit={!isOvertimeTypeDerived ? onBackToOvertimeType : undefined}
+              editLabel="Change overtime type"
+              ariaLabel="Selected overtime type"
+            />
           )}
         </CCol>
       </CRow>
 
-      <div className="rounded-3 border p-3 bg-body">
+      <section className="overtime-application-fields" aria-label="Overtime request details">
         <CRow className="g-3">
           {guidanceMessage ? (
             <CCol xs={12}>
-              <div className="small text-info-emphasis bg-info bg-opacity-10 border border-info-subtle rounded-3 p-2">
-                {guidanceMessage}
-              </div>
+              <WorkflowInlineFeedback kind="info" message={guidanceMessage} compact />
             </CCol>
           ) : null}
-          <CCol md={4}>
+          <CCol xs={12} md={4}>
             <CFormLabel htmlFor="overtime-claim-date">Date</CFormLabel>
             <CFormInput
               id="overtime-claim-date"
@@ -180,61 +197,93 @@ const OvertimeApplySection = ({
               value={claimDate}
               onChange={(event) => onClaimDateChange(event.target.value)}
               invalid={Boolean(fieldErrors.claimDate)}
+              aria-invalid={Boolean(fieldErrors.claimDate)}
+              aria-describedby={fieldErrors.claimDate ? 'overtime-claim-date-error' : undefined}
             />
-            <CFormFeedback invalid>{fieldErrors.claimDate}</CFormFeedback>
+            <CFormFeedback id="overtime-claim-date-error" invalid>
+              {fieldErrors.claimDate}
+            </CFormFeedback>
           </CCol>
-          <CCol md={4}>
-            <CFormLabel htmlFor="overtime-start-time">Start time</CFormLabel>
-            <CFormInput
-              id="overtime-start-time"
-              type="time"
-              value={startTime}
-              onChange={(event) => onStartTimeChange(event.target.value)}
-              invalid={Boolean(fieldErrors.startTime || fieldErrors.window)}
-            />
-            {fieldErrors.startTime ? (
-              <CFormFeedback invalid style={{ display: 'block' }}>
-                {fieldErrors.startTime}
-              </CFormFeedback>
-            ) : null}
-          </CCol>
-          <CCol md={4}>
-            <CFormLabel htmlFor="overtime-end-time">End time</CFormLabel>
-            <CFormInput
-              id="overtime-end-time"
-              type="time"
-              value={endTime}
-              onChange={(event) => onEndTimeChange(event.target.value)}
-              invalid={Boolean(fieldErrors.endTime || fieldErrors.window)}
-            />
-            {fieldErrors.endTime ? (
-              <CFormFeedback invalid style={{ display: 'block' }}>
-                {fieldErrors.endTime}
-              </CFormFeedback>
-            ) : null}
-          </CCol>
-          <CCol xs={12} data-testid="overtime-utility-panel">
-            <div className="small text-muted">
-              Overtime duration:{' '}
-              <span className="fw-semibold">{formatDuration(durationMinutes)}</span>
+          <CCol xs={12} md={8}>
+            <CRow className="g-3">
+              <CCol xs={6} className="workflow-compact-stack-field">
+                <CFormLabel htmlFor="overtime-start-time">Start time</CFormLabel>
+                <CFormInput
+                  id="overtime-start-time"
+                  type="time"
+                  value={startTime}
+                  onChange={(event) => onStartTimeChange(event.target.value)}
+                  invalid={Boolean(fieldErrors.startTime || fieldErrors.window)}
+                  aria-invalid={Boolean(fieldErrors.startTime || fieldErrors.window)}
+                  aria-describedby={
+                    fieldErrors.startTime || fieldErrors.window
+                      ? 'overtime-start-time-error'
+                      : undefined
+                  }
+                />
+                {fieldErrors.startTime ? (
+                  <CFormFeedback
+                    id="overtime-start-time-error"
+                    invalid
+                    style={{ display: 'block' }}
+                  >
+                    {fieldErrors.startTime}
+                  </CFormFeedback>
+                ) : fieldErrors.window ? (
+                  <span id="overtime-start-time-error" className="visually-hidden">
+                    {fieldErrors.window}
+                  </span>
+                ) : null}
+              </CCol>
+              <CCol xs={6} className="workflow-compact-stack-field">
+                <CFormLabel htmlFor="overtime-end-time">End time</CFormLabel>
+                <CFormInput
+                  id="overtime-end-time"
+                  type="time"
+                  value={endTime}
+                  onChange={(event) => onEndTimeChange(event.target.value)}
+                  invalid={Boolean(fieldErrors.endTime || fieldErrors.window)}
+                  aria-invalid={Boolean(fieldErrors.endTime || fieldErrors.window)}
+                  aria-describedby={
+                    fieldErrors.endTime || fieldErrors.window
+                      ? 'overtime-end-time-error'
+                      : undefined
+                  }
+                />
+                {fieldErrors.endTime ? (
+                  <CFormFeedback id="overtime-end-time-error" invalid style={{ display: 'block' }}>
+                    {fieldErrors.endTime}
+                  </CFormFeedback>
+                ) : fieldErrors.window ? (
+                  <span id="overtime-end-time-error" className="visually-hidden">
+                    {fieldErrors.window}
+                  </span>
+                ) : null}
+              </CCol>
+            </CRow>
+            <div className="mt-2" data-testid="overtime-utility-panel">
+              <div className="small text-muted">
+                Overtime duration:{' '}
+                <span className="fw-semibold">{formatDuration(durationMinutes)}</span>
+                {isOvernight ? (
+                  <span className="ms-2 text-warning">Ends on the next day (+1 day).</span>
+                ) : null}
+              </div>
               {isOvernight ? (
-                <span className="ms-2 text-warning">Ends on the next day (+1 day).</span>
+                <div className="mt-2">
+                  <CFormCheck
+                    id="overtime-overnight-confirmation"
+                    checked={isOvernightConfirmed}
+                    onChange={(event) => onOvernightConfirmationChange?.(event.target.checked)}
+                    label="I confirm this overtime ends on the next day."
+                    invalid={Boolean(fieldErrors.window)}
+                  />
+                </div>
+              ) : null}
+              {fieldErrors.window ? (
+                <div className="small text-danger mt-1">{fieldErrors.window}</div>
               ) : null}
             </div>
-            {isOvernight ? (
-              <div className="mt-2">
-                <CFormCheck
-                  id="overtime-overnight-confirmation"
-                  checked={isOvernightConfirmed}
-                  onChange={(event) => onOvernightConfirmationChange?.(event.target.checked)}
-                  label="I confirm this overtime ends on the next day."
-                  invalid={Boolean(fieldErrors.window)}
-                />
-              </div>
-            ) : null}
-            {fieldErrors.window ? (
-              <div className="small text-danger mt-1">{fieldErrors.window}</div>
-            ) : null}
           </CCol>
           <CCol xs={12}>
             <CFormLabel htmlFor="overtime-reason">Reason / work done</CFormLabel>
@@ -245,64 +294,57 @@ const OvertimeApplySection = ({
               onChange={(event) => onReasonChange(event.target.value)}
               placeholder="Describe overtime purpose and tasks completed."
               invalid={Boolean(fieldErrors.reason)}
+              aria-invalid={Boolean(fieldErrors.reason)}
+              aria-describedby={fieldErrors.reason ? 'overtime-reason-error' : undefined}
             />
-            <CFormFeedback invalid>{fieldErrors.reason}</CFormFeedback>
+            <CFormFeedback id="overtime-reason-error" invalid>
+              {fieldErrors.reason}
+            </CFormFeedback>
           </CCol>
           <CCol xs={12}>
-            <CFormLabel htmlFor="overtime-attachment">Evidence attachment (optional)</CFormLabel>
-            <CFormInput
+            <WorkflowAttachmentField
               id="overtime-attachment"
-              type="file"
+              label="Evidence attachment (optional)"
               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-              onChange={(event) => onAttachmentChange?.(event.target.files?.[0] || null)}
-              disabled={isActionBusy || isAttachmentUploading}
-              invalid={Boolean(fieldErrors.attachment)}
+              onFileSelect={onAttachmentChange}
+              disabled={isFormActionBusy || isAttachmentUploading}
+              error={fieldErrors.attachment}
+              guidance="PDF, JPG, PNG, DOC, or DOCX up to 10 MB."
+              statusLabel={attachment?.id ? 'Evidence ready' : ''}
+              statusDetail={
+                attachment?.id ? 'The uploaded file will be submitted with this request.' : ''
+              }
+              statusTone={attachment?.id ? 'success' : 'muted'}
+              hasAttachment={Boolean(attachment?.id)}
+              onRemove={onAttachmentRemove}
             />
-            <CFormFeedback invalid>{fieldErrors.attachment}</CFormFeedback>
-            {attachment?.originalName ? (
-              <div className="small text-body-secondary mt-1">
-                Attached: {attachment.originalName}
-              </div>
-            ) : null}
           </CCol>
         </CRow>
-      </div>
+      </section>
 
-      <FormActionGroup
-        className="mt-4"
-        data-testid="overtime-draft-panel"
-        mobileBehavior="compact-sticky"
-        statusMessage={
-          isDraftSaving
-            ? 'Saving draft…'
-            : isSubmittingClaim
-              ? 'Submitting request…'
-              : 'Draft ready'
-        }
-      >
-        <CButton
-          color="secondary"
-          variant="outline"
-          type="button"
-          onClick={onClearForm}
-          disabled={isActionBusy}
-        >
-          {isFormClearing ? <ButtonLoader label={clearingButtonLabel} /> : clearButtonLabel}
-        </CButton>
-        <span data-testid="overtime-draft-action">
-          <CButton color="light" type="button" onClick={onDraft} disabled={isActionBusy}>
-            {isDraftSaving ? <ButtonLoader label="Saving draft..." /> : 'Save draft'}
-          </CButton>
-        </span>
-        <CButton
-          color="primary"
-          type="submit"
-          data-testid="overtime-submit-action"
-          disabled={isActionBusy}
-        >
-          {isSubmittingClaim ? <ButtonLoader label={submittingButtonLabel} /> : submitButtonLabel}
-        </CButton>
-      </FormActionGroup>
+      <CRow className="g-3">
+        <CCol xs={12}>
+          <WorkflowStageActions
+            className="mt-4"
+            ariaLabel="Overtime form actions"
+            onReset={onClearForm}
+            resetLabel={clearButtonLabel}
+            onPrimary={() => {}}
+            primaryType="submit"
+            primaryLabel={submitButtonLabel}
+            primaryTestId="overtime-submit-action"
+            primaryBusyLabel={isSubmittingClaim ? submittingButtonLabel : ''}
+            isSaving={isFormActionBusy}
+            resetDisabled={isFormActionBusy}
+            feedback={draftFeedback}
+            statusMessage={resolvedActionStatus}
+            primaryDisabled={isFormActionBusy}
+            primaryFirst
+            mobileLayout="stacked-primary-first"
+            stackedMobileBehavior="terminal"
+          />
+        </CCol>
+      </CRow>
     </CForm>
   )
 }

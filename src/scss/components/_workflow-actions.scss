@@ -23,14 +23,27 @@
   min-height: var(--workflow-control-height);
 }
 
+.workflow-attachment-field__trigger,
+.workflow-attachment-field .workflow-attachment-action {
+  min-height: var(--workflow-control-height);
+}
+
 @media (max-width: 767.98px) {
-  .workflow-stage-actions--mobile-stacked .workflow-stage-actions__group,
+  .workflow-stage-actions--mobile-stacked
+    .workflow-stage-actions__group:not(.action-row-thumb--compact-sticky),
   .workflow-stage-actions--mobile-stacked .action-row-thumb-actions {
     width: 100%;
   }
 
   .workflow-stage-actions--mobile-stacked .action-row-thumb-actions {
     gap: var(--workflow-control-gap);
+  }
+}
+
+@media (max-width: 359.98px) {
+  .workflow-compact-stack-field {
+    flex: 0 0 auto;
+    width: 100%;
   }
 }
 

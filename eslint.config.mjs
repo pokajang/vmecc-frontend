@@ -13,6 +13,7 @@ const testFiles = [
   'src/test/**/*.{js,jsx}',
 ]
 const nodeFiles = ['*.{js,mjs,cjs}', 'scripts/**/*.{js,mjs,cjs}', 'tests/**/*.{js,mjs,cjs}']
+const qaFiles = ['.qa/**/*.{js,mjs,cjs}']
 
 export default [
   {
@@ -91,6 +92,15 @@ export default [
     languageOptions: {
       globals: {
         ...globals.node,
+      },
+    },
+  },
+  {
+    files: qaFiles,
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.browser,
       },
     },
   },

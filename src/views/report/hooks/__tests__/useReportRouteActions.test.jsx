@@ -23,6 +23,7 @@ vi.mock('../../reportStorage', () => ({
 vi.mock('../../reportApi', () => ({
   deleteReportRecord: vi.fn(),
   downloadDrillReportPdf: vi.fn(),
+  downloadErAssessmentReportPdf: vi.fn(),
   downloadErcoReportPdf: vi.fn(),
   isReportApiEnabled: () => false,
 }))
@@ -526,6 +527,101 @@ describe('useReportRouteActions', () => {
     expect(pushToast).toHaveBeenCalledWith(
       'Fitness Test report FIT-001 updated.',
       expect.objectContaining({ title: 'Updated', color: 'success' }),
+    )
+  })
+
+  it('keeps an ER Assessment draft when the server does not confirm Submitted status', async () => {
+    const navigate = vi.fn()
+    const pushToast = vi.fn()
+    const reloadRecords = vi.fn()
+    const persistRecord = vi.fn(async (row) => ({
+      saved: true,
+      record: { ...row, status: 'Draft', version: 1 },
+    }))
+    const { result } = renderHook(() =>
+      useReportRouteActions(
+        baseProps({
+          activeFormSlug: 'er-assessment',
+          reportBasePath: '/report/er-assessment',
+          reportTypeLabel: 'ER Assessment',
+          queryDraftId: 'draft-er-status-mismatch',
+          navigate,
+          persistRecord,
+          pushToast,
+          reloadRecords,
+          user: {
+            id: 'user-1',
+            name: 'Alex Tan',
+            permissions: ['reports.er_assessment.view'],
+          },
+        }),
+      ),
+    )
+
+    await act(async () => {
+      result.current.confirmReviewSubmit({
+        id: 'era-new',
+        displayId: 'ERA-NEW',
+        reportType: 'er-assessment',
+        status: 'Submitted',
+        submissionKey: 'era-stable-key',
+        sourceDraftId: 'draft-er-status-mismatch',
+      })
+    })
+
+    await waitFor(() => expect(reloadRecords).toHaveBeenCalledTimes(1))
+    expect(deleteReportDraft).not.toHaveBeenCalled()
+    expect(navigate).not.toHaveBeenCalled()
+    expect(pushToast).toHaveBeenCalledWith(
+      expect.stringContaining('did not confirm this assessment as Submitted'),
+      expect.objectContaining({ title: 'Submission not confirmed', color: 'danger' }),
+    )
+  })
+
+  it('cleans up and exits only after the server confirms an ER Assessment as Submitted', async () => {
+    const navigate = vi.fn()
+    const pushToast = vi.fn()
+    const persistRecord = vi.fn(async (row) => ({
+      saved: true,
+      record: { ...row, status: 'Submitted', version: 1 },
+    }))
+    const { result } = renderHook(() =>
+      useReportRouteActions(
+        baseProps({
+          activeFormSlug: 'er-assessment',
+          reportBasePath: '/report/er-assessment',
+          reportTypeLabel: 'ER Assessment',
+          queryDraftId: 'draft-er-submitted',
+          navigate,
+          persistRecord,
+          pushToast,
+          user: {
+            id: 'user-1',
+            name: 'Alex Tan',
+            permissions: ['reports.er_assessment.view'],
+          },
+        }),
+      ),
+    )
+
+    await act(async () => {
+      result.current.confirmReviewSubmit({
+        id: 'era-new',
+        displayId: 'ERA-NEW',
+        reportType: 'er-assessment',
+        status: 'Submitted',
+        submissionKey: 'era-stable-key',
+        sourceDraftId: 'draft-er-submitted',
+      })
+    })
+
+    await waitFor(() =>
+      expect(deleteReportDraft).toHaveBeenCalledWith('user-1', 'draft-er-submitted'),
+    )
+    expect(navigate).toHaveBeenCalledWith('/report/er-assessment')
+    expect(pushToast).toHaveBeenCalledWith(
+      'ER Assessment report ERA-NEW submitted.',
+      expect.objectContaining({ title: 'Submitted', color: 'success' }),
     )
   })
 })

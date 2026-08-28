@@ -26,7 +26,7 @@ const workflowContextLabel = (item = {}) => {
     ROUTING_SOURCE_LABELS[source] || '',
   ]
     .filter(Boolean)
-    .join(' · ')
+    .join(' - ')
 }
 
 const WorkflowNotificationCard = ({ item, onClick, onDelete, onMarkRead }) => {

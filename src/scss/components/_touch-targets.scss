@@ -61,3 +61,10 @@
     justify-content: center;
   }
 }
+
+@media (max-width: 767.98px) {
+  .workflow-module-page .form-control:not(textarea):not(.visually-hidden),
+  .workflow-module-page .form-select {
+    min-height: var(--workflow-control-height);
+  }
+}

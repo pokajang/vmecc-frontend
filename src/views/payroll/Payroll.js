@@ -6,6 +6,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import CreateActionButton from 'src/components/CreateActionButton'
 import ModulePageHeader from 'src/components/ModulePageHeader'
+import BackButton from 'src/components/BackButton'
 import ExpenseOtherClaimForm from 'src/views/payroll/components/claim-form/ExpenseOtherClaimForm'
 import ClaimTypeSelection from 'src/views/payroll/components/claim-form/ClaimTypeSelection'
 import SalaryClaimForm from 'src/views/payroll/components/claim-form/SalaryClaimForm'
@@ -47,6 +48,7 @@ const PayrollContent = () => {
   const [sort, setSort] = useState('submittedAt:desc')
 
   const toaster = useRef()
+  const claimFormBackActionRef = useRef(null)
   const [toast, addToast] = useState(0)
   const pushToast = useCallback((message, { title, color = 'light', delay = 6000 } = {}) => {
     addToast(
@@ -82,6 +84,25 @@ const PayrollContent = () => {
     activeSection,
     navigate,
   })
+
+  const registerClaimFormBackAction = useCallback((action) => {
+    claimFormBackActionRef.current = typeof action === 'function' ? action : null
+  }, [])
+  const handleNewClaimBack = useCallback(() => {
+    if (activeSection === 'new-claim-select') {
+      if (isDraftSelectionMode) {
+        cancelClaimSelectionEdit()
+      } else {
+        navigate('/payroll')
+      }
+      return
+    }
+    if (claimFormBackActionRef.current) {
+      claimFormBackActionRef.current()
+      return
+    }
+    navigate('/payroll')
+  }, [activeSection, cancelClaimSelectionEdit, isDraftSelectionMode, navigate])
 
   const {
     claimRecords,
@@ -262,9 +283,17 @@ const PayrollContent = () => {
   return (
     <CContainer fluid className="workflow-module-page" data-testid="payroll-module">
       <ModulePageHeader
-        title="Payroll"
+        title={
+          activeSection.startsWith('new-claim')
+            ? selectedClaimType
+              ? `Apply ${CLAIM_TYPE_META[selectedClaimType]?.label || 'Claim'}`
+              : 'Apply Claim'
+            : 'Payroll'
+        }
         actions={
-          activeSection.startsWith('new-claim') ? null : (
+          activeSection.startsWith('new-claim') ? (
+            <BackButton onClick={handleNewClaimBack} />
+          ) : (
             <div data-testid={activeSection === 'claims' ? 'payroll-new-claim-action' : undefined}>
               <CreateActionButton
                 label="Apply Claim"
@@ -348,13 +377,10 @@ const PayrollContent = () => {
               selectedType={selectedClaimType}
               onSelect={setSelectedClaimType}
               onContinue={continueNewClaim}
-              onBack={() => navigate('/payroll')}
-              onCancelEdit={isDraftSelectionMode ? cancelClaimSelectionEdit : undefined}
               periodValue={claimPeriod}
               onPeriodChange={setClaimPeriod}
               typeLocked={claimTypeLockedForSelection}
               salaryPeriodLocks={salaryPeriodLocks}
-              backLabel="Back to claims"
               continueLabel={isDraftSelectionMode ? 'Update' : 'Continue'}
             />
           )}
@@ -371,6 +397,7 @@ const PayrollContent = () => {
               onPeriodChange={setClaimPeriod}
               onPeriodConfirmedChange={setClaimPeriodConfirmed}
               draftPayload={expenseDraftPayload}
+              onBackActionChange={registerClaimFormBackAction}
             />
           )}
 
@@ -387,6 +414,7 @@ const PayrollContent = () => {
               onPeriodConfirmedChange={setClaimPeriodConfirmed}
               draftPayload={salaryDraftPayload}
               overtimeEligibility={overtimeEligibility}
+              onBackActionChange={registerClaimFormBackAction}
             />
           )}
 

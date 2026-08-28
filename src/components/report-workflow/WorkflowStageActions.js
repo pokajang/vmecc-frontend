@@ -3,7 +3,6 @@ import AppButton from 'src/components/AppButton'
 import FormActionGroup from 'src/components/FormActionGroup'
 import useMediaQuery from 'src/hooks/useMediaQuery'
 import WorkflowInlineFeedback from './WorkflowInlineFeedback'
-import { REPORT_ACTION_LABELS } from 'src/views/report/reportActionLabels'
 
 const MOBILE_WORKFLOW_ACTION_QUERY = '(max-width: 767.98px)'
 
@@ -13,14 +12,17 @@ const WorkflowStageActions = ({
   onReset,
   resetLabel = 'Reset',
   onSaveDraft,
-  saveLabel = REPORT_ACTION_LABELS.SAVE_DRAFT,
+  saveLabel = 'Save Draft',
   onPrimary,
-  primaryLabel = REPORT_ACTION_LABELS.CONTINUE,
+  primaryLabel = 'Continue',
+  primaryBusyLabel = '',
+  primaryTestId,
   primaryType = 'button',
   statusMessage = '',
   feedback = null,
   blockerMessage = '',
   isSaving = false,
+  resetDisabled = false,
   saveDisabled = false,
   primaryDisabled = false,
   primaryFirst = false,
@@ -69,12 +71,13 @@ const WorkflowStageActions = ({
   const primaryAction = showPrimary ? (
     <AppButton
       className="workflow-stage-actions__primary"
+      data-testid={primaryTestId}
       type={primaryType}
       intent="primary"
       disabled={primaryDisabled || isSaving}
       onClick={primaryType === 'submit' ? undefined : onPrimary}
     >
-      {primaryLabel}
+      {isSaving && primaryBusyLabel ? primaryBusyLabel : primaryLabel}
     </AppButton>
   ) : null
   const saveAction =
@@ -118,7 +121,12 @@ const WorkflowStageActions = ({
           </AppButton>
         ) : null}
         {typeof onReset === 'function' ? (
-          <AppButton type="button" intent="neutral" disabled={isSaving} onClick={onReset}>
+          <AppButton
+            type="button"
+            intent="neutral"
+            disabled={resetDisabled || isSaving}
+            onClick={onReset}
+          >
             {resetLabel}
           </AppButton>
         ) : null}

@@ -38,7 +38,6 @@ const OvertimeDetailSection = ({
         subtitle={selectedRecordPendingActionHint || ''}
         status={selectedRecord?.status || ''}
         onBack={onBack}
-        backLabel="Back to overtime"
       />
     ) : (
       <div className="mb-3">

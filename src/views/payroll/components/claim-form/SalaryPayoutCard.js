@@ -40,7 +40,11 @@ const SalaryPayoutCard = ({
   onRemoveItem,
   onPreviewAttachment,
   showAddAction = true,
+  embedded = false,
 }) => {
+  const Surface = embedded ? 'section' : CCard
+  const Content = embedded ? 'div' : CCardBody
+
   const adjustmentActions = (item, savedIndex) => (
     <>
       <CButton
@@ -187,18 +191,23 @@ const SalaryPayoutCard = ({
   ]
 
   return (
-    <CCard>
-      <CCardHeader className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
-        <span>Salary Payout</span>
-        {showAddAction && (
-          <CreateActionButton
-            label="Add Adjustment"
-            onClick={onAddItem}
-            disabled={!hasAssignedSalaryBaseline}
-          />
-        )}
-      </CCardHeader>
-      <CCardBody className="d-grid gap-3">
+    <Surface
+      className={embedded ? 'salary-payout-embedded' : undefined}
+      aria-label={embedded ? 'Salary payout' : undefined}
+    >
+      {!embedded ? (
+        <CCardHeader className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
+          <span>Salary Payout</span>
+          {showAddAction && (
+            <CreateActionButton
+              label="Add Adjustment"
+              onClick={onAddItem}
+              disabled={!hasAssignedSalaryBaseline}
+            />
+          )}
+        </CCardHeader>
+      ) : null}
+      <Content className="d-grid gap-3">
         {isSalaryAssignmentsLoading ? (
           <TableLoader />
         ) : !hasAssignedSalaryBaseline ? (
@@ -211,6 +220,7 @@ const SalaryPayoutCard = ({
             <ResponsiveFinancialBreakdown
               sections={mobileSections}
               ariaLabel="Salary payout breakdown"
+              className={embedded ? 'responsive-financial-breakdown--embedded' : ''}
             />
             <div className="d-none d-md-block rounded-3 shadow-sm overflow-hidden bg-body">
               <CTable align="middle" className="mb-0" responsive>
@@ -493,8 +503,8 @@ const SalaryPayoutCard = ({
             </div>
           </>
         )}
-      </CCardBody>
-    </CCard>
+      </Content>
+    </Surface>
   )
 }
 

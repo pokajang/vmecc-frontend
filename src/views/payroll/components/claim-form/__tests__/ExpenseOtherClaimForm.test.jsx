@@ -55,21 +55,23 @@ const baseProps = {
 }
 
 describe('ExpenseOtherClaimForm', () => {
-  it('shows thumb action group in back/clear/submit order without manual draft save', async () => {
+  it('shows the canonical primary-first actions without page navigation or manual draft save', async () => {
     render(
       <MemoryRouter>
         <ExpenseOtherClaimForm {...baseProps} />
       </MemoryRouter>,
     )
 
-    const actionBar = screen.getByRole('group', { name: 'Form actions' })
+    const actionBar = screen.getByRole('group', { name: 'Claim form actions' })
     const actionButtons = within(actionBar).getAllByRole('button')
     expect(actionButtons.map((button) => button.textContent.trim())).toEqual([
-      'Back to claims',
-      'Clear form',
       'Submit request',
+      'Clear form',
     ])
     expect(within(actionBar).queryByRole('button', { name: 'Save draft' })).toBeNull()
+    const totalRow = screen.getByText('Total Claim Amount').parentElement
+    expect(totalRow.className).toContain('gap-2')
+    expect(screen.getAllByText('RM 10.00').at(-1).className).toContain('text-nowrap')
     await act(async () => {})
   })
 
@@ -131,10 +133,17 @@ describe('ExpenseOtherClaimForm', () => {
 
   it('shows leave guard modal for dirty expense edits and discards through existing back action', () => {
     const onBack = vi.fn()
+    let registeredBackAction = null
 
     render(
       <MemoryRouter>
-        <ExpenseOtherClaimForm {...baseProps} onBack={onBack} />
+        <ExpenseOtherClaimForm
+          {...baseProps}
+          onBack={onBack}
+          onBackActionChange={(action) => {
+            registeredBackAction = action
+          }}
+        />
       </MemoryRouter>,
     )
 
@@ -142,7 +151,8 @@ describe('ExpenseOtherClaimForm', () => {
     fireEvent.change(screen.getByLabelText('Item Notes'), {
       target: { value: 'temporary expense draft change' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Back to claims' }))
+    expect(typeof registeredBackAction).toBe('function')
+    act(() => registeredBackAction())
 
     expect(screen.getByText('Unsaved Changes')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }))

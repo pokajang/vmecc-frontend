@@ -90,7 +90,7 @@ describe('WorkflowNotifications', () => {
     )
     expect(document.querySelector('.notification-item-dot')).toBeNull()
     expect(
-      screen.getByText('Alpha Team · Acting Assistant Incident Commander · Temporary coverage'),
+      screen.getByText('Alpha Team - Acting Assistant Incident Commander - Temporary coverage'),
     ).toBeTruthy()
 
     fireEvent.click(screen.getByText('Leave needs approval'))

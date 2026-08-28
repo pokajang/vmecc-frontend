@@ -1,7 +1,6 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react'
-import { CButton, CToaster } from '@coreui/react'
-import BackButton from 'src/components/BackButton'
-import FormActionGroup from 'src/components/FormActionGroup'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { CToaster } from '@coreui/react'
+import WorkflowStageActions from 'src/components/report-workflow/WorkflowStageActions'
 import ClaimLeaveModal from './ClaimLeaveModal'
 import ClaimSubmitModal from './ClaimSubmitModal'
 import { generateDraftId } from 'src/views/payroll/components/claimRecords'
@@ -47,6 +46,7 @@ const ExpenseOtherClaimForm = ({
   onPeriodChange,
   onPeriodConfirmedChange,
   draftPayload,
+  onBackActionChange,
 }) => {
   const isExceptionalClaim = claimType === 'other'
   const isEditingSubmittedClaim = Boolean(String(draftPayload?.sourceClaimId || '').trim())
@@ -349,6 +349,11 @@ const ExpenseOtherClaimForm = ({
     setLastSavedSnapshot,
   })
 
+  useEffect(() => {
+    onBackActionChange?.(handleBack)
+    return () => onBackActionChange?.(null)
+  }, [handleBack, onBackActionChange])
+
   return (
     <div className="d-grid gap-4" data-testid="payroll-claim-form">
       <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
@@ -464,28 +469,30 @@ const ExpenseOtherClaimForm = ({
             />
           )}
 
-          <div className="d-none d-md-block px-1 small text-body-secondary">{draftSyncSummary}</div>
-          <FormActionGroup
-            leading={<BackButton onClick={handleBack} label="Back to claims" />}
-            mobileBehavior="compact-sticky"
-            statusMessage={draftSyncSummary}
-          >
-            <CButton color="secondary" variant="outline" onClick={resetDraft}>
-              Clear form
-            </CButton>
-            <CButton
-              color="primary"
-              data-testid="payroll-claim-submit-action"
-              onClick={submitClaim}
-              disabled={isSubmittingClaim}
-            >
-              {isSubmittingClaim
-                ? 'Submitting...'
-                : isEditingSubmittedClaim
-                  ? 'Update request'
-                  : 'Submit request'}
-            </CButton>
-          </FormActionGroup>
+          <WorkflowStageActions
+            onReset={resetDraft}
+            resetLabel="Clear form"
+            onPrimary={submitClaim}
+            primaryLabel={isEditingSubmittedClaim ? 'Update request' : 'Submit request'}
+            primaryBusyLabel="Submitting..."
+            primaryTestId="payroll-claim-submit-action"
+            primaryDisabled={isSubmittingClaim}
+            isSaving={isSubmittingClaim}
+            feedback={
+              /failed|unable|retry/i.test(draftSyncSummary)
+                ? {
+                    kind: 'error',
+                    title: 'Draft could not be saved',
+                    message: draftSyncSummary,
+                    action: { label: 'Retry', onAction: () => saveDraft({ showNotice: false }) },
+                  }
+                : null
+            }
+            primaryFirst
+            mobileLayout="stacked-primary-first"
+            stackedMobileBehavior="terminal"
+            ariaLabel="Claim form actions"
+          />
         </>
       )}
     </div>

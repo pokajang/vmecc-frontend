@@ -65,7 +65,11 @@ test.describe('Overtime remediation browser smoke', () => {
     }
 
     await page.close()
-    const applicantContext = await browser.newContext()
+    const applicantContext = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      isMobile: true,
+      hasTouch: true,
+    })
     const applicantPage = await applicantContext.newPage()
     await login(applicantPage, personas.applicant)
     const applicantOvertime = await applicantPage.evaluate(async (browserApiBaseUrl) => {
@@ -100,39 +104,45 @@ test.describe('Overtime remediation browser smoke', () => {
     const overtimeRecord = applicantOvertime.records.body.data.find(
       (row) => row.display_id === 'SMK-OT-WORKFLOW',
     )
-    const resubmission = await applicantPage.evaluate(
-      async ({ record, browserApiBaseUrl }) => {
-        const sessionResponse = await fetch(`${browserApiBaseUrl}/auth/session`, {
-          credentials: 'include',
-          headers: { Accept: 'application/json' },
-        })
-        const session = await sessionResponse.json()
-        const response = await fetch(`${browserApiBaseUrl}/overtime/${record.id}`, {
-          method: 'PUT',
-          credentials: 'include',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': session.csrf_token,
-          },
-          body: JSON.stringify({
-            overtime_type: record.overtime_type,
-            claim_date: record.claim_date,
-            start_time: record.start_time,
-            end_time: record.end_time,
-            is_overnight: record.is_overnight,
-            duration_minutes: record.duration_minutes,
-            reason: 'Completed handover, asset checks, and incident log reconciliation.',
-            expected_version: record.version,
-          }),
-        })
-        return { status: response.status, body: await response.json() }
-      },
-      { record: overtimeRecord, browserApiBaseUrl: apiBaseUrl },
+    await applicantPage.goto(`${baseUrl}/overtime/${overtimeRecord.display_id}`, {
+      waitUntil: 'domcontentloaded',
+    })
+    const remindLater = applicantPage.getByRole('button', {
+      name: 'Remind me later',
+      exact: true,
+    })
+    if (await remindLater.isVisible().catch(() => false)) await remindLater.click()
+    await expect(applicantPage.getByTestId('overtime-detail')).toContainText('Needs Correction')
+    await applicantPage.getByTestId('overtime-edit-action').click()
+    await expect(applicantPage.getByTestId('overtime-apply')).toBeVisible()
+    await applicantPage
+      .getByLabel('Reason / work done', { exact: true })
+      .fill('Completed handover, asset checks, and incident log reconciliation.')
+    const updateButton = applicantPage.getByRole('button', {
+      name: 'Update request',
+      exact: true,
+    })
+    await expect(updateButton).toBeEnabled()
+    await updateButton.click()
+    await expect(
+      applicantPage.getByText('Confirm overtime resubmission', { exact: true }),
+    ).toBeVisible()
+    const [resubmissionResponse] = await Promise.all([
+      applicantPage.waitForResponse(
+        (response) =>
+          new URL(response.url()).pathname === `/api/overtime/${overtimeRecord.id}` &&
+          response.request().method() === 'PUT',
+      ),
+      applicantPage.getByRole('button', { name: 'Confirm resubmission', exact: true }).click(),
+    ])
+    const resubmissionBody = await resubmissionResponse.json()
+    expect(resubmissionResponse.status(), JSON.stringify(resubmissionBody)).toBe(200)
+    expect(resubmissionBody.data?.status).toBe('Pending')
+    expect(resubmissionBody.data?.workflow_stage).toBe('review')
+    await expect(applicantPage).toHaveURL(/\/overtime$/)
+    await expect(applicantPage.getByTestId('overtime-records')).toContainText(
+      'Completed handover, asset checks, and incident log reconciliation.',
     )
-    expect(resubmission.status).toBe(200)
-    expect(resubmission.body.data?.status).toBe('Pending')
-    expect(resubmission.body.data?.workflow_stage).toBe('review')
     await applicantContext.close()
   })
 })

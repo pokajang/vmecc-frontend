@@ -1,9 +1,9 @@
 import React from 'react'
-import { CButton } from '@coreui/react'
 import { BadgeDollarSign, Calendar, ReceiptText, ShieldCheck } from 'lucide-react'
 import { buildClaimPeriodOptions } from './claimPeriodOptions'
-import FormActionGroup from 'src/components/FormActionGroup'
-import IconOptionGrid from 'src/components/IconOptionGrid'
+import useReportIsMobile from 'src/hooks/useReportIsMobile'
+import ResponsiveChoiceSelector from 'src/components/report-workflow/ResponsiveChoiceSelector'
+import WorkflowChoiceStage from 'src/components/report-workflow/WorkflowChoiceStage'
 
 const CLAIM_TYPE_OPTIONS = [
   {
@@ -34,51 +34,57 @@ const ClaimTypeSelection = ({
   selectedType,
   onSelect,
   onContinue,
-  onBack,
-  onCancelEdit,
   periodValue,
   onPeriodChange,
   typeLocked = false,
   salaryPeriodLocks = {},
-  backLabel = 'Back to claims',
   continueLabel = 'Continue',
-  cancelLabel = 'Cancel edit',
 }) => {
+  const isMobile = useReportIsMobile()
   const isSalaryType = selectedType === 'salary'
   const selectedSalaryPeriodLockReason = isSalaryType ? salaryPeriodLocks?.[periodValue] || '' : ''
 
   return (
-    <div className="d-grid gap-4" data-testid="payroll-claim-type-selection">
-      <div>
-        <div className="fw-semibold">Claim type</div>
-        {typeLocked && (
-          <div className="small text-body-secondary mt-1">Claim type is locked for this draft.</div>
-        )}
-      </div>
-      <IconOptionGrid
-        options={CLAIM_TYPE_OPTIONS}
-        value={selectedType}
-        onChange={(nextType) => onSelect(nextType)}
-        variant="standard"
-        columns={{ xs: 12, md: 6, lg: 4 }}
-        rowClassName="g-3"
-        ariaLabel="Choose Claim Type"
-        disabled={typeLocked}
-        testIdPrefix="claim-type"
-      />
+    <WorkflowChoiceStage
+      title="Choose claim type"
+      testId="payroll-claim-type-selection"
+      options={CLAIM_TYPE_OPTIONS}
+      value={selectedType}
+      onChange={onSelect}
+      onContinue={onContinue}
+      continueLabel={continueLabel}
+      continueTestId="payroll-claim-type-continue"
+      continueDisabled={!selectedType || !periodValue || Boolean(selectedSalaryPeriodLockReason)}
+      disabled={typeLocked}
+      variant="standard"
+      columns={{ xs: 12, md: 6, lg: 4 }}
+      rowClassName="g-3"
+      ariaLabel="Choose Claim Type"
+      testIdPrefix="claim-type"
+    >
+      {typeLocked ? (
+        <div className="small text-body-secondary">Claim type is locked for this draft.</div>
+      ) : null}
 
-      {selectedType && (
-        <div className="d-grid gap-2">
-          <div className="fw-semibold">Claim month</div>
-          {isSalaryType && (
+      {selectedType ? (
+        <section className="d-grid gap-2" aria-labelledby="claim-month-heading">
+          <div>
+            <h3 id="claim-month-heading" className="h6 mb-0">
+              Claim month
+            </h3>
+          </div>
+          {isSalaryType ? (
             <div className="small text-body-secondary">
               Salary claim can be submitted once per payroll month.
             </div>
-          )}
-          {selectedSalaryPeriodLockReason ? (
-            <div className="small text-danger">{selectedSalaryPeriodLockReason}</div>
           ) : null}
-          <IconOptionGrid
+          {selectedSalaryPeriodLockReason ? (
+            <div className="small text-danger" role="alert">
+              {selectedSalaryPeriodLockReason}
+            </div>
+          ) : null}
+          <ResponsiveChoiceSelector
+            isMobile={isMobile}
             options={CLAIM_PERIOD_OPTIONS.map((option) => ({
               ...option,
               title: option.label,
@@ -90,35 +96,16 @@ const ClaimTypeSelection = ({
               disabled: isSalaryType && Boolean(salaryPeriodLocks?.[option.value]),
             }))}
             value={periodValue}
-            onChange={(nextPeriod) => onPeriodChange(nextPeriod)}
+            onChange={onPeriodChange}
             variant="standard"
             columns={{ xs: 12, md: 6, lg: 4 }}
             rowClassName="g-3"
             ariaLabel="Choose Claim Month"
             testIdPrefix="claim-period"
           />
-        </div>
-      )}
-
-      <FormActionGroup mobileBehavior="sticky" ariaLabel="Claim type actions">
-        <CButton color="light" onClick={onBack}>
-          {backLabel}
-        </CButton>
-        {onCancelEdit && (
-          <CButton color="light" onClick={onCancelEdit}>
-            {cancelLabel}
-          </CButton>
-        )}
-        <CButton
-          color="primary"
-          data-testid="payroll-claim-type-continue"
-          disabled={!selectedType || !periodValue || Boolean(selectedSalaryPeriodLockReason)}
-          onClick={() => onContinue(selectedType)}
-        >
-          {continueLabel}
-        </CButton>
-      </FormActionGroup>
-    </div>
+        </section>
+      ) : null}
+    </WorkflowChoiceStage>
   )
 }
 

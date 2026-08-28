@@ -18,6 +18,7 @@ import {
   rejectStaffOvertimeRecord,
   cancelStaffOvertimeRecord,
   requestCorrectionStaffOvertimeRecord,
+  deleteWorkflowAttachment,
   uploadWorkflowAttachment,
 } from './apiClient'
 import featureFlags from 'src/config/featureFlags'
@@ -326,6 +327,18 @@ export const uploadMyOvertimeAttachmentApiFirst = async (file) => {
   try {
     const result = await uploadWorkflowAttachment(file)
     return { ok: true, data: result?.data || null, source: 'api' }
+  } catch (error) {
+    return { ok: false, error, source: 'api', ...mapApiErrorMeta(error) }
+  }
+}
+
+export const deleteMyOvertimeAttachmentApiFirst = async (attachmentId) => {
+  if (!featureFlags.apiOtPayrollWritesPrimary) {
+    return { ok: false, error: new Error('API writes disabled by feature flag'), source: 'api' }
+  }
+  try {
+    await deleteWorkflowAttachment(attachmentId)
+    return { ok: true, source: 'api' }
   } catch (error) {
     return { ok: false, error, source: 'api', ...mapApiErrorMeta(error) }
   }

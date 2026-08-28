@@ -113,6 +113,7 @@ const inferReportTypeFromDisplayId = (displayId) => {
   if (prefix === 'erco') return 'erco'
   if (prefix === 'drl') return 'drill'
   if (prefix === 'fit') return 'fitness-test'
+  if (prefix === 'era') return 'er-assessment'
   return ''
 }
 

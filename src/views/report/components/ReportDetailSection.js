@@ -7,6 +7,7 @@ import ReportPhotoGallery from 'src/components/report-workflow/ReportPhotoGaller
 import RecordDetailActions from 'src/components/report-workflow/RecordDetailActions'
 import { DetailField } from 'src/components/report-workflow/ReportViewComponents'
 import RespondingTeamSummary from 'src/components/report-workflow/RespondingTeamSummary'
+import ErAssessmentReadOnlySections from '../er-assessment/ErAssessmentReadOnlySections'
 
 const ChronologyRows = ({ chronology }) => {
   const rows = (Array.isArray(chronology) ? chronology : []).filter((r) => r.time || r.action)
@@ -144,6 +145,7 @@ const ReportDetailSection = ({
   const isErco = reportType === 'erco'
   const isDrill = reportType === 'drill'
   const isFitness = reportType === 'fitness-test'
+  const isErAssessment = reportType === 'er-assessment'
 
   const hasRespondingTeam = (isErco || isDrill) && r.respondingTeam
   const hasChronology =
@@ -418,38 +420,42 @@ const ReportDetailSection = ({
         </CAlert>
       ) : null}
 
-      <section className="inspection-form-section d-grid gap-3">
-        <div className="fw-semibold text-muted">Report Context</div>
-        <CRow className="g-3">
-          <DetailField label={typeLabel}>{r.incidentType || '--'}</DetailField>
-          {r.weather ? <DetailField label={conditionLabel}>{r.weather}</DetailField> : null}
-          <DetailField label="Location" xs={12} md={r.weather ? 4 : 8}>
-            {r.location || '--'}
-          </DetailField>
-          {isDrill && Array.isArray(r.exerciseCategories) && r.exerciseCategories.length ? (
-            <DetailField label="Exercise Categories" xs={12} md={4}>
-              {r.exerciseCategories.join(', ')}
-            </DetailField>
-          ) : null}
-          {isDrill && r.reportIssuanceDate ? (
-            <DetailField label="Report Issuance Date" xs={12} md={4}>
-              {r.reportIssuanceDate}
-            </DetailField>
-          ) : null}
-          {r.teamInCharge || r.respondingTeamName ? (
-            <DetailField label="Team In Charge" xs={12} md={4}>
-              {r.teamInCharge || r.respondingTeamName}
-            </DetailField>
-          ) : null}
-          {r.aicInCharge ? (
-            <DetailField label="AIC In Charge" xs={12} md={4}>
-              {r.aicInCharge}
-            </DetailField>
-          ) : null}
-        </CRow>
-      </section>
+      {isErAssessment ? <ErAssessmentReadOnlySections report={r} /> : null}
 
-      {detailsText || summaryText ? (
+      {!isErAssessment ? (
+        <section className="inspection-form-section d-grid gap-3">
+          <div className="fw-semibold text-muted">Report Context</div>
+          <CRow className="g-3">
+            <DetailField label={typeLabel}>{r.incidentType || '--'}</DetailField>
+            {r.weather ? <DetailField label={conditionLabel}>{r.weather}</DetailField> : null}
+            <DetailField label="Location" xs={12} md={r.weather ? 4 : 8}>
+              {r.location || '--'}
+            </DetailField>
+            {isDrill && Array.isArray(r.exerciseCategories) && r.exerciseCategories.length ? (
+              <DetailField label="Exercise Categories" xs={12} md={4}>
+                {r.exerciseCategories.join(', ')}
+              </DetailField>
+            ) : null}
+            {isDrill && r.reportIssuanceDate ? (
+              <DetailField label="Report Issuance Date" xs={12} md={4}>
+                {r.reportIssuanceDate}
+              </DetailField>
+            ) : null}
+            {r.teamInCharge || r.respondingTeamName ? (
+              <DetailField label="Team In Charge" xs={12} md={4}>
+                {r.teamInCharge || r.respondingTeamName}
+              </DetailField>
+            ) : null}
+            {r.aicInCharge ? (
+              <DetailField label="AIC In Charge" xs={12} md={4}>
+                {r.aicInCharge}
+              </DetailField>
+            ) : null}
+          </CRow>
+        </section>
+      ) : null}
+
+      {!isErAssessment && (detailsText || summaryText) ? (
         <section className="inspection-form-section d-grid gap-3">
           <div className="fw-semibold text-muted">Report Details</div>
           {isDrill && r.exerciseTitle ? (
