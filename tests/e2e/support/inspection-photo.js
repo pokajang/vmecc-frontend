@@ -32,10 +32,15 @@ const setInspectionPhotoFromButton = async (button, fileName) => {
   expect([200, 201]).toContain(uploadResponse.status())
 
   if (await cameraModal.isVisible().catch(() => false)) {
-    await cameraModal
-      .getByRole('button', { name: /^Close/i })
-      .first()
-      .click()
+    const savePhotosButton = cameraModal.getByRole('button', { name: 'Save photos', exact: true })
+    if (await savePhotosButton.isVisible().catch(() => false)) {
+      await savePhotosButton.click()
+    } else {
+      await cameraModal
+        .getByRole('button', { name: /^Close/i })
+        .first()
+        .click()
+    }
     await expect(cameraModal).toBeHidden({ timeout: 10_000 })
   }
 }

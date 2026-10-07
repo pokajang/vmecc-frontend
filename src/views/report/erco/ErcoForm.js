@@ -386,7 +386,7 @@ const ErcoForm = ({
     navigateToSection(activeSection, true)
   }, [activeSection, draftHydrated, navigateToSection, normalizedSection, reportBasePath])
 
-  const saveDraft = async ({ overrides = {} } = {}) => {
+  const saveDraft = async ({ overrides = {}, retryConcurrentChange = true } = {}) => {
     if (saveLockRef.current) return false
     saveLockRef.current = true
     setIsSaving(true)
@@ -460,6 +460,9 @@ const ErcoForm = ({
     saveLockRef.current = false
     setIsSaving(false)
     if (changedDuringSave) {
+      if (retryConcurrentChange) {
+        return saveDraft({ overrides, retryConcurrentChange: false })
+      }
       setDraftStatus(
         'New changes were made while saving. Continue again to save the latest values.',
       )

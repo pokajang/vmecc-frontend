@@ -202,6 +202,7 @@ const runAuthenticatedMediaFlow = async (page, moduleKey) => {
       await expect(page.getByText('Post Incident Analysis', { exact: true }).first()).toBeVisible()
     } else {
       await expect(page.getByRole('region', { name: 'Strengths' })).toBeVisible()
+      await page.getByRole('button', { name: /^Exercise photographs/ }).click()
       await expect(page.getByRole('region', { name: 'Exercise photographs' })).toBeVisible()
     }
     if (moduleKey === 'erco') {
@@ -232,8 +233,8 @@ const runAuthenticatedMediaFlow = async (page, moduleKey) => {
     await expect.poll(() => uploadResponses.length, { timeout: 60_000 }).toBe(2)
     page.off('response', uploadListener)
     for (const response of uploadResponses) {
-      expect([200, 201]).toContain(response.status())
       const body = await response.json()
+      expect([200, 201], JSON.stringify(body)).toContain(response.status())
       expect(body.data?.media_id).toBeTruthy()
       expect(body.data?.url).toBeTruthy()
       expect(body.data?.thumbnail_url).toBeTruthy()
@@ -255,7 +256,10 @@ const runAuthenticatedMediaFlow = async (page, moduleKey) => {
       .click()
     expect((await draftSaveResponse).status()).toBe(200)
     await expect(page).toHaveURL(new RegExp(`/report/${moduleKey}/new/review`))
-    await page.getByRole('button', { name: 'Edit', exact: true }).click()
+    await page
+      .getByLabel('Report review actions')
+      .getByRole('button', { name: 'Edit', exact: true })
+      .click()
     await expect(page).toHaveURL(new RegExp(`/report/${moduleKey}/new/analysis`))
 
     const storedDraft = await apiJson(
@@ -275,23 +279,34 @@ const runAuthenticatedMediaFlow = async (page, moduleKey) => {
     await page.reload({ waitUntil: 'domcontentloaded' })
     await dismissIncidentalDialogs(page)
     await waitForSetup(page, moduleKey)
+    if (moduleKey === 'drill') {
+      await page.getByRole('button', { name: /^Exercise photographs/ }).click()
+    }
     const reloadedInputs = getPhotoInputs(page, moduleKey)
     await expect(reloadedInputs.descriptionOne).toHaveValue(multilineDescription)
     await expect(reloadedInputs.descriptionTwo).toHaveValue('')
 
+    const reloadedDraftSaveResponse = page.waitForResponse((response) => {
+      const url = new URL(response.url())
+      return moduleKey === 'erco'
+        ? url.pathname.includes('/api/reports/drafts/') && response.request().method() === 'PUT'
+        : url.pathname.endsWith('/api/reports/draft') && response.request().method() === 'POST'
+    })
     await page
       .getByRole('button', { name: moduleKey === 'erco' ? 'Review report' : 'Review & Submit' })
       .click()
+    const reloadedDraftSave = await reloadedDraftSaveResponse
+    expect(reloadedDraftSave.status(), await reloadedDraftSave.text()).toBe(200)
     await expect(page).toHaveURL(new RegExp(`/report/${moduleKey}/new/review`))
     await expect(page.getByText(multilineDescription)).toBeVisible()
-    const thumbnailImages = page.locator('.report-photo-gallery__thumbnail')
+    const thumbnailImages = page.getByLabel('Photographs').locator('.evidence-photo-gallery__image')
     await expect(thumbnailImages).toHaveCount(2)
     expect(await thumbnailImages.nth(0).getAttribute('src')).toContain('variant=thumbnail')
 
     await page.getByRole('button', { name: new RegExp('^View photo 1:') }).click()
     const viewer = page.getByRole('dialog', { name: 'Photographs' })
     await expect(viewer).toBeVisible()
-    const viewerImage = viewer.locator('.report-photo-viewer__image')
+    const viewerImage = viewer.locator('.photo-lightbox__image')
     await expect(viewerImage).toHaveAttribute(
       'src',
       new RegExp(`/api/report-media/${mediaIds[0]}$`),
@@ -348,7 +363,7 @@ const runAuthenticatedMediaFlow = async (page, moduleKey) => {
     await expect(page.getByText(multilineDescription)).toBeVisible()
     await page.getByRole('button', { name: new RegExp('^View photo 1:') }).click()
     const detailViewer = page.getByRole('dialog', { name: 'Photographs' })
-    await expect(detailViewer.locator('.report-photo-viewer__image')).toHaveAttribute(
+    await expect(detailViewer.locator('.photo-lightbox__image')).toHaveAttribute(
       'src',
       new RegExp(`/api/report-media/${mediaIds[0]}$`),
     )

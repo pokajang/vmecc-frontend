@@ -52,9 +52,12 @@ const toAnalysisPhotos = (rows) =>
       const url = String(photo?.url || photo?.src || photo?.dataUrl || '').trim()
       if (!url) return null
       return {
+        ...photo,
         id: String(photo?.id || `photo-${index + 1}`),
+        mediaId: String(photo?.mediaId || photo?.media_id || '').trim(),
         fileName: String(photo?.fileName || photo?.name || `photo-${index + 1}`),
         url,
+        thumbnailUrl: String(photo?.thumbnailUrl || photo?.thumbnail_url || '').trim(),
         description: String(photo?.description || photo?.caption || '').trim(),
       }
     })

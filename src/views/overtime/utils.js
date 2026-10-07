@@ -176,6 +176,7 @@ export const hasReachedFirstOvertimeApprovalStep = (record) => {
 export const canApplicantEditOvertimeRecord = (record) => {
   const status = String(record?.status || '').trim()
   if (status === 'Draft') return true
+  if (status === 'Needs Correction') return true
   if (status !== 'Pending') return false
   return !hasReachedFirstOvertimeApprovalStep(record)
 }

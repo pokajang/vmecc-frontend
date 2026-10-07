@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   fetchInspectionEquipmentOptions,
   loadCachedInspectionEquipmentCatalog,
@@ -50,7 +50,12 @@ const useInspectionCatalogRows = ({
   valueLooksLikeSavedInspection,
   zone,
 }) => {
-  const [equipmentRows, setEquipmentRows] = useState([])
+  const [equipmentRows, setEquipmentRowsState] = useState([])
+  const equipmentMutationVersionRef = useRef(0)
+  const setEquipmentRows = useCallback((nextRows) => {
+    equipmentMutationVersionRef.current += 1
+    setEquipmentRowsState(nextRows)
+  }, [])
   const [isLoadingEquipmentRows, setIsLoadingEquipmentRows] = useState(false)
   const [fireExtinguisherRows, setFireExtinguisherRows] = useState([])
   const [fireExtinguisherAreaRows, setFireExtinguisherAreaRows] = useState([])
@@ -83,29 +88,34 @@ const useInspectionCatalogRows = ({
     if (!isEquipmentCatalogInspectionForm || !mainLocation) {
       return deferEffectState(() => {
         setCatalogErrors((current) => ({ ...current, equipment: '' }))
-        clearRows(setEquipmentRows)
+        clearRows(setEquipmentRowsState)
         setIsLoadingEquipmentRows(false)
       })
     }
 
     let active = true
+    const requestMutationVersion = equipmentMutationVersionRef.current
     const cached = loadCachedInspectionEquipmentCatalog(selectedType, mainLocation)
     const cancelCachedState = deferEffectState(() => {
       if (!active) return
       setCatalogErrors((current) => ({ ...current, equipment: '' }))
-      setEquipmentRows(cached)
+      setEquipmentRowsState(cached)
       setIsLoadingEquipmentRows(true)
     })
 
     fetchInspectionEquipmentOptions({ inspectionType: selectedType, mainLocation })
       .then(({ data }) => {
         if (!active) return
-        setEquipmentRows(data)
-        saveCachedInspectionEquipmentCatalog(selectedType, mainLocation, data)
+        if (equipmentMutationVersionRef.current === requestMutationVersion) {
+          setEquipmentRowsState(data)
+          saveCachedInspectionEquipmentCatalog(selectedType, mainLocation, data)
+        }
       })
       .catch(() => {
         if (!active) return
-        setEquipmentRows(cached)
+        if (equipmentMutationVersionRef.current === requestMutationVersion) {
+          setEquipmentRowsState(cached)
+        }
         setCatalogErrors((current) => ({
           ...current,
           equipment: cached.length

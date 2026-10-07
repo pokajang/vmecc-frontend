@@ -71,7 +71,11 @@ const submitHseObservation = async ({
     timeout: routeTimeoutMs,
   })
 
-  await page.getByRole('button', { name: new RegExp(observationType, 'i') }).click()
+  const observationChoice = page.getByRole('radio', {
+    name: new RegExp(observationType, 'i'),
+  })
+  await page.getByText(observationType, { exact: true }).click()
+  await expect(observationChoice).toBeChecked()
   await page.getByRole('textbox', { name: 'Observation description' }).fill(description)
   if (immediateAction) {
     await page.getByRole('textbox', { name: 'Immediate corrective action' }).fill(immediateAction)
@@ -132,9 +136,11 @@ const submitHseObservation = async ({
     await expect(page.getByText('Submitted', { exact: true }).first()).toBeVisible({
       timeout: routeTimeoutMs,
     })
-    const findingSection = page.getByRole('button', {
-      name: new RegExp(`${observationType} Finding`, 'i'),
-    })
+    const findingSection = page
+      .getByRole('group')
+      .filter({ hasText: observationType })
+      .getByRole('button')
+      .first()
     await expect(findingSection).toBeVisible({ timeout: routeTimeoutMs })
     await findingSection.click()
     await expect(page.getByText(description, { exact: true })).toBeVisible({

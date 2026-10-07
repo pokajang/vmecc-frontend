@@ -113,7 +113,7 @@ test.describe('Overtime remediation browser smoke', () => {
     })
     if (await remindLater.isVisible().catch(() => false)) await remindLater.click()
     await expect(applicantPage.getByTestId('overtime-detail')).toContainText('Needs Correction')
-    await applicantPage.getByTestId('overtime-edit-action').click()
+    await applicantPage.locator('[data-testid="overtime-edit-action"]:visible').click()
     await expect(applicantPage.getByTestId('overtime-apply')).toBeVisible()
     await applicantPage
       .getByLabel('Reason / work done', { exact: true })

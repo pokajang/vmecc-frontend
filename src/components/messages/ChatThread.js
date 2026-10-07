@@ -383,6 +383,9 @@ const ChatThread = ({
       {/* Lightbox */}
       {lightboxUrl && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Message image preview"
           className="position-fixed d-flex align-items-center justify-content-center"
           style={{ inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.85)', cursor: 'zoom-out' }}
           onClick={() => setLightboxUrl(null)}
@@ -395,6 +398,7 @@ const ChatThread = ({
           />
           <button
             type="button"
+            aria-label="Close message image preview"
             className="btn btn-dark position-absolute d-flex align-items-center justify-content-center p-0"
             style={{ top: 16, right: 16, width: 36, height: 36, borderRadius: '50%' }}
             onClick={() => setLightboxUrl(null)}

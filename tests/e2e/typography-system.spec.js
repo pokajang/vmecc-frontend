@@ -9,11 +9,13 @@ test('Manrope is bundled and remains available from the offline asset cache', as
   page,
 }) => {
   await page.route('**/api/**', (route) =>
-    route.fulfill({
-      status: 401,
-      contentType: 'application/json',
-      body: JSON.stringify({ message: 'Unauthenticated.' }),
-    }),
+    ['fetch', 'xhr'].includes(route.request().resourceType())
+      ? route.fulfill({
+          status: 401,
+          contentType: 'application/json',
+          body: JSON.stringify({ message: 'Unauthenticated.' }),
+        })
+      : route.fallback(),
   )
 
   await page.goto('/', { waitUntil: 'domcontentloaded' })

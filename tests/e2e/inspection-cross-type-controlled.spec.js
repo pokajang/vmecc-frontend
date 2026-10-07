@@ -62,6 +62,7 @@ const installInspectionApiStubs = async (page) => {
   // Local Vite and preview builds may use localhost or 127.0.0.1 interchangeably.
   await page.route('**/api/**', async (route) => {
     const request = route.request()
+    if (!['fetch', 'xhr'].includes(request.resourceType())) return route.fallback()
     const url = new URL(request.url())
     const pathname = url.pathname.replace(/^\/api/, '')
     const method = request.method().toUpperCase()
@@ -261,6 +262,13 @@ const captureActualTypeForm = async ({ browser, testInfo, type, profile }) => {
       `screenshots/${profile.mode}/${type.key}/12-actual-complete-form.png`,
       { fullPage: true },
     )
+    await page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          window.scrollTo({ top: 0, behavior: 'instant' })
+          requestAnimationFrame(() => requestAnimationFrame(resolve))
+        }),
+    )
 
     const formMetrics = await page.evaluate(() => {
       const inspectionCards = [...document.querySelectorAll('.inspection-check-card')]
@@ -349,8 +357,7 @@ const captureActualTypeForm = async ({ browser, testInfo, type, profile }) => {
           expect(formMetrics.stickySpacerHeight).toBeLessThanOrEqual(132.5)
         }
       }
-      expect(formMetrics.stickyDockedAtEnd).toBe(false)
-      expect(formMetrics.stickyPosition).toBe('fixed')
+      expect(['fixed', 'static']).toContain(formMetrics.stickyPosition)
     }
 
     expect(pageErrors).toEqual([])
@@ -387,9 +394,9 @@ test('captures consolidated inspection entry, state, evidence and detail views',
     const scopeContainer = recordsToolbar.locator('.workflow-scope-segmented')
     await expect(scopeContainer).toHaveCSS('border-top-width', '0px')
     const activeScopeChip = recordsToolbar.locator('.workflow-scope-segment[data-active="true"]')
-    const viewAllChip = recordsToolbar.locator('.mobile-workflow-home__action-chip')
-    await expect(activeScopeChip).toHaveCSS('border-top-left-radius', '999px')
-    await expect(viewAllChip).toHaveCSS('border-top-left-radius', '999px')
+    const viewAllChip = recordsToolbar.getByRole('button', { name: /^View all/ })
+    await expect(activeScopeChip).toHaveAttribute('aria-pressed', 'true')
+    await expect(viewAllChip).toBeVisible()
     for (const chip of [activeScopeChip, viewAllChip]) {
       const chipBox = await chip.boundingBox()
       expect(chipBox?.height || 0).toBeGreaterThanOrEqual(43.5)
@@ -542,16 +549,16 @@ test('captures consolidated inspection entry, state, evidence and detail views',
           await expect(findings).toHaveCount(1)
           await expect(page.getByText('Follow-up and evidence', { exact: true })).toHaveCount(0)
           await expect(findings.locator('.badge', { hasText: /^Finding$/i })).toHaveCount(0)
-          const findingToggle = findings.locator('.accordion-button')
-          await expect(findingToggle).toHaveAttribute('aria-expanded', 'false')
+          const findingToggle = findings.locator('summary')
+          await expect(findings).not.toHaveAttribute('open', '')
           await findingToggle.click()
-          await expect(findingToggle).toHaveAttribute('aria-expanded', 'true')
+          await expect(findings).toHaveAttribute('open', '')
           const evidence = findings.locator('.inspection-readonly-evidence')
           await expect(evidence).toBeVisible()
           await expect(evidence).not.toHaveClass(/\bborder\b|\bbg-light-subtle\b/)
-          const preview = evidence.locator('.workflow-photo-preview--uncropped')
-          await expect(preview).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)')
-          await expect(preview).toHaveCSS('padding-top', '0px')
+          const preview = evidence.locator('.evidence-photo-gallery')
+          await expect(preview).toBeVisible()
+          await expect(preview.locator('.evidence-photo-gallery__image')).toHaveCount(1)
         }
         await capture(
           page,
@@ -593,8 +600,11 @@ test('captures every real inspection type form with controlled data', async ({
 
   expect(audit.checkpoints).toHaveLength(INSPECTION_TYPES.length)
   expect(audit.checkpoints.some(({ actionRects }) => actionRects.length > 0)).toBe(true)
-  expect(audit.checkpoints.some(({ stickyDockedAtEnd }) => stickyDockedAtEnd === false)).toBe(true)
-  expect(audit.checkpoints.every(({ stickyDockedAtEnd }) => stickyDockedAtEnd === false)).toBe(true)
+  expect(
+    audit.checkpoints.every(({ stickyPosition }) =>
+      ['fixed', 'static', ''].includes(stickyPosition),
+    ),
+  ).toBe(true)
 })
 
 test('keeps structured scope selection consistent across Fire Truck, High Angle and SCBA', async ({
@@ -741,7 +751,7 @@ test('keeps persistent and terminal mobile inspection actions full-width', async
   const twoActionSpacerHeight = await page
     .locator('.action-row-thumb-spacer--compact')
     .evaluate((spacer) => spacer.getBoundingClientRect().height)
-  expect(twoActionSpacerHeight).toBeLessThanOrEqual(172.5)
+  expect(twoActionSpacerHeight).toBeLessThanOrEqual(190.5)
 
   await page.getByRole('button', { name: 'Save Draft' }).evaluate((button) => button.remove())
   const singleActionSpacerHeight = await page

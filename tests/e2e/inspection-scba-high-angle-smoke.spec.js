@@ -288,7 +288,7 @@ const completeRemainingHighAngleRows = async (page) => {
     const rowText = String((await row.textContent().catch(() => '')) || '')
     if (!/Not checked/i.test(rowText)) continue
 
-    const openButton = row.getByRole('button', { name: 'Open', exact: true }).first()
+    const openButton = row.getByRole('button', { name: /^Open .* inspection details$/i }).first()
     if (await openButton.isVisible().catch(() => false)) {
       await openButton.click()
     }
@@ -298,14 +298,13 @@ const completeRemainingHighAngleRows = async (page) => {
 }
 
 const getHighAngleCompartmentTitles = async (page) =>
-  page.locator('.inspection-location-option-card').evaluateAll((nodes) =>
+  page.locator('.inspection-scope-navigator__option .fw-semibold').evaluateAll((nodes) =>
     nodes
       .map((node) =>
         String(node.textContent || '')
           .replace(/\s+/g, ' ')
           .trim(),
       )
-      .map((text) => text.replace(/\s+\d+\s+items?$/i, '').trim())
       .filter(Boolean),
   )
 
@@ -630,7 +629,9 @@ test.describe('SCBA and High Angle inspection prod smoke', () => {
             .first()
           await expect(highAngleCard).toBeVisible()
           const disclosure = highAngleCard
-            .getByRole('button', { name: /^Locking Carabiner - CT - Steel - S\b/i })
+            .getByRole('button', {
+              name: /^Open Locking Carabiner - CT - Steel - S inspection details$/i,
+            })
             .first()
           await expect(disclosure).toBeVisible()
           await disclosure.click()

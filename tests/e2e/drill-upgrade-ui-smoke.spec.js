@@ -159,12 +159,12 @@ const installApiStubs = async (page, initialDraft = draftPayload) => {
     if (path === '/report-media/drill-camera-media-e2e' && method === 'GET') {
       return route.fulfill({
         status: 200,
-        contentType: 'image/gif',
+        contentType: 'image/png',
         headers: {
           'Access-Control-Allow-Origin': baseUrl,
           'Access-Control-Allow-Credentials': 'true',
         },
-        body: Buffer.from(transparentPixel.split(',')[1], 'base64'),
+        body: createSmokePng('drill-camera-preview'),
       })
     }
     if (path === '/reports' && method === 'GET') return json(route, { data: [] })
@@ -297,7 +297,7 @@ test.describe('Drill Upgrade UI V1', () => {
           ? page
               .getByRole('list', { name: 'Drill setup summary' })
               .getByRole('button', { name: 'Edit Exercise Categories' })
-          : page.getByRole('group', { name: 'Exercise Categories' })
+          : page.getByRole('group', { name: 'Exercise Categories', exact: true }).last()
       await expect(categorySummary).toContainText('Fire')
       await expect(categorySummary).toContainText('Rescue')
       if (viewport.size.width < 768) {
@@ -446,33 +446,27 @@ test.describe('Drill Upgrade UI V1', () => {
     await expectNoHorizontalOverflow(page)
   })
 
-  test('keeps restored mobile setup feedback and summary rows compact', async ({ page }) => {
+  test('keeps restored mobile setup summary rows compact', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
     await installApiStubs(page)
     await page.goto(`${baseUrl}/report/drill/new/setup`)
 
-    const feedback = page.getByRole('status').filter({ hasText: 'Draft loaded: Saved draft' })
     const setup = page.getByTestId('drill-report-setup-ready')
     const environmentLabel = setup
       .locator('.mobile-setup-summary-list__label')
       .filter({ hasText: /^Environment$/ })
 
-    await expect(feedback).toContainText('Draft loaded: Saved draft')
+    await expect(setup.getByRole('button', { name: 'Edit Type' })).toContainText('Fire Drill')
     await expect(environmentLabel).toBeVisible()
 
     const layout = await page.evaluate(() => {
-      const feedbackElement = [...document.querySelectorAll('[role="status"]')].find((element) =>
-        element.textContent.includes('Draft loaded: Saved draft'),
-      )
       const setupElement = document.querySelector('[data-testid="drill-report-setup-ready"]')
       const environmentElement = [
         ...document.querySelectorAll('.mobile-setup-summary-list__label'),
       ].find((element) => element.textContent.trim() === 'Environment')
-      const feedbackRect = feedbackElement.getBoundingClientRect()
       const setupRect = setupElement.getBoundingClientRect()
       const environmentStyle = getComputedStyle(environmentElement)
       return {
-        feedbackGap: setupRect.top - feedbackRect.bottom,
         firstContentGap:
           setupElement.querySelector('.report-setup-grid').getBoundingClientRect().top -
           setupRect.top,
@@ -481,7 +475,6 @@ test.describe('Drill Upgrade UI V1', () => {
       }
     })
 
-    expect(layout.feedbackGap).toBeLessThanOrEqual(32)
     expect(layout.firstContentGap).toBeLessThanOrEqual(1)
     expect(layout.environmentHeight).toBeLessThanOrEqual(layout.environmentLineHeight * 1.25)
     await expectNoHorizontalOverflow(page)

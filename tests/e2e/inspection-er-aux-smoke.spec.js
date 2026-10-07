@@ -353,9 +353,13 @@ test.describe('ER Aux inspection prod smoke', () => {
       const mobileRadio = getErAuxCard(page, 'office:mobile-radio')
       await mobileRadio.getByRole('button', { name: 'Equipment actions for Mobile Radio' }).click()
       const actionMenu = page.locator('.dropdown-menu.show').last()
-      await expect(actionMenu.getByRole('button', { name: 'Edit', exact: true })).toBeVisible()
-      await expect(actionMenu.getByRole('button', { name: 'Delete', exact: true })).toBeVisible()
-      await actionMenu.getByRole('button', { name: 'Edit', exact: true }).click()
+      await expect(
+        actionMenu.getByRole('button', { name: 'Edit equipment details', exact: true }),
+      ).toBeVisible()
+      await expect(
+        actionMenu.getByRole('button', { name: 'Delete custom item', exact: true }),
+      ).toBeVisible()
+      await actionMenu.getByRole('button', { name: 'Edit equipment details', exact: true }).click()
 
       const editModal = page.locator('.modal.show', { hasText: 'Edit Equipment' }).last()
       await expect(editModal).toBeVisible()

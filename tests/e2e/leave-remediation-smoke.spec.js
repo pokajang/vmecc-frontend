@@ -116,7 +116,6 @@ test.describe('Leave remediation browser smoke', () => {
     await applicantPage.goto('/leave', { waitUntil: 'domcontentloaded' })
     const leaveRecords = applicantPage.getByTestId('leave-records')
     await expect(leaveRecords).toBeVisible({ timeout: 60_000 })
-    await leaveRecords.getByLabel('Rows per page').selectOption('all')
     await expect(leaveRecords).toContainText('SMK-LV-1', {
       timeout: 60_000,
     })
@@ -125,7 +124,7 @@ test.describe('Leave remediation browser smoke', () => {
     await expect(applicantPage.getByTestId('leave-detail')).toContainText('Needs Correction', {
       timeout: 60_000,
     })
-    await applicantPage.getByTestId('leave-edit-action').click()
+    await applicantPage.locator('[data-testid="leave-edit-action"]:visible').click()
     await expect(applicantPage.getByTestId('leave-apply')).toBeVisible()
     await applicantContext.close()
   })

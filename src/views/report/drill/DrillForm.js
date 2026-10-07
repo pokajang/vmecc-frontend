@@ -232,7 +232,7 @@ const DrillForm = ({
     onDirtyChange(isDirty)
   }, [isDirty, onDirtyChange])
 
-  const saveDraft = async ({ section = activeSection } = {}) => {
+  const saveDraft = async ({ section = activeSection, retryConcurrentChange = true } = {}) => {
     if (saveLockRef.current) {
       setBlockerMessage('A draft save is still in progress. Wait for it to finish and retry.')
       return false
@@ -283,6 +283,9 @@ const DrillForm = ({
     saveLockRef.current = false
     onDraftSaved?.()
     if (changedDuringSave) {
+      if (retryConcurrentChange) {
+        return saveDraft({ section, retryConcurrentChange: false })
+      }
       setBlockerMessage(
         'New changes were made while saving. Continue again to save the latest values.',
       )

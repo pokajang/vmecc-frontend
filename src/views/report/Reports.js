@@ -493,10 +493,11 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
       setIsFormDirty(false)
       setFormSessionKey((prev) => prev + 1)
       const query = new URLSearchParams({ type: value })
+      const typeField = activeFormSlug === 'er-assessment' ? 'assessmentType' : 'incidentType'
       navigate(`${reportBasePath}/new/setup?${query.toString()}`, {
         state: {
           skipReportDraft: activeFormSlug,
-          initialFormSeed: { assessmentType: value },
+          initialFormSeed: { [typeField]: value },
         },
       })
     },

@@ -1,6 +1,11 @@
 const { expect, test } = require('@playwright/test')
+const {
+  getControlledBrowserApiBaseUrl,
+  installControlledApiRequestGuard,
+} = require('./support/controlled-api-stubs')
 
 const baseUrl = process.env.VMECC_E2E_BASE_URL || 'http://127.0.0.1:3000'
+const apiBaseUrl = getControlledBrowserApiBaseUrl()
 const auditUser = {
   id: 916,
   name: 'ER Assessment UI Auditor',
@@ -21,7 +26,8 @@ const installApiStubs = async (
   let draftVersion = 0
   let mediaVersion = 0
   let remainingDraftFailures = failedDraftSaves
-  await page.route(/^https?:\/\/(?:localhost|127\.0\.0\.1):8000\/api\/.*/, (route) => {
+  await installControlledApiRequestGuard(page, apiBaseUrl)
+  const handleApiRoute = (route) => {
     const request = route.request()
     const path = new URL(request.url()).pathname.replace(/^\/api/, '')
 
@@ -97,7 +103,12 @@ const installApiStubs = async (
     }
 
     return json(route, { data: [], meta: {} })
-  })
+  }
+
+  const apiOrigins = new Set([apiBaseUrl, apiBaseUrl.replace('127.0.0.1', 'localhost')])
+  for (const origin of apiOrigins) {
+    await page.route(`${origin}/**`, handleApiRoute)
+  }
 }
 
 const expectNoHorizontalOverflow = async (page) => {
