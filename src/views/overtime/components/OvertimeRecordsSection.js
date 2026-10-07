@@ -1,6 +1,5 @@
 import React from 'react'
 import {
-  CBadge,
   CTable,
   CTableBody,
   CTableDataCell,
@@ -19,6 +18,7 @@ import RowActions from 'src/components/RowActions'
 import TableFilters from 'src/components/TableFilters'
 import WorkflowRecordsSectionShell from 'src/components/workflow/WorkflowRecordsSectionShell'
 import WorkflowStatusSummary from 'src/components/WorkflowStatusSummary'
+import CompactRecordStatus from 'src/components/report-workflow/CompactRecordStatus'
 import {
   APPLICANT_OVERTIME_EDIT_LOCK_REASON,
   canApplicantEditOvertimeRecord,
@@ -55,7 +55,6 @@ const OvertimeRecordsSection = ({
   getDisplayOvertimeId,
   getStatusLabel,
   getPendingActionHint,
-  getStatusBadge,
   getStartDateTimeLabel,
   getEndDateTimeLabel,
   isLoading = false,
@@ -66,12 +65,6 @@ const OvertimeRecordsSection = ({
     row,
     displayIndex: index + 1,
   }))
-  const renderStatusBadge = (row) =>
-    getStatusBadge ? (
-      getStatusBadge(row?.status || '-', getStatusLabel ? getStatusLabel(row) : row?.status || '-')
-    ) : (
-      <CBadge color="secondary">{getStatusLabel ? getStatusLabel(row) : row?.status || '-'}</CBadge>
-    )
   const getDraftActionItems = (row) => [
     {
       key: 'resume-draft-overtime',
@@ -147,26 +140,23 @@ const OvertimeRecordsSection = ({
     }, [])
   const buildMobileItem = ({ row }) => {
     const isDraft = Boolean(row?.isDraft)
-    const pendingActionHint = isDraft ? 'Draft saved' : getPendingActionHint?.(row)
     return {
       key: row.recordKey || row.id,
-      title: getDisplayOvertimeId(row),
-      eyebrow: getOvertimeTypeLabel(row?.overtimeType, { short: true }),
-      subtitle: row.reason || '-',
-      status: renderStatusBadge(row),
+      layout: 'compact',
+      title:
+        getStartDateTimeLabel(row) === getEndDateTimeLabel(row)
+          ? getStartDateTimeLabel(row)
+          : `${getStartDateTimeLabel(row)} – ${getEndDateTimeLabel(row)}`,
+      subtitle: [
+        getOvertimeTypeLabel(row?.overtimeType, { short: true }),
+        getDisplayOvertimeId(row),
+        formatDuration(row.durationMinutes),
+      ]
+        .filter(Boolean)
+        .join(' · '),
+      status: <CompactRecordStatus label={getStatusLabel?.(row) || row.status || '-'} />,
       ariaLabel: `Open overtime record ${getDisplayOvertimeId(row)} summary`,
       onOpen: () => openRecord(row),
-      fields: [
-        { key: 'start', label: 'Start', value: getStartDateTimeLabel(row) },
-        { key: 'end', label: 'End', value: getEndDateTimeLabel(row) },
-        { key: 'duration', label: 'Duration', value: formatDuration(row.durationMinutes) },
-        {
-          key: 'next',
-          label: 'Next',
-          value: pendingActionHint || getStatusLabel?.(row) || row.status || '-',
-        },
-      ],
-      detail: row?.hasDraftChanges ? 'Draft saved changes are available for this claim.' : null,
       actions: (
         <RowActions items={isDraft ? getDraftActionItems(row) : getSubmittedActionItems(row)} />
       ),
@@ -192,6 +182,8 @@ const OvertimeRecordsSection = ({
   return (
     <WorkflowRecordsSectionShell
       sectionTitle="My Overtime Records"
+      showMobileHeader={false}
+      compactMobile
       recordsTestId="overtime-records"
       headerActions={
         showPrimaryAction ? (
@@ -227,7 +219,7 @@ const OvertimeRecordsSection = ({
               },
             ]}
             onClear={clearFilters}
-            rowClassName="flex-md-nowrap"
+            rowClassName="inspection-records-filter-row inspection-report-records-filter-row flex-md-nowrap align-items-md-end"
             searchColMd={3}
             periodColMd={2}
             filterColMd={2}
@@ -386,6 +378,7 @@ const OvertimeRecordsSection = ({
             onRowsToShowChange={setRowsToShow}
             filteredCount={filteredRecords.length}
             totalCount={overtimeRecordsCount}
+            compactMobile
           />
         }
       />

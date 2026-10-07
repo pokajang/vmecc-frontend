@@ -190,7 +190,7 @@ describe('DrillForm V2 flow', () => {
       initialFormSeed: { ...completeSeed, incidentType: '', exerciseCategories: [] },
     })
 
-    const typePicker = await screen.findByRole('radiogroup', { name: 'Choose drill type' })
+    const typePicker = await screen.findByRole('list', { name: 'Choose drill type' })
     expect(screen.getByText('Choose Drill Type')).toBeTruthy()
     expect(screen.queryByText('Exercise Categories (optional)')).toBeNull()
     expect(screen.queryByLabelText('Drill setup summary')).toBeNull()
@@ -200,7 +200,8 @@ describe('DrillForm V2 flow', () => {
       ),
     ).toBe(true)
 
-    fireEvent.click(within(typePicker).getByRole('radio', { name: /Evacuation Drill/i }))
+    expect(within(typePicker).queryByRole('radio')).toBeNull()
+    fireEvent.click(within(typePicker).getByRole('button', { name: /Evacuation Drill/i }))
 
     expect(await screen.findByText('Exercise Categories (optional)')).toBeTruthy()
     expect(screen.queryByText('Confirm Drill Type')).toBeNull()
@@ -215,7 +216,7 @@ describe('DrillForm V2 flow', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'Edit Type' }))
 
-    const typePicker = screen.getByRole('radiogroup', { name: 'Change drill type' })
+    const typePicker = screen.getByRole('list', { name: 'Change drill type' })
     expect(document.querySelector('.mobile-bottom-drawer.show')).toBeTruthy()
     expect(
       Array.from(typePicker.children).every((item) =>
@@ -223,7 +224,8 @@ describe('DrillForm V2 flow', () => {
       ),
     ).toBe(true)
 
-    fireEvent.click(within(typePicker).getByRole('radio', { name: /Rescue Drill/i }))
+    expect(within(typePicker).queryByRole('radio')).toBeNull()
+    fireEvent.click(within(typePicker).getByRole('button', { name: /Rescue Drill/i }))
 
     await waitFor(() => expect(document.querySelector('.mobile-bottom-drawer')).toBeNull())
     expect(screen.queryByText('Confirm Drill Type')).toBeNull()

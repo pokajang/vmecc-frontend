@@ -1,0 +1,16 @@
+[
+  {
+    "type": "leave",
+    "id": "LV-AL-2026-001",
+    "internalId": 128,
+    "result": "cancelled through UI",
+    "verification": "read-only exact-ID database query"
+  },
+  {
+    "type": "overtime",
+    "id": "OT-2026-004",
+    "internalId": 86,
+    "result": "cancelled through UI",
+    "verification": "read-only exact-ID database query"
+  }
+]

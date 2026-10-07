@@ -1,0 +1,203 @@
+{
+  "claimId": "CLM-2026-003",
+  "checkpoints": [
+    {
+      "name": "mobile reopen",
+      "status": "passed",
+      "url": "http://localhost:3000/payroll/claims/CLM-2026-003"
+    },
+    {
+      "name": "desktop reopen",
+      "status": "passed",
+      "url": "http://localhost:3000/payroll/claims/CLM-2026-003"
+    },
+    {
+      "name": "UI cleanup",
+      "status": "passed"
+    }
+  ],
+  "network": [
+    {
+      "method": "POST",
+      "path": "/api/auth/login",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/session",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings/modules",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings/system-maintenance",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/rosters",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings/shift-windows",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/workflow/notifications/unread-count",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/overtime/eligibility",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/payroll/claims/drafts",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/payroll/claims/drafts",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/payroll/claims/drafts",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/payroll/claims",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/payroll/claims/drafts",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/payroll/claims/drafts",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/payroll/claims/drafts",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/payroll/claims",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/session",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings/modules",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings/system-maintenance",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/rosters",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings/shift-windows",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/workflow/notifications/unread-count",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/overtime/eligibility",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/payroll/claims/drafts",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/payroll/claims/drafts",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/payroll/claims/drafts",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/payroll/claims",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/payroll/claims/drafts",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/payroll/claims/drafts",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/payroll/claims/drafts",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/payroll/claims",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/payroll/claims/179/cancel",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/payroll/claims/drafts",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/payroll/claims/drafts",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/payroll/claims/drafts",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/payroll/claims",
+      "status": 200
+    }
+  ],
+  "consoleErrors": [],
+  "status": "passed"
+}

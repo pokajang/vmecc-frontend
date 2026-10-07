@@ -1,19 +1,8 @@
 const { expect, test } = require('@playwright/test')
+const { normalizeLoopbackOrigin } = require('./support/loopback-origin')
 
 const configuredDevBaseUrl = process.env.VMECC_E2E_BASE_URL || 'http://127.0.0.1:4173'
-const parsedDevBaseUrl = new URL(configuredDevBaseUrl)
-
-if (
-  parsedDevBaseUrl.protocol !== 'http:' ||
-  parsedDevBaseUrl.hostname !== '127.0.0.1' ||
-  !parsedDevBaseUrl.port ||
-  parsedDevBaseUrl.username ||
-  parsedDevBaseUrl.password
-) {
-  throw new Error('The browser component server must use an explicit loopback origin and port.')
-}
-
-const devBaseUrl = parsedDevBaseUrl.origin
+const devBaseUrl = normalizeLoopbackOrigin(configuredDevBaseUrl, 'The browser component server')
 const sourceUrl = (sourcePath) => {
   const resolvedUrl = new URL(sourcePath, devBaseUrl)
   if (resolvedUrl.origin !== devBaseUrl) {
@@ -123,7 +112,7 @@ const renderLeaveDetail = async (page, componentPath) => {
 for (const componentCase of componentCases) {
   test(`Leave detail preserves semantic, responsive, and link behavior for ${componentCase.name}`, async ({
     page,
-  }) => {
+  }, testInfo) => {
     await page.setViewportSize({ width: componentCase.width, height: componentCase.height })
     const pageErrors = []
     page.on('pageerror', (error) => pageErrors.push(error.message))
@@ -131,48 +120,29 @@ for (const componentCase of componentCases) {
     await renderLeaveDetail(page, componentCase.componentPath)
     expect(pageErrors).toEqual([])
 
-    const list = page.locator('dl.responsive-key-value-list')
+    const list = page.locator('dl.responsive-key-value-list').first()
     await expect(list).toBeVisible()
-    await expect(list.locator('dt')).toHaveText(
-      componentCase.staff
-        ? [
-            'Leave ID',
-            'Leave Type',
-            'Schedule',
-            'Days',
-            'Current Status',
-            'Current Action Owner',
-            'Next Action',
-            'Applied On',
-            'Coverage By',
-            'Roster Impact',
-            'Evidence',
-            'Reason',
-          ]
-        : [
-            'Leave ID',
-            'Leave Type',
-            'Schedule',
-            'Days',
-            'Current Status',
-            'Current Action Owner',
-            'Workflow Scope',
-            'Applicant Role',
-            'Next Action',
-            'Applied On',
-            'Coverage By',
-            'Roster Impact',
-            'Evidence',
-            'Reason',
-          ],
-    )
+    await expect(list.locator('dt')).toHaveText(['Days', 'Reason', 'Evidence', 'Coverage By'])
     await expect(list.getByText('0', { exact: true })).toBeVisible()
     await expect(list.getByText(/REASON-WITH-AN-EXCEPTIONALLY-LONG/)).toBeVisible()
-    if (componentCase.staff) await expect(list.getByText(/captured 2026-08-01 09:30/)).toBeVisible()
-
     const evidence = page.getByRole('link', { name: 'supporting-evidence.pdf' })
     await expect(evidence).toHaveAttribute('target', '_blank')
     await expect(evidence).toHaveAttribute('href', /leave\/attachments\/attachment-browser-1/)
+
+    await page.getByRole('button', { name: /Request information/i }).click()
+    const requestInformation = page.locator('dl.responsive-key-value-list').last()
+    await expect(requestInformation).toBeVisible()
+    await expect(requestInformation.locator('dt')).toHaveText([
+      'Current Action Owner',
+      'Workflow Scope',
+      'Applicant Role',
+      'Roster Impact',
+    ])
+    await expect(
+      requestInformation.getByText(/EXCEPTIONALLY-LONG-UNBROKEN-SHIFT-NAME-1234567890/),
+    ).toBeVisible()
+    await expect(requestInformation.getByText(/captured 2026-08-01 09:30/)).toBeVisible()
+
     await page.getByRole('button', { name: 'Back' }).focus()
     await page.keyboard.press('Tab')
     await expect(evidence).toBeFocused()
@@ -181,6 +151,105 @@ for (const componentCase of componentCases) {
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     )
     expect(overflow).toBeLessThanOrEqual(1)
+    if (componentCase.width < 768) {
+      const [titleBox, backBox] = await Promise.all([
+        page.getByRole('heading', { level: 2, name: 'Annual Leave' }).boundingBox(),
+        page.getByRole('button', { name: 'Back' }).boundingBox(),
+      ])
+      expect(titleBox).not.toBeNull()
+      expect(backBox).not.toBeNull()
+      expect(Math.abs(titleBox.y - backBox.y)).toBeLessThanOrEqual(12)
+      expect(backBox.x + backBox.width).toBeLessThanOrEqual(componentCase.width)
+    }
+    await page.screenshot({
+      path: testInfo.outputPath(`${componentCase.name}.png`),
+      fullPage: true,
+    })
     expect(pageErrors).toEqual([])
   })
 }
+
+test('compact populated records remain readable and keep actions outside the open target at 320px', async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 320, height: 700 })
+  await page.goto(sourceUrl('/@vite/client'), { waitUntil: 'commit' })
+  await page.setContent('<main><div id="compact-record-browser-harness"></div></main>')
+  await page.evaluate(
+    async ({ reactUrl, reactDomUrl, styleUrl, componentUrl }) => {
+      const [{ default: React }, { default: ReactDomClient }, componentModule] = await Promise.all([
+        import(/* @vite-ignore */ reactUrl),
+        import(/* @vite-ignore */ reactDomUrl),
+        import(/* @vite-ignore */ componentUrl),
+        import(/* @vite-ignore */ styleUrl),
+      ])
+      const MobileRecordList = componentModule.default
+      const item = {
+        key: 'LEV-BROWSER-001',
+        layout: 'compact',
+        title: '15 Apr 2026 08:30 AM – 15 Apr 2026 05:30 PM',
+        subtitle: 'Compassionate Leave · LEV-AL-2026-001 · 1 day',
+        status: React.createElement(
+          'span',
+          { className: 'compact-record-status small fw-semibold text-nowrap' },
+          'Pending Review',
+        ),
+        ariaLabel: 'Open leave record LEV-AL-2026-001 summary',
+        onOpen: () => {},
+        actions: React.createElement(
+          'button',
+          { type: 'button', 'aria-label': 'Row actions' },
+          '⋮',
+        ),
+      }
+      const root = ReactDomClient.createRoot(
+        document.getElementById('compact-record-browser-harness'),
+      )
+      root.render(
+        React.createElement(MobileRecordList, {
+          sections: [
+            {
+              key: 'april-2026',
+              label: 'April 2026',
+              summary: '1 day',
+              variant: 'list-group',
+              items: [item],
+            },
+          ],
+        }),
+      )
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    },
+    {
+      reactUrl: sourceUrl('/node_modules/.vite/deps/react.js'),
+      reactDomUrl: sourceUrl('/node_modules/.vite/deps/react-dom_client.js'),
+      styleUrl: sourceUrl('/src/scss/style.scss'),
+      componentUrl: sourceUrl('/src/components/MobileRecordList.js'),
+    },
+  )
+
+  const openTarget = page.getByRole('button', {
+    name: 'Open leave record LEV-AL-2026-001 summary',
+  })
+  const rowActions = page.getByRole('button', { name: 'Row actions' })
+  await expect(openTarget).toBeVisible()
+  await expect(rowActions).toBeVisible()
+  expect(await openTarget.evaluate((element) => element.contains(document.activeElement))).toBe(
+    false,
+  )
+  expect(await openTarget.evaluate((element) => element.querySelector('button'))).toBeNull()
+  await expect(page.getByText('Pending Review')).toBeVisible()
+  await expect(page.getByText(/Compassionate Leave/)).toBeVisible()
+  const [titleBox, statusBox] = await Promise.all([
+    page.locator('.record-card__title').boundingBox(),
+    page.locator('.compact-record-status').boundingBox(),
+  ])
+  expect(titleBox).not.toBeNull()
+  expect(statusBox).not.toBeNull()
+  expect(statusBox.y).toBeGreaterThanOrEqual(titleBox.y + titleBox.height)
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  )
+  expect(overflow).toBeLessThanOrEqual(1)
+  await page.screenshot({ path: testInfo.outputPath('populated-compact-record-mobile-320.png') })
+})

@@ -18,6 +18,7 @@ const useSalaryClaimActions = ({
   hasUnsavedChanges,
   isClaimTypeLocked,
   pushToast,
+  clearFeedback,
   saveDraft,
   buildDraftPayload,
   period,
@@ -31,6 +32,7 @@ const useSalaryClaimActions = ({
   localAutosaveKey,
   payrollBaselineConfirmed,
   hasAssignedSalaryBaseline,
+  hasAuthoritativeOvertimePreview,
   overtimeTotals,
   editingIndex,
   setSubmitDeclarationChecked,
@@ -300,6 +302,13 @@ const useSalaryClaimActions = ({
       })
       return
     }
+    if (!hasAuthoritativeOvertimePreview) {
+      pushToast('The payroll overtime calculation could not be verified. Please retry.', {
+        title: 'Payroll preview unavailable',
+        color: 'danger',
+      })
+      return
+    }
     if (!payrollBaselineConfirmed) {
       pushToast('Confirm the assigned salary payout snapshot before submitting for review.', {
         title: 'Payout confirmation required',
@@ -314,10 +323,13 @@ const useSalaryClaimActions = ({
       })
       return
     }
+    clearFeedback()
     setSubmitDeclarationChecked(false)
     setSubmitModalVisible(true)
   }, [
     editingIndex,
+    clearFeedback,
+    hasAuthoritativeOvertimePreview,
     hasAssignedSalaryBaseline,
     payrollBaselineConfirmed,
     pushToast,

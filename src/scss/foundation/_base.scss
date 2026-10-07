@@ -441,6 +441,7 @@ html {
 
 .app-action-group--stack > .btn {
   width: 100%;
+  min-height: var(--vmecc-touch-target);
 }
 
 .vmecc-choice-button.btn-primary {

@@ -1,4 +1,7 @@
 import React from 'react'
+import CompactRecordStatus, {
+  getCompactRecordStatusColor,
+} from 'src/components/report-workflow/CompactRecordStatus'
 
 import { parseLocalDateValue } from 'src/utils/localDate'
 import { formatReportDisplayId, formatTimestamp } from 'src/views/inspection/inspectionSharedUtils'
@@ -93,19 +96,11 @@ export const getCompactInspectionStatusLabel = (row) => {
 }
 
 export const getCompactInspectionStatusStyle = (row) => {
-  const status = getCompactInspectionStatusLabel(row).toLowerCase()
-  if (status === 'approved') return { color: 'var(--vmecc-status-success-text)' }
-  if (status === 'rejected' || status === 'cancelled') {
-    return { color: 'var(--vmecc-status-danger-text)' }
-  }
-  if (status === 'draft') return { color: 'var(--vmecc-status-draft-text)' }
-  return { color: 'var(--cui-secondary-color)' }
+  return { color: getCompactRecordStatusColor(getCompactInspectionStatusLabel(row)) }
 }
 
 export const renderCompactInspectionStatus = (row) => (
-  <span className="small fw-semibold text-nowrap" style={getCompactInspectionStatusStyle(row)}>
-    {getCompactInspectionStatusLabel(row)}
-  </span>
+  <CompactRecordStatus label={getCompactInspectionStatusLabel(row)} />
 )
 
 const INSPECTION_TYPE_DESCRIPTION_MAP = INSPECTION_INCIDENT_TYPE_OPTIONS.reduce((acc, row) => {

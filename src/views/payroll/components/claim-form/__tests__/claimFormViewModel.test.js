@@ -24,6 +24,7 @@ describe('claimFormViewModel', () => {
       ['Adjustments', '-RM\u00a050.00'],
       ['Approved OT', 'RM\u00a0120.00'],
     ])
+    expect(summary.metrics[0].primary).toBe(true)
   })
 
   it('describes category-specific expense fields without owning persistence', () => {

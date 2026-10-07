@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { CBadge, CContainer, CToast, CToastBody, CToastHeader, CToaster } from '@coreui/react'
+import { CBadge, CContainer } from '@coreui/react'
 import { useSelector } from 'react-redux'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { buildWorkflowHistoryEntries } from 'src/components/auditHistory'
@@ -36,6 +36,8 @@ import OvertimeRecordsTab from './leave-management/components/OvertimeRecordsTab
 import OvertimeWorkflowActionModal from './leave-management/components/OvertimeWorkflowActionModal'
 import OvertimeApprovalRules from '../settings/components/OvertimeApprovalRules'
 import useOvertimeAdminWorkflow from './salary-claims-management/hooks/useOvertimeAdminWorkflow'
+import WorkflowFeedbackBanner from 'src/components/report-workflow/WorkflowFeedbackBanner'
+import useWorkflowFeedback from 'src/components/report-workflow/useWorkflowFeedback'
 import {
   buildCompositeOvertimeRecordKey,
   decodeRouteValue,
@@ -139,8 +141,7 @@ const OvertimeManagementContent = () => {
     [location.search],
   )
 
-  const toaster = useRef()
-  const [toast, addToast] = useState(null)
+  const { feedback, clearFeedback, pushFeedback: pushToast } = useWorkflowFeedback()
   const [allOvertimeRecords, setAllOvertimeRecords] = useState([])
   const [isRecordsLoading, setIsRecordsLoading] = useState(false)
   const [recordsMeta, setRecordsMeta] = useState(DEFAULT_META)
@@ -167,19 +168,6 @@ const OvertimeManagementContent = () => {
     setStatusFilter(actionQueueStatus)
     setPage(1)
   }, [actionQueueStatus])
-
-  const pushToast = useCallback((message, { title, color = 'light', delay = 6000 } = {}) => {
-    addToast(
-      <CToast autohide delay={delay} color={color}>
-        {title ? (
-          <CToastHeader closeButton>
-            <strong className="me-auto">{title}</strong>
-          </CToastHeader>
-        ) : null}
-        <CToastBody>{message}</CToastBody>
-      </CToast>,
-    )
-  }, [])
 
   const tabFromPath = useMemo(() => {
     const parts = String(location.pathname || '')
@@ -741,7 +729,7 @@ const OvertimeManagementContent = () => {
 
   return (
     <CContainer fluid className="workflow-module-page" data-testid="overtime-management-module">
-      <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
+      <WorkflowFeedbackBanner feedback={feedback} onDismiss={clearFeedback} />
 
       <OvertimeWorkflowActionModal
         visible={overtimeWorkflowModalState.visible}

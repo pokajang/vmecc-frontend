@@ -5,7 +5,6 @@ import CreateActionButton from 'src/components/CreateActionButton'
 import IconOptionGrid, { OptionMetaLabel } from 'src/components/IconOptionGrid'
 import RowActions from 'src/components/RowActions'
 import { ACTIVE_CARD_STYLE, TOGGLE_CARD_PROPS } from 'src/views/inspection/typeOptionUtils'
-import { INCIDENT_TYPE_TOGGLE_VALUE } from 'src/views/inspection/useIncidentTypeManager'
 import { LOCATION_TOGGLE_VALUE } from 'src/views/inspection/useLocationTypeManager'
 import InspectionLocationOptionPicker from './InspectionLocationOptionPicker'
 import { FormFieldError, InspectionSelectedTypeCard } from './InspectionFormDisplaySections'
@@ -611,12 +610,6 @@ const InspectionFormSetupSections = ({
       : 'Sub-location'
 
   const handleTypeChange = (nextValue) => {
-    if (nextValue === INCIDENT_TYPE_TOGGLE_VALUE) {
-      incident.setShowAllIncidentTypes((prev) => !prev)
-      return
-    }
-
-    incident.setShowAllIncidentTypes(false)
     updateInspectionType(String(nextValue || '').trim())
     setIsEditingType(false)
     closeMobileSetupDrawer()
@@ -743,7 +736,7 @@ const InspectionFormSetupSections = ({
   const selectedSubLocationCountLabel = String(
     selectedSubLocationCountOption?.metaLabel || '',
   ).trim()
-  const desktopTypeOptions = isCompactViewport ? incident.visibleTypeOptions : incident.typeOptions
+  const desktopTypeOptions = incident.typeOptions
   const desktopPrimaryLocationVisibleOptions = isCompactViewport
     ? visiblePrimaryLocationOptions
     : primaryLocationOptions
@@ -868,7 +861,6 @@ const InspectionFormSetupSections = ({
   }
 
   const resetTypeSelection = () => {
-    incident.setShowAllIncidentTypes(false)
     if (typeof resetInspectionTypeSelection === 'function') {
       resetInspectionTypeSelection()
     } else {
@@ -1254,10 +1246,9 @@ const InspectionFormSetupSections = ({
             </div>
             {isCompactViewport ? (
               <InspectionMobileChoiceList
-                options={incident.visibleTypeOptions}
+                options={incident.typeOptions}
                 value={selectedType}
                 onChange={handleTypeChange}
-                toggleValue={INCIDENT_TYPE_TOGGLE_VALUE}
                 ariaLabel="Choose inspection type"
               />
             ) : (
@@ -1268,10 +1259,9 @@ const InspectionFormSetupSections = ({
                 variant={setupOptionVariant}
                 showDescription
                 columns={DESKTOP_SETUP_OPTION_COLUMNS}
-                cardProps={(option, isSelected) => {
-                  if (option?.value === INCIDENT_TYPE_TOGGLE_VALUE) return TOGGLE_CARD_PROPS
-                  return isSelected ? { style: ACTIVE_CARD_STYLE } : {}
-                }}
+                cardProps={(_option, isSelected) =>
+                  isSelected ? { style: ACTIVE_CARD_STYLE } : {}
+                }
               />
             )}
           </>

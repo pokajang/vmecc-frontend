@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { CToaster } from '@coreui/react'
 import WorkflowStageActions from 'src/components/report-workflow/WorkflowStageActions'
 import ClaimLeaveModal from './ClaimLeaveModal'
 import ClaimSubmitModal from './ClaimSubmitModal'
@@ -33,6 +32,7 @@ import ClaimSubmissionEditorCard from './ClaimSubmissionEditorCard'
 import ClaimPostSubmitModal from './ClaimPostSubmitModal'
 import ClaimDraftHeaderBar from './ClaimDraftHeaderBar'
 import useClaimToast from './hooks/useClaimToast'
+import WorkflowFeedbackBanner from 'src/components/report-workflow/WorkflowFeedbackBanner'
 import { buildClaimDefaultPathValidity, groupClaimAttachments } from './claimFormViewModel'
 
 const ExpenseOtherClaimForm = ({
@@ -64,7 +64,7 @@ const ExpenseOtherClaimForm = ({
   const [isSubmittingClaim, setIsSubmittingClaim] = useState(false)
   const pendingLeaveActionRef = useRef(null)
   const hasHydratedDraftRef = useRef(false)
-  const { toaster, toast, addToast, pushToast } = useClaimToast()
+  const { feedback, clearFeedback, pushToast } = useClaimToast()
   const draftType = isExceptionalClaim ? 'other' : 'expense'
   const [activeDraftId, setActiveDraftId] = useState(null)
   const [activeDraftBackendId, setActiveDraftBackendId] = useState(null)
@@ -248,7 +248,6 @@ const ExpenseOtherClaimForm = ({
     registerGuard,
     unregisterGuard,
     pushToast,
-    saveDraftSuccessMessage: `${isExceptionalClaim ? 'Exceptional' : 'Expense'} claim draft saved.`,
     suppressAutosave: isSubmittingClaim,
   })
 
@@ -333,7 +332,7 @@ const ExpenseOtherClaimForm = ({
     saveDraft,
     writeLocalBackup,
     pushToast,
-    addToast,
+    clearFeedback,
     resetDraft,
     releaseAttachmentIds,
     onBack,
@@ -356,7 +355,7 @@ const ExpenseOtherClaimForm = ({
 
   return (
     <div className="d-grid gap-4" data-testid="payroll-claim-form">
-      <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
+      <WorkflowFeedbackBanner feedback={feedback} onDismiss={clearFeedback} />
       <ClaimLeaveModal
         visible={leaveModalVisible}
         onClose={closeLeaveModal}
@@ -470,8 +469,6 @@ const ExpenseOtherClaimForm = ({
           )}
 
           <WorkflowStageActions
-            onReset={resetDraft}
-            resetLabel="Clear form"
             onPrimary={submitClaim}
             primaryLabel={isEditingSubmittedClaim ? 'Update request' : 'Submit request'}
             primaryBusyLabel="Submitting..."
@@ -490,7 +487,8 @@ const ExpenseOtherClaimForm = ({
             }
             primaryFirst
             mobileLayout="stacked-primary-first"
-            stackedMobileBehavior="terminal"
+            stackedMobileBehavior="compact-sticky"
+            dockAtEnd
             ariaLabel="Claim form actions"
           />
         </>

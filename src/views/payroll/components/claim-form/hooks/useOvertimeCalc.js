@@ -1,301 +1,120 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { fetchOvertimeRateSettings } from 'src/services/apiClient'
-import { loadMyOvertimeRecordsApiFirst } from 'src/services/overtimeApi'
-import { ROLE_OPTIONS } from 'src/constants/roles'
-import {
-  OVERTIME_BASE_HOUR_MODES,
-  OVERTIME_NORMAL_HOURS_STRATEGIES,
-  loadOvertimeRateSettings,
-} from 'src/views/staff/salary-claims-management/utils'
+import { useCallback, useMemo } from 'react'
+import { OVERTIME_BASE_HOUR_MODES } from 'src/views/staff/salary-claims-management/utils'
 import {
   formatDuration as formatOvertimeDuration,
-  getDisplayOvertimeId,
   getOvertimeTypeLabel,
   getWorkflowStatusLabel as getOvertimeWorkflowStatusLabel,
   normalizeOvertimeType,
 } from 'src/views/overtime/utils'
-import {
-  isApprovedOvertimeStatus,
-  normalizeOvertimeRateSettingsPayload,
-  normalizeRoleList,
-  normalizeRoleValue,
-  parseOptionalAmount,
-  resolveDaysInMonth,
-  roundMoney,
-} from '../utils/salaryClaimUtils'
+import { parseOptionalAmount, roundMoney } from '../utils/salaryClaimUtils'
+
+const numberOr = (value, fallback = 0) => {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
 
 const useOvertimeCalc = ({
-  user,
   period,
-  assignedSalaryBasic,
   assignedSalaryNet,
   totalAmount,
   isSysAdmin,
   isOvertimeEligible,
   overtimeEligibilityResolved,
-  hasOvertimeEligibilityError,
-  pushToast,
+  overtimePreview,
+  isOvertimePreviewLoading = false,
 }) => {
-  const [overtimeRateSettings, setOvertimeRateSettings] = useState(() =>
-    normalizeOvertimeRateSettingsPayload(loadOvertimeRateSettings()),
+  const hasAuthoritativeOvertimePreview = Boolean(
+    overtimePreview &&
+      typeof overtimePreview === 'object' &&
+      Array.isArray(overtimePreview.rows) &&
+      overtimePreview.totals &&
+      typeof overtimePreview.totals === 'object' &&
+      overtimePreview.rateSnapshot &&
+      typeof overtimePreview.rateSnapshot === 'object',
   )
-  const [overtimeRows, setOvertimeRows] = useState([])
-  const [isOvertimeRowsLoading, setIsOvertimeRowsLoading] = useState(false)
+  const rateSnapshot = hasAuthoritativeOvertimePreview ? overtimePreview.rateSnapshot : {}
+  const overtimeBaseMode =
+    rateSnapshot.hourlyBaseMode === OVERTIME_BASE_HOUR_MODES.MONTH_DAYS_DIVISION
+      ? OVERTIME_BASE_HOUR_MODES.MONTH_DAYS_DIVISION
+      : OVERTIME_BASE_HOUR_MODES.AUTO_STATUTORY
+  const overtimeNormalHoursStrategy =
+    String(rateSnapshot.normalHoursStrategyUsed || '').trim() || 'statutory_8h'
+  const overtimeRateMultipliers = useMemo(
+    () => ({
+      weekday: numberOr(rateSnapshot.weekdayMultiplier, 1.5),
+      weekend: numberOr(rateSnapshot.weekendMultiplier, 2),
+      publicHoliday: numberOr(rateSnapshot.publicHolidayMultiplier, 3),
+    }),
+    [
+      rateSnapshot.publicHolidayMultiplier,
+      rateSnapshot.weekdayMultiplier,
+      rateSnapshot.weekendMultiplier,
+    ],
+  )
+  const overtimeMonthlyDivisor = parseOptionalAmount(rateSnapshot.monthlyDivisorUsed) ?? 26
+  const overtimeGlobalNormalHoursPerDay =
+    parseOptionalAmount(rateSnapshot.globalNormalHoursPerDayUsed) ?? 8
+  const overtimeAutoHourlyBaseRate = parseOptionalAmount(rateSnapshot.hourlyBaseRateUsed)
+  const overtimePreviewHoursPerDay = overtimeGlobalNormalHoursPerDay
+  const resolveNormalHoursPerDayForRoles = useCallback(
+    () => overtimePreviewHoursPerDay,
+    [overtimePreviewHoursPerDay],
+  )
 
-  useEffect(() => {
-    let active = true
-    const hydrateOvertimeRateSettings = async () => {
-      try {
-        const result = await fetchOvertimeRateSettings()
-        if (!active) return
-        const source =
-          result?.data && typeof result.data === 'object' ? result.data : loadOvertimeRateSettings()
-        setOvertimeRateSettings(normalizeOvertimeRateSettingsPayload(source))
-      } catch {
-        if (!active) return
-        setOvertimeRateSettings((prev) => normalizeOvertimeRateSettingsPayload(prev))
-      }
-    }
-    hydrateOvertimeRateSettings()
-    return () => {
-      active = false
-    }
-  }, [user?.id])
+  const overtimeRowsForPeriod = useMemo(() => {
+    if (!period || !hasAuthoritativeOvertimePreview) return []
+    if (!isSysAdmin && (!overtimeEligibilityResolved || !isOvertimeEligible)) return []
 
-  useEffect(() => {
-    let active = true
-    const hydrateOvertimeRows = async () => {
-      if (!user?.id) {
-        setOvertimeRows([])
-        setIsOvertimeRowsLoading(false)
-        return
+    return overtimePreview.rows.map((row, index) => {
+      const overtimeType = normalizeOvertimeType(row?.overtimeType)
+      const durationMinutes = numberOr(row?.durationMinutes)
+      const durationHours = numberOr(row?.hours, roundMoney(durationMinutes / 60))
+      const isApproved = row?.isApproved === true
+      const hourlyBaseRate = numberOr(row?.hourlyBaseRateUsed)
+      const calculatedPayout = numberOr(row?.payoutUsed)
+
+      return {
+        id: String(
+          row?.overtimePublicId ||
+            row?.overtimeRecordId ||
+            row?.overtimeId ||
+            `overtime-preview-${index + 1}`,
+        ),
+        overtimeId: String(row?.overtimeId || '-'),
+        overtimeType,
+        overtimeTypeLabel: getOvertimeTypeLabel(overtimeType, { short: true }),
+        claimDate: row?.claimDate || '',
+        status: row?.status || '',
+        statusLabel: getOvertimeWorkflowStatusLabel(row),
+        durationMinutes,
+        durationHours,
+        durationLabel: formatOvertimeDuration(durationMinutes),
+        applicantRoles: Array.isArray(row?.applicantRoles) ? row.applicantRoles : [],
+        normalHoursPerDay: numberOr(row?.globalNormalHoursPerDayUsed, overtimePreviewHoursPerDay),
+        hourlyBaseRate,
+        hourlyBaseSource: row?.hourlyBaseSource || 'missing',
+        monthlyDivisorUsed: row?.monthlyDivisorUsed || overtimeMonthlyDivisor,
+        multiplier: numberOr(
+          row?.multiplierUsed,
+          overtimeRateMultipliers[overtimeType] || overtimeRateMultipliers.weekday,
+        ),
+        calculatedPayout,
+        payablePayout: isApproved ? calculatedPayout : 0,
+        isApproved,
       }
-      if (!isSysAdmin && hasOvertimeEligibilityError) {
-        setOvertimeRows([])
-        setIsOvertimeRowsLoading(false)
-        return
-      }
-      if (!isSysAdmin && !overtimeEligibilityResolved) {
-        setOvertimeRows([])
-        setIsOvertimeRowsLoading(false)
-        return
-      }
-      if (!isOvertimeEligible || !period) {
-        setOvertimeRows([])
-        setIsOvertimeRowsLoading(false)
-        return
-      }
-      setIsOvertimeRowsLoading(true)
-      const result = await loadMyOvertimeRecordsApiFirst(user.id, {
-        month: period,
-        status: 'Approved',
-      })
-      if (!active) return
-      if (!result?.ok) {
-        pushToast('Unable to load overtime records from API. Please retry.', {
-          title: 'Overtime load failed',
-          color: 'danger',
-        })
-        setOvertimeRows([])
-        setIsOvertimeRowsLoading(false)
-        return
-      }
-      setOvertimeRows(Array.isArray(result?.data) ? result.data : [])
-      setIsOvertimeRowsLoading(false)
-    }
-    hydrateOvertimeRows()
-    return () => {
-      active = false
-    }
+    })
   }, [
-    hasOvertimeEligibilityError,
+    hasAuthoritativeOvertimePreview,
     isOvertimeEligible,
     isSysAdmin,
     overtimeEligibilityResolved,
+    overtimeMonthlyDivisor,
+    overtimePreview,
+    overtimePreviewHoursPerDay,
+    overtimeRateMultipliers,
     period,
-    pushToast,
-    user?.id,
   ])
 
-  const overtimeBaseHourCalculation = useMemo(
-    () => overtimeRateSettings?.baseHourCalculation || {},
-    [overtimeRateSettings?.baseHourCalculation],
-  )
-  const overtimeRateMultipliers = useMemo(
-    () => ({
-      weekday: parseOptionalAmount(overtimeRateSettings?.weekdayMultiplier) ?? 1.5,
-      weekend: parseOptionalAmount(overtimeRateSettings?.weekendMultiplier) ?? 2.0,
-      publicHoliday: parseOptionalAmount(overtimeRateSettings?.publicHolidayMultiplier) ?? 3.0,
-    }),
-    [
-      overtimeRateSettings?.publicHolidayMultiplier,
-      overtimeRateSettings?.weekdayMultiplier,
-      overtimeRateSettings?.weekendMultiplier,
-    ],
-  )
-  const overtimeBaseMode =
-    overtimeBaseHourCalculation?.mode === OVERTIME_BASE_HOUR_MODES.MONTH_DAYS_DIVISION
-      ? OVERTIME_BASE_HOUR_MODES.MONTH_DAYS_DIVISION
-      : OVERTIME_BASE_HOUR_MODES.AUTO_STATUTORY
-  const overtimeNormalHoursStrategy = [
-    OVERTIME_NORMAL_HOURS_STRATEGIES.STATUTORY_8H,
-    OVERTIME_NORMAL_HOURS_STRATEGIES.GLOBAL,
-    OVERTIME_NORMAL_HOURS_STRATEGIES.ROLE_BASED,
-  ].includes(overtimeBaseHourCalculation?.normalHoursStrategy)
-    ? overtimeBaseHourCalculation.normalHoursStrategy
-    : OVERTIME_NORMAL_HOURS_STRATEGIES.STATUTORY_8H
-  const overtimeRoleNormalHoursPerDay = useMemo(() => {
-    const roleMap =
-      overtimeBaseHourCalculation?.roleNormalHoursPerDay &&
-      typeof overtimeBaseHourCalculation.roleNormalHoursPerDay === 'object' &&
-      !Array.isArray(overtimeBaseHourCalculation.roleNormalHoursPerDay)
-        ? overtimeBaseHourCalculation.roleNormalHoursPerDay
-        : {}
-    return Object.entries(roleMap).reduce((acc, [role, value]) => {
-      const normalizedRole = normalizeRoleValue(role)
-      if (!normalizedRole || !ROLE_OPTIONS.includes(normalizedRole)) return acc
-      const normalizedValue = String(value ?? '').trim()
-      if (!normalizedValue) return acc
-      acc[normalizedRole] = normalizedValue
-      return acc
-    }, {})
-  }, [overtimeBaseHourCalculation])
-  const overtimeDefaultRoleHoursPerDay = useMemo(() => {
-    const parsed = parseOptionalAmount(overtimeBaseHourCalculation?.defaultRoleHoursPerDay)
-    return parsed !== null && parsed > 0 ? parsed : 8
-  }, [overtimeBaseHourCalculation?.defaultRoleHoursPerDay])
-  const overtimeMonthlyDivisor = useMemo(() => {
-    const parsed = parseOptionalAmount(overtimeBaseHourCalculation?.monthlyDivisor)
-    return parsed !== null && parsed > 0 ? parsed : 26
-  }, [overtimeBaseHourCalculation?.monthlyDivisor])
-  const overtimeGlobalNormalHoursPerDay = useMemo(() => {
-    const parsed = parseOptionalAmount(overtimeBaseHourCalculation?.globalNormalHoursPerDay)
-    return parsed !== null && parsed > 0 ? parsed : 8
-  }, [overtimeBaseHourCalculation?.globalNormalHoursPerDay])
-  const resolveNormalHoursPerDayForRoles = useCallback(
-    (roles = []) => {
-      if (overtimeNormalHoursStrategy === OVERTIME_NORMAL_HOURS_STRATEGIES.STATUTORY_8H) {
-        return 8
-      }
-      if (overtimeNormalHoursStrategy === OVERTIME_NORMAL_HOURS_STRATEGIES.GLOBAL) {
-        return overtimeGlobalNormalHoursPerDay
-      }
-      const normalizedRoles = normalizeRoleList(roles)
-      for (const role of normalizedRoles) {
-        const parsedRoleHours = parseOptionalAmount(overtimeRoleNormalHoursPerDay?.[role])
-        if (parsedRoleHours !== null && parsedRoleHours > 0) {
-          return parsedRoleHours
-        }
-      }
-      return overtimeDefaultRoleHoursPerDay
-    },
-    [
-      overtimeDefaultRoleHoursPerDay,
-      overtimeGlobalNormalHoursPerDay,
-      overtimeNormalHoursStrategy,
-      overtimeRoleNormalHoursPerDay,
-    ],
-  )
-  const overtimeAutoHourlyBaseRate = useMemo(() => {
-    const basic = parseOptionalAmount(assignedSalaryBasic)
-    if (basic === null || basic <= 0) return null
-    const previewHoursPerDay = resolveNormalHoursPerDayForRoles(user?.roles || [])
-    if (overtimeMonthlyDivisor <= 0 || previewHoursPerDay <= 0) return null
-    return roundMoney(basic / overtimeMonthlyDivisor / previewHoursPerDay)
-  }, [assignedSalaryBasic, overtimeMonthlyDivisor, resolveNormalHoursPerDayForRoles, user?.roles])
-  const overtimePreviewHoursPerDay = useMemo(
-    () => resolveNormalHoursPerDayForRoles(user?.roles || []),
-    [resolveNormalHoursPerDayForRoles, user?.roles],
-  )
-  const overtimeRowsForPeriod = useMemo(() => {
-    if (overtimeEligibilityResolved && !isOvertimeEligible) return []
-    if (!period) return []
-    return overtimeRows
-      .filter((row) => String(row?.claimDate || '').startsWith(`${period}-`))
-      .map((row, index) => {
-        const overtimeType = normalizeOvertimeType(row?.overtimeType)
-        const durationMinutes = Number(row?.durationMinutes || 0) || 0
-        const durationHours = roundMoney(durationMinutes / 60)
-        const multiplier = overtimeRateMultipliers[overtimeType] || overtimeRateMultipliers.weekday
-        const applicantRoles = normalizeRoleList(
-          Array.isArray(row?.applicantRoles) && row.applicantRoles.length > 0
-            ? row.applicantRoles
-            : user?.roles || [],
-        )
-        const normalHoursPerDay = resolveNormalHoursPerDayForRoles(applicantRoles)
-        const monthDaysDivisor =
-          overtimeBaseMode === OVERTIME_BASE_HOUR_MODES.MONTH_DAYS_DIVISION
-            ? resolveDaysInMonth(row?.claimDate, period)
-            : null
-        const monthDaysHourlyBaseRate =
-          overtimeBaseMode === OVERTIME_BASE_HOUR_MODES.MONTH_DAYS_DIVISION &&
-          monthDaysDivisor !== null &&
-          monthDaysDivisor > 0 &&
-          normalHoursPerDay > 0
-            ? roundMoney(assignedSalaryBasic / monthDaysDivisor / normalHoursPerDay)
-            : null
-        const autoHourlyBaseRateForRowFromDivisor =
-          overtimeMonthlyDivisor > 0 && normalHoursPerDay > 0
-            ? roundMoney(assignedSalaryBasic / overtimeMonthlyDivisor / normalHoursPerDay)
-            : null
-        const autoHourlyBaseRateForRow =
-          overtimeBaseMode === OVERTIME_BASE_HOUR_MODES.MONTH_DAYS_DIVISION
-            ? monthDaysHourlyBaseRate
-            : autoHourlyBaseRateForRowFromDivisor
-        const hourlyBaseRate = autoHourlyBaseRateForRow !== null ? autoHourlyBaseRateForRow : 0
-        const hourlyBaseSource =
-          autoHourlyBaseRateForRow !== null
-            ? overtimeBaseMode === OVERTIME_BASE_HOUR_MODES.MONTH_DAYS_DIVISION
-              ? 'month_days_division'
-              : 'auto_statutory'
-            : 'missing'
-        const calculatedPayout = roundMoney(durationHours * hourlyBaseRate * multiplier)
-        const isApproved = isApprovedOvertimeStatus(row?.status)
-        return {
-          id: `${String(row?.id || '').trim() || `ot-row-${index + 1}`}-${index}`,
-          overtimeId: getDisplayOvertimeId(row),
-          overtimeType,
-          overtimeTypeLabel: getOvertimeTypeLabel(overtimeType, { short: true }),
-          claimDate: row?.claimDate || '',
-          status: row?.status || '',
-          statusLabel: getOvertimeWorkflowStatusLabel(row),
-          durationMinutes,
-          durationHours,
-          durationLabel: formatOvertimeDuration(durationMinutes),
-          applicantRoles,
-          normalHoursPerDay,
-          hourlyBaseRate,
-          hourlyBaseSource,
-          monthlyDivisorUsed:
-            overtimeBaseMode === OVERTIME_BASE_HOUR_MODES.MONTH_DAYS_DIVISION
-              ? monthDaysDivisor
-              : overtimeMonthlyDivisor,
-          multiplier,
-          calculatedPayout,
-          payablePayout: isApproved ? calculatedPayout : 0,
-          isApproved,
-        }
-      })
-      .sort((a, b) => {
-        const av = new Date(a.claimDate || 0).getTime()
-        const bv = new Date(b.claimDate || 0).getTime()
-        if (Number.isNaN(av) && Number.isNaN(bv)) return 0
-        if (Number.isNaN(av)) return 1
-        if (Number.isNaN(bv)) return -1
-        return av - bv
-      })
-  }, [
-    period,
-    isOvertimeEligible,
-    overtimeEligibilityResolved,
-    assignedSalaryBasic,
-    overtimeBaseMode,
-    overtimeMonthlyDivisor,
-    resolveNormalHoursPerDayForRoles,
-    overtimeRateMultipliers,
-    overtimeRows,
-    user?.roles,
-  ])
   const overtimeHourlySourceSummary = useMemo(
     () =>
       overtimeRowsForPeriod.reduce(
@@ -308,23 +127,22 @@ const useOvertimeCalc = ({
     [overtimeRowsForPeriod],
   )
   const overtimeTotals = useMemo(() => {
-    const totalHoursAll = roundMoney(
-      overtimeRowsForPeriod.reduce((sum, row) => sum + row.durationHours, 0),
-    )
-    const approvedRows = overtimeRowsForPeriod.filter((row) => row.isApproved)
-    const totalHoursApproved = roundMoney(
-      approvedRows.reduce((sum, row) => sum + row.durationHours, 0),
-    )
-    const totalPayoutApproved = roundMoney(
-      approvedRows.reduce((sum, row) => sum + row.payablePayout, 0),
-    )
-    return {
-      totalHoursAll,
-      totalHoursApproved,
-      totalPayoutApproved,
-      approvedCount: approvedRows.length,
+    if (!hasAuthoritativeOvertimePreview || overtimeRowsForPeriod.length === 0) {
+      return {
+        totalHoursAll: 0,
+        totalHoursApproved: 0,
+        totalPayoutApproved: 0,
+        approvedCount: 0,
+      }
     }
-  }, [overtimeRowsForPeriod])
+    const totals = overtimePreview.totals
+    return {
+      totalHoursAll: numberOr(totals.allHours),
+      totalHoursApproved: numberOr(totals.approvedHours),
+      totalPayoutApproved: numberOr(totals.approvedPayout),
+      approvedCount: numberOr(totals.approvedCount),
+    }
+  }, [hasAuthoritativeOvertimePreview, overtimePreview, overtimeRowsForPeriod.length])
   const totalClaimImpact = useMemo(
     () => roundMoney(totalAmount + overtimeTotals.totalPayoutApproved),
     [overtimeTotals.totalPayoutApproved, totalAmount],
@@ -335,19 +153,18 @@ const useOvertimeCalc = ({
   )
 
   return {
-    overtimeRateSettings,
-    setOvertimeRateSettings,
+    hasAuthoritativeOvertimePreview,
     overtimeBaseMode,
     overtimeNormalHoursStrategy,
     overtimeRateMultipliers,
-    overtimeRoleNormalHoursPerDay,
-    overtimeDefaultRoleHoursPerDay,
+    overtimeRoleNormalHoursPerDay: {},
+    overtimeDefaultRoleHoursPerDay: overtimePreviewHoursPerDay,
     overtimeMonthlyDivisor,
     overtimeGlobalNormalHoursPerDay,
     overtimeAutoHourlyBaseRate,
     overtimePreviewHoursPerDay,
     resolveNormalHoursPerDayForRoles,
-    isOvertimeRowsLoading,
+    isOvertimeRowsLoading: isOvertimePreviewLoading,
     overtimeRowsForPeriod,
     overtimeHourlySourceSummary,
     overtimeTotals,

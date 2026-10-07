@@ -22,6 +22,7 @@ const OvertimeSectionCard = ({
   isOvertimeEligible,
   isSysAdmin,
   hasOvertimeEligibilityError,
+  hasAuthoritativeOvertimePreview,
   isOvertimeRowsLoading,
   overtimeBaseMode,
   overtimeAutoHourlyBaseRate,
@@ -57,6 +58,11 @@ const OvertimeSectionCard = ({
           <div className="text-body-secondary">Checking overtime eligibility...</div>
         ) : isOvertimeRowsLoading ? (
           <TableLoader />
+        ) : !hasAuthoritativeOvertimePreview ? (
+          <div className="text-warning">
+            Payroll overtime calculation is unavailable. Please retry before submitting this
+            request.
+          </div>
         ) : (
           <>
             {overtimeBaseMode === OVERTIME_BASE_HOUR_MODES.AUTO_STATUTORY &&

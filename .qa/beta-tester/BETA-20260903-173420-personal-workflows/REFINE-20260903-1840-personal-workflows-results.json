@@ -1,0 +1,415 @@
+{
+  "runId": "REFINE-20260903-1840-personal-workflows",
+  "results": [
+    {
+      "journey": "authentication and single-session reuse",
+      "status": "passed"
+    },
+    {
+      "journey": "leave validation, submit, persist, and reopen",
+      "status": "passed",
+      "recordId": "LV-AL-2026-005"
+    },
+    {
+      "journey": "overtime validation, submit, persist, and reopen",
+      "status": "passed",
+      "recordId": "OT-2026-007"
+    },
+    {
+      "journey": "run",
+      "status": "failed",
+      "message": "Mobile submitted-claim actions do not retain 44px touch targets."
+    }
+  ],
+  "created": [
+    {
+      "type": "leave",
+      "id": "LV-AL-2026-005",
+      "internalId": 132
+    },
+    {
+      "type": "overtime",
+      "id": "OT-2026-007",
+      "internalId": 89
+    },
+    {
+      "type": "salary",
+      "id": "CLM-2026-003",
+      "internalId": 179
+    }
+  ],
+  "cleanup": [
+    {
+      "type": "leave",
+      "id": "LV-AL-2026-005",
+      "result": "cancelled through UI",
+      "method": "POST"
+    },
+    {
+      "type": "overtime",
+      "id": "OT-2026-007",
+      "result": "cancelled through UI",
+      "method": "POST"
+    }
+  ],
+  "network": [
+    {
+      "method": "POST",
+      "path": "/api/auth/login",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/session",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings/modules",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings/system-maintenance",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/rosters",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings/shift-windows",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/workflow/notifications/unread-count",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/overtime/eligibility",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/leave",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/leave/balance",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/leave/draft",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/leave/compute-days",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/leave/roster-impact",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/leave",
+      "status": 201
+    },
+    {
+      "method": "GET",
+      "path": "/api/leave/balance",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/leave/balance",
+      "status": 200
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/leave/draft",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/session",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings/modules",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings/system-maintenance",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/rosters",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings/shift-windows",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/workflow/notifications/unread-count",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/overtime/eligibility",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/leave",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/leave/balance",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/leave/132/cancel",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/leave",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/leave/balance",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/session",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings/modules",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings/system-maintenance",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/rosters",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings/shift-windows",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/workflow/notifications/unread-count",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/overtime/eligibility",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/overtime/policy",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/overtime",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/overtime/draft",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/overtime/classify-date",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/overtime",
+      "status": 201
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/overtime/draft",
+      "status": 204
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/session",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings/modules",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings/system-maintenance",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/rosters",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings/shift-windows",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/workflow/notifications/unread-count",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/overtime/eligibility",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/overtime/policy",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/overtime",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/overtime/draft",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/overtime/89/cancel",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/auth/session",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings/modules",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings/system-maintenance",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/rosters",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/settings/shift-windows",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/workflow/notifications/unread-count",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/overtime/eligibility",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/payroll/claims/drafts",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/payroll/claims/drafts",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/payroll/claims/drafts",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/payroll/salary-baseline",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/payroll/claims/drafts",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/payroll/claims/drafts",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/payroll/claims/drafts",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/api/payroll/claims",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/payroll/claims",
+      "status": 201
+    }
+  ],
+  "consoleErrors": [],
+  "recoveries": [
+    {
+      "classification": "harness invalidation",
+      "cause": "Initial overtime date was in the future relative to the server date.",
+      "correction": "Use 2026-09-03 and restart the visible journey from a clean browser context."
+    },
+    {
+      "classification": "harness invalidation",
+      "cause": "The first Salary detail oracle stopped at the mounted container before async records hydrated.",
+      "correction": "Wait for the submitted record identifier inside the detail view and reject a terminal not-found state."
+    }
+  ]
+}

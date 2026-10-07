@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react'
-import { CAlert, CContainer, CToast, CToastBody, CToastHeader, CToaster } from '@coreui/react'
+import { CAlert, CContainer } from '@coreui/react'
 import { useSelector } from 'react-redux'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
@@ -42,6 +42,8 @@ import useLeaveForm from './hooks/useLeaveForm'
 import useLeaveViewControls from './hooks/useLeaveViewControls'
 import useAttachment from './hooks/useAttachment'
 import StatusBadge from './components/StatusBadge'
+import WorkflowFeedbackBanner from 'src/components/report-workflow/WorkflowFeedbackBanner'
+import useWorkflowFeedback from 'src/components/report-workflow/useWorkflowFeedback'
 
 const LEAVE_MODULE_LOADED_AT_MS = Date.now()
 
@@ -115,25 +117,11 @@ const Leave = () => {
   } = useLeaveRecords(user?.id)
   const [editingRecordId, setEditingRecordId] = useState(null)
   const [originalAttachmentId, setOriginalAttachmentId] = useState(null)
-  const toaster = useRef()
   const cameraInputRef = useRef(null)
   const draftHydratedRef = useRef(false)
-  const [toast, addToast] = useState(null)
+  const { feedback, clearFeedback, pushFeedback: pushToast } = useWorkflowFeedback()
   const actorName = user?.name || user?.full_name || user?.email || 'System user'
   const isLeaveGuidanceEnabled = isHolidayGuidanceLeaveEnabledForUser(user)
-
-  const pushToast = useCallback((message, { title, color = 'light', delay = 6000 } = {}) => {
-    addToast(
-      <CToast autohide delay={delay} color={color}>
-        {title && (
-          <CToastHeader closeButton>
-            <strong className="me-auto">{title}</strong>
-          </CToastHeader>
-        )}
-        <CToastBody>{message}</CToastBody>
-      </CToast>,
-    )
-  }, [])
 
   const {
     attachmentName,
@@ -197,7 +185,6 @@ const Leave = () => {
     selectedAssignment,
     balanceSummary,
     balanceStats,
-    isSubmitBlockedByBalance,
     isFormDirty,
   } = useLeaveDerivedState({
     leaveRecords,
@@ -293,7 +280,6 @@ const Leave = () => {
     confirmAndSubmit,
     handleSubmit,
     handleBackToLeaveType,
-    handleClearForm,
   } = useLeaveActions({
     activeSection,
     isFormDirty,
@@ -347,6 +333,7 @@ const Leave = () => {
     selectedShiftConfig,
     selectedAssignment,
     pushToast,
+    clearFeedback,
     getDisplayLeaveId,
     formatDayCount,
     calculateDays,
@@ -363,7 +350,6 @@ const Leave = () => {
     },
     [activeSection, isFormDirty, navigate, runWithDiscardGuard],
   )
-  const showApplyBackAction = activeSection === 'new-leave'
   const handleApplyBack = useCallback(
     () => runWithDiscardGuard(() => navigate('/leave')),
     [navigate, runWithDiscardGuard],
@@ -385,20 +371,29 @@ const Leave = () => {
     <CContainer fluid className="workflow-module-page" data-testid="leave-module">
       <ModulePageHeader
         title={activeSection === 'new-leave' ? 'Apply Leave' : 'Leave'}
+        mobileTitle={activeSection === 'leave-records' ? 'Leave Records' : 'Leave'}
+        className={
+          activeSection === 'new-leave' ||
+          activeSection === 'leave-records' ||
+          activeSection === 'leave-detail'
+            ? 'module-page-header--mobile-context'
+            : ''
+        }
         actions={
-          <>
-            {showApplyBackAction ? <BackButton onClick={handleApplyBack} /> : null}
-            {activeSection === 'new-leave' ? null : (
-              <div data-testid="leave-new-action">
-                <CreateActionButton
-                  label="Apply Leave"
-                  importance="page-primary"
-                  onClick={() => runWithDiscardGuard(startNewLeave)}
-                  icon={<Plus size={15} />}
-                />
-              </div>
-            )}
-          </>
+          activeSection === 'new-leave' ? (
+            <BackButton onClick={handleApplyBack} />
+          ) : activeSection === 'leave-detail' ? (
+            <BackButton onClick={() => navigate('/leave')} />
+          ) : (
+            <div data-testid="leave-new-action">
+              <CreateActionButton
+                label="Apply Leave"
+                importance="page-primary"
+                onClick={() => runWithDiscardGuard(startNewLeave)}
+                icon={<Plus size={15} />}
+              />
+            </div>
+          )
         }
       />
       {activeSection !== 'new-leave' ? (
@@ -425,7 +420,7 @@ const Leave = () => {
           />
         </div>
       ) : null}
-      <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
+      <WorkflowFeedbackBanner feedback={feedback} onDismiss={clearFeedback} />
       <LeaveSubmitConfirmModal
         visible={isSubmitConfirmVisible}
         submitPreview={submitPreview}
@@ -513,6 +508,8 @@ const Leave = () => {
             selectedRecordPendingActionHint={selectedRecordPendingActionHint}
             selectedRecordHistoryEntries={selectedRecordHistoryEntries}
             onBack={() => navigate('/leave')}
+            showHeaderBack={false}
+            isLoading={isLeaveLoading}
             getDisplayLeaveId={getDisplayLeaveId}
             getScheduleLabel={getScheduleLabel}
             getStatusBadge={getStatusBadge}
@@ -574,10 +571,8 @@ const Leave = () => {
             formatDayCount={formatDayCount}
             reason={reason}
             onReasonChange={handleReasonChange}
-            onClearForm={handleClearForm}
             isSubmitting={isSubmitting}
             draftFeedback={draftFeedback}
-            isSubmitBlockedByBalance={isSubmitBlockedByBalance}
             editingRecordId={editingRecordId}
             guidanceMessage={shouldShowLeaveGuidanceMessage ? leaveGuidanceMessage : ''}
             rosterImpact={rosterImpact}

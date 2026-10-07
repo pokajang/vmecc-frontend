@@ -155,6 +155,7 @@ export default function useLeaveDerivedState({
         key: 'available',
         label: 'Available',
         value: `${formatDayCount(balanceSummary.available)} day(s)`,
+        primary: true,
       },
       {
         key: 'entitlement',
@@ -174,11 +175,6 @@ export default function useLeaveDerivedState({
     ],
     [balanceSummary, formatDayCount],
   )
-
-  const isSubmitBlockedByBalance =
-    !balanceSummary.hasAssignment ||
-    balanceSummary.isZeroEntitlement ||
-    balanceSummary.isInsufficient
 
   const isFormDirty = useMemo(() => {
     const hasAttachment = Boolean(attachmentName || attachmentMeta?.name || attachmentId)
@@ -221,7 +217,6 @@ export default function useLeaveDerivedState({
     selectedAssignment,
     balanceSummary,
     balanceStats,
-    isSubmitBlockedByBalance,
     isFormDirty,
   }
 }

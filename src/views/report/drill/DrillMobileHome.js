@@ -1,5 +1,4 @@
-import React, { useMemo, useState } from 'react'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import React, { useState } from 'react'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import CreateActionButton from 'src/components/CreateActionButton'
 import {
@@ -10,7 +9,7 @@ import {
 import TypeManagerModal from 'src/components/report-workflow/TypeManagerModal'
 import { formatMobileReportDate } from '../reportUiUtils'
 import { REPORT_MOBILE_QUERY } from '../hooks/useReportIsMobile'
-import useDrillTypeManager, { DRILL_TYPE_TOGGLE_VALUE } from './useDrillTypeManager'
+import useDrillTypeManager from './useDrillTypeManager'
 import { recordDrillTypeUsage } from './typeUsageStorage'
 
 const MOBILE_HOME_RECENT_RECORD_LIMIT = 3
@@ -38,12 +37,6 @@ const DrillMobileHome = ({
     pushToast,
   })
 
-  const typeOptions = useMemo(() => {
-    const toggleIcon = drillType.showAllDrillTypes ? ChevronUp : ChevronDown
-    return drillType.visibleTypeOptions.map((option) =>
-      option?.value === DRILL_TYPE_TOGGLE_VALUE ? { ...option, icon: toggleIcon } : option,
-    )
-  }, [drillType.showAllDrillTypes, drillType.visibleTypeOptions])
   const draftRow = draftRows[0] || null
   const draftSummary = draftRow
     ? [
@@ -141,13 +134,8 @@ const DrillMobileHome = ({
             onClick={drillType.openAddModal}
           />
         }
-        options={typeOptions}
-        toggleValue={DRILL_TYPE_TOGGLE_VALUE}
+        options={drillType.typeOptions}
         onChange={(nextValue) => {
-          if (nextValue === DRILL_TYPE_TOGGLE_VALUE) {
-            drillType.setShowAllDrillTypes((prev) => !prev)
-            return
-          }
           const value = String(nextValue || '').trim()
           if (!value) return
           recordDrillTypeUsage(user?.id, value)

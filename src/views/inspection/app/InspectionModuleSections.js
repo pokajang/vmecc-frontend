@@ -104,7 +104,6 @@ export const InspectionRecordsView = ({
           onSelectType={(inspectionType) =>
             runGuardedAction(() => startNewWithType(inspectionType))
           }
-          onToggleTypes={() => homeIncident.setShowAllIncidentTypes((prev) => !prev)}
           onAddType={homeIncident.openAddModal}
           onContinueDraft={() => runGuardedAction(() => openSavedDraft(activeDraftRows[0]))}
           onDeleteDraft={() => setDeleteTarget(activeDraftRows[0])}

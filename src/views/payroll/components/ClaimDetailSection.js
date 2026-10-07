@@ -1,13 +1,14 @@
 import React from 'react'
-import { CBadge, CButton, CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/react'
-import { Calendar, Download, Pencil } from 'lucide-react'
+import { CBadge } from '@coreui/react'
 import ApprovalGates from 'src/components/ApprovalGates'
 import AuditHistoryPanel from 'src/components/AuditHistoryPanel'
+import BackButton from 'src/components/BackButton'
 import PageState from 'src/components/PageState'
 import { buildClaimHistoryEntries } from 'src/components/auditHistory'
-import WorkflowDetailActions from 'src/components/workflow/WorkflowDetailActions'
-import WorkflowDetailHeader from 'src/components/workflow/WorkflowDetailHeader'
+import RecordDetailActions from 'src/components/report-workflow/RecordDetailActions'
+import RecordDetailSummary from 'src/components/report-workflow/RecordDetailSummary'
 import SalaryClaimReadonlyView from './SalaryClaimReadonlyView'
+import { getClaimStatusColor } from '../payrollUtils'
 
 const CLAIM_GATES = [
   { action: 'Checked', label: 'Checked' },
@@ -32,8 +33,33 @@ const ClaimDetailSection = ({
   onDeleteClaim,
   canCancelClaim = false,
   canDeleteClaim = false,
+  showHeaderBack = true,
+  isLoading = false,
 }) => {
   const isSalaryClaim = selectedClaim?.type === 'salary'
+  const claimTitle = /\bclaim$/i.test(String(selectedClaimTypeMeta?.label || '').trim())
+    ? selectedClaimTypeMeta.label
+    : `${selectedClaimTypeMeta?.label || 'Claim'} Claim`
+  const renderClaimActions = (mode) => (
+    <RecordDetailActions
+      record={selectedClaim}
+      mode={mode}
+      ariaLabel="Claim actions"
+      testAnchorPrefix="payroll-claim"
+      handlers={{
+        download: onDownloadClaim,
+        edit: onEditClaim,
+        cancel: onCancelClaim,
+        delete: onDeleteClaim,
+      }}
+      fallbackCapabilities={{
+        download: true,
+        edit: canEditSubmittedClaim,
+        cancel: canCancelClaim,
+        delete: canDeleteClaim,
+      }}
+    />
+  )
   const claimHistoryEntries = selectedClaim
     ? [
         ...buildClaimHistoryEntries(selectedClaim),
@@ -61,60 +87,37 @@ const ClaimDetailSection = ({
       ]
     : []
   return (
-    <div className="d-grid gap-3" data-testid="payroll-claim-detail">
-      <WorkflowDetailHeader
-        title={selectedClaim ? `${selectedClaimTypeMeta.label} Claim` : 'Claim Details'}
-        subtitle={selectedClaim?.id ? `Claim ID: ${selectedClaim.id}` : ''}
-        status={selectedClaim?.status || ''}
-        backTo="/payroll"
-      />
-      {selectedClaim?.status ? (
-        <div>
-          <ApprovalGates
-            gates={CLAIM_GATES}
-            approvalHistory={selectedClaim.approvalHistory}
-            isCancelled={selectedClaim.status === 'Cancelled'}
-            direction="horizontal"
-          />
-        </div>
-      ) : null}
-
+    <div
+      className="inspection-detail-section inspection-form-sections d-grid gap-4"
+      data-testid="payroll-claim-detail"
+    >
       {!selectedClaim ? (
-        <PageState variant="error" message="Claim record not found." />
+        <>
+          {showHeaderBack ? <BackButton to="/payroll" /> : null}
+          {isLoading ? (
+            <PageState variant="loading" message="Loading claim record..." />
+          ) : (
+            <PageState variant="error" message="Claim record not found." />
+          )}
+        </>
       ) : (
         <>
-          <CRow className="g-3">
-            <CCol xs={6} md={4} lg={3}>
-              <div className="h-100 rounded-3 border d-flex align-items-center gap-2 px-3 py-3 bg-body">
-                {(() => {
-                  const Icon = selectedClaimTypeMeta.icon
-                  return (
-                    <>
-                      <div
-                        className="rounded-circle d-inline-flex align-items-center justify-content-center bg-light text-primary"
-                        style={{ width: 28, height: 28, flex: '0 0 28px' }}
-                      >
-                        <Icon size={14} />
-                      </div>
-                      <span className="fw-medium">{selectedClaimTypeMeta.label}</span>
-                    </>
-                  )
-                })()}
+          <RecordDetailSummary
+            title={claimTitle}
+            status={selectedClaim.status || ''}
+            statusColor={getClaimStatusColor(selectedClaim.status)}
+            context={selectedClaim.period || '-'}
+            metadata={[
+              selectedClaim.id,
+              selectedClaim.submittedAt ? `Submitted ${formatDate(selectedClaim.submittedAt)}` : '',
+            ]}
+            actions={
+              <div className="d-flex align-items-center gap-2">
+                {showHeaderBack ? <BackButton to="/payroll" /> : null}
+                {renderClaimActions('desktop')}
               </div>
-            </CCol>
-            <CCol xs={6} md={4} lg={3}>
-              <div className="h-100 rounded-3 border d-flex align-items-center gap-2 px-3 py-3 bg-body">
-                <div
-                  className="rounded-circle d-inline-flex align-items-center justify-content-center bg-light text-primary"
-                  style={{ width: 28, height: 28, flex: '0 0 28px' }}
-                >
-                  <Calendar size={14} />
-                </div>
-                <span className="fw-medium">{selectedClaim.period || '-'}</span>
-              </div>
-            </CCol>
-          </CRow>
-
+            }
+          />
           {isSalaryClaim ? (
             <SalaryClaimReadonlyView
               key={`${selectedClaim.userId || selectedClaim.ownerId || selectedClaim.employeeId || 'unknown'}::${selectedClaim.id || 'unknown'}`}
@@ -123,14 +126,14 @@ const ClaimDetailSection = ({
               formatDate={formatDate}
             />
           ) : (
-            <CCard>
-              <CCardHeader>Saved Claim Items</CCardHeader>
-              <CCardBody className="d-grid gap-3">
+            <section className="inspection-form-section d-grid gap-3">
+              <div className="fw-semibold text-muted">Saved claim items</div>
+              <div className="d-grid gap-3">
                 <div className="d-grid gap-2">
                   {submittedClaimItems.map((item) => (
                     <div
                       key={item.id}
-                      className="d-flex align-items-start gap-3 border-bottom pb-3"
+                      className="workflow-detail-list-item d-flex align-items-start gap-3 pb-3"
                     >
                       <div className="flex-grow-1">
                         <div className="d-flex align-items-center flex-wrap gap-2">
@@ -161,56 +164,30 @@ const ClaimDetailSection = ({
                   <span className="fw-semibold">{submittedTotalLabel}</span>
                   <span className="h5 mb-0">{formatCurrency(submittedClaimTotalValue)}</span>
                 </div>
-              </CCardBody>
-            </CCard>
+              </div>
+            </section>
           )}
 
-          <AuditHistoryPanel
-            title="Claim History"
-            entries={claimHistoryEntries}
-            emptyMessage="No workflow activity yet."
-            formatDateTime={formatDate}
-          />
+          {selectedClaim.status ? (
+            <section className="inspection-form-section d-grid gap-3">
+              <div className="fw-semibold text-muted">Workflow progress</div>
+              <ApprovalGates
+                gates={CLAIM_GATES}
+                approvalHistory={selectedClaim.approvalHistory}
+                isCancelled={selectedClaim.status === 'Cancelled'}
+                direction="horizontal"
+              />
+              <AuditHistoryPanel
+                title="Activity"
+                entries={claimHistoryEntries}
+                emptyMessage="No workflow activity yet."
+                formatDateTime={formatDate}
+                compact
+              />
+            </section>
+          ) : null}
 
-          <WorkflowDetailActions ariaLabel="Claim actions">
-            <CButton
-              color="light"
-              className="icon-label-action"
-              data-testid="payroll-claim-download-action"
-              onClick={() => onDownloadClaim(selectedClaim)}
-            >
-              <Download size={14} aria-hidden="true" />
-              Download claim
-            </CButton>
-            <CButton
-              color="primary"
-              className="icon-label-action"
-              data-testid="payroll-claim-edit-action"
-              onClick={() => onEditClaim(selectedClaim)}
-              disabled={!canEditSubmittedClaim}
-            >
-              <Pencil size={14} aria-hidden="true" />
-              Edit
-            </CButton>
-            <CButton
-              color="warning"
-              variant="outline"
-              data-testid="payroll-claim-cancel-action"
-              disabled={!canCancelClaim}
-              onClick={() => onCancelClaim?.(selectedClaim)}
-            >
-              Cancel
-            </CButton>
-            <CButton
-              color="danger"
-              variant="outline"
-              data-testid="payroll-claim-delete-action"
-              disabled={!canDeleteClaim}
-              onClick={() => onDeleteClaim?.(selectedClaim)}
-            >
-              Delete
-            </CButton>
-          </WorkflowDetailActions>
+          {renderClaimActions('mobile')}
         </>
       )}
     </div>

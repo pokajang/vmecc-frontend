@@ -1,13 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import {
-  CAlert,
-  CBadge,
-  CContainer,
-  CToast,
-  CToastBody,
-  CToastHeader,
-  CToaster,
-} from '@coreui/react'
+import { CAlert, CBadge, CContainer } from '@coreui/react'
 import { useSelector } from 'react-redux'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
@@ -48,6 +40,8 @@ import useOvertimeActions from './hooks/useOvertimeActions'
 import useOvertimeRecordsViewModel from './hooks/useOvertimeRecordsViewModel'
 import useOvertimeDraftHydration from './hooks/useOvertimeDraftHydration'
 import useOvertimeTypeGuidance from './hooks/useOvertimeTypeGuidance'
+import WorkflowFeedbackBanner from 'src/components/report-workflow/WorkflowFeedbackBanner'
+import useWorkflowFeedback from 'src/components/report-workflow/useWorkflowFeedback'
 
 const getStatusBadge = (status, label = status) => (
   <CBadge color={statusColorMap[status] || 'secondary'}>{label || '-'}</CBadge>
@@ -78,9 +72,8 @@ const OvertimeContent = () => {
   const [isDiscardConfirmVisible, setIsDiscardConfirmVisible] = useState(false)
   const [pendingDiscardAction, setPendingDiscardAction] = useState(null)
   const [editingRecordId, setEditingRecordId] = useState(null)
-  const toaster = useRef()
   const draftHydratedRef = useRef(false)
-  const [toast, addToast] = useState(null)
+  const { feedback, clearFeedback, pushFeedback: pushToast } = useWorkflowFeedback()
   const actorName = user?.name || user?.full_name || user?.email || 'System user'
   const isOvertimeGuidanceEnabled = isHolidayGuidanceOvertimeEnabledForUser(user)
   const handleHydrationStart = useCallback(() => {
@@ -126,19 +119,6 @@ const OvertimeContent = () => {
     isFormDirty,
   } = useOvertimeForm({ overtimeTypeDerivedMode, editingRecordId })
 
-  const pushToast = useCallback((message, { title, color = 'light', delay = 6000 } = {}) => {
-    addToast(
-      <CToast autohide delay={delay} color={color}>
-        {title ? (
-          <CToastHeader closeButton>
-            <strong className="me-auto">{title}</strong>
-          </CToastHeader>
-        ) : null}
-        <CToastBody>{message}</CToastBody>
-      </CToast>,
-    )
-  }, [])
-
   const {
     overtimePolicy,
     overtimeRecords,
@@ -153,7 +133,6 @@ const OvertimeContent = () => {
     isOvertimeEligibilityLoading,
     overtimeEligibilityResolved,
     isOvertimeEligibleEffective,
-    pushToast,
     onHydrationStart: handleHydrationStart,
   })
 
@@ -258,16 +237,11 @@ const OvertimeContent = () => {
   const submittingButtonLabel = isResubmittingClaim
     ? 'Updating request...'
     : 'Submitting request...'
-  const clearButtonLabel = hasPersistedEditTarget
-    ? isLinkedDraftForEditing
-      ? 'Discard draft changes'
-      : 'Reset to submitted'
-    : 'Clear form'
   const clearingButtonLabel = hasPersistedEditTarget
     ? isLinkedDraftForEditing
       ? 'Discarding...'
       : 'Resetting...'
-    : 'Clearing...'
+    : 'Resetting form...'
 
   useEffect(() => {
     if (activeSection !== 'new-overtime') return undefined
@@ -455,12 +429,6 @@ const OvertimeContent = () => {
         attachmentId: nextFormValues.attachmentId,
       }),
     )
-    if (linkedDraft) {
-      pushToast(`Loaded draft changes for ${getDisplayOvertimeId(row)}.`, {
-        title: 'Draft loaded',
-        color: 'info',
-      })
-    }
     setFieldErrors({})
     navigate('/overtime/new')
   }
@@ -507,7 +475,6 @@ const OvertimeContent = () => {
     handleSubmit,
     confirmAndSubmit,
     confirmDiscardDraftChanges,
-    handleClearForm,
   } = useOvertimeActions({
     userId: user?.id,
     userRoles: user?.roles,
@@ -521,6 +488,7 @@ const OvertimeContent = () => {
     overtimeId,
     navigate,
     pushToast,
+    clearFeedback,
     overtimeTypeDerivedMode,
     isResumeEditMode,
     hasPersistedEditTarget,
@@ -561,7 +529,6 @@ const OvertimeContent = () => {
     },
     [activeSection, isFormDirty, navigate, runWithDiscardGuard],
   )
-  const showApplyBackAction = activeSection === 'new-overtime'
   const handleApplyBack = useCallback(
     () => runWithDiscardGuard(() => navigate('/overtime')),
     [navigate, runWithDiscardGuard],
@@ -615,20 +582,30 @@ const OvertimeContent = () => {
     <CContainer fluid className="workflow-module-page" data-testid="overtime-module">
       <ModulePageHeader
         title={activeSection === 'new-overtime' ? 'Apply Overtime' : 'Overtime'}
+        mobileTitle={activeSection === 'overtime-records' ? 'Overtime Records' : 'Overtime'}
+        className={
+          activeSection === 'new-overtime' ||
+          activeSection === 'overtime-records' ||
+          activeSection === 'overtime-detail'
+            ? 'module-page-header--mobile-context'
+            : ''
+        }
         actions={
-          <>
-            {showApplyBackAction ? <BackButton onClick={handleApplyBack} /> : null}
-            {activeSection === 'new-overtime' ? null : (
-              <div data-testid="overtime-new-action">
-                <CreateActionButton
-                  label="Apply Overtime"
-                  importance="page-primary"
-                  onClick={() => runWithDiscardGuard(startNewOvertime)}
-                  icon={<Plus size={15} />}
-                />
-              </div>
-            )}
-          </>
+          activeSection === 'new-overtime' ? (
+            <BackButton onClick={handleApplyBack} />
+          ) : activeSection === 'overtime-detail' ? (
+            <BackButton onClick={() => navigate('/overtime')} />
+          ) : (
+            <div data-testid="overtime-new-action">
+              <CreateActionButton
+                label="Apply Overtime"
+                mobileLabel="Apply"
+                importance="page-primary"
+                onClick={() => runWithDiscardGuard(startNewOvertime)}
+                icon={<Plus size={15} />}
+              />
+            </div>
+          )
         }
       />
       {activeSection !== 'new-overtime' ? (
@@ -655,7 +632,7 @@ const OvertimeContent = () => {
           />
         </div>
       ) : null}
-      <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
+      <WorkflowFeedbackBanner feedback={feedback} onDismiss={clearFeedback} />
       <OvertimeSubmitConfirmModal
         visible={isSubmitConfirmVisible}
         submitPreview={submitPreview}
@@ -757,9 +734,12 @@ const OvertimeContent = () => {
             onBack={() => navigate('/overtime')}
             getDisplayOvertimeId={getDisplayOvertimeId}
             getScheduleLabel={getScheduleLabel}
+            getStatusBadge={getStatusBadge}
             formatDate={formatDate}
             formatDateTime={formatDateTime}
             showPageHeader
+            showHeaderBack={false}
+            isLoading={isOvertimeLoading}
             canEdit={Boolean(selectedRecord && canApplicantEditOvertimeRecord(selectedRecord))}
             canCancel={
               Boolean(selectedRecord) &&
@@ -808,8 +788,6 @@ const OvertimeContent = () => {
             isFormActionBusy={isFormActionBusy}
             formActionStatus={formActionStatus}
             draftFeedback={draftFeedback}
-            onClearForm={handleClearForm}
-            clearButtonLabel={clearButtonLabel}
             clearingButtonLabel={clearingButtonLabel}
             editingRecordId={editingRecordId}
             isResumeEditMode={isResumeEditMode}

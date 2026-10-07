@@ -6,7 +6,6 @@ import {
   MobileTypeSelectionSection,
   MobileWorkflowDraftCard,
 } from 'src/components/report-workflow/mobile-home'
-import { INCIDENT_TYPE_TOGGLE_VALUE } from 'src/views/inspection/useIncidentTypeManager'
 import { stripInspectionContext } from 'src/views/inspection/typeOptionUtils'
 import { formatHomeDate, getRecordDateValue } from './inspectionModuleUtils'
 
@@ -21,7 +20,6 @@ const InspectionMobileHome = ({
   onRecordScopeChange,
   isRecordsLoading = false,
   onSelectType,
-  onToggleTypes,
   onAddType,
   onContinueDraft,
   onDeleteDraft,
@@ -68,14 +66,7 @@ const InspectionMobileHome = ({
           />
         }
         options={typeOptions}
-        toggleValue={INCIDENT_TYPE_TOGGLE_VALUE}
-        onChange={(nextValue) => {
-          if (nextValue === INCIDENT_TYPE_TOGGLE_VALUE) {
-            onToggleTypes?.()
-            return
-          }
-          onSelectType?.(String(nextValue || '').trim())
-        }}
+        onChange={(nextValue) => onSelectType?.(String(nextValue || '').trim())}
       />
 
       {draftRow ? (

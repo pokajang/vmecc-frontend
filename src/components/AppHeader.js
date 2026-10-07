@@ -9,10 +9,6 @@ import {
   CBadge,
   CNavLink,
   CNavItem,
-  CToast,
-  CToastBody,
-  CToastHeader,
-  CToaster,
   CTooltip,
 } from '@coreui/react'
 import { Bell, Flag, MessageSquareText, Menu, Sparkles, User } from 'lucide-react'
@@ -42,7 +38,6 @@ const HEADER_TOOLTIP_TRIGGER = ['hover']
 
 const AppHeader = () => {
   const headerRef = useRef()
-  const toaster = useRef()
   const menuTriggerRef = useRef(null)
   const accountTriggerRef = useRef(null)
   const returnFocusRef = useRef(null)
@@ -72,10 +67,10 @@ const AppHeader = () => {
   const [sheetMode, setSheetMode] = useState('menu')
   const [sheetSession, setSheetSession] = useState(0)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
-  const [toast, addToast] = useState(null)
   const [feedbackModalVisible, setFeedbackModalVisible] = useState(false)
   const [feedbackMessage, setFeedbackMessage] = useState('')
   const [feedbackError, setFeedbackError] = useState('')
+  const [feedbackSuccess, setFeedbackSuccess] = useState('')
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false)
 
   const canClaim = payrollEnabled && hasPermission(authUser, 'self.payroll')
@@ -129,19 +124,6 @@ const AppHeader = () => {
       ...(isDesktop ? { sidebarShow: true } : {}),
     })
   }, [aiHelperOpen, dispatch, isDesktop])
-
-  const pushToast = useCallback((message, { title = '', color = 'light' } = {}) => {
-    addToast(
-      <CToast autohide delay={4000} color={color}>
-        {title ? (
-          <CToastHeader closeButton>
-            <strong className="me-auto">{title}</strong>
-          </CToastHeader>
-        ) : null}
-        <CToastBody>{message}</CToastBody>
-      </CToast>,
-    )
-  }, [])
 
   const handleSheetNavigate = useCallback(
     (item) => {
@@ -207,6 +189,7 @@ const AppHeader = () => {
     setFeedbackModalVisible(false)
     setFeedbackMessage('')
     setFeedbackError('')
+    setFeedbackSuccess('')
   }, [isSubmittingFeedback])
 
   const openFeedbackReportModal = useCallback(
@@ -217,6 +200,7 @@ const AppHeader = () => {
       closeAiHelper()
       setMobileOverlay(null)
       setFeedbackError('')
+      setFeedbackSuccess('')
       setFeedbackModalVisible(true)
     },
     [closeAiHelper],
@@ -241,19 +225,15 @@ const AppHeader = () => {
           title: typeof document !== 'undefined' ? document.title || '' : '',
         },
       })
-      setFeedbackModalVisible(false)
       setFeedbackMessage('')
       setFeedbackError('')
-      pushToast('Your report has been submitted to system administrators.', {
-        title: 'Report submitted',
-        color: 'success',
-      })
+      setFeedbackSuccess('Your report has been submitted to system administrators.')
     } catch (err) {
       setFeedbackError(err?.payload?.message || err?.message || 'Unable to submit report.')
     } finally {
       setIsSubmittingFeedback(false)
     }
-  }, [feedbackMessage, location.pathname, location.search, pushToast])
+  }, [feedbackMessage, location.pathname, location.search])
 
   const navItems = (
     <>
@@ -486,13 +466,12 @@ const AppHeader = () => {
         visible={feedbackModalVisible}
         message={feedbackMessage}
         error={feedbackError}
+        success={feedbackSuccess}
         submitting={isSubmittingFeedback}
         onClose={closeFeedbackReportModal}
         onMessageChange={setFeedbackMessage}
         onSubmit={handleFeedbackSubmit}
       />
-
-      <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
     </>
   )
 }

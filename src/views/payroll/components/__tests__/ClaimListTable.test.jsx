@@ -104,7 +104,8 @@ describe('ClaimListTable', () => {
     expect(mobileCard.textContent).toContain('April 2026')
     expect(mobileCard.textContent).toContain('2026-04-18')
     expect(mobileCard.textContent).toContain('RM 240.00')
-    expect(mobileCard.textContent).toContain('Pending Checked')
+    expect(mobileCard.textContent).toContain('Pending')
+    expect(mobileCard.closest('article').className).toContain('record-card--compact')
 
     fireEvent.keyDown(mobileCard, { key: 'Enter' })
     fireEvent.keyDown(mobileCard, { key: ' ' })

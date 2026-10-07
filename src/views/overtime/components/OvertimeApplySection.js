@@ -15,6 +15,7 @@ import ResponsiveChoiceSelector from 'src/components/report-workflow/ResponsiveC
 import WorkflowAttachmentField from 'src/components/report-workflow/WorkflowAttachmentField'
 import WorkflowChoiceStage from 'src/components/report-workflow/WorkflowChoiceStage'
 import WorkflowInlineFeedback from 'src/components/report-workflow/WorkflowInlineFeedback'
+import ResponsiveSetupSummaryField from 'src/components/report-workflow/ResponsiveSetupSummaryField'
 import WorkflowSetupField from 'src/components/report-workflow/WorkflowSetupField'
 import WorkflowStageActions from 'src/components/report-workflow/WorkflowStageActions'
 import { focusFirstInvalidField } from 'src/components/report-workflow/workflowFormFocus'
@@ -47,8 +48,6 @@ const OvertimeApplySection = ({
   isOvernight,
   isOvernightConfirmed = false,
   onOvernightConfirmationChange,
-  onClearForm,
-  clearButtonLabel = 'Clear form',
   clearingButtonLabel = 'Clearing...',
   isResumeEditMode = false,
   isOvertimeTypeDerived = false,
@@ -171,7 +170,7 @@ const OvertimeApplySection = ({
               {renderTypeChoices()}
             </WorkflowSetupField>
           ) : (
-            <WorkflowSetupField
+            <ResponsiveSetupSummaryField
               label="Overtime type"
               value={selectedOvertimeTypeOption?.title || 'Overtime Claim'}
               onEdit={!isOvertimeTypeDerived ? onBackToOvertimeType : undefined}
@@ -304,7 +303,7 @@ const OvertimeApplySection = ({
           <CCol xs={12}>
             <WorkflowAttachmentField
               id="overtime-attachment"
-              label="Evidence attachment (optional)"
+              label="Evidence attachment"
               accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
               onFileSelect={onAttachmentChange}
               disabled={isFormActionBusy || isAttachmentUploading}
@@ -327,21 +326,19 @@ const OvertimeApplySection = ({
           <WorkflowStageActions
             className="mt-4"
             ariaLabel="Overtime form actions"
-            onReset={onClearForm}
-            resetLabel={clearButtonLabel}
             onPrimary={() => {}}
             primaryType="submit"
             primaryLabel={submitButtonLabel}
             primaryTestId="overtime-submit-action"
             primaryBusyLabel={isSubmittingClaim ? submittingButtonLabel : ''}
             isSaving={isFormActionBusy}
-            resetDisabled={isFormActionBusy}
             feedback={draftFeedback}
             statusMessage={resolvedActionStatus}
             primaryDisabled={isFormActionBusy}
             primaryFirst
             mobileLayout="stacked-primary-first"
-            stackedMobileBehavior="terminal"
+            stackedMobileBehavior="compact-sticky"
+            dockAtEnd
           />
         </CCol>
       </CRow>

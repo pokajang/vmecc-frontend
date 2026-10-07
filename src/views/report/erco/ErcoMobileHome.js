@@ -1,5 +1,4 @@
-import React, { useMemo, useState } from 'react'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import React, { useState } from 'react'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import CreateActionButton from 'src/components/CreateActionButton'
 import {
@@ -10,7 +9,7 @@ import {
 import TypeManagerModal from 'src/components/report-workflow/TypeManagerModal'
 import { formatMobileReportDate } from '../reportUiUtils'
 import { recordTypeUsage } from './typeUsageStorage'
-import useIncidentTypeManager, { INCIDENT_TYPE_TOGGLE_VALUE } from './useIncidentTypeManager'
+import useIncidentTypeManager from './useIncidentTypeManager'
 import { REPORT_MOBILE_QUERY } from '../hooks/useReportIsMobile'
 
 const MOBILE_HOME_RECENT_RECORD_LIMIT = 3
@@ -38,12 +37,6 @@ const ErcoMobileHome = ({
     pushToast,
   })
 
-  const typeOptions = useMemo(() => {
-    const toggleIcon = incident.showAllIncidentTypes ? ChevronUp : ChevronDown
-    return incident.visibleTypeOptions.map((option) =>
-      option?.value === INCIDENT_TYPE_TOGGLE_VALUE ? { ...option, icon: toggleIcon } : option,
-    )
-  }, [incident.showAllIncidentTypes, incident.visibleTypeOptions])
   const draftRow = draftRows[0] || null
   const draftSummary = draftRow
     ? [draftRow.incidentType || 'ERCO', draftRow.location || 'No location']
@@ -138,13 +131,8 @@ const ErcoMobileHome = ({
             onClick={incident.openAddModal}
           />
         }
-        options={typeOptions}
-        toggleValue={INCIDENT_TYPE_TOGGLE_VALUE}
+        options={incident.typeOptions}
         onChange={(nextValue) => {
-          if (nextValue === INCIDENT_TYPE_TOGGLE_VALUE) {
-            incident.setShowAllIncidentTypes((prev) => !prev)
-            return
-          }
           const value = String(nextValue || '').trim()
           if (!value) return
           recordTypeUsage(user?.id, 'incident', value)

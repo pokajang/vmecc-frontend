@@ -1,8 +1,7 @@
 import React from 'react'
 import WorkflowStageActions from 'src/components/report-workflow/WorkflowStageActions'
-import WorkflowSetupField from 'src/components/report-workflow/WorkflowSetupField'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
-import MobileSetupSummaryRow from 'src/components/report-workflow/MobileSetupSummaryRow'
+import ResponsiveSetupSummaryField from 'src/components/report-workflow/ResponsiveSetupSummaryField'
 import {
   CAlert,
   CButton,
@@ -38,35 +37,17 @@ export const ReportSetupSummaryRow = ({
   onEdit,
   onReset,
   showDesktop = false,
-}) => {
-  const isMobile = useReportIsMobile()
-  if (!isMobile && !showDesktop) return null
-
-  if (!isMobile) {
-    return (
-      <WorkflowSetupField
-        label={label}
-        value={value || '--'}
-        secondaryValue={secondaryValue}
-        onEdit={onEdit}
-        onReset={onReset}
-        className="report-setup-summary-row report-setup-summary-row--desktop"
-      />
-    )
-  }
-
-  return (
-    <div className="report-setup-summary-row mobile-setup-summary-row d-md-none">
-      <MobileSetupSummaryRow
-        label={label}
-        value={value}
-        secondaryValue={secondaryValue}
-        onEdit={onEdit}
-        onReset={onReset}
-      />
-    </div>
-  )
-}
+}) => (
+  <ResponsiveSetupSummaryField
+    label={label}
+    value={value}
+    secondaryValue={secondaryValue}
+    onEdit={onEdit}
+    onReset={onReset}
+    showDesktop={showDesktop}
+    desktopClassName="report-setup-summary-row report-setup-summary-row--desktop"
+  />
+)
 
 export const ReportMobileActionGroup = ({
   onPrimary,

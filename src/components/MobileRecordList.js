@@ -24,7 +24,7 @@ const MobileRecordList = ({ sections = [], emptyMessage = null, variant = 'card'
           }
         >
           {section.label ? (
-            <div className="vmecc-label d-flex flex-wrap align-items-center justify-content-between gap-2 text-body-secondary text-uppercase">
+            <div className="vmecc-label d-flex flex-wrap align-items-center justify-content-between gap-2 text-body-secondary">
               <span>{section.label}</span>
               {section.summary ? (
                 <span className="text-body-secondary">{section.summary}</span>

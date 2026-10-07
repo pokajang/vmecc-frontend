@@ -131,7 +131,6 @@ const useInspectionModuleFormRuntime = ({
     })
     if (next.source === 'draft') {
       setDraftStatus(next.draftStatus)
-      pushToast('Draft restored.', { title: 'Draft loaded', color: 'info' })
     } else if (next.source === 'workspace') {
       setDraftStatus(next.draftStatus || localWorkspaceStatus)
     } else {

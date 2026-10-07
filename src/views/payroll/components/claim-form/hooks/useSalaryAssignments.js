@@ -12,6 +12,7 @@ import { formatCurrency, formatDate, parseAmount } from '../utils/claimFormUtils
 
 const useSalaryAssignments = ({ user, period, savedItems, pushToast }) => {
   const [salaryAssignments, setSalaryAssignments] = useState([])
+  const [overtimePreview, setOvertimePreview] = useState(null)
   const [isSalaryAssignmentsLoading, setIsSalaryAssignmentsLoading] = useState(false)
 
   useEffect(() => {
@@ -19,10 +20,12 @@ const useSalaryAssignments = ({ user, period, savedItems, pushToast }) => {
     const hydrateSalaryAssignments = async () => {
       if (!user?.id || !/^\d{4}-\d{2}$/.test(String(period || ''))) {
         setSalaryAssignments([])
+        setOvertimePreview(null)
         setIsSalaryAssignmentsLoading(false)
         return
       }
       setSalaryAssignments([])
+      setOvertimePreview(null)
       setIsSalaryAssignmentsLoading(true)
       try {
         const result = await fetchPayrollSalaryBaseline(period, {
@@ -31,6 +34,11 @@ const useSalaryAssignments = ({ user, period, savedItems, pushToast }) => {
         })
         if (!requestContext.isCurrent()) return
         const baseline = result?.data
+        setOvertimePreview(
+          baseline?.overtimePreview && typeof baseline.overtimePreview === 'object'
+            ? baseline.overtimePreview
+            : null,
+        )
         setSalaryAssignments(
           baseline
             ? [
@@ -58,6 +66,7 @@ const useSalaryAssignments = ({ user, period, savedItems, pushToast }) => {
           color: 'danger',
         })
         setSalaryAssignments([])
+        setOvertimePreview(null)
       } finally {
         if (requestContext.isCurrent()) setIsSalaryAssignmentsLoading(false)
       }
@@ -148,6 +157,7 @@ const useSalaryAssignments = ({ user, period, savedItems, pushToast }) => {
 
   return {
     salaryAssignments,
+    overtimePreview,
     isSalaryAssignmentsLoading,
     totalAmount,
     assignedSalaryConfig,

@@ -113,7 +113,7 @@ const DrillPostAnalysisStep = ({
             photos={analysis.photos}
             onChange={(photos) => updateAnalysis({ photos })}
             pushToast={pushToast}
-            onBeforeCameraOpen={() => onSaveDraft({ silentSuccess: true })}
+            onBeforeCameraOpen={() => onSaveDraft()}
             allowCapture={false}
             onProcessingChange={onPhotoProcessingChange}
             emptyMessage=""

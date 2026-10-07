@@ -13,6 +13,10 @@ const smokePassword = process.env.VMECC_SMOKE_RBAC_PASSWORD || 'SmokeRole!2026'
 const routeTimeoutMs = Number(process.env.VMECC_SMOKE_ROUTE_TIMEOUT_MS || 20_000)
 const apiPacingMs = Number(process.env.VMECC_SMOKE_API_PACING_MS || 650)
 const loginCookieNames = ['vmecc_session', 'vmecc_remember']
+const mobileRouteViewports = [
+  { key: 'mobile-320', width: 320, height: 700 },
+  { key: 'mobile-390', width: 390, height: 844 },
+]
 const artifactRoot = evidencePath(
   'smoke-full',
   process.env.VMECC_SMOKE_RUN_ID || new Date().toISOString().replace(/[:.]/g, '-'),
@@ -493,7 +497,7 @@ test.describe('FULL SMOKE repo-wide RBAC and notification harness', () => {
     expect(failures, `API RBAC failures: ${JSON.stringify(failures, null, 2)}`).toEqual([])
   })
 
-  test('UI route sweep loads allowed persona routes without persistent errors', async ({
+  test('mobile UI route sweep loads allowed persona routes without persistent errors', async ({
     page,
   }) => {
     test.skip(
@@ -534,57 +538,76 @@ test.describe('FULL SMOKE repo-wide RBAC and notification harness', () => {
 
     for (const persona of personas) {
       const csrfToken = await loginWithPage(page, persona)
-      for (const route of persona.routes) {
-        const beforeConsole = consoleErrors.length
-        const beforeErrors = pageErrors.length
-        const beforeResponses = failedResponses.length
-        const beforeDeniedResponses = deniedResponses.length
-        const beforeCancelledRequests = cancelledRequests.length
-        const result = { role: persona.role, route, passed: true, notes: [] }
-
-        try {
-          await page.goto(`${baseUrl}${route}`, {
-            waitUntil: 'domcontentloaded',
-            timeout: routeTimeoutMs,
-          })
-          await waitForAppReady(page, route)
-          await expect(page).not.toHaveURL(/\/login/i)
-        } catch (error) {
-          result.passed = false
-          result.notes.push(error.message)
-          fs.mkdirSync(artifactRoot, { recursive: true })
+      for (const viewport of mobileRouteViewports) {
+        await page.setViewportSize({ width: viewport.width, height: viewport.height })
+        for (const route of persona.routes) {
+          const beforeConsole = consoleErrors.length
+          const beforeErrors = pageErrors.length
+          const beforeResponses = failedResponses.length
+          const beforeDeniedResponses = deniedResponses.length
+          const beforeCancelledRequests = cancelledRequests.length
+          const result = {
+            role: persona.role,
+            route,
+            viewport: viewport.key,
+            passed: true,
+            notes: [],
+          }
           const fileName =
-            `${persona.role}-${route}`.replace(/[^a-z0-9]+/gi, '_').toLowerCase() + '.png'
+            `${persona.role}-${viewport.key}-${route}`.replace(/[^a-z0-9]+/gi, '_').toLowerCase() +
+            '.png'
+
+          try {
+            await page.goto(`${baseUrl}${route}`, {
+              waitUntil: 'domcontentloaded',
+              timeout: routeTimeoutMs,
+            })
+            await waitForAppReady(page, route)
+            await expect(page).not.toHaveURL(/\/login/i)
+            const overflow = await page.evaluate(
+              () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+            )
+            if (overflow > 1) {
+              result.passed = false
+              result.notes.push(`horizontal overflow: ${overflow}px`)
+            }
+          } catch (error) {
+            result.passed = false
+            result.notes.push(error.message)
+          }
+
+          consoleErrors.slice(beforeConsole).forEach((item) => {
+            result.passed = false
+            result.notes.push(`console.error: ${item.message}`)
+          })
+          const routeCancelledRequests = cancelledRequests.slice(beforeCancelledRequests)
+          pageErrors
+            .slice(beforeErrors)
+            .filter(
+              (item) => !isNavigationCancellationPageError(item.message, routeCancelledRequests),
+            )
+            .forEach((item) => {
+              result.passed = false
+              result.notes.push(`pageerror: ${item.message}`)
+            })
+          failedResponses.slice(beforeResponses).forEach((item) => {
+            result.passed = false
+            result.notes.push(`failed response: ${item.status} ${item.url}`)
+          })
+          deniedResponses.slice(beforeDeniedResponses).forEach((item) => {
+            result.passed = false
+            result.notes.push(
+              `unexpected denied response: ${item.status} ${item.method} ${item.url}`,
+            )
+          })
+
+          fs.mkdirSync(artifactRoot, { recursive: true })
           await page
             .screenshot({ path: path.join(artifactRoot, fileName), fullPage: true })
             .catch(() => {})
           result.screenshot = fileName
+          results.push(result)
         }
-
-        consoleErrors.slice(beforeConsole).forEach((item) => {
-          result.passed = false
-          result.notes.push(`console.error: ${item.message}`)
-        })
-        const routeCancelledRequests = cancelledRequests.slice(beforeCancelledRequests)
-        pageErrors
-          .slice(beforeErrors)
-          .filter(
-            (item) => !isNavigationCancellationPageError(item.message, routeCancelledRequests),
-          )
-          .forEach((item) => {
-            result.passed = false
-            result.notes.push(`pageerror: ${item.message}`)
-          })
-        failedResponses.slice(beforeResponses).forEach((item) => {
-          result.passed = false
-          result.notes.push(`failed response: ${item.status} ${item.url}`)
-        })
-        deniedResponses.slice(beforeDeniedResponses).forEach((item) => {
-          result.passed = false
-          result.notes.push(`unexpected denied response: ${item.status} ${item.method} ${item.url}`)
-        })
-
-        results.push(result)
       }
 
       await page.goto('about:blank')

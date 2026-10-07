@@ -17,7 +17,7 @@
   border-radius: 999px;
   background: var(--cui-tertiary-bg);
   color: var(--cui-body-color);
-  font-size: 0.75rem;
+  font-size: var(--vmecc-text-caption);
   font-weight: 700;
 }
 
@@ -113,7 +113,7 @@
   margin: -0.5rem 0 -0.5rem auto;
   padding: 0.5rem 0;
   border: 0;
-  font-size: 0.8rem;
+  font-size: var(--vmecc-text-caption);
   font-weight: 600;
   text-align: left;
   text-decoration: none;
@@ -202,34 +202,6 @@
 
   .er-assessment-requirement--compact .card-body {
     padding: 0;
-  }
-
-  .er-assessment-stage-actions .action-row-thumb--compact-sticky {
-    left: auto;
-    right: calc(
-      var(--cui-sidebar-occupy-end, 0px) + 0.75rem + env(safe-area-inset-right, 0px)
-    );
-    width: auto;
-    min-width: min(10rem, calc(100vw - 1.5rem));
-    padding: 0;
-    border: 0;
-    background: transparent;
-    box-shadow: none !important;
-  }
-
-  .er-assessment-stage-actions
-    .action-row-thumb--compact-sticky
-    .action-row-thumb-actions {
-    display: flex;
-    width: auto;
-    justify-content: flex-end;
-  }
-
-  .er-assessment-stage-actions
-    .action-row-thumb--compact-sticky
-    .workflow-stage-actions__primary {
-    flex: 0 0 auto;
-    min-width: 10rem;
   }
 
   .workflow-status-choice__group {

@@ -1,21 +1,8 @@
 const { expect, test } = require('@playwright/test')
+const { normalizeLoopbackOrigin } = require('./support/loopback-origin')
 
 const configuredDevBaseUrl = process.env.VMECC_E2E_BASE_URL || 'http://127.0.0.1:4173'
-const parsedDevBaseUrl = new URL(configuredDevBaseUrl)
-
-if (
-  parsedDevBaseUrl.protocol !== 'http:' ||
-  parsedDevBaseUrl.hostname !== '127.0.0.1' ||
-  !parsedDevBaseUrl.port ||
-  parsedDevBaseUrl.username ||
-  parsedDevBaseUrl.password
-) {
-  throw new Error(
-    'The browser component server must use an explicit http://127.0.0.1:<port> origin.',
-  )
-}
-
-const devBaseUrl = parsedDevBaseUrl.origin
+const devBaseUrl = normalizeLoopbackOrigin(configuredDevBaseUrl, 'The browser component server')
 
 const sourceUrl = (sourcePath) => {
   const resolvedUrl = new URL(sourcePath, devBaseUrl)

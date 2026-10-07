@@ -166,7 +166,7 @@ const FitnessTestForm = ({
     window.setTimeout(() => container?.querySelector('input, textarea, button')?.focus(), 100)
   }
 
-  const saveDraft = async ({ silentSuccess = false, step = activeStep } = {}) => {
+  const saveDraft = async ({ step = activeStep } = {}) => {
     if (saveLockRef.current) return false
     saveLockRef.current = true
     const snapshot = toSerializableFitnessTestForm({ ...formRef.current, workflowStep: step })
@@ -195,7 +195,6 @@ const FitnessTestForm = ({
       setSaveState(changedDuringSave ? 'dirty' : 'saved')
       onDirtyChange(changedDuringSave)
       onDraftSaved?.()
-      if (!silentSuccess) pushToast('Draft saved.', { title: 'Draft saved', color: 'success' })
       if (changedDuringSave) {
         setBlockerMessage(
           'New changes were made while saving. Continue again to save the latest values.',
@@ -224,7 +223,7 @@ const FitnessTestForm = ({
       return
     }
     setBlockerMessage('')
-    const saved = await saveDraft({ silentSuccess: true, step: nextStep })
+    const saved = await saveDraft({ step: nextStep })
     if (!saved) return
     setForm((current) => ({ ...current, workflowStep: nextStep }))
     setActiveStep(nextStep)
@@ -232,7 +231,7 @@ const FitnessTestForm = ({
   }
 
   const returnToStep = async (nextStep) => {
-    const saved = await saveDraft({ silentSuccess: true, step: nextStep })
+    const saved = await saveDraft({ step: nextStep })
     if (!saved) return
     setForm((current) => ({ ...current, workflowStep: nextStep }))
     setActiveStep(nextStep)
@@ -254,7 +253,7 @@ const FitnessTestForm = ({
       return
     }
     setBlockerMessage('')
-    const saved = await saveDraft({ silentSuccess: true, step: 'signoff' })
+    const saved = await saveDraft({ step: 'signoff' })
     if (!saved) return
     const nextRecord = buildFitnessTestRecord({
       form,

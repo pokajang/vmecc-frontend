@@ -15,7 +15,7 @@ import { Upload } from 'lucide-react'
 import { formatCameraDiagnosticsLines } from 'src/utils/cameraDiagnostics'
 import WorkflowAttachmentField from 'src/components/report-workflow/WorkflowAttachmentField'
 import WorkflowInlineFeedback from 'src/components/report-workflow/WorkflowInlineFeedback'
-import WorkflowSetupField from 'src/components/report-workflow/WorkflowSetupField'
+import ResponsiveSetupSummaryField from 'src/components/report-workflow/ResponsiveSetupSummaryField'
 import WorkflowStageActions from 'src/components/report-workflow/WorkflowStageActions'
 import WorkflowSummaryList from 'src/components/report-workflow/WorkflowSummaryList'
 import { focusFirstInvalidField } from 'src/components/report-workflow/workflowFormFocus'
@@ -62,8 +62,6 @@ const LeaveApplySection = ({
   formatDayCount,
   reason,
   onReasonChange,
-  onClearForm,
-  isSubmitBlockedByBalance,
   editingRecordId,
   guidanceMessage = '',
   rosterImpact = null,
@@ -90,8 +88,8 @@ const LeaveApplySection = ({
         <CForm ref={formRef} onSubmit={onSubmit} data-testid="leave-apply" noValidate>
           <CRow className="g-3 mb-4 align-items-stretch">
             <CCol xs={12} md={5} lg={4}>
-              <WorkflowSetupField
-                className="h-100"
+              <ResponsiveSetupSummaryField
+                desktopClassName="h-100"
                 label="Leave type"
                 value={selectedLeaveTypeOption?.title || leaveType}
                 onEdit={onBackToLeaveType}
@@ -101,25 +99,41 @@ const LeaveApplySection = ({
             </CCol>
             <CCol xs={12} md={7} lg={8}>
               <div className="leave-balance h-100" data-testid="leave-balance">
-                <WorkflowSummaryList title="Leave balance" items={balanceStats} variant="metrics" />
+                <WorkflowSummaryList
+                  title="Leave balance"
+                  items={balanceStats}
+                  variant="metrics"
+                  listClassName="workflow-summary__list--mobile-tiles"
+                />
                 {!balanceSummary.hasAssignment && (
                   <WorkflowInlineFeedback
                     className="mt-3"
                     compact
-                    kind="error"
-                    title="Assignment required"
-                    message={`No assignment found for ${leaveType} (${balanceSummary.year}).`}
+                    kind="warning"
+                    title="HR review required"
+                    message={`No entitlement assignment was found for ${leaveType} (${balanceSummary.year}). You can still submit this request for HR review.`}
                   />
                 )}
                 {balanceSummary.hasAssignment && balanceSummary.isZeroEntitlement && (
                   <WorkflowInlineFeedback
                     className="mt-3"
                     compact
-                    kind="error"
-                    title="No entitlement"
-                    message="Entitlement is 0 day(s). Submission is blocked until HR/HQ updates assignment."
+                    kind="warning"
+                    title="HR review required"
+                    message="Your current entitlement is 0 day(s). You can still submit this request for HR review."
                   />
                 )}
+                {balanceSummary.hasAssignment &&
+                  !balanceSummary.isZeroEntitlement &&
+                  balanceSummary.isInsufficient && (
+                    <WorkflowInlineFeedback
+                      className="mt-3"
+                      compact
+                      kind="warning"
+                      title="HR review required"
+                      message="The requested days exceed your current available balance. You can still submit this request for HR review."
+                    />
+                  )}
                 {leaveType === 'Other Leave' && (
                   <WorkflowInlineFeedback
                     className="mt-3"
@@ -369,14 +383,12 @@ const LeaveApplySection = ({
           <WorkflowStageActions
             className="mt-4"
             ariaLabel="Leave form actions"
-            onReset={onClearForm}
-            resetLabel="Clear form"
             onPrimary={() => {}}
             primaryType="submit"
             primaryLabel={editingRecordId ? 'Update request' : 'Submit request'}
             primaryBusyLabel="Submitting request..."
             primaryTestId="leave-submit-action"
-            primaryDisabled={isSubmitBlockedByBalance || isAttachmentProcessing || isSubmitting}
+            primaryDisabled={isAttachmentProcessing || isSubmitting}
             isSaving={isSubmitting || isAttachmentProcessing}
             feedback={draftFeedback}
             statusMessage={
@@ -388,7 +400,8 @@ const LeaveApplySection = ({
             }
             primaryFirst
             mobileLayout="stacked-primary-first"
-            stackedMobileBehavior="terminal"
+            stackedMobileBehavior="compact-sticky"
+            dockAtEnd
           />
         </CForm>
       )}

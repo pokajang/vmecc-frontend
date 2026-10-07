@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { CBadge, CContainer, CToaster } from '@coreui/react'
+import { CBadge, CContainer } from '@coreui/react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useSelector } from 'react-redux'
 import useTableRows from 'src/hooks/useTableRows'
@@ -28,6 +28,7 @@ import LeaveManagementTabsContent from './leave-management/components/LeaveManag
 import useLeaveAdminData from './leave-management/hooks/useLeaveAdminData'
 import LeaveWorkflowActionModal from './leave-management/components/LeaveWorkflowActionModal'
 import useLeaveAssignmentState from './leave-management/hooks/useLeaveAssignmentState'
+import WorkflowFeedbackBanner from 'src/components/report-workflow/WorkflowFeedbackBanner'
 import useLeaveAdminWorkflow from './leave-management/hooks/useLeaveAdminWorkflow'
 import useLeaveManagementDataActions from './leave-management/hooks/useLeaveManagementDataActions'
 import useLeaveManagementDerivedState from './leave-management/hooks/useLeaveManagementDerivedState'
@@ -65,7 +66,6 @@ const LeaveManagement = () => {
     [location.search],
   )
 
-  const toaster = useRef()
   const [isBulkLeaveSubmitting, setIsBulkLeaveSubmitting] = useState(false)
   const {
     search,
@@ -112,7 +112,8 @@ const LeaveManagement = () => {
     isLeaveRecordsLoading,
     isAssignmentsLoading,
     isHolidaysLoading,
-    toast,
+    feedback,
+    clearFeedback,
     pushToast,
     hydrateAssignmentsFromStorage,
     refreshAllLeaveRecords,
@@ -321,7 +322,7 @@ const LeaveManagement = () => {
 
   return (
     <CContainer fluid data-testid="leave-management-module">
-      <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
+      <WorkflowFeedbackBanner feedback={feedback} onDismiss={clearFeedback} />
       {!isDetailSection ? <ModulePageHeader title="Staff Leave Management" /> : null}
       <LeaveWorkflowActionModal
         visible={workflowModalState.visible}

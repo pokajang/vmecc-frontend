@@ -101,9 +101,11 @@ vi.mock('../components/OvertimeApplySection', () => ({
       <button type="button" onClick={() => onReasonChange('Changed overtime reason')}>
         change-reason
       </button>
-      <button type="button" onClick={onClearForm}>
-        clear-form
-      </button>
+      {onClearForm ? (
+        <button type="button" onClick={onClearForm}>
+          clear-form
+        </button>
+      ) : null}
       <button type="button" onClick={() => onSubmit({ preventDefault: () => {} })}>
         submit-claim
       </button>
@@ -348,7 +350,7 @@ describe('Overtime applicant draft runtime', () => {
     })
   })
 
-  it('autosave creates the synthetic draft row and clear removes it', async () => {
+  it('autosave creates the synthetic draft row without exposing a clear-form action', async () => {
     overtimeApiMocks.loadMyOvertimeDraftApiFirst.mockResolvedValue({
       ok: true,
       data: null,
@@ -382,16 +384,13 @@ describe('Overtime applicant draft runtime', () => {
       expect(screen.getByTestId('pathname').textContent).toBe('/overtime/new')
     })
 
-    fireEvent.click(screen.getByText('clear-form'))
-    await waitFor(() => {
-      expect(overtimeApiMocks.clearMyOvertimeDraftApiFirst).toHaveBeenCalled()
-    })
+    expect(screen.queryByText('clear-form')).toBeNull()
+    expect(overtimeApiMocks.clearMyOvertimeDraftApiFirst).not.toHaveBeenCalled()
 
     fireEvent.click(screen.getByRole('button', { name: 'Back' }))
     await waitFor(() => {
       const ids = screen.getByTestId('records-ids').textContent || ''
-      expect(ids.includes('DRAFT')).toBe(false)
-      expect(ids).toBe('OT-2026-001')
+      expect(ids.startsWith('DRAFT')).toBe(true)
     })
   })
 
@@ -428,7 +427,7 @@ describe('Overtime applicant draft runtime', () => {
     })
   })
 
-  it('edit mode without linked draft uses reset-to-submitted behavior without draft delete API call', async () => {
+  it('edit mode without linked draft omits the clear-form action', async () => {
     overtimeApiMocks.loadMyOvertimeDraftApiFirst.mockResolvedValue({
       ok: true,
       data: null,
@@ -444,17 +443,14 @@ describe('Overtime applicant draft runtime', () => {
     fireEvent.click(screen.getByText('edit-first-record'))
     await waitFor(() => {
       expect(screen.getByTestId('pathname').textContent).toBe('/overtime/new')
-      expect(screen.getByTestId('clear-button-label').textContent).toBe('Reset to submitted')
+      expect(screen.getByTestId('clear-button-label').textContent).toBe('')
     })
 
-    fireEvent.click(screen.getByText('clear-form'))
-    await waitFor(() => {
-      expect(overtimeApiMocks.clearMyOvertimeDraftApiFirst).not.toHaveBeenCalled()
-      expect(screen.getByTestId('pathname').textContent).toBe('/overtime/new')
-    })
+    expect(screen.queryByText('clear-form')).toBeNull()
+    expect(overtimeApiMocks.clearMyOvertimeDraftApiFirst).not.toHaveBeenCalled()
   })
 
-  it('edit mode with linked draft confirms discard, clears draft API, and stays on edit page', async () => {
+  it('edit mode with linked draft omits the clear-form action', async () => {
     overtimeApiMocks.loadMyOvertimeDraftApiFirst.mockResolvedValue({
       ok: true,
       data: linkedEditDraftPayload,
@@ -470,19 +466,11 @@ describe('Overtime applicant draft runtime', () => {
     fireEvent.click(screen.getByText('edit-first-record'))
     await waitFor(() => {
       expect(screen.getByTestId('pathname').textContent).toBe('/overtime/new')
-      expect(screen.getByTestId('clear-button-label').textContent).toBe('Discard draft changes')
+      expect(screen.getByTestId('clear-button-label').textContent).toBe('')
     })
 
-    fireEvent.click(screen.getByText('clear-form'))
-    await waitFor(() => {
-      expect(screen.getByTestId('action-confirm-discard-draft-changes')).toBeTruthy()
-    })
-
-    fireEvent.click(screen.getByText('confirm-action'))
-    await waitFor(() => {
-      expect(overtimeApiMocks.clearMyOvertimeDraftApiFirst).toHaveBeenCalledTimes(1)
-      expect(screen.getByTestId('pathname').textContent).toBe('/overtime/new')
-    })
+    expect(screen.queryByText('clear-form')).toBeNull()
+    expect(overtimeApiMocks.clearMyOvertimeDraftApiFirst).not.toHaveBeenCalled()
   })
 
   it('blocks edit navigation for pending overtime after first approval step', async () => {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { CAlert, CBadge, CRow } from '@coreui/react'
 import { DetailField } from 'src/components/report-workflow/ReportViewComponents'
+import RecordDetailSummary from 'src/components/report-workflow/RecordDetailSummary'
 import DisclosureCard from 'src/components/DisclosureCard'
 import useMediaQuery from 'src/hooks/useMediaQuery'
 import {
@@ -403,40 +404,31 @@ const InspectionDetailSection = ({
   return (
     <div className="inspection-detail-section">
       <div className="inspection-form-sections d-grid gap-4">
-        <div className="d-flex flex-wrap justify-content-between align-items-start gap-3">
-          <div className="d-grid gap-1">
-            <div className="d-flex flex-wrap align-items-center gap-2">
-              <div className="fw-semibold">{selectedTypeDefinition?.title || selectedType}</div>
-              {renderStatusBadge(record.status || 'Unknown', customStatusRenderer)}
-            </div>
-            {mainLocationLabel ? <div>{mainLocationLabel}</div> : null}
-            <div className="small text-body-secondary">
-              {[record.displayId, submittedAt].filter(Boolean).join(' · ')}
-            </div>
-            {record.nextActionRole ? (
-              <div className="inspection-detail-next-action small">
-                <span className="text-body-secondary">Next action:</span>{' '}
-                <span className="fw-semibold">{record.nextActionRole}</span>
-              </div>
-            ) : null}
-          </div>
-          <InspectionDetailActionBar
-            mode="desktop"
-            record={record}
-            onBack={onBack}
-            onEditRecord={onEditRecord}
-            canEditRecord={canEditRecord}
-            onDeleteRecord={onDeleteRecord}
-            canDeleteRecord={canDeleteRecord}
-            onReviewRecord={onReviewRecord}
-            onApproveRecord={onApproveRecord}
-            onRejectRecord={onRejectRecord}
-            onDownloadRecord={onDownloadRecord}
-            downloadingId={downloadingId}
-            isActionBusy={isActionBusy}
-            isDeleting={isDeleting}
-          />
-        </div>
+        <RecordDetailSummary
+          title={selectedTypeDefinition?.title || selectedType}
+          status={renderStatusBadge(record.status || 'Unknown', customStatusRenderer)}
+          context={mainLocationLabel}
+          metadata={[record.displayId, submittedAt]}
+          nextAction={record.nextActionRole}
+          actions={
+            <InspectionDetailActionBar
+              mode="desktop"
+              record={record}
+              onBack={onBack}
+              onEditRecord={onEditRecord}
+              canEditRecord={canEditRecord}
+              onDeleteRecord={onDeleteRecord}
+              canDeleteRecord={canDeleteRecord}
+              onReviewRecord={onReviewRecord}
+              onApproveRecord={onApproveRecord}
+              onRejectRecord={onRejectRecord}
+              onDownloadRecord={onDownloadRecord}
+              downloadingId={downloadingId}
+              isActionBusy={isActionBusy}
+              isDeleting={isDeleting}
+            />
+          }
+        />
 
         <section className="inspection-form-section d-grid gap-3">
           <div className="fw-semibold text-muted">Inspection Context</div>

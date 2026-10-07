@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React, { useState } from 'react'
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import ErcoSetupStep from '../ErcoSetupStep'
 import ErcoRespondingTeamStep from '../ErcoRespondingTeamStep'
@@ -549,11 +549,15 @@ describe('ERCO mobile setup polish', () => {
     expect(screen.getByText('Choose Incident Type')).toBeTruthy()
     expect(screen.queryByText('Choose Area')).toBeNull()
 
-    fireEvent.click(screen.getByRole('radio', { name: /Fire/i }))
+    const incidentPicker = screen.getByRole('list', { name: 'Choose incident type' })
+    expect(within(incidentPicker).queryByRole('radio')).toBeNull()
+    fireEvent.click(within(incidentPicker).getByRole('button', { name: /Fire/i }))
     await waitFor(() => expect(screen.getByText('Weather')).toBeTruthy())
     expect(screen.queryByText('Choose Area')).toBeNull()
 
-    fireEvent.click(screen.getByRole('radio', { name: /Clear/i }))
+    const weatherPicker = screen.getByRole('list', { name: 'Choose weather' })
+    expect(within(weatherPicker).queryByRole('radio')).toBeNull()
+    fireEvent.click(within(weatherPicker).getByRole('button', { name: /Clear/i }))
     await waitFor(() => expect(screen.getByText('Choose Area')).toBeTruthy())
   })
 

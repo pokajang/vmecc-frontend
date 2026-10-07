@@ -7,6 +7,7 @@ import { buildWorkflowNotificationDetailPath } from 'src/services/workflowNotifi
 import TableLoader from 'src/components/TableLoader'
 import WorkflowNotificationCard from '../WorkflowNotificationCard'
 import MobileOverlaySection from 'src/components/header/MobileOverlaySection'
+import WorkflowFeedbackBanner from 'src/components/report-workflow/WorkflowFeedbackBanner'
 
 export const groupWorkflowNotifications = (items = []) => {
   const actionRequired = []
@@ -30,11 +31,6 @@ export const groupWorkflowNotifications = (items = []) => {
       items: updates,
     },
   ].filter((group) => group.items.length > 0)
-}
-
-const resolveFeedbackConfirmColor = (color) => {
-  if (['primary', 'success', 'info', 'warning', 'danger'].includes(color)) return color
-  return 'info'
 }
 
 const WorkflowNotifications = ({ onClose }) => {
@@ -103,17 +99,7 @@ const WorkflowNotifications = ({ onClose }) => {
 
   return (
     <>
-      <ActionConfirmModal
-        visible={Boolean(feedback?.message)}
-        title={feedback?.title || 'Notice'}
-        message={feedback?.message || ''}
-        confirmLabel="OK"
-        confirmColor={resolveFeedbackConfirmColor(feedback?.color)}
-        isNotice
-        showCancelAction={false}
-        onClose={clearFeedback}
-        onConfirm={clearFeedback}
-      />
+      <WorkflowFeedbackBanner feedback={feedback} onDismiss={clearFeedback} />
       <ActionConfirmModal
         visible={confirmOpen}
         title="Delete all notifications?"

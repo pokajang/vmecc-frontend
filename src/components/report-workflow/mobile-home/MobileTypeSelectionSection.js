@@ -26,7 +26,7 @@ const MobileTypeSelectionSection = ({
   onChange,
   toggleValue = '',
   mode = 'action',
-  showDescriptions = false,
+  descriptionPolicy = 'compact',
   listProps = {},
   className = '',
   ...sectionProps
@@ -48,7 +48,7 @@ const MobileTypeSelectionSection = ({
         onChange={onChange}
         toggleValue={toggleValue}
         ariaLabel={listProps.ariaLabel || title}
-        showDescriptions={showDescriptions}
+        descriptionPolicy={descriptionPolicy}
         className={buildClassName('mobile-workflow-home__type-list', listProps.className)}
       />
     </MobileWorkflowSection>

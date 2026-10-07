@@ -64,6 +64,14 @@ describe('UI debt shared primitives', () => {
     expect(label?.textContent).toBe('Add remark')
   })
 
+  it('can shorten only the visible mobile label without weakening the accessible name', () => {
+    render(<CreateActionButton label="Apply Overtime" mobileLabel="Apply" onClick={vi.fn()} />)
+
+    const action = screen.getByRole('button', { name: 'Apply Overtime' })
+    expect(action.querySelector('.d-sm-none')?.textContent).toBe('Apply')
+    expect(action.querySelector('.d-none.d-sm-inline')?.textContent).toBe('Apply Overtime')
+  })
+
   it('keeps full header context on desktop and concise context on mobile', () => {
     render(
       <ModulePageHeader
@@ -85,6 +93,14 @@ describe('UI debt shared primitives', () => {
     ).toContain('d-none')
   })
 
+  it('supports concise mobile titles without replacing the desktop task title', () => {
+    render(<ModulePageHeader title="Apply Leave" mobileTitle="Leave" />)
+
+    expect(screen.getByText('Leave').className).toContain('d-md-none')
+    expect(screen.getByText('Apply Leave').className).toContain('d-none')
+    expect(screen.getByText('Apply Leave').className).toContain('d-md-inline')
+  })
+
   it('keeps long dynamic titles wrap-safe without reordering or enabling page actions', () => {
     render(
       <ModulePageHeader
@@ -99,7 +115,10 @@ describe('UI debt shared primitives', () => {
 
     const heading = screen.getByRole('heading', { level: 1 })
     const action = screen.getByRole('button', { name: 'Manage team' })
+    const header = heading.closest('.module-page-header')
     expect(heading.className).toContain('text-break')
+    expect(header.className).not.toContain('flex-wrap')
+    expect(header.className).not.toContain('gap-3')
     expect(heading.compareDocumentPosition(action) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(action.disabled).toBe(true)
     expect(action.closest('.module-page-header__actions')).toBeTruthy()
@@ -197,6 +216,39 @@ describe('UI debt shared primitives', () => {
     )
 
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }))
+    expect(handleAction).toHaveBeenCalledTimes(1)
+    expect(handleOpen).not.toHaveBeenCalled()
+  })
+
+  it('keeps compact record actions outside the keyboard-open region', () => {
+    const handleOpen = vi.fn()
+    const handleAction = vi.fn()
+
+    render(
+      <RecordCard
+        variant="list-group"
+        item={{
+          key: 'REC-2',
+          layout: 'compact',
+          title: 'A long record title that may wrap on a narrow screen',
+          status: <span>Pending Review</span>,
+          ariaLabel: 'Open record REC-2',
+          onOpen: handleOpen,
+          actions: (
+            <button type="button" onClick={handleAction}>
+              More
+            </button>
+          ),
+        }}
+      />,
+    )
+
+    const openRegion = screen.getByRole('button', { name: 'Open record REC-2' })
+    const action = screen.getByRole('button', { name: 'More' })
+    expect(openRegion.contains(action)).toBe(false)
+    expect(document.querySelector('[role="button"] button')).toBeNull()
+
+    fireEvent.click(action)
     expect(handleAction).toHaveBeenCalledTimes(1)
     expect(handleOpen).not.toHaveBeenCalled()
   })

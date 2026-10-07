@@ -33,7 +33,6 @@ const useClaimDraft = ({
   registerGuard,
   unregisterGuard,
   pushToast,
-  saveDraftSuccessMessage,
   suppressAutosave = false,
 }) => {
   const [lastSavedSnapshot, setLastSavedSnapshot] = useState(initialSnapshot)
@@ -119,12 +118,6 @@ const useClaimDraft = ({
       } else if (!activeDraftId) {
         setActiveDraftId(payload.id)
       }
-      if (showNotice) {
-        pushToast(saveDraftSuccessMessage, {
-          title: 'Draft saved',
-          color: 'success',
-        })
-      }
       return apiResult.data
     },
     [
@@ -133,7 +126,6 @@ const useClaimDraft = ({
       buildSnapshot,
       draftType,
       pushToast,
-      saveDraftSuccessMessage,
       setActiveDraftBackendId,
       setActiveDraftId,
       userId,

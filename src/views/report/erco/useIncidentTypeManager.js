@@ -1,10 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronDown, ChevronUp } from 'lucide-react'
 import { ERCO_INCIDENT_TYPE_OPTIONS } from './constants'
 import { loadCustomIncidentTypes, saveCustomIncidentTypes } from './customIncidentTypesStorage'
 import {
   applyTypeOverrides,
-  buildPinnedVisibleOptions,
   getTypeIconOptions,
   normalizeTypeKey,
   pickLeastUsedTypeIconKey,
@@ -17,11 +15,7 @@ import {
 } from './systemTypeOverridesStorage'
 import { loadTypeUsage, sortOptionsByUsage } from './typeUsageStorage'
 
-export const INCIDENT_TYPE_VISIBLE_LIMIT = 3
-export const INCIDENT_TYPE_TOGGLE_VALUE = '__erco_incident_types_toggle__'
-
 const useIncidentTypeManager = ({ userId, selectedType, updateSetupField, pushToast }) => {
-  const [showAllIncidentTypes, setShowAllIncidentTypes] = useState(false)
   const [showAddTypeModal, setShowAddTypeModal] = useState(false)
   const [incidentEditMode, setIncidentEditMode] = useState(false)
   const [incidentSystemOverrides, setIncidentSystemOverrides] = useState([])
@@ -89,23 +83,6 @@ const useIncidentTypeManager = ({ userId, selectedType, updateSetupField, pushTo
   const editingSystemType = useMemo(
     () => Boolean(editingIncidentTypeKey && systemTypeSet.has(editingIncidentTypeKey)),
     [editingIncidentTypeKey, systemTypeSet],
-  )
-
-  const visibleTypeOptions = useMemo(
-    () =>
-      buildPinnedVisibleOptions({
-        options: typeOptions,
-        selected: selectedType,
-        visibleLimit: INCIDENT_TYPE_VISIBLE_LIMIT,
-        showAll: showAllIncidentTypes,
-        toggleOption: {
-          value: INCIDENT_TYPE_TOGGLE_VALUE,
-          title: showAllIncidentTypes ? 'Show less' : 'Show more',
-          description: '',
-          icon: showAllIncidentTypes ? ChevronUp : ChevronDown,
-        },
-      }),
-    [selectedType, showAllIncidentTypes, typeOptions],
   )
 
   const resetDraft = () => {
@@ -337,13 +314,10 @@ const useIncidentTypeManager = ({ userId, selectedType, updateSetupField, pushTo
   }
 
   return {
-    showAllIncidentTypes,
-    setShowAllIncidentTypes,
     showAddTypeModal,
     incidentEditMode,
     setIncidentEditMode,
     typeOptions,
-    visibleTypeOptions,
     systemTypeSet,
     systemOverrideSet,
     openAddModal,

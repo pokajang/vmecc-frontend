@@ -23,6 +23,7 @@ import RowActionCell from 'src/components/RowActionCell'
 import RowActions from 'src/components/RowActions'
 import TableFilters from 'src/components/TableFilters'
 import WorkflowStatusSummary from 'src/components/WorkflowStatusSummary'
+import CompactRecordStatus from 'src/components/report-workflow/CompactRecordStatus'
 import { buildBulkSelectionSummary } from '../helpers/bulkSelectionSummary'
 import SalaryBulkModeBar from './SalaryBulkModeBar'
 import { activateOnEnterOrSpace } from 'src/utils/uiAccessibility'
@@ -134,56 +135,16 @@ const SalaryRecordsTab = ({ vm, handlers }) => {
   ).length
 
   const buildMobileSalaryItem = (row) => {
-    const assignedNetRaw = row?.payrollSnapshot?.net
-    const assignedNet =
-      assignedNetRaw === null || typeof assignedNetRaw === 'undefined'
-        ? null
-        : parseAmount(assignedNetRaw)
-    const adjustmentsTotal = getSalaryAdjustmentsTotal(row)
-    const approvedOvertimeRaw = row?.approvedOvertimePayout
-    const approvedOvertime =
-      approvedOvertimeRaw === null || typeof approvedOvertimeRaw === 'undefined'
-        ? null
-        : parseAmount(approvedOvertimeRaw)
     const projectedNet = getSalaryProjectedNet(row)
 
     return {
       key: `${row.id}-${row.ownerId || 'owner'}`,
-      title: row.id || '-',
-      subtitle: row.ownerLabel || '-',
-      eyebrow: row.period || 'Salary',
-      status: (
-        <WorkflowStatusSummary
-          statusLabel={row.status || '-'}
-          gates={SALARY_GATES}
-          approvalHistory={row.approvalHistory}
-          isCancelled={row.status === 'Cancelled'}
-        />
-      ),
-      fields: [
-        {
-          key: 'baseline',
-          label: 'Baseline',
-          value: renderMoneyValue(assignedNet, formatCurrency),
-        },
-        {
-          key: 'adjustments',
-          label: 'Adjustments',
-          value: renderMoneyValue(adjustmentsTotal, formatCurrency),
-        },
-        {
-          key: 'overtime',
-          label: 'OT payout',
-          value: renderMoneyValue(approvedOvertime, formatCurrency),
-        },
-        {
-          key: 'payable',
-          label: 'Final payable',
-          value: renderMoneyValue(projectedNet, formatCurrency),
-        },
-        { key: 'submitted', label: 'Submitted', value: formatDate(row.submittedAt) },
-      ],
-      detail: row?.salaryContractIncomplete === true ? 'Incomplete backend salary data' : '',
+      layout: 'compact',
+      title: row.period || formatDate(row.submittedAt) || 'Salary',
+      subtitle: [row.ownerLabel, row.id, renderMoneyValue(projectedNet, formatCurrency)]
+        .filter(Boolean)
+        .join(' · '),
+      status: <CompactRecordStatus label={row.status || '-'} />,
       ariaLabel: `Open salary record ${row.id || '-'}`,
       onOpen: () => openClaimDetail(row, 'salaryRecords'),
       actions: <RowActions items={buildClaimRowActionItems(row)} />,

@@ -26,6 +26,7 @@ import RowActions from 'src/components/RowActions'
 import TableFilters from 'src/components/TableFilters'
 import TableLoader from 'src/components/TableLoader'
 import WorkflowStatusSummary from 'src/components/WorkflowStatusSummary'
+import CompactRecordStatus from 'src/components/report-workflow/CompactRecordStatus'
 import BulkActionButton from 'src/views/staff/components/BulkActionButton'
 import BulkWorkflowActionModal from './BulkWorkflowActionModal'
 import useBulkWorkflowSelection from '../hooks/useBulkWorkflowSelection'
@@ -235,40 +236,19 @@ const LeaveRecordsSection = ({
   )
 
   const buildMobileRecordItem = ({ row }) => {
-    const reviewActionConfig = actionMode === 'review' ? getReviewActionConfig?.(row) : null
     const statusLabel = String(row?.status || '').trim() || '-'
-    const nextActionLabel =
-      reviewActionConfig?.approveDisabled && reviewActionConfig?.rejectDisabled
-        ? reviewActionConfig?.requiredRole
-          ? `Requires ${reviewActionConfig.requiredRole}`
-          : 'No workflow action available'
-        : reviewActionConfig?.approveLabel || ''
 
     return {
       key: row.recordKey || row.id,
-      title: getDisplayLeaveId(row),
-      subtitle: row.employee || row.reason || '-',
-      eyebrow: row.leaveType || 'Leave',
-      status: (
-        <WorkflowStatusSummary
-          statusLabel={statusLabel}
-          nextActionLabel={nextActionLabel}
-          gates={resolveLeaveGates(row)}
-          approvalHistory={row.approvalHistory}
-          isCancelled={row.status === 'Cancelled'}
-        />
-      ),
-      fields: [
-        { key: 'start', label: 'Start', value: getStartDateTimeLabel(row) },
-        { key: 'end', label: 'End', value: getEndDateTimeLabel(row) },
-        { key: 'days', label: 'Days', value: row.days ?? '-' },
-        {
-          key: 'applied',
-          label: 'Applied',
-          value: typeof formatDate === 'function' ? formatDate(row.appliedAt) : '-',
-        },
-      ],
-      detail: row.team ? getTeamSuffixLabel(row.team).replace(/^- /, '') : row.reason || '',
+      layout: 'compact',
+      title:
+        getStartDateTimeLabel(row) === getEndDateTimeLabel(row)
+          ? getStartDateTimeLabel(row)
+          : `${getStartDateTimeLabel(row)} – ${getEndDateTimeLabel(row)}`,
+      subtitle: [row.leaveType || 'Leave', row.employee, getDisplayLeaveId(row)]
+        .filter(Boolean)
+        .join(' · '),
+      status: <CompactRecordStatus label={statusLabel} />,
       ariaLabel: `Open leave record ${getDisplayLeaveId(row)}`,
       onOpen: () => openRecord(row),
       actions: <RowActions items={buildActionItemsForRow(row)} />,

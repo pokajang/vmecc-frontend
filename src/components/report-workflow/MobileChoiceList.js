@@ -26,7 +26,8 @@ const MobileChoiceList = ({
   toggleValue = '',
   getOptionKey,
   testIdPrefix = '',
-  showDescriptions = true,
+  descriptionPolicy = 'compact',
+  indicatorVariant = 'selection',
   disabled = false,
 }) => {
   const optionRefs = useRef([])
@@ -115,6 +116,7 @@ const MobileChoiceList = ({
           {visibleOptions.map((option, index) => {
             const optionValue = option?.value
             const title = option?.title || option?.label || String(optionValue || '')
+            const showDescriptions = ['decision-support', 'always'].includes(descriptionPolicy)
             const description = showDescriptions ? String(option?.description || '').trim() : ''
             const metaLabel = String(option?.metaLabel || '').trim()
             const MetaIcon = option?.metaIconKey === 'check' ? CheckCircle2 : null
@@ -122,6 +124,8 @@ const MobileChoiceList = ({
             const selected = isMultiple
               ? selectedValues.has(optionValue)
               : isSelectedValue(value, optionValue, resolvedMode)
+            const showAdvanceIndicator =
+              resolvedMode === 'action' || (indicatorVariant === 'advance' && !selected)
             const optionDisabled = disabled || Boolean(option?.disabled)
             const key =
               (typeof getOptionKey === 'function' ? getOptionKey(option) : undefined) ||
@@ -194,11 +198,11 @@ const MobileChoiceList = ({
                     className={buildClassName(
                       'mobile-choice-list__indicator',
                       selected ? 'mobile-choice-list__indicator--selected' : '',
-                      resolvedMode === 'action' ? 'mobile-choice-list__indicator--action' : '',
+                      showAdvanceIndicator ? 'mobile-choice-list__indicator--action' : '',
                     )}
                     aria-hidden="true"
                   >
-                    {resolvedMode === 'action' ? (
+                    {showAdvanceIndicator ? (
                       <ChevronRight size={18} />
                     ) : selected ? (
                       <Check size={15} strokeWidth={2.5} />

@@ -63,6 +63,32 @@ describe('ClaimDetailSection privacy boundaries', () => {
     expect(screen.getByRole('alert').textContent).toContain('Claim record not found.')
   })
 
+  it('shows a loading state while the requested record is hydrating', () => {
+    render(
+      <MemoryRouter>
+        <ClaimDetailSection {...props} selectedClaim={null} isLoading />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('status').textContent).toContain('Loading claim record...')
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+
+  it('does not duplicate a claim suffix already present in the type label', () => {
+    render(
+      <MemoryRouter>
+        <ClaimDetailSection
+          {...props}
+          selectedClaimTypeMeta={{ ...props.selectedClaimTypeMeta, label: 'Salary Claim' }}
+          selectedClaim={claim('SAL-1', 'USER-1')}
+        />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByRole('heading', { level: 2, name: 'Salary Claim' })).toBeTruthy()
+    expect(screen.queryByText('Salary Claim Claim')).toBeNull()
+  })
+
   it('renders the shared semantic detail header and action region', () => {
     render(
       <MemoryRouter>
@@ -70,8 +96,8 @@ describe('ClaimDetailSection privacy boundaries', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Salary Claim' })).toBeTruthy()
-    expect(screen.getByText('Claim ID: SAL-1')).toBeTruthy()
+    expect(screen.getByRole('heading', { level: 2, name: 'Salary Claim' })).toBeTruthy()
+    expect(screen.getByText('SAL-1')).toBeTruthy()
     expect(screen.getByRole('group', { name: 'Claim actions' })).toBeTruthy()
   })
 

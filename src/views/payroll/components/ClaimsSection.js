@@ -45,6 +45,8 @@ const ClaimsSection = ({
   <WorkflowRecordsSectionShell
     sectionTitle="Claim Records"
     showHeader
+    showMobileHeader={false}
+    compactMobile
     recordsTestId="payroll-claims"
     headerActions={
       showPrimaryAction ? (
@@ -86,7 +88,7 @@ const ClaimsSection = ({
             },
           ]}
           onClear={onClearFilters}
-          rowClassName="flex-md-nowrap"
+          rowClassName="inspection-records-filter-row inspection-report-records-filter-row flex-md-nowrap align-items-md-end"
           searchColMd={3}
           periodColMd={2}
           filterColMd={2}
@@ -128,6 +130,7 @@ const ClaimsSection = ({
           onRowsToShowChange={onRowsToShowChange}
           filteredCount={filteredClaims.length}
           totalCount={totalCount}
+          compactMobile
         />
       </>
     )}

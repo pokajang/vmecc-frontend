@@ -1,7 +1,5 @@
 import React from 'react'
-import { getStatusColor, PAYROLL_STATUS_COLOR } from 'src/constants/statusPresentation'
 import {
-  CBadge,
   CTable,
   CTableBody,
   CTableDataCell,
@@ -14,6 +12,7 @@ import ApprovalGates from 'src/components/ApprovalGates'
 import GroupedTableHeaderRow, { GroupTotalBadge } from 'src/components/GroupedTableHeader'
 import MobileRecordList from 'src/components/MobileRecordList'
 import RowActions from 'src/components/RowActions'
+import CompactRecordStatus from 'src/components/report-workflow/CompactRecordStatus'
 
 const MONTH_INDEX_BY_NAME = {
   january: 1,
@@ -111,25 +110,6 @@ const TERMINAL_STATUSES = ['Approved', 'Paid', 'Rejected', 'Cancelled']
 const resolveStatusLabel = (claim = {}) => {
   if (claim?.isDraft) return claim?.localOnly ? 'Draft (Syncing)' : 'Draft'
   return String(claim?.status || '').trim() || '-'
-}
-
-const resolveNextState = (claim = {}) => {
-  const status = resolveStatusLabel(claim)
-  if (claim?.isDraft) return status
-  if (TERMINAL_STATUSES.includes(status)) return status
-
-  const completedActions = new Set(
-    (Array.isArray(claim?.approvalHistory) ? claim.approvalHistory : []).map(
-      (entry) => entry?.action,
-    ),
-  )
-  const nextGate = PAYROLL_GATES.find((gate) => !completedActions.has(gate.action))
-  return nextGate ? `Pending ${nextGate.label}` : status
-}
-
-const renderStatusBadge = (claim = {}) => {
-  const status = resolveStatusLabel(claim)
-  return <CBadge color={getStatusColor(status, PAYROLL_STATUS_COLOR)}>{status}</CBadge>
 }
 
 const ClaimListTable = ({
@@ -256,18 +236,20 @@ const ClaimListTable = ({
 
       return {
         key: claim.id,
-        title: claim.id,
-        eyebrow: claim.category || 'Claim',
-        subtitle: detail || claim.period || '-',
-        status: renderStatusBadge(claim),
+        layout: 'compact',
+        title: formatDate(claim.submittedAt) || claim.period || '-',
+        subtitle: [
+          claim.category || 'Claim',
+          claim.id,
+          claim.period,
+          formatCurrency(resolveDisplayAmount(claim)),
+          detail,
+        ]
+          .filter(Boolean)
+          .join(' · '),
+        status: <CompactRecordStatus label={resolveStatusLabel(claim)} />,
         ariaLabel: `Open claim ${claim.id} summary`,
         onOpen: () => onOpenClaim(claim),
-        fields: [
-          { key: 'period', label: 'Period', value: claim.period || '-' },
-          { key: 'submitted', label: 'Submitted', value: formatDate(claim.submittedAt) },
-          { key: 'amount', label: 'Amount', value: formatCurrency(resolveDisplayAmount(claim)) },
-          { key: 'next', label: 'Next', value: resolveNextState(claim) },
-        ],
         actions: (
           <RowActions
             items={getClaimActionItems(claim)}

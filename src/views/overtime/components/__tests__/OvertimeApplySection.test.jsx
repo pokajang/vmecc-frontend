@@ -107,7 +107,7 @@ describe('OvertimeApplySection', () => {
 
     expect(screen.queryByRole('button', { name: 'Save draft' })).toBeNull()
     expect(screen.getByRole('button', { name: 'Submit request' }).disabled).toBe(true)
-    expect(screen.getByRole('button', { name: 'Clear form' }).disabled).toBe(true)
+    expect(screen.queryByRole('button', { name: 'Clear form' })).toBeNull()
     expect(screen.getByRole('status').textContent).toContain('Checking overtime type...')
   })
 
@@ -146,11 +146,11 @@ describe('OvertimeApplySection', () => {
     expect(screen.getByText('Weekend Overtime')).toBeTruthy()
     expect(screen.getByText('Public Holiday Overtime')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Update request' })).toBeTruthy()
-    expect(screen.getByRole('button', { name: 'Clear form' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Clear form' })).toBeNull()
     expect(screen.queryByRole('button', { name: 'Save draft' })).toBeNull()
     expect(screen.getByRole('button', { name: 'Add attachment' })).toBeTruthy()
-    expect(document.querySelector('.action-row-thumb--terminal')).toBeTruthy()
-    expect(document.querySelector('.action-row-thumb-spacer')).toBeNull()
+    expect(document.querySelector('.action-row-thumb--compact-sticky')).toBeTruthy()
+    expect(document.querySelector('.action-row-thumb-spacer--compact')).toBeTruthy()
   })
 
   it('renders the overnight confirmation control on cross-day requests', () => {

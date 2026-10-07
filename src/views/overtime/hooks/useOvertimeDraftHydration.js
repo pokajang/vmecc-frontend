@@ -14,7 +14,6 @@ const useOvertimeDraftHydration = ({
   overtimeType,
   overtimeTypeConfirmed,
   overtimeTypeDerivedMode,
-  pushToast,
   reason,
   setClaimDate,
   setAttachment,
@@ -88,9 +87,6 @@ const useOvertimeDraftHydration = ({
         attachmentId: overtimeDraft.attachmentId,
       }),
     )
-    setTimeout(() => {
-      pushToast('Saved overtime draft restored.', { title: 'Draft loaded', color: 'info' })
-    }, 0)
   }, [
     activeSection,
     attachment,
@@ -103,7 +99,6 @@ const useOvertimeDraftHydration = ({
     overtimeTypeDerivedMode,
     overtimeType,
     overtimeTypeConfirmed,
-    pushToast,
     reason,
     setClaimDate,
     setAttachment,

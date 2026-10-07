@@ -50,6 +50,5 @@ export default function useLeaveActions(props) {
     confirmAndSubmit: submission.confirmAndSubmit,
     handleSubmit: submission.handleSubmit,
     handleBackToLeaveType,
-    handleClearForm: submission.handleClearForm,
   }
 }

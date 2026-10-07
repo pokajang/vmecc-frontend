@@ -30,11 +30,15 @@ const AuditHistoryPanel = ({
     Array.isArray(value) || (value && typeof value === 'object')
       ? JSON.stringify(value)
       : String(value ?? '-'),
+  compact = false,
+  className = '',
 }) => {
   const rows = normalizeHistoryEntries(entries)
 
   return (
-    <CCard>
+    <CCard
+      className={`${compact ? 'workflow-detail-card workflow-detail-history' : ''} ${className}`.trim()}
+    >
       <CCardHeader>{title}</CCardHeader>
       <CCardBody>
         {rows.length === 0 ? (

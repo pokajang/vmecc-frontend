@@ -1,0 +1,14 @@
+[
+  {
+    "type": "leave",
+    "id": "LV-AL-2026-001",
+    "result": "cleanup failed",
+    "message": "page.waitForResponse: Timeout 30000ms exceeded while waiting for event \"response\""
+  },
+  {
+    "type": "overtime",
+    "id": "OT-2026-004",
+    "result": "cleanup failed",
+    "message": "page.waitForResponse: Timeout 30000ms exceeded while waiting for event \"response\""
+  }
+]

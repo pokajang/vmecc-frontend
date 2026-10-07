@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { CAlert, CButton, CToast, CToastBody, CToastHeader, CToaster } from '@coreui/react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { CAlert, CButton } from '@coreui/react'
 import { Pencil, Save } from 'lucide-react'
 import ButtonLoader from 'src/components/ButtonLoader'
 import TableLoader from 'src/components/TableLoader'
@@ -21,12 +21,13 @@ import {
   RolePermissionToolbar,
 } from './components/RolePermissionMatrixSections'
 import useRolePermissionData from './hooks/useRolePermissionData'
+import WorkflowFeedbackBanner from 'src/components/report-workflow/WorkflowFeedbackBanner'
+import useWorkflowFeedback from 'src/components/report-workflow/useWorkflowFeedback'
 
 const RolePermissionMatrix = () => {
   const authUser = useSelector((state) => state.authUser)
   const canManage = useMemo(() => hasPermission(authUser, 'settings.manage'), [authUser])
-  const toaster = useRef()
-  const [toast, addToast] = useState(null)
+  const { feedback, clearFeedback, pushFeedback: pushToast } = useWorkflowFeedback()
   const [editMode, setEditMode] = useState(false)
   const [permSearch, setPermSearch] = useState('')
   const [groupFilter, setGroupFilter] = useState('All')
@@ -41,19 +42,6 @@ const RolePermissionMatrix = () => {
       return VIEW_MODE_MATRIX
     }
   })
-
-  const pushToast = useCallback((message, { title = '', color = 'light' } = {}) => {
-    addToast(
-      <CToast autohide delay={4000} color={color}>
-        {title && (
-          <CToastHeader closeButton>
-            <strong className="me-auto">{title}</strong>
-          </CToastHeader>
-        )}
-        <CToastBody>{message}</CToastBody>
-      </CToast>,
-    )
-  }, [])
 
   const {
     cancel,
@@ -180,7 +168,7 @@ const RolePermissionMatrix = () => {
 
   return (
     <>
-      <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
+      <WorkflowFeedbackBanner feedback={feedback} onDismiss={clearFeedback} />
 
       <div className="mb-4" data-testid="settings-role-permissions-panel">
         <div className="d-flex justify-content-between align-items-center mb-3">

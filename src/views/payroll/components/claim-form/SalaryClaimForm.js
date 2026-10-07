@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { CButton, CToaster } from '@coreui/react'
+import { CButton } from '@coreui/react'
 import ClaimLeaveModal from './ClaimLeaveModal'
 import { generateDraftId } from 'src/views/payroll/components/claimRecords'
 import useAttachmentManager from './hooks/useAttachmentManager'
@@ -27,6 +27,7 @@ import ClaimDraftHeaderBar from './ClaimDraftHeaderBar'
 import SalaryClaimSubmitDialog from './SalaryClaimSubmitDialog'
 import SalaryClaimHeaderRow from './SalaryClaimHeaderRow'
 import { buildClaimDefaultPathValidity } from './claimFormViewModel'
+import WorkflowFeedbackBanner from 'src/components/report-workflow/WorkflowFeedbackBanner'
 
 const SalaryClaimForm = ({
   user,
@@ -61,7 +62,7 @@ const SalaryClaimForm = ({
   const hasInitializedPeriodRef = useRef(false)
   const adjustmentFormRef = useRef(null)
   const adjustmentDateInputRef = useRef(null)
-  const { toaster, toast, pushToast } = useClaimToast()
+  const { feedback, clearFeedback, pushToast } = useClaimToast()
   const draftType = 'salary'
   const [activeDraftId, setActiveDraftId] = useState(null)
   const [activeDraftBackendId, setActiveDraftBackendId] = useState(null)
@@ -75,6 +76,7 @@ const SalaryClaimForm = ({
 
   const {
     isSalaryAssignmentsLoading,
+    overtimePreview,
     totalAmount,
     assignedSalarySnapshot,
     allowanceItems,
@@ -89,6 +91,7 @@ const SalaryClaimForm = ({
   } = useSalaryAssignments({ user, period: header.period, savedItems, pushToast })
 
   const {
+    hasAuthoritativeOvertimePreview,
     overtimeBaseMode,
     overtimeRateMultipliers,
     overtimeMonthlyDivisor,
@@ -111,7 +114,8 @@ const SalaryClaimForm = ({
     isOvertimeEligible,
     overtimeEligibilityResolved,
     hasOvertimeEligibilityError,
-    pushToast,
+    overtimePreview,
+    isOvertimePreviewLoading: isSalaryAssignmentsLoading,
   })
 
   const buildSnapshot = useCallback(
@@ -272,7 +276,6 @@ const SalaryClaimForm = ({
     registerGuard,
     unregisterGuard,
     pushToast,
-    saveDraftSuccessMessage: 'Salary payout confirmation draft saved.',
     suppressAutosave: isSubmittingClaim,
   })
 
@@ -336,6 +339,7 @@ const SalaryClaimForm = ({
     hasUnsavedChanges,
     isClaimTypeLocked,
     pushToast,
+    clearFeedback,
     saveDraft,
     buildDraftPayload,
     period: header.period,
@@ -349,6 +353,7 @@ const SalaryClaimForm = ({
     localAutosaveKey,
     payrollBaselineConfirmed,
     hasAssignedSalaryBaseline,
+    hasAuthoritativeOvertimePreview,
     overtimeTotals,
     editingIndex,
     setSubmitDeclarationChecked,
@@ -463,6 +468,7 @@ const SalaryClaimForm = ({
       isOvertimeEligible,
       isSysAdmin,
       hasOvertimeEligibilityError,
+      hasAuthoritativeOvertimePreview,
       isOvertimeRowsLoading,
       overtimeBaseMode,
       overtimeAutoHourlyBaseRate,
@@ -475,6 +481,7 @@ const SalaryClaimForm = ({
     }),
     [
       hasOvertimeEligibilityError,
+      hasAuthoritativeOvertimePreview,
       isOvertimeEligible,
       isOvertimeRowsLoading,
       isSysAdmin,
@@ -520,10 +527,9 @@ const SalaryClaimForm = ({
   const salaryBodyActions = useMemo(
     () => ({
       submitClaim,
-      clearForm: resetDraft,
       retryDraft: () => saveDraft({ showNotice: false }),
     }),
-    [resetDraft, saveDraft, submitClaim],
+    [saveDraft, submitClaim],
   )
   const salaryBodyState = useMemo(
     () => ({
@@ -537,7 +543,7 @@ const SalaryClaimForm = ({
 
   return (
     <div className="d-grid gap-4" data-testid="payroll-claim-form">
-      <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
+      <WorkflowFeedbackBanner feedback={feedback} onDismiss={clearFeedback} />
       <ClaimLeaveModal
         visible={leaveModalVisible}
         onClose={closeLeaveModal}

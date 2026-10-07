@@ -49,7 +49,7 @@ const SalaryAdjustmentCard = ({
             onChange={(direction) => onUpdateDraftItem({ claimType: direction })}
             ariaLabel="Choose adjustment type"
             testIdPrefix="salary-adjustment-type"
-            showDescriptions={false}
+            descriptionPolicy="compact"
           />
         </CCol>
 

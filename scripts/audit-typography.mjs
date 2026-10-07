@@ -21,8 +21,11 @@ const files = await collectFiles(sourceRoot)
 const violations = []
 let allFontSizeDeclarations = 0
 let semanticFontSizeDeclarations = 0
+let printFontSizeDeclarations = 0
 let legacySmallUtilityReferences = 0
-const maxDirectFontSizeDeclarations = 63
+const maxBrowserDirectFontSizeDeclarations = 50
+const maxPrintFontSizeDeclarations = 13
+const printOnlyFiles = new Set([path.join('src', 'views', 'roster', 'rosterPrintExport.js')])
 
 for (const file of files) {
   const source = await readFile(file, 'utf8')
@@ -35,8 +38,15 @@ for (const file of files) {
     violations.push(`${relativePath}: unsupported inline font weight ${match[1]}`)
   }
 
-  allFontSizeDeclarations += source.match(/font-size\s*:/g)?.length || 0
-  semanticFontSizeDeclarations += source.match(/font-size\s*:\s*var\(--vmecc-text-/g)?.length || 0
+  const fileFontSizeDeclarations = source.match(/font-size\s*:/g)?.length || 0
+  const fileSemanticFontSizeDeclarations =
+    source.match(/font-size\s*:\s*var\(--vmecc-text-/g)?.length || 0
+  if (printOnlyFiles.has(relativePath)) {
+    printFontSizeDeclarations += fileFontSizeDeclarations
+  } else {
+    allFontSizeDeclarations += fileFontSizeDeclarations
+    semanticFontSizeDeclarations += fileSemanticFontSizeDeclarations
+  }
   if (['.js', '.jsx'].includes(path.extname(file))) {
     legacySmallUtilityReferences += source.match(/\bsmall\b/g)?.length || 0
   }
@@ -112,9 +122,14 @@ if (!pageHeaderSource.includes('vmecc-page-title')) {
 }
 
 const directFontSizeDeclarations = allFontSizeDeclarations - semanticFontSizeDeclarations
-if (directFontSizeDeclarations > maxDirectFontSizeDeclarations) {
+if (directFontSizeDeclarations > maxBrowserDirectFontSizeDeclarations) {
   violations.push(
-    `Direct font-size declaration budget exceeded: ${directFontSizeDeclarations}/${maxDirectFontSizeDeclarations}`,
+    `Browser direct font-size declaration budget exceeded: ${directFontSizeDeclarations}/${maxBrowserDirectFontSizeDeclarations}`,
+  )
+}
+if (printFontSizeDeclarations > maxPrintFontSizeDeclarations) {
+  violations.push(
+    `Print-only font-size declaration budget exceeded: ${printFontSizeDeclarations}/${maxPrintFontSizeDeclarations}`,
   )
 }
 
@@ -123,6 +138,6 @@ if (violations.length > 0) {
   process.exitCode = 1
 } else {
   console.log(
-    `Typography audit passed: ${semanticFontSizeDeclarations} semantic and ${directFontSizeDeclarations} direct font-size declarations; ${legacySmallUtilityReferences} legacy small references tracked.`,
+    `Typography audit passed: ${semanticFontSizeDeclarations} semantic and ${directFontSizeDeclarations} direct browser font-size declarations; ${printFontSizeDeclarations} print-only declarations; ${legacySmallUtilityReferences} legacy small references tracked.`,
   )
 }

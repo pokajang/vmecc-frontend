@@ -2,7 +2,6 @@
 import React from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import { ChevronUp } from 'lucide-react'
 import InspectionFormSetupSections from '../form/components/InspectionFormSetupSections'
 import { FIRE_EXTINGUISHER_CHECK_FIELDS } from '../types/fire-extinguisher/helpers'
 
@@ -63,18 +62,12 @@ const baseProps = {
   form: { inspectionType: '', inspectedAt: '', photos: [] },
   incident: {
     openAddModal: vi.fn(),
-    setShowAllIncidentTypes: vi.fn(),
     showAddTypeModal: false,
     typeOptions: [
       { value: 'General Inspection', title: 'General Inspection' },
       { value: 'Fire Extinguisher Inspection', title: 'Fire Extinguisher Inspection' },
       { value: 'SCBA', title: 'SCBA' },
       { value: 'Hydraulic Equipment', title: 'Hydraulic Equipment' },
-    ],
-    visibleTypeOptions: [
-      { value: 'General Inspection', title: 'General Inspection' },
-      { value: 'Fire Extinguisher Inspection', title: 'Fire Extinguisher Inspection' },
-      { value: '__inspection_incident_types_toggle__', title: 'Show less', icon: ChevronUp },
     ],
   },
   inspectedAtRef: { current: null },
@@ -135,12 +128,8 @@ const buildFireExtinguisherRow = (overrides = {}, complete = false) => ({
 })
 
 describe('InspectionFormSetupSections', () => {
-  it('collapses expanded incident types after selecting a type card', () => {
+  it('selects an inspection type card', () => {
     mockCompactViewport(true)
-    const incident = {
-      ...baseProps.incident,
-      setShowAllIncidentTypes: vi.fn(),
-    }
     const updateForm = vi.fn()
     const updateInspectionType = vi.fn()
     const setIsEditingType = vi.fn()
@@ -148,7 +137,6 @@ describe('InspectionFormSetupSections', () => {
     render(
       <InspectionFormSetupSections
         {...baseProps}
-        incident={incident}
         updateForm={updateForm}
         updateInspectionType={updateInspectionType}
         setIsEditingType={setIsEditingType}
@@ -157,20 +145,19 @@ describe('InspectionFormSetupSections', () => {
 
     fireEvent.click(screen.getByText('General Inspection'))
 
-    expect(incident.setShowAllIncidentTypes).toHaveBeenCalledWith(false)
     expect(updateInspectionType).toHaveBeenCalledWith('General Inspection')
     expect(updateForm).not.toHaveBeenCalled()
     expect(setIsEditingType).toHaveBeenCalledWith(false)
   })
 
-  it('keeps the mobile show-less action outside the type radio group', () => {
+  it('shows every inspection type in the mobile type radio group', () => {
     mockCompactViewport(true)
 
     render(<InspectionFormSetupSections {...baseProps} />)
 
-    const showLess = screen.getByRole('button', { name: 'Show less' })
-    expect(showLess.getAttribute('aria-expanded')).toBe('true')
-    expect(screen.getAllByRole('radio')).toHaveLength(2)
+    expect(screen.getAllByRole('radio')).toHaveLength(4)
+    expect(screen.queryByText('Show more')).toBeNull()
+    expect(screen.queryByText('Show less')).toBeNull()
   })
 
   it('shows all inspection types on desktop without mobile toggle affordances', () => {
@@ -229,15 +216,9 @@ describe('InspectionFormSetupSections', () => {
     mockCompactViewport(true)
     const updateInspectionType = vi.fn()
     const setIsEditingType = vi.fn()
-    const incident = {
-      ...baseProps.incident,
-      setShowAllIncidentTypes: vi.fn(),
-    }
-
     render(
       <InspectionFormSetupSections
         {...baseProps}
-        incident={incident}
         isEditingType={false}
         selectedType="Fire Extinguisher Inspection"
         selectedTypeOption={{
@@ -254,7 +235,6 @@ describe('InspectionFormSetupSections', () => {
 
     expect(updateInspectionType).toHaveBeenCalledWith('')
     expect(setIsEditingType).toHaveBeenCalledWith(false)
-    expect(incident.setShowAllIncidentTypes).toHaveBeenCalledWith(false)
   })
 
   it('returns to the type-only mobile landing state after resetting type', () => {

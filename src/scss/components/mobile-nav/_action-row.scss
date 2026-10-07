@@ -309,7 +309,7 @@
   }
 
   .action-row-thumb--docked-at-end + .action-row-thumb-spacer--compact {
-    height: calc(var(--mobile-overlay-nav-height) + env(safe-area-inset-bottom, 0px) + 0.75rem);
+    height: 0.75rem !important;
   }
 
   .salary-bulk-mode-bar {

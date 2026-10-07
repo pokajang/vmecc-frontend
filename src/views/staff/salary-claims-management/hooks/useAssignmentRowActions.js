@@ -32,17 +32,11 @@ const useAssignmentRowActions = ({
     async ({ showNotice = true } = {}) => {
       const result = await saveAssignmentAsDraft({ actorName })
       if (result?.ok) {
-        if (showNotice) {
-          pushToast('Salary assignment draft saved.', {
-            title: 'Draft saved',
-            color: 'success',
-          })
-        }
         return true
       }
       return false
     },
-    [actorName, pushToast, saveAssignmentAsDraft],
+    [actorName, saveAssignmentAsDraft],
   )
 
   const setSalary = useCallback(async () => {

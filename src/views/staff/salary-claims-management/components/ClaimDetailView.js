@@ -1,13 +1,14 @@
 import React from 'react'
-import { CAlert, CButton, CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/react'
-import { Calendar, Download, X } from 'lucide-react'
+import { CAlert, CButton } from '@coreui/react'
+import { Download, X } from 'lucide-react'
 import ApprovalGates from 'src/components/ApprovalGates'
 import AuditHistoryPanel from 'src/components/AuditHistoryPanel'
+import BackButton from 'src/components/BackButton'
 import CreateActionButton from 'src/components/CreateActionButton'
 import PageState from 'src/components/PageState'
+import RecordDetailSummary from 'src/components/report-workflow/RecordDetailSummary'
 import ResponsiveKeyValueList from 'src/components/workflow/ResponsiveKeyValueList'
 import WorkflowDetailActions from 'src/components/workflow/WorkflowDetailActions'
-import WorkflowDetailHeader from 'src/components/workflow/WorkflowDetailHeader'
 import SalaryClaimReadonlyView from '../../../payroll/components/SalaryClaimReadonlyView'
 
 const CLAIM_GATES = [
@@ -44,64 +45,78 @@ const ClaimDetailView = ({ vm, handlers }) => {
     renderItemDetailsField,
   } = handlers
   const isSalaryClaim = selectedClaim?.type === 'salary'
+  const renderWorkflowActions = () => (
+    <WorkflowDetailActions
+      statusMessage={
+        claimWorkflowState.pending
+          ? claimWorkflowState.canRespond
+            ? `You can ${claimWorkflowState.approveActionLabel.toLowerCase()} this claim.`
+            : claimWorkflowState.nextRole
+              ? `Pending ${claimWorkflowState.stageLabel} by ${claimWorkflowState.nextRole}.`
+              : `Pending ${claimWorkflowState.stageLabel}.`
+          : 'Workflow completed.'
+      }
+    >
+      <CButton
+        color="light"
+        className="icon-label-action"
+        onClick={() => onTriggerClaimAction(selectedClaim, selectedClaimActions.download.key)}
+        disabled={selectedClaimActions.download.disabled}
+      >
+        <Download size={14} aria-hidden="true" />
+        {selectedClaimActions.download.label}
+      </CButton>
+      {!selectedClaimActions.reject.disabled ? (
+        <CButton
+          color="danger"
+          variant="outline"
+          onClick={() => onTriggerClaimAction(selectedClaim, selectedClaimActions.reject.key)}
+        >
+          {selectedClaimActions.reject.label}
+        </CButton>
+      ) : null}
+      {!selectedClaimActions.primaryWorkflowAction.disabled ? (
+        <CButton
+          color="primary"
+          onClick={() =>
+            onTriggerClaimAction(selectedClaim, selectedClaimActions.primaryWorkflowAction.key)
+          }
+        >
+          {selectedClaimActions.primaryWorkflowAction.label}
+        </CButton>
+      ) : null}
+    </WorkflowDetailActions>
+  )
 
   return (
-    <div className="d-grid gap-3" data-testid="salary-claims-management-detail">
-      <WorkflowDetailHeader
+    <div
+      className="inspection-detail-section d-grid gap-4"
+      data-testid="salary-claims-management-detail"
+    >
+      <RecordDetailSummary
         title={selectedClaim ? `${selectedClaimTypeMeta.label} Claim` : 'Claim Details'}
-        subtitle={selectedClaim?.id ? `Claim ID: ${selectedClaim.id}` : ''}
         status={selectedClaim?.status}
-        statusColor={statusColorMap[selectedClaim?.status] || 'secondary'}
-        onBack={onBack}
-        backLabel="Back to claims"
+        context={selectedClaim?.period || ''}
+        metadata={[
+          selectedClaim?.id,
+          selectedClaim?.submittedAt ? `Submitted ${formatDate(selectedClaim.submittedAt)}` : '',
+        ]}
+        nextAction={claimWorkflowState?.nextRole || ''}
+        statusColor={statusColorMap?.[selectedClaim?.status] || 'secondary'}
+        actions={
+          <div className="d-flex align-items-start gap-2">
+            {selectedClaim ? (
+              <div className="d-none d-md-block">{renderWorkflowActions()}</div>
+            ) : null}
+            <BackButton onClick={onBack} label="Back to claims" />
+          </div>
+        }
       />
-      <div className="d-flex flex-wrap align-items-center gap-2">
-        {selectedClaim?.status && (
-          <ApprovalGates
-            gates={CLAIM_GATES}
-            approvalHistory={selectedClaim.approvalHistory}
-            isCancelled={selectedClaim.status === 'Cancelled'}
-            direction="horizontal"
-          />
-        )}
-      </div>
 
       {!selectedClaim ? (
         <PageState variant="error" message="Claim record not found." />
       ) : (
         <>
-          <CRow className="g-3">
-            <CCol xs={6} md={4} lg={3}>
-              <div className="h-100 rounded-3 border d-flex align-items-center gap-2 px-3 py-3 bg-body">
-                {(() => {
-                  const Icon = selectedClaimTypeMeta.icon
-                  return (
-                    <>
-                      <div
-                        className="rounded-circle d-inline-flex align-items-center justify-content-center bg-light text-primary"
-                        style={{ width: 28, height: 28, flex: '0 0 28px' }}
-                      >
-                        <Icon size={14} />
-                      </div>
-                      <span className="fw-medium">{selectedClaimTypeMeta.label}</span>
-                    </>
-                  )
-                })()}
-              </div>
-            </CCol>
-            <CCol xs={6} md={4} lg={3}>
-              <div className="h-100 rounded-3 border d-flex align-items-center gap-2 px-3 py-3 bg-body">
-                <div
-                  className="rounded-circle d-inline-flex align-items-center justify-content-center bg-light text-primary"
-                  style={{ width: 28, height: 28, flex: '0 0 28px' }}
-                >
-                  <Calendar size={14} />
-                </div>
-                <span className="fw-medium">{selectedClaim.period || '-'}</span>
-              </div>
-            </CCol>
-          </CRow>
-
           {isSalaryClaim && selectedClaim?.salaryContractIncomplete === true && (
             <CAlert color="warning" className="mb-0">
               Salary breakdown is unavailable because required details are missing
@@ -121,188 +136,140 @@ const ClaimDetailView = ({ vm, handlers }) => {
               formatDate={formatDate}
             />
           ) : !isSalaryClaim ? (
-            <CRow className="g-3">
-              <CCol xs={12} md={isItemDetailsVisible ? 6 : 12}>
-                <CCard>
-                  <CCardHeader>Saved Claim Items</CCardHeader>
-                  <CCardBody className="d-grid gap-3">
-                    <div className="d-grid gap-2">
-                      {submittedClaimItems.map((item) => (
-                        <div
-                          key={item.id}
-                          className={`d-flex align-items-start gap-3 border-bottom pb-3 ${
-                            selectedClaimItem?.id === item.id ? 'bg-light rounded px-2 pt-2' : ''
-                          }`}
-                        >
-                          <div className="flex-grow-1">
-                            <div className="d-flex align-items-center flex-wrap gap-2">
-                              <CButton
-                                type="button"
-                                color="link"
-                                className="workflow-item-action p-0 text-start fw-semibold text-decoration-none"
-                                aria-label={`Open claim item ${item.title || item.id}`}
-                                onClick={() => onSelectClaimItem(item.id)}
-                              >
-                                {item.title}
-                              </CButton>
-                              {item.date && (
-                                <span className="small text-body-secondary">
-                                  {formatDate(item.date)}
-                                </span>
-                              )}
-                            </div>
-                            <div className="small text-body-secondary mt-1 d-flex align-items-center flex-wrap gap-2">
-                              <span>{item.note || 'No additional notes for this item.'}</span>
-                              {item.attachmentName && (
-                                <CButton
-                                  color="light"
-                                  size="sm"
-                                  className="workflow-attachment-action text-body-secondary"
-                                  aria-label={`Preview ${item.attachmentName}`}
-                                  onClick={() => {
-                                    onOpenAttachmentPreview(item.attachmentName, item, 'item-list')
-                                  }}
-                                >
-                                  {truncateAttachmentLabel(item.attachmentName)}
-                                </CButton>
-                              )}
-                            </div>
-                          </div>
-                          <div className="fw-semibold text-nowrap">
-                            {formatCurrency(item.amount)}
-                          </div>
+            <>
+              <section className="inspection-form-section d-grid gap-3">
+                <div className="fw-semibold text-muted">Saved claim items</div>
+                <div className="d-grid gap-2">
+                  {submittedClaimItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className={`workflow-detail-list-item d-flex align-items-start gap-3 pb-3 ${
+                        selectedClaimItem?.id === item.id ? 'bg-light rounded px-2 pt-2' : ''
+                      }`}
+                    >
+                      <div className="flex-grow-1 min-w-0">
+                        <div className="d-flex align-items-center flex-wrap gap-2">
+                          <CButton
+                            type="button"
+                            color="link"
+                            className="workflow-item-action p-0 text-start fw-semibold text-decoration-none"
+                            aria-label={`Open claim item ${item.title || item.id}`}
+                            onClick={() => onSelectClaimItem(item.id)}
+                          >
+                            {item.title}
+                          </CButton>
+                          {item.date ? (
+                            <span className="small text-body-secondary">
+                              {formatDate(item.date)}
+                            </span>
+                          ) : null}
                         </div>
-                      ))}
+                        <div className="small text-body-secondary mt-1 d-flex align-items-center flex-wrap gap-2">
+                          <span>{item.note || 'No additional notes for this item.'}</span>
+                          {item.attachmentName ? (
+                            <CButton
+                              color="light"
+                              size="sm"
+                              className="workflow-attachment-action text-body-secondary"
+                              aria-label={`Preview ${item.attachmentName}`}
+                              onClick={() =>
+                                onOpenAttachmentPreview(item.attachmentName, item, 'item-list')
+                              }
+                            >
+                              {truncateAttachmentLabel(item.attachmentName)}
+                            </CButton>
+                          ) : null}
+                        </div>
+                      </div>
+                      <div className="fw-semibold text-nowrap">{formatCurrency(item.amount)}</div>
                     </div>
+                  ))}
+                </div>
+                <div className="pt-1 d-flex justify-content-between align-items-center gap-3">
+                  <span className="fw-semibold">{submittedTotalLabel}</span>
+                  <span className="h5 mb-0 text-nowrap">{submittedDisplayTotal}</span>
+                </div>
+              </section>
 
-                    <div className="pt-1 d-flex justify-content-between align-items-center">
-                      <span className="fw-semibold">{submittedTotalLabel}</span>
-                      <span className="h5 mb-0">{submittedDisplayTotal}</span>
+              {isItemDetailsVisible ? (
+                <section className="inspection-form-section d-grid gap-3">
+                  <div className="d-flex justify-content-between align-items-center gap-2">
+                    <div className="fw-semibold text-muted">Item details</div>
+                    <CreateActionButton
+                      label="Close"
+                      onClick={onCloseItemDetails}
+                      icon={<X size={13} />}
+                    />
+                  </div>
+                  {!selectedClaimItem ? (
+                    <div className="text-body-secondary">Select an item to view details.</div>
+                  ) : (
+                    <div className="d-grid">
+                      {selectedClaimItemDetails.map((entry, index) => {
+                        const key = `${entry.label}-${index}`
+                        if (entry.label === 'Attachment' && selectedClaimItem.attachmentName) {
+                          return renderItemDetailsField(
+                            key,
+                            'Attachment',
+                            <CButton
+                              color="light"
+                              size="sm"
+                              className="workflow-attachment-action text-body-secondary"
+                              aria-label={`Preview ${selectedClaimItem.attachmentName}`}
+                              onClick={() =>
+                                onOpenAttachmentPreview(
+                                  selectedClaimItem.attachmentName,
+                                  selectedClaimItem,
+                                  'item-details',
+                                )
+                              }
+                            >
+                              {truncateAttachmentLabel(selectedClaimItem.attachmentName)}
+                            </CButton>,
+                          )
+                        }
+                        return renderItemDetailsField(key, entry.label, entry.value)
+                      })}
                     </div>
-                  </CCardBody>
-                </CCard>
-              </CCol>
-              {isItemDetailsVisible && (
-                <CCol xs={12} md={6}>
-                  <CCard className="h-100">
-                    <CCardHeader className="d-flex justify-content-between align-items-center">
-                      <span>Item Details</span>
-                      <CreateActionButton
-                        label="Close"
-                        onClick={onCloseItemDetails}
-                        icon={<X size={13} />}
-                      />
-                    </CCardHeader>
-                    <CCardBody>
-                      {!selectedClaimItem ? (
-                        <div className="text-body-secondary">Select an item to view details.</div>
-                      ) : (
-                        <div className="d-grid">
-                          {selectedClaimItemDetails.map((entry, index) => {
-                            const key = `${entry.label}-${index}`
-                            if (entry.label === 'Attachment' && selectedClaimItem.attachmentName) {
-                              return renderItemDetailsField(
-                                key,
-                                'Attachment',
-                                <CButton
-                                  color="light"
-                                  size="sm"
-                                  className="workflow-attachment-action text-body-secondary"
-                                  aria-label={`Preview ${selectedClaimItem.attachmentName}`}
-                                  onClick={() =>
-                                    onOpenAttachmentPreview(
-                                      selectedClaimItem.attachmentName,
-                                      selectedClaimItem,
-                                      'item-details',
-                                    )
-                                  }
-                                >
-                                  {truncateAttachmentLabel(selectedClaimItem.attachmentName)}
-                                </CButton>,
-                              )
-                            }
-                            return renderItemDetailsField(key, entry.label, entry.value)
-                          })}
-                        </div>
-                      )}
-                    </CCardBody>
-                  </CCard>
-                </CCol>
-              )}
-            </CRow>
+                  )}
+                </section>
+              ) : null}
+            </>
           ) : null}
 
-          <CCard>
-            <CCardHeader>Workflow State</CCardHeader>
-            <CCardBody>
-              <ResponsiveKeyValueList
-                items={[
-                  { key: 'status', label: 'Current Status', value: selectedClaim.status || '-' },
-                  {
-                    key: 'owner',
-                    label: 'Current Action Owner',
-                    value: claimWorkflowState.nextRole || '-',
-                  },
-                  {
-                    key: 'action',
-                    label: 'Next Action',
-                    value: claimWorkflowState.stageLabel || '-',
-                  },
-                ]}
-              />
-            </CCardBody>
-          </CCard>
+          <section className="inspection-form-section d-grid gap-3">
+            <div className="fw-semibold text-muted">Workflow progress</div>
+            <ApprovalGates
+              gates={CLAIM_GATES}
+              approvalHistory={selectedClaim.approvalHistory}
+              isCancelled={selectedClaim.status === 'Cancelled'}
+              direction="horizontal"
+            />
+            <ResponsiveKeyValueList
+              compact
+              items={[
+                {
+                  key: 'owner',
+                  label: 'Current Action Owner',
+                  value: claimWorkflowState.nextRole || '-',
+                },
+                {
+                  key: 'action',
+                  label: 'Next Action',
+                  value: claimWorkflowState.stageLabel || '-',
+                },
+              ]}
+            />
+            <AuditHistoryPanel
+              title="Activity"
+              entries={claimHistoryEntries}
+              emptyMessage="No workflow activity yet."
+              formatDateTime={formatDateTime}
+              compact
+            />
+          </section>
 
-          <AuditHistoryPanel
-            title="Claim History"
-            entries={claimHistoryEntries}
-            emptyMessage="No workflow activity yet."
-            formatDateTime={formatDateTime}
-          />
-
-          <WorkflowDetailActions
-            statusMessage={
-              claimWorkflowState.pending
-                ? claimWorkflowState.canRespond
-                  ? `You can ${claimWorkflowState.approveActionLabel.toLowerCase()} this claim.`
-                  : claimWorkflowState.nextRole
-                    ? `Pending ${claimWorkflowState.stageLabel} by ${claimWorkflowState.nextRole}.`
-                    : `Pending ${claimWorkflowState.stageLabel}.`
-                : 'Workflow completed.'
-            }
-          >
-            <CButton
-              color="light"
-              className="icon-label-action"
-              onClick={() => onTriggerClaimAction(selectedClaim, selectedClaimActions.download.key)}
-              disabled={selectedClaimActions.download.disabled}
-            >
-              <Download size={14} aria-hidden="true" />
-              {selectedClaimActions.download.label}
-            </CButton>
-            {!selectedClaimActions.reject.disabled ? (
-              <CButton
-                color="danger"
-                variant="outline"
-                onClick={() => onTriggerClaimAction(selectedClaim, selectedClaimActions.reject.key)}
-              >
-                {selectedClaimActions.reject.label}
-              </CButton>
-            ) : null}
-            {!selectedClaimActions.primaryWorkflowAction.disabled ? (
-              <CButton
-                color="primary"
-                onClick={() =>
-                  onTriggerClaimAction(
-                    selectedClaim,
-                    selectedClaimActions.primaryWorkflowAction.key,
-                  )
-                }
-              >
-                {selectedClaimActions.primaryWorkflowAction.label}
-              </CButton>
-            ) : null}
-          </WorkflowDetailActions>
+          <div className="d-md-none">{renderWorkflowActions()}</div>
         </>
       )}
     </div>

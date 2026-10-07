@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import SalaryClaimForm from '../SalaryClaimForm'
-import { loadMyOvertimeRecordsApiFirst } from 'src/services/overtimeApi'
+import * as apiClient from 'src/services/apiClient'
 import * as payrollClaimsApi from 'src/services/payrollClaimsApi'
 
 vi.mock('src/services/salaryAssignmentsApi', () => ({
@@ -22,10 +22,6 @@ vi.mock('src/services/salaryAssignmentsApi', () => ({
   })),
 }))
 
-vi.mock('src/services/overtimeApi', () => ({
-  loadMyOvertimeRecordsApiFirst: vi.fn(async () => ({ ok: true, data: [] })),
-}))
-
 vi.mock('src/services/apiClient', async (importOriginal) => {
   const actual = await importOriginal()
   return {
@@ -40,6 +36,20 @@ vi.mock('src/services/apiClient', async (importOriginal) => {
         allowances: [],
         employeeContributions: { epf: 0, perkeso: 0, sip: 0 },
         employerContributions: { epf: 0, perkeso: 0, sip: 0 },
+        overtimePreview: {
+          rows: [],
+          totals: { allHours: 0, approvedHours: 0, approvedPayout: 0, approvedCount: 0 },
+          rateSnapshot: {
+            hourlyBaseMode: 'auto_statutory',
+            hourlyBaseRateUsed: 4.81,
+            monthlyDivisorUsed: 26,
+            globalNormalHoursPerDayUsed: 8,
+            normalHoursStrategyUsed: 'statutory_8h',
+            weekdayMultiplier: 1.5,
+            weekendMultiplier: 2,
+            publicHolidayMultiplier: 3,
+          },
+        },
       },
     })),
   }
@@ -109,10 +119,8 @@ describe('SalaryClaimForm', () => {
 
     const actionBar = screen.getByRole('group', { name: 'Claim form actions' })
     const actionButtons = within(actionBar).getAllByRole('button')
-    expect(actionButtons.map((button) => button.textContent.trim())).toEqual([
-      'Submit request',
-      'Clear form',
-    ])
+    expect(actionButtons.map((button) => button.textContent.trim())).toEqual(['Submit request'])
+    expect(within(actionBar).queryByRole('button', { name: 'Clear form' })).toBeNull()
     expect(within(actionBar).queryByRole('button', { name: 'Save draft' })).toBeNull()
   })
 
@@ -149,6 +157,8 @@ describe('SalaryClaimForm', () => {
     expect(screen.getByText('Approved OT')).toBeTruthy()
     expect(document.querySelectorAll('.workflow-summary-surface')).toHaveLength(1)
     expect(document.querySelector('.workflow-summary__list--metrics')).toBeTruthy()
+    expect(document.querySelector('.workflow-summary__list--mobile-tiles')).toBeTruthy()
+    expect(document.querySelector('.workflow-summary__item--primary')).toBeTruthy()
 
     const actionBar = screen.getByRole('group', { name: 'Claim form actions' })
     await waitFor(() => {
@@ -187,7 +197,7 @@ describe('SalaryClaimForm', () => {
     expect(overtimeDisclosure.querySelector('.card')).toBeNull()
   })
 
-  it('opens a blank editor on Add Adjustment and clears it without touching saved items', async () => {
+  it('opens a blank editor on Add Adjustment and cancels it without touching saved items', async () => {
     render(
       <MemoryRouter>
         <SalaryClaimForm {...baseProps} />
@@ -219,8 +229,9 @@ describe('SalaryClaimForm', () => {
     fireEvent.change(screen.getByLabelText('Remarks'), {
       target: { value: 'temporary salary draft change' },
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Clear form' }))
-
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel add item' }))
+    expect(screen.queryByLabelText('Remarks')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Add Adjustment' }))
     expect(screen.getByLabelText('Remarks').value).toBe('')
     expect(screen.getAllByText('KEEP_THIS_SALARY_NOTE').length).toBeGreaterThan(0)
   })
@@ -257,7 +268,7 @@ describe('SalaryClaimForm', () => {
     expect(onBack).toHaveBeenCalled()
   })
 
-  it('loads overtime rows using backend-compatible month and status filters', async () => {
+  it('loads the server-authoritative overtime preview through the salary baseline endpoint', async () => {
     render(
       <MemoryRouter>
         <SalaryClaimForm
@@ -268,14 +279,15 @@ describe('SalaryClaimForm', () => {
     )
 
     await waitFor(() => {
-      expect(loadMyOvertimeRecordsApiFirst).toHaveBeenCalledWith(1, {
-        month: '2026-04',
-        status: 'Approved',
-      })
+      expect(apiClient.fetchPayrollSalaryBaseline).toHaveBeenCalledWith(
+        '2026-04',
+        expect.objectContaining({ cache: 'no-store' }),
+      )
     })
+    expect(apiClient.fetchOvertimeRateSettings).not.toHaveBeenCalled()
   })
 
-  it('shows role ineligibility message and skips overtime API when eligible is false', async () => {
+  it('shows role ineligibility message when eligible is false', async () => {
     render(
       <MemoryRouter>
         <SalaryClaimForm
@@ -288,10 +300,9 @@ describe('SalaryClaimForm', () => {
     expect(
       screen.getByText(/Overtime contribution is disabled for your current role/i),
     ).toBeTruthy()
-    expect(loadMyOvertimeRecordsApiFirst).not.toHaveBeenCalled()
   })
 
-  it('shows eligibility error message and skips overtime API when error is set', async () => {
+  it('shows eligibility error message when error is set', async () => {
     render(
       <MemoryRouter>
         <SalaryClaimForm
@@ -302,10 +313,9 @@ describe('SalaryClaimForm', () => {
     )
 
     expect(screen.getByText(/eligibility could not be verified/i)).toBeTruthy()
-    expect(loadMyOvertimeRecordsApiFirst).not.toHaveBeenCalled()
   })
 
-  it('shows eligibility loading state and skips overtime API while unresolved', async () => {
+  it('shows eligibility loading state while unresolved', async () => {
     render(
       <MemoryRouter>
         <SalaryClaimForm
@@ -316,7 +326,35 @@ describe('SalaryClaimForm', () => {
     )
 
     expect(screen.getByText(/Checking overtime eligibility/i)).toBeTruthy()
-    expect(loadMyOvertimeRecordsApiFirst).not.toHaveBeenCalled()
+  })
+
+  it('blocks payout confirmation when the authoritative overtime preview is unavailable', async () => {
+    apiClient.fetchPayrollSalaryBaseline.mockResolvedValueOnce({
+      data: {
+        salaryAssignmentPublicId: '01TESTBASELINE',
+        effectiveFrom: '2026-01-01',
+        basic: 1000,
+        allowanceTotal: 0,
+        allowances: [],
+        employeeContributions: { epf: 0, perkeso: 0, sip: 0 },
+        employerContributions: { epf: 0, perkeso: 0, sip: 0 },
+      },
+    })
+
+    render(
+      <MemoryRouter>
+        <SalaryClaimForm
+          {...baseProps}
+          overtimeEligibility={{ isResolved: true, eligible: true, error: null }}
+        />
+      </MemoryRouter>,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText(/Payroll calculation is unavailable/i)).toBeTruthy()
+    })
+    expect(screen.queryByLabelText(/I confirm the salary payout baseline/i)).toBeNull()
+    expect(apiClient.fetchOvertimeRateSettings).not.toHaveBeenCalled()
   })
 
   it('blocks submit when hydrated salary adjustment item is invalid', async () => {

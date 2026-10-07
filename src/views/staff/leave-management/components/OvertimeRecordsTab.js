@@ -21,6 +21,7 @@ import RowActionCell from 'src/components/RowActionCell'
 import RowActions from 'src/components/RowActions'
 import TableFilters from 'src/components/TableFilters'
 import WorkflowStatusSummary from 'src/components/WorkflowStatusSummary'
+import CompactRecordStatus from 'src/components/report-workflow/CompactRecordStatus'
 import BulkActionButton from 'src/views/staff/components/BulkActionButton'
 import BulkWorkflowActionModal from './BulkWorkflowActionModal'
 import useBulkWorkflowSelection from '../hooks/useBulkWorkflowSelection'
@@ -246,39 +247,27 @@ const OvertimeRecordsTab = (props) => {
   )
 
   const buildMobileRecordItem = (row) => {
-    const reviewActionConfig = getReviewActionConfig?.(row) || {}
     const statusLabel =
       typeof getStatusLabel === 'function'
         ? getStatusLabel(row)
         : String(row?.status || '').trim() || '-'
-    const nextActionLabel =
-      typeof getPendingActionHint === 'function'
-        ? getPendingActionHint(row)
-        : reviewActionConfig?.requiredRole
-          ? `Requires ${reviewActionConfig.requiredRole}`
-          : reviewActionConfig?.approveLabel || ''
 
     return {
       key: row.recordKey || row.id,
-      title: getDisplayOvertimeId(row),
-      subtitle: row.employee || row.submittedBy || '-',
-      eyebrow: getOvertimeTypeLabel(row?.overtimeType, { short: true }),
-      status: (
-        <WorkflowStatusSummary
-          statusLabel={statusLabel}
-          nextActionLabel={nextActionLabel}
-          gates={resolveOvertimeGates(row)}
-          approvalHistory={row.approvalHistory}
-          isCancelled={row.status === 'Cancelled'}
-        />
-      ),
-      fields: [
-        { key: 'start', label: 'Start', value: getStartDateTimeLabel(row) },
-        { key: 'end', label: 'End', value: getEndDateTimeLabel(row) },
-        { key: 'duration', label: 'Duration', value: formatDuration(row.durationMinutes) },
-        { key: 'submitted', label: 'Submitted', value: formatDate(row.appliedAt) },
-      ],
-      detail: formatWorkflowTeamSuffix(row.team).replace(/^- /, '') || row.reason || '',
+      layout: 'compact',
+      title:
+        getStartDateTimeLabel(row) === getEndDateTimeLabel(row)
+          ? getStartDateTimeLabel(row)
+          : `${getStartDateTimeLabel(row)} – ${getEndDateTimeLabel(row)}`,
+      subtitle: [
+        getOvertimeTypeLabel(row?.overtimeType, { short: true }),
+        row.employee || row.submittedBy,
+        getDisplayOvertimeId(row),
+        formatDuration(row.durationMinutes),
+      ]
+        .filter(Boolean)
+        .join(' · '),
+      status: <CompactRecordStatus label={statusLabel} />,
       ariaLabel: `Open overtime record ${getDisplayOvertimeId(row)}`,
       onOpen: () => openOvertimeDetail?.(row),
       actions: <RowActions items={buildRowActionItems(row)} />,

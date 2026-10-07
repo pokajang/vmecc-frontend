@@ -11,8 +11,8 @@ import {
 } from '@coreui/react'
 import { AlertTriangle, CalendarX2, Download } from 'lucide-react'
 
-import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
 import ButtonLoader from 'src/components/ButtonLoader'
+import WorkflowFeedbackBanner from 'src/components/report-workflow/WorkflowFeedbackBanner'
 import MobileBottomDrawer from 'src/components/MobileBottomDrawer'
 import useMediaQuery from 'src/hooks/useMediaQuery'
 import { getFireExtinguisherExportFilterNotes } from './fireExtinguisherExportFilters'
@@ -42,11 +42,6 @@ const CategoryCard = ({ id, title, count, checked, disabled, icon, onChange }) =
     </span>
   </label>
 )
-
-const resolveFeedbackConfirmColor = (color) => {
-  if (['primary', 'success', 'info', 'warning', 'danger'].includes(color)) return color
-  return 'info'
-}
 
 const FireExtinguisherExceptionExportDialog = ({ visible, filterSnapshot, onClose }) => {
   const useMobileDrawer = useMediaQuery('(max-width: 575.98px)')
@@ -78,23 +73,9 @@ const FireExtinguisherExceptionExportDialog = ({ visible, filterSnapshot, onClos
     selectedTotal === 0
   const formatLabel = format === 'docx' ? 'Word' : 'PDF'
   const title = 'Export fire extinguisher exceptions'
-  const feedbackModal = (
-    <ActionConfirmModal
-      visible={Boolean(feedback?.message)}
-      title={feedback?.title || 'Notice'}
-      message={feedback?.message || ''}
-      confirmLabel="OK"
-      confirmColor={resolveFeedbackConfirmColor(feedback?.color)}
-      isNotice
-      showCancelAction={false}
-      confirmDisabled={isDownloading}
-      onClose={clearFeedback}
-      onConfirm={clearFeedback}
-    />
-  )
-
   const body = (
     <div className="fire-extinguisher-export d-grid gap-3">
+      <WorkflowFeedbackBanner feedback={feedback} onDismiss={clearFeedback} className="mb-0" />
       <section aria-labelledby="fire-extinguisher-export-context-title">
         <div className="d-flex align-items-center justify-content-between gap-2">
           <div className="d-flex flex-wrap align-items-baseline gap-2">
@@ -251,7 +232,6 @@ const FireExtinguisherExceptionExportDialog = ({ visible, filterSnapshot, onClos
   if (useMobileDrawer) {
     return (
       <>
-        {feedbackModal}
         <MobileBottomDrawer
           visible={visible}
           title={title}
@@ -270,7 +250,6 @@ const FireExtinguisherExceptionExportDialog = ({ visible, filterSnapshot, onClos
 
   return (
     <>
-      {feedbackModal}
       <CModal
         visible={visible}
         onClose={isDownloading ? undefined : onClose}

@@ -5,6 +5,7 @@ const WorkflowRecordsSectionShell = ({
   sectionTitle = '',
   sectionTitleMobile,
   showHeader = true,
+  showMobileHeader = true,
   recordsTestId = '',
   filtersTestId = '',
   desktopFiltersTestId = '',
@@ -35,7 +36,7 @@ const WorkflowRecordsSectionShell = ({
         {...(recordsTestId ? { 'data-testid': `${recordsTestId}-mobile` } : {})}
       >
         {mobileBefore}
-        {showHeader ? (
+        {showHeader && showMobileHeader ? (
           <div className="d-flex justify-content-between align-items-center gap-2 mb-3">
             {sectionTitle ? (
               <span className="vmecc-meta fw-semibold">{mobileTitle || sectionTitle}</span>

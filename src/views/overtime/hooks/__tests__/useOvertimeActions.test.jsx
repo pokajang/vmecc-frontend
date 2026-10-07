@@ -34,6 +34,7 @@ const buildProps = (overrides = {}) => ({
   overtimeId: null,
   navigate: vi.fn(),
   pushToast: vi.fn(),
+  clearFeedback: vi.fn(),
   overtimeTypeDerivedMode: false,
   isResumeEditMode: false,
   hasPersistedEditTarget: false,
@@ -115,6 +116,27 @@ describe('useOvertimeActions action acceptance', () => {
     expect(result.current.isSubmitConfirmVisible).toBe(true)
     expect(result.current.submitPreview).toEqual(
       expect.objectContaining({ editingRecordId: existing.id, isResubmission: true }),
+    )
+    expect(props.clearFeedback).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps validation feedback when the submission is still invalid', () => {
+    const props = buildProps({
+      form: {
+        ...buildProps().form,
+        claimDate: '',
+        reason: '',
+      },
+    })
+    const { result } = renderHook(() => useOvertimeActions(props))
+
+    act(() => result.current.handleSubmit({ preventDefault: vi.fn() }))
+
+    expect(result.current.isSubmitConfirmVisible).toBe(false)
+    expect(props.clearFeedback).not.toHaveBeenCalled()
+    expect(props.pushToast).toHaveBeenCalledWith(
+      'Review the highlighted overtime fields.',
+      expect.objectContaining({ color: 'danger' }),
     )
   })
 

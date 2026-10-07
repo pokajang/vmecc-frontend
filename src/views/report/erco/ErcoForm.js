@@ -176,7 +176,7 @@ const ErcoForm = ({
         draftSeedRef.current = draftForm
         setHasDraftSeed(true)
       }
-      setDraftStatus('Draft loaded')
+      setDraftStatus('')
       onDirtyChange(false)
     },
     onDraftLoadSettled: handleDraftLoadSettled,
@@ -386,7 +386,7 @@ const ErcoForm = ({
     navigateToSection(activeSection, true)
   }, [activeSection, draftHydrated, navigateToSection, normalizedSection, reportBasePath])
 
-  const saveDraft = async ({ silentSuccess = false, overrides = {} } = {}) => {
+  const saveDraft = async ({ overrides = {} } = {}) => {
     if (saveLockRef.current) return false
     saveLockRef.current = true
     setIsSaving(true)
@@ -442,9 +442,6 @@ const ErcoForm = ({
       saveLockRef.current = false
       setIsSaving(false)
       return false
-    }
-    if (!silentSuccess) {
-      pushToast('Draft saved.', { title: 'Draft saved', color: 'success' })
     }
     setDraftStatus('Draft saved')
     draftSeedRef.current = {
@@ -542,7 +539,6 @@ const ErcoForm = ({
 
   const requestReview = async () => {
     const saved = await saveDraft({
-      silentSuccess: true,
       overrides: {
         setupConfirmed: true,
         respondingTeamConfirmed: true,
@@ -664,7 +660,6 @@ const ErcoForm = ({
             onContinue={async () => {
               if (!validateSetupBeforeContinue()) return
               const saved = await saveDraft({
-                silentSuccess: true,
                 overrides: { setupConfirmed: true },
               })
               if (!saved) return
@@ -684,7 +679,6 @@ const ErcoForm = ({
             isSaving={isSaving}
             onBack={async () => {
               const saved = await saveDraft({
-                silentSuccess: true,
                 overrides: {
                   setupConfirmed: false,
                   respondingTeamConfirmed: false,
@@ -700,7 +694,6 @@ const ErcoForm = ({
             onContinue={async () => {
               if (!validateRespondingTeamBeforeContinue()) return
               const saved = await saveDraft({
-                silentSuccess: true,
                 overrides: { setupConfirmed: true, respondingTeamConfirmed: true },
               })
               if (!saved) return
@@ -719,7 +712,6 @@ const ErcoForm = ({
             isSaving={isSaving}
             onBack={async () => {
               const saved = await saveDraft({
-                silentSuccess: true,
                 overrides: {
                   setupConfirmed: true,
                   respondingTeamConfirmed: false,
@@ -734,7 +726,6 @@ const ErcoForm = ({
             onContinue={async () => {
               if (!validateDetailsBeforeContinue()) return
               const saved = await saveDraft({
-                silentSuccess: true,
                 overrides: {
                   setupConfirmed: true,
                   respondingTeamConfirmed: true,
@@ -757,7 +748,6 @@ const ErcoForm = ({
             isSaving={isSaving}
             onBack={async () => {
               const saved = await saveDraft({
-                silentSuccess: true,
                 overrides: {
                   setupConfirmed: true,
                   respondingTeamConfirmed: true,

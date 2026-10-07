@@ -1,6 +1,5 @@
 import React from 'react'
 import {
-  CBadge,
   CTable,
   CTableBody,
   CTableDataCell,
@@ -17,6 +16,7 @@ import RowActionCell from 'src/components/RowActionCell'
 import RowActions from 'src/components/RowActions'
 import TableFilters from 'src/components/TableFilters'
 import WorkflowStatusSummary from 'src/components/WorkflowStatusSummary'
+import CompactRecordStatus from 'src/components/report-workflow/CompactRecordStatus'
 import WorkflowRecordsSectionShell from 'src/components/workflow/WorkflowRecordsSectionShell'
 
 const resolveLeaveGates = (row) => {
@@ -71,7 +71,6 @@ const LeaveRecordsSection = ({
   getDisplayLeaveId,
   getStatusLabel,
   getPendingActionHint,
-  getStatusBadge,
   getStartDateTimeLabel,
   getEndDateTimeLabel,
   isLoading = false,
@@ -88,12 +87,6 @@ const LeaveRecordsSection = ({
     row,
     displayIndex: index + 1,
   }))
-  const renderStatusBadge = (row) =>
-    getStatusBadge ? (
-      getStatusBadge(row?.status || '-', getStatusLabel ? getStatusLabel(row) : row?.status || '-')
-    ) : (
-      <CBadge color="secondary">{getStatusLabel ? getStatusLabel(row) : row?.status || '-'}</CBadge>
-    )
   const getLeaveActionItems = (row) => {
     const reviewActionConfig =
       actionMode === 'review'
@@ -179,27 +172,27 @@ const LeaveRecordsSection = ({
   const mobileSections = groupedVisibleRows.map((group) => ({
     key: group.label || 'all-records',
     label: shouldGroupByMonth ? group.label : '',
-    summary: shouldGroupByMonth ? `${formatDayTotal(group.totalDays)} day(s)` : '',
+    summary: shouldGroupByMonth
+      ? `${formatDayTotal(group.totalDays)} ${Number(group.totalDays) === 1 ? 'day' : 'days'}`
+      : '',
     items: group.entries.map(({ row }) => {
-      const pendingActionHint = getPendingActionHint?.(row)
       return {
         key: row.recordKey || row.id,
-        title: getDisplayLeaveId(row),
-        eyebrow: row.leaveType || 'Leave request',
-        subtitle: row.reason || '-',
-        status: renderStatusBadge(row),
+        layout: 'compact',
+        title:
+          getStartDateTimeLabel(row) === getEndDateTimeLabel(row)
+            ? getStartDateTimeLabel(row)
+            : `${getStartDateTimeLabel(row)} – ${getEndDateTimeLabel(row)}`,
+        subtitle: [
+          row.leaveType || 'Leave request',
+          getDisplayLeaveId(row),
+          `${formatDayTotal(row.days)} ${Number(row.days) === 1 ? 'day' : 'days'}`,
+        ]
+          .filter(Boolean)
+          .join(' · '),
+        status: <CompactRecordStatus label={getStatusLabel?.(row) || row.status || '-'} />,
         ariaLabel: `Open leave record ${getDisplayLeaveId(row)} summary`,
         onOpen: () => openRecord(row),
-        fields: [
-          { key: 'start', label: 'Start', value: getStartDateTimeLabel(row) },
-          { key: 'end', label: 'End', value: getEndDateTimeLabel(row) },
-          { key: 'days', label: 'Days', value: row.days ?? '-' },
-          {
-            key: 'next',
-            label: 'Next',
-            value: pendingActionHint || getStatusLabel?.(row) || row.status || '-',
-          },
-        ],
         actions: <RowActions items={getLeaveActionItems(row)} />,
       }
     }),
@@ -235,6 +228,8 @@ const LeaveRecordsSection = ({
   return (
     <WorkflowRecordsSectionShell
       sectionTitle={title}
+      showMobileHeader={false}
+      compactMobile
       recordsTestId="leave-records"
       headerActions={renderedHeaderActions}
       filters={
@@ -267,7 +262,7 @@ const LeaveRecordsSection = ({
               },
             ]}
             onClear={clearFilters}
-            rowClassName="flex-md-nowrap"
+            rowClassName="inspection-records-filter-row inspection-report-records-filter-row flex-md-nowrap align-items-md-end"
             searchColMd={3}
             periodColMd={2}
             filterColMd={2}
@@ -375,6 +370,7 @@ const LeaveRecordsSection = ({
             onRowsToShowChange={setRowsToShow}
             filteredCount={filteredRecords.length}
             totalCount={leaveRecordsCount}
+            compactMobile
           />
         }
       />

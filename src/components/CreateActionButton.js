@@ -6,6 +6,7 @@ const DISABLED_STYLE = { cursor: 'not-allowed' }
 
 const CreateActionButton = ({
   label,
+  mobileLabel,
   onClick,
   icon,
   disabled = false,
@@ -50,7 +51,16 @@ const CreateActionButton = ({
           {resolvedIcon}
         </span>
       ) : null}
-      <span className="create-action-button__label">{label}</span>
+      <span className="create-action-button__label">
+        {mobileLabel ? (
+          <>
+            <span className="d-sm-none">{mobileLabel}</span>
+            <span className="d-none d-sm-inline">{label}</span>
+          </>
+        ) : (
+          label
+        )}
+      </span>
     </AppButton>
   )
 }

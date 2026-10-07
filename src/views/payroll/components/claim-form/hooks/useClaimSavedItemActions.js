@@ -1,20 +1,15 @@
 import { useCallback } from 'react'
-import { CToast, CToastBody, CToastHeader } from '@coreui/react'
-import { formatCurrency, parseAmount } from '../utils/claimFormUtils'
 import {
-  CLAIM_PERIOD_OPTIONS,
   createClaimItem,
   normalizeItem,
   validateClaimSubmissionDraft,
 } from '../utils/claimSubmissionUtils'
 
 const useClaimSavedItemActions = ({
-  addToast,
   buildDraftPayload,
   claimType,
   draftItem,
   editingIndex,
-  header,
   isExceptionalClaim,
   pushToast,
   releaseAttachmentIds,
@@ -44,28 +39,6 @@ const useClaimSavedItemActions = ({
     const nextDraftItem = createClaimItem(claimType)
     setSavedItems(nextSavedItems)
 
-    const parsedAmount = parseAmount(normalizedItem.amount)
-    const amountLabel = parsedAmount > 0 ? formatCurrency(parsedAmount) : ''
-    const actionLabel = editingIndex !== null ? 'updated' : 'added to claim'
-    const periodLabel =
-      CLAIM_PERIOD_OPTIONS.find((option) => option.value === header.period)?.label ||
-      header.period ||
-      'this'
-    addToast(
-      <CToast autohide delay={6000}>
-        <CToastHeader closeButton>
-          <strong className="me-auto">
-            Claim item {editingIndex !== null ? 'updated' : 'saved'}
-          </strong>
-        </CToastHeader>
-        <CToastBody>
-          {normalizedItem.category}
-          {amountLabel ? ` (${amountLabel}) ` : ' '}
-          {actionLabel} to {periodLabel} claim.
-        </CToastBody>
-      </CToast>,
-    )
-
     setDraftItem(nextDraftItem)
     setEditingIndex(null)
     if (editingIndex === null) {
@@ -86,12 +59,10 @@ const useClaimSavedItemActions = ({
       releaseAttachmentIds([previousAttachmentId])
     }
   }, [
-    addToast,
     buildDraftPayload,
     claimType,
     draftItem,
     editingIndex,
-    header.period,
     pushToast,
     releaseAttachmentIds,
     saveDraft,

@@ -321,6 +321,30 @@
       "specs": ["reporting-workflow-smoke.spec.js"]
     },
     {
+      "key": "reports.er_assessment",
+      "route": "/report/er-assessment",
+      "tier": "critical",
+      "specs": [
+        "reporting-workflow-smoke.spec.js",
+        "er-assessment-uiux-parity.spec.js",
+        "report-cross-module-mobile-audit.spec.js",
+        "reporting-records-consistency.spec.js"
+      ],
+      "owner": "Emergency Operations",
+      "routeFamilies": [
+        "/report/er-assessment",
+        "/report/er-assessment/new",
+        "/report/er-assessment/new/:newSection",
+        "/report/er-assessment/:reportId"
+      ],
+      "apiFamilies": ["/api/reports", "/api/reports/er-assessment"],
+      "positiveCaseIds": ["ER-ASSESSMENT-MOBILE-LIFECYCLE"],
+      "negativeCaseIds": ["ER-ASSESSMENT-WRONG-ROLE-DENIED"],
+      "workflowCaseIds": ["ER-ASSESSMENT-SUBMIT-REVIEW-APPROVE"],
+      "artifactCaseIds": ["ER-ASSESSMENT-PDF-EXPORT"],
+      "automationStatus": "partial"
+    },
+    {
       "key": "reports.pdf_exports",
       "route": "/inspection",
       "tier": "standard",

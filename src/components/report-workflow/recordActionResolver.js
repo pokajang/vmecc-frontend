@@ -1,4 +1,14 @@
-const ACTION_ORDER = ['view', 'download', 'edit', 'review', 'approve', 'reject', 'delete', 'back']
+const ACTION_ORDER = [
+  'view',
+  'download',
+  'edit',
+  'review',
+  'approve',
+  'reject',
+  'cancel',
+  'delete',
+  'back',
+]
 
 const ACTION_PRESENTATION = {
   view: { label: 'View details', color: 'light' },
@@ -7,6 +17,7 @@ const ACTION_PRESENTATION = {
   review: { label: 'Review', color: 'primary' },
   approve: { label: 'Approve', color: 'success' },
   reject: { label: 'Reject', color: 'danger', variant: 'outline', className: 'text-danger' },
+  cancel: { label: 'Cancel', color: 'secondary', variant: 'outline' },
   delete: { label: 'Delete', color: 'danger', variant: 'outline', className: 'text-danger' },
   back: { label: 'Back to records', color: 'light' },
 }

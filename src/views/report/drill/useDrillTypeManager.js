@@ -1,12 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronDown, ChevronUp } from 'lucide-react'
 import { DRILL_TYPE_OPTIONS } from './constants'
 import { loadCustomDrillTypes, saveCustomDrillTypes } from './customDrillTypesStorage'
 import { loadDrillTypeOverrides, saveDrillTypeOverrides } from './systemTypeOverridesStorage'
 import { loadDrillTypeUsage, sortDrillOptionsByUsage } from './typeUsageStorage'
 import {
   applyTypeOverrides,
-  buildPinnedVisibleOptions,
   getTypeIconOptions,
   normalizeTypeKey,
   pickLeastUsedTypeIconKey,
@@ -14,11 +12,7 @@ import {
   withResolvedTypeIcon,
 } from '../typeOptionUtils'
 
-export const DRILL_TYPE_VISIBLE_LIMIT = 4
-export const DRILL_TYPE_TOGGLE_VALUE = '__drill_types_toggle__'
-
 const useDrillTypeManager = ({ userId, selectedType, updateSetupField, pushToast }) => {
-  const [showAllDrillTypes, setShowAllDrillTypes] = useState(false)
   const [showAddTypeModal, setShowAddTypeModal] = useState(false)
   const [drillTypeEditMode, setDrillTypeEditMode] = useState(false)
   const [drillTypeOverrides, setDrillTypeOverrides] = useState([])
@@ -68,23 +62,6 @@ const useDrillTypeManager = ({ userId, selectedType, updateSetupField, pushToast
   const systemTypeSet = useMemo(
     () => new Set(DRILL_TYPE_OPTIONS.map((row) => normalizeTypeKey(row.value))),
     [],
-  )
-
-  const visibleTypeOptions = useMemo(
-    () =>
-      buildPinnedVisibleOptions({
-        options: typeOptions,
-        selected: selectedType,
-        visibleLimit: DRILL_TYPE_VISIBLE_LIMIT,
-        showAll: showAllDrillTypes,
-        toggleOption: {
-          value: DRILL_TYPE_TOGGLE_VALUE,
-          title: showAllDrillTypes ? 'Show less' : 'Show more',
-          description: '',
-          icon: showAllDrillTypes ? ChevronUp : ChevronDown,
-        },
-      }),
-    [selectedType, showAllDrillTypes, typeOptions],
   )
 
   const resetDraft = () => {
@@ -237,13 +214,10 @@ const useDrillTypeManager = ({ userId, selectedType, updateSetupField, pushToast
   }
 
   return {
-    showAllDrillTypes,
-    setShowAllDrillTypes,
     showAddTypeModal,
     drillTypeEditMode,
     setDrillTypeEditMode,
     typeOptions,
-    visibleTypeOptions,
     openAddModal,
     closeAddModal,
     saveType,

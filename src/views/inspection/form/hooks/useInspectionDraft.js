@@ -38,7 +38,6 @@ const useInspectionDraft = ({
         if (typeof onDraftLoaded === 'function') {
           onDraftLoaded(draftForm)
         }
-        pushToast('Saved draft restored.', { title: 'Draft loaded', color: 'info' })
       } catch (error) {
         pushToast(error?.message || 'Unable to load saved draft.', {
           title: 'Draft load failed',

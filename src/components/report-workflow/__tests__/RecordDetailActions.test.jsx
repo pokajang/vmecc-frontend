@@ -10,6 +10,21 @@ afterEach(() => {
 })
 
 describe('RecordDetailActions', () => {
+  it('supports the shared cancellation action contract', () => {
+    const onCancel = vi.fn()
+    render(
+      <RecordDetailActions
+        mode="desktop"
+        record={{ id: 'leave-1' }}
+        handlers={{ cancel: onCancel }}
+        fallbackCapabilities={{ cancel: true }}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect(onCancel).toHaveBeenCalledTimes(1)
+  })
+
   it('waits for the More actions drawer to close before running a destructive action', async () => {
     vi.useFakeTimers()
     const onDelete = vi.fn()

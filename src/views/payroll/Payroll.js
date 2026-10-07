@@ -1,5 +1,5 @@
 ﻿import React, { useCallback, useMemo, useRef, useState } from 'react'
-import { CAlert, CContainer, CToast, CToastBody, CToastHeader, CToaster } from '@coreui/react'
+import { CAlert, CContainer } from '@coreui/react'
 import { useSelector } from 'react-redux'
 import { hasPermission } from 'src/utils/authz'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
@@ -22,6 +22,8 @@ import { canEditClaimRecord, formatCurrency, formatDate, resolvePeriodValue } fr
 import usePayrollClaimsData from './hooks/usePayrollClaimsData'
 import usePayrollClaimSelection from './hooks/usePayrollClaimSelection'
 import usePayrollClaimActions from './hooks/usePayrollClaimActions'
+import WorkflowFeedbackBanner from 'src/components/report-workflow/WorkflowFeedbackBanner'
+import useWorkflowFeedback from 'src/components/report-workflow/useWorkflowFeedback'
 
 const resolveActiveSection = (pathname) => {
   if (pathname === '/payroll/claims/new') return 'new-claim-select'
@@ -47,21 +49,8 @@ const PayrollContent = () => {
   const [period, setPeriod] = useState('all')
   const [sort, setSort] = useState('submittedAt:desc')
 
-  const toaster = useRef()
   const claimFormBackActionRef = useRef(null)
-  const [toast, addToast] = useState(0)
-  const pushToast = useCallback((message, { title, color = 'light', delay = 6000 } = {}) => {
-    addToast(
-      <CToast autohide delay={delay} color={color}>
-        {title && (
-          <CToastHeader closeButton>
-            <strong className="me-auto">{title}</strong>
-          </CToastHeader>
-        )}
-        <CToastBody>{message}</CToastBody>
-      </CToast>,
-    )
-  }, [])
+  const { feedback, clearFeedback, pushFeedback: pushToast } = useWorkflowFeedback()
 
   const activeSection = resolveActiveSection(location.pathname)
 
@@ -290,9 +279,27 @@ const PayrollContent = () => {
               : 'Apply Claim'
             : 'Payroll'
         }
+        mobileTitle={
+          activeSection === 'claims'
+            ? 'Claim Records'
+            : activeSection.startsWith('new-claim') && selectedClaimType
+              ? CLAIM_TYPE_META[selectedClaimType]?.label || 'Claim'
+              : activeSection === 'claim-detail'
+                ? 'Payroll'
+                : 'Payroll'
+        }
+        className={
+          activeSection === 'claims' ||
+          activeSection === 'claim-detail' ||
+          activeSection.startsWith('new-claim')
+            ? 'module-page-header--mobile-context'
+            : ''
+        }
         actions={
           activeSection.startsWith('new-claim') ? (
             <BackButton onClick={handleNewClaimBack} />
+          ) : activeSection === 'claim-detail' ? (
+            <BackButton onClick={() => navigate('/payroll')} />
           ) : (
             <div data-testid={activeSection === 'claims' ? 'payroll-new-claim-action' : undefined}>
               <CreateActionButton
@@ -314,7 +321,7 @@ const PayrollContent = () => {
           <PayrollNav activeSection={activeSection} onNavigate={navigate} />
         </div>
       ) : null}
-      <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
+      <WorkflowFeedbackBanner feedback={feedback} onDismiss={clearFeedback} />
       <ClaimActionModals
         cancelModalVisible={cancelModalVisible}
         cancelTarget={cancelTarget}
@@ -370,7 +377,13 @@ const PayrollContent = () => {
             />
           )}
 
-          {activeSection === 'claim-detail' && <ClaimDetailSection {...claimDetailProps} />}
+          {activeSection === 'claim-detail' && (
+            <ClaimDetailSection
+              {...claimDetailProps}
+              showHeaderBack={false}
+              isLoading={isClaimsLoading}
+            />
+          )}
 
           {activeSection === 'new-claim-select' && (
             <ClaimTypeSelection

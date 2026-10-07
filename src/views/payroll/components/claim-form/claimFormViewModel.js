@@ -38,6 +38,7 @@ export const buildSalaryClaimSummary = ({
         label: 'Final Payable',
         value: formatCurrency(finalPayable),
         emphasis: true,
+        primary: true,
       },
       {
         key: 'baselineNet',

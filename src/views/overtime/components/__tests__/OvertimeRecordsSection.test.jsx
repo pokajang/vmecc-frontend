@@ -167,7 +167,12 @@ describe('OvertimeRecordsSection draft row UX', () => {
     expect(draftCard.textContent).toContain('DRAFT')
     expect(draftCard.textContent).toContain('2h')
     expect(submittedCard.textContent).toContain('OT-2026-001')
-    expect(submittedCard.textContent).toContain('Pending overtime row')
+    expect(submittedCard.textContent).not.toContain('Pending overtime row')
+    expect(submittedCard.closest('article').className).toContain('record-card--compact')
+    const mobileSection = document.querySelector('[data-testid="overtime-records-mobile"]')
+    expect(mobileSection.className).toContain('inspection-mobile-section')
+    expect(mobileSection.querySelector('.inspection-report-records-filter-row')).toBeTruthy()
+    expect(mobileSection.querySelector('.data-table-footer--compact-mobile')).toBeTruthy()
 
     fireEvent.keyDown(submittedCard, { key: 'Enter' })
     expect(openRecord).toHaveBeenCalledWith(pendingRow)

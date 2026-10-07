@@ -10,6 +10,7 @@ yarn.lock
 /playwright-report/
 /smoke-artifacts/
 /.playwright-output/
+/.qa/**/trace.zip
 
 # production build artifacts are committed for shared cPanel hosting.
 

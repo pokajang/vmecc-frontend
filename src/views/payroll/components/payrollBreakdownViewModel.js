@@ -11,6 +11,7 @@ export const formatBaselineSource = (value) => {
   if (normalized === 'hybrid') return 'Claim Snapshot + Salary Record'
   if (normalized === 'claim_snapshot') return 'Claim Snapshot'
   if (normalized === 'salary_record') return 'Salary Record'
+  if (normalized === 'salary_assignment') return 'Salary Assignment'
   return 'Unavailable'
 }
 
@@ -226,6 +227,8 @@ const getAdjustmentLabel = (item = {}) =>
 const normalizeAmountRows = (rows = []) =>
   asArray(rows).map((item) => ({
     ...item,
+    key: item?.key || item?.id,
+    label: item?.label || item?.name,
     amount: parseAmount(item?.amount),
   }))
 
@@ -324,7 +327,9 @@ const buildPayslipBreakdown = (source = {}) => {
 
 const buildSalaryClaimBreakdown = (source = {}) => {
   const payrollSnapshot = asObject(source?.payrollSnapshot)
-  const allowanceItems = normalizeAmountRows(payrollSnapshot?.allowanceItems)
+  const allowanceItems = normalizeAmountRows(
+    payrollSnapshot?.allowanceItems || payrollSnapshot?.allowances,
+  )
   const deductionItems = normalizeAmountRows(payrollSnapshot?.deductionItems)
   const adjustmentItems = asArray(source?.items)
   const additionRows = adjustmentItems.filter(
@@ -336,7 +341,9 @@ const buildSalaryClaimBreakdown = (source = {}) => {
   const basicSalary = parseAmount(payrollSnapshot?.basic)
   const grossSalary = parseAmount(payrollSnapshot?.gross)
   const baselineNet = parseAmount(payrollSnapshot?.net)
-  const baselineTotalDeductions = parseAmount(payrollSnapshot?.totalDeductions)
+  const baselineTotalDeductions = parseAmount(
+    payrollSnapshot?.totalDeductions ?? payrollSnapshot?.employeeDeductionTotal,
+  )
   const additionTotal = additionRows.reduce(
     (sum, item) => sum + Math.abs(parseAmount(item?.amount)),
     0,
@@ -375,6 +382,12 @@ const buildSalaryClaimBreakdown = (source = {}) => {
     (sum, entry) => sum + (Number(entry?.employerAmount || 0) || 0),
     0,
   )
+  const baselineSource =
+    source?.baselineSource ||
+    payrollSnapshot?.baselineSource ||
+    (payrollSnapshot?.salaryAssignmentId || payrollSnapshot?.salaryAssignmentPublicId
+      ? 'salary_assignment'
+      : '')
 
   return {
     summary: {
@@ -390,8 +403,8 @@ const buildSalaryClaimBreakdown = (source = {}) => {
       finalPayable,
     },
     baseline: {
-      source: source?.baselineSource || payrollSnapshot?.baselineSource,
-      sourceLabel: formatBaselineSource(source?.baselineSource || payrollSnapshot?.baselineSource),
+      source: baselineSource,
+      sourceLabel: formatBaselineSource(baselineSource),
       salaryRecord: source?.salaryRecord || null,
       allowanceItems,
       allowanceTotal: parseAmount(payrollSnapshot?.allowanceTotal),

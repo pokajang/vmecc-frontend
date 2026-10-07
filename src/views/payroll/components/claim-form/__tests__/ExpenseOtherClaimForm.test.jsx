@@ -64,10 +64,8 @@ describe('ExpenseOtherClaimForm', () => {
 
     const actionBar = screen.getByRole('group', { name: 'Claim form actions' })
     const actionButtons = within(actionBar).getAllByRole('button')
-    expect(actionButtons.map((button) => button.textContent.trim())).toEqual([
-      'Submit request',
-      'Clear form',
-    ])
+    expect(actionButtons.map((button) => button.textContent.trim())).toEqual(['Submit request'])
+    expect(within(actionBar).queryByRole('button', { name: 'Clear form' })).toBeNull()
     expect(within(actionBar).queryByRole('button', { name: 'Save draft' })).toBeNull()
     const totalRow = screen.getByText('Total Claim Amount').parentElement
     expect(totalRow.className).toContain('gap-2')
@@ -75,7 +73,7 @@ describe('ExpenseOtherClaimForm', () => {
     await act(async () => {})
   })
 
-  it('clears only current editor state and keeps saved items', () => {
+  it('cancels only current editor state and keeps saved items', () => {
     render(
       <MemoryRouter>
         <ExpenseOtherClaimForm {...baseProps} />
@@ -85,8 +83,9 @@ describe('ExpenseOtherClaimForm', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add Item' }))
     const notesField = screen.getByLabelText('Item Notes')
     fireEvent.change(notesField, { target: { value: 'temporary draft change' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Clear form' }))
-
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel add item' }))
+    expect(screen.queryByLabelText('Item Notes')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Add Item' }))
     expect(screen.getByLabelText('Item Notes').value).toBe('')
     expect(screen.getByText('KEEP_THIS_EXPENSE_NOTE')).toBeTruthy()
   })
@@ -194,7 +193,18 @@ describe('ExpenseOtherClaimForm', () => {
       expect(submitSpy).toHaveBeenCalled()
       expect(screen.getByText('Claim submitted')).toBeTruthy()
     })
-    expect(screen.getByText('Claim CLM-POST-001 was saved successfully.')).toBeTruthy()
+    expect(
+      screen.getByText(
+        'Claim CLM-POST-001 was submitted for review. It remains subject to approval.',
+      ),
+    ).toBeTruthy()
+    const submittedActions = screen.getByRole('group', { name: 'Submitted claim actions' })
+    expect(submittedActions.classList.contains('app-action-group--inline')).toBe(true)
+    expect(
+      within(submittedActions)
+        .getAllByRole('button')
+        .map((button) => button.textContent),
+    ).toEqual(['Create another claim', 'Go to claims list'])
   })
 
   it('locks submit actions while submit request is in-flight', async () => {

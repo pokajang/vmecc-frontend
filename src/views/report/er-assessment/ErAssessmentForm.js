@@ -522,7 +522,7 @@ const ErAssessmentForm = ({
   }
 
   const saveDraft = useCallback(
-    async ({ silentSuccess = false, step = activeStep } = {}) => {
+    async ({ step = activeStep } = {}) => {
       if (hydrationState !== 'ready') {
         setMessage('Wait for the saved assessment to finish restoring before continuing.')
         return false
@@ -571,9 +571,6 @@ const ErAssessmentForm = ({
         setSaveState(changedDuringSave ? 'dirty' : 'saved')
         onDirtyChange?.(changedDuringSave)
         onDraftSaved?.()
-        if (!silentSuccess) {
-          pushToast?.('ER Assessment draft saved.', { title: 'Draft saved', color: 'success' })
-        }
         if (changedDuringSave) {
           setMessage(
             'New changes were made while saving. Continue again to save the latest values.',
@@ -600,7 +597,6 @@ const ErAssessmentForm = ({
       layoutUploadState,
       onDirtyChange,
       onDraftSaved,
-      pushToast,
       reportTypeSlug,
       user?.id,
     ],
@@ -618,7 +614,7 @@ const ErAssessmentForm = ({
       ...current,
       responses: current.responses.map((row, index) => (index === nextIndex ? snapshot : row)),
     }))
-    const saved = await saveDraft({ silentSuccess: true, step: 'requirements' })
+    const saved = await saveDraft({ step: 'requirements' })
     if (!saved) return
     const retainedMediaIds = new Set(
       snapshot.photos.map((photo) => String(photo?.mediaId || '').trim()).filter(Boolean),
@@ -669,7 +665,7 @@ const ErAssessmentForm = ({
         [`response-${index}`]: undefined,
         [`remarks-${index}`]: undefined,
       }))
-      await saveDraft({ silentSuccess: true, step: 'requirements' })
+      await saveDraft({ step: 'requirements' })
     },
     [requestRequirementCloseOrSwitch, saveDraft, updateForm],
   )
@@ -687,14 +683,14 @@ const ErAssessmentForm = ({
     const next = validSteps[stepIndex + 1]
     if (!next) return
     setMessage('')
-    const saved = await saveDraft({ silentSuccess: true, step: next })
+    const saved = await saveDraft({ step: next })
     if (saved) navigateToStep(next)
   }
 
   const goBack = useCallback(async () => {
     const previous = validSteps[validSteps.indexOf(activeStep) - 1]
     if (!previous) return false
-    const saved = await saveDraft({ silentSuccess: true, step: previous })
+    const saved = await saveDraft({ step: previous })
     if (saved) navigateToStep(previous)
     return saved
   }, [activeStep, navigateToStep, saveDraft, validSteps])
@@ -725,7 +721,7 @@ const ErAssessmentForm = ({
       return
     }
     setMessage('')
-    const saved = await saveDraft({ silentSuccess: true, step: 'signoff' })
+    const saved = await saveDraft({ step: 'signoff' })
     if (!saved) return
     const record = buildErAssessmentRecord({
       form: formRef.current,

@@ -29,6 +29,15 @@ const login = async (page) => {
     .filter(Boolean)
   expect(cookies.length).toBeGreaterThan(0)
   await page.context().addCookies(cookies)
+
+  const sessionResponse = await page.request.get(`${apiBaseUrl}/auth/session`, {
+    headers: { Accept: 'application/json' },
+  })
+  const sessionBody = await sessionResponse.text()
+  expect(sessionResponse.status(), sessionBody).toBe(200)
+  await page.route(`${apiBaseUrl}/auth/session`, (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: sessionBody }),
+  )
 }
 
 const routes = [

@@ -1,0 +1,50 @@
+[
+  {
+    "name": "leave",
+    "visible": true,
+    "box": {
+      "x": 299.6875,
+      "y": 16,
+      "width": 62.3125,
+      "height": 44
+    },
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "scrollX": 0,
+    "documentWidth": 390
+  },
+  {
+    "name": "overtime",
+    "visible": true,
+    "box": {
+      "x": 299.6875,
+      "y": 16,
+      "width": 62.3125,
+      "height": 44
+    },
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "scrollX": 0,
+    "documentWidth": 390
+  },
+  {
+    "name": "salary",
+    "visible": true,
+    "box": {
+      "x": 299.6875,
+      "y": 16,
+      "width": 62.3125,
+      "height": 44
+    },
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "scrollX": 0,
+    "documentWidth": 390
+  }
+]

@@ -1,11 +1,12 @@
 import React from 'react'
-import { CBadge, CButton, CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/react'
 import ApprovalGates from 'src/components/ApprovalGates'
 import AuditHistoryPanel from 'src/components/AuditHistoryPanel'
+import BackButton from 'src/components/BackButton'
+import DisclosureCard from 'src/components/DisclosureCard'
 import PageState from 'src/components/PageState'
+import RecordDetailActions from 'src/components/report-workflow/RecordDetailActions'
+import RecordDetailSummary from 'src/components/report-workflow/RecordDetailSummary'
 import ResponsiveKeyValueList from 'src/components/workflow/ResponsiveKeyValueList'
-import WorkflowDetailActions from 'src/components/workflow/WorkflowDetailActions'
-import WorkflowDetailHeader from 'src/components/workflow/WorkflowDetailHeader'
 import { buildApiUrl } from 'src/services/apiClient'
 
 const resolveLeaveGates = (record) => {
@@ -18,11 +19,13 @@ const resolveLeaveGates = (record) => {
 }
 
 const formatRosterImpact = (record) => {
-  const items = record?.rosterImpactSnapshot?.items
+  const snapshot = record?.rosterImpactSnapshot
+  const items = snapshot?.items
   if (!Array.isArray(items) || items.length === 0) return '-'
-  return items
+  const duties = items
     .map((item) => `${item.shift_label || item.shift} shift, ${item.team_name}, ${item.date}`)
     .join('; ')
+  return snapshot?.observed_at ? `${duties} (captured ${snapshot.observed_at})` : duties
 }
 
 const LeaveDetailSection = ({
@@ -38,141 +41,135 @@ const LeaveDetailSection = ({
   canEdit = false,
   canCancel = false,
   canDelete = false,
+  showHeaderBack = true,
+  isLoading = false,
   onEdit,
   onCancel,
   onDelete,
+  testId = 'leave-detail-section',
 }) => {
-  const hasApplicantActions = canEdit || canCancel || canDelete
+  if (!selectedRecord) {
+    return (
+      <>
+        {showHeaderBack ? <BackButton onClick={onBack} /> : null}
+        {isLoading ? (
+          <PageState variant="loading" message="Loading leave record..." />
+        ) : (
+          <PageState variant="error" message="Leave record not found." />
+        )}
+      </>
+    )
+  }
+
+  const renderDetailActions = (mode) => (
+    <RecordDetailActions
+      record={selectedRecord}
+      mode={mode}
+      ariaLabel="Leave record actions"
+      testAnchorPrefix="leave"
+      handlers={{
+        edit: onEdit,
+        cancel: onCancel,
+        delete: onDelete,
+      }}
+      fallbackCapabilities={{ edit: canEdit, cancel: canCancel, delete: canDelete }}
+    />
+  )
 
   return (
-    <>
-      <WorkflowDetailHeader
-        title={selectedRecord ? `Leave ${getDisplayLeaveId(selectedRecord)}` : 'Leave Details'}
-        subtitle={selectedRecordPendingActionHint || ''}
-        status={selectedRecord?.status || ''}
-        onBack={onBack}
-      />
-      {!selectedRecord ? (
-        <PageState variant="error" message="Leave record not found." />
-      ) : (
-        <CRow className="g-4">
-          <CCol xs={12} md={6}>
-            <CCard className="h-100">
-              <CCardHeader>Leave Details</CCardHeader>
-              <CCardBody>
-                <ResponsiveKeyValueList
-                  items={[
-                    { label: 'Leave ID', value: getDisplayLeaveId(selectedRecord) },
-                    { label: 'Leave Type', value: selectedRecord.leaveType || '-' },
-                    { label: 'Schedule', value: getScheduleLabel(selectedRecord) },
-                    { label: 'Days', value: selectedRecord.days },
-                    {
-                      label: 'Current Status',
-                      value: getStatusBadge ? (
-                        getStatusBadge(selectedRecord.status || '-', selectedRecord.status || '-')
-                      ) : (
-                        <CBadge color="secondary">{selectedRecord.status || '-'}</CBadge>
-                      ),
-                    },
-                    {
-                      label: 'Current Action Owner',
-                      value: selectedRecord.nextActionRole || '-',
-                    },
-                    {
-                      label: 'Workflow Scope',
-                      value: selectedRecord.workflowTeamName || 'Organization-wide',
-                    },
-                    {
-                      label: 'Applicant Role',
-                      value: selectedRecord.workflowApplicantRole || '-',
-                    },
-                    {
-                      label: 'Next Action',
-                      value: selectedRecordPendingActionHint ? (
-                        <span className="fw-semibold">{selectedRecordPendingActionHint}</span>
-                      ) : (
-                        '-'
-                      ),
-                    },
-                    { label: 'Applied On', value: formatDate(selectedRecord.appliedAt) },
-                    { label: 'Coverage By', value: selectedRecord.coverBy || '-' },
-                    { label: 'Roster Impact', value: formatRosterImpact(selectedRecord) },
-                    {
-                      label: 'Evidence',
-                      value: selectedRecord.attachmentAvailable ? (
-                        <a
-                          href={buildApiUrl(`/leave/attachments/${selectedRecord.attachmentId}`)}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          {selectedRecord.attachmentName || 'View attachment'}
-                        </a>
-                      ) : (
-                        '-'
-                      ),
-                    },
-                    { label: 'Reason', value: selectedRecord.reason || '-' },
-                  ]}
-                />
-                <div className="d-flex justify-content-between align-items-start gap-3 py-2">
-                  <div className="text-body-secondary">Status</div>
-                  <div className="text-end">
-                    <ApprovalGates
-                      gates={resolveLeaveGates(selectedRecord)}
-                      approvalHistory={selectedRecord.approvalHistory}
-                      isCancelled={selectedRecord.status === 'Cancelled'}
-                      direction="horizontal"
-                    />
-                  </div>
-                </div>
-              </CCardBody>
-            </CCard>
-          </CCol>
-          <CCol xs={12} md={6}>
-            <AuditHistoryPanel
-              title="Workflow Progress"
-              entries={selectedRecordHistoryEntries}
-              emptyMessage="No workflow activity yet."
-              formatDateTime={formatDateTime}
-            />
-            {hasApplicantActions ? (
-              <WorkflowDetailActions
-                className="mt-3"
-                statusMessage={selectedRecordPendingActionHint}
-              >
-                <CButton
-                  color="primary"
-                  variant="outline"
-                  data-testid="leave-edit-action"
-                  disabled={!canEdit}
-                  onClick={() => onEdit?.(selectedRecord)}
-                >
-                  Edit
-                </CButton>
-                <CButton
-                  color="warning"
-                  variant="outline"
-                  data-testid="leave-cancel-action"
-                  disabled={!canCancel}
-                  onClick={() => onCancel?.(selectedRecord)}
-                >
-                  Cancel
-                </CButton>
-                <CButton
-                  color="danger"
-                  variant="outline"
-                  data-testid="leave-delete-action"
-                  disabled={!canDelete}
-                  onClick={() => onDelete?.(selectedRecord)}
-                >
-                  Delete
-                </CButton>
-              </WorkflowDetailActions>
-            ) : null}
-          </CCol>
-        </CRow>
-      )}
-    </>
+    <div className="inspection-detail-section" data-testid={testId}>
+      <div className="inspection-form-sections d-grid gap-4">
+        <RecordDetailSummary
+          title={selectedRecord.leaveType || 'Leave request'}
+          status={
+            getStatusBadge
+              ? getStatusBadge(selectedRecord.status || '-', selectedRecord.status || '-')
+              : selectedRecord.status || ''
+          }
+          context={getScheduleLabel(selectedRecord)}
+          metadata={[
+            getDisplayLeaveId(selectedRecord),
+            `Applied ${formatDate(selectedRecord.appliedAt)}`,
+          ]}
+          nextAction={selectedRecord.nextActionRole || selectedRecordPendingActionHint}
+          actions={
+            <div className="d-flex align-items-start gap-2">
+              <div className="d-none d-md-block">{renderDetailActions('desktop')}</div>
+              {showHeaderBack ? <BackButton onClick={onBack} /> : null}
+            </div>
+          }
+        />
+
+        <section className="inspection-form-section d-grid gap-3">
+          <div className="fw-semibold text-muted">Leave details</div>
+          <ResponsiveKeyValueList
+            compact
+            items={[
+              { label: 'Days', value: selectedRecord.days },
+              { label: 'Reason', value: selectedRecord.reason || '-' },
+              {
+                label: 'Evidence',
+                value: selectedRecord.attachmentAvailable ? (
+                  <a
+                    href={buildApiUrl(`/leave/attachments/${selectedRecord.attachmentId}`)}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {selectedRecord.attachmentName || 'View attachment'}
+                  </a>
+                ) : (
+                  '-'
+                ),
+              },
+              { label: 'Coverage By', value: selectedRecord.coverBy || '-' },
+            ]}
+          />
+        </section>
+
+        <section className="inspection-form-section d-grid gap-3">
+          <div className="fw-semibold text-muted">Workflow progress</div>
+          <ApprovalGates
+            gates={resolveLeaveGates(selectedRecord)}
+            approvalHistory={selectedRecord.approvalHistory}
+            isCancelled={selectedRecord.status === 'Cancelled'}
+            direction="horizontal"
+          />
+          <AuditHistoryPanel
+            title="Activity"
+            entries={selectedRecordHistoryEntries}
+            emptyMessage="No workflow activity yet."
+            formatDateTime={formatDateTime}
+            compact
+          />
+        </section>
+
+        <DisclosureCard
+          summary={
+            <div>
+              <div className="fw-semibold">Request information</div>
+              <div className="small text-body-secondary">
+                Applied {formatDate(selectedRecord.appliedAt)}
+              </div>
+            </div>
+          }
+        >
+          <ResponsiveKeyValueList
+            compact
+            items={[
+              { label: 'Current Action Owner', value: selectedRecord.nextActionRole || '-' },
+              {
+                label: 'Workflow Scope',
+                value: selectedRecord.workflowTeamName || 'Organization-wide',
+              },
+              { label: 'Applicant Role', value: selectedRecord.workflowApplicantRole || '-' },
+              { label: 'Roster Impact', value: formatRosterImpact(selectedRecord) },
+            ]}
+          />
+        </DisclosureCard>
+
+        {renderDetailActions('mobile')}
+      </div>
+    </div>
   )
 }
 

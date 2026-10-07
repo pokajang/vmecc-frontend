@@ -152,7 +152,7 @@ describe('WorkflowNotifications', () => {
 
     fireEvent.click(refreshButton)
     expect(await screen.findByText('Messages refreshed successfully.')).toBeTruthy()
-    fireEvent.click(screen.getByRole('button', { name: 'OK' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }))
     await waitFor(() => expect(screen.queryByText('Messages refreshed successfully.')).toBeNull())
 
     fireEvent.click(deleteAllButton)

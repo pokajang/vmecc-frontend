@@ -47,7 +47,7 @@ const useClaimSubmissionActions = ({
   saveDraft,
   writeLocalBackup,
   pushToast,
-  addToast,
+  clearFeedback,
   resetDraft,
   releaseAttachmentIds,
   onBack,
@@ -174,12 +174,10 @@ const useClaimSubmissionActions = ({
 
   const { cancelAddItem, editSavedItem, handleAddItem, removeSavedItem, saveItem } =
     useClaimSavedItemActions({
-      addToast,
       buildDraftPayload,
       claimType,
       draftItem,
       editingIndex,
-      header,
       isExceptionalClaim,
       pushToast,
       releaseAttachmentIds,
@@ -209,9 +207,11 @@ const useClaimSubmissionActions = ({
       })
       return
     }
+    clearFeedback()
     setSubmitDeclarationChecked(false)
     setSubmitModalVisible(true)
   }, [
+    clearFeedback,
     editingIndex,
     isSubmittingClaim,
     pushToast,

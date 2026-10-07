@@ -1,28 +1,9 @@
 const DEFAULT_CONTROLLED_API_BASE_URL = 'http://127.0.0.1:8000/api'
+const { parseLoopbackUrl } = require('./loopback-origin')
 
 const normalizeControlledApiBaseUrl = (value = DEFAULT_CONTROLLED_API_BASE_URL) => {
   const configuredValue = String(value || '').trim()
-  let url
-
-  try {
-    url = new URL(configuredValue)
-  } catch {
-    throw new Error('The mocked E2E API URL must be a valid absolute URL.')
-  }
-
-  if (
-    url.protocol !== 'http:' ||
-    url.hostname !== '127.0.0.1' ||
-    !url.port ||
-    url.username ||
-    url.password ||
-    url.search ||
-    url.hash
-  ) {
-    throw new Error(
-      'The mocked E2E API URL must use an explicit http://127.0.0.1:<port> origin without credentials, query, or fragment.',
-    )
-  }
+  const url = parseLoopbackUrl(configuredValue, 'The mocked E2E API URL')
 
   const pathname = url.pathname.replace(/\/+$/, '') || '/api'
   return `${url.origin}${pathname}`

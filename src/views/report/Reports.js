@@ -16,6 +16,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { X } from 'lucide-react'
 import { hasPermission } from 'src/utils/authz'
 import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
+import WorkflowFeedbackBanner from 'src/components/report-workflow/WorkflowFeedbackBanner'
 import CreateActionButton from 'src/components/CreateActionButton'
 import MobileModuleBackAction from 'src/components/MobileModuleBackAction'
 import ModuleNavTabs from 'src/components/ModuleNavTabs'
@@ -53,11 +54,6 @@ const initialRouteDetailState = {
   record: null,
   errorStatus: null,
   routeKey: '',
-}
-
-const resolveFeedbackConfirmColor = (color) => {
-  if (['primary', 'success', 'info', 'warning', 'danger'].includes(color)) return color
-  return 'info'
 }
 
 const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTypeMeta } = {}) => {
@@ -200,14 +196,6 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
       delay,
     }))
   }, [])
-
-  useEffect(() => {
-    if (!feedback?.message || !feedback.delay) return undefined
-    const timerId = window.setTimeout(() => {
-      setFeedback((current) => (current?.id === feedback.id ? null : current))
-    }, feedback.delay)
-    return () => window.clearTimeout(timerId)
-  }, [feedback])
 
   const clearFeedback = useCallback(() => {
     setFeedback(null)
@@ -562,14 +550,13 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
       activeSection === 'review' ||
       activeSection === 'new' ||
       (activeSection === 'records' && showMobileRecords))
+  const showMobileWorkflowContext =
+    isWorkFirstReport &&
+    (activeSection === 'new' || activeSection === 'review' || activeSection === 'records')
   const mobileTitle =
-    isWorkFirstReport && activeSection === 'records' && !showMobileRecords
-      ? `Conduct ${reportTypeLabel}`
-      : isWorkFirstReport && (activeSection === 'new' || activeSection === 'review')
-        ? `Conduct ${reportTypeLabel}`
-        : isWorkFirstReport && activeSection === 'records' && showMobileRecords
-          ? `${reportTypeLabel} Records`
-          : reportTypeLabel
+    isWorkFirstReport && activeSection === 'records' && showMobileRecords
+      ? `${reportTypeLabel} Records`
+      : reportTypeLabel
   const pageTitle = isWorkFirstReport ? (
     <>
       <span className="d-md-none">{mobileTitle}</span>
@@ -650,6 +637,7 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
     >
       <ModulePageHeader
         title={pageTitle}
+        className={showMobileWorkflowContext ? 'module-page-header--mobile-context' : ''}
         actions={
           <>
             {showMobileBack ? (
@@ -669,17 +657,7 @@ const Reports = ({ overrideReportType, overrideBasePath, formComponent, reportTy
           </>
         }
       />
-      <ActionConfirmModal
-        visible={Boolean(feedback?.message)}
-        title={feedback?.title || 'Notice'}
-        message={feedback?.message || ''}
-        confirmLabel="OK"
-        confirmColor={resolveFeedbackConfirmColor(feedback?.color)}
-        isNotice
-        showCancelAction={false}
-        onClose={clearFeedback}
-        onConfirm={clearFeedback}
-      />
+      <WorkflowFeedbackBanner feedback={feedback} onDismiss={clearFeedback} />
       {isDeleting || isSubmitting ? (
         <div
           style={{

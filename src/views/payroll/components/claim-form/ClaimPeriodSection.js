@@ -33,7 +33,8 @@ const ClaimPeriodSection = ({
           primaryLabel={continueLabel}
           primaryDisabled={!value}
           mobileLayout="stacked-primary-first"
-          stackedMobileBehavior="terminal"
+          stackedMobileBehavior="compact-sticky"
+          dockAtEnd
           ariaLabel="Claim month actions"
         />
       ) : null}

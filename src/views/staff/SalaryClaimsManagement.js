@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { CContainer, CToast, CToastBody, CToastHeader, CToaster } from '@coreui/react'
+import { CContainer } from '@coreui/react'
 import { useSelector } from 'react-redux'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { hasAnyPermission, hasPermission } from 'src/utils/authz'
@@ -43,6 +43,8 @@ import {
   toTypeLabel,
 } from './salary-claims-management/utils'
 import { ASSIGNMENT_DRAFT_STATUS, TAB_GROUP_BY_KEY } from './salary-claims-management/constants'
+import WorkflowFeedbackBanner from 'src/components/report-workflow/WorkflowFeedbackBanner'
+import useWorkflowFeedback from 'src/components/report-workflow/useWorkflowFeedback'
 
 const assignmentMatchesRouteKey = (row, routeKey) => {
   const normalizedRouteKey = String(routeKey || '').trim()
@@ -107,25 +109,8 @@ const SalaryClaimsManagementContent = () => {
     isAssignmentCreateRoute || isAssignmentEditRoute || isAssignmentViewRoute
   const isSalarySettingsRoute = location.pathname.startsWith('/staff/set-salary')
 
-  const toaster = useRef()
   const assignmentRouteInitRef = useRef('')
-  const [toast, addToast] = useState(null)
-
-  const pushToast = useCallback(
-    (message, { title, color = 'light', delay = 6000 } = {}) => {
-      addToast(
-        <CToast autohide delay={delay} color={color}>
-          {title && (
-            <CToastHeader closeButton>
-              <strong className="me-auto">{title}</strong>
-            </CToastHeader>
-          )}
-          <CToastBody>{message}</CToastBody>
-        </CToast>,
-      )
-    },
-    [addToast],
-  )
+  const { feedback, clearFeedback, pushFeedback: pushToast } = useWorkflowFeedback()
 
   const hydration = useSalaryClaimsHydration({
     user,
@@ -484,7 +469,7 @@ const SalaryClaimsManagementContent = () => {
         isSalarySettingsRoute ? 'salary-settings-module' : 'salary-claims-management-module'
       }
     >
-      <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
+      <WorkflowFeedbackBanner feedback={feedback} onDismiss={clearFeedback} />
 
       <SalaryWorkflowActionModal
         visible={actions.workflowModalState.visible}

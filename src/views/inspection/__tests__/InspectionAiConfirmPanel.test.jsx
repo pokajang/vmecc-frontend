@@ -7,7 +7,6 @@ import InspectionAiConfirmPanel from '../ui/InspectionAiConfirmPanel'
 vi.mock('src/hooks/useMediaQuery', () => ({ default: () => false }))
 
 vi.mock('../useIncidentTypeManager', () => ({
-  INCIDENT_TYPE_TOGGLE_VALUE: '__manage__',
   default: () => ({
     addTypeError: '',
     closeAddModal: vi.fn(),
@@ -25,11 +24,9 @@ vi.mock('../useIncidentTypeManager', () => ({
     setNewTypeDescription: vi.fn(),
     setNewTypeIconKey: vi.fn(),
     setNewTypeName: vi.fn(),
-    setShowAllIncidentTypes: vi.fn(),
     showAddTypeModal: false,
     startEditType: vi.fn(),
     typeOptions: [],
-    visibleTypeOptions: [],
   }),
 }))
 

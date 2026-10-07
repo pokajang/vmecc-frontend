@@ -1,0 +1,16 @@
+{
+  "status": "passed",
+  "consoleErrors": [],
+  "networkFailures": [],
+  "layout": {
+    "clientWidth": 305,
+    "scrollWidth": 305
+  },
+  "contributionLabel": {
+    "x": 28,
+    "y": 252.96875,
+    "width": 108,
+    "height": 63
+  },
+  "rateModeDisplay": "grid"
+}

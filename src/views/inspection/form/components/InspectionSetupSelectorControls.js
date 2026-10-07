@@ -98,7 +98,8 @@ export const InspectionMobileChoiceList = ({
       testIdPrefix={testIdPrefix}
       disabled={disabled}
       ariaLabel={ariaLabel}
-      showDescriptions={showDescription}
+      descriptionPolicy={showDescription ? 'decision-support' : 'compact'}
+      indicatorVariant="advance"
     />
   )
 }

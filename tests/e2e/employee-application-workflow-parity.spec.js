@@ -6,6 +6,12 @@ const email =
   process.env.VMECC_APPLICATION_UAT_EMAIL || 'codex.smoke.tactical-response-team@vmecc.local'
 const password = process.env.VMECC_SMOKE_RBAC_PASSWORD || 'SmokeRole!2026'
 
+if (new URL(baseUrl).hostname !== new URL(apiBaseUrl).hostname) {
+  throw new Error(
+    'Employee workflow parity requires matching frontend and API hostnames so session cookies remain valid.',
+  )
+}
+
 const viewports = [
   { key: 'mobile-320', width: 320, height: 568 },
   { key: 'mobile-390', width: 390, height: 844 },
@@ -15,14 +21,14 @@ const viewports = [
 
 const themes = ['light', 'dark']
 
-const login = async (page) => {
-  const response = await page.request.post(`${apiBaseUrl}/auth/login`, {
+const login = async (request) => {
+  const response = await request.post(`${apiBaseUrl}/auth/login`, {
     headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
     data: { email, password, remember: true },
   })
   expect(response.status(), await response.text()).toBe(200)
 
-  const sessionResponse = await page.request.get(`${apiBaseUrl}/auth/session`, {
+  const sessionResponse = await request.get(`${apiBaseUrl}/auth/session`, {
     headers: { Accept: 'application/json' },
   })
   const sessionBody = await sessionResponse.json()
@@ -48,6 +54,22 @@ const installIsolatedDraftRoutes = async (page, sessionBody) => {
         data: { registry: [], configured: {}, effective: {}, fallbackMode: true },
       }),
     }),
+  )
+
+  await page.route(`${apiBaseUrl}/leave`, (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '{"data":[]}' }),
+  )
+
+  await page.route(`${apiBaseUrl}/leave/balance`, (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '{"data":[]}' }),
+  )
+
+  await page.route(`${apiBaseUrl}/overtime`, (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '{"data":[]}' }),
+  )
+
+  await page.route(`${apiBaseUrl}/overtime/policy`, (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '{"data":{}}' }),
   )
 
   await page.route(`${apiBaseUrl}/overtime/draft`, async (route) => {
@@ -76,6 +98,46 @@ const installIsolatedDraftRoutes = async (page, sessionBody) => {
     }
     await route.fulfill({ status: 200, contentType: 'application/json', body: '{"data":{}}' })
   })
+
+  await page.route(`${apiBaseUrl}/payroll/claims**`, (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '{"data":[]}' }),
+  )
+
+  await page.route(`${apiBaseUrl}/payroll/salary-baseline**`, (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: {
+          salaryAssignmentPublicId: 'uat-salary-baseline',
+          effectiveFrom: '2026-01-01',
+          basic: 4000,
+          allowanceTotal: 300,
+          allowances: [],
+          employeeContributions: { epf: 0, perkeso: 0, sip: 0 },
+          employerContributions: { epf: 0, perkeso: 0, sip: 0 },
+          overtimePreview: {
+            rows: [],
+            totals: { allHours: 0, approvedHours: 0, approvedPayout: 0, approvedCount: 0 },
+            rateSnapshot: {
+              hourlyBaseMode: 'auto_statutory',
+              hourlyBaseRateUsed: 19.23,
+              monthlyDivisorUsed: 26,
+              globalNormalHoursPerDayUsed: 8,
+              normalHoursStrategyUsed: 'statutory_8h',
+              weekdayMultiplier: 1.5,
+              weekendMultiplier: 2,
+              publicHolidayMultiplier: 3,
+            },
+          },
+        },
+      }),
+    }),
+  )
+
+  await page.route(`${apiBaseUrl}/overtime?**`, (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '{"data":[]}' }),
+  )
 
   await page.route(`${apiBaseUrl}/payroll/claims/drafts**`, async (route) => {
     if (route.request().method() === 'GET') {
@@ -119,7 +181,7 @@ const expectSharedFormContract = async ({ page, form, actionLabel }) => {
   await expect(page.getByRole('button', { name: /^Back to /i })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Save Draft', exact: true })).toHaveCount(0)
   await expect(page.getByRole('button', { name: actionLabel, exact: true })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Clear form', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Clear form', exact: true })).toHaveCount(0)
   expect(await form.evaluate((element) => element.parentElement?.classList.contains('card'))).toBe(
     false,
   )
@@ -127,13 +189,37 @@ const expectSharedFormContract = async ({ page, form, actionLabel }) => {
     const actionPosition = await form
       .locator('.workflow-stage-actions__group')
       .evaluate((element) => window.getComputedStyle(element).position)
-    expect(actionPosition).not.toBe('fixed')
+    expect(['fixed', 'static']).toContain(actionPosition)
+    await expect(form.locator('.mobile-setup-summary-list').first()).toBeVisible()
+    await expect(form.locator('.action-row-thumb-spacer--compact')).toBeVisible()
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+    const actionGroup = form.locator('.workflow-stage-actions__group')
+    await expect(actionGroup).toHaveClass(/action-row-thumb--docked-at-end/)
+    await expect
+      .poll(() => actionGroup.evaluate((element) => window.getComputedStyle(element).position))
+      .toBe('static')
+    const spacerHeight = await form
+      .locator('.action-row-thumb-spacer--compact')
+      .evaluate((element) => element.getBoundingClientRect().height)
+    expect(spacerHeight).toBeLessThanOrEqual(16)
+    const primaryActionHeight = await form
+      .getByRole('button', { name: actionLabel, exact: true })
+      .evaluate((element) => element.getBoundingClientRect().height)
+    expect(
+      primaryActionHeight,
+      `${actionLabel} must retain a 44px mobile touch target`,
+    ).toBeGreaterThanOrEqual(43.5)
   }
 }
 
 const openOvertimeForm = async (page, theme) => {
   await openRoute(page, '/overtime/new', theme)
-  await expect(page.getByRole('heading', { name: 'Apply Overtime', exact: true })).toBeVisible()
+  await expect(
+    page.getByRole('heading', {
+      name: (page.viewportSize()?.width || 0) < 768 ? 'Overtime' : 'Apply Overtime',
+      exact: true,
+    }),
+  ).toBeVisible()
   await expect(page.getByTestId('overtime-type-selection')).toBeVisible({ timeout: 30_000 })
   await expect(page.getByRole('button', { name: 'Continue', exact: true })).toHaveCount(0)
   await page.getByTestId('overtime-type-weekday').click()
@@ -175,7 +261,6 @@ const openLeaveForm = async (page, theme) => {
   await openRoute(page, '/leave/new', theme)
   await expect(page.getByTestId('leave-type-selection')).toBeVisible({ timeout: 30_000 })
   await page.getByTestId('leave-type-annual-leave').click()
-  await page.getByTestId('leave-type-continue').click()
   const form = page.getByTestId('leave-apply')
   await expectSharedFormContract({
     page,
@@ -197,6 +282,34 @@ const openExpenseClaimForm = async (page, theme) => {
     form,
     actionLabel: 'Submit request',
   })
+  await expect(
+    page.getByRole('heading', {
+      name: (page.viewportSize()?.width || 0) < 768 ? 'Expense Claim' : 'Apply Expense Claim',
+      exact: true,
+    }),
+  ).toBeVisible()
+  return form
+}
+
+const openExceptionalClaimForm = async (page, theme) => {
+  await openRoute(page, '/payroll/claims/new', theme)
+  await expect(page.getByTestId('payroll-claim-type-selection')).toBeVisible({ timeout: 30_000 })
+  await page.getByTestId('claim-type-other').click()
+  await page.locator('[data-testid^="claim-period-"]:not([disabled])').first().click()
+  await page.getByTestId('payroll-claim-type-continue').click()
+  const form = page.getByTestId('payroll-claim-form')
+  await expectSharedFormContract({
+    page,
+    form,
+    actionLabel: 'Submit request',
+  })
+  await expect(
+    page.getByRole('heading', {
+      name:
+        (page.viewportSize()?.width || 0) < 768 ? 'Exceptional Claim' : 'Apply Exceptional Claim',
+      exact: true,
+    }),
+  ).toBeVisible()
   return form
 }
 
@@ -212,9 +325,7 @@ const openSalaryClaimForm = async (page, theme) => {
     form,
     actionLabel: 'Submit request',
   })
-  const summaryCard = form
-    .getByText('Salary Claim Summary', { exact: true })
-    .locator('xpath=ancestor::*[contains(concat(" ", normalize-space(@class), " "), " card ")][1]')
+  const summaryCard = form.getByRole('region', { name: 'Salary Claim Summary', exact: true })
   const addAdjustment = form.getByRole('button', { name: 'Add Adjustment', exact: true })
   const [summaryBox, addAdjustmentBox] = await Promise.all([
     summaryCard.boundingBox(),
@@ -231,12 +342,22 @@ const openSalaryClaimForm = async (page, theme) => {
 
 test.describe('employee application workflow visual parity', () => {
   test.use({ hasTouch: true, isMobile: true, deviceScaleFactor: 1 })
+  let sessionBody
+  let authState
+
+  test.beforeAll(async ({ request }) => {
+    sessionBody = await login(request)
+    authState = await request.storageState()
+  })
+
+  test.beforeEach(async ({ context }) => {
+    if (authState?.cookies?.length) await context.addCookies(authState.cookies)
+  })
 
   test('overtime, leave, and payroll claims follow the shared application contract', async ({
     page,
   }, testInfo) => {
-    test.setTimeout(300_000)
-    const sessionBody = await login(page)
+    test.setTimeout(600_000)
     await installIsolatedDraftRoutes(page, sessionBody)
 
     await page.addInitScript(() => {
@@ -250,6 +371,7 @@ test.describe('employee application workflow visual parity', () => {
       { key: 'leave', open: openLeaveForm },
       { key: 'salary-claim', open: openSalaryClaimForm },
       { key: 'expense-claim', open: openExpenseClaimForm },
+      { key: 'exceptional-claim', open: openExceptionalClaimForm },
     ]
 
     for (const theme of themes) {
@@ -262,6 +384,90 @@ test.describe('employee application workflow visual parity', () => {
           await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
           await page.screenshot({
             path: testInfo.outputPath(`${workflow.key}-${viewport.key}-${theme}.png`),
+            fullPage: true,
+          })
+        }
+      }
+    }
+  })
+
+  test('leave, overtime, and claim records carry the reporting records header contract', async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(300_000)
+    await installIsolatedDraftRoutes(page, sessionBody)
+
+    const recordRoutes = [
+      { key: 'leave-records', path: '/leave', mobileTitle: 'Leave Records', desktopTitle: 'Leave' },
+      {
+        key: 'overtime-records',
+        path: '/overtime',
+        mobileTitle: 'Overtime Records',
+        desktopTitle: 'Overtime',
+      },
+      {
+        key: 'claim-records',
+        path: '/payroll',
+        mobileTitle: 'Claim Records',
+        desktopTitle: 'Payroll',
+      },
+    ]
+
+    for (const theme of themes) {
+      for (const viewport of viewports) {
+        await page.setViewportSize({ width: viewport.width, height: viewport.height })
+        for (const recordRoute of recordRoutes) {
+          await openRoute(page, recordRoute.path, theme)
+          const expectedTitle =
+            viewport.width < 768 ? recordRoute.mobileTitle : recordRoute.desktopTitle
+          const heading = page.getByRole('heading', { name: expectedTitle, exact: true })
+          await expect(heading).toBeVisible()
+          await expect(page.locator('.module-page-header--mobile-context')).toHaveCount(1)
+          if (viewport.width < 768) {
+            const mobileRecords = page.locator('[data-testid$="-mobile"]')
+            await expect(mobileRecords).toHaveClass(/inspection-mobile-section/)
+            await expect(
+              mobileRecords.locator('.inspection-report-records-filter-row'),
+            ).toHaveCount(1)
+            await expect(mobileRecords.locator('.vmecc-meta.fw-semibold')).toHaveCount(0)
+            const fontSize = await heading.evaluate((element) =>
+              Number.parseFloat(window.getComputedStyle(element).fontSize),
+            )
+            expect(fontSize).toBe(14)
+            const headingHeight = await heading.evaluate(
+              (element) => element.getBoundingClientRect().height,
+            )
+            expect(
+              headingHeight,
+              `${recordRoute.mobileTitle} should remain a single-line mobile chip`,
+            ).toBeLessThanOrEqual(32)
+
+            const mobileSearch = mobileRecords.locator('.table-filter-mobile-search')
+            const mobileFilter = mobileRecords.locator('.table-filter-trigger')
+            await expect(mobileSearch).toBeVisible()
+            await expect(mobileFilter).toBeVisible()
+            await expect(mobileSearch).toHaveAttribute('placeholder', /^Search /)
+
+            const [headerBox, searchBox] = await Promise.all([
+              page.locator('.module-page-header').boundingBox(),
+              mobileSearch.boundingBox(),
+            ])
+            expect(headerBox).not.toBeNull()
+            expect(searchBox).not.toBeNull()
+            expect(searchBox.y).toBeGreaterThanOrEqual(headerBox.y + headerBox.height + 4)
+            expect(searchBox.width).toBeGreaterThanOrEqual(160)
+          }
+          await expect(page.locator('[data-testid$="-mobile"] [role="status"]')).toHaveCount(0, {
+            timeout: 30_000,
+          })
+          if (viewport.width < 768) {
+            await expect(
+              page.locator('[data-testid$="-mobile"]').getByText(/No .* records match/i),
+            ).toBeVisible()
+          }
+          await expectNoHorizontalOverflow(page, `${recordRoute.key} ${viewport.key} ${theme}`)
+          await page.screenshot({
+            path: testInfo.outputPath(`${recordRoute.key}-${viewport.key}-${theme}.png`),
             fullPage: true,
           })
         }

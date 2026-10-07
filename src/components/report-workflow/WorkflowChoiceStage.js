@@ -22,6 +22,7 @@ const WorkflowChoiceStage = ({
   rowClassName,
   variant = 'compact',
   showDescription = true,
+  mobileDescriptionPolicy = 'compact',
   advanceOnSelect = false,
   children = null,
   className = '',
@@ -57,6 +58,7 @@ const WorkflowChoiceStage = ({
         rowClassName={rowClassName}
         variant={variant}
         showDescription={showDescription}
+        mobileDescriptionPolicy={mobileDescriptionPolicy}
       />
       {children}
       {error ? <WorkflowInlineFeedback kind="error" message={error} compact /> : null}

@@ -1,4 +1,5 @@
 const { expect, test } = require('@playwright/test')
+const { getLoopbackUrlAliases } = require('./support/loopback-origin')
 
 const apiBaseUrl =
   process.env.VMECC_E2E_BROWSER_API_URL ||
@@ -31,7 +32,7 @@ const queuePayload = (kind) => ({
 
 const installApiMocks = async (page) => {
   const methods = []
-  await page.route(`${apiBaseUrl}/**`, async (route) => {
+  const handleApiRoute = async (route) => {
     const request = route.request()
     const url = new URL(request.url())
     methods.push(request.method())
@@ -54,7 +55,10 @@ const installApiMocks = async (page) => {
       },
       body: JSON.stringify(payload),
     })
-  })
+  }
+  for (const origin of getLoopbackUrlAliases(apiBaseUrl, 'The mocked E2E API URL')) {
+    await page.route(`${origin}/**`, handleApiRoute)
+  }
   return methods
 }
 

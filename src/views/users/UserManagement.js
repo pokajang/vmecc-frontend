@@ -1,17 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import {
-  CAlert,
-  CCard,
-  CCardBody,
-  CCardHeader,
-  CCol,
-  CContainer,
-  CRow,
-  CToast,
-  CToastBody,
-  CToastHeader,
-  CToaster,
-} from '@coreui/react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import { CAlert, CCard, CCardBody, CCardHeader, CCol, CContainer, CRow } from '@coreui/react'
 import { useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { roles } from './CreateStaffForm'
@@ -29,6 +17,8 @@ import useBulkUserActions from './user-management/hooks/useBulkUserActions'
 import useUserExportActions from './user-management/hooks/useUserExportActions'
 import UserManagementHeader from './user-management/components/UserManagementHeader'
 import UserManagementTableSection from './user-management/components/UserManagementTableSection'
+import WorkflowFeedbackBanner from 'src/components/report-workflow/WorkflowFeedbackBanner'
+import useWorkflowFeedback from 'src/components/report-workflow/useWorkflowFeedback'
 
 const toastColor = (type) => {
   if (type === 'danger') return 'danger'
@@ -67,8 +57,7 @@ const UserManagement = () => {
     [authUser],
   )
 
-  const toaster = useRef()
-  const [toast, addToast] = useState(null)
+  const { feedback, clearFeedback, pushFeedback: pushToast } = useWorkflowFeedback()
 
   const {
     users,
@@ -183,19 +172,6 @@ const UserManagement = () => {
     [navigate],
   )
 
-  const pushToast = useCallback((message, { title, color = 'light', delay = 6000 } = {}) => {
-    addToast(
-      <CToast autohide delay={delay} color={color}>
-        {title && (
-          <CToastHeader closeButton>
-            <strong className="me-auto">{title}</strong>
-          </CToastHeader>
-        )}
-        <CToastBody>{message}</CToastBody>
-      </CToast>,
-    )
-  }, [])
-
   useEffect(() => {
     if (!statusMessage?.message) return
     const timer = setTimeout(() => {
@@ -251,7 +227,7 @@ const UserManagement = () => {
 
   return (
     <CContainer fluid data-testid="users-module">
-      <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
+      <WorkflowFeedbackBanner feedback={feedback} onDismiss={clearFeedback} />
       <ModulePageHeader
         title="User Management"
         actions={

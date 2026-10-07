@@ -88,14 +88,12 @@ export default function useLeaveBootEffects({
             }
           : null,
       )
-      pushToast('Saved leave draft restored.', { title: 'Draft loaded', color: 'info' })
     }
     hydrateDraft()
   }, [
     activeSection,
     draftHydratedRef,
     editingRecordId,
-    pushToast,
     setAttachmentId,
     setAttachmentMeta,
     setAttachmentName,

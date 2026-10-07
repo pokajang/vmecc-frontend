@@ -305,6 +305,13 @@
   min-width: 0;
 }
 
+@include media-breakpoint-down(lg) {
+  .inspection-module-page input.form-control:not(.form-control-sm),
+  .inspection-module-page select.form-select:not(.form-select-sm) {
+    min-height: var(--vmecc-touch-target);
+  }
+}
+
 @include media-breakpoint-down(md) {
   .report-option-card.inspection-option-card {
     min-height: 3.35rem;

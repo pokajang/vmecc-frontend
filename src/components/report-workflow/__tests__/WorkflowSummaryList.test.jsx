@@ -41,7 +41,13 @@ describe('WorkflowSummaryList', () => {
         ariaLabel="Balance metrics"
         variant="metrics"
         items={[
-          { key: 'available', label: 'Available', value: '8 days', emphasis: true },
+          {
+            key: 'available',
+            label: 'Available',
+            value: '8 days',
+            emphasis: true,
+            primary: true,
+          },
           { key: 'pending', label: 'Pending', value: '2 days', isAlert: true },
         ]}
       />,
@@ -51,6 +57,9 @@ describe('WorkflowSummaryList', () => {
     expect(list.classList).toContain('workflow-summary__list--metrics')
     expect(screen.getByText('8 days').closest('.workflow-summary__item').classList).toContain(
       'workflow-summary__item--emphasis',
+    )
+    expect(screen.getByText('8 days').closest('.workflow-summary__item').classList).toContain(
+      'workflow-summary__item--primary',
     )
     expect(screen.getByText('2 days').closest('.workflow-summary__item').classList).toContain(
       'workflow-summary__item--alert',

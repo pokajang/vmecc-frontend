@@ -1,5 +1,24 @@
 @use '../tools/coreui-tools' as *;
 
+.module-page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.module-page-header__title {
+  min-width: 0;
+}
+
+.module-page-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .workflow-module-page {
   min-width: 0;
   max-width: 100%;
@@ -119,6 +138,28 @@
 
 .responsive-key-value-list__value {
   text-align: end;
+}
+
+.responsive-key-value-list--compact {
+  gap: 0.85rem;
+}
+
+.responsive-key-value-list--compact .responsive-key-value-list__row {
+  padding: 0;
+  border-bottom: 0;
+}
+
+.workflow-detail-list-item + .workflow-detail-list-item {
+  padding-top: 0.75rem;
+}
+
+.workflow-detail-readonly-section {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 1px solid var(--cui-border-color);
+  border-radius: var(--vmecc-radius-control);
+  background: var(--cui-body-bg);
 }
 
 .responsive-financial-breakdown__title {
@@ -254,11 +295,13 @@
   }
 
   .workflow-module-page .module-page-header {
-    flex-wrap: nowrap;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
     width: 100%;
     min-height: 44px;
-    gap: 0.75rem;
-    overflow: hidden;
+    gap: 0.5rem;
+    overflow: visible;
   }
 
   .workflow-module-page .module-page-header__title {
@@ -271,12 +314,51 @@
     margin-left: auto;
   }
 
+  .module-page-header--mobile-context .module-page-header__title .vmecc-page-title {
+    display: inline-flex;
+    width: fit-content;
+    max-width: 100%;
+    align-items: center;
+    margin-bottom: 0 !important;
+    padding: 0.25rem 0.625rem;
+    border-radius: var(--vmecc-radius-pill);
+    background: var(--cui-tertiary-bg);
+    color: var(--cui-secondary-color);
+    font-size: 0.875rem;
+    font-weight: var(--vmecc-weight-semibold);
+    line-height: var(--vmecc-leading-compact);
+  }
+
   .workflow-detail-header {
     align-items: flex-start;
   }
 
   .workflow-detail-header__actions {
     width: 100%;
+  }
+
+  .workflow-detail-card {
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .workflow-detail-card > .card-header {
+    padding: 0 0 0.75rem;
+    border: 0;
+    background: transparent;
+    font-weight: var(--vmecc-weight-semibold);
+  }
+
+  .workflow-detail-card > .card-body {
+    padding: 0;
+  }
+
+  .workflow-detail-readonly-section {
+    padding: 0.75rem 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
   }
 
   .responsive-key-value-list__row {

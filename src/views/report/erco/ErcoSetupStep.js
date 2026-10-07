@@ -9,7 +9,7 @@ import { ReportMobileActionGroup, ReportSetupSummaryRow } from '../components/Re
 import { DetailsStepActions } from './erco-form-components'
 import { normalizeErcoLocationList } from './utils'
 import { recordTypeUsage } from './typeUsageStorage'
-import useIncidentTypeManager, { INCIDENT_TYPE_TOGGLE_VALUE } from './useIncidentTypeManager'
+import useIncidentTypeManager from './useIncidentTypeManager'
 import useWeatherTypeManager, { WEATHER_TOGGLE_VALUE } from './useWeatherTypeManager'
 import useLocationTypeManager, { LOCATION_TOGGLE_VALUE } from './useLocationTypeManager'
 import useReportIsMobile, { REPORT_MOBILE_QUERY } from '../hooks/useReportIsMobile'
@@ -288,7 +288,6 @@ const ErcoSetupStep = ({
     openMobileGroup(group)
 
     if (group === 'incident') {
-      incident.setShowAllIncidentTypes(false)
       setForm((prev) => ({ ...prev, incidentType: '' }))
       setSetupFieldErrors((prev) => ({ ...prev, incidentType: undefined }))
       return
@@ -563,14 +562,10 @@ const ErcoSetupStep = ({
               </div>
               <ResponsiveChoiceSelector
                 isMobile={isMobile}
-                options={incident.visibleTypeOptions}
+                options={incident.typeOptions}
                 value={form.incidentType}
+                selectionMode={isMobile ? 'action' : 'single'}
                 onChange={(value) => {
-                  if (value === INCIDENT_TYPE_TOGGLE_VALUE) {
-                    incident.setShowAllIncidentTypes((prev) => !prev)
-                    return
-                  }
-                  incident.setShowAllIncidentTypes(false)
                   recordTypeUsage(userId, 'incident', value)
                   updateSetupField('incidentType', value)
                   collapseDesktopGroup('incident')
@@ -579,24 +574,9 @@ const ErcoSetupStep = ({
                   setActiveMobileGroup('weather')
                 }}
                 variant="compact"
-                toggleValue={INCIDENT_TYPE_TOGGLE_VALUE}
                 ariaLabel="Choose incident type"
                 columns={{ xs: 12, md: 3 }}
-                cardProps={(option, isSelected) => {
-                  if (option?.value === INCIDENT_TYPE_TOGGLE_VALUE) {
-                    return {
-                      style: {
-                        backgroundColor: TOGGLE_CARD_BG,
-                        borderColor: TOGGLE_CARD_BORDER,
-                        borderStyle: 'dashed',
-                      },
-                      className: 'text-primary',
-                      iconContainerClassName: 'bg-body text-primary',
-                      titleClassName: 'fw-semibold text-primary',
-                      descriptionClassName: 'mb-0 mt-1 text-body-secondary',
-                    }
-                  }
-
+                cardProps={(_option, isSelected) => {
                   return isSelected
                     ? {
                         style: {
@@ -641,6 +621,7 @@ const ErcoSetupStep = ({
                 isMobile={isMobile}
                 options={weather.visibleTypeOptions}
                 value={form.weather}
+                selectionMode={isMobile ? 'action' : 'single'}
                 onChange={(value) => {
                   if (value === WEATHER_TOGGLE_VALUE) {
                     weather.setShowAllWeatherTypes((prev) => !prev)

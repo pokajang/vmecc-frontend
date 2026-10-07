@@ -23,6 +23,7 @@ import RowActionCell from 'src/components/RowActionCell'
 import RowActions from 'src/components/RowActions'
 import TableFilters from 'src/components/TableFilters'
 import WorkflowStatusSummary from 'src/components/WorkflowStatusSummary'
+import CompactRecordStatus from 'src/components/report-workflow/CompactRecordStatus'
 import BulkActionButton from 'src/views/staff/components/BulkActionButton'
 import { activateOnEnterOrSpace } from 'src/utils/uiAccessibility'
 
@@ -95,23 +96,12 @@ const ClaimRecordsTab = ({ vm, handlers }) => {
 
   const buildMobileClaimItem = (row) => ({
     key: `${row.id}-${row.ownerId || 'owner'}`,
-    title: row.id || '-',
-    subtitle: row.ownerLabel || '-',
-    eyebrow: toTypeLabel(row.type),
-    status: (
-      <WorkflowStatusSummary
-        statusLabel={row.status || '-'}
-        gates={CLAIM_GATES}
-        approvalHistory={row.approvalHistory}
-        isCancelled={row.status === 'Cancelled'}
-      />
-    ),
-    fields: [
-      { key: 'period', label: 'Period', value: row.period || '-' },
-      { key: 'category', label: 'Category', value: row.category || '-' },
-      { key: 'amount', label: 'Amount', value: formatCurrency(resolveRowAmount(row)) },
-      { key: 'submitted', label: 'Submitted', value: formatDate(row.submittedAt) },
-    ],
+    layout: 'compact',
+    title: formatDate(row.submittedAt) || row.period || '-',
+    subtitle: [toTypeLabel(row.type), row.ownerLabel, row.id, formatCurrency(resolveRowAmount(row))]
+      .filter(Boolean)
+      .join(' · '),
+    status: <CompactRecordStatus label={row.status || '-'} />,
     ariaLabel: `Open claim record ${row.id || '-'}`,
     onOpen: () => openClaimDetail(row, 'claimRecords'),
     actions: <RowActions items={buildClaimRowActionItems(row)} />,

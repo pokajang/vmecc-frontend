@@ -44,6 +44,7 @@ const WorkflowSummaryList = ({
               'workflow-summary__item',
               item.span === 'full' || item.fullWidth ? 'workflow-summary__item--full' : '',
               item.emphasis ? 'workflow-summary__item--emphasis' : '',
+              item.primary ? 'workflow-summary__item--primary' : '',
               item.isAlert ? 'workflow-summary__item--alert' : '',
               item.className || '',
             ]

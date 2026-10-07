@@ -312,7 +312,6 @@ vi.mock('../ui/InspectionWorkflowActionModal', () => ({
 }))
 
 vi.mock('../useIncidentTypeManager', () => ({
-  INCIDENT_TYPE_TOGGLE_VALUE: '__inspection_toggle__',
   default: () => ({
     showAddTypeModal: false,
     closeAddModal: () => {},
@@ -321,11 +320,6 @@ vi.mock('../useIncidentTypeManager', () => ({
     typeOptions: [
       { value: 'Hydraulic Rescue Tools Inspection', title: 'Hydraulic Rescue Tools Inspection' },
     ],
-    visibleTypeOptions: [
-      { value: 'Hydraulic Rescue Tools Inspection', title: 'Hydraulic Rescue Tools Inspection' },
-    ],
-    showAllIncidentTypes: false,
-    setShowAllIncidentTypes: () => {},
     openAddModal: () => {},
     removeType: () => {},
     newTypeName: '',
@@ -779,7 +773,7 @@ describe('InspectionModule route family', () => {
     const mobileHeading = () => heading.querySelector('.d-md-none')
 
     expect(desktopHeading()?.textContent).toBe('Inspection')
-    expect(mobileHeading()?.textContent).toBe('Conduct Inspection')
+    expect(mobileHeading()?.textContent).toBe('Inspection')
 
     fireEvent.click(screen.getByRole('button', { name: 'All Extinguishers' }))
     await waitFor(() =>
@@ -795,7 +789,7 @@ describe('InspectionModule route family', () => {
     )
 
     expect(desktopHeading()?.textContent).toBe('Inspection')
-    expect(mobileHeading()?.textContent).toBe('Conduct Inspection')
+    expect(mobileHeading()?.textContent).toBe('Inspection')
   })
 
   it('opens the All Extinguishers tab without treating it as a detail record', async () => {

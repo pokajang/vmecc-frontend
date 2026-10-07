@@ -90,7 +90,6 @@ const useReportDraft = ({
         if (typeof setDetailsConfirmed === 'function') {
           setDetailsConfirmed(restoredDetailsConfirmed)
         }
-        lifecycle.pushToast?.('Saved draft restored.', { title: 'Draft loaded', color: 'info' })
       }
       if (!cancelled) lifecycleRef.current?.onDraftLoadSettled?.()
     }

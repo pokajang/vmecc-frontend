@@ -4,6 +4,7 @@ const {
   isRequestWithinControlledApi,
   normalizeControlledApiBaseUrl,
 } = require('./support/controlled-api-stubs')
+const { getLoopbackUrlAliases, normalizeLoopbackOrigin } = require('./support/loopback-origin')
 
 test('mocked E2E API contracts fail closed outside the explicit loopback origin', () => {
   const apiBaseUrl = normalizeControlledApiBaseUrl('http://127.0.0.1:8123/api/')
@@ -20,13 +21,26 @@ test('mocked E2E API contracts fail closed outside the explicit loopback origin'
   ).toBe(false)
 
   expect(() => normalizeControlledApiBaseUrl('https://api.example.test/api')).toThrow(
-    /explicit http:\/\/127\.0\.0\.1:<port>/,
+    /localhost-or-127\.0\.0\.1/,
   )
-  expect(() => normalizeControlledApiBaseUrl('http://localhost:8123/api')).toThrow(
-    /explicit http:\/\/127\.0\.0\.1:<port>/,
+  expect(normalizeControlledApiBaseUrl('http://localhost:8123/api')).toBe(
+    'http://localhost:8123/api',
   )
   expect(() => normalizeControlledApiBaseUrl('http://127.0.0.1/api')).toThrow(
-    /explicit http:\/\/127\.0\.0\.1:<port>/,
+    /localhost-or-127\.0\.0\.1/,
+  )
+})
+
+test('loopback helpers normalize both local aliases without broadening the safety boundary', () => {
+  expect(normalizeLoopbackOrigin('http://localhost:3000', 'Frontend URL')).toBe(
+    'http://localhost:3000',
+  )
+  expect(getLoopbackUrlAliases('http://127.0.0.1:8000/api')).toEqual([
+    'http://127.0.0.1:8000/api',
+    'http://localhost:8000/api',
+  ])
+  expect(() => normalizeLoopbackOrigin('https://example.test', 'Frontend URL')).toThrow(
+    /localhost-or-127\.0\.0\.1/,
   )
 })
 

@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
 import React from 'react'
-import { describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 
 import FeedbackReportModal from '../FeedbackReportModal'
+
+afterEach(cleanup)
 
 describe('FeedbackReportModal', () => {
   it('shows counter, validation state, and submit loading state', () => {
@@ -35,5 +37,31 @@ describe('FeedbackReportModal', () => {
     expect(screen.getByRole('button', { name: 'Submitting...' }).hasAttribute('disabled')).toBe(
       true,
     )
+  })
+
+  it('keeps submission feedback inside the modal and replaces form actions with Close', () => {
+    const onClose = vi.fn()
+
+    render(
+      <FeedbackReportModal
+        visible
+        message="A useful issue description"
+        error=""
+        success="Your report has been submitted to system administrators."
+        submitting={false}
+        onClose={onClose}
+        onMessageChange={vi.fn()}
+        onSubmit={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByText('Report submitted')).toBeTruthy()
+    expect(
+      screen.getByText('Your report has been submitted to system administrators.'),
+    ).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Submit report' })).toBeNull()
+
+    fireEvent.click(screen.getByText('Close'))
+    expect(onClose).toHaveBeenCalledTimes(1)
   })
 })

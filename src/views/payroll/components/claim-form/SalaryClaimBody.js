@@ -48,6 +48,7 @@ const SalaryClaimBody = ({
     isOvertimeEligible = false,
     isSysAdmin = false,
     hasOvertimeEligibilityError = false,
+    hasAuthoritativeOvertimePreview = false,
     isOvertimeRowsLoading = false,
     overtimeBaseMode,
     overtimeAutoHourlyBaseRate,
@@ -66,7 +67,7 @@ const SalaryClaimBody = ({
     handleAttachmentChange = () => {},
     clearDraftAttachment = () => {},
   } = attachments
-  const { submitClaim = () => {}, clearForm = resetDraft, retryDraft = () => {} } = actions
+  const { submitClaim = () => {}, retryDraft = () => {} } = actions
   const {
     draftSyncSummary = '',
     isEditingSubmittedClaim = false,
@@ -99,7 +100,10 @@ const SalaryClaimBody = ({
 
   return (
     <>
-      <section className="workflow-summary-surface" aria-labelledby="salary-claim-summary-title">
+      <section
+        className="workflow-summary-surface workflow-summary-surface--mobile-flat"
+        aria-labelledby="salary-claim-summary-title"
+      >
         <div className="workflow-summary-surface__header">
           <h2 id="salary-claim-summary-title" className="workflow-summary__title">
             Salary Claim Summary
@@ -124,6 +128,7 @@ const SalaryClaimBody = ({
           ariaLabel="Salary claim totals"
           items={summary.metrics}
           variant="metrics"
+          listClassName="workflow-summary__list--mobile-tiles"
         />
       </section>
 
@@ -181,6 +186,7 @@ const SalaryClaimBody = ({
           isOvertimeEligible={isOvertimeEligible}
           isSysAdmin={isSysAdmin}
           hasOvertimeEligibilityError={hasOvertimeEligibilityError}
+          hasAuthoritativeOvertimePreview={hasAuthoritativeOvertimePreview}
           isOvertimeRowsLoading={isOvertimeRowsLoading}
           overtimeBaseMode={overtimeBaseMode}
           overtimeAutoHourlyBaseRate={overtimeAutoHourlyBaseRate}
@@ -194,19 +200,23 @@ const SalaryClaimBody = ({
         />
       </DisclosureCard>
 
-      {hasAssignedSalaryBaseline && !isSalaryAssignmentsLoading && (
-        <div className="px-1">
-          <CFormCheck
-            id="salary-payout-confirmed"
-            label="I confirm this assigned payout baseline is correct for the selected payroll month."
-            checked={payrollBaselineConfirmed}
-            onChange={(event) => setPayrollBaselineConfirmed(event.target.checked)}
-          />
-        </div>
-      )}
+      {hasAssignedSalaryBaseline && !isSalaryAssignmentsLoading ? (
+        hasAuthoritativeOvertimePreview ? (
+          <div className="px-1">
+            <CFormCheck
+              id="salary-payout-confirmed"
+              label="I confirm this assigned payout baseline is correct for the selected payroll month."
+              checked={payrollBaselineConfirmed}
+              onChange={(event) => setPayrollBaselineConfirmed(event.target.checked)}
+            />
+          </div>
+        ) : (
+          <div className="small text-warning px-1">
+            Payroll calculation is unavailable. Reopen this month or retry later before submitting.
+          </div>
+        )
+      ) : null}
       <WorkflowStageActions
-        onReset={clearForm}
-        resetLabel="Clear form"
         onPrimary={submitClaim}
         primaryLabel={isEditingSubmittedClaim ? 'Update request' : 'Submit request'}
         primaryBusyLabel="Submitting..."
@@ -225,7 +235,8 @@ const SalaryClaimBody = ({
         }
         primaryFirst
         mobileLayout="stacked-primary-first"
-        stackedMobileBehavior="terminal"
+        stackedMobileBehavior="compact-sticky"
+        dockAtEnd
         ariaLabel="Claim form actions"
       />
     </>

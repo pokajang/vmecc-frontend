@@ -14,7 +14,6 @@ const ActionConfirmModal = ({
   cancelLabel = 'Cancel',
   confirmDisabled = false,
   cancelDisabled = false,
-  isNotice = false,
   showCancelAction = true,
   mobileDrawer = true,
   mobileDrawerQuery = '(max-width: 575.98px)',
@@ -23,7 +22,6 @@ const ActionConfirmModal = ({
   onConfirm,
 }) => {
   const useMobileDrawer = useMediaQuery(mobileDrawerQuery)
-  const shouldShowCancelAction = isNotice ? false : showCancelAction
   const confirmIntent = ['primary', 'success', 'info', 'warning', 'danger'].includes(confirmColor)
     ? confirmColor
     : 'primary'
@@ -35,7 +33,7 @@ const ActionConfirmModal = ({
 
   const actions = (
     <ActionButtonGroup ariaLabel="Confirmation actions">
-      {shouldShowCancelAction ? (
+      {showCancelAction ? (
         <AppButton intent="neutral" onClick={handleClose} disabled={cancelDisabled}>
           {cancelLabel}
         </AppButton>

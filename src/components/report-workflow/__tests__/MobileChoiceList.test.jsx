@@ -34,6 +34,20 @@ describe('MobileChoiceList', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Fire Drill/ }))
     expect(onChange).toHaveBeenCalledWith('fire', expect.objectContaining({ value: 'fire' }))
+    expect(screen.queryByText('Emergency fire response exercise.')).toBeNull()
+  })
+
+  it('shows descriptions only for an explicit decision-support policy', () => {
+    render(
+      <MobileChoiceList
+        mode="action"
+        ariaLabel="Choose type"
+        options={options}
+        onChange={() => {}}
+        descriptionPolicy="decision-support"
+      />,
+    )
+
     expect(screen.getByText('Emergency fire response exercise.')).toBeTruthy()
   })
 
@@ -56,6 +70,35 @@ describe('MobileChoiceList', () => {
 
     fireEvent.keyDown(radios[0], { key: 'ArrowDown' })
     expect(onChange).toHaveBeenCalledWith('rescue', expect.objectContaining({ value: 'rescue' }))
+  })
+
+  it('uses forward affordances for advancing choices while retaining selected-state feedback', () => {
+    render(
+      <MobileChoiceList
+        mode="single"
+        indicatorVariant="advance"
+        ariaLabel="Choose location"
+        options={options}
+        value="rescue"
+        onChange={() => {}}
+      />,
+    )
+
+    const choices = screen.getAllByRole('radio')
+    const availableIndicator = choices[0].querySelector('.mobile-choice-list__indicator')
+    const selectedIndicator = choices[1].querySelector('.mobile-choice-list__indicator')
+
+    expect(availableIndicator.classList.contains('mobile-choice-list__indicator--action')).toBe(
+      true,
+    )
+    expect(availableIndicator.querySelector('.lucide-chevron-right')).toBeTruthy()
+    expect(selectedIndicator.classList.contains('mobile-choice-list__indicator--selected')).toBe(
+      true,
+    )
+    expect(selectedIndicator.classList.contains('mobile-choice-list__indicator--action')).toBe(
+      false,
+    )
+    expect(selectedIndicator.querySelector('.lucide-check')).toBeTruthy()
   })
 
   it('exposes multiple selection as checkboxes', () => {

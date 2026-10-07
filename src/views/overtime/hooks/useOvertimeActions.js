@@ -28,6 +28,7 @@ const useOvertimeActions = ({
   overtimeId,
   navigate,
   pushToast,
+  clearFeedback,
   overtimeTypeDerivedMode,
   isResumeEditMode,
   hasPersistedEditTarget,
@@ -251,6 +252,7 @@ const useOvertimeActions = ({
       return
     }
     if (!validateSubmission()) return
+    clearFeedback()
     setSubmitPreview(buildSubmitPreview())
     setIsSubmitConfirmVisible(true)
   }
@@ -342,9 +344,9 @@ const useOvertimeActions = ({
       pushToast(
         `Overtime claim ${getDisplayOvertimeId(persistedRecord)} ${
           existingRecord ? 'resubmitted' : 'submitted'
-        } (${submitPreview.durationMinutes} minute(s)).`,
+        } (${submitPreview.durationMinutes} minute(s)). It is pending approval.`,
         {
-          title: existingRecord ? 'Resubmitted' : 'Submitted',
+          title: existingRecord ? 'Resubmitted for approval' : 'Submitted for approval',
           color: 'success',
         },
       )
@@ -419,9 +421,6 @@ const useOvertimeActions = ({
           }),
         )
         if (navigateAfter) navigate('/overtime')
-        if (showNotice) {
-          pushToast('Overtime draft saved.', { title: 'Draft saved', color: 'success' })
-        }
         return true
       } catch (error) {
         if (showNotice) {
@@ -523,47 +522,6 @@ const useOvertimeActions = ({
         title: 'Draft discarded',
         color: 'info',
       })
-    } finally {
-      setIsFormClearing(false)
-    }
-  }
-
-  const handleClearForm = async () => {
-    if (isFormActionBusy) {
-      explainBusyAction()
-      return
-    }
-    if (hasPersistedEditTarget) {
-      if (isLinkedDraftForEditing) {
-        setIsDiscardDraftChangesConfirmVisible(true)
-        return
-      }
-      const restored = resetFormToSubmittedRecord()
-      if (!restored) {
-        pushToast('Submitted overtime record is unavailable for reset.', {
-          title: 'Reset unavailable',
-          color: 'warning',
-        })
-        return
-      }
-      pushToast('Form reset to submitted overtime values.', {
-        title: 'Reset complete',
-        color: 'info',
-      })
-      return
-    }
-    setIsFormClearing(true)
-    try {
-      const clearResult = await clearMyOvertimeDraftApiFirst(userId, overtimeDraft?.draftVersion)
-      if (!clearResult?.ok) {
-        pushToast('Unable to clear overtime draft from backend. Please retry.', {
-          title: 'Clear failed',
-          color: 'danger',
-        })
-        return
-      }
-      setOvertimeDraft(null)
-      resetForm()
     } finally {
       setIsFormClearing(false)
     }
@@ -736,7 +694,6 @@ const useOvertimeActions = ({
     confirmAndSubmit,
     handleDraft,
     confirmDiscardDraftChanges,
-    handleClearForm,
   }
 }
 

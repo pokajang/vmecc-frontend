@@ -65,13 +65,13 @@ const LeaveTypeSelection = ({ selectedType, onSelect, onContinue }) => {
       value={selectedType}
       onChange={onSelect}
       onContinue={onContinue}
-      continueTestId="leave-type-continue"
-      continueDisabled={!selectedType}
       showDescription
-      columns={{ xs: 6, md: 6, lg: 4 }}
+      columns={{ xs: 12, md: 4, lg: 4 }}
       rowClassName="g-2 g-md-3"
+      variant="standard"
       ariaLabel="Choose Leave Type"
       testIdPrefix="leave-type"
+      advanceOnSelect
     />
   )
 }

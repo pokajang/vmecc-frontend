@@ -15,7 +15,7 @@ const ResponsiveChoiceSelector = ({
   getOptionKey,
   emptyState = null,
   mobileClassName = '',
-  mobileShowDescriptions,
+  mobileDescriptionPolicy = 'compact',
   mobileFooterAction = null,
   variant = 'compact',
   showDescription = true,
@@ -37,7 +37,7 @@ const ResponsiveChoiceSelector = ({
         getOptionKey={getOptionKey}
         emptyState={emptyState}
         className={mobileClassName}
-        showDescriptions={mobileShowDescriptions ?? showDescription}
+        descriptionPolicy={mobileDescriptionPolicy}
         footerAction={mobileFooterAction}
       />
     )

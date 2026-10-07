@@ -1,0 +1,91 @@
+{
+  "runId": "BETA-20260903-161800-personal-workflows",
+  "results": [
+    {
+      "journey": "authentication",
+      "status": "passed"
+    },
+    {
+      "journey": "leave required-field recovery",
+      "status": "passed"
+    },
+    {
+      "journey": "leave submit, persist, reopen",
+      "status": "passed",
+      "recordId": "LV-AL-2026-001"
+    },
+    {
+      "journey": "overtime required-field recovery",
+      "status": "passed"
+    },
+    {
+      "journey": "overtime submit, persist, reopen",
+      "status": "passed",
+      "recordId": "OT-2026-004"
+    },
+    {
+      "journey": "salary submit, persist, reopen",
+      "status": "failed",
+      "message": "locator.check: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#salary-payout-confirmed')\u001b[22m\n"
+    },
+    {
+      "journey": "console errors",
+      "status": "failed",
+      "count": 9
+    },
+    {
+      "journey": "unexpected failed responses",
+      "status": "failed",
+      "responses": [
+        {
+          "status": 403,
+          "path": "/api/payroll/claims/drafts"
+        },
+        {
+          "status": 403,
+          "path": "/api/payroll/claims/drafts"
+        },
+        {
+          "status": 403,
+          "path": "/api/payroll/claims/drafts"
+        },
+        {
+          "status": 403,
+          "path": "/api/settings/overtime-rate-settings"
+        },
+        {
+          "status": 403,
+          "path": "/api/payroll/claims/drafts"
+        },
+        {
+          "status": 403,
+          "path": "/api/payroll/claims/drafts"
+        },
+        {
+          "status": 403,
+          "path": "/api/payroll/claims/drafts"
+        },
+        {
+          "status": 403,
+          "path": "/api/payroll/claims"
+        },
+        {
+          "status": 403,
+          "path": "/api/payroll/claims"
+        }
+      ]
+    }
+  ],
+  "created": [
+    {
+      "type": "leave",
+      "id": "LV-AL-2026-001",
+      "internalId": 128
+    },
+    {
+      "type": "overtime",
+      "id": "OT-2026-004",
+      "internalId": 86
+    }
+  ]
+}

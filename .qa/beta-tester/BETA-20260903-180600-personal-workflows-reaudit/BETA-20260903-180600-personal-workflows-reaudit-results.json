@@ -1,0 +1,28 @@
+{
+  "runId": "BETA-20260903-180600-personal-workflows-reaudit",
+  "results": [
+    {
+      "item": "authentication",
+      "status": "passed",
+      "critical": true
+    },
+    {
+      "item": "detail parity mobile-320",
+      "status": "passed",
+      "critical": true
+    },
+    {
+      "item": "detail parity mobile-390",
+      "status": "passed",
+      "critical": true
+    },
+    {
+      "item": "run",
+      "status": "failed",
+      "critical": true,
+      "error": "Desktop overflow"
+    }
+  ],
+  "networkFailures": [],
+  "consoleErrors": []
+}

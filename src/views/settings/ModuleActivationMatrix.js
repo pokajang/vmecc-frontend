@@ -1,17 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
-import {
-  CAlert,
-  CBadge,
-  CButton,
-  CFormSwitch,
-  CSpinner,
-  CToast,
-  CToastBody,
-  CToaster,
-} from '@coreui/react'
+import { CAlert, CBadge, CButton, CFormSwitch, CSpinner } from '@coreui/react'
 import { Save } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
 import ButtonLoader from 'src/components/ButtonLoader'
+import WorkflowFeedbackBanner from 'src/components/report-workflow/WorkflowFeedbackBanner'
+import useWorkflowFeedback from 'src/components/report-workflow/useWorkflowFeedback'
 import { fetchModuleActivation, saveModuleActivation } from 'src/services/apiClient'
 import { normalizeModuleActivationPayload } from 'src/utils/modules'
 import {
@@ -178,7 +171,7 @@ const ModuleActivationMatrix = () => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
-  const [toast, setToast] = useState(null)
+  const { feedback, clearFeedback, pushFeedback } = useWorkflowFeedback()
 
   useEffect(() => {
     let active = true
@@ -252,17 +245,16 @@ const ModuleActivationMatrix = () => {
       setConfiguredDraft(payload.configured || {})
       dispatch({ type: 'set', moduleActivation: payload })
       publishModuleActivation(payload)
-      setToast(
-        <CToast autohide delay={3500} color="success">
-          <CToastBody>Module activation settings updated.</CToastBody>
-        </CToast>,
-      )
+      pushFeedback('Module activation settings updated.', {
+        title: 'Settings updated',
+        color: 'success',
+      })
     } catch (err) {
       setError(err?.message || 'Unable to save module activation settings.')
     } finally {
       setSaving(false)
     }
-  }, [configuredDraft, dispatch])
+  }, [configuredDraft, dispatch, pushFeedback])
 
   if (loading) {
     return (
@@ -274,7 +266,7 @@ const ModuleActivationMatrix = () => {
 
   return (
     <div data-testid="settings-modules-panel">
-      <CToaster push={toast} placement="bottom-end" className="mb-3 me-3" />
+      <WorkflowFeedbackBanner feedback={feedback} onDismiss={clearFeedback} />
       <div className="d-flex justify-content-between align-items-start gap-3 mb-3">
         <div>
           <div className="fw-semibold">Module Activation</div>

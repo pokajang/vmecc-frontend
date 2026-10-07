@@ -10,8 +10,8 @@ import {
 } from 'src/components/report-workflow/ReportViewComponents'
 import useMediaQuery from 'src/hooks/useMediaQuery'
 import { recordTypeUsage } from '../typeUsageStorage'
-import { ACTIVE_CARD_STYLE, TOGGLE_CARD_PROPS } from '../typeOptionUtils'
-import useIncidentTypeManager, { INCIDENT_TYPE_TOGGLE_VALUE } from '../useIncidentTypeManager'
+import { ACTIVE_CARD_STYLE } from '../typeOptionUtils'
+import useIncidentTypeManager from '../useIncidentTypeManager'
 import {
   buildSecondaryOptions,
   CompletedStep,
@@ -251,24 +251,16 @@ const InspectionAiConfirmPanel = ({
           <div className="fw-semibold text-muted">Choose Type</div>
           <ResponsiveChoiceSelector
             isMobile={isMobile}
-            options={incident.visibleTypeOptions}
+            options={incident.typeOptions}
             value={confirmedType}
             onChange={(value) => {
-              if (value === INCIDENT_TYPE_TOGGLE_VALUE) {
-                incident.setShowAllIncidentTypes((prev) => !prev)
-                return
-              }
               recordTypeUsage(userId, 'incident', value)
               setConfirmedType(value)
             }}
             variant="compact"
-            toggleValue={INCIDENT_TYPE_TOGGLE_VALUE}
             ariaLabel="Choose inspection type"
             columns={{ xs: 6, md: 3 }}
-            cardProps={(option, isSelected) => {
-              if (option?.value === INCIDENT_TYPE_TOGGLE_VALUE) return TOGGLE_CARD_PROPS
-              return isSelected ? { style: ACTIVE_CARD_STYLE } : {}
-            }}
+            cardProps={(_option, isSelected) => (isSelected ? { style: ACTIVE_CARD_STYLE } : {})}
           />
           <details className="rounded-3 border bg-body p-3">
             <summary className="fw-semibold text-muted">Custom type management</summary>

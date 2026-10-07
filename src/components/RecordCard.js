@@ -59,34 +59,45 @@ const RecordCard = ({ item = {}, className = '', variant = 'card' }) => {
             : `record-card record-card--compact border rounded-3 p-3 bg-body shadow-sm ${className}`.trim()
         }
       >
-        <div
-          {...interactiveProps}
-          className={`record-card__compact-row d-flex min-w-0 align-items-start justify-content-between gap-2 ${interactiveProps.className || ''}`.trim()}
-        >
-          <div className="record-card__main min-w-0 flex-grow-1" style={{ minWidth: 0 }}>
-            {item.eyebrow ? (
-              <div className="record-card-eyebrow vmecc-caption text-body-secondary mb-1">
-                {item.eyebrow}
-              </div>
-            ) : null}
-            <div className="record-card__title vmecc-card-title text-truncate">{item.title}</div>
-            {item.subtitle ? (
-              <div className="record-card__subtitle vmecc-meta text-body-secondary text-truncate mt-1">
-                {item.subtitle}
-              </div>
-            ) : null}
-            {item.searchText ? <span className="visually-hidden">{item.searchText}</span> : null}
-          </div>
+        <div className="record-card__compact-row d-flex min-w-0 align-items-start gap-2">
           <div
-            className="record-card__meta d-flex min-w-0 flex-shrink-1 align-items-center justify-content-end gap-1"
-            style={{ maxWidth: item.actions ? '48%' : '55%' }}
-            onClick={item.actions ? stopActionEvent : undefined}
-            onMouseDown={item.actions ? stopActionEvent : undefined}
-            onKeyDown={item.actions ? stopActionEvent : undefined}
+            {...interactiveProps}
+            className={`d-flex min-w-0 flex-grow-1 align-items-start justify-content-between gap-2 ${interactiveProps.className || ''}`.trim()}
+            style={{ minWidth: 0 }}
           >
-            {item.status ? <div className="min-w-0 text-end">{item.status}</div> : null}
-            {item.actions ? item.actions : null}
+            <div className="record-card__main min-w-0 flex-grow-1" style={{ minWidth: 0 }}>
+              {item.eyebrow ? (
+                <div className="record-card-eyebrow vmecc-caption text-body-secondary mb-1">
+                  {item.eyebrow}
+                </div>
+              ) : null}
+              <div className="record-card__title vmecc-card-title text-break">{item.title}</div>
+              {item.subtitle ? (
+                <div className="record-card__subtitle vmecc-meta text-body-secondary text-break mt-1">
+                  {item.subtitle}
+                </div>
+              ) : null}
+              {item.searchText ? <span className="visually-hidden">{item.searchText}</span> : null}
+            </div>
+            {item.status ? (
+              <div
+                className="record-card__meta d-flex min-w-0 flex-shrink-1 align-items-center justify-content-end text-end"
+                style={{ maxWidth: item.actions ? '42%' : '55%' }}
+              >
+                {item.status}
+              </div>
+            ) : null}
           </div>
+          {item.actions ? (
+            <div
+              className="record-card__actions flex-shrink-0"
+              onClick={stopActionEvent}
+              onMouseDown={stopActionEvent}
+              onKeyDown={stopActionEvent}
+            >
+              {item.actions}
+            </div>
+          ) : null}
         </div>
         {item.expanded && item.expandedContent ? (
           <div className="mt-3">{item.expandedContent}</div>

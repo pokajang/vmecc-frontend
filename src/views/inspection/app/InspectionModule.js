@@ -1,13 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useSelector } from 'react-redux'
-import { ChevronDown, ChevronUp } from 'lucide-react'
-import ActionConfirmModal from 'src/views/shared/ActionConfirmModal'
+import WorkflowFeedbackBanner from 'src/components/report-workflow/WorkflowFeedbackBanner'
 import { INSPECTION_SORT_OPTIONS } from 'src/views/inspection/constants'
 import { hasPermission } from 'src/utils/authz'
-import useIncidentTypeManager, {
-  INCIDENT_TYPE_TOGGLE_VALUE,
-} from 'src/views/inspection/useIncidentTypeManager'
+import useIncidentTypeManager from 'src/views/inspection/useIncidentTypeManager'
 import useInspectionDraftRows from 'src/views/inspection/state/useInspectionDraftRows'
 import useInspectionOfflineHealthController from 'src/views/inspection/state/useInspectionOfflineHealthController'
 import useInspectionQueueController from 'src/views/inspection/state/useInspectionQueueController'
@@ -55,11 +52,6 @@ import {
   buildInspectionRecordsLocation,
   getInitialInspectionRecordScope,
 } from './inspectionRecordRouteContext'
-
-const resolveFeedbackConfirmColor = (color) => {
-  if (['primary', 'success', 'info', 'warning', 'danger'].includes(color)) return color
-  return 'info'
-}
 
 const InspectionModule = () => {
   const location = useLocation()
@@ -134,13 +126,6 @@ const InspectionModule = () => {
     }))
   }, [])
 
-  useEffect(() => {
-    if (!feedback?.message || !feedback.delay) return undefined
-    const timerId = window.setTimeout(() => {
-      setFeedback((current) => (current?.id === feedback.id ? null : current))
-    }, feedback.delay)
-    return () => window.clearTimeout(timerId)
-  }, [feedback])
   const clearFeedback = useCallback(() => {
     setFeedback(null)
   }, [])
@@ -258,12 +243,7 @@ const InspectionModule = () => {
     updateSetupField: () => {},
     pushToast,
   })
-  const homeTypeOptions = useMemo(() => {
-    const toggleIcon = homeIncident.showAllIncidentTypes ? ChevronUp : ChevronDown
-    return homeIncident.visibleTypeOptions.map((option) =>
-      option?.value === INCIDENT_TYPE_TOGGLE_VALUE ? { ...option, icon: toggleIcon } : option,
-    )
-  }, [homeIncident.showAllIncidentTypes, homeIncident.visibleTypeOptions])
+  const homeTypeOptions = homeIncident.typeOptions
 
   const editingRecord = records.find((row) => String(row.id || '').trim() === routeRecordId) || null
   const scopedSubmittedRecords = useMemo(
@@ -528,6 +508,10 @@ const InspectionModule = () => {
     visibleActiveSection === 'review' ||
     visibleActiveSection === 'detail' ||
     (visibleActiveSection === 'records' && showMobileRecords)
+  const showMobileWorkflowContext =
+    visibleActiveSection === 'form' ||
+    visibleActiveSection === 'review' ||
+    visibleActiveSection === 'records'
 
   const handleMobileBack = () => {
     handleInspectionMobileBack({
@@ -559,17 +543,7 @@ const InspectionModule = () => {
 
   return (
     <>
-      <ActionConfirmModal
-        visible={Boolean(feedback?.message)}
-        title={feedback?.title || 'Notice'}
-        message={feedback?.message || ''}
-        confirmLabel="OK"
-        confirmColor={resolveFeedbackConfirmColor(feedback?.color)}
-        isNotice
-        showCancelAction={false}
-        onClose={clearFeedback}
-        onConfirm={clearFeedback}
-      />
+      <WorkflowFeedbackBanner feedback={feedback} onDismiss={clearFeedback} />
       <InspectionModuleLayout
         activeSection={visibleActiveSection}
         canConduct={canConduct}
@@ -656,6 +630,7 @@ const InspectionModule = () => {
         navigate={navigate}
         pageTitle={pageTitle}
         recordsSectionActive={recordsSectionActive}
+        showMobileWorkflowContext={showMobileWorkflowContext}
         recordsViewProps={buildInspectionRecordsViewProps({
           activeDraftRows,
           canApproveRecord,

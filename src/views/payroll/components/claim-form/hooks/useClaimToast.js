@@ -1,28 +1,12 @@
-import { useCallback, useRef, useState } from 'react'
-import { CToast, CToastBody, CToastHeader } from '@coreui/react'
+import useWorkflowFeedback from 'src/components/report-workflow/useWorkflowFeedback'
 
 const useClaimToast = () => {
-  const toaster = useRef()
-  const [toast, addToast] = useState(0)
-
-  const pushToast = useCallback((message, { title, color = 'light', delay = 6000 } = {}) => {
-    addToast(
-      <CToast autohide delay={delay} color={color}>
-        {title && (
-          <CToastHeader closeButton>
-            <strong className="me-auto">{title}</strong>
-          </CToastHeader>
-        )}
-        <CToastBody>{message}</CToastBody>
-      </CToast>,
-    )
-  }, [])
+  const { feedback, clearFeedback, pushFeedback } = useWorkflowFeedback()
 
   return {
-    toaster,
-    toast,
-    addToast,
-    pushToast,
+    feedback,
+    clearFeedback,
+    pushToast: pushFeedback,
   }
 }
 

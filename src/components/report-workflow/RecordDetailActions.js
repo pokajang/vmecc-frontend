@@ -91,6 +91,8 @@ const RecordDetailActions = ({
     action?.onClick?.()
   }
 
+  if (actions.length === 0) return null
+
   return (
     <>
       {showDesktop ? (

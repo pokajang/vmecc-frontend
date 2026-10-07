@@ -372,7 +372,6 @@ vi.mock('../useLocationTypeManager', () => ({
 }))
 
 vi.mock('../useIncidentTypeManager', () => ({
-  INCIDENT_TYPE_TOGGLE_VALUE: '__inspection_incident_types_toggle__',
   default: () => ({
     showAddTypeModal: false,
     closeAddModal: () => {},
@@ -393,22 +392,6 @@ vi.mock('../useIncidentTypeManager', () => ({
         title: 'Health Safety Environment Inspection',
       },
     ],
-    visibleTypeOptions: [
-      { value: 'General Inspection', title: 'General Inspection' },
-      { value: 'ER Aux Equipment Inspection', title: 'ER Aux Equipment Inspection' },
-      { value: 'FRT Daily Inspection', title: 'FRT Daily Inspection' },
-      {
-        value: 'High Angle Rescue Equipment Inspection',
-        title: 'High Angle Rescue Equipment Inspection',
-      },
-      { value: 'Hydraulic Rescue Tools Inspection', title: 'Hydraulic Rescue Tools Inspection' },
-      { value: 'SCBA Inspection', title: 'SCBA Inspection' },
-      {
-        value: 'Health Safety Environment Inspection',
-        title: 'Health Safety Environment Inspection',
-      },
-    ],
-    setShowAllIncidentTypes: () => {},
     openAddModal: () => {},
     removeType: () => {},
     newTypeName: '',

@@ -193,7 +193,7 @@ const DrillForm = ({
       setLastSavedSignature(signature(normalized))
       draftSeedRef.current = normalized
       setHasDraftSeed(true)
-      setDraftStatus('Draft loaded: Saved draft')
+      setDraftStatus('')
       setSaveState('saved')
       setFormHydrationVersion((prev) => prev + 1)
       onDirtyChange(false)
@@ -232,7 +232,7 @@ const DrillForm = ({
     onDirtyChange(isDirty)
   }, [isDirty, onDirtyChange])
 
-  const saveDraft = async ({ silentSuccess = false, section = activeSection } = {}) => {
+  const saveDraft = async ({ section = activeSection } = {}) => {
     if (saveLockRef.current) {
       setBlockerMessage('A draft save is still in progress. Wait for it to finish and retry.')
       return false
@@ -280,7 +280,6 @@ const DrillForm = ({
     const changedDuringSave = signature(formRef.current) !== snapshotSignature
     setSaveState(changedDuringSave ? 'dirty' : 'saved')
     onDirtyChange(changedDuringSave)
-    if (!silentSuccess) pushToast('Draft saved.', { title: 'Draft saved', color: 'success' })
     saveLockRef.current = false
     onDraftSaved?.()
     if (changedDuringSave) {
@@ -313,13 +312,13 @@ const DrillForm = ({
 
   const continueTo = async (validator, nextSection, message, errorTarget) => {
     if (!validateStage(validator, message, errorTarget)) return
-    const saved = await saveDraft({ silentSuccess: true, section: nextSection })
+    const saved = await saveDraft({ section: nextSection })
     if (!saved) return
     navigateToSection(nextSection)
   }
 
   const navigateWithDraft = async (section) => {
-    const saved = await saveDraft({ silentSuccess: true, section })
+    const saved = await saveDraft({ section })
     if (!saved) return
     navigateToSection(section)
   }
@@ -341,7 +340,7 @@ const DrillForm = ({
       window.setTimeout(scrollToFirstError, 0)
       return
     }
-    const draftSaved = await saveDraft({ silentSuccess: true, section: 'analysis' })
+    const draftSaved = await saveDraft({ section: 'analysis' })
     if (!draftSaved) return
     const nextRecord = buildDrillRecord({
       form: formRef.current,

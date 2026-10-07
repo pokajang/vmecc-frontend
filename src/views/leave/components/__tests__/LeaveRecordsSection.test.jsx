@@ -110,6 +110,10 @@ describe('LeaveRecordsSection interactions', () => {
     expect(mobileCard.textContent).toContain('Annual Leave')
     expect(mobileCard.textContent).toContain('15 Apr 2026')
     expect(mobileCard.textContent).toContain('1')
+    const mobileSection = document.querySelector('[data-testid="leave-records-mobile"]')
+    expect(mobileSection.className).toContain('inspection-mobile-section')
+    expect(mobileSection.querySelector('.inspection-report-records-filter-row')).toBeTruthy()
+    expect(mobileSection.querySelector('.data-table-footer--compact-mobile')).toBeTruthy()
 
     fireEvent.click(mobileCard)
     expect(props.openRecord).toHaveBeenCalledWith(props.visibleRows[0])

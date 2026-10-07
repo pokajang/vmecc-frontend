@@ -23,13 +23,24 @@
   }
 
   .inspection-module-page .module-page-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
     min-height: var(--inspection-mobile-control-height);
     margin-bottom: 0.85rem;
-    gap: 0.75rem;
+    gap: 0.5rem;
+    overflow: visible;
   }
 
-  .inspection-module-page .module-page-header__title .vmecc-page-title {
-    font-size: var(--vmecc-text-page-title);
+  .inspection-module-page .module-page-header__actions {
+    flex-wrap: nowrap;
+  }
+
+  .inspection-module-page
+    .module-page-header:not(.module-page-header--mobile-context)
+    .module-page-header__title
+    .vmecc-page-title {
+    font-size: var(--vmecc-text-overlay-title);
     font-weight: var(--vmecc-weight-bold);
     line-height: var(--vmecc-leading-heading);
   }
@@ -170,7 +181,7 @@
   .inspection-mobile-section .inspection-scope-segment {
     min-height: calc(var(--inspection-mobile-control-height) - 6px);
     padding: 0.28rem 0.65rem;
-    font-size: 0.875rem;
+    font-size: var(--vmecc-text-meta);
     font-weight: 600;
     color: var(--cui-secondary-color);
   }
@@ -201,7 +212,7 @@
     border: 0;
     border-radius: 0;
     background: transparent;
-    font-size: 0.875rem;
+    font-size: var(--vmecc-text-meta);
     font-weight: 600;
     color: var(--cui-secondary-color);
   }
@@ -219,7 +230,7 @@
 
   .inspection-check-card-header .fw-semibold,
   .inspection-hydraulic-card-header .fw-semibold {
-    font-size: 0.9375rem;
+    font-size: var(--vmecc-text-label);
     line-height: 1.3;
   }
 
@@ -363,7 +374,7 @@
   .inspection-module-page .form-select {
     min-height: var(--inspection-mobile-control-height);
     border-color: var(--cui-border-color);
-    font-size: 1rem;
+    font-size: var(--vmecc-text-body);
     line-height: 1.35;
   }
 

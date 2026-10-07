@@ -112,13 +112,19 @@ describe('SalaryClaimReadonlyView', () => {
     expect(screen.getByText('Salary Baseline')).toBeTruthy()
     expect(screen.getByText('Deductions & Contributions')).toBeTruthy()
     expect(screen.getAllByText('Overtime Records').length).toBeGreaterThan(0)
-    expect(screen.getByText('Adjustment Items')).toBeTruthy()
+    expect(screen.getByText('Payout breakdown')).toBeTruthy()
+    expect(screen.queryByText('Adjustment Items')).toBeNull()
     expect(screen.getByText('Addition Adjustments')).toBeTruthy()
     expect(screen.getByText('Deduction Adjustments')).toBeTruthy()
     expect(screen.getByText('Item')).toBeTruthy()
     expect(screen.getAllByText('Amount').length).toBeGreaterThan(0)
     expect(screen.getByText('OT ID')).toBeTruthy()
     expect(screen.getByText('Payout Used')).toBeTruthy()
+    expect(screen.getByText('Rate mode').parentElement.className).toContain('d-grid')
+    expect(screen.getByText('Rows').parentElement.className).toContain('d-grid')
+    expect(screen.getByText('Employee contributions').parentElement.style.gridTemplateColumns).toBe(
+      'minmax(6.75rem, 40%) minmax(0, 1fr)',
+    )
   })
 
   it('opens attachment preview from adjustment badges', () => {

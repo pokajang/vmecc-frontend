@@ -84,6 +84,27 @@ describe('InspectionLocationOptionPicker', () => {
     expect(screen.queryByText('Location 14')).toBeNull()
   })
 
+  it('presents unselected mobile locations as forward actions without empty radio rings', () => {
+    render(
+      <InspectionLocationOptionPicker
+        options={makeOptions(3)}
+        visibleOptions={makeOptions(3)}
+        value=""
+        onChange={vi.fn()}
+        isCompactViewport
+        ariaLabel="Choose location"
+      />,
+    )
+
+    const choices = screen.getAllByRole('radio')
+    expect(choices).toHaveLength(3)
+    choices.forEach((choice) => {
+      const indicator = choice.querySelector('.mobile-choice-list__indicator')
+      expect(indicator.classList.contains('mobile-choice-list__indicator--action')).toBe(true)
+      expect(indicator.querySelector('.lucide-chevron-right')).toBeTruthy()
+    })
+  })
+
   it('shows a compact empty state when no searched locations match', () => {
     render(
       <InspectionLocationOptionPicker

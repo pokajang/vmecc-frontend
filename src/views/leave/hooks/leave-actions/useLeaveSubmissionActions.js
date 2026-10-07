@@ -43,6 +43,7 @@ export default function useLeaveSubmissionActions({
   selectedShiftConfig,
   selectedAssignment,
   pushToast,
+  clearFeedback,
   getDisplayLeaveId,
   formatDayCount,
   calculateDays,
@@ -80,9 +81,6 @@ export default function useLeaveSubmissionActions({
       try {
         await saveLeaveDraft(user?.id, draftPayload)
         untrackTransientAttachment(attachmentId)
-        if (showNotice) {
-          pushToast('Leave draft saved.', { title: 'Draft saved', color: 'success' })
-        }
         return true
       } catch (error) {
         if (showNotice) {
@@ -198,22 +196,6 @@ export default function useLeaveSubmissionActions({
       setFieldErrors(nextErrors)
       return false
     }
-    if (!balanceSummary.hasAssignment) {
-      pushToast(
-        `No entitlement assignment found for ${leaveType} in ${balanceSummary.year}. Please ask HR/HQ to assign it first.`,
-        { title: 'Assignment required', color: 'danger' },
-      )
-      setFieldErrors({})
-      return false
-    }
-    if (balanceSummary.isZeroEntitlement) {
-      pushToast(
-        `${leaveType} entitlement is 0 day(s). This leave type cannot be submitted until HR/HQ updates your assignment.`,
-        { title: 'No entitlement', color: 'danger' },
-      )
-      setFieldErrors({})
-      return false
-    }
     if (activeFieldRule.coverageRequired && !coverBy.trim()) {
       pushToast('Coverage By is required for this leave type and duration.', {
         title: 'Validation error',
@@ -232,27 +214,17 @@ export default function useLeaveSubmissionActions({
       setFieldErrors(nextErrors)
       return false
     }
-    if (balanceSummary.isInsufficient) {
-      pushToast('Requested days exceed the current available leave balance for this leave type.', {
-        title: 'Insufficient balance',
-        color: 'danger',
-      })
-      setFieldErrors(nextErrors)
-      return false
-    }
     setFieldErrors({})
     return true
   }, [
     activeFieldRule.attachmentRequired,
     activeFieldRule.coverageRequired,
     attachmentName,
-    balanceSummary,
     calculateDays,
     coverBy,
     endDate,
     endTimeSlot,
     isAttachmentProcessing,
-    leaveType,
     pushToast,
     reason,
     requestedDays,
@@ -368,8 +340,11 @@ export default function useLeaveSubmissionActions({
         pushToast(dayAdjustmentMessage, { title: 'Recommended leave days', color: 'info' })
       }
       pushToast(
-        `Leave request ${getDisplayLeaveId(returnedRecord)} submitted for ${submitPreview.leaveType} (${formatDayCount(serverComputedDays || submitPreview.requestedDays)} day(s)).`,
-        { title: existingRecord ? 'Updated' : 'Submitted', color: 'success' },
+        `Leave request ${getDisplayLeaveId(returnedRecord)} ${existingRecord ? 'updated' : 'submitted'} for ${submitPreview.leaveType} (${formatDayCount(serverComputedDays || submitPreview.requestedDays)} day(s)). It is pending approval.`,
+        {
+          title: existingRecord ? 'Updated for approval' : 'Submitted for approval',
+          color: 'success',
+        },
       )
       closeSubmitConfirmModal()
       resetForm()
@@ -419,19 +394,12 @@ export default function useLeaveSubmissionActions({
     (event) => {
       event.preventDefault()
       if (!validateSubmission()) return
+      clearFeedback()
       setSubmitPreview(buildSubmitPreview())
       setIsSubmitConfirmVisible(true)
     },
-    [buildSubmitPreview, validateSubmission],
+    [buildSubmitPreview, clearFeedback, validateSubmission],
   )
-
-  const handleClearForm = useCallback(() => {
-    cleanupTransientOnly()
-    clearLeaveDraft(user?.id)
-    resetForm()
-    setOriginalAttachmentId(null)
-    setEditingRecordId(null)
-  }, [cleanupTransientOnly, resetForm, setEditingRecordId, setOriginalAttachmentId, user?.id])
 
   return {
     isSubmitConfirmVisible,
@@ -443,6 +411,5 @@ export default function useLeaveSubmissionActions({
     handleDraft,
     confirmAndSubmit,
     handleSubmit,
-    handleClearForm,
   }
 }

@@ -32,12 +32,14 @@ export const buildInspectionPageTitle = ({
 }) => {
   let mobileTitle
 
-  if (activeSection === 'review') {
-    mobileTitle = isUpdatingExistingRecord ? 'Review Updates' : 'Review Inspection'
+  if (
+    activeSection === 'form' ||
+    activeSection === 'review' ||
+    (activeSection === 'records' && !showMobileRecords)
+  ) {
+    mobileTitle = 'Inspection'
   } else if (activeSection === 'extinguishers') {
     mobileTitle = 'All Extinguishers'
-  } else if (activeSection === 'records' && !showMobileRecords) {
-    mobileTitle = 'Conduct Inspection'
   } else if (recordsSectionActive) {
     mobileTitle = 'Inspection Records'
   } else {
@@ -92,12 +94,17 @@ const InspectionModuleLayout = ({
   navigate,
   reportBasePath,
   recordsReturnPath,
+  showMobileWorkflowContext = false,
   canConduct = true,
   showExtinguisherCatalog = true,
 }) => {
   return (
     <CContainer fluid className="inspection-module-page" data-testid="inspection-module">
-      <ModulePageHeader title={pageTitle} actions={headerActions} />
+      <ModulePageHeader
+        title={pageTitle}
+        actions={headerActions}
+        className={showMobileWorkflowContext ? 'module-page-header--mobile-context' : ''}
+      />
       {(isDeleting || isSubmitting) && (
         <div
           className="inspection-loading-overlay"

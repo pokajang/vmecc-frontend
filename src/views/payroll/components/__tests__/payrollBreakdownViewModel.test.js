@@ -96,6 +96,38 @@ describe('payrollBreakdownViewModel', () => {
     expect(breakdown.adjustments.deductionRows[0].signedAmount).toBe(-40)
   })
 
+  it('reads the server salary-assignment snapshot aliases used by submitted claims', () => {
+    const breakdown = buildPayrollBreakdown(
+      {
+        payrollSnapshot: {
+          salaryAssignmentId: 7,
+          basic: 4000,
+          gross: 4300,
+          net: 3832,
+          employeeDeductionTotal: 468,
+          allowanceTotal: 300,
+          allowances: [{ id: 'fixed', name: 'Fixed allowance', amount: 300 }],
+          employeeContributions: { epf: 440, perkeso: 20, sip: 8 },
+        },
+        adjustmentsTotal: 0,
+        approvedOvertimePayout: 0,
+        projectedNetPayout: 3832,
+      },
+      { sourceType: 'salaryClaim' },
+    )
+
+    expect(breakdown.baseline.sourceLabel).toBe('Salary Assignment')
+    expect(breakdown.baseline.allowanceItems).toHaveLength(1)
+    expect(breakdown.baseline.allowanceItems[0]).toMatchObject({
+      key: 'fixed',
+      label: 'Fixed allowance',
+      amount: 300,
+    })
+    expect(breakdown.summary.baselineTotalDeductions).toBe(468)
+    expect(breakdown.summary.adjustedNetBeforeOvertime).toBe(3832)
+    expect(breakdown.summary.finalPayable).toBe(3832)
+  })
+
   it('normalizes overtime rows and detail text', () => {
     const breakdown = buildPayrollBreakdown(
       {

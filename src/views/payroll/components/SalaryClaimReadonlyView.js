@@ -15,7 +15,6 @@ import AttachmentPreviewModal from 'src/views/staff/salary-claims-management/com
 import {
   buildOvertimeDetailText,
   buildPayrollBreakdown,
-  formatAdjustmentItems,
   formatAllowanceList,
   formatContributionList,
 } from './payrollBreakdownViewModel'
@@ -58,17 +57,24 @@ const SalaryClaimReadonlyView = ({ claim, formatCurrency, formatDate }) => {
   }
 
   const renderStackedSection = (title, rows) => (
-    <section className="border rounded-3 bg-body p-3">
+    <section className="workflow-detail-readonly-section">
       <div className="fw-semibold small text-body mb-2">{title}</div>
       <div className="d-grid gap-2">
         {rows.map((item) => (
           <div
             key={item.label}
-            className="d-flex justify-content-between gap-3 small"
-            style={{ overflowWrap: 'anywhere' }}
+            className={`d-grid small ${item.stacked ? 'gap-1' : 'gap-3'}`}
+            style={{
+              gridTemplateColumns: item.stacked
+                ? 'minmax(0, 1fr)'
+                : 'minmax(6.75rem, 40%) minmax(0, 1fr)',
+              overflowWrap: 'anywhere',
+            }}
           >
             <span className="text-body-secondary">{item.label}</span>
-            <span className="fw-semibold text-end">{item.value ?? '-'}</span>
+            <span className={`fw-semibold ${item.stacked ? '' : 'text-end'}`.trim()}>
+              {item.value ?? '-'}
+            </span>
           </div>
         ))}
       </div>
@@ -76,7 +82,7 @@ const SalaryClaimReadonlyView = ({ claim, formatCurrency, formatDate }) => {
   )
 
   const renderAdjustmentStack = (title, rows, source) => (
-    <section className="border rounded-3 bg-body p-3">
+    <section className="workflow-detail-readonly-section">
       <div className="fw-semibold small text-body mb-2">{title}</div>
       {rows.length === 0 ? (
         <div className="small text-body-secondary">No adjustment rows.</div>
@@ -173,9 +179,10 @@ const SalaryClaimReadonlyView = ({ claim, formatCurrency, formatDate }) => {
         { label: 'Overtime rows', value: overtime.rows.length },
         { label: 'Approved hours', value: Number(overtime.approvedHours).toFixed(2) },
         { label: 'Approved payout', value: formatCurrency(overtime.approvedPayout) },
-        { label: 'Rate mode', value: overtime.hourlyBaseModeNote || '-' },
+        { label: 'Rate mode', value: overtime.hourlyBaseModeNote || '-', stacked: true },
         {
           label: 'Rows',
+          stacked: true,
           value:
             overtime.rows.length > 0
               ? overtime.rows
@@ -198,19 +205,13 @@ const SalaryClaimReadonlyView = ({ claim, formatCurrency, formatDate }) => {
         adjustments.deductionRows,
         'salary-readonly-deduction',
       )}
-      {renderStackedSection('Adjustment Items', [
-        {
-          label: 'All adjustments',
-          value: formatAdjustmentItems(adjustments.displayRows, formatCurrency),
-        },
-      ])}
     </div>
   )
 
   return (
     <div className="d-grid gap-3">
-      <CCard>
-        <CCardHeader>Salary Claim (View Only)</CCardHeader>
+      <CCard className="workflow-detail-card">
+        <CCardHeader>Payout breakdown</CCardHeader>
         <CCardBody>
           <div className="border rounded-3 bg-body p-3 mb-3">
             <div className="d-flex flex-wrap justify-content-between align-items-start gap-3">

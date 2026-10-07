@@ -1,4 +1,7 @@
 import { expect, test } from '@playwright/test'
+import loopbackOrigin from './support/loopback-origin'
+
+const { getLoopbackUrlAliases } = loopbackOrigin
 
 const apiBaseUrl =
   process.env.VMECC_E2E_BROWSER_API_URL ||
@@ -122,7 +125,7 @@ const installDashboardStubs = async (page) => {
   let notificationRead = false
   let notificationsDeleted = false
 
-  await page.route(`${apiBaseUrl}/**`, (route) => {
+  const handleApiRoute = (route) => {
     const path = new URL(route.request().url()).pathname.replace(/^\/api/, '')
     const method = route.request().method()
 
@@ -187,7 +190,10 @@ const installDashboardStubs = async (page) => {
     }
 
     return fulfillJson(route, { data: [], meta: {} })
-  })
+  }
+  for (const origin of getLoopbackUrlAliases(apiBaseUrl, 'The mocked E2E API URL')) {
+    await page.route(`${origin}/**`, handleApiRoute)
+  }
 }
 
 const expectNoHorizontalPageOverflow = async (page) => {

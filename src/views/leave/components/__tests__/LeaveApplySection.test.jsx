@@ -23,7 +23,7 @@ const baseProps = {
   },
   SelectedLeaveIcon: null,
   balanceStats: [
-    { key: 'available', label: 'Available', value: '10 day(s)' },
+    { key: 'available', label: 'Available', value: '10 day(s)', primary: true },
     { key: 'entitlement', label: 'Entitlement', value: '14 day(s)' },
     { key: 'used', label: 'Used', value: '2 day(s)' },
     { key: 'pending', label: 'Pending', value: '2 day(s)' },
@@ -72,7 +72,6 @@ const baseProps = {
   onReasonChange: vi.fn(),
   onClearForm: vi.fn(),
   onDraft: vi.fn(),
-  isSubmitBlockedByBalance: false,
   editingRecordId: null,
   requestUploadFromCameraFallback: vi.fn(),
   uploadInputRef: { current: null },
@@ -92,18 +91,20 @@ describe('LeaveApplySection', () => {
     expect(screen.getByRole('button', { name: 'Change leave type' })).toBeTruthy()
     const actionBar = document.querySelector('.action-row-thumb')
     expect(actionBar).toBeTruthy()
-    expect(actionBar.className).toContain('action-row-thumb--terminal')
-    expect(document.querySelector('.action-row-thumb-spacer')).toBeNull()
+    expect(actionBar.className).toContain('action-row-thumb--compact-sticky')
+    expect(document.querySelector('.action-row-thumb-spacer--compact')).toBeTruthy()
 
     const actionButtons = within(actionBar).getAllByRole('button')
-    expect(actionButtons.map((button) => button.textContent)).toEqual([
-      'Submit request',
-      'Clear form',
-    ])
+    expect(actionButtons.map((button) => button.textContent)).toEqual(['Submit request'])
+    expect(screen.queryByRole('button', { name: 'Clear form' })).toBeNull()
     expect(screen.queryByRole('button', { name: 'Save draft' })).toBeNull()
     const balance = screen.getByTestId('leave-balance')
     expect(within(balance).getAllByRole('term')).toHaveLength(4)
     expect(balance.querySelector('.workflow-summary__list--metrics')).toBeTruthy()
+    expect(balance.querySelector('.workflow-summary__list--mobile-tiles')).toBeTruthy()
+    expect(screen.getByText('Available').closest('.workflow-summary__item').classList).toContain(
+      'workflow-summary__item--primary',
+    )
     expect(balance.querySelector('.bg-body-tertiary')).toBeNull()
     expect(balance.className).not.toContain('border')
     expect(document.querySelectorAll('.workflow-compact-stack-field')).toHaveLength(4)
@@ -129,5 +130,45 @@ describe('LeaveApplySection', () => {
 
     expect(screen.getByText('Camera processing failed. Upload the photo manually.')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Upload photo' })).toBeTruthy()
+  })
+
+  it.each([
+    {
+      balanceSummary: {
+        hasAssignment: false,
+        isZeroEntitlement: true,
+        isInsufficient: true,
+        year: 2026,
+      },
+      message: /No entitlement assignment was found.*You can still submit/i,
+    },
+    {
+      balanceSummary: {
+        hasAssignment: true,
+        isZeroEntitlement: true,
+        isInsufficient: true,
+        year: 2026,
+      },
+      message: /current entitlement is 0 day.*You can still submit/i,
+    },
+    {
+      balanceSummary: {
+        hasAssignment: true,
+        isZeroEntitlement: false,
+        isInsufficient: true,
+        year: 2026,
+      },
+      message: /exceed your current available balance.*You can still submit/i,
+    },
+  ])('keeps entitlement review conditions advisory', ({ balanceSummary, message }) => {
+    render(
+      <MemoryRouter>
+        <LeaveApplySection {...baseProps} balanceSummary={balanceSummary} />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByText('HR review required')).toBeTruthy()
+    expect(screen.getByText(message)).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Submit request' }).disabled).toBe(false)
   })
 })

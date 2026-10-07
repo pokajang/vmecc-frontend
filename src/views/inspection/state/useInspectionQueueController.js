@@ -191,7 +191,6 @@ const useInspectionQueueController = ({
         refreshQueueRows()
         setQueueConflictTarget(null)
         setDraftVersion((prev) => prev + 1)
-        pushToast('Queued inspection saved as draft.', { title: 'Draft saved', color: 'success' })
       } else {
         pushToast('Unable to save queued inspection as draft.', {
           title: 'Draft save failed',

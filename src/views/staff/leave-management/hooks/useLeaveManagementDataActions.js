@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import { CToast, CToastBody, CToastHeader } from '@coreui/react'
 import { leaveEntitlementRows } from '../data'
 import { loadLeaveAssignments } from '../leaveAssignmentStorage'
 import { deleteHoliday, loadHolidays, updateHoliday } from '../holidayApi'
 import { loadAllLeaveRecords } from 'src/views/leave/leavePersistence'
+import useWorkflowFeedback from 'src/components/report-workflow/useWorkflowFeedback'
 
 const isExactDemoAssignmentRow = (row) =>
   leaveEntitlementRows.some(
@@ -37,20 +37,7 @@ export default function useLeaveManagementDataActions({
   const [isLeaveRecordsLoading, setIsLeaveRecordsLoading] = useState(false)
   const [isAssignmentsLoading, setIsAssignmentsLoading] = useState(false)
   const [isHolidaysLoading, setIsHolidaysLoading] = useState(false)
-  const [toast, addToast] = useState(null)
-
-  const pushToast = useCallback((message, { title, color = 'light', delay = 6000 } = {}) => {
-    addToast(
-      <CToast autohide delay={delay} color={color}>
-        {title && (
-          <CToastHeader closeButton>
-            <strong className="me-auto">{title}</strong>
-          </CToastHeader>
-        )}
-        <CToastBody>{message}</CToastBody>
-      </CToast>,
-    )
-  }, [])
+  const { feedback, clearFeedback, pushFeedback: pushToast } = useWorkflowFeedback()
 
   const hydrateAssignmentsFromStorage = useCallback(async () => {
     setIsAssignmentsLoading(true)
@@ -196,7 +183,8 @@ export default function useLeaveManagementDataActions({
     isLeaveRecordsLoading,
     isAssignmentsLoading,
     isHolidaysLoading,
-    toast,
+    feedback,
+    clearFeedback,
     pushToast,
     hydrateAssignmentsFromStorage,
     refreshAllLeaveRecords,

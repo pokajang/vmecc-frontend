@@ -12,7 +12,7 @@ import { ReportSetupActions, ReportSetupSummaryRow } from '../components/ReportW
 import { getLocalDateInputValue, parseLocalDateValue } from 'src/utils/localDate'
 import useReportIsMobile, { REPORT_MOBILE_QUERY } from '../hooks/useReportIsMobile'
 import useDrillCategoryManager, { DRILL_CATEGORY_TOGGLE_VALUE } from './useDrillCategoryManager'
-import useDrillTypeManager, { DRILL_TYPE_TOGGLE_VALUE } from './useDrillTypeManager'
+import useDrillTypeManager from './useDrillTypeManager'
 import useDrillLocationManager, { DRILL_LOCATION_TOGGLE_VALUE } from './useDrillLocationManager'
 import useDrillEnvironmentManager, {
   DRILL_ENVIRONMENT_TOGGLE_VALUE,
@@ -322,11 +322,6 @@ const DrillSetupStep = ({
   }
 
   const selectDrillType = (nextValue, { closeMobileDrawer = false } = {}) => {
-    if (nextValue === DRILL_TYPE_TOGGLE_VALUE) {
-      drillType.setShowAllDrillTypes((prev) => !prev)
-      return
-    }
-    drillType.setShowAllDrillTypes(false)
     const value = String(nextValue || '').trim()
     if (!value) return
     updateSetupField('incidentType', value)
@@ -336,7 +331,6 @@ const DrillSetupStep = ({
   }
 
   const resetTypeSelection = () => {
-    drillType.setShowAllDrillTypes(false)
     updateSetupField('incidentType', '')
     openSection('type')
   }
@@ -821,18 +815,14 @@ const DrillSetupStep = ({
         <div className="d-grid gap-3">
           <ResponsiveChoiceSelector
             isMobile
-            options={drillType.visibleTypeOptions}
+            options={drillType.typeOptions}
             value={form.incidentType}
+            selectionMode="action"
             onChange={(nextValue) => selectDrillType(nextValue, { closeMobileDrawer: true })}
             variant="compact"
             showDescription
-            toggleValue={DRILL_TYPE_TOGGLE_VALUE}
             columns={{ xs: 12 }}
-            cardProps={(option) =>
-              option?.value === DRILL_TYPE_TOGGLE_VALUE
-                ? TOGGLE_CARD_PROPS
-                : { className: 'report-option-card' }
-            }
+            cardProps={() => ({ className: 'report-option-card' })}
             ariaLabel="Change drill type"
           />
           <CButton
@@ -871,18 +861,14 @@ const DrillSetupStep = ({
               </div>
               <ResponsiveChoiceSelector
                 isMobile={isMobile}
-                options={drillType.visibleTypeOptions}
+                options={drillType.typeOptions}
                 value={form.incidentType}
+                selectionMode={isMobile ? 'action' : 'single'}
                 onChange={selectDrillType}
                 variant="compact"
                 showDescription
-                toggleValue={DRILL_TYPE_TOGGLE_VALUE}
                 columns={{ xs: 12, md: 3 }}
-                cardProps={(option) =>
-                  option?.value === DRILL_TYPE_TOGGLE_VALUE
-                    ? TOGGLE_CARD_PROPS
-                    : { className: 'report-option-card' }
-                }
+                cardProps={() => ({ className: 'report-option-card' })}
                 ariaLabel="Choose drill type"
               />
             </>
@@ -975,6 +961,7 @@ const DrillSetupStep = ({
                 isMobile={isMobile}
                 options={drillEnvironment.visibleTypeOptions}
                 value={form.weather}
+                selectionMode={isMobile ? 'action' : 'single'}
                 onChange={(nextValue) => {
                   if (nextValue === DRILL_ENVIRONMENT_TOGGLE_VALUE) {
                     drillEnvironment.setShowAllDrillEnvironments((prev) => !prev)
@@ -1018,6 +1005,7 @@ const DrillSetupStep = ({
                   isMobile={isMobile}
                   options={drillLocation.visibleTypeOptions}
                   value={form.location}
+                  selectionMode={isMobile ? 'action' : 'single'}
                   onChange={(nextValue) => {
                     if (nextValue === DRILL_LOCATION_TOGGLE_VALUE) {
                       drillLocation.setShowAllDrillLocations((prev) => !prev)

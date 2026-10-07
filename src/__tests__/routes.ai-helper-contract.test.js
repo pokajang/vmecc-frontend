@@ -60,6 +60,7 @@ const composedOrServerLabels = new Set([
   'New Drill Report',
   'New ERCO Report',
   'New Fitness Test Report',
+  'Evidence attachment (optional)',
   'pending verification',
 ])
 

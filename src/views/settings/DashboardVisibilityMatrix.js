@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   CAlert,
   CButton,
@@ -10,10 +10,6 @@ import {
   CTableHead,
   CTableHeaderCell,
   CTableRow,
-  CToast,
-  CToastBody,
-  CToastHeader,
-  CToaster,
 } from '@coreui/react'
 import { Lock, Pencil, Save } from 'lucide-react'
 import { useDispatch, useSelector } from 'react-redux'
@@ -22,6 +18,8 @@ import TableLoader from 'src/components/TableLoader'
 import { DASHBOARD_VISIBILITY_ROWS } from 'src/constants/dashboardVisibility'
 import { fetchRolePermissions, fetchSession, saveRolePermissions } from 'src/services/apiClient'
 import { hasPermission } from 'src/utils/authz'
+import WorkflowFeedbackBanner from 'src/components/report-workflow/WorkflowFeedbackBanner'
+import useWorkflowFeedback from 'src/components/report-workflow/useWorkflowFeedback'
 
 const LOCKED_ROLE = 'System Administrator'
 const VIEW_MODE_ROLE = 'role'
@@ -31,8 +29,7 @@ const DashboardVisibilityMatrix = () => {
   const authUser = useSelector((state) => state.authUser)
   const canManage = useMemo(() => hasPermission(authUser, 'settings.manage'), [authUser])
   const dispatch = useDispatch()
-  const toaster = useRef()
-  const [toast, addToast] = useState(null)
+  const { feedback, clearFeedback, pushFeedback: pushToast } = useWorkflowFeedback()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [editMode, setEditMode] = useState(false)
@@ -43,19 +40,6 @@ const DashboardVisibilityMatrix = () => {
   const [localMatrix, setLocalMatrix] = useState({})
   const [viewMode, setViewMode] = useState(VIEW_MODE_ROLE)
   const [focusedRole, setFocusedRole] = useState('')
-
-  const pushToast = useCallback((message, { title = '', color = 'light' } = {}) => {
-    addToast(
-      <CToast autohide delay={4000} color={color}>
-        {title && (
-          <CToastHeader closeButton>
-            <strong className="me-auto">{title}</strong>
-          </CToastHeader>
-        )}
-        <CToastBody>{message}</CToastBody>
-      </CToast>,
-    )
-  }, [])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -208,7 +192,7 @@ const DashboardVisibilityMatrix = () => {
 
   return (
     <>
-      <CToaster ref={toaster} push={toast} placement="bottom-end" className="mb-3 me-3" />
+      <WorkflowFeedbackBanner feedback={feedback} onDismiss={clearFeedback} />
 
       <div className="mb-4" data-testid="settings-dashboard-visibility-panel">
         <div className="d-flex justify-content-between align-items-center mb-3">
