@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
 import React from 'react'
-import { describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import SalaryClaimsTabsNav from '../SalaryClaimsTabsNav'
+
+afterEach(cleanup)
 
 describe('SalaryClaimsTabsNav', () => {
   it('renders warning badge for salary contract drift count and switches tabs', () => {
@@ -43,5 +45,24 @@ describe('SalaryClaimsTabsNav', () => {
     expect(selector.value).toBe('assignment')
     fireEvent.change(selector, { target: { value: 'companyLegal' } })
     expect(onSwitch).toHaveBeenCalledWith('companyLegal')
+  })
+
+  it('omits permission-restricted workflow rules from desktop and mobile navigation', () => {
+    render(
+      <MemoryRouter>
+        <SalaryClaimsTabsNav
+          activeTab="assignment"
+          onSwitch={vi.fn()}
+          group="settings"
+          hiddenTabKeys={['workflowRules']}
+        />
+      </MemoryRouter>,
+    )
+
+    expect(screen.queryByText('Workflow Rules')).toBeNull()
+    const selector = screen.getByLabelText('Payroll configuration section')
+    expect(Array.from(selector.options).map((option) => option.value)).not.toContain(
+      'workflowRules',
+    )
   })
 })

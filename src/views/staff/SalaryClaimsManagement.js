@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CContainer } from '@coreui/react'
 import { useSelector } from 'react-redux'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { hasAnyPermission, hasPermission } from 'src/utils/authz'
 import { SALARY_CLAIMS_ALLOWED_PERMISSIONS } from './leave-management/data'
 import ErrorBoundary from 'src/components/ErrorBoundary'
@@ -67,6 +67,7 @@ const SalaryClaimsManagementContent = () => {
     () => hasPermission(user, 'staff.salary.pay') || hasPermission(user, 'system.admin'),
     [user],
   )
+  const canManageSalaryWorkflowRules = useMemo(() => hasPermission(user, 'settings.manage'), [user])
   const actorName = useMemo(
     () => user?.name || user?.full_name || user?.email || 'System user',
     [user?.name, user?.full_name, user?.email],
@@ -461,6 +462,10 @@ const SalaryClaimsManagementContent = () => {
     )
   }
 
+  if (pageState.tab === 'workflowRules' && !canManageSalaryWorkflowRules) {
+    return <Navigate to="/403" replace />
+  }
+
   return (
     <CContainer
       fluid
@@ -570,6 +575,7 @@ const SalaryClaimsManagementContent = () => {
               activeTab={pageState.activeTab}
               onSwitch={pageState.switchTab}
               group={tabNavGroup}
+              hiddenTabKeys={canManageSalaryWorkflowRules ? [] : ['workflowRules']}
               tabMeta={{
                 salaryRecords:
                   derived.salaryContractIncompleteTotalCount > 0

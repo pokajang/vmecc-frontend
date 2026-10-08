@@ -10,8 +10,11 @@ const ALL_TAB_ITEMS = [
   { key: 'companyLegal', label: 'Company Information', group: 'settings' },
 ]
 
-const SalaryClaimsTabsNav = ({ activeTab, onSwitch, group, tabMeta = {} }) => {
-  const items = group ? ALL_TAB_ITEMS.filter((t) => t.group === group) : ALL_TAB_ITEMS
+const SalaryClaimsTabsNav = ({ activeTab, onSwitch, group, hiddenTabKeys = [], tabMeta = {} }) => {
+  const hiddenTabs = new Set(hiddenTabKeys)
+  const items = ALL_TAB_ITEMS.filter(
+    (tabItem) => (!group || tabItem.group === group) && !hiddenTabs.has(tabItem.key),
+  )
   const canSwitch = typeof onSwitch === 'function'
 
   if (items.length === 0) return null
