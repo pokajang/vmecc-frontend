@@ -1,0 +1,1 @@
+import{o as m}from"./index-BSiC21u0.js";import{F as a}from"./FormActionGroup-8UxxxSpK.js";const l=({children:o,leading:t=null,statusMessage:r="",ariaLabel:s="Workflow actions",className:i="",mobileBehavior:c="compact-sticky"})=>m.jsx(a,{leading:t,statusMessage:r,ariaLabel:s,className:i,mobileBehavior:c,children:o});export{l as W};

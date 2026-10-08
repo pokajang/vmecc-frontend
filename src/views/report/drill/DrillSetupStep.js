@@ -61,10 +61,10 @@ const getLastCompleteDrillSetupGroup = (completion) => {
   return ''
 }
 
-const getFirstIncompleteSetupGroup = (form) => {
+const getFirstIncompleteSetupGroup = (form, categoriesAcknowledged = false) => {
   if (!String(form?.incidentType || '').trim()) return 'type'
   const categories = Array.isArray(form?.exerciseCategories) ? form.exerciseCategories : []
-  if (categories.length === 0) return 'categories'
+  if (!categoriesAcknowledged && categories.length === 0) return 'categories'
   if (!String(form?.weather || '').trim()) return 'environment'
   if (!String(form?.location || '').trim()) return 'location'
   if (!String(form?.reportDate || '').trim() || !String(form?.reportTime || '').trim())
@@ -119,6 +119,7 @@ const DrillSetupStep = ({
   const [activeMobileGroup, setActiveMobileGroup] = useState(() => getInitialMobileSetupGroup(form))
   const [mobileEditOverride, setMobileEditOverride] = useState('')
   const [desktopEditGroup, setDesktopEditGroup] = useState('')
+  const [categoriesAcknowledged, setCategoriesAcknowledged] = useState(false)
   const [deleteTypeTarget, setDeleteTypeTarget] = useState(null)
   const [deleteCategoryTarget, setDeleteCategoryTarget] = useState(null)
   const [deleteLocationTarget, setDeleteLocationTarget] = useState(null)
@@ -157,8 +158,8 @@ const DrillSetupStep = ({
   )
 
   const getFirstIncompleteGroup = React.useCallback(
-    () => getFirstIncompleteSetupGroup(form),
-    [form],
+    () => getFirstIncompleteSetupGroup(form, categoriesAcknowledged),
+    [categoriesAcknowledged, form],
   )
 
   const resolvedActiveMobileGroup =
@@ -229,8 +230,11 @@ const DrillSetupStep = ({
     )
   }, [drillEnvironment.typeOptions, form.weather])
 
-  const setNextRequiredGroup = (nextForm = form) => {
-    const nextSection = getFirstIncompleteSetupGroup(nextForm)
+  const setNextRequiredGroup = (
+    nextForm = form,
+    optionalCategoriesAcknowledged = categoriesAcknowledged,
+  ) => {
+    const nextSection = getFirstIncompleteSetupGroup(nextForm, optionalCategoriesAcknowledged)
     if (isMobile) {
       rememberMobileSetupGroup(nextSection)
       setMobileEditOverride(nextSection)
@@ -267,7 +271,9 @@ const DrillSetupStep = ({
   const shouldShowSetupEditor = (group) =>
     isMobile
       ? effectiveMobileGroup === group
-      : !completion[group] || desktopEditGroup === group || setupGroupHasError(group)
+      : (!completion[group] && !(group === 'categories' && categoriesAcknowledged)) ||
+        desktopEditGroup === group ||
+        setupGroupHasError(group)
 
   const setupGroupClassName = (group, gap = 3) =>
     `d-grid gap-${gap}${isMobile && !shouldShowSetupEditor(group) ? ' d-none' : ''}`
@@ -327,7 +333,8 @@ const DrillSetupStep = ({
     updateSetupField('incidentType', value)
     recordDrillTypeUsage(user?.id, value)
     if (closeMobileDrawer) setActiveMobileSetupDrawer('')
-    setNextRequiredGroup({ ...form, incidentType: value })
+    setCategoriesAcknowledged(false)
+    setNextRequiredGroup({ ...form, incidentType: value }, false)
   }
 
   const resetTypeSelection = () => {
@@ -338,6 +345,7 @@ const DrillSetupStep = ({
   const resetCategorySelection = () => {
     drillCategory.setShowAllCategories(false)
     updateSetupField('exerciseCategories', [])
+    setCategoriesAcknowledged(false)
     openSection('categories')
   }
 
@@ -930,8 +938,8 @@ const DrillSetupStep = ({
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    setNextRequiredGroup(form)
-                    if (!isMobile) closeCurrentGroup()
+                    setCategoriesAcknowledged(true)
+                    setNextRequiredGroup(form, true)
                   }}
                 >
                   Done

@@ -187,7 +187,12 @@ describe('DrillForm V2 flow', () => {
     mockMobileViewport()
     renderForm({
       newSection: 'setup',
-      initialFormSeed: { ...completeSeed, incidentType: '', exerciseCategories: [] },
+      initialFormSeed: {
+        ...completeSeed,
+        incidentType: '',
+        exerciseCategories: [],
+        weather: '',
+      },
     })
 
     const typePicker = await screen.findByRole('list', { name: 'Choose drill type' })
@@ -205,6 +210,11 @@ describe('DrillForm V2 flow', () => {
 
     expect(await screen.findByText('Exercise Categories (optional)')).toBeTruthy()
     expect(screen.queryByText('Confirm Drill Type')).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }))
+
+    expect(await screen.findByText('Choose Environment / Condition')).toBeTruthy()
+    expect(screen.queryByText('Exercise Categories (optional)')).toBeNull()
   })
 
   it('edits a selected mobile drill type in the shared setup drawer', async () => {

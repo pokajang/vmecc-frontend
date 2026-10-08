@@ -1,1 +1,0 @@
-import{o as m}from"./index-CHZIPk-1.js";import{F as a}from"./FormActionGroup-BZbI_6FV.js";const l=({children:o,leading:t=null,statusMessage:r="",ariaLabel:s="Workflow actions",className:i="",mobileBehavior:c="compact-sticky"})=>m.jsx(a,{leading:t,statusMessage:r,ariaLabel:s,className:i,mobileBehavior:c,children:o});export{l as W};

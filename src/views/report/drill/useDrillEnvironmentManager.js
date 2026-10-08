@@ -76,10 +76,16 @@ const useDrillEnvironmentManager = ({
       try {
         await replaceDrillEnvironmentOptions(Array.isArray(rows) ? rows : [])
       } catch {
-        // Keep local storage behavior when backend persistence is unavailable.
+        pushToast?.(
+          'Could not save drill environments to the server. Your changes remain on this device.',
+          {
+            title: 'Environment sync failed',
+            color: 'warning',
+          },
+        )
       }
     },
-    [userId],
+    [pushToast, userId],
   )
 
   const refreshRemoteEnvironmentOptions = useCallback(async () => {
@@ -90,9 +96,15 @@ const useDrillEnvironmentManager = ({
       setCustomEnvironments(normalized)
       saveCustomDrillEnvironments(userId, normalized)
     } catch {
-      // Keep local storage behavior as a fallback.
+      pushToast?.(
+        'Could not load saved drill environments from the server. Showing options stored on this device.',
+        {
+          title: 'Environment sync unavailable',
+          color: 'warning',
+        },
+      )
     }
-  }, [userId])
+  }, [pushToast, userId])
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
