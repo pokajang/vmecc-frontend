@@ -13,6 +13,7 @@ const completeTrtUser = {
   address: 'Lot 1',
   state: 'Selangor',
   roles: ['Tactical Response Team'],
+  permissions: ['self.profile.emergency', 'self.profile.medical'],
   emergency_contact: {
     name: 'Emergency Person',
     relationship: 'Sibling',
@@ -59,12 +60,27 @@ describe('trtProfileCompletion', () => {
     const result = getProfileCompleteness({
       id: 2,
       roles: ['Admin'],
+      permissions: ['self.profile.emergency', 'self.profile.medical'],
       name: '',
     })
 
     expect(result.applies).toBe(true)
     expect(result.complete).toBe(false)
     expect(result.missingGroups).toEqual(['personal', 'emergency', 'medical'])
+  })
+
+  it('only requires profile groups the user is allowed to view and update', () => {
+    const result = getProfileCompleteness({
+      ...completeTrtUser,
+      roles: ['Representative'],
+      permissions: ['self.dashboard', 'self.messages', 'teams.view'],
+      emergency_contact: null,
+      medical_info: null,
+    })
+
+    expect(result.complete).toBe(true)
+    expect(result.missingGroups).toEqual([])
+    expect(result.missingByGroup).toEqual({})
   })
 
   it('does not apply without an authenticated user', () => {

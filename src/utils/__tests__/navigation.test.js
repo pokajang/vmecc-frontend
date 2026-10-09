@@ -69,6 +69,21 @@ describe('system administrator navigation visibility', () => {
   })
 })
 
+describe('team viewer roster navigation visibility', () => {
+  it('shows the published roster entry to users with teams.view', () => {
+    const navigation = [{ component: CNavItem, name: 'Roster Management', to: '/roster/overview' }]
+
+    const visible = getVisibleNavigationWithOptions(
+      navigation,
+      { permissions: ['teams.view'] },
+      0,
+      { showNavInstallItem: false },
+    )
+
+    expect(visible.map((item) => item.to)).toEqual(['/roster/overview'])
+  })
+})
+
 describe('report navigation permission visibility', () => {
   const reportNavigation = [
     { component: CNavTitle, name: 'Reporting' },

@@ -95,7 +95,10 @@ export const applyRoleVisibility = (items, authUser, options = {}) => {
     ) {
       return acc
     }
-    if (String(item.to || '').startsWith('/roster') && !hasPermission(authUser, 'rosters.manage')) {
+    if (
+      String(item.to || '').startsWith('/roster') &&
+      !hasAnyPermission(authUser, ['rosters.manage', 'teams.view'])
+    ) {
       return acc
     }
     if (String(item.to || '').startsWith('/reporting-settings')) {

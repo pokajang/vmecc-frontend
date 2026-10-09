@@ -10,6 +10,7 @@ import StatutorySection from './StatutorySection'
 import MedicalSection from './MedicalSection'
 import ModulePageHeader from 'src/components/ModulePageHeader'
 import RouteNavTabs from 'src/components/RouteNavTabs'
+import { hasPermission } from 'src/utils/authz'
 
 const Profile = () => {
   const location = useLocation()
@@ -17,6 +18,9 @@ const Profile = () => {
   const user = useSelector((state) => state.authUser)
 
   const userRoles = useMemo(() => user?.roles || [], [user?.roles])
+  const canEditEmergency = hasPermission(user, 'self.profile.emergency')
+  const canEditBanking = hasPermission(user, 'self.profile.banking')
+  const canEditMedical = hasPermission(user, 'self.profile.medical')
   const activeSection = location.pathname === '/profile/security' ? 'security' : 'profile'
 
   if (!user) {
@@ -49,18 +53,24 @@ const Profile = () => {
           <div data-testid="profile-personal">
             <AccountSection user={user} roles={userRoles} />
           </div>
-          <div data-testid="profile-emergency">
-            <EmergencySection contact={user.emergency_contact} user={user} />
-          </div>
-          <div data-testid="profile-banking">
-            <BankingSection banking={user.banking_info} />
-          </div>
+          {canEditEmergency && (
+            <div data-testid="profile-emergency">
+              <EmergencySection contact={user.emergency_contact} user={user} />
+            </div>
+          )}
+          {canEditBanking && (
+            <div data-testid="profile-banking">
+              <BankingSection banking={user.banking_info} />
+            </div>
+          )}
           <div data-testid="profile-statutory">
             <StatutorySection statutory={user.statutory_info} />
           </div>
-          <div data-testid="profile-medical">
-            <MedicalSection medical={user.medical_info} />
-          </div>
+          {canEditMedical && (
+            <div data-testid="profile-medical">
+              <MedicalSection medical={user.medical_info} />
+            </div>
+          )}
         </>
       )}
     </CContainer>

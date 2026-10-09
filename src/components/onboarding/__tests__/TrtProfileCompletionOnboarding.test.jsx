@@ -46,6 +46,7 @@ const completeUser = {
   address: 'Lot 1',
   state: 'Selangor',
   roles: ['Tactical Response Team'],
+  permissions: ['self.profile.emergency', 'self.profile.medical'],
   emergency_contact: {
     name: 'Emergency Person',
     relationship: 'Sibling',
@@ -119,6 +120,21 @@ describe('ProfileCompletionOnboarding', () => {
     renderWithStore(completeUser)
 
     await waitFor(() => expect(screen.queryByText('Welcome, TRT')).toBeNull())
+  })
+
+  it('does not request restricted profile sections from a representative', async () => {
+    renderWithStore({
+      ...completeUser,
+      roles: ['Representative'],
+      permissions: ['self.dashboard', 'self.messages', 'teams.view'],
+      emergency_contact: null,
+      medical_info: null,
+    })
+
+    await new Promise((resolve) => setTimeout(resolve, 2100))
+    expect(screen.queryByText(/emergency contact/i)).toBeNull()
+    expect(screen.queryByText(/critical medical info/i)).toBeNull()
+    expect(screen.queryByText('Welcome, TRT')).toBeNull()
   })
 
   it('shows for incomplete users with another role', async () => {

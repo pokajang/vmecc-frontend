@@ -1,3 +1,5 @@
+import { hasPermission } from 'src/utils/authz'
+
 // Keep the persisted key stable so existing snooze and completion records remain valid.
 export const PROFILE_COMPLETION_ONBOARDING_KEY = 'profile_completion_trt'
 export const PROFILE_COMPLETION_ONBOARDING_VERSION = 'v1'
@@ -28,6 +30,17 @@ export const PROFILE_COMPLETION_GROUPS = [
     description: 'Record known medical details or confirm there is nothing critical to declare.',
   },
 ]
+
+const PROFILE_GROUP_PERMISSIONS = {
+  emergency: 'self.profile.emergency',
+  medical: 'self.profile.medical',
+}
+
+export const getProfileCompletionGroups = (user) =>
+  PROFILE_COMPLETION_GROUPS.filter((group) => {
+    const permission = PROFILE_GROUP_PERMISSIONS[group.key]
+    return !permission || hasPermission(user, permission)
+  })
 
 const REQUIRED_FIELDS = {
   personal: [
@@ -82,15 +95,21 @@ export const getProfileCompleteness = (user) => {
     }
   }
 
+  const applicableGroups = getProfileCompletionGroups(user)
+  const applicableGroupKeys = new Set(applicableGroups.map((group) => group.key))
   const missingByGroup = {}
   Object.entries(REQUIRED_FIELDS).forEach(([groupKey, fields]) => {
+    if (!applicableGroupKeys.has(groupKey)) return
     const missing = fields.filter((field) => !isFilled(getValue(user, field.key)))
     if (missing.length > 0) {
       missingByGroup[groupKey] = missing
     }
   })
 
-  if (!hasCriticalMedicalInfoAcknowledgement(user?.medical_info)) {
+  if (
+    applicableGroupKeys.has('medical') &&
+    !hasCriticalMedicalInfoAcknowledgement(user?.medical_info)
+  ) {
     missingByGroup.medical = [
       {
         key: 'medical_info',
@@ -99,9 +118,9 @@ export const getProfileCompleteness = (user) => {
     ]
   }
 
-  const missingGroups = PROFILE_COMPLETION_GROUPS.filter(
-    (group) => (missingByGroup[group.key] || []).length > 0,
-  ).map((group) => group.key)
+  const missingGroups = applicableGroups
+    .filter((group) => (missingByGroup[group.key] || []).length > 0)
+    .map((group) => group.key)
   const missingFields = Object.values(missingByGroup).flat()
 
   return {

@@ -53,10 +53,10 @@ const PublishBadge = ({ status }) => {
 
 // Overview tab
 
-const OverviewTab = ({ canManageRoster, exportedBy }) => {
+const OverviewTab = ({ exportedBy }) => {
   const {
     state: { stats, monthlyStats, teams, allShifts, teamStatuses, loading },
-  } = useRosterState(canManageRoster, true, 'all') // publishedOnly=true, fetch all historical data
+  } = useRosterState(true, true, 'all') // publishedOnly=true, fetch all historical data
 
   return (
     <section data-testid="roster-management-overview">
@@ -127,8 +127,8 @@ const ScheduleTab = ({
       onMonthToggle,
     },
   } = useRosterState(
-    canManageRoster,
-    false,
+    true,
+    !canManageRoster,
     defaultRangeType,
     initialStatusFilter,
     initialAttentionFilter,
@@ -177,16 +177,18 @@ const ScheduleTab = ({
         <Download size={13} aria-hidden="true" />
         Export
       </CButton>
-      <CButton
-        size="sm"
-        className={`icon-label-action ${ghostBtn}`}
-        onClick={() => setEditMode(true)}
-        data-testid="roster-management-edit-action"
-        disabled={loading}
-      >
-        <Pencil size={13} aria-hidden="true" />
-        Edit Roster
-      </CButton>
+      {canManageRoster && (
+        <CButton
+          size="sm"
+          className={`icon-label-action ${ghostBtn}`}
+          onClick={() => setEditMode(true)}
+          data-testid="roster-management-edit-action"
+          disabled={loading}
+        >
+          <Pencil size={13} aria-hidden="true" />
+          Edit Roster
+        </CButton>
+      )}
     </div>
   ) : null
 
@@ -405,6 +407,7 @@ const ScheduleTab = ({
 const RosterManagement = () => {
   const authUser = useSelector((state) => state.authUser)
   const canManageRoster = hasPermission(authUser, 'rosters.manage')
+  const canViewRoster = canManageRoster || hasPermission(authUser, 'teams.view')
   const exportedBy = authUser?.name || authUser?.email || 'Unknown'
   const location = useLocation()
   const navigate = useNavigate()
@@ -420,10 +423,10 @@ const RosterManagement = () => {
     navigate(`/roster/${PATH_BY_TAB[tab]}`, { replace: true })
   }
 
-  if (!canManageRoster) {
+  if (!canViewRoster) {
     return (
       <CAlert color="warning" className="my-4">
-        You do not have permission to manage rosters.
+        You do not have permission to view rosters.
       </CAlert>
     )
   }
@@ -452,9 +455,7 @@ const RosterManagement = () => {
         />
       </div>
 
-      {resolvedTab === 'overview' && (
-        <OverviewTab canManageRoster={canManageRoster} exportedBy={exportedBy} />
-      )}
+      {resolvedTab === 'overview' && <OverviewTab exportedBy={exportedBy} />}
       {resolvedTab === 'schedule' && (
         <ScheduleTab
           canManageRoster={canManageRoster}

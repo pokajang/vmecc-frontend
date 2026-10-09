@@ -6,9 +6,12 @@ import { MemoryRouter } from 'react-router-dom'
 import RosterManagement from '../RosterManagement'
 
 const rosterStateMock = vi.hoisted(() => vi.fn())
+const authUserMock = vi.hoisted(() => ({
+  current: { name: 'Admin', permissions: ['rosters.manage'] },
+}))
 
 vi.mock('react-redux', () => ({
-  useSelector: () => ({ name: 'Admin', permissions: ['rosters.manage'] }),
+  useSelector: () => authUserMock.current,
 }))
 
 vi.mock('../RosterStat', () => ({
@@ -81,6 +84,7 @@ vi.mock('../useRosterState', () => ({
 afterEach(() => {
   cleanup()
   rosterStateMock.mockClear()
+  authUserMock.current = { name: 'Admin', permissions: ['rosters.manage'] }
 })
 
 it('uses route-backed nav tabs without tab roles and marks the active route current', () => {
@@ -110,4 +114,18 @@ it('passes the safe draft-attention deep link to roster state', () => {
   )
 
   expect(rosterStateMock).toHaveBeenCalledWith(true, false, 'all', null, 'draft')
+})
+
+it('shows scoped team viewers a published read-only roster', () => {
+  authUserMock.current = { name: 'Representative', permissions: ['teams.view'] }
+
+  render(
+    <MemoryRouter initialEntries={['/roster/schedule']}>
+      <RosterManagement />
+    </MemoryRouter>,
+  )
+
+  expect(screen.getByTestId('roster-management-module')).toBeTruthy()
+  expect(screen.queryByTestId('roster-management-edit-action')).toBeNull()
+  expect(rosterStateMock).toHaveBeenCalledWith(true, true, 'month', null, null)
 })

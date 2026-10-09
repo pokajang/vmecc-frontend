@@ -22,10 +22,10 @@ import { MALAYSIA_STATE_OPTIONS } from 'src/constants/malaysiaStates'
 import ButtonLoader from 'src/components/ButtonLoader'
 import { updateOnboardingState, updateProfile } from 'src/services/apiClient'
 import {
-  PROFILE_COMPLETION_GROUPS,
   PROFILE_COMPLETION_ONBOARDING_KEY,
   PROFILE_COMPLETION_ONBOARDING_VERSION,
   PROFILE_COMPLETION_REMINDER_DELAY_MS,
+  getProfileCompletionGroups,
   getProfileCompleteness,
   getProfileOnboardingStorageKey,
   hasCriticalMedicalInfoAcknowledgement,
@@ -146,11 +146,11 @@ const normalizeMedicalForm = (user = {}) => {
   }
 }
 
-const getStepProgress = (activeStep) => {
-  const index = PROFILE_COMPLETION_GROUPS.findIndex((group) => group.key === activeStep)
+const getStepProgress = (activeStep, groups) => {
+  const index = groups.findIndex((group) => group.key === activeStep)
   return {
     index: index === -1 ? 0 : index,
-    percent: ((index === -1 ? 1 : index + 1) / PROFILE_COMPLETION_GROUPS.length) * 100,
+    percent: ((index === -1 ? 1 : index + 1) / groups.length) * 100,
   }
 }
 
@@ -192,9 +192,9 @@ const buildMedicalPayload = (form) => ({
   notes: form.noKnownCriticalMedicalInfo ? '' : form.notes || '',
 })
 
-const MissingSummary = ({ missingByGroup }) => (
+const MissingSummary = ({ groups, missingByGroup }) => (
   <div className="d-grid gap-2">
-    {PROFILE_COMPLETION_GROUPS.map((group) => {
+    {groups.map((group) => {
       const missing = missingByGroup[group.key] || []
       const isComplete = missing.length === 0
       const Icon = iconByStep[group.key]
@@ -256,6 +256,7 @@ const ProfileCompletionOnboarding = () => {
   const dispatch = useDispatch()
   const location = useLocation()
   const authUser = useSelector((state) => state.authUser)
+  const profileGroups = useMemo(() => getProfileCompletionGroups(authUser), [authUser])
   const completeness = useMemo(() => getProfileCompleteness(authUser), [authUser])
   const storageKey = useMemo(() => getProfileOnboardingStorageKey(authUser?.id), [authUser?.id])
   const serverOnboardingRecord = authUser?.onboarding?.[PROFILE_COMPLETION_ONBOARDING_KEY] || null
@@ -411,8 +412,8 @@ const ProfileCompletionOnboarding = () => {
     }
   }
 
-  const currentStep = PROFILE_COMPLETION_GROUPS.find((group) => group.key === activeStep)
-  const progress = getStepProgress(activeStep)
+  const currentStep = profileGroups.find((group) => group.key === activeStep)
+  const progress = getStepProgress(activeStep, profileGroups)
   const firstName = getFirstName(authUser)
 
   return (
@@ -442,7 +443,7 @@ const ProfileCompletionOnboarding = () => {
                 system.
               </h4>
             </div>
-            <MissingSummary missingByGroup={completeness.missingByGroup} />
+            <MissingSummary groups={profileGroups} missingByGroup={completeness.missingByGroup} />
           </>
         )}
 
@@ -455,7 +456,7 @@ const ProfileCompletionOnboarding = () => {
                   <div className="text-body-secondary">{currentStep?.description}</div>
                 </div>
                 <span className="text-body-secondary">
-                  Step {progress.index + 1} of {PROFILE_COMPLETION_GROUPS.length}
+                  Step {progress.index + 1} of {profileGroups.length}
                 </span>
               </div>
               <CProgress thin color="primary" value={progress.percent} />
@@ -683,8 +684,7 @@ const ProfileCompletionOnboarding = () => {
             <div>
               <h4 className="mb-2">Your profile is ready.</h4>
               <p className="mb-0 text-body-secondary">
-                Your contact, emergency, and medical readiness details are complete. You can now
-                continue using the system.
+                Your required profile details are complete. You can now continue using the system.
               </p>
             </div>
           </div>
