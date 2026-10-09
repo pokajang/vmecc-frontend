@@ -118,6 +118,7 @@ const SalaryClaimsManagementContent = () => {
     isHrUser,
     pushToast,
     actionFilter: actionQueueAction,
+    canLoadSalaryWorkflowRules: canManageSalaryWorkflowRules,
   })
   const combinedAssignmentRows = useMemo(
     () =>

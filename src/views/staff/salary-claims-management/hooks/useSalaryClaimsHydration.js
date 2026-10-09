@@ -21,7 +21,13 @@ import {
   OVERTIME_NORMAL_HOURS_STRATEGIES,
 } from '../utils'
 
-const useSalaryClaimsHydration = ({ user, isHrUser, pushToast, actionFilter = '' }) => {
+const useSalaryClaimsHydration = ({
+  user,
+  isHrUser,
+  pushToast,
+  actionFilter = '',
+  canLoadSalaryWorkflowRules = false,
+}) => {
   const [salaryWorkflowRule, setSalaryWorkflowRule] = useState(() =>
     resolveSalaryWorkflowRule(DEFAULT_SALARY_WORKFLOW_RULES),
   )
@@ -51,11 +57,13 @@ const useSalaryClaimsHydration = ({ user, isHrUser, pushToast, actionFilter = ''
     setIsClaimsLoading(true)
     try {
       let workflowRule = resolveSalaryWorkflowRule(DEFAULT_SALARY_WORKFLOW_RULES)
-      try {
-        const workflowResult = await fetchSalaryWorkflowRules()
-        workflowRule = resolveSalaryWorkflowRule(workflowResult?.data || {})
-      } catch {
-        // Keep deterministic defaults when settings API data is unavailable.
+      if (canLoadSalaryWorkflowRules) {
+        try {
+          const workflowResult = await fetchSalaryWorkflowRules()
+          workflowRule = resolveSalaryWorkflowRule(workflowResult?.data || {})
+        } catch {
+          // Keep deterministic defaults when settings API data is unavailable.
+        }
       }
       if (!requestContext.isCurrent()) return
       setSalaryWorkflowRule(workflowRule)
@@ -98,7 +106,7 @@ const useSalaryClaimsHydration = ({ user, isHrUser, pushToast, actionFilter = ''
       if (requestContext.isCurrent()) setIsClaimsLoading(false)
       requestContext.release()
     }
-  }, [actionFilter, pushToast, user?.id])
+  }, [actionFilter, canLoadSalaryWorkflowRules, pushToast, user?.id])
 
   const hydrateOvertimeRates = useCallback(async () => {
     let next = defaultOvertimeRateSettings()

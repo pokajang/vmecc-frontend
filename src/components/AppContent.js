@@ -8,6 +8,12 @@ import routes from '../routes'
 import ErrorBoundary from './ErrorBoundary'
 import { getModuleDisabledReason, isModuleEnabled } from 'src/utils/modules'
 import PageState from './PageState'
+import { hasAnyPermission } from 'src/utils/authz'
+
+export const canAccessRoute = (route, user) => {
+  const permissions = Array.isArray(route?.permissions) ? route.permissions : []
+  return permissions.length === 0 || hasAnyPermission(user, permissions)
+}
 
 const ModuleDisabled = ({ moduleKey, moduleActivation }) => {
   const state = getModuleDisabledReason(moduleActivation, moduleKey)
@@ -23,6 +29,7 @@ const ModuleDisabled = ({ moduleKey, moduleActivation }) => {
 
 const AppContent = () => {
   const moduleActivation = useSelector((state) => state.moduleActivation)
+  const authUser = useSelector((state) => state.authUser)
 
   return (
     <CContainer
@@ -43,7 +50,9 @@ const AppContent = () => {
                   name={route.name}
                   element={
                     <ErrorBoundary>
-                      {routeModule && !isModuleEnabled(moduleActivation, routeModule) ? (
+                      {!canAccessRoute(route, authUser) ? (
+                        <Navigate to="/403" replace />
+                      ) : routeModule && !isModuleEnabled(moduleActivation, routeModule) ? (
                         <ModuleDisabled
                           moduleKey={routeModule}
                           moduleActivation={moduleActivation}

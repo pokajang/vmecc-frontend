@@ -36,6 +36,14 @@ const WorkflowNotifications = React.lazy(
   () => import('./views/notifications/workflow/WorkflowNotifications'),
 )
 
+const REPORT_ROUTE_PERMISSIONS = [
+  'reports.inspection.view',
+  'reports.erco.view',
+  'reports.drill.view',
+  'reports.fitness.view',
+  'reports.er_assessment.view',
+]
+
 const SALARY_CLAIMS_TAB_PATH_MAP = {
   claims: 'claims',
   salary: 'salary',
@@ -330,10 +338,30 @@ const routes = [
     name: 'Inspection Detail Legacy',
     element: ReportInspectionDetailRedirect,
   },
-  { path: '/report/:reportType', name: 'Reports', element: Reports },
-  { path: '/report/:reportType/new', name: 'New Report', element: Reports },
-  { path: '/report/:reportType/new/:newSection', name: 'New Report Section', element: Reports },
-  { path: '/report/:reportType/:reportId', name: 'Report Detail', element: Reports },
+  {
+    path: '/report/:reportType',
+    name: 'Reports',
+    element: Reports,
+    permissions: REPORT_ROUTE_PERMISSIONS,
+  },
+  {
+    path: '/report/:reportType/new',
+    name: 'New Report',
+    element: Reports,
+    permissions: REPORT_ROUTE_PERMISSIONS,
+  },
+  {
+    path: '/report/:reportType/new/:newSection',
+    name: 'New Report Section',
+    element: Reports,
+    permissions: REPORT_ROUTE_PERMISSIONS,
+  },
+  {
+    path: '/report/:reportType/:reportId',
+    name: 'Report Detail',
+    element: Reports,
+    permissions: REPORT_ROUTE_PERMISSIONS,
+  },
   { path: '/staff/details', name: 'Staff Details', element: StaffDetails },
   {
     path: '/staff/leave-management',
@@ -352,7 +380,12 @@ const routes = [
     element: LeaveManagement,
   },
   { path: '/staff/leave-management/overtime', name: 'Overtime Records', element: LeaveManagement },
-  { path: '/staff/leave-management/rules', name: 'Leave Workflow', element: LeaveManagement },
+  {
+    path: '/staff/leave-management/rules',
+    name: 'Leave Workflow',
+    element: LeaveManagement,
+    permissions: ['settings.manage'],
+  },
   {
     path: '/staff/leave-management/record/:leaveId',
     name: 'Leave Record Detail',
@@ -377,6 +410,7 @@ const routes = [
     path: '/staff/overtime-management/rules',
     name: 'Overtime Rules',
     element: OvertimeManagement,
+    permissions: ['settings.manage'],
   },
   {
     path: '/staff/overtime-management/record/:overtimeRouteKey',
