@@ -68,6 +68,10 @@ const SalaryClaimsManagementContent = () => {
     [user],
   )
   const canManageSalaryWorkflowRules = useMemo(() => hasPermission(user, 'settings.manage'), [user])
+  const canLoadStaffOvertimeRecords = useMemo(
+    () => hasPermission(user, 'staff.overtime.manage'),
+    [user],
+  )
   const actorName = useMemo(
     () => user?.name || user?.full_name || user?.email || 'System user',
     [user?.name, user?.full_name, user?.email],
@@ -119,6 +123,7 @@ const SalaryClaimsManagementContent = () => {
     pushToast,
     actionFilter: actionQueueAction,
     canLoadSalaryWorkflowRules: canManageSalaryWorkflowRules,
+    canLoadStaffOvertimeRecords,
   })
   const combinedAssignmentRows = useMemo(
     () =>

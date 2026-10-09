@@ -45,9 +45,11 @@ const MedicalSection = ({ medical = {} }) => {
   const [form, setForm] = useState(() => normalizeMedicalForm(medical))
 
   const renderRow = (label, content) => (
-    <div className="d-flex justify-content-between align-items-center">
+    <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-1">
       <span className="text-muted">{label}</span>
-      <span className="ms-3 text-end">{content}</span>
+      <span className="ms-sm-3 text-sm-end text-break" style={{ minWidth: 0 }}>
+        {content}
+      </span>
     </div>
   )
 

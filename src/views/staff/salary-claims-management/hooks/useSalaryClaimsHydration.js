@@ -27,6 +27,7 @@ const useSalaryClaimsHydration = ({
   pushToast,
   actionFilter = '',
   canLoadSalaryWorkflowRules = false,
+  canLoadStaffOvertimeRecords = false,
 }) => {
   const [salaryWorkflowRule, setSalaryWorkflowRule] = useState(() =>
     resolveSalaryWorkflowRule(DEFAULT_SALARY_WORKFLOW_RULES),
@@ -224,10 +225,10 @@ const useSalaryClaimsHydration = ({
     async ({ showWarningToast = false } = {}) => {
       const requestContext = createPayrollRequestContext(user?.id)
       try {
-        if (!user?.id) {
+        if (!user?.id || !canLoadStaffOvertimeRecords) {
           setAllOvertimeRecords([])
-          setHydratedOvertimeUserId('')
-          return { ok: false, data: [] }
+          setHydratedOvertimeUserId(user?.id ? String(user.id) : '')
+          return { ok: true, data: [] }
         }
         const result = await loadStaffOvertimeRecordsApiFirst()
         if (!requestContext.isCurrent()) return result
@@ -246,7 +247,7 @@ const useSalaryClaimsHydration = ({
         requestContext.release()
       }
     },
-    [pushToast, user?.id],
+    [canLoadStaffOvertimeRecords, pushToast, user?.id],
   )
 
   useEffect(() => {

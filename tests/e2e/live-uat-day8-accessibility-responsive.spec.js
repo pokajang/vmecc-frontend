@@ -7,8 +7,8 @@ const apiBaseUrl =
 
 const auditUser = {
   id: 908,
-  name: 'Day 8 Accessibility Auditor',
-  email: 'day8.accessibility.audit@example.test',
+  name: 'Day 8 Accessibility Auditor With Long Profile Values',
+  email: 'day8.accessibility.audit.with.long.profile.values@example.test',
   status: 'active',
   permissions: ['*'],
   roles: ['System Administrator'],
@@ -105,6 +105,17 @@ const expectBoundedContent = async (page, section) => {
 }
 
 test.describe('Day 8 accessibility and responsive contracts', () => {
+  test('keeps long profile values bounded and named at 320px', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 720 })
+    await installApiStubs(page)
+    await page.goto('/profile', { waitUntil: 'domcontentloaded' })
+
+    const profile = page.getByTestId('profile-module')
+    await expect(profile).toBeVisible()
+    await expect(profile.getByText(auditUser.email, { exact: true })).toBeVisible()
+    await expectBoundedContent(page, profile)
+  })
+
   for (const viewport of mandatoryViewports) {
     test(`keeps the Inspection task bounded and named at ${viewport.key}`, async ({ page }) => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height })
