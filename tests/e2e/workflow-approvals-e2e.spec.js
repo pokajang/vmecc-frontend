@@ -21,7 +21,10 @@ const weekdayAtOffset = (offsetDays) => {
 }
 const payrollPeriod = () => {
   const now = new Date()
-  const firstDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 2, 1, 12))
+  const configuredOffset = Number(process.env.VMECC_E2E_PAYROLL_MONTH_OFFSET || 2)
+  const monthOffset =
+    Number.isInteger(configuredOffset) && configuredOffset > 0 ? configuredOffset : 2
+  const firstDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + monthOffset, 1, 12))
   return {
     label: firstDay.toLocaleString('en', { month: 'long', year: 'numeric', timeZone: 'UTC' }),
     value: toDateOnly(firstDay).slice(0, 7),
